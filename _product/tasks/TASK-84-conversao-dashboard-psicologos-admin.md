@@ -10,8 +10,11 @@ O Admin ja possui o dashboard de psicologos em `/psicologos`, com visao geral, o
 
 A classificacao deve respeitar o filtro de periodo do dashboard e usar somente sinais reais ja persistidos:
 
+- exposicao real por abertura do perfil em `profile_view_event.source=profile_page`;
+- exposicao real por impressao de busca em `profile_view_event.source=search_result`;
+- exposicao real por visualizacao qualificada de video em `profile_video_watch_session` com 3s ou mais;
+- exposicao real por visualizacao de posts/respostas autorais em `page_view_event`;
 - cliques de WhatsApp em `contact_request.channel=whatsapp`;
-- aberturas reais do perfil em `profile_view_event.source=profile_page`;
 - favoritos em `psychologist_favorite`.
 
 ## Escopo
@@ -19,28 +22,29 @@ A classificacao deve respeitar o filtro de periodo do dashboard e usar somente s
 - Adicionar ao contrato do dashboard Admin de psicologos um bloco agregado `profile_conversion`.
 - Classificar cada psicologo ativo no fim da janela selecionada em uma das categorias:
   - **Alta Conversão**;
-  - **Trafego Nao Convertido**;
+  - **Exposicao Nao Convertida**;
   - **Interesse Nao Convertido**;
   - **Baixa Conversão**;
   - **Dados Insuficientes**.
 - Renderizar no Admin, abaixo do grafico de visao geral e antes de **Origem do trafego**, um bloco **Conversão** com grafico de pizza, quantidades e taxas de psicologos por categoria.
 - Manter a leitura agregada e nao publica, sem lista individual, ranking ou mecanismo punitivo.
 
-## Regras de classificacao V1
+## Regras de classificacao atuais
 
-As metricas sao calculadas dentro da janela temporal selecionada e normalizadas para 30 dias pelo numero de dias em que o perfil estava ativo dentro da janela.
+As metricas sao calculadas dentro da janela temporal selecionada. Para Conversao, nao ha normalizacao por 30 dias: a taxa operacional e `cliques WhatsApp / exposicao`.
 
-- **Alta Conversão**: WhatsApp e o sinal mais forte. Entra quando ha pelo menos 5 cliques normalizados/30d, ou pelo menos 3 cliques normalizados/30d com 2+ cliques reais e taxa WhatsApp/perfil de 5% ou mais.
-- **Trafego Nao Convertido**: 60+ aberturas de perfil normalizadas/30d, WhatsApp abaixo do corte forte e conversao WhatsApp/perfil abaixo de 5% ou sem base de perfil.
-- **Interesse Nao Convertido**: 5+ favoritos normalizados/30d e WhatsApp abaixo do corte forte.
-- **Baixa Conversão**: abaixo dos cortes de WhatsApp, perfil e favoritos.
-- **Dados Insuficientes**: menos de 7 dias ativos dentro da janela, salvo quando o volume de WhatsApp ja caracteriza Alta Conversão.
+- **Exposicao**: soma, com peso 1 por evento, de abertura do perfil, impressao de busca, visualizacao qualificada de video e views de posts/respostas autorais em comunidades.
+- **Alta Conversao**: pelo menos 50 exposicoes, pelo menos 3 cliques WhatsApp e taxa de conversao igual ou superior a 5%.
+- **Exposicao Nao Convertida**: pelo menos 60 exposicoes e taxa abaixo de 2% ou nenhum clique WhatsApp.
+- **Interesse Nao Convertido**: 5+ favoritos e sem taxa/volume para Alta Conversao.
+- **Baixa Conversao**: exposicao suficiente, mas fora dos cortes de Alta Conversao, Exposicao Nao Convertida e Interesse Nao Convertido.
+- **Dados Insuficientes**: exposicao abaixo de 50 sem sinal suficiente para outro bucket.
 
 ## Criterios de aceite
 
-- [x] O backend retorna `profile_conversion` no `GET /api/admin/private/psychologists/dashboard` usando apenas dados reais de `profile_view_event`, `contact_request` e `psychologist_favorite`.
+- [x] O backend retorna `profile_conversion` no `GET /api/admin/private/psychologists/dashboard` usando apenas dados reais de exposicao, `contact_request` e `psychologist_favorite`.
 - [x] As categorias usam os nomes finais definidos pelo produto e percentuais em relacao ao total de psicologos analisados.
-- [x] A classificacao respeita o filtro de periodo, inclusive `Todo o periodo`, `Este ano` e intervalos customizados, com normalizacao para 30 dias.
+- [x] A classificacao respeita o filtro de periodo, inclusive `Todo o periodo`, `Este ano` e intervalos customizados, sem normalizacao por 30 dias na Conversao.
 - [x] O Admin exibe o bloco **Conversão** logo abaixo da visao geral, antes de **Origem do trafego**, com grafico de pizza e legenda com quantidades/taxas.
 - [x] A UI e mobile-first e nao usa `<img>`.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
@@ -62,7 +66,7 @@ As metricas sao calculadas dentro da janela temporal selecionada e normalizadas 
 - Servidor local: backend recompilado reiniciado em `localhost:3001`; Admin reiniciado em `localhost:3002`.
 - HTTP local `GET http://localhost:3002/psicologos`: `200 OK`.
 - Bundle gerado em `admin/.next/static/chunks/app/(admin)/psicologos` contem o bloco de Conversão e as categorias, confirmando que a porta 3002 esta servindo build com a alteracao.
-- Refinamento visual de Conversão em 2026-07-25 removeu o texto introdutorio, contadores agregados, totais por categoria e faixa tecnica dos cortes; a legenda passou a ficar em duas colunas no desktop, com Alta Conversão ao lado de Interesse Nao Convertido, Trafego Nao Convertido ao lado de Baixa Conversão e Dados Insuficientes ocupando linha propria; o bloco tambem ganhou filtro por plano (Todos, Gratuitos, Assinantes e Cortesia) com dados reais por segmento.
+- Refinamento visual de Conversão em 2026-07-25 removeu o texto introdutorio, contadores agregados, totais por categoria e faixa tecnica dos cortes; a legenda passou a ficar em duas colunas no desktop, com Alta Conversão ao lado de Interesse Nao Convertido, Exposicao Nao Convertida ao lado de Baixa Conversão e Dados Insuficientes ocupando linha propria; o bloco tambem ganhou filtro por plano (Todos, Gratuitos, Assinantes e Cortesia) com dados reais por segmento.
 - Refinamento de UI solicitado em 2026-07-25 validado com `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local de `buildPsychologistsDashboard({ period: "all" })` confirmando ordem/copies e `plan_segments.*.profile_conversion`, bundle com `profile-conversion-plan-segment` e HTTP local `GET http://localhost:3002/psicologos` retornando 200.
 - Refinamento compacto solicitado em 2026-07-26: a legenda de Conversão deixou de exibir a linha `N psicologo(s)` e passou a reunir quantidade e taxa no topo do card, no formato `1 (6,7%)`, com o percentual em menor peso textual. Validado com `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e HTTP local `GET http://localhost:3002/psicologos` retornando 200. Builder/Quick Copy nao estava exposto como ferramenta no ambiente; a alteracao usou a referencia local `Admin | Psicologos - Dashboard` e a captura fornecida pelo usuario.
 
@@ -161,3 +165,36 @@ As metricas sao calculadas dentro da janela temporal selecionada e normalizadas 
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - HTTP local: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?profile_conversion=strong_conversion` e `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornaram 200.
 - Validação estática: `admin/src`, `backend/src`, `_product/tasks`, `adrs`, `admin/.next/static` e `admin/.next/server` não contêm a copy anterior da categoria `strong_conversion`.
+
+## Ajuste pos-feedback 2026-07-29 - Conversao por exposicao e tooltips
+
+- Pedido do usuario: alterar a categoria exibida **Trafego Nao Convertido** para **Exposicao Nao Convertida**, adicionar tooltips nas cinco opcoes de Conversao e aplicar a nova regra `taxa = cliques WhatsApp / exposicao`.
+- Backend Admin: dashboard, lista, detalhe de estatisticas do psicologo e fluxo cruzado de intencao/conversao passaram a usar exposicao como denominador, sem normalizacao por 30 dias para Conversao.
+- A exposicao usa apenas eventos reais existentes: visualizacao de perfil, impressao em busca, visualizacao qualificada de video do perfil e views de posts/respostas autorais em comunidades. Cada exposicao registrada tem peso 1 nesta versao.
+- `contact_request.channel=whatsapp` continua sendo o numerador dos cliques WhatsApp, cobrindo cliques vindos de perfil, video ou comunidade quando a acao cria contact_request.
+- O identificador interno `unconverted_traffic` foi preservado por compatibilidade; apenas label, descricao e filtros exibem **Exposicao Nao Convertida**.
+- Frontend Admin: donut de Conversao em `/psicologos` exibe tooltip nas cinco categorias usando a descricao real da API; lista, filtros e matriz usam a nova copy.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` e a captura enviada pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0347-conversao-por-exposicao-admin-psicologos.md`.
+
+### Criterios complementares
+
+- [x] A UI Admin exibe **Exposicao Nao Convertida** no lugar de **Trafego Nao Convertido** nas telas e filtros de psicologos.
+- [x] O donut de Conversao possui tooltip para Alta Conversao, Exposicao Nao Convertida, Interesse Nao Convertido, Baixa Conversao e Dados Insuficientes.
+- [x] A taxa de Conversao usa `cliques WhatsApp / exposicao`, sem normalizacao por 30 dias.
+- [x] A exposicao considera somente eventos reais ja instrumentados, sem mocks, seeds ou dados artificiais.
+- [x] O ID interno `unconverted_traffic` e os links profundos existentes foram preservados.
+- [x] Nenhum package novo, schema Prisma, migration, seed, mock ou endpoint simulado foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check --write "src/utils/admin-profile-conversion.ts" "src/modules/api/admin/private/dashboard/summary/DTOs/IAdminDashboardSummaryDTO.ts" "src/modules/api/admin/private/dashboard/summary/repositories/AdminDashboardRepository.ts" "src/modules/api/admin/private/dashboard/summary/repositories/interfaces/IAdminDashboardRepository.ts" "src/modules/api/admin/private/dashboard/summary/use-cases/services.ts" "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/dashboard/repositories/AdminPsychologistsDashboardRepository.ts" "src/modules/api/admin/private/psychologists/dashboard/repositories/interfaces/IAdminPsychologistsDashboardRepository.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/engagement/DTOs/IAdminPsychologistEngagementDTO.ts" "src/modules/api/admin/private/psychologists/engagement/repositories/AdminPsychologistEngagementRepository.ts" "src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts" "src/modules/api/admin/private/psychologists/list/repositories/AdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/repositories/interfaces/IAdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/dashboard/index.ts" "src/api/req/psychologists/index.ts" "src/app/(admin)/dashboard/client.tsx" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke backend com `buildPsychologistsDashboard({ period: "all" })`: retornou status 200, labels `Alta Conversão`, `Interesse Não Convertido`, `Exposição Não Convertida`, `Baixa Conversão`, `Dados Insuficientes`, totals com `exposures=440` e thresholds novos.
+- HTTP local: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?profile_conversion=unconverted_traffic` retornaram 200.

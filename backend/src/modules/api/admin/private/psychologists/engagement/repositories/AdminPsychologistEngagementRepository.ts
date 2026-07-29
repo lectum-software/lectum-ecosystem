@@ -747,13 +747,14 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
-  async countPostViews(postIds: string[]) {
+  async countPostViews(postIds: string[], from?: Date, to?: Date) {
     if (postIds.length === 0) return [];
 
     return prisma.page_view_event.groupBy({
       by: ["target_id"],
       where: {
         deleted: false,
+        ...(from && to ? { occurred_at: { gte: from, lte: to } } : {}),
         target_id: { in: postIds },
         target_type: { in: ["post", "community_post"] },
       },
@@ -761,13 +762,14 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
-  async countReplyViews(replyIds: string[]) {
+  async countReplyViews(replyIds: string[], from?: Date, to?: Date) {
     if (replyIds.length === 0) return [];
 
     return prisma.page_view_event.groupBy({
       by: ["target_id"],
       where: {
         deleted: false,
+        ...(from && to ? { occurred_at: { gte: from, lte: to } } : {}),
         target_id: { in: replyIds },
         target_type: { in: ["reply", "post_reply"] },
       },

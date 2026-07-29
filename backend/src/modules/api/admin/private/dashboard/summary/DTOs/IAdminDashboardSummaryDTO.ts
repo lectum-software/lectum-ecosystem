@@ -138,7 +138,7 @@ export type AdminDashboardIntentConversionFlow = {
   intents: AdminDashboardIntentConversionNode[];
   psychologist_conversions: AdminDashboardIntentConversionNode[];
   privacy_note: string;
-  source: "profile_view_event+psychologist_favorite+contact_request";
+  source: "profile_view_event.source=profile_page/search_result+profile_video_watch_session.qualified>=3s+page_view_event.target_type=post/community_post/reply/post_reply+contact_request+psychologist_favorite";
   total_pairs: number;
   unavailable_reason: string | null;
 };

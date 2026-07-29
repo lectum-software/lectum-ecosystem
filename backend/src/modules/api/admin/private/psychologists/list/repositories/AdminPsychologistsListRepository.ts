@@ -1,5 +1,6 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS } from "@/utils/admin-profile-conversion";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { IAdminPsychologistsListRepository } from "./interfaces/IAdminPsychologistsListRepository";
 
@@ -207,6 +208,29 @@ const publicDirectoryWhere = {
 const psychologistIdsWhere = (psychologistIds: string[]) => ({
   in: psychologistIds,
 });
+
+const SEARCH_RESULT_SOURCE = "search_result";
+
+const countGroupsFromCounts = (records: Array<{ count: number; psychologist_id: string }>) =>
+  records.map((record) => ({
+    _count: {
+      _all: record.count,
+    },
+    psychologist_id: record.psychologist_id,
+  }));
+
+const sumCountsByPsychologistId = (records: Array<{ count: number; psychologist_id: string }>) => {
+  const counts = new Map<string, number>();
+
+  for (const record of records) {
+    counts.set(record.psychologist_id, (counts.get(record.psychologist_id) ?? 0) + record.count);
+  }
+
+  return [...counts.entries()].map(([psychologist_id, count]) => ({
+    count,
+    psychologist_id,
+  }));
+};
 
 export class AdminPsychologistsListRepository implements IAdminPsychologistsListRepository {
   async listSpecialtyCatalog() {
@@ -456,6 +480,176 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         _all: true,
       },
     });
+  }
+
+  async listSearchResultImpressionCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    return prisma.profile_view_event.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        deleted: false,
+        psychologist_id: psychologistIdsWhere(psychologistIds),
+        source: SEARCH_RESULT_SOURCE,
+      },
+      _count: {
+        _all: true,
+      },
+    });
+  }
+
+  async listQualifiedVideoViewCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    return prisma.profile_video_watch_session.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        deleted: false,
+        psychologist_id: psychologistIdsWhere(psychologistIds),
+        OR: [
+          {
+            watched_seconds: {
+              gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
+            },
+          },
+          {
+            max_position_seconds: {
+              gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
+            },
+          },
+        ],
+      },
+      _count: {
+        _all: true,
+      },
+    });
+  }
+
+  async listCommunityPostViewCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    const posts = await prisma.community_post.findMany({
+      select: {
+        author_id: true,
+        id: true,
+      },
+      where: {
+        author: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        author_id: psychologistIdsWhere(psychologistIds),
+        community: {
+          deleted: false,
+        },
+        deleted: false,
+        status: "publicado",
+      },
+    });
+    const postIds = posts.map((post) => post.id);
+    if (postIds.length === 0) return [];
+
+    const viewGroups = await prisma.page_view_event.groupBy({
+      by: ["target_id"],
+      where: {
+        deleted: false,
+        target_id: {
+          in: postIds,
+        },
+        target_type: {
+          in: ["post", "community_post"],
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+    const authorByPostId = new Map(posts.map((post) => [post.id, post.author_id]));
+
+    return countGroupsFromCounts(
+      sumCountsByPsychologistId(
+        viewGroups.flatMap((group) => {
+          const targetId = group.target_id;
+          if (!targetId) return [];
+
+          const psychologistId = authorByPostId.get(targetId);
+          if (!psychologistId) return [];
+
+          return [
+            {
+              count: group._count._all,
+              psychologist_id: psychologistId,
+            },
+          ];
+        }),
+      ),
+    );
+  }
+
+  async listCommunityReplyViewCounts(psychologistIds: string[]) {
+    if (psychologistIds.length === 0) return [];
+
+    const replies = await prisma.post_reply.findMany({
+      select: {
+        author_id: true,
+        id: true,
+      },
+      where: {
+        author: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        author_id: psychologistIdsWhere(psychologistIds),
+        deleted: false,
+        post: {
+          community: {
+            deleted: false,
+          },
+          deleted: false,
+          status: "publicado",
+        },
+      },
+    });
+    const replyIds = replies.map((reply) => reply.id);
+    if (replyIds.length === 0) return [];
+
+    const viewGroups = await prisma.page_view_event.groupBy({
+      by: ["target_id"],
+      where: {
+        deleted: false,
+        target_id: {
+          in: replyIds,
+        },
+        target_type: {
+          in: ["reply", "post_reply"],
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+    const authorByReplyId = new Map(replies.map((reply) => [reply.id, reply.author_id]));
+
+    return countGroupsFromCounts(
+      sumCountsByPsychologistId(
+        viewGroups.flatMap((group) => {
+          const targetId = group.target_id;
+          if (!targetId) return [];
+
+          const psychologistId = authorByReplyId.get(targetId);
+          if (!psychologistId) return [];
+
+          return [
+            {
+              count: group._count._all,
+              psychologist_id: psychologistId,
+            },
+          ];
+        }),
+      ),
+    );
   }
 
   async listFavoriteCounts(psychologistIds: string[]) {

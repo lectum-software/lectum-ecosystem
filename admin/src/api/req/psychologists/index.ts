@@ -467,27 +467,43 @@ export type PsychologistsDashboardProfileConversionCategory = {
   label: string;
   percentage: number;
   totals: {
+    community_post_views: number;
+    community_reply_views: number;
+    exposures: number;
     favorites: number;
     profile_views: number;
+    qualified_video_views: number;
+    search_result_impressions: number;
     whatsapp_clicks: number;
   };
+};
+
+export type PsychologistsProfileConversionSource =
+  "profile_view_event.source=profile_page/search_result+profile_video_watch_session.qualified>=3s+page_view_event.target_type=post/community_post/reply/post_reply+contact_request+psychologist_favorite";
+
+export type PsychologistsProfileConversionThresholds = {
+  exposure_minimum: number;
+  favorites_interest_minimum: number;
+  low_conversion_rate_percent: number;
+  qualified_video_watch_seconds: number;
+  strong_conversion_rate_percent: number;
+  unconverted_exposure_minimum: number;
+  whatsapp_minimum_for_strong_conversion: number;
 };
 
 export type PsychologistsDashboardProfileConversionResults = {
   categories: PsychologistsDashboardProfileConversionCategory[];
   description: string;
-  source: "profile_view_event+contact_request+psychologist_favorite";
-  thresholds: {
-    favorites_high_30d: number;
-    minimum_active_days: number;
-    profile_views_high_30d: number;
-    strong_conversion_rate_percent: number;
-    whatsapp_high_30d: number;
-    whatsapp_high_with_conversion_30d: number;
-  };
+  source: PsychologistsProfileConversionSource;
+  thresholds: PsychologistsProfileConversionThresholds;
   totals: {
+    community_post_views: number;
+    community_reply_views: number;
+    exposures: number;
     favorites: number;
     profile_views: number;
+    qualified_video_views: number;
+    search_result_impressions: number;
     psychologists: number;
     whatsapp_clicks: number;
   };
@@ -516,11 +532,16 @@ export type PsychologistsDashboardProfileConversionEngagementQuadrant = {
   percentage: number;
   totals: {
     community_interactions: number;
+    community_post_views: number;
+    community_reply_views: number;
+    exposures: number;
     favorites: number;
     patient_replies: number;
     posts: number;
     profile_views: number;
+    qualified_video_views: number;
     replies: number;
+    search_result_impressions: number;
     votes: number;
     whatsapp_clicks: number;
   };
@@ -548,7 +569,7 @@ export type PsychologistsDashboardProfileConversionEngagementResults = {
   };
   description: string;
   quadrants: PsychologistsDashboardProfileConversionEngagementQuadrant[];
-  source: "profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
+  source: "profile_view_event.source=profile_page/search_result+profile_video_watch_session.qualified>=3s+page_view_event.target_type=post/community_post/reply/post_reply+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
   thresholds: {
     engaged_score_30d: number;
     engaged_interactions_30d: number;
@@ -565,9 +586,11 @@ export type PsychologistsDashboardProfileConversionEngagementResults = {
       replies: number;
       votes: number;
     };
-    profile_conversion_strong_whatsapp_high_30d: number;
-    profile_conversion_strong_whatsapp_with_conversion_30d: number;
+    profile_conversion_exposure_minimum: number;
+    profile_conversion_low_conversion_rate_percent: number;
+    profile_conversion_strong_whatsapp_minimum: number;
     profile_conversion_strong_conversion_rate_percent: number;
+    profile_conversion_unconverted_exposure_minimum: number;
     weights: {
       patient_replies: number;
       posts: number;
@@ -578,6 +601,7 @@ export type PsychologistsDashboardProfileConversionEngagementResults = {
   totals: {
     community_interactions: number;
     engaged_psychologists: number;
+    exposures: number;
     high_engagement_psychologists: number;
     insufficient_data_psychologists: number;
     low_engaged_psychologists: number;
@@ -653,31 +677,21 @@ export type PsychologistsListProfileConversionCategoryId =
 export type PsychologistsListProfileConversion = {
   description: string;
   id: PsychologistsListProfileConversionCategoryId;
-  label:
-    | "Baixa Conversão"
-    | "Dados Insuficientes"
-    | "Interesse Não Convertido"
-    | "Alta Conversão"
-    | "Tráfego Não Convertido";
+  label: string;
   signals: {
     active_days: number;
+    community_post_views: number;
+    community_reply_views: number;
+    exposure_count: number;
     favorites: number;
-    normalized_favorites_30d: number;
-    normalized_profile_views_30d: number;
-    normalized_whatsapp_clicks_30d: number;
     profile_views: number;
+    qualified_video_views: number;
+    search_result_impressions: number;
     whatsapp_clicks: number;
     whatsapp_conversion_rate_percent: number | null;
   };
-  source: "profile_view_event+contact_request+psychologist_favorite";
-  thresholds: {
-    favorites_high_30d: number;
-    minimum_active_days: number;
-    profile_views_high_30d: number;
-    strong_conversion_rate_percent: number;
-    whatsapp_high_30d: number;
-    whatsapp_high_with_conversion_30d: number;
-  };
+  source: PsychologistsProfileConversionSource;
+  thresholds: PsychologistsProfileConversionThresholds;
 };
 
 export type PsychologistsListEngagement = {
@@ -777,7 +791,7 @@ export type AdminPsychologistsList = {
   pages: number;
   per_page: number;
   sort: PsychologistsListSort;
-  source: "user+psychologist_profile+professional_subscription+public_ranking+profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
+  source: "user+psychologist_profile+professional_subscription+public_ranking+profile_view_event+profile_video_watch_session+page_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
 };
 
 export type AdminPsychologistDetailStatus = "free" | "pending" | "unpublished" | "verified";
@@ -1262,23 +1276,18 @@ export type AdminPsychologistStatistics = {
       label: string;
       signals: {
         active_days: number;
+        community_post_views: number;
+        community_reply_views: number;
+        exposure_count: number;
         favorites: number;
-        normalized_favorites_30d: number;
-        normalized_profile_views_30d: number;
-        normalized_whatsapp_clicks_30d: number;
         profile_views: number;
+        qualified_video_views: number;
+        search_result_impressions: number;
         whatsapp_clicks: number;
         whatsapp_conversion_rate_percent: number | null;
       };
-      source: "profile_view_event+contact_request+psychologist_favorite";
-      thresholds: {
-        favorites_high_30d: number;
-        minimum_active_days: number;
-        profile_views_high_30d: number;
-        strong_conversion_rate_percent: number;
-        whatsapp_high_30d: number;
-        whatsapp_high_with_conversion_30d: number;
-      };
+      source: PsychologistsProfileConversionSource;
+      thresholds: PsychologistsProfileConversionThresholds;
     };
   };
   community: {

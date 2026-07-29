@@ -1,5 +1,9 @@
 import type { Request } from "express";
 import type { AdminPsychologistCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
+import type {
+  AdminProfileConversionSource,
+  AdminProfileConversionThresholds,
+} from "@/utils/admin-profile-conversion";
 
 export type AdminPsychologistEngagementQuery = {
   community?: string;
@@ -51,23 +55,18 @@ export type AdminPsychologistBusinessProfileConversion = {
   label: string;
   signals: {
     active_days: number;
+    community_post_views: number;
+    community_reply_views: number;
+    exposure_count: number;
     favorites: number;
-    normalized_favorites_30d: number;
-    normalized_profile_views_30d: number;
-    normalized_whatsapp_clicks_30d: number;
     profile_views: number;
+    qualified_video_views: number;
+    search_result_impressions: number;
     whatsapp_clicks: number;
     whatsapp_conversion_rate_percent: number | null;
   };
-  source: "profile_view_event+contact_request+psychologist_favorite";
-  thresholds: {
-    favorites_high_30d: number;
-    minimum_active_days: number;
-    profile_views_high_30d: number;
-    strong_conversion_rate_percent: number;
-    whatsapp_high_30d: number;
-    whatsapp_high_with_conversion_30d: number;
-  };
+  source: AdminProfileConversionSource;
+  thresholds: AdminProfileConversionThresholds;
 };
 
 export type AdminPsychologistStatisticsPeriod = {

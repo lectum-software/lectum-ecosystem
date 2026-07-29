@@ -103,6 +103,11 @@ export type AdminPsychologistEventRecord = {
   psychologist_id: string;
 };
 
+export type AdminPsychologistCountRecord = {
+  count: number;
+  psychologist_id: string;
+};
+
 export type AdminPsychologistCommunityEngagementEventRecord = AdminPsychologistEventRecord & {
   type: "patient_reply" | "post" | "reply" | "vote";
 };
@@ -185,6 +190,18 @@ export interface IAdminPsychologistsDashboardRepository {
   listProfileViews(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistEventRecord[]>;
+  listSearchResultImpressionCounts(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistCountRecord[]>;
+  listQualifiedVideoViewCounts(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistCountRecord[]>;
+  listCommunityPostViewCounts(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistCountRecord[]>;
+  listCommunityReplyViewCounts(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistCountRecord[]>;
   listDirectoryFilters(): Promise<AdminPsychologistsDashboardDirectoryFilters>;
   listDirectoryFilterSearchActions(
     range: AdminPsychologistsDashboardDateRange,

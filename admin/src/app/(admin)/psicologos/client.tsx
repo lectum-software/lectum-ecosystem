@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Award,
   ChevronDown,
+  CircleHelp,
   type LucideIcon,
   MessageCircle,
   RefreshCw,
@@ -62,6 +63,7 @@ type PsychologistEngagementDonutBucketId =
 type PsychologistsDonutChartItem = {
   color: string;
   count: number;
+  description?: string;
   id: string;
   label: string;
   percentage: number;
@@ -343,7 +345,7 @@ const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS: {
   },
   {
     id: "unconverted_traffic",
-    label: "Tráfego Não Convertido",
+    label: "Exposição Não Convertida",
   },
   {
     id: "low_conversion",
@@ -2353,6 +2355,22 @@ const PsychologistsDonutChart = ({
                   style={{ backgroundColor: item.color }}
                 />
                 <span className="min-w-0 break-words">{item.label}</span>
+                {item.description ? (
+                  <button
+                    aria-label={`${item.label}: ${item.description}`}
+                    className="group relative mt-0.5 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    title={item.description}
+                    type="button"
+                  >
+                    <CircleHelp aria-hidden className="h-3.5 w-3.5 text-muted" />
+                    <span
+                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-56 -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                      role="tooltip"
+                    >
+                      {item.description}
+                    </span>
+                  </button>
+                ) : null}
               </span>
               <span className="shrink-0 text-right text-sm font-semibold text-foreground">
                 {numberFormatter.format(item.count)}{" "}
@@ -2427,6 +2445,7 @@ const ProfileConversionDonutChart = ({
   const items = profileConversion.categories.map((item) => ({
     color: PROFILE_CONVERSION_CHART_COLORS[item.id],
     count: item.count,
+    description: item.description,
     id: item.id,
     label: item.label,
     percentage: item.percentage,
@@ -2551,11 +2570,16 @@ const findProfileConversionEngagementQuadrant = (
     percentage: 0,
     totals: {
       community_interactions: 0,
+      community_post_views: 0,
+      community_reply_views: 0,
+      exposures: 0,
       favorites: 0,
       patient_replies: 0,
       posts: 0,
       profile_views: 0,
+      qualified_video_views: 0,
       replies: 0,
+      search_result_impressions: 0,
       votes: 0,
       whatsapp_clicks: 0,
     },

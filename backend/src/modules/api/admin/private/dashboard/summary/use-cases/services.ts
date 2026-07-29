@@ -1,5 +1,12 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import {
+  ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG,
+  ADMIN_PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER,
+  ADMIN_PROFILE_CONVERSION_EXPOSURE_SOURCE,
+  calculateAdminProfileConversionRatePercent,
+  classifyAdminProfileConversionCategory,
+} from "@/utils/admin-profile-conversion";
 import type {
   AdminDashboardDateRange,
   AdminDashboardDeviceItem,
@@ -90,17 +97,14 @@ type IntentConversionPairCounts = {
 
 type PsychologistConversionCounts = {
   activeDays: number;
+  exposureCount: number;
   favorites: number;
-  normalizedFavorites: number;
-  normalizedProfileViews: number;
-  normalizedWhatsappClicks: number;
   profileViews: number;
   whatsappClicks: number;
   whatsappConversionRate: number | null;
 };
 
-const INTENT_CONVERSION_SOURCE =
-  "profile_view_event+psychologist_favorite+contact_request" as const;
+const INTENT_CONVERSION_SOURCE = ADMIN_PROFILE_CONVERSION_EXPOSURE_SOURCE;
 const PATIENT_INTENT_SCORE_WEIGHTS = {
   favorites: 20,
   profile_views: 3,
@@ -135,39 +139,12 @@ const INTENT_CONVERSION_INTENT_ORDER: AdminDashboardIntentConversionIntentId[] =
   "objective",
   "very_qualified",
 ];
-const PROFILE_CONVERSION_FAVORITES_HIGH_30D = 5;
-const PROFILE_CONVERSION_MIN_ACTIVE_DAYS = 7;
-const PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D = 60;
-const PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT = 5;
-const PROFILE_CONVERSION_WHATSAPP_HIGH_30D = 5;
-const PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
-const INTENT_CONVERSION_CATEGORY_CONFIG = {
-  low_conversion: {
-    description: "Psicólogos com poucos sinais de perfil, favorito e WhatsApp.",
-    label: "Baixa Conversão",
-  },
-  strong_conversion: {
-    description: "Psicólogos com alto índice de cliques no WhatsApp.",
-    label: "Alta Conversão",
-  },
-  unconverted_interest: {
-    description: "Psicólogos muito favoritados, mas com poucos cliques no WhatsApp.",
-    label: "Interesse Não Convertido",
-  },
-  unconverted_traffic: {
-    description: "Psicólogos com muitas aberturas de perfil, mas poucos cliques no WhatsApp.",
-    label: "Tráfego Não Convertido",
-  },
-} as const satisfies Record<
+const INTENT_CONVERSION_CATEGORY_CONFIG = ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG satisfies Record<
   AdminDashboardIntentConversionCategoryId,
   { description: string; label: string }
 >;
-const INTENT_CONVERSION_CATEGORY_ORDER: AdminDashboardIntentConversionCategoryId[] = [
-  "strong_conversion",
-  "unconverted_interest",
-  "unconverted_traffic",
-  "low_conversion",
-];
+const INTENT_CONVERSION_CATEGORY_ORDER =
+  ADMIN_PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER as AdminDashboardIntentConversionCategoryId[];
 
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
@@ -377,12 +354,6 @@ const safePercentage = (value: number, total: number) => {
   return roundPercent((value / total) * 100);
 };
 
-const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
-  if (activeDays <= 0) return 0;
-
-  return roundPercent((count / activeDays) * 30);
-};
-
 const scoreContribution = (metricId: keyof IntentConversionPairCounts, value: number) =>
   Math.min(
     PATIENT_INTENT_SCORE_CAPS[metricId],
@@ -417,38 +388,9 @@ const classifyIntentConversionPair = (
 const classifyPsychologistConversion = (
   signals: PsychologistConversionCounts,
 ): AdminDashboardIntentConversionCategoryId => {
-  const hasStrongWhatsappVolume =
-    signals.normalizedWhatsappClicks >= PROFILE_CONVERSION_WHATSAPP_HIGH_30D ||
-    (signals.whatsappClicks >= 2 &&
-      signals.normalizedWhatsappClicks >= PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D &&
-      typeof signals.whatsappConversionRate === "number" &&
-      signals.whatsappConversionRate >= PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT);
+  const categoryId = classifyAdminProfileConversionCategory(signals);
 
-  if (hasStrongWhatsappVolume) return "strong_conversion";
-  if (signals.activeDays < PROFILE_CONVERSION_MIN_ACTIVE_DAYS) return "low_conversion";
-
-  const hasLowWhatsappVolume =
-    signals.normalizedWhatsappClicks < PROFILE_CONVERSION_WHATSAPP_HIGH_30D;
-  const hasWeakWhatsappConversion =
-    signals.whatsappConversionRate === null ||
-    signals.whatsappConversionRate < PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT;
-
-  if (
-    signals.normalizedProfileViews >= PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D &&
-    hasLowWhatsappVolume &&
-    hasWeakWhatsappConversion
-  ) {
-    return "unconverted_traffic";
-  }
-
-  if (
-    signals.normalizedFavorites >= PROFILE_CONVERSION_FAVORITES_HIGH_30D &&
-    hasLowWhatsappVolume
-  ) {
-    return "unconverted_interest";
-  }
-
-  return "low_conversion";
+  return categoryId === "insufficient_data" ? "low_conversion" : categoryId;
 };
 
 const getProfileActiveDaysInRange = (
@@ -487,6 +429,9 @@ const buildPsychologistConversionMap = (
   events: PsychologistConversionEvents,
   range: AdminDashboardDateRange,
 ) => {
+  const exposureCounts = new Map(
+    events.exposureCounts.map((event) => [event.psychologist_id, event.count]),
+  );
   const profileViewCounts = countEventsByPsychologist(events.profileViews);
   const favoriteCounts = countEventsByPsychologist(events.favorites);
   const whatsappClickCounts = countEventsByPsychologist(events.whatsappClicks);
@@ -495,20 +440,21 @@ const buildPsychologistConversionMap = (
   for (const profile of profiles) {
     const psychologistId = profile.user_id;
     const activeDays = getProfileActiveDaysInRange(profile, range);
+    const exposureCount = exposureCounts.get(psychologistId) ?? 0;
     const profileViews = profileViewCounts.get(psychologistId) ?? 0;
     const favorites = favoriteCounts.get(psychologistId) ?? 0;
     const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
-    const whatsappConversionRate =
-      profileViews > 0 ? roundPercent((whatsappClicks / profileViews) * 100) : null;
+    const whatsappConversionRate = calculateAdminProfileConversionRatePercent({
+      exposureCount,
+      whatsappClicks,
+    });
 
     conversionByPsychologist.set(
       psychologistId,
       classifyPsychologistConversion({
         activeDays,
+        exposureCount,
         favorites,
-        normalizedFavorites: normalizeCountToThirtyDays(favorites, activeDays),
-        normalizedProfileViews: normalizeCountToThirtyDays(profileViews, activeDays),
-        normalizedWhatsappClicks: normalizeCountToThirtyDays(whatsappClicks, activeDays),
         profileViews,
         whatsappClicks,
         whatsappConversionRate,
@@ -649,7 +595,8 @@ const buildIntentConversionFlow = (params: {
       },
       {
         count: exploratoryLoss,
-        description: "Curiosos chegando a psicólogos em Tráfego Não Convertido ou Baixa Conversão.",
+        description:
+          "Curiosos chegando a psicólogos em Exposição Não Convertida ou Baixa Conversão.",
         id: "exploratory_loss",
         label: "Tráfego exploratório",
         percentage: safePercentage(exploratoryLoss, totalPairs),

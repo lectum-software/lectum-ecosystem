@@ -753,8 +753,8 @@ const psychologistConversionFallbackConfig: Record<
     label: "Interesse Não Convertido",
   },
   unconverted_traffic: {
-    description: "Psicólogos com muitas aberturas de perfil, mas poucos cliques no WhatsApp.",
-    label: "Tráfego Não Convertido",
+    description: "Psicólogos com muitas exposições, mas poucos cliques no WhatsApp.",
+    label: "Exposição Não Convertida",
   },
 };
 

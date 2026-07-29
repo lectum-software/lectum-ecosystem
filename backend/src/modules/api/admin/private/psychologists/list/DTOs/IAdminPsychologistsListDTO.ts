@@ -3,6 +3,10 @@ import type {
   AdminCommunityEngagementDiagnosis,
   AdminPsychologistCommunityEngagementDiagnosis,
 } from "@/utils/admin-community-engagement-diagnosis";
+import type {
+  AdminProfileConversionSource,
+  AdminProfileConversionThresholds,
+} from "@/utils/admin-profile-conversion";
 
 export const ADMIN_PSYCHOLOGISTS_LIST_SORTS = [
   "relevance",
@@ -112,23 +116,18 @@ export type AdminPsychologistsListProfileConversionSummary = {
   label: string;
   signals: {
     active_days: number;
+    community_post_views: number;
+    community_reply_views: number;
+    exposure_count: number;
     favorites: number;
-    normalized_favorites_30d: number;
-    normalized_profile_views_30d: number;
-    normalized_whatsapp_clicks_30d: number;
     profile_views: number;
+    qualified_video_views: number;
+    search_result_impressions: number;
     whatsapp_clicks: number;
     whatsapp_conversion_rate_percent: number | null;
   };
-  source: "profile_view_event+contact_request+psychologist_favorite";
-  thresholds: {
-    favorites_high_30d: number;
-    minimum_active_days: number;
-    profile_views_high_30d: number;
-    strong_conversion_rate_percent: number;
-    whatsapp_high_30d: number;
-    whatsapp_high_with_conversion_30d: number;
-  };
+  source: AdminProfileConversionSource;
+  thresholds: AdminProfileConversionThresholds;
 };
 
 export type AdminPsychologistsListEngagementSummary = Omit<
@@ -229,7 +228,7 @@ export type AdminPsychologistsListSummary = {
   pages: number;
   per_page: number;
   sort: AdminPsychologistsListSort;
-  source: "user+psychologist_profile+professional_subscription+public_ranking+profile_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
+  source: "user+psychologist_profile+professional_subscription+public_ranking+profile_view_event+profile_video_watch_session+page_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
 };
 
 export type IAdminPsychologistsListDTO = Request & {
