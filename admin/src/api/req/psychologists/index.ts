@@ -657,7 +657,7 @@ export type PsychologistsListProfileConversion = {
     | "Baixa Conversão"
     | "Dados Insuficientes"
     | "Interesse Não Convertido"
-    | "Conversão Forte"
+    | "Alta Conversão"
     | "Tráfego Não Convertido";
   signals: {
     active_days: number;

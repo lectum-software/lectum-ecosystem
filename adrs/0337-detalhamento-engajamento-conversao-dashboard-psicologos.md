@@ -49,7 +49,7 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
 
 ## Consequências
 
-- O Admin passa a enxergar se a conversão forte aparece entre psicólogos muito engajados, engajados,
+- O Admin passa a enxergar se a alta conversão aparece entre psicólogos muito engajados, engajados,
   pouco engajados ou sem engajamento, sem criar tracking novo, migration, seed, mock ou endpoint
   paralelo.
 - Links do dashboard continuam navegando para a lista com filtro composto real, agora mais granular.

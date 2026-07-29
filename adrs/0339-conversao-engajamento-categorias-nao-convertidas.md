@@ -10,20 +10,20 @@ TASK-89
 
 ## Contexto
 
-O dashboard Admin de psicólogos já separa a análise isolada de **Conversão** em **Conversão Forte**, **Interesse Não Convertido**, **Tráfego Não Convertido**, **Baixa Conversão** e **Dados Insuficientes**. Porém a matriz **Conversão x Engajamento** ainda condensava todo psicólogo sem conversão forte em uma única linha **Sem conversão forte**, escondendo se o problema era interesse não convertido, tráfego não convertido ou baixa conversão.
+O dashboard Admin de psicólogos já separa a análise isolada de **Conversão** em **Alta Conversão**, **Interesse Não Convertido**, **Tráfego Não Convertido**, **Baixa Conversão** e **Dados Insuficientes**. Porém a matriz **Conversão x Engajamento** ainda condensava todo psicólogo sem alta conversão em uma única linha **Sem alta conversão**, escondendo se o problema era interesse não convertido, tráfego não convertido ou baixa conversão.
 
 Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A execução usou `_product/tasks/PROTO-INVENTORY.md`, a referência local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuário.
 
 ## Decisão
 
 - Expandir os quadrantes de `profile_conversion_engagement` para cruzar quatro linhas de conversão com os quatro níveis de engajamento comunitário:
-  - **Conversão forte**;
+  - **Alta conversão**;
   - **Interesse Não Convertido**;
   - **Tráfego Não Convertido**;
   - **Baixa Conversão**.
 - Manter **Dados Insuficientes** fora do eixo composto, conforme ADR-0338; quando a classificação isolada de conversão for `insufficient_data`, o comparativo continua tratando o perfil na linha operacional **Baixa Conversão** para preservar cobertura sem reintroduzir a categoria na matriz.
 - Manter os cards da matriz como links reais para `/psicologos/lista?profile_conversion_engagement=...`, agora aceitando os novos filtros compostos `unconverted_interest_*` e `unconverted_traffic_*`.
-- Preservar o resumo lateral como taxa de **Conversão Forte** por nível de engajamento, porque ele responde a comparação observacional central sem afirmar causalidade.
+- Preservar o resumo lateral como taxa de **Alta Conversão** por nível de engajamento, porque ele responde a comparação observacional central sem afirmar causalidade.
 
 ## Consequências
 

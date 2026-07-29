@@ -18,7 +18,7 @@ A classificacao deve respeitar o filtro de periodo do dashboard e usar somente s
 
 - Adicionar ao contrato do dashboard Admin de psicologos um bloco agregado `profile_conversion`.
 - Classificar cada psicologo ativo no fim da janela selecionada em uma das categorias:
-  - **Conversão Forte**;
+  - **Alta Conversão**;
   - **Trafego Nao Convertido**;
   - **Interesse Nao Convertido**;
   - **Baixa Conversão**;
@@ -30,11 +30,11 @@ A classificacao deve respeitar o filtro de periodo do dashboard e usar somente s
 
 As metricas sao calculadas dentro da janela temporal selecionada e normalizadas para 30 dias pelo numero de dias em que o perfil estava ativo dentro da janela.
 
-- **Conversão Forte**: WhatsApp e o sinal mais forte. Entra quando ha pelo menos 5 cliques normalizados/30d, ou pelo menos 3 cliques normalizados/30d com 2+ cliques reais e taxa WhatsApp/perfil de 5% ou mais.
+- **Alta Conversão**: WhatsApp e o sinal mais forte. Entra quando ha pelo menos 5 cliques normalizados/30d, ou pelo menos 3 cliques normalizados/30d com 2+ cliques reais e taxa WhatsApp/perfil de 5% ou mais.
 - **Trafego Nao Convertido**: 60+ aberturas de perfil normalizadas/30d, WhatsApp abaixo do corte forte e conversao WhatsApp/perfil abaixo de 5% ou sem base de perfil.
 - **Interesse Nao Convertido**: 5+ favoritos normalizados/30d e WhatsApp abaixo do corte forte.
 - **Baixa Conversão**: abaixo dos cortes de WhatsApp, perfil e favoritos.
-- **Dados Insuficientes**: menos de 7 dias ativos dentro da janela, salvo quando o volume de WhatsApp ja caracteriza Conversão Forte.
+- **Dados Insuficientes**: menos de 7 dias ativos dentro da janela, salvo quando o volume de WhatsApp ja caracteriza Alta Conversão.
 
 ## Criterios de aceite
 
@@ -62,7 +62,7 @@ As metricas sao calculadas dentro da janela temporal selecionada e normalizadas 
 - Servidor local: backend recompilado reiniciado em `localhost:3001`; Admin reiniciado em `localhost:3002`.
 - HTTP local `GET http://localhost:3002/psicologos`: `200 OK`.
 - Bundle gerado em `admin/.next/static/chunks/app/(admin)/psicologos` contem o bloco de Conversão e as categorias, confirmando que a porta 3002 esta servindo build com a alteracao.
-- Refinamento visual de Conversão em 2026-07-25 removeu o texto introdutorio, contadores agregados, totais por categoria e faixa tecnica dos cortes; a legenda passou a ficar em duas colunas no desktop, com Conversão Forte ao lado de Interesse Nao Convertido, Trafego Nao Convertido ao lado de Baixa Conversão e Dados Insuficientes ocupando linha propria; o bloco tambem ganhou filtro por plano (Todos, Gratuitos, Assinantes e Cortesia) com dados reais por segmento.
+- Refinamento visual de Conversão em 2026-07-25 removeu o texto introdutorio, contadores agregados, totais por categoria e faixa tecnica dos cortes; a legenda passou a ficar em duas colunas no desktop, com Alta Conversão ao lado de Interesse Nao Convertido, Trafego Nao Convertido ao lado de Baixa Conversão e Dados Insuficientes ocupando linha propria; o bloco tambem ganhou filtro por plano (Todos, Gratuitos, Assinantes e Cortesia) com dados reais por segmento.
 - Refinamento de UI solicitado em 2026-07-25 validado com `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke local de `buildPsychologistsDashboard({ period: "all" })` confirmando ordem/copies e `plan_segments.*.profile_conversion`, bundle com `profile-conversion-plan-segment` e HTTP local `GET http://localhost:3002/psicologos` retornando 200.
 - Refinamento compacto solicitado em 2026-07-26: a legenda de Conversão deixou de exibir a linha `N psicologo(s)` e passou a reunir quantidade e taxa no topo do card, no formato `1 (6,7%)`, com o percentual em menor peso textual. Validado com `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e HTTP local `GET http://localhost:3002/psicologos` retornando 200. Builder/Quick Copy nao estava exposto como ferramenta no ambiente; a alteracao usou a referencia local `Admin | Psicologos - Dashboard` e a captura fornecida pelo usuario.
 
@@ -131,3 +131,33 @@ As metricas sao calculadas dentro da janela temporal selecionada e normalizadas 
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - HTTP local: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?profile_conversion_engagement=strong_conversion_very_engaged` retornaram 200.
 - Validação estática do build: `admin/.next/static` e `admin/.next/server` não contêm os identificadores e copies anteriores da leitura de resultado dos psicólogos.
+
+
+## Ajuste pós-feedback 2026-07-29 - Alta Conversão
+
+- Pedido do usuário: renomear a categoria exibida para **Alta Conversão** em todos os locais do painel Admin.
+- Backend Admin: labels e descrições retornados por dashboard, lista, detalhe de estatísticas do psicólogo, engajamento e fluxo cruzado de intenção/conversão passaram a exibir **Alta Conversão**.
+- Frontend Admin: filtros, tags, matriz **Conversão x Engajamento**, resumo observacional e type unions passaram a exibir **Alta Conversão** ou **Alta conversão** conforme contexto textual.
+- O identificador interno `strong_conversion` permaneceu inalterado por compatibilidade de contrato, URL e agregados; não houve mudança de regra de classificação.
+- Nenhuma alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` não se aplica.
+- ADR atualizado: `adrs/0343-vocabulario-conversao-admin.md`.
+
+### Critérios complementares
+
+- [x] A UI Admin exibe **Alta Conversão** no badge do detalhe do psicólogo quando a categoria `strong_conversion` vem da API.
+- [x] Dashboard, lista, filtros e matriz de conversão/engajamento exibem **Alta Conversão** ou **Alta conversão** no contexto correto.
+- [x] Backend retorna a nova label em todos os contratos Admin que expõem a categoria `strong_conversion`.
+- [x] O ID interno `strong_conversion` e os links profundos existentes foram preservados.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+
+### Validação complementar
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/dashboard/summary/use-cases/services.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- HTTP local: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?profile_conversion=strong_conversion` e `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` retornaram 200.
+- Validação estática: `admin/src`, `backend/src`, `_product/tasks`, `adrs`, `admin/.next/static` e `admin/.next/server` não contêm a copy anterior da categoria `strong_conversion`.

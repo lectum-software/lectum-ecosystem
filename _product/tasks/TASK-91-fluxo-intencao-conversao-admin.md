@@ -14,7 +14,7 @@
 
 ## Contexto
 
-Após a padronização das leituras de **Intenção** dos pacientes e **Conversão** dos psicólogos, o produto precisa que os dois lados conversem visualmente no Admin. A leitura atual existe em blocos separados: pacientes são classificados como frios, curiosos, interessados/objetivos e qualificados; psicólogos são classificados por conversão forte, interesse não convertido, tráfego não convertido e baixa conversão.
+Após a padronização das leituras de **Intenção** dos pacientes e **Conversão** dos psicólogos, o produto precisa que os dois lados conversem visualmente no Admin. A leitura atual existe em blocos separados: pacientes são classificados como frios, curiosos, interessados/objetivos e qualificados; psicólogos são classificados por alta conversão, interesse não convertido, tráfego não convertido e baixa conversão.
 
 Em conversa de produto, foi decidido que uma tabela limitaria a interpretação. A experiência deve usar um visual mais lúdico e intuitivo, com fluxo/Sankey em cards, mostrando como os pares reais paciente-psicólogo caminham da intenção do paciente para a categoria de conversão do psicólogo.
 

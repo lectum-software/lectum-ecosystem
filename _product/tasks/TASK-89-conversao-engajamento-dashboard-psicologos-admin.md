@@ -17,9 +17,9 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 
 - Estender o contrato real `GET /api/admin/private/psychologists/dashboard` com `profile_conversion_engagement`.
 - Calcular quadrantes agregados por psicologo ativo no fim do periodo selecionado:
-  - **Conversão forte + alto engajamento**;
+  - **Alta conversão + alto engajamento**;
   - **Alto engajamento + baixa conversão**;
-  - **Conversão forte + baixo engajamento**;
+  - **Alta conversão + baixo engajamento**;
   - **Baixa conversão + baixo engajamento**;
   - **Dados insuficientes** para perfis com menos de 7 dias ativos sem sinal forte.
 - Usar o mesmo filtro por periodo e o mesmo filtro por plano dos blocos analiticos do dashboard: **Todos**, **Assinantes**, **Gratuitos** e **Cortesia**.
@@ -103,7 +103,7 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 
 - Pedido do usuario: detalhar o bloco **Engajamento** entre **Muito engajado**, **Engajado**, **Pouco engajado** e **Dados insuficientes**; aplicar o mesmo detalhamento no bloco **Conversão x Engajamento**.
 - Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `profile_conversion_engagement` com totais e comparacoes separados para `very_engaged`, `engaged` e `low_engaged`, mantendo os agregados `high_engagement` e `low_engagement` por compatibilidade.
-- Backend Admin: os quadrantes do dashboard foram expandidos para seis recortes reais de conversão forte/sem conversão forte cruzados com **muito engajado**, **engajado** e **pouco engajado**, mais **Dados insuficientes**.
+- Backend Admin: os quadrantes do dashboard foram expandidos para seis recortes reais de alta conversão/sem alta conversão cruzados com **muito engajado**, **engajado** e **pouco engajado**, mais **Dados insuficientes**.
 - Lista Admin: o filtro composto `profile_conversion_engagement` passou a aceitar os novos ids granulares para manter os links do dashboard para `/psicologos/lista`.
 - Frontend Admin: o donut de **Engajamento** exibe quatro categorias: **Muito engajado**, **Engajado**, **Pouco engajado** e **Dados insuficientes**.
 - Frontend Admin: a matriz **Conversão x Engajamento** agora tem tres colunas de engajamento e card separado para **Dados insuficientes**, preservando layout mobile-first e links para lista.
@@ -137,7 +137,7 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - Pedido do usuario: assim como pacientes exibem a categoria **Sem engajamento**, psicologos tambem precisam separar aqueles que nunca engajaram.
 - Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `no_engagement` em `profile_conversion_engagement.comparison` e `no_engagement_psychologists` em `totals`, separando psicologos com 0 interacoes reais em comunidades no periodo.
 - Backend Admin: **Pouco engajado** passou a representar psicologos com ao menos 1 interacao real, mas abaixo do corte normalizado de **Engajado**; **Sem engajamento** representa 0 interacoes, preservando **Dados insuficientes** para perfis com menos de 7 dias ativos sem sinal forte.
-- Backend Admin: os quadrantes do dashboard foram expandidos para oito recortes reais de conversão forte/sem conversão forte cruzados com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mais **Dados insuficientes**.
+- Backend Admin: os quadrantes do dashboard foram expandidos para oito recortes reais de alta conversão/sem alta conversão cruzados com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**, mais **Dados insuficientes**.
 - Lista Admin: o filtro composto `profile_conversion_engagement` passou a aceitar `strong_conversion_no_engagement` e `low_conversion_no_engagement`, mantendo os links reais do dashboard para `/psicologos/lista`.
 - Lista Admin: a coluna **Engajamento** passa a exibir **Sem engajamento** quando o psicologo tem 0 interacoes reais em comunidades, evitando que os links do dashboard cheguem a uma lista com badge **Sem base** para esses casos.
 - Frontend Admin: o donut de **Engajamento** e a matriz **Conversão x Engajamento** exibem a nova categoria **Sem engajamento**, preservando layout mobile-first e links para lista.
@@ -200,7 +200,7 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - Pedido do usuario: em psicologos, remover **Dados insuficientes** como opcao de **Engajamento**; se nao houver engajamento no periodo, o psicologo deve entrar em **Sem engajamento**.
 - Backend Admin: `profile_conversion_engagement` do dashboard nao retorna mais o quadrante `insufficient_data`; perfis com 0 interacoes reais em comunidades entram em `*_no_engagement`, mesmo quando possuem menos de 7 dias ativos.
 - Backend Admin: `insufficient_data_psychologists` permanece no payload de totais apenas por compatibilidade e fica em 0 nessa leitura composta; a categoria **Dados Insuficientes** continua existindo somente na analise isolada de **Conversão**.
-- Lista Admin: o filtro composto `profile_conversion_engagement` removeu `insufficient_data` das opcoes e a resolucao backend da lista passou a devolver sempre um dos oito cruzamentos reais de conversão forte/sem conversão forte x engajamento.
+- Lista Admin: o filtro composto `profile_conversion_engagement` removeu `insufficient_data` das opcoes e a resolucao backend da lista passou a devolver sempre um dos oito cruzamentos reais de alta conversão/sem alta conversão x engajamento.
 - Frontend Admin: o donut de **Engajamento** e a matriz **Conversão x Engajamento** exibem apenas **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**; o card separado de **Dados insuficientes** foi removido.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
@@ -231,10 +231,10 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 ## Execucao complementar: categorias nao convertidas na matriz Conversão x Engajamento (2026-07-28)
 
 - Pedido do usuario: em **Conversão x Engajamento**, adicionar **Interesse Nao Convertido** e **Trafego Nao Convertido** na parte de conversão.
-- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar 16 quadrantes em `profile_conversion_engagement`, cruzando **Conversão forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Conversão** com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar 16 quadrantes em `profile_conversion_engagement`, cruzando **Alta conversão**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Conversão** com **Muito engajado**, **Engajado**, **Pouco engajado** e **Sem engajamento**.
 - Backend Admin: a classificacao isolada `insufficient_data` continua fora do eixo composto, conforme ADR-0338, e permanece mapeada operacionalmente para **Baixa Conversão** na matriz para nao reintroduzir **Dados Insuficientes** em `profile_conversion_engagement`.
 - Lista Admin: o filtro composto `profile_conversion_engagement` passou a aceitar os novos recortes `unconverted_interest_*` e `unconverted_traffic_*`, mantendo links reais da matriz para `/psicologos/lista`.
-- Frontend Admin: a matriz em `/psicologos` agora exibe as linhas **Conversão forte**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Conversão**, com layout mobile-first e grade desktop compacta.
+- Frontend Admin: a matriz em `/psicologos` agora exibe as linhas **Alta conversão**, **Interesse Nao Convertido**, **Trafego Nao Convertido** e **Baixa Conversão**, com layout mobile-first e grade desktop compacta.
 - Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
 - ADR criado: `adrs/0339-conversao-engajamento-categorias-nao-convertidas.md`.

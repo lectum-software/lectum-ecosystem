@@ -105,7 +105,7 @@ const BUSINESS_PROFILE_CONVERSION_CATEGORY_CONFIG = {
   },
   strong_conversion: {
     description: "Alto índice de cliques no WhatsApp, o sinal mais forte de resultado.",
-    label: "Conversão Forte",
+    label: "Alta Conversão",
   },
   unconverted_interest: {
     description: "Muitos favoritos, mas poucos cliques no WhatsApp.",

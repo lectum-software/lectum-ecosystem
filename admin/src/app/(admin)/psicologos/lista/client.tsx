@@ -171,22 +171,22 @@ const PROFILE_CONVERSION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = 
   {
     count: 0,
     id: "strong_conversion_very_engaged",
-    label: "Conversão forte + muito engajado",
+    label: "Alta conversão + muito engajado",
   },
   {
     count: 0,
     id: "strong_conversion_engaged",
-    label: "Conversão forte + engajado",
+    label: "Alta conversão + engajado",
   },
   {
     count: 0,
     id: "strong_conversion_low_engaged",
-    label: "Conversão forte + pouco engajado",
+    label: "Alta conversão + pouco engajado",
   },
   {
     count: 0,
     id: "strong_conversion_no_engagement",
-    label: "Conversão forte + sem engajamento",
+    label: "Alta conversão + sem engajamento",
   },
   {
     count: 0,
@@ -251,7 +251,7 @@ const PROFILE_CONVERSION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = 
 ];
 
 const PROFILE_CONVERSION_FILTER_OPTIONS: PsychologistsListOption[] = [
-  { count: 0, id: "strong_conversion", label: "Conversão Forte" },
+  { count: 0, id: "strong_conversion", label: "Alta Conversão" },
   { count: 0, id: "unconverted_traffic", label: "Tráfego Não Convertido" },
   { count: 0, id: "unconverted_interest", label: "Interesse Não Convertido" },
   { count: 0, id: "low_conversion", label: "Baixa Conversão" },

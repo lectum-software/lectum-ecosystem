@@ -20,7 +20,7 @@ A resposta de `GET /api/admin/private/psychologists` passa a incluir dois objeto
 - `profile_conversion` classifica o profissional em `strong_profile_conversion`, `unconverted_traffic`, `unconverted_interest`, `low_profile_conversion` ou `insufficient_data`, usando sinais reais acumulados ate a consulta e normalizados para 30 dias conforme dias ativos desde o cadastro.
 - `engagement` classifica o profissional em `muito_ativo`, `ativo`, `pouco_ativo` ou `sem_base`, reutilizando o diagnostico canonico de engajamento comunitario para a contagem normalizada de posts, respostas e votos.
 - A lista Admin renderiza as colunas **Conversão** e **Engajamento** no desktop e os mesmos rótulos nos cards mobile-first.
-- O endpoint tambem aceita os parametros opcionais `profile_conversion`, `engagement` e `profile_conversion_engagement` para recorte por URL/modal, aplicando-os somente depois de calcular as classificacoes reais de cada psicologo. O recorte `profile_conversion_engagement` combina conversão forte/baixa com engajamento alto/baixo sem persistir dado derivado.
+- O endpoint tambem aceita os parametros opcionais `profile_conversion`, `engagement` e `profile_conversion_engagement` para recorte por URL/modal, aplicando-os somente depois de calcular as classificacoes reais de cada psicologo. O recorte `profile_conversion_engagement` combina alta conversão/baixa com engajamento alto/baixo sem persistir dado derivado.
 
 ## Consequencias
 

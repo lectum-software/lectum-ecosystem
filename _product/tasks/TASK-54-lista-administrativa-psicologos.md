@@ -475,7 +475,7 @@ Frontend esperado:
 
 - [x] A tabela desktop exibe as novas colunas **Conversão** e **Engajamento**.
 - [x] Os cards mobile-first exibem **Conversão** e **Engajamento** sem usar `<img>` cru.
-- [x] **Conversão** usa categorias reais da lista: Conversão Forte, Trafego Nao Convertido, Interesse Nao Convertido, Baixa Conversão e Dados Insuficientes.
+- [x] **Conversão** usa categorias reais da lista: Alta Conversão, Trafego Nao Convertido, Interesse Nao Convertido, Baixa Conversão e Dados Insuficientes.
 - [x] **Engajamento** usa categorias reais da lista: Muito ativo, Ativo, Pouco ativo e Sem base.
 - [x] Os valores sao calculados no backend a partir de sinais reais, sem mock ou endpoint simulado.
 - [x] A UI permanece mobile-first em base aproximada de 390px e sem overflow horizontal de viewport.
@@ -605,7 +605,7 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless/CDP com admin temporario real removido ao final:
-  - filtro ativo em `/psicologos/lista?profile_conversion_engagement=strong_conversion_high_engagement`: tag **Quadrante: Conversão forte + alto engajamento** visivel com botao **Remover filtro Quadrante...**, sem faixa branca nem texto visivel **Filtros aplicados**;
+  - filtro ativo em `/psicologos/lista?profile_conversion_engagement=strong_conversion_high_engagement`: tag **Quadrante: Alta conversão + alto engajamento** visivel com botao **Remover filtro Quadrante...**, sem faixa branca nem texto visivel **Filtros aplicados**;
   - apos clicar no **X**, a URL removeu `profile_conversion_engagement`, a contagem voltou para `0` e nenhum resumo/aviso de filtros ficou visivel;
   - sem filtros em `/psicologos/lista`: nao ha texto **Filtros aplicados**, nao ha mensagem **Nenhum filtro aplicado** e nao ha faixa branca;
   - desktop `1440x1000` e mobile base `390x844`: sem overflow horizontal de viewport.

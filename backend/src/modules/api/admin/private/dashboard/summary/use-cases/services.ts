@@ -148,7 +148,7 @@ const INTENT_CONVERSION_CATEGORY_CONFIG = {
   },
   strong_conversion: {
     description: "Psicólogos com alto índice de cliques no WhatsApp.",
-    label: "Conversão Forte",
+    label: "Alta Conversão",
   },
   unconverted_interest: {
     description: "Psicólogos muito favoritados, mas com poucos cliques no WhatsApp.",
@@ -634,7 +634,7 @@ const buildIntentConversionFlow = (params: {
     insights: [
       {
         count: healthyAbsorption,
-        description: "Qualificados que chegaram a psicólogos classificados em Conversão Forte.",
+        description: "Qualificados que chegaram a psicólogos classificados em Alta Conversão.",
         id: "healthy_absorption",
         label: "Absorção saudável",
         percentage: safePercentage(healthyAbsorption, totalPairs),
@@ -642,7 +642,7 @@ const buildIntentConversionFlow = (params: {
       {
         count: retainedIntention,
         description:
-          "Interessados ou Qualificados que chegaram a psicólogos sem Conversão Forte no período.",
+          "Interessados ou Qualificados que chegaram a psicólogos sem Alta Conversão no período.",
         id: "retained_intention",
         label: "Intenção represada",
         percentage: safePercentage(retainedIntention, totalPairs),

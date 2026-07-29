@@ -30,6 +30,12 @@ O bloco **Comparativo de oferta e demanda** permanece com o vocabulário de dema
 - O Admin evita a ambiguidade entre conversão de assinatura e conversão do perfil.
 - Não houve package novo, mock, seed, endpoint paralelo, migration ou alteração em `backend/prisma/schema.prisma`.
 
+## Atualização 2026-07-29 - Alta Conversão
+
+A categoria de maior resultado passa a ser exibida no Admin como **Alta Conversão**, substituindo a copy anterior da categoria `strong_conversion` em badges, filtros, matriz **Conversão x Engajamento**, dashboard, detalhe do psicólogo e descrições operacionais.
+
+O identificador interno `strong_conversion` permanece inalterado para manter compatibilidade de contratos, URLs e agregações já publicados; a mudança é de vocabulário de produto, não de regra de cálculo.
+
 ## Validação
 
 - `pnpm --dir backend check`

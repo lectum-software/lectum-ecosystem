@@ -335,7 +335,7 @@ const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS: {
 }[] = [
   {
     id: "strong_conversion",
-    label: "Conversão Forte",
+    label: "Alta Conversão",
   },
   {
     id: "unconverted_interest",
@@ -2846,7 +2846,7 @@ const DashboardProfileConversionEngagementCard = ({
                   <span className="font-black text-foreground">
                     {formatRateDifference(rateDifference)}
                   </span>{" "}
-                  na taxa de conversão forte versus pouco ou sem engajamento no período.
+                  na taxa de alta conversão versus pouco ou sem engajamento no período.
                 </>
               ) : (
                 "Impacto observado: ainda não há base suficiente para comparar a conversão entre muito engajados, engajados e pouco ou sem engajamento no período."

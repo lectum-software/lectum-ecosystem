@@ -22,11 +22,11 @@ Adicionar ao dashboard Admin de psicologos um bloco **Conversão** calculado ind
 
 A V1 usa cinco categorias:
 
-1. **Conversão Forte** - WhatsApp e o sinal mais forte e prevalece sobre as outras metricas.
+1. **Alta Conversão** - WhatsApp e o sinal mais forte e prevalece sobre as outras metricas.
 2. **Interesse Nao Convertido** - muitos favoritos, mas poucos cliques no WhatsApp.
 3. **Trafego Nao Convertido** - muitas aberturas de perfil, mas poucos cliques no WhatsApp.
 4. **Baixa Conversão** - poucos cliques no WhatsApp, poucas aberturas de perfil e poucos favoritos.
-5. **Dados Insuficientes** - perfil com janela ativa curta demais para leitura estavel, salvo quando WhatsApp ja indica Conversão Forte.
+5. **Dados Insuficientes** - perfil com janela ativa curta demais para leitura estavel, salvo quando WhatsApp ja indica Alta Conversão.
 
 Os cortes sao normalizados para 30 dias a partir dos dias ativos do perfil dentro da janela selecionada:
 
@@ -34,9 +34,9 @@ Os cortes sao normalizados para 30 dias a partir dos dias ativos do perfil dentr
 - WhatsApp forte com conversao: 3+ cliques/30d, 2+ cliques reais e taxa WhatsApp/perfil >= 5%;
 - Trafego alto: 60+ aberturas de perfil/30d;
 - Interesse alto: 5+ favoritos/30d;
-- Dados insuficientes: menos de 7 dias ativos dentro da janela, exceto quando WhatsApp ja caracteriza Conversão Forte.
+- Dados insuficientes: menos de 7 dias ativos dentro da janela, exceto quando WhatsApp ja caracteriza Alta Conversão.
 
-A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. A legenda fica em duas colunas no desktop, mantendo leitura mobile-first em uma coluna; a ordem visual e Conversão Forte ao lado de Interesse Nao Convertido, Trafego Nao Convertido ao lado de Baixa Conversão e Dados Insuficientes em linha propria. O bloco oferece filtro por plano (Todos, Gratuitos, Assinantes e Cortesia), calculado no backend por segmento para evitar filtragem visual sem base real. Para manter o bloco mais executivo, a interface nao exibe texto introdutorio, contadores agregados, totais de eventos por categoria nem a faixa tecnica dos cortes; em cada card de categoria, a quantidade aparece junto ao percentual no formato `1 (6,7%)`, com a taxa em menor peso visual. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
+A UI mostra grafico de pizza, quantidades e percentuais de psicologos em cada categoria logo abaixo da visao geral e antes de **Origem do trafego**. A legenda fica em duas colunas no desktop, mantendo leitura mobile-first em uma coluna; a ordem visual e Alta Conversão ao lado de Interesse Nao Convertido, Trafego Nao Convertido ao lado de Baixa Conversão e Dados Insuficientes em linha propria. O bloco oferece filtro por plano (Todos, Gratuitos, Assinantes e Cortesia), calculado no backend por segmento para evitar filtragem visual sem base real. Para manter o bloco mais executivo, a interface nao exibe texto introdutorio, contadores agregados, totais de eventos por categoria nem a faixa tecnica dos cortes; em cada card de categoria, a quantidade aparece junto ao percentual no formato `1 (6,7%)`, com a taxa em menor peso visual. Nao ha lista individual, ranking ou exportacao por profissional nesta entrega.
 
 Complemento de 2026-07-25: a aba individual **Estatisticas** do psicologo tambem pode exibir a mesma classificacao como tag operacional ao lado do titulo **Estatisticas de negocio**. O calculo permanece privado/Admin, usa o mesmo periodo selecionado e as mesmas fontes reais (`profile_view_event`, `contact_request` e `psychologist_favorite`). A tag individual nao muda a decisao original: nao e publica, nao cria ranking, nao exporta lista punitiva e serve apenas para contextualizar o detalhe do psicologo que o Admin ja abriu.
 

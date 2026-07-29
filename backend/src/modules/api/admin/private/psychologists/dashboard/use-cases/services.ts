@@ -134,7 +134,7 @@ const PROFILE_CONVERSION_CATEGORY_CONFIG = {
   },
   strong_conversion: {
     description: "Psic\u00f3logos com alto \u00edndice de cliques no WhatsApp.",
-    label: "Conversão Forte",
+    label: "Alta Conversão",
   },
   unconverted_interest: {
     description: "Psic\u00f3logos muito favoritados, mas com poucos cliques no WhatsApp.",
@@ -1556,7 +1556,7 @@ const buildProfileConversionEngagementResults = (params: {
   return {
     comparison,
     description:
-      "Rela\u00e7\u00e3o observacional entre envolvimento real em comunidades e Conversão Forte no per\u00edodo selecionado; n\u00e3o indica causalidade, ranking ou puni\u00e7\u00e3o.",
+      "Rela\u00e7\u00e3o observacional entre envolvimento real em comunidades e Alta Conversão no per\u00edodo selecionado; n\u00e3o indica causalidade, ranking ou puni\u00e7\u00e3o.",
     quadrants: PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER.flatMap((profileConversionCategoryId) =>
       PROFILE_CONVERSION_ENGAGEMENT_LEVEL_ORDER.map((engagementLevel) => {
         const id = buildProfileConversionEngagementQuadrantId(

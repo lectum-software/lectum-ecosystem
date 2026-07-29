@@ -42,7 +42,7 @@ Builder/Quick Copy não estava exposto como ferramenta callable neste ambiente. 
 
 ## Consequências
 
-- O Dashboard passa a mostrar, em uma única leitura, se a demanda qualificada está sendo absorvida por psicólogos com conversão forte ou retida em categorias não convertidas.
+- O Dashboard passa a mostrar, em uma única leitura, se a demanda qualificada está sendo absorvida por psicólogos com alta conversão ou retida em categorias não convertidas.
 - A página individual do psicólogo passa a explicar a qualidade do tráfego e não apenas o volume por origem.
 - A atribuição de WhatsApp continua conservadora: o total vem de `contact_request`; a origem só é marcada quando há vínculo first-party suficiente.
 - O Admin evita inferir origem por aproximação quando não há visitor/session/user compartilhado.

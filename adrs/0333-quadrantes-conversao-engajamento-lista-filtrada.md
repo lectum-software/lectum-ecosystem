@@ -10,7 +10,7 @@ TASK-89
 
 ## Contexto
 
-O bloco **Conversão x Engajamento** do dashboard Admin de psicólogos exibia quatro quadrantes agregados, mas não permitia ao Admin chegar rapidamente à lista operacional de profissionais daquele recorte. A lista Admin já possui filtros reais de conversão e engajamento por profissional, porém os quadrantes do dashboard usam uma regra composta: conversão forte versus sem conversão forte e alto versus baixo engajamento.
+O bloco **Conversão x Engajamento** do dashboard Admin de psicólogos exibia quatro quadrantes agregados, mas não permitia ao Admin chegar rapidamente à lista operacional de profissionais daquele recorte. A lista Admin já possui filtros reais de conversão e engajamento por profissional, porém os quadrantes do dashboard usam uma regra composta: alta conversão versus sem alta conversão e alto versus baixo engajamento.
 
 ## Decisão
 

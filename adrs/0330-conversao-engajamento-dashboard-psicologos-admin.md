@@ -18,11 +18,11 @@ Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente. A e
 
 - Estender o contrato existente `GET /api/admin/private/psychologists/dashboard` com o objeto `profile_conversion_engagement`, sem endpoint paralelo.
 - Calcular a matriz por psicologo ativo no fim do periodo selecionado e reaproveitar a mesma base de segmentos por plano: **Todos**, **Assinantes**, **Gratuitos** e **Cortesia**.
-- Considerar **conversão forte** quando a classificacao canônica de conversão do dashboard for `strong_profile_conversion`.
+- Considerar **alta conversão** quando a classificacao canônica de conversão do dashboard for `strong_profile_conversion`.
 - Considerar **alto engajamento** quando posts publicados, respostas e votos/reacoes do psicologo em comunidades atingirem pelo menos 6 interacoes normalizadas para 30 dias, reaproveitando `diagnoseAdminCommunityEngagement`.
-- Tratar como **Dados Insuficientes** perfis com menos de 7 dias ativos no periodo quando nao houver conversão forte nem alto engajamento.
+- Tratar como **Dados Insuficientes** perfis com menos de 7 dias ativos no periodo quando nao houver alta conversão nem alto engajamento.
 - Exibir a leitura como matriz agregada mobile-first logo abaixo do bloco **Conversão** e antes de **Origem do trafego para psicologos**.
-- Incluir comparacao agregada da taxa de conversão forte entre psicologos engajados e pouco engajados, com copy objetiva de **impacto observado** que destaca a diferenca em pontos percentuais sem tratar a relacao como causal.
+- Incluir comparacao agregada da taxa de alta conversão entre psicologos engajados e pouco engajados, com copy objetiva de **impacto observado** que destaca a diferenca em pontos percentuais sem tratar a relacao como causal.
 
 ## Consequencias
 
