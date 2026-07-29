@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 97 tasks: `TASK-00` a `TASK-91`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 98 tasks: `TASK-00` a `TASK-92`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -172,6 +172,7 @@ ou cortesia manual.
 | 89 | [TASK-89 - Comparativo Conversão x Engajamento no dashboard Admin de psicologos](TASK-89-conversao-engajamento-dashboard-psicologos-admin.md) | Completed | 53, 72, 84, 88 |
 | 90 | [TASK-90 - Engajamento ponderado no Admin](TASK-90-engajamento-ponderado-admin.md) | Completed | 53, 54, 60, 89 |
 | 91 | [TASK-91 - Fluxo de intenção e conversão cruzada no Admin](TASK-91-fluxo-intencao-conversao-admin.md) | Completed | 48, 57, 60, 84, 89, 90 |
+| 92 | [TASK-92 - Simplificação visual do fluxo de intenção e conversão no Dashboard Admin](TASK-92-simplificacao-fluxo-intencao-conversao-admin.md) | Completed | 91 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -282,6 +283,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 42. [TASK-89 - Comparativo Conversão x Engajamento no dashboard Admin de psicologos](TASK-89-conversao-engajamento-dashboard-psicologos-admin.md)
 43. [TASK-90 - Engajamento ponderado no Admin](TASK-90-engajamento-ponderado-admin.md)
 44. [TASK-91 - Fluxo de intenção e conversão cruzada no Admin](TASK-91-fluxo-intencao-conversao-admin.md)
+45. [TASK-92 - Simplificação visual do fluxo de intenção e conversão no Dashboard Admin](TASK-92-simplificacao-fluxo-intencao-conversao-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

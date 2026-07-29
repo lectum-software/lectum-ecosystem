@@ -3,20 +3,17 @@
 import {
   Activity,
   AlertTriangle,
-  ArrowRight,
   CalendarDays,
   ChevronDown,
   Flag,
   GitFork,
   type LucideIcon,
   RefreshCw,
-  Sparkles,
-  Target,
   UserRoundCheck,
   Users,
   WalletCards,
 } from "lucide-react";
-import { type FocusEventHandler, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { type FocusEventHandler, useEffect, useMemo, useState } from "react";
 import { useAdminDashboardSummary } from "@/api/callers/dashboard";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -24,7 +21,6 @@ import type {
   DashboardDailyPoint,
   DashboardIntentConversionCategoryId,
   DashboardIntentConversionFlow as DashboardIntentConversionFlowData,
-  DashboardIntentConversionFlowItem,
   DashboardIntentConversionIntentId,
   DashboardMetric,
   DashboardPendingReport,
@@ -48,10 +44,25 @@ const SKELETON_KEYS = ["sessions", "revenue", "patients", "psychologists", "repo
 
 type DashboardPeriodValue = DashboardPeriodPreset | "custom";
 type DashboardDateRange = Required<Pick<DashboardSummaryQuery, "from" | "to">>;
-type DashboardIntentConversionVisualExampleFlow = Pick<
-  DashboardIntentConversionFlowItem,
-  "conversion_id" | "count" | "intent_id"
->;
+type DashboardIntentConversionDisplayIntentId = DashboardIntentConversionIntentId | "cold";
+type DashboardIntentConversionDisplayNode<TId extends string> = {
+  count: number;
+  description: string;
+  id: TId;
+  label: string;
+  percentage: number;
+};
+type DashboardIntentConversionMatrixFlow = {
+  conversion_id: DashboardIntentConversionCategoryId;
+  conversion_index: number;
+  conversion_label: string;
+  count: number;
+  id: `${DashboardIntentConversionDisplayIntentId}_${DashboardIntentConversionCategoryId}`;
+  intent_id: DashboardIntentConversionDisplayIntentId;
+  intent_index: number;
+  intent_label: string;
+  percentage: number;
+};
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -166,135 +177,6 @@ const formatDashboardPercent = (value: number) =>
     maximumFractionDigits: 1,
     minimumFractionDigits: 0,
   })}%`;
-
-const LOCAL_DASHBOARD_VISUAL_EXAMPLE_HOSTS = new Set(["localhost", "127.0.0.1"]);
-const subscribeToDashboardVisualExampleSnapshot = () => () => undefined;
-const getLocalDashboardVisualExampleSnapshot = () =>
-  process.env.NODE_ENV === "development" &&
-  typeof window !== "undefined" &&
-  LOCAL_DASHBOARD_VISUAL_EXAMPLE_HOSTS.has(window.location.hostname);
-const getServerDashboardVisualExampleSnapshot = () => false;
-const useLocalDashboardVisualExampleEnabled = () =>
-  useSyncExternalStore(
-    subscribeToDashboardVisualExampleSnapshot,
-    getLocalDashboardVisualExampleSnapshot,
-    getServerDashboardVisualExampleSnapshot,
-  );
-
-const DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS = [
-  { conversion_id: "strong_conversion", count: 18, intent_id: "very_qualified" },
-  { conversion_id: "unconverted_interest", count: 14, intent_id: "objective" },
-  { conversion_id: "unconverted_traffic", count: 12, intent_id: "curious" },
-  { conversion_id: "strong_conversion", count: 10, intent_id: "objective" },
-  { conversion_id: "unconverted_interest", count: 8, intent_id: "very_qualified" },
-  { conversion_id: "low_conversion", count: 7, intent_id: "curious" },
-  { conversion_id: "unconverted_traffic", count: 6, intent_id: "objective" },
-  { conversion_id: "low_conversion", count: 5, intent_id: "very_qualified" },
-  { conversion_id: "strong_conversion", count: 4, intent_id: "curious" },
-] as const satisfies readonly DashboardIntentConversionVisualExampleFlow[];
-
-const dashboardIntentConversionVisualExampleCount = <TId extends string>(
-  id: TId,
-  counts: Map<TId, number>,
-) => counts.get(id) ?? 0;
-
-const dashboardIntentConversionVisualExamplePercentage = (count: number, total: number) =>
-  total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
-
-const hasIntentConversionFlowData = (flow: DashboardIntentConversionFlowData) =>
-  flow.total_pairs > 0 || flow.flows.some((item) => item.count > 0);
-
-const buildDashboardIntentConversionVisualExample = (
-  flow: DashboardIntentConversionFlowData,
-): DashboardIntentConversionFlowData => {
-  const totalPairs = DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.reduce(
-    (sum, item) => sum + item.count,
-    0,
-  );
-  const intentCounts = new Map<DashboardIntentConversionIntentId, number>();
-  const conversionCounts = new Map<DashboardIntentConversionCategoryId, number>();
-  const intentById = new Map(flow.intents.map((intent) => [intent.id, intent]));
-  const conversionById = new Map(
-    flow.psychologist_conversions.map((conversion) => [conversion.id, conversion]),
-  );
-
-  for (const item of DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS) {
-    intentCounts.set(item.intent_id, (intentCounts.get(item.intent_id) ?? 0) + item.count);
-    conversionCounts.set(
-      item.conversion_id,
-      (conversionCounts.get(item.conversion_id) ?? 0) + item.count,
-    );
-  }
-
-  const healthyAbsorption =
-    DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.find(
-      (item) => item.intent_id === "very_qualified" && item.conversion_id === "strong_conversion",
-    )?.count ?? 0;
-  const retainedIntention = DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.filter(
-    (item) => item.intent_id !== "curious" && item.conversion_id !== "strong_conversion",
-  ).reduce((sum, item) => sum + item.count, 0);
-  const exploratoryLoss = DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.filter(
-    (item) =>
-      item.intent_id === "curious" &&
-      (item.conversion_id === "low_conversion" || item.conversion_id === "unconverted_traffic"),
-  ).reduce((sum, item) => sum + item.count, 0);
-  const insightCounts = {
-    exploratory_loss: exploratoryLoss,
-    healthy_absorption: healthyAbsorption,
-    retained_intention: retainedIntention,
-  } satisfies Record<DashboardIntentConversionFlowData["insights"][number]["id"], number>;
-
-  return {
-    ...flow,
-    flows: DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.map((item) => ({
-      conversion_id: item.conversion_id,
-      conversion_label: conversionById.get(item.conversion_id)?.label ?? item.conversion_id,
-      conversion_percentage: dashboardIntentConversionVisualExamplePercentage(
-        item.count,
-        dashboardIntentConversionVisualExampleCount(item.conversion_id, conversionCounts),
-      ),
-      count: item.count,
-      id: `${item.intent_id}_${item.conversion_id}` as DashboardIntentConversionFlowItem["id"],
-      intent_id: item.intent_id,
-      intent_label: intentById.get(item.intent_id)?.label ?? item.intent_id,
-      intent_percentage: dashboardIntentConversionVisualExamplePercentage(
-        item.count,
-        dashboardIntentConversionVisualExampleCount(item.intent_id, intentCounts),
-      ),
-      percentage: dashboardIntentConversionVisualExamplePercentage(item.count, totalPairs),
-    })),
-    insights: flow.insights.map((insight) => {
-      const count = insightCounts[insight.id];
-
-      return {
-        ...insight,
-        count,
-        percentage: dashboardIntentConversionVisualExamplePercentage(count, totalPairs),
-      };
-    }),
-    intents: flow.intents.map((intent) => {
-      const count = dashboardIntentConversionVisualExampleCount(intent.id, intentCounts);
-
-      return {
-        ...intent,
-        count,
-        percentage: dashboardIntentConversionVisualExamplePercentage(count, totalPairs),
-      };
-    }),
-    psychologist_conversions: flow.psychologist_conversions.map((conversion) => {
-      const count = dashboardIntentConversionVisualExampleCount(conversion.id, conversionCounts);
-
-      return {
-        ...conversion,
-        count,
-        percentage: dashboardIntentConversionVisualExamplePercentage(count, totalPairs),
-      };
-    }),
-    total_pairs: totalPairs,
-    unavailable_reason: null,
-  };
-};
-
 const isValidRange = (range: DashboardSummaryQuery) => {
   if (!range.from || !range.to) return false;
 
@@ -792,113 +674,336 @@ const ChartLegend = ({
   </div>
 );
 
-const intentConversionToneClasses: Record<DashboardIntentConversionIntentId, string> = {
-  curious: "border-blue-200 bg-blue-50 text-blue-700",
-  objective: "border-amber-200 bg-amber-50 text-amber-700",
-  very_qualified: "border-emerald-200 bg-emerald-50 text-emerald-700",
+const PATIENT_INTENT_DISPLAY_ORDER = ["cold", "curious", "objective", "very_qualified"] as const;
+const PSYCHOLOGIST_CONVERSION_DISPLAY_ORDER = [
+  "strong_conversion",
+  "unconverted_interest",
+  "unconverted_traffic",
+  "low_conversion",
+] as const satisfies readonly DashboardIntentConversionCategoryId[];
+const DASHBOARD_INTENT_MATRIX_NODE_HEIGHT = 74;
+const DASHBOARD_INTENT_MATRIX_NODE_GAP = 12;
+const DASHBOARD_INTENT_MATRIX_HEIGHT =
+  DASHBOARD_INTENT_MATRIX_NODE_HEIGHT * PATIENT_INTENT_DISPLAY_ORDER.length +
+  DASHBOARD_INTENT_MATRIX_NODE_GAP * (PATIENT_INTENT_DISPLAY_ORDER.length - 1);
+const DASHBOARD_INTENT_MATRIX_WIDTH = 420;
+
+const patientIntentDisplayConfig: Record<
+  DashboardIntentConversionDisplayIntentId,
+  { description: string; label: string }
+> = {
+  cold: {
+    description: "Sem abertura, favorito ou WhatsApp associado a um psicólogo no período.",
+    label: "Frios",
+  },
+  curious: {
+    description: "Abertura de perfil sem favorito ou WhatsApp para o mesmo psicólogo.",
+    label: "Curiosos",
+  },
+  objective: {
+    description: "Retorno ao perfil ou favorito antes do clique no WhatsApp.",
+    label: "Interessados",
+  },
+  very_qualified: {
+    description: "Favorito ou WhatsApp com sinal claro de escolha do psicólogo.",
+    label: "Qualificados",
+  },
+};
+
+const psychologistConversionFallbackConfig: Record<
+  DashboardIntentConversionCategoryId,
+  { description: string; label: string }
+> = {
+  low_conversion: {
+    description: "Psicólogos com poucos sinais de perfil, favorito e WhatsApp.",
+    label: "Baixa Conversão",
+  },
+  strong_conversion: {
+    description: "Psicólogos com alto índice de cliques no WhatsApp.",
+    label: "Alta Conversão",
+  },
+  unconverted_interest: {
+    description: "Psicólogos muito favoritados, mas com poucos cliques no WhatsApp.",
+    label: "Interesse Não Convertido",
+  },
+  unconverted_traffic: {
+    description: "Psicólogos com muitas aberturas de perfil, mas poucos cliques no WhatsApp.",
+    label: "Tráfego Não Convertido",
+  },
+};
+
+const intentConversionToneClasses: Record<DashboardIntentConversionDisplayIntentId, string> = {
+  cold: "border-border bg-surface-muted text-muted",
+  curious: "border-primary/20 bg-primary-soft text-primary",
+  objective: "border-warning/25 bg-warning/10 text-warning",
+  very_qualified: "border-success/25 bg-success/10 text-success",
 };
 
 const psychologistConversionToneClasses: Record<DashboardIntentConversionCategoryId, string> = {
-  low_conversion: "border-amber-200 bg-amber-50 text-amber-700",
-  strong_conversion: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  unconverted_interest: "border-pink-200 bg-pink-50 text-pink-700",
-  unconverted_traffic: "border-slate-200 bg-slate-50 text-slate-600",
+  low_conversion: "border-warning/25 bg-warning/10 text-warning",
+  strong_conversion: "border-success/25 bg-success/10 text-success",
+  unconverted_interest: "border-danger/20 bg-danger/10 text-danger",
+  unconverted_traffic: "border-border bg-surface-muted text-muted",
 };
 
-const getIntentConversionTone = (id: string) =>
-  intentConversionToneClasses[id as DashboardIntentConversionIntentId] ??
-  "border-border bg-surface-muted text-muted";
-
-const getPsychologistConversionTone = (id: string) =>
-  psychologistConversionToneClasses[id as DashboardIntentConversionCategoryId] ??
-  "border-border bg-surface-muted text-muted";
-
-const intentConversionInsightToneClasses: Record<
-  DashboardIntentConversionFlowData["insights"][number]["id"],
-  string
-> = {
-  exploratory_loss: "border-slate-200 bg-slate-50 text-slate-700",
-  healthy_absorption: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  retained_intention: "border-pink-200 bg-pink-50 text-pink-700",
+const intentConversionStrokeColors: Record<DashboardIntentConversionDisplayIntentId, string> = {
+  cold: "var(--admin-muted)",
+  curious: "var(--admin-primary)",
+  objective: "var(--admin-warning)",
+  very_qualified: "var(--admin-success)",
 };
 
-const IntentConversionNodeCard = ({
-  className,
-  countLabel,
-  description,
-  label,
-  percentage,
+const safeDashboardIntentMatrixPercentage = (count: number, total: number) =>
+  total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
+
+const getDashboardIntentMatrixNodeY = (index: number) =>
+  DASHBOARD_INTENT_MATRIX_NODE_HEIGHT / 2 +
+  index * (DASHBOARD_INTENT_MATRIX_NODE_HEIGHT + DASHBOARD_INTENT_MATRIX_NODE_GAP);
+
+const buildDashboardIntentConversionMatrix = (flow: DashboardIntentConversionFlowData) => {
+  const intentById = new Map<
+    DashboardIntentConversionIntentId,
+    DashboardIntentConversionDisplayNode<DashboardIntentConversionIntentId>
+  >(
+    flow.intents.map((intent) => {
+      const id = intent.id as DashboardIntentConversionIntentId;
+
+      return [id, { ...intent, id }];
+    }),
+  );
+  const conversionById = new Map<
+    DashboardIntentConversionCategoryId,
+    DashboardIntentConversionDisplayNode<DashboardIntentConversionCategoryId>
+  >(
+    flow.psychologist_conversions.map((conversion) => {
+      const id = conversion.id as DashboardIntentConversionCategoryId;
+
+      return [id, { ...conversion, id }];
+    }),
+  );
+  const flowByPair = new Map(flow.flows.map((item) => [item.id, item]));
+  const patientNodes = PATIENT_INTENT_DISPLAY_ORDER.map((id) => {
+    const config = patientIntentDisplayConfig[id];
+    if (id === "cold") {
+      return {
+        count: 0,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: 0,
+      } satisfies DashboardIntentConversionDisplayNode<DashboardIntentConversionDisplayIntentId>;
+    }
+
+    const source = intentById.get(id);
+
+    return {
+      count: source?.count ?? 0,
+      description: source?.description ?? config.description,
+      id,
+      label: config.label,
+      percentage: source?.percentage ?? 0,
+    } satisfies DashboardIntentConversionDisplayNode<DashboardIntentConversionDisplayIntentId>;
+  });
+  const psychologistNodes = PSYCHOLOGIST_CONVERSION_DISPLAY_ORDER.map((id) => {
+    const config = psychologistConversionFallbackConfig[id];
+    const source = conversionById.get(id);
+
+    return {
+      count: source?.count ?? 0,
+      description: source?.description ?? config.description,
+      id,
+      label: config.label,
+      percentage: source?.percentage ?? 0,
+    } satisfies DashboardIntentConversionDisplayNode<DashboardIntentConversionCategoryId>;
+  });
+  const matrixFlows = patientNodes.flatMap((intent, intentIndex) =>
+    psychologistNodes.map((conversion, conversionIndex) => {
+      const pairId = `${intent.id}_${conversion.id}` as DashboardIntentConversionMatrixFlow["id"];
+      const source =
+        intent.id === "cold"
+          ? undefined
+          : flowByPair.get(
+              `${intent.id}_${conversion.id}` as `${DashboardIntentConversionIntentId}_${DashboardIntentConversionCategoryId}`,
+            );
+      const count = source?.count ?? 0;
+
+      return {
+        conversion_id: conversion.id,
+        conversion_index: conversionIndex,
+        conversion_label: conversion.label,
+        count,
+        id: pairId,
+        intent_id: intent.id,
+        intent_index: intentIndex,
+        intent_label: intent.label,
+        percentage: safeDashboardIntentMatrixPercentage(count, flow.total_pairs),
+      } satisfies DashboardIntentConversionMatrixFlow;
+    }),
+  );
+
+  return {
+    flows: matrixFlows,
+    maxFlowCount: Math.max(0, ...matrixFlows.map((item) => item.count)),
+    patientNodes,
+    psychologistNodes,
+  };
+};
+
+const getDashboardIntentFlowStrokeWidth = (count: number, maxFlowCount: number) => {
+  if (count <= 0 || maxFlowCount <= 0) return 1.25;
+
+  return 2 + Math.sqrt(count / maxFlowCount) * 12;
+};
+
+const getDashboardIntentFlowOpacity = (count: number, maxFlowCount: number) => {
+  if (count <= 0 || maxFlowCount <= 0) return 0.12;
+
+  return Math.min(0.86, 0.3 + (count / maxFlowCount) * 0.56);
+};
+
+const DashboardIntentConversionSideNode = <TId extends string>({
+  align = "left",
+  node,
+  toneClassName,
 }: {
-  className: string;
-  countLabel: string;
-  description: string;
-  label: string;
-  percentage: number;
+  align?: "left" | "right";
+  node: DashboardIntentConversionDisplayNode<TId>;
+  toneClassName: string;
 }) => (
-  <article className={cn("rounded-[1.35rem] border p-4", className)}>
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h3 className="text-sm font-black text-foreground">{label}</h3>
-        <p className="mt-1 text-xs font-semibold leading-5 text-muted">{description}</p>
-      </div>
-      <span className="shrink-0 rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-foreground">
-        {formatDashboardPercent(percentage)}
-      </span>
+  <article
+    className={cn(
+      "flex h-full min-w-0 items-center justify-between gap-3 rounded-[1.15rem] border px-3 py-2",
+      align === "right" && "flex-row-reverse text-right",
+      toneClassName,
+    )}
+    title={node.description}
+  >
+    <div className="min-w-0">
+      <h3 className="truncate text-sm font-black text-foreground">{node.label}</h3>
+      <p className="mt-1 truncate text-[0.68rem] font-black text-muted">
+        {numberFormatter.format(node.count)} pares
+      </p>
     </div>
-    <p className="mt-3 text-2xl font-black text-foreground">{countLabel}</p>
+    <span className="shrink-0 rounded-full bg-surface/90 px-2 py-1 text-[0.68rem] font-black text-foreground shadow-control">
+      {formatDashboardPercent(node.percentage)}
+    </span>
   </article>
 );
 
-const IntentConversionFlowRow = ({ flow }: { flow: DashboardIntentConversionFlowItem }) => (
-  <article className="rounded-[1.35rem] border border-border/70 bg-surface p-4 shadow-control">
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <span
-          className={cn(
-            "rounded-full border px-2.5 py-1 text-[0.68rem] font-black",
-            intentConversionToneClasses[flow.intent_id],
-          )}
-        >
-          {flow.intent_label}
-        </span>
-        <ArrowRight aria-hidden className="h-4 w-4 shrink-0 text-subtle" />
-        <span
-          className={cn(
-            "rounded-full border px-2.5 py-1 text-[0.68rem] font-black",
-            psychologistConversionToneClasses[flow.conversion_id],
-          )}
-        >
-          {flow.conversion_label}
-        </span>
-      </div>
-      <div className="shrink-0 text-left sm:text-right">
-        <p className="text-lg font-black text-foreground">{numberFormatter.format(flow.count)}</p>
-        <p className="text-[0.68rem] font-black text-muted">
-          {formatDashboardPercent(flow.percentage)} dos pares
-        </p>
+const DashboardIntentConversionMatrix = ({
+  matrix,
+}: {
+  matrix: ReturnType<typeof buildDashboardIntentConversionMatrix>;
+}) => {
+  const orderedFlows = [...matrix.flows].sort((left, right) => left.count - right.count);
+
+  return (
+    <div className="mt-5 overflow-x-auto pb-1">
+      <div className="min-w-[760px]">
+        <div className="grid grid-cols-[minmax(10rem,0.76fr)_minmax(22rem,1.3fr)_minmax(10rem,0.76fr)] gap-4 text-[0.68rem] font-black uppercase tracking-[0.09em] text-subtle">
+          <span>Pacientes</span>
+          <span className="text-center">Intensidade do fluxo</span>
+          <span className="text-right">Psicólogos</span>
+        </div>
+        <div className="mt-3 grid grid-cols-[minmax(10rem,0.76fr)_minmax(22rem,1.3fr)_minmax(10rem,0.76fr)] gap-4">
+          <div
+            className="grid gap-3"
+            style={{
+              gridTemplateRows: `repeat(${PATIENT_INTENT_DISPLAY_ORDER.length}, ${DASHBOARD_INTENT_MATRIX_NODE_HEIGHT}px)`,
+            }}
+          >
+            {matrix.patientNodes.map((node) => (
+              <DashboardIntentConversionSideNode
+                key={node.id}
+                node={node}
+                toneClassName={intentConversionToneClasses[node.id]}
+              />
+            ))}
+          </div>
+
+          <div className="relative overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface-muted/70 shadow-control">
+            <svg
+              aria-label="Fluxo entre categorias de pacientes e categorias de psicólogos"
+              className="h-full w-full"
+              preserveAspectRatio="none"
+              role="img"
+              viewBox={`0 0 ${DASHBOARD_INTENT_MATRIX_WIDTH} ${DASHBOARD_INTENT_MATRIX_HEIGHT}`}
+            >
+              <defs>
+                <marker
+                  id="dashboard-intent-flow-arrow"
+                  markerHeight="8"
+                  markerUnits="userSpaceOnUse"
+                  markerWidth="8"
+                  orient="auto"
+                  refX="7"
+                  refY="4"
+                >
+                  <path d="M0,0 L8,4 L0,8 Z" fill="context-stroke" />
+                </marker>
+              </defs>
+              {orderedFlows.map((item) => {
+                const y1 = getDashboardIntentMatrixNodeY(item.intent_index);
+                const y2 = getDashboardIntentMatrixNodeY(item.conversion_index);
+                const strokeWidth = getDashboardIntentFlowStrokeWidth(
+                  item.count,
+                  matrix.maxFlowCount,
+                );
+                const opacity = getDashboardIntentFlowOpacity(item.count, matrix.maxFlowCount);
+                const d = `M 10 ${y1} C 145 ${y1}, 275 ${y2}, 410 ${y2}`;
+
+                return (
+                  <path
+                    d={d}
+                    fill="none"
+                    key={item.id}
+                    markerEnd="url(#dashboard-intent-flow-arrow)"
+                    opacity={opacity}
+                    stroke={intentConversionStrokeColors[item.intent_id]}
+                    strokeDasharray={item.count > 0 ? undefined : "4 10"}
+                    strokeLinecap="round"
+                    strokeWidth={strokeWidth}
+                  >
+                    <title>
+                      {item.intent_label} para {item.conversion_label}:{" "}
+                      {numberFormatter.format(item.count)} pares
+                    </title>
+                  </path>
+                );
+              })}
+            </svg>
+          </div>
+
+          <div
+            className="grid gap-3"
+            style={{
+              gridTemplateRows: `repeat(${PSYCHOLOGIST_CONVERSION_DISPLAY_ORDER.length}, ${DASHBOARD_INTENT_MATRIX_NODE_HEIGHT}px)`,
+            }}
+          >
+            {matrix.psychologistNodes.map((node) => (
+              <DashboardIntentConversionSideNode
+                align="right"
+                key={node.id}
+                node={node}
+                toneClassName={psychologistConversionToneClasses[node.id]}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
-    <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
-      <span
-        aria-hidden
-        className="block h-full rounded-full bg-primary"
-        style={{ width: `${Math.min(100, Math.max(4, flow.percentage))}%` }}
-      />
-    </div>
-  </article>
-);
+  );
+};
 
 const DashboardIntentConversionFlow = ({
   flow,
   periodDescription,
-  visualExample = false,
 }: {
   flow: DashboardIntentConversionFlowData;
   periodDescription: string;
-  visualExample?: boolean;
 }) => {
   const totalPairsLabel = numberFormatter.format(flow.total_pairs);
-  const hasFlows = flow.flows.length > 0 && flow.total_pairs > 0;
+  const matrix = buildDashboardIntentConversionMatrix(flow);
 
   return (
     <CardShell className="overflow-hidden p-5 md:p-6">
@@ -911,7 +1016,8 @@ const DashboardIntentConversionFlow = ({
             <div className="min-w-0">
               <h2 className="text-lg font-black text-foreground">Fluxo de intenção e conversão</h2>
               <p className="mt-1 text-sm font-bold leading-6 text-muted">
-                Leitura cruzada de intenção real dos pacientes com a conversão dos psicólogos.
+                Categorias de pacientes à esquerda; categorias de psicólogos à direita. A espessura
+                da seta indica o volume real de pares.
               </p>
             </div>
           </div>
@@ -925,105 +1031,21 @@ const DashboardIntentConversionFlow = ({
         </div>
       </div>
 
-      {visualExample ? (
-        <div className="mt-5 rounded-[1.35rem] border border-primary/20 bg-primary-soft/70 p-3 text-xs font-bold leading-5 text-primary">
-          Números de exemplo exibidos somente no localhost em desenvolvimento para visualização. Não
-          representam sinais reais de pacientes, psicólogos ou conversões.
-        </div>
-      ) : null}
-
       {flow.unavailable_reason ? (
-        <div className="mt-5 rounded-[1.35rem] border border-dashed border-border bg-surface-muted p-5 text-sm font-bold leading-6 text-muted">
+        <div className="mt-5 rounded-[1.35rem] border border-dashed border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
           {flow.unavailable_reason}
         </div>
       ) : null}
 
-      {flow.insights.length > 0 ? (
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          {flow.insights.map((insight) => (
-            <article
-              className={cn(
-                "rounded-[1.35rem] border p-4",
-                intentConversionInsightToneClasses[insight.id],
-              )}
-              key={insight.id}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-black text-foreground">{insight.label}</p>
-                  <p className="mt-1 text-xs font-semibold leading-5 text-muted">
-                    {insight.description}
-                  </p>
-                </div>
-                <Sparkles aria-hidden className="h-4 w-4 shrink-0" />
-              </div>
-              <p className="mt-3 text-xl font-black text-foreground">
-                {numberFormatter.format(insight.count)}
-                <span className="ml-2 text-xs font-black text-muted">
-                  {formatDashboardPercent(insight.percentage)}
-                </span>
-              </p>
-            </article>
-          ))}
-        </div>
-      ) : null}
+      <DashboardIntentConversionMatrix matrix={matrix} />
 
-      {hasFlows ? (
-        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(12rem,0.8fr)_minmax(0,1.5fr)_minmax(12rem,0.8fr)]">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
-              <Target aria-hidden className="h-4 w-4 text-primary" />
-              Intenção do paciente
-            </div>
-            {flow.intents.map((intent) => (
-              <IntentConversionNodeCard
-                className={getIntentConversionTone(intent.id)}
-                countLabel={`${numberFormatter.format(intent.count)} pares`}
-                description={intent.description}
-                key={intent.id}
-                label={intent.label}
-                percentage={intent.percentage}
-              />
-            ))}
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
-              <ArrowRight aria-hidden className="h-4 w-4 text-primary" />
-              Caminhos observados
-            </div>
-            {flow.flows.map((item) => (
-              <IntentConversionFlowRow flow={item} key={item.id} />
-            ))}
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
-              <UserRoundCheck aria-hidden className="h-4 w-4 text-primary" />
-              Conversão do psicólogo
-            </div>
-            {flow.psychologist_conversions.map((conversion) => (
-              <IntentConversionNodeCard
-                className={getPsychologistConversionTone(conversion.id)}
-                countLabel={`${numberFormatter.format(conversion.count)} pares`}
-                description={conversion.description}
-                key={conversion.id}
-                label={conversion.label}
-                percentage={conversion.percentage}
-              />
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      <div className="mt-5 grid gap-3 rounded-[1.35rem] bg-surface-muted p-4 text-xs font-semibold leading-5 text-muted md:grid-cols-2">
+      <div className="mt-5 rounded-[1.35rem] bg-surface-muted p-4 text-xs font-semibold leading-5 text-muted">
         <p>{flow.coverage_note}</p>
-        <p>{flow.privacy_note}</p>
+        <p className="mt-1">{flow.privacy_note}</p>
       </div>
     </CardShell>
   );
 };
-
 const DashboardContent = ({
   periodControls,
   periodDescription,
@@ -1034,12 +1056,6 @@ const DashboardContent = ({
   summary: AdminDashboardSummary;
 }) => {
   const noRecords = !hasPeriodRecords(summary);
-  const localVisualExampleEnabled = useLocalDashboardVisualExampleEnabled();
-  const showIntentConversionVisualExample =
-    localVisualExampleEnabled && !hasIntentConversionFlowData(summary.intent_conversion_flow);
-  const intentConversionFlow = showIntentConversionVisualExample
-    ? buildDashboardIntentConversionVisualExample(summary.intent_conversion_flow)
-    : summary.intent_conversion_flow;
   const communitySeries = [
     {
       color: "var(--admin-primary)",
@@ -1078,9 +1094,8 @@ const DashboardContent = ({
       </DashboardOverviewPanel>
 
       <DashboardIntentConversionFlow
-        flow={intentConversionFlow}
+        flow={summary.intent_conversion_flow}
         periodDescription={periodDescription}
-        visualExample={showIntentConversionVisualExample}
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)]">
