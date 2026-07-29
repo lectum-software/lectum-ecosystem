@@ -890,14 +890,14 @@ Frontend esperado:
 
 ## Ajuste pos-feedback 2026-07-28 - Bloco Intencao x Engajamento
 
-- Pedido do usuario: assim como existe **Demanda x Engajamento** no dashboard de psicologos, adicionar em `/pacientes`, abaixo de **Intencao e engajamento dos pacientes**, um bloco **Intencao x Engajamento** para entender a relacao entre as duas metricas.
+- Pedido do usuario: assim como existe **Conversão x Engajamento** no dashboard de psicologos, adicionar em `/pacientes`, abaixo de **Intencao e engajamento dos pacientes**, um bloco **Intencao x Engajamento** para entender a relacao entre as duas metricas.
 - O backend passou a retornar `intent_engagement` no payload real de `GET /api/admin/private/patients/dashboard`, cruzando a classificacao unica de intencao com a classificacao unica de engajamento ja calculadas para cada paciente do periodo.
 - A matriz tem 16 celulas: **Frios**, **Curiosos**, **Interessados** e **Qualificados** versus **Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**, com contagem, percentual da base, percentual da linha e percentual da coluna.
 - O bloco tambem exibe metricas resumidas de alta intencao entre pacientes engajados, alta intencao entre pouco/sem engajamento e diferenca observada em pontos percentuais.
 - A UI permanece mobile-first: em telas estreitas a matriz empilha por categoria de intencao; no desktop progride para matriz com colunas de engajamento e resumo lateral.
 - A leitura e explicitamente observacional, agregada e interna ao Admin; nao indica causalidade, atendimento, diagnostico, conversa, ranking publico ou lista nominal de pacientes.
 - Nao houve schema Prisma, migration, package novo, tracking, seed, mock, endpoint paralelo, backfill artificial ou uso de `<img>`.
-- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Demanda x Engajamento** em `/psicologos` e o pedido/screenshot enviado pelo usuario em 2026-07-28.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Conversão x Engajamento** em `/psicologos` e o pedido/screenshot enviado pelo usuario em 2026-07-28.
 - ADR atualizado: `adrs/0314-admin-patient-dashboard-intent-distribution.md`.
 
 ### Criterios de aceite do ajuste
@@ -1075,11 +1075,11 @@ Frontend esperado:
 
 ## Ajuste pos-feedback 2026-07-29 - Links dos quadrantes Intencao x Engajamento para lista filtrada
 
-- Pedido do usuario: assim como o clique em um quadrante de **Demanda x Engajamento** leva para a lista de psicologos filtrada, os quadrantes de **Intencao x Engajamento** em `/pacientes` devem levar para `/pacientes/lista` com a lista de pacientes filtrada.
+- Pedido do usuario: assim como o clique em um quadrante de **Conversão x Engajamento** leva para a lista de psicologos filtrada, os quadrantes de **Intencao x Engajamento** em `/pacientes` devem levar para `/pacientes/lista` com a lista de pacientes filtrada.
 - Frontend Admin: as 16 celulas da matriz **Intencao x Engajamento** viraram links reais para `/pacientes/lista?intent_engagement=...`, preservando o layout compacto mobile-first, contagem, percentual da base e percentual dentro da linha.
 - Lista Admin: `/pacientes/lista` passou a aceitar, parsear, cachear e enviar o filtro composto `intent_engagement`, mantendo busca, status, forma de cadastro, ordenacao e paginacao existentes.
 - Backend Admin: `GET /api/admin/private/patients` valida `intent_engagement` contra os 16 cruzamentos canonicos e filtra os pacientes depois de enriquecer cada item com intencao e engajamento comunitario reais, sem endpoint paralelo ou recalculo no cliente.
-- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Demanda x Engajamento** em `/psicologos` e a captura enviada pelo usuario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Conversão x Engajamento** em `/psicologos` e a captura enviada pelo usuario.
 - Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
 - ADR criado: `adrs/0342-quadrantes-intencao-engajamento-lista-filtrada.md`.
 

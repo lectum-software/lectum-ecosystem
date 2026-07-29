@@ -375,7 +375,7 @@ const METRIC_ICONS: Record<string, LucideIcon> = {
   profile_views: Eye,
   ranking: Trophy,
   rating_avg: Star,
-  demand: BarChart3,
+  profile_conversion: BarChart3,
   whatsapp_clicks: MessageCircle,
 };
 
@@ -393,7 +393,8 @@ const GENERAL_TAB_STATISTICS_QUERY = {
 
 type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][number];
 type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
-type BusinessDemandCategoryId = AdminPsychologistStatistics["business"]["demand"]["id"];
+type BusinessProfileConversionCategoryId =
+  AdminPsychologistStatistics["business"]["profile_conversion"]["id"];
 type StatisticsChartMetric = {
   dotRadius: number;
   icon: LucideIcon;
@@ -407,13 +408,14 @@ type StatisticsChartMetric = {
   swatchClassName: string;
 };
 
-const BUSINESS_DEMAND_BADGE_CLASS: Record<BusinessDemandCategoryId, string> = {
-  insufficient_data: "bg-surface-muted text-subtle",
-  low_demand: "bg-surface-muted text-muted",
-  strong_demand: "bg-success/10 text-success",
-  unconverted_interest: "bg-primary-soft text-primary",
-  unconverted_traffic: "bg-warning/10 text-warning",
-};
+const BUSINESS_PROFILE_CONVERSION_BADGE_CLASS: Record<BusinessProfileConversionCategoryId, string> =
+  {
+    insufficient_data: "bg-surface-muted text-subtle",
+    low_conversion: "bg-surface-muted text-muted",
+    strong_conversion: "bg-success/10 text-success",
+    unconverted_interest: "bg-primary-soft text-primary",
+    unconverted_traffic: "bg-warning/10 text-warning",
+  };
 
 const BUSINESS_CHART_METRICS = [
   {
@@ -2054,7 +2056,7 @@ const MetricCard = ({
   );
 };
 
-const DemandMetricCard = ({
+const ProfileConversionMetricCard = ({
   isError,
   isLoading,
   statistics,
@@ -2063,16 +2065,17 @@ const DemandMetricCard = ({
   isLoading: boolean;
   statistics?: AdminPsychologistStatistics;
 }) => {
-  const demand = statistics?.business.demand;
-  const value = demand?.label ?? (isLoading ? "Carregando" : isError ? "Indisponível" : "—");
+  const profileConversion = statistics?.business.profile_conversion;
+  const value =
+    profileConversion?.label ?? (isLoading ? "Carregando" : isError ? "Indisponível" : "—");
 
   return (
     <div
-      aria-busy={isLoading && !demand}
+      aria-busy={isLoading && !profileConversion}
       className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft"
     >
-      <MetricIconCircle icon={METRIC_ICONS.demand} metricId="demand" />
-      <p className="mt-4 text-sm font-extrabold text-muted">Demanda</p>
+      <MetricIconCircle icon={METRIC_ICONS.profile_conversion} metricId="profile_conversion" />
+      <p className="mt-4 text-sm font-extrabold text-muted">Conversão</p>
       <p className="mt-2 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
         {value}
       </p>
@@ -2601,7 +2604,7 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
               metric={ratingMetric}
             />
           ) : null}
-          <DemandMetricCard
+          <ProfileConversionMetricCard
             isError={generalStatisticsQuery.isError}
             isLoading={generalStatisticsQuery.isLoading && !generalStatisticsQuery.data}
             statistics={generalStatisticsQuery.data}
@@ -4983,7 +4986,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const communityStatistics = communityStatisticsQuery.data;
   const activeCommunitiesStatistics = activeCommunitiesStatisticsQuery.data;
   const activityHoursStatistics = activityHoursStatisticsQuery.data;
-  const businessDemand = businessStatistics.business.demand;
+  const businessProfileConversion = businessStatistics.business.profile_conversion;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
@@ -5078,10 +5081,10 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 <Badge
                   className={cn(
                     "border border-current/10",
-                    BUSINESS_DEMAND_BADGE_CLASS[businessDemand.id],
+                    BUSINESS_PROFILE_CONVERSION_BADGE_CLASS[businessProfileConversion.id],
                   )}
                 >
-                  {businessDemand.label}
+                  {businessProfileConversion.label}
                 </Badge>
                 {isBusinessRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">

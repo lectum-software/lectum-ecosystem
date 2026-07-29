@@ -46,10 +46,14 @@ type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
-type DemandCategoryItem = AdminPsychologistsDashboard["demand"]["categories"][number];
-type DemandEngagementQuadrantItem =
-  AdminPsychologistsDashboard["demand_engagement"]["quadrants"][number];
-type DemandEngagementAxisCategoryId = Exclude<DemandCategoryItem["id"], "insufficient_data">;
+type ProfileConversionCategoryItem =
+  AdminPsychologistsDashboard["profile_conversion"]["categories"][number];
+type ProfileConversionEngagementQuadrantItem =
+  AdminPsychologistsDashboard["profile_conversion_engagement"]["quadrants"][number];
+type ProfileConversionEngagementAxisCategoryId = Exclude<
+  ProfileConversionCategoryItem["id"],
+  "insufficient_data"
+>;
 type PsychologistEngagementDonutBucketId =
   | "engaged"
   | "low_engaged"
@@ -288,13 +292,13 @@ const DASHBOARD_METRIC_CONFIG = {
   total_psychologists: { color: "#308ce8", icon: UsersRound },
 } satisfies Record<DashboardMetricKey, { color: string; icon: LucideIcon }>;
 
-const DEMAND_CHART_COLORS = {
+const PROFILE_CONVERSION_CHART_COLORS = {
   insufficient_data: "#94a3b8",
-  low_demand: "#f59f00",
-  strong_demand: "#13a85b",
+  low_conversion: "#f59f00",
+  strong_conversion: "#13a85b",
   unconverted_interest: "#8b5cf6",
   unconverted_traffic: "#ef4444",
-} satisfies Record<DemandCategoryItem["id"], string>;
+} satisfies Record<ProfileConversionCategoryItem["id"], string>;
 
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   engaged: "#308ce8",
@@ -303,7 +307,7 @@ const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   very_engaged: "#13a85b",
 } satisfies Record<PsychologistEngagementDonutBucketId, string>;
 
-const DEMAND_ENGAGEMENT_MATRIX_COLUMNS: {
+const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS: {
   id: PsychologistEngagementDonutBucketId;
   label: string;
 }[] = [
@@ -325,13 +329,13 @@ const DEMAND_ENGAGEMENT_MATRIX_COLUMNS: {
   },
 ];
 
-const DEMAND_ENGAGEMENT_MATRIX_ROWS: {
-  id: DemandEngagementAxisCategoryId;
+const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS: {
+  id: ProfileConversionEngagementAxisCategoryId;
   label: string;
 }[] = [
   {
-    id: "strong_demand",
-    label: "Demanda forte",
+    id: "strong_conversion",
+    label: "Conversão Forte",
   },
   {
     id: "unconverted_interest",
@@ -342,22 +346,22 @@ const DEMAND_ENGAGEMENT_MATRIX_ROWS: {
     label: "Tráfego Não Convertido",
   },
   {
-    id: "low_demand",
-    label: "Baixa Demanda",
+    id: "low_conversion",
+    label: "Baixa Conversão",
   },
 ];
 
-const buildDemandEngagementQuadrantId = (
-  demandCategoryId: DemandEngagementAxisCategoryId,
+const buildProfileConversionEngagementQuadrantId = (
+  profileConversionCategoryId: ProfileConversionEngagementAxisCategoryId,
   engagementLevel: PsychologistEngagementDonutBucketId,
-): DemandEngagementQuadrantItem["id"] =>
-  `${demandCategoryId}_${engagementLevel}` as DemandEngagementQuadrantItem["id"];
+): ProfileConversionEngagementQuadrantItem["id"] =>
+  `${profileConversionCategoryId}_${engagementLevel}` as ProfileConversionEngagementQuadrantItem["id"];
 
-const buildDemandEngagementListHref = (
-  quadrantId: DemandEngagementQuadrantItem["id"],
+const buildProfileConversionEngagementListHref = (
+  quadrantId: ProfileConversionEngagementQuadrantItem["id"],
   planSegment: PlanSegmentFilter,
 ) => {
-  const params = new URLSearchParams({ demand_engagement: quadrantId });
+  const params = new URLSearchParams({ profile_conversion_engagement: quadrantId });
   const plan = LIST_PLAN_FILTER_BY_SEGMENT[planSegment];
 
   if (plan) params.set("plan", plan);
@@ -801,8 +805,8 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     psychologists_count: summary.cards.total_psychologists.value,
     signup_method: summary.signup_method,
     statistics: summary.statistics,
-    demand: summary.demand,
-    demand_engagement: summary.demand_engagement,
+    profile_conversion: summary.profile_conversion,
+    profile_conversion_engagement: summary.profile_conversion_engagement,
     traffic_sources: summary.traffic_sources,
   };
 
@@ -2375,9 +2379,9 @@ const PsychologistsDonutChart = ({
 };
 
 const buildPsychologistEngagementDonutItems = (
-  demandEngagement: AdminPsychologistsDashboard["demand_engagement"],
+  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"],
 ): PsychologistsDonutChartItem[] => {
-  const total = Math.max(0, demandEngagement.totals.psychologists);
+  const total = Math.max(0, profileConversionEngagement.totals.psychologists);
   const buildItem = (
     id: PsychologistEngagementDonutBucketId,
     label: string,
@@ -2394,32 +2398,40 @@ const buildPsychologistEngagementDonutItems = (
     buildItem(
       "very_engaged",
       "Muito engajado",
-      Math.max(0, demandEngagement.totals.very_engaged_psychologists),
+      Math.max(0, profileConversionEngagement.totals.very_engaged_psychologists),
     ),
-    buildItem("engaged", "Engajado", Math.max(0, demandEngagement.totals.engaged_psychologists)),
+    buildItem(
+      "engaged",
+      "Engajado",
+      Math.max(0, profileConversionEngagement.totals.engaged_psychologists),
+    ),
     buildItem(
       "low_engaged",
       "Pouco engajado",
-      Math.max(0, demandEngagement.totals.low_engaged_psychologists),
+      Math.max(0, profileConversionEngagement.totals.low_engaged_psychologists),
     ),
     buildItem(
       "no_engagement",
       "Sem engajamento",
-      Math.max(0, demandEngagement.totals.no_engagement_psychologists),
+      Math.max(0, profileConversionEngagement.totals.no_engagement_psychologists),
     ),
   ];
 };
 
-const DemandDonutChart = ({ demand }: { demand: AdminPsychologistsDashboard["demand"] }) => {
-  const total = Math.max(0, demand.totals.psychologists);
-  const items = demand.categories.map((item) => ({
-    color: DEMAND_CHART_COLORS[item.id],
+const ProfileConversionDonutChart = ({
+  profileConversion,
+}: {
+  profileConversion: AdminPsychologistsDashboard["profile_conversion"];
+}) => {
+  const total = Math.max(0, profileConversion.totals.psychologists);
+  const items = profileConversion.categories.map((item) => ({
+    color: PROFILE_CONVERSION_CHART_COLORS[item.id],
     count: item.count,
     id: item.id,
     label: item.label,
     percentage: item.percentage,
   }));
-  const ariaLabel = `Gráfico de donut de Demanda dos psicólogos: ${demand.categories
+  const ariaLabel = `Gráfico de donut de Conversão dos psicólogos: ${profileConversion.categories
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
@@ -2432,8 +2444,8 @@ const DemandDonutChart = ({ demand }: { demand: AdminPsychologistsDashboard["dem
     <PsychologistsDonutChart
       ariaLabel={ariaLabel}
       emptyMessage={
-        demand.unavailable_reason ??
-        "Sem psicólogos ativos no período selecionado para classificar Demanda."
+        profileConversion.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Conversão."
       }
       items={items}
       total={total}
@@ -2442,12 +2454,12 @@ const DemandDonutChart = ({ demand }: { demand: AdminPsychologistsDashboard["dem
 };
 
 const PsychologistEngagementDonutChart = ({
-  demandEngagement,
+  profileConversionEngagement,
 }: {
-  demandEngagement: AdminPsychologistsDashboard["demand_engagement"];
+  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"];
 }) => {
-  const total = Math.max(0, demandEngagement.totals.psychologists);
-  const items = buildPsychologistEngagementDonutItems(demandEngagement);
+  const total = Math.max(0, profileConversionEngagement.totals.psychologists);
+  const items = buildPsychologistEngagementDonutItems(profileConversionEngagement);
   const ariaLabel = `Gráfico de donut de Engajamento dos psicólogos: ${items
     .map(
       (item) =>
@@ -2461,7 +2473,7 @@ const PsychologistEngagementDonutChart = ({
     <PsychologistsDonutChart
       ariaLabel={ariaLabel}
       emptyMessage={
-        demandEngagement.unavailable_reason ??
+        profileConversionEngagement.unavailable_reason ??
         "Sem psicólogos ativos no período selecionado para classificar Engajamento."
       }
       items={items}
@@ -2469,12 +2481,16 @@ const PsychologistEngagementDonutChart = ({
     />
   );
 };
-const DashboardDemandCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
-  const [demandPlanSegment, setDemandPlanSegment] = useState<PlanSegmentFilter>("all");
-  const demandSegmentSummary = getPlanSegmentSummary(summary, demandPlanSegment);
-  const demand = demandSegmentSummary.demand;
-  const demandEngagement = demandSegmentSummary.demand_engagement;
-  if (!demand || !demandEngagement) return null;
+const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
+  const [profileConversionPlanSegment, setProfileConversionPlanSegment] =
+    useState<PlanSegmentFilter>("all");
+  const profileConversionSegmentSummary = getPlanSegmentSummary(
+    summary,
+    profileConversionPlanSegment,
+  );
+  const profileConversion = profileConversionSegmentSummary.profile_conversion;
+  const profileConversionEngagement = profileConversionSegmentSummary.profile_conversion_engagement;
+  if (!profileConversion || !profileConversionEngagement) return null;
 
   return (
     <CardShell className="p-5">
@@ -2482,12 +2498,12 @@ const DashboardDemandCard = ({ summary }: { summary: AdminPsychologistsDashboard
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Demanda e engajamento dos psicólogos"
+          title="Conversão e engajamento dos psicólogos"
         />
         <PlanSegmentSelect
-          id="demand-plan-segment"
-          onChange={setDemandPlanSegment}
-          value={demandPlanSegment}
+          id="profile-conversion-plan-segment"
+          onChange={setProfileConversionPlanSegment}
+          value={profileConversionPlanSegment}
         />
       </div>
 
@@ -2495,14 +2511,14 @@ const DashboardDemandCard = ({ summary }: { summary: AdminPsychologistsDashboard
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-foreground">Demanda</h3>
+              <h3 className="text-lg font-bold text-foreground">Conversão</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(demand.totals.psychologists)}
+                {numberFormatter.format(profileConversion.totals.psychologists)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
             </div>
           </div>
-          <DemandDonutChart demand={demand} />
+          <ProfileConversionDonutChart profileConversion={profileConversion} />
         </section>
 
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
@@ -2510,22 +2526,24 @@ const DashboardDemandCard = ({ summary }: { summary: AdminPsychologistsDashboard
             <div>
               <h3 className="text-lg font-bold text-foreground">Engajamento</h3>
               <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(demandEngagement.totals.psychologists)}
+                {numberFormatter.format(profileConversionEngagement.totals.psychologists)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
             </div>
           </div>
-          <PsychologistEngagementDonutChart demandEngagement={demandEngagement} />
+          <PsychologistEngagementDonutChart
+            profileConversionEngagement={profileConversionEngagement}
+          />
         </section>
       </div>
     </CardShell>
   );
 };
-const findDemandEngagementQuadrant = (
-  demandEngagement: AdminPsychologistsDashboard["demand_engagement"],
-  id: DemandEngagementQuadrantItem["id"],
+const findProfileConversionEngagementQuadrant = (
+  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"],
+  id: ProfileConversionEngagementQuadrantItem["id"],
 ) =>
-  demandEngagement.quadrants.find((quadrant) => quadrant.id === id) ?? {
+  profileConversionEngagement.quadrants.find((quadrant) => quadrant.id === id) ?? {
     count: 0,
     description: "",
     id,
@@ -2543,7 +2561,13 @@ const findDemandEngagementQuadrant = (
     },
   };
 
-const DemandEngagementMetric = ({ label, value }: { label: string; value: ReactNode }) => (
+const ProfileConversionEngagementMetric = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: ReactNode;
+}) => (
   <div className="rounded-2xl bg-surface-muted p-3">
     <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">{label}</p>
     <p className="mt-1 text-base font-black text-foreground">{value}</p>
@@ -2559,22 +2583,22 @@ const formatRateDifference = (value: number | null) => {
   return `${prefix}${numberFormatter.format(Math.abs(value))} p.p.`;
 };
 
-type DemandEngagementMatrixCell = {
+type ProfileConversionEngagementMatrixCell = {
   color: string;
   columnLabel: string;
-  quadrant: DemandEngagementQuadrantItem;
+  quadrant: ProfileConversionEngagementQuadrantItem;
   rowLabel: string;
   rowPercentage: number;
 };
 
-const buildDemandEngagementRowCells = (
-  demandEngagement: AdminPsychologistsDashboard["demand_engagement"],
-  row: (typeof DEMAND_ENGAGEMENT_MATRIX_ROWS)[number],
-): DemandEngagementMatrixCell[] => {
-  const quadrants = DEMAND_ENGAGEMENT_MATRIX_COLUMNS.map((column) =>
-    findDemandEngagementQuadrant(
-      demandEngagement,
-      buildDemandEngagementQuadrantId(row.id, column.id),
+const buildProfileConversionEngagementRowCells = (
+  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"],
+  row: (typeof PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS)[number],
+): ProfileConversionEngagementMatrixCell[] => {
+  const quadrants = PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS.map((column) =>
+    findProfileConversionEngagementQuadrant(
+      profileConversionEngagement,
+      buildProfileConversionEngagementQuadrantId(row.id, column.id),
     ),
   );
   const rowTotal = quadrants.reduce((total, quadrant) => total + Math.max(0, quadrant.count), 0);
@@ -2582,16 +2606,16 @@ const buildDemandEngagementRowCells = (
   return quadrants.map((quadrant, index) => ({
     color:
       PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS[
-        DEMAND_ENGAGEMENT_MATRIX_COLUMNS[index]?.id ?? "no_engagement"
+        PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS[index]?.id ?? "no_engagement"
       ],
-    columnLabel: DEMAND_ENGAGEMENT_MATRIX_COLUMNS[index]?.label ?? quadrant.label,
+    columnLabel: PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS[index]?.label ?? quadrant.label,
     quadrant,
     rowLabel: row.label,
     rowPercentage: rowTotal > 0 ? toOneDecimal((Math.max(0, quadrant.count) / rowTotal) * 100) : 0,
   }));
 };
 
-const DemandEngagementQuadrantCard = ({
+const ProfileConversionEngagementQuadrantCard = ({
   color,
   description,
   headingLabel,
@@ -2605,7 +2629,7 @@ const DemandEngagementQuadrantCard = ({
   headingLabel?: string;
   intensityPercentage?: number;
   planSegment: PlanSegmentFilter;
-  quadrant: DemandEngagementQuadrantItem;
+  quadrant: ProfileConversionEngagementQuadrantItem;
   showEngagementLabel?: boolean;
 }) => {
   const hasData = quadrant.count > 0;
@@ -2617,7 +2641,7 @@ const DemandEngagementQuadrantCard = ({
     <Link
       aria-label={`Ver lista de profissionais em ${quadrant.label}`}
       className="block min-h-[7.75rem] min-w-0 rounded-[1.2rem] border p-3 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-      href={buildDemandEngagementListHref(quadrant.id, planSegment)}
+      href={buildProfileConversionEngagementListHref(quadrant.id, planSegment)}
       style={{
         backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
         borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
@@ -2651,19 +2675,23 @@ const DemandEngagementQuadrantCard = ({
   );
 };
 
-const DashboardDemandEngagementCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
-  const [demandEngagementPlanSegment, setDemandEngagementPlanSegment] =
+const DashboardProfileConversionEngagementCard = ({
+  summary,
+}: {
+  summary: AdminPsychologistsDashboard;
+}) => {
+  const [profileConversionEngagementPlanSegment, setProfileConversionEngagementPlanSegment] =
     useState<PlanSegmentFilter>("all");
-  const segmentSummary = getPlanSegmentSummary(summary, demandEngagementPlanSegment);
-  const demandEngagement = segmentSummary.demand_engagement;
+  const segmentSummary = getPlanSegmentSummary(summary, profileConversionEngagementPlanSegment);
+  const profileConversionEngagement = segmentSummary.profile_conversion_engagement;
 
-  if (!demandEngagement) return null;
+  if (!profileConversionEngagement) return null;
 
-  const veryEngaged = demandEngagement.comparison.very_engaged;
-  const engaged = demandEngagement.comparison.engaged;
-  const lowEngaged = demandEngagement.comparison.low_engaged;
-  const noEngagement = demandEngagement.comparison.no_engagement;
-  const rateDifference = demandEngagement.comparison.rate_difference_points;
+  const veryEngaged = profileConversionEngagement.comparison.very_engaged;
+  const engaged = profileConversionEngagement.comparison.engaged;
+  const lowEngaged = profileConversionEngagement.comparison.low_engaged;
+  const noEngagement = profileConversionEngagement.comparison.no_engagement;
+  const rateDifference = profileConversionEngagement.comparison.rate_difference_points;
 
   return (
     <CardShell className="p-5">
@@ -2671,42 +2699,45 @@ const DashboardDemandEngagementCard = ({ summary }: { summary: AdminPsychologist
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={TrendingUp}
-          title="Demanda x Engajamento"
+          title="Conversão x Engajamento"
         />
         <PlanSegmentSelect
-          id="demand-engagement-plan-segment"
-          onChange={setDemandEngagementPlanSegment}
-          value={demandEngagementPlanSegment}
+          id="profile-conversion-engagement-plan-segment"
+          onChange={setProfileConversionEngagementPlanSegment}
+          value={profileConversionEngagementPlanSegment}
         />
       </div>
 
-      {demandEngagement.totals.psychologists === 0 ? (
+      {profileConversionEngagement.totals.psychologists === 0 ? (
         <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-          {demandEngagement.unavailable_reason ??
-            "Sem psicólogos ativos no período selecionado para comparar Demanda e Engajamento."}
+          {profileConversionEngagement.unavailable_reason ??
+            "Sem psicólogos ativos no período selecionado para comparar Conversão e Engajamento."}
         </p>
       ) : (
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
           <div className="min-w-0">
             <div className="grid gap-3 lg:hidden">
-              {DEMAND_ENGAGEMENT_MATRIX_ROWS.map((row) => {
-                const rowCells = buildDemandEngagementRowCells(demandEngagement, row);
+              {PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
+                const rowCells = buildProfileConversionEngagementRowCells(
+                  profileConversionEngagement,
+                  row,
+                );
 
                 return (
                   <section
                     className="rounded-[1.35rem] border border-border bg-surface p-3"
-                    key={`psychologist-mobile-demand-engagement-${row.label}`}
+                    key={`psychologist-mobile-profile-conversion-engagement-${row.label}`}
                   >
                     <h3 className="text-sm font-black text-foreground">{row.label}</h3>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {rowCells.map((cell) => (
-                        <DemandEngagementQuadrantCard
+                        <ProfileConversionEngagementQuadrantCard
                           color={cell.color}
                           description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
                           headingLabel={cell.columnLabel}
                           intensityPercentage={cell.rowPercentage}
                           key={cell.quadrant.id}
-                          planSegment={demandEngagementPlanSegment}
+                          planSegment={profileConversionEngagementPlanSegment}
                           quadrant={cell.quadrant}
                           showEngagementLabel
                         />
@@ -2719,30 +2750,33 @@ const DashboardDemandEngagementCard = ({ summary }: { summary: AdminPsychologist
 
             <div className="hidden gap-2 lg:grid lg:grid-cols-[132px_repeat(4,minmax(0,1fr))]">
               <div className="hidden lg:block" aria-hidden />
-              {DEMAND_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
+              {PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
                 <p
                   className="rounded-2xl bg-surface-muted px-3 py-2 text-center text-xs font-black text-muted"
-                  key={`psychologist-demand-engagement-column-${column.id}`}
+                  key={`psychologist-profile-conversion-engagement-column-${column.id}`}
                 >
                   {column.label}
                 </p>
               ))}
 
-              {DEMAND_ENGAGEMENT_MATRIX_ROWS.map((row) => {
-                const rowCells = buildDemandEngagementRowCells(demandEngagement, row);
+              {PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
+                const rowCells = buildProfileConversionEngagementRowCells(
+                  profileConversionEngagement,
+                  row,
+                );
 
                 return (
-                  <Fragment key={`psychologist-demand-engagement-row-${row.label}`}>
+                  <Fragment key={`psychologist-profile-conversion-engagement-row-${row.label}`}>
                     <p className="grid place-items-center rounded-2xl bg-surface-muted px-2 text-center text-[0.72rem] font-black text-muted">
                       {row.label}
                     </p>
                     {rowCells.map((cell) => (
-                      <DemandEngagementQuadrantCard
+                      <ProfileConversionEngagementQuadrantCard
                         color={cell.color}
                         description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
                         intensityPercentage={cell.rowPercentage}
                         key={cell.quadrant.id}
-                        planSegment={demandEngagementPlanSegment}
+                        planSegment={profileConversionEngagementPlanSegment}
                         quadrant={cell.quadrant}
                       />
                     ))}
@@ -2753,55 +2787,55 @@ const DashboardDemandEngagementCard = ({ summary }: { summary: AdminPsychologist
           </div>
 
           <aside className="grid content-start gap-3">
-            <DemandEngagementMetric
-              label="Demanda entre muito engajados"
+            <ProfileConversionEngagementMetric
+              label="Conversão entre muito engajados"
               value={
                 <>
-                  {formatNullablePercentage(veryEngaged.strong_demand_rate)}
+                  {formatNullablePercentage(veryEngaged.strong_conversion_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(veryEngaged.strong_demand_count)}/
+                    · {numberFormatter.format(veryEngaged.strong_conversion_count)}/
                     {numberFormatter.format(veryEngaged.psychologists)}
                   </span>
                 </>
               }
             />
-            <DemandEngagementMetric
-              label="Demanda entre engajados"
+            <ProfileConversionEngagementMetric
+              label="Conversão entre engajados"
               value={
                 <>
-                  {formatNullablePercentage(engaged.strong_demand_rate)}
+                  {formatNullablePercentage(engaged.strong_conversion_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(engaged.strong_demand_count)}/
+                    · {numberFormatter.format(engaged.strong_conversion_count)}/
                     {numberFormatter.format(engaged.psychologists)}
                   </span>
                 </>
               }
             />
-            <DemandEngagementMetric
-              label="Demanda entre pouco engajados"
+            <ProfileConversionEngagementMetric
+              label="Conversão entre pouco engajados"
               value={
                 <>
-                  {formatNullablePercentage(lowEngaged.strong_demand_rate)}
+                  {formatNullablePercentage(lowEngaged.strong_conversion_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(lowEngaged.strong_demand_count)}/
+                    · {numberFormatter.format(lowEngaged.strong_conversion_count)}/
                     {numberFormatter.format(lowEngaged.psychologists)}
                   </span>
                 </>
               }
             />
-            <DemandEngagementMetric
-              label="Demanda entre sem engajamento"
+            <ProfileConversionEngagementMetric
+              label="Conversão entre sem engajamento"
               value={
                 <>
-                  {formatNullablePercentage(noEngagement.strong_demand_rate)}
+                  {formatNullablePercentage(noEngagement.strong_conversion_rate)}
                   <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(noEngagement.strong_demand_count)}/
+                    · {numberFormatter.format(noEngagement.strong_conversion_count)}/
                     {numberFormatter.format(noEngagement.psychologists)}
                   </span>
                 </>
               }
             />
-            <DemandEngagementMetric
+            <ProfileConversionEngagementMetric
               label="Diferença observada"
               value={formatRateDifference(rateDifference)}
             />
@@ -2812,10 +2846,10 @@ const DashboardDemandEngagementCard = ({ summary }: { summary: AdminPsychologist
                   <span className="font-black text-foreground">
                     {formatRateDifference(rateDifference)}
                   </span>{" "}
-                  na taxa de demanda forte versus pouco ou sem engajamento no período.
+                  na taxa de conversão forte versus pouco ou sem engajamento no período.
                 </>
               ) : (
-                "Impacto observado: ainda não há base suficiente para comparar a demanda entre muito engajados, engajados e pouco ou sem engajamento no período."
+                "Impacto observado: ainda não há base suficiente para comparar a conversão entre muito engajados, engajados e pouco ou sem engajamento no período."
               )}
             </div>
           </aside>
@@ -2999,8 +3033,8 @@ const DashboardContent = ({
           />
           <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
         </DashboardOverviewPanel>
-        <DashboardDemandCard summary={summary} />
-        <DashboardDemandEngagementCard summary={summary} />
+        <DashboardProfileConversionCard summary={summary} />
+        <DashboardProfileConversionEngagementCard summary={summary} />
         <DashboardTrafficSourcesCard summary={summary} />
       </section>
 

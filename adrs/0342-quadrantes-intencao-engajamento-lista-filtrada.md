@@ -10,11 +10,11 @@ TASK-60
 
 ## Contexto
 
-O dashboard Admin de pacientes ja cruza **Intencao x Engajamento** em 16 celulas agregadas. O bloco equivalente de psicologos, **Demanda x Engajamento**, ja permite clicar em um quadrante e abrir a lista administrativa com o filtro composto aplicado.
+O dashboard Admin de pacientes ja cruza **Intencao x Engajamento** em 16 celulas agregadas. O bloco equivalente de psicologos, **Conversão x Engajamento**, ja permite clicar em um quadrante e abrir a lista administrativa com o filtro composto aplicado.
 
 O produto pediu o mesmo comportamento para pacientes: cada quadrante deve levar a `/pacientes/lista` mostrando apenas pacientes daquele cruzamento. A solucao precisava manter dados reais, evitar mocks/endpoints paralelos e preservar o layout mobile-first da matriz.
 
-Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente. A execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Demanda x Engajamento** em `/psicologos` e a captura enviada pelo usuario.
+Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente. A execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Conversão x Engajamento** em `/psicologos` e a captura enviada pelo usuario.
 
 ## Decisao
 

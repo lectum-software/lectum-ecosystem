@@ -145,21 +145,22 @@ Formato recomendado:
 - [ADR-0317 - Filtro Cortesia no dashboard Admin de psicologos](0317-filtro-cortesia-dashboard-psicologos-admin.md) - Accepted
 - [ADR-0320 - Presets relativos de período nos filtros Admin](0320-admin-presets-relativos-periodo.md) - Accepted
 - [ADR-0321 - Ordem canônica dos presets de período do Admin](0321-ordem-presets-periodo-admin.md) - Accepted
-- [ADR-0322 - Demanda agregada no dashboard Admin de psicologos](0322-demanda-dashboard-psicologos-admin.md) - Accepted
+- [ADR-0322 - Conversão agregada no dashboard Admin de psicologos](0322-conversao-dashboard-psicologos-admin.md) - Accepted
 - [ADR-0323 - Visao geral de Trafego com timeline filtravel](0323-trafego-visao-geral-timeline.md) - Accepted
 - [ADR-0324 - Canais canonicos de origem do trafego no Admin](0324-canais-origem-trafego-admin.md) - Accepted
 - [ADR-0326 - Graficos radiais do Admin como donut](0326-admin-graficos-donut.md) - Accepted
 - [ADR-0327 - Dashboard Admin enxuto sem blocos analiticos secundarios](0327-dashboard-admin-enxuto.md) - Accepted
-- [ADR-0330 - Comparativo Demanda x Engajamento no dashboard Admin de psicologos](0330-demanda-engajamento-dashboard-psicologos-admin.md) - Accepted
-- [ADR-0331 - Colunas de Demanda e Engajamento na lista Admin de psicologos](0331-colunas-demanda-engajamento-lista-psicologos-admin.md) - Accepted
+- [ADR-0330 - Comparativo Conversão x Engajamento no dashboard Admin de psicologos](0330-conversao-engajamento-dashboard-psicologos-admin.md) - Accepted
+- [ADR-0331 - Colunas de Conversão e Engajamento na lista Admin de psicologos](0331-colunas-conversao-engajamento-lista-psicologos-admin.md) - Accepted
 - [ADR-0332 - Catalogo canonico de especialidades na lista Admin de psicologos](0332-catalogo-especialidades-lista-admin-psicologos.md) - Accepted
-- [ADR-0333 - Quadrantes de Demanda x Engajamento navegam para lista filtrada](0333-quadrantes-demanda-engajamento-lista-filtrada.md) - Accepted
+- [ADR-0333 - Quadrantes de Conversão x Engajamento navegam para lista filtrada](0333-quadrantes-conversao-engajamento-lista-filtrada.md) - Accepted
 - [ADR-0334 - Filtros administrativos antes de Especialidade na lista Admin de psicologos](0334-filtros-administrativos-modal-lista-psicologos.md) - Accepted
-- [ADR-0335 - Demanda e engajamento em duas colunas no dashboard Admin de psicologos](0335-demanda-engajamento-duas-colunas-dashboard-psicologos.md) - Accepted
+- [ADR-0335 - Conversão e engajamento em duas colunas no dashboard Admin de psicologos](0335-conversao-engajamento-duas-colunas-dashboard-psicologos.md) - Accepted
 - [ADR-0336 - Query key canonica para filtros da lista Admin de psicologos](0336-query-key-filtros-lista-psicologos-admin.md) - Accepted
-- [ADR-0337 - Detalhamento de Engajamento no dashboard Admin de psicologos](0337-detalhamento-engajamento-demanda-dashboard-psicologos.md) - Accepted
+- [ADR-0337 - Detalhamento de Engajamento no dashboard Admin de psicologos](0337-detalhamento-engajamento-conversao-dashboard-psicologos.md) - Accepted
 - [ADR-0338 - Engajamento comunitario de pacientes e sem dados insuficientes em psicologos](0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md) - Accepted
-- [ADR-0339 - Categorias de demanda nao convertida na matriz Demanda x Engajamento](0339-demanda-engajamento-categorias-nao-convertidas.md) - Accepted
+- [ADR-0339 - Categorias de conversão nao convertida na matriz Conversão x Engajamento](0339-conversao-engajamento-categorias-nao-convertidas.md) - Accepted
 - [ADR-0340 - Score ponderado de engajamento comunitario no Admin](0340-engajamento-ponderado-admin.md) - Accepted
-- [ADR-0341 - Vocabulário Demanda no Admin de psicólogos](0341-vocabulario-demanda-admin.md) - Accepted
+- [ADR-0341 - Vocabulário Conversão no Admin de psicólogos](0341-vocabulario-conversao-admin.md) - Accepted
 - [ADR-0342 - Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md) - Accepted
+- [ADR-0343 - Vocabulário Conversão no Admin de psicólogos](0343-vocabulario-conversao-admin.md) - Accepted

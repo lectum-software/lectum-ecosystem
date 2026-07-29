@@ -11,19 +11,19 @@ import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import type {
-  AdminPsychologistsListDemandCategoryId,
-  AdminPsychologistsListDemandEngagementQuadrantId,
   AdminPsychologistsListEngagementCategoryId,
   AdminPsychologistsListExperience,
   AdminPsychologistsListFilters,
   AdminPsychologistsListItem,
   AdminPsychologistsListOption,
+  AdminPsychologistsListProfileConversionCategoryId,
+  AdminPsychologistsListProfileConversionEngagementQuadrantId,
   AdminPsychologistsListQuery,
   AdminPsychologistsListRegistryVerification,
   AdminPsychologistsListSort,
   IAdminPsychologistsListDTO,
 } from "../DTOs/IAdminPsychologistsListDTO";
-import { ADMIN_PSYCHOLOGISTS_LIST_DEMAND_ENGAGEMENT_QUADRANTS } from "../DTOs/IAdminPsychologistsListDTO";
+import { ADMIN_PSYCHOLOGISTS_LIST_PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS } from "../DTOs/IAdminPsychologistsListDTO";
 import { AdminPsychologistsListRepository } from "../repositories/AdminPsychologistsListRepository";
 import type {
   AdminPsychologistAuthorCountGroup,
@@ -39,12 +39,12 @@ const MAX_LIMIT = 50;
 const STATUS_ACTIVE = "ativa";
 const FREE_PLAN_SLUG = "gratuito";
 const MS_PER_DAY = 86_400_000;
-const DEMAND_FAVORITES_HIGH_30D = 5;
-const DEMAND_MIN_ACTIVE_DAYS = 7;
-const DEMAND_PROFILE_VIEWS_HIGH_30D = 60;
-const DEMAND_STRONG_CONVERSION_RATE_PERCENT = 5;
-const DEMAND_WHATSAPP_HIGH_30D = 5;
-const DEMAND_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
+const PROFILE_CONVERSION_FAVORITES_HIGH_30D = 5;
+const PROFILE_CONVERSION_MIN_ACTIVE_DAYS = 7;
+const PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D = 60;
+const PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT = 5;
+const PROFILE_CONVERSION_WHATSAPP_HIGH_30D = 5;
+const PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
 const COMMUNITY_ENGAGEMENT_SOURCE = "community_post+post_reply+post_vote.user_id";
 const COMMUNITY_ENGAGEMENT_MINIMUM_SIGNAL_30D = 3;
 const COMMUNITY_ENGAGEMENT_ACTIVE_30D = 6;
@@ -67,10 +67,10 @@ const STATUSES = new Set<AdminPsychologistsListItem["status"]>([
 const EXPERIENCES = new Set<AdminPsychologistsListExperience>(["0_4", "5_9", "10_plus", "unknown"]);
 const PROFILE_STATUSES = new Set(["active", "inactive"]);
 const REGISTRY_STATUSES = new Set(["active", "pending"]);
-const DEMAND_CATEGORIES = new Set<AdminPsychologistsListDemandCategoryId>([
+const PROFILE_CONVERSION_CATEGORIES = new Set<AdminPsychologistsListProfileConversionCategoryId>([
   "insufficient_data",
-  "low_demand",
-  "strong_demand",
+  "low_conversion",
+  "strong_conversion",
   "unconverted_interest",
   "unconverted_traffic",
 ]);
@@ -80,9 +80,10 @@ const ENGAGEMENT_CATEGORIES = new Set<AdminPsychologistsListEngagementCategoryId
   "pouco_ativo",
   "sem_base",
 ]);
-const DEMAND_ENGAGEMENT_QUADRANTS = new Set<AdminPsychologistsListDemandEngagementQuadrantId>(
-  ADMIN_PSYCHOLOGISTS_LIST_DEMAND_ENGAGEMENT_QUADRANTS,
-);
+const PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS =
+  new Set<AdminPsychologistsListProfileConversionEngagementQuadrantId>(
+    ADMIN_PSYCHOLOGISTS_LIST_PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS,
+  );
 
 const EXPERIENCE_LABELS: Record<AdminPsychologistsListExperience, string> = {
   "0_4": "0 a 4 anos",
@@ -119,19 +120,19 @@ const GENDER_LABELS: Record<string, string> = {
   other: "Outro",
 };
 
-const DEMAND_CATEGORY_CONFIG = {
+const PROFILE_CONVERSION_CATEGORY_CONFIG = {
   insufficient_data: {
     description:
       "Perfil com menos de 7 dias ativos desde o cadastro e sem volume forte de WhatsApp para classificar com segurança.",
     label: "Dados Insuficientes",
   },
-  low_demand: {
+  low_conversion: {
     description: "Poucos cliques no WhatsApp, poucas aberturas de perfil e poucos favoritos.",
-    label: "Baixa Demanda",
+    label: "Baixa Conversão",
   },
-  strong_demand: {
+  strong_conversion: {
     description: "Alto índice de cliques no WhatsApp, o sinal mais forte de resultado.",
-    label: "Demanda Forte",
+    label: "Conversão Forte",
   },
   unconverted_interest: {
     description: "Muitos favoritos, mas poucos cliques no WhatsApp.",
@@ -141,7 +142,10 @@ const DEMAND_CATEGORY_CONFIG = {
     description: "Muitas aberturas de perfil, mas poucos cliques no WhatsApp.",
     label: "Tráfego Não Convertido",
   },
-} satisfies Record<AdminPsychologistsListDemandCategoryId, { description: string; label: string }>;
+} satisfies Record<
+  AdminPsychologistsListProfileConversionCategoryId,
+  { description: string; label: string }
+>;
 
 const normalizeKey = (value: string) =>
   value
@@ -578,7 +582,7 @@ const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
   return roundPercent((count / activeDays) * 30);
 };
 
-type DemandSignalCounts = {
+type ProfileConversionSignalCounts = {
   activeDays: number;
   favorites: number;
   normalizedFavorites: number;
@@ -589,45 +593,49 @@ type DemandSignalCounts = {
   whatsappConversionRate: number | null;
 };
 
-const classifyDemandCategory = (
-  signals: DemandSignalCounts,
-): AdminPsychologistsListDemandCategoryId => {
+const classifyProfileConversionCategory = (
+  signals: ProfileConversionSignalCounts,
+): AdminPsychologistsListProfileConversionCategoryId => {
   const hasStrongWhatsappVolume =
-    signals.normalizedWhatsappClicks >= DEMAND_WHATSAPP_HIGH_30D ||
+    signals.normalizedWhatsappClicks >= PROFILE_CONVERSION_WHATSAPP_HIGH_30D ||
     (signals.whatsappClicks >= 2 &&
-      signals.normalizedWhatsappClicks >= DEMAND_WHATSAPP_HIGH_WITH_CONVERSION_30D &&
+      signals.normalizedWhatsappClicks >= PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D &&
       typeof signals.whatsappConversionRate === "number" &&
-      signals.whatsappConversionRate >= DEMAND_STRONG_CONVERSION_RATE_PERCENT);
+      signals.whatsappConversionRate >= PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT);
 
-  if (hasStrongWhatsappVolume) return "strong_demand";
-  if (signals.activeDays < DEMAND_MIN_ACTIVE_DAYS) return "insufficient_data";
+  if (hasStrongWhatsappVolume) return "strong_conversion";
+  if (signals.activeDays < PROFILE_CONVERSION_MIN_ACTIVE_DAYS) return "insufficient_data";
 
-  const hasLowWhatsappVolume = signals.normalizedWhatsappClicks < DEMAND_WHATSAPP_HIGH_30D;
+  const hasLowWhatsappVolume =
+    signals.normalizedWhatsappClicks < PROFILE_CONVERSION_WHATSAPP_HIGH_30D;
   const hasWeakWhatsappConversion =
     signals.whatsappConversionRate === null ||
-    signals.whatsappConversionRate < DEMAND_STRONG_CONVERSION_RATE_PERCENT;
+    signals.whatsappConversionRate < PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT;
 
   if (
-    signals.normalizedProfileViews >= DEMAND_PROFILE_VIEWS_HIGH_30D &&
+    signals.normalizedProfileViews >= PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D &&
     hasLowWhatsappVolume &&
     hasWeakWhatsappConversion
   ) {
     return "unconverted_traffic";
   }
 
-  if (signals.normalizedFavorites >= DEMAND_FAVORITES_HIGH_30D && hasLowWhatsappVolume) {
+  if (
+    signals.normalizedFavorites >= PROFILE_CONVERSION_FAVORITES_HIGH_30D &&
+    hasLowWhatsappVolume
+  ) {
     return "unconverted_interest";
   }
 
-  return "low_demand";
+  return "low_conversion";
 };
 
-const buildDemandSummary = (input: {
+const buildProfileConversionSummary = (input: {
   activeDays: number;
   favorites: number;
   profileViews: number;
   whatsappClicks: number;
-}): AdminPsychologistsListItem["demand"] => {
+}): AdminPsychologistsListItem["profile_conversion"] => {
   const whatsappConversionRate =
     input.profileViews > 0 ? roundPercent((input.whatsappClicks / input.profileViews) * 100) : null;
   const signals = {
@@ -640,8 +648,8 @@ const buildDemandSummary = (input: {
     whatsappClicks: input.whatsappClicks,
     whatsappConversionRate,
   };
-  const categoryId = classifyDemandCategory(signals);
-  const config = DEMAND_CATEGORY_CONFIG[categoryId];
+  const categoryId = classifyProfileConversionCategory(signals);
+  const config = PROFILE_CONVERSION_CATEGORY_CONFIG[categoryId];
 
   return {
     description: config.description,
@@ -659,12 +667,12 @@ const buildDemandSummary = (input: {
     },
     source: "profile_view_event+contact_request+psychologist_favorite",
     thresholds: {
-      favorites_high_30d: DEMAND_FAVORITES_HIGH_30D,
-      minimum_active_days: DEMAND_MIN_ACTIVE_DAYS,
-      profile_views_high_30d: DEMAND_PROFILE_VIEWS_HIGH_30D,
-      strong_conversion_rate_percent: DEMAND_STRONG_CONVERSION_RATE_PERCENT,
-      whatsapp_high_30d: DEMAND_WHATSAPP_HIGH_30D,
-      whatsapp_high_with_conversion_30d: DEMAND_WHATSAPP_HIGH_WITH_CONVERSION_30D,
+      favorites_high_30d: PROFILE_CONVERSION_FAVORITES_HIGH_30D,
+      minimum_active_days: PROFILE_CONVERSION_MIN_ACTIVE_DAYS,
+      profile_views_high_30d: PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D,
+      strong_conversion_rate_percent: PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT,
+      whatsapp_high_30d: PROFILE_CONVERSION_WHATSAPP_HIGH_30D,
+      whatsapp_high_with_conversion_30d: PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D,
     },
   };
 };
@@ -787,7 +795,7 @@ const buildItem = (
     social_value: profile.social_value,
     state: profile.professional_address_state,
     status,
-    demand: buildDemandSummary({
+    profile_conversion: buildProfileConversionSummary({
       activeDays,
       favorites,
       profileViews,
@@ -799,11 +807,15 @@ const buildItem = (
   };
 };
 
-type ListDemandEngagementLevel = "engaged" | "low_engaged" | "no_engagement" | "very_engaged";
+type ListProfileConversionEngagementLevel =
+  | "engaged"
+  | "low_engaged"
+  | "no_engagement"
+  | "very_engaged";
 
 const listEngagementLevelFromItem = (
   item: AdminPsychologistsListItem,
-): ListDemandEngagementLevel => {
+): ListProfileConversionEngagementLevel => {
   if (item.engagement.signals.interactions <= 0) return "no_engagement";
   if (item.engagement.id === "muito_ativo") return "very_engaged";
   if (item.engagement.id === "ativo") return "engaged";
@@ -811,23 +823,27 @@ const listEngagementLevelFromItem = (
   return "low_engaged";
 };
 
-const resolveDemandEngagementQuadrant = (
+const resolveProfileConversionEngagementQuadrant = (
   item: AdminPsychologistsListItem,
-): AdminPsychologistsListDemandEngagementQuadrantId => {
+): AdminPsychologistsListProfileConversionEngagementQuadrantId => {
   const engagementLevel = listEngagementLevelFromItem(item);
-  const demandPrefix = item.demand.id === "insufficient_data" ? "low_demand" : item.demand.id;
-  const quadrantId = `${demandPrefix}_${engagementLevel}`;
+  const profileConversionPrefix =
+    item.profile_conversion.id === "insufficient_data"
+      ? "low_conversion"
+      : item.profile_conversion.id;
+  const quadrantId = `${profileConversionPrefix}_${engagementLevel}`;
 
-  return quadrantId as AdminPsychologistsListDemandEngagementQuadrantId;
+  return quadrantId as AdminPsychologistsListProfileConversionEngagementQuadrantId;
 };
 
 const matchesSignalFilters = (
   item: AdminPsychologistsListItem,
   query: AdminPsychologistsListQuery,
 ) =>
-  (!query.demand || item.demand.id === query.demand) &&
+  (!query.profile_conversion || item.profile_conversion.id === query.profile_conversion) &&
   (!query.engagement || item.engagement.id === query.engagement) &&
-  (!query.demand_engagement || resolveDemandEngagementQuadrant(item) === query.demand_engagement);
+  (!query.profile_conversion_engagement ||
+    resolveProfileConversionEngagementQuadrant(item) === query.profile_conversion_engagement);
 
 const sortItems = (items: AdminPsychologistsListItem[], sort: AdminPsychologistsListSort) => {
   const sorted = [...items];
@@ -1007,8 +1023,8 @@ const activeFiltersCount = (query: AdminPsychologistsListQuery) =>
     query.plan,
     query.profile_status,
     query.registry_status,
-    query.demand,
-    query.demand_engagement,
+    query.profile_conversion,
+    query.profile_conversion_engagement,
     query.engagement,
     query.experience,
     query.available_today,
@@ -1036,8 +1052,9 @@ export const listAdminPsychologists = async (
     (query.experience && !EXPERIENCES.has(query.experience)) ||
     (query.profile_status && !PROFILE_STATUSES.has(query.profile_status)) ||
     (query.registry_status && !REGISTRY_STATUSES.has(query.registry_status)) ||
-    (query.demand && !DEMAND_CATEGORIES.has(query.demand)) ||
-    (query.demand_engagement && !DEMAND_ENGAGEMENT_QUADRANTS.has(query.demand_engagement)) ||
+    (query.profile_conversion && !PROFILE_CONVERSION_CATEGORIES.has(query.profile_conversion)) ||
+    (query.profile_conversion_engagement &&
+      !PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS.has(query.profile_conversion_engagement)) ||
     (query.engagement && !ENGAGEMENT_CATEGORIES.has(query.engagement)) ||
     (query.sort && !SORTS.has(query.sort))
   ) {

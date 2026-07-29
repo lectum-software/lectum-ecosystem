@@ -96,7 +96,7 @@ A UI agora mostra donuts espelhados: intencao em Frios/Curiosos/Interessados/Qua
 
 ## Atualização 2026-07-28 - Intenção x Engajamento
 
-Por pedido de produto, o dashboard `/pacientes` ganhou um bloco **Intenção x Engajamento** logo abaixo de **Intenção e engajamento dos pacientes**, seguindo a lógica analítica do bloco **Demanda x Engajamento** de psicólogos sem expor listas nominais.
+Por pedido de produto, o dashboard `/pacientes` ganhou um bloco **Intenção x Engajamento** logo abaixo de **Intenção e engajamento dos pacientes**, seguindo a lógica analítica do bloco **Conversão x Engajamento** de psicólogos sem expor listas nominais.
 
 O contrato `GET /api/admin/private/patients/dashboard` passa a retornar `intent_engagement`, calculado no backend com as classificações reais já existentes de intenção e engajamento por paciente único. A matriz cruza as quatro categorias de intenção (**Frios**, **Curiosos**, **Interessados** e **Qualificados**) com os quatro níveis de engajamento (**Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**), sempre sobre a mesma base de pacientes do período.
 

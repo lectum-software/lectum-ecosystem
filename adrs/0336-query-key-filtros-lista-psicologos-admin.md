@@ -10,13 +10,13 @@ TASK-54
 
 ## Contexto
 
-A lista Admin `/psicologos/lista` ja enviava `demand` e `engagement` ao endpoint real quando esses filtros estavam na URL, mas a `queryKey` do TanStack Query nao incluia todos os parametros suportados pela lista. Com isso, mudar somente filtros novos como **Demanda** e **Engajamento** podia reaproveitar o cache da lista sem filtros e deixar linhas incompatíveis visiveis.
+A lista Admin `/psicologos/lista` ja enviava `profile_conversion` e `engagement` ao endpoint real quando esses filtros estavam na URL, mas a `queryKey` do TanStack Query nao incluia todos os parametros suportados pela lista. Com isso, mudar somente filtros novos como **Conversão** e **Engajamento** podia reaproveitar o cache da lista sem filtros e deixar linhas incompatíveis visiveis.
 
 ## Decisao
 
 `admin/src/api/cache/keys.ts` passa a normalizar na chave da lista todos os filtros suportados por `PsychologistsListQuery`, incluindo:
 
-- `demand`, `engagement` e `demand_engagement`;
+- `profile_conversion`, `engagement` e `profile_conversion_engagement`;
 - `profile_status`, `registry_status`, `available_today`, `more_experienced` e `verified`;
 - `specialty`, `race_color` e `religion`.
 
@@ -34,7 +34,7 @@ A chave de cache fica alinhada ao contrato HTTP real (`cleanListParams`) para qu
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- HTTP local `GET http://localhost:3002/psicologos/lista?engagement=muito_ativo&demand=strong_demand` retornou `200`.
+- HTTP local `GET http://localhost:3002/psicologos/lista?engagement=muito_ativo&profile_conversion=strong_profile_conversion` retornou `200`.
 
 ## Pendencias
 

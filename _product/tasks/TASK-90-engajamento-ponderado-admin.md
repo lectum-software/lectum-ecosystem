@@ -41,8 +41,8 @@ O Admin deve classificar engajamento comunitário com pesos por tipo de ação, 
 
 ## Escopo frontend
 
-- Atualizar `/psicologos` para explicar o critério ponderado no bloco **Demanda x Engajamento**.
-- Atualizar `/psicologos/lista` para aceitar os quadrantes compostos com categorias de demanda não convertida e exibir **Sem engajamento** no filtro de engajamento.
+- Atualizar `/psicologos` para explicar o critério ponderado no bloco **Conversão x Engajamento**.
+- Atualizar `/psicologos/lista` para aceitar os quadrantes compostos com categorias de conversão não convertida e exibir **Sem engajamento** no filtro de engajamento.
 - Atualizar `/pacientes` para explicar os cortes ponderados do gráfico **Engajamento dos pacientes**.
 
 ## Escopo backend
@@ -119,6 +119,6 @@ O Admin deve classificar engajamento comunitário com pesos por tipo de ação, 
 
 ## Notas de execução
 
-- A expansão de quadrantes de **Demanda x Engajamento** preserva a navegação para filtros reais na lista.
+- A expansão de quadrantes de **Conversão x Engajamento** preserva a navegação para filtros reais na lista.
 - O score ponderado é métrica operacional interna do Admin; não aparece para pacientes/psicólogos e não altera descoberta pública.
 - A validação em browser usou um admin temporário real criado via `admin:bootstrap` e removido do banco ao final.

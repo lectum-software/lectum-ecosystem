@@ -1130,7 +1130,7 @@ const buildPsychologistAlerts = (
   let professionalCrpPending = 0;
   let invalidWhatsapp = 0;
   let unpublishedRequiredSettings = 0;
-  let psychologistNoDemandAfterAdaptation = 0;
+  let psychologistNoConversionAfterAdaptation = 0;
   const adaptationCutoff = new Date(now.getTime() - PSYCHOLOGIST_ADAPTATION_DAYS * DAY_IN_MS);
 
   for (const profile of profiles) {
@@ -1263,7 +1263,7 @@ const buildPsychologistAlerts = (
       profileViews === 0 &&
       whatsappClicks === 0
     ) {
-      psychologistNoDemandAfterAdaptation += 1;
+      psychologistNoConversionAfterAdaptation += 1;
       alerts.push({
         action_href: href,
         action_label: "Abrir psicólogo",
@@ -1299,11 +1299,11 @@ const buildPsychologistAlerts = (
           },
         ],
         group: "operacional",
-        id: `no-demand-${profile.id}`,
+        id: `no-conversion-${profile.id}`,
         priority: "medium",
         source: "professional_subscription+profile_view_event+contact_request",
-        title: "Psicólogo sem demanda após adaptação",
-        type: "psychologist_no_demand",
+        title: "Psicólogo sem conversão após adaptação",
+        type: "psychologist_no_conversion",
         user,
       });
     }
@@ -1314,7 +1314,7 @@ const buildPsychologistAlerts = (
     counts: {
       invalidWhatsapp,
       professionalCrpPending,
-      psychologistNoDemandAfterAdaptation,
+      psychologistNoConversionAfterAdaptation,
       unpublishedRequiredSettings,
     },
   };
@@ -1416,7 +1416,7 @@ const buildOperationalAlerts = async (
     uncoveredPostsCount +
     registrationErrors +
     psychologistAlerts.counts.unpublishedRequiredSettings +
-    psychologistAlerts.counts.psychologistNoDemandAfterAdaptation;
+    psychologistAlerts.counts.psychologistNoConversionAfterAdaptation;
   const urgentTotal = pendingReports + psychologistAlerts.counts.professionalCrpPending;
   const items = [
     ...reportAlerts,
@@ -1433,8 +1433,8 @@ const buildOperationalAlerts = async (
       patient_posts_without_coverage_48h: uncoveredPostsCount,
       pending_reports: pendingReports,
       professional_crp_pending: psychologistAlerts.counts.professionalCrpPending,
-      psychologist_no_demand_after_adaptation:
-        psychologistAlerts.counts.psychologistNoDemandAfterAdaptation,
+      psychologist_no_conversion_after_adaptation:
+        psychologistAlerts.counts.psychologistNoConversionAfterAdaptation,
       registration_errors: registrationErrors,
       total: pendingReports + complianceTotal + operationalTotal,
       unpublished_required_settings: psychologistAlerts.counts.unpublishedRequiredSettings,
@@ -1488,7 +1488,7 @@ const normalizeOperationalAlertType = (
     normalized === "patient_post_without_coverage" ||
     normalized === "post_report" ||
     normalized === "professional_crp_pending" ||
-    normalized === "psychologist_no_demand" ||
+    normalized === "psychologist_no_conversion" ||
     normalized === "registration_error" ||
     normalized === "unpublished_required_settings"
     ? normalized
@@ -1769,7 +1769,7 @@ const createComplianceChartPoint = (date: string) => ({
 const createOperationalChartPoint = (date: string) => ({
   date,
   patient_posts_without_coverage_48h: 0,
-  psychologist_no_demand_after_adaptation: 0,
+  psychologist_no_conversion_after_adaptation: 0,
   registration_errors: 0,
   unpublished_required_settings: 0,
 });
@@ -1839,12 +1839,12 @@ const buildAlertOverviewCharts = (alerts: AdminModerationOperationalAlertDTO[]) 
       continue;
     }
 
-    if (alert.type === "psychologist_no_demand") {
+    if (alert.type === "psychologist_no_conversion") {
       incrementChartPoint(
         operational,
         alert.created_at,
         createOperationalChartPoint,
-        "psychologist_no_demand_after_adaptation",
+        "psychologist_no_conversion_after_adaptation",
       );
       continue;
     }

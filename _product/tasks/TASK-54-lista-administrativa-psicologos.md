@@ -130,7 +130,7 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- HTTP local `GET http://localhost:3002/psicologos/lista?engagement=muito_ativo&demand=strong_demand` retornou `200`.
+- HTTP local `GET http://localhost:3002/psicologos/lista?engagement=muito_ativo&profile_conversion=strong_profile_conversion` retornou `200`.
 - Browser local com admin real.
 
 ## Notas de execução
@@ -437,14 +437,14 @@ Frontend esperado:
 ## Ajuste complementar: texto simples nos status da tabela (2026-07-28)
 
 - Pedido do usuario: remover as tags/pilulas da tabela de `/psicologos/lista` e manter texto normal para reduzir o peso visual.
-- Frontend Admin: as celulas de **Plano**, **Perfil**, **Registro**, **Demanda** e **Engajamento** passaram a usar texto simples com cor por token (`text-success`, `text-primary`, `text-warning`, `text-danger` e `text-muted`), sem fundo, borda, arredondamento ou padding de tag.
+- Frontend Admin: as celulas de **Plano**, **Perfil**, **Registro**, **Conversão** e **Engajamento** passaram a usar texto simples com cor por token (`text-success`, `text-primary`, `text-warning`, `text-danger` e `text-muted`), sem fundo, borda, arredondamento ou padding de tag.
 - O mesmo componente de texto foi aplicado aos cards mobile-first da lista para manter consistencia entre desktop e base mobile `390px`.
 - Nao houve alteracao de backend, Prisma/migrations, packages, contratos de API, dados, filtros, ordenacao ou paginacao.
 - ADR novo nao se aplica: ajuste puramente visual sem decisao arquitetural, integracao, regra de dominio ou trade-off novo.
 
 ### Criterios complementares
 
-- [x] As colunas **Plano**, **Perfil**, **Registro**, **Demanda** e **Engajamento** nao renderizam mais tags/pilulas na tabela desktop.
+- [x] As colunas **Plano**, **Perfil**, **Registro**, **Conversão** e **Engajamento** nao renderizam mais tags/pilulas na tabela desktop.
 - [x] Os valores permanecem legiveis como texto normal e preservam o significado por cor sem aumentar o peso visual.
 - [x] Os cards mobile-first da lista usam o mesmo tratamento textual.
 - [x] A lista continua sem overflow horizontal em desktop e mobile base `390px`.
@@ -460,26 +460,26 @@ Frontend esperado:
   - desktop `1440x1000`: 8 linhas reais, 40 textos de status nas celulas, `hasPillClass=false`, `document.documentElement.scrollWidth=1425` e `innerWidth=1440`;
   - mobile base `390x844`: 40 textos de status nos cards, `hasPillClass=false`, `document.documentElement.scrollWidth=390` e `innerWidth=390`.
 
-## Execucao complementar: colunas de Demanda e Engajamento (2026-07-28)
+## Execucao complementar: colunas de Conversão e Engajamento (2026-07-28)
 
-- Pedido do usuario: adicionar as colunas **Demanda** e **Engajamento** na lista Admin de psicologos.
-- Frontend Admin: a tabela desktop de `/psicologos/lista` agora exibe **Demanda** e **Engajamento** entre **Registro** e **Acoes**; os cards mobile-first exibem os mesmos rotulos como sinais compactos.
-- Frontend Admin: a modal de filtros tambem recebeu recortes opcionais por **Demanda**, **Engajamento** e **Quadrante** combinando ambos, com os identificadores reais retornados pelo contrato da lista e persistencia por URL/search params somente ao aplicar a modal.
-- Backend Admin: `GET /api/admin/private/psychologists` passou a retornar `demand` e `engagement` por profissional, calculados sem mock a partir de `profile_view_event`, `contact_request`, `psychologist_favorite`, `community_post`, `post_reply` e `post_vote`.
-- Backend Admin: os parametros opcionais `demand`, `engagement` e `demand_engagement` sao validados e aplicados depois de calcular as classificacoes reais de cada psicologo.
+- Pedido do usuario: adicionar as colunas **Conversão** e **Engajamento** na lista Admin de psicologos.
+- Frontend Admin: a tabela desktop de `/psicologos/lista` agora exibe **Conversão** e **Engajamento** entre **Registro** e **Acoes**; os cards mobile-first exibem os mesmos rotulos como sinais compactos.
+- Frontend Admin: a modal de filtros tambem recebeu recortes opcionais por **Conversão**, **Engajamento** e **Quadrante** combinando ambos, com os identificadores reais retornados pelo contrato da lista e persistencia por URL/search params somente ao aplicar a modal.
+- Backend Admin: `GET /api/admin/private/psychologists` passou a retornar `profile_conversion` e `engagement` por profissional, calculados sem mock a partir de `profile_view_event`, `contact_request`, `psychologist_favorite`, `community_post`, `post_reply` e `post_vote`.
+- Backend Admin: os parametros opcionais `profile_conversion`, `engagement` e `profile_conversion_engagement` sao validados e aplicados depois de calcular as classificacoes reais de cada psicologo.
 - Builder/Quick Copy `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/proto/admin/Psicólogos/Psicólogos- Lista.png`, a captura enviada pelo usuario e o codigo real da lista.
 - Nao houve alteracao de Prisma schema/migrations, package, seed, mock, backfill ou endpoint paralelo.
-- ADR criado: `adrs/0331-colunas-demanda-engajamento-lista-psicologos-admin.md`.
+- ADR criado: `adrs/0331-colunas-conversao-engajamento-lista-psicologos-admin.md`.
 
 ### Criterios complementares
 
-- [x] A tabela desktop exibe as novas colunas **Demanda** e **Engajamento**.
-- [x] Os cards mobile-first exibem **Demanda** e **Engajamento** sem usar `<img>` cru.
-- [x] **Demanda** usa categorias reais da lista: Demanda Forte, Trafego Nao Convertido, Interesse Nao Convertido, Baixa Demanda e Dados Insuficientes.
+- [x] A tabela desktop exibe as novas colunas **Conversão** e **Engajamento**.
+- [x] Os cards mobile-first exibem **Conversão** e **Engajamento** sem usar `<img>` cru.
+- [x] **Conversão** usa categorias reais da lista: Conversão Forte, Trafego Nao Convertido, Interesse Nao Convertido, Baixa Conversão e Dados Insuficientes.
 - [x] **Engajamento** usa categorias reais da lista: Muito ativo, Ativo, Pouco ativo e Sem base.
 - [x] Os valores sao calculados no backend a partir de sinais reais, sem mock ou endpoint simulado.
 - [x] A UI permanece mobile-first em base aproximada de 390px e sem overflow horizontal de viewport.
-- [x] O recorte opcional **Quadrante** combina demanda e engajamento sem criar dado derivado persistente.
+- [x] O recorte opcional **Quadrante** combina conversão e engajamento sem criar dado derivado persistente.
 - [x] Nenhum Prisma schema/migration ou package foi alterado.
 
 ### Validacao complementar
@@ -491,11 +491,11 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke de servico real com `.env` local: `listAdminPsychologists({ limit: 3, sort: "relevance" })` retornou `status=200`, `count=15`, `rows=3`, primeiro item com `demand="strong_demand"`, `engagement="muito_ativo"` e fontes reais declaradas.
-- Smoke de filtros reais: `demand="strong_demand"` e `engagement="muito_ativo"` retornaram `status=200`/`active_filters_count=1`; valor invalido de `demand` retornou `status=400`.
+- Smoke de servico real com `.env` local: `listAdminPsychologists({ limit: 3, sort: "relevance" })` retornou `status=200`, `count=15`, `rows=3`, primeiro item com `profile_conversion="strong_conversion"`, `engagement="muito_ativo"` e fontes reais declaradas.
+- Smoke de filtros reais: `profile_conversion="strong_conversion"` e `engagement="muito_ativo"` retornaram `status=200`/`active_filters_count=1`; valor invalido de `profile_conversion` retornou `status=400`.
 - Browser local/headless/CDP autenticado com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`:
-  - desktop `1440x1000`: headers `Rank, Psicologo, Data de cadastro, Plano, Perfil, Registro, Demanda, Engajamento, Acoes`, 8 linhas reais, `document.documentElement.scrollWidth=1425` e `innerWidth=1440`;
-  - mobile base `390x844`: cards reais exibindo **Demanda** e **Engajamento**, `document.documentElement.scrollWidth=390` e `innerWidth=390`.
+  - desktop `1440x1000`: headers `Rank, Psicologo, Data de cadastro, Plano, Perfil, Registro, Conversão, Engajamento, Acoes`, 8 linhas reais, `document.documentElement.scrollWidth=1425` e `innerWidth=1440`;
+  - mobile base `390x844`: cards reais exibindo **Conversão** e **Engajamento**, `document.documentElement.scrollWidth=390` e `innerWidth=390`.
 
 ## Ajuste complementar: catalogo canonico de especialidades no filtro Admin (2026-07-28)
 
@@ -524,18 +524,18 @@ Frontend esperado:
 
 ## Ajuste complementar: filtros administrativos antes de Especialidade (2026-07-28)
 
-- Pedido do usuario: na modal da lista de psicologos, adicionar antes de **Especialidade** os filtros administrativos **Plano**, **Status perfil**, **Status registro**, **Demanda** e **Engajamento**.
-- Frontend Admin: a modal de `/psicologos/lista` agora inicia com **Plano**, **Status perfil**, **Status registro**, **Demanda**, **Engajamento** e so depois **Especialidade**, mantendo a composicao mobile-first e sem `<img>` cru.
-- Frontend Admin: o campo visual **Quadrante** foi removido da modal para nao interromper a ordem solicitada; o parametro legado `demand_engagement` continua sendo parseado/limpo quando **Demanda** ou **Engajamento** sao selecionados, preservando links existentes.
-- Backend/Admin API: os filtros simples `demand` e `engagement` continuam usando categorias reais calculadas a partir dos sinais administrativos existentes, sem mock, endpoint paralelo, package novo ou migration.
+- Pedido do usuario: na modal da lista de psicologos, adicionar antes de **Especialidade** os filtros administrativos **Plano**, **Status perfil**, **Status registro**, **Conversão** e **Engajamento**.
+- Frontend Admin: a modal de `/psicologos/lista` agora inicia com **Plano**, **Status perfil**, **Status registro**, **Conversão**, **Engajamento** e so depois **Especialidade**, mantendo a composicao mobile-first e sem `<img>` cru.
+- Frontend Admin: o campo visual **Quadrante** foi removido da modal para nao interromper a ordem solicitada; o parametro legado `profile_conversion_engagement` continua sendo parseado/limpo quando **Conversão** ou **Engajamento** sao selecionados, preservando links existentes.
+- Backend/Admin API: os filtros simples `profile_conversion` e `engagement` continuam usando categorias reais calculadas a partir dos sinais administrativos existentes, sem mock, endpoint paralelo, package novo ou migration.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia auditavel permaneceu `_product/proto/admin/Psicologos/Psicologos- Lista.png`, a captura enviada pelo usuario e o browser local.
 - ADR criado: `adrs/0334-filtros-administrativos-modal-lista-psicologos.md`.
 
 ### Criterios complementares
 
-- [x] **Plano**, **Status perfil**, **Status registro**, **Demanda** e **Engajamento** aparecem antes de **Especialidade** na modal.
-- [x] **Demanda** e **Engajamento** aplicam parametros reais na URL/API (`demand` e `engagement`) somente ao aplicar filtros.
-- [x] O campo **Quadrante** nao aparece mais na modal principal, mas links existentes por `demand_engagement` continuam aceitos.
+- [x] **Plano**, **Status perfil**, **Status registro**, **Conversão** e **Engajamento** aparecem antes de **Especialidade** na modal.
+- [x] **Conversão** e **Engajamento** aplicam parametros reais na URL/API (`profile_conversion` e `engagement`) somente ao aplicar filtros.
+- [x] O campo **Quadrante** nao aparece mais na modal principal, mas links existentes por `profile_conversion_engagement` continuam aceitos.
 - [x] A modal permanece mobile-first na base aproximada de `390px` e sem overflow horizontal de viewport.
 - [x] Nenhum Prisma schema/migration, package, mock, seed ou endpoint paralelo foi criado.
 
@@ -546,8 +546,8 @@ Frontend esperado:
 - `NEXT_PRIVATE_BUILD_WORKER=0 node .\node_modules\next\dist\bin\next build --webpack --debug` em `admin/`
 - `pnpm check`
 - Browser local/headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8`:
-  - desktop `1440x1000`: labels iniciais `Plano`, `Status perfil`, `Status registro`, `Demanda`, `Engajamento`, `Especialidade`, `orderOk=true`, `hasQuadrante=false`, `scrollWidth=1425`, `innerWidth=1440`;
-  - aplicacao real dos filtros gerou URL com `engagement=ativo` e `demand=strong_demand`;
+  - desktop `1440x1000`: labels iniciais `Plano`, `Status perfil`, `Status registro`, `Conversão`, `Engajamento`, `Especialidade`, `orderOk=true`, `hasQuadrante=false`, `scrollWidth=1425`, `innerWidth=1440`;
+  - aplicacao real dos filtros gerou URL com `engagement=ativo` e `profile_conversion=strong_profile_conversion`;
   - mobile base `390x844`: mesma ordem de labels, `orderOk=true`, `hasQuadrante=false`, `scrollWidth=390`, `innerWidth=390`.
 
 ## Ajuste complementar: ordenacao compacta e resumo de filtros aplicados (2026-07-28)
@@ -564,7 +564,7 @@ Frontend esperado:
 
 - [x] O seletor **Ordenar por** ficou compacto e mais alinhado a densidade da tabela.
 - [x] A lista informa explicitamente os filtros ativos usados na tabela.
-- [x] O bloco de filtros aplicados cobre busca, Plano, Status perfil, Status registro, Demanda, Engajamento e demais filtros suportados pela URL/API.
+- [x] O bloco de filtros aplicados cobre busca, Plano, Status perfil, Status registro, Conversão, Engajamento e demais filtros suportados pela URL/API.
 - [x] O estado sem filtros ativos informa que nenhum filtro foi aplicado.
 - [x] A UI permanece mobile-first em base aproximada de `390px` e sem overflow horizontal de viewport.
 - [x] Nenhum backend, Prisma/migrations, package, mock, seed ou endpoint paralelo foi criado.
@@ -575,8 +575,8 @@ Frontend esperado:
 - `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/lista/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- Browser local/headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8&q=T%C3%BAlio&plan=courtesy&profile_status=active&registry_status=active&demand=strong_demand&engagement=muito_ativo`:
-  - desktop `1440x1000`: bloco **Filtros aplicados** mostrou Busca, Plano, Status perfil, Status registro, Demanda e Engajamento; seletor de ordenacao mediu `220x40`; `scrollWidth=1440`, `innerWidth=1440`;
+- Browser local/headless/CDP com admin temporario real removido ao final em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8&q=T%C3%BAlio&plan=courtesy&profile_status=active&registry_status=active&profile_conversion=strong_conversion&engagement=muito_ativo`:
+  - desktop `1440x1000`: bloco **Filtros aplicados** mostrou Busca, Plano, Status perfil, Status registro, Conversão e Engajamento; seletor de ordenacao mediu `220x40`; `scrollWidth=1440`, `innerWidth=1440`;
   - mobile base `390x844`: mesmos filtros visiveis; seletor de ordenacao mediu `258x38`; `scrollWidth=390`, `innerWidth=390`.
 
 ## Ajuste complementar: tags de filtros sem faixa (2026-07-28)
@@ -605,25 +605,25 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - `pnpm check`
 - Browser local/headless/CDP com admin temporario real removido ao final:
-  - filtro ativo em `/psicologos/lista?demand_engagement=strong_demand_high_engagement`: tag **Quadrante: Demanda forte + alto engajamento** visivel com botao **Remover filtro Quadrante...**, sem faixa branca nem texto visivel **Filtros aplicados**;
-  - apos clicar no **X**, a URL removeu `demand_engagement`, a contagem voltou para `0` e nenhum resumo/aviso de filtros ficou visivel;
+  - filtro ativo em `/psicologos/lista?profile_conversion_engagement=strong_conversion_high_engagement`: tag **Quadrante: Conversão forte + alto engajamento** visivel com botao **Remover filtro Quadrante...**, sem faixa branca nem texto visivel **Filtros aplicados**;
+  - apos clicar no **X**, a URL removeu `profile_conversion_engagement`, a contagem voltou para `0` e nenhum resumo/aviso de filtros ficou visivel;
   - sem filtros em `/psicologos/lista`: nao ha texto **Filtros aplicados**, nao ha mensagem **Nenhum filtro aplicado** e nao ha faixa branca;
   - desktop `1440x1000` e mobile base `390x844`: sem overflow horizontal de viewport.
 
 ## Correcao de regressao: aplicacao de filtros na lista Admin (2026-07-28)
 
-- Pedido do usuario: filtros ativos como `demand=strong_demand` e `engagement=muito_ativo` apareciam como tags na URL/UI, mas a tabela ainda exibia profissionais fora desses recortes.
+- Pedido do usuario: filtros ativos como `profile_conversion=strong_profile_conversion` e `engagement=muito_ativo` apareciam como tags na URL/UI, mas a tabela ainda exibia profissionais fora desses recortes.
 - Causa identificada: `GET /api/admin/private/psychologists` ja aceitava e aplicava os filtros reais, mas a query key do TanStack Query em `admin/src/api/cache/keys.ts` nao incluia todos os parametros novos de `PsychologistsListQuery`. Ao alterar apenas esses filtros, o Admin podia reutilizar a mesma entrada de cache da lista sem filtro.
-- Frontend Admin: `normalizePsychologistsList` passou a incluir `demand`, `engagement`, `demand_engagement`, `profile_status`, `registry_status`, `available_today`, `more_experienced`, `verified`, `specialty`, `race_color` e `religion`, alinhando a cache key ao contrato HTTP real da lista.
+- Frontend Admin: `normalizePsychologistsList` passou a incluir `profile_conversion`, `engagement`, `profile_conversion_engagement`, `profile_status`, `registry_status`, `available_today`, `more_experienced`, `verified`, `specialty`, `race_color` e `religion`, alinhando a cache key ao contrato HTTP real da lista.
 - Nao houve alteracao de backend, Prisma/migrations, packages, dados, seed, mock, endpoint paralelo, filtros disponiveis ou layout visual.
 - Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a correcao foi comportamental de cache/query key e preservou a referencia visual da lista Admin.
 - ADR criado: `adrs/0336-query-key-filtros-lista-psicologos-admin.md`.
 
 ### Criterios complementares
 
-- [x] Alterar **Demanda** muda a query key da lista e dispara nova leitura da API.
+- [x] Alterar **Conversão** muda a query key da lista e dispara nova leitura da API.
 - [x] Alterar **Engajamento** muda a query key da lista e dispara nova leitura da API.
-- [x] O filtro composto `demand_engagement` continua tendo cache key propria para links vindos do dashboard.
+- [x] O filtro composto `profile_conversion_engagement` continua tendo cache key propria para links vindos do dashboard.
 - [x] Os demais filtros suportados pela URL/API permanecem representados na cache key da listagem.
 - [x] Nenhum backend, Prisma/migrations, package, mock, seed ou endpoint paralelo foi criado.
 

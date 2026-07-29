@@ -179,7 +179,7 @@ Esta task é uma correção transversal de UX no Admin e não altera API, persis
 - `pnpm --dir admin check` - OK.
 - `pnpm --dir admin build` - OK.
 - `pnpm --dir backend check` - OK após isolar alterações paralelas não relacionadas.
-- `pnpm check` - tentado, mas não concluiu de forma limpa no workspace porque alterações paralelas não relacionadas da TASK-84 reapareceram em arquivos backend de demanda do dashboard de psicólogos; não houve falha atribuída a este ajuste.
+- `pnpm check` - tentado, mas não concluiu de forma limpa no workspace porque alterações paralelas não relacionadas da TASK-84 reapareceram em arquivos backend de conversão do dashboard de psicólogos; não houve falha atribuída a este ajuste.
 - Smoke HTTP local no Admin: `/psicologos`, `/pacientes`, `/comunidades`, `/financeiro`, `/notificacoes` e `/moderacao` retornaram 200 em `http://localhost:3002`.
 - Chrome headless local abriu `http://localhost:3002/psicologos` e gerou screenshot; sem sessão administrativa, a página exibiu redirecionamento para login.
 

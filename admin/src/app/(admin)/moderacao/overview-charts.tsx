@@ -123,7 +123,7 @@ const operationalChartMetrics = [
   {
     color: "#f59f00",
     icon: Eye,
-    key: "psychologist_no_demand_after_adaptation",
+    key: "psychologist_no_conversion_after_adaptation",
     label: "Psicólogos assinantes sem tráfego",
   },
 ] satisfies ModerationChartMetric[];

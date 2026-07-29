@@ -1,4 +1,4 @@
-# ADR-0333: Quadrantes de Demanda x Engajamento navegam para lista filtrada
+# ADR-0333: Quadrantes de Conversão x Engajamento navegam para lista filtrada
 
 ## Status
 
@@ -10,13 +10,13 @@ TASK-89
 
 ## Contexto
 
-O bloco **Demanda x Engajamento** do dashboard Admin de psicólogos exibia quatro quadrantes agregados, mas não permitia ao Admin chegar rapidamente à lista operacional de profissionais daquele recorte. A lista Admin já possui filtros reais de demanda e engajamento por profissional, porém os quadrantes do dashboard usam uma regra composta: demanda forte versus sem demanda forte e alto versus baixo engajamento.
+O bloco **Conversão x Engajamento** do dashboard Admin de psicólogos exibia quatro quadrantes agregados, mas não permitia ao Admin chegar rapidamente à lista operacional de profissionais daquele recorte. A lista Admin já possui filtros reais de conversão e engajamento por profissional, porém os quadrantes do dashboard usam uma regra composta: conversão forte versus sem conversão forte e alto versus baixo engajamento.
 
 ## Decisão
 
-Transformar os quatro cards de quadrante em links visualmente tratados como botões para `/psicologos/lista`, usando o novo filtro de URL/API `demand_engagement` com o id exato do quadrante. Quando o seletor por plano do bloco estiver em **Assinantes**, **Gratuitos** ou **Cortesia**, a navegação também carrega o filtro `plan` correspondente da lista.
+Transformar os quatro cards de quadrante em links visualmente tratados como botões para `/psicologos/lista`, usando o novo filtro de URL/API `profile_conversion_engagement` com o id exato do quadrante. Quando o seletor por plano do bloco estiver em **Assinantes**, **Gratuitos** ou **Cortesia**, a navegação também carrega o filtro `plan` correspondente da lista.
 
-Na lista Admin, `demand_engagement` é validado no contrato real e aplicado após calcular os sinais reais de cada psicólogo, sem mock, seed, endpoint paralelo ou migration. O parâmetro permanece aceito por URL/search params para links profundos vindos do dashboard; a modal principal da lista não reintroduz o campo **Quadrante**, preservando a decisão registrada na TASK-54.
+Na lista Admin, `profile_conversion_engagement` é validado no contrato real e aplicado após calcular os sinais reais de cada psicólogo, sem mock, seed, endpoint paralelo ou migration. O parâmetro permanece aceito por URL/search params para links profundos vindos do dashboard; a modal principal da lista não reintroduz o campo **Quadrante**, preservando a decisão registrada na TASK-54.
 
 ## Consequências
 
@@ -34,7 +34,7 @@ Na lista Admin, `demand_engagement` é validado no contrato real e aplicado apó
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?demand_engagement=strong_demand_high_engagement` retornaram 200.
+- Smoke local no Admin dev server: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?profile_conversion_engagement=strong_conversion_high_engagement` retornaram 200.
 
 ## Pendências
 

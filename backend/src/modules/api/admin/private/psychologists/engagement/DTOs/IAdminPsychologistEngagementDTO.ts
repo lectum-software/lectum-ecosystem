@@ -38,16 +38,16 @@ export type AdminPsychologistAvailabilityMetric = {
   value: number | null;
 };
 
-export type AdminPsychologistBusinessDemandCategoryId =
+export type AdminPsychologistBusinessProfileConversionCategoryId =
   | "insufficient_data"
-  | "low_demand"
-  | "strong_demand"
+  | "low_conversion"
+  | "strong_conversion"
   | "unconverted_interest"
   | "unconverted_traffic";
 
-export type AdminPsychologistBusinessDemand = {
+export type AdminPsychologistBusinessProfileConversion = {
   description: string;
-  id: AdminPsychologistBusinessDemandCategoryId;
+  id: AdminPsychologistBusinessProfileConversionCategoryId;
   label: string;
   signals: {
     active_days: number;
@@ -284,7 +284,7 @@ export type AdminPsychologistStatisticsDTO = {
   business: {
     cards: AdminPsychologistAvailabilityMetric[];
     series: AdminPsychologistStatisticsSeriesPoint[];
-    demand: AdminPsychologistBusinessDemand;
+    profile_conversion: AdminPsychologistBusinessProfileConversion;
   };
   community: {
     cards: AdminPsychologistAvailabilityMetric[];

@@ -89,8 +89,8 @@ const normalizePsychologistsList = (input: PsychologistsListQuery) => ({
   state: input.state || "all",
   status: input.status || "all",
   target_audience: input.target_audience || "all",
-  demand: input.demand || "all",
-  demand_engagement: input.demand_engagement || "all",
+  profile_conversion: input.profile_conversion || "all",
+  profile_conversion_engagement: input.profile_conversion_engagement || "all",
   verified: input.verified || false,
 });
 

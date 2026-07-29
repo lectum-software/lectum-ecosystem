@@ -411,24 +411,24 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - Browser local/headless via Chrome CDP em `http://localhost:3002/psicologos/cmrwmw35t0000xkuhxoceh77v`: desktop `1366x900` e mobile `390x844` validaram as abas Geral, Perfil, Plano, Estatisticas, Publicacoes, Avaliacoes, Denuncias, Atividades e Conta sem `font-black`/`font-extrabold` em titulos `h2`/`h3`/`h4` visiveis e sem overflow horizontal. Admin temporario real removido ao final.
 
 
-## Ajuste complementar 2026-07-28 - contadores de demanda e engajamento na aba Geral
+## Ajuste complementar 2026-07-28 - contadores de conversão e engajamento na aba Geral
 
 - Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
-- Os tres blocos `Cliques no WhatsApp`, `Favoritado` e `Visualizacoes de perfil` foram unificados em um unico contador `Demanda`.
-- O contador `Demanda` destaca o resultado real `business.demand.label` retornado por `GET /api/admin/private/psychologists/:id/statistics` no periodo `all`; os tres sinais originais continuam dentro do contador com menor peso textual.
+- Os tres blocos `Cliques no WhatsApp`, `Favoritado` e `Visualizacoes de perfil` foram unificados em um unico contador `Conversão`.
+- O contador `Conversão` destaca o resultado real `business.profile_conversion.label` retornado por `GET /api/admin/private/psychologists/:id/statistics` no periodo `all`; os tres sinais originais continuam dentro do contador com menor peso textual.
 - Foi adicionado o contador `Engajamento`, usando `community.engagement_diagnosis.label` do mesmo endpoint real de estatisticas.
-- A ordem dos contadores passa a ser `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
+- A ordem dos contadores passa a ser `Ranking`, `Avaliacoes`, `Conversão`, `Engajamento`.
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, package, mock, seed ou backfill.
 - UI permanece mobile-first: os quatro contadores empilham em largura base e usam grade em duas colunas a partir de `sm` e quatro colunas em desktop largo.
 - Builder/Quick Copy nao esteve acessivel como ferramenta callable; foram usadas a captura enviada pelo usuario e a referencia local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
-- ADR criado: `adrs/0329-admin-psicologo-contadores-demanda-engajamento.md`.
+- ADR criado: `adrs/0329-admin-psicologo-contadores-conversao-engajamento.md`.
 
 ### Criterios do ajuste de contadores
 
-- [x] WhatsApp, Favoritado e Visualizacoes de perfil aparecem dentro do contador `Demanda` com menor peso textual.
-- [x] `Demanda` destaca o resultado real da classificacao de demanda do psicologo.
+- [x] WhatsApp, Favoritado e Visualizacoes de perfil aparecem dentro do contador `Conversão` com menor peso textual.
+- [x] `Conversão` destaca o resultado real da classificacao de conversão do psicologo.
 - [x] A aba Geral exibe um novo contador `Engajamento` com diagnostico real.
-- [x] A ordem visual dos contadores e `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
+- [x] A ordem visual dos contadores e `Ranking`, `Avaliacoes`, `Conversão`, `Engajamento`.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 - [x] Nenhum `<img>` cru foi usado.
 
@@ -440,27 +440,27 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
 
 
-## Ajuste pos-feedback 2026-07-28 - Demanda sem sinais internos
+## Ajuste pos-feedback 2026-07-28 - Conversão sem sinais internos
 
 - Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
-- O contador `Demanda` passou a exibir somente o resultado real `business.demand.label`, sem listar `WhatsApp`, `Favoritado` e `Visualizacoes de perfil` dentro do card.
-- Os sinais continuam disponiveis nos blocos detalhados de estatisticas e nao foram removidos do contrato, tracking, backend ou calculo de demanda.
+- O contador `Conversão` passou a exibir somente o resultado real `business.profile_conversion.label`, sem listar `WhatsApp`, `Favoritado` e `Visualizacoes de perfil` dentro do card.
+- Os sinais continuam disponiveis nos blocos detalhados de estatisticas e nao foram removidos do contrato, tracking, backend ou calculo de conversão.
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, package, mock, seed ou backfill.
-- UI permanece mobile-first com os quatro contadores na ordem `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
+- UI permanece mobile-first com os quatro contadores na ordem `Ranking`, `Avaliacoes`, `Conversão`, `Engajamento`.
 - Builder/Quick Copy nao esteve acessivel como ferramenta callable; foram usadas a captura enviada pelo usuario e a referencia local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
-- ADR atualizado: `adrs/0329-admin-psicologo-contadores-demanda-engajamento.md`.
+- ADR atualizado: `adrs/0329-admin-psicologo-contadores-conversao-engajamento.md`.
 
 ### Criterios do ajuste pos-feedback
 
-- [x] O contador `Demanda` nao exibe `WhatsApp`, `Favoritado` nem `Visualizacoes de perfil` dentro do card.
-- [x] `Demanda` continua destacando o resultado real da classificacao de demanda do psicologo.
-- [x] A ordem visual dos contadores permanece `Ranking`, `Avaliacoes`, `Demanda`, `Engajamento`.
+- [x] O contador `Conversão` nao exibe `WhatsApp`, `Favoritado` nem `Visualizacoes de perfil` dentro do card.
+- [x] `Conversão` continua destacando o resultado real da classificacao de conversão do psicologo.
+- [x] A ordem visual dos contadores permanece `Ranking`, `Avaliacoes`, `Conversão`, `Engajamento`.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
 - [x] Nenhum `<img>` cru foi usado.
 
 ### Validacao complementar do ajuste pos-feedback
 
-- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx" "../adrs/0329-admin-psicologo-contadores-demanda-engajamento.md" "../_product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx" "../adrs/0329-admin-psicologo-contadores-conversao-engajamento.md" "../_product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.

@@ -57,7 +57,7 @@ export const schema: IValidatorRequest = {
       optional: true,
     },
     {
-      key: "demand",
+      key: "profile_conversion",
       coerse: "string",
       method: "string",
       max: 60,
@@ -71,7 +71,7 @@ export const schema: IValidatorRequest = {
       optional: true,
     },
     {
-      key: "demand_engagement",
+      key: "profile_conversion_engagement",
       coerse: "string",
       method: "string",
       max: 60,
