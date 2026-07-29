@@ -260,3 +260,43 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - HTTP local no Admin dev server: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?profile_conversion_engagement=unconverted_interest_no_engagement` e `GET http://localhost:3002/psicologos/lista?profile_conversion_engagement=unconverted_traffic_engaged` retornaram 200.
 - Validacao estatica do build: bundle de `/psicologos`/`/psicologos/lista` contem **Interesse Nao Convertido**, **Trafego Nao Convertido**, `unconverted_interest_very_engaged`, `unconverted_traffic_no_engagement` e `lg:grid-cols-[132px_repeat(4,minmax(0,1fr))]`.
 - Browser local/headless autenticado em 390x844 validou `/psicologos` e `/psicologos/lista?engagement=sem_base`, com `scrollWidth=390` e screenshots em `.tmp/admin-psychologists-weighted-engagement-mobile.png` e `.tmp/admin-psychologists-list-weighted-engagement-mobile.png`.
+
+## Ajuste pós-feedback 2026-07-29 - Exposição ponderada e 3 donuts lado a lado
+
+- Pedido do usuário: adicionar um bloco de **Exposição** no painel `/psicologos`, usando pesos diferentes por qualidade de exposição, e mover as legendas para baixo dos donuts para permitir três blocos lado a lado.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passou a retornar `profile_exposure` no agregado principal e em `plan_segments` para Todos, Assinantes, Gratuitos e Cortesia.
+- A Exposição usa apenas eventos reais existentes: impressões de listagem (`profile_view_event.source="search_result"`), aberturas de perfil (`profile_view_event.source="profile_page"`), views qualificadas de vídeo do perfil (`profile_video_watch_session`) e views de posts/respostas autorais em comunidades (`page_view_event.target_type=post/reply`).
+- O score ponderado adotado foi: listagem `0,25`, resposta vista `0,5`, post visto `0,75`, perfil aberto `1` e vídeo qualificado `1,5`.
+- A classificação de Exposição usa percentis da plataforma no período para **Alta Exposição**, **Exposição Padrão**, **Baixa Exposição**, **Sem Exposição** e **Dados Insuficientes** durante os primeiros 30 dias.
+- Frontend Admin: o card superior foi renomeado para **Conversão, engajamento e exposição dos psicólogos**, passou a renderizar três blocos responsivos e moveu a legenda dos donuts para baixo do gráfico.
+- Frontend Admin: o bloco **Exposição** exibe faixa padrão do período, tooltip com pesos e categorias vindas da API.
+- Backend Admin: as consultas de exposição foram agrupadas em lote separado para reduzir concorrência e evitar `EMAXCONNSESSION` no banco de desenvolvimento.
+- Builder/Quick Copy não estava exposto como ferramenta callable neste ambiente; a execução usou `_product/tasks/PROTO-INVENTORY.md`, a referência local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e a captura enviada pelo usuário.
+- Nenhuma alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` não se aplica.
+- ADR criado: `adrs/0351-exposicao-ponderada-dashboard-psicologos-admin.md`.
+
+### Critérios complementares
+
+- [x] O dashboard Admin de psicólogos retorna `profile_exposure` com dados reais e sem endpoint paralelo.
+- [x] `plan_segments` retorna `profile_exposure` para Todos, Assinantes, Gratuitos e Cortesia.
+- [x] A Exposição usa score ponderado com pesos diferentes para listagem, comentário/resposta vista, post visto, perfil aberto e vídeo qualificado.
+- [x] A classificação exibe Alta Exposição, Exposição Padrão, Baixa Exposição, Sem Exposição e Dados Insuficientes.
+- [x] O card superior exibe Conversão, Engajamento e Exposição com legendas abaixo dos donuts, preservando layout mobile-first.
+- [x] A UI explica os pesos de Exposição e não usa `<img>` cru.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema Prisma ou migration foi criado.
+- [x] ADR relevante registrado.
+- [x] Checks/builds relevantes executados e verdes.
+- [x] Commit próprio criado e push executado.
+
+### Validação complementar
+
+- `pnpm --dir backend exec biome check --write "src/utils/admin-profile-exposure.ts" "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke backend com `buildPsychologistsDashboard({ period: "all" })`: retornou `profile_exposure`, cinco categorias, totais reais de exposição, benchmark e `plan_segments` com `profile_exposure` para `all`, `subscribers`, `free` e `courtesy`.
+- HTTP local no Admin dev server: `GET http://localhost:3002/psicologos` retornou 200.
+- Browser local/headless autenticado em `http://localhost:3002/psicologos`: desktop `1920x1080` validou três cards na mesma linha (`Conversão`, `Engajamento`, `Exposição`) e mobile `390x844` validou `scrollWidth=390`, presença de **Exposição**, faixa padrão e tooltip/descrição de score ponderado. Screenshots salvos em `.tmp/admin-psychologists-exposure-desktop.png` e `.tmp/admin-psychologists-exposure-mobile.png`.

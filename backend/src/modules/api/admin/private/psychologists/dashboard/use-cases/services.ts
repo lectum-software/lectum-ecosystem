@@ -23,6 +23,16 @@ import {
   classifyAdminProfileConversionCategory,
 } from "@/utils/admin-profile-conversion";
 import {
+  ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG,
+  ADMIN_PROFILE_EXPOSURE_CATEGORY_ORDER,
+  ADMIN_PROFILE_EXPOSURE_SOURCE,
+  ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
+  buildAdminProfileExposureBenchmark,
+  calculateAdminProfileExposureScore,
+  classifyAdminProfileExposureCategory,
+  roundAdminProfileExposureNumber,
+} from "@/utils/admin-profile-exposure";
+import {
   daysBetweenDates,
   firstPaidProfessionalSubscription,
   isPaidProfessionalSubscription,
@@ -57,6 +67,9 @@ import type {
   AdminPsychologistsDashboardProfileConversionEngagementQuadrantId,
   AdminPsychologistsDashboardProfileConversionEngagementResults,
   AdminPsychologistsDashboardProfileConversionResults,
+  AdminPsychologistsDashboardProfileExposureCategoryId,
+  AdminPsychologistsDashboardProfileExposureResults,
+  AdminPsychologistsDashboardProfileExposureTotals,
   AdminPsychologistsDashboardPsychologist,
   AdminPsychologistsDashboardQuery,
   AdminPsychologistsDashboardSummary,
@@ -65,6 +78,7 @@ import type {
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
   AdminPsychologistCommunityEngagementEventRecord,
+  AdminPsychologistCountRecord,
   AdminPsychologistDirectoryFilterSearchRecord,
   AdminPsychologistEventRecord,
   AdminPsychologistPlatformPageViewRecord,
@@ -124,6 +138,13 @@ const PROFILE_CONVERSION_CATEGORY_CONFIG =
     AdminPsychologistsDashboardProfileConversionCategoryId,
     { description: string; label: string }
   >;
+const PROFILE_EXPOSURE_CATEGORY_ORDER =
+  ADMIN_PROFILE_EXPOSURE_CATEGORY_ORDER as AdminPsychologistsDashboardProfileExposureCategoryId[];
+
+const PROFILE_EXPOSURE_CATEGORY_CONFIG = ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG satisfies Record<
+  AdminPsychologistsDashboardProfileExposureCategoryId,
+  { description: string; label: string }
+>;
 const PROFILE_CONVERSION_ENGAGEMENT_LEVEL_CONFIG = {
   engaged: {
     description: "engajamento consistente em comunidades",
@@ -1054,6 +1075,9 @@ const countEventsByPsychologist = (events: AdminPsychologistEventRecord[]) => {
   return counts;
 };
 
+const countRecordsByPsychologist = (records: AdminPsychologistCountRecord[]) =>
+  new Map(records.map((record) => [record.psychologist_id, record.count]));
+
 const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
   if (activeDays <= 0) return 0;
 
@@ -1177,6 +1201,175 @@ const buildProfileConversionResults = (params: {
     unavailable_reason:
       totalPsychologists === 0
         ? "Sem psic?logos ativos no fim do per?odo selecionado para classificar convers?o."
+        : null,
+  };
+};
+
+const emptyProfileExposureTotals = (): AdminPsychologistsDashboardProfileExposureTotals => ({
+  community_post_views: 0,
+  community_reply_views: 0,
+  exposure_score: 0,
+  profile_views: 0,
+  qualified_video_views: 0,
+  search_result_impressions: 0,
+});
+
+const addProfileExposureTotals = (
+  totals: AdminPsychologistsDashboardProfileExposureTotals,
+  signals: AdminPsychologistsDashboardProfileExposureTotals,
+) => {
+  totals.community_post_views += signals.community_post_views;
+  totals.community_reply_views += signals.community_reply_views;
+  totals.exposure_score = roundAdminProfileExposureNumber(
+    totals.exposure_score + signals.exposure_score,
+  );
+  totals.profile_views += signals.profile_views;
+  totals.qualified_video_views += signals.qualified_video_views;
+  totals.search_result_impressions += signals.search_result_impressions;
+};
+
+const buildProfileExposureSignalTotals = (input: {
+  communityPostViews: number;
+  communityReplyViews: number;
+  profileViews: number;
+  qualifiedVideoViews: number;
+  searchResultImpressions: number;
+}): AdminPsychologistsDashboardProfileExposureTotals => ({
+  community_post_views: input.communityPostViews,
+  community_reply_views: input.communityReplyViews,
+  exposure_score: calculateAdminProfileExposureScore(input),
+  profile_views: input.profileViews,
+  qualified_video_views: input.qualifiedVideoViews,
+  search_result_impressions: input.searchResultImpressions,
+});
+
+const buildProfileExposureResults = (params: {
+  communityPostViews: AdminPsychologistCountRecord[];
+  communityReplyViews: AdminPsychologistCountRecord[];
+  profileViews: AdminPsychologistEventRecord[];
+  profiles: AdminPsychologistProfileRecord[];
+  qualifiedVideoViews: AdminPsychologistCountRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+  searchResultImpressions: AdminPsychologistCountRecord[];
+}): AdminPsychologistsDashboardProfileExposureResults => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const profileViewEvents = params.profileViews.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const profileViewCounts = countEventsByPsychologist(profileViewEvents);
+  const searchResultImpressionCounts = countRecordsByPsychologist(
+    params.searchResultImpressions.filter((record) =>
+      analyzedPsychologistIds.has(record.psychologist_id),
+    ),
+  );
+  const qualifiedVideoViewCounts = countRecordsByPsychologist(
+    params.qualifiedVideoViews.filter((record) =>
+      analyzedPsychologistIds.has(record.psychologist_id),
+    ),
+  );
+  const communityPostViewCounts = countRecordsByPsychologist(
+    params.communityPostViews.filter((record) =>
+      analyzedPsychologistIds.has(record.psychologist_id),
+    ),
+  );
+  const communityReplyViewCounts = countRecordsByPsychologist(
+    params.communityReplyViews.filter((record) =>
+      analyzedPsychologistIds.has(record.psychologist_id),
+    ),
+  );
+  const exposureSignalsByPsychologist = new Map<
+    string,
+    AdminPsychologistsDashboardProfileExposureTotals
+  >();
+
+  for (const profile of params.profiles) {
+    const psychologistId = profile.user.id;
+    exposureSignalsByPsychologist.set(
+      psychologistId,
+      buildProfileExposureSignalTotals({
+        communityPostViews: communityPostViewCounts.get(psychologistId) ?? 0,
+        communityReplyViews: communityReplyViewCounts.get(psychologistId) ?? 0,
+        profileViews: profileViewCounts.get(psychologistId) ?? 0,
+        qualifiedVideoViews: qualifiedVideoViewCounts.get(psychologistId) ?? 0,
+        searchResultImpressions: searchResultImpressionCounts.get(psychologistId) ?? 0,
+      }),
+    );
+  }
+
+  const eligibleProfiles = params.profiles.filter(
+    (profile) =>
+      getProfileAgeDaysUntil(profile, params.range.end) >=
+      ADMIN_PROFILE_EXPOSURE_THRESHOLDS.adaptation_period_days,
+  );
+  const benchmark = buildAdminProfileExposureBenchmark({
+    eligiblePsychologists: eligibleProfiles.length,
+    exposureScores: eligibleProfiles.map(
+      (profile) => exposureSignalsByPsychologist.get(profile.user.id)?.exposure_score ?? 0,
+    ),
+  });
+  const categories = new Map(
+    PROFILE_EXPOSURE_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: emptyProfileExposureTotals(),
+      },
+    ]),
+  );
+  const totalSignals = {
+    ...emptyProfileExposureTotals(),
+    adaptation_psychologists: params.profiles.length - benchmark.eligible_psychologists,
+    eligible_psychologists: benchmark.eligible_psychologists,
+    exposed_psychologists: 0,
+    psychologists: params.profiles.length,
+  };
+
+  for (const profile of params.profiles) {
+    const signals =
+      exposureSignalsByPsychologist.get(profile.user.id) ?? emptyProfileExposureTotals();
+    const categoryId = classifyAdminProfileExposureCategory({
+      benchmark,
+      signals: {
+        exposureScore: signals.exposure_score,
+        profileAgeDays: getProfileAgeDaysUntil(profile, params.range.end),
+      },
+    });
+    const category = categories.get(categoryId);
+
+    addProfileExposureTotals(totalSignals, signals);
+    if (signals.exposure_score > 0) totalSignals.exposed_psychologists += 1;
+    if (category) {
+      category.count += 1;
+      addProfileExposureTotals(category.totals, signals);
+    }
+  }
+
+  return {
+    benchmark,
+    categories: PROFILE_EXPOSURE_CATEGORY_ORDER.map((id) => {
+      const config = PROFILE_EXPOSURE_CATEGORY_CONFIG[id];
+      const values = categories.get(id) ?? {
+        count: 0,
+        totals: emptyProfileExposureTotals(),
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, params.profiles.length),
+        totals: values.totals,
+      };
+    }),
+    description:
+      "Classificação interna e agregada por score ponderado de Exposição no período selecionado; combina impressões em listagem, views de perfil, vídeo qualificado e views de conteúdo autoral sem contar WhatsApp como exposição.",
+    source: ADMIN_PROFILE_EXPOSURE_SOURCE,
+    thresholds: ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
+    totals: totalSignals,
+    unavailable_reason:
+      params.profiles.length === 0
+        ? "Sem psicólogos ativos no fim do período selecionado para classificar Exposição."
         : null,
   };
 };
@@ -2343,6 +2536,8 @@ const buildConversionBySignupMethod = (profiles: AdminPsychologistProfileRecord[
 
 const buildPlanSegmentSummaries = (params: {
   communityEngagementEvents: AdminPsychologistCommunityEngagementEventRecord[];
+  communityPostViewCounts: AdminPsychologistCountRecord[];
+  communityReplyViewCounts: AdminPsychologistCountRecord[];
   currentNewSignups: AdminPsychologistProfileRecord[];
   currentProfiles: AdminPsychologistProfileRecord[];
   date: Date;
@@ -2356,9 +2551,12 @@ const buildPlanSegmentSummaries = (params: {
   preSignupConversionPageViews: AdminPsychologistPreSignupConversionPageViewRecord[];
   preSignupConversionSessions: AdminPsychologistPreSignupConversionSessionRecord[];
   preSignupConversionSignupIdentities: AdminPsychologistSignupAnalyticsIdentityRecord[];
+  profileViews: AdminPsychologistEventRecord[];
   profiles: AdminPsychologistProfileRecord[];
   publicProfilePageViews: AdminPsychologistPublicProfilePageViewRecord[];
+  qualifiedVideoViewCounts: AdminPsychologistCountRecord[];
   range: AdminPsychologistsDashboardDateRange;
+  searchResultImpressionCounts: AdminPsychologistCountRecord[];
   whatsappContactRequests: AdminPsychologistEventRecord[];
 }) =>
   PLAN_SEGMENT_OPTIONS.reduce(
@@ -2439,6 +2637,15 @@ const buildPlanSegmentSummaries = (params: {
           profiles: segmentProfiles,
           range: params.range,
           whatsappClicks: params.whatsappContactRequests,
+        }),
+        profile_exposure: buildProfileExposureResults({
+          communityPostViews: params.communityPostViewCounts,
+          communityReplyViews: params.communityReplyViewCounts,
+          profileViews: params.profileViews,
+          profiles: segmentProfiles,
+          qualifiedVideoViews: params.qualifiedVideoViewCounts,
+          range: params.range,
+          searchResultImpressions: params.searchResultImpressionCounts,
         }),
         traffic_sources: {
           ...trafficSources,
@@ -2547,6 +2754,19 @@ export const buildPsychologistsDashboard = async (
     repository.listPreSignupConversionLinkedSessions(currentPeriodPsychologistIds),
     repository.listPreSignupConversionSignupIdentities(currentPeriodPsychologistIds),
   ]);
+  const [
+    communityPostViewCounts,
+    communityReplyViewCounts,
+    profileViews,
+    qualifiedVideoViewCounts,
+    searchResultImpressionCounts,
+  ] = await Promise.all([
+    repository.listCommunityPostViewCounts(current),
+    repository.listCommunityReplyViewCounts(current),
+    repository.listProfileViews(current),
+    repository.listQualifiedVideoViewCounts(current),
+    repository.listSearchResultImpressionCounts(current),
+  ]);
   const preSignupConversionVisitorIds = collectPreSignupConversionVisitorIds(
     buildPsychologistVisitorIds({
       linkedPageViews: preSignupConversionLinkedPageViews,
@@ -2607,6 +2827,8 @@ export const buildPsychologistsDashboard = async (
   });
   const planSegments = buildPlanSegmentSummaries({
     communityEngagementEvents,
+    communityPostViewCounts,
+    communityReplyViewCounts,
     currentNewSignups,
     currentProfiles,
     date: current.end,
@@ -2620,9 +2842,12 @@ export const buildPsychologistsDashboard = async (
     preSignupConversionPageViews,
     preSignupConversionSessions,
     preSignupConversionSignupIdentities,
+    profileViews,
     profiles,
     publicProfilePageViews,
+    qualifiedVideoViewCounts,
     range: current,
+    searchResultImpressionCounts,
     whatsappContactRequests,
   });
   const platformUsage = planSegments.all.platform_usage;
@@ -2631,6 +2856,7 @@ export const buildPsychologistsDashboard = async (
   const trafficSources = planSegments.all.traffic_sources;
   const profileConversion = planSegments.all.profile_conversion;
   const profileConversionEngagement = planSegments.all.profile_conversion_engagement;
+  const profileExposure = planSegments.all.profile_exposure;
   const statistics = planSegments.all.statistics;
   const profileNameByUserId = new Map(
     profiles.map((profile) => [profile.user.id, profile.user.name]),
@@ -2753,6 +2979,7 @@ export const buildPsychologistsDashboard = async (
     },
     profile_conversion: profileConversion,
     profile_conversion_engagement: profileConversionEngagement,
+    profile_exposure: profileExposure,
     traffic_sources: {
       ...trafficSources,
       source: "page_view_event.traffic_source+target_type=psychologist",
@@ -2766,6 +2993,17 @@ export const buildPsychologistsDashboard = async (
               id: "psychologist_profile_conversion",
               label: "Conversão dos psic\u00f3logos",
               source: ADMIN_PROFILE_CONVERSION_SOURCE,
+            },
+          ]
+        : []),
+      ...(profileExposure.unavailable_reason
+        ? [
+            {
+              description:
+                "A Exposição depende de ao menos um perfil de psicólogo ativo no período selecionado.",
+              id: "psychologist_profile_exposure",
+              label: "Exposição dos psicólogos",
+              source: profileExposure.source,
             },
           ]
         : []),

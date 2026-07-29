@@ -51,6 +51,8 @@ type ProfileConversionCategoryItem =
   AdminPsychologistsDashboard["profile_conversion"]["categories"][number];
 type ProfileConversionEngagementQuadrantItem =
   AdminPsychologistsDashboard["profile_conversion_engagement"]["quadrants"][number];
+type ProfileExposureCategoryItem =
+  AdminPsychologistsDashboard["profile_exposure"]["categories"][number];
 type ProfileConversionEngagementAxisCategoryId = Exclude<
   ProfileConversionCategoryItem["id"],
   "insufficient_data"
@@ -307,6 +309,14 @@ const PROFILE_CONVERSION_CHART_COLORS = {
   standard_conversion: "#308ce8",
   strong_conversion: "#13a85b",
 } satisfies Record<ProfileConversionCategoryItem["id"], string>;
+
+const PROFILE_EXPOSURE_CHART_COLORS = {
+  high_exposure: "#13a85b",
+  insufficient_data: "#94a3b8",
+  low_exposure: "#f59f00",
+  no_exposure: "#ef4444",
+  standard_exposure: "#308ce8",
+} satisfies Record<ProfileExposureCategoryItem["id"], string>;
 
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   engaged: "#308ce8",
@@ -847,6 +857,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     statistics: summary.statistics,
     profile_conversion: summary.profile_conversion,
     profile_conversion_engagement: summary.profile_conversion_engagement,
+    profile_exposure: summary.profile_exposure,
     traffic_sources: summary.traffic_sources,
   };
 
@@ -2367,10 +2378,10 @@ const PsychologistsDonutChart = ({
 
   return (
     <figure className="relative z-10 mt-5 overflow-visible">
-      <div className="grid min-w-0 gap-5 2xl:grid-cols-[170px_minmax(0,1fr)] 2xl:items-center">
+      <div className="flex min-w-0 flex-col gap-4">
         <svg
           aria-label={ariaLabel}
-          className="mx-auto aspect-square w-full max-w-[12rem] min-w-0"
+          className="mx-auto aspect-square w-full max-w-[10.5rem] min-w-0"
           role="img"
           viewBox="0 0 120 120"
         >
@@ -2418,13 +2429,13 @@ const PsychologistsDonutChart = ({
           </text>
         </svg>
 
-        <div className="min-w-0 space-y-3">
+        <div className="min-w-0 space-y-2.5">
           {items.map((item) => (
             <div
-              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2"
               key={item.id}
             >
-              <span className="flex min-w-0 items-start gap-2 text-sm font-semibold leading-5 text-foreground">
+              <span className="flex min-w-0 items-start gap-2 text-xs font-semibold leading-5 text-foreground xl:text-sm">
                 <span
                   aria-hidden
                   className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
@@ -2447,7 +2458,7 @@ const PsychologistsDonutChart = ({
                   </button>
                 ) : null}
               </span>
-              <span className="shrink-0 text-right text-sm font-semibold text-foreground">
+              <span className="shrink-0 text-right text-xs font-semibold text-foreground xl:text-sm">
                 {numberFormatter.format(item.count)}{" "}
                 <span className="text-xs font-medium text-muted">
                   ({formatPercentageValue(item.percentage)})
@@ -2547,8 +2558,50 @@ const ProfileConversionDonutChart = ({
   );
 };
 
+const ProfileExposureDonutChart = ({
+  profileExposure,
+}: {
+  profileExposure: AdminPsychologistsDashboard["profile_exposure"];
+}) => {
+  const total = Math.max(0, profileExposure.totals.psychologists);
+  const items = profileExposure.categories.map((item) => ({
+    color: PROFILE_EXPOSURE_CHART_COLORS[item.id],
+    count: item.count,
+    description: item.description,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
+  const ariaLabel = `Gráfico de donut de Exposição dos psicólogos: ${profileExposure.categories
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+          item.percentage,
+        )})`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        profileExposure.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Exposição."
+      }
+      items={items}
+      total={total}
+    />
+  );
+};
+
 const formatWhatsappClicksValue = (value: number) => {
   const label = value === 1 ? "clique" : "cliques";
+
+  return `${numberFormatter.format(value)} ${label}`;
+};
+
+const formatExposureScoreValue = (value: number) => {
+  const label = value === 1 ? "ponto" : "pontos";
 
   return `${numberFormatter.format(value)} ${label}`;
 };
@@ -2563,6 +2616,18 @@ const formatProfileConversionStandardRange = (
   if (min === max) return formatWhatsappClicksValue(min);
 
   return `${formatWhatsappClicksValue(min)} a ${formatWhatsappClicksValue(max)}`;
+};
+
+const formatProfileExposureStandardRange = (
+  benchmark: AdminPsychologistsDashboard["profile_exposure"]["benchmark"],
+) => {
+  const min = benchmark.standard_min_exposure_score;
+  const max = benchmark.standard_max_exposure_score;
+
+  if (min === null || max === null) return "Sem faixa padrão no período";
+  if (min === max) return formatExposureScoreValue(min);
+
+  return `${formatExposureScoreValue(min)} a ${formatExposureScoreValue(max)}`;
 };
 
 const PsychologistEngagementDonutChart = ({
@@ -2602,9 +2667,12 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   );
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
   const profileConversionEngagement = profileConversionSegmentSummary.profile_conversion_engagement;
-  if (!profileConversion || !profileConversionEngagement) return null;
+  const profileExposure = profileConversionSegmentSummary.profile_exposure;
+  if (!profileConversion || !profileConversionEngagement || !profileExposure) return null;
 
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
+  const exposureStandardRangeLabel = formatProfileExposureStandardRange(profileExposure.benchmark);
+  const exposureWeights = profileExposure.thresholds.weights;
 
   return (
     <CardShell className="relative z-20 overflow-visible p-5">
@@ -2612,7 +2680,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Conversão e engajamento dos psicólogos"
+          title="Conversão, engajamento e exposição dos psicólogos"
         />
         <PlanSegmentSelect
           id="profile-conversion-plan-segment"
@@ -2621,7 +2689,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         />
       </div>
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-2">
+      <div className="mt-5 grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-[8rem]">
@@ -2659,6 +2727,52 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           <PsychologistEngagementDonutChart
             profileConversionEngagement={profileConversionEngagement}
           />
+        </section>
+
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4 lg:col-span-2 2xl:col-span-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-[8rem]">
+              <span className="inline-flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">Exposição</h3>
+                <button
+                  aria-label={`Pesos da Exposição: resultado em listagem ${exposureWeights.search_result_impression}; resposta vista ${exposureWeights.community_reply_view}; post visto ${exposureWeights.community_post_view}; perfil aberto ${exposureWeights.profile_view}; vídeo qualificado ${exposureWeights.qualified_video_view}.`}
+                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  type="button"
+                >
+                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
+                  <span
+                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                    role="tooltip"
+                  >
+                    Score ponderado: resultado em listagem{" "}
+                    {numberFormatter.format(exposureWeights.search_result_impression)}; resposta
+                    vista {numberFormatter.format(exposureWeights.community_reply_view)}; post visto{" "}
+                    {numberFormatter.format(exposureWeights.community_post_view)}; perfil aberto{" "}
+                    {numberFormatter.format(exposureWeights.profile_view)}; vídeo qualificado{" "}
+                    {numberFormatter.format(exposureWeights.qualified_video_view)}.
+                  </span>
+                </button>
+              </span>
+              <div className="mt-3">
+                <p className="text-3xl font-black text-foreground">
+                  {numberFormatter.format(profileExposure.totals.psychologists)}
+                </p>
+                <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+              </div>
+            </div>
+            <div className="w-full rounded-2xl border border-primary/10 bg-surface px-3 py-2 sm:max-w-xs sm:flex-1">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
+                Exposição padrão do período
+              </p>
+              <p className="mt-1 text-sm font-black text-foreground">
+                {exposureStandardRangeLabel}
+              </p>
+              <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
+                Score ponderado de exposição
+              </p>
+            </div>
+          </div>
+          <ProfileExposureDonutChart profileExposure={profileExposure} />
         </section>
       </div>
     </CardShell>

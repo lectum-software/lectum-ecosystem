@@ -512,6 +512,73 @@ export type PsychologistsDashboardProfileConversionResults = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardProfileExposureCategoryId =
+  | "high_exposure"
+  | "insufficient_data"
+  | "low_exposure"
+  | "no_exposure"
+  | "standard_exposure";
+
+export type PsychologistsDashboardProfileExposureTotals = {
+  community_post_views: number;
+  community_reply_views: number;
+  exposure_score: number;
+  profile_views: number;
+  qualified_video_views: number;
+  search_result_impressions: number;
+};
+
+export type PsychologistsDashboardProfileExposureCategory = {
+  count: number;
+  description: string;
+  id: PsychologistsDashboardProfileExposureCategoryId;
+  label: string;
+  percentage: number;
+  totals: PsychologistsDashboardProfileExposureTotals;
+};
+
+export type PsychologistsProfileExposureSource =
+  "profile_view_event.source=profile_page/search_result+profile_video_watch_session+page_view_event.target_type=post/reply";
+
+export type PsychologistsProfileExposureThresholds = {
+  adaptation_period_days: number;
+  qualified_video_watch_seconds: number;
+  weights: {
+    community_post_view: number;
+    community_reply_view: number;
+    profile_view: number;
+    qualified_video_view: number;
+    search_result_impression: number;
+  };
+};
+
+export type PsychologistsProfileExposureBenchmark = {
+  adaptation_period_days: number;
+  basis: "non_zero_weighted_exposure_score_outside_adaptation_period";
+  eligible_psychologists: number;
+  exposed_psychologists: number;
+  p25_exposure_score: number | null;
+  p50_exposure_score: number | null;
+  p75_exposure_score: number | null;
+  standard_max_exposure_score: number | null;
+  standard_min_exposure_score: number | null;
+};
+
+export type PsychologistsDashboardProfileExposureResults = {
+  benchmark: PsychologistsProfileExposureBenchmark;
+  categories: PsychologistsDashboardProfileExposureCategory[];
+  description: string;
+  source: PsychologistsProfileExposureSource;
+  thresholds: PsychologistsProfileExposureThresholds;
+  totals: PsychologistsDashboardProfileExposureTotals & {
+    adaptation_psychologists: number;
+    eligible_psychologists: number;
+    exposed_psychologists: number;
+    psychologists: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardProfileConversionEngagementCategoryId = Exclude<
   PsychologistsDashboardProfileConversionCategoryId,
   "insufficient_data"
@@ -621,6 +688,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   statistics: PsychologistsDashboardStatistics;
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;
+  profile_exposure: PsychologistsDashboardProfileExposureResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
 };
 
@@ -1848,6 +1916,7 @@ export type AdminPsychologistsDashboard = {
   };
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;
+  profile_exposure: PsychologistsDashboardProfileExposureResults;
   traffic_sources: PsychologistsDashboardTrafficSources;
   unavailable: PsychologistsDashboardUnavailableMetric[];
 };

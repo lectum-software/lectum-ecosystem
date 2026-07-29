@@ -4,6 +4,11 @@ import type {
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
+import type {
+  AdminProfileExposureBenchmark,
+  AdminProfileExposureSource,
+  AdminProfileExposureThresholds,
+} from "@/utils/admin-profile-exposure";
 
 export type AdminPsychologistsDashboardQuery = {
   from?: string;
@@ -447,6 +452,46 @@ export type AdminPsychologistsDashboardProfileConversionResults = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistsDashboardProfileExposureCategoryId =
+  | "high_exposure"
+  | "insufficient_data"
+  | "low_exposure"
+  | "no_exposure"
+  | "standard_exposure";
+
+export type AdminPsychologistsDashboardProfileExposureTotals = {
+  community_post_views: number;
+  community_reply_views: number;
+  exposure_score: number;
+  profile_views: number;
+  qualified_video_views: number;
+  search_result_impressions: number;
+};
+
+export type AdminPsychologistsDashboardProfileExposureCategory = {
+  count: number;
+  description: string;
+  id: AdminPsychologistsDashboardProfileExposureCategoryId;
+  label: string;
+  percentage: number;
+  totals: AdminPsychologistsDashboardProfileExposureTotals;
+};
+
+export type AdminPsychologistsDashboardProfileExposureResults = {
+  benchmark: AdminProfileExposureBenchmark;
+  categories: AdminPsychologistsDashboardProfileExposureCategory[];
+  description: string;
+  source: AdminProfileExposureSource;
+  thresholds: AdminProfileExposureThresholds;
+  totals: AdminPsychologistsDashboardProfileExposureTotals & {
+    adaptation_psychologists: number;
+    eligible_psychologists: number;
+    exposed_psychologists: number;
+    psychologists: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistsDashboardProfileConversionEngagementCategoryId = Exclude<
   AdminPsychologistsDashboardProfileConversionCategoryId,
   "insufficient_data"
@@ -556,6 +601,7 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
   statistics: AdminPsychologistsDashboardStatistics;
   profile_conversion: AdminPsychologistsDashboardProfileConversionResults;
   profile_conversion_engagement: AdminPsychologistsDashboardProfileConversionEngagementResults;
+  profile_exposure: AdminPsychologistsDashboardProfileExposureResults;
   traffic_sources: AdminPsychologistsDashboardTrafficSources;
 };
 
@@ -600,6 +646,7 @@ export type AdminPsychologistsDashboardSummary = {
   };
   profile_conversion: AdminPsychologistsDashboardProfileConversionResults;
   profile_conversion_engagement: AdminPsychologistsDashboardProfileConversionEngagementResults;
+  profile_exposure: AdminPsychologistsDashboardProfileExposureResults;
   traffic_sources: AdminPsychologistsDashboardTrafficSources;
   unavailable: AdminPsychologistsDashboardUnavailableMetric[];
 };
