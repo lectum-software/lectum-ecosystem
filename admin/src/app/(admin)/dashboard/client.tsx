@@ -13,7 +13,7 @@ import {
   Users,
   WalletCards,
 } from "lucide-react";
-import { type FocusEventHandler, useEffect, useMemo, useState } from "react";
+import { type FocusEventHandler, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAdminDashboardSummary } from "@/api/callers/dashboard";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -62,6 +62,11 @@ type DashboardIntentConversionMatrixFlow = {
   intent_index: number;
   intent_label: string;
   percentage: number;
+};
+type DashboardIntentConversionExampleCount = {
+  conversion_id: DashboardIntentConversionCategoryId;
+  count: number;
+  intent_id: DashboardIntentConversionDisplayIntentId;
 };
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -674,7 +679,7 @@ const ChartLegend = ({
   </div>
 );
 
-const PATIENT_INTENT_DISPLAY_ORDER = ["cold", "curious", "objective", "very_qualified"] as const;
+const PATIENT_INTENT_DISPLAY_ORDER = ["very_qualified", "objective", "curious", "cold"] as const;
 const PSYCHOLOGIST_CONVERSION_DISPLAY_ORDER = [
   "strong_conversion",
   "unconverted_interest",
@@ -686,7 +691,28 @@ const DASHBOARD_INTENT_MATRIX_NODE_GAP = 12;
 const DASHBOARD_INTENT_MATRIX_HEIGHT =
   DASHBOARD_INTENT_MATRIX_NODE_HEIGHT * PATIENT_INTENT_DISPLAY_ORDER.length +
   DASHBOARD_INTENT_MATRIX_NODE_GAP * (PATIENT_INTENT_DISPLAY_ORDER.length - 1);
-const DASHBOARD_INTENT_MATRIX_WIDTH = 420;
+const DASHBOARD_INTENT_MATRIX_WIDTH = 440;
+const DASHBOARD_INTENT_MATRIX_SOURCE_X = 1;
+const DASHBOARD_INTENT_MATRIX_TARGET_X = DASHBOARD_INTENT_MATRIX_WIDTH - 1;
+const LOCAL_DASHBOARD_VISUAL_EXAMPLE_HOSTS = new Set(["localhost", "127.0.0.1"]);
+const DASHBOARD_INTENT_CONVERSION_LOCAL_EXAMPLE_FLOWS = [
+  { conversion_id: "strong_conversion", count: 28, intent_id: "very_qualified" },
+  { conversion_id: "unconverted_interest", count: 6, intent_id: "very_qualified" },
+  { conversion_id: "unconverted_traffic", count: 3, intent_id: "very_qualified" },
+  { conversion_id: "low_conversion", count: 1, intent_id: "very_qualified" },
+  { conversion_id: "strong_conversion", count: 12, intent_id: "objective" },
+  { conversion_id: "unconverted_interest", count: 18, intent_id: "objective" },
+  { conversion_id: "unconverted_traffic", count: 7, intent_id: "objective" },
+  { conversion_id: "low_conversion", count: 4, intent_id: "objective" },
+  { conversion_id: "strong_conversion", count: 4, intent_id: "curious" },
+  { conversion_id: "unconverted_interest", count: 5, intent_id: "curious" },
+  { conversion_id: "unconverted_traffic", count: 17, intent_id: "curious" },
+  { conversion_id: "low_conversion", count: 9, intent_id: "curious" },
+  { conversion_id: "strong_conversion", count: 2, intent_id: "cold" },
+  { conversion_id: "unconverted_interest", count: 3, intent_id: "cold" },
+  { conversion_id: "unconverted_traffic", count: 6, intent_id: "cold" },
+  { conversion_id: "low_conversion", count: 8, intent_id: "cold" },
+] as const satisfies readonly DashboardIntentConversionExampleCount[];
 
 const patientIntentDisplayConfig: Record<
   DashboardIntentConversionDisplayIntentId,
@@ -756,11 +782,56 @@ const intentConversionStrokeColors: Record<DashboardIntentConversionDisplayInten
 const safeDashboardIntentMatrixPercentage = (count: number, total: number) =>
   total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
 
+const hasDashboardIntentConversionRealData = (flow: DashboardIntentConversionFlowData) =>
+  flow.total_pairs > 0 || flow.flows.some((item) => item.count > 0);
+
+const subscribeToLocalDashboardIntentExampleHost = () => () => undefined;
+
+const getLocalDashboardIntentExampleSnapshot = () =>
+  typeof window !== "undefined" &&
+  LOCAL_DASHBOARD_VISUAL_EXAMPLE_HOSTS.has(window.location.hostname);
+
+const getLocalDashboardIntentExampleServerSnapshot = () => false;
+
+const useLocalDashboardIntentExampleEnabled = () =>
+  useSyncExternalStore(
+    subscribeToLocalDashboardIntentExampleHost,
+    getLocalDashboardIntentExampleSnapshot,
+    getLocalDashboardIntentExampleServerSnapshot,
+  );
+
 const getDashboardIntentMatrixNodeY = (index: number) =>
   DASHBOARD_INTENT_MATRIX_NODE_HEIGHT / 2 +
   index * (DASHBOARD_INTENT_MATRIX_NODE_HEIGHT + DASHBOARD_INTENT_MATRIX_NODE_GAP);
 
-const buildDashboardIntentConversionMatrix = (flow: DashboardIntentConversionFlowData) => {
+const buildDashboardIntentConversionMatrix = (
+  flow: DashboardIntentConversionFlowData,
+  options?: { exampleCounts?: readonly DashboardIntentConversionExampleCount[] },
+) => {
+  const exampleCounts = options?.exampleCounts ?? [];
+  const isExample = exampleCounts.length > 0;
+  const exampleIntentCounts = new Map<DashboardIntentConversionDisplayIntentId, number>();
+  const exampleConversionCounts = new Map<DashboardIntentConversionCategoryId, number>();
+  const exampleFlowCounts = new Map<DashboardIntentConversionMatrixFlow["id"], number>();
+  const totalPairs = isExample
+    ? exampleCounts.reduce((total, item) => total + item.count, 0)
+    : flow.total_pairs;
+
+  for (const item of exampleCounts) {
+    const pairId =
+      `${item.intent_id}_${item.conversion_id}` as DashboardIntentConversionMatrixFlow["id"];
+
+    exampleIntentCounts.set(
+      item.intent_id,
+      (exampleIntentCounts.get(item.intent_id) ?? 0) + item.count,
+    );
+    exampleConversionCounts.set(
+      item.conversion_id,
+      (exampleConversionCounts.get(item.conversion_id) ?? 0) + item.count,
+    );
+    exampleFlowCounts.set(pairId, (exampleFlowCounts.get(pairId) ?? 0) + item.count);
+  }
+
   const intentById = new Map<
     DashboardIntentConversionIntentId,
     DashboardIntentConversionDisplayNode<DashboardIntentConversionIntentId>
@@ -784,6 +855,18 @@ const buildDashboardIntentConversionMatrix = (flow: DashboardIntentConversionFlo
   const flowByPair = new Map(flow.flows.map((item) => [item.id, item]));
   const patientNodes = PATIENT_INTENT_DISPLAY_ORDER.map((id) => {
     const config = patientIntentDisplayConfig[id];
+    if (isExample) {
+      const count = exampleIntentCounts.get(id) ?? 0;
+
+      return {
+        count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safeDashboardIntentMatrixPercentage(count, totalPairs),
+      } satisfies DashboardIntentConversionDisplayNode<DashboardIntentConversionDisplayIntentId>;
+    }
+
     if (id === "cold") {
       return {
         count: 0,
@@ -807,25 +890,28 @@ const buildDashboardIntentConversionMatrix = (flow: DashboardIntentConversionFlo
   const psychologistNodes = PSYCHOLOGIST_CONVERSION_DISPLAY_ORDER.map((id) => {
     const config = psychologistConversionFallbackConfig[id];
     const source = conversionById.get(id);
+    const count = isExample ? (exampleConversionCounts.get(id) ?? 0) : (source?.count ?? 0);
 
     return {
-      count: source?.count ?? 0,
+      count,
       description: source?.description ?? config.description,
       id,
       label: config.label,
-      percentage: source?.percentage ?? 0,
+      percentage: isExample
+        ? safeDashboardIntentMatrixPercentage(count, totalPairs)
+        : (source?.percentage ?? 0),
     } satisfies DashboardIntentConversionDisplayNode<DashboardIntentConversionCategoryId>;
   });
   const matrixFlows = patientNodes.flatMap((intent, intentIndex) =>
     psychologistNodes.map((conversion, conversionIndex) => {
       const pairId = `${intent.id}_${conversion.id}` as DashboardIntentConversionMatrixFlow["id"];
       const source =
-        intent.id === "cold"
+        isExample || intent.id === "cold"
           ? undefined
           : flowByPair.get(
               `${intent.id}_${conversion.id}` as `${DashboardIntentConversionIntentId}_${DashboardIntentConversionCategoryId}`,
             );
-      const count = source?.count ?? 0;
+      const count = isExample ? (exampleFlowCounts.get(pairId) ?? 0) : (source?.count ?? 0);
 
       return {
         conversion_id: conversion.id,
@@ -836,16 +922,18 @@ const buildDashboardIntentConversionMatrix = (flow: DashboardIntentConversionFlo
         intent_id: intent.id,
         intent_index: intentIndex,
         intent_label: intent.label,
-        percentage: safeDashboardIntentMatrixPercentage(count, flow.total_pairs),
+        percentage: safeDashboardIntentMatrixPercentage(count, totalPairs),
       } satisfies DashboardIntentConversionMatrixFlow;
     }),
   );
 
   return {
     flows: matrixFlows,
+    isExample,
     maxFlowCount: Math.max(0, ...matrixFlows.map((item) => item.count)),
     patientNodes,
     psychologistNodes,
+    totalPairs,
   };
 };
 
@@ -872,10 +960,12 @@ const DashboardIntentConversionSideNode = <TId extends string>({
 }) => (
   <article
     className={cn(
-      "flex h-full min-w-0 items-center justify-between gap-3 rounded-[1.15rem] border px-3 py-2",
+      "relative flex h-full min-w-0 items-center justify-between gap-3 rounded-[1.15rem] border px-3 py-2",
       align === "right" && "flex-row-reverse text-right",
       toneClassName,
     )}
+    data-dashboard-intent-node-id={node.id}
+    data-dashboard-intent-side={align === "right" ? "psychologist" : "patient"}
     title={node.description}
   >
     <div className="min-w-0">
@@ -887,6 +977,13 @@ const DashboardIntentConversionSideNode = <TId extends string>({
     <span className="shrink-0 rounded-full bg-surface/90 px-2 py-1 text-[0.68rem] font-black text-foreground shadow-control">
       {formatDashboardPercent(node.percentage)}
     </span>
+    <span
+      aria-hidden
+      className={cn(
+        "absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border border-current bg-surface shadow-control",
+        align === "right" ? "-left-[5px]" : "-right-[5px]",
+      )}
+    />
   </article>
 );
 
@@ -898,7 +995,10 @@ const DashboardIntentConversionMatrix = ({
   const orderedFlows = [...matrix.flows].sort((left, right) => left.count - right.count);
 
   return (
-    <div className="mt-5 overflow-x-auto pb-1">
+    <div
+      className="mt-5 overflow-x-auto pb-1"
+      data-dashboard-intent-matrix-mode={matrix.isExample ? "local-example" : "real"}
+    >
       <div className="min-w-[760px]">
         <div className="grid grid-cols-[minmax(10rem,0.76fr)_minmax(22rem,1.3fr)_minmax(10rem,0.76fr)] gap-4 text-[0.68rem] font-black uppercase tracking-[0.09em] text-subtle">
           <span>Pacientes</span>
@@ -950,10 +1050,18 @@ const DashboardIntentConversionMatrix = ({
                   matrix.maxFlowCount,
                 );
                 const opacity = getDashboardIntentFlowOpacity(item.count, matrix.maxFlowCount);
-                const d = `M 10 ${y1} C 145 ${y1}, 275 ${y2}, 410 ${y2}`;
+                const d = `M ${DASHBOARD_INTENT_MATRIX_SOURCE_X} ${y1} C ${
+                  DASHBOARD_INTENT_MATRIX_WIDTH * 0.35
+                } ${y1}, ${DASHBOARD_INTENT_MATRIX_WIDTH * 0.65} ${y2}, ${
+                  DASHBOARD_INTENT_MATRIX_TARGET_X
+                } ${y2}`;
 
                 return (
                   <path
+                    data-dashboard-intent-flow="true"
+                    data-dashboard-intent-flow-conversion-id={item.conversion_id}
+                    data-dashboard-intent-flow-count={item.count}
+                    data-dashboard-intent-flow-intent-id={item.intent_id}
                     d={d}
                     fill="none"
                     key={item.id}
@@ -1002,8 +1110,15 @@ const DashboardIntentConversionFlow = ({
   flow: DashboardIntentConversionFlowData;
   periodDescription: string;
 }) => {
-  const totalPairsLabel = numberFormatter.format(flow.total_pairs);
-  const matrix = buildDashboardIntentConversionMatrix(flow);
+  const localExampleEnabled = useLocalDashboardIntentExampleEnabled();
+  const showLocalExample = localExampleEnabled && !hasDashboardIntentConversionRealData(flow);
+  const matrix = buildDashboardIntentConversionMatrix(
+    flow,
+    showLocalExample
+      ? { exampleCounts: DASHBOARD_INTENT_CONVERSION_LOCAL_EXAMPLE_FLOWS }
+      : undefined,
+  );
+  const totalPairsLabel = numberFormatter.format(matrix.totalPairs);
 
   return (
     <CardShell className="overflow-hidden p-5 md:p-6">
@@ -1017,21 +1132,29 @@ const DashboardIntentConversionFlow = ({
               <h2 className="text-lg font-black text-foreground">Fluxo de intenção e conversão</h2>
               <p className="mt-1 text-sm font-bold leading-6 text-muted">
                 Categorias de pacientes à esquerda; categorias de psicólogos à direita. A espessura
-                da seta indica o volume real de pares.
+                da seta indica{" "}
+                {showLocalExample
+                  ? "o volume de exemplo nesta visualização local."
+                  : "o volume real de pares."}
               </p>
             </div>
           </div>
         </div>
         <div className="rounded-[1.15rem] border border-border/70 bg-surface-muted px-4 py-3">
           <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
-            {periodDescription}
+            {showLocalExample ? "Exemplo visual local" : periodDescription}
           </p>
           <p className="mt-1 text-2xl font-black text-foreground">{totalPairsLabel}</p>
           <p className="text-xs font-bold text-muted">pares paciente-psicólogo</p>
         </div>
       </div>
 
-      {flow.unavailable_reason ? (
+      {showLocalExample ? (
+        <div className="mt-5 rounded-[1.35rem] border border-primary/20 bg-primary-soft p-4 text-sm font-bold leading-6 text-primary">
+          Exemplo visual local: números exibidos apenas no localhost para calibrar a leitura das
+          setas. Não representam sinais reais de pacientes, psicólogos ou conversões.
+        </div>
+      ) : flow.unavailable_reason ? (
         <div className="mt-5 rounded-[1.35rem] border border-dashed border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
           {flow.unavailable_reason}
         </div>
@@ -1040,7 +1163,14 @@ const DashboardIntentConversionFlow = ({
       <DashboardIntentConversionMatrix matrix={matrix} />
 
       <div className="mt-5 rounded-[1.35rem] bg-surface-muted p-4 text-xs font-semibold leading-5 text-muted">
-        <p>{flow.coverage_note}</p>
+        {showLocalExample ? (
+          <p>
+            A visualização local usa uma matriz de exemplo somente quando a API retorna zero pares
+            reais; em produção, o bloco usa exclusivamente o fluxo intent_conversion_flow.
+          </p>
+        ) : (
+          <p>{flow.coverage_note}</p>
+        )}
         <p className="mt-1">{flow.privacy_note}</p>
       </div>
     </CardShell>
