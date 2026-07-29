@@ -280,6 +280,56 @@ export type AdminPsychologistTrafficSources = {
   updated_at: Date | null;
 };
 
+export type AdminPsychologistTrafficQualityLevelId =
+  | "interested"
+  | "qualified"
+  | "unidentified"
+  | "visited";
+
+export type AdminPsychologistTrafficQualityOrigin = {
+  actors: number;
+  id: string;
+  label: string;
+  percentage: number;
+  profile_views: number;
+  qualified_actors: number;
+};
+
+export type AdminPsychologistTrafficQualityLevel = {
+  count: number;
+  description: string;
+  id: AdminPsychologistTrafficQualityLevelId;
+  label: string;
+  percentage: number;
+};
+
+export type AdminPsychologistTrafficQualityFlowItem = {
+  count: number;
+  id: `${string}_${AdminPsychologistTrafficQualityLevelId}`;
+  origin_id: string;
+  origin_label: string;
+  percentage: number;
+  quality_id: AdminPsychologistTrafficQualityLevelId;
+  quality_label: string;
+};
+
+export type AdminPsychologistTrafficQualitySummary = {
+  absorption_rate: number | null;
+  attributed_whatsapp_clicks: number;
+  attribution_note: string;
+  flows: AdminPsychologistTrafficQualityFlowItem[];
+  origins: AdminPsychologistTrafficQualityOrigin[];
+  predominant_quality: AdminPsychologistTrafficQualityLevel | null;
+  primary_qualified_origin: AdminPsychologistTrafficQualityOrigin | null;
+  quality_levels: AdminPsychologistTrafficQualityLevel[];
+  source: "page_view_event+psychologist_favorite+contact_request+important_action_event";
+  total_actors: number;
+  total_profile_views: number;
+  total_whatsapp_clicks: number;
+  unattributed_whatsapp_clicks: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistStatisticsDTO = {
   business: {
     cards: AdminPsychologistAvailabilityMetric[];
@@ -300,6 +350,7 @@ export type AdminPsychologistStatisticsDTO = {
   period: AdminPsychologistStatisticsPeriod;
   platform_usage: AdminPsychologistPlatformUsage;
   source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event";
+  traffic_quality: AdminPsychologistTrafficQualitySummary;
   traffic_sources: AdminPsychologistTrafficSources;
   unavailable: AdminPsychologistAvailabilityMetric[];
   video: AdminPsychologistStatisticsVideo;

@@ -3,11 +3,15 @@
 import {
   Activity,
   AlertTriangle,
+  ArrowRight,
   CalendarDays,
   ChevronDown,
   Flag,
+  GitFork,
   type LucideIcon,
   RefreshCw,
+  Sparkles,
+  Target,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -18,6 +22,10 @@ import { resolveApiError } from "@/api/handle";
 import type {
   AdminDashboardSummary,
   DashboardDailyPoint,
+  DashboardIntentConversionCategoryId,
+  DashboardIntentConversionFlow as DashboardIntentConversionFlowData,
+  DashboardIntentConversionFlowItem,
+  DashboardIntentConversionIntentId,
   DashboardMetric,
   DashboardPendingReport,
   DashboardPeriodPreset,
@@ -148,6 +156,12 @@ const formatChange = (value: number | null) => {
     minimumFractionDigits: 0,
   })}%`;
 };
+
+const formatDashboardPercent = (value: number) =>
+  `${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  })}%`;
 
 const isValidRange = (range: DashboardSummaryQuery) => {
   if (!range.from || !range.to) return false;
@@ -646,6 +660,229 @@ const ChartLegend = ({
   </div>
 );
 
+const intentConversionToneClasses: Record<DashboardIntentConversionIntentId, string> = {
+  curious: "border-blue-200 bg-blue-50 text-blue-700",
+  objective: "border-amber-200 bg-amber-50 text-amber-700",
+  very_qualified: "border-emerald-200 bg-emerald-50 text-emerald-700",
+};
+
+const psychologistConversionToneClasses: Record<DashboardIntentConversionCategoryId, string> = {
+  low_conversion: "border-amber-200 bg-amber-50 text-amber-700",
+  strong_conversion: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  unconverted_interest: "border-pink-200 bg-pink-50 text-pink-700",
+  unconverted_traffic: "border-slate-200 bg-slate-50 text-slate-600",
+};
+
+const getIntentConversionTone = (id: string) =>
+  intentConversionToneClasses[id as DashboardIntentConversionIntentId] ??
+  "border-border bg-surface-muted text-muted";
+
+const getPsychologistConversionTone = (id: string) =>
+  psychologistConversionToneClasses[id as DashboardIntentConversionCategoryId] ??
+  "border-border bg-surface-muted text-muted";
+
+const intentConversionInsightToneClasses: Record<
+  DashboardIntentConversionFlowData["insights"][number]["id"],
+  string
+> = {
+  exploratory_loss: "border-slate-200 bg-slate-50 text-slate-700",
+  healthy_absorption: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  retained_intention: "border-pink-200 bg-pink-50 text-pink-700",
+};
+
+const IntentConversionNodeCard = ({
+  className,
+  countLabel,
+  description,
+  label,
+  percentage,
+}: {
+  className: string;
+  countLabel: string;
+  description: string;
+  label: string;
+  percentage: number;
+}) => (
+  <article className={cn("rounded-[1.35rem] border p-4", className)}>
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h3 className="text-sm font-black text-foreground">{label}</h3>
+        <p className="mt-1 text-xs font-semibold leading-5 text-muted">{description}</p>
+      </div>
+      <span className="shrink-0 rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-foreground">
+        {formatDashboardPercent(percentage)}
+      </span>
+    </div>
+    <p className="mt-3 text-2xl font-black text-foreground">{countLabel}</p>
+  </article>
+);
+
+const IntentConversionFlowRow = ({ flow }: { flow: DashboardIntentConversionFlowItem }) => (
+  <article className="rounded-[1.35rem] border border-border/70 bg-surface p-4 shadow-control">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-1 text-[0.68rem] font-black",
+            intentConversionToneClasses[flow.intent_id],
+          )}
+        >
+          {flow.intent_label}
+        </span>
+        <ArrowRight aria-hidden className="h-4 w-4 shrink-0 text-subtle" />
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-1 text-[0.68rem] font-black",
+            psychologistConversionToneClasses[flow.conversion_id],
+          )}
+        >
+          {flow.conversion_label}
+        </span>
+      </div>
+      <div className="shrink-0 text-left sm:text-right">
+        <p className="text-lg font-black text-foreground">{numberFormatter.format(flow.count)}</p>
+        <p className="text-[0.68rem] font-black text-muted">
+          {formatDashboardPercent(flow.percentage)} dos pares
+        </p>
+      </div>
+    </div>
+    <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
+      <span
+        aria-hidden
+        className="block h-full rounded-full bg-primary"
+        style={{ width: `${Math.min(100, Math.max(4, flow.percentage))}%` }}
+      />
+    </div>
+  </article>
+);
+
+const DashboardIntentConversionFlow = ({
+  flow,
+  periodDescription,
+}: {
+  flow: DashboardIntentConversionFlowData;
+  periodDescription: string;
+}) => {
+  const totalPairsLabel = numberFormatter.format(flow.total_pairs);
+  const hasFlows = flow.flows.length > 0 && flow.total_pairs > 0;
+
+  return (
+    <CardShell className="overflow-hidden p-5 md:p-6">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+              <GitFork aria-hidden className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg font-black text-foreground">Fluxo de intenção e conversão</h2>
+              <p className="mt-1 text-sm font-bold leading-6 text-muted">
+                Leitura cruzada de intenção real dos pacientes com a conversão dos psicólogos.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-[1.15rem] border border-border/70 bg-surface-muted px-4 py-3">
+          <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
+            {periodDescription}
+          </p>
+          <p className="mt-1 text-2xl font-black text-foreground">{totalPairsLabel}</p>
+          <p className="text-xs font-bold text-muted">pares paciente-psicólogo</p>
+        </div>
+      </div>
+
+      {flow.unavailable_reason ? (
+        <div className="mt-5 rounded-[1.35rem] border border-dashed border-border bg-surface-muted p-5 text-sm font-bold leading-6 text-muted">
+          {flow.unavailable_reason}
+        </div>
+      ) : null}
+
+      {flow.insights.length > 0 ? (
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {flow.insights.map((insight) => (
+            <article
+              className={cn(
+                "rounded-[1.35rem] border p-4",
+                intentConversionInsightToneClasses[insight.id],
+              )}
+              key={insight.id}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-foreground">{insight.label}</p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+                    {insight.description}
+                  </p>
+                </div>
+                <Sparkles aria-hidden className="h-4 w-4 shrink-0" />
+              </div>
+              <p className="mt-3 text-xl font-black text-foreground">
+                {numberFormatter.format(insight.count)}
+                <span className="ml-2 text-xs font-black text-muted">
+                  {formatDashboardPercent(insight.percentage)}
+                </span>
+              </p>
+            </article>
+          ))}
+        </div>
+      ) : null}
+
+      {hasFlows ? (
+        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(12rem,0.8fr)_minmax(0,1.5fr)_minmax(12rem,0.8fr)]">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
+              <Target aria-hidden className="h-4 w-4 text-primary" />
+              Intenção do paciente
+            </div>
+            {flow.intents.map((intent) => (
+              <IntentConversionNodeCard
+                className={getIntentConversionTone(intent.id)}
+                countLabel={`${numberFormatter.format(intent.count)} pares`}
+                description={intent.description}
+                key={intent.id}
+                label={intent.label}
+                percentage={intent.percentage}
+              />
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
+              <ArrowRight aria-hidden className="h-4 w-4 text-primary" />
+              Caminhos observados
+            </div>
+            {flow.flows.map((item) => (
+              <IntentConversionFlowRow flow={item} key={item.id} />
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
+              <UserRoundCheck aria-hidden className="h-4 w-4 text-primary" />
+              Conversão do psicólogo
+            </div>
+            {flow.psychologist_conversions.map((conversion) => (
+              <IntentConversionNodeCard
+                className={getPsychologistConversionTone(conversion.id)}
+                countLabel={`${numberFormatter.format(conversion.count)} pares`}
+                description={conversion.description}
+                key={conversion.id}
+                label={conversion.label}
+                percentage={conversion.percentage}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-5 grid gap-3 rounded-[1.35rem] bg-surface-muted p-4 text-xs font-semibold leading-5 text-muted md:grid-cols-2">
+        <p>{flow.coverage_note}</p>
+        <p>{flow.privacy_note}</p>
+      </div>
+    </CardShell>
+  );
+};
+
 const DashboardContent = ({
   periodControls,
   periodDescription,
@@ -692,6 +929,11 @@ const DashboardContent = ({
           <MetricCard icon={Flag} metric={summary.cards.pending_reports} tone="orange" />
         </div>
       </DashboardOverviewPanel>
+
+      <DashboardIntentConversionFlow
+        flow={summary.intent_conversion_flow}
+        periodDescription={periodDescription}
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)]">
         <div className="space-y-5">

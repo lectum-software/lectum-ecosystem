@@ -4,6 +4,10 @@ import type {
   AdminDashboardDateRange,
   AdminDashboardDeviceItem,
   AdminDashboardFinancialPoint,
+  AdminDashboardIntentConversionCategoryId,
+  AdminDashboardIntentConversionFlow,
+  AdminDashboardIntentConversionFlowItem,
+  AdminDashboardIntentConversionIntentId,
   AdminDashboardLocationItem,
   AdminDashboardMetric,
   AdminDashboardPendingReport,
@@ -64,6 +68,106 @@ type SubscriptionRecord = Awaited<
 type PendingReportRecord = Awaited<
   ReturnType<AdminDashboardRepository["listPendingReports"]>
 >[number];
+
+type IntentConversionSignals = Awaited<
+  ReturnType<AdminDashboardRepository["listIntentConversionSignals"]>
+>;
+
+type PsychologistConversionEvents = Awaited<
+  ReturnType<AdminDashboardRepository["listPsychologistConversionEvents"]>
+>;
+
+type PsychologistConversionProfile = Awaited<
+  ReturnType<AdminDashboardRepository["listPsychologistConversionProfiles"]>
+>[number];
+
+type IntentConversionPairCounts = {
+  favorites: number;
+  profile_views: number;
+  repeated_profile_views: number;
+  whatsapp_clicks: number;
+};
+
+type PsychologistConversionCounts = {
+  activeDays: number;
+  favorites: number;
+  normalizedFavorites: number;
+  normalizedProfileViews: number;
+  normalizedWhatsappClicks: number;
+  profileViews: number;
+  whatsappClicks: number;
+  whatsappConversionRate: number | null;
+};
+
+const INTENT_CONVERSION_SOURCE =
+  "profile_view_event+psychologist_favorite+contact_request" as const;
+const PATIENT_INTENT_SCORE_WEIGHTS = {
+  favorites: 20,
+  profile_views: 3,
+  repeated_profile_views: 5,
+  whatsapp_clicks: 45,
+} as const satisfies Record<keyof IntentConversionPairCounts, number>;
+const PATIENT_INTENT_SCORE_CAPS = {
+  favorites: 40,
+  profile_views: 30,
+  repeated_profile_views: 20,
+  whatsapp_clicks: 90,
+} as const satisfies Record<keyof IntentConversionPairCounts, number>;
+const INTENT_CONVERSION_INTENT_CONFIG = {
+  curious: {
+    description: "Abertura de perfil sem favorito ou WhatsApp para o mesmo psicólogo.",
+    label: "Curiosos",
+  },
+  objective: {
+    description: "Retorno ao perfil ou favorito antes do clique no WhatsApp.",
+    label: "Interessados",
+  },
+  very_qualified: {
+    description: "Clique no WhatsApp ou múltiplos sinais fortes para o mesmo psicólogo.",
+    label: "Qualificados",
+  },
+} as const satisfies Record<
+  AdminDashboardIntentConversionIntentId,
+  { description: string; label: string }
+>;
+const INTENT_CONVERSION_INTENT_ORDER: AdminDashboardIntentConversionIntentId[] = [
+  "curious",
+  "objective",
+  "very_qualified",
+];
+const PROFILE_CONVERSION_FAVORITES_HIGH_30D = 5;
+const PROFILE_CONVERSION_MIN_ACTIVE_DAYS = 7;
+const PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D = 60;
+const PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT = 5;
+const PROFILE_CONVERSION_WHATSAPP_HIGH_30D = 5;
+const PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
+const INTENT_CONVERSION_CATEGORY_CONFIG = {
+  low_conversion: {
+    description: "Psicólogos com poucos sinais de perfil, favorito e WhatsApp.",
+    label: "Baixa Conversão",
+  },
+  strong_conversion: {
+    description: "Psicólogos com alto índice de cliques no WhatsApp.",
+    label: "Conversão Forte",
+  },
+  unconverted_interest: {
+    description: "Psicólogos muito favoritados, mas com poucos cliques no WhatsApp.",
+    label: "Interesse Não Convertido",
+  },
+  unconverted_traffic: {
+    description: "Psicólogos com muitas aberturas de perfil, mas poucos cliques no WhatsApp.",
+    label: "Tráfego Não Convertido",
+  },
+} as const satisfies Record<
+  AdminDashboardIntentConversionCategoryId,
+  { description: string; label: string }
+>;
+const INTENT_CONVERSION_CATEGORY_ORDER: AdminDashboardIntentConversionCategoryId[] = [
+  "strong_conversion",
+  "unconverted_interest",
+  "unconverted_traffic",
+  "low_conversion",
+];
 
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
@@ -271,6 +375,317 @@ const safePercentage = (value: number, total: number) => {
   if (total <= 0) return 0;
 
   return roundPercent((value / total) * 100);
+};
+
+const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
+  if (activeDays <= 0) return 0;
+
+  return roundPercent((count / activeDays) * 30);
+};
+
+const scoreContribution = (metricId: keyof IntentConversionPairCounts, value: number) =>
+  Math.min(
+    PATIENT_INTENT_SCORE_CAPS[metricId],
+    Math.max(0, value) * PATIENT_INTENT_SCORE_WEIGHTS[metricId],
+  );
+
+const patientIntentScore = (counts: IntentConversionPairCounts) =>
+  Math.min(
+    100,
+    Math.round(
+      scoreContribution("profile_views", counts.profile_views) +
+        scoreContribution("repeated_profile_views", counts.repeated_profile_views) +
+        scoreContribution("favorites", counts.favorites) +
+        scoreContribution("whatsapp_clicks", counts.whatsapp_clicks),
+    ),
+  );
+
+const classifyIntentConversionPair = (
+  counts: IntentConversionPairCounts,
+): AdminDashboardIntentConversionIntentId | null => {
+  const score = patientIntentScore(counts);
+
+  if (counts.whatsapp_clicks > 0 || score >= 45) return "very_qualified";
+  if (counts.favorites > 0 || score >= 20) return "objective";
+  if (counts.profile_views > 0 || counts.repeated_profile_views > 0 || score > 0) {
+    return "curious";
+  }
+
+  return null;
+};
+
+const classifyPsychologistConversion = (
+  signals: PsychologistConversionCounts,
+): AdminDashboardIntentConversionCategoryId => {
+  const hasStrongWhatsappVolume =
+    signals.normalizedWhatsappClicks >= PROFILE_CONVERSION_WHATSAPP_HIGH_30D ||
+    (signals.whatsappClicks >= 2 &&
+      signals.normalizedWhatsappClicks >= PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D &&
+      typeof signals.whatsappConversionRate === "number" &&
+      signals.whatsappConversionRate >= PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT);
+
+  if (hasStrongWhatsappVolume) return "strong_conversion";
+  if (signals.activeDays < PROFILE_CONVERSION_MIN_ACTIVE_DAYS) return "low_conversion";
+
+  const hasLowWhatsappVolume =
+    signals.normalizedWhatsappClicks < PROFILE_CONVERSION_WHATSAPP_HIGH_30D;
+  const hasWeakWhatsappConversion =
+    signals.whatsappConversionRate === null ||
+    signals.whatsappConversionRate < PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT;
+
+  if (
+    signals.normalizedProfileViews >= PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D &&
+    hasLowWhatsappVolume &&
+    hasWeakWhatsappConversion
+  ) {
+    return "unconverted_traffic";
+  }
+
+  if (
+    signals.normalizedFavorites >= PROFILE_CONVERSION_FAVORITES_HIGH_30D &&
+    hasLowWhatsappVolume
+  ) {
+    return "unconverted_interest";
+  }
+
+  return "low_conversion";
+};
+
+const getProfileActiveDaysInRange = (
+  profile: PsychologistConversionProfile,
+  range: AdminDashboardDateRange,
+) => {
+  const rangeStart = startOfDate(range.start);
+  const rangeEnd = endOfDate(range.end);
+  const profileStart = startOfDate(profile.user.createdAt);
+  const activeStart = profileStart > rangeStart ? profileStart : rangeStart;
+
+  if (activeStart > rangeEnd) return 0;
+
+  return daysBetweenInclusive(activeStart, rangeEnd);
+};
+
+const countEventsByPsychologist = (events: Array<{ psychologist_id: string }>) => {
+  const counts = new Map<string, number>();
+
+  for (const event of events) {
+    counts.set(event.psychologist_id, (counts.get(event.psychologist_id) ?? 0) + 1);
+  }
+
+  return counts;
+};
+
+const emptyIntentConversionPairCounts = (): IntentConversionPairCounts => ({
+  favorites: 0,
+  profile_views: 0,
+  repeated_profile_views: 0,
+  whatsapp_clicks: 0,
+});
+
+const buildPsychologistConversionMap = (
+  profiles: PsychologistConversionProfile[],
+  events: PsychologistConversionEvents,
+  range: AdminDashboardDateRange,
+) => {
+  const profileViewCounts = countEventsByPsychologist(events.profileViews);
+  const favoriteCounts = countEventsByPsychologist(events.favorites);
+  const whatsappClickCounts = countEventsByPsychologist(events.whatsappClicks);
+  const conversionByPsychologist = new Map<string, AdminDashboardIntentConversionCategoryId>();
+
+  for (const profile of profiles) {
+    const psychologistId = profile.user_id;
+    const activeDays = getProfileActiveDaysInRange(profile, range);
+    const profileViews = profileViewCounts.get(psychologistId) ?? 0;
+    const favorites = favoriteCounts.get(psychologistId) ?? 0;
+    const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
+    const whatsappConversionRate =
+      profileViews > 0 ? roundPercent((whatsappClicks / profileViews) * 100) : null;
+
+    conversionByPsychologist.set(
+      psychologistId,
+      classifyPsychologistConversion({
+        activeDays,
+        favorites,
+        normalizedFavorites: normalizeCountToThirtyDays(favorites, activeDays),
+        normalizedProfileViews: normalizeCountToThirtyDays(profileViews, activeDays),
+        normalizedWhatsappClicks: normalizeCountToThirtyDays(whatsappClicks, activeDays),
+        profileViews,
+        whatsappClicks,
+        whatsappConversionRate,
+      }),
+    );
+  }
+
+  return conversionByPsychologist;
+};
+
+const buildIntentConversionFlow = (params: {
+  psychologistConversionEvents: PsychologistConversionEvents;
+  psychologistProfiles: PsychologistConversionProfile[];
+  range: AdminDashboardDateRange;
+  signals: IntentConversionSignals;
+}): AdminDashboardIntentConversionFlow => {
+  const conversionByPsychologist = buildPsychologistConversionMap(
+    params.psychologistProfiles,
+    params.psychologistConversionEvents,
+    params.range,
+  );
+  const pairCounts = new Map<string, IntentConversionPairCounts & { psychologistId: string }>();
+  const profileViewCountsByPair = new Map<string, number>();
+
+  const getPair = (patientId: string, psychologistId: string) => {
+    const key = `${patientId}:${psychologistId}`;
+    const current = pairCounts.get(key);
+    if (current) return current;
+
+    const next = {
+      ...emptyIntentConversionPairCounts(),
+      psychologistId,
+    };
+    pairCounts.set(key, next);
+    return next;
+  };
+
+  for (const view of params.signals.profileViews) {
+    if (!view.viewer_id) continue;
+
+    const pair = getPair(view.viewer_id, view.psychologist_id);
+    pair.profile_views += 1;
+    const key = `${view.viewer_id}:${view.psychologist_id}`;
+    profileViewCountsByPair.set(key, (profileViewCountsByPair.get(key) ?? 0) + 1);
+  }
+
+  for (const [key, views] of profileViewCountsByPair.entries()) {
+    const pair = pairCounts.get(key);
+    if (!pair) continue;
+
+    pair.repeated_profile_views = Math.max(0, views - 1);
+  }
+
+  for (const favorite of params.signals.favorites) {
+    getPair(favorite.user_id, favorite.psychologist_id).favorites += 1;
+  }
+
+  for (const click of params.signals.whatsappClicks) {
+    if (!click.user_id) continue;
+
+    getPair(click.user_id, click.psychologist_id).whatsapp_clicks += 1;
+  }
+
+  const intentTotals = new Map<AdminDashboardIntentConversionIntentId, number>(
+    INTENT_CONVERSION_INTENT_ORDER.map((id) => [id, 0]),
+  );
+  const conversionTotals = new Map<AdminDashboardIntentConversionCategoryId, number>(
+    INTENT_CONVERSION_CATEGORY_ORDER.map((id) => [id, 0]),
+  );
+  const flowCounts = new Map<string, number>();
+
+  for (const pair of pairCounts.values()) {
+    const intentId = classifyIntentConversionPair(pair);
+    if (!intentId) continue;
+
+    const conversionId = conversionByPsychologist.get(pair.psychologistId) ?? "low_conversion";
+    const flowKey = `${intentId}_${conversionId}`;
+
+    intentTotals.set(intentId, (intentTotals.get(intentId) ?? 0) + 1);
+    conversionTotals.set(conversionId, (conversionTotals.get(conversionId) ?? 0) + 1);
+    flowCounts.set(flowKey, (flowCounts.get(flowKey) ?? 0) + 1);
+  }
+
+  const totalPairs = [...flowCounts.values()].reduce((sum, count) => sum + count, 0);
+  const flowItems: AdminDashboardIntentConversionFlowItem[] =
+    INTENT_CONVERSION_INTENT_ORDER.flatMap((intentId) =>
+      INTENT_CONVERSION_CATEGORY_ORDER.map((conversionId) => {
+        const count = flowCounts.get(`${intentId}_${conversionId}`) ?? 0;
+
+        return {
+          conversion_id: conversionId,
+          conversion_label: INTENT_CONVERSION_CATEGORY_CONFIG[conversionId].label,
+          conversion_percentage: safePercentage(count, conversionTotals.get(conversionId) ?? 0),
+          count,
+          id: `${intentId}_${conversionId}` as const,
+          intent_id: intentId,
+          intent_label: INTENT_CONVERSION_INTENT_CONFIG[intentId].label,
+          intent_percentage: safePercentage(count, intentTotals.get(intentId) ?? 0),
+          percentage: safePercentage(count, totalPairs),
+        };
+      }),
+    ).filter((item) => item.count > 0);
+
+  const healthyAbsorption = flowCounts.get("very_qualified_strong_conversion") ?? 0;
+  const retainedIntention = [...flowCounts.entries()].reduce((sum, [key, count]) => {
+    const isWarmIntent = key.startsWith("objective_") || key.startsWith("very_qualified_");
+    const isStrongConversion = key.endsWith("_strong_conversion");
+
+    return isWarmIntent && !isStrongConversion ? sum + count : sum;
+  }, 0);
+  const exploratoryLoss =
+    (flowCounts.get("curious_unconverted_traffic") ?? 0) +
+    (flowCounts.get("curious_low_conversion") ?? 0);
+
+  return {
+    coverage_note:
+      "Fluxo observacional por pares paciente-psicólogo com sinais reais no período; pacientes frios não entram porque não têm perfil associado.",
+    flows: flowItems.sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return right.percentage - left.percentage;
+    }),
+    insights: [
+      {
+        count: healthyAbsorption,
+        description: "Qualificados que chegaram a psicólogos classificados em Conversão Forte.",
+        id: "healthy_absorption",
+        label: "Absorção saudável",
+        percentage: safePercentage(healthyAbsorption, totalPairs),
+      },
+      {
+        count: retainedIntention,
+        description:
+          "Interessados ou Qualificados que chegaram a psicólogos sem Conversão Forte no período.",
+        id: "retained_intention",
+        label: "Intenção represada",
+        percentage: safePercentage(retainedIntention, totalPairs),
+      },
+      {
+        count: exploratoryLoss,
+        description: "Curiosos chegando a psicólogos em Tráfego Não Convertido ou Baixa Conversão.",
+        id: "exploratory_loss",
+        label: "Tráfego exploratório",
+        percentage: safePercentage(exploratoryLoss, totalPairs),
+      },
+    ],
+    intents: INTENT_CONVERSION_INTENT_ORDER.map((id) => {
+      const count = intentTotals.get(id) ?? 0;
+
+      return {
+        count,
+        description: INTENT_CONVERSION_INTENT_CONFIG[id].description,
+        id,
+        label: INTENT_CONVERSION_INTENT_CONFIG[id].label,
+        percentage: safePercentage(count, totalPairs),
+      };
+    }),
+    privacy_note:
+      "Indicador interno do Admin; não é exibido a pacientes ou psicólogos e não infere sessão, atendimento, diagnóstico ou conteúdo de conversa.",
+    psychologist_conversions: INTENT_CONVERSION_CATEGORY_ORDER.map((id) => {
+      const count = conversionTotals.get(id) ?? 0;
+
+      return {
+        count,
+        description: INTENT_CONVERSION_CATEGORY_CONFIG[id].description,
+        id,
+        label: INTENT_CONVERSION_CATEGORY_CONFIG[id].label,
+        percentage: safePercentage(count, totalPairs),
+      };
+    }),
+    source: INTENT_CONVERSION_SOURCE,
+    total_pairs: totalPairs,
+    unavailable_reason:
+      totalPairs > 0
+        ? null
+        : "Nenhum par paciente-psicólogo com sinal real foi encontrado no período.",
+  };
 };
 
 const normalizeDeviceType = (value: string): AdminDashboardDeviceItem["device_type"] => {
@@ -502,6 +917,9 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     visitorSessions,
     paidSubscriptions,
     pendingReportRows,
+    intentConversionSignals,
+    psychologistConversionEvents,
+    psychologistConversionProfiles,
   ] = await Promise.all([
     repository.countVisitorSessions(current),
     repository.countVisitorSessions(previous),
@@ -519,12 +937,21 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     repository.listVisitorSessions(current),
     repository.listPaidSubscriptionsUntil(current.end),
     repository.listPendingReports(current),
+    repository.listIntentConversionSignals(current),
+    repository.listPsychologistConversionEvents(current),
+    repository.listPsychologistConversionProfiles(),
   ]);
 
   const financial = buildFinancial(paidSubscriptions, labels, current.end, days);
   const previousFinancial = estimateMrrAt(paidSubscriptions, previous.end);
   const devices = buildDevices(visitorSessions);
   const locations = buildLocations(visitorLocations);
+  const intentConversionFlow = buildIntentConversionFlow({
+    psychologistConversionEvents,
+    psychologistProfiles: psychologistConversionProfiles,
+    range: current,
+    signals: intentConversionSignals,
+  });
 
   const summary: AdminDashboardSummary = {
     cards: {
@@ -593,6 +1020,7 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
       source: financial.source,
       unavailable_reason: financial.unavailable_reason,
     },
+    intent_conversion_flow: intentConversionFlow,
     locations: {
       ...locations,
       source: "visitor_location.country",

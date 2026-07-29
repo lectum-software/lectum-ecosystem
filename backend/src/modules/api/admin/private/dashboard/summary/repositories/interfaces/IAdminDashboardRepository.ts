@@ -57,6 +57,25 @@ export interface IAdminDashboardRepository {
     range: AdminDashboardDateRange,
     authorRole?: DashboardCommunityAuthorRole,
   ): Promise<Array<{ createdAt: Date }>>;
+  listIntentConversionSignals(range: AdminDashboardDateRange): Promise<{
+    favorites: Array<{ createdAt: Date; psychologist_id: string; user_id: string }>;
+    profileViews: Array<{ createdAt: Date; psychologist_id: string; viewer_id: string | null }>;
+    whatsappClicks: Array<{ createdAt: Date; psychologist_id: string; user_id: string | null }>;
+  }>;
+  listPsychologistConversionEvents(range: AdminDashboardDateRange): Promise<{
+    favorites: Array<{ createdAt: Date; psychologist_id: string }>;
+    profileViews: Array<{ createdAt: Date; psychologist_id: string }>;
+    whatsappClicks: Array<{ createdAt: Date; psychologist_id: string }>;
+  }>;
+  listPsychologistConversionProfiles(): Promise<
+    Array<{
+      user: {
+        createdAt: Date;
+        id: string;
+      };
+      user_id: string;
+    }>
+  >;
   listVisitorLocations(range: AdminDashboardDateRange): Promise<Array<{ country: string | null }>>;
   listVisitorSessions(range: AdminDashboardDateRange): Promise<Array<{ device_type: string }>>;
 }

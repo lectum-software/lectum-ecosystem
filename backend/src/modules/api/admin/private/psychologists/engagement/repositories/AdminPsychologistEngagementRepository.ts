@@ -164,7 +164,11 @@ export class AdminPsychologistEngagementRepository {
         psychologist_id: psychologistId,
         source: PROFILE_PAGE_SOURCE,
       },
-      select: { createdAt: true },
+      select: {
+        createdAt: true,
+        device_id: true,
+        viewer_id: true,
+      },
     });
   }
 
@@ -253,6 +257,8 @@ export class AdminPsychologistEngagementRepository {
         occurred_at: true,
         session_id: true,
         traffic_source: true,
+        user_id: true,
+        visitor_id: true,
       },
       where: {
         deleted: false,
@@ -284,7 +290,10 @@ export class AdminPsychologistEngagementRepository {
         deleted: false,
         psychologist_id: psychologistId,
       },
-      select: { createdAt: true },
+      select: {
+        createdAt: true,
+        user_id: true,
+      },
     });
   }
 
@@ -295,7 +304,31 @@ export class AdminPsychologistEngagementRepository {
         deleted: false,
         psychologist_id: psychologistId,
       },
-      select: { createdAt: true },
+      select: {
+        createdAt: true,
+        user_id: true,
+      },
+    });
+  }
+
+  async listImportantPsychologistWhatsappActions(psychologistId: string, from: Date, to: Date) {
+    return prisma.important_action_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        occurred_at: true,
+        session_id: true,
+        user_id: true,
+        visitor_id: true,
+      },
+      where: {
+        action_type: "whatsapp_click",
+        deleted: false,
+        occurred_at: { gte: from, lte: to },
+        target_id: psychologistId,
+        target_type: "psychologist",
+      },
     });
   }
 

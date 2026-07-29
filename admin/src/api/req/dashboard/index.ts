@@ -88,6 +88,54 @@ export type DashboardUnavailableMetric = {
   source: string;
 };
 
+export type DashboardIntentConversionIntentId = "curious" | "objective" | "very_qualified";
+
+export type DashboardIntentConversionCategoryId =
+  | "low_conversion"
+  | "strong_conversion"
+  | "unconverted_interest"
+  | "unconverted_traffic";
+
+export type DashboardIntentConversionNode = {
+  count: number;
+  description: string;
+  id: string;
+  label: string;
+  percentage: number;
+};
+
+export type DashboardIntentConversionFlowItem = {
+  conversion_id: DashboardIntentConversionCategoryId;
+  conversion_label: string;
+  conversion_percentage: number;
+  count: number;
+  id: `${DashboardIntentConversionIntentId}_${DashboardIntentConversionCategoryId}`;
+  intent_id: DashboardIntentConversionIntentId;
+  intent_label: string;
+  intent_percentage: number;
+  percentage: number;
+};
+
+export type DashboardIntentConversionInsight = {
+  count: number;
+  description: string;
+  id: "exploratory_loss" | "healthy_absorption" | "retained_intention";
+  label: string;
+  percentage: number;
+};
+
+export type DashboardIntentConversionFlow = {
+  coverage_note: string;
+  flows: DashboardIntentConversionFlowItem[];
+  insights: DashboardIntentConversionInsight[];
+  intents: DashboardIntentConversionNode[];
+  psychologist_conversions: DashboardIntentConversionNode[];
+  privacy_note: string;
+  source: "profile_view_event+psychologist_favorite+contact_request";
+  total_pairs: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminDashboardSummary = {
   cards: {
     patients: DashboardMetric;
@@ -119,6 +167,7 @@ export type AdminDashboardSummary = {
     source: "active_subscription_estimate";
     unavailable_reason: string | null;
   };
+  intent_conversion_flow: DashboardIntentConversionFlow;
   locations: {
     items: DashboardLocationItem[];
     source: "visitor_location.country";

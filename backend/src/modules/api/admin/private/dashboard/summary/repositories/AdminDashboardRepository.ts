@@ -70,6 +70,9 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
       postReplies,
       postReports,
       paidSubscriptions,
+      profileViews,
+      psychologistFavorites,
+      whatsappClicks,
     ] = await Promise.all([
       prisma.visitor_session.aggregate({
         _min: { createdAt: true },
@@ -117,6 +120,24 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
           },
         },
       }),
+      prisma.profile_view_event.aggregate({
+        _min: { createdAt: true },
+        where: {
+          deleted: false,
+          source: "profile_page",
+        },
+      }),
+      prisma.psychologist_favorite.aggregate({
+        _min: { createdAt: true },
+        where: { deleted: false },
+      }),
+      prisma.contact_request.aggregate({
+        _min: { createdAt: true },
+        where: {
+          channel: "whatsapp",
+          deleted: false,
+        },
+      }),
     ]);
 
     return earliestDate([
@@ -127,6 +148,9 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
       postReplies._min.createdAt,
       postReports._min.createdAt,
       paidSubscriptions._min.createdAt,
+      profileViews._min.createdAt,
+      psychologistFavorites._min.createdAt,
+      whatsappClicks._min.createdAt,
     ]);
   }
 
@@ -318,6 +342,175 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
       },
       select: {
         device_type: true,
+      },
+    });
+  }
+
+  async listIntentConversionSignals(range: AdminDashboardDateRange) {
+    const createdAt = createdAtWhere(range);
+
+    const [profileViews, favorites, whatsappClicks] = await Promise.all([
+      prisma.profile_view_event.findMany({
+        orderBy: { createdAt: "asc" },
+        select: {
+          createdAt: true,
+          psychologist_id: true,
+          viewer_id: true,
+        },
+        where: {
+          createdAt,
+          deleted: false,
+          psychologist: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          source: "profile_page",
+          viewer: {
+            active: true,
+            deleted: false,
+            role: "paciente",
+          },
+          viewer_id: {
+            not: null,
+          },
+        },
+      }),
+      prisma.psychologist_favorite.findMany({
+        orderBy: { createdAt: "asc" },
+        select: {
+          createdAt: true,
+          psychologist_id: true,
+          user_id: true,
+        },
+        where: {
+          createdAt,
+          deleted: false,
+          psychologist: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          user: {
+            active: true,
+            deleted: false,
+            role: "paciente",
+          },
+        },
+      }),
+      prisma.contact_request.findMany({
+        orderBy: { createdAt: "asc" },
+        select: {
+          createdAt: true,
+          psychologist_id: true,
+          user_id: true,
+        },
+        where: {
+          channel: "whatsapp",
+          createdAt,
+          deleted: false,
+          psychologist: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          user: {
+            active: true,
+            deleted: false,
+            role: "paciente",
+          },
+          user_id: {
+            not: null,
+          },
+        },
+      }),
+    ]);
+
+    return {
+      favorites,
+      profileViews,
+      whatsappClicks,
+    };
+  }
+
+  async listPsychologistConversionEvents(range: AdminDashboardDateRange) {
+    const createdAt = createdAtWhere(range);
+
+    const [profileViews, favorites, whatsappClicks] = await Promise.all([
+      prisma.profile_view_event.findMany({
+        select: {
+          createdAt: true,
+          psychologist_id: true,
+        },
+        where: {
+          createdAt,
+          deleted: false,
+          psychologist: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+          source: "profile_page",
+        },
+      }),
+      prisma.psychologist_favorite.findMany({
+        select: {
+          createdAt: true,
+          psychologist_id: true,
+        },
+        where: {
+          createdAt,
+          deleted: false,
+          psychologist: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+        },
+      }),
+      prisma.contact_request.findMany({
+        select: {
+          createdAt: true,
+          psychologist_id: true,
+        },
+        where: {
+          channel: "whatsapp",
+          createdAt,
+          deleted: false,
+          psychologist: {
+            active: true,
+            deleted: false,
+            role: "psicologo",
+          },
+        },
+      }),
+    ]);
+
+    return {
+      favorites,
+      profileViews,
+      whatsappClicks,
+    };
+  }
+
+  async listPsychologistConversionProfiles() {
+    return prisma.psychologist_profile.findMany({
+      select: {
+        user: {
+          select: {
+            createdAt: true,
+            id: true,
+          },
+        },
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
       },
     });
   }

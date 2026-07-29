@@ -95,6 +95,54 @@ export type AdminDashboardUnavailableMetric = {
   source: string;
 };
 
+export type AdminDashboardIntentConversionIntentId = "curious" | "objective" | "very_qualified";
+
+export type AdminDashboardIntentConversionCategoryId =
+  | "low_conversion"
+  | "strong_conversion"
+  | "unconverted_interest"
+  | "unconverted_traffic";
+
+export type AdminDashboardIntentConversionNode = {
+  count: number;
+  description: string;
+  id: string;
+  label: string;
+  percentage: number;
+};
+
+export type AdminDashboardIntentConversionFlowItem = {
+  conversion_id: AdminDashboardIntentConversionCategoryId;
+  conversion_label: string;
+  conversion_percentage: number;
+  count: number;
+  id: `${AdminDashboardIntentConversionIntentId}_${AdminDashboardIntentConversionCategoryId}`;
+  intent_id: AdminDashboardIntentConversionIntentId;
+  intent_label: string;
+  intent_percentage: number;
+  percentage: number;
+};
+
+export type AdminDashboardIntentConversionInsight = {
+  count: number;
+  description: string;
+  id: "exploratory_loss" | "healthy_absorption" | "retained_intention";
+  label: string;
+  percentage: number;
+};
+
+export type AdminDashboardIntentConversionFlow = {
+  coverage_note: string;
+  flows: AdminDashboardIntentConversionFlowItem[];
+  insights: AdminDashboardIntentConversionInsight[];
+  intents: AdminDashboardIntentConversionNode[];
+  psychologist_conversions: AdminDashboardIntentConversionNode[];
+  privacy_note: string;
+  source: "profile_view_event+psychologist_favorite+contact_request";
+  total_pairs: number;
+  unavailable_reason: string | null;
+};
+
 export type AdminDashboardSummary = {
   cards: {
     patients: AdminDashboardMetric;
@@ -126,6 +174,7 @@ export type AdminDashboardSummary = {
     source: "active_subscription_estimate";
     unavailable_reason: string | null;
   };
+  intent_conversion_flow: AdminDashboardIntentConversionFlow;
   locations: {
     items: AdminDashboardLocationItem[];
     source: "visitor_location.country";

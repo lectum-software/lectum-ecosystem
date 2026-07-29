@@ -4067,6 +4067,25 @@ const StatisticsVideoCard = ({
 const formatTrafficNullableCount = (value: number | null) =>
   numberFormatter.format(typeof value === "number" ? value : 0);
 
+const formatTrafficQualityPercentage = (value: number) =>
+  `${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  })}%`;
+
+type PsychologistTrafficQuality = AdminPsychologistStatistics["traffic_quality"];
+type PsychologistTrafficQualityLevelId = PsychologistTrafficQuality["quality_levels"][number]["id"];
+
+const trafficQualityToneClasses: Record<PsychologistTrafficQualityLevelId, string> = {
+  interested: "border-amber-200 bg-amber-50 text-amber-700",
+  qualified: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  unidentified: "border-slate-200 bg-slate-50 text-slate-600",
+  visited: "border-blue-200 bg-blue-50 text-blue-700",
+};
+
+const getTrafficQualityTone = (id: PsychologistTrafficQualityLevelId) =>
+  trafficQualityToneClasses[id] ?? "border-border bg-surface-muted text-muted";
+
 type PsychologistPlatformHourlyActivityPoint = NonNullable<
   AdminPsychologistStatistics["platform_usage"]["hourly_activity"]
 >[number];
@@ -4152,6 +4171,67 @@ const normalizePsychologistPlatformHourlyActivityPoint = (
   };
 };
 
+const PsychologistTrafficQualityMetric = ({
+  description,
+  icon: Icon,
+  label,
+  value,
+}: {
+  description: string;
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) => (
+  <article className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4">
+    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.08em] text-subtle">
+      <Icon aria-hidden className="h-4 w-4 text-primary" />
+      {label}
+    </div>
+    <p className="mt-3 text-2xl font-black text-foreground">{value}</p>
+    <p className="mt-1 text-xs font-semibold leading-5 text-muted">{description}</p>
+  </article>
+);
+
+const PsychologistTrafficQualityFlowRow = ({
+  flow,
+}: {
+  flow: PsychologistTrafficQuality["flows"][number];
+}) => (
+  <article className="rounded-[1.35rem] border border-border/70 bg-surface p-4 shadow-control">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <span className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[0.68rem] font-black text-muted">
+          {flow.origin_label}
+        </span>
+        <span aria-hidden className="text-subtle">
+          →
+        </span>
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-1 text-[0.68rem] font-black",
+            getTrafficQualityTone(flow.quality_id),
+          )}
+        >
+          {flow.quality_label}
+        </span>
+      </div>
+      <div className="shrink-0 text-left sm:text-right">
+        <p className="text-lg font-black text-foreground">{numberFormatter.format(flow.count)}</p>
+        <p className="text-[0.68rem] font-black text-muted">
+          {formatTrafficQualityPercentage(flow.percentage)} do tráfego lido
+        </p>
+      </div>
+    </div>
+    <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
+      <span
+        aria-hidden
+        className="block h-full rounded-full bg-primary"
+        style={{ width: `${Math.min(100, Math.max(4, flow.percentage))}%` }}
+      />
+    </div>
+  </article>
+);
+
 const PsychologistTrafficSourcesCard = ({
   isRefreshing = false,
   periodControls,
@@ -4162,13 +4242,22 @@ const PsychologistTrafficSourcesCard = ({
   statistics: AdminPsychologistStatistics;
 }) => {
   const traffic = statistics.traffic_sources;
+  const quality = statistics.traffic_quality;
+  const hasQualityFlows = quality.flows.length > 0 && quality.total_actors > 0;
+  const absorptionRateLabel =
+    quality.absorption_rate === null
+      ? "—"
+      : formatTrafficQualityPercentage(quality.absorption_rate);
+  const predominantQuality = quality.predominant_quality;
+  const primaryQualifiedOrigin = quality.primary_qualified_origin;
+  const orderedFlows = [...quality.flows].sort((a, b) => b.count - a.count).slice(0, 6);
 
   return (
     <CardShell className="p-5">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-bold text-foreground">Origem do tráfego</h2>
+            <h2 className="text-lg font-bold text-foreground">Qualidade do tráfego</h2>
             {traffic.updated_at ? (
               <Badge className="bg-surface-muted text-muted">
                 Atualizado em {formatDateOnly(traffic.updated_at)}
@@ -4182,79 +4271,213 @@ const PsychologistTrafficSourcesCard = ({
             ) : null}
           </div>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">
-            Canais que levam pacientes até o perfil público e ao WhatsApp do psicólogo.
+            Origem, intenção e absorção dos pacientes que chegaram ao perfil público deste
+            psicólogo.
           </p>
         </div>
         {periodControls}
       </div>
 
-      <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
-        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
-          <span>{"Fonte"}</span>
-          <span className="text-center">{"Perfil"}</span>
-          <span className="text-center">{"WhatsApp"}</span>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <PsychologistTrafficQualityMetric
+          description={
+            predominantQuality
+              ? predominantQuality.description
+              : "Ainda não há volume suficiente para identificar um padrão de qualidade."
+          }
+          icon={Heart}
+          label="Qualidade predominante"
+          value={predominantQuality?.label ?? "Sem leitura"}
+        />
+        <PsychologistTrafficQualityMetric
+          description="WhatsApps reais divididos pelas visualizações públicas do perfil no período."
+          icon={MessageCircle}
+          label="Absorção para WhatsApp"
+          value={absorptionRateLabel}
+        />
+        <PsychologistTrafficQualityMetric
+          description="Canal com maior número de pacientes qualificados atribuídos de forma segura."
+          icon={Globe2}
+          label="Origem qualificada"
+          value={primaryQualifiedOrigin?.label ?? "Sem origem qualificada"}
+        />
+      </div>
+
+      {quality.unavailable_reason ? (
+        <div className="mt-5 rounded-[1.35rem] border border-dashed border-border bg-surface-muted p-5 text-sm font-bold leading-6 text-muted">
+          {quality.unavailable_reason}
         </div>
-        <div className="divide-y divide-border">
-          {traffic.sources.map((source) => (
-            <div
-              className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
-              key={source.id}
-            >
-              <div className="min-w-0">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <p className="truncate text-sm font-black text-foreground">{source.label}</p>
-                  {source.badge === "primary_source" ? (
-                    <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
-                  ) : null}
-                </div>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                  {source.description}
-                </p>
-              </div>
-              <p className="text-center text-lg font-black text-foreground">
-                {numberFormatter.format(source.profile_views)}
-              </p>
-              <p className="text-center text-lg font-black text-foreground">
-                {formatTrafficNullableCount(source.whatsapp_clicks)}
-              </p>
+      ) : null}
+
+      {hasQualityFlows ? (
+        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(12rem,0.8fr)_minmax(0,1.35fr)_minmax(12rem,0.8fr)]">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
+              <Globe2 aria-hidden className="h-4 w-4 text-primary" />
+              Origens lidas
             </div>
-          ))}
+            {quality.origins.map((origin) => (
+              <article
+                className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
+                key={origin.id}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-foreground">{origin.label}</h3>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+                      {numberFormatter.format(origin.profile_views)} visualizações ·{" "}
+                      {numberFormatter.format(origin.qualified_actors)} qualificados
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-foreground">
+                    {formatTrafficQualityPercentage(origin.percentage)}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
+              <Send aria-hidden className="h-4 w-4 text-primary" />
+              Caminhos observados
+            </div>
+            {orderedFlows.map((flow) => (
+              <PsychologistTrafficQualityFlowRow flow={flow} key={flow.id} />
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-subtle">
+              <Eye aria-hidden className="h-4 w-4 text-primary" />
+              Níveis de qualidade
+            </div>
+            {quality.quality_levels.map((level) => (
+              <article
+                className={cn("rounded-[1.35rem] border p-4", getTrafficQualityTone(level.id))}
+                key={level.id}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-foreground">{level.label}</h3>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+                      {level.description}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-surface px-2 py-1 text-[0.68rem] font-black text-foreground">
+                    {formatTrafficQualityPercentage(level.percentage)}
+                  </span>
+                </div>
+                <p className="mt-3 text-2xl font-black text-foreground">
+                  {numberFormatter.format(level.count)}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-5 grid gap-3 rounded-[1.35rem] bg-surface-muted p-4 text-xs font-semibold leading-5 text-muted md:grid-cols-[minmax(0,1fr)_minmax(12rem,0.45fr)]">
+        <p>{quality.attribution_note}</p>
+        <div className="grid grid-cols-3 gap-2 text-center md:grid-cols-1 md:text-left">
+          <div>
+            <p className="font-black text-foreground">
+              {numberFormatter.format(quality.total_whatsapp_clicks)}
+            </p>
+            <p>WhatsApps</p>
+          </div>
+          <div>
+            <p className="font-black text-foreground">
+              {numberFormatter.format(quality.attributed_whatsapp_clicks)}
+            </p>
+            <p>Atribuídos</p>
+          </div>
+          <div>
+            <p className="font-black text-foreground">
+              {numberFormatter.format(quality.unattributed_whatsapp_clicks)}
+            </p>
+            <p>Sem origem</p>
+          </div>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 md:hidden">
-        {traffic.sources.map((source) => (
-          <article
-            className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
-            key={source.id}
-          >
-            <div className="min-w-0">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <h3 className="text-sm font-bold text-foreground">{source.label}</h3>
-                {source.badge === "primary_source" ? (
-                  <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
-                ) : null}
-              </div>
-              <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
+      <details className="mt-5 rounded-[1.35rem] border border-border/70 bg-surface">
+        <summary className="cursor-pointer px-4 py-3 text-sm font-black text-foreground">
+          Ver detalhamento por origem de tráfego
+        </summary>
+        <div className="border-border border-t p-4">
+          <p className="text-sm font-bold leading-6 text-muted">
+            Canais que levam pacientes até o perfil público e ao WhatsApp do psicólogo.
+          </p>
+
+          <div className="mt-4 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
+            <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+              <span>{"Fonte"}</span>
+              <span className="text-center">{"Perfil"}</span>
+              <span className="text-center">{"WhatsApp"}</span>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {[
-                ["Perfil", numberFormatter.format(source.profile_views)],
-                ["WhatsApp", formatTrafficNullableCount(source.whatsapp_clicks)],
-              ].map(([label, value]) => (
-                <div className="rounded-2xl bg-surface p-3" key={label}>
-                  <p className="text-[0.68rem] font-black text-muted">{label}</p>
-                  <p className="mt-1 text-base font-black text-foreground">{value}</p>
+            <div className="divide-y divide-border">
+              {traffic.sources.map((source) => (
+                <div
+                  className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
+                  key={source.id}
+                >
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-black text-foreground">{source.label}</p>
+                      {source.badge === "primary_source" ? (
+                        <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                      {source.description}
+                    </p>
+                  </div>
+                  <p className="text-center text-lg font-black text-foreground">
+                    {numberFormatter.format(source.profile_views)}
+                  </p>
+                  <p className="text-center text-lg font-black text-foreground">
+                    {formatTrafficNullableCount(source.whatsapp_clicks)}
+                  </p>
                 </div>
               ))}
             </div>
-          </article>
-        ))}
-      </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:hidden">
+            {traffic.sources.map((source) => (
+              <article
+                className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
+                key={source.id}
+              >
+                <div className="min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-bold text-foreground">{source.label}</h3>
+                    {source.badge === "primary_source" ? (
+                      <Badge className="bg-primary-soft text-primary">{"Principal origem"}</Badge>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {[
+                    ["Perfil", numberFormatter.format(source.profile_views)],
+                    ["WhatsApp", formatTrafficNullableCount(source.whatsapp_clicks)],
+                  ].map(([label, value]) => (
+                    <div className="rounded-2xl bg-surface p-3" key={label}>
+                      <p className="text-[0.68rem] font-black text-muted">{label}</p>
+                      <p className="mt-1 text-base font-black text-foreground">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </details>
     </CardShell>
   );
 };
-
 type PsychologistPlatformDeviceUsage =
   AdminPsychologistStatistics["platform_usage"]["device_usage"];
 type PsychologistPlatformDeviceUsageItem = PsychologistPlatformDeviceUsage["items"][number];

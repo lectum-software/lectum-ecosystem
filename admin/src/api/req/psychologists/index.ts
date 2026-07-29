@@ -1398,6 +1398,56 @@ export type AdminPsychologistStatistics = {
     unavailable_reason: string | null;
   };
   source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event";
+  traffic_quality: {
+    absorption_rate: number | null;
+    attributed_whatsapp_clicks: number;
+    attribution_note: string;
+    flows: {
+      count: number;
+      id: `${string}_${"interested" | "qualified" | "unidentified" | "visited"}`;
+      origin_id: string;
+      origin_label: string;
+      percentage: number;
+      quality_id: "interested" | "qualified" | "unidentified" | "visited";
+      quality_label: string;
+    }[];
+    origins: {
+      actors: number;
+      id: string;
+      label: string;
+      percentage: number;
+      profile_views: number;
+      qualified_actors: number;
+    }[];
+    predominant_quality: {
+      count: number;
+      description: string;
+      id: "interested" | "qualified" | "unidentified" | "visited";
+      label: string;
+      percentage: number;
+    } | null;
+    primary_qualified_origin: {
+      actors: number;
+      id: string;
+      label: string;
+      percentage: number;
+      profile_views: number;
+      qualified_actors: number;
+    } | null;
+    quality_levels: {
+      count: number;
+      description: string;
+      id: "interested" | "qualified" | "unidentified" | "visited";
+      label: string;
+      percentage: number;
+    }[];
+    source: "page_view_event+psychologist_favorite+contact_request+important_action_event";
+    total_actors: number;
+    total_profile_views: number;
+    total_whatsapp_clicks: number;
+    unattributed_whatsapp_clicks: number;
+    unavailable_reason: string | null;
+  };
   traffic_sources: {
     attribution_unavailable_reason: string | null;
     description: string;

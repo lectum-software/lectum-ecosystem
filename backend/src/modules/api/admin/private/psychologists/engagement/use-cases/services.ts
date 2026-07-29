@@ -12,11 +12,13 @@ import {
   normalizeAdminOperatingSystem,
 } from "@/utils/admin-operating-system";
 import {
+  psychologistTrafficOriginDefinitions,
   summarizePlatformHourlyActivity,
   summarizePlatformHourlyActivityByWeekday,
   summarizePlatformPeakActivityHours,
   summarizePlatformUsage,
   summarizePsychologistTrafficOrigins,
+  trafficOriginFromPageViewSource,
 } from "@/utils/admin-psychologist-analytics";
 import type {
   AdminPsychologistAvailabilityMetric,
@@ -32,6 +34,7 @@ import type {
   AdminPsychologistStatisticsDTO,
   AdminPsychologistStatisticsPeriod,
   AdminPsychologistStatisticsSeriesPoint,
+  AdminPsychologistTrafficQualityLevelId,
   IAdminPsychologistPublicationsDTO,
   IAdminPsychologistStatisticsDTO,
 } from "../DTOs/IAdminPsychologistEngagementDTO";
@@ -53,6 +56,35 @@ const PROFILE_CONVERSION_PROFILE_VIEWS_HIGH_30D = 60;
 const PROFILE_CONVERSION_STRONG_CONVERSION_RATE_PERCENT = 5;
 const PROFILE_CONVERSION_WHATSAPP_HIGH_30D = 5;
 const PROFILE_CONVERSION_WHATSAPP_HIGH_WITH_CONVERSION_30D = 3;
+const TRAFFIC_QUALITY_SOURCE =
+  "page_view_event+psychologist_favorite+contact_request+important_action_event" as const;
+const TRAFFIC_QUALITY_LEVEL_CONFIG = {
+  interested: {
+    description: "Retornou ao perfil ou favoritou este psicólogo antes do WhatsApp.",
+    label: "Interessado",
+  },
+  qualified: {
+    description: "Clicou no WhatsApp deste psicólogo no período.",
+    label: "Qualificado",
+  },
+  unidentified: {
+    description: "Sinal real sem identidade first-party suficiente para ligar à origem.",
+    label: "Não identificado",
+  },
+  visited: {
+    description: "Abriu o perfil, mas não gerou favorito, retorno relevante ou WhatsApp.",
+    label: "Só visitou",
+  },
+} as const satisfies Record<
+  AdminPsychologistTrafficQualityLevelId,
+  { description: string; label: string }
+>;
+const TRAFFIC_QUALITY_LEVEL_ORDER: AdminPsychologistTrafficQualityLevelId[] = [
+  "visited",
+  "interested",
+  "qualified",
+  "unidentified",
+];
 type AdminPsychologistPublicationsSort = NonNullable<AdminPsychologistPublicationsQuery["sort"]>;
 const PSYCHOLOGIST_PUBLICATIONS_SORTS = new Set<AdminPsychologistPublicationsSort>([
   "engagement",
@@ -265,6 +297,9 @@ const metric = (input: {
 });
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
+
+const safePercentage = (count: number, total: number) =>
+  total > 0 ? roundPercent((count / total) * 100) : 0;
 
 const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
   if (activeDays <= 0) return 0;
@@ -975,6 +1010,279 @@ const buildTrafficSources = (
   };
 };
 
+type TrafficQualityPageView = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listPublicProfilePageViews"]>
+>[number];
+type TrafficQualityProfileView = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listProfileViews"]>
+>[number];
+type TrafficQualityFavorite = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listFavorites"]>
+>[number];
+type TrafficQualityWhatsappClick = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listWhatsappClicks"]>
+>[number];
+type TrafficQualityImportantWhatsappAction = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listImportantPsychologistWhatsappActions"]>
+>[number];
+
+type TrafficQualityActorOrigin = {
+  favorites: number;
+  originId: string;
+  profileViews: number;
+  sessions: Set<string>;
+  whatsappSignals: number;
+};
+
+const TRAFFIC_QUALITY_UNATTRIBUTED_ORIGIN = {
+  description:
+    "Sinais reais sem pageview de origem suficiente para ligar o contato a um canal first-party.",
+  id: "unattributed",
+  label: "Origem não atribuída",
+} as const;
+
+const trafficQualityOriginDefinitions = [
+  ...psychologistTrafficOriginDefinitions,
+  TRAFFIC_QUALITY_UNATTRIBUTED_ORIGIN,
+];
+
+const actorKeyFromTrafficEvent = (event: {
+  session_id?: string | null;
+  user_id?: string | null;
+  visitor_id?: string | null;
+}) => {
+  if (event.user_id) return `user:${event.user_id}`;
+  if (event.visitor_id) return `visitor:${event.visitor_id}`;
+  if (event.session_id) return `session:${event.session_id}`;
+
+  return null;
+};
+
+const actorKeyFromProfileView = (event: {
+  device_id?: string | null;
+  viewer_id?: string | null;
+}) => {
+  if (event.viewer_id) return `user:${event.viewer_id}`;
+  if (event.device_id) return `device:${event.device_id}`;
+
+  return null;
+};
+
+const trafficQualityOriginLabel = (originId: string) =>
+  trafficQualityOriginDefinitions.find((definition) => definition.id === originId)?.label ??
+  "Origem não atribuída";
+
+const buildTrafficQuality = (params: {
+  favorites: TrafficQualityFavorite[];
+  importantWhatsappActions: TrafficQualityImportantWhatsappAction[];
+  pageViews: TrafficQualityPageView[];
+  profileViews: TrafficQualityProfileView[];
+  whatsappClicks: TrafficQualityWhatsappClick[];
+}): AdminPsychologistStatisticsDTO["traffic_quality"] => {
+  const groups = new Map<string, TrafficQualityActorOrigin>();
+  const originsByActor = new Map<string, Set<string>>();
+
+  const getGroup = (actorKey: string, originId: string) => {
+    const key = `${actorKey}:${originId}`;
+    const current = groups.get(key);
+    if (current) return current;
+
+    const next: TrafficQualityActorOrigin = {
+      favorites: 0,
+      originId,
+      profileViews: 0,
+      sessions: new Set<string>(),
+      whatsappSignals: 0,
+    };
+    groups.set(key, next);
+
+    if (!originsByActor.has(actorKey)) originsByActor.set(actorKey, new Set());
+    originsByActor.get(actorKey)?.add(originId);
+
+    return next;
+  };
+
+  const getOriginIdsForActor = (actorKey: string) => {
+    const origins = originsByActor.get(actorKey);
+    if (origins && origins.size > 0) return [...origins];
+
+    return [TRAFFIC_QUALITY_UNATTRIBUTED_ORIGIN.id];
+  };
+
+  for (const pageView of params.pageViews) {
+    const actorKey = actorKeyFromTrafficEvent(pageView);
+    if (!actorKey) continue;
+
+    const originId = trafficOriginFromPageViewSource(pageView.traffic_source);
+    const group = getGroup(actorKey, originId);
+    group.profileViews += 1;
+    group.sessions.add(pageView.session_id);
+  }
+
+  for (const profileView of params.profileViews) {
+    const actorKey = actorKeyFromProfileView(profileView);
+    if (!actorKey) continue;
+
+    for (const originId of getOriginIdsForActor(actorKey)) {
+      const group = getGroup(actorKey, originId);
+      if (group.profileViews === 0) group.profileViews += 1;
+    }
+  }
+
+  for (const favorite of params.favorites) {
+    const actorKey = `user:${favorite.user_id}`;
+
+    for (const originId of getOriginIdsForActor(actorKey)) {
+      getGroup(actorKey, originId).favorites += 1;
+    }
+  }
+
+  for (const action of params.importantWhatsappActions) {
+    const actorKey = actorKeyFromTrafficEvent(action);
+    if (!actorKey) continue;
+
+    for (const originId of getOriginIdsForActor(actorKey)) {
+      getGroup(actorKey, originId).whatsappSignals += 1;
+    }
+  }
+
+  let attributedWhatsappClicks = 0;
+
+  params.whatsappClicks.forEach((click, index) => {
+    const actorKey = click.user_id ? `user:${click.user_id}` : `contact:${index}`;
+    const originIds = getOriginIdsForActor(actorKey);
+    const hasAttributedOrigin = originIds.some(
+      (originId) => originId !== TRAFFIC_QUALITY_UNATTRIBUTED_ORIGIN.id,
+    );
+
+    if (hasAttributedOrigin) attributedWhatsappClicks += 1;
+
+    for (const originId of originIds) {
+      getGroup(actorKey, originId).whatsappSignals += 1;
+    }
+  });
+
+  const flowCounts = new Map<string, number>();
+  const qualityCounts = new Map<AdminPsychologistTrafficQualityLevelId, number>(
+    TRAFFIC_QUALITY_LEVEL_ORDER.map((id) => [id, 0]),
+  );
+  const originActorCounts = new Map<string, number>();
+  const originProfileViews = new Map<string, number>();
+  const originQualifiedActors = new Map<string, number>();
+
+  for (const group of groups.values()) {
+    const qualityId: AdminPsychologistTrafficQualityLevelId =
+      group.whatsappSignals > 0
+        ? "qualified"
+        : group.favorites > 0 || group.profileViews > 1
+          ? "interested"
+          : group.profileViews > 0
+            ? "visited"
+            : "unidentified";
+    const flowKey = `${group.originId}_${qualityId}`;
+
+    flowCounts.set(flowKey, (flowCounts.get(flowKey) ?? 0) + 1);
+    qualityCounts.set(qualityId, (qualityCounts.get(qualityId) ?? 0) + 1);
+    originActorCounts.set(group.originId, (originActorCounts.get(group.originId) ?? 0) + 1);
+    originProfileViews.set(
+      group.originId,
+      (originProfileViews.get(group.originId) ?? 0) + group.profileViews,
+    );
+    if (qualityId === "qualified") {
+      originQualifiedActors.set(
+        group.originId,
+        (originQualifiedActors.get(group.originId) ?? 0) + 1,
+      );
+    }
+  }
+
+  const totalActors = [...originActorCounts.values()].reduce((sum, count) => sum + count, 0);
+  const totalProfileViews = params.pageViews.length || params.profileViews.length;
+  const totalWhatsappClicks = params.whatsappClicks.length;
+  const qualityLevels = TRAFFIC_QUALITY_LEVEL_ORDER.map((id) => {
+    const count = qualityCounts.get(id) ?? 0;
+
+    return {
+      count,
+      description: TRAFFIC_QUALITY_LEVEL_CONFIG[id].description,
+      id,
+      label: TRAFFIC_QUALITY_LEVEL_CONFIG[id].label,
+      percentage: safePercentage(count, totalActors),
+    };
+  });
+  const origins = trafficQualityOriginDefinitions
+    .map((definition) => {
+      const actors = originActorCounts.get(definition.id) ?? 0;
+
+      return {
+        actors,
+        id: definition.id,
+        label: definition.label,
+        percentage: safePercentage(actors, totalActors),
+        profile_views: originProfileViews.get(definition.id) ?? 0,
+        qualified_actors: originQualifiedActors.get(definition.id) ?? 0,
+      };
+    })
+    .filter((origin) => origin.actors > 0 || origin.profile_views > 0);
+  const predominantQuality =
+    [...qualityLevels].sort((left, right) => {
+      if (right.count !== left.count) return right.count - left.count;
+
+      return right.percentage - left.percentage;
+    })[0] ?? null;
+  const primaryQualifiedOrigin =
+    [...origins]
+      .filter((origin) => origin.qualified_actors > 0)
+      .sort((left, right) => {
+        if (right.qualified_actors !== left.qualified_actors) {
+          return right.qualified_actors - left.qualified_actors;
+        }
+
+        return right.profile_views - left.profile_views;
+      })[0] ?? null;
+
+  return {
+    absorption_rate:
+      totalProfileViews > 0 ? roundPercent((totalWhatsappClicks / totalProfileViews) * 100) : null,
+    attributed_whatsapp_clicks: Math.min(attributedWhatsappClicks, totalWhatsappClicks),
+    attribution_note:
+      "WhatsApp total usa contact_request; a ligação com origem usa visitor/session/user de page_view_event e important_action_event quando disponível.",
+    flows: trafficQualityOriginDefinitions
+      .flatMap((origin) =>
+        TRAFFIC_QUALITY_LEVEL_ORDER.map((qualityId) => {
+          const count = flowCounts.get(`${origin.id}_${qualityId}`) ?? 0;
+
+          return {
+            count,
+            id: `${origin.id}_${qualityId}` as const,
+            origin_id: origin.id,
+            origin_label: trafficQualityOriginLabel(origin.id),
+            percentage: safePercentage(count, totalActors),
+            quality_id: qualityId,
+            quality_label: TRAFFIC_QUALITY_LEVEL_CONFIG[qualityId].label,
+          };
+        }),
+      )
+      .filter((flow) => flow.count > 0),
+    origins,
+    predominant_quality: predominantQuality?.count ? predominantQuality : null,
+    primary_qualified_origin: primaryQualifiedOrigin,
+    quality_levels: qualityLevels,
+    source: TRAFFIC_QUALITY_SOURCE,
+    total_actors: totalActors,
+    total_profile_views: totalProfileViews,
+    total_whatsapp_clicks: totalWhatsappClicks,
+    unattributed_whatsapp_clicks: Math.max(
+      0,
+      totalWhatsappClicks - Math.min(attributedWhatsappClicks, totalWhatsappClicks),
+    ),
+    unavailable_reason:
+      totalActors > 0
+        ? null
+        : "Nenhum acesso com origem first-party foi encontrado para este psicólogo no período.",
+  };
+};
+
 const earlierDate = (current: Date | null, candidate: Date | null) => {
   if (!candidate) return current;
   if (!current) return candidate;
@@ -1233,6 +1541,7 @@ export const showAdminPsychologistStatistics = async (
     platformSessions,
     pwaInstallAction,
     trafficPageViews,
+    importantWhatsappActions,
     patientPostsByCommunityCounts,
   ] = await Promise.all([
     repository.listProfileViews(userId, period.current.start, period.current.end),
@@ -1260,6 +1569,11 @@ export const showAdminPsychologistStatistics = async (
     repository.listPlatformSessions(userId, period.current.start, period.current.end),
     repository.findPwaInstallAction(userId),
     repository.listPublicProfilePageViews(userId, period.current.start, period.current.end),
+    repository.listImportantPsychologistWhatsappActions(
+      userId,
+      period.current.start,
+      period.current.end,
+    ),
     repository.countPatientPostsByCommunity(period.current.start, period.current.end),
   ]);
 
@@ -1448,6 +1762,13 @@ export const showAdminPsychologistStatistics = async (
     unavailable_reason: platformUsageSummary.unavailable_reason,
   };
   const trafficSources = buildTrafficSources(trafficPageViews);
+  const trafficQuality = buildTrafficQuality({
+    favorites,
+    importantWhatsappActions,
+    pageViews: trafficPageViews,
+    profileViews,
+    whatsappClicks,
+  });
   const businessProfileConversion = buildBusinessProfileConversion({
     activeDays: getProfileActiveDaysInStatisticsRange(profile.user.createdAt, period.current),
     favorites: favorites.length,
@@ -1582,6 +1903,7 @@ export const showAdminPsychologistStatistics = async (
     platform_usage: platformUsage,
     source:
       "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event",
+    traffic_quality: trafficQuality,
     traffic_sources: trafficSources,
     unavailable,
     video: buildVideo(
