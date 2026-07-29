@@ -231,6 +231,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 51. [TASK-86 - Trilha pre-cadastro dos psicologos no dashboard Admin](TASK-86-trilha-pre-cadastro-psicologos-admin.md) foi adicionada e concluida em 2026-07-27 para permitir alternar o card **Conversao do cadastro ate assinatura** em `/psicologos` para **Conversao ate o cadastro**, medindo a trilha anonima previa do psicologo ate criar conta pelo `visitor_id` persistido no cadastro.
 52. [TASK-88 - Seletor de conversao no titulo e filtro de plano na trilha pre-cadastro dos psicologos Admin](TASK-88-seletor-conversao-titulo-filtro-plano-psicologos-admin.md) foi adicionada e concluida em 2026-07-27 para mover o seletor de jornada para o proprio titulo do card e reservar o canto superior direito da visualizacao **Conversao ate o cadastro** para o filtro por plano **Todos / Assinantes / Gratuitos / Cortesia**.
 53. [TASK-89 - Comparativo Demanda x Engajamento no dashboard Admin de psicologos](TASK-89-demanda-engajamento-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-28 para cruzar, de forma observacional, demanda agregada com envolvimento real dos psicologos nas comunidades.
+54. [TASK-60 - Dashboard administrativo de pacientes](TASK-60-dashboard-administrativo-pacientes.md) recebeu ajuste complementar em 2026-07-29 para tornar os quadrantes de **Intencao x Engajamento** acionaveis, navegando para `/pacientes/lista?intent_engagement=...` com filtro composto real.
 
 ### 1A. Trilha Admin planejada
 

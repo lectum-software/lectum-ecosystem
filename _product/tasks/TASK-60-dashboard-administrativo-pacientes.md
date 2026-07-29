@@ -1072,3 +1072,34 @@ Frontend esperado:
 - Smoke de servico local `buildPatientsDashboard({ period: "all" })` retornou `engagement_analysis.source="community_post+post_reply+post_vote+post_save+post_reply_save"`, `intent_engagement.source` combinando intencao + comunidade, 16 celulas e itens reais **Muito engajados**, **Engajados**, **Pouco engajados** e **Sem engajamento**.
 - Smoke de servico local `listAdminPatients({ limit: 5 })` retornou `source` com tabelas de intencao + comunidade e labels reais de engajamento por comunidade, sem mock.
 - Browser local/headless autenticado em `http://localhost:3002/pacientes` e `http://localhost:3002/pacientes/lista` validou mobile `390x844`, `scrollWidth=390`, textos de **Engajamento** e **Sem engajamento** presentes. Screenshots salvos em `.tmp/admin-patients-engagement-mobile.png` e `.tmp/admin-patients-list-engagement-mobile.png`.
+
+## Ajuste pos-feedback 2026-07-29 - Links dos quadrantes Intencao x Engajamento para lista filtrada
+
+- Pedido do usuario: assim como o clique em um quadrante de **Demanda x Engajamento** leva para a lista de psicologos filtrada, os quadrantes de **Intencao x Engajamento** em `/pacientes` devem levar para `/pacientes/lista` com a lista de pacientes filtrada.
+- Frontend Admin: as 16 celulas da matriz **Intencao x Engajamento** viraram links reais para `/pacientes/lista?intent_engagement=...`, preservando o layout compacto mobile-first, contagem, percentual da base e percentual dentro da linha.
+- Lista Admin: `/pacientes/lista` passou a aceitar, parsear, cachear e enviar o filtro composto `intent_engagement`, mantendo busca, status, forma de cadastro, ordenacao e paginacao existentes.
+- Backend Admin: `GET /api/admin/private/patients` valida `intent_engagement` contra os 16 cruzamentos canonicos e filtra os pacientes depois de enriquecer cada item com intencao e engajamento comunitario reais, sem endpoint paralelo ou recalculo no cliente.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, o comportamento existente de **Demanda x Engajamento** em `/psicologos` e a captura enviada pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0342-quadrantes-intencao-engajamento-lista-filtrada.md`.
+
+### Criterios complementares
+
+- [x] Cada celula de **Intencao x Engajamento** navega para `/pacientes/lista` com `intent_engagement` do cruzamento selecionado.
+- [x] A lista de pacientes aplica o filtro composto usando as classificacoes reais de intencao e engajamento comunitario.
+- [x] Query key, parsing de URL e chamada HTTP da lista incluem `intent_engagement`, evitando reutilizacao de cache de filtros diferentes.
+- [x] Layout mobile-first preservado em 390px sem overflow horizontal.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, migration ou `<img>` foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/list/DTOs/IAdminPatientsListDTO.ts" "src/modules/api/admin/private/patients/list/use-cases/services.ts" "src/modules/api/admin/private/patients/list/validator/index.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/cache/keys.ts" "src/api/req/patients/list.ts" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check` (primeira tentativa bloqueada por `.next/types` stale; apos `pnpm --dir admin build` gerar novamente os tipos, foi reexecutado e passou)
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke de servico local `listAdminPatients({ limit: 5, intent_engagement: "objective_low_engagement" })`: retornou status 200, `count=12`, `active_filters_count=1` e todos os itens da pagina em `objective_low_engagement`.
+- Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou 32 links DOM (16 mobile + 16 desktop) para `intent_engagement`, incluindo `objective_low_engagement`; em `http://localhost:3002/pacientes/lista?intent_engagement=objective_low_engagement`, validou **12 pacientes encontrados**, **1 filtro(s) ativo(s)**, `scrollWidth=390` e `viewport=390`. Screenshots salvos em `.tmp/admin-patients-intent-engagement-links.png` e `.tmp/admin-patients-list-intent-engagement-filter.png`.
+- Admin temporario de validacao `codex-intent-engagement-20260728@example.com` foi removido do banco apos a verificacao.

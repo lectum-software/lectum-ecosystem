@@ -11,9 +11,12 @@ export type PatientsListEngagementId =
   | "low_engagement"
   | "no_engagement"
   | "very_engaged";
+export type PatientsListIntentEngagementQuadrantId =
+  `${PatientsListIntentId}_${PatientsListEngagementId}`;
 
 export type PatientsListQuery = {
   gender?: string;
+  intent_engagement?: PatientsListIntentEngagementQuadrantId;
   limit?: number;
   page?: number;
   provider?: PatientsListProvider;
@@ -74,6 +77,7 @@ export type AdminPatientsList = {
 
 const cleanParams = (input: PatientsListQuery) => ({
   ...(input.gender ? { gender: input.gender } : {}),
+  ...(input.intent_engagement ? { intent_engagement: input.intent_engagement } : {}),
   ...(input.limit ? { limit: input.limit } : {}),
   ...(input.page ? { page: input.page } : {}),
   ...(input.provider ? { provider: input.provider } : {}),

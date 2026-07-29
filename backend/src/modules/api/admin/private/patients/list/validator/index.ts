@@ -23,6 +23,7 @@ export const schema: IValidatorRequest = {
     { key: "status", coerse: "string", method: "string", max: 20, optional: true },
     { key: "provider", coerse: "string", method: "string", max: 40, optional: true },
     { key: "gender", coerse: "string", method: "string", max: 80, optional: true },
+    { key: "intent_engagement", coerse: "string", method: "string", max: 80, optional: true },
     { key: "sort", coerse: "string", method: "string", max: 40, optional: true },
   ],
 };

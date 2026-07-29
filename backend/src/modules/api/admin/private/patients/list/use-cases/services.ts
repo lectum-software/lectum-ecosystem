@@ -7,6 +7,7 @@ import {
 import type {
   AdminPatientsListEngagementId,
   AdminPatientsListFilters,
+  AdminPatientsListIntentEngagementQuadrantId,
   AdminPatientsListIntentId,
   AdminPatientsListItem,
   AdminPatientsListOption,
@@ -16,6 +17,7 @@ import type {
   AdminPatientsListStatus,
   IAdminPatientsListDTO,
 } from "../DTOs/IAdminPatientsListDTO";
+import { ADMIN_PATIENTS_LIST_INTENT_ENGAGEMENT_QUADRANTS } from "../DTOs/IAdminPatientsListDTO";
 import {
   type AdminPatientListRecord,
   AdminPatientsListRepository,
@@ -59,6 +61,9 @@ type PatientsListClassifications = {
 const SORTS = new Set<AdminPatientsListSort>(["recent", "name"]);
 const STATUSES = new Set<AdminPatientsListStatus>(["active", "inactive"]);
 const PROVIDERS = new Set<AdminPatientsListProvider>(["email_password", "google"]);
+const INTENT_ENGAGEMENT_QUADRANTS = new Set<AdminPatientsListIntentEngagementQuadrantId>(
+  ADMIN_PATIENTS_LIST_INTENT_ENGAGEMENT_QUADRANTS,
+);
 
 const GENDER_LABELS: Record<string, string> = {
   female: "Feminino",
@@ -462,6 +467,14 @@ const enrichPatientIntentAndEngagement = (
   };
 };
 
+const resolveIntentEngagementQuadrant = (
+  item: AdminPatientsListItem,
+): AdminPatientsListIntentEngagementQuadrantId =>
+  `${item.intent.id}_${item.engagement.id}` as AdminPatientsListIntentEngagementQuadrantId;
+
+const matchesSignalFilters = (item: AdminPatientsListItem, query: AdminPatientsListQuery) =>
+  !query.intent_engagement || resolveIntentEngagementQuadrant(item) === query.intent_engagement;
+
 const addOptionCount = (
   map: Map<string, { count: number; label: string }>,
   id: string,
@@ -512,15 +525,33 @@ const buildFilters = (patients: AdminPatientListRecord[]): AdminPatientsListFilt
 };
 
 const activeFiltersCount = (query: AdminPatientsListQuery) =>
-  [query.q, query.status, query.provider, query.gender].filter(
+  [query.q, query.status, query.provider, query.gender, query.intent_engagement].filter(
     (value) => value !== undefined && value !== null && value !== "",
   ).length;
+
+const enrichPatients = async (
+  repository: AdminPatientsListRepository,
+  items: AdminPatientsListItem[],
+) => {
+  const patientIds = items.map((patient) => patient.id);
+  const [intentSignals, communityEngagementSignals] = await Promise.all([
+    repository.listIntentSignals(patientIds),
+    repository.listCommunityEngagementEvents(patientIds),
+  ]);
+  const classifications = buildPatientListClassifications(items, {
+    communityEngagementSignals,
+    intentSignals,
+  });
+
+  return items.map((patient) => enrichPatientIntentAndEngagement(patient, classifications));
+};
 
 export const listAdminPatients = async (query: AdminPatientsListQuery): Promise<Resolve> => {
   if (
     (query.sort && !SORTS.has(query.sort)) ||
     (query.status && !STATUSES.has(query.status)) ||
-    (query.provider && !PROVIDERS.has(query.provider))
+    (query.provider && !PROVIDERS.has(query.provider)) ||
+    (query.intent_engagement && !INTENT_ENGAGEMENT_QUADRANTS.has(query.intent_engagement))
   ) {
     return {
       status: 400,
@@ -533,24 +564,19 @@ export const listAdminPatients = async (query: AdminPatientsListQuery): Promise<
   const pagination = normalizePagination(query);
   const patients = await repository.listPatients();
   const filteredPatients = patients.filter((patient) => matchesFilters(patient, query));
-  const sortedItems = sortItems(filteredPatients.map(mapPatient), sort);
+  const baseItems = filteredPatients.map(mapPatient);
+  const signalFilteredItems = query.intent_engagement
+    ? (await enrichPatients(repository, baseItems)).filter((patient) =>
+        matchesSignalFilters(patient, query),
+      )
+    : baseItems;
+  const sortedItems = sortItems(signalFilteredItems, sort);
   const count = sortedItems.length;
   const pages = Math.max(1, Math.ceil(count / pagination.limit));
   const responsePage = Math.min(pagination.page, pages);
   const responseSkip = (responsePage - 1) * pagination.limit;
   const pageData = sortedItems.slice(responseSkip, responseSkip + pagination.limit);
-  const patientIds = pageData.map((patient) => patient.id);
-  const [intentSignals, communityEngagementSignals] = await Promise.all([
-    repository.listIntentSignals(patientIds),
-    repository.listCommunityEngagementEvents(patientIds),
-  ]);
-  const classifications = buildPatientListClassifications(pageData, {
-    communityEngagementSignals,
-    intentSignals,
-  });
-  const data = pageData.map((patient) =>
-    enrichPatientIntentAndEngagement(patient, classifications),
-  );
+  const data = query.intent_engagement ? pageData : await enrichPatients(repository, pageData);
 
   return {
     status: 200,

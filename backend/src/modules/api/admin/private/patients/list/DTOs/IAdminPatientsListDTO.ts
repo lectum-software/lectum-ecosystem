@@ -3,6 +3,24 @@ import type { Request } from "express";
 export const ADMIN_PATIENTS_LIST_SORTS = ["recent", "name"] as const;
 export const ADMIN_PATIENTS_LIST_STATUSES = ["active", "inactive"] as const;
 export const ADMIN_PATIENTS_LIST_PROVIDERS = ["email_password", "google"] as const;
+export const ADMIN_PATIENTS_LIST_INTENT_ENGAGEMENT_QUADRANTS = [
+  "cold_very_engaged",
+  "cold_engaged",
+  "cold_low_engagement",
+  "cold_no_engagement",
+  "curious_very_engaged",
+  "curious_engaged",
+  "curious_low_engagement",
+  "curious_no_engagement",
+  "objective_very_engaged",
+  "objective_engaged",
+  "objective_low_engagement",
+  "objective_no_engagement",
+  "very_qualified_very_engaged",
+  "very_qualified_engaged",
+  "very_qualified_low_engagement",
+  "very_qualified_no_engagement",
+] as const;
 
 export type AdminPatientsListSort = (typeof ADMIN_PATIENTS_LIST_SORTS)[number];
 export type AdminPatientsListStatus = (typeof ADMIN_PATIENTS_LIST_STATUSES)[number];
@@ -13,9 +31,12 @@ export type AdminPatientsListEngagementId =
   | "low_engagement"
   | "no_engagement"
   | "very_engaged";
+export type AdminPatientsListIntentEngagementQuadrantId =
+  (typeof ADMIN_PATIENTS_LIST_INTENT_ENGAGEMENT_QUADRANTS)[number];
 
 export type AdminPatientsListQuery = {
   gender?: string;
+  intent_engagement?: AdminPatientsListIntentEngagementQuadrantId;
   limit?: number;
   page?: number;
   provider?: AdminPatientsListProvider;

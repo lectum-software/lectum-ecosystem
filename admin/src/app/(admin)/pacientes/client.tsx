@@ -17,6 +17,7 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
+import Link from "next/link";
 import {
   type FocusEvent,
   Fragment,
@@ -1187,6 +1188,12 @@ const findPatientIntentEngagementCell = (
   };
 };
 
+const buildPatientIntentEngagementListHref = (cellId: PatientIntentEngagementCell["id"]) => {
+  const params = new URLSearchParams({ intent_engagement: cellId });
+
+  return `/pacientes/lista?${params.toString()}`;
+};
+
 const PatientIntentEngagementMetric = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="rounded-2xl bg-surface-muted p-3">
     <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">{label}</p>
@@ -1206,11 +1213,14 @@ const PatientIntentEngagementCellCard = ({
   const intensity = hasData ? 0.08 + Math.min(0.2, (cell.row_percentage / 100) * 0.2) : 0;
 
   return (
-    <article
-      aria-label={`${cell.intent_label} com ${cell.engagement_label}: ${numberFormatter.format(
+    <Link
+      aria-label={`Ver lista de pacientes em ${cell.intent_label} com ${
+        cell.engagement_label
+      }: ${numberFormatter.format(
         cell.count,
       )} paciente(s), ${formatPercentageValue(cell.percentage)} da base.`}
-      className="min-h-[7.75rem] min-w-0 rounded-[1.2rem] border p-3"
+      className="block min-h-[7.75rem] min-w-0 rounded-[1.2rem] border p-3 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+      href={buildPatientIntentEngagementListHref(cell.id)}
       style={{
         backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
         borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
@@ -1235,7 +1245,10 @@ const PatientIntentEngagementCellCard = ({
       <p className="mt-2 text-[0.72rem] font-bold leading-5 text-muted">
         {formatPercentageValue(cell.row_percentage)} dentro de {cell.intent_label.toLowerCase()}.
       </p>
-    </article>
+      <p className="sr-only">
+        Clique para ver a lista de pacientes deste quadrante filtrada por intencao e engajamento.
+      </p>
+    </Link>
   );
 };
 

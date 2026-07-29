@@ -14,6 +14,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useAdminPatientsList } from "@/api/callers/patients/list";
 import { resolveApiError } from "@/api/handle";
 import type {
+  PatientsListIntentEngagementQuadrantId,
   PatientsListItem,
   PatientsListProvider,
   PatientsListQuery,
@@ -37,9 +38,29 @@ const PROVIDER_OPTIONS: Array<{ id: PatientsListProvider; label: string }> = [
   { id: "google", label: "Google" },
 ];
 
+const INTENT_ENGAGEMENT_QUADRANTS: PatientsListIntentEngagementQuadrantId[] = [
+  "cold_very_engaged",
+  "cold_engaged",
+  "cold_low_engagement",
+  "cold_no_engagement",
+  "curious_very_engaged",
+  "curious_engaged",
+  "curious_low_engagement",
+  "curious_no_engagement",
+  "objective_very_engaged",
+  "objective_engaged",
+  "objective_low_engagement",
+  "objective_no_engagement",
+  "very_qualified_very_engaged",
+  "very_qualified_engaged",
+  "very_qualified_low_engagement",
+  "very_qualified_no_engagement",
+];
+
 const listSorts = new Set(SORT_OPTIONS.map((item) => item.id));
 const listStatuses = new Set(STATUS_OPTIONS.map((item) => item.id));
 const listProviders = new Set(PROVIDER_OPTIONS.map((item) => item.id));
+const listIntentEngagementQuadrants = new Set(INTENT_ENGAGEMENT_QUADRANTS);
 const LOADING_ROWS = ["loading-1", "loading-2", "loading-3", "loading-4", "loading-5"];
 const SEARCH_DEBOUNCE_MS = 350;
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -74,9 +95,16 @@ const parseQuery = (params: URLSearchParams): PatientsListQuery => {
   const sort = params.get("sort") as PatientsListSort | null;
   const status = params.get("status") as PatientsListStatus | null;
   const provider = params.get("provider") as PatientsListProvider | null;
+  const intentEngagement = params.get(
+    "intent_engagement",
+  ) as PatientsListIntentEngagementQuadrantId | null;
 
   return {
     gender: params.get("gender") || undefined,
+    intent_engagement:
+      intentEngagement && listIntentEngagementQuadrants.has(intentEngagement)
+        ? intentEngagement
+        : undefined,
     limit: Math.min(50, parsePositiveNumber(params.get("limit"), 12)),
     page: parsePositiveNumber(params.get("page"), 1),
     provider: provider && listProviders.has(provider) ? provider : undefined,

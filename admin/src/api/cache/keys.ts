@@ -96,6 +96,7 @@ const normalizePsychologistsList = (input: PsychologistsListQuery) => ({
 
 const normalizePatientsList = (input: PatientsListQuery) => ({
   gender: input.gender || "all",
+  intent_engagement: input.intent_engagement || "all",
   limit: input.limit || 12,
   page: input.page || 1,
   provider: input.provider || "all",

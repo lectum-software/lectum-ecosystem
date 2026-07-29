@@ -162,3 +162,4 @@ Formato recomendado:
 - [ADR-0339 - Categorias de demanda nao convertida na matriz Demanda x Engajamento](0339-demanda-engajamento-categorias-nao-convertidas.md) - Accepted
 - [ADR-0340 - Score ponderado de engajamento comunitario no Admin](0340-engajamento-ponderado-admin.md) - Accepted
 - [ADR-0341 - Vocabulário Demanda no Admin de psicólogos](0341-vocabulario-demanda-admin.md) - Accepted
+- [ADR-0342 - Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md) - Accepted
