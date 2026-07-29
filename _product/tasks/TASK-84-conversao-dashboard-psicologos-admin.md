@@ -282,3 +282,27 @@ As metricas sao calculadas dentro da janela temporal selecionada. Para Conversao
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - HTTP local: `GET http://localhost:3002/psicologos` retornou 200.
 - Validacao estatica: `admin/src/app/(admin)/psicologos/client.tsx` contem `bottom-full right-0 z-50` na tooltip e nao usa mais `title={item.description}` no botao de ajuda.
+
+## Ajuste pos-feedback 2026-07-29 - Camada da tooltip acima do bloco seguinte
+
+- Pedido do usuario: a tooltip das categorias de **Conversao** continuava aparecendo parcialmente escondida pelo bloco seguinte na tela `/psicologos`.
+- Frontend Admin: o CardShell que agrupa **Conversao e engajamento dos psicologos** agora cria uma camada propria acima dos blocos subsequentes (`relative z-20`) e permite `overflow-visible`, preservando a tooltip inline acima do card **Conversao x Engajamento**.
+- A tooltip continua abrindo para cima, sem `title` nativo do navegador, com copy e categorias vindas dos dados reais da API.
+- Nao houve alteracao de contrato HTTP, backend, persistencia, package, schema Prisma ou migration; `pnpm --dir backend db:migrate` nao se aplica.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` e a captura enviada pelo usuario.
+- ADR atualizado: `adrs/0349-conversao-bruta-percentis-admin-psicologos.md`.
+
+### Criterios complementares
+
+- [x] A tooltip das categorias de Conversao renderiza acima do card **Conversao x Engajamento** em vez de ficar escondida por ele.
+- [x] O ajuste preserva a implementacao inline mobile-first, sem novo package e sem `<img>`.
+- [x] Nenhum mock, seed artificial, endpoint simulado, schema Prisma ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- HTTP local: `GET http://localhost:3002/psicologos` retornou 200.
+- Validacao estatica: `admin/src/app/(admin)/psicologos/client.tsx` contem `relative z-20 overflow-visible p-5` no CardShell do bloco **Conversao e engajamento dos psicologos** e a tooltip customizada mantem `bottom-full right-0 z-50` sem `title={item.description}`.

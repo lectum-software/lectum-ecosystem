@@ -2607,7 +2607,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
 
   return (
-    <CardShell className="p-5">
+    <CardShell className="relative z-20 overflow-visible p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}

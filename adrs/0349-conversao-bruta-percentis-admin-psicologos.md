@@ -25,6 +25,7 @@ Tambem foi definida a categoria **Sem Conversao** para psicologos fora do period
 - A UI do bloco **Conversao** deve exibir a faixa padrao do periodo e tooltips explicando as cinco categorias.
 - Atualizacao 2026-07-29: no dashboard Admin de psicologos, o card branco da faixa **Conversao padrao do periodo** fica alinhado pelo topo ao titulo **Conversao** em telas maiores e usa a microcopy executiva **Cliques no WhatsApp**, sem expor P25/P75 na interface principal.
 - Atualizacao 2026-07-29: as tooltips das categorias de Conversao abrem para cima, com camada alta e sem `title` nativo do navegador, para nao ficarem encobertas pelo bloco **Conversao x Engajamento**.
+- Atualizacao 2026-07-29: o CardShell do bloco **Conversao e engajamento dos psicologos** tambem cria uma camada propria (`relative z-20`) e libera `overflow-visible`, garantindo que a tooltip inline fique acima do card seguinte sem trocar a arquitetura do componente.
 
 ## Consequencias
 
@@ -35,6 +36,7 @@ Tambem foi definida a categoria **Sem Conversao** para psicologos fora do period
 - A decisao nao altera schema Prisma, migrations, packages ou backfills.
 - A interface continua mostrando a faixa padrao, mas reduz linguagem tecnica na leitura principal; detalhes metodologicos permanecem registrados nesta ADR e na task.
 - O ajuste de tooltip preserva a implementacao inline existente e evita adicionar dependencia nova apenas para esse comportamento.
+- A camada explicita no card pai evita que o `backdrop-blur`/stacking context dos cards administrativos oculte tooltips sem introduzir portal, popover global ou dependencia externa.
 
 ## Validacao
 
