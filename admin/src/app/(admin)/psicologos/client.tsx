@@ -297,9 +297,9 @@ const DASHBOARD_METRIC_CONFIG = {
 const PROFILE_CONVERSION_CHART_COLORS = {
   insufficient_data: "#94a3b8",
   low_conversion: "#f59f00",
+  no_conversion: "#ef4444",
+  standard_conversion: "#308ce8",
   strong_conversion: "#13a85b",
-  unconverted_interest: "#8b5cf6",
-  unconverted_traffic: "#ef4444",
 } satisfies Record<ProfileConversionCategoryItem["id"], string>;
 
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
@@ -340,16 +340,16 @@ const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS: {
     label: "Alta Conversão",
   },
   {
-    id: "unconverted_interest",
-    label: "Interesse Não Convertido",
-  },
-  {
-    id: "unconverted_traffic",
-    label: "Exposição Não Convertida",
+    id: "standard_conversion",
+    label: "Conversão Padrão",
   },
   {
     id: "low_conversion",
     label: "Baixa Conversão",
+  },
+  {
+    id: "no_conversion",
+    label: "Sem Conversão",
   },
 ];
 
@@ -2472,6 +2472,24 @@ const ProfileConversionDonutChart = ({
   );
 };
 
+const formatWhatsappClicksValue = (value: number) => {
+  const label = value === 1 ? "clique" : "cliques";
+
+  return `${numberFormatter.format(value)} ${label}`;
+};
+
+const formatProfileConversionStandardRange = (
+  benchmark: AdminPsychologistsDashboard["profile_conversion"]["benchmark"],
+) => {
+  const min = benchmark.standard_min_whatsapp_clicks;
+  const max = benchmark.standard_max_whatsapp_clicks;
+
+  if (min === null || max === null) return "Sem faixa padrão no período";
+  if (min === max) return formatWhatsappClicksValue(min);
+
+  return `${formatWhatsappClicksValue(min)} a ${formatWhatsappClicksValue(max)}`;
+};
+
 const PsychologistEngagementDonutChart = ({
   profileConversionEngagement,
 }: {
@@ -2511,6 +2529,8 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const profileConversionEngagement = profileConversionSegmentSummary.profile_conversion_engagement;
   if (!profileConversion || !profileConversionEngagement) return null;
 
+  const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
+
   return (
     <CardShell className="p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -2535,6 +2555,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                 {numberFormatter.format(profileConversion.totals.psychologists)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+              <div className="mt-3 max-w-xs rounded-2xl border border-primary/10 bg-surface px-3 py-2">
+                <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
+                  Conversão padrão do período
+                </p>
+                <p className="mt-1 text-sm font-black text-foreground">{standardRangeLabel}</p>
+                <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
+                  WhatsApp entre P25 e P75 dos psicólogos elegíveis.
+                </p>
+              </div>
             </div>
           </div>
           <ProfileConversionDonutChart profileConversion={profileConversion} />
@@ -2570,16 +2599,9 @@ const findProfileConversionEngagementQuadrant = (
     percentage: 0,
     totals: {
       community_interactions: 0,
-      community_post_views: 0,
-      community_reply_views: 0,
-      exposures: 0,
-      favorites: 0,
       patient_replies: 0,
       posts: 0,
-      profile_views: 0,
-      qualified_video_views: 0,
       replies: 0,
-      search_result_impressions: 0,
       votes: 0,
       whatsapp_clicks: 0,
     },

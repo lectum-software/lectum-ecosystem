@@ -1,5 +1,4 @@
 import prisma from "@/infra/database/prisma";
-import { ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS } from "@/utils/admin-profile-conversion";
 import type { AdminDashboardDateRange } from "../DTOs/IAdminDashboardSummaryDTO";
 import type {
   DashboardCommunityAuthorRole,
@@ -10,16 +9,6 @@ const createdAtWhere = (range: AdminDashboardDateRange) => ({
   gte: range.start,
   lte: range.end,
 });
-
-const SEARCH_RESULT_SOURCE = "search_result";
-
-const countRecordsFromGroups = (
-  groups: Array<{ _count: { _all: number }; psychologist_id: string }>,
-) =>
-  groups.map((group) => ({
-    count: group._count._all,
-    psychologist_id: group.psychologist_id,
-  }));
 
 const sumCountsByPsychologistId = (records: Array<{ count: number; psychologist_id: string }>) => {
   const counts = new Map<string, number>();
@@ -585,92 +574,8 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
   async listPsychologistConversionEvents(range: AdminDashboardDateRange) {
     const createdAt = createdAtWhere(range);
 
-    const [
-      profileViews,
-      searchResultImpressionGroups,
-      qualifiedVideoViewGroups,
-      communityPostViewGroups,
-      communityReplyViewGroups,
-      favorites,
-      whatsappClicks,
-    ] = await Promise.all([
-      prisma.profile_view_event.findMany({
-        select: {
-          createdAt: true,
-          psychologist_id: true,
-        },
-        where: {
-          createdAt,
-          deleted: false,
-          psychologist: {
-            active: true,
-            deleted: false,
-            role: "psicologo",
-          },
-          source: "profile_page",
-        },
-      }),
-      prisma.profile_view_event.groupBy({
-        by: ["psychologist_id"],
-        where: {
-          createdAt,
-          deleted: false,
-          psychologist: {
-            active: true,
-            deleted: false,
-            role: "psicologo",
-          },
-          source: SEARCH_RESULT_SOURCE,
-        },
-        _count: {
-          _all: true,
-        },
-      }),
-      prisma.profile_video_watch_session.groupBy({
-        by: ["psychologist_id"],
-        where: {
-          createdAt,
-          deleted: false,
-          psychologist: {
-            active: true,
-            deleted: false,
-            role: "psicologo",
-          },
-          OR: [
-            {
-              watched_seconds: {
-                gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
-              },
-            },
-            {
-              max_position_seconds: {
-                gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
-              },
-            },
-          ],
-        },
-        _count: {
-          _all: true,
-        },
-      }),
-      this.listPsychologistCommunityPostViewCounts(range),
-      this.listPsychologistCommunityReplyViewCounts(range),
-      prisma.psychologist_favorite.findMany({
-        select: {
-          createdAt: true,
-          psychologist_id: true,
-        },
-        where: {
-          createdAt,
-          deleted: false,
-          psychologist: {
-            active: true,
-            deleted: false,
-            role: "psicologo",
-          },
-        },
-      }),
-      prisma.contact_request.findMany({
+    return {
+      whatsappClicks: await prisma.contact_request.findMany({
         select: {
           createdAt: true,
           psychologist_id: true,
@@ -686,22 +591,6 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
           },
         },
       }),
-    ]);
-
-    return {
-      exposureCounts: sumCountsByPsychologistId([
-        ...profileViews.map((view) => ({
-          count: 1,
-          psychologist_id: view.psychologist_id,
-        })),
-        ...countRecordsFromGroups(searchResultImpressionGroups),
-        ...countRecordsFromGroups(qualifiedVideoViewGroups),
-        ...communityPostViewGroups,
-        ...communityReplyViewGroups,
-      ]),
-      favorites,
-      profileViews,
-      whatsappClicks,
     };
   }
 

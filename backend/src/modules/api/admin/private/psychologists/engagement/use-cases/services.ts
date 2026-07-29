@@ -13,10 +13,9 @@ import {
 } from "@/utils/admin-operating-system";
 import {
   ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG,
-  ADMIN_PROFILE_CONVERSION_EXPOSURE_SOURCE,
-  ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
+  ADMIN_PROFILE_CONVERSION_SOURCE,
   ADMIN_PROFILE_CONVERSION_THRESHOLDS,
-  calculateAdminProfileConversionRatePercent,
+  buildAdminProfileConversionBenchmark,
   classifyAdminProfileConversionCategory,
 } from "@/utils/admin-profile-conversion";
 import {
@@ -282,15 +281,9 @@ const safePercentage = (count: number, total: number) =>
 
 type BusinessProfileConversionSignals = {
   activeDays: number;
-  communityPostViews: number;
-  communityReplyViews: number;
-  exposureCount: number;
-  favorites: number;
-  profileViews: number;
-  qualifiedVideoViews: number;
-  searchResultImpressions: number;
+  benchmark: ReturnType<typeof buildAdminProfileConversionBenchmark>;
+  profileAgeDays: number;
   whatsappClicks: number;
-  whatsappConversionRate: number | null;
 };
 
 const classifyBusinessProfileConversionCategory = (
@@ -313,58 +306,41 @@ const getProfileActiveDaysInStatisticsRange = (
   return daysBetweenInclusive(activeStart, rangeEnd);
 };
 
+const getProfileAgeDaysUntil = (profileCreatedAt: Date, date: Date) => {
+  const profileStart = startOfDate(profileCreatedAt);
+  const rangeEnd = endOfDate(date);
+
+  if (profileStart > rangeEnd) return 0;
+
+  return daysBetweenInclusive(profileStart, rangeEnd);
+};
+
 const buildBusinessProfileConversion = (input: {
   activeDays: number;
-  communityPostViews: number;
-  communityReplyViews: number;
-  favorites: number;
-  profileViews: number;
-  qualifiedVideoViews: number;
-  searchResultImpressions: number;
+  benchmark: ReturnType<typeof buildAdminProfileConversionBenchmark>;
+  profileAgeDays: number;
   whatsappClicks: number;
 }): AdminPsychologistBusinessProfileConversion => {
-  const exposureCount =
-    input.profileViews +
-    input.searchResultImpressions +
-    input.qualifiedVideoViews +
-    input.communityPostViews +
-    input.communityReplyViews;
-  const whatsappConversionRate = calculateAdminProfileConversionRatePercent({
-    exposureCount,
-    whatsappClicks: input.whatsappClicks,
-  });
   const signals = {
     activeDays: input.activeDays,
-    communityPostViews: input.communityPostViews,
-    communityReplyViews: input.communityReplyViews,
-    exposureCount,
-    favorites: input.favorites,
-    profileViews: input.profileViews,
-    qualifiedVideoViews: input.qualifiedVideoViews,
-    searchResultImpressions: input.searchResultImpressions,
+    benchmark: input.benchmark,
+    profileAgeDays: input.profileAgeDays,
     whatsappClicks: input.whatsappClicks,
-    whatsappConversionRate,
   };
   const categoryId = classifyBusinessProfileConversionCategory(signals);
   const config = BUSINESS_PROFILE_CONVERSION_CATEGORY_CONFIG[categoryId];
 
   return {
+    benchmark: input.benchmark,
     description: config.description,
     id: categoryId,
     label: config.label,
     signals: {
       active_days: signals.activeDays,
-      community_post_views: signals.communityPostViews,
-      community_reply_views: signals.communityReplyViews,
-      exposure_count: signals.exposureCount,
-      favorites: signals.favorites,
-      profile_views: signals.profileViews,
-      qualified_video_views: signals.qualifiedVideoViews,
-      search_result_impressions: signals.searchResultImpressions,
+      profile_age_days: signals.profileAgeDays,
       whatsapp_clicks: signals.whatsappClicks,
-      whatsapp_conversion_rate_percent: signals.whatsappConversionRate,
     },
-    source: ADMIN_PROFILE_CONVERSION_EXPOSURE_SOURCE,
+    source: ADMIN_PROFILE_CONVERSION_SOURCE,
     thresholds: ADMIN_PROFILE_CONVERSION_THRESHOLDS,
   };
 };
@@ -1469,6 +1445,8 @@ export const showAdminPsychologistStatistics = async (
 
   const userId = profile.user.id;
   const [
+    benchmarkProfiles,
+    benchmarkWhatsappClickCounts,
     profileViews,
     whatsappClicks,
     favorites,
@@ -1497,6 +1475,8 @@ export const showAdminPsychologistStatistics = async (
     importantWhatsappActions,
     patientPostsByCommunityCounts,
   ] = await Promise.all([
+    repository.listProfileConversionBenchmarkProfiles(),
+    repository.listWhatsappClickCountsByPsychologist(period.current.start, period.current.end),
     repository.listProfileViews(userId, period.current.start, period.current.end),
     repository.listWhatsappClicks(userId, period.current.start, period.current.end),
     repository.listFavorites(userId, period.current.start, period.current.end),
@@ -1536,13 +1516,9 @@ export const showAdminPsychologistStatistics = async (
   const previousCommunityReplies = filterRepliesByCommunity(previousReplies, query.community);
   const postIds = communityPosts.map((post) => post.id);
   const replyIds = communityReplies.map((reply) => reply.id);
-  const allPostIds = allPosts.map((post) => post.id);
-  const allReplyIds = allReplies.map((reply) => reply.id);
   const previousPostIds = previousCommunityPosts.map((post) => post.id);
   const previousReplyIds = previousCommunityReplies.map((reply) => reply.id);
   const [
-    businessPostViews,
-    businessReplyViews,
     postSaves,
     replySaves,
     commentsReceived,
@@ -1565,8 +1541,6 @@ export const showAdminPsychologistStatistics = async (
     previousPostShares,
     previousReplyShares,
   ] = await Promise.all([
-    repository.countPostViews(allPostIds, period.current.start, period.current.end),
-    repository.countReplyViews(allReplyIds, period.current.start, period.current.end),
     repository.listPostSaves(postIds, period.current.start, period.current.end),
     repository.listReplySaves(replyIds, period.current.start, period.current.end),
     repository.listCommentsReceived(postIds, userId, period.current.start, period.current.end),
@@ -1728,19 +1702,25 @@ export const showAdminPsychologistStatistics = async (
     profileViews,
     whatsappClicks,
   });
-  const qualifiedVideoViews = videoSessions.filter(
-    (session) =>
-      session.watched_seconds >= ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS ||
-      session.max_position_seconds >= ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
-  ).length;
+  const benchmarkWhatsappCounts = new Map(
+    benchmarkWhatsappClickCounts.map((item) => [item.psychologist_id, item._count._all]),
+  );
+  const benchmarkEligibleProfiles = benchmarkProfiles.filter(
+    (item) =>
+      getProfileAgeDaysUntil(item.user.createdAt, period.current.end) >=
+      ADMIN_PROFILE_CONVERSION_THRESHOLDS.adaptation_period_days,
+  );
+  const profileConversionBenchmark = buildAdminProfileConversionBenchmark({
+    eligiblePsychologists: benchmarkEligibleProfiles.length,
+    whatsappClicks: benchmarkEligibleProfiles.map(
+      (item) => benchmarkWhatsappCounts.get(item.user_id) ?? 0,
+    ),
+  });
+  const profileAgeDays = getProfileAgeDaysUntil(profile.user.createdAt, period.current.end);
   const businessProfileConversion = buildBusinessProfileConversion({
     activeDays: getProfileActiveDaysInStatisticsRange(profile.user.createdAt, period.current),
-    communityPostViews: sum(businessPostViews.map((view) => view._count._all)),
-    communityReplyViews: sum(businessReplyViews.map((view) => view._count._all)),
-    favorites: favorites.length,
-    profileViews: profileViews.length,
-    qualifiedVideoViews,
-    searchResultImpressions: searchResults.length,
+    benchmark: profileConversionBenchmark,
+    profileAgeDays,
     whatsappClicks: whatsappClicks.length,
   });
 

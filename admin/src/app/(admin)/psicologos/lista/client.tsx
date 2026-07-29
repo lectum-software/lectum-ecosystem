@@ -190,43 +190,23 @@ const PROFILE_CONVERSION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = 
   },
   {
     count: 0,
-    id: "unconverted_interest_very_engaged",
-    label: "Interesse n\u00e3o convertido + muito engajado",
+    id: "standard_conversion_very_engaged",
+    label: "Conversão padrão + muito engajado",
   },
   {
     count: 0,
-    id: "unconverted_interest_engaged",
-    label: "Interesse n\u00e3o convertido + engajado",
+    id: "standard_conversion_engaged",
+    label: "Conversão padrão + engajado",
   },
   {
     count: 0,
-    id: "unconverted_interest_low_engaged",
-    label: "Interesse n\u00e3o convertido + pouco engajado",
+    id: "standard_conversion_low_engaged",
+    label: "Conversão padrão + pouco engajado",
   },
   {
     count: 0,
-    id: "unconverted_interest_no_engagement",
-    label: "Interesse n\u00e3o convertido + sem engajamento",
-  },
-  {
-    count: 0,
-    id: "unconverted_traffic_very_engaged",
-    label: "Exposição não convertida + muito engajado",
-  },
-  {
-    count: 0,
-    id: "unconverted_traffic_engaged",
-    label: "Exposição não convertida + engajado",
-  },
-  {
-    count: 0,
-    id: "unconverted_traffic_low_engaged",
-    label: "Exposição não convertida + pouco engajado",
-  },
-  {
-    count: 0,
-    id: "unconverted_traffic_no_engagement",
-    label: "Exposição não convertida + sem engajamento",
+    id: "standard_conversion_no_engagement",
+    label: "Conversão padrão + sem engajamento",
   },
   {
     count: 0,
@@ -248,13 +228,33 @@ const PROFILE_CONVERSION_ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = 
     id: "low_conversion_no_engagement",
     label: "Baixa conversão + sem engajamento",
   },
+  {
+    count: 0,
+    id: "no_conversion_very_engaged",
+    label: "Sem conversão + muito engajado",
+  },
+  {
+    count: 0,
+    id: "no_conversion_engaged",
+    label: "Sem conversão + engajado",
+  },
+  {
+    count: 0,
+    id: "no_conversion_low_engaged",
+    label: "Sem conversão + pouco engajado",
+  },
+  {
+    count: 0,
+    id: "no_conversion_no_engagement",
+    label: "Sem conversão + sem engajamento",
+  },
 ];
 
 const PROFILE_CONVERSION_FILTER_OPTIONS: PsychologistsListOption[] = [
   { count: 0, id: "strong_conversion", label: "Alta Conversão" },
-  { count: 0, id: "unconverted_traffic", label: "Exposição Não Convertida" },
-  { count: 0, id: "unconverted_interest", label: "Interesse Não Convertido" },
+  { count: 0, id: "standard_conversion", label: "Conversão Padrão" },
   { count: 0, id: "low_conversion", label: "Baixa Conversão" },
+  { count: 0, id: "no_conversion", label: "Sem Conversão" },
   { count: 0, id: "insufficient_data", label: "Dados Insuficientes" },
 ];
 
@@ -899,14 +899,14 @@ const resolveProfileLabel = (item: PsychologistsListItem) =>
 const resolveProfileConversionLabel = (item: PsychologistsListItem) => {
   if (item.profile_conversion.id === "strong_conversion")
     return { label: item.profile_conversion.label, tone: "active" as const };
-  if (item.profile_conversion.id === "unconverted_interest")
+  if (item.profile_conversion.id === "standard_conversion")
     return { label: item.profile_conversion.label, tone: "info" as const };
-  if (item.profile_conversion.id === "unconverted_traffic")
+  if (item.profile_conversion.id === "low_conversion")
     return { label: item.profile_conversion.label, tone: "warning" as const };
-  if (item.profile_conversion.id === "insufficient_data")
-    return { label: item.profile_conversion.label, tone: "inactive" as const };
+  if (item.profile_conversion.id === "no_conversion")
+    return { label: item.profile_conversion.label, tone: "danger" as const };
 
-  return { label: item.profile_conversion.label, tone: "danger" as const };
+  return { label: item.profile_conversion.label, tone: "inactive" as const };
 };
 
 const resolveEngagementLabel = (item: PsychologistsListItem) => {

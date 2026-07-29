@@ -1,8 +1,9 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS } from "@/utils/admin-profile-conversion";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { IAdminPsychologistsListRepository } from "./interfaces/IAdminPsychologistsListRepository";
+
+const QUALIFIED_VIDEO_WATCH_SECONDS = 3;
 
 const catalogSelect = {
   id: true,
@@ -509,12 +510,12 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         OR: [
           {
             watched_seconds: {
-              gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
+              gte: QUALIFIED_VIDEO_WATCH_SECONDS,
             },
           },
           {
             max_position_seconds: {
-              gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
+              gte: QUALIFIED_VIDEO_WATCH_SECONDS,
             },
           },
         ],

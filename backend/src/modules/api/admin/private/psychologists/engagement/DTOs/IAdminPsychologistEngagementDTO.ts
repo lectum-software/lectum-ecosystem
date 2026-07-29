@@ -1,6 +1,7 @@
 import type { Request } from "express";
 import type { AdminPsychologistCommunityEngagementDiagnosis } from "@/utils/admin-community-engagement-diagnosis";
 import type {
+  AdminProfileConversionBenchmark,
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
@@ -45,25 +46,19 @@ export type AdminPsychologistAvailabilityMetric = {
 export type AdminPsychologistBusinessProfileConversionCategoryId =
   | "insufficient_data"
   | "low_conversion"
-  | "strong_conversion"
-  | "unconverted_interest"
-  | "unconverted_traffic";
+  | "no_conversion"
+  | "standard_conversion"
+  | "strong_conversion";
 
 export type AdminPsychologistBusinessProfileConversion = {
+  benchmark: AdminProfileConversionBenchmark;
   description: string;
   id: AdminPsychologistBusinessProfileConversionCategoryId;
   label: string;
   signals: {
     active_days: number;
-    community_post_views: number;
-    community_reply_views: number;
-    exposure_count: number;
-    favorites: number;
-    profile_views: number;
-    qualified_video_views: number;
-    search_result_impressions: number;
+    profile_age_days: number;
     whatsapp_clicks: number;
-    whatsapp_conversion_rate_percent: number | null;
   };
   source: AdminProfileConversionSource;
   thresholds: AdminProfileConversionThresholds;

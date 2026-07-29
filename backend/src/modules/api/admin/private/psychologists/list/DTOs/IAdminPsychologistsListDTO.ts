@@ -4,6 +4,7 @@ import type {
   AdminPsychologistCommunityEngagementDiagnosis,
 } from "@/utils/admin-community-engagement-diagnosis";
 import type {
+  AdminProfileConversionBenchmark,
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
@@ -31,18 +32,18 @@ export const ADMIN_PSYCHOLOGISTS_LIST_PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS = 
   "strong_conversion_engaged",
   "strong_conversion_low_engaged",
   "strong_conversion_no_engagement",
-  "unconverted_interest_very_engaged",
-  "unconverted_interest_engaged",
-  "unconverted_interest_low_engaged",
-  "unconverted_interest_no_engagement",
-  "unconverted_traffic_very_engaged",
-  "unconverted_traffic_engaged",
-  "unconverted_traffic_low_engaged",
-  "unconverted_traffic_no_engagement",
+  "standard_conversion_very_engaged",
+  "standard_conversion_engaged",
+  "standard_conversion_low_engaged",
+  "standard_conversion_no_engagement",
   "low_conversion_very_engaged",
   "low_conversion_engaged",
   "low_conversion_low_engaged",
   "low_conversion_no_engagement",
+  "no_conversion_very_engaged",
+  "no_conversion_engaged",
+  "no_conversion_low_engaged",
+  "no_conversion_no_engagement",
 ] as const;
 
 export type AdminPsychologistsListSort = (typeof ADMIN_PSYCHOLOGISTS_LIST_SORTS)[number];
@@ -106,25 +107,19 @@ export type AdminPsychologistsListRegistryVerification = {
 export type AdminPsychologistsListProfileConversionCategoryId =
   | "insufficient_data"
   | "low_conversion"
-  | "strong_conversion"
-  | "unconverted_interest"
-  | "unconverted_traffic";
+  | "no_conversion"
+  | "standard_conversion"
+  | "strong_conversion";
 
 export type AdminPsychologistsListProfileConversionSummary = {
+  benchmark: AdminProfileConversionBenchmark;
   description: string;
   id: AdminPsychologistsListProfileConversionCategoryId;
   label: string;
   signals: {
     active_days: number;
-    community_post_views: number;
-    community_reply_views: number;
-    exposure_count: number;
-    favorites: number;
-    profile_views: number;
-    qualified_video_views: number;
-    search_result_impressions: number;
+    profile_age_days: number;
     whatsapp_clicks: number;
-    whatsapp_conversion_rate_percent: number | null;
   };
   source: AdminProfileConversionSource;
   thresholds: AdminProfileConversionThresholds;
@@ -228,7 +223,7 @@ export type AdminPsychologistsListSummary = {
   pages: number;
   per_page: number;
   sort: AdminPsychologistsListSort;
-  source: "user+psychologist_profile+professional_subscription+public_ranking+profile_view_event+profile_video_watch_session+page_view_event+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
+  source: "user+psychologist_profile+professional_subscription+public_ranking+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
 };
 
 export type IAdminPsychologistsListDTO = Request & {

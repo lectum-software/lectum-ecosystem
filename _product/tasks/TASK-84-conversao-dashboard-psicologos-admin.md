@@ -10,12 +10,9 @@ O Admin ja possui o dashboard de psicologos em `/psicologos`, com visao geral, o
 
 A classificacao deve respeitar o filtro de periodo do dashboard e usar somente sinais reais ja persistidos:
 
-- exposicao real por abertura do perfil em `profile_view_event.source=profile_page`;
-- exposicao real por impressao de busca em `profile_view_event.source=search_result`;
-- exposicao real por visualizacao qualificada de video em `profile_video_watch_session` com 3s ou mais;
-- exposicao real por visualizacao de posts/respostas autorais em `page_view_event`;
-- cliques de WhatsApp em `contact_request.channel=whatsapp`;
-- favoritos em `psychologist_favorite`.
+- cliques de WhatsApp em `contact_request.channel=whatsapp` no periodo selecionado;
+- data de criacao do usuario do psicologo em `user.createdAt`, para separar o periodo de adaptacao;
+- distribuicao da plataforma no periodo selecionado, calculada por percentis dos cliques WhatsApp dos psicologos elegiveis.
 
 ## Escopo
 
@@ -31,14 +28,15 @@ A classificacao deve respeitar o filtro de periodo do dashboard e usar somente s
 
 ## Regras de classificacao atuais
 
-As metricas sao calculadas dentro da janela temporal selecionada. Para Conversao, nao ha normalizacao por 30 dias: a taxa operacional e `cliques WhatsApp / exposicao`.
+As metricas sao calculadas dentro da janela temporal selecionada. Para Conversao, a V1 usa volume bruto de cliques WhatsApp e comparacao direta com a plataforma; nao ha taxa por exposicao, nem normalizacao por 30 dias, nem coorte.
 
-- **Exposicao**: soma, com peso 1 por evento, de abertura do perfil, impressao de busca, visualizacao qualificada de video e views de posts/respostas autorais em comunidades.
-- **Alta Conversao**: pelo menos 50 exposicoes, pelo menos 3 cliques WhatsApp e taxa de conversao igual ou superior a 5%.
-- **Exposicao Nao Convertida**: pelo menos 60 exposicoes e taxa abaixo de 2% ou nenhum clique WhatsApp.
-- **Interesse Nao Convertido**: 5+ favoritos e sem taxa/volume para Alta Conversao.
-- **Baixa Conversao**: exposicao suficiente, mas fora dos cortes de Alta Conversao, Exposicao Nao Convertida e Interesse Nao Convertido.
-- **Dados Insuficientes**: exposicao abaixo de 50 sem sinal suficiente para outro bucket.
+- **Periodo de adaptacao**: psicologos com menos de 30 dias desde `user.createdAt` ate o fim do periodo selecionado entram em **Dados Insuficientes**.
+- **Benchmark da plataforma**: calculado entre psicologos fora da adaptacao, usando somente quem teve pelo menos 1 clique WhatsApp no periodo para definir P25, mediana/P50 e P75.
+- **Conversao Padrao**: faixa entre P25 e P75 dos cliques WhatsApp dos psicologos elegiveis e com clique no periodo.
+- **Alta Conversao**: psicologo fora da adaptacao com cliques WhatsApp acima do P75 do periodo.
+- **Baixa Conversao**: psicologo fora da adaptacao, com pelo menos 1 clique WhatsApp, mas abaixo do P25 do periodo.
+- **Sem Conversao**: psicologo fora da adaptacao com 0 clique WhatsApp no periodo selecionado.
+- **Dados Insuficientes**: psicologo ainda em adaptacao, antes de completar 30 dias.
 
 ## Criterios de aceite
 
@@ -198,3 +196,39 @@ As metricas sao calculadas dentro da janela temporal selecionada. Para Conversao
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - Smoke backend com `buildPsychologistsDashboard({ period: "all" })`: retornou status 200, labels `Alta Conversão`, `Interesse Não Convertido`, `Exposição Não Convertida`, `Baixa Conversão`, `Dados Insuficientes`, totals com `exposures=440` e thresholds novos.
 - HTTP local: `GET http://localhost:3002/psicologos` e `GET http://localhost:3002/psicologos/lista?profile_conversion=unconverted_traffic` retornaram 200.
+
+
+## Ajuste pos-feedback 2026-07-29 - Conversao bruta por percentis
+
+- Pedido do usuario: remover a regra baseada em taxa por exposicao e classificar Conversao pela comparacao direta do volume bruto de cliques WhatsApp com a plataforma.
+- Backend Admin: dashboard, lista, detalhe de estatisticas do psicologo e fluxo de intencao/conversao passaram a usar somente `contact_request.channel=whatsapp` e `user.createdAt` na classificacao de Conversao.
+- O benchmark da plataforma agora retorna `p25_whatsapp_clicks`, `p50_whatsapp_clicks`, `p75_whatsapp_clicks`, `standard_min_whatsapp_clicks` e `standard_max_whatsapp_clicks`.
+- A faixa **Conversao Padrao** do periodo selecionado e P25-P75 dos cliques WhatsApp dos psicologos fora da adaptacao e com ao menos 1 clique.
+- Categorias atuais: **Alta Conversao**, **Conversao Padrao**, **Baixa Conversao**, **Sem Conversao** e **Dados Insuficientes**.
+- **Sem Conversao** foi criada para psicologos fora da adaptacao com 0 clique WhatsApp no periodo selecionado.
+- **Dados Insuficientes** usa somente o periodo de adaptacao: menos de 30 dias desde `user.createdAt` ate o fim da janela selecionada.
+- O bloco **Conversao** em `/psicologos` exibe a faixa de valor da Conversao Padrao do periodo selecionado e manteve tooltips nas cinco categorias, usando as descricoes reais da API.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` e a captura enviada pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR criado: `adrs/0349-conversao-bruta-percentis-admin-psicologos.md`.
+
+### Criterios complementares
+
+- [x] A Conversao nao usa mais exposicao, favoritos, views, impressao de busca ou visualizacao qualificada de video no calculo da categoria.
+- [x] A API retorna as cinco categorias atuais e remove categorias de exposicao/interesse nao convertido.
+- [x] A API retorna a faixa padrao do periodo por `standard_min_whatsapp_clicks` e `standard_max_whatsapp_clicks`.
+- [x] A UI Admin exibe a faixa de valor da Conversao Padrao no bloco Conversao.
+- [x] A UI Admin explica as cinco categorias em tooltips.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema Prisma ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir backend exec biome check --write ...`
+- `pnpm --dir admin exec biome check --write ...`
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- Smoke backend com `buildPsychologistsDashboard({ period: "all" })`: retornou status 200, categorias `Alta Conversao`, `Conversao Padrao`, `Baixa Conversao`, `Sem Conversao`, `Dados Insuficientes`, benchmark de percentis e totais reais de WhatsApp.
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- HTTP local: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?profile_conversion=no_conversion` e `GET http://localhost:3002/psicologos/lista?profile_conversion=standard_conversion` retornaram 200.

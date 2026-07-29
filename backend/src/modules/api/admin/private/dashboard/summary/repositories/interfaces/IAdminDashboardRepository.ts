@@ -1,4 +1,4 @@
-﻿import type { AdminDashboardDateRange } from "../../DTOs/IAdminDashboardSummaryDTO";
+import type { AdminDashboardDateRange } from "../../DTOs/IAdminDashboardSummaryDTO";
 
 export type DashboardCommunityAuthorRole = "paciente" | "psicologo";
 
@@ -63,9 +63,6 @@ export interface IAdminDashboardRepository {
     whatsappClicks: Array<{ createdAt: Date; psychologist_id: string; user_id: string | null }>;
   }>;
   listPsychologistConversionEvents(range: AdminDashboardDateRange): Promise<{
-    exposureCounts: Array<{ count: number; psychologist_id: string }>;
-    favorites: Array<{ createdAt: Date; psychologist_id: string }>;
-    profileViews: Array<{ createdAt: Date; psychologist_id: string }>;
     whatsappClicks: Array<{ createdAt: Date; psychologist_id: string }>;
   }>;
   listPsychologistConversionProfiles(): Promise<

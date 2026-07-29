@@ -1,10 +1,11 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
   ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG,
   ADMIN_PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER,
-  ADMIN_PROFILE_CONVERSION_EXPOSURE_SOURCE,
-  calculateAdminProfileConversionRatePercent,
+  ADMIN_PROFILE_CONVERSION_SOURCE,
+  ADMIN_PROFILE_CONVERSION_THRESHOLDS,
+  buildAdminProfileConversionBenchmark,
   classifyAdminProfileConversionCategory,
 } from "@/utils/admin-profile-conversion";
 import type {
@@ -97,14 +98,12 @@ type IntentConversionPairCounts = {
 
 type PsychologistConversionCounts = {
   activeDays: number;
-  exposureCount: number;
-  favorites: number;
-  profileViews: number;
+  benchmark: ReturnType<typeof buildAdminProfileConversionBenchmark>;
+  profileAgeDays: number;
   whatsappClicks: number;
-  whatsappConversionRate: number | null;
 };
 
-const INTENT_CONVERSION_SOURCE = ADMIN_PROFILE_CONVERSION_EXPOSURE_SOURCE;
+const INTENT_CONVERSION_SOURCE = ADMIN_PROFILE_CONVERSION_SOURCE;
 const PATIENT_INTENT_SCORE_WEIGHTS = {
   favorites: 20,
   profile_views: 3,
@@ -390,7 +389,7 @@ const classifyPsychologistConversion = (
 ): AdminDashboardIntentConversionCategoryId => {
   const categoryId = classifyAdminProfileConversionCategory(signals);
 
-  return categoryId === "insufficient_data" ? "low_conversion" : categoryId;
+  return categoryId === "insufficient_data" ? "standard_conversion" : categoryId;
 };
 
 const getProfileActiveDaysInRange = (
@@ -405,6 +404,15 @@ const getProfileActiveDaysInRange = (
   if (activeStart > rangeEnd) return 0;
 
   return daysBetweenInclusive(activeStart, rangeEnd);
+};
+
+const getProfileAgeDaysUntil = (profile: PsychologistConversionProfile, date: Date) => {
+  const profileStart = startOfDate(profile.user.createdAt);
+  const rangeEnd = endOfDate(date);
+
+  if (profileStart > rangeEnd) return 0;
+
+  return daysBetweenInclusive(profileStart, rangeEnd);
 };
 
 const countEventsByPsychologist = (events: Array<{ psychologist_id: string }>) => {
@@ -429,35 +437,33 @@ const buildPsychologistConversionMap = (
   events: PsychologistConversionEvents,
   range: AdminDashboardDateRange,
 ) => {
-  const exposureCounts = new Map(
-    events.exposureCounts.map((event) => [event.psychologist_id, event.count]),
-  );
-  const profileViewCounts = countEventsByPsychologist(events.profileViews);
-  const favoriteCounts = countEventsByPsychologist(events.favorites);
   const whatsappClickCounts = countEventsByPsychologist(events.whatsappClicks);
   const conversionByPsychologist = new Map<string, AdminDashboardIntentConversionCategoryId>();
+  const eligibleProfiles = profiles.filter(
+    (profile) =>
+      getProfileAgeDaysUntil(profile, range.end) >=
+      ADMIN_PROFILE_CONVERSION_THRESHOLDS.adaptation_period_days,
+  );
+  const benchmark = buildAdminProfileConversionBenchmark({
+    eligiblePsychologists: eligibleProfiles.length,
+    whatsappClicks: eligibleProfiles.map(
+      (profile) => whatsappClickCounts.get(profile.user_id) ?? 0,
+    ),
+  });
 
   for (const profile of profiles) {
     const psychologistId = profile.user_id;
     const activeDays = getProfileActiveDaysInRange(profile, range);
-    const exposureCount = exposureCounts.get(psychologistId) ?? 0;
-    const profileViews = profileViewCounts.get(psychologistId) ?? 0;
-    const favorites = favoriteCounts.get(psychologistId) ?? 0;
+    const profileAgeDays = getProfileAgeDaysUntil(profile, range.end);
     const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
-    const whatsappConversionRate = calculateAdminProfileConversionRatePercent({
-      exposureCount,
-      whatsappClicks,
-    });
 
     conversionByPsychologist.set(
       psychologistId,
       classifyPsychologistConversion({
         activeDays,
-        exposureCount,
-        favorites,
-        profileViews,
+        benchmark,
+        profileAgeDays,
         whatsappClicks,
-        whatsappConversionRate,
       }),
     );
   }
@@ -566,8 +572,8 @@ const buildIntentConversionFlow = (params: {
     return isWarmIntent && !isStrongConversion ? sum + count : sum;
   }, 0);
   const exploratoryLoss =
-    (flowCounts.get("curious_unconverted_traffic") ?? 0) +
-    (flowCounts.get("curious_low_conversion") ?? 0);
+    (flowCounts.get("curious_low_conversion") ?? 0) +
+    (flowCounts.get("curious_no_conversion") ?? 0);
 
   return {
     coverage_note:
@@ -595,8 +601,7 @@ const buildIntentConversionFlow = (params: {
       },
       {
         count: exploratoryLoss,
-        description:
-          "Curiosos chegando a psicólogos em Exposição Não Convertida ou Baixa Conversão.",
+        description: "Curiosos chegando a psicólogos em Baixa Conversão ou Sem Conversão.",
         id: "exploratory_loss",
         label: "Tráfego exploratório",
         percentage: safePercentage(exploratoryLoss, totalPairs),

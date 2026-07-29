@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
@@ -153,6 +153,47 @@ export class AdminPsychologistEngagementRepository {
         },
       },
       select: psychologistSelect,
+    });
+  }
+
+  async listProfileConversionBenchmarkProfiles() {
+    return prisma.psychologist_profile.findMany({
+      select: {
+        user: {
+          select: {
+            createdAt: true,
+            id: true,
+          },
+        },
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  async listWhatsappClickCountsByPsychologist(from: Date, to: Date) {
+    return prisma.contact_request.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        channel: "whatsapp",
+        createdAt: { gte: from, lte: to },
+        deleted: false,
+        psychologist: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+      _count: {
+        _all: true,
+      },
     });
   }
 

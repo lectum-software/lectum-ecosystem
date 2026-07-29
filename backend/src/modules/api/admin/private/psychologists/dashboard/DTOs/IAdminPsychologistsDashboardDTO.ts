@@ -1,5 +1,6 @@
 import type { Request } from "express";
 import type {
+  AdminProfileConversionBenchmark,
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
@@ -407,9 +408,9 @@ export type AdminPsychologistsDashboardTrafficSources = {
 export type AdminPsychologistsDashboardProfileConversionCategoryId =
   | "insufficient_data"
   | "low_conversion"
-  | "strong_conversion"
-  | "unconverted_interest"
-  | "unconverted_traffic";
+  | "no_conversion"
+  | "standard_conversion"
+  | "strong_conversion";
 
 export type AdminPsychologistsDashboardProfileConversionCategory = {
   count: number;
@@ -418,30 +419,20 @@ export type AdminPsychologistsDashboardProfileConversionCategory = {
   label: string;
   percentage: number;
   totals: {
-    community_post_views: number;
-    community_reply_views: number;
-    exposures: number;
-    favorites: number;
-    profile_views: number;
-    qualified_video_views: number;
-    search_result_impressions: number;
     whatsapp_clicks: number;
   };
 };
 
 export type AdminPsychologistsDashboardProfileConversionResults = {
+  benchmark: AdminProfileConversionBenchmark;
   categories: AdminPsychologistsDashboardProfileConversionCategory[];
   description: string;
   source: AdminProfileConversionSource;
   thresholds: AdminProfileConversionThresholds;
   totals: {
-    community_post_views: number;
-    community_reply_views: number;
-    exposures: number;
-    favorites: number;
-    profile_views: number;
-    qualified_video_views: number;
-    search_result_impressions: number;
+    adaptation_psychologists: number;
+    eligible_psychologists: number;
+    non_zero_whatsapp_psychologists: number;
     psychologists: number;
     whatsapp_clicks: number;
   };
@@ -470,16 +461,9 @@ export type AdminPsychologistsDashboardProfileConversionEngagementQuadrant = {
   percentage: number;
   totals: {
     community_interactions: number;
-    community_post_views: number;
-    community_reply_views: number;
-    exposures: number;
-    favorites: number;
     patient_replies: number;
     posts: number;
-    profile_views: number;
-    qualified_video_views: number;
     replies: number;
-    search_result_impressions: number;
     votes: number;
     whatsapp_clicks: number;
   };
@@ -507,7 +491,7 @@ export type AdminPsychologistsDashboardProfileConversionEngagementResults = {
   };
   description: string;
   quadrants: AdminPsychologistsDashboardProfileConversionEngagementQuadrant[];
-  source: "profile_view_event.source=profile_page/search_result+profile_video_watch_session.qualified>=3s+page_view_event.target_type=post/community_post/reply/post_reply+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
+  source: "contact_request.channel=whatsapp+user.createdAt+platform_percentiles+community_post+post_reply+post_vote";
   thresholds: {
     engaged_score_30d: number;
     engaged_interactions_30d: number;
@@ -524,11 +508,7 @@ export type AdminPsychologistsDashboardProfileConversionEngagementResults = {
       replies: number;
       votes: number;
     };
-    profile_conversion_exposure_minimum: number;
-    profile_conversion_low_conversion_rate_percent: number;
-    profile_conversion_strong_whatsapp_minimum: number;
-    profile_conversion_strong_conversion_rate_percent: number;
-    profile_conversion_unconverted_exposure_minimum: number;
+    profile_conversion_adaptation_period_days: number;
     weights: {
       patient_replies: number;
       posts: number;
@@ -547,7 +527,6 @@ export type AdminPsychologistsDashboardProfileConversionEngagementResults = {
     patient_replies: number;
     posts: number;
     psychologists: number;
-    exposures: number;
     replies: number;
     strong_conversion_psychologists: number;
     very_engaged_psychologists: number;

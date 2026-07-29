@@ -411,10 +411,10 @@ type StatisticsChartMetric = {
 const BUSINESS_PROFILE_CONVERSION_BADGE_CLASS: Record<BusinessProfileConversionCategoryId, string> =
   {
     insufficient_data: "bg-surface-muted text-subtle",
-    low_conversion: "bg-surface-muted text-muted",
+    low_conversion: "bg-warning/10 text-warning",
+    no_conversion: "bg-danger/10 text-danger",
+    standard_conversion: "bg-primary-soft text-primary",
     strong_conversion: "bg-success/10 text-success",
-    unconverted_interest: "bg-primary-soft text-primary",
-    unconverted_traffic: "bg-warning/10 text-warning",
   };
 
 const BUSINESS_CHART_METRICS = [

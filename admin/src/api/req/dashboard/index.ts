@@ -1,4 +1,4 @@
-﻿import { adminApi } from "@/api/client";
+import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
 import type { ApiResponse } from "@/api/types";
 
@@ -92,9 +92,9 @@ export type DashboardIntentConversionIntentId = "curious" | "objective" | "very_
 
 export type DashboardIntentConversionCategoryId =
   | "low_conversion"
-  | "strong_conversion"
-  | "unconverted_interest"
-  | "unconverted_traffic";
+  | "no_conversion"
+  | "standard_conversion"
+  | "strong_conversion";
 
 export type DashboardIntentConversionNode = {
   count: number;
@@ -131,7 +131,7 @@ export type DashboardIntentConversionFlow = {
   intents: DashboardIntentConversionNode[];
   psychologist_conversions: DashboardIntentConversionNode[];
   privacy_note: string;
-  source: "profile_view_event.source=profile_page/search_result+profile_video_watch_session.qualified>=3s+page_view_event.target_type=post/community_post/reply/post_reply+contact_request+psychologist_favorite";
+  source: "contact_request.channel=whatsapp+user.createdAt+platform_percentiles";
   total_pairs: number;
   unavailable_reason: string | null;
 };

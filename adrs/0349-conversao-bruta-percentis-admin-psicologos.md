@@ -1,0 +1,43 @@
+# ADR-0349 - Conversao bruta por percentis no Admin de psicologos
+
+## Status
+
+Aceita
+
+## Contexto
+
+A classificacao anterior de Conversao usava taxa de cliques WhatsApp por exposicao. O produto decidiu que, na V1, a exposicao pode ficar subjetiva em comunidades e que a leitura executiva deve ser mais direta: comparar psicologos pelo volume bruto de cliques WhatsApp no periodo selecionado.
+
+Tambem foi definida a categoria **Sem Conversao** para psicologos fora do periodo de adaptacao que tiveram zero clique WhatsApp.
+
+## Decisao
+
+- A categoria de Conversao passa a ser calculada somente por `contact_request.channel=whatsapp` e `user.createdAt`.
+- Psicologos com menos de 30 dias desde `user.createdAt` ate o fim do periodo selecionado entram em **Dados Insuficientes**.
+- Entre os psicologos fora da adaptacao, o benchmark da plataforma usa somente quem teve ao menos 1 clique WhatsApp no periodo para calcular P25, mediana/P50 e P75.
+- A faixa **Conversao Padrao** e P25-P75 do periodo selecionado.
+- Psicologos fora da adaptacao sao classificados assim:
+  - `whatsapp_clicks = 0`: **Sem Conversao**;
+  - `whatsapp_clicks < P25`: **Baixa Conversao**;
+  - `P25 <= whatsapp_clicks <= P75`: **Conversao Padrao**;
+  - `whatsapp_clicks > P75`: **Alta Conversao**.
+- Se nao houver base nao-zero para percentis, psicologos fora da adaptacao e com clique entram em **Conversao Padrao** ate haver distribuicao suficiente.
+- A UI do bloco **Conversao** deve exibir a faixa padrao do periodo e tooltips explicando as cinco categorias.
+
+## Consequencias
+
+- A regra fica simples, transparente e menos dependente de modelagem subjetiva de exposicao.
+- O resultado passa a ser comparativo ao comportamento real da plataforma no periodo, em vez de depender de cortes fixos absolutos de taxa.
+- A comparacao pode variar quando a plataforma crescer; isso e desejado para uma metrica operacional relativa.
+- A decisao nao cria ranking publico nem efeito punitivo para profissionais.
+- A decisao nao altera schema Prisma, migrations, packages ou backfills.
+
+## Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir admin check`
+- `pnpm --dir backend build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke backend de `buildPsychologistsDashboard({ period: "all" })` confirmou categorias, benchmark e totais reais.
+- HTTP local de `/psicologos`, `/psicologos/lista?profile_conversion=no_conversion` e `/psicologos/lista?profile_conversion=standard_conversion` retornou 200.

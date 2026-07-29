@@ -1,13 +1,14 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { PSYCHOLOGIST_SIGNUP_ANALYTICS_IDENTITY_TYPE } from "@/modules/api/public/analytics/helpers/signup-identity";
-import { ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS } from "@/utils/admin-profile-conversion";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   AdminPsychologistsDashboardDateRange,
   AdminPsychologistsDashboardDirectoryFilterItem,
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
 import type { IAdminPsychologistsDashboardRepository } from "./interfaces/IAdminPsychologistsDashboardRepository";
+
+const QUALIFIED_VIDEO_WATCH_SECONDS = 3;
 
 const eventCreatedAtWhere = (range: AdminPsychologistsDashboardDateRange) => ({
   gte: range.start,
@@ -973,12 +974,12 @@ export class AdminPsychologistsDashboardRepository
         OR: [
           {
             watched_seconds: {
-              gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
+              gte: QUALIFIED_VIDEO_WATCH_SECONDS,
             },
           },
           {
             max_position_seconds: {
-              gte: ADMIN_PROFILE_CONVERSION_QUALIFIED_VIDEO_WATCH_SECONDS,
+              gte: QUALIFIED_VIDEO_WATCH_SECONDS,
             },
           },
         ],
