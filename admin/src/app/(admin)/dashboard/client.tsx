@@ -16,7 +16,7 @@ import {
   Users,
   WalletCards,
 } from "lucide-react";
-import { type FocusEventHandler, useEffect, useMemo, useState } from "react";
+import { type FocusEventHandler, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAdminDashboardSummary } from "@/api/callers/dashboard";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -48,6 +48,10 @@ const SKELETON_KEYS = ["sessions", "revenue", "patients", "psychologists", "repo
 
 type DashboardPeriodValue = DashboardPeriodPreset | "custom";
 type DashboardDateRange = Required<Pick<DashboardSummaryQuery, "from" | "to">>;
+type DashboardIntentConversionVisualExampleFlow = Pick<
+  DashboardIntentConversionFlowItem,
+  "conversion_id" | "count" | "intent_id"
+>;
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -162,6 +166,134 @@ const formatDashboardPercent = (value: number) =>
     maximumFractionDigits: 1,
     minimumFractionDigits: 0,
   })}%`;
+
+const LOCAL_DASHBOARD_VISUAL_EXAMPLE_HOSTS = new Set(["localhost", "127.0.0.1"]);
+const subscribeToDashboardVisualExampleSnapshot = () => () => undefined;
+const getLocalDashboardVisualExampleSnapshot = () =>
+  process.env.NODE_ENV === "development" &&
+  typeof window !== "undefined" &&
+  LOCAL_DASHBOARD_VISUAL_EXAMPLE_HOSTS.has(window.location.hostname);
+const getServerDashboardVisualExampleSnapshot = () => false;
+const useLocalDashboardVisualExampleEnabled = () =>
+  useSyncExternalStore(
+    subscribeToDashboardVisualExampleSnapshot,
+    getLocalDashboardVisualExampleSnapshot,
+    getServerDashboardVisualExampleSnapshot,
+  );
+
+const DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS = [
+  { conversion_id: "strong_conversion", count: 18, intent_id: "very_qualified" },
+  { conversion_id: "unconverted_interest", count: 14, intent_id: "objective" },
+  { conversion_id: "unconverted_traffic", count: 12, intent_id: "curious" },
+  { conversion_id: "strong_conversion", count: 10, intent_id: "objective" },
+  { conversion_id: "unconverted_interest", count: 8, intent_id: "very_qualified" },
+  { conversion_id: "low_conversion", count: 7, intent_id: "curious" },
+  { conversion_id: "unconverted_traffic", count: 6, intent_id: "objective" },
+  { conversion_id: "low_conversion", count: 5, intent_id: "very_qualified" },
+  { conversion_id: "strong_conversion", count: 4, intent_id: "curious" },
+] as const satisfies readonly DashboardIntentConversionVisualExampleFlow[];
+
+const dashboardIntentConversionVisualExampleCount = <TId extends string>(
+  id: TId,
+  counts: Map<TId, number>,
+) => counts.get(id) ?? 0;
+
+const dashboardIntentConversionVisualExamplePercentage = (count: number, total: number) =>
+  total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
+
+const hasIntentConversionFlowData = (flow: DashboardIntentConversionFlowData) =>
+  flow.total_pairs > 0 || flow.flows.some((item) => item.count > 0);
+
+const buildDashboardIntentConversionVisualExample = (
+  flow: DashboardIntentConversionFlowData,
+): DashboardIntentConversionFlowData => {
+  const totalPairs = DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.reduce(
+    (sum, item) => sum + item.count,
+    0,
+  );
+  const intentCounts = new Map<DashboardIntentConversionIntentId, number>();
+  const conversionCounts = new Map<DashboardIntentConversionCategoryId, number>();
+  const intentById = new Map(flow.intents.map((intent) => [intent.id, intent]));
+  const conversionById = new Map(
+    flow.psychologist_conversions.map((conversion) => [conversion.id, conversion]),
+  );
+
+  for (const item of DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS) {
+    intentCounts.set(item.intent_id, (intentCounts.get(item.intent_id) ?? 0) + item.count);
+    conversionCounts.set(
+      item.conversion_id,
+      (conversionCounts.get(item.conversion_id) ?? 0) + item.count,
+    );
+  }
+
+  const healthyAbsorption =
+    DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.find(
+      (item) => item.intent_id === "very_qualified" && item.conversion_id === "strong_conversion",
+    )?.count ?? 0;
+  const retainedIntention = DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.filter(
+    (item) => item.intent_id !== "curious" && item.conversion_id !== "strong_conversion",
+  ).reduce((sum, item) => sum + item.count, 0);
+  const exploratoryLoss = DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.filter(
+    (item) =>
+      item.intent_id === "curious" &&
+      (item.conversion_id === "low_conversion" || item.conversion_id === "unconverted_traffic"),
+  ).reduce((sum, item) => sum + item.count, 0);
+  const insightCounts = {
+    exploratory_loss: exploratoryLoss,
+    healthy_absorption: healthyAbsorption,
+    retained_intention: retainedIntention,
+  } satisfies Record<DashboardIntentConversionFlowData["insights"][number]["id"], number>;
+
+  return {
+    ...flow,
+    flows: DASHBOARD_INTENT_CONVERSION_VISUAL_EXAMPLE_FLOWS.map((item) => ({
+      conversion_id: item.conversion_id,
+      conversion_label: conversionById.get(item.conversion_id)?.label ?? item.conversion_id,
+      conversion_percentage: dashboardIntentConversionVisualExamplePercentage(
+        item.count,
+        dashboardIntentConversionVisualExampleCount(item.conversion_id, conversionCounts),
+      ),
+      count: item.count,
+      id: `${item.intent_id}_${item.conversion_id}` as DashboardIntentConversionFlowItem["id"],
+      intent_id: item.intent_id,
+      intent_label: intentById.get(item.intent_id)?.label ?? item.intent_id,
+      intent_percentage: dashboardIntentConversionVisualExamplePercentage(
+        item.count,
+        dashboardIntentConversionVisualExampleCount(item.intent_id, intentCounts),
+      ),
+      percentage: dashboardIntentConversionVisualExamplePercentage(item.count, totalPairs),
+    })),
+    insights: flow.insights.map((insight) => {
+      const count = insightCounts[insight.id];
+
+      return {
+        ...insight,
+        count,
+        percentage: dashboardIntentConversionVisualExamplePercentage(count, totalPairs),
+      };
+    }),
+    intents: flow.intents.map((intent) => {
+      const count = dashboardIntentConversionVisualExampleCount(intent.id, intentCounts);
+
+      return {
+        ...intent,
+        count,
+        percentage: dashboardIntentConversionVisualExamplePercentage(count, totalPairs),
+      };
+    }),
+    psychologist_conversions: flow.psychologist_conversions.map((conversion) => {
+      const count = dashboardIntentConversionVisualExampleCount(conversion.id, conversionCounts);
+
+      return {
+        ...conversion,
+        count,
+        percentage: dashboardIntentConversionVisualExamplePercentage(count, totalPairs),
+      };
+    }),
+    total_pairs: totalPairs,
+    unavailable_reason: null,
+  };
+};
 
 const isValidRange = (range: DashboardSummaryQuery) => {
   if (!range.from || !range.to) return false;
@@ -759,9 +891,11 @@ const IntentConversionFlowRow = ({ flow }: { flow: DashboardIntentConversionFlow
 const DashboardIntentConversionFlow = ({
   flow,
   periodDescription,
+  visualExample = false,
 }: {
   flow: DashboardIntentConversionFlowData;
   periodDescription: string;
+  visualExample?: boolean;
 }) => {
   const totalPairsLabel = numberFormatter.format(flow.total_pairs);
   const hasFlows = flow.flows.length > 0 && flow.total_pairs > 0;
@@ -790,6 +924,13 @@ const DashboardIntentConversionFlow = ({
           <p className="text-xs font-bold text-muted">pares paciente-psicólogo</p>
         </div>
       </div>
+
+      {visualExample ? (
+        <div className="mt-5 rounded-[1.35rem] border border-primary/20 bg-primary-soft/70 p-3 text-xs font-bold leading-5 text-primary">
+          Números de exemplo exibidos somente no localhost em desenvolvimento para visualização. Não
+          representam sinais reais de pacientes, psicólogos ou conversões.
+        </div>
+      ) : null}
 
       {flow.unavailable_reason ? (
         <div className="mt-5 rounded-[1.35rem] border border-dashed border-border bg-surface-muted p-5 text-sm font-bold leading-6 text-muted">
@@ -893,6 +1034,12 @@ const DashboardContent = ({
   summary: AdminDashboardSummary;
 }) => {
   const noRecords = !hasPeriodRecords(summary);
+  const localVisualExampleEnabled = useLocalDashboardVisualExampleEnabled();
+  const showIntentConversionVisualExample =
+    localVisualExampleEnabled && !hasIntentConversionFlowData(summary.intent_conversion_flow);
+  const intentConversionFlow = showIntentConversionVisualExample
+    ? buildDashboardIntentConversionVisualExample(summary.intent_conversion_flow)
+    : summary.intent_conversion_flow;
   const communitySeries = [
     {
       color: "var(--admin-primary)",
@@ -931,8 +1078,9 @@ const DashboardContent = ({
       </DashboardOverviewPanel>
 
       <DashboardIntentConversionFlow
-        flow={summary.intent_conversion_flow}
+        flow={intentConversionFlow}
         periodDescription={periodDescription}
+        visualExample={showIntentConversionVisualExample}
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)]">

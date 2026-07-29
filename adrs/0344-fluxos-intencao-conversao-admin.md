@@ -48,6 +48,12 @@ Builder/Quick Copy não estava exposto como ferramenta callable neste ambiente. 
 - O Admin evita inferir origem por aproximação quando não há visitor/session/user compartilhado.
 - Não houve alteração de schema Prisma, migration, pacote novo, backfill, seed, mock ou tracking adicional.
 
+## Complemento 2026-07-29 - exemplo visual local no Dashboard
+
+Para apoiar conferência visual no ambiente de desenvolvimento, o card **Fluxo de intenção e conversão** pode preencher apenas a renderização local (`localhost`/`127.0.0.1` em `NODE_ENV=development`) com números de exemplo quando o contrato real retorna `total_pairs=0`.
+
+Essa decisão não altera o backend, não cria seed, não muda o contrato da API, não persiste dados e não substitui os dados reais quando houver pelo menos um fluxo real. A UI exibe aviso explícito de que os valores são somente de visualização e não representam sinais reais de pacientes, psicólogos ou conversões.
+
 ## Validação
 
 - `pnpm --dir backend check`
