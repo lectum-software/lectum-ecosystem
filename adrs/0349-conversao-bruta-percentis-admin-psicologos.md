@@ -23,6 +23,7 @@ Tambem foi definida a categoria **Sem Conversao** para psicologos fora do period
   - `whatsapp_clicks > P75`: **Alta Conversao**.
 - Se nao houver base nao-zero para percentis, psicologos fora da adaptacao e com clique entram em **Conversao Padrao** ate haver distribuicao suficiente.
 - A UI do bloco **Conversao** deve exibir a faixa padrao do periodo e tooltips explicando as cinco categorias.
+- Atualizacao 2026-07-29: no dashboard Admin de psicologos, o card branco da faixa **Conversao padrao do periodo** fica alinhado pelo topo ao titulo **Conversao** em telas maiores e usa a microcopy executiva **Cliques no WhatsApp**, sem expor P25/P75 na interface principal.
 
 ## Consequencias
 
@@ -31,6 +32,7 @@ Tambem foi definida a categoria **Sem Conversao** para psicologos fora do period
 - A comparacao pode variar quando a plataforma crescer; isso e desejado para uma metrica operacional relativa.
 - A decisao nao cria ranking publico nem efeito punitivo para profissionais.
 - A decisao nao altera schema Prisma, migrations, packages ou backfills.
+- A interface continua mostrando a faixa padrao, mas reduz linguagem tecnica na leitura principal; detalhes metodologicos permanecem registrados nesta ADR e na task.
 
 ## Validacao
 

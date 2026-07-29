@@ -232,3 +232,27 @@ As metricas sao calculadas dentro da janela temporal selecionada. Para Conversao
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - HTTP local: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/psicologos/lista?profile_conversion=no_conversion` e `GET http://localhost:3002/psicologos/lista?profile_conversion=standard_conversion` retornaram 200.
+
+## Ajuste pos-feedback 2026-07-29 - Card da Conversao padrao
+
+- Pedido do usuario: aproximar a faixa **Conversao padrao do periodo** do contador de psicologos considerados, trocar a microcopy tecnica por **Cliques no WhatsApp** e alinhar o topo do bloco branco ao topo do titulo **Conversao**.
+- Frontend Admin: o bloco interno de **Conversao** em `/psicologos` agora organiza o titulo/contador e o card da faixa em um `flex` mobile-first, empilhando em telas estreitas e alinhando pelo topo em telas maiores.
+- A regra de classificacao, contrato HTTP, percentis e dados reais de `contact_request.channel=whatsapp` permanecem inalterados.
+- Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia local `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` e as capturas enviadas pelo usuario.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR atualizado: `adrs/0349-conversao-bruta-percentis-admin-psicologos.md`.
+
+### Criterios complementares
+
+- [x] O bloco branco **Conversao padrao do periodo** fica alinhado pelo topo ao texto **Conversao** em telas maiores.
+- [x] A UI continua mobile-first, empilhando contador e faixa em telas estreitas.
+- [x] A microcopy abaixo da faixa passa a ser **Cliques no WhatsApp**.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema Prisma ou migration foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- HTTP local: `GET http://localhost:3002/psicologos` retornou 200.

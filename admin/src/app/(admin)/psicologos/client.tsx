@@ -2548,22 +2548,24 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
 
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-[8rem]">
               <h3 className="text-lg font-bold text-foreground">Conversão</h3>
-              <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(profileConversion.totals.psychologists)}
-              </p>
-              <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
-              <div className="mt-3 max-w-xs rounded-2xl border border-primary/10 bg-surface px-3 py-2">
-                <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
-                  Conversão padrão do período
+              <div className="mt-3">
+                <p className="text-3xl font-black text-foreground">
+                  {numberFormatter.format(profileConversion.totals.psychologists)}
                 </p>
-                <p className="mt-1 text-sm font-black text-foreground">{standardRangeLabel}</p>
-                <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
-                  WhatsApp entre P25 e P75 dos psicólogos elegíveis.
-                </p>
+                <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
               </div>
+            </div>
+            <div className="w-full rounded-2xl border border-primary/10 bg-surface px-3 py-2 sm:max-w-xs sm:flex-1">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
+                Conversão padrão do período
+              </p>
+              <p className="mt-1 text-sm font-black text-foreground">{standardRangeLabel}</p>
+              <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
+                Cliques no WhatsApp
+              </p>
             </div>
           </div>
           <ProfileConversionDonutChart profileConversion={profileConversion} />
