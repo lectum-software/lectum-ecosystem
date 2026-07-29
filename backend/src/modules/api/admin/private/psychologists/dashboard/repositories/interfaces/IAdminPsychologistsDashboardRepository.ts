@@ -108,8 +108,14 @@ export type AdminPsychologistCountRecord = {
   psychologist_id: string;
 };
 
-export type AdminPsychologistCommunityEngagementEventRecord = AdminPsychologistEventRecord & {
-  type: "patient_reply" | "post" | "reply" | "vote";
+export type AdminPsychologistReceivedEngagementEventRecord = AdminPsychologistEventRecord & {
+  type:
+    | "comment_received"
+    | "content_save"
+    | "content_share"
+    | "positive_vote"
+    | "profile_favorite"
+    | "profile_follow";
 };
 
 export type AdminPsychologistPlatformPageViewRecord = {
@@ -181,9 +187,9 @@ export type AdminPsychologistDirectoryFilterSearchRecord = {
 };
 
 export interface IAdminPsychologistsDashboardRepository {
-  listCommunityEngagementEvents(
+  listReceivedEngagementEvents(
     range: AdminPsychologistsDashboardDateRange,
-  ): Promise<AdminPsychologistCommunityEngagementEventRecord[]>;
+  ): Promise<AdminPsychologistReceivedEngagementEventRecord[]>;
   listFavoriteEvents(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistEventRecord[]>;

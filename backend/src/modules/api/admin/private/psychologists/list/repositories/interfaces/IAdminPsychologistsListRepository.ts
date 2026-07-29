@@ -134,11 +134,24 @@ export type AdminPsychologistUserCountGroup = {
   user_id: string;
 };
 
+export type AdminPsychologistReceivedEngagementCountsRecord = {
+  comments_received: number;
+  content_saves: number;
+  content_shares: number;
+  positive_votes: number;
+  profile_favorites: number;
+  profile_follows: number;
+  psychologist_id: string;
+};
+
 export interface IAdminPsychologistsListRepository {
   listCommunityPostCounts(psychologistIds: string[]): Promise<AdminPsychologistAuthorCountGroup[]>;
   listCommunityReplyCounts(psychologistIds: string[]): Promise<AdminPsychologistAuthorCountGroup[]>;
   listCommunityVoteCounts(psychologistIds: string[]): Promise<AdminPsychologistUserCountGroup[]>;
   listFavoriteCounts(psychologistIds: string[]): Promise<AdminPsychologistCountGroup[]>;
+  listReceivedEngagementCounts(
+    psychologistIds: string[],
+  ): Promise<AdminPsychologistReceivedEngagementCountsRecord[]>;
   listPatientReplyCounts(psychologistIds: string[]): Promise<AdminPsychologistAuthorCountGroup[]>;
   listProfileViewCounts(psychologistIds: string[]): Promise<AdminPsychologistCountGroup[]>;
   listSearchResultImpressionCounts(

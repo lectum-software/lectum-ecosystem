@@ -2558,7 +2558,7 @@ const ProfileConversionDonutChart = ({
   );
 };
 
-const ProfileExposureDonutChart = ({
+const ProfileVisibilityDonutChart = ({
   profileExposure,
 }: {
   profileExposure: AdminPsychologistsDashboard["profile_exposure"];
@@ -2572,7 +2572,7 @@ const ProfileExposureDonutChart = ({
     label: item.label,
     percentage: item.percentage,
   }));
-  const ariaLabel = `Gráfico de donut de Exposição dos psicólogos: ${profileExposure.categories
+  const ariaLabel = `Gráfico de donut de Visibilidade dos psicólogos: ${profileExposure.categories
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
@@ -2586,7 +2586,7 @@ const ProfileExposureDonutChart = ({
       ariaLabel={ariaLabel}
       emptyMessage={
         profileExposure.unavailable_reason ??
-        "Sem psicólogos ativos no período selecionado para classificar Exposição."
+        "Sem psicólogos ativos no período selecionado para classificar Visibilidade."
       }
       items={items}
       total={total}
@@ -2600,7 +2600,7 @@ const formatWhatsappClicksValue = (value: number) => {
   return `${numberFormatter.format(value)} ${label}`;
 };
 
-const formatExposureScoreValue = (value: number) => {
+const formatVisibilityScoreValue = (value: number) => {
   const label = value === 1 ? "ponto" : "pontos";
 
   return `${numberFormatter.format(value)} ${label}`;
@@ -2625,9 +2625,9 @@ const formatProfileExposureStandardRange = (
   const max = benchmark.standard_max_exposure_score;
 
   if (min === null || max === null) return "Sem faixa padrão no período";
-  if (min === max) return formatExposureScoreValue(min);
+  if (min === max) return formatVisibilityScoreValue(min);
 
-  return `${formatExposureScoreValue(min)} a ${formatExposureScoreValue(max)}`;
+  return `${formatVisibilityScoreValue(min)} a ${formatVisibilityScoreValue(max)}`;
 };
 
 const PsychologistEngagementDonutChart = ({
@@ -2671,8 +2671,10 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   if (!profileConversion || !profileConversionEngagement || !profileExposure) return null;
 
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
-  const exposureStandardRangeLabel = formatProfileExposureStandardRange(profileExposure.benchmark);
-  const exposureWeights = profileExposure.thresholds.weights;
+  const visibilityStandardRangeLabel = formatProfileExposureStandardRange(
+    profileExposure.benchmark,
+  );
+  const visibilityWeights = profileExposure.thresholds.weights;
 
   return (
     <CardShell className="relative z-20 overflow-visible p-5">
@@ -2680,7 +2682,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Conversão, engajamento e exposição dos psicólogos"
+          title="Visibilidade, engajamento e conversão dos psicólogos"
         />
         <PlanSegmentSelect
           id="profile-conversion-plan-segment"
@@ -2691,6 +2693,83 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-[8rem]">
+              <span className="inline-flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">Visibilidade</h3>
+                <button
+                  aria-label={`Pesos da Visibilidade: resultado em listagem ${visibilityWeights.search_result_impression}; resposta vista ${visibilityWeights.community_reply_view}; post visto ${visibilityWeights.community_post_view}; perfil aberto ${visibilityWeights.profile_view}; vídeo qualificado ${visibilityWeights.qualified_video_view}.`}
+                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  type="button"
+                >
+                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
+                  <span
+                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                    role="tooltip"
+                  >
+                    Score ponderado: resultado em listagem{" "}
+                    {numberFormatter.format(visibilityWeights.search_result_impression)}; resposta
+                    vista {numberFormatter.format(visibilityWeights.community_reply_view)}; post
+                    visto {numberFormatter.format(visibilityWeights.community_post_view)}; perfil
+                    aberto {numberFormatter.format(visibilityWeights.profile_view)}; vídeo
+                    qualificado {numberFormatter.format(visibilityWeights.qualified_video_view)}.
+                  </span>
+                </button>
+              </span>
+              <div className="mt-3">
+                <p className="text-3xl font-black text-foreground">
+                  {numberFormatter.format(profileExposure.totals.psychologists)}
+                </p>
+                <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+              </div>
+            </div>
+            <div className="w-full rounded-2xl border border-primary/10 bg-surface px-3 py-2 sm:max-w-xs sm:flex-1">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
+                Visibilidade padrão do período
+              </p>
+              <p className="mt-1 text-sm font-black text-foreground">
+                {visibilityStandardRangeLabel}
+              </p>
+              <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
+                Score ponderado de visibilidade
+              </p>
+            </div>
+          </div>
+          <ProfileVisibilityDonutChart profileExposure={profileExposure} />
+        </section>
+
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <span className="inline-flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">Engajamento</h3>
+                <button
+                  aria-label="Engajamento recebido: comentários, reações positivas, salvamentos, compartilhamentos, favoritos e seguidores recebidos pelo psicólogo."
+                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  type="button"
+                >
+                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
+                  <span
+                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                    role="tooltip"
+                  >
+                    Mede interações recebidas pelo psicólogo: comentários, reações positivas,
+                    salvamentos, compartilhamentos, favoritos e seguidores.
+                  </span>
+                </button>
+              </span>
+              <p className="mt-1 text-3xl font-black text-foreground">
+                {numberFormatter.format(profileConversionEngagement.totals.psychologists)}
+              </p>
+              <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+            </div>
+          </div>
+          <PsychologistEngagementDonutChart
+            profileConversionEngagement={profileConversionEngagement}
+          />
+        </section>
+
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4 lg:col-span-2 2xl:col-span-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-[8rem]">
               <h3 className="text-lg font-bold text-foreground">Conversão</h3>
@@ -2713,67 +2792,6 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           </div>
           <ProfileConversionDonutChart profileConversion={profileConversion} />
         </section>
-
-        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-bold text-foreground">Engajamento</h3>
-              <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(profileConversionEngagement.totals.psychologists)}
-              </p>
-              <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
-            </div>
-          </div>
-          <PsychologistEngagementDonutChart
-            profileConversionEngagement={profileConversionEngagement}
-          />
-        </section>
-
-        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4 lg:col-span-2 2xl:col-span-1">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-[8rem]">
-              <span className="inline-flex items-center gap-2">
-                <h3 className="text-lg font-bold text-foreground">Exposição</h3>
-                <button
-                  aria-label={`Pesos da Exposição: resultado em listagem ${exposureWeights.search_result_impression}; resposta vista ${exposureWeights.community_reply_view}; post visto ${exposureWeights.community_post_view}; perfil aberto ${exposureWeights.profile_view}; vídeo qualificado ${exposureWeights.qualified_video_view}.`}
-                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  type="button"
-                >
-                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
-                  <span
-                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
-                    role="tooltip"
-                  >
-                    Score ponderado: resultado em listagem{" "}
-                    {numberFormatter.format(exposureWeights.search_result_impression)}; resposta
-                    vista {numberFormatter.format(exposureWeights.community_reply_view)}; post visto{" "}
-                    {numberFormatter.format(exposureWeights.community_post_view)}; perfil aberto{" "}
-                    {numberFormatter.format(exposureWeights.profile_view)}; vídeo qualificado{" "}
-                    {numberFormatter.format(exposureWeights.qualified_video_view)}.
-                  </span>
-                </button>
-              </span>
-              <div className="mt-3">
-                <p className="text-3xl font-black text-foreground">
-                  {numberFormatter.format(profileExposure.totals.psychologists)}
-                </p>
-                <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
-              </div>
-            </div>
-            <div className="w-full rounded-2xl border border-primary/10 bg-surface px-3 py-2 sm:max-w-xs sm:flex-1">
-              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
-                Exposição padrão do período
-              </p>
-              <p className="mt-1 text-sm font-black text-foreground">
-                {exposureStandardRangeLabel}
-              </p>
-              <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
-                Score ponderado de exposição
-              </p>
-            </div>
-          </div>
-          <ProfileExposureDonutChart profileExposure={profileExposure} />
-        </section>
       </div>
     </CardShell>
   );
@@ -2789,11 +2807,13 @@ const findProfileConversionEngagementQuadrant = (
     label: "",
     percentage: 0,
     totals: {
-      community_interactions: 0,
-      patient_replies: 0,
-      posts: 0,
-      replies: 0,
-      votes: 0,
+      comments_received: 0,
+      content_saves: 0,
+      content_shares: 0,
+      positive_votes: 0,
+      profile_favorites: 0,
+      profile_follows: 0,
+      received_interactions: 0,
       whatsapp_clicks: 0,
     },
   };
@@ -2905,7 +2925,7 @@ const ProfileConversionEngagementQuadrantCard = ({
       <p className="mt-2 text-[0.72rem] font-bold leading-5 text-muted">{description}</p>
       <p className="sr-only">
         Clique para ver a lista de profissionais deste quadrante.{" "}
-        {numberFormatter.format(quadrant.totals.community_interactions)} interações e{" "}
+        {numberFormatter.format(quadrant.totals.received_interactions)} interações recebidas e{" "}
         {numberFormatter.format(quadrant.totals.whatsapp_clicks)} cliques de WhatsApp.
       </p>
     </Link>

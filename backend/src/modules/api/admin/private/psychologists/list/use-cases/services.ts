@@ -1,19 +1,20 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
-  ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS,
-  ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG,
-  calculateAdminPsychologistCommunityEngagementScore,
-  diagnoseAdminPsychologistWeightedCommunityEngagement,
-  formatAdminPsychologistCommunityEngagementDiagnosis,
-} from "@/utils/admin-community-engagement-diagnosis";
-import {
   ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG,
   ADMIN_PROFILE_CONVERSION_SOURCE,
   ADMIN_PROFILE_CONVERSION_THRESHOLDS,
   buildAdminProfileConversionBenchmark,
   classifyAdminProfileConversionCategory,
 } from "@/utils/admin-profile-conversion";
+import {
+  ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_CONFIG,
+  ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS,
+  ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SOURCE,
+  calculateAdminProfileReceivedEngagementScore,
+  diagnoseAdminProfileReceivedEngagement,
+  normalizeAdminProfileReceivedEngagementToThirtyDays,
+} from "@/utils/admin-profile-received-engagement";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
@@ -33,12 +34,11 @@ import type {
 import { ADMIN_PSYCHOLOGISTS_LIST_PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS } from "../DTOs/IAdminPsychologistsListDTO";
 import { AdminPsychologistsListRepository } from "../repositories/AdminPsychologistsListRepository";
 import type {
-  AdminPsychologistAuthorCountGroup,
   AdminPsychologistCountGroup,
   AdminPsychologistListProfileRecord,
   AdminPsychologistListSpecialtyCatalogRecord,
   AdminPsychologistListSubscriptionRecord,
-  AdminPsychologistUserCountGroup,
+  AdminPsychologistReceivedEngagementCountsRecord,
 } from "../repositories/interfaces/IAdminPsychologistsListRepository";
 
 const DEFAULT_LIMIT = 12;
@@ -46,7 +46,7 @@ const MAX_LIMIT = 50;
 const STATUS_ACTIVE = "ativa";
 const FREE_PLAN_SLUG = "gratuito";
 const MS_PER_DAY = 86_400_000;
-const COMMUNITY_ENGAGEMENT_SOURCE = "community_post+post_reply+post_vote.user_id";
+const COMMUNITY_ENGAGEMENT_SOURCE = ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SOURCE;
 const COMMUNITY_ENGAGEMENT_MINIMUM_SIGNAL_30D = 3;
 const COMMUNITY_ENGAGEMENT_ACTIVE_30D = 6;
 const COMMUNITY_ENGAGEMENT_HIGHLY_ACTIVE_30D = 12;
@@ -360,11 +360,20 @@ const mapExperience = (
 const mapCountGroups = (groups: AdminPsychologistCountGroup[]) =>
   new Map(groups.map((group) => [group.psychologist_id, group._count._all]));
 
-const mapAuthorCountGroups = (groups: AdminPsychologistAuthorCountGroup[]) =>
-  new Map(groups.map((group) => [group.author_id, group._count._all]));
+const mapReceivedEngagementCounts = (groups: AdminPsychologistReceivedEngagementCountsRecord[]) =>
+  new Map(groups.map((group) => [group.psychologist_id, group]));
 
-const mapUserCountGroups = (groups: AdminPsychologistUserCountGroup[]) =>
-  new Map(groups.map((group) => [group.user_id, group._count._all]));
+const emptyReceivedEngagementCounts = (
+  psychologistId: string,
+): AdminPsychologistReceivedEngagementCountsRecord => ({
+  comments_received: 0,
+  content_saves: 0,
+  content_shares: 0,
+  positive_votes: 0,
+  profile_favorites: 0,
+  profile_follows: 0,
+  psychologist_id: psychologistId,
+});
 
 const getNormalizedOptionMatch = (current: string | null | undefined, expected?: string) => {
   if (!expected) return true;
@@ -530,8 +539,6 @@ const matchesFilters = (
 const roundScore = (value: number) => Math.round(value * 1000) / 10;
 const ratingAverage = (value: number) => Math.round((value / 100) * 10) / 10;
 
-const roundPercent = (value: number) => Math.round(value * 10) / 10;
-
 const startOfDate = (date: Date) => {
   const next = new Date(date);
   next.setHours(0, 0, 0, 0);
@@ -553,12 +560,6 @@ const profileActiveDaysUntil = (profileCreatedAt: Date, date: Date) => {
   if (createdAt > until) return 0;
 
   return daysBetweenInclusive(createdAt, until);
-};
-
-const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
-  if (activeDays <= 0) return 0;
-
-  return roundPercent((count / activeDays) * 30);
 };
 
 type ProfileConversionSignalCounts = {
@@ -606,59 +607,72 @@ const buildProfileConversionSummary = (input: {
 
 const buildEngagementSummary = (input: {
   activeDays: number;
-  patientReplies: number;
-  posts: number;
-  replies: number;
-  votes: number;
+  commentsReceived: number;
+  contentSaves: number;
+  contentShares: number;
+  positiveVotes: number;
+  profileFavorites: number;
+  profileFollows: number;
 }): AdminPsychologistsListItem["engagement"] => {
-  const interactions = input.posts + input.replies + input.votes;
-  const weightedScore = calculateAdminPsychologistCommunityEngagementScore({
+  const interactions =
+    input.commentsReceived +
+    input.contentSaves +
+    input.contentShares +
+    input.positiveVotes +
+    input.profileFavorites +
+    input.profileFollows;
+  const weightedScore = calculateAdminProfileReceivedEngagementScore({
     activeDays: input.activeDays,
-    patientReplies: input.patientReplies,
-    posts: input.posts,
-    replies: input.replies,
-    votes: input.votes,
+    commentsReceived: input.commentsReceived,
+    contentSaves: input.contentSaves,
+    contentShares: input.contentShares,
+    positiveVotes: input.positiveVotes,
+    profileFavorites: input.profileFavorites,
+    profileFollows: input.profileFollows,
   });
-  const normalizedInteractions = normalizeCountToThirtyDays(interactions, input.activeDays);
-  const diagnosis = formatAdminPsychologistCommunityEngagementDiagnosis(
-    diagnoseAdminPsychologistWeightedCommunityEngagement({
-      activeDays: input.activeDays,
-      patientReplies: input.patientReplies,
-      posts: input.posts,
-      replies: input.replies,
-      source: COMMUNITY_ENGAGEMENT_SOURCE,
-      votes: input.votes,
-    }),
+  const normalizedInteractions = normalizeAdminProfileReceivedEngagementToThirtyDays(
+    interactions,
+    input.activeDays,
   );
+  const diagnosis = diagnoseAdminProfileReceivedEngagement({
+    activeDays: input.activeDays,
+    commentsReceived: input.commentsReceived,
+    contentSaves: input.contentSaves,
+    contentShares: input.contentShares,
+    positiveVotes: input.positiveVotes,
+    profileFavorites: input.profileFavorites,
+    profileFollows: input.profileFollows,
+    source: COMMUNITY_ENGAGEMENT_SOURCE,
+  });
 
   return {
     id: diagnosis.id,
     label: diagnosis.label,
     signals: {
       active_days: input.activeDays,
+      comments_received: input.commentsReceived,
+      content_saves: input.contentSaves,
+      content_shares: input.contentShares,
       interactions,
       normalized_interactions_30d: normalizedInteractions,
-      normalized_patient_replies_30d: weightedScore.normalized_patient_replies_30d,
       normalized_weighted_score_30d: weightedScore.weighted_score_30d,
-      patient_replies: input.patientReplies,
-      posts: input.posts,
-      replies: input.replies,
+      positive_votes: input.positiveVotes,
+      profile_favorites: input.profileFavorites,
+      profile_follows: input.profileFollows,
       uncapped_normalized_weighted_score_30d: weightedScore.uncapped_weighted_score_30d,
-      votes: input.votes,
     },
     source: COMMUNITY_ENGAGEMENT_SOURCE,
     thresholds: {
       active_interactions_30d: COMMUNITY_ENGAGEMENT_ACTIVE_30D,
-      active_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.engaged_score_30d,
-      high_value_patient_replies_for_very_active_30d:
-        ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.very_engaged_min_patient_replies_30d,
+      active_score_30d: ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS.engaged_score_30d,
       highly_active_interactions_30d: COMMUNITY_ENGAGEMENT_HIGHLY_ACTIVE_30D,
-      highly_active_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.very_engaged_score_30d,
+      highly_active_score_30d:
+        ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS.very_engaged_score_30d,
       minimum_signal_interactions_30d: COMMUNITY_ENGAGEMENT_MINIMUM_SIGNAL_30D,
       minimum_signal_score_30d:
-        ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.minimum_signal_score_30d,
-      score_caps_30d: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.caps_30d,
-      weights: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.weights,
+        ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS.minimum_signal_score_30d,
+      score_caps_30d: ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_CONFIG.caps_30d,
+      weights: ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_CONFIG.weights,
     },
   };
 };
@@ -667,13 +681,10 @@ const buildItem = (
   profile: AdminPsychologistListProfileRecord,
   params: {
     benchmark: ReturnType<typeof buildAdminProfileConversionBenchmark>;
-    communityPostCounts: Map<string, number>;
-    communityReplyCounts: Map<string, number>;
-    communityVoteCounts: Map<string, number>;
     date: Date;
     favoriteCounts: Map<string, number>;
-    patientReplyCounts: Map<string, number>;
     rankingById: Map<string, { position: number; score: number }>;
+    receivedEngagementCounts: Map<string, AdminPsychologistReceivedEngagementCountsRecord>;
     whatsappCounts: Map<string, number>;
   },
 ): AdminPsychologistsListItem => {
@@ -685,10 +696,8 @@ const buildItem = (
   const favorites = params.favoriteCounts.get(userId) ?? 0;
   const profileAgeDays = profileActiveDaysUntil(profile.user.createdAt, params.date);
   const whatsappClicks = params.whatsappCounts.get(userId) ?? 0;
-  const posts = params.communityPostCounts.get(userId) ?? 0;
-  const replies = params.communityReplyCounts.get(userId) ?? 0;
-  const patientReplies = params.patientReplyCounts.get(userId) ?? 0;
-  const votes = params.communityVoteCounts.get(userId) ?? 0;
+  const receivedEngagement =
+    params.receivedEngagementCounts.get(userId) ?? emptyReceivedEngagementCounts(userId);
 
   return {
     accepts_insurance: profile.accepts_insurance,
@@ -701,10 +710,12 @@ const buildItem = (
     email: profile.user.email,
     engagement: buildEngagementSummary({
       activeDays,
-      patientReplies,
-      posts,
-      replies,
-      votes,
+      commentsReceived: receivedEngagement.comments_received,
+      contentSaves: receivedEngagement.content_saves,
+      contentShares: receivedEngagement.content_shares,
+      positiveVotes: receivedEngagement.positive_votes,
+      profileFavorites: receivedEngagement.profile_favorites,
+      profileFollows: receivedEngagement.profile_follows,
     }),
     experience_years: crpExperienceYears(profile.crp_registration_date),
     favorites_count: favorites,
@@ -1003,29 +1014,15 @@ export const listAdminPsychologists = async (
   ]);
 
   const ids = profiles.map((profile) => profile.user.id);
-  const [
-    communityPostGroups,
-    communityReplyGroups,
-    communityVoteGroups,
-    favoriteGroups,
-    patientReplyGroups,
-    whatsappGroups,
-    ranked,
-  ] = await Promise.all([
-    repository.listCommunityPostCounts(ids),
-    repository.listCommunityReplyCounts(ids),
-    repository.listCommunityVoteCounts(ids),
+  const [favoriteGroups, receivedEngagementGroups, whatsappGroups, ranked] = await Promise.all([
     repository.listFavoriteCounts(ids),
-    repository.listPatientReplyCounts(ids),
+    repository.listReceivedEngagementCounts(ids),
     repository.listWhatsappClickCounts(ids),
     rankPsychologistCandidates(rankingCandidates, null),
   ]);
 
-  const communityPostCounts = mapAuthorCountGroups(communityPostGroups);
-  const communityReplyCounts = mapAuthorCountGroups(communityReplyGroups);
-  const communityVoteCounts = mapUserCountGroups(communityVoteGroups);
   const favoriteCounts = mapCountGroups(favoriteGroups);
-  const patientReplyCounts = mapAuthorCountGroups(patientReplyGroups);
+  const receivedEngagementCounts = mapReceivedEngagementCounts(receivedEngagementGroups);
   const whatsappCounts = mapCountGroups(whatsappGroups);
   const benchmarkEligibleProfiles = profiles.filter(
     (profile) =>
@@ -1053,13 +1050,10 @@ export const listAdminPsychologists = async (
     .map((profile) =>
       buildItem(profile, {
         benchmark: profileConversionBenchmark,
-        communityPostCounts,
-        communityReplyCounts,
-        communityVoteCounts,
         date: now,
         favoriteCounts,
-        patientReplyCounts,
         rankingById,
+        receivedEngagementCounts,
         whatsappCounts,
       }),
     )
@@ -1084,7 +1078,7 @@ export const listAdminPsychologists = async (
       per_page: pagination.limit,
       sort,
       source:
-        "user+psychologist_profile+professional_subscription+public_ranking+contact_request+psychologist_favorite+community_post+post_reply+post_vote" as const,
+        "user+psychologist_profile+professional_subscription+public_ranking+contact_request+psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share" as const,
     },
   };
 };

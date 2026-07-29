@@ -1,13 +1,13 @@
 import type { Request } from "express";
 import type {
-  AdminCommunityEngagementDiagnosis,
-  AdminPsychologistCommunityEngagementDiagnosis,
-} from "@/utils/admin-community-engagement-diagnosis";
-import type {
   AdminProfileConversionBenchmark,
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
+import type {
+  AdminProfileReceivedEngagementDiagnosis,
+  AdminProfileReceivedEngagementSource,
+} from "@/utils/admin-profile-received-engagement";
 
 export const ADMIN_PSYCHOLOGISTS_LIST_SORTS = [
   "relevance",
@@ -49,7 +49,8 @@ export const ADMIN_PSYCHOLOGISTS_LIST_PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS = 
 export type AdminPsychologistsListSort = (typeof ADMIN_PSYCHOLOGISTS_LIST_SORTS)[number];
 export type AdminPsychologistsListStatus = (typeof ADMIN_PSYCHOLOGISTS_LIST_STATUSES)[number];
 export type AdminPsychologistsListExperience = (typeof ADMIN_PSYCHOLOGISTS_LIST_EXPERIENCE)[number];
-export type AdminPsychologistsListEngagementCategoryId = AdminCommunityEngagementDiagnosis["id"];
+export type AdminPsychologistsListEngagementCategoryId =
+  AdminProfileReceivedEngagementDiagnosis["id"];
 export type AdminPsychologistsListProfileConversionEngagementQuadrantId =
   (typeof ADMIN_PSYCHOLOGISTS_LIST_PROFILE_CONVERSION_ENGAGEMENT_QUADRANTS)[number];
 
@@ -126,41 +127,45 @@ export type AdminPsychologistsListProfileConversionSummary = {
 };
 
 export type AdminPsychologistsListEngagementSummary = Omit<
-  AdminPsychologistCommunityEngagementDiagnosis,
+  AdminProfileReceivedEngagementDiagnosis,
   "source"
 > & {
   signals: {
     active_days: number;
+    comments_received: number;
+    content_saves: number;
+    content_shares: number;
     interactions: number;
     normalized_interactions_30d: number;
-    normalized_patient_replies_30d: number;
     normalized_weighted_score_30d: number;
-    patient_replies: number;
-    posts: number;
-    replies: number;
+    positive_votes: number;
+    profile_favorites: number;
+    profile_follows: number;
     uncapped_normalized_weighted_score_30d: number;
-    votes: number;
   };
-  source: "community_post+post_reply+post_vote.user_id";
+  source: AdminProfileReceivedEngagementSource;
   thresholds: {
     active_interactions_30d: number;
     active_score_30d: number;
-    high_value_patient_replies_for_very_active_30d: number;
     highly_active_interactions_30d: number;
     highly_active_score_30d: number;
     minimum_signal_interactions_30d: number;
     minimum_signal_score_30d: number;
     score_caps_30d: {
-      patient_replies: null;
-      posts: number;
-      replies: number;
-      votes: number;
+      comments_received: null;
+      content_saves: number;
+      content_shares: number;
+      positive_votes: number;
+      profile_favorites: null;
+      profile_follows: null;
     };
     weights: {
-      patient_replies: number;
-      posts: number;
-      replies: number;
-      votes: number;
+      comments_received: number;
+      content_saves: number;
+      content_shares: number;
+      positive_votes: number;
+      profile_favorites: number;
+      profile_follows: number;
     };
   };
 };
@@ -223,7 +228,7 @@ export type AdminPsychologistsListSummary = {
   pages: number;
   per_page: number;
   sort: AdminPsychologistsListSort;
-  source: "user+psychologist_profile+professional_subscription+public_ranking+contact_request+psychologist_favorite+community_post+post_reply+post_vote";
+  source: "user+psychologist_profile+professional_subscription+public_ranking+contact_request+psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share";
 };
 
 export type IAdminPsychologistsListDTO = Request & {

@@ -300,3 +300,37 @@ A leitura deve ser agregada, nao publica e nao punitiva. Ela deve cruzar sinais 
 - Smoke backend com `buildPsychologistsDashboard({ period: "all" })`: retornou `profile_exposure`, cinco categorias, totais reais de exposição, benchmark e `plan_segments` com `profile_exposure` para `all`, `subscribers`, `free` e `courtesy`.
 - HTTP local no Admin dev server: `GET http://localhost:3002/psicologos` retornou 200.
 - Browser local/headless autenticado em `http://localhost:3002/psicologos`: desktop `1920x1080` validou três cards na mesma linha (`Conversão`, `Engajamento`, `Exposição`) e mobile `390x844` validou `scrollWidth=390`, presença de **Exposição**, faixa padrão e tooltip/descrição de score ponderado. Screenshots salvos em `.tmp/admin-psychologists-exposure-desktop.png` e `.tmp/admin-psychologists-exposure-mobile.png`.
+
+## Ajuste pós-feedback 2026-07-29 - Visibilidade e engajamento recebido
+
+- Pedido do usuário: não criar o funil por enquanto; mudar **Exposição** para **Visibilidade**, redefinir **Engajamento** como interação que o psicólogo recebe e organizar os blocos superiores na ordem **Visibilidade**, **Engajamento** e **Conversão**.
+- Backend Admin: `profile_conversion_engagement` passou a classificar engajamento recebido por eventos reais de favoritos, seguidores, comentários recebidos, votos positivos recebidos, salvamentos e compartilhamentos recebidos em posts/respostas do psicólogo.
+- Backend Admin: eventos de conteúdo excluem autoengajamento quando o autor do evento é o próprio psicólogo destinatário.
+- Backend Admin: os labels/descrições de `profile_exposure` passaram a comunicar **Visibilidade**, mantendo o nome técnico `profile_exposure` por compatibilidade.
+- Lista Admin: o filtro composto `profile_conversion_engagement` passou a usar a mesma leitura de engajamento recebido do dashboard, mantendo links reais da matriz para `/psicologos/lista`.
+- Frontend Admin: o card superior passou a exibir os blocos na ordem **Visibilidade**, **Engajamento** e **Conversão**; **Engajamento** recebeu tooltip de conceito recebido e **Visibilidade** substituiu a cópia pública de Exposição.
+- Builder/Quick Copy não estava exposto como ferramenta callable neste ambiente; a execução usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e as capturas enviadas pelo usuário.
+- Nenhuma alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` não se aplica.
+- ADR criado: `adrs/0352-visibilidade-engajamento-recebido-dashboard-psicologos-admin.md`.
+
+### Critérios complementares
+
+- [x] O bloco público **Exposição** foi renomeado para **Visibilidade**.
+- [x] O bloco **Engajamento** usa interações recebidas pelo psicólogo, não ações executadas por ele na comunidade.
+- [x] Os blocos superiores seguem a ordem **Visibilidade**, **Engajamento** e **Conversão**.
+- [x] A matriz/lista usam a mesma classificação real de engajamento recebido.
+- [x] Não foi criado funil visual nesta entrega.
+- [x] A UI permanece mobile-first e sem `<img>` cru.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema Prisma ou migration foi criado.
+
+### Validação complementar
+
+- `pnpm --dir backend exec biome check --write "src/utils/admin-profile-received-engagement.ts" "src/utils/admin-profile-exposure.ts" "src/modules/api/admin/private/psychologists/dashboard/use-cases/services.ts" "src/modules/api/admin/private/psychologists/dashboard/repositories/AdminPsychologistsDashboardRepository.ts" "src/modules/api/admin/private/psychologists/dashboard/repositories/interfaces/IAdminPsychologistsDashboardRepository.ts" "src/modules/api/admin/private/psychologists/dashboard/DTOs/IAdminPsychologistsDashboardDTO.ts" "src/modules/api/admin/private/psychologists/list/use-cases/services.ts" "src/modules/api/admin/private/psychologists/list/repositories/AdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/repositories/interfaces/IAdminPsychologistsListRepository.ts" "src/modules/api/admin/private/psychologists/list/DTOs/IAdminPsychologistsListDTO.ts"`
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx" "src/api/req/psychologists/index.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- API local `GET http://localhost:3001/api/admin/private/psychologists/dashboard?period=all` retornou 200 com `profile_conversion_engagement.source` de engajamento recebido e categorias de `profile_exposure` rotuladas como **Visibilidade**.
+- Browser local/headless autenticado em `http://localhost:3002/psicologos`: desktop `1920x1080` validou três cards na mesma linha e ordem **Visibilidade**, **Engajamento**, **Conversão**; mobile `390x844` validou `scrollWidth=390`, mesma ordem vertical, ausência de copy pública **Exposição** e tooltip de engajamento recebido. Screenshots salvos em `.tmp/admin-psychologists-visibility-engagement-desktop.png` e `.tmp/admin-psychologists-visibility-engagement-mobile.png`.

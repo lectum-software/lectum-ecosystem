@@ -1,12 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { extractPsychologistSignupAnalyticsVisitorId } from "@/modules/api/public/analytics/helpers/signup-identity";
-import {
-  ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS,
-  ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG,
-  calculateAdminPsychologistCommunityEngagementScore,
-  diagnoseAdminPsychologistWeightedCommunityEngagement,
-} from "@/utils/admin-community-engagement-diagnosis";
 import type { AdminOperatingSystemType } from "@/utils/admin-operating-system";
 import {
   ADMIN_OPERATING_SYSTEM_LABELS,
@@ -32,6 +26,14 @@ import {
   classifyAdminProfileExposureCategory,
   roundAdminProfileExposureNumber,
 } from "@/utils/admin-profile-exposure";
+import {
+  ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_CONFIG,
+  ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS,
+  ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SOURCE,
+  calculateAdminProfileReceivedEngagementScore,
+  diagnoseAdminProfileReceivedEngagement,
+  normalizeAdminProfileReceivedEngagementToThirtyDays,
+} from "@/utils/admin-profile-received-engagement";
 import {
   daysBetweenDates,
   firstPaidProfessionalSubscription,
@@ -77,7 +79,6 @@ import type {
 } from "../DTOs/IAdminPsychologistsDashboardDTO";
 import { AdminPsychologistsDashboardRepository } from "../repositories/AdminPsychologistsDashboardRepository";
 import type {
-  AdminPsychologistCommunityEngagementEventRecord,
   AdminPsychologistCountRecord,
   AdminPsychologistDirectoryFilterSearchRecord,
   AdminPsychologistEventRecord,
@@ -88,6 +89,7 @@ import type {
   AdminPsychologistPreSignupConversionSessionRecord,
   AdminPsychologistProfileRecord,
   AdminPsychologistPublicProfilePageViewRecord,
+  AdminPsychologistReceivedEngagementEventRecord,
   AdminPsychologistSignupAnalyticsIdentityRecord,
   AdminPsychologistSubscriptionRecord,
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
@@ -103,7 +105,7 @@ const FREE_PLAN_SLUG = "gratuito";
 const DIRECTORY_FILTER_SEARCH_ACTION_SOURCE =
   "important_action_event.action_type=psychologist_directory_filter_search";
 const CITY_FILTER_MINIMUM_SEARCHES = 10;
-const COMMUNITY_ENGAGEMENT_SOURCE = "community_post+post_reply+post_vote.user_id";
+const RECEIVED_ENGAGEMENT_SOURCE = ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SOURCE;
 const PROFILE_CONVERSION_ENGAGEMENT_MIN_ACTIVE_DAYS = 7;
 const PROFILE_CONVERSION_ENGAGEMENT_MINIMUM_SIGNAL_30D = 3;
 const PROFILE_CONVERSION_ENGAGEMENT_ENGAGED_INTERACTIONS_30D = 6;
@@ -147,19 +149,19 @@ const PROFILE_EXPOSURE_CATEGORY_CONFIG = ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG 
 >;
 const PROFILE_CONVERSION_ENGAGEMENT_LEVEL_CONFIG = {
   engaged: {
-    description: "engajamento consistente em comunidades",
+    description: "intera\u00e7\u00f5es recebidas consistentes em perfil e comunidades",
     label: "engajado",
   },
   low_engaged: {
-    description: "poucas intera\u00e7\u00f5es reais em comunidades",
+    description: "poucas intera\u00e7\u00f5es recebidas em perfil e comunidades",
     label: "pouco engajado",
   },
   no_engagement: {
-    description: "nenhuma intera\u00e7\u00e3o real em comunidades no per\u00edodo",
+    description: "nenhuma intera\u00e7\u00e3o recebida em perfil ou comunidades no per\u00edodo",
     label: "sem engajamento",
   },
   very_engaged: {
-    description: "volume muito alto de intera\u00e7\u00f5es em comunidades",
+    description: "volume muito alto de intera\u00e7\u00f5es recebidas em perfil e comunidades",
     label: "muito engajado",
   },
 } satisfies Record<
@@ -1078,12 +1080,6 @@ const countEventsByPsychologist = (events: AdminPsychologistEventRecord[]) => {
 const countRecordsByPsychologist = (records: AdminPsychologistCountRecord[]) =>
   new Map(records.map((record) => [record.psychologist_id, record.count]));
 
-const normalizeCountToThirtyDays = (count: number, activeDays: number) => {
-  if (activeDays <= 0) return 0;
-
-  return roundPercent((count / activeDays) * 30);
-};
-
 const getProfileActiveDaysInRange = (
   profile: AdminPsychologistProfileRecord,
   range: AdminPsychologistsDashboardDateRange,
@@ -1363,52 +1359,58 @@ const buildProfileExposureResults = (params: {
       };
     }),
     description:
-      "Classificação interna e agregada por score ponderado de Exposição no período selecionado; combina impressões em listagem, views de perfil, vídeo qualificado e views de conteúdo autoral sem contar WhatsApp como exposição.",
+      "Classificação interna e agregada por score ponderado de Visibilidade no período selecionado; combina impressões em listagem, views de perfil, vídeo qualificado e views de conteúdo autoral sem contar WhatsApp como Visibilidade.",
     source: ADMIN_PROFILE_EXPOSURE_SOURCE,
     thresholds: ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
     totals: totalSignals,
     unavailable_reason:
       params.profiles.length === 0
-        ? "Sem psicólogos ativos no fim do período selecionado para classificar Exposição."
+        ? "Sem psicólogos ativos no fim do período selecionado para classificar Visibilidade."
         : null,
   };
 };
 
-type CommunityEngagementSignalCounts = {
+type ReceivedEngagementSignalCounts = {
+  commentsReceived: number;
+  contentSaves: number;
+  contentShares: number;
   interactions: number;
   normalizedInteractions: number;
-  normalizedPatientReplies: number;
   normalizedWeightedScore: number;
-  patientReplies: number;
-  posts: number;
-  replies: number;
+  positiveVotes: number;
+  profileFavorites: number;
+  profileFollows: number;
   uncappedNormalizedWeightedScore: number;
-  votes: number;
 };
 
-const countCommunityEngagementEventsByPsychologist = (
-  events: AdminPsychologistCommunityEngagementEventRecord[],
+const emptyReceivedEngagementSignalCounts = (): ReceivedEngagementSignalCounts => ({
+  commentsReceived: 0,
+  contentSaves: 0,
+  contentShares: 0,
+  interactions: 0,
+  normalizedInteractions: 0,
+  normalizedWeightedScore: 0,
+  positiveVotes: 0,
+  profileFavorites: 0,
+  profileFollows: 0,
+  uncappedNormalizedWeightedScore: 0,
+});
+
+const countReceivedEngagementEventsByPsychologist = (
+  events: AdminPsychologistReceivedEngagementEventRecord[],
 ) => {
-  const counts = new Map<string, CommunityEngagementSignalCounts>();
+  const counts = new Map<string, ReceivedEngagementSignalCounts>();
 
   for (const event of events) {
-    const current = counts.get(event.psychologist_id) ?? {
-      interactions: 0,
-      normalizedInteractions: 0,
-      normalizedPatientReplies: 0,
-      normalizedWeightedScore: 0,
-      patientReplies: 0,
-      posts: 0,
-      replies: 0,
-      uncappedNormalizedWeightedScore: 0,
-      votes: 0,
-    };
+    const current = counts.get(event.psychologist_id) ?? emptyReceivedEngagementSignalCounts();
 
     current.interactions += 1;
-    if (event.type === "post") current.posts += 1;
-    if (event.type === "reply" || event.type === "patient_reply") current.replies += 1;
-    if (event.type === "patient_reply") current.patientReplies += 1;
-    if (event.type === "vote") current.votes += 1;
+    if (event.type === "comment_received") current.commentsReceived += 1;
+    if (event.type === "content_save") current.contentSaves += 1;
+    if (event.type === "content_share") current.contentShares += 1;
+    if (event.type === "positive_vote") current.positiveVotes += 1;
+    if (event.type === "profile_favorite") current.profileFavorites += 1;
+    if (event.type === "profile_follow") current.profileFollows += 1;
 
     counts.set(event.psychologist_id, current);
   }
@@ -1417,11 +1419,13 @@ const countCommunityEngagementEventsByPsychologist = (
 };
 
 const emptyProfileConversionEngagementTotals = () => ({
-  community_interactions: 0,
-  patient_replies: 0,
-  posts: 0,
-  replies: 0,
-  votes: 0,
+  comments_received: 0,
+  content_saves: 0,
+  content_shares: 0,
+  positive_votes: 0,
+  profile_favorites: 0,
+  profile_follows: 0,
+  received_interactions: 0,
   whatsapp_clicks: 0,
 });
 
@@ -1475,20 +1479,20 @@ const differenceBetweenProfileConversionRates = (
     : null;
 
 const buildProfileConversionEngagementResults = (params: {
-  communityEngagementEvents: AdminPsychologistCommunityEngagementEventRecord[];
   profiles: AdminPsychologistProfileRecord[];
   range: AdminPsychologistsDashboardDateRange;
+  receivedEngagementEvents: AdminPsychologistReceivedEngagementEventRecord[];
   whatsappClicks: AdminPsychologistEventRecord[];
 }): AdminPsychologistsDashboardProfileConversionEngagementResults => {
   const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
-  const communityEngagementEvents = params.communityEngagementEvents.filter((event) =>
+  const receivedEngagementEvents = params.receivedEngagementEvents.filter((event) =>
     analyzedPsychologistIds.has(event.psychologist_id),
   );
   const whatsappClickEvents = params.whatsappClicks.filter((event) =>
     analyzedPsychologistIds.has(event.psychologist_id),
   );
-  const communityEngagementCounts =
-    countCommunityEngagementEventsByPsychologist(communityEngagementEvents);
+  const receivedEngagementCounts =
+    countReceivedEngagementEventsByPsychologist(receivedEngagementEvents);
   const whatsappClickCounts = countEventsByPsychologist(whatsappClickEvents);
   const eligibleProfiles = params.profiles.filter(
     (profile) =>
@@ -1524,23 +1528,27 @@ const buildProfileConversionEngagementResults = (params: {
     very_vs_no_rate_difference_points: null as number | null,
   };
   const totalSignals = {
-    community_interactions: communityEngagementEvents.length,
+    comments_received: receivedEngagementEvents.filter((event) => event.type === "comment_received")
+      .length,
+    content_saves: receivedEngagementEvents.filter((event) => event.type === "content_save").length,
+    content_shares: receivedEngagementEvents.filter((event) => event.type === "content_share")
+      .length,
     engaged_psychologists: 0,
     high_engagement_psychologists: 0,
     insufficient_data_psychologists: 0,
     low_engaged_psychologists: 0,
     low_engagement_psychologists: 0,
     no_engagement_psychologists: 0,
-    patient_replies: communityEngagementEvents.filter((event) => event.type === "patient_reply")
+    positive_votes: receivedEngagementEvents.filter((event) => event.type === "positive_vote")
       .length,
-    posts: communityEngagementEvents.filter((event) => event.type === "post").length,
+    profile_favorites: receivedEngagementEvents.filter((event) => event.type === "profile_favorite")
+      .length,
+    profile_follows: receivedEngagementEvents.filter((event) => event.type === "profile_follow")
+      .length,
     psychologists: params.profiles.length,
-    replies: communityEngagementEvents.filter(
-      (event) => event.type === "reply" || event.type === "patient_reply",
-    ).length,
+    received_interactions: receivedEngagementEvents.length,
     strong_conversion_psychologists: 0,
     very_engaged_psychologists: 0,
-    votes: communityEngagementEvents.filter((event) => event.type === "vote").length,
   };
 
   for (const profile of params.profiles) {
@@ -1548,30 +1556,21 @@ const buildProfileConversionEngagementResults = (params: {
     const activeDays = getProfileActiveDaysInRange(profile, params.range);
     const profileAgeDays = getProfileAgeDaysUntil(profile, params.range.end);
     const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
-    const engagementSignals = communityEngagementCounts.get(psychologistId) ?? {
-      interactions: 0,
-      normalizedInteractions: 0,
-      normalizedPatientReplies: 0,
-      normalizedWeightedScore: 0,
-      patientReplies: 0,
-      posts: 0,
-      replies: 0,
-      uncappedNormalizedWeightedScore: 0,
-      votes: 0,
-    };
-    const weightedEngagementScore = calculateAdminPsychologistCommunityEngagementScore({
+    const engagementSignals =
+      receivedEngagementCounts.get(psychologistId) ?? emptyReceivedEngagementSignalCounts();
+    const weightedEngagementScore = calculateAdminProfileReceivedEngagementScore({
       activeDays,
-      patientReplies: engagementSignals.patientReplies,
-      posts: engagementSignals.posts,
-      replies: engagementSignals.replies,
-      votes: engagementSignals.votes,
+      commentsReceived: engagementSignals.commentsReceived,
+      contentSaves: engagementSignals.contentSaves,
+      contentShares: engagementSignals.contentShares,
+      positiveVotes: engagementSignals.positiveVotes,
+      profileFavorites: engagementSignals.profileFavorites,
+      profileFollows: engagementSignals.profileFollows,
     });
-    engagementSignals.normalizedInteractions = normalizeCountToThirtyDays(
+    engagementSignals.normalizedInteractions = normalizeAdminProfileReceivedEngagementToThirtyDays(
       engagementSignals.interactions,
       activeDays,
     );
-    engagementSignals.normalizedPatientReplies =
-      weightedEngagementScore.normalized_patient_replies_30d;
     engagementSignals.normalizedWeightedScore = weightedEngagementScore.weighted_score_30d;
     engagementSignals.uncappedNormalizedWeightedScore =
       weightedEngagementScore.uncapped_weighted_score_30d;
@@ -1586,13 +1585,15 @@ const buildProfileConversionEngagementResults = (params: {
     if (profileConversionCategoryId === "insufficient_data") {
       totalSignals.insufficient_data_psychologists += 1;
     }
-    const engagementDiagnosis = diagnoseAdminPsychologistWeightedCommunityEngagement({
+    const engagementDiagnosis = diagnoseAdminProfileReceivedEngagement({
       activeDays,
-      patientReplies: engagementSignals.patientReplies,
-      posts: engagementSignals.posts,
-      replies: engagementSignals.replies,
-      source: COMMUNITY_ENGAGEMENT_SOURCE,
-      votes: engagementSignals.votes,
+      commentsReceived: engagementSignals.commentsReceived,
+      contentSaves: engagementSignals.contentSaves,
+      contentShares: engagementSignals.contentShares,
+      positiveVotes: engagementSignals.positiveVotes,
+      profileFavorites: engagementSignals.profileFavorites,
+      profileFollows: engagementSignals.profileFollows,
+      source: RECEIVED_ENGAGEMENT_SOURCE,
     });
     const engagementLevel = engagementLevelFromSignals({
       diagnosisId: engagementDiagnosis.id,
@@ -1637,11 +1638,13 @@ const buildProfileConversionEngagementResults = (params: {
 
     if (quadrant) {
       quadrant.count += 1;
-      quadrant.totals.community_interactions += engagementSignals.interactions;
-      quadrant.totals.patient_replies += engagementSignals.patientReplies;
-      quadrant.totals.posts += engagementSignals.posts;
-      quadrant.totals.replies += engagementSignals.replies;
-      quadrant.totals.votes += engagementSignals.votes;
+      quadrant.totals.comments_received += engagementSignals.commentsReceived;
+      quadrant.totals.content_saves += engagementSignals.contentSaves;
+      quadrant.totals.content_shares += engagementSignals.contentShares;
+      quadrant.totals.positive_votes += engagementSignals.positiveVotes;
+      quadrant.totals.profile_favorites += engagementSignals.profileFavorites;
+      quadrant.totals.profile_follows += engagementSignals.profileFollows;
+      quadrant.totals.received_interactions += engagementSignals.interactions;
       quadrant.totals.whatsapp_clicks += whatsappClicks;
     }
   }
@@ -1676,7 +1679,7 @@ const buildProfileConversionEngagementResults = (params: {
   return {
     comparison,
     description:
-      "Rela\u00e7\u00e3o observacional entre envolvimento real em comunidades e Alta Conversão no per\u00edodo selecionado; n\u00e3o indica causalidade, ranking ou puni\u00e7\u00e3o.",
+      "Rela\u00e7\u00e3o observacional entre intera\u00e7\u00f5es recebidas pelo psic\u00f3logo em perfil/comunidades e Alta Convers\u00e3o no per\u00edodo selecionado; n\u00e3o indica causalidade, ranking ou puni\u00e7\u00e3o.",
     quadrants: PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER.flatMap((profileConversionCategoryId) =>
       PROFILE_CONVERSION_ENGAGEMENT_LEVEL_ORDER.map((engagementLevel) => {
         const id = buildProfileConversionEngagementQuadrantId(
@@ -1703,28 +1706,27 @@ const buildProfileConversionEngagementResults = (params: {
       }),
     ),
     source:
-      "contact_request.channel=whatsapp+user.createdAt+platform_percentiles+community_post+post_reply+post_vote",
+      "contact_request.channel=whatsapp+user.createdAt+platform_percentiles+psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share",
     thresholds: {
-      engaged_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.engaged_score_30d,
+      engaged_score_30d: ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS.engaged_score_30d,
       engaged_interactions_30d: PROFILE_CONVERSION_ENGAGEMENT_ENGAGED_INTERACTIONS_30D,
       high_engagement_interactions_30d: PROFILE_CONVERSION_ENGAGEMENT_ENGAGED_INTERACTIONS_30D,
-      high_value_patient_replies_for_very_engaged_30d:
-        ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.very_engaged_min_patient_replies_30d,
-      highly_engaged_score_30d: ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.very_engaged_score_30d,
+      highly_engaged_score_30d:
+        ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS.very_engaged_score_30d,
       highly_engaged_interactions_30d: PROFILE_CONVERSION_ENGAGEMENT_VERY_ENGAGED_INTERACTIONS_30D,
       minimum_active_days: PROFILE_CONVERSION_ENGAGEMENT_MIN_ACTIVE_DAYS,
       minimum_signal_score_30d:
-        ADMIN_COMMUNITY_ENGAGEMENT_SCORE_THRESHOLDS.minimum_signal_score_30d,
+        ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_THRESHOLDS.minimum_signal_score_30d,
       minimum_signal_interactions_30d: PROFILE_CONVERSION_ENGAGEMENT_MINIMUM_SIGNAL_30D,
-      score_caps_30d: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.caps_30d,
+      score_caps_30d: ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_CONFIG.caps_30d,
       profile_conversion_adaptation_period_days:
         ADMIN_PROFILE_CONVERSION_THRESHOLDS.adaptation_period_days,
-      weights: ADMIN_PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_SCORE_CONFIG.weights,
+      weights: ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SCORE_CONFIG.weights,
     },
     totals: totalSignals,
     unavailable_reason:
       params.profiles.length === 0
-        ? "Sem psic\u00f3logos ativos no fim do per\u00edodo selecionado para comparar conversão e engajamento."
+        ? "Sem psic\u00f3logos ativos no fim do per\u00edodo selecionado para comparar Convers\u00e3o e Engajamento."
         : null,
   };
 };
@@ -2535,7 +2537,6 @@ const buildConversionBySignupMethod = (profiles: AdminPsychologistProfileRecord[
   });
 
 const buildPlanSegmentSummaries = (params: {
-  communityEngagementEvents: AdminPsychologistCommunityEngagementEventRecord[];
   communityPostViewCounts: AdminPsychologistCountRecord[];
   communityReplyViewCounts: AdminPsychologistCountRecord[];
   currentNewSignups: AdminPsychologistProfileRecord[];
@@ -2556,6 +2557,7 @@ const buildPlanSegmentSummaries = (params: {
   publicProfilePageViews: AdminPsychologistPublicProfilePageViewRecord[];
   qualifiedVideoViewCounts: AdminPsychologistCountRecord[];
   range: AdminPsychologistsDashboardDateRange;
+  receivedEngagementEvents: AdminPsychologistReceivedEngagementEventRecord[];
   searchResultImpressionCounts: AdminPsychologistCountRecord[];
   whatsappContactRequests: AdminPsychologistEventRecord[];
 }) =>
@@ -2633,9 +2635,9 @@ const buildPlanSegmentSummaries = (params: {
           whatsappClicks: params.whatsappContactRequests,
         }),
         profile_conversion_engagement: buildProfileConversionEngagementResults({
-          communityEngagementEvents: params.communityEngagementEvents,
           profiles: segmentProfiles,
           range: params.range,
+          receivedEngagementEvents: params.receivedEngagementEvents,
           whatsappClicks: params.whatsappContactRequests,
         }),
         profile_exposure: buildProfileExposureResults({
@@ -2730,7 +2732,6 @@ export const buildPsychologistsDashboard = async (
   const currentPeriodPsychologistIds = currentNewSignups.map((profile) => profile.user.id);
   const psychologistUserIds = profiles.map((profile) => profile.user.id);
   const [
-    communityEngagementEvents,
     directoryFilterSearchActions,
     rankingCandidates,
     platformPageViews,
@@ -2742,7 +2743,6 @@ export const buildPsychologistsDashboard = async (
     preSignupConversionLinkedSessions,
     preSignupConversionSignupIdentities,
   ] = await Promise.all([
-    repository.listCommunityEngagementEvents(current),
     repository.listDirectoryFilterSearchActions(current),
     repository.listPublicRankingCandidates(),
     repository.listPlatformPageViews(current),
@@ -2754,6 +2754,7 @@ export const buildPsychologistsDashboard = async (
     repository.listPreSignupConversionLinkedSessions(currentPeriodPsychologistIds),
     repository.listPreSignupConversionSignupIdentities(currentPeriodPsychologistIds),
   ]);
+  const receivedEngagementEvents = await repository.listReceivedEngagementEvents(current);
   const [
     communityPostViewCounts,
     communityReplyViewCounts,
@@ -2826,7 +2827,6 @@ export const buildPsychologistsDashboard = async (
     signupIdentities: preSignupConversionSignupIdentities,
   });
   const planSegments = buildPlanSegmentSummaries({
-    communityEngagementEvents,
     communityPostViewCounts,
     communityReplyViewCounts,
     currentNewSignups,
@@ -2847,6 +2847,7 @@ export const buildPsychologistsDashboard = async (
     publicProfilePageViews,
     qualifiedVideoViewCounts,
     range: current,
+    receivedEngagementEvents,
     searchResultImpressionCounts,
     whatsappContactRequests,
   });
@@ -3000,9 +3001,9 @@ export const buildPsychologistsDashboard = async (
         ? [
             {
               description:
-                "A Exposição depende de ao menos um perfil de psicólogo ativo no período selecionado.",
+                "A Visibilidade depende de ao menos um perfil de psicólogo ativo no período selecionado.",
               id: "psychologist_profile_exposure",
-              label: "Exposição dos psicólogos",
+              label: "Visibilidade dos psicólogos",
               source: profileExposure.source,
             },
           ]

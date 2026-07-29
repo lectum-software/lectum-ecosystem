@@ -52,28 +52,28 @@ export type AdminProfileExposureThresholds = typeof ADMIN_PROFILE_EXPOSURE_THRES
 export const ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG = {
   high_exposure: {
     description:
-      "Psicólogo fora da adaptação com score ponderado de Exposição acima da faixa padrão da plataforma no período selecionado.",
-    label: "Alta Exposição",
+      "Psicólogo fora da adaptação com score ponderado de Visibilidade acima da faixa padrão da plataforma no período selecionado.",
+    label: "Alta Visibilidade",
   },
   insufficient_data: {
     description:
-      "Psicólogo ainda dentro dos primeiros 30 dias de adaptação; a Exposição ainda não é comparada com a plataforma.",
+      "Psicólogo ainda dentro dos primeiros 30 dias de adaptação; a Visibilidade ainda não é comparada com a plataforma.",
     label: "Dados Insuficientes",
   },
   low_exposure: {
     description:
-      "Psicólogo fora da adaptação, com alguma exposição real, mas abaixo da faixa padrão da plataforma no período selecionado.",
-    label: "Baixa Exposição",
+      "Psicólogo fora da adaptação, com alguma visibilidade real, mas abaixo da faixa padrão da plataforma no período selecionado.",
+    label: "Baixa Visibilidade",
   },
   no_exposure: {
     description:
       "Psicólogo fora da adaptação sem impressão em listagem, abertura de perfil, visualização qualificada de vídeo ou view de conteúdo autoral no período selecionado.",
-    label: "Sem Exposição",
+    label: "Sem Visibilidade",
   },
   standard_exposure: {
     description:
-      "Psicólogo fora da adaptação com score ponderado de Exposição dentro da faixa padrão da plataforma no período selecionado.",
-    label: "Exposição Padrão",
+      "Psicólogo fora da adaptação com score ponderado de Visibilidade dentro da faixa padrão da plataforma no período selecionado.",
+    label: "Visibilidade Padrão",
   },
 } satisfies Record<AdminProfileExposureCategoryId, { description: string; label: string }>;
 
