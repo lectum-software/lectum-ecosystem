@@ -53,7 +53,10 @@ graficos e restaura a matriz compacta.
 - `pnpm --dir admin check`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - Browser local autenticado em `/psicologos` validou visualmente os donuts contidos e a matriz
-  desktop compacta.
+  desktop compacta por CDP, com screenshots em `.tmp/task98-auth-donuts.png` e
+  `.tmp/task98-auth-matrix.png`.
+- Admin temporario real `codex-task98-validation-1785377453@lectum.local` foi criado com
+  `admin:bootstrap` apenas para validacao local e removido do banco ao final junto com seus tokens.
 
 ## Observacoes
 
