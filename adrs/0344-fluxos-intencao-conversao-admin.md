@@ -54,6 +54,20 @@ Para apoiar conferência visual no ambiente de desenvolvimento, o card **Fluxo d
 
 Essa decisão não altera o backend, não cria seed, não muda o contrato da API, não persiste dados e não substitui os dados reais quando houver pelo menos um fluxo real. A UI exibe aviso explícito de que os valores são somente de visualização e não representam sinais reais de pacientes, psicólogos ou conversões.
 
+## Complemento 2026-07-30 - origem do tráfego volta a ser leitura principal no detalhe
+
+Por feedback direto de produto, o detalhe administrativo do psicólogo em `/psicologos/[id]?tab=estatisticas` deixa de usar **Qualidade do tráfego** como bloco visual principal. A leitura principal volta a ser a tabela **Origem do tráfego**, alinhada ao dashboard Admin de psicólogos e ao contrato real `traffic_sources`.
+
+A decisão é somente de apresentação no Admin:
+
+- remover da UI do detalhe os cards/fluxos de qualidade e o `<details>` que escondia a tabela;
+- renderizar diretamente as fontes `Explorar`, `Busca e filtros`, `Comunidades`, `Link direto` e `Favoritos`;
+- exibir **Perfil** com o percentual real já calculado em `traffic_sources.sources[].percentage`;
+- exibir **WhatsApp** com percentual calculado sobre a soma real de cliques atribuídos por fonte, mantendo `0 (0%)` quando a atribuição por origem segue indisponível;
+- preservar o endpoint e o payload `traffic_quality` para compatibilidade interna até uma task futura decidir removê-los.
+
+Não houve alteração de backend, schema Prisma, migration, package, mock, seed ou tracking. O Builder/Quick Copy não estava exposto como ferramenta callable; a validação visual usou os protótipos locais e os screenshots enviados pelo usuário.
+
 ## Validação
 
 - `pnpm --dir backend check`
@@ -65,6 +79,7 @@ Essa decisão não altera o backend, não cria seed, não muda o contrato da API
 - Browser local em `/dashboard` e `/psicologos/[id]?tab=estatisticas`.
 - Browser local/headless autenticado validou `/dashboard` e `/psicologos/visual-user-no-traction-psychologist?tab=estatisticas` em 390px e 1366px, sem overflow horizontal, com screenshots em `.tmp/admin-dashboard-intent-conversion-mobile.png`, `.tmp/admin-psychologist-traffic-quality-mobile.png`, `.tmp/admin-dashboard-intent-conversion-desktop.png` e `.tmp/admin-psychologist-traffic-quality-desktop.png`.
 - O admin temporário real criado para validação browser foi removido do banco ao final.
+- Complemento 2026-07-30: `pnpm --dir admin check`, `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`, `NODE_OPTIONS=--max-old-space-size=8192 pnpm check` e Chrome/CDP autenticado validaram a tabela **Origem do tráfego** no detalhe do psicólogo em desktop e mobile; o admin temporário real foi removido ao final.
 
 ## Pendências
 

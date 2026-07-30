@@ -120,3 +120,31 @@ Adicionar ao Dashboard Admin um bloco visual de **Fluxo de intenção e convers�
 - A leitura cruzada é operacional e agregada, destinada ao Admin.
 - A correlação entre os dois lados usa thresholds já existentes de conversão de psicólogos e score de intenção por par paciente-psicólogo, evitando criar vocabulário paralelo.
 - A origem de WhatsApp é uma atribuição de qualidade quando existe vínculo first-party; o total canônico de WhatsApp continua vindo de `contact_request`.
+
+## Ajuste complementar 2026-07-30 - Origem do tráfego como bloco principal no detalhe
+
+- Pedido do usuário: em `/psicologos/[id]?tab=estatisticas`, substituir o bloco **Qualidade do tráfego** por uma tabela de **Origem do tráfego**, seguindo a leitura já usada no dashboard Admin de psicólogos.
+- A UI do detalhe removeu os cards/fluxos de qualidade e passou a renderizar diretamente a taxonomia fixa `Explorar`, `Busca e filtros`, `Comunidades`, `Link direto` e `Favoritos`, com colunas **Fonte**, **Perfil** e **WhatsApp**.
+- Os percentuais de **Perfil** usam `traffic_sources.sources[].percentage`; os percentuais de **WhatsApp** são calculados sobre a soma real de `traffic_sources.sources[].whatsapp_clicks`, exibindo `0 (0%)` quando a atribuição por origem ainda não existe.
+- O filtro independente de período/data do bloco foi preservado.
+- Não houve alteração de backend, contrato HTTP, Prisma schema/migrations, package, mock, seed ou dado persistido.
+- Builder/Quick Copy não estava exposto como ferramenta callable; referências auditáveis usadas: `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`, `_product/proto/admin/Tráfego.png` e os screenshots enviados pelo usuário.
+- ADR atualizado: `adrs/0344-fluxos-intencao-conversao-admin.md`.
+
+### Critérios de aceite deste ajuste
+
+- [x] O detalhe estatístico do psicólogo não renderiza mais o bloco **Qualidade do tráfego**.
+- [x] O bloco principal agora renderiza **Origem do tráfego** com colunas/campos **Fonte**, **Perfil** e **WhatsApp**.
+- [x] A UI permanece mobile-first: tabela no desktop e cards empilhados em ~390px.
+- [x] Percentuais e contadores vêm do contrato real `traffic_sources`; nenhum mock ou endpoint paralelo foi usado.
+- [x] Não houve alteração de banco/schema/migrations; `db:migrate` não se aplica.
+- [x] Nenhum `<img>` cru, formulário de produto ou package novo foi introduzido.
+
+### Validação deste ajuste
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"` - OK.
+- `pnpm --dir admin check` - OK.
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build` - OK.
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check` - OK.
+- HTTP local em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` - OK (`200`) após subir `next start` com build atualizado.
+- Browser local/headless via Chrome/CDP com admin temporário real removido ao final - OK: confirmou presença de **Origem do tráfego**, ausência de **Qualidade do tráfego**, renderização desktop sem overflow e renderização mobile em cards; screenshots salvos em `.tmp/admin-psychologist-traffic-origin-desktop.png` e `.tmp/admin-psychologist-traffic-origin-mobile.png`.
