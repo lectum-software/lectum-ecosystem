@@ -2400,9 +2400,11 @@ const PsychologistsDonutChart = ({
       <div className="flex min-w-0 flex-col gap-4">
         <svg
           aria-label={ariaLabel}
-          className="mx-auto aspect-square w-full max-w-[10.5rem] min-w-0"
+          className="mx-auto block shrink-0"
+          height="156"
           role="img"
           viewBox="0 0 120 120"
+          width="156"
         >
           <circle
             cx="60"
@@ -3092,15 +3094,16 @@ const ProfileConversionEngagementQuadrantCard = ({
   return (
     <Link
       aria-label={`Ver lista de profissionais em ${quadrant.label}`}
-      className="block min-h-[7.75rem] min-w-0 rounded-[1.2rem] border p-3 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+      className="block min-h-24 min-w-0 rounded-2xl border p-2.5 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
       href={buildProfileConversionEngagementListHref(quadrant.id, planSegment)}
       style={{
         backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
         borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
+        minHeight: "6rem",
       }}
     >
       {showEngagementLabel ? (
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-1.5 flex items-center gap-2">
           <span
             aria-hidden
             className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -3111,13 +3114,13 @@ const ProfileConversionEngagementQuadrantCard = ({
           </h4>
         </div>
       ) : null}
-      <p className="text-lg font-black text-foreground">
+      <p className="text-base font-black text-foreground">
         {numberFormatter.format(quadrant.count)}
         <span className="ml-1 text-xs font-bold text-muted">
           ({formatPercentageValue(quadrant.percentage)})
         </span>
       </p>
-      <p className="mt-2 text-[0.72rem] font-bold leading-5 text-muted">{description}</p>
+      <p className="mt-1.5 text-[0.68rem] font-bold leading-4 text-muted">{description}</p>
       <p className="sr-only">
         Clique para ver a lista de profissionais deste quadrante.{" "}
         {numberFormatter.format(quadrant.totals.received_interactions)} interações recebidas e{" "}
@@ -3200,11 +3203,14 @@ const DashboardProfileConversionEngagementCard = ({
               })}
             </div>
 
-            <div className="hidden gap-2 lg:grid lg:grid-cols-[132px_repeat(4,minmax(0,1fr))]">
+            <div
+              className="hidden gap-2 lg:grid"
+              style={{ gridTemplateColumns: "132px repeat(4, minmax(0, 1fr))" }}
+            >
               <div className="hidden lg:block" aria-hidden />
               {PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
                 <p
-                  className="rounded-2xl bg-surface-muted px-3 py-2 text-center text-xs font-black text-muted"
+                  className="rounded-xl bg-surface-muted px-2 py-1.5 text-center text-[0.72rem] font-black text-muted"
                   key={`psychologist-profile-conversion-engagement-column-${column.id}`}
                 >
                   {column.label}
@@ -3219,7 +3225,7 @@ const DashboardProfileConversionEngagementCard = ({
 
                 return (
                   <Fragment key={`psychologist-profile-conversion-engagement-row-${row.label}`}>
-                    <p className="grid place-items-center rounded-2xl bg-surface-muted px-2 text-center text-[0.72rem] font-black text-muted">
+                    <p className="grid place-items-center rounded-xl bg-surface-muted px-2 py-2 text-center text-[0.68rem] font-black text-muted">
                       {row.label}
                     </p>
                     {rowCells.map((cell) => (
