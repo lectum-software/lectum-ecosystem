@@ -26,6 +26,10 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
 - Renderizar a curva acumulada/Lorenz em SVG/CSS proprio, sem biblioteca externa, junto de cards de
   total, base, sem clique, top 10% e top 20%.
 - Manter a leitura interna e agregada, sem ranking individual nem filtros adicionais nesta versao.
+- Para a revisao visual local solicitada em 2026-07-30, permitir numeros ilustrativos somente no
+  Admin em `localhost`/`127.0.0.1`/`::1`, apenas quando a API real retorna `total_clicks=0`.
+  O exemplo fica marcado como **Exemplo visual local** e nao altera backend, banco, contrato, CSV,
+  tracking ou producao.
 
 ## Consequencias
 
@@ -36,6 +40,9 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
   precisa.
 - Nao ha alteracao em schema Prisma, migrations, tracking, packages, rankings publicos ou dados
   individuais expostos.
+- O exemplo visual local reduz atrito de avaliacao de UI durante desenvolvimento, mas deve continuar
+  explicitamente separado dos dados reais. Em qualquer host nao local, e quando houver clique real,
+  a visualizacao usa somente `whatsapp_click_distribution` retornado pela API.
 
 ## Task relacionada
 
@@ -51,6 +58,12 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`: OK.
 - Browser local/headless autenticado em `/dashboard`: OK em desktop 1366px e mobile 390px; o bloco ficou entre **Visao geral** e **Atividade nas comunidades**, sem overflow horizontal.
 - Browser local/headless em **Todo o periodo**: OK, renderizando curva acumulada em SVG e o resumo de top 20% com dados reais.
+- Ajuste local 2026-07-30: `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx"`: OK.
+- Ajuste local 2026-07-30: `pnpm --dir admin check`: OK.
+- Ajuste local 2026-07-30: `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`: OK.
+- Ajuste local 2026-07-30: browser local/headless em `http://localhost:3002/dashboard`: OK em
+  desktop 1366px e mobile 390px, exibindo **Exemplo visual local**, 120 cliques ilustrativos,
+  top 10% em 44,2%, top 20% em 54,2% e curva SVG sem overflow horizontal.
 
 ## Pendencias
 

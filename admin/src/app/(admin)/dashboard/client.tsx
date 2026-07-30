@@ -12,7 +12,7 @@ import {
   Users,
   WalletCards,
 } from "lucide-react";
-import { type FocusEventHandler, useEffect, useMemo, useState } from "react";
+import { type FocusEventHandler, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAdminDashboardSummary } from "@/api/callers/dashboard";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -162,6 +162,106 @@ const formatGini = (value: number | null) => {
     maximumFractionDigits: 3,
     minimumFractionDigits: 2,
   });
+};
+
+const LOCAL_VISUAL_EXAMPLE_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+const LOCAL_VISUAL_WHATSAPP_CLICK_COUNTS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 18, 35];
+
+const isLocalVisualExampleHost = () =>
+  typeof window !== "undefined" && LOCAL_VISUAL_EXAMPLE_HOSTS.has(window.location.hostname);
+
+const subscribeToLocalVisualExampleHost = () => () => undefined;
+const getLocalVisualExampleHostSnapshot = () => isLocalVisualExampleHost();
+const getServerLocalVisualExampleHostSnapshot = () => false;
+
+const sumValues = (values: number[]) => values.reduce((sum, value) => sum + value, 0);
+
+const calculatePercentage = (value: number, total: number) =>
+  total > 0 ? (value / total) * 100 : 0;
+
+const buildLocalDistributionCurve = (
+  sortedAscendingCounts: number[],
+  totalClicks: number,
+): DashboardWhatsAppClickDistribution["curve"] => {
+  let cumulativeClicks = 0;
+
+  return [
+    {
+      click_percentage: 0,
+      cumulative_clicks: 0,
+      psychologist_percentage: 0,
+      psychologists: 0,
+    },
+    ...sortedAscendingCounts.map((clicks, index) => {
+      cumulativeClicks += clicks;
+
+      return {
+        click_percentage: calculatePercentage(cumulativeClicks, totalClicks),
+        cumulative_clicks: cumulativeClicks,
+        psychologist_percentage: calculatePercentage(index + 1, sortedAscendingCounts.length),
+        psychologists: index + 1,
+      };
+    }),
+  ];
+};
+
+const buildLocalDistributionSegment = (
+  sortedDescendingCounts: number[],
+  totalClicks: number,
+  targetPercentage: number,
+): DashboardWhatsAppClickDistribution["top_10_percent"] => {
+  const psychologistCount =
+    sortedDescendingCounts.length > 0
+      ? Math.max(1, Math.ceil(sortedDescendingCounts.length * targetPercentage))
+      : 0;
+  const clicks = sumValues(sortedDescendingCounts.slice(0, psychologistCount));
+
+  return {
+    click_percentage: calculatePercentage(clicks, totalClicks),
+    clicks,
+    psychologist_count: psychologistCount,
+    psychologist_percentage: calculatePercentage(psychologistCount, sortedDescendingCounts.length),
+  };
+};
+
+const calculateLocalGini = (sortedAscendingCounts: number[], totalClicks: number) => {
+  if (sortedAscendingCounts.length === 0 || totalClicks === 0) return null;
+
+  const weightedSum = sortedAscendingCounts.reduce(
+    (sum, value, index) => sum + (index + 1) * value,
+    0,
+  );
+  const length = sortedAscendingCounts.length;
+
+  return (2 * weightedSum) / (length * totalClicks) - (length + 1) / length;
+};
+
+const buildLocalWhatsAppDistributionExample = (): DashboardWhatsAppClickDistribution => {
+  const sortedAscendingCounts = [...LOCAL_VISUAL_WHATSAPP_CLICK_COUNTS].sort((a, b) => a - b);
+  const sortedDescendingCounts = [...sortedAscendingCounts].reverse();
+  const totalClicks = sumValues(sortedAscendingCounts);
+  const psychologistsWithClicks = sortedAscendingCounts.filter((count) => count > 0).length;
+  const top10 = buildLocalDistributionSegment(sortedDescendingCounts, totalClicks, 0.1);
+  const top20 = buildLocalDistributionSegment(sortedDescendingCounts, totalClicks, 0.2);
+
+  return {
+    concentration_label: "Concentração moderada",
+    concentration_level: "moderate",
+    curve: buildLocalDistributionCurve(sortedAscendingCounts, totalClicks),
+    gini: calculateLocalGini(sortedAscendingCounts, totalClicks),
+    psychologists_with_clicks: psychologistsWithClicks,
+    psychologists_without_clicks: sortedAscendingCounts.length - psychologistsWithClicks,
+    source: "contact_request.channel=whatsapp+psychologist_profile.published",
+    summary: `Exemplo visual local: top 20% (${numberFormatter.format(
+      top20.psychologist_count,
+    )} psicólogos) concentrariam ${formatPercent(
+      top20.click_percentage,
+    )} dos ${numberFormatter.format(totalClicks)} cliques de WhatsApp.`,
+    top_10_percent: top10,
+    top_20_percent: top20,
+    total_clicks: totalClicks,
+    total_psychologists: sortedAscendingCounts.length,
+  };
 };
 
 const isValidRange = (range: DashboardSummaryQuery) => {
@@ -699,8 +799,10 @@ const buildSvgLinePath = (points: Array<{ x: number; y: number }>) =>
 
 const WhatsAppDistributionChart = ({
   distribution,
+  isLocalVisualExample = false,
 }: {
   distribution: DashboardWhatsAppClickDistribution;
+  isLocalVisualExample?: boolean;
 }) => {
   const hasClickableDistribution =
     distribution.total_psychologists > 0 && distribution.total_clicks > 0;
@@ -830,7 +932,7 @@ const WhatsAppDistributionChart = ({
       <div className="mt-4 flex flex-col gap-3 text-xs font-semibold text-muted sm:flex-row sm:flex-wrap">
         <span className="inline-flex items-center gap-2">
           <span aria-hidden className="h-0.5 w-7 rounded-full bg-primary" />
-          Distribuição real
+          {isLocalVisualExample ? "Distribuição de exemplo" : "Distribuição real"}
         </span>
         <span className="inline-flex items-center gap-2">
           <span aria-hidden className="h-0 w-7 border-t border-dashed border-border" />
@@ -843,10 +945,11 @@ const WhatsAppDistributionChart = ({
         </summary>
         <p className="mt-2 leading-5">{distribution.summary}</p>
         <p className="mt-2 leading-5">
-          Top 10% concentram {formatPercent(distribution.top_10_percent.click_percentage)} dos
-          cliques; top 20% concentram {formatPercent(distribution.top_20_percent.click_percentage)}{" "}
-          dos cliques. Psicólogos sem clique:{" "}
-          {numberFormatter.format(distribution.psychologists_without_clicks)}.
+          Top 10% {isLocalVisualExample ? "concentrariam" : "concentram"}{" "}
+          {formatPercent(distribution.top_10_percent.click_percentage)} dos cliques; top 20%{" "}
+          {isLocalVisualExample ? "concentrariam" : "concentram"}{" "}
+          {formatPercent(distribution.top_20_percent.click_percentage)} dos cliques. Psicólogos sem
+          clique: {numberFormatter.format(distribution.psychologists_without_clicks)}.
         </p>
       </details>
     </figure>
@@ -860,9 +963,20 @@ const WhatsAppDistributionCard = ({
   distribution: DashboardWhatsAppClickDistribution;
   periodDescription: string;
 }) => {
+  const isLocalPreviewHost = useSyncExternalStore(
+    subscribeToLocalVisualExampleHost,
+    getLocalVisualExampleHostSnapshot,
+    getServerLocalVisualExampleHostSnapshot,
+  );
+  const showLocalVisualExample = isLocalPreviewHost && distribution.total_clicks === 0;
+  const displayDistribution = showLocalVisualExample
+    ? buildLocalWhatsAppDistributionExample()
+    : distribution;
   const withoutClicksPercentage = formatPercent(
-    distribution.total_psychologists > 0
-      ? (distribution.psychologists_without_clicks / distribution.total_psychologists) * 100
+    displayDistribution.total_psychologists > 0
+      ? (displayDistribution.psychologists_without_clicks /
+          displayDistribution.total_psychologists) *
+          100
       : 0,
   );
 
@@ -873,51 +987,75 @@ const WhatsAppDistributionCard = ({
       title="Distribuição dos cliques de WhatsApp"
     >
       <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <p className="max-w-3xl text-sm font-medium leading-6 text-muted">{distribution.summary}</p>
-        <span
-          className={cn(
-            "inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold",
-            concentrationToneClasses[distribution.concentration_level],
-          )}
-        >
-          {distribution.concentration_label}
-          {distribution.gini !== null ? ` · Gini ${formatGini(distribution.gini)}` : ""}
-        </span>
+        <p className="max-w-3xl text-sm font-medium leading-6 text-muted">
+          {displayDistribution.summary}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {showLocalVisualExample ? (
+            <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
+              Exemplo visual local
+            </span>
+          ) : null}
+          <span
+            className={cn(
+              "inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold",
+              concentrationToneClasses[displayDistribution.concentration_level],
+            )}
+          >
+            {displayDistribution.concentration_label}
+            {displayDistribution.gini !== null
+              ? ` · Gini ${formatGini(displayDistribution.gini)}`
+              : ""}
+          </span>
+        </div>
       </div>
+
+      {showLocalVisualExample ? (
+        <p className="mt-3 rounded-2xl border border-dashed border-primary/30 bg-primary-soft/45 p-3 text-xs font-semibold leading-5 text-muted">
+          Números ilustrativos visíveis apenas em localhost para validar a leitura visual. A API
+          real retornou {numberFormatter.format(distribution.total_clicks)} clique(s) neste período;
+          nenhum dado foi criado ou persistido.
+        </p>
+      ) : null}
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <DistributionStatCard
-          detail="Registros reais de contato"
+          detail={
+            showLocalVisualExample ? "Exemplo visual — API real: 0" : "Registros reais de contato"
+          }
           label="Cliques de WhatsApp"
-          value={numberFormatter.format(distribution.total_clicks)}
+          value={numberFormatter.format(displayDistribution.total_clicks)}
         />
         <DistributionStatCard
-          detail="Ativos e publicados"
+          detail={showLocalVisualExample ? "Base ilustrativa local" : "Ativos e publicados"}
           label="Psicólogos considerados"
-          value={numberFormatter.format(distribution.total_psychologists)}
+          value={numberFormatter.format(displayDistribution.total_psychologists)}
         />
         <DistributionStatCard
           detail={`${withoutClicksPercentage} da base`}
           label="Sem clique"
-          value={numberFormatter.format(distribution.psychologists_without_clicks)}
+          value={numberFormatter.format(displayDistribution.psychologists_without_clicks)}
         />
         <DistributionStatCard
           detail={`${numberFormatter.format(
-            distribution.top_10_percent.psychologist_count,
+            displayDistribution.top_10_percent.psychologist_count,
           )} psicólogo(s)`}
           label="Top 10%"
-          value={formatPercent(distribution.top_10_percent.click_percentage)}
+          value={formatPercent(displayDistribution.top_10_percent.click_percentage)}
         />
         <DistributionStatCard
           detail={`${numberFormatter.format(
-            distribution.top_20_percent.psychologist_count,
+            displayDistribution.top_20_percent.psychologist_count,
           )} psicólogo(s)`}
           label="Top 20%"
-          value={formatPercent(distribution.top_20_percent.click_percentage)}
+          value={formatPercent(displayDistribution.top_20_percent.click_percentage)}
         />
       </div>
 
-      <WhatsAppDistributionChart distribution={distribution} />
+      <WhatsAppDistributionChart
+        distribution={displayDistribution}
+        isLocalVisualExample={showLocalVisualExample}
+      />
     </ChartCard>
   );
 };

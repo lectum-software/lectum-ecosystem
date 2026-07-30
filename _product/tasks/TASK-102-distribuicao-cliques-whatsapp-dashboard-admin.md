@@ -106,9 +106,11 @@ Frontend esperado:
 - [x] Psicólogos sem clique entram na base da distribuição com valor zero.
 - [x] A UI exibe total de cliques, psicólogos considerados, psicólogos sem clique, top 10% e top 20%.
 - [x] A curva acumulada/Lorenz é renderizada em SVG/CSS próprio, com linha de equilíbrio e resumo textual acessível.
-- [x] Estados sem psicólogos ou sem cliques são honestos, sem simulação de dados.
+- [x] Estados sem psicólogos ou sem cliques permanecem honestos no contrato real; em `localhost`,
+      a pedido explícito do usuário, pode aparecer um exemplo visual identificado e sem persistência.
 - [x] UI mobile-first preservada; nenhum `<img>` cru foi adicionado.
-- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema Prisma ou migration foi criado.
+- [x] Nenhum mock/backend, seed artificial, endpoint simulado, package novo, schema Prisma ou
+      migration foi criado; o exemplo visual local-only não altera API nem dados reais.
 - [x] Builder/Quick Copy não estava callable; `_product/proto/admin/Dashboard.png` e a captura do usuário foram usadas como referência.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Browser local validou desktop e mobile 390px.
@@ -165,3 +167,30 @@ Frontend esperado:
 
 - A base desta V1 é "psicólogos ativos e publicados atualmente"; não reconstrói histórico de publicação para períodos passados.
 - A métrica é agregada e interna ao Admin; não cria ranking individual nem altera exposição pública dos psicólogos.
+
+## Ajuste de visualização local (2026-07-30)
+
+- Após validação visual do fundador em `localhost`, foi solicitado adicionar números de exemplo
+  apenas para visualizar o comportamento do bloco quando o período real retorna zero cliques.
+- A decisão foi manter backend, contrato e banco sem qualquer simulação. O Admin passa a trocar
+  somente a camada de apresentação, apenas quando `window.location.hostname` é `localhost`,
+  `127.0.0.1` ou `::1` e a API real retorna `total_clicks=0`.
+- O exemplo local é explicitamente identificado com o selo **Exemplo visual local** e aviso de que a
+  API real retornou 0 cliques no período. Em hosts não locais, ou quando houver clique real, a UI
+  exibe somente os dados reais retornados por `whatsapp_click_distribution`.
+- Exemplo usado para visualização: 120 cliques distribuídos entre 14 psicólogos, com top 10%
+  concentrando 44,2% e top 20% concentrando 54,2% dos cliques, sem criar registros, seeds,
+  migrations, endpoint paralelo ou package de gráficos.
+
+## Validação executada no ajuste local
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx"`: OK.
+- `pnpm --dir admin check`: OK.
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`: OK.
+- Browser local/headless autenticado em `http://localhost:3002/dashboard`: OK em desktop 1366px
+  e mobile 390px, com **Exemplo visual local**, 120 cliques ilustrativos, top 10% em 44,2%,
+  top 20% em 54,2%, curva SVG renderizada e sem overflow horizontal.
+- Evidências locais: `.tmp/dashboard-admin-task102-local-preview/desktop-local-example-1366.png`
+  e `.tmp/dashboard-admin-task102-local-preview/mobile-local-example-390.png`.
+- Admin temporário real `codex-task102-local-preview@lectum.local` foi criado apenas para validar
+  o browser local e removido do banco ao final.
