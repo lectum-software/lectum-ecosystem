@@ -291,8 +291,12 @@ const CardShell = ({ children, className }: { children?: ReactNode; className?: 
   </section>
 );
 
-const hexToRgba = (hex: string, alpha: number) => {
-  const normalized = hex.replace("#", "");
+const hexToRgba = (hex: string | null | undefined, alpha: number) => {
+  const normalized = typeof hex === "string" ? hex.replace("#", "") : "";
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return `rgba(100, 116, 139, ${alpha})`;
+  }
+
   const red = Number.parseInt(normalized.slice(0, 2), 16);
   const green = Number.parseInt(normalized.slice(2, 4), 16);
   const blue = Number.parseInt(normalized.slice(4, 6), 16);
@@ -3304,18 +3308,26 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
   const [selectedCategory, setSelectedCategory] =
     useState<ProfileConversionFunnelCategoryId>("strong_conversion");
   const segmentSummary = getPlanSegmentSummary(summary, planSegment);
+  const profileConversion = segmentSummary.profile_conversion;
   const engagementMatrix = segmentSummary.profile_conversion_engagement_favorites;
   const visibilityMatrix = segmentSummary.profile_conversion_visibility;
   const conversionRows = engagementMatrix?.rows ?? visibilityMatrix?.rows ?? [];
   const selectedRow =
     conversionRows.find((row) => row.id === selectedCategory) ?? conversionRows[0] ?? null;
-  const insufficientDataCategory = segmentSummary.profile_conversion.categories.find(
-    (category) => category.id === "insufficient_data",
-  );
 
-  if (!engagementMatrix || !visibilityMatrix || conversionRows.length === 0 || !selectedRow) {
+  if (
+    !profileConversion ||
+    !engagementMatrix ||
+    !visibilityMatrix ||
+    conversionRows.length === 0 ||
+    !selectedRow
+  ) {
     return null;
   }
+
+  const insufficientDataCategory = profileConversion.categories.find(
+    (category) => category.id === "insufficient_data",
+  );
 
   const visibilityInsight = getDominantProfileConversionFunnelInsight(
     visibilityMatrix,
@@ -3406,7 +3418,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                 count={selectedRow.count}
                 labels={[
                   selectedRow.label,
-                  formatWhatsappClicksValue(selectedRow.totals.whatsapp_clicks),
+                  formatWhatsappClicksValue(selectedRow.totals?.whatsapp_clicks ?? 0),
                 ]}
                 metricLabel="do total de psicólogos considerados"
                 percentage={selectedRow.percentage}
