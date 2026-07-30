@@ -28,6 +28,8 @@ Visibilidade Comunidade/Video.
 - Para manter exatamente 16 colunas, perfis em adaptacao sao projetados nos mesmos eixos analiticos
   das matrizes usando sinais reais do periodo. Os donuts isolados continuam responsaveis por mostrar
   **Dados Insuficientes** quando a comparacao isolada ainda nao deve ser lida como benchmark.
+- Renomear apenas o label de `no_video` para **Vídeo sem view**, preservando o id tecnico e a
+  semantica de 0 tempo assistido no video de apresentacao no periodo selecionado.
 
 ## Consequencias
 
@@ -43,6 +45,7 @@ Visibilidade Comunidade/Video.
 ## Task relacionada
 
 - TASK-100 - Matrizes Conversao x Engajamentos/Favoritos e Visibilidade no Admin de psicologos.
+- TASK-101 - Label Video sem view na matriz Conversao x Visibilidade do Admin.
 
 ## Validacoes
 
@@ -58,3 +61,4 @@ Visibilidade Comunidade/Video.
 - Browser local autenticado em `/psicologos` validou a matriz padrao, a alternancia para
   **Conversao x Visibilidade**, a ausencia dos contadores laterais e a manutencao das 16 colunas por
   matriz. Screenshot local: `.tmp/task100-conversion-matrices.png`.
+- Em TASK-101, API/browser locais validaram o label **Vídeo sem view** para a coluna `no_video`.

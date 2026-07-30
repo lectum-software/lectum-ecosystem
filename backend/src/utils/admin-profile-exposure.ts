@@ -169,7 +169,7 @@ export const ADMIN_PROFILE_EXPOSURE_VIDEO_CATEGORY_CONFIG = {
   },
   no_video: {
     description: "Nenhum tempo assistido no vídeo de apresentação no período selecionado.",
-    label: "Sem Vídeo",
+    label: "Vídeo sem view",
   },
   standard_video: {
     description:

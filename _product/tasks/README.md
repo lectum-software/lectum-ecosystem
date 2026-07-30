@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 106 tasks: `TASK-00` a `TASK-100`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 107 tasks: `TASK-00` a `TASK-101`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -181,6 +181,7 @@ ou cortesia manual.
 | 98 | [TASK-98 - Ajuste de tamanho dos graficos e matriz no dashboard Admin de psicologos](TASK-98-ajuste-tamanho-graficos-matriz-dashboard-psicologos-admin.md) | Completed | 53, 87, 89, 96, 97 |
 | 99 | [TASK-99 - Manter tres graficos lado a lado no funil Admin de psicologos](TASK-99-tres-graficos-lado-a-lado-funil-psicologos-admin.md) | Completed | 53, 87, 96, 97, 98 |
 | 100 | [TASK-100 - Matrizes Conversao x Engajamentos/Favoritos e Visibilidade no Admin de psicologos](TASK-100-matrizes-conversao-engajamentos-favoritos-visibilidade-admin.md) | Completed | 53, 84, 96, 97, 99 |
+| 101 | [TASK-101 - Label Video sem view na matriz Conversao x Visibilidade do Admin](TASK-101-label-video-sem-view-visibilidade-admin.md) | Completed | 53, 97, 100 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -250,6 +251,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 60. [TASK-98 - Ajuste de tamanho dos graficos e matriz no dashboard Admin de psicologos](TASK-98-ajuste-tamanho-graficos-matriz-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-30 para conter os donuts executivos e restaurar a grade compacta da matriz Conversao x Engajamento.
 61. [TASK-99 - Manter tres graficos lado a lado no funil Admin de psicologos](TASK-99-tres-graficos-lado-a-lado-funil-psicologos-admin.md) foi adicionada e concluida em 2026-07-30 para restaurar o formato desktop com Visibilidade, Engajamento/Favoritos e Conversao na mesma linha.
 62. [TASK-100 - Matrizes Conversao x Engajamentos/Favoritos e Visibilidade no Admin de psicologos](TASK-100-matrizes-conversao-engajamentos-favoritos-visibilidade-admin.md) foi adicionada e concluida em 2026-07-30 para trocar o bloco Conversao x Engajamento por uma matriz alternavel entre Conversao x Engajamentos/Favoritos e Conversao x Visibilidade, ambas com 16 colunas e sem contadores laterais.
+63. [TASK-101 - Label Video sem view na matriz Conversao x Visibilidade do Admin](TASK-101-label-video-sem-view-visibilidade-admin.md) foi adicionada e concluida em 2026-07-30 para trocar **Sem Video** por **Vídeo sem view** na categoria `no_video`, mantendo o contrato tecnico e a regra de calculo.
 
 ### 1A. Trilha Admin planejada
 
@@ -308,6 +310,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 51. [TASK-98 - Ajuste de tamanho dos graficos e matriz no dashboard Admin de psicologos](TASK-98-ajuste-tamanho-graficos-matriz-dashboard-psicologos-admin.md)
 52. [TASK-99 - Manter tres graficos lado a lado no funil Admin de psicologos](TASK-99-tres-graficos-lado-a-lado-funil-psicologos-admin.md)
 53. [TASK-100 - Matrizes Conversao x Engajamentos/Favoritos e Visibilidade no Admin de psicologos](TASK-100-matrizes-conversao-engajamentos-favoritos-visibilidade-admin.md)
+54. [TASK-101 - Label Video sem view na matriz Conversao x Visibilidade do Admin](TASK-101-label-video-sem-view-visibilidade-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
