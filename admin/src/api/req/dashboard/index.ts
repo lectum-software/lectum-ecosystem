@@ -136,6 +136,41 @@ export type DashboardIntentConversionFlow = {
   unavailable_reason: string | null;
 };
 
+export type DashboardWhatsAppClickDistributionConcentrationLevel =
+  | "balanced"
+  | "concentrated"
+  | "moderate"
+  | "unavailable";
+
+export type DashboardWhatsAppClickDistributionPoint = {
+  click_percentage: number;
+  cumulative_clicks: number;
+  psychologist_percentage: number;
+  psychologists: number;
+};
+
+export type DashboardWhatsAppClickDistributionSegment = {
+  click_percentage: number;
+  clicks: number;
+  psychologist_count: number;
+  psychologist_percentage: number;
+};
+
+export type DashboardWhatsAppClickDistribution = {
+  concentration_label: string;
+  concentration_level: DashboardWhatsAppClickDistributionConcentrationLevel;
+  curve: DashboardWhatsAppClickDistributionPoint[];
+  gini: number | null;
+  psychologists_with_clicks: number;
+  psychologists_without_clicks: number;
+  source: "contact_request.channel=whatsapp+psychologist_profile.published";
+  summary: string;
+  top_10_percent: DashboardWhatsAppClickDistributionSegment;
+  top_20_percent: DashboardWhatsAppClickDistributionSegment;
+  total_clicks: number;
+  total_psychologists: number;
+};
+
 export type AdminDashboardSummary = {
   cards: {
     patients: DashboardMetric;
@@ -180,6 +215,7 @@ export type AdminDashboardSummary = {
   };
   period: DashboardPeriod;
   unavailable: DashboardUnavailableMetric[];
+  whatsapp_click_distribution: DashboardWhatsAppClickDistribution;
 };
 
 const cleanParams = (input: DashboardSummaryQuery) => ({

@@ -22,6 +22,7 @@ import type {
   DashboardPendingReport,
   DashboardPeriodPreset,
   DashboardSummaryQuery,
+  DashboardWhatsAppClickDistribution,
 } from "@/api/req/dashboard";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
@@ -148,6 +149,21 @@ const formatChange = (value: number | null) => {
   })}%`;
 };
 
+const formatPercent = (value: number) =>
+  `${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+  })}%`;
+
+const formatGini = (value: number | null) => {
+  if (value === null) return "—";
+
+  return value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 3,
+    minimumFractionDigits: 2,
+  });
+};
+
 const isValidRange = (range: DashboardSummaryQuery) => {
   if (!range.from || !range.to) return false;
 
@@ -163,7 +179,12 @@ const hasPeriodRecords = (summary: AdminDashboardSummary) => {
     ...summary.community_activity.psychologist_replies,
   ].some((point) => point.count > 0);
 
-  return cardValues || communityValues || summary.pending_reports.total > 0;
+  return (
+    cardValues ||
+    communityValues ||
+    summary.pending_reports.total > 0 ||
+    summary.whatsapp_click_distribution.total_clicks > 0
+  );
 };
 
 const CardShell = ({ children, className }: { children?: React.ReactNode; className?: string }) => (
@@ -645,6 +666,262 @@ const ChartLegend = ({
   </div>
 );
 
+const concentrationToneClasses: Record<
+  DashboardWhatsAppClickDistribution["concentration_level"],
+  string
+> = {
+  balanced: "bg-success/10 text-success",
+  concentrated: "bg-danger/10 text-danger",
+  moderate: "bg-warning/10 text-warning",
+  unavailable: "bg-surface-muted text-muted",
+};
+
+const DistributionStatCard = ({
+  detail,
+  label,
+  value,
+}: {
+  detail: string;
+  label: string;
+  value: string;
+}) => (
+  <div className="min-w-0 rounded-[1.25rem] border border-border/70 bg-surface p-3 shadow-control">
+    <p className="text-xs font-semibold text-muted">{label}</p>
+    <p className="mt-2 truncate text-2xl font-bold tracking-tight text-foreground">{value}</p>
+    <p className="mt-1 text-[0.72rem] font-medium leading-4 text-muted">{detail}</p>
+  </div>
+);
+
+const buildSvgLinePath = (points: Array<{ x: number; y: number }>) =>
+  points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
+    .join(" ");
+
+const WhatsAppDistributionChart = ({
+  distribution,
+}: {
+  distribution: DashboardWhatsAppClickDistribution;
+}) => {
+  const hasClickableDistribution =
+    distribution.total_psychologists > 0 && distribution.total_clicks > 0;
+
+  if (!hasClickableDistribution) {
+    return (
+      <div className="mt-5 rounded-[1.5rem] border border-dashed border-border bg-surface-muted p-4 text-sm font-medium leading-6 text-muted">
+        {distribution.summary}
+      </div>
+    );
+  }
+
+  const width = 680;
+  const height = 300;
+  const padding = { bottom: 42, left: 48, right: 24, top: 28 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const getX = (percentage: number) => padding.left + (percentage / 100) * chartWidth;
+  const getY = (percentage: number) => padding.top + chartHeight - (percentage / 100) * chartHeight;
+  const curvePoints = distribution.curve.map((point) => ({
+    x: getX(point.psychologist_percentage),
+    y: getY(point.click_percentage),
+  }));
+  const curvePath = buildSvgLinePath(curvePoints);
+  const equalityPath = buildSvgLinePath([
+    { x: getX(0), y: getY(0) },
+    { x: getX(100), y: getY(100) },
+  ]);
+  const gridValues = [0, 25, 50, 75, 100];
+
+  return (
+    <figure className="mt-5 overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="overflow-x-auto">
+        <svg
+          aria-label={`Curva acumulada da distribuição de cliques de WhatsApp: ${distribution.summary}`}
+          className="min-w-[620px]"
+          role="img"
+          viewBox={`0 0 ${width} ${height}`}
+        >
+          {gridValues.map((value) => {
+            const x = getX(value);
+            const y = getY(value);
+
+            return (
+              <g key={`whatsapp-distribution-grid-${value}`}>
+                <line
+                  opacity="0.54"
+                  stroke="var(--admin-border)"
+                  strokeWidth="1"
+                  x1={padding.left}
+                  x2={width - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+                <line
+                  opacity="0.28"
+                  stroke="var(--admin-border)"
+                  strokeWidth="1"
+                  x1={x}
+                  x2={x}
+                  y1={padding.top}
+                  y2={height - padding.bottom}
+                />
+                <text fill="var(--admin-muted)" fontSize="11" fontWeight="600" x="8" y={y + 4}>
+                  {value}%
+                </text>
+                <text
+                  fill="var(--admin-muted)"
+                  fontSize="11"
+                  fontWeight="600"
+                  textAnchor="middle"
+                  x={x}
+                  y={height - 13}
+                >
+                  {value}%
+                </text>
+              </g>
+            );
+          })}
+
+          <path
+            d={equalityPath}
+            fill="none"
+            stroke="var(--admin-muted)"
+            strokeDasharray="7 7"
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
+          <path
+            d={curvePath}
+            fill="none"
+            stroke="var(--admin-primary)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="3"
+          />
+          <circle
+            cx={getX(100)}
+            cy={getY(100)}
+            fill="var(--admin-surface)"
+            r="4"
+            stroke="var(--admin-primary)"
+            strokeWidth="2"
+          />
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="12"
+            fontWeight="700"
+            textAnchor="middle"
+            x={padding.left + chartWidth / 2}
+            y={height - 2}
+          >
+            % acumulado de psicólogos
+          </text>
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="12"
+            fontWeight="700"
+            transform={`rotate(-90 ${14} ${padding.top + chartHeight / 2})`}
+            x="14"
+            y={padding.top + chartHeight / 2}
+          >
+            % acumulado de cliques
+          </text>
+        </svg>
+      </div>
+      <div className="mt-4 flex flex-col gap-3 text-xs font-semibold text-muted sm:flex-row sm:flex-wrap">
+        <span className="inline-flex items-center gap-2">
+          <span aria-hidden className="h-0.5 w-7 rounded-full bg-primary" />
+          Distribuição real
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span aria-hidden className="h-0 w-7 border-t border-dashed border-border" />
+          Distribuição equilibrada
+        </span>
+      </div>
+      <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
+        <summary className="cursor-pointer font-semibold text-foreground">
+          Resumo textual do gráfico
+        </summary>
+        <p className="mt-2 leading-5">{distribution.summary}</p>
+        <p className="mt-2 leading-5">
+          Top 10% concentram {formatPercent(distribution.top_10_percent.click_percentage)} dos
+          cliques; top 20% concentram {formatPercent(distribution.top_20_percent.click_percentage)}{" "}
+          dos cliques. Psicólogos sem clique:{" "}
+          {numberFormatter.format(distribution.psychologists_without_clicks)}.
+        </p>
+      </details>
+    </figure>
+  );
+};
+
+const WhatsAppDistributionCard = ({
+  distribution,
+  periodDescription,
+}: {
+  distribution: DashboardWhatsAppClickDistribution;
+  periodDescription: string;
+}) => {
+  const withoutClicksPercentage = formatPercent(
+    distribution.total_psychologists > 0
+      ? (distribution.psychologists_without_clicks / distribution.total_psychologists) * 100
+      : 0,
+  );
+
+  return (
+    <ChartCard
+      description={periodDescription}
+      icon={Activity}
+      title="Distribuição dos cliques de WhatsApp"
+    >
+      <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <p className="max-w-3xl text-sm font-medium leading-6 text-muted">{distribution.summary}</p>
+        <span
+          className={cn(
+            "inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold",
+            concentrationToneClasses[distribution.concentration_level],
+          )}
+        >
+          {distribution.concentration_label}
+          {distribution.gini !== null ? ` · Gini ${formatGini(distribution.gini)}` : ""}
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <DistributionStatCard
+          detail="Registros reais de contato"
+          label="Cliques de WhatsApp"
+          value={numberFormatter.format(distribution.total_clicks)}
+        />
+        <DistributionStatCard
+          detail="Ativos e publicados"
+          label="Psicólogos considerados"
+          value={numberFormatter.format(distribution.total_psychologists)}
+        />
+        <DistributionStatCard
+          detail={`${withoutClicksPercentage} da base`}
+          label="Sem clique"
+          value={numberFormatter.format(distribution.psychologists_without_clicks)}
+        />
+        <DistributionStatCard
+          detail={`${numberFormatter.format(
+            distribution.top_10_percent.psychologist_count,
+          )} psicólogo(s)`}
+          label="Top 10%"
+          value={formatPercent(distribution.top_10_percent.click_percentage)}
+        />
+        <DistributionStatCard
+          detail={`${numberFormatter.format(
+            distribution.top_20_percent.psychologist_count,
+          )} psicólogo(s)`}
+          label="Top 20%"
+          value={formatPercent(distribution.top_20_percent.click_percentage)}
+        />
+      </div>
+
+      <WhatsAppDistributionChart distribution={distribution} />
+    </ChartCard>
+  );
+};
+
 const DashboardContent = ({
   periodControls,
   periodDescription,
@@ -691,6 +968,11 @@ const DashboardContent = ({
           <MetricCard icon={Flag} metric={summary.cards.pending_reports} tone="orange" />
         </div>
       </DashboardOverviewPanel>
+
+      <WhatsAppDistributionCard
+        distribution={summary.whatsapp_click_distribution}
+        periodDescription={periodDescription}
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)]">
         <div className="space-y-5">

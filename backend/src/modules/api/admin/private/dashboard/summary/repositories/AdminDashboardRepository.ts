@@ -615,4 +615,53 @@ export class AdminDashboardRepository implements IAdminDashboardRepository {
       },
     });
   }
+
+  async listPublishedPsychologistProfiles(): Promise<Array<{ user_id: string }>> {
+    return prisma.psychologist_profile.findMany({
+      select: {
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        published: true,
+        user: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  async listWhatsappClickCountsByPsychologist(
+    range: AdminDashboardDateRange,
+    psychologistIds: string[],
+  ): Promise<Array<{ count: number; psychologist_id: string }>> {
+    if (psychologistIds.length === 0) return [];
+
+    const groups = await prisma.contact_request.groupBy({
+      by: ["psychologist_id"],
+      where: {
+        channel: "whatsapp",
+        createdAt: createdAtWhere(range),
+        deleted: false,
+        psychologist: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        psychologist_id: {
+          in: psychologistIds,
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    return groups.map((group) => ({
+      count: group._count._all,
+      psychologist_id: group.psychologist_id,
+    }));
+  }
 }

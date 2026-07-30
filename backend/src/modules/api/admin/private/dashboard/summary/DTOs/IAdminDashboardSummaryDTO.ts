@@ -143,6 +143,41 @@ export type AdminDashboardIntentConversionFlow = {
   unavailable_reason: string | null;
 };
 
+export type AdminDashboardWhatsAppClickDistributionConcentrationLevel =
+  | "balanced"
+  | "concentrated"
+  | "moderate"
+  | "unavailable";
+
+export type AdminDashboardWhatsAppClickDistributionPoint = {
+  click_percentage: number;
+  cumulative_clicks: number;
+  psychologist_percentage: number;
+  psychologists: number;
+};
+
+export type AdminDashboardWhatsAppClickDistributionSegment = {
+  click_percentage: number;
+  clicks: number;
+  psychologist_count: number;
+  psychologist_percentage: number;
+};
+
+export type AdminDashboardWhatsAppClickDistribution = {
+  concentration_label: string;
+  concentration_level: AdminDashboardWhatsAppClickDistributionConcentrationLevel;
+  curve: AdminDashboardWhatsAppClickDistributionPoint[];
+  gini: number | null;
+  psychologists_with_clicks: number;
+  psychologists_without_clicks: number;
+  source: "contact_request.channel=whatsapp+psychologist_profile.published";
+  summary: string;
+  top_10_percent: AdminDashboardWhatsAppClickDistributionSegment;
+  top_20_percent: AdminDashboardWhatsAppClickDistributionSegment;
+  total_clicks: number;
+  total_psychologists: number;
+};
+
 export type AdminDashboardSummary = {
   cards: {
     patients: AdminDashboardMetric;
@@ -187,6 +222,7 @@ export type AdminDashboardSummary = {
   };
   period: AdminDashboardPeriod;
   unavailable: AdminDashboardUnavailableMetric[];
+  whatsapp_click_distribution: AdminDashboardWhatsAppClickDistribution;
 };
 
 export type IAdminDashboardSummaryDTO = Request & {

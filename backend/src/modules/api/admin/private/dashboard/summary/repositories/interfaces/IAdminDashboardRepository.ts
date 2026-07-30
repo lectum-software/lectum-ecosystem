@@ -74,6 +74,11 @@ export interface IAdminDashboardRepository {
       user_id: string;
     }>
   >;
+  listPublishedPsychologistProfiles(): Promise<Array<{ user_id: string }>>;
   listVisitorLocations(range: AdminDashboardDateRange): Promise<Array<{ country: string | null }>>;
   listVisitorSessions(range: AdminDashboardDateRange): Promise<Array<{ device_type: string }>>;
+  listWhatsappClickCountsByPsychologist(
+    range: AdminDashboardDateRange,
+    psychologistIds: string[],
+  ): Promise<Array<{ count: number; psychologist_id: string }>>;
 }

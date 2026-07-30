@@ -23,6 +23,10 @@ import type {
   AdminDashboardQuery,
   AdminDashboardSeverity,
   AdminDashboardSummary,
+  AdminDashboardWhatsAppClickDistribution,
+  AdminDashboardWhatsAppClickDistributionConcentrationLevel,
+  AdminDashboardWhatsAppClickDistributionPoint,
+  AdminDashboardWhatsAppClickDistributionSegment,
   IAdminDashboardSummaryDTO,
 } from "../DTOs/IAdminDashboardSummaryDTO";
 import { AdminDashboardRepository } from "../repositories/AdminDashboardRepository";
@@ -87,6 +91,14 @@ type PsychologistConversionEvents = Awaited<
 
 type PsychologistConversionProfile = Awaited<
   ReturnType<AdminDashboardRepository["listPsychologistConversionProfiles"]>
+>[number];
+
+type PublishedPsychologistProfile = Awaited<
+  ReturnType<AdminDashboardRepository["listPublishedPsychologistProfiles"]>
+>[number];
+
+type WhatsappClickCountByPsychologist = Awaited<
+  ReturnType<AdminDashboardRepository["listWhatsappClickCountsByPsychologist"]>
 >[number];
 
 type IntentConversionPairCounts = {
@@ -838,6 +850,185 @@ const buildPendingReports = (reports: PendingReportRecord[], total: number) => (
   total,
 });
 
+const formatPercentText = (value: number) =>
+  `${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+  })}%`;
+
+const formatCountText = (value: number, singular: string, plural: string) =>
+  `${value.toLocaleString("pt-BR")} ${value === 1 ? singular : plural}`;
+
+const sumNumbers = (values: number[]) => values.reduce((sum, value) => sum + value, 0);
+
+const concentrationFromGini = (
+  gini: number | null,
+  totalClicks: number,
+  totalPsychologists: number,
+): {
+  label: string;
+  level: AdminDashboardWhatsAppClickDistributionConcentrationLevel;
+} => {
+  if (totalPsychologists === 0) {
+    return {
+      label: "Sem psicólogos publicados",
+      level: "unavailable",
+    };
+  }
+
+  if (totalClicks === 0 || gini === null) {
+    return {
+      label: "Sem cliques no período",
+      level: "unavailable",
+    };
+  }
+
+  if (gini < 0.3) {
+    return {
+      label: "Baixa concentração",
+      level: "balanced",
+    };
+  }
+
+  if (gini < 0.55) {
+    return {
+      label: "Concentração moderada",
+      level: "moderate",
+    };
+  }
+
+  return {
+    label: "Alta concentração",
+    level: "concentrated",
+  };
+};
+
+const buildGini = (sortedAscendingCounts: number[], totalClicks: number) => {
+  if (sortedAscendingCounts.length === 0 || totalClicks === 0) return null;
+
+  const weightedSum = sortedAscendingCounts.reduce(
+    (sum, value, index) => sum + (index + 1) * value,
+    0,
+  );
+  const raw =
+    (2 * weightedSum) / (sortedAscendingCounts.length * totalClicks) -
+    (sortedAscendingCounts.length + 1) / sortedAscendingCounts.length;
+
+  return Math.round(Math.max(0, Math.min(1, raw)) * 1000) / 1000;
+};
+
+const buildWhatsAppCurve = (
+  sortedAscendingCounts: number[],
+  totalClicks: number,
+): AdminDashboardWhatsAppClickDistributionPoint[] => {
+  if (sortedAscendingCounts.length === 0) return [];
+
+  let cumulativeClicks = 0;
+
+  return [
+    {
+      click_percentage: 0,
+      cumulative_clicks: 0,
+      psychologist_percentage: 0,
+      psychologists: 0,
+    },
+    ...sortedAscendingCounts.map((count, index) => {
+      cumulativeClicks += count;
+
+      return {
+        click_percentage: safePercentage(cumulativeClicks, totalClicks),
+        cumulative_clicks: cumulativeClicks,
+        psychologist_percentage: safePercentage(index + 1, sortedAscendingCounts.length),
+        psychologists: index + 1,
+      };
+    }),
+  ];
+};
+
+const buildTopSegment = (
+  sortedDescendingCounts: number[],
+  totalClicks: number,
+  percentage: 10 | 20,
+): AdminDashboardWhatsAppClickDistributionSegment => {
+  const totalPsychologists = sortedDescendingCounts.length;
+  if (totalPsychologists === 0) {
+    return {
+      click_percentage: 0,
+      clicks: 0,
+      psychologist_count: 0,
+      psychologist_percentage: 0,
+    };
+  }
+
+  const psychologistCount = Math.max(1, Math.ceil(totalPsychologists * (percentage / 100)));
+  const clicks = sumNumbers(sortedDescendingCounts.slice(0, psychologistCount));
+
+  return {
+    click_percentage: safePercentage(clicks, totalClicks),
+    clicks,
+    psychologist_count: psychologistCount,
+    psychologist_percentage: safePercentage(psychologistCount, totalPsychologists),
+  };
+};
+
+const buildWhatsAppDistributionSummary = (params: {
+  top20: AdminDashboardWhatsAppClickDistributionSegment;
+  totalClicks: number;
+  totalPsychologists: number;
+}) => {
+  if (params.totalPsychologists === 0) {
+    return "Nenhum psicólogo ativo e publicado foi encontrado para compor a base da distribuição.";
+  }
+
+  if (params.totalClicks === 0) {
+    return "Nenhum clique real de WhatsApp foi registrado para os psicólogos considerados neste período.";
+  }
+
+  return `Top 20% (${formatCountText(
+    params.top20.psychologist_count,
+    "psicólogo",
+    "psicólogos",
+  )}) concentram ${formatPercentText(params.top20.click_percentage)} dos cliques de WhatsApp no período.`;
+};
+
+const buildWhatsAppClickDistribution = (
+  profiles: PublishedPsychologistProfile[],
+  clickCounts: WhatsappClickCountByPsychologist[],
+): AdminDashboardWhatsAppClickDistribution => {
+  const clicksByPsychologist = new Map(
+    clickCounts.map((item) => [item.psychologist_id, item.count]),
+  );
+  const counts = profiles.map((profile) => clicksByPsychologist.get(profile.user_id) ?? 0);
+  const totalPsychologists = counts.length;
+  const totalClicks = sumNumbers(counts);
+  const sortedAscendingCounts = [...counts].sort((left, right) => left - right);
+  const sortedDescendingCounts = [...counts].sort((left, right) => right - left);
+  const psychologistsWithClicks = counts.filter((count) => count > 0).length;
+  const top10 = buildTopSegment(sortedDescendingCounts, totalClicks, 10);
+  const top20 = buildTopSegment(sortedDescendingCounts, totalClicks, 20);
+  const gini = buildGini(sortedAscendingCounts, totalClicks);
+  const concentration = concentrationFromGini(gini, totalClicks, totalPsychologists);
+
+  return {
+    concentration_label: concentration.label,
+    concentration_level: concentration.level,
+    curve: buildWhatsAppCurve(sortedAscendingCounts, totalClicks),
+    gini,
+    psychologists_with_clicks: psychologistsWithClicks,
+    psychologists_without_clicks: Math.max(0, totalPsychologists - psychologistsWithClicks),
+    source: "contact_request.channel=whatsapp+psychologist_profile.published",
+    summary: buildWhatsAppDistributionSummary({
+      top20,
+      totalClicks,
+      totalPsychologists,
+    }),
+    top_10_percent: top10,
+    top_20_percent: top20,
+    total_clicks: totalClicks,
+    total_psychologists: totalPsychologists,
+  };
+};
+
 export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise<Resolve> => {
   const repository = new AdminDashboardRepository();
   const allPeriodStartDate =
@@ -851,6 +1042,8 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
   }
 
   const { current, days, labels, period, previous } = resolvedPeriod.period;
+  const publishedPsychologistProfiles = await repository.listPublishedPsychologistProfiles();
+  const publishedPsychologistIds = publishedPsychologistProfiles.map((profile) => profile.user_id);
 
   const [
     sessions,
@@ -872,6 +1065,7 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     intentConversionSignals,
     psychologistConversionEvents,
     psychologistConversionProfiles,
+    whatsappClickCountsByPsychologist,
   ] = await Promise.all([
     repository.countVisitorSessions(current),
     repository.countVisitorSessions(previous),
@@ -892,6 +1086,7 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     repository.listIntentConversionSignals(current),
     repository.listPsychologistConversionEvents(current),
     repository.listPsychologistConversionProfiles(),
+    repository.listWhatsappClickCountsByPsychologist(current, publishedPsychologistIds),
   ]);
 
   const financial = buildFinancial(paidSubscriptions, labels, current.end, days);
@@ -904,6 +1099,10 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
     range: current,
     signals: intentConversionSignals,
   });
+  const whatsappClickDistribution = buildWhatsAppClickDistribution(
+    publishedPsychologistProfiles,
+    whatsappClickCountsByPsychologist,
+  );
 
   const summary: AdminDashboardSummary = {
     cards: {
@@ -988,6 +1187,7 @@ export const buildDashboardSummary = async (query: AdminDashboardQuery): Promise
         source: "payment_event",
       },
     ],
+    whatsapp_click_distribution: whatsappClickDistribution,
   };
 
   return {

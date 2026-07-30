@@ -59,12 +59,53 @@ const appendDailyRows = (
   }
 };
 
+const appendWhatsAppDistributionRows = (summary: AdminDashboardSummary, rows: string[]) => {
+  const distribution = summary.whatsapp_click_distribution;
+
+  rows.push(
+    csvRow([
+      "whatsapp_click_distribution",
+      "total_clicks",
+      "Cliques de WhatsApp",
+      "",
+      distribution.total_clicks,
+      distribution.source,
+      `total_psychologists=${distribution.total_psychologists};with_clicks=${distribution.psychologists_with_clicks};without_clicks=${distribution.psychologists_without_clicks};gini=${distribution.gini ?? "n/a"}`,
+    ]),
+  );
+
+  rows.push(
+    csvRow([
+      "whatsapp_click_distribution",
+      "top_10_percent",
+      "Top 10%",
+      "",
+      distribution.top_10_percent.click_percentage,
+      distribution.source,
+      `clicks=${distribution.top_10_percent.clicks};psychologists=${distribution.top_10_percent.psychologist_count}`,
+    ]),
+  );
+
+  rows.push(
+    csvRow([
+      "whatsapp_click_distribution",
+      "top_20_percent",
+      "Top 20%",
+      "",
+      distribution.top_20_percent.click_percentage,
+      distribution.source,
+      `clicks=${distribution.top_20_percent.clicks};psychologists=${distribution.top_20_percent.psychologist_count}`,
+    ]),
+  );
+};
+
 const buildCsv = (summary: AdminDashboardSummary) => {
   const rows: string[] = [];
   rows.push(csvRow(["Lectum Admin Dashboard"]));
   rows.push(csvRow(["period", summary.period.from, summary.period.to, summary.period.label]));
   rows.push("");
   appendMetricRows(summary, rows);
+  appendWhatsAppDistributionRows(summary, rows);
   rows.push("");
   appendDailyRows(rows, "community_posts", summary.community_activity.posts, "community_post");
   appendDailyRows(rows, "community_comments", summary.community_activity.comments, "post_reply");
