@@ -103,3 +103,20 @@ executivo, chamado **Engajamento e Favoritos**, com 16 combinações internas.
 
 - Não há alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; portanto
   `pnpm --dir backend db:migrate` não se aplica à execução desta task.
+
+## Ajuste pos-feedback - tooltips de Visibilidade e Conversao
+
+- [x] Tooltips das opcoes dos donuts de **Visibilidade** e **Conversao** removidas; a tooltip permanece apenas nos nomes dos blocos.
+- [x] Tooltip de **Visibilidade** atualizada para explicar tempo real de atencao em video de apresentacao, visita ao perfil e conteudo da comunidade, com a faixa padrao do periodo em negrito.
+- [x] Tooltip de **Conversao** adicionada para explicar cliques no WhatsApp recebidos, com a faixa padrao do periodo em negrito.
+- [x] Cards brancos **Visibilidade padrao do periodo** e **Conversao padrao do periodo** removidos da leitura principal.
+- [x] Ajuste mantido no Admin mobile-first, sem `<img>`, sem mocks, sem package novo, sem endpoint paralelo, sem schema Prisma e sem migration.
+
+## Validacao complementar do ajuste pos-feedback
+
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a validacao usou `_product/tasks/PROTO-INVENTORY.md`, a imagem local exportada correspondente ao dashboard Admin de Psicologos e os screenshots enviados pelo usuario.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- Browser local autenticado em `/psicologos` validou desktop e mobile 390px: tooltip de **Visibilidade** presente, tooltip de **Conversao** presente, nenhuma tooltip nas opcoes desses donuts e ausencia dos cards brancos de faixa padrao.
+- Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica a este ajuste.

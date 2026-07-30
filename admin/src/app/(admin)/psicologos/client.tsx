@@ -2346,11 +2346,13 @@ const PsychologistsDonutChart = ({
   ariaLabel,
   emptyMessage,
   items,
+  showDescriptionTooltips = true,
   total,
 }: {
   ariaLabel: string;
   emptyMessage: string;
   items: PsychologistsDonutChartItem[];
+  showDescriptionTooltips?: boolean;
   total: number;
 }) => {
   const radius = 42;
@@ -2457,7 +2459,7 @@ const PsychologistsDonutChart = ({
                   style={{ backgroundColor: item.color }}
                 />
                 <span className="min-w-0 break-words">{item.label}</span>
-                {item.description ? (
+                {showDescriptionTooltips && item.description ? (
                   <button
                     aria-label={`${item.label}: ${item.description}`}
                     className="group relative mt-0.5 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -2597,6 +2599,7 @@ const ProfileConversionDonutChart = ({
         "Sem psicólogos ativos no período selecionado para classificar Conversão."
       }
       items={items}
+      showDescriptionTooltips={false}
       total={total}
     />
   );
@@ -2633,6 +2636,7 @@ const ProfileVisibilityDonutChart = ({
         "Sem psicólogos ativos no período selecionado para classificar Visibilidade."
       }
       items={items}
+      showDescriptionTooltips={false}
       total={total}
     />
   );
@@ -2755,9 +2759,12 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const visibilityStandardRangeLabel = formatProfileExposureStandardRange(
     profileExposure.benchmark,
   );
-  const visibilityViewportPercentage = Math.round(
-    profileExposure.thresholds.content_attention_min_visible_ratio * 100,
-  );
+  const hasConversionStandardRange =
+    profileConversion.benchmark.standard_min_whatsapp_clicks !== null &&
+    profileConversion.benchmark.standard_max_whatsapp_clicks !== null;
+  const conversionTooltipStandardText = hasConversionStandardRange
+    ? `${standardRangeLabel} no WhatsApp`
+    : standardRangeLabel;
 
   return (
     <CardShell className="relative z-20 overflow-visible p-5">
@@ -2776,12 +2783,12 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
             <div className="min-w-[8rem]">
               <span className="inline-flex items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground">Visibilidade</h3>
                 <button
-                  aria-label="Visibilidade por tempo real de atenção: segundos em perfil, conteúdo autoral visível e vídeo de apresentação, sem contar aba minimizada ou aparição em listagem."
+                  aria-label={`Visibilidade mede o tempo real de atenção que o psicólogo recebe no seu vídeo de apresentação, visita ao perfil e conteúdo da comunidade. A visibilidade padrão para o período selecionado é ${visibilityStandardRangeLabel}.`}
                   className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   type="button"
                 >
@@ -2790,14 +2797,10 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                     className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
                     role="tooltip"
                   >
-                    Visibilidade mede tempo real de atenção recebido pelo psicólogo. Conta segundos
-                    em perfil e conteúdo autoral visível; pausa quando a aba/janela fica oculta ou
-                    sem foco e não pontua apenas aparição em listagem. Em cards de comunidade,
-                    considera conteúdo com pelo menos {visibilityViewportPercentage}% do card ou{" "}
-                    {numberFormatter.format(
-                      profileExposure.thresholds.content_attention_min_visible_pixels,
-                    )}
-                    px de altura visível.
+                    Visibilidade mede o tempo real de atenção que o psicólogo recebe no seu vídeo de
+                    apresentação, visita ao perfil e conteúdo da comunidade. A visibilidade padrão
+                    para o período selecionado é{" "}
+                    <strong className="font-black">{visibilityStandardRangeLabel}</strong>.
                   </span>
                 </button>
               </span>
@@ -2807,17 +2810,6 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                 </p>
                 <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
               </div>
-            </div>
-            <div className="w-full rounded-2xl border border-primary/10 bg-surface px-3 py-2 sm:max-w-xs sm:flex-1">
-              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
-                Visibilidade padrão do período
-              </p>
-              <p className="mt-1 text-sm font-black text-foreground">
-                {visibilityStandardRangeLabel}
-              </p>
-              <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
-                Tempo real de atenção
-              </p>
             </div>
           </div>
           <ProfileVisibilityDonutChart profileExposure={profileExposure} />
@@ -2875,24 +2867,33 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         </section>
 
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4 lg:col-span-2 2xl:col-span-1">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
             <div className="min-w-[8rem]">
-              <h3 className="text-lg font-bold text-foreground">Conversão</h3>
+              <span className="inline-flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">Conversão</h3>
+                <button
+                  aria-label={`Conversão é a quantidade de cliques para o WhatsApp que o psicólogo recebe. A conversão padrão para o período selecionado é ${conversionTooltipStandardText}.`}
+                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  type="button"
+                >
+                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
+                  <span
+                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                    role="tooltip"
+                  >
+                    Conversão é a quantidade de cliques para o WhatsApp que o psicólogo recebe. A
+                    conversão padrão para o período selecionado é{" "}
+                    <strong className="font-black">{standardRangeLabel}</strong>
+                    {hasConversionStandardRange ? " no WhatsApp." : "."}
+                  </span>
+                </button>
+              </span>
               <div className="mt-3">
                 <p className="text-3xl font-black text-foreground">
                   {numberFormatter.format(profileConversion.totals.psychologists)}
                 </p>
                 <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
               </div>
-            </div>
-            <div className="w-full rounded-2xl border border-primary/10 bg-surface px-3 py-2 sm:max-w-xs sm:flex-1">
-              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
-                Conversão padrão do período
-              </p>
-              <p className="mt-1 text-sm font-black text-foreground">{standardRangeLabel}</p>
-              <p className="mt-1 text-[0.7rem] font-semibold leading-4 text-muted">
-                Cliques no WhatsApp
-              </p>
             </div>
           </div>
           <ProfileConversionDonutChart profileConversion={profileConversion} />
