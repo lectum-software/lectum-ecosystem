@@ -11,14 +11,14 @@ import type {
   AdminCommunityUpdateBody,
 } from "../DTOs/IAdminCommunityManageDTO";
 
-const TOP_MENTOR_UPVOTE_WEIGHT = 5;
+const TOP_MENTOR_UPVOTE_WEIGHT = 2;
 const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
-const TOP_MENTOR_COMMENT_WEIGHT = 2;
-const TOP_MENTOR_SHARE_WEIGHT = 4;
-const TOP_MENTOR_SAVE_WEIGHT = 3;
+const TOP_MENTOR_COMMENT_WEIGHT = 5;
+const TOP_MENTOR_SHARE_WEIGHT = 8;
+const TOP_MENTOR_SAVE_WEIGHT = 2;
 const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 6;
 const TOP_MENTOR_POST_WEIGHT = 1;
-const TOP_MENTOR_REPLY_WEIGHT = 1;
+const TOP_MENTOR_REPLY_WEIGHT = 3;
 const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 
@@ -520,6 +520,7 @@ export type AdminCommunityMentorMetrics = {
   community_whatsapp_clicks: number;
   downvotes_received: number;
   posts_published: number;
+  reply_coverage_count: number;
   removed_posts: number;
   removed_posts_penalty: number;
   replies_published: number;
@@ -533,16 +534,19 @@ export const adminCommunityMentorFormula = () => ({
   comment_weight: TOP_MENTOR_COMMENT_WEIGHT,
   community_whatsapp_weight: TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
   description:
-    "score = (upvotes × 5) - (downvotes × 3) + (comentários recebidos × 2) + (compartilhamentos × 4) + (salvamentos × 3) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (respostas publicadas × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
+    "score = (upvotes × 2) - (downvotes × 3) + (comentários recebidos × 5) + (compartilhamentos × 8) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (cobertura de respostas × 3) + (dias ativos × 1) - penalidade progressiva por posts removidos",
   downvote_weight: TOP_MENTOR_DOWNVOTE_WEIGHT,
   notes: [
     "A lista administrativa inclui todos os psicólogos participantes da comunidade, inclusive com score zero.",
     "A indicação de subida/queda compara a posição atual com o período anterior equivalente de 30 dias.",
+    "Cobertura de respostas conta no máximo 1 ponto de cobertura por post de paciente respondido pelo psicólogo no período.",
+    "Upvotes, downvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
     "Cliques de WhatsApp da comunidade permanecem zerados enquanto não houver origem persistida por comunidade.",
   ],
   post_weight: TOP_MENTOR_POST_WEIGHT,
   removed_post_penalty_step: TOP_MENTOR_REMOVED_POST_PENALTY_STEP,
   reply_weight: TOP_MENTOR_REPLY_WEIGHT,
+  reply_coverage_weight: TOP_MENTOR_REPLY_WEIGHT,
   save_weight: TOP_MENTOR_SAVE_WEIGHT,
   share_weight: TOP_MENTOR_SHARE_WEIGHT,
   upvote_weight: TOP_MENTOR_UPVOTE_WEIGHT,
@@ -554,6 +558,7 @@ export const emptyAdminCommunityMentorMetrics = (): AdminCommunityMentorMetrics 
   community_whatsapp_clicks: 0,
   downvotes_received: 0,
   posts_published: 0,
+  reply_coverage_count: 0,
   removed_posts: 0,
   removed_posts_penalty: 0,
   replies_published: 0,
@@ -573,7 +578,7 @@ export const adminCommunityMentorScore = (metrics: AdminCommunityMentorMetrics) 
     metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
     metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT +
     metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
-    metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
   const penaltyPoints =
     metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
@@ -589,7 +594,8 @@ export const adminCommunityMentorScoreBreakdown = (metrics: AdminCommunityMentor
   downvotes_penalty: metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT,
   posts_points: metrics.posts_published * TOP_MENTOR_POST_WEIGHT,
   removed_posts_penalty: metrics.removed_posts_penalty,
-  replies_points: metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT,
+  replies_points: metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
+  reply_coverage_points: metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
   saves_points: metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT,
   shares_points: metrics.shares_received * TOP_MENTOR_SHARE_WEIGHT,
   upvotes_points: metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT,
@@ -1467,6 +1473,7 @@ export class AdminCommunityManageRepository {
     const [
       postParticipation,
       replyParticipation,
+      replyCoverage,
       postVotes,
       replyVotes,
       postCommentsReceived,
@@ -1502,7 +1509,31 @@ export class AdminCommunityManageRepository {
           },
           createdAt: createdAtWindow,
           deleted: false,
-          post: publishedPostFilter,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
+        },
+      }),
+      prisma.post_reply.groupBy({
+        _count: {
+          post_id: true,
+        },
+        by: ["author_id", "post_id"],
+        where: {
+          author_id: {
+            in: mentorIds,
+          },
+          createdAt: createdAtWindow,
+          deleted: false,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
         },
       }),
       prisma.post_vote.findMany({
@@ -1512,6 +1543,7 @@ export class AdminCommunityManageRepository {
               author_id: true,
             },
           },
+          user_id: true,
           value: true,
         },
         where: {
@@ -1538,6 +1570,7 @@ export class AdminCommunityManageRepository {
               author_id: true,
             },
           },
+          user_id: true,
           value: true,
         },
         where: {
@@ -1613,6 +1646,7 @@ export class AdminCommunityManageRepository {
               author_id: true,
             },
           },
+          user_id: true,
         },
         where: {
           createdAt: createdAtWindow,
@@ -1632,6 +1666,7 @@ export class AdminCommunityManageRepository {
               author_id: true,
             },
           },
+          user_id: true,
         },
         where: {
           createdAt: createdAtWindow,
@@ -1652,6 +1687,7 @@ export class AdminCommunityManageRepository {
               author_id: true,
             },
           },
+          user_id: true,
         },
         where: {
           createdAt: createdAtWindow,
@@ -1707,7 +1743,12 @@ export class AdminCommunityManageRepository {
           },
           createdAt: createdAtWindow,
           deleted: false,
-          post: publishedPostFilter,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
         },
       }),
     ]);
@@ -1731,10 +1772,12 @@ export class AdminCommunityManageRepository {
       metrics(item.author_id).posts_published = item._count.author_id;
     for (const item of replyParticipation)
       metrics(item.author_id).replies_published = item._count.author_id;
+    for (const item of replyCoverage) metrics(item.author_id).reply_coverage_count += 1;
 
     for (const vote of postVotes) {
       const mentorId = vote.post?.author_id;
       if (!mentorId) continue;
+      if (vote.user_id === mentorId) continue;
       if (vote.value === 1) metrics(mentorId).upvotes_received += 1;
       if (vote.value === -1) metrics(mentorId).downvotes_received += 1;
     }
@@ -1742,6 +1785,7 @@ export class AdminCommunityManageRepository {
     for (const vote of replyVotes) {
       const mentorId = vote.reply?.author_id;
       if (!mentorId) continue;
+      if (vote.user_id === mentorId) continue;
       if (vote.value === 1) metrics(mentorId).upvotes_received += 1;
       if (vote.value === -1) metrics(mentorId).downvotes_received += 1;
     }
@@ -1758,17 +1802,17 @@ export class AdminCommunityManageRepository {
 
     for (const save of postSaves) {
       const mentorId = save.post?.author_id;
-      if (mentorId) metrics(mentorId).saves_received += 1;
+      if (mentorId && save.user_id !== mentorId) metrics(mentorId).saves_received += 1;
     }
 
     for (const share of postShares) {
       const mentorId = share.post?.author_id;
-      if (mentorId) metrics(mentorId).shares_received += 1;
+      if (mentorId && share.user_id !== mentorId) metrics(mentorId).shares_received += 1;
     }
 
     for (const share of replyShares) {
       const mentorId = share.reply?.author_id;
-      if (mentorId) metrics(mentorId).shares_received += 1;
+      if (mentorId && share.user_id !== mentorId) metrics(mentorId).shares_received += 1;
     }
 
     for (const item of removedPostParticipation) {

@@ -161,8 +161,50 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ## Atualizacao 2026-06-13
 
 - Formula do ranking ajustada conforme `C:\Users\tulio\Desktop\Lectum\Sistema de Ranking de Mentores.pdf` e ADR-0070.
-- Componentes sem fonte persistida atual (`shares_received` e `community_whatsapp_clicks`) permanecem zerados ate existir rastreamento real por comunidade; nao usar mocks.
+- Naquele momento, componentes sem fonte persistida atual (`shares_received` e `community_whatsapp_clicks`) permaneciam zerados ate existir rastreamento real por comunidade; nao usar mocks. Em 2026-07-30, `shares_received` ja deriva de `post_share`, enquanto `community_whatsapp_clicks` segue zerado ate origem persistida de comunidade.
 - Responsividade mobile da tela Top Mentores corrigida conforme ADR-0071 para evitar corte/overflow horizontal em 390px.
+
+## Atualizacao 2026-07-30 - recalibragem do score de mentores
+
+- Pedido de produto: reformular parte da formula de Top Mentores para reduzir peso de voto simples,
+  aumentar peso de relacionamento util e transformar resposta publicada em cobertura.
+- Formula vigente registrada em ADR-0070 e `DATA-MODEL.md`:
+  - upvote recebido `x2`;
+  - downvote recebido `-3`;
+  - comentario recebido `x5`;
+  - compartilhamento recebido `x8`;
+  - salvamento recebido `x2`;
+  - WhatsApp originado da comunidade `x6`;
+  - post publicado `x1`;
+  - cobertura de resposta `x3`;
+  - dia ativo `x1`;
+  - menos penalidade progressiva por posts removidos.
+- Cobertura de resposta conta no maximo uma vez por post de paciente respondido pelo psicologo no
+  periodo, mesmo que ele publique varias respostas no mesmo post.
+- Acoes identificaveis do proprio psicologo no proprio conteudo nao entram no score de upvotes,
+  downvotes, salvamentos ou compartilhamentos recebidos.
+- `community_whatsapp_clicks` continua zerado ate existir origem persistida de comunidade; nenhum
+  mock, seed, endpoint simulado, schema Prisma, migration ou package novo foi criado.
+- Validacoes desta atualizacao:
+  - `pnpm --dir backend exec biome check --write ...`;
+  - `pnpm --dir frontend exec biome check --write src/api/generator/types/community.ts`;
+  - `pnpm --dir admin exec biome check --write src/api/req/communities/index.ts`;
+  - `pnpm --dir backend exec tsx -e ...` validando formula pura e cobertura;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir admin check`;
+  - `pnpm check`.
+- Criterios especificos desta atualizacao:
+  - [x] Pesos do Top Mentores atualizados no endpoint publico, ranking administrativo e helper de
+        sinais de ranking usado em posts/digests.
+  - [x] `reply_coverage_count` criado como metrica derivada sem migration, contando um post de
+        paciente coberto uma unica vez por mentor.
+  - [x] Autointeracoes autenticadas do psicologo no proprio conteudo excluidas dos sinais
+        recebidos do score.
+  - [x] ADR-0070 e `DATA-MODEL.md` atualizados com a regra vigente.
+  - [x] Checks/builds relevantes executados sem erro.
+  - [x] Commit proprio criado e push executado.
 
 ## Complemento 2026-06-18 - limpeza visual da tela Top 5 Mentores
 

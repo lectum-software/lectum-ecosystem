@@ -1977,14 +1977,24 @@ const compareRanking = (
   const scoreDiff = right.score - left.score;
   if (scoreDiff !== 0) return scoreDiff;
 
-  const upvoteDiff = right.metrics.upvotes_received - left.metrics.upvotes_received;
-  if (upvoteDiff !== 0) return upvoteDiff;
-
   const commentDiff = right.metrics.comments_received - left.metrics.comments_received;
   if (commentDiff !== 0) return commentDiff;
 
+  const shareDiff = right.metrics.shares_received - left.metrics.shares_received;
+  if (shareDiff !== 0) return shareDiff;
+
+  const whatsappDiff =
+    right.metrics.community_whatsapp_clicks - left.metrics.community_whatsapp_clicks;
+  if (whatsappDiff !== 0) return whatsappDiff;
+
+  const coverageDiff = right.metrics.reply_coverage_count - left.metrics.reply_coverage_count;
+  if (coverageDiff !== 0) return coverageDiff;
+
   const saveDiff = right.metrics.saves_received - left.metrics.saves_received;
   if (saveDiff !== 0) return saveDiff;
+
+  const upvoteDiff = right.metrics.upvotes_received - left.metrics.upvotes_received;
+  if (upvoteDiff !== 0) return upvoteDiff;
 
   const activeDayDiff = right.metrics.active_days - left.metrics.active_days;
   if (activeDayDiff !== 0) return activeDayDiff;
@@ -2022,6 +2032,7 @@ const rankMembers = (
         community_whatsapp_clicks: 0,
         downvotes_received: 0,
         posts_published: 0,
+        reply_coverage_count: 0,
         removed_posts: 0,
         removed_posts_penalty: 0,
         replies_published: 0,
@@ -3687,7 +3698,7 @@ export const listRanking = async (data: IAdminCommunityRankingDTO): Promise<Reso
         },
         metrics: {
           ...item.metrics,
-          participation_events: item.metrics.posts_published + item.metrics.replies_published,
+          participation_events: item.metrics.posts_published + item.metrics.reply_coverage_count,
         },
         position: item.position,
         position_delta: positionDelta,

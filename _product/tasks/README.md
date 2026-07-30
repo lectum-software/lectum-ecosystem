@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 109 tasks: `TASK-00` a `TASK-102`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 110 tasks: `TASK-00` a `TASK-103`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -184,6 +184,7 @@ ou cortesia manual.
 | 101 | [TASK-101 - Label Video sem view na matriz Conversao x Visibilidade do Admin](TASK-101-label-video-sem-view-visibilidade-admin.md) | Completed | 53, 97, 100 |
 | 101A | [TASK-101A - Centralizacao dos textos nos blocos da matriz de conversao Admin](TASK-101A-centralizacao-textos-blocos-matriz-conversao-admin.md) | Completed | 53, 100, 101 |
 | 102 | [TASK-102 - Distribuicao de cliques WhatsApp por psicologo no Dashboard Admin](TASK-102-distribuicao-cliques-whatsapp-dashboard-admin.md) | Completed | 16, 48, 76, 94 |
+| 103 | [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md) | Completed | 53, 100, 101A |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -255,7 +256,9 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 62. [TASK-100 - Matrizes Conversao x Engajamentos/Favoritos e Visibilidade no Admin de psicologos](TASK-100-matrizes-conversao-engajamentos-favoritos-visibilidade-admin.md) foi adicionada e concluida em 2026-07-30 para trocar o bloco Conversao x Engajamento por uma matriz alternavel entre Conversao x Engajamentos/Favoritos e Conversao x Visibilidade, ambas com 16 colunas e sem contadores laterais.
 63. [TASK-101 - Label Video sem view na matriz Conversao x Visibilidade do Admin](TASK-101-label-video-sem-view-visibilidade-admin.md) foi adicionada e concluida em 2026-07-30 para trocar **Sem Video** por **Vídeo sem view** na categoria `no_video`, mantendo o contrato tecnico e a regra de calculo.
 64. [TASK-101A - Centralizacao dos textos nos blocos da matriz de conversao Admin](TASK-101A-centralizacao-textos-blocos-matriz-conversao-admin.md) foi adicionada e concluida em 2026-07-30 para centralizar os valores e descricoes dentro das celulas das matrizes Conversao x Engajamentos/Favoritos e Conversao x Visibilidade.
+65. [TASK-27 - Ranking Top Mentores](TASK-27-ranking-top-mentores.md) recebeu complemento em 2026-07-30 para recalibrar a formula de score: upvotes `x2`, comentarios `x5`, compartilhamentos `x8`, salvamentos `x2`, cobertura de respostas `x3`, exclusao de autointeracoes no proprio conteudo e manutencao da penalidade progressiva.
 65. [TASK-102 - Distribuicao de cliques WhatsApp por psicologo no Dashboard Admin](TASK-102-distribuicao-cliques-whatsapp-dashboard-admin.md) foi adicionada e concluida em 2026-07-30 para exibir em `/dashboard`, abaixo da **Visao geral**, a curva acumulada e os shares de Top 10%/Top 20% dos cliques reais de WhatsApp entre psicologos ativos e publicados.
+66. [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md) foi adicionada e concluida em 2026-07-30 para sintetizar as matrizes Conversao x Visibilidade e Conversao x Engajamentos/Favoritos em um funil observacional por categoria de conversao.
 
 ### 1A. Trilha Admin planejada
 
@@ -317,6 +320,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 54. [TASK-101 - Label Video sem view na matriz Conversao x Visibilidade do Admin](TASK-101-label-video-sem-view-visibilidade-admin.md)
 55. [TASK-101A - Centralizacao dos textos nos blocos da matriz de conversao Admin](TASK-101A-centralizacao-textos-blocos-matriz-conversao-admin.md)
 56. [TASK-102 - Distribuicao de cliques WhatsApp por psicologo no Dashboard Admin](TASK-102-distribuicao-cliques-whatsapp-dashboard-admin.md)
+57. [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

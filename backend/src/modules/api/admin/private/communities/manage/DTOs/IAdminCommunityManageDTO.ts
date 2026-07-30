@@ -471,6 +471,7 @@ export type AdminCommunityRankingItemDTO = {
     downvotes_received: number;
     participation_events: number;
     posts_published: number;
+    reply_coverage_count: number;
     removed_posts: number;
     removed_posts_penalty: number;
     replies_published: number;
@@ -488,6 +489,7 @@ export type AdminCommunityRankingItemDTO = {
     community_whatsapp_points: number;
     downvotes_penalty: number;
     posts_points: number;
+    reply_coverage_points: number;
     removed_posts_penalty: number;
     replies_points: number;
     saves_points: number;

@@ -681,17 +681,20 @@ silenciamento do post. A identidade de quem compartilhou nao e exposta na centra
 
 ### Ranking de mentores (TASK-27 - derivado)
 
-Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de eventos persistidos por comunidade e do entitlement profissional ativo (`professional_subscription`, PRD secao 10: so Plano Profissional). A formula foi aprovada e depois ajustada pelo PDF local `Sistema de Ranking de Mentores.pdf` em ADR-0070:
+Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de eventos persistidos por comunidade e do entitlement profissional ativo (`professional_subscription`, PRD secao 10: so Plano Profissional). A formula foi aprovada, ajustada pelo PDF local `Sistema de Ranking de Mentores.pdf` em ADR-0070 e recalibrada em 2026-07-30 para priorizar relacionamento util e cobertura real:
 
 ```text
-score = (upvotes * 5) - (downvotes * 3) + (comentarios recebidos * 2) + (compartilhamentos * 4) + (salvamentos * 3) + (cliques WhatsApp da comunidade * 6) + (posts publicados * 1) + (respostas publicadas * 1) + (dias ativos * 1) - penalidade progressiva por posts removidos
+score = (upvotes * 2) - (downvotes * 3) + (comentarios recebidos * 5) + (compartilhamentos * 8) + (salvamentos * 2) + (cliques WhatsApp da comunidade * 6) + (posts publicados * 1) + (cobertura de respostas * 3) + (dias ativos * 1) - penalidade progressiva por posts removidos
 ```
 
 A penalidade de posts removidos e progressiva por comunidade: `30 * removed_posts * (removed_posts + 1) / 2`.
-`shares_received` deriva de `post_share` para posts e respostas; `community_whatsapp_clicks` permanece zerado ate existir
-fonte persistida com origem de comunidade. Nao usar mocks para preencher componentes sem fonte real. Se for necessario
-materializar para performance, criar `mentor_score_snapshot` (`psychologist_id`, `community_id`, `score Int`, `period
-String`, `position Int`) ou modelo equivalente apos ADR especifica de snapshot.
+`reply_coverage_count` conta no maximo uma cobertura por post de paciente respondido pelo psicologo no periodo, mesmo que
+ele publique varias respostas no mesmo post. Upvotes, downvotes, salvamentos e compartilhamentos executados pelo proprio
+psicologo no proprio conteudo nao entram no score. `shares_received` deriva de `post_share` para posts e respostas;
+`community_whatsapp_clicks` permanece zerado ate existir fonte persistida com origem de comunidade. Nao usar mocks para
+preencher componentes sem fonte real. Se for necessario materializar para performance, criar `mentor_score_snapshot`
+(`psychologist_id`, `community_id`, `score Int`, `period String`, `position Int`) ou modelo equivalente apos ADR
+especifica de snapshot.
 
 ---
 

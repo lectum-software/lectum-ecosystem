@@ -1,21 +1,24 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 
-const TOP_MENTOR_UPVOTE_WEIGHT = 5;
+const TOP_MENTOR_UPVOTE_WEIGHT = 2;
 const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
-const TOP_MENTOR_COMMENT_WEIGHT = 2;
-const TOP_MENTOR_SHARE_WEIGHT = 4;
-const TOP_MENTOR_SAVE_WEIGHT = 3;
+const TOP_MENTOR_COMMENT_WEIGHT = 5;
+const TOP_MENTOR_SHARE_WEIGHT = 8;
+const TOP_MENTOR_SAVE_WEIGHT = 2;
+const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 6;
 const TOP_MENTOR_POST_WEIGHT = 1;
-const TOP_MENTOR_REPLY_WEIGHT = 1;
+const TOP_MENTOR_REPLY_WEIGHT = 3;
 const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 
 type TopMentorMutableMetrics = {
   active_days: number;
   comments_received: number;
+  community_whatsapp_clicks: number;
   downvotes_received: number;
   posts_published: number;
+  reply_coverage_count: number;
   removed_posts: number;
   removed_posts_penalty: number;
   replies_published: number;
@@ -32,8 +35,10 @@ export type CommunityMentorRankingSignal = {
 const emptyTopMentorMetrics = (): TopMentorMutableMetrics => ({
   active_days: 0,
   comments_received: 0,
+  community_whatsapp_clicks: 0,
   downvotes_received: 0,
   posts_published: 0,
+  reply_coverage_count: 0,
   removed_posts: 0,
   removed_posts_penalty: 0,
   replies_published: 0,
@@ -52,8 +57,9 @@ const topMentorScore = (metrics: TopMentorMutableMetrics) => {
     metrics.comments_received * TOP_MENTOR_COMMENT_WEIGHT +
     metrics.shares_received * TOP_MENTOR_SHARE_WEIGHT +
     metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
+    metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT +
     metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
-    metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
   const penaltyPoints =
     metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
@@ -68,7 +74,9 @@ const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
     metrics.comments_received > 0 ||
     metrics.shares_received > 0 ||
     metrics.saves_received > 0 ||
+    metrics.community_whatsapp_clicks > 0 ||
     metrics.posts_published > 0 ||
+    metrics.reply_coverage_count > 0 ||
     metrics.replies_published > 0 ||
     metrics.active_days > 0 ||
     metrics.removed_posts > 0
@@ -93,6 +101,7 @@ export const getCommunityMentorRankingSignals = async (
   const [
     postParticipation,
     replyParticipation,
+    replyCoverage,
     postVotes,
     replyVotes,
     postCommentsReceived,
@@ -123,10 +132,33 @@ export const getCommunityMentorRankingSignals = async (
         author_id: {
           in: uniqueMentorIds,
         },
-        post: publishedPostFilter,
+        post: {
+          ...publishedPostFilter,
+          author: {
+            role: "paciente",
+          },
+        },
       },
       _count: {
         author_id: true,
+      },
+    }),
+    prisma.post_reply.groupBy({
+      by: ["author_id", "post_id"],
+      where: {
+        deleted: false,
+        author_id: {
+          in: uniqueMentorIds,
+        },
+        post: {
+          ...publishedPostFilter,
+          author: {
+            role: "paciente",
+          },
+        },
+      },
+      _count: {
+        post_id: true,
       },
     }),
     prisma.post_vote.findMany({
@@ -146,6 +178,7 @@ export const getCommunityMentorRankingSignals = async (
         },
       },
       select: {
+        user_id: true,
         value: true,
         post: {
           select: {
@@ -172,6 +205,7 @@ export const getCommunityMentorRankingSignals = async (
         },
       },
       select: {
+        user_id: true,
         value: true,
         reply: {
           select: {
@@ -237,6 +271,7 @@ export const getCommunityMentorRankingSignals = async (
         },
       },
       select: {
+        user_id: true,
         post: {
           select: {
             author_id: true,
@@ -256,6 +291,7 @@ export const getCommunityMentorRankingSignals = async (
         },
       },
       select: {
+        user_id: true,
         post: {
           select: {
             author_id: true,
@@ -278,6 +314,7 @@ export const getCommunityMentorRankingSignals = async (
         },
       },
       select: {
+        user_id: true,
         reply: {
           select: {
             author_id: true,
@@ -317,7 +354,12 @@ export const getCommunityMentorRankingSignals = async (
         author_id: {
           in: uniqueMentorIds,
         },
-        post: publishedPostFilter,
+        post: {
+          ...publishedPostFilter,
+          author: {
+            role: "paciente",
+          },
+        },
       },
       select: {
         author_id: true,
@@ -351,8 +393,13 @@ export const getCommunityMentorRankingSignals = async (
     getMetrics(item.author_id).replies_published = item._count.author_id;
   }
 
+  for (const item of replyCoverage) {
+    getMetrics(item.author_id).reply_coverage_count += 1;
+  }
+
   for (const vote of postVotes) {
     if (!vote.post?.author_id) continue;
+    if (vote.user_id === vote.post.author_id) continue;
 
     const metrics = getMetrics(vote.post.author_id);
     if (vote.value === 1) metrics.upvotes_received += 1;
@@ -361,6 +408,7 @@ export const getCommunityMentorRankingSignals = async (
 
   for (const vote of replyVotes) {
     if (!vote.reply?.author_id) continue;
+    if (vote.user_id === vote.reply.author_id) continue;
 
     const metrics = getMetrics(vote.reply.author_id);
     if (vote.value === 1) metrics.upvotes_received += 1;
@@ -382,19 +430,19 @@ export const getCommunityMentorRankingSignals = async (
   }
 
   for (const save of postSaves) {
-    if (save.post?.author_id) {
+    if (save.post?.author_id && save.user_id !== save.post.author_id) {
       getMetrics(save.post.author_id).saves_received += 1;
     }
   }
 
   for (const share of postShares) {
-    if (share.post?.author_id) {
+    if (share.post?.author_id && share.user_id !== share.post.author_id) {
       getMetrics(share.post.author_id).shares_received += 1;
     }
   }
 
   for (const share of replyShares) {
-    if (share.reply?.author_id) {
+    if (share.reply?.author_id && share.user_id !== share.reply.author_id) {
       getMetrics(share.reply.author_id).shares_received += 1;
     }
   }
@@ -428,17 +476,24 @@ export const getCommunityMentorRankingSignals = async (
       const scoreDiff = b.score - a.score;
       if (scoreDiff !== 0) return scoreDiff;
 
-      const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
-      if (upvoteDiff !== 0) return upvoteDiff;
-
       const commentDiff = b.metrics.comments_received - a.metrics.comments_received;
       if (commentDiff !== 0) return commentDiff;
 
       const shareDiff = b.metrics.shares_received - a.metrics.shares_received;
       if (shareDiff !== 0) return shareDiff;
 
+      const whatsappDiff =
+        b.metrics.community_whatsapp_clicks - a.metrics.community_whatsapp_clicks;
+      if (whatsappDiff !== 0) return whatsappDiff;
+
+      const coverageDiff = b.metrics.reply_coverage_count - a.metrics.reply_coverage_count;
+      if (coverageDiff !== 0) return coverageDiff;
+
       const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
       if (saveDiff !== 0) return saveDiff;
+
+      const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
+      if (upvoteDiff !== 0) return upvoteDiff;
 
       const activeDayDiff = b.metrics.active_days - a.metrics.active_days;
       if (activeDayDiff !== 0) return activeDayDiff;

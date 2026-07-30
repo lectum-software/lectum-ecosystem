@@ -43,14 +43,14 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const DEFAULT_TOP_MENTORS_LIMIT = 5;
 const MAX_TOP_MENTORS_LIMIT = 10;
-const TOP_MENTOR_UPVOTE_WEIGHT = 5;
+const TOP_MENTOR_UPVOTE_WEIGHT = 2;
 const TOP_MENTOR_DOWNVOTE_WEIGHT = 3;
-const TOP_MENTOR_COMMENT_WEIGHT = 2;
-const TOP_MENTOR_SHARE_WEIGHT = 4;
-const TOP_MENTOR_SAVE_WEIGHT = 3;
+const TOP_MENTOR_COMMENT_WEIGHT = 5;
+const TOP_MENTOR_SHARE_WEIGHT = 8;
+const TOP_MENTOR_SAVE_WEIGHT = 2;
 const TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT = 6;
 const TOP_MENTOR_POST_WEIGHT = 1;
-const TOP_MENTOR_REPLY_WEIGHT = 1;
+const TOP_MENTOR_REPLY_WEIGHT = 3;
 const TOP_MENTOR_ACTIVE_DAY_WEIGHT = 1;
 const TOP_MENTOR_REMOVED_POST_PENALTY_STEP = 30;
 const COMMUNITY_DOWNVOTE_RANKING_WEIGHT = 0.6;
@@ -1015,6 +1015,7 @@ type TopMentorMutableMetrics = {
   saves_received: number;
   community_whatsapp_clicks: number;
   posts_published: number;
+  reply_coverage_count: number;
   replies_published: number;
   active_days: number;
   removed_posts: number;
@@ -1029,6 +1030,7 @@ const emptyTopMentorMetrics = (): TopMentorMutableMetrics => ({
   saves_received: 0,
   community_whatsapp_clicks: 0,
   posts_published: 0,
+  reply_coverage_count: 0,
   replies_published: 0,
   active_days: 0,
   removed_posts: 0,
@@ -1047,7 +1049,7 @@ const topMentorScore = (metrics: TopMentorMutableMetrics) => {
     metrics.saves_received * TOP_MENTOR_SAVE_WEIGHT +
     metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT +
     metrics.posts_published * TOP_MENTOR_POST_WEIGHT +
-    metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT +
+    metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT +
     metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT;
   const penaltyPoints =
     metrics.downvotes_received * TOP_MENTOR_DOWNVOTE_WEIGHT + metrics.removed_posts_penalty;
@@ -1064,6 +1066,7 @@ const hasTopMentorRankingSignal = (metrics: TopMentorMutableMetrics) => {
     metrics.saves_received > 0 ||
     metrics.community_whatsapp_clicks > 0 ||
     metrics.posts_published > 0 ||
+    metrics.reply_coverage_count > 0 ||
     metrics.replies_published > 0 ||
     metrics.active_days > 0 ||
     metrics.removed_posts > 0
@@ -1079,11 +1082,14 @@ const topMentorsFormula = () => ({
   community_whatsapp_weight: TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
   post_weight: TOP_MENTOR_POST_WEIGHT,
   reply_weight: TOP_MENTOR_REPLY_WEIGHT,
+  reply_coverage_weight: TOP_MENTOR_REPLY_WEIGHT,
   active_day_weight: TOP_MENTOR_ACTIVE_DAY_WEIGHT,
   removed_post_penalty_step: TOP_MENTOR_REMOVED_POST_PENALTY_STEP,
   description:
-    "score = (upvotes × 5) - (downvotes × 3) + (comentários recebidos × 2) + (compartilhamentos × 4) + (salvamentos × 3) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (respostas publicadas × 1) + (dias ativos × 1) - penalidade progressiva por posts removidos",
+    "score = (upvotes × 2) - (downvotes × 3) + (comentários recebidos × 5) + (compartilhamentos × 8) + (salvamentos × 2) + (cliques WhatsApp da comunidade × 6) + (posts publicados × 1) + (cobertura de respostas × 3) + (dias ativos × 1) - penalidade progressiva por posts removidos",
   notes: [
+    "Cobertura de respostas conta no máximo 1 ponto de cobertura por post de paciente respondido pelo psicólogo no período.",
+    "Upvotes, downvotes, salvamentos e compartilhamentos feitos pelo próprio psicólogo no próprio conteúdo não entram no score.",
     "Compartilhamentos usam eventos persistidos de post/reply compartilhado; cliques de WhatsApp por comunidade só entram quando houver origem persistida de comunidade.",
   ],
 });
@@ -1783,6 +1789,7 @@ export class CommunityRepository implements ICommunityRepository {
     const [
       postParticipation,
       replyParticipation,
+      replyCoverage,
       postVotes,
       replyVotes,
       postCommentsReceived,
@@ -1815,10 +1822,34 @@ export class CommunityRepository implements ICommunityRepository {
             in: eligibleMentorIds,
           },
           createdAt: createdAtWindow,
-          post: publishedPostFilter,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
         },
         _count: {
           author_id: true,
+        },
+      }),
+      prisma.post_reply.groupBy({
+        by: ["author_id", "post_id"],
+        where: {
+          deleted: false,
+          author_id: {
+            in: eligibleMentorIds,
+          },
+          createdAt: createdAtWindow,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
+        },
+        _count: {
+          post_id: true,
         },
       }),
       prisma.post_vote.findMany({
@@ -1839,6 +1870,7 @@ export class CommunityRepository implements ICommunityRepository {
           },
         },
         select: {
+          user_id: true,
           value: true,
           post: {
             select: {
@@ -1866,6 +1898,7 @@ export class CommunityRepository implements ICommunityRepository {
           },
         },
         select: {
+          user_id: true,
           value: true,
           reply: {
             select: {
@@ -1934,6 +1967,7 @@ export class CommunityRepository implements ICommunityRepository {
           },
         },
         select: {
+          user_id: true,
           post: {
             select: {
               author_id: true,
@@ -1954,6 +1988,7 @@ export class CommunityRepository implements ICommunityRepository {
           },
         },
         select: {
+          user_id: true,
           post: {
             select: {
               author_id: true,
@@ -1977,6 +2012,7 @@ export class CommunityRepository implements ICommunityRepository {
           },
         },
         select: {
+          user_id: true,
           reply: {
             select: {
               author_id: true,
@@ -2019,7 +2055,12 @@ export class CommunityRepository implements ICommunityRepository {
             in: eligibleMentorIds,
           },
           createdAt: createdAtWindow,
-          post: publishedPostFilter,
+          post: {
+            ...publishedPostFilter,
+            author: {
+              role: "paciente",
+            },
+          },
         },
         select: {
           author_id: true,
@@ -2053,8 +2094,14 @@ export class CommunityRepository implements ICommunityRepository {
       getMetrics(item.author_id).replies_published = item._count.author_id;
     }
 
+    for (const item of replyCoverage) {
+      getMetrics(item.author_id).reply_coverage_count += 1;
+    }
+
     for (const vote of postVotes) {
       if (vote.post?.author_id) {
+        if (vote.user_id === vote.post.author_id) continue;
+
         const metrics = getMetrics(vote.post.author_id);
         if (vote.value === 1) metrics.upvotes_received += 1;
         if (vote.value === -1) metrics.downvotes_received += 1;
@@ -2063,6 +2110,8 @@ export class CommunityRepository implements ICommunityRepository {
 
     for (const vote of replyVotes) {
       if (vote.reply?.author_id) {
+        if (vote.user_id === vote.reply.author_id) continue;
+
         const metrics = getMetrics(vote.reply.author_id);
         if (vote.value === 1) metrics.upvotes_received += 1;
         if (vote.value === -1) metrics.downvotes_received += 1;
@@ -2084,19 +2133,19 @@ export class CommunityRepository implements ICommunityRepository {
     }
 
     for (const save of postSaves) {
-      if (save.post?.author_id) {
+      if (save.post?.author_id && save.user_id !== save.post.author_id) {
         getMetrics(save.post.author_id).saves_received += 1;
       }
     }
 
     for (const share of postShares) {
-      if (share.post?.author_id) {
+      if (share.post?.author_id && share.user_id !== share.post.author_id) {
         getMetrics(share.post.author_id).shares_received += 1;
       }
     }
 
     for (const share of replyShares) {
-      if (share.reply?.author_id) {
+      if (share.reply?.author_id && share.user_id !== share.reply.author_id) {
         getMetrics(share.reply.author_id).shares_received += 1;
       }
     }
@@ -2140,18 +2189,24 @@ export class CommunityRepository implements ICommunityRepository {
         const scoreDiff = b.score - a.score;
         if (scoreDiff !== 0) return scoreDiff;
 
-        const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
-        if (upvoteDiff !== 0) return upvoteDiff;
-
         const commentDiff = b.metrics.comments_received - a.metrics.comments_received;
         if (commentDiff !== 0) return commentDiff;
+
+        const shareDiff = b.metrics.shares_received - a.metrics.shares_received;
+        if (shareDiff !== 0) return shareDiff;
 
         const whatsappDiff =
           b.metrics.community_whatsapp_clicks - a.metrics.community_whatsapp_clicks;
         if (whatsappDiff !== 0) return whatsappDiff;
 
+        const coverageDiff = b.metrics.reply_coverage_count - a.metrics.reply_coverage_count;
+        if (coverageDiff !== 0) return coverageDiff;
+
         const saveDiff = b.metrics.saves_received - a.metrics.saves_received;
         if (saveDiff !== 0) return saveDiff;
+
+        const upvoteDiff = b.metrics.upvotes_received - a.metrics.upvotes_received;
+        if (upvoteDiff !== 0) return upvoteDiff;
 
         const activeDayDiff = b.metrics.active_days - a.metrics.active_days;
         if (activeDayDiff !== 0) return activeDayDiff;
@@ -2203,11 +2258,12 @@ export class CommunityRepository implements ICommunityRepository {
           saves_received: item.metrics.saves_received,
           community_whatsapp_clicks: item.metrics.community_whatsapp_clicks,
           posts_published: item.metrics.posts_published,
+          reply_coverage_count: item.metrics.reply_coverage_count,
           replies_published: item.metrics.replies_published,
           active_days: item.metrics.active_days,
           removed_posts: item.metrics.removed_posts,
           removed_posts_penalty: item.metrics.removed_posts_penalty,
-          participation_events: item.metrics.posts_published + item.metrics.replies_published,
+          participation_events: item.metrics.posts_published + item.metrics.reply_coverage_count,
         },
         score_breakdown: {
           upvotes_points: item.metrics.upvotes_received * TOP_MENTOR_UPVOTE_WEIGHT,
@@ -2218,7 +2274,8 @@ export class CommunityRepository implements ICommunityRepository {
           community_whatsapp_points:
             item.metrics.community_whatsapp_clicks * TOP_MENTOR_COMMUNITY_WHATSAPP_WEIGHT,
           posts_points: item.metrics.posts_published * TOP_MENTOR_POST_WEIGHT,
-          replies_points: item.metrics.replies_published * TOP_MENTOR_REPLY_WEIGHT,
+          replies_points: item.metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
+          reply_coverage_points: item.metrics.reply_coverage_count * TOP_MENTOR_REPLY_WEIGHT,
           active_days_points: item.metrics.active_days * TOP_MENTOR_ACTIVE_DAY_WEIGHT,
           removed_posts_penalty: item.metrics.removed_posts_penalty,
         },

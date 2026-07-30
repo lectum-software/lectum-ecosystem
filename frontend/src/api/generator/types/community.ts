@@ -203,6 +203,7 @@ export type CommunityTopMentorMetrics = {
   saves_received: number;
   community_whatsapp_clicks: number;
   posts_published: number;
+  reply_coverage_count: number;
   replies_published: number;
   active_days: number;
   removed_posts: number;
@@ -218,6 +219,7 @@ export type CommunityTopMentorBreakdown = {
   saves_points: number;
   community_whatsapp_points: number;
   posts_points: number;
+  reply_coverage_points: number;
   replies_points: number;
   active_days_points: number;
   removed_posts_penalty: number;
@@ -252,6 +254,7 @@ export type CommunityTopMentorsResponse = {
     share_weight: number;
     save_weight: number;
     community_whatsapp_weight: number;
+    reply_coverage_weight: number;
     reply_weight: number;
     post_weight: number;
     active_day_weight: number;
