@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  Activity,
   AlertTriangle,
   ArrowDown,
   ArrowUp,
@@ -397,12 +398,13 @@ type BusinessProfileConversionQualityId =
   AdminPsychologistStatistics["business"]["profile_conversion"]["quality"]["id"];
 type StatisticsChartMetric = {
   dotRadius: number;
+  getValue: (point: StatisticsSeriesPoint) => number;
   icon: LucideIcon;
   iconClassName: string;
   iconToneClassName: string;
   id: string;
-  key: StatisticsSeriesMetricKey;
   label: string;
+  source: string;
   shortLabel: string;
   strokeClassName: string;
   swatchClassName: string;
@@ -422,63 +424,63 @@ const BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS: Record<
 const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 4.2,
-    id: "profile_views",
-    icon: Eye,
-    iconClassName: "text-primary",
-    iconToneClassName: "bg-primary-soft",
-    key: "profile_views",
-    label: "Visualizações",
-    shortLabel: "Perfil",
-    strokeClassName: "stroke-primary",
-    swatchClassName: "bg-primary",
-  },
-  {
-    dotRadius: 3.8,
     id: "whatsapp_clicks",
     icon: MessageCircle,
     iconClassName: "text-emerald-500",
     iconToneClassName: "bg-emerald-50",
-    key: "whatsapp_clicks",
-    label: "WhatsApp",
-    shortLabel: "WhatsApp",
+    getValue: (point) => point.whatsapp_clicks,
+    label: "Cliques no WhatsApp",
+    source: "contact_request.channel=whatsapp",
+    shortLabel: "Conversão",
     strokeClassName: "stroke-emerald-500",
     swatchClassName: "bg-emerald-500",
   },
   {
-    dotRadius: 3.4,
-    id: "favorites",
+    dotRadius: 3.8,
+    id: "visibility_signal",
+    icon: Search,
+    iconClassName: "text-blue-500",
+    iconToneClassName: "bg-blue-50",
+    getValue: (point) => point.profile_views + point.search_results,
+    label: "Visibilidade",
+    source: "profile_view_event.source=profile_page+search_result",
+    shortLabel: "Visibilidade",
+    strokeClassName: "stroke-blue-500",
+    swatchClassName: "bg-blue-500",
+  },
+  {
+    dotRadius: 3.5,
+    id: "engagement_score",
     icon: Heart,
     iconClassName: "text-pink-500",
     iconToneClassName: "bg-pink-50",
-    key: "favorites",
-    label: "Favoritos",
-    shortLabel: "Favoritos",
+    getValue: (point) =>
+      Math.max(
+        0,
+        point.upvotes * 2 +
+          point.comments_received * 5 +
+          point.shares * 8 +
+          point.saves * 2 -
+          point.downvotes * 3,
+      ),
+    label: "Engajamento (score)",
+    source: "post_vote+post_reply+post_save+post_reply_save+post_share",
+    shortLabel: "Engajamento",
     strokeClassName: "stroke-pink-500",
     swatchClassName: "bg-pink-500",
   },
   {
     dotRadius: 3.2,
-    id: "reviews",
-    icon: Star,
+    id: "activity_score",
+    icon: Activity,
     iconClassName: "text-amber-500",
     iconToneClassName: "bg-amber-50",
-    key: "reviews",
-    label: "Avaliações",
-    shortLabel: "Avaliações",
+    getValue: (point) => point.posts + point.replies * 3,
+    label: "Atividade (score)",
+    source: "community_post.author_id+post_reply.author_id",
+    shortLabel: "Atividade",
     strokeClassName: "stroke-amber-500",
     swatchClassName: "bg-amber-500",
-  },
-  {
-    dotRadius: 3,
-    id: "search_results",
-    icon: Search,
-    iconClassName: "text-blue-500",
-    iconToneClassName: "bg-blue-50",
-    key: "search_results",
-    label: "Resultados de busca",
-    shortLabel: "Busca",
-    strokeClassName: "stroke-blue-500",
-    swatchClassName: "bg-blue-500",
   },
 ] as const satisfies readonly StatisticsChartMetric[];
 
@@ -489,8 +491,9 @@ const COMMUNITY_CHART_METRICS = [
     iconClassName: "text-primary",
     iconToneClassName: "bg-primary-soft",
     id: "posts",
-    key: "posts",
+    getValue: (point) => point.posts,
     label: "Posts",
+    source: "community_post.author_id",
     shortLabel: "Posts",
     strokeClassName: "stroke-primary",
     swatchClassName: "bg-primary",
@@ -501,8 +504,9 @@ const COMMUNITY_CHART_METRICS = [
     iconClassName: "text-blue-500",
     iconToneClassName: "bg-blue-50",
     id: "replies",
-    key: "replies",
+    getValue: (point) => point.replies,
     label: "Respostas",
+    source: "post_reply.author_id",
     shortLabel: "Respostas",
     strokeClassName: "stroke-blue-500",
     swatchClassName: "bg-blue-500",
@@ -513,8 +517,9 @@ const COMMUNITY_CHART_METRICS = [
     iconClassName: "text-emerald-500",
     iconToneClassName: "bg-emerald-50",
     id: "upvotes",
-    key: "upvotes",
-    label: "Upvotes",
+    getValue: (point) => point.upvotes,
+    label: "Upvotes recebidos",
+    source: "post_vote.value=1 em conteúdos do psicólogo",
     shortLabel: "Upvotes",
     strokeClassName: "stroke-emerald-500",
     swatchClassName: "bg-emerald-500",
@@ -525,47 +530,51 @@ const COMMUNITY_CHART_METRICS = [
     iconClassName: "text-red-500",
     iconToneClassName: "bg-red-50",
     id: "downvotes",
-    key: "downvotes",
-    label: "Downvotes",
+    getValue: (point) => point.downvotes,
+    label: "Downvotes recebidos",
+    source: "post_vote.value=-1 em conteúdos do psicólogo",
     shortLabel: "Downvotes",
     strokeClassName: "stroke-red-500",
     swatchClassName: "bg-red-500",
   },
   {
     dotRadius: 3.3,
+    icon: BookOpen,
+    iconClassName: "text-pink-500",
+    iconToneClassName: "bg-pink-50",
+    id: "comments_received",
+    getValue: (point) => point.comments_received,
+    label: "Comentários recebidos",
+    source: "post_reply em posts do psicólogo",
+    shortLabel: "Comentários",
+    strokeClassName: "stroke-pink-500",
+    swatchClassName: "bg-pink-500",
+  },
+  {
+    dotRadius: 3.1,
     icon: Bookmark,
     iconClassName: "text-orange-500",
     iconToneClassName: "bg-orange-50",
     id: "saves",
-    key: "saves",
-    label: "Salvamentos",
+    getValue: (point) => point.saves,
+    label: "Salvamentos recebidos",
+    source: "post_save+post_reply_save",
     shortLabel: "Salvos",
     strokeClassName: "stroke-orange-500",
     swatchClassName: "bg-orange-500",
   },
   {
-    dotRadius: 3.1,
+    dotRadius: 3,
     icon: Share2,
     iconClassName: "text-violet-500",
     iconToneClassName: "bg-violet-50",
     id: "shares",
-    key: "shares",
-    label: "Compartilhamentos",
+    getValue: (point) => point.shares,
+    label: "Compartilhamentos recebidos",
+    source: "post_share em conteúdos do psicólogo",
     shortLabel: "Shares",
     strokeClassName: "stroke-violet-500",
     swatchClassName: "bg-violet-500",
-  },
-  {
-    dotRadius: 3,
-    icon: BookOpen,
-    iconClassName: "text-pink-500",
-    iconToneClassName: "bg-pink-50",
-    id: "comments_received",
-    key: "comments_received",
-    label: "Comentários recebidos",
-    shortLabel: "Comentários",
-    strokeClassName: "stroke-pink-500",
-    swatchClassName: "bg-pink-500",
   },
 ] as const satisfies readonly StatisticsChartMetric[];
 
@@ -2987,7 +2996,9 @@ const ActiveCommunitiesBlock = ({
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-bold text-foreground">Comunidades ativas</h2>
+          <h2 className="text-lg font-bold text-foreground">
+            Atividade e engajamento por comunidade
+          </h2>
           <Badge
             className={cn(
               "border border-current/10",
@@ -3004,8 +3015,8 @@ const ActiveCommunitiesBlock = ({
           ) : null}
         </div>
         <p className="mt-1 text-xs font-bold leading-5 text-muted">
-          Comunidades em que o psicólogo realizou post, resposta, upvote ou downvote no período,
-          ordenadas da mais ativa para a menos ativa.
+          Tabela por comunidade com produção, cobertura, ranking e engajamento do psicólogo no
+          período.
         </p>
       </div>
       {periodControls}
@@ -3019,8 +3030,8 @@ const ActiveCommunitiesBlock = ({
       <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
         <table className="w-full min-w-[980px] border-collapse text-left">
           <caption className="sr-only">
-            Lista de comunidades ativas do psicólogo por comunidade, ranking, posts, respostas,
-            cobertura e engajamento, com status de seguimento junto ao nome.
+            Atividade e engajamento do psicólogo por comunidade, com ranking, posts, respostas,
+            cobertura e status de seguimento junto ao nome.
           </caption>
           <thead className="bg-surface-muted/80">
             <tr className="text-xs font-black text-muted">
@@ -3364,7 +3375,7 @@ const defaultStatisticsMetricItemClassName =
   "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]";
 
 const businessStatisticsMetricItemClassName =
-  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] xl:w-[calc((100%_-_2rem)/5)]";
+  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] xl:w-[calc((100%_-_1.5rem)/4)]";
 
 const StatisticsMetricCarousel = ({
   items,
@@ -3433,6 +3444,54 @@ const aggregateStatisticsChartPoints = (
   points: AdminPsychologistStatistics["business"]["series"],
 ) => aggregateCalendarChartPoints(points, BUSINESS_SERIES_METRIC_KEYS);
 
+const sumStatisticsChartMetricValue = (
+  points: AdminPsychologistStatistics["business"]["series"],
+  metric: StatisticsChartMetric,
+) => Math.round(points.reduce((total, point) => total + metric.getValue(point), 0));
+
+const withStatisticsChartMetricConfig = (
+  metric: AdminPsychologistEngagementMetric,
+  config: StatisticsChartMetric,
+): AdminPsychologistEngagementMetric => ({
+  ...metric,
+  id: config.id,
+  label: config.label,
+  source: config.source,
+});
+
+const buildStatisticsOverviewMetric = ({
+  config,
+  metric,
+  points,
+}: {
+  config: StatisticsChartMetric;
+  metric?: AdminPsychologistEngagementMetric;
+  points: AdminPsychologistStatistics["business"]["series"];
+}): AdminPsychologistEngagementMetric => {
+  const value = sumStatisticsChartMetricValue(points, config);
+
+  if (metric) {
+    return withStatisticsChartMetricConfig(
+      {
+        ...metric,
+        value: metric.value ?? value,
+      },
+      config,
+    );
+  }
+
+  return {
+    available: points.length > 0,
+    comparison: null,
+    id: config.id,
+    label: config.label,
+    source: config.source,
+    unavailable_reason: points.length > 0 ? null : "Sem pontos reais no período",
+    unit: "count",
+    value,
+  };
+};
+
 const StatisticsSeriesChart = ({
   keys,
   points,
@@ -3463,7 +3522,7 @@ const StatisticsSeriesChart = ({
   const innerHeight = chartHeight - padding.top - padding.bottom;
   const max = Math.max(
     1,
-    ...chartPoints.flatMap((point) => keys.map((item) => Number(point[item.key] ?? 0))),
+    ...chartPoints.flatMap((point) => keys.map((item) => item.getValue(point))),
   );
   const xFor = (index: number) =>
     padding.left +
@@ -3520,7 +3579,7 @@ const StatisticsSeriesChart = ({
           {keys.map((item) => {
             const linePoints = chartPoints.map((point, index) => ({
               x: xFor(index),
-              y: yFor(Number(point[item.key] ?? 0)),
+              y: yFor(item.getValue(point)),
             }));
             const linePath = buildSmoothSvgPath(linePoints);
 
@@ -3537,7 +3596,7 @@ const StatisticsSeriesChart = ({
           })}
           {keys.map((item) =>
             chartPoints.map((point, index) => {
-              const value = Number(point[item.key] ?? 0);
+              const value = item.getValue(point);
 
               return (
                 <circle
@@ -5020,17 +5079,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     CommunityChartMetricId[]
   >(() => COMMUNITY_CHART_METRICS.map((item) => item.id));
   const availableBusinessMetricIds = useMemo<BusinessChartMetricId[]>(() => {
-    const availableIds = new Set(
-      (businessStatisticsQuery.data?.business.cards ?? [])
-        .filter((metric) => metric.available)
-        .map((metric) => metric.id),
-    );
-    const ids = BUSINESS_CHART_METRICS.filter((item) => availableIds.has(item.id)).map(
-      (item) => item.id,
-    );
-
-    return ids.length > 0 ? ids : BUSINESS_CHART_METRICS.map((item) => item.id);
-  }, [businessStatisticsQuery.data?.business.cards]);
+    return BUSINESS_CHART_METRICS.map((item) => item.id);
+  }, []);
   const availableCommunityMetricIds = useMemo<CommunityChartMetricId[]>(() => {
     const availableIds = new Set(
       (communityStatisticsQuery.data?.community.cards ?? [])
@@ -5102,18 +5152,24 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
+  const businessCommunityMetricMap = new Map(
+    businessStatistics.community.cards.map((metric) => [metric.id, metric]),
+  );
   const communityMetricMap = new Map(
     communityStatistics.community.cards.map((metric) => [metric.id, metric]),
   );
-  const businessCards = BUSINESS_CHART_METRICS.flatMap((config) => {
-    const metric = businessMetricMap.get(config.id);
-
-    return metric ? [{ config, metric }] : [];
-  });
+  const businessCards = BUSINESS_CHART_METRICS.map((config) => ({
+    config,
+    metric: buildStatisticsOverviewMetric({
+      config,
+      metric: businessMetricMap.get(config.id) ?? businessCommunityMetricMap.get(config.id),
+      points: businessStatistics.business.series,
+    }),
+  }));
   const communityCards = COMMUNITY_CHART_METRICS.flatMap((config) => {
     const metric = communityMetricMap.get(config.id);
 
-    return metric ? [{ config, metric }] : [];
+    return metric ? [{ config, metric: withStatisticsChartMetricConfig(metric, config) }] : [];
   });
   const hasSelectedCommunity =
     communityStatisticsSelectedCommunity === "all" ||
@@ -5153,7 +5209,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
     )
     .map(({ config }) => config);
   const toggleBusinessMetric = (metricId: BusinessChartMetricId) => {
-    const metric = businessMetricMap.get(metricId);
+    const metric = businessCards.find(({ config }) => config.id === metricId)?.metric;
     if (!metric?.available) return;
 
     setVisibleBusinessMetricIds((current) => {
@@ -5189,7 +5245,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div className="min-w-0 xl:col-span-2">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-bold text-foreground">Estatísticas de negócio</h2>
+                <h2 className="text-lg font-bold text-foreground">
+                  Conversão, visibilidade, engajamento e atividade
+                </h2>
                 <Badge
                   className={cn(
                     "border border-current/10",
@@ -5239,7 +5297,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               id: config.id,
             }))}
             showNavigation={false}
-            title="estatísticas de negócio"
+            title="conversão, visibilidade, engajamento e atividade"
           />
 
           <StatisticsSeriesChart
@@ -5247,66 +5305,24 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             points={businessStatistics.business.series}
           />
         </CardShell>
-
-        <StatisticsVideoCard
-          detail={detail}
-          isRefreshing={isVideoRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="video-statistics"
-              onDateControlsBlur={videoStatisticsFilter.handleDateControlsBlur}
-              onDateChange={videoStatisticsFilter.handleDateChange}
-              onPeriodChange={videoStatisticsFilter.handlePeriodChange}
-              period={videoStatisticsFilter.selectedPeriod}
-              range={videoStatisticsFilter.draftRange}
-              rangeError={videoStatisticsFilter.rangeError}
-            />
-          }
-          statistics={videoStatistics}
-        />
-
-        <PsychologistTrafficSourcesCard
-          isRefreshing={isTrafficRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="traffic-statistics"
-              onDateControlsBlur={trafficStatisticsFilter.handleDateControlsBlur}
-              onDateChange={trafficStatisticsFilter.handleDateChange}
-              onPeriodChange={trafficStatisticsFilter.handlePeriodChange}
-              period={trafficStatisticsFilter.selectedPeriod}
-              range={trafficStatisticsFilter.draftRange}
-              rangeError={trafficStatisticsFilter.rangeError}
-            />
-          }
-          statistics={trafficStatistics}
-        />
-
-        <PsychologistPlatformUsageCard
-          isRefreshing={isPlatformRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="platform-statistics"
-              onDateControlsBlur={platformStatisticsFilter.handleDateControlsBlur}
-              onDateChange={platformStatisticsFilter.handleDateChange}
-              onPeriodChange={platformStatisticsFilter.handlePeriodChange}
-              period={platformStatisticsFilter.selectedPeriod}
-              range={platformStatisticsFilter.draftRange}
-              rangeError={platformStatisticsFilter.rangeError}
-            />
-          }
-          statistics={platformStatistics}
-        />
       </section>
 
       <section
-        aria-busy={isCommunityRefreshing || isActivityHoursRefreshing}
+        aria-busy={
+          isCommunityRefreshing ||
+          isActiveCommunitiesRefreshing ||
+          isVideoRefreshing ||
+          isTrafficRefreshing ||
+          isActivityHoursRefreshing ||
+          isPlatformRefreshing
+        }
         className="grid max-w-full gap-5 overflow-x-clip"
       >
         <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-bold text-foreground">Estatísticas de comunidade</h2>
+                <h2 className="text-lg font-bold text-foreground">Atividade e engajamento</h2>
                 {isCommunityRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                     <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -5315,7 +5331,8 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 ) : null}
               </div>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Indicadores de contribuição, engajamento e posição do psicólogo nas comunidades.
+                Indicadores de publicação, resposta e engajamento recebido pelo psicólogo nas
+                comunidades.
               </p>
             </div>
             <StatisticsPeriodControls
@@ -5370,7 +5387,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               ),
               id: config.id,
             }))}
-            title="estatísticas de comunidade"
+            title="atividade e engajamento"
           />
 
           <StatisticsSeriesChart
@@ -5396,9 +5413,42 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           }
         />
 
+        <StatisticsVideoCard
+          detail={detail}
+          isRefreshing={isVideoRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="video-statistics"
+              onDateControlsBlur={videoStatisticsFilter.handleDateControlsBlur}
+              onDateChange={videoStatisticsFilter.handleDateChange}
+              onPeriodChange={videoStatisticsFilter.handlePeriodChange}
+              period={videoStatisticsFilter.selectedPeriod}
+              range={videoStatisticsFilter.draftRange}
+              rangeError={videoStatisticsFilter.rangeError}
+            />
+          }
+          statistics={videoStatistics}
+        />
+
         <ContentFormatDistributionsBlock
           distribution={activeCommunitiesStatistics.community.content_distribution}
           isRefreshing={isActiveCommunitiesRefreshing}
+        />
+
+        <PsychologistTrafficSourcesCard
+          isRefreshing={isTrafficRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="traffic-statistics"
+              onDateControlsBlur={trafficStatisticsFilter.handleDateControlsBlur}
+              onDateChange={trafficStatisticsFilter.handleDateChange}
+              onPeriodChange={trafficStatisticsFilter.handlePeriodChange}
+              period={trafficStatisticsFilter.selectedPeriod}
+              range={trafficStatisticsFilter.draftRange}
+              rangeError={trafficStatisticsFilter.rangeError}
+            />
+          }
+          statistics={trafficStatistics}
         />
 
         <PsychologistPlatformActivityHoursCard
@@ -5415,6 +5465,22 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             />
           }
           statistics={activityHoursStatistics}
+        />
+
+        <PsychologistPlatformUsageCard
+          isRefreshing={isPlatformRefreshing}
+          periodControls={
+            <StatisticsPeriodControls
+              idPrefix="platform-statistics"
+              onDateControlsBlur={platformStatisticsFilter.handleDateControlsBlur}
+              onDateChange={platformStatisticsFilter.handleDateChange}
+              onPeriodChange={platformStatisticsFilter.handlePeriodChange}
+              period={platformStatisticsFilter.selectedPeriod}
+              range={platformStatisticsFilter.draftRange}
+              rangeError={platformStatisticsFilter.rangeError}
+            />
+          }
+          statistics={platformStatistics}
         />
       </section>
     </div>

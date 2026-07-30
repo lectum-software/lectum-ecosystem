@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 110 tasks: `TASK-00` a `TASK-103`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 111 tasks: `TASK-00` a `TASK-104`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -185,6 +185,7 @@ ou cortesia manual.
 | 101A | [TASK-101A - Centralizacao dos textos nos blocos da matriz de conversao Admin](TASK-101A-centralizacao-textos-blocos-matriz-conversao-admin.md) | Completed | 53, 100, 101 |
 | 102 | [TASK-102 - Distribuicao de cliques WhatsApp por psicologo no Dashboard Admin](TASK-102-distribuicao-cliques-whatsapp-dashboard-admin.md) | Completed | 16, 48, 76, 94 |
 | 103 | [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md) | Completed | 53, 100, 101A |
+| 104 | [TASK-104 - Reorganizacao segura da aba Estatisticas do psicologo no Admin](TASK-104-reorganizacao-estatisticas-psicologo-admin.md) | Completed | 57, 72, 75, 76 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -262,6 +263,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 67. [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicologos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md) recebeu ajuste complementar em 2026-07-30 para manter voto positivo com peso `1` e elevar compartilhamento recebido para peso `8` no score comunitario do Admin.
 68. [TASK-102 - Distribuicao de cliques WhatsApp por psicologo no Dashboard Admin](TASK-102-distribuicao-cliques-whatsapp-dashboard-admin.md) recebeu ajuste complementar em 2026-07-30 para separar titulos e numeros dos eixos, remover o resumo textual visivel do card de WhatsApp e posicionar os contadores a direita do grafico em desktop.
 69. [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md) recebeu ajuste complementar em 2026-07-30 para ficar abaixo da **Visao geral**, remover o filtro local de plano, remover o texto explicativo longo e trocar o icone do titulo por funil.
+70. [TASK-104 - Reorganizacao segura da aba Estatisticas do psicologo no Admin](TASK-104-reorganizacao-estatisticas-psicologo-admin.md) foi adicionada e concluida em 2026-07-30 para reorganizar a aba Estatisticas do detalhe do psicologo preservando blocos existentes e trocando as opcoes principais para Conversao, Visibilidade, Engajamento e Atividade sem backend novo.
 
 ### 1A. Trilha Admin planejada
 
@@ -324,6 +326,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 55. [TASK-101A - Centralizacao dos textos nos blocos da matriz de conversao Admin](TASK-101A-centralizacao-textos-blocos-matriz-conversao-admin.md)
 56. [TASK-102 - Distribuicao de cliques WhatsApp por psicologo no Dashboard Admin](TASK-102-distribuicao-cliques-whatsapp-dashboard-admin.md)
 57. [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md)
+58. [TASK-104 - Reorganizacao segura da aba Estatisticas do psicologo no Admin](TASK-104-reorganizacao-estatisticas-psicologo-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
