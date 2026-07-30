@@ -2899,24 +2899,6 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
               <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
             </div>
           </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <div className="rounded-2xl border border-primary/10 bg-surface px-3 py-2">
-              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
-                Favoritados
-              </p>
-              <p className="mt-1 text-sm font-black text-foreground">
-                {numberFormatter.format(profileEngagementFavorites.totals.favorited_psychologists)}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-primary/10 bg-surface px-3 py-2">
-              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
-                Com relacionamento
-              </p>
-              <p className="mt-1 text-sm font-black text-foreground">
-                {numberFormatter.format(profileEngagementFavorites.totals.engaged_psychologists)}
-              </p>
-            </div>
-          </div>
           <ProfileEngagementFavoritesDonutChart
             profileEngagementFavorites={profileEngagementFavorites}
           />

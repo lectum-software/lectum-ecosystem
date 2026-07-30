@@ -120,3 +120,26 @@ executivo, chamado **Engajamento e Favoritos**, com 16 combinações internas.
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - Browser local autenticado em `/psicologos` validou desktop e mobile 390px: tooltip de **Visibilidade** presente, tooltip de **Conversao** presente, nenhuma tooltip nas opcoes desses donuts e ausencia dos cards brancos de faixa padrao.
 - Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica a este ajuste.
+
+## Ajuste pos-feedback - remocao dos blocos brancos de Engajamento e Favoritos
+
+- [x] Cards brancos **Favoritados** e **Com relacionamento** removidos do bloco
+      **Engajamento e Favoritos** em `/psicologos`.
+- [x] O bloco mantem titulo, tooltip conceitual, total de psicologos considerados, donut e legenda
+      resumida/expansivel.
+- [x] Ajuste mantido no Admin mobile-first, sem `<img>`, sem mocks, sem package novo, sem endpoint
+      paralelo, sem schema Prisma e sem migration.
+
+## Validacao complementar da remocao dos blocos de Engajamento e Favoritos
+
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a validacao usou
+  `_product/tasks/PROTO-INVENTORY.md`, a imagem local exportada correspondente ao dashboard Admin de
+  Psicologos e o screenshot enviado pelo usuario.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- Servidor local do Admin reiniciado em `http://localhost:3002`; HTTP local retornou `200` para
+  `/psicologos` e o bundle/source do card nao contem mais as labels **Favoritados** ou
+  **Com relacionamento**.
+- Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`;
+  `pnpm --dir backend db:migrate` nao se aplica a este ajuste.
