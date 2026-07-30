@@ -2868,7 +2868,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         />
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
           <div>
             <div className="min-w-[8rem]">
@@ -2957,7 +2957,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           />
         </section>
 
-        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4 lg:col-span-2 2xl:col-span-1">
+        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4 lg:col-span-2 xl:col-span-1">
           <div>
             <div className="min-w-[8rem]">
               <span className="inline-flex items-center gap-2">

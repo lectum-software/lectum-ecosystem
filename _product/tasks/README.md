@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 104 tasks: `TASK-00` a `TASK-98`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 105 tasks: `TASK-00` a `TASK-99`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -179,6 +179,7 @@ ou cortesia manual.
 | 96 | [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicólogos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md) | Completed | 53, 84, 89, 90 |
 | 97 | [TASK-97 - Visibilidade Comunidade x Video no dashboard Admin de psicologos](TASK-97-visibilidade-comunidade-video-dashboard-psicologos-admin.md) | Completed | 53, 84, 87, 89, 96 |
 | 98 | [TASK-98 - Ajuste de tamanho dos graficos e matriz no dashboard Admin de psicologos](TASK-98-ajuste-tamanho-graficos-matriz-dashboard-psicologos-admin.md) | Completed | 53, 87, 89, 96, 97 |
+| 99 | [TASK-99 - Manter tres graficos lado a lado no funil Admin de psicologos](TASK-99-tres-graficos-lado-a-lado-funil-psicologos-admin.md) | Completed | 53, 87, 96, 97, 98 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -246,6 +247,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 58. [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicologos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-29 para classificar psicologos em 16 combinacoes entre relacionamento comunitario recebido e favoritos, mantendo o donut executivo resumido e expansivel.
 59. [TASK-97 - Visibilidade Comunidade x Video no dashboard Admin de psicologos](TASK-97-visibilidade-comunidade-video-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-30 para classificar psicologos em 16 combinacoes entre visibilidade comunitaria e video de apresentacao, mantendo o donut executivo resumido e expansivel.
 60. [TASK-98 - Ajuste de tamanho dos graficos e matriz no dashboard Admin de psicologos](TASK-98-ajuste-tamanho-graficos-matriz-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-30 para conter os donuts executivos e restaurar a grade compacta da matriz Conversao x Engajamento.
+61. [TASK-99 - Manter tres graficos lado a lado no funil Admin de psicologos](TASK-99-tres-graficos-lado-a-lado-funil-psicologos-admin.md) foi adicionada e concluida em 2026-07-30 para restaurar o formato desktop com Visibilidade, Engajamento/Favoritos e Conversao na mesma linha.
 
 ### 1A. Trilha Admin planejada
 
@@ -302,6 +304,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 49. [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicologos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md)
 50. [TASK-97 - Visibilidade Comunidade x Video no dashboard Admin de psicologos](TASK-97-visibilidade-comunidade-video-dashboard-psicologos-admin.md)
 51. [TASK-98 - Ajuste de tamanho dos graficos e matriz no dashboard Admin de psicologos](TASK-98-ajuste-tamanho-graficos-matriz-dashboard-psicologos-admin.md)
+52. [TASK-99 - Manter tres graficos lado a lado no funil Admin de psicologos](TASK-99-tres-graficos-lado-a-lado-funil-psicologos-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
