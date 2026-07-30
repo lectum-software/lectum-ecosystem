@@ -3059,7 +3059,7 @@ const ProfileConversionMatrixQuadrantCard = ({
 
   return (
     <div
-      className="min-h-24 min-w-0 rounded-2xl border p-2.5 text-left"
+      className="flex min-h-24 min-w-0 flex-col items-center justify-center rounded-2xl border p-2.5 text-center"
       style={{
         backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
         borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
@@ -3067,13 +3067,13 @@ const ProfileConversionMatrixQuadrantCard = ({
       }}
     >
       {showColumnLabel ? (
-        <div className="mb-1.5 flex items-center gap-2">
+        <div className="mb-1.5 flex items-center justify-center gap-2">
           <span
             aria-hidden
             className="h-2.5 w-2.5 shrink-0 rounded-full"
             style={{ backgroundColor: color }}
           />
-          <h4 className="min-w-0 text-xs font-black text-foreground">
+          <h4 className="min-w-0 text-center text-xs font-black text-foreground">
             {headingLabel ?? quadrant.column_label}
           </h4>
         </div>
@@ -3084,7 +3084,9 @@ const ProfileConversionMatrixQuadrantCard = ({
           ({formatPercentageValue(quadrant.percentage)})
         </span>
       </p>
-      <p className="mt-1.5 text-[0.68rem] font-bold leading-4 text-muted">{description}</p>
+      <p className="mt-1.5 text-center text-[0.68rem] font-bold leading-4 text-muted">
+        {description}
+      </p>
       <p className="sr-only">
         {numberFormatter.format(quadrant.count)} profissionais,{" "}
         {formatPercentageValue(quadrant.percentage)} do total da matriz.
