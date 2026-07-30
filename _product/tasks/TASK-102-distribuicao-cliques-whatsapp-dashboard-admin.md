@@ -194,3 +194,26 @@ Frontend esperado:
   e `.tmp/dashboard-admin-task102-local-preview/mobile-local-example-390.png`.
 - Admin temporário real `codex-task102-local-preview@lectum.local` foi criado apenas para validar
   o browser local e removido do banco ao final.
+
+## Ajuste de proporção do gráfico (2026-07-30)
+
+- Após revisão visual em `localhost`, o gráfico da curva acumulada estava ocupando largura/altura
+  excessivas dentro do card.
+- A área visual do gráfico foi limitada ao token `max-w-3xl` (~768px), centralizada no card, com SVG
+  em proporção fixa 16:9 (`640x360`) e `min-width` menor para preservar leitura mobile sem estourar
+  a página.
+- O gráfico recebeu o título **Curva acumulada dos cliques** e tooltip acessível por hover/foco,
+  explicando que o eixo X representa o percentual acumulado de psicólogos, o eixo Y representa o
+  percentual acumulado de cliques e que quanto mais a curva azul fica abaixo da linha pontilhada,
+  maior é a concentração dos cliques em poucos psicólogos.
+- Validação executada:
+  - `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx"`: OK.
+  - `pnpm --dir admin check`: OK.
+  - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`: OK.
+  - Browser local/headless em `http://localhost:3002/dashboard`: OK em desktop 1366px e mobile
+    390px, com título, tooltip, SVG em razão ~1,78, largura de 734px no desktop e sem overflow
+    horizontal.
+- Evidências locais: `.tmp/dashboard-admin-task102-graph-size/desktop-graph-size-1366.png` e
+  `.tmp/dashboard-admin-task102-graph-size/mobile-graph-size-390.png`.
+- Admin temporário real `codex-task102-local-preview@lectum.local` foi criado apenas para validar
+  o browser local e removido do banco ao final.

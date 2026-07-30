@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronDown,
   Flag,
+  Info,
   type LucideIcon,
   RefreshCw,
   UserRoundCheck,
@@ -792,6 +793,35 @@ const DistributionStatCard = ({
   </div>
 );
 
+const WhatsAppDistributionChartTitle = () => (
+  <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="min-w-0">
+      <h3 className="text-sm font-bold text-foreground">Curva acumulada dos cliques</h3>
+      <p className="mt-1 text-xs font-semibold text-muted">
+        Proporção fixa 16:9 para leitura executiva.
+      </p>
+    </div>
+    <span className="group relative inline-flex w-fit">
+      <button
+        aria-label="O que significa a curva acumulada dos cliques"
+        className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface text-muted shadow-control transition hover:border-primary/40 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        title="O que significa a curva acumulada dos cliques"
+        type="button"
+      >
+        <Info aria-hidden className="h-4 w-4" />
+      </button>
+      <span
+        className="pointer-events-none absolute right-0 top-full z-20 mt-2 w-[min(18rem,calc(100vw-3rem))] rounded-2xl border border-border bg-surface p-3 text-left text-xs font-semibold leading-5 text-muted opacity-0 shadow-admin-soft transition group-hover:opacity-100 group-focus-within:opacity-100"
+        role="tooltip"
+      >
+        O eixo X mostra o percentual acumulado de psicólogos, ordenados de menos para mais cliques.
+        O eixo Y mostra o percentual acumulado de cliques. Quanto mais a curva azul fica abaixo da
+        linha pontilhada, maior é a concentração dos cliques em poucos psicólogos.
+      </span>
+    </span>
+  </div>
+);
+
 const buildSvgLinePath = (points: Array<{ x: number; y: number }>) =>
   points
     .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
@@ -815,9 +845,9 @@ const WhatsAppDistributionChart = ({
     );
   }
 
-  const width = 680;
-  const height = 300;
-  const padding = { bottom: 42, left: 48, right: 24, top: 28 };
+  const width = 640;
+  const height = 360;
+  const padding = { bottom: 56, left: 62, right: 26, top: 30 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (percentage: number) => padding.left + (percentage / 100) * chartWidth;
@@ -834,11 +864,12 @@ const WhatsAppDistributionChart = ({
   const gridValues = [0, 25, 50, 75, 100];
 
   return (
-    <figure className="mt-5 overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface p-4">
+    <figure className="mx-auto mt-5 max-w-3xl overflow-visible rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <WhatsAppDistributionChartTitle />
       <div className="overflow-x-auto">
         <svg
           aria-label={`Curva acumulada da distribuição de cliques de WhatsApp: ${distribution.summary}`}
-          className="min-w-[620px]"
+          className="aspect-[16/9] h-auto w-full min-w-[20rem]"
           role="img"
           viewBox={`0 0 ${width} ${height}`}
         >
@@ -909,20 +940,20 @@ const WhatsAppDistributionChart = ({
           />
           <text
             fill="var(--admin-foreground)"
-            fontSize="12"
+            fontSize="11"
             fontWeight="700"
             textAnchor="middle"
             x={padding.left + chartWidth / 2}
-            y={height - 2}
+            y={height - 12}
           >
             % acumulado de psicólogos
           </text>
           <text
             fill="var(--admin-foreground)"
-            fontSize="12"
+            fontSize="11"
             fontWeight="700"
-            transform={`rotate(-90 ${14} ${padding.top + chartHeight / 2})`}
-            x="14"
+            transform={`rotate(-90 ${18} ${padding.top + chartHeight / 2})`}
+            x="18"
             y={padding.top + chartHeight / 2}
           >
             % acumulado de cliques

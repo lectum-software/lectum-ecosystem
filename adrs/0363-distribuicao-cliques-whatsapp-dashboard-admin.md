@@ -30,6 +30,9 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
   Admin em `localhost`/`127.0.0.1`/`::1`, apenas quando a API real retorna `total_clicks=0`.
   O exemplo fica marcado como **Exemplo visual local** e nao altera backend, banco, contrato, CSV,
   tracking ou producao.
+- Para a revisao visual seguinte, limitar a curva acumulada ao token `max-w-3xl` (~768px), manter
+  SVG em proporcao fixa 16:9 (`640x360`) e adicionar titulo com tooltip explicando
+  eixo X, eixo Y, linha pontilhada de equilibrio e leitura de concentracao.
 
 ## Consequencias
 
@@ -43,6 +46,9 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
 - O exemplo visual local reduz atrito de avaliacao de UI durante desenvolvimento, mas deve continuar
   explicitamente separado dos dados reais. Em qualquer host nao local, e quando houver clique real,
   a visualizacao usa somente `whatsapp_click_distribution` retornado pela API.
+- A limitacao de proporcao evita que a curva domine a tela em desktop amplo, preserva mobile-first
+  com rolagem interna quando necessario e torna o significado do grafico mais claro sem adicionar
+  biblioteca de tooltip/grafico.
 
 ## Task relacionada
 
@@ -64,6 +70,12 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
 - Ajuste local 2026-07-30: browser local/headless em `http://localhost:3002/dashboard`: OK em
   desktop 1366px e mobile 390px, exibindo **Exemplo visual local**, 120 cliques ilustrativos,
   top 10% em 44,2%, top 20% em 54,2% e curva SVG sem overflow horizontal.
+- Ajuste visual 2026-07-30: `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx"`: OK.
+- Ajuste visual 2026-07-30: `pnpm --dir admin check`: OK.
+- Ajuste visual 2026-07-30: `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`: OK.
+- Ajuste visual 2026-07-30: browser local/headless em `http://localhost:3002/dashboard`: OK,
+  validando titulo **Curva acumulada dos cliques**, tooltip explicativa, SVG em razao ~1,78,
+  largura de 734px no desktop 1366px e ausencia de overflow horizontal no desktop e mobile 390px.
 
 ## Pendencias
 
