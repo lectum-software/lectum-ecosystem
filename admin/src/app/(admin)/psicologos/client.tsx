@@ -18,7 +18,6 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import Link from "next/link";
 import { type FocusEvent, Fragment, type ReactNode, useMemo, useState } from "react";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
@@ -49,8 +48,6 @@ type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
 type ProfileConversionCategoryItem =
   AdminPsychologistsDashboard["profile_conversion"]["categories"][number];
-type ProfileConversionEngagementQuadrantItem =
-  AdminPsychologistsDashboard["profile_conversion_engagement"]["quadrants"][number];
 type ProfileExposureCategoryItem =
   AdminPsychologistsDashboard["profile_exposure"]["categories"][number];
 type ProfileExposureCommunityCategoryId = NonNullable<ProfileExposureCategoryItem["community_id"]>;
@@ -59,15 +56,17 @@ type ProfileEngagementFavoritesCategoryItem =
 type ProfileEngagementFavoritesCommunityCategoryId = NonNullable<
   ProfileEngagementFavoritesCategoryItem["engagement_id"]
 >;
-type ProfileConversionEngagementAxisCategoryId = Exclude<
-  ProfileConversionCategoryItem["id"],
-  "insufficient_data"
->;
-type PsychologistEngagementDonutBucketId =
-  | "engaged"
-  | "low_engaged"
-  | "no_engagement"
-  | "very_engaged";
+type ProfileConversionEngagementFavoritesMatrix =
+  AdminPsychologistsDashboard["profile_conversion_engagement_favorites"];
+type ProfileConversionVisibilityMatrix =
+  AdminPsychologistsDashboard["profile_conversion_visibility"];
+type ProfileConversionMatrixMode = "engagement_favorites" | "visibility";
+type ProfileConversionMatrixResults =
+  | ProfileConversionEngagementFavoritesMatrix
+  | ProfileConversionVisibilityMatrix;
+type ProfileConversionMatrixQuadrantItem = ProfileConversionMatrixResults["quadrants"][number];
+type ProfileConversionMatrixColumnItem = ProfileConversionMatrixResults["columns"][number];
+type ProfileConversionMatrixRowItem = ProfileConversionMatrixResults["rows"][number];
 type PsychologistsDonutChartItem = {
   color: string;
   count: number;
@@ -89,13 +88,6 @@ const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = 
   { id: "courtesy", label: "Cortesia" },
 ];
 
-const LIST_PLAN_FILTER_BY_SEGMENT = {
-  all: null,
-  courtesy: "courtesy",
-  free: "free",
-  subscribers: "professional",
-} satisfies Record<PlanSegmentFilter, string | null>;
-
 const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] = [
   { id: "searches", label: "Mais buscas" },
   { id: "psychologists", label: "Mais psicólogos" },
@@ -105,6 +97,14 @@ const SUPPLY_DEMAND_SORT_OPTIONS: { id: SupplyDemandSortKey; label: string }[] =
 const CONVERSION_JOURNEY_OPTIONS: { id: ConversionJourney; label: string }[] = [
   { id: "subscription", label: "Conversão do cadastro até assinatura" },
   { id: "registration", label: "Conversão até o cadastro" },
+];
+
+const PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS: {
+  id: ProfileConversionMatrixMode;
+  label: string;
+}[] = [
+  { id: "engagement_favorites", label: "Conversão x Engajamentos e Favoritos" },
+  { id: "visibility", label: "Conversão x Visibilidade" },
 ];
 
 const PLATFORM_PAGES_VIEW_OPTIONS: { id: PlatformPagesView; label: string }[] = [
@@ -333,75 +333,6 @@ const PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS = {
   no_engagement: "#64748b",
   standard_engagement: "#308ce8",
 } satisfies Record<ProfileEngagementFavoritesCommunityCategoryId, string>;
-
-const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
-  engaged: "#308ce8",
-  low_engaged: "#f59f00",
-  no_engagement: "#64748b",
-  very_engaged: "#13a85b",
-} satisfies Record<PsychologistEngagementDonutBucketId, string>;
-
-const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS: {
-  id: PsychologistEngagementDonutBucketId;
-  label: string;
-}[] = [
-  {
-    id: "very_engaged",
-    label: "Alto Engajamento",
-  },
-  {
-    id: "engaged",
-    label: "Engajamento Padrão",
-  },
-  {
-    id: "low_engaged",
-    label: "Baixo Engajamento",
-  },
-  {
-    id: "no_engagement",
-    label: "Sem Engajamento",
-  },
-];
-
-const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS: {
-  id: ProfileConversionEngagementAxisCategoryId;
-  label: string;
-}[] = [
-  {
-    id: "strong_conversion",
-    label: "Alta Conversão",
-  },
-  {
-    id: "standard_conversion",
-    label: "Conversão Padrão",
-  },
-  {
-    id: "low_conversion",
-    label: "Baixa Conversão",
-  },
-  {
-    id: "no_conversion",
-    label: "Sem Conversão",
-  },
-];
-
-const buildProfileConversionEngagementQuadrantId = (
-  profileConversionCategoryId: ProfileConversionEngagementAxisCategoryId,
-  engagementLevel: PsychologistEngagementDonutBucketId,
-): ProfileConversionEngagementQuadrantItem["id"] =>
-  `${profileConversionCategoryId}_${engagementLevel}` as ProfileConversionEngagementQuadrantItem["id"];
-
-const buildProfileConversionEngagementListHref = (
-  quadrantId: ProfileConversionEngagementQuadrantItem["id"],
-  planSegment: PlanSegmentFilter,
-) => {
-  const params = new URLSearchParams({ profile_conversion_engagement: quadrantId });
-  const plan = LIST_PLAN_FILTER_BY_SEGMENT[planSegment];
-
-  if (plan) params.set("plan", plan);
-
-  return `/psicologos/lista?${params.toString()}`;
-};
 
 const SIGNUP_METHOD_CHART_COLORS = {
   email_password: "#13a85b",
@@ -829,6 +760,38 @@ const ConversionJourneyTitleSelect = ({
   </label>
 );
 
+const ProfileConversionMatrixTitleSelect = ({
+  id,
+  onChange,
+  value,
+}: {
+  id: string;
+  onChange: (value: ProfileConversionMatrixMode) => void;
+  value: ProfileConversionMatrixMode;
+}) => (
+  <label className="inline-flex max-w-full" htmlFor={id}>
+    <span className="sr-only">Selecionar matriz de conversao dos psicologos</span>
+    <span className="relative inline-flex max-w-full items-center">
+      <select
+        className="max-w-full appearance-none truncate rounded-control bg-transparent py-0 pl-0 pr-7 text-left text-lg font-semibold text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
+        id={id}
+        onChange={(event) => onChange(event.target.value as ProfileConversionMatrixMode)}
+        value={value}
+      >
+        {PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+      />
+    </span>
+  </label>
+);
+
 const PlatformPagesTitleSelect = ({
   id,
   onChange,
@@ -874,6 +837,8 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     profile_conversion: summary.profile_conversion,
     profile_engagement_favorites: summary.profile_engagement_favorites,
     profile_conversion_engagement: summary.profile_conversion_engagement,
+    profile_conversion_engagement_favorites: summary.profile_conversion_engagement_favorites,
+    profile_conversion_visibility: summary.profile_conversion_visibility,
     profile_exposure: summary.profile_exposure,
     traffic_sources: summary.traffic_sources,
   };
@@ -2993,98 +2958,117 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
     </CardShell>
   );
 };
-const findProfileConversionEngagementQuadrant = (
-  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"],
-  id: ProfileConversionEngagementQuadrantItem["id"],
-) =>
-  profileConversionEngagement.quadrants.find((quadrant) => quadrant.id === id) ?? {
-    count: 0,
-    description: "",
-    id,
-    label: "",
-    percentage: 0,
-    totals: {
-      comments_received: 0,
-      content_saves: 0,
-      content_shares: 0,
-      positive_votes: 0,
-      profile_favorites: 0,
-      profile_follows: 0,
-      received_interactions: 0,
-      whatsapp_clicks: 0,
-    },
-  };
+const getProfileEngagementFavoritesColorById = (id: string) => {
+  const communityCategoryId = Object.keys(PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS).find(
+    (candidate) => id.startsWith(`${candidate}_`),
+  ) as ProfileEngagementFavoritesCommunityCategoryId | undefined;
 
-const ProfileConversionEngagementMetric = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) => (
-  <div className="rounded-2xl bg-surface-muted p-3">
-    <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">{label}</p>
-    <p className="mt-1 text-base font-black text-foreground">{value}</p>
-  </div>
-);
-
-const formatRateDifference = (value: number | null) => {
-  if (typeof value !== "number") return "Sem base";
-  if (value === 0) return "0 p.p.";
-
-  const prefix = value > 0 ? "+" : "-";
-
-  return `${prefix}${numberFormatter.format(Math.abs(value))} p.p.`;
+  return communityCategoryId
+    ? PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS[communityCategoryId]
+    : PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR;
 };
 
-type ProfileConversionEngagementMatrixCell = {
+const getProfileExposureColorById = (id: string) => {
+  const communityCategoryId = Object.keys(PROFILE_EXPOSURE_CHART_COLORS).find((candidate) =>
+    id.startsWith(`${candidate}_`),
+  ) as ProfileExposureCommunityCategoryId | undefined;
+
+  return communityCategoryId
+    ? PROFILE_EXPOSURE_CHART_COLORS[communityCategoryId]
+    : PROFILE_EXPOSURE_OTHER_COLOR;
+};
+
+const getProfileConversionMatrixColumnColor = (
+  column: ProfileConversionMatrixColumnItem,
+  mode: ProfileConversionMatrixMode,
+) =>
+  mode === "engagement_favorites"
+    ? getProfileEngagementFavoritesColorById(column.id)
+    : getProfileExposureColorById(column.id);
+
+const findProfileConversionMatrixQuadrant = (
+  matrix: ProfileConversionMatrixResults,
+  row: ProfileConversionMatrixRowItem,
+  column: ProfileConversionMatrixColumnItem,
+): ProfileConversionMatrixQuadrantItem =>
+  matrix.quadrants.find(
+    (quadrant) => quadrant.row_id === row.id && quadrant.column_id === column.id,
+  ) ??
+  ({
+    column_id: column.id,
+    column_label: column.label,
+    count: 0,
+    description: `Psicólogos em ${row.label} com ${column.label}.`,
+    id: `${row.id}_${column.id}`,
+    label: `${row.label} + ${column.label}`,
+    percentage: 0,
+    row_id: row.id,
+    row_label: row.label,
+    totals: {
+      comments_received: 0,
+      community_engagement_score: 0,
+      content_saves: 0,
+      content_shares: 0,
+      favorites: 0,
+      positive_votes: 0,
+      received_community_interactions: 0,
+      whatsapp_clicks: 0,
+    },
+  } as ProfileConversionMatrixQuadrantItem);
+
+type ProfileConversionMatrixCell = {
   color: string;
-  columnLabel: string;
-  quadrant: ProfileConversionEngagementQuadrantItem;
-  rowLabel: string;
+  column: ProfileConversionMatrixColumnItem;
+  quadrant: ProfileConversionMatrixQuadrantItem;
+  row: ProfileConversionMatrixRowItem;
   rowPercentage: number;
 };
 
-const buildProfileConversionEngagementRowCells = (
-  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"],
-  row: (typeof PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS)[number],
-): ProfileConversionEngagementMatrixCell[] => {
-  const quadrants = PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS.map((column) =>
-    findProfileConversionEngagementQuadrant(
-      profileConversionEngagement,
-      buildProfileConversionEngagementQuadrantId(row.id, column.id),
-    ),
+const buildProfileConversionMatrixRowCells = (
+  matrix: ProfileConversionMatrixResults,
+  row: ProfileConversionMatrixRowItem,
+  mode: ProfileConversionMatrixMode,
+): ProfileConversionMatrixCell[] => {
+  const quadrants = matrix.columns.map((column) =>
+    findProfileConversionMatrixQuadrant(matrix, row, column),
   );
   const rowTotal = quadrants.reduce((total, quadrant) => total + Math.max(0, quadrant.count), 0);
 
-  return quadrants.map((quadrant, index) => ({
-    color:
-      PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS[
-        PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS[index]?.id ?? "no_engagement"
-      ],
-    columnLabel: PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS[index]?.label ?? quadrant.label,
-    quadrant,
-    rowLabel: row.label,
-    rowPercentage: rowTotal > 0 ? toOneDecimal((Math.max(0, quadrant.count) / rowTotal) * 100) : 0,
-  }));
+  return quadrants.map((quadrant, index) => {
+    const column = matrix.columns[index] ?? {
+      count: 0,
+      description: quadrant.description,
+      id: quadrant.column_id,
+      label: quadrant.column_label,
+      percentage: 0,
+      totals: quadrant.totals,
+    };
+
+    return {
+      color: getProfileConversionMatrixColumnColor(column, mode),
+      column,
+      quadrant,
+      row,
+      rowPercentage:
+        rowTotal > 0 ? toOneDecimal((Math.max(0, quadrant.count) / rowTotal) * 100) : 0,
+    };
+  });
 };
 
-const ProfileConversionEngagementQuadrantCard = ({
+const ProfileConversionMatrixQuadrantCard = ({
   color,
   description,
   headingLabel,
   intensityPercentage,
-  planSegment,
   quadrant,
-  showEngagementLabel = false,
+  showColumnLabel = false,
 }: {
   color: string;
   description: string;
   headingLabel?: string;
   intensityPercentage?: number;
-  planSegment: PlanSegmentFilter;
-  quadrant: ProfileConversionEngagementQuadrantItem;
-  showEngagementLabel?: boolean;
+  quadrant: ProfileConversionMatrixQuadrantItem;
+  showColumnLabel?: boolean;
 }) => {
   const hasData = quadrant.count > 0;
   const intensity = hasData
@@ -3092,17 +3076,15 @@ const ProfileConversionEngagementQuadrantCard = ({
     : 0;
 
   return (
-    <Link
-      aria-label={`Ver lista de profissionais em ${quadrant.label}`}
-      className="block min-h-24 min-w-0 rounded-2xl border p-2.5 text-left transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-      href={buildProfileConversionEngagementListHref(quadrant.id, planSegment)}
+    <div
+      className="min-h-24 min-w-0 rounded-2xl border p-2.5 text-left"
       style={{
         backgroundColor: hasData ? hexToRgba(color, intensity) : "var(--admin-surface-muted)",
         borderColor: hasData ? hexToRgba(color, 0.32) : "var(--admin-border)",
         minHeight: "6rem",
       }}
     >
-      {showEngagementLabel ? (
+      {showColumnLabel ? (
         <div className="mb-1.5 flex items-center gap-2">
           <span
             aria-hidden
@@ -3110,7 +3092,7 @@ const ProfileConversionEngagementQuadrantCard = ({
             style={{ backgroundColor: color }}
           />
           <h4 className="min-w-0 text-xs font-black text-foreground">
-            {headingLabel ?? quadrant.label}
+            {headingLabel ?? quadrant.column_label}
           </h4>
         </div>
       ) : null}
@@ -3122,11 +3104,10 @@ const ProfileConversionEngagementQuadrantCard = ({
       </p>
       <p className="mt-1.5 text-[0.68rem] font-bold leading-4 text-muted">{description}</p>
       <p className="sr-only">
-        Clique para ver a lista de profissionais deste quadrante.{" "}
-        {numberFormatter.format(quadrant.totals.received_interactions)} interações recebidas e{" "}
-        {numberFormatter.format(quadrant.totals.whatsapp_clicks)} cliques de WhatsApp.
+        {numberFormatter.format(quadrant.count)} profissionais,{" "}
+        {formatPercentageValue(quadrant.percentage)} do total da matriz.
       </p>
-    </Link>
+    </div>
   );
 };
 
@@ -3135,18 +3116,17 @@ const DashboardProfileConversionEngagementCard = ({
 }: {
   summary: AdminPsychologistsDashboard;
 }) => {
-  const [profileConversionEngagementPlanSegment, setProfileConversionEngagementPlanSegment] =
+  const [profileConversionMatrixPlanSegment, setProfileConversionMatrixPlanSegment] =
     useState<PlanSegmentFilter>("all");
-  const segmentSummary = getPlanSegmentSummary(summary, profileConversionEngagementPlanSegment);
-  const profileConversionEngagement = segmentSummary.profile_conversion_engagement;
+  const [profileConversionMatrixMode, setProfileConversionMatrixMode] =
+    useState<ProfileConversionMatrixMode>("engagement_favorites");
+  const segmentSummary = getPlanSegmentSummary(summary, profileConversionMatrixPlanSegment);
+  const matrix: ProfileConversionMatrixResults =
+    profileConversionMatrixMode === "engagement_favorites"
+      ? segmentSummary.profile_conversion_engagement_favorites
+      : segmentSummary.profile_conversion_visibility;
 
-  if (!profileConversionEngagement) return null;
-
-  const veryEngaged = profileConversionEngagement.comparison.very_engaged;
-  const engaged = profileConversionEngagement.comparison.engaged;
-  const lowEngaged = profileConversionEngagement.comparison.low_engaged;
-  const noEngagement = profileConversionEngagement.comparison.no_engagement;
-  const rateDifference = profileConversionEngagement.comparison.rate_difference_points;
+  if (!matrix) return null;
 
   return (
     <CardShell className="p-5">
@@ -3154,87 +3134,96 @@ const DashboardProfileConversionEngagementCard = ({
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={TrendingUp}
-          title="Conversão x Engajamento"
+          title={
+            <ProfileConversionMatrixTitleSelect
+              id="profile-conversion-matrix-mode"
+              onChange={setProfileConversionMatrixMode}
+              value={profileConversionMatrixMode}
+            />
+          }
         />
         <PlanSegmentSelect
-          id="profile-conversion-engagement-plan-segment"
-          onChange={setProfileConversionEngagementPlanSegment}
-          value={profileConversionEngagementPlanSegment}
+          id="profile-conversion-matrix-plan-segment"
+          onChange={setProfileConversionMatrixPlanSegment}
+          value={profileConversionMatrixPlanSegment}
         />
       </div>
 
-      {profileConversionEngagement.totals.psychologists === 0 ? (
+      {matrix.totals.psychologists === 0 ? (
         <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-          {profileConversionEngagement.unavailable_reason ??
-            "Sem psicólogos ativos no período selecionado para comparar Conversão e Engajamento."}
+          {matrix.unavailable_reason ??
+            "Sem psicólogos ativos no período selecionado para cruzar Conversão com o eixo selecionado."}
         </p>
       ) : (
-        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
-          <div className="min-w-0">
-            <div className="grid gap-3 lg:hidden">
-              {PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
-                const rowCells = buildProfileConversionEngagementRowCells(
-                  profileConversionEngagement,
-                  row,
-                );
+        <div className="mt-5">
+          <div className="grid gap-3 lg:hidden">
+            {matrix.rows.map((row) => {
+              const rowCells = buildProfileConversionMatrixRowCells(
+                matrix,
+                row,
+                profileConversionMatrixMode,
+              );
 
-                return (
-                  <section
-                    className="rounded-[1.35rem] border border-border bg-surface p-3"
-                    key={`psychologist-mobile-profile-conversion-engagement-${row.label}`}
-                  >
-                    <h3 className="text-sm font-black text-foreground">{row.label}</h3>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      {rowCells.map((cell) => (
-                        <ProfileConversionEngagementQuadrantCard
-                          color={cell.color}
-                          description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
-                          headingLabel={cell.columnLabel}
-                          intensityPercentage={cell.rowPercentage}
-                          key={cell.quadrant.id}
-                          planSegment={profileConversionEngagementPlanSegment}
-                          quadrant={cell.quadrant}
-                          showEngagementLabel
-                        />
-                      ))}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
+              return (
+                <section
+                  className="rounded-[1.35rem] border border-border bg-surface p-3"
+                  key={`psychologist-mobile-profile-conversion-matrix-${row.id}`}
+                >
+                  <h3 className="text-sm font-black text-foreground">{row.label}</h3>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-4">
+                    {rowCells.map((cell) => (
+                      <ProfileConversionMatrixQuadrantCard
+                        color={cell.color}
+                        description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.row.label.toLowerCase()}.`}
+                        headingLabel={cell.column.label}
+                        intensityPercentage={cell.rowPercentage}
+                        key={cell.quadrant.id}
+                        quadrant={cell.quadrant}
+                        showColumnLabel
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
 
+          <div className="hidden overflow-x-auto pb-2 lg:block">
             <div
-              className="hidden gap-2 lg:grid"
-              style={{ gridTemplateColumns: "132px repeat(4, minmax(0, 1fr))" }}
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: `132px repeat(${matrix.columns.length}, minmax(7.5rem, 1fr))`,
+                minWidth: `${132 + matrix.columns.length * 128}px`,
+              }}
             >
-              <div className="hidden lg:block" aria-hidden />
-              {PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS.map((column) => (
+              <div className="sticky left-0 z-10 hidden bg-surface lg:block" aria-hidden />
+              {matrix.columns.map((column) => (
                 <p
-                  className="rounded-xl bg-surface-muted px-2 py-1.5 text-center text-[0.72rem] font-black text-muted"
-                  key={`psychologist-profile-conversion-engagement-column-${column.id}`}
+                  className="rounded-xl bg-surface-muted px-2 py-1.5 text-center text-[0.68rem] font-black leading-4 text-muted"
+                  key={`psychologist-profile-conversion-matrix-column-${column.id}`}
                 >
                   {column.label}
                 </p>
               ))}
 
-              {PROFILE_CONVERSION_ENGAGEMENT_MATRIX_ROWS.map((row) => {
-                const rowCells = buildProfileConversionEngagementRowCells(
-                  profileConversionEngagement,
+              {matrix.rows.map((row) => {
+                const rowCells = buildProfileConversionMatrixRowCells(
+                  matrix,
                   row,
+                  profileConversionMatrixMode,
                 );
 
                 return (
-                  <Fragment key={`psychologist-profile-conversion-engagement-row-${row.label}`}>
-                    <p className="grid place-items-center rounded-xl bg-surface-muted px-2 py-2 text-center text-[0.68rem] font-black text-muted">
+                  <Fragment key={`psychologist-profile-conversion-matrix-row-${row.id}`}>
+                    <p className="sticky left-0 z-10 grid place-items-center rounded-xl bg-surface-muted px-2 py-2 text-center text-[0.68rem] font-black text-muted">
                       {row.label}
                     </p>
                     {rowCells.map((cell) => (
-                      <ProfileConversionEngagementQuadrantCard
+                      <ProfileConversionMatrixQuadrantCard
                         color={cell.color}
-                        description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.rowLabel.toLowerCase()}.`}
+                        description={`${formatPercentageValue(cell.rowPercentage)} dentro de ${cell.row.label.toLowerCase()}.`}
                         intensityPercentage={cell.rowPercentage}
                         key={cell.quadrant.id}
-                        planSegment={profileConversionEngagementPlanSegment}
                         quadrant={cell.quadrant}
                       />
                     ))}
@@ -3243,75 +3232,6 @@ const DashboardProfileConversionEngagementCard = ({
               })}
             </div>
           </div>
-
-          <aside className="grid content-start gap-3">
-            <ProfileConversionEngagementMetric
-              label="Conversão em Alto Engajamento"
-              value={
-                <>
-                  {formatNullablePercentage(veryEngaged.strong_conversion_rate)}
-                  <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(veryEngaged.strong_conversion_count)}/
-                    {numberFormatter.format(veryEngaged.psychologists)}
-                  </span>
-                </>
-              }
-            />
-            <ProfileConversionEngagementMetric
-              label="Conversão em Engajamento Padrão"
-              value={
-                <>
-                  {formatNullablePercentage(engaged.strong_conversion_rate)}
-                  <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(engaged.strong_conversion_count)}/
-                    {numberFormatter.format(engaged.psychologists)}
-                  </span>
-                </>
-              }
-            />
-            <ProfileConversionEngagementMetric
-              label="Conversão em Baixo Engajamento"
-              value={
-                <>
-                  {formatNullablePercentage(lowEngaged.strong_conversion_rate)}
-                  <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(lowEngaged.strong_conversion_count)}/
-                    {numberFormatter.format(lowEngaged.psychologists)}
-                  </span>
-                </>
-              }
-            />
-            <ProfileConversionEngagementMetric
-              label="Conversão em Sem Engajamento"
-              value={
-                <>
-                  {formatNullablePercentage(noEngagement.strong_conversion_rate)}
-                  <span className="ml-1 text-xs font-bold text-muted">
-                    · {numberFormatter.format(noEngagement.strong_conversion_count)}/
-                    {numberFormatter.format(noEngagement.psychologists)}
-                  </span>
-                </>
-              }
-            />
-            <ProfileConversionEngagementMetric
-              label="Diferença observada"
-              value={formatRateDifference(rateDifference)}
-            />
-            <div className="rounded-[1.35rem] border border-border bg-surface-muted p-4 text-xs font-bold leading-5 text-muted">
-              {typeof rateDifference === "number" ? (
-                <>
-                  Impacto observado: psicólogos em Alto Engajamento e Engajamento Padrão apresentam,
-                  juntos,{" "}
-                  <span className="font-black text-foreground">
-                    {formatRateDifference(rateDifference)}
-                  </span>{" "}
-                  na taxa de alta conversão versus Baixo Engajamento ou Sem Engajamento no período.
-                </>
-              ) : (
-                "Impacto observado: ainda não há base suficiente para comparar a conversão entre Alto Engajamento, Engajamento Padrão, Baixo Engajamento e Sem Engajamento no período."
-              )}
-            </div>
-          </aside>
         </div>
       )}
     </CardShell>
