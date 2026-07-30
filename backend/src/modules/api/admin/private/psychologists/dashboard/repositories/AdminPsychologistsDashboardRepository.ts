@@ -818,6 +818,11 @@ export class AdminPsychologistsDashboardRepository
           deleted: false,
           role: "psicologo",
         },
+        user: {
+          active: true,
+          deleted: false,
+          role: "paciente",
+        },
       },
     });
 
@@ -833,6 +838,11 @@ export class AdminPsychologistsDashboardRepository
           active: true,
           deleted: false,
           role: "psicologo",
+        },
+        user: {
+          active: true,
+          deleted: false,
+          role: "paciente",
         },
       },
     });
@@ -852,6 +862,7 @@ export class AdminPsychologistsDashboardRepository
         author: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         createdAt: eventCreatedAtWhere(range),
         deleted: false,
@@ -885,6 +896,7 @@ export class AdminPsychologistsDashboardRepository
         author: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         createdAt: eventCreatedAtWhere(range),
         deleted: false,
@@ -980,6 +992,7 @@ export class AdminPsychologistsDashboardRepository
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         value: 1,
       },
@@ -1019,6 +1032,7 @@ export class AdminPsychologistsDashboardRepository
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         value: 1,
       },
@@ -1052,6 +1066,7 @@ export class AdminPsychologistsDashboardRepository
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
       },
     });
@@ -1087,6 +1102,7 @@ export class AdminPsychologistsDashboardRepository
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
       },
     });
@@ -1117,6 +1133,16 @@ export class AdminPsychologistsDashboardRepository
           status: "publicado",
         },
         reply_id: null,
+        user: {
+          is: {
+            active: true,
+            deleted: false,
+            role: "paciente",
+          },
+        },
+        user_id: {
+          not: null,
+        },
       },
     });
 
@@ -1149,6 +1175,16 @@ export class AdminPsychologistsDashboardRepository
           },
         },
         reply_id: {
+          not: null,
+        },
+        user: {
+          is: {
+            active: true,
+            deleted: false,
+            role: "paciente",
+          },
+        },
+        user_id: {
           not: null,
         },
       },

@@ -16,6 +16,27 @@ import {
   buildAdminProfileConversionBenchmark,
   classifyAdminProfileConversionCategory,
 } from "@/utils/admin-profile-conversion";
+import type {
+  AdminProfileEngagementFavoritesCategoryId,
+  AdminProfileEngagementFavoritesCommunityCategoryId,
+  AdminProfileEngagementFavoritesFavoriteCategoryId,
+} from "@/utils/admin-profile-engagement-favorites";
+import {
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_CATEGORY_ORDER,
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_COMMUNITY_CATEGORY_CONFIG,
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_COMMUNITY_CATEGORY_ORDER,
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_FAVORITE_CATEGORY_CONFIG,
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_INSUFFICIENT_DATA_CONFIG,
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SCORE_CONFIG,
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE,
+  ADMIN_PROFILE_ENGAGEMENT_FAVORITES_THRESHOLDS,
+  buildAdminProfileEngagementFavoritesBenchmark,
+  buildAdminProfileEngagementFavoritesCombinationId,
+  calculateAdminProfileEngagementFavoritesCommunityScore,
+  classifyAdminProfileEngagementFavoritesCommunityCategory,
+  classifyAdminProfileEngagementFavoritesFavoriteCategory,
+  getAdminProfileEngagementFavoritesCombinationConfig,
+} from "@/utils/admin-profile-engagement-favorites";
 import {
   ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG,
   ADMIN_PROFILE_EXPOSURE_CATEGORY_ORDER,
@@ -69,6 +90,8 @@ import type {
   AdminPsychologistsDashboardProfileConversionEngagementQuadrantId,
   AdminPsychologistsDashboardProfileConversionEngagementResults,
   AdminPsychologistsDashboardProfileConversionResults,
+  AdminPsychologistsDashboardProfileEngagementFavoritesResults,
+  AdminPsychologistsDashboardProfileEngagementFavoritesTotals,
   AdminPsychologistsDashboardProfileExposureCategoryId,
   AdminPsychologistsDashboardProfileExposureResults,
   AdminPsychologistsDashboardProfileExposureTotals,
@@ -151,19 +174,19 @@ const PROFILE_EXPOSURE_CATEGORY_CONFIG = ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG 
 const PROFILE_CONVERSION_ENGAGEMENT_LEVEL_CONFIG = {
   engaged: {
     description: "intera\u00e7\u00f5es recebidas consistentes em perfil e comunidades",
-    label: "engajado",
+    label: "Engajamento Padr\u00e3o",
   },
   low_engaged: {
     description: "poucas intera\u00e7\u00f5es recebidas em perfil e comunidades",
-    label: "pouco engajado",
+    label: "Baixo Engajamento",
   },
   no_engagement: {
     description: "nenhuma intera\u00e7\u00e3o recebida em perfil ou comunidades no per\u00edodo",
-    label: "sem engajamento",
+    label: "Sem Engajamento",
   },
   very_engaged: {
     description: "volume muito alto de intera\u00e7\u00f5es recebidas em perfil e comunidades",
-    label: "muito engajado",
+    label: "Alto Engajamento",
   },
 } satisfies Record<
   AdminPsychologistsDashboardProfileConversionEngagementLevelId,
@@ -1447,6 +1470,239 @@ const countReceivedEngagementEventsByPsychologist = (
   return counts;
 };
 
+const emptyProfileEngagementFavoritesTotals =
+  (): AdminPsychologistsDashboardProfileEngagementFavoritesTotals => ({
+    comments_received: 0,
+    community_engagement_score: 0,
+    content_saves: 0,
+    content_shares: 0,
+    favorites: 0,
+    positive_votes: 0,
+    received_community_interactions: 0,
+    whatsapp_clicks: 0,
+  });
+
+const addProfileEngagementFavoritesTotals = (
+  target: AdminPsychologistsDashboardProfileEngagementFavoritesTotals,
+  source: AdminPsychologistsDashboardProfileEngagementFavoritesTotals,
+) => {
+  target.comments_received += source.comments_received;
+  target.community_engagement_score = roundOneDecimal(
+    target.community_engagement_score + source.community_engagement_score,
+  );
+  target.content_saves += source.content_saves;
+  target.content_shares += source.content_shares;
+  target.favorites += source.favorites;
+  target.positive_votes += source.positive_votes;
+  target.received_community_interactions += source.received_community_interactions;
+  target.whatsapp_clicks += source.whatsapp_clicks;
+};
+
+const buildProfileEngagementFavoritesSignalTotals = (input: {
+  commentsReceived: number;
+  contentSaves: number;
+  contentShares: number;
+  favorites: number;
+  positiveVotes: number;
+  whatsappClicks: number;
+}): AdminPsychologistsDashboardProfileEngagementFavoritesTotals => {
+  const communityEngagementScore = calculateAdminProfileEngagementFavoritesCommunityScore({
+    commentsReceived: input.commentsReceived,
+    contentSaves: input.contentSaves,
+    contentShares: input.contentShares,
+    positiveVotes: input.positiveVotes,
+  });
+
+  return {
+    comments_received: input.commentsReceived,
+    community_engagement_score: communityEngagementScore,
+    content_saves: input.contentSaves,
+    content_shares: input.contentShares,
+    favorites: input.favorites,
+    positive_votes: input.positiveVotes,
+    received_community_interactions:
+      input.commentsReceived + input.contentSaves + input.contentShares + input.positiveVotes,
+    whatsapp_clicks: input.whatsappClicks,
+  };
+};
+
+const getProfileEngagementFavoritesCategoryConfig = (
+  id: AdminProfileEngagementFavoritesCategoryId,
+) => {
+  if (id === "insufficient_data") {
+    return {
+      description: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_INSUFFICIENT_DATA_CONFIG.description,
+      engagement_id: null,
+      engagement_label: null,
+      favorites_id: null,
+      favorites_label: null,
+      label: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_INSUFFICIENT_DATA_CONFIG.label,
+    };
+  }
+
+  const communityId = ADMIN_PROFILE_ENGAGEMENT_FAVORITES_COMMUNITY_CATEGORY_ORDER.find(
+    (candidate) => id.startsWith(`${candidate}_`),
+  ) as AdminProfileEngagementFavoritesCommunityCategoryId;
+  const favoritesId = id.slice(
+    `${communityId}_`.length,
+  ) as AdminProfileEngagementFavoritesFavoriteCategoryId;
+  const config = getAdminProfileEngagementFavoritesCombinationConfig({
+    communityCategoryId: communityId,
+    favoriteCategoryId: favoritesId,
+  });
+
+  return {
+    description: config.description,
+    engagement_id: communityId,
+    engagement_label:
+      ADMIN_PROFILE_ENGAGEMENT_FAVORITES_COMMUNITY_CATEGORY_CONFIG[communityId].label,
+    favorites_id: favoritesId,
+    favorites_label: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_FAVORITE_CATEGORY_CONFIG[favoritesId].label,
+    label: config.label,
+  };
+};
+
+const buildProfileEngagementFavoritesResults = (params: {
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+  receivedEngagementEvents: AdminPsychologistReceivedEngagementEventRecord[];
+  whatsappClicks: AdminPsychologistEventRecord[];
+}): AdminPsychologistsDashboardProfileEngagementFavoritesResults => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const receivedEngagementEvents = params.receivedEngagementEvents.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const whatsappClickEvents = params.whatsappClicks.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const receivedEngagementCounts =
+    countReceivedEngagementEventsByPsychologist(receivedEngagementEvents);
+  const whatsappClickCounts = countEventsByPsychologist(whatsappClickEvents);
+  const signalsByPsychologistId = new Map<
+    string,
+    AdminPsychologistsDashboardProfileEngagementFavoritesTotals
+  >();
+
+  for (const profile of params.profiles) {
+    const psychologistId = profile.user.id;
+    const counts =
+      receivedEngagementCounts.get(psychologistId) ?? emptyReceivedEngagementSignalCounts();
+
+    signalsByPsychologistId.set(
+      psychologistId,
+      buildProfileEngagementFavoritesSignalTotals({
+        commentsReceived: counts.commentsReceived,
+        contentSaves: counts.contentSaves,
+        contentShares: counts.contentShares,
+        favorites: counts.profileFavorites,
+        positiveVotes: counts.positiveVotes,
+        whatsappClicks: whatsappClickCounts.get(psychologistId) ?? 0,
+      }),
+    );
+  }
+
+  const eligibleProfiles = params.profiles.filter(
+    (profile) =>
+      getProfileAgeDaysUntil(profile, params.range.end) >=
+      ADMIN_PROFILE_ENGAGEMENT_FAVORITES_THRESHOLDS.adaptation_period_days,
+  );
+  const benchmark = buildAdminProfileEngagementFavoritesBenchmark({
+    communityEngagementScores: eligibleProfiles.map(
+      (profile) => signalsByPsychologistId.get(profile.user.id)?.community_engagement_score ?? 0,
+    ),
+    eligiblePsychologists: eligibleProfiles.length,
+    favoriteCounts: eligibleProfiles.map(
+      (profile) => signalsByPsychologistId.get(profile.user.id)?.favorites ?? 0,
+    ),
+  });
+  const categories = new Map(
+    ADMIN_PROFILE_ENGAGEMENT_FAVORITES_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: emptyProfileEngagementFavoritesTotals(),
+      },
+    ]),
+  );
+  const totalSignals = {
+    ...emptyProfileEngagementFavoritesTotals(),
+    adaptation_psychologists: params.profiles.length - eligibleProfiles.length,
+    eligible_psychologists: eligibleProfiles.length,
+    engaged_psychologists: 0,
+    favorited_psychologists: 0,
+    psychologists: params.profiles.length,
+  };
+
+  for (const profile of params.profiles) {
+    const psychologistId = profile.user.id;
+    const signals =
+      signalsByPsychologistId.get(psychologistId) ?? emptyProfileEngagementFavoritesTotals();
+    const profileAgeDays = getProfileAgeDaysUntil(profile, params.range.end);
+    const communityCategoryId = classifyAdminProfileEngagementFavoritesCommunityCategory({
+      benchmark,
+      engagementScore: signals.community_engagement_score,
+      profileAgeDays,
+    });
+    const favoriteCategoryId = classifyAdminProfileEngagementFavoritesFavoriteCategory({
+      benchmark,
+      favorites: signals.favorites,
+      profileAgeDays,
+    });
+    const categoryId =
+      communityCategoryId === "insufficient_data" || favoriteCategoryId === "insufficient_data"
+        ? "insufficient_data"
+        : buildAdminProfileEngagementFavoritesCombinationId({
+            communityCategoryId,
+            favoriteCategoryId,
+          });
+    const category = categories.get(categoryId);
+
+    addProfileEngagementFavoritesTotals(totalSignals, signals);
+    if (signals.community_engagement_score > 0) totalSignals.engaged_psychologists += 1;
+    if (signals.favorites > 0) totalSignals.favorited_psychologists += 1;
+    if (category) {
+      category.count += 1;
+      addProfileEngagementFavoritesTotals(category.totals, signals);
+    }
+  }
+
+  return {
+    benchmark,
+    categories: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_CATEGORY_ORDER.map((id) => {
+      const config = getProfileEngagementFavoritesCategoryConfig(id);
+      const values = categories.get(id) ?? {
+        count: 0,
+        totals: emptyProfileEngagementFavoritesTotals(),
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        engagement_id: config.engagement_id,
+        engagement_label: config.engagement_label,
+        favorites_id: config.favorites_id,
+        favorites_label: config.favorites_label,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, params.profiles.length),
+        totals: values.totals,
+      };
+    }),
+    description:
+      "Classificação interna e agregada que cruza relacionamento recebido na comunidade com favoritos recebidos no período; usada para entender o funil até WhatsApp sem alterar ranking público ou punir psicólogos.",
+    source: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE,
+    thresholds: {
+      ...ADMIN_PROFILE_ENGAGEMENT_FAVORITES_THRESHOLDS,
+      score: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SCORE_CONFIG,
+    },
+    totals: totalSignals,
+    unavailable_reason:
+      params.profiles.length === 0
+        ? "Sem psicólogos ativos no fim do período selecionado para classificar Engajamento e Favoritos."
+        : null,
+  };
+};
+
 const emptyProfileConversionEngagementTotals = () => ({
   comments_received: 0,
   content_saves: 0,
@@ -2661,6 +2917,12 @@ const buildPlanSegmentSummaries = (params: {
           range: params.range,
           whatsappClicks: params.whatsappContactRequests,
         }),
+        profile_engagement_favorites: buildProfileEngagementFavoritesResults({
+          profiles: segmentProfiles,
+          range: params.range,
+          receivedEngagementEvents: params.receivedEngagementEvents,
+          whatsappClicks: params.whatsappContactRequests,
+        }),
         profile_conversion_engagement: buildProfileConversionEngagementResults({
           profiles: segmentProfiles,
           range: params.range,
@@ -2873,6 +3135,7 @@ export const buildPsychologistsDashboard = async (
   const trafficSources = planSegments.all.traffic_sources;
   const profileConversion = planSegments.all.profile_conversion;
   const profileConversionEngagement = planSegments.all.profile_conversion_engagement;
+  const profileEngagementFavorites = planSegments.all.profile_engagement_favorites;
   const profileExposure = planSegments.all.profile_exposure;
   const statistics = planSegments.all.statistics;
   const profileNameByUserId = new Map(
@@ -2995,6 +3258,7 @@ export const buildPsychologistsDashboard = async (
       source: "user+professional_subscription",
     },
     profile_conversion: profileConversion,
+    profile_engagement_favorites: profileEngagementFavorites,
     profile_conversion_engagement: profileConversionEngagement,
     profile_exposure: profileExposure,
     traffic_sources: {
@@ -3032,6 +3296,17 @@ export const buildPsychologistsDashboard = async (
               id: "psychologist_profile_conversion_engagement",
               label: "Conversão x Engajamento",
               source: profileConversionEngagement.source,
+            },
+          ]
+        : []),
+      ...(profileEngagementFavorites.unavailable_reason
+        ? [
+            {
+              description:
+                "Engajamento e Favoritos depende de ao menos um perfil de psicÃ³logo ativo no perÃ­odo selecionado.",
+              id: "psychologist_profile_engagement_favorites",
+              label: "Engajamento e Favoritos",
+              source: profileEngagementFavorites.source,
             },
           ]
         : []),

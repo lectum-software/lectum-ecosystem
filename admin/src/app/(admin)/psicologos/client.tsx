@@ -53,6 +53,11 @@ type ProfileConversionEngagementQuadrantItem =
   AdminPsychologistsDashboard["profile_conversion_engagement"]["quadrants"][number];
 type ProfileExposureCategoryItem =
   AdminPsychologistsDashboard["profile_exposure"]["categories"][number];
+type ProfileEngagementFavoritesCategoryItem =
+  AdminPsychologistsDashboard["profile_engagement_favorites"]["categories"][number];
+type ProfileEngagementFavoritesCommunityCategoryId = NonNullable<
+  ProfileEngagementFavoritesCategoryItem["engagement_id"]
+>;
 type ProfileConversionEngagementAxisCategoryId = Exclude<
   ProfileConversionCategoryItem["id"],
   "insufficient_data"
@@ -318,6 +323,15 @@ const PROFILE_EXPOSURE_CHART_COLORS = {
   standard_exposure: "#308ce8",
 } satisfies Record<ProfileExposureCategoryItem["id"], string>;
 
+const PROFILE_ENGAGEMENT_FAVORITES_VISIBLE_LIMIT = 5;
+const PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR = "#64748b";
+const PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS = {
+  high_engagement: "#13a85b",
+  low_engagement: "#f59f00",
+  no_engagement: "#64748b",
+  standard_engagement: "#308ce8",
+} satisfies Record<ProfileEngagementFavoritesCommunityCategoryId, string>;
+
 const PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS = {
   engaged: "#308ce8",
   low_engaged: "#f59f00",
@@ -331,19 +345,19 @@ const PROFILE_CONVERSION_ENGAGEMENT_MATRIX_COLUMNS: {
 }[] = [
   {
     id: "very_engaged",
-    label: "Muito engajado",
+    label: "Alto Engajamento",
   },
   {
     id: "engaged",
-    label: "Engajado",
+    label: "Engajamento Padrão",
   },
   {
     id: "low_engaged",
-    label: "Pouco engajado",
+    label: "Baixo Engajamento",
   },
   {
     id: "no_engagement",
-    label: "Sem engajamento",
+    label: "Sem Engajamento",
   },
 ];
 
@@ -856,6 +870,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     signup_method: summary.signup_method,
     statistics: summary.statistics,
     profile_conversion: summary.profile_conversion,
+    profile_engagement_favorites: summary.profile_engagement_favorites,
     profile_conversion_engagement: summary.profile_conversion_engagement,
     profile_exposure: summary.profile_exposure,
     traffic_sources: summary.traffic_sources,
@@ -2482,44 +2497,73 @@ const PsychologistsDonutChart = ({
   );
 };
 
-const buildPsychologistEngagementDonutItems = (
-  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"],
-): PsychologistsDonutChartItem[] => {
-  const total = Math.max(0, profileConversionEngagement.totals.psychologists);
-  const buildItem = (
-    id: PsychologistEngagementDonutBucketId,
-    label: string,
-    count: number,
-  ): PsychologistsDonutChartItem => ({
-    color: PSYCHOLOGIST_ENGAGEMENT_DONUT_COLORS[id],
-    count,
-    id,
-    label,
-    percentage: total > 0 ? toOneDecimal((count / total) * 100) : 0,
-  });
+const getProfileEngagementFavoritesColor = (item: ProfileEngagementFavoritesCategoryItem) => {
+  if (item.id === "insufficient_data") return PROFILE_CONVERSION_CHART_COLORS.insufficient_data;
 
-  return [
-    buildItem(
-      "very_engaged",
-      "Muito engajado",
-      Math.max(0, profileConversionEngagement.totals.very_engaged_psychologists),
-    ),
-    buildItem(
-      "engaged",
-      "Engajado",
-      Math.max(0, profileConversionEngagement.totals.engaged_psychologists),
-    ),
-    buildItem(
-      "low_engaged",
-      "Pouco engajado",
-      Math.max(0, profileConversionEngagement.totals.low_engaged_psychologists),
-    ),
-    buildItem(
-      "no_engagement",
-      "Sem engajamento",
-      Math.max(0, profileConversionEngagement.totals.no_engagement_psychologists),
-    ),
+  return item.engagement_id
+    ? PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS[item.engagement_id]
+    : PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR;
+};
+
+const mapProfileEngagementFavoritesDonutItem = (
+  item: ProfileEngagementFavoritesCategoryItem,
+): PsychologistsDonutChartItem => ({
+  color: getProfileEngagementFavoritesColor(item),
+  count: item.count,
+  description: item.description,
+  id: item.id,
+  label: item.label,
+  percentage: item.percentage,
+});
+
+const buildProfileEngagementFavoritesDonutItems = (
+  profileEngagementFavorites: AdminPsychologistsDashboard["profile_engagement_favorites"],
+) => {
+  const total = Math.max(0, profileEngagementFavorites.totals.psychologists);
+  const indexedCategories = profileEngagementFavorites.categories.map((item, index) => ({
+    index,
+    item,
+  }));
+  const insufficientData = indexedCategories.find(({ item }) => item.id === "insufficient_data");
+  const combinationCategories = indexedCategories.filter(
+    ({ item }) => item.id !== "insufficient_data",
+  );
+  const nonZeroCombinations = combinationCategories
+    .filter(({ item }) => item.count > 0)
+    .sort((left, right) => {
+      if (right.item.count !== left.item.count) return right.item.count - left.item.count;
+
+      return left.index - right.index;
+    });
+  const topCombinations = nonZeroCombinations.slice(0, PROFILE_ENGAGEMENT_FAVORITES_VISIBLE_LIMIT);
+  const hiddenCombinations = nonZeroCombinations.slice(PROFILE_ENGAGEMENT_FAVORITES_VISIBLE_LIMIT);
+  const hiddenCount = hiddenCombinations.reduce((sum, { item }) => sum + item.count, 0);
+  const collapsedItems: PsychologistsDonutChartItem[] = [
+    ...topCombinations.map(({ item }) => mapProfileEngagementFavoritesDonutItem(item)),
+    ...(hiddenCount > 0
+      ? [
+          {
+            color: PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR,
+            count: hiddenCount,
+            description: `Soma das demais combinações com volume no período: ${hiddenCombinations
+              .map(({ item }) => item.label)
+              .join(", ")}.`,
+            id: "other_engagement_favorites",
+            label: "Outras combinações",
+            percentage: total > 0 ? toOneDecimal((hiddenCount / total) * 100) : 0,
+          },
+        ]
+      : []),
+    ...(insufficientData && insufficientData.item.count > 0
+      ? [mapProfileEngagementFavoritesDonutItem(insufficientData.item)]
+      : []),
   ];
+
+  return {
+    allItems: profileEngagementFavorites.categories.map(mapProfileEngagementFavoritesDonutItem),
+    collapsedItems,
+    hiddenCombinationCount: hiddenCombinations.length,
+  };
 };
 
 const ProfileConversionDonutChart = ({
@@ -2641,14 +2685,17 @@ const formatProfileExposureStandardRange = (
   return `${formatVisibilityDurationValue(min)} a ${formatVisibilityDurationValue(max)}`;
 };
 
-const PsychologistEngagementDonutChart = ({
-  profileConversionEngagement,
+const ProfileEngagementFavoritesDonutChart = ({
+  profileEngagementFavorites,
 }: {
-  profileConversionEngagement: AdminPsychologistsDashboard["profile_conversion_engagement"];
+  profileEngagementFavorites: AdminPsychologistsDashboard["profile_engagement_favorites"];
 }) => {
-  const total = Math.max(0, profileConversionEngagement.totals.psychologists);
-  const items = buildPsychologistEngagementDonutItems(profileConversionEngagement);
-  const ariaLabel = `Gráfico de donut de Engajamento dos psicólogos: ${items
+  const [expanded, setExpanded] = useState(false);
+  const total = Math.max(0, profileEngagementFavorites.totals.psychologists);
+  const { allItems, collapsedItems, hiddenCombinationCount } =
+    buildProfileEngagementFavoritesDonutItems(profileEngagementFavorites);
+  const items = expanded ? allItems : collapsedItems;
+  const ariaLabel = `Gráfico de donut de Engajamento e Favoritos dos psicólogos: ${items
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
@@ -2658,15 +2705,30 @@ const PsychologistEngagementDonutChart = ({
     .join("; ")}.`;
 
   return (
-    <PsychologistsDonutChart
-      ariaLabel={ariaLabel}
-      emptyMessage={
-        profileConversionEngagement.unavailable_reason ??
-        "Sem psicólogos ativos no período selecionado para classificar Engajamento."
-      }
-      items={items}
-      total={total}
-    />
+    <div>
+      <PsychologistsDonutChart
+        ariaLabel={ariaLabel}
+        emptyMessage={
+          profileEngagementFavorites.unavailable_reason ??
+          "Sem psicólogos ativos no período selecionado para classificar Engajamento e Favoritos."
+        }
+        items={items}
+        total={total}
+      />
+      {hiddenCombinationCount > 0 ? (
+        <button
+          className="mt-3 rounded-full border border-primary/20 px-3 py-1.5 text-xs font-black text-primary transition hover:bg-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          onClick={() => setExpanded((current) => !current)}
+          type="button"
+        >
+          {expanded
+            ? "Ver combinações principais"
+            : `Ver todas as ${numberFormatter.format(
+                profileEngagementFavorites.categories.length,
+              )} categorias`}
+        </button>
+      ) : null}
+    </div>
   );
 };
 const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
@@ -2678,8 +2740,16 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   );
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
   const profileConversionEngagement = profileConversionSegmentSummary.profile_conversion_engagement;
+  const profileEngagementFavorites = profileConversionSegmentSummary.profile_engagement_favorites;
   const profileExposure = profileConversionSegmentSummary.profile_exposure;
-  if (!profileConversion || !profileConversionEngagement || !profileExposure) return null;
+  if (
+    !profileConversion ||
+    !profileConversionEngagement ||
+    !profileEngagementFavorites ||
+    !profileExposure
+  ) {
+    return null;
+  }
 
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
   const visibilityStandardRangeLabel = formatProfileExposureStandardRange(
@@ -2695,7 +2765,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Visibilidade, engajamento e conversão dos psicólogos"
+          title="Visibilidade, engajamento, favoritos e conversão dos psicólogos"
         />
         <PlanSegmentSelect
           id="profile-conversion-plan-segment"
@@ -2757,30 +2827,50 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <span className="inline-flex items-center gap-2">
-                <h3 className="text-lg font-bold text-foreground">Engajamento</h3>
+                <h3 className="text-lg font-bold text-foreground">Engajamento e Favoritos</h3>
                 <button
-                  aria-label="Engajamento recebido: comentários, reações positivas, salvamentos, compartilhamentos, favoritos e seguidores recebidos pelo psicólogo."
+                  aria-label="Engajamento e Favoritos: cruza relacionamento recebido na comunidade com favoritos recebidos no período selecionado."
                   className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   type="button"
                 >
                   <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
                   <span
-                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
                     role="tooltip"
                   >
-                    Mede interações recebidas pelo psicólogo: comentários, reações positivas,
-                    salvamentos, compartilhamentos, favoritos e seguidores.
+                    Cruza favoritos recebidos com relacionamento de pacientes na comunidade. O score
+                    de comunidade usa comentários recebidos (peso 5), compartilhamentos (3),
+                    salvamentos (2) e votos positivos (1). É uma leitura analítica do funil até
+                    WhatsApp e não altera o ranking público.
                   </span>
                 </button>
               </span>
               <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(profileConversionEngagement.totals.psychologists)}
+                {numberFormatter.format(profileEngagementFavorites.totals.psychologists)}
               </p>
               <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
             </div>
           </div>
-          <PsychologistEngagementDonutChart
-            profileConversionEngagement={profileConversionEngagement}
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-2xl border border-primary/10 bg-surface px-3 py-2">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
+                Favoritados
+              </p>
+              <p className="mt-1 text-sm font-black text-foreground">
+                {numberFormatter.format(profileEngagementFavorites.totals.favorited_psychologists)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-primary/10 bg-surface px-3 py-2">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-subtle">
+                Com relacionamento
+              </p>
+              <p className="mt-1 text-sm font-black text-foreground">
+                {numberFormatter.format(profileEngagementFavorites.totals.engaged_psychologists)}
+              </p>
+            </div>
+          </div>
+          <ProfileEngagementFavoritesDonutChart
+            profileEngagementFavorites={profileEngagementFavorites}
           />
         </section>
 
@@ -3060,7 +3150,7 @@ const DashboardProfileConversionEngagementCard = ({
 
           <aside className="grid content-start gap-3">
             <ProfileConversionEngagementMetric
-              label="Conversão entre muito engajados"
+              label="Conversão em Alto Engajamento"
               value={
                 <>
                   {formatNullablePercentage(veryEngaged.strong_conversion_rate)}
@@ -3072,7 +3162,7 @@ const DashboardProfileConversionEngagementCard = ({
               }
             />
             <ProfileConversionEngagementMetric
-              label="Conversão entre engajados"
+              label="Conversão em Engajamento Padrão"
               value={
                 <>
                   {formatNullablePercentage(engaged.strong_conversion_rate)}
@@ -3084,7 +3174,7 @@ const DashboardProfileConversionEngagementCard = ({
               }
             />
             <ProfileConversionEngagementMetric
-              label="Conversão entre pouco engajados"
+              label="Conversão em Baixo Engajamento"
               value={
                 <>
                   {formatNullablePercentage(lowEngaged.strong_conversion_rate)}
@@ -3096,7 +3186,7 @@ const DashboardProfileConversionEngagementCard = ({
               }
             />
             <ProfileConversionEngagementMetric
-              label="Conversão entre sem engajamento"
+              label="Conversão em Sem Engajamento"
               value={
                 <>
                   {formatNullablePercentage(noEngagement.strong_conversion_rate)}
@@ -3114,14 +3204,15 @@ const DashboardProfileConversionEngagementCard = ({
             <div className="rounded-[1.35rem] border border-border bg-surface-muted p-4 text-xs font-bold leading-5 text-muted">
               {typeof rateDifference === "number" ? (
                 <>
-                  Impacto observado: psicólogos muito engajados e engajados apresentam, juntos,{" "}
+                  Impacto observado: psicólogos em Alto Engajamento e Engajamento Padrão apresentam,
+                  juntos,{" "}
                   <span className="font-black text-foreground">
                     {formatRateDifference(rateDifference)}
                   </span>{" "}
-                  na taxa de alta conversão versus pouco ou sem engajamento no período.
+                  na taxa de alta conversão versus Baixo Engajamento ou Sem Engajamento no período.
                 </>
               ) : (
-                "Impacto observado: ainda não há base suficiente para comparar a conversão entre muito engajados, engajados e pouco ou sem engajamento no período."
+                "Impacto observado: ainda não há base suficiente para comparar a conversão entre Alto Engajamento, Engajamento Padrão, Baixo Engajamento e Sem Engajamento no período."
               )}
             </div>
           </aside>

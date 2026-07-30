@@ -661,6 +661,11 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
       where: {
         deleted: false,
         psychologist_id: psychologistIdsWhere(psychologistIds),
+        user: {
+          active: true,
+          deleted: false,
+          role: "paciente",
+        },
       },
       _count: {
         _all: true,
@@ -705,6 +710,11 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
       where: {
         deleted: false,
         psychologist_id: psychologistIdsWhere(psychologistIds),
+        user: {
+          active: true,
+          deleted: false,
+          role: "paciente",
+        },
       },
       _count: {
         _all: true,
@@ -742,6 +752,7 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         author: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         deleted: false,
         post: {
@@ -773,6 +784,7 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         author: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         deleted: false,
         parent_reply: {
@@ -844,6 +856,7 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         value: 1,
       },
@@ -887,6 +900,7 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
         value: 1,
       },
@@ -924,6 +938,7 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
       },
     });
@@ -963,6 +978,7 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
         user: {
           active: true,
           deleted: false,
+          role: "paciente",
         },
       },
     });
@@ -997,6 +1013,16 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
           status: "publicado",
         },
         reply_id: null,
+        user: {
+          is: {
+            active: true,
+            deleted: false,
+            role: "paciente",
+          },
+        },
+        user_id: {
+          not: null,
+        },
       },
     });
     for (const share of postShares) {
@@ -1033,6 +1059,16 @@ export class AdminPsychologistsListRepository implements IAdminPsychologistsList
           },
         },
         reply_id: {
+          not: null,
+        },
+        user: {
+          is: {
+            active: true,
+            deleted: false,
+            role: "paciente",
+          },
+        },
+        user_id: {
           not: null,
         },
       },
