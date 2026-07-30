@@ -143,3 +143,30 @@ executivo, chamado **Engajamento e Favoritos**, com 16 combinações internas.
   **Com relacionamento**.
 - Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`;
   `pnpm --dir backend db:migrate` nao se aplica a este ajuste.
+
+## Ajuste pos-feedback - tooltips do funil executivo
+
+- [x] Tooltips das opcoes do donut de **Engajamento e Favoritos** removidas, inclusive
+      **Sem Engajamento e Sem favoritos** e **Dados Insuficientes**.
+- [x] Tooltips dos titulos **Visibilidade**, **Engajamento e Favoritos** e **Conversao**
+      mantidas/ativadas na frente do titulo com explicacao breve do bloco.
+- [x] Padrao da plataforma do periodo exibido em negrito nas tooltips de titulo:
+      comunidade/video em **Visibilidade**, engajamento/favoritos em **Engajamento e Favoritos**
+      e WhatsApp em **Conversao**.
+- [x] Ajuste mantido no Admin mobile-first, sem `<img>`, sem mocks, sem package novo, sem
+      endpoint paralelo, sem schema Prisma e sem migration.
+
+## Validacao complementar das tooltips do funil executivo
+
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a validacao usou
+  `_product/tasks/PROTO-INVENTORY.md`, a imagem local exportada correspondente ao dashboard Admin de
+  Psicologos e os screenshots enviados pelo usuario.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- HTTP local no Admin retornou `200` para `http://localhost:3002/psicologos`.
+- Smoke estatico no fonte confirmou tres donuts executivos com `showDescriptionTooltips={false}`,
+  faixa padrao do periodo nas tooltips de titulo e negrito para os benchmarks de Engajamento e
+  Favoritos.
+- Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`;
+  `pnpm --dir backend db:migrate` nao se aplica a este ajuste.

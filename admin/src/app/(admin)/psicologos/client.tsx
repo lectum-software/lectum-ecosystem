@@ -2695,6 +2695,18 @@ const formatWhatsappClicksValue = (value: number) => {
   return `${numberFormatter.format(value)} ${label}`;
 };
 
+const formatCommunityEngagementScoreValue = (value: number) => {
+  const label = value === 1 ? "ponto" : "pontos";
+
+  return `${numberFormatter.format(value)} ${label}`;
+};
+
+const formatFavoritesValue = (value: number) => {
+  const label = value === 1 ? "favorito" : "favoritos";
+
+  return `${numberFormatter.format(value)} ${label}`;
+};
+
 const formatVisibilityDurationValue = (value: number) => {
   const seconds = Math.max(0, Math.round(value));
   const hours = Math.floor(seconds / 3600);
@@ -2738,6 +2750,30 @@ const formatProfileExposureSurfaceStandardRange = (
   return `${formatVisibilityDurationValue(min)} a ${formatVisibilityDurationValue(max)}`;
 };
 
+const formatProfileEngagementStandardRange = (
+  benchmark: AdminPsychologistsDashboard["profile_engagement_favorites"]["benchmark"]["community_engagement"],
+) => {
+  const min = benchmark.standard_min_engagement_score;
+  const max = benchmark.standard_max_engagement_score;
+
+  if (min === null || max === null) return "Sem faixa padrão no período";
+  if (min === max) return formatCommunityEngagementScoreValue(min);
+
+  return `${formatCommunityEngagementScoreValue(min)} a ${formatCommunityEngagementScoreValue(max)}`;
+};
+
+const formatProfileFavoritesStandardRange = (
+  benchmark: AdminPsychologistsDashboard["profile_engagement_favorites"]["benchmark"]["favorites"],
+) => {
+  const min = benchmark.standard_min_favorites;
+  const max = benchmark.standard_max_favorites;
+
+  if (min === null || max === null) return "Sem faixa padrão no período";
+  if (min === max) return formatFavoritesValue(min);
+
+  return `${formatFavoritesValue(min)} a ${formatFavoritesValue(max)}`;
+};
+
 const ProfileEngagementFavoritesDonutChart = ({
   profileEngagementFavorites,
 }: {
@@ -2766,6 +2802,7 @@ const ProfileEngagementFavoritesDonutChart = ({
           "Sem psicólogos ativos no período selecionado para classificar Engajamento e Favoritos."
         }
         items={items}
+        showDescriptionTooltips={false}
         total={total}
       />
       {hiddenCombinationCount > 0 ? (
@@ -2811,6 +2848,12 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const videoVisibilityStandardRangeLabel = formatProfileExposureSurfaceStandardRange(
     profileExposure.benchmark.presentation_video,
   );
+  const engagementStandardRangeLabel = formatProfileEngagementStandardRange(
+    profileEngagementFavorites.benchmark.community_engagement,
+  );
+  const favoritesStandardRangeLabel = formatProfileFavoritesStandardRange(
+    profileEngagementFavorites.benchmark.favorites,
+  );
   const hasConversionStandardRange =
     profileConversion.benchmark.standard_min_whatsapp_clicks !== null &&
     profileConversion.benchmark.standard_max_whatsapp_clicks !== null;
@@ -2840,7 +2883,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
               <span className="inline-flex items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground">Visibilidade</h3>
                 <button
-                  aria-label={`Visibilidade cruza atenção em conteúdo autoral nas comunidades com tempo assistido no vídeo de apresentação. Comunidade padrão: ${communityVisibilityStandardRangeLabel}. Vídeo padrão: ${videoVisibilityStandardRangeLabel}.`}
+                  aria-label={`Visibilidade mostra a atenção recebida em conteúdo autoral nas comunidades e no vídeo de apresentação. Padrão da plataforma no período: comunidade ${communityVisibilityStandardRangeLabel}; vídeo ${videoVisibilityStandardRangeLabel}.`}
                   className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   type="button"
                 >
@@ -2849,13 +2892,12 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                     className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
                     role="tooltip"
                   >
-                    Visibilidade cruza tempo real de atenção em posts e respostas autorais nas
-                    comunidades (feed, dentro das comunidades e detalhes; texto, imagem ou vídeo)
-                    com tempo assistido no vídeo de apresentação. Não conta aparição em listagem nem
-                    WhatsApp. Comunidade padrão:{" "}
+                    Visibilidade mostra a atenção recebida pelo psicólogo em conteúdo autoral nas
+                    comunidades e no vídeo de apresentação. Não conta aparição em listagens nem
+                    WhatsApp. Padrão da plataforma no período: comunidade{" "}
                     <strong className="font-black">{communityVisibilityStandardRangeLabel}</strong>
                     {"; "}
-                    vídeo padrão:{" "}
+                    vídeo{" "}
                     <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
                   </span>
                 </button>
@@ -2877,7 +2919,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
               <span className="inline-flex items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground">Engajamento e Favoritos</h3>
                 <button
-                  aria-label="Engajamento e Favoritos: cruza relacionamento recebido na comunidade com favoritos recebidos no período selecionado."
+                  aria-label={`Engajamento e Favoritos cruza relacionamento recebido de pacientes na comunidade com favoritos recebidos. Padrão da plataforma no período: engajamento ${engagementStandardRangeLabel}; favoritos ${favoritesStandardRangeLabel}.`}
                   className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   type="button"
                 >
@@ -2886,10 +2928,13 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                     className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
                     role="tooltip"
                   >
-                    Cruza favoritos recebidos com relacionamento de pacientes na comunidade. O score
-                    de comunidade usa comentários recebidos (peso 5), compartilhamentos (3),
-                    salvamentos (2) e votos positivos (1). É uma leitura analítica do funil até
-                    WhatsApp e não altera o ranking público.
+                    Engajamento e Favoritos cruza relacionamento recebido de pacientes na comunidade
+                    com favoritos recebidos. O relacionamento usa score ponderado de comentários,
+                    compartilhamentos, salvamentos e votos positivos. Padrão da plataforma no
+                    período: engajamento{" "}
+                    <strong className="font-black">{engagementStandardRangeLabel}</strong>
+                    {"; "}
+                    favoritos <strong className="font-black">{favoritesStandardRangeLabel}</strong>.
                   </span>
                 </button>
               </span>
@@ -2910,7 +2955,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
               <span className="inline-flex items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground">Conversão</h3>
                 <button
-                  aria-label={`Conversão é a quantidade de cliques para o WhatsApp que o psicólogo recebe. A conversão padrão para o período selecionado é ${conversionTooltipStandardText}.`}
+                  aria-label={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
                   className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   type="button"
                 >
@@ -2919,8 +2964,8 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
                     className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
                     role="tooltip"
                   >
-                    Conversão é a quantidade de cliques para o WhatsApp que o psicólogo recebe. A
-                    conversão padrão para o período selecionado é{" "}
+                    Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato
+                    com o paciente. Padrão da plataforma no período:{" "}
                     <strong className="font-black">{standardRangeLabel}</strong>
                     {hasConversionStandardRange ? " no WhatsApp." : "."}
                   </span>
