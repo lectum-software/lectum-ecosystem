@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 102 tasks: `TASK-00` a `TASK-96`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
+- A fila operacional agora possui 103 tasks: `TASK-00` a `TASK-97`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B` e `TASK-31A` a `TASK-31C`.
 
 ## Inventário visual ativo
 
@@ -177,6 +177,7 @@ ou cortesia manual.
 | 94 | [TASK-94 - Remocao do bloco Fluxo de intencao e conversao no Dashboard Admin](TASK-94-remocao-bloco-fluxo-intencao-conversao-dashboard-admin.md) | Completed | 93 |
 | 95 | [TASK-95 - Análise de qualidade da conversão no perfil Admin do psicólogo](TASK-95-analise-qualidade-conversao-perfil-psicologo-admin.md) | Completed | 57, 84, 89 |
 | 96 | [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicólogos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md) | Completed | 53, 84, 89, 90 |
+| 97 | [TASK-97 - Visibilidade Comunidade x Video no dashboard Admin de psicologos](TASK-97-visibilidade-comunidade-video-dashboard-psicologos-admin.md) | Completed | 53, 84, 87, 89, 96 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -242,6 +243,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 56. [TASK-94 - Remocao do bloco Fluxo de intencao e conversao no Dashboard Admin](TASK-94-remocao-bloco-fluxo-intencao-conversao-dashboard-admin.md) foi adicionada e concluida em 2026-07-29 para remover o bloco de `/dashboard`, mantendo o contrato backend por compatibilidade e a tela executiva sem exemplo visual local.
 57. [TASK-95 - Análise de qualidade da conversão no perfil Admin do psicólogo](TASK-95-analise-qualidade-conversao-perfil-psicologo-admin.md) foi adicionada e concluida em 2026-07-29 para separar, no perfil individual, qualidade absoluta normalizada para 30 dias e posição relativa contra a mediana da plataforma, mantendo o dashboard `/psicologos` simples.
 58. [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicologos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-29 para classificar psicologos em 16 combinacoes entre relacionamento comunitario recebido e favoritos, mantendo o donut executivo resumido e expansivel.
+59. [TASK-97 - Visibilidade Comunidade x Video no dashboard Admin de psicologos](TASK-97-visibilidade-comunidade-video-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-30 para classificar psicologos em 16 combinacoes entre visibilidade comunitaria e video de apresentacao, mantendo o donut executivo resumido e expansivel.
 
 ### 1A. Trilha Admin planejada
 
@@ -296,6 +298,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 47. [TASK-94 - Remocao do bloco Fluxo de intencao e conversao no Dashboard Admin](TASK-94-remocao-bloco-fluxo-intencao-conversao-dashboard-admin.md)
 48. [TASK-95 - Análise de qualidade da conversão no perfil Admin do psicólogo](TASK-95-analise-qualidade-conversao-perfil-psicologo-admin.md)
 49. [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicologos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md)
+50. [TASK-97 - Visibilidade Comunidade x Video no dashboard Admin de psicologos](TASK-97-visibilidade-comunidade-video-dashboard-psicologos-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

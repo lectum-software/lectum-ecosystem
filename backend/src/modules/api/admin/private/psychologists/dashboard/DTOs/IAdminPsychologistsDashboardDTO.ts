@@ -15,8 +15,11 @@ import type {
 } from "@/utils/admin-profile-engagement-favorites";
 import type {
   AdminProfileExposureBenchmark,
+  AdminProfileExposureCategoryId,
+  AdminProfileExposureCommunityCategoryId,
   AdminProfileExposureSource,
   AdminProfileExposureThresholds,
+  AdminProfileExposureVideoCategoryId,
 } from "@/utils/admin-profile-exposure";
 
 export type AdminPsychologistsDashboardQuery = {
@@ -461,12 +464,13 @@ export type AdminPsychologistsDashboardProfileConversionResults = {
   unavailable_reason: string | null;
 };
 
-export type AdminPsychologistsDashboardProfileExposureCategoryId =
-  | "high_exposure"
-  | "insufficient_data"
-  | "low_exposure"
-  | "no_exposure"
-  | "standard_exposure";
+export type AdminPsychologistsDashboardProfileExposureCommunityCategoryId =
+  AdminProfileExposureCommunityCategoryId;
+
+export type AdminPsychologistsDashboardProfileExposureVideoCategoryId =
+  AdminProfileExposureVideoCategoryId;
+
+export type AdminPsychologistsDashboardProfileExposureCategoryId = AdminProfileExposureCategoryId;
 
 export type AdminPsychologistsDashboardProfileExposureTotals = {
   community_post_attention_seconds: number;
@@ -484,12 +488,16 @@ export type AdminPsychologistsDashboardProfileExposureTotals = {
 };
 
 export type AdminPsychologistsDashboardProfileExposureCategory = {
+  community_id: AdminPsychologistsDashboardProfileExposureCommunityCategoryId | null;
+  community_label: string | null;
   count: number;
   description: string;
   id: AdminPsychologistsDashboardProfileExposureCategoryId;
   label: string;
   percentage: number;
   totals: AdminPsychologistsDashboardProfileExposureTotals;
+  video_id: AdminPsychologistsDashboardProfileExposureVideoCategoryId | null;
+  video_label: string | null;
 };
 
 export type AdminPsychologistsDashboardProfileExposureResults = {
@@ -500,9 +508,11 @@ export type AdminPsychologistsDashboardProfileExposureResults = {
   thresholds: AdminProfileExposureThresholds;
   totals: AdminPsychologistsDashboardProfileExposureTotals & {
     adaptation_psychologists: number;
+    community_visible_psychologists: number;
     eligible_psychologists: number;
     exposed_psychologists: number;
     psychologists: number;
+    video_visible_psychologists: number;
   };
   unavailable_reason: string | null;
 };

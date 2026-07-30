@@ -53,6 +53,7 @@ type ProfileConversionEngagementQuadrantItem =
   AdminPsychologistsDashboard["profile_conversion_engagement"]["quadrants"][number];
 type ProfileExposureCategoryItem =
   AdminPsychologistsDashboard["profile_exposure"]["categories"][number];
+type ProfileExposureCommunityCategoryId = NonNullable<ProfileExposureCategoryItem["community_id"]>;
 type ProfileEngagementFavoritesCategoryItem =
   AdminPsychologistsDashboard["profile_engagement_favorites"]["categories"][number];
 type ProfileEngagementFavoritesCommunityCategoryId = NonNullable<
@@ -315,13 +316,14 @@ const PROFILE_CONVERSION_CHART_COLORS = {
   strong_conversion: "#13a85b",
 } satisfies Record<ProfileConversionCategoryItem["id"], string>;
 
+const PROFILE_EXPOSURE_VISIBLE_LIMIT = 5;
+const PROFILE_EXPOSURE_OTHER_COLOR = "#64748b";
 const PROFILE_EXPOSURE_CHART_COLORS = {
-  high_exposure: "#13a85b",
-  insufficient_data: "#94a3b8",
-  low_exposure: "#f59f00",
-  no_exposure: "#ef4444",
-  standard_exposure: "#308ce8",
-} satisfies Record<ProfileExposureCategoryItem["id"], string>;
+  high_community: "#13a85b",
+  low_community: "#f59f00",
+  no_community: "#64748b",
+  standard_community: "#308ce8",
+} satisfies Record<ProfileExposureCommunityCategoryId, string>;
 
 const PROFILE_ENGAGEMENT_FAVORITES_VISIBLE_LIMIT = 5;
 const PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR = "#64748b";
@@ -2499,6 +2501,76 @@ const PsychologistsDonutChart = ({
   );
 };
 
+const getProfileExposureColor = (item: ProfileExposureCategoryItem) => {
+  if (item.id === "insufficient_data") return PROFILE_CONVERSION_CHART_COLORS.insufficient_data;
+
+  return item.community_id
+    ? PROFILE_EXPOSURE_CHART_COLORS[item.community_id]
+    : PROFILE_EXPOSURE_OTHER_COLOR;
+};
+
+const mapProfileExposureDonutItem = (
+  item: ProfileExposureCategoryItem,
+): PsychologistsDonutChartItem => ({
+  color: getProfileExposureColor(item),
+  count: item.count,
+  description: item.description,
+  id: item.id,
+  label: item.label,
+  percentage: item.percentage,
+});
+
+const buildProfileExposureDonutItems = (
+  profileExposure: AdminPsychologistsDashboard["profile_exposure"],
+) => {
+  const total = Math.max(0, profileExposure.totals.psychologists);
+  const indexedCategories = profileExposure.categories.map((item, index) => ({
+    index,
+    item,
+  }));
+  const insufficientData = indexedCategories.find(({ item }) => item.id === "insufficient_data");
+  const combinationCategories = indexedCategories.filter(
+    ({ item }) => item.id !== "insufficient_data",
+  );
+  const nonZeroCombinations = combinationCategories
+    .filter(({ item }) => item.count > 0)
+    .sort((left, right) => {
+      if (right.item.count !== left.item.count) return right.item.count - left.item.count;
+
+      return left.index - right.index;
+    });
+  const topCombinations = nonZeroCombinations.slice(0, PROFILE_EXPOSURE_VISIBLE_LIMIT);
+  const hiddenCombinations = nonZeroCombinations.slice(PROFILE_EXPOSURE_VISIBLE_LIMIT);
+  const hiddenCount = hiddenCombinations.reduce((sum, { item }) => sum + item.count, 0);
+  const collapsedItems: PsychologistsDonutChartItem[] = [
+    ...topCombinations.map(({ item }) => mapProfileExposureDonutItem(item)),
+    ...(hiddenCount > 0
+      ? [
+          {
+            color: PROFILE_EXPOSURE_OTHER_COLOR,
+            count: hiddenCount,
+            description: `Soma das demais combinações com volume no período: ${hiddenCombinations
+              .map(({ item }) => item.label)
+              .join(", ")}.`,
+            id: "other_profile_exposure",
+            label: "Outras combinações",
+            percentage: total > 0 ? toOneDecimal((hiddenCount / total) * 100) : 0,
+          },
+        ]
+      : []),
+    ...(insufficientData && insufficientData.item.count > 0
+      ? [mapProfileExposureDonutItem(insufficientData.item)]
+      : []),
+  ];
+
+  return {
+    allItems: profileExposure.categories.map(mapProfileExposureDonutItem),
+    collapsedItems,
+    combinationCount: combinationCategories.length,
+    hiddenCombinationCount: hiddenCombinations.length,
+  };
+};
+
 const getProfileEngagementFavoritesColor = (item: ProfileEngagementFavoritesCategoryItem) => {
   if (item.id === "insufficient_data") return PROFILE_CONVERSION_CHART_COLORS.insufficient_data;
 
@@ -2610,16 +2682,12 @@ const ProfileVisibilityDonutChart = ({
 }: {
   profileExposure: AdminPsychologistsDashboard["profile_exposure"];
 }) => {
+  const [expanded, setExpanded] = useState(false);
   const total = Math.max(0, profileExposure.totals.psychologists);
-  const items = profileExposure.categories.map((item) => ({
-    color: PROFILE_EXPOSURE_CHART_COLORS[item.id],
-    count: item.count,
-    description: item.description,
-    id: item.id,
-    label: item.label,
-    percentage: item.percentage,
-  }));
-  const ariaLabel = `Gráfico de donut de Visibilidade dos psicólogos: ${profileExposure.categories
+  const { allItems, collapsedItems, combinationCount, hiddenCombinationCount } =
+    buildProfileExposureDonutItems(profileExposure);
+  const items = expanded ? allItems : collapsedItems;
+  const ariaLabel = `Gráfico de donut de Visibilidade Comunidade x Vídeo dos psicólogos: ${items
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
@@ -2629,19 +2697,31 @@ const ProfileVisibilityDonutChart = ({
     .join("; ")}.`;
 
   return (
-    <PsychologistsDonutChart
-      ariaLabel={ariaLabel}
-      emptyMessage={
-        profileExposure.unavailable_reason ??
-        "Sem psicólogos ativos no período selecionado para classificar Visibilidade."
-      }
-      items={items}
-      showDescriptionTooltips={false}
-      total={total}
-    />
+    <div>
+      <PsychologistsDonutChart
+        ariaLabel={ariaLabel}
+        emptyMessage={
+          profileExposure.unavailable_reason ??
+          "Sem psicólogos ativos no período selecionado para classificar Visibilidade."
+        }
+        items={items}
+        showDescriptionTooltips={false}
+        total={total}
+      />
+      {hiddenCombinationCount > 0 ? (
+        <button
+          className="mt-3 rounded-full border border-primary/20 px-3 py-1.5 text-xs font-black text-primary transition hover:bg-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          onClick={() => setExpanded((current) => !current)}
+          type="button"
+        >
+          {expanded
+            ? "Ver combinações principais"
+            : `Ver todas as ${numberFormatter.format(combinationCount)} combinações`}
+        </button>
+      ) : null}
+    </div>
   );
 };
-
 const formatWhatsappClicksValue = (value: number) => {
   const label = value === 1 ? "clique" : "cliques";
 
@@ -2677,11 +2757,13 @@ const formatProfileConversionStandardRange = (
   return `${formatWhatsappClicksValue(min)} a ${formatWhatsappClicksValue(max)}`;
 };
 
-const formatProfileExposureStandardRange = (
-  benchmark: AdminPsychologistsDashboard["profile_exposure"]["benchmark"],
+const formatProfileExposureSurfaceStandardRange = (
+  benchmark: AdminPsychologistsDashboard["profile_exposure"]["benchmark"][
+    | "community_visibility"
+    | "presentation_video"],
 ) => {
-  const min = benchmark.standard_min_visibility_seconds ?? benchmark.standard_min_exposure_score;
-  const max = benchmark.standard_max_visibility_seconds ?? benchmark.standard_max_exposure_score;
+  const min = benchmark.standard_min_visibility_seconds;
+  const max = benchmark.standard_max_visibility_seconds;
 
   if (min === null || max === null) return "Sem faixa padrão no período";
   if (min === max) return formatVisibilityDurationValue(min);
@@ -2756,8 +2838,11 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   }
 
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
-  const visibilityStandardRangeLabel = formatProfileExposureStandardRange(
-    profileExposure.benchmark,
+  const communityVisibilityStandardRangeLabel = formatProfileExposureSurfaceStandardRange(
+    profileExposure.benchmark.community_visibility,
+  );
+  const videoVisibilityStandardRangeLabel = formatProfileExposureSurfaceStandardRange(
+    profileExposure.benchmark.presentation_video,
   );
   const hasConversionStandardRange =
     profileConversion.benchmark.standard_min_whatsapp_clicks !== null &&
@@ -2788,19 +2873,23 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
               <span className="inline-flex items-center gap-2">
                 <h3 className="text-lg font-bold text-foreground">Visibilidade</h3>
                 <button
-                  aria-label={`Visibilidade mede o tempo real de atenção que o psicólogo recebe no seu vídeo de apresentação, visita ao perfil e conteúdo da comunidade. A visibilidade padrão para o período selecionado é ${visibilityStandardRangeLabel}.`}
+                  aria-label={`Visibilidade cruza atenção em conteúdo autoral nas comunidades com tempo assistido no vídeo de apresentação. Comunidade padrão: ${communityVisibilityStandardRangeLabel}. Vídeo padrão: ${videoVisibilityStandardRangeLabel}.`}
                   className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   type="button"
                 >
                   <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
                   <span
-                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
                     role="tooltip"
                   >
-                    Visibilidade mede o tempo real de atenção que o psicólogo recebe no seu vídeo de
-                    apresentação, visita ao perfil e conteúdo da comunidade. A visibilidade padrão
-                    para o período selecionado é{" "}
-                    <strong className="font-black">{visibilityStandardRangeLabel}</strong>.
+                    Visibilidade cruza tempo real de atenção em posts e respostas autorais nas
+                    comunidades (feed, dentro das comunidades e detalhes; texto, imagem ou vídeo)
+                    com tempo assistido no vídeo de apresentação. Não conta aparição em listagem nem
+                    WhatsApp. Comunidade padrão:{" "}
+                    <strong className="font-black">{communityVisibilityStandardRangeLabel}</strong>
+                    {"; "}
+                    vídeo padrão:{" "}
+                    <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
                   </span>
                 </button>
               </span>

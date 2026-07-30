@@ -38,13 +38,15 @@ import {
   getAdminProfileEngagementFavoritesCombinationConfig,
 } from "@/utils/admin-profile-engagement-favorites";
 import {
-  ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG,
   ADMIN_PROFILE_EXPOSURE_CATEGORY_ORDER,
   ADMIN_PROFILE_EXPOSURE_SOURCE,
   ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
   buildAdminProfileExposureBenchmark,
+  buildAdminProfileExposureCombinationId,
   calculateAdminProfileExposureScore,
-  classifyAdminProfileExposureCategory,
+  classifyAdminProfileExposureCommunityCategory,
+  classifyAdminProfileExposureVideoCategory,
+  getAdminProfileExposureCategoryConfig,
   roundAdminProfileExposureNumber,
 } from "@/utils/admin-profile-exposure";
 import {
@@ -167,10 +169,6 @@ const PROFILE_CONVERSION_CATEGORY_CONFIG =
 const PROFILE_EXPOSURE_CATEGORY_ORDER =
   ADMIN_PROFILE_EXPOSURE_CATEGORY_ORDER as AdminPsychologistsDashboardProfileExposureCategoryId[];
 
-const PROFILE_EXPOSURE_CATEGORY_CONFIG = ADMIN_PROFILE_EXPOSURE_CATEGORY_CONFIG satisfies Record<
-  AdminPsychologistsDashboardProfileExposureCategoryId,
-  { description: string; label: string }
->;
 const PROFILE_CONVERSION_ENGAGEMENT_LEVEL_CONFIG = {
   engaged: {
     description: "intera\u00e7\u00f5es recebidas consistentes em perfil e comunidades",
@@ -1237,6 +1235,14 @@ const emptyProfileExposureTotals = (): AdminPsychologistsDashboardProfileExposur
   visibility_seconds: 0,
 });
 
+const getProfileExposureCommunityVisibilitySeconds = (
+  signals: AdminPsychologistsDashboardProfileExposureTotals,
+) => signals.community_post_attention_seconds + signals.community_reply_attention_seconds;
+
+const getProfileExposureVideoVisibilitySeconds = (
+  signals: AdminPsychologistsDashboardProfileExposureTotals,
+) => signals.profile_video_attention_seconds;
+
 const addProfileExposureTotals = (
   totals: AdminPsychologistsDashboardProfileExposureTotals,
   signals: AdminPsychologistsDashboardProfileExposureTotals,
@@ -1350,10 +1356,20 @@ const buildProfileExposureResults = (params: {
       ADMIN_PROFILE_EXPOSURE_THRESHOLDS.adaptation_period_days,
   );
   const benchmark = buildAdminProfileExposureBenchmark({
+    communityVisibilitySeconds: eligibleProfiles.map((profile) => {
+      const signals = exposureSignalsByPsychologist.get(profile.user.id);
+
+      return signals ? getProfileExposureCommunityVisibilitySeconds(signals) : 0;
+    }),
     eligiblePsychologists: eligibleProfiles.length,
     exposureScores: eligibleProfiles.map(
       (profile) => exposureSignalsByPsychologist.get(profile.user.id)?.exposure_score ?? 0,
     ),
+    presentationVideoSeconds: eligibleProfiles.map((profile) => {
+      const signals = exposureSignalsByPsychologist.get(profile.user.id);
+
+      return signals ? getProfileExposureVideoVisibilitySeconds(signals) : 0;
+    }),
   });
   const categories = new Map(
     PROFILE_EXPOSURE_CATEGORY_ORDER.map((id) => [
@@ -1367,25 +1383,42 @@ const buildProfileExposureResults = (params: {
   const totalSignals = {
     ...emptyProfileExposureTotals(),
     adaptation_psychologists: params.profiles.length - benchmark.eligible_psychologists,
+    community_visible_psychologists: 0,
     eligible_psychologists: benchmark.eligible_psychologists,
     exposed_psychologists: 0,
     psychologists: params.profiles.length,
+    video_visible_psychologists: 0,
   };
 
   for (const profile of params.profiles) {
     const signals =
       exposureSignalsByPsychologist.get(profile.user.id) ?? emptyProfileExposureTotals();
-    const categoryId = classifyAdminProfileExposureCategory({
+    const profileAgeDays = getProfileAgeDaysUntil(profile, params.range.end);
+    const communityVisibilitySeconds = getProfileExposureCommunityVisibilitySeconds(signals);
+    const videoVisibilitySeconds = getProfileExposureVideoVisibilitySeconds(signals);
+    const communityCategoryId = classifyAdminProfileExposureCommunityCategory({
       benchmark,
-      signals: {
-        exposureScore: signals.exposure_score,
-        profileAgeDays: getProfileAgeDaysUntil(profile, params.range.end),
-      },
+      profileAgeDays,
+      visibilitySeconds: communityVisibilitySeconds,
     });
+    const videoCategoryId = classifyAdminProfileExposureVideoCategory({
+      benchmark,
+      profileAgeDays,
+      visibilitySeconds: videoVisibilitySeconds,
+    });
+    const categoryId: AdminPsychologistsDashboardProfileExposureCategoryId =
+      communityCategoryId === "insufficient_data" || videoCategoryId === "insufficient_data"
+        ? "insufficient_data"
+        : buildAdminProfileExposureCombinationId({
+            communityCategoryId,
+            videoCategoryId,
+          });
     const category = categories.get(categoryId);
 
     addProfileExposureTotals(totalSignals, signals);
     if (signals.exposure_score > 0) totalSignals.exposed_psychologists += 1;
+    if (communityVisibilitySeconds > 0) totalSignals.community_visible_psychologists += 1;
+    if (videoVisibilitySeconds > 0) totalSignals.video_visible_psychologists += 1;
     if (category) {
       category.count += 1;
       addProfileExposureTotals(category.totals, signals);
@@ -1395,23 +1428,27 @@ const buildProfileExposureResults = (params: {
   return {
     benchmark,
     categories: PROFILE_EXPOSURE_CATEGORY_ORDER.map((id) => {
-      const config = PROFILE_EXPOSURE_CATEGORY_CONFIG[id];
+      const config = getAdminProfileExposureCategoryConfig(id);
       const values = categories.get(id) ?? {
         count: 0,
         totals: emptyProfileExposureTotals(),
       };
 
       return {
+        community_id: config.community_id,
+        community_label: config.community_label,
         count: values.count,
         description: config.description,
         id,
         label: config.label,
         percentage: safePercentage(values.count, params.profiles.length),
         totals: values.totals,
+        video_id: config.video_id,
+        video_label: config.video_label,
       };
     }),
     description:
-      "Classificação interna e agregada por tempo real de Visibilidade no período selecionado; soma segundos de atenção em perfil, vídeo de apresentação e conteúdo autoral, sem contar aparição em listagem nem WhatsApp como Visibilidade.",
+      "Classificação interna e agregada que cruza a Visibilidade em conteúdo autoral nas comunidades (feed, páginas de comunidade e detalhes; texto, imagem ou vídeo) com o tempo assistido no vídeo de apresentação. Não conta aparição em listagem nem WhatsApp como Visibilidade.",
     source: ADMIN_PROFILE_EXPOSURE_SOURCE,
     thresholds: ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
     totals: totalSignals,
