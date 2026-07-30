@@ -69,7 +69,7 @@ export const ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SCORE_CONFIG = {
   weights: {
     comments_received: 5,
     content_saves: 2,
-    content_shares: 3,
+    content_shares: 8,
     positive_votes: 1,
   },
 } as const;

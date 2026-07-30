@@ -26,7 +26,7 @@ apagaria a diferença entre relacionamento comunitário e intenção mais próxi
   Visibilidade e Conversão.
 - Relacionamento comunitário usa score ponderado antes do benchmark:
   - comentário/resposta recebida: peso `5`;
-  - compartilhamento recebido: peso `3`;
+  - compartilhamento recebido: peso `8`;
   - salvamento recebido: peso `2`;
   - voto positivo recebido: peso `1`.
 - O novo bloco usa ações recebidas de pacientes. Seguidores não entram no cálculo porque não existe
@@ -49,6 +49,9 @@ apagaria a diferença entre relacionamento comunitário e intenção mais próxi
   evitando comparação injusta contra a plataforma.
 - A comparação é observacional; ela ajuda a entender correlação com WhatsApp, mas não prova
   causalidade.
+- Em 2026-07-30, o peso de compartilhamento recebido foi elevado de `3` para `8` para aproximar
+  o sinal de recomendação explícita da importância usada no ranking comunitário, mantendo voto
+  positivo recebido com peso `1` no Admin.
 
 ## Task relacionada
 
@@ -65,4 +68,5 @@ apagaria a diferença entre relacionamento comunitário e intenção mais próxi
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
 - Smoke direto do helper de cálculo confirmou pesos, P25/P75 e período de adaptação.
+- Smoke complementar em 2026-07-30 confirmou `content_shares=8` e `positive_votes=1`.
 - HTTP local do Admin retornou `200` em `/psicologos`.

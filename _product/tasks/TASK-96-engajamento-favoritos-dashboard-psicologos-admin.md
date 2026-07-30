@@ -40,7 +40,7 @@ executivo, chamado **Engajamento e Favoritos**, com 16 combinações internas.
   - psicólogos elegíveis com favoritos são comparados contra P25/P75 dos não-zero do período.
 - Engajamento comunitário usa primeiro um score ponderado apenas com ações recebidas de pacientes:
   - comentários/respostas recebidos: peso `5`;
-  - compartilhamentos recebidos: peso `3`;
+  - compartilhamentos recebidos: peso `8`;
   - salvamentos recebidos: peso `2`;
   - votos positivos recebidos: peso `1`.
 - O score comunitário segue a mesma lógica de benchmark por P25/P75 dos não-zero:
@@ -64,7 +64,7 @@ executivo, chamado **Engajamento e Favoritos**, com 16 combinações internas.
 - [x] `profile_engagement_favorites` é retornado no dashboard Admin e nos segmentos de plano.
 - [x] Cada psicólogo é classificado em uma das 16 combinações ou em **Dados Insuficientes**.
 - [x] Favoritos usam benchmark de plataforma por P25/P75 dos não-zero fora da adaptação.
-- [x] Engajamento comunitário usa pesos `comentário=5`, `compartilhamento=3`, `salvamento=2` e
+- [x] Engajamento comunitário usa pesos `comentário=5`, `compartilhamento=8`, `salvamento=2` e
       `voto positivo=1`, depois benchmark por P25/P75.
 - [x] O novo cálculo usa apenas eventos reais e prioriza ações recebidas de pacientes.
 - [x] O bloco da UI passa a se chamar **Engajamento e Favoritos**, mostra donut resumido por volume
@@ -91,7 +91,7 @@ executivo, chamado **Engajamento e Favoritos**, com 16 combinações internas.
 - `pnpm --dir backend build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
-- Smoke direto do helper `admin-profile-engagement-favorites` confirmou score `19` para
+- Smoke direto do helper `admin-profile-engagement-favorites` confirmou score `24` para
   `2 comentários`, `1 salvamento`, `1 compartilhamento` e `4 votos positivos`, além de P25/P75,
   `high_engagement`, `standard_favorites` e `insufficient_data` para adaptação.
 - HTTP local no Admin dev server retornou `200` para `http://localhost:3002/psicologos`.
@@ -168,5 +168,25 @@ executivo, chamado **Engajamento e Favoritos**, com 16 combinações internas.
 - Smoke estatico no fonte confirmou tres donuts executivos com `showDescriptionTooltips={false}`,
   faixa padrao do periodo nas tooltips de titulo e negrito para os benchmarks de Engajamento e
   Favoritos.
+- Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`;
+  `pnpm --dir backend db:migrate` nao se aplica a este ajuste.
+
+## Ajuste complementar - peso de compartilhamento recebido no score Admin
+
+- [x] Compartilhamento recebido no score comunitario de **Engajamento e Favoritos** alterado de
+      peso `3` para peso `8`.
+- [x] Voto positivo recebido mantido com peso `1`.
+- [x] Ajuste mantido sem mock, sem package novo, sem endpoint paralelo, sem schema Prisma e sem
+      migration.
+
+## Validacao complementar do peso de compartilhamento recebido
+
+- `pnpm --dir backend exec biome check --write src/utils/admin-profile-engagement-favorites.ts`
+- Smoke direto do helper `admin-profile-engagement-favorites` confirmou score `24` para
+  `2 comentarios`, `1 salvamento`, `1 compartilhamento` e `4 votos positivos`, preservando
+  `content_shares=8` e `positive_votes=1`.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
 - Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`;
   `pnpm --dir backend db:migrate` nao se aplica a este ajuste.
