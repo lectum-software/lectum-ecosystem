@@ -261,6 +261,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 66. [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md) foi adicionada e concluida em 2026-07-30 para sintetizar as matrizes Conversao x Visibilidade e Conversao x Engajamentos/Favoritos em um funil observacional por categoria de conversao.
 67. [TASK-96 - Engajamento e Favoritos no dashboard Admin de psicologos](TASK-96-engajamento-favoritos-dashboard-psicologos-admin.md) recebeu ajuste complementar em 2026-07-30 para manter voto positivo com peso `1` e elevar compartilhamento recebido para peso `8` no score comunitario do Admin.
 68. [TASK-102 - Distribuicao de cliques WhatsApp por psicologo no Dashboard Admin](TASK-102-distribuicao-cliques-whatsapp-dashboard-admin.md) recebeu ajuste complementar em 2026-07-30 para separar titulos e numeros dos eixos, remover o resumo textual visivel do card de WhatsApp e posicionar os contadores a direita do grafico em desktop.
+69. [TASK-103 - Funil comportamental por conversao no Admin de psicologos](TASK-103-funil-comportamental-conversao-admin-psicologos.md) recebeu ajuste complementar em 2026-07-30 para ficar abaixo da **Visao geral**, remover o filtro local de plano, remover o texto explicativo longo e trocar o icone do titulo por funil.
 
 ### 1A. Trilha Admin planejada
 

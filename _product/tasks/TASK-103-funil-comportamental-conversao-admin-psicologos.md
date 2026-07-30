@@ -16,6 +16,11 @@ Favoritos, deixando a saida como a categoria de conversao escolhida.
 A leitura deve ser observacional, interna ao Admin e derivada dos contratos reais existentes; nao
 pode afirmar causalidade, criar ranking publico ou alterar algoritmos.
 
+Complemento solicitado em 2026-07-30: o bloco foi simplificado para ficar logo abaixo da
+**Visao geral**, usar icone de funil, manter apenas o seletor de categoria de conversao e remover o
+texto explicativo longo do topo. A leitura do funil passa a usar a visao agregada de todos os planos,
+sem filtro local de plano no card.
+
 Referencias visuais consultadas:
 
 - `_product/tasks/PROTO-INVENTORY.md`;
@@ -28,23 +33,22 @@ e os screenshots enviados, registrando esta limitacao.
 
 ## Escopo
 
-- Adicionar em `/psicologos`, entre os donuts executivos e as matrizes, o bloco **Funil
-  comportamental por conversao**.
+- Adicionar em `/psicologos`, logo abaixo da **Visao geral**, o bloco **Funil comportamental por
+  conversao**.
 - Criar dropdown local para selecionar a categoria de conversao:
   - Psicologos de alta conversao;
   - Psicologos de conversao padrao;
   - Psicologos de baixa conversao;
   - Psicologos sem conversao.
-- Reutilizar o filtro por plano ja existente no dashboard para Todos, Assinantes, Gratuitos e
-  Cortesia.
+- Usar no card a visao agregada de todos os planos, sem exibir filtro local de plano.
 - Para a categoria selecionada, derivar do contrato real:
   - topo do funil: coluna predominante em `profile_conversion_visibility` dentro da linha de
     conversao;
   - meio do funil: coluna predominante em `profile_conversion_engagement_favorites` dentro da linha
     de conversao;
   - saida: propria linha/categoria de conversao escolhida.
-- Exibir base, percentual e leitura sugerida, com aviso de amostra pequena e nota sobre Dados
-  Insuficientes quando aplicavel.
+- Exibir base, percentual e sinais principais com dados reais, mantendo o card sem texto explicativo
+  longo no topo.
 - Manter UI mobile-first: funil em largura total no mobile (~390px), estreitando camadas apenas a
   partir de `md`, e progressao para layout com resumo lateral no desktop.
 
@@ -58,8 +62,8 @@ e os screenshots enviados, registrando esta limitacao.
 
 ## Criterios de aceite
 
-- [x] O dashboard `/psicologos` exibe o bloco **Funil comportamental por conversao** entre os donuts
-      executivos e as matrizes.
+- [x] O dashboard `/psicologos` exibe o bloco **Funil comportamental por conversao** logo abaixo da
+      **Visao geral**.
 - [x] O dropdown permite selecionar as quatro categorias de conversao operacionais e inicia em
       **Psicologos de alta conversao**.
 - [x] O topo do funil usa a coluna predominante real de `profile_conversion_visibility` dentro da
@@ -67,10 +71,11 @@ e os screenshots enviados, registrando esta limitacao.
 - [x] O meio do funil usa a coluna predominante real de
       `profile_conversion_engagement_favorites` dentro da categoria selecionada.
 - [x] A saida do funil mostra a categoria de conversao, base e cliques WhatsApp reais da linha.
-- [x] A leitura sugerida deixa explicito que o padrao e observacional e nao causal.
+- [x] O card usa icone de funil e mantem a leitura como observacional sem o paragrafo explicativo
+      longo no topo.
 - [x] Estados sem profissionais na categoria e bases pequenas sao tratados de forma honesta, sem
       simular dados.
-- [x] O filtro por plano funciona para Todos, Assinantes, Gratuitos e Cortesia sem novo endpoint.
+- [x] O card nao exibe filtro de plano e usa a visao agregada de todos os planos sem novo endpoint.
 - [x] UI mobile-first preservada; nenhum `<img>` cru foi adicionado.
 - [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema Prisma ou migration foi
       criado.
@@ -94,6 +99,23 @@ e os screenshots enviados, registrando esta limitacao.
   **Psicologos sem conversao** para confirmar as tres camadas do funil com dados reais disponiveis
   no periodo. Screenshots locais: `.tmp/task103-funnel-desktop.png` e
   `.tmp/task103-funnel-mobile.png`.
+- Admin temporario real de validacao local foi criado com `admin:bootstrap` e removido do banco ao
+  final junto com seus tokens.
+
+Complemento de 2026-07-30:
+
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou
+  `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicologos/Psicologos - Dashboard.png`
+  e o screenshot enviado pelo usuario como referencia visual.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Browser local via Chrome/CDP validou `/psicologos` em desktop e mobile 390px: bloco logo abaixo
+  da **Visao geral**, sem filtro de plano, sem o paragrafo explicativo longo e com icone de funil.
+  Screenshots locais: `.tmp/task103-funnel-adjusted-desktop.png` e
+  `.tmp/task103-funnel-adjusted-mobile-390.png`.
 - Admin temporario real de validacao local foi criado com `admin:bootstrap` e removido do banco ao
   final junto com seus tokens.
 
