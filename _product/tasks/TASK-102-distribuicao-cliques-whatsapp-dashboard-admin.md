@@ -105,7 +105,7 @@ Frontend esperado:
 - [x] A API retorna `whatsapp_click_distribution` com dados reais de `contact_request.channel="whatsapp"` e base real de psicólogos ativos/publicados.
 - [x] Psicólogos sem clique entram na base da distribuição com valor zero.
 - [x] A UI exibe total de cliques, psicólogos considerados, psicólogos sem clique, top 10% e top 20%.
-- [x] A curva acumulada/Lorenz é renderizada em SVG/CSS próprio, com linha de equilíbrio e resumo textual acessível.
+- [x] A curva acumulada/Lorenz é renderizada em SVG/CSS próprio, com linha de equilíbrio, sem resumo textual visível no card e com descrição acessível por `aria-label`.
 - [x] Estados sem psicólogos ou sem cliques permanecem honestos no contrato real; em `localhost`,
       a pedido explícito do usuário, pode aparecer um exemplo visual identificado e sem persistência.
 - [x] UI mobile-first preservada; nenhum `<img>` cru foi adicionado.
@@ -217,3 +217,40 @@ Frontend esperado:
   `.tmp/dashboard-admin-task102-graph-size/mobile-graph-size-390.png`.
 - Admin temporário real `codex-task102-local-preview@lectum.local` foi criado apenas para validar
   o browser local e removido do banco ao final.
+
+## Ajuste de layout do gráfico e contadores (2026-07-30)
+
+- Após nova revisão visual do fundador em `localhost`, foram solicitados três ajustes no bloco:
+  separar melhor títulos e números dos eixos, remover o resumo textual visível do gráfico e mover
+  os contadores para a direita do gráfico em desktop.
+- A curva acumulada manteve SVG/CSS próprio e proporção 16:9, mas o `padding.left`/`padding.bottom`
+  do SVG foi ampliado; os rótulos numéricos passaram a ficar afastados dos títulos dos eixos.
+- O `<details>` **Resumo textual do gráfico** foi removido apenas do card de distribuição de
+  WhatsApp. A descrição acessível permanece no `aria-label` do SVG; o resumo textual do gráfico de
+  **Atividade nas comunidades** não foi alterado por estar fora deste pedido.
+- Os contadores **Cliques de WhatsApp**, **Psicólogos considerados**, **Sem clique**, **Top 10%** e
+  **Top 20%** passaram a ficar em uma coluna à direita do gráfico em `lg+`; no mobile continuam
+  empilhados abaixo da curva para preservar leitura mobile-first e evitar overflow horizontal.
+- A frase resumida acima do gráfico foi removida junto do resumo textual visível; foram mantidos
+  apenas os selos de **Exemplo visual local** e concentração/Gini, além do aviso explícito de que os
+  números ilustrativos não persistem dados.
+- Builder/Quick Copy seguiu sem ferramenta callable no ambiente; a validação usou a captura enviada
+  pelo usuário em `localhost`, `_product/proto/admin/Dashboard.png` e browser local/headless.
+- Não houve alteração em backend, API, banco, schema Prisma, migrations, tracking, CSV ou packages.
+- Validação executada:
+  - `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx"`: OK.
+  - Browser local/headless autenticado em `http://localhost:3012/dashboard` com dev server
+    temporário, pois `http://localhost:3002` estava ocupado por `next start` de build anterior:
+    OK em desktop 1366px, com contadores à direita do gráfico, sem resumo textual visível no card
+    de WhatsApp e sem sobreposição dos títulos dos eixos com os números dos eixos. A porta 3012
+    exigiu Chrome headless com web security desabilitada apenas para contornar CORS da origem
+    temporária; a API e o login usados foram reais em `localhost:3001`.
+  - Browser local/headless mobile 390px: OK, sem overflow horizontal, com gráfico antes dos
+    contadores empilhados e sem resumo textual visível no card de WhatsApp.
+  - Evidências locais: `.tmp/dashboard-admin-task102-layout-adjust/desktop-1366.png` e
+    `.tmp/dashboard-admin-task102-layout-adjust/mobile-390.png`.
+  - Admin temporário real `codex-dashboard-layout-validation@lectum.local` foi criado apenas para
+    validação browser via login real e removido do banco ao final.
+  - `pnpm --dir admin check`: OK.
+  - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`: OK.
+  - `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`: OK.

@@ -33,6 +33,10 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
 - Para a revisao visual seguinte, limitar a curva acumulada ao token `max-w-3xl` (~768px), manter
   SVG em proporcao fixa 16:9 (`640x360`) e adicionar titulo com tooltip explicando
   eixo X, eixo Y, linha pontilhada de equilibrio e leitura de concentracao.
+- Para o ajuste visual de 2026-07-30, manter a curva em SVG proprio, mas reservar mais area para
+  titulos e numeros dos eixos, remover o resumo textual visivel do card de WhatsApp e deslocar os
+  contadores agregados para uma coluna a direita do grafico em desktop. No mobile, os contadores
+  continuam empilhados abaixo da curva para preservar a leitura mobile-first.
 
 ## Consequencias
 
@@ -49,6 +53,8 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
 - A limitacao de proporcao evita que a curva domine a tela em desktop amplo, preserva mobile-first
   com rolagem interna quando necessario e torna o significado do grafico mais claro sem adicionar
   biblioteca de tooltip/grafico.
+- A remocao do resumo textual visivel reduz redundancia visual no card. A acessibilidade minima da
+  curva permanece via `aria-label` do SVG e a tooltip explicativa segue disponivel por hover/foco.
 
 ## Task relacionada
 
@@ -76,6 +82,16 @@ necessidade de criar tracking, mock, seed, pacote de graficos ou endpoint parale
 - Ajuste visual 2026-07-30: browser local/headless em `http://localhost:3002/dashboard`: OK,
   validando titulo **Curva acumulada dos cliques**, tooltip explicativa, SVG em razao ~1,78,
   largura de 734px no desktop 1366px e ausencia de overflow horizontal no desktop e mobile 390px.
+- Ajuste layout 2026-07-30: `pnpm --dir admin exec biome check --write "src/app/(admin)/dashboard/client.tsx"`: OK.
+- Ajuste layout 2026-07-30: browser local/headless autenticado em `http://localhost:3012/dashboard`
+  com dev server temporario porque `http://localhost:3002` estava ocupado por `next start` de build
+  anterior: OK em desktop 1366px e mobile 390px, com contadores a direita no desktop, sem resumo
+  textual visivel no card de WhatsApp, sem sobreposicao entre titulos e numeros dos eixos e sem
+  overflow horizontal. A porta 3012 exigiu Chrome headless com web security desabilitada apenas para
+  contornar CORS da origem temporaria; a API e o login usados foram reais em `localhost:3001`.
+- Ajuste layout 2026-07-30: `pnpm --dir admin check`: OK.
+- Ajuste layout 2026-07-30: `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`: OK.
+- Ajuste layout 2026-07-30: `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`: OK.
 
 ## Pendencias
 

@@ -839,7 +839,7 @@ const WhatsAppDistributionChart = ({
 
   if (!hasClickableDistribution) {
     return (
-      <div className="mt-5 rounded-[1.5rem] border border-dashed border-border bg-surface-muted p-4 text-sm font-medium leading-6 text-muted">
+      <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-muted p-4 text-sm font-medium leading-6 text-muted">
         {distribution.summary}
       </div>
     );
@@ -847,7 +847,7 @@ const WhatsAppDistributionChart = ({
 
   const width = 640;
   const height = 360;
-  const padding = { bottom: 56, left: 62, right: 26, top: 30 };
+  const padding = { bottom: 74, left: 86, right: 26, top: 30 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   const getX = (percentage: number) => padding.left + (percentage / 100) * chartWidth;
@@ -864,7 +864,7 @@ const WhatsAppDistributionChart = ({
   const gridValues = [0, 25, 50, 75, 100];
 
   return (
-    <figure className="mx-auto mt-5 max-w-3xl overflow-visible rounded-[1.5rem] border border-border/70 bg-surface p-4">
+    <figure className="min-w-0 overflow-visible rounded-[1.5rem] border border-border/70 bg-surface p-4">
       <WhatsAppDistributionChartTitle />
       <div className="overflow-x-auto">
         <svg
@@ -897,7 +897,14 @@ const WhatsAppDistributionChart = ({
                   y1={padding.top}
                   y2={height - padding.bottom}
                 />
-                <text fill="var(--admin-muted)" fontSize="11" fontWeight="600" x="8" y={y + 4}>
+                <text
+                  fill="var(--admin-muted)"
+                  fontSize="11"
+                  fontWeight="600"
+                  textAnchor="end"
+                  x={padding.left - 14}
+                  y={y + 4}
+                >
                   {value}%
                 </text>
                 <text
@@ -906,7 +913,7 @@ const WhatsAppDistributionChart = ({
                   fontWeight="600"
                   textAnchor="middle"
                   x={x}
-                  y={height - 13}
+                  y={height - padding.bottom + 30}
                 >
                   {value}%
                 </text>
@@ -944,7 +951,7 @@ const WhatsAppDistributionChart = ({
             fontWeight="700"
             textAnchor="middle"
             x={padding.left + chartWidth / 2}
-            y={height - 12}
+            y={height - 10}
           >
             % acumulado de psicólogos
           </text>
@@ -952,9 +959,8 @@ const WhatsAppDistributionChart = ({
             fill="var(--admin-foreground)"
             fontSize="11"
             fontWeight="700"
-            transform={`rotate(-90 ${18} ${padding.top + chartHeight / 2})`}
-            x="18"
-            y={padding.top + chartHeight / 2}
+            textAnchor="middle"
+            transform={`translate(18 ${padding.top + chartHeight / 2}) rotate(-90)`}
           >
             % acumulado de cliques
           </text>
@@ -970,19 +976,6 @@ const WhatsAppDistributionChart = ({
           Distribuição equilibrada
         </span>
       </div>
-      <details className="mt-3 rounded-2xl bg-surface-muted p-3 text-xs text-muted">
-        <summary className="cursor-pointer font-semibold text-foreground">
-          Resumo textual do gráfico
-        </summary>
-        <p className="mt-2 leading-5">{distribution.summary}</p>
-        <p className="mt-2 leading-5">
-          Top 10% {isLocalVisualExample ? "concentrariam" : "concentram"}{" "}
-          {formatPercent(distribution.top_10_percent.click_percentage)} dos cliques; top 20%{" "}
-          {isLocalVisualExample ? "concentrariam" : "concentram"}{" "}
-          {formatPercent(distribution.top_20_percent.click_percentage)} dos cliques. Psicólogos sem
-          clique: {numberFormatter.format(distribution.psychologists_without_clicks)}.
-        </p>
-      </details>
     </figure>
   );
 };
@@ -1017,28 +1010,23 @@ const WhatsAppDistributionCard = ({
       icon={Activity}
       title="Distribuição dos cliques de WhatsApp"
     >
-      <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <p className="max-w-3xl text-sm font-medium leading-6 text-muted">
-          {displayDistribution.summary}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {showLocalVisualExample ? (
-            <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
-              Exemplo visual local
-            </span>
-          ) : null}
-          <span
-            className={cn(
-              "inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold",
-              concentrationToneClasses[displayDistribution.concentration_level],
-            )}
-          >
-            {displayDistribution.concentration_label}
-            {displayDistribution.gini !== null
-              ? ` · Gini ${formatGini(displayDistribution.gini)}`
-              : ""}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {showLocalVisualExample ? (
+          <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
+            Exemplo visual local
           </span>
-        </div>
+        ) : null}
+        <span
+          className={cn(
+            "inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold",
+            concentrationToneClasses[displayDistribution.concentration_level],
+          )}
+        >
+          {displayDistribution.concentration_label}
+          {displayDistribution.gini !== null
+            ? ` · Gini ${formatGini(displayDistribution.gini)}`
+            : ""}
+        </span>
       </div>
 
       {showLocalVisualExample ? (
@@ -1049,44 +1037,51 @@ const WhatsAppDistributionCard = ({
         </p>
       ) : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <DistributionStatCard
-          detail={
-            showLocalVisualExample ? "Exemplo visual — API real: 0" : "Registros reais de contato"
-          }
-          label="Cliques de WhatsApp"
-          value={numberFormatter.format(displayDistribution.total_clicks)}
+      <div className="mt-5 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,48rem)_minmax(15rem,18rem)] lg:justify-center xl:grid-cols-[minmax(0,48rem)_minmax(17rem,20rem)]">
+        <WhatsAppDistributionChart
+          distribution={displayDistribution}
+          isLocalVisualExample={showLocalVisualExample}
         />
-        <DistributionStatCard
-          detail={showLocalVisualExample ? "Base ilustrativa local" : "Ativos e publicados"}
-          label="Psicólogos considerados"
-          value={numberFormatter.format(displayDistribution.total_psychologists)}
-        />
-        <DistributionStatCard
-          detail={`${withoutClicksPercentage} da base`}
-          label="Sem clique"
-          value={numberFormatter.format(displayDistribution.psychologists_without_clicks)}
-        />
-        <DistributionStatCard
-          detail={`${numberFormatter.format(
-            displayDistribution.top_10_percent.psychologist_count,
-          )} psicólogo(s)`}
-          label="Top 10%"
-          value={formatPercent(displayDistribution.top_10_percent.click_percentage)}
-        />
-        <DistributionStatCard
-          detail={`${numberFormatter.format(
-            displayDistribution.top_20_percent.psychologist_count,
-          )} psicólogo(s)`}
-          label="Top 20%"
-          value={formatPercent(displayDistribution.top_20_percent.click_percentage)}
-        />
-      </div>
 
-      <WhatsAppDistributionChart
-        distribution={displayDistribution}
-        isLocalVisualExample={showLocalVisualExample}
-      />
+        <aside
+          aria-label="Contadores da distribuição de cliques de WhatsApp"
+          className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1"
+        >
+          <DistributionStatCard
+            detail={
+              showLocalVisualExample ? "Exemplo visual — API real: 0" : "Registros reais de contato"
+            }
+            label="Cliques de WhatsApp"
+            value={numberFormatter.format(displayDistribution.total_clicks)}
+          />
+          <DistributionStatCard
+            detail={showLocalVisualExample ? "Base ilustrativa local" : "Ativos e publicados"}
+            label="Psicólogos considerados"
+            value={numberFormatter.format(displayDistribution.total_psychologists)}
+          />
+          <DistributionStatCard
+            detail={`${withoutClicksPercentage} da base`}
+            label="Sem clique"
+            value={numberFormatter.format(displayDistribution.psychologists_without_clicks)}
+          />
+          <DistributionStatCard
+            detail={
+              numberFormatter.format(displayDistribution.top_10_percent.psychologist_count) +
+              " psicólogo(s)"
+            }
+            label="Top 10%"
+            value={formatPercent(displayDistribution.top_10_percent.click_percentage)}
+          />
+          <DistributionStatCard
+            detail={
+              numberFormatter.format(displayDistribution.top_20_percent.psychologist_count) +
+              " psicólogo(s)"
+            }
+            label="Top 20%"
+            value={formatPercent(displayDistribution.top_20_percent.click_percentage)}
+          />
+        </aside>
+      </div>
     </ChartCard>
   );
 };
