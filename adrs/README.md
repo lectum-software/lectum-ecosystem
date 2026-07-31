@@ -168,3 +168,4 @@ Formato recomendado:
 - [ADR-0353 - Qualidade absoluta da conversão no perfil Admin do psicólogo](0353-qualidade-absoluta-conversao-perfil-admin.md) - Accepted
 - [ADR-0377 - Tag de resultado no titulo de Visibilidade do psicologo Admin](0377-tag-resultado-titulo-visibilidade-psicologo-admin.md) - Accepted
 - [ADR-0378 - Origem do trafego por WhatsApp no Admin de psicologos](0378-origem-trafego-whatsapp-psicologos-admin.md) - Accepted
+- [ADR-0379 - Grupo visual de Comunidades na tabela de trafego WhatsApp Admin](0379-grupo-comunidades-tabela-trafego-whatsapp-admin.md) - Accepted
