@@ -452,6 +452,25 @@ export type PsychologistsDashboardTrafficSourceItem = {
     | "search_filters";
   label: string;
   percentage: number;
+  platform_metrics:
+    | {
+        id:
+          | "average_visibility"
+          | "average_retention"
+          | "comments"
+          | "downvotes"
+          | "profile_accesses"
+          | "saves"
+          | "shares"
+          | "upvotes"
+          | "views";
+        label: string;
+        source: string;
+        unavailable_reason: string | null;
+        unit: "count" | "percentage" | "seconds";
+        value: number | null;
+      }[]
+    | null;
   profile_views: number;
   sessions: number;
   whatsapp_clicks: number;

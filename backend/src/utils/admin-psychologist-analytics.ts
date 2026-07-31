@@ -104,9 +104,30 @@ export type AdminPsychologistWhatsappTrafficOriginSource = {
   id: AdminPsychologistWhatsappTrafficOriginSourceId;
   label: string;
   percentage: number;
+  platform_metrics: AdminPsychologistWhatsappTrafficPlatformMetric[] | null;
   profile_views: number;
   sessions: number;
   whatsapp_clicks: number;
+};
+
+export type AdminPsychologistWhatsappTrafficPlatformMetricId =
+  | "average_visibility"
+  | "average_retention"
+  | "comments"
+  | "downvotes"
+  | "profile_accesses"
+  | "saves"
+  | "shares"
+  | "upvotes"
+  | "views";
+
+export type AdminPsychologistWhatsappTrafficPlatformMetric = {
+  id: AdminPsychologistWhatsappTrafficPlatformMetricId;
+  label: string;
+  source: string;
+  unavailable_reason: string | null;
+  unit: "count" | "percentage" | "seconds";
+  value: number | null;
 };
 
 export type TimeToFirstPaidSubscriptionStatus =
@@ -878,6 +899,10 @@ const classifyWhatsappTrafficAction = (
 export const summarizePsychologistWhatsappTrafficOrigins = (params: {
   actions: AdminPsychologistWhatsappTrafficAction[];
   allowedPsychologistIds?: Set<string> | null;
+  communityPlatformMetrics?: Map<
+    AdminPsychologistWhatsappTrafficOriginSourceId,
+    AdminPsychologistWhatsappTrafficPlatformMetric[]
+  > | null;
   communityPosts: AdminPsychologistWhatsappTrafficCommunityPost[];
   communityReplies: AdminPsychologistWhatsappTrafficCommunityReply[];
 }) => {
@@ -948,6 +973,7 @@ export const summarizePsychologistWhatsappTrafficOrigins = (params: {
           totalWhatsappClicks > 0
             ? roundOneDecimal((whatsappClicks / totalWhatsappClicks) * 100)
             : 0,
+        platform_metrics: params.communityPlatformMetrics?.get(definition.id) ?? null,
         profile_views: 0,
         sessions: group?.sessions.size ?? 0,
         whatsapp_clicks: whatsappClicks,

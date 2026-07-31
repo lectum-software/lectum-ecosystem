@@ -213,6 +213,78 @@ export type AdminPsychologistTrafficCommunityReplyRecord = {
   media_type: string | null;
 };
 
+export type AdminPsychologistCommunityTrafficPlatformPostRecord = {
+  author_id: string;
+  id: string;
+  media_items: { media_type: string | null }[];
+  media_type: string | null;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformReplyRecord = {
+  author_id: string;
+  id: string;
+  media_type: string | null;
+  parent_reply_id: string | null;
+  post_id: string;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformPageViewRecord = {
+  occurred_at: Date;
+  session_id: string;
+  target_id: string | null;
+  target_type: string | null;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformVideoWatchRecord = {
+  duration_seconds: number;
+  target_id: string;
+  target_type: string;
+  watched_seconds: number;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformAttentionRecord = {
+  attention_seconds: number;
+  target_id: string;
+  target_type: string;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformVoteRecord = {
+  post_id: string | null;
+  reply_id: string | null;
+  value: number;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformPostSaveRecord = {
+  post_id: string;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformReplySaveRecord = {
+  reply_id: string;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformShareRecord = {
+  post_id: string;
+  reply_id: string | null;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformCommentRecord = {
+  parent_reply_id: string | null;
+  post_id: string;
+};
+
+export type AdminPsychologistCommunityTrafficPlatformDataset = {
+  attentionSessions: AdminPsychologistCommunityTrafficPlatformAttentionRecord[];
+  comments: AdminPsychologistCommunityTrafficPlatformCommentRecord[];
+  pageViews: AdminPsychologistCommunityTrafficPlatformPageViewRecord[];
+  posts: AdminPsychologistCommunityTrafficPlatformPostRecord[];
+  postSaves: AdminPsychologistCommunityTrafficPlatformPostSaveRecord[];
+  replies: AdminPsychologistCommunityTrafficPlatformReplyRecord[];
+  replySaves: AdminPsychologistCommunityTrafficPlatformReplySaveRecord[];
+  shares: AdminPsychologistCommunityTrafficPlatformShareRecord[];
+  videoWatchSessions: AdminPsychologistCommunityTrafficPlatformVideoWatchRecord[];
+  votes: AdminPsychologistCommunityTrafficPlatformVoteRecord[];
+};
+
 export type AdminPsychologistDirectoryFilterSearchRecord = {
   target_id: string | null;
   target_type: string | null;
@@ -295,6 +367,9 @@ export interface IAdminPsychologistsDashboardRepository {
   listWhatsappTrafficActions(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistWhatsappTrafficActionRecord[]>;
+  listCommunityTrafficPlatformMetricDataset(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistCommunityTrafficPlatformDataset>;
   listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(

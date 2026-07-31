@@ -3973,6 +3973,49 @@ const TrafficSourceMetricValue = ({
   </span>
 );
 
+const formatTrafficSourcePlatformMetricValue = (
+  metric: NonNullable<TrafficSourceItem["platform_metrics"]>[number],
+) => {
+  if (typeof metric.value !== "number") return "Sem dados";
+  if (metric.unit === "percentage") return formatPercentageValue(metric.value);
+  if (metric.unit === "seconds") return formatSecondsMetric(metric.value);
+
+  return numberFormatter.format(metric.value);
+};
+
+const TrafficSourcePlatformMetrics = ({
+  className,
+  source,
+}: {
+  className?: string;
+  source: TrafficSourceItem;
+}) => {
+  const metrics = source.platform_metrics ?? [];
+
+  if (metrics.length === 0) {
+    return (
+      <p className={cn("mt-1 text-xs leading-5 text-muted", className)}>{source.description}</p>
+    );
+  }
+
+  return (
+    <div className={cn("mt-2 flex flex-wrap gap-1.5", className)}>
+      {metrics.map((metric) => (
+        <span
+          className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface px-2 py-1 text-[0.68rem] font-bold leading-none text-muted"
+          key={metric.id}
+          title={metric.unavailable_reason ?? metric.source}
+        >
+          <span>{metric.label}</span>
+          <strong className="font-black text-foreground">
+            {formatTrafficSourcePlatformMetricValue(metric)}
+          </strong>
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const TrafficSourceGroupToggle = ({ expanded }: { expanded: boolean }) => (
   <span
     aria-hidden
@@ -4062,6 +4105,7 @@ const buildTrafficSourceDisplayRows = (
       isExpandableGroup: true,
       label: "Comunidades",
       percentage: sumTrafficSourceValue(communitySources, "percentage"),
+      platform_metrics: null,
       profile_views: sumTrafficSourceValue(communitySources, "profile_views"),
       sessions: sumTrafficSourceValue(communitySources, "sessions"),
       whatsapp_clicks: sumTrafficSourceValue(communitySources, "whatsapp_clicks"),
@@ -4085,6 +4129,7 @@ const buildTrafficSourceDisplayRows = (
       isExpandableGroup: true,
       label: "Vídeo de apresentação",
       percentage: sumTrafficSourceValue(presentationVideoSources, "percentage"),
+      platform_metrics: null,
       profile_views: sumTrafficSourceValue(presentationVideoSources, "profile_views"),
       sessions: sumTrafficSourceValue(presentationVideoSources, "sessions"),
       whatsapp_clicks: sumTrafficSourceValue(presentationVideoSources, "whatsapp_clicks"),
@@ -4213,9 +4258,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                             <p className="truncate text-xs font-black text-foreground">
                               {getTrafficSourceDetailLabel(childSource, source.groupKind)}
                             </p>
-                            <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                              {childSource.description}
-                            </p>
+                            <TrafficSourcePlatformMetrics source={childSource} />
                           </div>
                           <div className="flex justify-center text-center">
                             <TrafficSourceMetricValue
@@ -4336,9 +4379,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                             <p className="text-xs font-black text-foreground">
                               {getTrafficSourceDetailLabel(childSource, source.groupKind)}
                             </p>
-                            <p className="mt-1 line-clamp-2 text-[0.72rem] leading-5 text-muted">
-                              {childSource.description}
-                            </p>
+                            <TrafficSourcePlatformMetrics source={childSource} />
                           </div>
                           <TrafficSourceMetricValue
                             className="shrink-0 text-sm"
