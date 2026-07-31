@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 122 tasks: `TASK-00` a `TASK-115`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 123 tasks: `TASK-00` a `TASK-116`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -197,6 +197,7 @@ ou cortesia manual.
 | 113 | [TASK-113 - Tag de resultado no titulo de Visibilidade do psicologo Admin](TASK-113-tag-resultado-titulo-visibilidade-psicologo-admin.md) | Completed | 57, 95, 104, 105, 106, 108, 111, 112 |
 | 114 | [TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos](TASK-114-tabela-trafego-whatsapp-dashboard-psicologos-admin.md) | Completed | 16, 27, 49, 53, 76 |
 | 115 | [TASK-115 - Grupo Comunidades na tabela de trafego WhatsApp do Admin de psicologos](TASK-115-grupo-comunidades-tabela-trafego-whatsapp-psicologos-admin.md) | Completed | 53, 76, 114 |
+| 116 | [TASK-116 - Grupos expansiveis na tabela de trafego WhatsApp do Admin de psicologos](TASK-116-grupos-expansiveis-trafego-whatsapp-psicologos-admin.md) | Completed | 53, 76, 114, 115 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -286,6 +287,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 79. [TASK-113 - Tag de resultado no titulo de Visibilidade do psicologo Admin](TASK-113-tag-resultado-titulo-visibilidade-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para trocar a tag fixa Unidade: tempo pelo diagnostico real Alta/Baixa/Sem/Padrao Visibilidade no titulo do bloco Visibilidade.
 80. [TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos](TASK-114-tabela-trafego-whatsapp-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para transformar a tabela Origem do trafego em uma leitura de cliques WhatsApp por superficie, com Perfil como linha, sem Link direto e Comunidades detalhadas.
 81. [TASK-115 - Grupo Comunidades na tabela de trafego WhatsApp do Admin de psicologos](TASK-115-grupo-comunidades-tabela-trafego-whatsapp-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para agrupar Comunidades em um bloco unico com somatorio e detalhes subordinados na tabela de trafego dos psicologos.
+82. [TASK-116 - Grupos expansiveis na tabela de trafego WhatsApp do Admin de psicologos](TASK-116-grupos-expansiveis-trafego-whatsapp-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para recolher/expandir Comunidades e Video de apresentacao, agrupando Explorar e Busca e filtros sob o novo bloco agregado.
 
 ### 1A. Trilha Admin planejada
 
@@ -360,6 +362,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 67. [TASK-113 - Tag de resultado no titulo de Visibilidade do psicologo Admin](TASK-113-tag-resultado-titulo-visibilidade-psicologo-admin.md)
 68. [TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos](TASK-114-tabela-trafego-whatsapp-dashboard-psicologos-admin.md)
 69. [TASK-115 - Grupo Comunidades na tabela de trafego WhatsApp do Admin de psicologos](TASK-115-grupo-comunidades-tabela-trafego-whatsapp-psicologos-admin.md)
+70. [TASK-116 - Grupos expansiveis na tabela de trafego WhatsApp do Admin de psicologos](TASK-116-grupos-expansiveis-trafego-whatsapp-psicologos-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

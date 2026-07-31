@@ -127,10 +127,17 @@ type CommunityTrafficSourceId = Extract<
   | "community_reply_video"
   | "community_top_mentors"
 >;
+type PresentationVideoTrafficSourceId = Extract<
+  TrafficSourceItem["id"],
+  "explore" | "search_filters"
+>;
+type TrafficSourceGroupId = "communities_group" | "presentation_video_group";
+type TrafficSourceGroupKind = "communities" | "presentation_video";
 type TrafficSourceDisplayItem = Omit<TrafficSourceItem, "id"> & {
   children?: TrafficSourceItem[];
-  id: TrafficSourceItem["id"] | "communities_group";
-  isCommunityGroup?: boolean;
+  groupKind?: TrafficSourceGroupKind;
+  id: TrafficSourceItem["id"] | TrafficSourceGroupId;
+  isExpandableGroup?: boolean;
 };
 
 const PLAN_SEGMENT_FILTER_OPTIONS: { id: PlanSegmentFilter; label: string }[] = [
@@ -183,6 +190,13 @@ const COMMUNITY_TRAFFIC_SOURCE_DETAIL_LABELS = {
   community_reply_video: "Respostas com vídeo",
   community_top_mentors: "Ranking Top Mentores",
 } satisfies Record<CommunityTrafficSourceId, string>;
+const PRESENTATION_VIDEO_TRAFFIC_SOURCE_IDS = [
+  "explore",
+  "search_filters",
+] as const satisfies readonly PresentationVideoTrafficSourceId[];
+const PRESENTATION_VIDEO_TRAFFIC_SOURCE_ID_SET = new Set<TrafficSourceItem["id"]>(
+  PRESENTATION_VIDEO_TRAFFIC_SOURCE_IDS,
+);
 
 const toOneDecimal = (value: number) => Math.round(value * 10) / 10;
 
@@ -3959,13 +3973,41 @@ const TrafficSourceMetricValue = ({
   </span>
 );
 
+const TrafficSourceGroupToggle = ({ expanded }: { expanded: boolean }) => (
+  <span
+    aria-hidden
+    className="inline-flex h-6 w-6 shrink-0 items-center justify-center text-muted transition"
+    data-traffic-source-chevron=""
+  >
+    <ChevronDown
+      aria-hidden
+      className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
+    />
+  </span>
+);
+
 const isCommunityTrafficSource = (
   source: TrafficSourceItem,
 ): source is TrafficSourceItem & { id: CommunityTrafficSourceId } =>
   COMMUNITY_TRAFFIC_SOURCE_ID_SET.has(source.id);
 
-const getCommunityTrafficSourceDetailLabel = (source: TrafficSourceItem) =>
-  isCommunityTrafficSource(source)
+const isPresentationVideoTrafficSource = (
+  source: TrafficSourceItem,
+): source is TrafficSourceItem & { id: PresentationVideoTrafficSourceId } =>
+  PRESENTATION_VIDEO_TRAFFIC_SOURCE_ID_SET.has(source.id);
+
+const isExpandableTrafficSourceGroup = (
+  source: TrafficSourceDisplayItem,
+): source is TrafficSourceDisplayItem & {
+  children: TrafficSourceItem[];
+  id: TrafficSourceGroupId;
+} => Boolean(source.isExpandableGroup && source.children?.length);
+
+const getTrafficSourceDetailLabel = (
+  source: TrafficSourceItem,
+  groupKind?: TrafficSourceGroupKind,
+) =>
+  groupKind === "communities" && isCommunityTrafficSource(source)
     ? COMMUNITY_TRAFFIC_SOURCE_DETAIL_LABELS[source.id]
     : source.label;
 
@@ -3981,12 +4023,25 @@ const buildTrafficSourceDisplayRows = (
   const communitySourcesById = new Map<CommunityTrafficSourceId, TrafficSourceItem>();
   const communitySources: TrafficSourceItem[] = [];
   let communitySortIndex = sources.length;
+  const presentationVideoSourcesById = new Map<
+    PresentationVideoTrafficSourceId,
+    TrafficSourceItem
+  >();
+  const presentationVideoSources: TrafficSourceItem[] = [];
+  let presentationVideoSortIndex = sources.length;
 
   sources.forEach((source, index) => {
     if (isCommunityTrafficSource(source)) {
       communitySourcesById.set(source.id, source);
       communitySources.push(source);
       communitySortIndex = Math.min(communitySortIndex, index);
+      return;
+    }
+
+    if (isPresentationVideoTrafficSource(source)) {
+      presentationVideoSourcesById.set(source.id, source);
+      presentationVideoSources.push(source);
+      presentationVideoSortIndex = Math.min(presentationVideoSortIndex, index);
       return;
     }
 
@@ -4002,8 +4057,9 @@ const buildTrafficSourceDisplayRows = (
       badge: null,
       children: communityDetails,
       description: "Somatório dos cliques de WhatsApp originados nas comunidades.",
+      groupKind: "communities",
       id: "communities_group",
-      isCommunityGroup: true,
+      isExpandableGroup: true,
       label: "Comunidades",
       percentage: sumTrafficSourceValue(communitySources, "percentage"),
       profile_views: sumTrafficSourceValue(communitySources, "profile_views"),
@@ -4012,6 +4068,29 @@ const buildTrafficSourceDisplayRows = (
     };
 
     displayCandidates.push({ index: communitySortIndex, source: communityGroup });
+  }
+
+  if (presentationVideoSources.length > 0) {
+    const presentationVideoDetails = PRESENTATION_VIDEO_TRAFFIC_SOURCE_IDS.map((id) =>
+      presentationVideoSourcesById.get(id),
+    ).filter((source): source is TrafficSourceItem => Boolean(source));
+    const presentationVideoGroup: TrafficSourceDisplayItem = {
+      ...presentationVideoSources[0],
+      badge: null,
+      children: presentationVideoDetails,
+      description:
+        "Somatório dos cliques de WhatsApp associados ao vídeo de apresentação em Explorar e buscas/filtros.",
+      groupKind: "presentation_video",
+      id: "presentation_video_group",
+      isExpandableGroup: true,
+      label: "Vídeo de apresentação",
+      percentage: sumTrafficSourceValue(presentationVideoSources, "percentage"),
+      profile_views: sumTrafficSourceValue(presentationVideoSources, "profile_views"),
+      sessions: sumTrafficSourceValue(presentationVideoSources, "sessions"),
+      whatsapp_clicks: sumTrafficSourceValue(presentationVideoSources, "whatsapp_clicks"),
+    };
+
+    displayCandidates.push({ index: presentationVideoSortIndex, source: presentationVideoGroup });
   }
 
   const sortedCandidates = displayCandidates.sort((left, right) => {
@@ -4035,6 +4114,9 @@ const buildTrafficSourceDisplayRows = (
 
 const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [trafficPlanSegment, setTrafficPlanSegment] = useState<PlanSegmentFilter>("all");
+  const [expandedTrafficSourceGroups, setExpandedTrafficSourceGroups] = useState<
+    Set<TrafficSourceGroupId>
+  >(() => new Set());
   const trafficSegmentSummary = getPlanSegmentSummary(summary, trafficPlanSegment);
   const traffic = trafficSegmentSummary.traffic_sources;
   const trafficRows = buildTrafficSourceDisplayRows(traffic.sources);
@@ -4044,6 +4126,19 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
   );
   const getWhatsappClicksPercentage = (value: number | null) =>
     totalWhatsappClicks > 0 ? toOneDecimal(((value ?? 0) / totalWhatsappClicks) * 100) : 0;
+  const toggleTrafficSourceGroup = (groupId: TrafficSourceGroupId) => {
+    setExpandedTrafficSourceGroups((current) => {
+      const next = new Set(current);
+
+      if (next.has(groupId)) {
+        next.delete(groupId);
+        return next;
+      }
+
+      next.add(groupId);
+      return next;
+    });
+  };
 
   return (
     <CardShell className="p-5">
@@ -4069,10 +4164,18 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
         </div>
         <div className="divide-y divide-border">
           {trafficRows.map((source) => {
-            if (source.isCommunityGroup && source.children?.length) {
+            if (isExpandableTrafficSourceGroup(source)) {
+              const isExpanded = expandedTrafficSourceGroups.has(source.id);
+
               return (
                 <div className="bg-surface-muted/35" key={source.id}>
-                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(120px,0.35fr)] items-center gap-3 px-4 py-4">
+                  <button
+                    aria-expanded={isExpanded}
+                    aria-label={`${isExpanded ? "Ocultar" : "Expandir"} detalhes de ${source.label}`}
+                    className="grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_minmax(150px,0.35fr)] items-center gap-3 px-4 py-4 text-left transition hover:bg-surface-muted/55 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    onClick={() => toggleTrafficSourceGroup(source.id)}
+                    type="button"
+                  >
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <p className="truncate text-sm font-black text-foreground">
@@ -4088,38 +4191,43 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                         {source.description}
                       </p>
                     </div>
-                    <div className="flex justify-center text-center">
-                      <TrafficSourceMetricValue
-                        className="text-lg"
-                        percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                        value={formatNullableCount(source.whatsapp_clicks)}
-                      />
-                    </div>
-                  </div>
-                  <div className="divide-y divide-border/70 border-border/70 border-t">
-                    {source.children.map((childSource) => (
-                      <div
-                        className="grid grid-cols-[minmax(0,1fr)_minmax(120px,0.35fr)] items-center gap-3 px-4 py-3"
-                        key={childSource.id}
-                      >
-                        <div className="min-w-0 border-primary/25 border-l-2 pl-4">
-                          <p className="truncate text-xs font-black text-foreground">
-                            {getCommunityTrafficSourceDetailLabel(childSource)}
-                          </p>
-                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                            {childSource.description}
-                          </p>
-                        </div>
-                        <div className="flex justify-center text-center">
-                          <TrafficSourceMetricValue
-                            className="text-base"
-                            percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
-                            value={formatNullableCount(childSource.whatsapp_clicks)}
-                          />
-                        </div>
+                    <div className="grid grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-4 text-center">
+                      <div className="flex justify-center">
+                        <TrafficSourceMetricValue
+                          className="text-lg"
+                          percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
+                          value={formatNullableCount(source.whatsapp_clicks)}
+                        />
                       </div>
-                    ))}
-                  </div>
+                      <TrafficSourceGroupToggle expanded={isExpanded} />
+                    </div>
+                  </button>
+                  {isExpanded ? (
+                    <div className="divide-y divide-border/70 border-border/70 border-t">
+                      {source.children.map((childSource) => (
+                        <div
+                          className="grid grid-cols-[minmax(0,1fr)_minmax(120px,0.35fr)] items-center gap-3 px-4 py-3"
+                          key={childSource.id}
+                        >
+                          <div className="min-w-0 border-primary/25 border-l-2 pl-4">
+                            <p className="truncate text-xs font-black text-foreground">
+                              {getTrafficSourceDetailLabel(childSource, source.groupKind)}
+                            </p>
+                            <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                              {childSource.description}
+                            </p>
+                          </div>
+                          <div className="flex justify-center text-center">
+                            <TrafficSourceMetricValue
+                              className="text-base"
+                              percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
+                              value={formatNullableCount(childSource.whatsapp_clicks)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               );
             }
@@ -4156,73 +4264,96 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
       </div>
 
       <div className="mt-5 grid gap-3 md:hidden">
-        {trafficRows.map((source) => (
-          <article
-            className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
-            key={source.id}
-          >
-            <div className="min-w-0">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <h4 className="text-sm font-black text-foreground">{source.label}</h4>
-                {source.badge === "primary_source" ? (
-                  <span className="rounded-full bg-primary-soft px-2 py-1 text-[0.68rem] font-black text-primary">
-                    Principal origem
-                  </span>
+        {trafficRows.map((source) => {
+          const isExpandableGroup = isExpandableTrafficSourceGroup(source);
+          const isExpanded = isExpandableGroup ? expandedTrafficSourceGroups.has(source.id) : false;
+          const metricBlock = (
+            <div className="mt-4 rounded-2xl bg-surface p-3">
+              <p className="text-[0.68rem] font-black text-muted">WhatsApp</p>
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <TrafficSourceMetricValue
+                  className="text-base"
+                  percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
+                  value={formatNullableCount(source.whatsapp_clicks)}
+                />
+                {isExpandableGroup ? <TrafficSourceGroupToggle expanded={isExpanded} /> : null}
+              </div>
+            </div>
+          );
+          const summaryContent = (
+            <>
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h4 className="text-sm font-black text-foreground">{source.label}</h4>
+                    {source.badge === "primary_source" ? (
+                      <span className="rounded-full bg-primary-soft px-2 py-1 text-[0.68rem] font-black text-primary">
+                        Principal origem
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
+                </div>
+              </div>
+              {metricBlock}
+            </>
+          );
+
+          return (
+            <article
+              className={cn(
+                "rounded-[1.35rem] border border-border/70 bg-surface-muted p-4",
+                isExpandableGroup && "transition hover:border-primary/30",
+              )}
+              key={source.id}
+            >
+              {isExpandableGroup ? (
+                <button
+                  aria-expanded={isExpanded}
+                  aria-label={`${isExpanded ? "Ocultar" : "Expandir"} detalhes de ${source.label}`}
+                  className="w-full cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  onClick={() => toggleTrafficSourceGroup(source.id)}
+                  type="button"
+                >
+                  {summaryContent}
+                </button>
+              ) : (
+                summaryContent
+              )}
+              <div className="mt-2 grid gap-2">
+                {isExpandableGroup && isExpanded ? (
+                  <div className="rounded-2xl border border-border/70 bg-surface p-3">
+                    <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
+                      Detalhamento de {source.label}
+                    </p>
+                    <div className="mt-2 divide-y divide-border/70">
+                      {source.children.map((childSource) => (
+                        <div
+                          className="flex items-start justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                          key={childSource.id}
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-foreground">
+                              {getTrafficSourceDetailLabel(childSource, source.groupKind)}
+                            </p>
+                            <p className="mt-1 line-clamp-2 text-[0.72rem] leading-5 text-muted">
+                              {childSource.description}
+                            </p>
+                          </div>
+                          <TrafficSourceMetricValue
+                            className="shrink-0 text-sm"
+                            percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
+                            value={formatNullableCount(childSource.whatsapp_clicks)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : null}
               </div>
-              <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
-            </div>
-            <div className="mt-4 grid gap-2">
-              {[
-                {
-                  label: "WhatsApp",
-                  percentage: getWhatsappClicksPercentage(source.whatsapp_clicks),
-                  value: formatNullableCount(source.whatsapp_clicks),
-                },
-              ].map((item) => (
-                <div className="rounded-2xl bg-surface p-3" key={item.label}>
-                  <p className="text-[0.68rem] font-black text-muted">{item.label}</p>
-                  <p className="mt-1">
-                    <TrafficSourceMetricValue
-                      className="text-base"
-                      percentage={item.percentage}
-                      value={item.value}
-                    />
-                  </p>
-                </div>
-              ))}
-              {source.isCommunityGroup && source.children?.length ? (
-                <div className="rounded-2xl border border-border/70 bg-surface p-3">
-                  <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-muted">
-                    Detalhamento de comunidades
-                  </p>
-                  <div className="mt-2 divide-y divide-border/70">
-                    {source.children.map((childSource) => (
-                      <div
-                        className="flex items-start justify-between gap-3 py-2 first:pt-0 last:pb-0"
-                        key={childSource.id}
-                      >
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-foreground">
-                            {getCommunityTrafficSourceDetailLabel(childSource)}
-                          </p>
-                          <p className="mt-1 line-clamp-2 text-[0.72rem] leading-5 text-muted">
-                            {childSource.description}
-                          </p>
-                        </div>
-                        <TrafficSourceMetricValue
-                          className="shrink-0 text-sm"
-                          percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
-                          value={formatNullableCount(childSource.whatsapp_clicks)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </div>
     </CardShell>
   );

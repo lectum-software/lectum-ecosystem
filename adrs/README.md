@@ -169,3 +169,4 @@ Formato recomendado:
 - [ADR-0377 - Tag de resultado no titulo de Visibilidade do psicologo Admin](0377-tag-resultado-titulo-visibilidade-psicologo-admin.md) - Accepted
 - [ADR-0378 - Origem do trafego por WhatsApp no Admin de psicologos](0378-origem-trafego-whatsapp-psicologos-admin.md) - Accepted
 - [ADR-0379 - Grupo visual de Comunidades na tabela de trafego WhatsApp Admin](0379-grupo-comunidades-tabela-trafego-whatsapp-admin.md) - Accepted
+- [ADR-0380 - Grupos expansiveis na tabela de trafego WhatsApp Admin](0380-grupos-expansiveis-trafego-whatsapp-admin.md) - Accepted
