@@ -311,6 +311,64 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
+  async listPublicProfileAttentionSessions(psychologistId: string, from: Date, to: Date) {
+    const views = await prisma.page_view_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        duration_seconds: true,
+        occurred_at: true,
+        user_id: true,
+      },
+      where: {
+        deleted: false,
+        duration_seconds: {
+          gt: 0,
+        },
+        occurred_at: { gte: from, lte: to },
+        page_kind: "psychologist_profile",
+        target_id: psychologistId,
+        target_type: "psychologist",
+      },
+    });
+
+    return views.flatMap((view) => {
+      if (view.user_id && view.user_id === psychologistId) return [];
+
+      return [
+        {
+          attention_seconds: view.duration_seconds ?? 0,
+          createdAt: view.occurred_at,
+        },
+      ];
+    });
+  }
+
+  async listCommunityContentAttentionSessions(psychologistId: string, from: Date, to: Date) {
+    return prisma.content_attention_session.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: {
+        attention_seconds: true,
+        createdAt: true,
+        target_type: true,
+      },
+      where: {
+        attention_seconds: {
+          gt: 0,
+        },
+        createdAt: { gte: from, lte: to },
+        deleted: false,
+        psychologist_id: psychologistId,
+        target_type: {
+          in: ["post", "reply"],
+        },
+      },
+    });
+  }
+
   async listSearchResultImpressions(psychologistId: string, from: Date, to: Date) {
     return prisma.profile_view_event.findMany({
       where: {
@@ -397,6 +455,7 @@ export class AdminPsychologistEngagementRepository {
       },
       select: {
         completed: true,
+        createdAt: true,
         duration_seconds: true,
         last_event_at: true,
         max_position_seconds: true,

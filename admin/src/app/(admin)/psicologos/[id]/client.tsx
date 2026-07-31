@@ -413,6 +413,7 @@ type StatisticsChartMetric = {
   shortLabel: string;
   strokeClassName: string;
   swatchClassName: string;
+  unit?: AdminPsychologistEngagementMetric["unit"];
 };
 
 const BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS: Record<
@@ -446,12 +447,14 @@ const BUSINESS_CHART_METRICS = [
     icon: Search,
     iconClassName: "text-blue-500",
     iconToneClassName: "bg-blue-50",
-    getValue: (point) => point.profile_views + point.search_results,
-    label: "Visibilidade",
-    source: "profile_view_event.source=profile_page+search_result",
+    getValue: (point) => point.visibility_seconds,
+    label: "Visibilidade (tempo)",
+    source:
+      "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds",
     shortLabel: "Visibilidade",
     strokeClassName: "stroke-blue-500",
     swatchClassName: "bg-blue-500",
+    unit: "seconds",
   },
   {
     dotRadius: 3.5,
@@ -620,6 +623,7 @@ const BUSINESS_SERIES_METRIC_KEYS = [
   "downvotes",
   "shares",
   "posts",
+  "visibility_seconds",
 ] as const satisfies readonly StatisticsSeriesMetricKey[];
 
 const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[] = [
@@ -1780,6 +1784,23 @@ const formatProfileConversionSupport = (conversion: BusinessProfileConversion) =
   )}.`;
 };
 
+const formatDurationSeconds = (value: number | null) => {
+  if (typeof value !== "number") return "Indisponível";
+
+  const seconds = Math.max(0, Math.round(value));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+
+  if (hours > 0) {
+    return `${numberFormatter.format(hours)}h ${String(minutes).padStart(2, "0")}min`;
+  }
+  if (minutes > 0)
+    return `${numberFormatter.format(minutes)}min ${String(remainder).padStart(2, "0")}s`;
+
+  return `${numberFormatter.format(seconds)}s`;
+};
+
 const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) => {
   if (!metric.available || metric.value === null) return "Indisponível";
   if (metric.unit === "percentage") {
@@ -1788,21 +1809,14 @@ const formatEngagementMetricValue = (metric: AdminPsychologistEngagementMetric) 
       minimumFractionDigits: 1,
     })}%`;
   }
-  if (metric.unit === "seconds") return `${numberFormatter.format(metric.value)}s`;
+  if (metric.unit === "seconds") return formatDurationSeconds(metric.value);
   if (metric.unit === "position") return `#${numberFormatter.format(metric.value)}`;
 
   return numberFormatter.format(metric.value);
 };
 
 const formatPlatformDuration = (value: number | null) => {
-  if (typeof value !== "number") return "Indisponível";
-
-  const seconds = Math.round(value);
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  if (minutes <= 0) return `${seconds}s`;
-
-  return `${minutes}min ${String(remainder).padStart(2, "0")}s`;
+  return formatDurationSeconds(value);
 };
 
 const formatChange = (value: number | null) => {
@@ -3524,9 +3538,15 @@ const buildStatisticsOverviewMetric = ({
     label: config.label,
     source: config.source,
     unavailable_reason: points.length > 0 ? null : "Sem pontos reais no período",
-    unit: "count",
+    unit: config.unit ?? "count",
     value,
   };
+};
+
+const formatStatisticsChartMetricValue = (value: number, metric?: StatisticsChartMetric) => {
+  if (metric?.unit === "seconds") return formatDurationSeconds(value);
+
+  return numberFormatter.format(value);
 };
 
 const StatisticsSeriesChart = ({
@@ -3566,6 +3586,7 @@ const StatisticsSeriesChart = ({
     (chartPoints.length <= 1 ? innerWidth / 2 : (index / (chartPoints.length - 1)) * innerWidth);
   const yFor = (value: number) => padding.top + innerHeight - (value / max) * innerHeight;
   const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(max * ratio));
+  const axisMetric = keys.length === 1 ? keys[0] : undefined;
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
   const dateLabels = chartPoints.flatMap((point, index) =>
     index % labelStep === 0 || index === chartPoints.length - 1
@@ -3608,7 +3629,7 @@ const StatisticsSeriesChart = ({
                   x={padding.left - 8}
                   y={y}
                 >
-                  {numberFormatter.format(value)}
+                  {formatStatisticsChartMetricValue(value, axisMetric)}
                 </text>
               </g>
             );
@@ -3646,7 +3667,8 @@ const StatisticsSeriesChart = ({
                   strokeWidth="1.45"
                 >
                   <title>
-                    {point.tooltipLabel} · {item.label}: {numberFormatter.format(value)}
+                    {point.tooltipLabel} · {item.label}:{" "}
+                    {formatStatisticsChartMetricValue(value, item)}
                   </title>
                 </circle>
               );

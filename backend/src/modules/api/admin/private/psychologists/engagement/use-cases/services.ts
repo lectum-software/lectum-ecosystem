@@ -66,6 +66,8 @@ const MAX_PERIOD_DAYS = 3660;
 const MS_PER_DAY = 86_400_000;
 const TRAFFIC_QUALITY_SOURCE =
   "page_view_event+psychologist_favorite+contact_request+important_action_event" as const;
+const PROFILE_VISIBILITY_TEMPORAL_SOURCE =
+  "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds" as const;
 const TRAFFIC_QUALITY_LEVEL_CONFIG = {
   interested: {
     description: "Retornou ao perfil ou favoritou este psicólogo antes do WhatsApp.",
@@ -114,6 +116,9 @@ const addDays = (date: Date, days: number) => {
   next.setDate(next.getDate() + days);
   return next;
 };
+
+const labelsFromRange = (start: Date, days: number) =>
+  Array.from({ length: days }, (_, index) => toDateKey(addDays(start, index)));
 
 const startOfDate = (date: Date) => {
   const next = new Date(date);
@@ -239,7 +244,7 @@ const resolvePeriod = (
     return { success: false, code: "invalid_analytics_date_range" };
   }
 
-  const labels = Array.from({ length: days }, (_, index) => toDateKey(addDays(start, index)));
+  const labels = labelsFromRange(start, days);
   const previousEnd = endOfDate(addDays(start, -1));
   const previousStart = startOfDate(addDays(start, -days));
 
@@ -595,9 +600,69 @@ const groupDateCounts = <T extends { createdAt: Date }>(items: T[], labels: stri
   return counts;
 };
 
+const normalizeSeconds = (value: number | null | undefined) => {
+  const seconds = Number(value ?? 0);
+
+  if (!Number.isFinite(seconds) || seconds <= 0) return 0;
+
+  return Math.round(seconds);
+};
+
+const groupDateSums = <T extends { createdAt: Date }>(
+  items: T[],
+  labels: string[],
+  getValue: (item: T) => number | null | undefined,
+) => {
+  const counts = new Map(labels.map((label) => [label, 0]));
+
+  for (const item of items) {
+    const label = toDateKey(item.createdAt);
+    if (!counts.has(label)) continue;
+    counts.set(label, (counts.get(label) ?? 0) + normalizeSeconds(getValue(item)));
+  }
+
+  return counts;
+};
+
 const valueFromMap = (map: Map<string, number>, key: string) => map.get(key) ?? 0;
 
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
+
+const buildVisibilitySecondsByDate = (input: {
+  communityContentAttentionSessions: { attention_seconds: number; createdAt: Date }[];
+  labels: string[];
+  profileAttentionSessions: { attention_seconds: number; createdAt: Date }[];
+  videoSessions: { createdAt: Date; watched_seconds: number }[];
+}) => {
+  const profileAttentionSeconds = groupDateSums(
+    input.profileAttentionSessions,
+    input.labels,
+    (item) => item.attention_seconds,
+  );
+  const videoAttentionSeconds = groupDateSums(input.videoSessions, input.labels, (item) => {
+    return item.watched_seconds;
+  });
+  const communityAttentionSeconds = groupDateSums(
+    input.communityContentAttentionSessions,
+    input.labels,
+    (item) => item.attention_seconds,
+  );
+
+  return new Map(
+    input.labels.map((label) => {
+      const profileSurfaceSeconds = Math.max(
+        valueFromMap(profileAttentionSeconds, label),
+        valueFromMap(videoAttentionSeconds, label),
+      );
+      const communitySeconds = valueFromMap(communityAttentionSeconds, label);
+
+      return [label, profileSurfaceSeconds + communitySeconds];
+    }),
+  );
+};
+
+const sumVisibilitySecondsByDate = (visibilitySecondsByDate: Map<string, number>) =>
+  sum([...visibilitySecondsByDate.values()]);
 
 const RETENTION_BUCKETS = Array.from({ length: 20 }, (_, index) => (index + 1) * 5);
 
@@ -668,6 +733,7 @@ const buildSeries = (input: {
   replySaves: { createdAt: Date }[];
   replyVotes: { createdAt: Date; value: number }[];
   searchResults: { createdAt: Date }[];
+  visibilitySecondsByDate?: Map<string, number>;
   whatsappClicks: { createdAt: Date }[];
 }): AdminPsychologistStatisticsSeriesPoint[] => {
   const profileViews = groupDateCounts(input.profileViews, input.labels);
@@ -688,6 +754,7 @@ const buildSeries = (input: {
     input.labels,
   );
   const shares = groupDateCounts([...input.postShares, ...input.replyShares], input.labels);
+  const visibilitySecondsByDate = input.visibilitySecondsByDate ?? new Map<string, number>();
 
   return input.labels.map((date) => ({
     comments_received: valueFromMap(commentsReceived, date),
@@ -700,6 +767,7 @@ const buildSeries = (input: {
     saves: valueFromMap(saves, date),
     search_results: valueFromMap(searchResults, date),
     shares: valueFromMap(shares, date),
+    visibility_seconds: valueFromMap(visibilitySecondsByDate, date),
     whatsapp_clicks: valueFromMap(whatsappClicks, date),
     upvotes: valueFromMap(upvotes, date),
     posts: valueFromMap(posts, date),
@@ -1486,6 +1554,8 @@ export const showAdminPsychologistStatistics = async (
     favorites,
     reviews,
     searchResults,
+    profileAttentionSessions,
+    communityContentAttentionSessions,
     videoSessions,
     videoActionEvents,
     previousProfileViews,
@@ -1493,6 +1563,8 @@ export const showAdminPsychologistStatistics = async (
     previousFavorites,
     previousReviews,
     previousSearchResults,
+    previousProfileAttentionSessions,
+    previousCommunityContentAttentionSessions,
     previousVideoSessions,
     previousVideoActionEvents,
     posts,
@@ -1516,6 +1588,12 @@ export const showAdminPsychologistStatistics = async (
     repository.listFavorites(userId, period.current.start, period.current.end),
     repository.listReviews(userId, period.current.start, period.current.end),
     repository.listSearchResultImpressions(userId, period.current.start, period.current.end),
+    repository.listPublicProfileAttentionSessions(userId, period.current.start, period.current.end),
+    repository.listCommunityContentAttentionSessions(
+      userId,
+      period.current.start,
+      period.current.end,
+    ),
     repository.listVideoSessions(userId, period.current.start, period.current.end),
     repository.listVideoActionEvents(userId, period.current.start, period.current.end),
     repository.listProfileViews(userId, period.previous.start, period.previous.end),
@@ -1523,6 +1601,16 @@ export const showAdminPsychologistStatistics = async (
     repository.listFavorites(userId, period.previous.start, period.previous.end),
     repository.listReviews(userId, period.previous.start, period.previous.end),
     repository.listSearchResultImpressions(userId, period.previous.start, period.previous.end),
+    repository.listPublicProfileAttentionSessions(
+      userId,
+      period.previous.start,
+      period.previous.end,
+    ),
+    repository.listCommunityContentAttentionSessions(
+      userId,
+      period.previous.start,
+      period.previous.end,
+    ),
     repository.listVideoSessions(userId, period.previous.start, period.previous.end),
     repository.listVideoActionEvents(userId, period.previous.start, period.previous.end),
     repository.listAuthoredPosts(userId, period.current.start, period.current.end),
@@ -1618,6 +1706,20 @@ export const showAdminPsychologistStatistics = async (
     patientPostsByCommunityCounts.map((item) => [item.community_id, item._count._all]),
   );
   const unavailable: AdminPsychologistAvailabilityMetric[] = [];
+  const visibilitySecondsByDate = buildVisibilitySecondsByDate({
+    communityContentAttentionSessions,
+    labels: period.labels,
+    profileAttentionSessions,
+    videoSessions,
+  });
+  const previousVisibilitySecondsByDate = buildVisibilitySecondsByDate({
+    communityContentAttentionSessions: previousCommunityContentAttentionSessions,
+    labels: labelsFromRange(period.previous.start, period.period.days),
+    profileAttentionSessions: previousProfileAttentionSessions,
+    videoSessions: previousVideoSessions,
+  });
+  const visibilitySeconds = sumVisibilitySecondsByDate(visibilitySecondsByDate);
+  const previousVisibilitySeconds = sumVisibilitySecondsByDate(previousVisibilitySecondsByDate);
   const businessSeries = buildSeries({
     commentsReceived,
     favorites,
@@ -1633,6 +1735,7 @@ export const showAdminPsychologistStatistics = async (
     replySaves,
     replyVotes,
     searchResults,
+    visibilitySecondsByDate,
     whatsappClicks,
   });
   const communitySeries = buildSeries({
@@ -1773,6 +1876,14 @@ export const showAdminPsychologistStatistics = async (
           value: profileViews.length,
         }),
         metric({
+          comparison: buildComparison(visibilitySeconds, previousVisibilitySeconds, period.period),
+          id: "visibility_signal",
+          label: "Visibilidade (tempo)",
+          source: PROFILE_VISIBILITY_TEMPORAL_SOURCE,
+          unit: "seconds",
+          value: visibilitySeconds,
+        }),
+        metric({
           comparison: buildComparison(
             whatsappClicks.length,
             previousWhatsappClicks.length,
@@ -1884,7 +1995,7 @@ export const showAdminPsychologistStatistics = async (
     period: period.period,
     platform_usage: platformUsage,
     source:
-      "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event",
+      "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event+content_attention_session",
     traffic_quality: trafficQuality,
     traffic_sources: trafficSources,
     unavailable,

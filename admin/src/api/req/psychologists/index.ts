@@ -1735,7 +1735,7 @@ export type AdminPsychologistStatistics = {
     }[];
     unavailable_reason: string | null;
   };
-  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event";
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event+content_attention_session";
   traffic_quality: {
     absorption_rate: number | null;
     attributed_whatsapp_clicks: number;
@@ -1874,6 +1874,7 @@ export type AdminPsychologistStatisticsPoint = {
   saves: number;
   search_results: number;
   shares: number;
+  visibility_seconds: number;
   whatsapp_clicks: number;
   upvotes: number;
   posts: number;

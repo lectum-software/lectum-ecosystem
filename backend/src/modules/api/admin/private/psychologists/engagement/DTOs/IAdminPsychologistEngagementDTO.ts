@@ -104,6 +104,7 @@ export type AdminPsychologistStatisticsSeriesPoint = {
   saves: number;
   search_results: number;
   shares: number;
+  visibility_seconds: number;
   whatsapp_clicks: number;
   upvotes: number;
   posts: number;
@@ -361,7 +362,7 @@ export type AdminPsychologistStatisticsDTO = {
   };
   period: AdminPsychologistStatisticsPeriod;
   platform_usage: AdminPsychologistPlatformUsage;
-  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event";
+  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event+content_attention_session";
   traffic_quality: AdminPsychologistTrafficQualitySummary;
   traffic_sources: AdminPsychologistTrafficSources;
   unavailable: AdminPsychologistAvailabilityMetric[];
