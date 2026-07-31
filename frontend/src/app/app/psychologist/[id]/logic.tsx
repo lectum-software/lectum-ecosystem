@@ -33,6 +33,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useImportantActionTracking } from "@/api/callers/analytics";
 import {
   useDirectoryPsychologist,
   useDirectoryPsychologistPosts,
@@ -57,7 +58,9 @@ import type {
 } from "@/api/generator/types/directory";
 import type { FreeProfessionalProfileActivationPendingField } from "@/api/generator/types/free-profile";
 import type { PostListPost } from "@/api/generator/types/posts";
+import type { DisplayMode, ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { documentHasUserAttention } from "@/components/analytics/attention";
+import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
@@ -105,6 +108,31 @@ type ApiErrorData = {
 
 type ApiError = Error & {
   data?: ApiErrorData;
+};
+
+type NavigatorWithStandalone = Navigator & { standalone?: boolean };
+
+const getDisplayMode = (): DisplayMode => {
+  if (typeof window === "undefined") return "unknown";
+
+  const navigatorWithStandalone = window.navigator as NavigatorWithStandalone;
+  if (window.matchMedia("(display-mode: fullscreen)").matches) return "fullscreen";
+  if (window.matchMedia("(display-mode: minimal-ui)").matches) return "minimal-ui";
+  if (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigatorWithStandalone.standalone === true
+  ) {
+    return "standalone";
+  }
+  if (window.matchMedia("(display-mode: browser)").matches) return "browser";
+
+  return "unknown";
+};
+
+const currentAnalyticsPath = () => {
+  if (typeof window === "undefined") return "/";
+
+  return `${window.location.pathname || "/"}${window.location.search || ""}`;
 };
 
 const tabs: Array<{ label: string; value: ProfileTab }> = [
@@ -2264,6 +2292,7 @@ export const PsychologistProfileLogic = () => {
   const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const [pendingScrollTab, setPendingScrollTab] = useState<ProfileTab | null>(null);
   const trackedProfileViewRef = useRef<string | null>(null);
+  const trackedTabOpenRef = useRef<string | null>(null);
   const currentUser = useAppSelector((state) => state.user);
   const conversion = useProgressiveConversion();
   const id = params.id;
@@ -2279,9 +2308,11 @@ export const PsychologistProfileLogic = () => {
 
   const profileQuery = useDirectoryPsychologist(id);
   const { mutate: trackProfileView } = useDirectoryPsychologistProfileView(id);
+  const importantActionTracking = useImportantActionTracking();
   const sharePostMutation = useSharePost();
   const shareReplyMutation = useShareReply();
   const profile = profileQuery.data;
+  const loadedProfileId = profile?.id;
   const postsPreview = useDirectoryPsychologistPosts(
     id,
     previewListQuery,
@@ -2346,12 +2377,59 @@ export const PsychologistProfileLogic = () => {
   }, [fetchNextReviewsPage, hasNextReviewsPage, isFetchingNextReviewsPage, isFetchingReviews]);
 
   useEffect(() => {
-    if (!profile?.id || profile.id !== id) return;
-    if (trackedProfileViewRef.current === profile.id) return;
+    if (!loadedProfileId || loadedProfileId !== id) return;
+    if (trackedProfileViewRef.current === loadedProfileId) return;
 
-    trackedProfileViewRef.current = profile.id;
+    trackedProfileViewRef.current = loadedProfileId;
     trackProfileView();
-  }, [id, profile?.id, trackProfileView]);
+  }, [id, loadedProfileId, trackProfileView]);
+
+  const trackProfileTabOpen = useCallback(
+    (tab: Extract<ProfileTab, "avaliacoes" | "publicacoes">) => {
+      if (!loadedProfileId || loadedProfileId !== id) return;
+      if (currentUser?.id === loadedProfileId) return;
+
+      const analyticsIdentity = getOrCreateAnalyticsIdentity();
+      if (!analyticsIdentity) return;
+
+      const actionType: ImportantActionTrackingRequest["action_type"] =
+        tab === "publicacoes"
+          ? "psychologist_profile_publications_tab_open"
+          : "psychologist_profile_reviews_tab_open";
+
+      void importantActionTracking
+        .mutateAsync({
+          action_type: actionType,
+          display_mode: getDisplayMode(),
+          occurred_at: new Date().toISOString(),
+          page_kind: "psychologist_profile",
+          path: currentAnalyticsPath(),
+          session_id: analyticsIdentity.sessionId,
+          target_id: loadedProfileId,
+          target_type: "psychologist",
+          visitor_id: analyticsIdentity.visitorId,
+        })
+        .catch(() => {
+          // Analytics first-party não deve bloquear a navegação entre abas do perfil.
+        });
+    },
+    [currentUser?.id, id, importantActionTracking, loadedProfileId],
+  );
+
+  useEffect(() => {
+    if (activeTab !== "publicacoes" && activeTab !== "avaliacoes") {
+      trackedTabOpenRef.current = loadedProfileId ? `${loadedProfileId}:geral` : null;
+      return;
+    }
+
+    if (!loadedProfileId || loadedProfileId !== id) return;
+
+    const trackingKey = `${loadedProfileId}:${activeTab}`;
+    if (trackedTabOpenRef.current === trackingKey) return;
+
+    trackedTabOpenRef.current = trackingKey;
+    trackProfileTabOpen(activeTab);
+  }, [activeTab, id, loadedProfileId, trackProfileTabOpen]);
 
   const navigateWithParams = useCallback(
     (mutate: (next: URLSearchParams) => void) => {

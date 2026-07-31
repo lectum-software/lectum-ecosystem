@@ -3,6 +3,8 @@ import type { AnalyticsDisplayMode } from "../../helpers/tracking";
 
 export type ImportantActionType =
   | "psychologist_directory_filter_search"
+  | "psychologist_profile_publications_tab_open"
+  | "psychologist_profile_reviews_tab_open"
   | "psychologist_video_favorite"
   | "psychologist_video_profile_access"
   | "psychologist_video_share"

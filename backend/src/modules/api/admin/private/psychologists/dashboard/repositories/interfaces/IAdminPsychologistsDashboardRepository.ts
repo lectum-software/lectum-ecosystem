@@ -285,6 +285,44 @@ export type AdminPsychologistCommunityTrafficPlatformDataset = {
   votes: AdminPsychologistCommunityTrafficPlatformVoteRecord[];
 };
 
+export type AdminPsychologistProfileTrafficPlatformProfileViewRecord = {
+  psychologist_id: string;
+};
+
+export type AdminPsychologistProfileTrafficPlatformPageViewRecord = {
+  duration_seconds: number | null;
+  target_id: string | null;
+  user_id: string | null;
+};
+
+export type AdminPsychologistProfileTrafficPlatformFavoriteRecord = {
+  psychologist_id: string;
+};
+
+export type AdminPsychologistProfileTrafficPlatformVideoWatchRecord = {
+  completed: boolean;
+  duration_seconds: number;
+  max_position_seconds: number;
+  milestone_100: boolean;
+  psychologist_id: string;
+  viewer_id: string | null;
+  watched_seconds: number;
+};
+
+export type AdminPsychologistProfileTrafficPlatformTabActionRecord = {
+  action_type: string;
+  target_id: string | null;
+  user_id: string | null;
+};
+
+export type AdminPsychologistProfileTrafficPlatformDataset = {
+  favorites: AdminPsychologistProfileTrafficPlatformFavoriteRecord[];
+  pageViews: AdminPsychologistProfileTrafficPlatformPageViewRecord[];
+  profileViews: AdminPsychologistProfileTrafficPlatformProfileViewRecord[];
+  tabActions: AdminPsychologistProfileTrafficPlatformTabActionRecord[];
+  videoWatchSessions: AdminPsychologistProfileTrafficPlatformVideoWatchRecord[];
+};
+
 export type AdminPsychologistDirectoryFilterSearchRecord = {
   target_id: string | null;
   target_type: string | null;
@@ -370,6 +408,10 @@ export interface IAdminPsychologistsDashboardRepository {
   listCommunityTrafficPlatformMetricDataset(
     range: AdminPsychologistsDashboardDateRange,
   ): Promise<AdminPsychologistCommunityTrafficPlatformDataset>;
+  listProfileTrafficPlatformMetricDataset(
+    range: AdminPsychologistsDashboardDateRange,
+    psychologistIds: string[],
+  ): Promise<AdminPsychologistProfileTrafficPlatformDataset>;
   listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(

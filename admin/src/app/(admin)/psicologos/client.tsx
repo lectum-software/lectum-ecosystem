@@ -131,8 +131,8 @@ type PresentationVideoTrafficSourceId = Extract<
   TrafficSourceItem["id"],
   "explore" | "search_filters"
 >;
-type TrafficSourceGroupId = "communities_group" | "presentation_video_group";
-type TrafficSourceGroupKind = "communities" | "presentation_video";
+type TrafficSourceGroupId = "communities_group" | "presentation_video_group" | "profile_group";
+type TrafficSourceGroupKind = "communities" | "presentation_video" | "profile";
 type TrafficSourceDisplayItem = Omit<TrafficSourceItem, "id"> & {
   children?: TrafficSourceItem[];
   groupKind?: TrafficSourceGroupKind;
@@ -3988,7 +3988,7 @@ const TrafficSourcePlatformMetrics = ({
   source,
 }: {
   className?: string;
-  source: TrafficSourceItem;
+  source: Pick<TrafficSourceItem, "description" | "platform_metrics">;
 }) => {
   const metrics = source.platform_metrics ?? [];
 
@@ -4016,12 +4016,22 @@ const TrafficSourcePlatformMetrics = ({
   );
 };
 
-const TrafficSourcePlatformMetricsDescription = ({ source }: { source: TrafficSourceItem }) => {
+const TrafficSourcePlatformMetricsDescription = ({
+  context,
+  source,
+}: {
+  context?: TrafficSourceGroupKind;
+  source: Pick<TrafficSourceItem, "platform_metrics">;
+}) => {
   if (!source.platform_metrics?.length) return null;
 
   return (
     <p className="mt-1 text-[0.68rem] font-bold leading-4 text-muted">
-      Valores médios de engajamento da categoria.
+      {context === "profile"
+        ? "Valores médios de engajamento dentro do perfil."
+        : context === "presentation_video"
+          ? "Valores médios de engajamento do vídeo de apresentação."
+          : "Valores médios de engajamento da categoria."}
     </p>
   );
 };
@@ -4052,9 +4062,13 @@ const isPresentationVideoTrafficSource = (
 const isExpandableTrafficSourceGroup = (
   source: TrafficSourceDisplayItem,
 ): source is TrafficSourceDisplayItem & {
-  children: TrafficSourceItem[];
   id: TrafficSourceGroupId;
-} => Boolean(source.isExpandableGroup && source.children?.length);
+  isExpandableGroup: true;
+} =>
+  Boolean(
+    source.isExpandableGroup &&
+      ((source.children?.length ?? 0) > 0 || (source.platform_metrics?.length ?? 0) > 0),
+  );
 
 const getTrafficSourceDetailLabel = (
   source: TrafficSourceItem,
@@ -4095,6 +4109,19 @@ const buildTrafficSourceDisplayRows = (
       presentationVideoSourcesById.set(source.id, source);
       presentationVideoSources.push(source);
       presentationVideoSortIndex = Math.min(presentationVideoSortIndex, index);
+      return;
+    }
+
+    if (source.id === "profile") {
+      displayCandidates.push({
+        index,
+        source: {
+          ...source,
+          groupKind: "profile",
+          id: "profile_group",
+          isExpandableGroup: true,
+        },
+      });
       return;
     }
 
@@ -4166,6 +4193,20 @@ const buildTrafficSourceDisplayRows = (
     badge: maxWhatsappClicks > 0 && index === 0 ? "primary_source" : null,
   }));
 };
+
+const TrafficSourceProfileMetricsDetail = ({
+  className,
+  source,
+}: {
+  className?: string;
+  source: TrafficSourceDisplayItem;
+}) => (
+  <div className={cn("min-w-0 border-primary/25 border-l-2 pl-4", className)}>
+    <p className="text-xs font-black text-foreground">Engajamento dentro do perfil</p>
+    <TrafficSourcePlatformMetricsDescription context="profile" source={source} />
+    <TrafficSourcePlatformMetrics source={source} />
+  </div>
+);
 
 const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [trafficPlanSegment, setTrafficPlanSegment] = useState<PlanSegmentFilter>("all");
@@ -4259,27 +4300,38 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                   </button>
                   {isExpanded ? (
                     <div className="divide-y divide-border/70 border-border/70 border-t">
-                      {source.children.map((childSource) => (
-                        <div
-                          className="grid grid-cols-[minmax(0,1fr)_minmax(120px,0.35fr)] items-center gap-3 px-4 py-3"
-                          key={childSource.id}
-                        >
-                          <div className="min-w-0 border-primary/25 border-l-2 pl-4">
-                            <p className="truncate text-xs font-black text-foreground">
-                              {getTrafficSourceDetailLabel(childSource, source.groupKind)}
-                            </p>
-                            <TrafficSourcePlatformMetricsDescription source={childSource} />
-                            <TrafficSourcePlatformMetrics source={childSource} />
+                      {source.children?.length ? (
+                        source.children.map((childSource) => (
+                          <div
+                            className="grid grid-cols-[minmax(0,1fr)_minmax(120px,0.35fr)] items-center gap-3 px-4 py-3"
+                            key={childSource.id}
+                          >
+                            <div className="min-w-0 border-primary/25 border-l-2 pl-4">
+                              <p className="truncate text-xs font-black text-foreground">
+                                {getTrafficSourceDetailLabel(childSource, source.groupKind)}
+                              </p>
+                              <TrafficSourcePlatformMetricsDescription
+                                context={source.groupKind}
+                                source={childSource}
+                              />
+                              <TrafficSourcePlatformMetrics source={childSource} />
+                            </div>
+                            <div className="flex justify-center text-center">
+                              <TrafficSourceMetricValue
+                                className="text-base"
+                                percentage={getWhatsappClicksPercentage(
+                                  childSource.whatsapp_clicks,
+                                )}
+                                value={formatNullableCount(childSource.whatsapp_clicks)}
+                              />
+                            </div>
                           </div>
-                          <div className="flex justify-center text-center">
-                            <TrafficSourceMetricValue
-                              className="text-base"
-                              percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
-                              value={formatNullableCount(childSource.whatsapp_clicks)}
-                            />
-                          </div>
+                        ))
+                      ) : source.platform_metrics?.length ? (
+                        <div className="px-4 py-3">
+                          <TrafficSourceProfileMetricsDetail source={source} />
                         </div>
-                      ))}
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -4381,25 +4433,34 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                       Detalhamento de {source.label}
                     </p>
                     <div className="mt-2 divide-y divide-border/70">
-                      {source.children.map((childSource) => (
-                        <div
-                          className="flex items-start justify-between gap-3 py-2 first:pt-0 last:pb-0"
-                          key={childSource.id}
-                        >
-                          <div className="min-w-0">
-                            <p className="text-xs font-black text-foreground">
-                              {getTrafficSourceDetailLabel(childSource, source.groupKind)}
-                            </p>
-                            <TrafficSourcePlatformMetricsDescription source={childSource} />
-                            <TrafficSourcePlatformMetrics source={childSource} />
+                      {source.children?.length ? (
+                        source.children.map((childSource) => (
+                          <div
+                            className="flex items-start justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                            key={childSource.id}
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-black text-foreground">
+                                {getTrafficSourceDetailLabel(childSource, source.groupKind)}
+                              </p>
+                              <TrafficSourcePlatformMetricsDescription
+                                context={source.groupKind}
+                                source={childSource}
+                              />
+                              <TrafficSourcePlatformMetrics source={childSource} />
+                            </div>
+                            <TrafficSourceMetricValue
+                              className="shrink-0 text-sm"
+                              percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
+                              value={formatNullableCount(childSource.whatsapp_clicks)}
+                            />
                           </div>
-                          <TrafficSourceMetricValue
-                            className="shrink-0 text-sm"
-                            percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
-                            value={formatNullableCount(childSource.whatsapp_clicks)}
-                          />
+                        ))
+                      ) : source.platform_metrics?.length ? (
+                        <div className="py-2 first:pt-0 last:pb-0">
+                          <TrafficSourceProfileMetricsDetail className="pl-3" source={source} />
                         </div>
-                      ))}
+                      ) : null}
                     </div>
                   </div>
                 ) : null}

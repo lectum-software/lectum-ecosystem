@@ -1200,6 +1200,116 @@ export class AdminPsychologistsDashboardRepository
     };
   }
 
+  async listProfileTrafficPlatformMetricDataset(
+    range: AdminPsychologistsDashboardDateRange,
+    psychologistIds: string[],
+  ) {
+    const uniquePsychologistIds = [...new Set(psychologistIds.filter(Boolean))];
+    if (uniquePsychologistIds.length === 0) {
+      return {
+        favorites: [],
+        pageViews: [],
+        profileViews: [],
+        tabActions: [],
+        videoWatchSessions: [],
+      };
+    }
+
+    const [favorites, pageViews, profileViews, tabActions, videoWatchSessions] = await Promise.all([
+      prisma.psychologist_favorite.findMany({
+        select: {
+          psychologist_id: true,
+        },
+        where: {
+          createdAt: eventCreatedAtWhere(range),
+          deleted: false,
+          psychologist_id: {
+            in: uniquePsychologistIds,
+          },
+        },
+      }),
+      prisma.page_view_event.findMany({
+        select: {
+          duration_seconds: true,
+          target_id: true,
+          user_id: true,
+        },
+        where: {
+          deleted: false,
+          duration_seconds: {
+            gt: 0,
+          },
+          occurred_at: eventCreatedAtWhere(range),
+          page_kind: "psychologist_profile",
+          target_id: {
+            in: uniquePsychologistIds,
+          },
+          target_type: "psychologist",
+        },
+      }),
+      prisma.profile_view_event.findMany({
+        select: {
+          psychologist_id: true,
+        },
+        where: {
+          createdAt: eventCreatedAtWhere(range),
+          deleted: false,
+          psychologist_id: {
+            in: uniquePsychologistIds,
+          },
+          source: "profile_page",
+        },
+      }),
+      prisma.important_action_event.findMany({
+        select: {
+          action_type: true,
+          target_id: true,
+          user_id: true,
+        },
+        where: {
+          action_type: {
+            in: [
+              "psychologist_profile_publications_tab_open",
+              "psychologist_profile_reviews_tab_open",
+            ],
+          },
+          deleted: false,
+          occurred_at: eventCreatedAtWhere(range),
+          target_id: {
+            in: uniquePsychologistIds,
+          },
+          target_type: "psychologist",
+        },
+      }),
+      prisma.profile_video_watch_session.findMany({
+        select: {
+          completed: true,
+          duration_seconds: true,
+          max_position_seconds: true,
+          milestone_100: true,
+          psychologist_id: true,
+          viewer_id: true,
+          watched_seconds: true,
+        },
+        where: {
+          createdAt: eventCreatedAtWhere(range),
+          deleted: false,
+          psychologist_id: {
+            in: uniquePsychologistIds,
+          },
+        },
+      }),
+    ]);
+
+    return {
+      favorites,
+      pageViews,
+      profileViews,
+      tabActions,
+      videoWatchSessions,
+    };
+  }
+
   async listReceivedEngagementEvents(range: AdminPsychologistsDashboardDateRange) {
     const favoriteEvents = await prisma.psychologist_favorite.findMany({
       select: {
