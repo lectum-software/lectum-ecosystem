@@ -104,6 +104,12 @@ const professionLabel = (mentor: CommunityTopMentor) => {
   return normalized.endsWith("a") ? "Psicóloga" : "Psicólogo";
 };
 
+const topMentorProfileUrl = (profileUrl: string) => {
+  const separator = profileUrl.includes("?") ? "&" : "?";
+
+  return `${profileUrl}${separator}traffic_origin=community_top_mentors`;
+};
+
 const Avatar = ({
   className,
   mentor,
@@ -180,7 +186,7 @@ const PodiumMentor = ({
         "group grid min-w-0 justify-items-center gap-2 text-center transition hover:-translate-y-1",
         className,
       )}
-      href={mentor.professional.profile_url}
+      href={topMentorProfileUrl(mentor.professional.profile_url)}
     >
       <span
         className="lectum-top-mentor-float relative grid overflow-visible place-items-center"
@@ -275,7 +281,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   return (
     <Link
       className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-[#E5EAF0] bg-white px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface"
-      href={mentor.professional.profile_url}
+      href={topMentorProfileUrl(mentor.professional.profile_url)}
     >
       <span
         className={cn(

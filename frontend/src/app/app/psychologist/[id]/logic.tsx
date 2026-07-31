@@ -2196,13 +2196,27 @@ const ReviewsTab = ({
   );
 };
 
-const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
+const WhatsAppCta = ({
+  profile,
+  trafficOrigin,
+}: {
+  profile: DirectoryPsychologistProfile;
+  trafficOrigin?: string | null;
+}) => {
   if (!profile.whatsapp_url) {
     return null;
   }
 
   const whatsappIdentity = toPsychologistWhatsAppIdentity(profile);
   const whatsappName = getPsychologistWhatsappDisplayName(whatsappIdentity);
+  const whatsappTrackingPath =
+    trafficOrigin === "community_top_mentors" ? "/community/top-mentors" : undefined;
+  const whatsappTrackingContext = {
+    pageKind: "psychologist_profile",
+    ...(whatsappTrackingPath ? { path: whatsappTrackingPath } : {}),
+    targetId: profile.id,
+    targetType: "psychologist",
+  };
 
   return (
     <>
@@ -2214,6 +2228,7 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
           <PsychologistWhatsAppRedirectButton
             className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-[8px] bg-success px-3 text-[13px] font-bold text-white transition hover:bg-success/90"
             psychologist={whatsappIdentity}
+            trackingContext={whatsappTrackingContext}
           >
             <PsychologistWhatsAppButtonContent
               iconClassName="h-4 w-4"
@@ -2228,6 +2243,7 @@ const WhatsAppCta = ({ profile }: { profile: DirectoryPsychologistProfile }) => 
         className="group fixed right-5 bottom-10 z-40 hidden h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-[#16A34A] text-white shadow-[0_14px_30px_rgba(22,163,74,0.26)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:bg-[#15803D] hover:shadow-[0_18px_36px_rgba(22,163,74,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] focus-visible:ring-offset-2 focus-visible:ring-offset-white motion-safe:animate-[lectum-desktop-create-float_4.2s_ease-in-out_infinite] lg:grid lg:h-16 lg:w-16 xl:right-20 2xl:right-28"
         psychologist={whatsappIdentity}
         title={`Fale com ${whatsappName}`}
+        trackingContext={whatsappTrackingContext}
       >
         <WhatsAppIcon
           className="h-7 w-7 transition group-hover:scale-105 lg:h-8 lg:w-8"
@@ -2670,7 +2686,7 @@ export const PsychologistProfileLogic = () => {
                   ) : null}
                 </div>
 
-                <WhatsAppCta profile={profile} />
+                <WhatsAppCta profile={profile} trafficOrigin={urlParams.get("traffic_origin")} />
               </>
             ) : null}
           </div>

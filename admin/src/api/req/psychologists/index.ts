@@ -440,18 +440,27 @@ export type PsychologistsDashboardOperatingSystemUsage = {
 export type PsychologistsDashboardTrafficSourceItem = {
   badge: "primary_source" | null;
   description: string;
-  id: "communities" | "direct_link" | "explore" | "favorites" | "search_filters";
+  id:
+    | "community_post_text"
+    | "community_post_video"
+    | "community_reply_text"
+    | "community_reply_video"
+    | "community_top_mentors"
+    | "explore"
+    | "favorites"
+    | "profile"
+    | "search_filters";
   label: string;
   percentage: number;
   profile_views: number;
   sessions: number;
-  whatsapp_clicks: number | null;
+  whatsapp_clicks: number;
 };
 
 export type PsychologistsDashboardTrafficSources = {
   attribution_unavailable_reason: string | null;
   description: string;
-  source: "page_view_event.traffic_source+target_type=psychologist";
+  source: "important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click";
   sources: PsychologistsDashboardTrafficSourceItem[];
   total_profile_views: number;
   total_sessions: number;

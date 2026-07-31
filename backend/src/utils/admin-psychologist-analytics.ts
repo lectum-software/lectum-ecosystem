@@ -63,6 +63,52 @@ export type AdminPsychologistTrafficOriginSource = {
   whatsapp_clicks: null;
 };
 
+export type AdminPsychologistWhatsappTrafficOriginSourceId =
+  | "community_post_text"
+  | "community_post_video"
+  | "community_reply_text"
+  | "community_reply_video"
+  | "community_top_mentors"
+  | "explore"
+  | "favorites"
+  | "profile"
+  | "search_filters";
+
+export type AdminPsychologistWhatsappTrafficAction = {
+  action_type: string;
+  occurred_at: Date;
+  page_kind: string;
+  path: string | null;
+  session_id: string;
+  target_id: string | null;
+  target_type: string | null;
+};
+
+export type AdminPsychologistWhatsappTrafficCommunityPost = {
+  author_id: string;
+  id: string;
+  media_items?: Array<{ media_type: string | null }>;
+  media_type: string | null;
+};
+
+export type AdminPsychologistWhatsappTrafficCommunityReply = {
+  author_id: string;
+  id: string;
+  media_type: string | null;
+};
+
+export type AdminPsychologistWhatsappTrafficOriginSource = {
+  badge: "primary_source" | null;
+  conversion_rate: null;
+  description: string;
+  id: AdminPsychologistWhatsappTrafficOriginSourceId;
+  label: string;
+  percentage: number;
+  profile_views: number;
+  sessions: number;
+  whatsapp_clicks: number;
+};
+
 export type TimeToFirstPaidSubscriptionStatus =
   | "converted"
   | "courtesy_only"
@@ -644,6 +690,291 @@ export const summarizePsychologistTrafficOrigins = (
       totalProfileViews > 0
         ? null
         : "Nenhuma visita a perfil público de psicólogo com origem de tráfego foi registrada no período.",
+    updated_at: updatedAt,
+  };
+};
+
+const psychologistWhatsappTrafficOriginDefinitions: Array<
+  Pick<AdminPsychologistWhatsappTrafficOriginSource, "description" | "id" | "label">
+> = [
+  {
+    description: "Cliques realizados no CTA de WhatsApp dentro do perfil público do psicólogo.",
+    id: "profile",
+    label: "Perfil",
+  },
+  {
+    description: "Cliques originados pela página de psicólogos e navegação pelos vídeos.",
+    id: "explore",
+    label: "Explorar",
+  },
+  {
+    description:
+      "Cliques originados após pesquisas de nome, especialidades, abordagem, convênio e demais filtros.",
+    id: "search_filters",
+    label: "Busca e filtros",
+  },
+  {
+    description:
+      "Cliques originados na área de psicólogos favoritos de usuários que já favoritaram perfis antes.",
+    id: "favorites",
+    label: "Favoritos",
+  },
+  {
+    description: "Cliques em CTAs de posts profissionais com vídeo nas comunidades.",
+    id: "community_post_video",
+    label: "Comunidades · Posts com vídeo",
+  },
+  {
+    description: "Cliques em CTAs de posts profissionais sem vídeo nas comunidades.",
+    id: "community_post_text",
+    label: "Comunidades · Posts sem vídeo",
+  },
+  {
+    description: "Cliques em CTAs de respostas profissionais com vídeo nas comunidades.",
+    id: "community_reply_video",
+    label: "Comunidades · Respostas com vídeo",
+  },
+  {
+    description: "Cliques em CTAs de respostas profissionais sem vídeo nas comunidades.",
+    id: "community_reply_text",
+    label: "Comunidades · Respostas sem vídeo",
+  },
+  {
+    description: "Cliques originados pela navegação do Ranking Top Mentores.",
+    id: "community_top_mentors",
+    label: "Comunidades · Ranking Top Mentores",
+  },
+];
+
+const WHATSAPP_TRAFFIC_DEFINITION_INDEX = new Map(
+  psychologistWhatsappTrafficOriginDefinitions.map((definition, index) => [definition.id, index]),
+);
+
+const SEARCH_FILTER_TRAFFIC_PARAMS = new Set([
+  "accepts_insurance",
+  "approach",
+  "available_today",
+  "city",
+  "discount_first_session",
+  "gender",
+  "language",
+  "modality",
+  "q",
+  "race_color",
+  "religion",
+  "search",
+  "service",
+  "social_value",
+  "specialty",
+  "state",
+  "target_audience",
+]);
+
+const normalizeTrafficActionPath = (path: string | null) => (path ?? "").toLowerCase();
+
+const trafficActionPathIncludes = (action: AdminPsychologistWhatsappTrafficAction, value: string) =>
+  normalizeTrafficActionPath(action.path).includes(value);
+
+const hasSearchFilterTrafficParams = (path: string | null) => {
+  if (!path?.includes("?")) return false;
+
+  try {
+    const url = new URL(path, "https://lectum.local");
+
+    return [...url.searchParams.entries()].some(([key, value]) => {
+      if (!SEARCH_FILTER_TRAFFIC_PARAMS.has(key)) return false;
+
+      const normalizedValue = value.trim().toLowerCase();
+      return normalizedValue !== "" && normalizedValue !== "false";
+    });
+  } catch {
+    return false;
+  }
+};
+
+const isCommunityPostTarget = (targetType: string | null) =>
+  targetType === "community_post" || targetType === "post";
+
+const isCommunityReplyTarget = (targetType: string | null) =>
+  targetType === "post_reply" || targetType === "reply";
+
+const hasVideoMedia = (
+  record:
+    | AdminPsychologistWhatsappTrafficCommunityPost
+    | AdminPsychologistWhatsappTrafficCommunityReply
+    | null
+    | undefined,
+) => {
+  if (!record) return false;
+  if (record.media_type === "video") return true;
+
+  return (
+    "media_items" in record &&
+    (record.media_items?.some((item) => item.media_type === "video") ?? false)
+  );
+};
+
+const resolveWhatsappTrafficPsychologistId = (
+  action: AdminPsychologistWhatsappTrafficAction,
+  postsById: Map<string, AdminPsychologistWhatsappTrafficCommunityPost>,
+  repliesById: Map<string, AdminPsychologistWhatsappTrafficCommunityReply>,
+) => {
+  const targetId = action.target_id;
+  const targetType = action.target_type;
+
+  if (targetType === "psychologist" && targetId) return targetId;
+  if (targetId && isCommunityPostTarget(targetType))
+    return postsById.get(targetId)?.author_id ?? null;
+  if (targetId && isCommunityReplyTarget(targetType)) {
+    return repliesById.get(targetId)?.author_id ?? null;
+  }
+
+  return null;
+};
+
+const classifyWhatsappTrafficAction = (
+  action: AdminPsychologistWhatsappTrafficAction,
+  postsById: Map<string, AdminPsychologistWhatsappTrafficCommunityPost>,
+  repliesById: Map<string, AdminPsychologistWhatsappTrafficCommunityReply>,
+): AdminPsychologistWhatsappTrafficOriginSourceId | null => {
+  const targetId = action.target_id;
+  const targetType = action.target_type;
+
+  if (trafficActionPathIncludes(action, "/community/top-mentors")) return "community_top_mentors";
+
+  if (targetId && isCommunityPostTarget(targetType)) {
+    return hasVideoMedia(postsById.get(targetId)) ? "community_post_video" : "community_post_text";
+  }
+
+  if (targetId && isCommunityReplyTarget(targetType)) {
+    return hasVideoMedia(repliesById.get(targetId))
+      ? "community_reply_video"
+      : "community_reply_text";
+  }
+
+  if (
+    trafficActionPathIncludes(action, "/favorites") ||
+    trafficActionPathIncludes(action, "/favoritos")
+  ) {
+    return "favorites";
+  }
+
+  if (action.page_kind === "psychologist_profile") return "profile";
+
+  if (action.page_kind === "psychologists" && hasSearchFilterTrafficParams(action.path)) {
+    return "search_filters";
+  }
+
+  if (
+    action.action_type === "psychologist_video_whatsapp_click" ||
+    action.page_kind === "psychologists"
+  ) {
+    return "explore";
+  }
+
+  return null;
+};
+
+export const summarizePsychologistWhatsappTrafficOrigins = (params: {
+  actions: AdminPsychologistWhatsappTrafficAction[];
+  allowedPsychologistIds?: Set<string> | null;
+  communityPosts: AdminPsychologistWhatsappTrafficCommunityPost[];
+  communityReplies: AdminPsychologistWhatsappTrafficCommunityReply[];
+}) => {
+  const postsById = new Map(params.communityPosts.map((post) => [post.id, post]));
+  const repliesById = new Map(params.communityReplies.map((reply) => [reply.id, reply]));
+  const groups = new Map<
+    AdminPsychologistWhatsappTrafficOriginSourceId,
+    { sessions: Set<string>; whatsappClicks: number }
+  >(
+    psychologistWhatsappTrafficOriginDefinitions.map((source) => [
+      source.id,
+      { sessions: new Set<string>(), whatsappClicks: 0 },
+    ]),
+  );
+
+  for (const action of params.actions) {
+    const sourceId = classifyWhatsappTrafficAction(action, postsById, repliesById);
+    if (!sourceId) continue;
+
+    if (params.allowedPsychologistIds) {
+      const psychologistId = resolveWhatsappTrafficPsychologistId(action, postsById, repliesById);
+      if (!psychologistId || !params.allowedPsychologistIds.has(psychologistId)) continue;
+    }
+
+    const group = groups.get(sourceId);
+    if (!group) continue;
+
+    group.whatsappClicks += 1;
+    group.sessions.add(action.session_id);
+  }
+
+  const totalWhatsappClicks = [...groups.values()].reduce(
+    (sum, group) => sum + group.whatsappClicks,
+    0,
+  );
+  const totalSessions = new Set(
+    [...groups.values()].flatMap((group) => [...group.sessions.values()]),
+  ).size;
+  const maxWhatsappClicks = Math.max(
+    0,
+    ...[...groups.values()].map((group) => group.whatsappClicks),
+  );
+  const primarySourceId =
+    totalWhatsappClicks > 0
+      ? (psychologistWhatsappTrafficOriginDefinitions.find(
+          (definition) => (groups.get(definition.id)?.whatsappClicks ?? 0) === maxWhatsappClicks,
+        )?.id ?? null)
+      : null;
+  const updatedAt =
+    params.actions.length > 0
+      ? params.actions.reduce<Date | null>(
+          (latest, action) =>
+            !latest || action.occurred_at > latest ? action.occurred_at : latest,
+          null,
+        )
+      : null;
+
+  const sources = psychologistWhatsappTrafficOriginDefinitions
+    .map((definition) => {
+      const group = groups.get(definition.id);
+      const whatsappClicks = group?.whatsappClicks ?? 0;
+
+      return {
+        ...definition,
+        badge: definition.id === primarySourceId ? ("primary_source" as const) : null,
+        conversion_rate: null,
+        percentage:
+          totalWhatsappClicks > 0
+            ? roundOneDecimal((whatsappClicks / totalWhatsappClicks) * 100)
+            : 0,
+        profile_views: 0,
+        sessions: group?.sessions.size ?? 0,
+        whatsapp_clicks: whatsappClicks,
+      };
+    })
+    .sort((left, right) => {
+      if (right.whatsapp_clicks !== left.whatsapp_clicks) {
+        return right.whatsapp_clicks - left.whatsapp_clicks;
+      }
+
+      return (
+        (WHATSAPP_TRAFFIC_DEFINITION_INDEX.get(left.id) ?? 0) -
+        (WHATSAPP_TRAFFIC_DEFINITION_INDEX.get(right.id) ?? 0)
+      );
+    });
+
+  return {
+    attribution_unavailable_reason:
+      "A origem dos cliques usa eventos first-party de WhatsApp; cliques sem evento de ação importante não entram nesta tabela por origem.",
+    description: "Entenda em quais superfícies os pacientes clicam no WhatsApp dos psicólogos.",
+    sources,
+    total_profile_views: 0,
+    total_sessions: totalSessions,
+    unavailable_reason:
+      totalWhatsappClicks > 0
+        ? null
+        : "Nenhum clique de WhatsApp com origem first-party foi registrado no período.",
     updated_at: updatedAt,
   };
 };

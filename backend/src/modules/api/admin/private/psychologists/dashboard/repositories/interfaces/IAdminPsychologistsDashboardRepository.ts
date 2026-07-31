@@ -190,6 +190,29 @@ export type AdminPsychologistPublicProfilePageViewRecord = {
   traffic_source: string | null;
 };
 
+export type AdminPsychologistWhatsappTrafficActionRecord = {
+  action_type: string;
+  occurred_at: Date;
+  page_kind: string;
+  path: string | null;
+  session_id: string;
+  target_id: string | null;
+  target_type: string | null;
+};
+
+export type AdminPsychologistTrafficCommunityPostRecord = {
+  author_id: string;
+  id: string;
+  media_items: { media_type: string | null }[];
+  media_type: string | null;
+};
+
+export type AdminPsychologistTrafficCommunityReplyRecord = {
+  author_id: string;
+  id: string;
+  media_type: string | null;
+};
+
 export type AdminPsychologistDirectoryFilterSearchRecord = {
   target_id: string | null;
   target_type: string | null;
@@ -263,6 +286,15 @@ export interface IAdminPsychologistsDashboardRepository {
     range: AdminPsychologistsDashboardDateRange,
     psychologistIds: string[],
   ): Promise<AdminPsychologistPublicProfilePageViewRecord[]>;
+  listTrafficCommunityPosts(
+    postIds: string[],
+  ): Promise<AdminPsychologistTrafficCommunityPostRecord[]>;
+  listTrafficCommunityReplies(
+    replyIds: string[],
+  ): Promise<AdminPsychologistTrafficCommunityReplyRecord[]>;
+  listWhatsappTrafficActions(
+    range: AdminPsychologistsDashboardDateRange,
+  ): Promise<AdminPsychologistWhatsappTrafficActionRecord[]>;
   listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(

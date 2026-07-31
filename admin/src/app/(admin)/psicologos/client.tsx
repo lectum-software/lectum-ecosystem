@@ -3931,7 +3931,18 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
   const [trafficPlanSegment, setTrafficPlanSegment] = useState<PlanSegmentFilter>("all");
   const trafficSegmentSummary = getPlanSegmentSummary(summary, trafficPlanSegment);
   const traffic = trafficSegmentSummary.traffic_sources;
-  const totalWhatsappClicks = traffic.sources.reduce(
+  const trafficRows = traffic.sources
+    .map((source, index) => ({ index, source }))
+    .sort((left, right) => {
+      const rightClicks = right.source.whatsapp_clicks ?? 0;
+      const leftClicks = left.source.whatsapp_clicks ?? 0;
+
+      if (rightClicks !== leftClicks) return rightClicks - leftClicks;
+
+      return left.index - right.index;
+    })
+    .map((item) => item.source);
+  const totalWhatsappClicks = trafficRows.reduce(
     (total, source) => total + (source.whatsapp_clicks ?? 0),
     0,
   );
@@ -3956,15 +3967,14 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
       </div>
 
       <div className="mt-5 hidden overflow-hidden rounded-[1.35rem] border border-border/70 md:block">
-        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(120px,0.35fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
           <span>Fonte</span>
-          <span className="text-center">Perfil</span>
           <span className="text-center">WhatsApp</span>
         </div>
         <div className="divide-y divide-border">
-          {traffic.sources.map((source) => (
+          {trafficRows.map((source) => (
             <div
-              className="grid grid-cols-[minmax(0,1.25fr)_minmax(110px,0.75fr)_minmax(92px,0.55fr)] items-center gap-3 px-4 py-4"
+              className="grid grid-cols-[minmax(0,1fr)_minmax(120px,0.35fr)] items-center gap-3 px-4 py-4"
               key={source.id}
             >
               <div className="min-w-0">
@@ -3983,13 +3993,6 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
               <div className="flex justify-center text-center">
                 <TrafficSourceMetricValue
                   className="text-lg"
-                  percentage={source.percentage}
-                  value={numberFormatter.format(source.profile_views)}
-                />
-              </div>
-              <div className="flex justify-center text-center">
-                <TrafficSourceMetricValue
-                  className="text-lg"
                   percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
                   value={formatNullableCount(source.whatsapp_clicks)}
                 />
@@ -4000,7 +4003,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
       </div>
 
       <div className="mt-5 grid gap-3 md:hidden">
-        {traffic.sources.map((source) => (
+        {trafficRows.map((source) => (
           <article
             className="rounded-[1.35rem] border border-border/70 bg-surface-muted p-4"
             key={source.id}
@@ -4016,13 +4019,8 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
               </div>
               <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 grid gap-2">
               {[
-                {
-                  label: "Perfil",
-                  percentage: source.percentage,
-                  value: numberFormatter.format(source.profile_views),
-                },
                 {
                   label: "WhatsApp",
                   percentage: getWhatsappClicksPercentage(source.whatsapp_clicks),

@@ -804,6 +804,91 @@ export class AdminPsychologistsDashboardRepository
     });
   }
 
+  async listWhatsappTrafficActions(range: AdminPsychologistsDashboardDateRange) {
+    return prisma.important_action_event.findMany({
+      orderBy: {
+        occurred_at: "asc",
+      },
+      select: {
+        action_type: true,
+        occurred_at: true,
+        page_kind: true,
+        path: true,
+        session_id: true,
+        target_id: true,
+        target_type: true,
+      },
+      where: {
+        action_type: {
+          in: ["psychologist_video_whatsapp_click", "whatsapp_click"],
+        },
+        deleted: false,
+        occurred_at: eventCreatedAtWhere(range),
+      },
+    });
+  }
+
+  async listTrafficCommunityPosts(postIds: string[]) {
+    const uniquePostIds = [...new Set(postIds.filter(Boolean))];
+    if (uniquePostIds.length === 0) return [];
+
+    return prisma.community_post.findMany({
+      select: {
+        author_id: true,
+        id: true,
+        media_items: {
+          select: {
+            media_type: true,
+          },
+          where: {
+            deleted: false,
+          },
+        },
+        media_type: true,
+      },
+      where: {
+        deleted: false,
+        id: {
+          in: uniquePostIds,
+        },
+        status: "publicado",
+        author: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+      },
+    });
+  }
+
+  async listTrafficCommunityReplies(replyIds: string[]) {
+    const uniqueReplyIds = [...new Set(replyIds.filter(Boolean))];
+    if (uniqueReplyIds.length === 0) return [];
+
+    return prisma.post_reply.findMany({
+      select: {
+        author_id: true,
+        id: true,
+        media_type: true,
+      },
+      where: {
+        author: {
+          active: true,
+          deleted: false,
+          role: "psicologo",
+        },
+        deleted: false,
+        id: {
+          in: uniqueReplyIds,
+        },
+        post: {
+          deleted: false,
+          status: "publicado",
+        },
+      },
+    });
+  }
+
   async listReceivedEngagementEvents(range: AdminPsychologistsDashboardDateRange) {
     const favoriteEvents = await prisma.psychologist_favorite.findMany({
       select: {

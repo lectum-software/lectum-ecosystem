@@ -419,6 +419,12 @@ const FavoritePsychologistCard = ({
               whatsappUrl: psychologist.whatsapp_url,
             }}
             stopPropagation
+            trackingContext={{
+              pageKind: "psychologists",
+              path: "/app/favorites",
+              targetId: psychologist.id,
+              targetType: "psychologist",
+            }}
           >
             <PsychologistWhatsAppButtonContent
               iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"

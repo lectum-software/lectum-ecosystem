@@ -71,7 +71,7 @@ import {
   signupMethodLabel,
   summarizeConversionCohort,
   summarizePlatformUsage,
-  summarizePsychologistTrafficOrigins,
+  summarizePsychologistWhatsappTrafficOrigins,
 } from "@/utils/admin-psychologist-analytics";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
@@ -123,10 +123,12 @@ import type {
   AdminPsychologistPreSignupConversionPageViewRecord,
   AdminPsychologistPreSignupConversionSessionRecord,
   AdminPsychologistProfileRecord,
-  AdminPsychologistPublicProfilePageViewRecord,
   AdminPsychologistReceivedEngagementEventRecord,
   AdminPsychologistSignupAnalyticsIdentityRecord,
   AdminPsychologistSubscriptionRecord,
+  AdminPsychologistTrafficCommunityPostRecord,
+  AdminPsychologistTrafficCommunityReplyRecord,
+  AdminPsychologistWhatsappTrafficActionRecord,
 } from "../repositories/interfaces/IAdminPsychologistsDashboardRepository";
 
 const DEFAULT_PERIOD_DAYS = 7;
@@ -2706,14 +2708,18 @@ const filterRecordsByUserPlanSegment = <T extends { user_id: string | null }>(
   allowedUserIds: Set<string>,
 ) => records.filter((record) => record.user_id && allowedUserIds.has(record.user_id));
 
-const filterPublicProfileViewsByPlanSegment = <
-  T extends {
-    target_id: string | null;
-  },
->(
-  records: T[],
-  allowedPsychologistIds: Set<string>,
-) => records.filter((record) => record.target_id && allowedPsychologistIds.has(record.target_id));
+const collectWhatsappTrafficTargetIds = (
+  actions: AdminPsychologistWhatsappTrafficActionRecord[],
+  targetTypes: Set<string>,
+) => [
+  ...new Set(
+    actions.flatMap((action) =>
+      action.target_id && action.target_type && targetTypes.has(action.target_type)
+        ? [action.target_id]
+        : [],
+    ),
+  ),
+];
 
 const activeProfessionalSubscriptionsAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   activeSubscriptionsAt(profile, date).filter(isProfessionalPlan);
@@ -3453,9 +3459,11 @@ const buildPlanSegmentSummaries = (params: {
   profileAttentionSeconds: AdminPsychologistAttentionRecord[];
   profileVideoAttentionSeconds: AdminPsychologistAttentionRecord[];
   profiles: AdminPsychologistProfileRecord[];
-  publicProfilePageViews: AdminPsychologistPublicProfilePageViewRecord[];
   range: AdminPsychologistsDashboardDateRange;
   receivedEngagementEvents: AdminPsychologistReceivedEngagementEventRecord[];
+  trafficCommunityPosts: AdminPsychologistTrafficCommunityPostRecord[];
+  trafficCommunityReplies: AdminPsychologistTrafficCommunityReplyRecord[];
+  whatsappTrafficActions: AdminPsychologistWhatsappTrafficActionRecord[];
   whatsappContactRequests: AdminPsychologistEventRecord[];
 }) =>
   PLAN_SEGMENT_OPTIONS.reduce(
@@ -3476,9 +3484,6 @@ const buildPlanSegmentSummaries = (params: {
         segment.id,
       );
       const segmentUserIds = new Set(segmentProfiles.map((profile) => profile.user.id));
-      const segmentSupplyUserIds = new Set(
-        segmentProfilesForSupply.map((profile) => profile.user.id),
-      );
       const isAll = segment.id === "all";
       const platformPageViews = isAll
         ? params.platformPageViews
@@ -3489,12 +3494,6 @@ const buildPlanSegmentSummaries = (params: {
       const platformPwaInstalls = isAll
         ? params.platformPwaInstalls
         : filterRecordsByUserPlanSegment(params.platformPwaInstalls, segmentUserIds);
-      const publicProfilePageViews = isAll
-        ? params.publicProfilePageViews
-        : filterPublicProfileViewsByPlanSegment(
-            params.publicProfilePageViews,
-            segmentSupplyUserIds,
-          );
       const platformUsage = summarizePlatformUsage({
         eligiblePsychologistsCount: segmentProfiles.length,
         labels: params.labels,
@@ -3503,7 +3502,12 @@ const buildPlanSegmentSummaries = (params: {
           event.user_id ? [event.user_id] : [],
         ),
       });
-      const trafficSources = summarizePsychologistTrafficOrigins(publicProfilePageViews);
+      const trafficSources = summarizePsychologistWhatsappTrafficOrigins({
+        actions: params.whatsappTrafficActions,
+        allowedPsychologistIds: isAll ? null : segmentUserIds,
+        communityPosts: params.trafficCommunityPosts,
+        communityReplies: params.trafficCommunityReplies,
+      });
 
       accumulator[segment.id] = {
         device_usage: buildDeviceUsage(platformSessions),
@@ -3567,7 +3571,8 @@ const buildPlanSegmentSummaries = (params: {
         }),
         traffic_sources: {
           ...trafficSources,
-          source: "page_view_event.traffic_source+target_type=psychologist" as const,
+          source:
+            "important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click" as const,
         },
       };
 
@@ -3653,7 +3658,7 @@ export const buildPsychologistsDashboard = async (
     platformPageViews,
     platformSessions,
     platformPwaInstalls,
-    publicProfilePageViews,
+    whatsappTrafficActions,
     whatsappContactRequests,
     preSignupConversionLinkedPageViews,
     preSignupConversionLinkedSessions,
@@ -3664,11 +3669,19 @@ export const buildPsychologistsDashboard = async (
     repository.listPlatformPageViews(current),
     repository.listPlatformSessions(current),
     repository.listPlatformPwaInstallActions(current),
-    repository.listPublicProfilePageViews(current, psychologistUserIds),
+    repository.listWhatsappTrafficActions(current),
     repository.listWhatsappContactRequests(current),
     repository.listPreSignupConversionLinkedPageViews(currentPeriodPsychologistIds),
     repository.listPreSignupConversionLinkedSessions(currentPeriodPsychologistIds),
     repository.listPreSignupConversionSignupIdentities(currentPeriodPsychologistIds),
+  ]);
+  const [trafficCommunityPosts, trafficCommunityReplies] = await Promise.all([
+    repository.listTrafficCommunityPosts(
+      collectWhatsappTrafficTargetIds(whatsappTrafficActions, new Set(["community_post", "post"])),
+    ),
+    repository.listTrafficCommunityReplies(
+      collectWhatsappTrafficTargetIds(whatsappTrafficActions, new Set(["post_reply", "reply"])),
+    ),
   ]);
   const receivedEngagementEvents = await repository.listReceivedEngagementEvents(current);
   const [communityContentAttentionSeconds, profileAttentionSeconds, profileVideoAttentionSeconds] =
@@ -3753,9 +3766,11 @@ export const buildPsychologistsDashboard = async (
     profileAttentionSeconds,
     profileVideoAttentionSeconds,
     profiles,
-    publicProfilePageViews,
     range: current,
     receivedEngagementEvents,
+    trafficCommunityPosts,
+    trafficCommunityReplies,
+    whatsappTrafficActions,
     whatsappContactRequests,
   });
   const platformUsage = planSegments.all.platform_usage;
@@ -3897,7 +3912,7 @@ export const buildPsychologistsDashboard = async (
     profile_exposure: profileExposure,
     traffic_sources: {
       ...trafficSources,
-      source: "page_view_event.traffic_source+target_type=psychologist",
+      source: "important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click",
     },
     unavailable: [
       ...(profileConversion.unavailable_reason
@@ -3970,10 +3985,10 @@ export const buildPsychologistsDashboard = async (
         ? [
             {
               description:
-                "Origem do tráfego agregada depende de page_view_event do perfil público dos psicólogos no período selecionado.",
+                "Origem do tráfego agregada depende de important_action_event de WhatsApp no período selecionado.",
               id: "traffic_sources",
               label: "Origem do tráfego",
-              source: "page_view_event",
+              source: "important_action_event",
             },
           ]
         : []),

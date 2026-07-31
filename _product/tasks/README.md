@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 120 tasks: `TASK-00` a `TASK-113`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 121 tasks: `TASK-00` a `TASK-114`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -195,6 +195,7 @@ ou cortesia manual.
 | 111 | [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) | Completed | 57, 104, 105, 106, 107, 108, 109, 110 |
 | 112 | [TASK-112 - Posicao media do video no Explorar no psicologo Admin](TASK-112-posicao-media-video-explorar-psicologo-admin.md) | Completed | 57, 104, 105, 111 |
 | 113 | [TASK-113 - Tag de resultado no titulo de Visibilidade do psicologo Admin](TASK-113-tag-resultado-titulo-visibilidade-psicologo-admin.md) | Completed | 57, 95, 104, 105, 106, 108, 111, 112 |
+| 114 | [TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos](TASK-114-tabela-trafego-whatsapp-dashboard-psicologos-admin.md) | Completed | 16, 27, 49, 53, 76 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -282,6 +283,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 77. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para incluir Visibilidade temporal, Taxa de cobertura, periodo selecionado, tags de atividade/engajamento e trocar Atividade de score ponderado para acoes brutas.
 78. [TASK-112 - Posicao media do video no Explorar no psicologo Admin](TASK-112-posicao-media-video-explorar-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para mover o bloco de video apos Atividade e engajamento e exibir a posicao media real no Explorar com comparativo de subida/descida.
 79. [TASK-113 - Tag de resultado no titulo de Visibilidade do psicologo Admin](TASK-113-tag-resultado-titulo-visibilidade-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para trocar a tag fixa Unidade: tempo pelo diagnostico real Alta/Baixa/Sem/Padrao Visibilidade no titulo do bloco Visibilidade.
+80. [TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos](TASK-114-tabela-trafego-whatsapp-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para transformar a tabela Origem do trafego em uma leitura de cliques WhatsApp por superficie, com Perfil como linha, sem Link direto e Comunidades detalhadas.
 
 ### 1A. Trilha Admin planejada
 
@@ -354,6 +356,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 65. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md)
 66. [TASK-112 - Posicao media do video no Explorar no psicologo Admin](TASK-112-posicao-media-video-explorar-psicologo-admin.md)
 67. [TASK-113 - Tag de resultado no titulo de Visibilidade do psicologo Admin](TASK-113-tag-resultado-titulo-visibilidade-psicologo-admin.md)
+68. [TASK-114 - Tabela de trafego por WhatsApp no dashboard Admin de psicologos](TASK-114-tabela-trafego-whatsapp-dashboard-psicologos-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
