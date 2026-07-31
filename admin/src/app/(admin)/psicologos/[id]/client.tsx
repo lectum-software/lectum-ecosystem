@@ -609,6 +609,7 @@ type StatisticsCustomRange = Pick<AdminPsychologistStatisticsQuery, "from" | "to
 type PublicationsPeriodValue = NonNullable<AdminPsychologistPublicationsQuery["period"]>;
 type PublicationsPeriodPreset = Exclude<PublicationsPeriodValue, "custom">;
 type PublicationsCustomRange = Pick<AdminPsychologistPublicationsQuery, "from" | "to">;
+type StatisticsMetricComparison = NonNullable<AdminPsychologistEngagementMetric["comparison"]>;
 
 const BUSINESS_SERIES_METRIC_KEYS = [
   "comments_received",
@@ -1835,6 +1836,36 @@ const formatPreviousPeriod = (
   if (!comparison) return "período anterior";
 
   return `${formatDayMonth(comparison.previous_from)} - ${formatDayMonth(comparison.previous_to)}`;
+};
+
+const roundStatisticsPercent = (value: number) => {
+  return Number(value.toFixed(1));
+};
+
+const calculateStatisticsChangePercent = (current: number, previous: number) => {
+  if (previous === 0) return current === 0 ? 0 : null;
+
+  return roundStatisticsPercent(((current - previous) / previous) * 100);
+};
+
+const buildStatisticsMetricComparison = ({
+  current,
+  period,
+  previous,
+}: {
+  current: number;
+  period: AdminPsychologistStatistics["period"];
+  previous: number;
+}): StatisticsMetricComparison => {
+  const change = calculateStatisticsChangePercent(current, previous);
+
+  return {
+    change_percent: change,
+    previous_from: period.previous_from,
+    previous_to: period.previous_to,
+    previous_value: previous,
+    trend: change === null ? "unavailable" : change > 0 ? "up" : change < 0 ? "down" : "flat",
+  };
 };
 
 const formatStatisticsPeriodSummary = (period: AdminPsychologistStatistics["period"]) =>
@@ -3500,6 +3531,46 @@ const sumStatisticsChartMetricValue = (
   metric: StatisticsChartMetric,
 ) => Math.round(points.reduce((total, point) => total + metric.getValue(point), 0));
 
+const getPreviousStatisticsMetricValue = (
+  metrics: Map<string, AdminPsychologistEngagementMetric>,
+  id: string,
+) => metrics.get(id)?.comparison?.previous_value ?? 0;
+
+const buildDerivedBusinessMetricComparison = ({
+  config,
+  current,
+  metrics,
+  period,
+}: {
+  config: StatisticsChartMetric;
+  current: number;
+  metrics: Map<string, AdminPsychologistEngagementMetric>;
+  period: AdminPsychologistStatistics["period"];
+}): AdminPsychologistEngagementMetric["comparison"] | null => {
+  if (config.id === "engagement_score") {
+    const previous = Math.max(
+      0,
+      getPreviousStatisticsMetricValue(metrics, "upvotes") * 2 +
+        getPreviousStatisticsMetricValue(metrics, "comments_received") * 5 +
+        getPreviousStatisticsMetricValue(metrics, "shares") * 8 +
+        getPreviousStatisticsMetricValue(metrics, "saves") * 2 -
+        getPreviousStatisticsMetricValue(metrics, "downvotes") * 3,
+    );
+
+    return buildStatisticsMetricComparison({ current, period, previous });
+  }
+
+  if (config.id === "activity_score") {
+    const previous =
+      getPreviousStatisticsMetricValue(metrics, "posts") +
+      getPreviousStatisticsMetricValue(metrics, "replies") * 3;
+
+    return buildStatisticsMetricComparison({ current, period, previous });
+  }
+
+  return null;
+};
+
 const withStatisticsChartMetricConfig = (
   metric: AdminPsychologistEngagementMetric,
   config: StatisticsChartMetric,
@@ -3511,10 +3582,12 @@ const withStatisticsChartMetricConfig = (
 });
 
 const buildStatisticsOverviewMetric = ({
+  comparison,
   config,
   metric,
   points,
 }: {
+  comparison?: AdminPsychologistEngagementMetric["comparison"] | null;
   config: StatisticsChartMetric;
   metric?: AdminPsychologistEngagementMetric;
   points: AdminPsychologistStatistics["business"]["series"];
@@ -3525,6 +3598,7 @@ const buildStatisticsOverviewMetric = ({
     return withStatisticsChartMetricConfig(
       {
         ...metric,
+        comparison: metric.comparison ?? comparison ?? null,
         value: metric.value ?? value,
       },
       config,
@@ -3533,7 +3607,7 @@ const buildStatisticsOverviewMetric = ({
 
   return {
     available: points.length > 0,
-    comparison: null,
+    comparison: comparison ?? null,
     id: config.id,
     label: config.label,
     source: config.source,
@@ -3574,19 +3648,33 @@ const StatisticsSeriesChart = ({
   const chartPoints = aggregateStatisticsChartPoints(points);
   const chartWidth = 1120;
   const chartHeight = 280;
-  const padding = { bottom: 28, left: 42, right: 28, top: 28 };
+  const rightAxisKeys = keys.filter((item) => item.unit === "seconds");
+  const leftAxisKeys = keys.filter((item) => item.unit !== "seconds");
+  const hasRightAxis = rightAxisKeys.length > 0;
+  const hasLeftAxis = leftAxisKeys.length > 0;
+  const padding = { bottom: 28, left: 42, right: hasRightAxis ? 86 : 28, top: 28 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
-  const max = Math.max(
+  const leftMax = Math.max(
     1,
-    ...chartPoints.flatMap((point) => keys.map((item) => item.getValue(point))),
+    ...chartPoints.flatMap((point) => leftAxisKeys.map((item) => item.getValue(point))),
+  );
+  const rightMax = Math.max(
+    1,
+    ...chartPoints.flatMap((point) => rightAxisKeys.map((item) => item.getValue(point))),
   );
   const xFor = (index: number) =>
     padding.left +
     (chartPoints.length <= 1 ? innerWidth / 2 : (index / (chartPoints.length - 1)) * innerWidth);
-  const yFor = (value: number) => padding.top + innerHeight - (value / max) * innerHeight;
-  const gridValues = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(max * ratio));
-  const axisMetric = keys.length === 1 ? keys[0] : undefined;
+  const yForRatio = (ratio: number) => padding.top + innerHeight - ratio * innerHeight;
+  const yForMetric = (metric: StatisticsChartMetric, value: number) => {
+    const axisMax = metric.unit === "seconds" ? rightMax : leftMax;
+
+    return yForRatio(value / axisMax);
+  };
+  const gridRatios = [0, 0.25, 0.5, 0.75, 1];
+  const leftAxisMetric = leftAxisKeys.length === 1 ? leftAxisKeys[0] : undefined;
+  const rightAxisMetric = rightAxisKeys[0];
   const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
   const dateLabels = chartPoints.flatMap((point, index) =>
     index % labelStep === 0 || index === chartPoints.length - 1
@@ -3607,37 +3695,74 @@ const StatisticsSeriesChart = ({
           width={chartWidth}
         >
           <title>Evolução do período</title>
-          {gridValues.map((value) => {
-            const y = yFor(value);
+          {gridRatios.map((ratio) => {
+            const y = yForRatio(ratio);
+            const leftValue = Math.round(leftMax * ratio);
+            const rightValue = Math.round(rightMax * ratio);
 
             return (
-              <g key={`business-grid-${value}-${y}`}>
+              <g key={`business-grid-${ratio}`}>
                 <line
                   className="stroke-border"
                   opacity="0.44"
-                  strokeDasharray={value === 0 ? "0" : "4 6"}
+                  strokeDasharray={ratio === 0 ? "0" : "4 6"}
                   strokeWidth="1"
                   x1={padding.left}
                   x2={chartWidth - padding.right}
                   y1={y}
                   y2={y}
                 />
-                <text
-                  className="fill-muted text-[10px] font-medium"
-                  dominantBaseline="middle"
-                  textAnchor="end"
-                  x={padding.left - 8}
-                  y={y}
-                >
-                  {formatStatisticsChartMetricValue(value, axisMetric)}
-                </text>
+                {hasLeftAxis ? (
+                  <text
+                    className="fill-muted text-[10px] font-medium"
+                    dominantBaseline="middle"
+                    textAnchor="end"
+                    x={padding.left - 8}
+                    y={y}
+                  >
+                    {formatStatisticsChartMetricValue(leftValue, leftAxisMetric)}
+                  </text>
+                ) : null}
+                {hasRightAxis ? (
+                  <text
+                    className="fill-muted text-[10px] font-medium"
+                    dominantBaseline="middle"
+                    textAnchor="start"
+                    x={chartWidth - padding.right + 10}
+                    y={y}
+                  >
+                    {formatStatisticsChartMetricValue(rightValue, rightAxisMetric)}
+                  </text>
+                ) : null}
               </g>
             );
           })}
+          {hasLeftAxis ? (
+            <line
+              className="stroke-border"
+              opacity="0.72"
+              strokeWidth="1"
+              x1={padding.left}
+              x2={padding.left}
+              y1={padding.top}
+              y2={padding.top + innerHeight}
+            />
+          ) : null}
+          {hasRightAxis ? (
+            <line
+              className="stroke-border"
+              opacity="0.72"
+              strokeWidth="1"
+              x1={chartWidth - padding.right}
+              x2={chartWidth - padding.right}
+              y1={padding.top}
+              y2={padding.top + innerHeight}
+            />
+          ) : null}
           {keys.map((item) => {
             const linePoints = chartPoints.map((point, index) => ({
               x: xFor(index),
-              y: yFor(item.getValue(point)),
+              y: yForMetric(item, item.getValue(point)),
             }));
             const linePath = buildSmoothSvgPath(linePoints);
 
@@ -3660,7 +3785,7 @@ const StatisticsSeriesChart = ({
                 <circle
                   className={cn("fill-surface", item.strokeClassName)}
                   cx={xFor(index)}
-                  cy={yFor(value)}
+                  cy={yForMetric(item, value)}
                   key={`${item.id}-${point.date}`}
                   opacity={index === chartPoints.length - 1 ? "1" : "0.72"}
                   r={index === chartPoints.length - 1 ? "3.1" : "2.1"}
@@ -5168,14 +5293,29 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const communityMetricMap = new Map(
     communityStatistics.community.cards.map((metric) => [metric.id, metric]),
   );
-  const businessCards = BUSINESS_CHART_METRICS.map((config) => ({
-    config,
-    metric: buildStatisticsOverviewMetric({
+  const businessCards = BUSINESS_CHART_METRICS.map((config) => {
+    const sourceMetric =
+      businessMetricMap.get(config.id) ?? businessCommunityMetricMap.get(config.id);
+    const current = sumStatisticsChartMetricValue(businessStatistics.business.series, config);
+    const comparison =
+      sourceMetric?.comparison ??
+      buildDerivedBusinessMetricComparison({
+        config,
+        current,
+        metrics: businessCommunityMetricMap,
+        period: businessStatistics.period,
+      });
+
+    return {
       config,
-      metric: businessMetricMap.get(config.id) ?? businessCommunityMetricMap.get(config.id),
-      points: businessStatistics.business.series,
-    }),
-  }));
+      metric: buildStatisticsOverviewMetric({
+        comparison,
+        config,
+        metric: sourceMetric,
+        points: businessStatistics.business.series,
+      }),
+    };
+  });
   const communityCards = COMMUNITY_CHART_METRICS.flatMap((config) => {
     const metric = communityMetricMap.get(config.id);
 
