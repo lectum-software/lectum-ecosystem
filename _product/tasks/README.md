@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 125 tasks: `TASK-00` a `TASK-118`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 126 tasks: `TASK-00` a `TASK-119`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -200,6 +200,7 @@ ou cortesia manual.
 | 116 | [TASK-116 - Grupos expansiveis na tabela de trafego WhatsApp do Admin de psicologos](TASK-116-grupos-expansiveis-trafego-whatsapp-psicologos-admin.md) | Completed | 53, 76, 114, 115 |
 | 117 | [TASK-117 - Medias reais de analises das comunidades no trafego WhatsApp Admin](TASK-117-medias-reais-comunidades-trafego-whatsapp-psicologos-admin.md) | Completed | 53, 75, 76, 97, 108, 111, 114, 115, 116 |
 | 118 | [TASK-118 - Copy de medias de engajamento nas sublinhas de Comunidades do trafego WhatsApp Admin](TASK-118-copy-medias-engajamento-comunidades-trafego-whatsapp-admin.md) | Completed | 53, 114, 115, 116, 117 |
+| 119 | [TASK-119 - Label Tempo de permanencia nas metricas de Comunidades do trafego WhatsApp Admin](TASK-119-label-tempo-permanencia-comunidades-trafego-whatsapp-admin.md) | Completed | 53, 114, 115, 116, 117, 118 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -292,6 +293,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 82. [TASK-116 - Grupos expansiveis na tabela de trafego WhatsApp do Admin de psicologos](TASK-116-grupos-expansiveis-trafego-whatsapp-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para recolher/expandir Comunidades e Video de apresentacao, agrupando Explorar e Busca e filtros sob o novo bloco agregado.
 83. [TASK-117 - Medias reais de analises das comunidades no trafego WhatsApp Admin](TASK-117-medias-reais-comunidades-trafego-whatsapp-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para exibir medias reais por conteudo nas sublinhas de Comunidades, trocar Tempo total assistido por Visibilidade media e preservar Ranking Top Mentores como descricao.
 84. [TASK-118 - Copy de medias de engajamento nas sublinhas de Comunidades do trafego WhatsApp Admin](TASK-118-copy-medias-engajamento-comunidades-trafego-whatsapp-admin.md) foi adicionada e concluida em 2026-07-31 para explicar os valores medios de engajamento abaixo dos titulos e encurtar os chips Retencao/Visibilidade.
+85. [TASK-119 - Label Tempo de permanencia nas metricas de Comunidades do trafego WhatsApp Admin](TASK-119-label-tempo-permanencia-comunidades-trafego-whatsapp-admin.md) foi adicionada e concluida em 2026-07-31 para trocar o chip Visibilidade por Tempo de permanencia nas metricas de Comunidades, mantendo calculos e ids tecnicos.
 
 ### 1A. Trilha Admin planejada
 
@@ -369,6 +371,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 70. [TASK-116 - Grupos expansiveis na tabela de trafego WhatsApp do Admin de psicologos](TASK-116-grupos-expansiveis-trafego-whatsapp-psicologos-admin.md)
 71. [TASK-117 - Medias reais de analises das comunidades no trafego WhatsApp Admin](TASK-117-medias-reais-comunidades-trafego-whatsapp-psicologos-admin.md)
 72. [TASK-118 - Copy de medias de engajamento nas sublinhas de Comunidades do trafego WhatsApp Admin](TASK-118-copy-medias-engajamento-comunidades-trafego-whatsapp-admin.md)
+73. [TASK-119 - Label Tempo de permanencia nas metricas de Comunidades do trafego WhatsApp Admin](TASK-119-label-tempo-permanencia-comunidades-trafego-whatsapp-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

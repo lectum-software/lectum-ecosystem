@@ -3018,7 +3018,7 @@ const buildCommunityTrafficPlatformMetrics = (
               }),
               buildAverageCommunityTrafficMetric(totals, {
                 id: "average_visibility",
-                label: "Visibilidade",
+                label: "Tempo de perman\u00eancia",
                 total: totals.visibilitySeconds,
                 unit: "seconds",
               }),
@@ -3026,7 +3026,7 @@ const buildCommunityTrafficPlatformMetrics = (
           : [
               buildAverageCommunityTrafficMetric(totals, {
                 id: "average_visibility",
-                label: "Visibilidade",
+                label: "Tempo de perman\u00eancia",
                 total: totals.visibilitySeconds,
                 unit: "seconds",
               }),

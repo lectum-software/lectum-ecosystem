@@ -172,3 +172,4 @@ Formato recomendado:
 - [ADR-0380 - Grupos expansiveis na tabela de trafego WhatsApp Admin](0380-grupos-expansiveis-trafego-whatsapp-admin.md) - Accepted
 - [ADR-0381 - Medias reais de analises das comunidades no trafego WhatsApp Admin](0381-medias-reais-comunidades-trafego-whatsapp-admin.md) - Accepted
 - [ADR-0382 - Copy de medias de engajamento nas sublinhas de Comunidades do trafego WhatsApp Admin](0382-copy-medias-engajamento-comunidades-trafego-whatsapp-admin.md) - Accepted
+- [ADR-0383 - Label Tempo de permanencia nas metricas de Comunidades do trafego WhatsApp Admin](0383-label-tempo-permanencia-comunidades-trafego-whatsapp-admin.md) - Accepted
