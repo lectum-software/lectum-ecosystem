@@ -83,3 +83,59 @@ sem ranking publico, punicao ou mudanca de algoritmo.
   Insuficientes** quando aplicavel.
 - Nao houve alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; portanto
   `pnpm --dir backend db:migrate` nao se aplica.
+
+## Complemento 2026-07-30 - separacao dos eixos compostos
+
+### Contexto
+
+Antes de avançar para novas analises de conversao, o produto decidiu separar os blocos compostos ja
+existentes:
+
+- Visibilidade passa a aparecer em dois donuts: **Video de apresentacao** e **Visibilidade na
+  comunidade**.
+- **Engajamento e Favoritos** passa a aparecer em dois donuts: **Engajamento recebido** e
+  **Favoritados recebidos**.
+- A matriz de origem do funil deixa de alternar apenas entre eixos compostos e passa a oferecer
+  quatro leituras separadas contra Conversao.
+
+### Escopo complementar
+
+- Separar os donuts do card executivo sem alterar formulas, pesos, percentis ou fontes reais.
+- Derivar as categorias isoladas dos contratos reais `profile_exposure` e
+  `profile_engagement_favorites`.
+- Derivar as matrizes separadas no Admin a partir de `profile_conversion_visibility` e
+  `profile_conversion_engagement_favorites`, agrupando as 16 colunas atuais pelo eixo selecionado.
+- Manter a UI mobile-first e a grade desktop com cinco cards somente em telas muito largas.
+
+### Criterios de aceite complementares
+
+- [x] O card executivo exibe donuts separados para **Video de apresentacao** e **Visibilidade na
+      comunidade**.
+- [x] O card executivo exibe donuts separados para **Engajamento recebido** e **Favoritados
+      recebidos**.
+- [x] A matriz expandida do funil permite alternar entre **Conversao x Visibilidade na Comunidade**,
+      **Conversao x Video de apresentacao**, **Conversao x Engajamento recebido** e **Conversao x
+      Favoritados recebidos**.
+- [x] Todas as leituras usam os dados reais e as formulas ja existentes, sem mock, endpoint novo,
+      package novo, schema Prisma ou migration.
+- [x] UI mobile-first preservada; nenhum `<img>` cru foi adicionado.
+- [x] ADR complementar criado em `adrs/0369-separacao-eixos-funil-psicologos-admin.md`.
+
+### Validacao complementar
+
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou
+  `_product/tasks/PROTO-INVENTORY.md`, a referencia local do Admin e o screenshot enviado pelo
+  usuario.
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`
+- `pnpm --dir admin typecheck`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Browser local autenticado em `/psicologos` validou os cinco donuts separados no desktop e em
+  viewport mobile de 390px, alem das quatro opcoes da matriz expandida:
+  **Conversao x Visibilidade na Comunidade**, **Conversao x Video de apresentacao**,
+  **Conversao x Engajamento recebido** e **Conversao x Favoritados recebidos**. Screenshots locais:
+  `.tmp/task100-separated-dashboard-desktop.png` e
+  `.tmp/task100-separated-dashboard-mobile-390.png`.
+- Admin temporario real de validacao local foi criado com `admin:bootstrap` e removido do banco ao
+  final junto com seus tokens.

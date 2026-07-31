@@ -52,22 +52,58 @@ type ProfileConversionCategoryItem =
 type ProfileExposureCategoryItem =
   AdminPsychologistsDashboard["profile_exposure"]["categories"][number];
 type ProfileExposureCommunityCategoryId = NonNullable<ProfileExposureCategoryItem["community_id"]>;
+type ProfileExposureVideoCategoryId = NonNullable<ProfileExposureCategoryItem["video_id"]>;
 type ProfileEngagementFavoritesCategoryItem =
   AdminPsychologistsDashboard["profile_engagement_favorites"]["categories"][number];
 type ProfileEngagementFavoritesCommunityCategoryId = NonNullable<
   ProfileEngagementFavoritesCategoryItem["engagement_id"]
 >;
+type ProfileEngagementFavoritesFavoriteCategoryId = NonNullable<
+  ProfileEngagementFavoritesCategoryItem["favorites_id"]
+>;
 type ProfileConversionEngagementFavoritesMatrix =
   AdminPsychologistsDashboard["profile_conversion_engagement_favorites"];
 type ProfileConversionVisibilityMatrix =
   AdminPsychologistsDashboard["profile_conversion_visibility"];
-type ProfileConversionMatrixMode = "engagement_favorites" | "visibility";
-type ProfileConversionMatrixResults =
+type ProfileConversionMatrixMode =
+  | "community_visibility"
+  | "engagement"
+  | "favorites"
+  | "video_visibility";
+type ProfileConversionSourceMatrix =
   | ProfileConversionEngagementFavoritesMatrix
   | ProfileConversionVisibilityMatrix;
-type ProfileConversionMatrixQuadrantItem = ProfileConversionMatrixResults["quadrants"][number];
-type ProfileConversionMatrixColumnItem = ProfileConversionMatrixResults["columns"][number];
-type ProfileConversionMatrixRowItem = ProfileConversionMatrixResults["rows"][number];
+type ProfileConversionMatrixColumnItem = {
+  color: string;
+  count: number;
+  description: string;
+  id: string;
+  label: string;
+  percentage: number;
+};
+type ProfileConversionMatrixRowItem = ProfileConversionSourceMatrix["rows"][number];
+type ProfileConversionMatrixQuadrantItem = {
+  column_id: string;
+  column_label: string;
+  count: number;
+  description: string;
+  id: string;
+  label: string;
+  percentage: number;
+  row_id: ProfileConversionMatrixRowItem["id"];
+  row_label: string;
+};
+type ProfileConversionMatrixResults = {
+  columns: ProfileConversionMatrixColumnItem[];
+  description: string;
+  quadrants: ProfileConversionMatrixQuadrantItem[];
+  rows: ProfileConversionMatrixRowItem[];
+  source: string;
+  totals: {
+    psychologists: number;
+  };
+  unavailable_reason: string | null;
+};
 type ProfileConversionFunnelCategoryId = ProfileConversionMatrixRowItem["id"];
 type PsychologistsDonutChartItem = {
   color: string;
@@ -105,8 +141,10 @@ const PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS: {
   id: ProfileConversionMatrixMode;
   label: string;
 }[] = [
-  { id: "engagement_favorites", label: "Conversão x Engajamentos e Favoritos" },
-  { id: "visibility", label: "Conversão x Visibilidade" },
+  { id: "community_visibility", label: "Conversão x Visibilidade na Comunidade" },
+  { id: "video_visibility", label: "Conversão x Vídeo de apresentação" },
+  { id: "engagement", label: "Conversão x Engajamento recebido" },
+  { id: "favorites", label: "Conversão x Favoritados recebidos" },
 ];
 
 const PLATFORM_PAGES_VIEW_OPTIONS: { id: PlatformPagesView; label: string }[] = [
@@ -232,6 +270,9 @@ const formatChange = (value: number | null) => {
 
 const formatPercentageValue = (value: number) => `${numberFormatter.format(value)}%`;
 
+const calculatePercentage = (value: number, total: number) =>
+  total > 0 ? toOneDecimal((Math.max(0, value) / total) * 100) : 0;
+
 const formatNullablePercentage = (value: number | null) =>
   typeof value === "number" ? formatPercentageValue(value) : "Indisponível";
 
@@ -322,23 +363,159 @@ const PROFILE_CONVERSION_CHART_COLORS = {
   strong_conversion: "#13a85b",
 } satisfies Record<ProfileConversionCategoryItem["id"], string>;
 
-const PROFILE_EXPOSURE_VISIBLE_LIMIT = 5;
-const PROFILE_EXPOSURE_OTHER_COLOR = "#64748b";
 const PROFILE_EXPOSURE_CHART_COLORS = {
   high_community: "#13a85b",
   low_community: "#f59f00",
   no_community: "#64748b",
   standard_community: "#308ce8",
 } satisfies Record<ProfileExposureCommunityCategoryId, string>;
+const PROFILE_VIDEO_VISIBILITY_CHART_COLORS = {
+  high_video: "#13a85b",
+  low_video: "#f59f00",
+  no_video: "#64748b",
+  standard_video: "#308ce8",
+} satisfies Record<ProfileExposureVideoCategoryId, string>;
 
-const PROFILE_ENGAGEMENT_FAVORITES_VISIBLE_LIMIT = 5;
-const PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR = "#64748b";
+const PROFILE_EXPOSURE_COMMUNITY_CATEGORY_OPTIONS: Array<{
+  color: string;
+  description: string;
+  id: ProfileExposureCommunityCategoryId;
+  label: string;
+}> = [
+  {
+    color: PROFILE_EXPOSURE_CHART_COLORS.high_community,
+    description: "Atenção em conteúdo autoral nas comunidades acima da faixa padrão.",
+    id: "high_community",
+    label: "Alta Comunidade",
+  },
+  {
+    color: PROFILE_EXPOSURE_CHART_COLORS.standard_community,
+    description: "Atenção em conteúdo autoral nas comunidades dentro da faixa padrão.",
+    id: "standard_community",
+    label: "Comunidade Padrão",
+  },
+  {
+    color: PROFILE_EXPOSURE_CHART_COLORS.low_community,
+    description: "Atenção em conteúdo autoral nas comunidades abaixo da faixa padrão.",
+    id: "low_community",
+    label: "Baixa Comunidade",
+  },
+  {
+    color: PROFILE_EXPOSURE_CHART_COLORS.no_community,
+    description: "Nenhuma atenção registrada em conteúdo autoral nas comunidades.",
+    id: "no_community",
+    label: "Sem Comunidade",
+  },
+];
+
+const PROFILE_EXPOSURE_VIDEO_CATEGORY_OPTIONS: Array<{
+  color: string;
+  description: string;
+  id: ProfileExposureVideoCategoryId;
+  label: string;
+}> = [
+  {
+    color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.high_video,
+    description: "Tempo assistido no vídeo de apresentação acima da faixa padrão.",
+    id: "high_video",
+    label: "Alto Vídeo",
+  },
+  {
+    color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.standard_video,
+    description: "Tempo assistido no vídeo de apresentação dentro da faixa padrão.",
+    id: "standard_video",
+    label: "Vídeo Padrão",
+  },
+  {
+    color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.low_video,
+    description: "Tempo assistido no vídeo de apresentação abaixo da faixa padrão.",
+    id: "low_video",
+    label: "Baixo Vídeo",
+  },
+  {
+    color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.no_video,
+    description: "Nenhum tempo assistido no vídeo de apresentação no período.",
+    id: "no_video",
+    label: "Vídeo sem view",
+  },
+];
+
 const PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS = {
   high_engagement: "#13a85b",
   low_engagement: "#f59f00",
   no_engagement: "#64748b",
   standard_engagement: "#308ce8",
 } satisfies Record<ProfileEngagementFavoritesCommunityCategoryId, string>;
+const PROFILE_FAVORITES_CHART_COLORS = {
+  high_favorites: "#13a85b",
+  low_favorites: "#f59f00",
+  no_favorites: "#64748b",
+  standard_favorites: "#308ce8",
+} satisfies Record<ProfileEngagementFavoritesFavoriteCategoryId, string>;
+
+const PROFILE_ENGAGEMENT_CATEGORY_OPTIONS: Array<{
+  color: string;
+  description: string;
+  id: ProfileEngagementFavoritesCommunityCategoryId;
+  label: string;
+}> = [
+  {
+    color: PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS.high_engagement,
+    description: "Score de relacionamento recebido na comunidade acima da faixa padrão.",
+    id: "high_engagement",
+    label: "Alto Engajamento",
+  },
+  {
+    color: PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS.standard_engagement,
+    description: "Score de relacionamento recebido na comunidade dentro da faixa padrão.",
+    id: "standard_engagement",
+    label: "Engajamento Padrão",
+  },
+  {
+    color: PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS.low_engagement,
+    description: "Score de relacionamento recebido na comunidade abaixo da faixa padrão.",
+    id: "low_engagement",
+    label: "Baixo Engajamento",
+  },
+  {
+    color: PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS.no_engagement,
+    description: "Nenhum comentário, voto positivo, salvamento ou compartilhamento recebido.",
+    id: "no_engagement",
+    label: "Sem Engajamento",
+  },
+];
+
+const PROFILE_FAVORITES_CATEGORY_OPTIONS: Array<{
+  color: string;
+  description: string;
+  id: ProfileEngagementFavoritesFavoriteCategoryId;
+  label: string;
+}> = [
+  {
+    color: PROFILE_FAVORITES_CHART_COLORS.high_favorites,
+    description: "Favoritos recebidos acima da faixa padrão.",
+    id: "high_favorites",
+    label: "Muito favoritado",
+  },
+  {
+    color: PROFILE_FAVORITES_CHART_COLORS.standard_favorites,
+    description: "Favoritos recebidos dentro da faixa padrão.",
+    id: "standard_favorites",
+    label: "Favoritado padrão",
+  },
+  {
+    color: PROFILE_FAVORITES_CHART_COLORS.low_favorites,
+    description: "Favoritos recebidos abaixo da faixa padrão, mas com ao menos um favorito.",
+    id: "low_favorites",
+    label: "Pouco favoritado",
+  },
+  {
+    color: PROFILE_FAVORITES_CHART_COLORS.no_favorites,
+    description: "Nenhum favorito recebido no período.",
+    id: "no_favorites",
+    label: "Sem favoritos",
+  },
+];
 
 const SIGNUP_METHOD_CHART_COLORS = {
   email_password: "#13a85b",
@@ -2514,143 +2691,99 @@ const PsychologistsDonutChart = ({
   );
 };
 
-const getProfileExposureColor = (item: ProfileExposureCategoryItem) => {
-  if (item.id === "insufficient_data") return PROFILE_CONVERSION_CHART_COLORS.insufficient_data;
-
-  return item.community_id
-    ? PROFILE_EXPOSURE_CHART_COLORS[item.community_id]
-    : PROFILE_EXPOSURE_OTHER_COLOR;
-};
-
-const mapProfileExposureDonutItem = (
-  item: ProfileExposureCategoryItem,
-): PsychologistsDonutChartItem => ({
-  color: getProfileExposureColor(item),
-  count: item.count,
-  description: item.description,
-  id: item.id,
-  label: item.label,
-  percentage: item.percentage,
-});
-
-const buildProfileExposureDonutItems = (
+const buildProfileExposureSurfaceDonutItems = (
   profileExposure: AdminPsychologistsDashboard["profile_exposure"],
-) => {
+  surface: "community" | "video",
+): PsychologistsDonutChartItem[] => {
   const total = Math.max(0, profileExposure.totals.psychologists);
-  const indexedCategories = profileExposure.categories.map((item, index) => ({
-    index,
-    item,
-  }));
-  const insufficientData = indexedCategories.find(({ item }) => item.id === "insufficient_data");
-  const combinationCategories = indexedCategories.filter(
-    ({ item }) => item.id !== "insufficient_data",
-  );
-  const nonZeroCombinations = combinationCategories
-    .filter(({ item }) => item.count > 0)
-    .sort((left, right) => {
-      if (right.item.count !== left.item.count) return right.item.count - left.item.count;
+  const options =
+    surface === "community"
+      ? PROFILE_EXPOSURE_COMMUNITY_CATEGORY_OPTIONS
+      : PROFILE_EXPOSURE_VIDEO_CATEGORY_OPTIONS;
+  const countsById = new Map(options.map((option) => [option.id, 0]));
+  const insufficientDataCount =
+    profileExposure.categories.find((item) => item.id === "insufficient_data")?.count ?? 0;
 
-      return left.index - right.index;
-    });
-  const topCombinations = nonZeroCombinations.slice(0, PROFILE_EXPOSURE_VISIBLE_LIMIT);
-  const hiddenCombinations = nonZeroCombinations.slice(PROFILE_EXPOSURE_VISIBLE_LIMIT);
-  const hiddenCount = hiddenCombinations.reduce((sum, { item }) => sum + item.count, 0);
-  const collapsedItems: PsychologistsDonutChartItem[] = [
-    ...topCombinations.map(({ item }) => mapProfileExposureDonutItem(item)),
-    ...(hiddenCount > 0
-      ? [
-          {
-            color: PROFILE_EXPOSURE_OTHER_COLOR,
-            count: hiddenCount,
-            description: `Soma das demais combinações com volume no período: ${hiddenCombinations
-              .map(({ item }) => item.label)
-              .join(", ")}.`,
-            id: "other_profile_exposure",
-            label: "Outras combinações",
-            percentage: total > 0 ? toOneDecimal((hiddenCount / total) * 100) : 0,
-          },
-        ]
-      : []),
-    ...(insufficientData && insufficientData.item.count > 0
-      ? [mapProfileExposureDonutItem(insufficientData.item)]
-      : []),
+  for (const item of profileExposure.categories) {
+    if (item.id === "insufficient_data") continue;
+
+    const categoryId = surface === "community" ? item.community_id : item.video_id;
+    if (!categoryId) continue;
+
+    countsById.set(categoryId, (countsById.get(categoryId) ?? 0) + item.count);
+  }
+
+  return [
+    ...options.map((option) => {
+      const count = countsById.get(option.id) ?? 0;
+
+      return {
+        color: option.color,
+        count,
+        description: option.description,
+        id: option.id,
+        label: option.label,
+        percentage: calculatePercentage(count, total),
+      };
+    }),
+    {
+      color: PROFILE_CONVERSION_CHART_COLORS.insufficient_data,
+      count: insufficientDataCount,
+      description:
+        "Psicólogo ainda dentro dos primeiros 30 dias de adaptação; a visibilidade ainda não é comparada com a plataforma.",
+      id: "insufficient_data",
+      label: "Dados Insuficientes",
+      percentage: calculatePercentage(insufficientDataCount, total),
+    },
   ];
-
-  return {
-    allItems: profileExposure.categories.map(mapProfileExposureDonutItem),
-    collapsedItems,
-    combinationCount: combinationCategories.length,
-    hiddenCombinationCount: hiddenCombinations.length,
-  };
 };
 
-const getProfileEngagementFavoritesColor = (item: ProfileEngagementFavoritesCategoryItem) => {
-  if (item.id === "insufficient_data") return PROFILE_CONVERSION_CHART_COLORS.insufficient_data;
-
-  return item.engagement_id
-    ? PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS[item.engagement_id]
-    : PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR;
-};
-
-const mapProfileEngagementFavoritesDonutItem = (
-  item: ProfileEngagementFavoritesCategoryItem,
-): PsychologistsDonutChartItem => ({
-  color: getProfileEngagementFavoritesColor(item),
-  count: item.count,
-  description: item.description,
-  id: item.id,
-  label: item.label,
-  percentage: item.percentage,
-});
-
-const buildProfileEngagementFavoritesDonutItems = (
+const buildProfileEngagementFavoritesAxisDonutItems = (
   profileEngagementFavorites: AdminPsychologistsDashboard["profile_engagement_favorites"],
-) => {
+  axis: "engagement" | "favorites",
+): PsychologistsDonutChartItem[] => {
   const total = Math.max(0, profileEngagementFavorites.totals.psychologists);
-  const indexedCategories = profileEngagementFavorites.categories.map((item, index) => ({
-    index,
-    item,
-  }));
-  const insufficientData = indexedCategories.find(({ item }) => item.id === "insufficient_data");
-  const combinationCategories = indexedCategories.filter(
-    ({ item }) => item.id !== "insufficient_data",
-  );
-  const nonZeroCombinations = combinationCategories
-    .filter(({ item }) => item.count > 0)
-    .sort((left, right) => {
-      if (right.item.count !== left.item.count) return right.item.count - left.item.count;
+  const options =
+    axis === "engagement"
+      ? PROFILE_ENGAGEMENT_CATEGORY_OPTIONS
+      : PROFILE_FAVORITES_CATEGORY_OPTIONS;
+  const countsById = new Map(options.map((option) => [option.id, 0]));
+  const insufficientDataCount =
+    profileEngagementFavorites.categories.find((item) => item.id === "insufficient_data")?.count ??
+    0;
 
-      return left.index - right.index;
-    });
-  const topCombinations = nonZeroCombinations.slice(0, PROFILE_ENGAGEMENT_FAVORITES_VISIBLE_LIMIT);
-  const hiddenCombinations = nonZeroCombinations.slice(PROFILE_ENGAGEMENT_FAVORITES_VISIBLE_LIMIT);
-  const hiddenCount = hiddenCombinations.reduce((sum, { item }) => sum + item.count, 0);
-  const collapsedItems: PsychologistsDonutChartItem[] = [
-    ...topCombinations.map(({ item }) => mapProfileEngagementFavoritesDonutItem(item)),
-    ...(hiddenCount > 0
-      ? [
-          {
-            color: PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR,
-            count: hiddenCount,
-            description: `Soma das demais combinações com volume no período: ${hiddenCombinations
-              .map(({ item }) => item.label)
-              .join(", ")}.`,
-            id: "other_engagement_favorites",
-            label: "Outras combinações",
-            percentage: total > 0 ? toOneDecimal((hiddenCount / total) * 100) : 0,
-          },
-        ]
-      : []),
-    ...(insufficientData && insufficientData.item.count > 0
-      ? [mapProfileEngagementFavoritesDonutItem(insufficientData.item)]
-      : []),
+  for (const item of profileEngagementFavorites.categories) {
+    if (item.id === "insufficient_data") continue;
+
+    const categoryId = axis === "engagement" ? item.engagement_id : item.favorites_id;
+    if (!categoryId) continue;
+
+    countsById.set(categoryId, (countsById.get(categoryId) ?? 0) + item.count);
+  }
+
+  return [
+    ...options.map((option) => {
+      const count = countsById.get(option.id) ?? 0;
+
+      return {
+        color: option.color,
+        count,
+        description: option.description,
+        id: option.id,
+        label: option.label,
+        percentage: calculatePercentage(count, total),
+      };
+    }),
+    {
+      color: PROFILE_CONVERSION_CHART_COLORS.insufficient_data,
+      count: insufficientDataCount,
+      description:
+        "Psicólogo ainda dentro dos primeiros 30 dias de adaptação; engajamento e favoritos ainda não são comparados com a plataforma.",
+      id: "insufficient_data",
+      label: "Dados Insuficientes",
+      percentage: calculatePercentage(insufficientDataCount, total),
+    },
   ];
-
-  return {
-    allItems: profileEngagementFavorites.categories.map(mapProfileEngagementFavoritesDonutItem),
-    collapsedItems,
-    hiddenCombinationCount: hiddenCombinations.length,
-  };
 };
 
 const ProfileConversionDonutChart = ({
@@ -2690,17 +2823,17 @@ const ProfileConversionDonutChart = ({
   );
 };
 
-const ProfileVisibilityDonutChart = ({
+const ProfileExposureSurfaceDonutChart = ({
   profileExposure,
+  surface,
 }: {
   profileExposure: AdminPsychologistsDashboard["profile_exposure"];
+  surface: "community" | "video";
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const total = Math.max(0, profileExposure.totals.psychologists);
-  const { allItems, collapsedItems, combinationCount, hiddenCombinationCount } =
-    buildProfileExposureDonutItems(profileExposure);
-  const items = expanded ? allItems : collapsedItems;
-  const ariaLabel = `Gráfico de donut de Visibilidade Comunidade x Vídeo dos psicólogos: ${items
+  const items = buildProfileExposureSurfaceDonutItems(profileExposure, surface);
+  const title = surface === "community" ? "Visibilidade na Comunidade" : "Vídeo de apresentação";
+  const ariaLabel = `Gráfico de donut de ${title} dos psicólogos: ${items
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
@@ -2710,31 +2843,19 @@ const ProfileVisibilityDonutChart = ({
     .join("; ")}.`;
 
   return (
-    <div>
-      <PsychologistsDonutChart
-        ariaLabel={ariaLabel}
-        emptyMessage={
-          profileExposure.unavailable_reason ??
-          "Sem psicólogos ativos no período selecionado para classificar Visibilidade."
-        }
-        items={items}
-        showDescriptionTooltips={false}
-        total={total}
-      />
-      {hiddenCombinationCount > 0 ? (
-        <button
-          className="mt-3 rounded-full border border-primary/20 px-3 py-1.5 text-xs font-black text-primary transition hover:bg-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          onClick={() => setExpanded((current) => !current)}
-          type="button"
-        >
-          {expanded
-            ? "Ver combinações principais"
-            : `Ver todas as ${numberFormatter.format(combinationCount)} combinações`}
-        </button>
-      ) : null}
-    </div>
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        profileExposure.unavailable_reason ??
+        `Sem psicólogos ativos no período selecionado para classificar ${title}.`
+      }
+      items={items}
+      showDescriptionTooltips={false}
+      total={total}
+    />
   );
 };
+
 const formatWhatsappClicksValue = (value: number) => {
   const label = value === 1 ? "clique" : "cliques";
 
@@ -2820,17 +2941,17 @@ const formatProfileFavoritesStandardRange = (
   return `${formatFavoritesValue(min)} a ${formatFavoritesValue(max)}`;
 };
 
-const ProfileEngagementFavoritesDonutChart = ({
+const ProfileEngagementFavoritesAxisDonutChart = ({
+  axis,
   profileEngagementFavorites,
 }: {
+  axis: "engagement" | "favorites";
   profileEngagementFavorites: AdminPsychologistsDashboard["profile_engagement_favorites"];
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const total = Math.max(0, profileEngagementFavorites.totals.psychologists);
-  const { allItems, collapsedItems, hiddenCombinationCount } =
-    buildProfileEngagementFavoritesDonutItems(profileEngagementFavorites);
-  const items = expanded ? allItems : collapsedItems;
-  const ariaLabel = `Gráfico de donut de Engajamento e Favoritos dos psicólogos: ${items
+  const items = buildProfileEngagementFavoritesAxisDonutItems(profileEngagementFavorites, axis);
+  const title = axis === "engagement" ? "Engajamento recebido" : "Favoritados recebidos";
+  const ariaLabel = `Gráfico de donut de ${title} dos psicólogos: ${items
     .map(
       (item) =>
         `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
@@ -2840,33 +2961,67 @@ const ProfileEngagementFavoritesDonutChart = ({
     .join("; ")}.`;
 
   return (
-    <div>
-      <PsychologistsDonutChart
-        ariaLabel={ariaLabel}
-        emptyMessage={
-          profileEngagementFavorites.unavailable_reason ??
-          "Sem psicólogos ativos no período selecionado para classificar Engajamento e Favoritos."
-        }
-        items={items}
-        showDescriptionTooltips={false}
-        total={total}
-      />
-      {hiddenCombinationCount > 0 ? (
-        <button
-          className="mt-3 rounded-full border border-primary/20 px-3 py-1.5 text-xs font-black text-primary transition hover:bg-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          onClick={() => setExpanded((current) => !current)}
-          type="button"
-        >
-          {expanded
-            ? "Ver combinações principais"
-            : `Ver todas as ${numberFormatter.format(
-                profileEngagementFavorites.categories.length,
-              )} categorias`}
-        </button>
-      ) : null}
-    </div>
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        profileEngagementFavorites.unavailable_reason ??
+        `Sem psicólogos ativos no período selecionado para classificar ${title}.`
+      }
+      items={items}
+      showDescriptionTooltips={false}
+      total={total}
+    />
   );
 };
+
+const DashboardProfileSignalCard = ({
+  children,
+  className,
+  title,
+  tooltipAriaLabel,
+  tooltipContent,
+  total,
+}: {
+  children: ReactNode;
+  className?: string;
+  title: string;
+  tooltipAriaLabel: string;
+  tooltipContent: ReactNode;
+  total: number;
+}) => (
+  <section
+    className={cn(
+      "min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4",
+      className,
+    )}
+  >
+    <div>
+      <div className="min-w-[8rem]">
+        <span className="inline-flex items-center gap-2">
+          <h3 className="text-lg font-bold text-foreground">{title}</h3>
+          <button
+            aria-label={tooltipAriaLabel}
+            className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            type="button"
+          >
+            <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
+            <span
+              className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+              role="tooltip"
+            >
+              {tooltipContent}
+            </span>
+          </button>
+        </span>
+        <div className="mt-3">
+          <p className="text-3xl font-black text-foreground">{numberFormatter.format(total)}</p>
+          <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+        </div>
+      </div>
+    </div>
+    {children}
+  </section>
+);
 const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [profileConversionPlanSegment, setProfileConversionPlanSegment] =
     useState<PlanSegmentFilter>("all");
@@ -2875,15 +3030,9 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
     profileConversionPlanSegment,
   );
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
-  const profileConversionEngagement = profileConversionSegmentSummary.profile_conversion_engagement;
   const profileEngagementFavorites = profileConversionSegmentSummary.profile_engagement_favorites;
   const profileExposure = profileConversionSegmentSummary.profile_exposure;
-  if (
-    !profileConversion ||
-    !profileConversionEngagement ||
-    !profileEngagementFavorites ||
-    !profileExposure
-  ) {
+  if (!profileConversion || !profileEngagementFavorites || !profileExposure) {
     return null;
   }
 
@@ -2922,142 +3071,286 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         />
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
-          <div>
-            <div className="min-w-[8rem]">
-              <span className="inline-flex items-center gap-2">
-                <h3 className="text-lg font-bold text-foreground">Visibilidade</h3>
-                <button
-                  aria-label={`Visibilidade mostra a atenção recebida em conteúdo autoral nas comunidades e no vídeo de apresentação. Padrão da plataforma no período: comunidade ${communityVisibilityStandardRangeLabel}; vídeo ${videoVisibilityStandardRangeLabel}.`}
-                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  type="button"
-                >
-                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
-                  <span
-                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
-                    role="tooltip"
-                  >
-                    Visibilidade mostra a atenção recebida pelo psicólogo em conteúdo autoral nas
-                    comunidades e no vídeo de apresentação. Não conta aparição em listagens nem
-                    WhatsApp. Padrão da plataforma no período: comunidade{" "}
-                    <strong className="font-black">{communityVisibilityStandardRangeLabel}</strong>
-                    {"; "}
-                    vídeo{" "}
-                    <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
-                  </span>
-                </button>
-              </span>
-              <div className="mt-3">
-                <p className="text-3xl font-black text-foreground">
-                  {numberFormatter.format(profileExposure.totals.psychologists)}
-                </p>
-                <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
-              </div>
-            </div>
-          </div>
-          <ProfileVisibilityDonutChart profileExposure={profileExposure} />
-        </section>
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+        <DashboardProfileSignalCard
+          title="Vídeo de apresentação"
+          tooltipAriaLabel={`Vídeo de apresentação mede o tempo assistido no vídeo do perfil. Padrão da plataforma no período: ${videoVisibilityStandardRangeLabel}.`}
+          tooltipContent={
+            <>
+              Vídeo de apresentação usa o tempo assistido real no vídeo do perfil. Padrão da
+              plataforma no período:{" "}
+              <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
+            </>
+          }
+          total={profileExposure.totals.psychologists}
+        >
+          <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="video" />
+        </DashboardProfileSignalCard>
 
-        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <span className="inline-flex items-center gap-2">
-                <h3 className="text-lg font-bold text-foreground">Engajamento e Favoritos</h3>
-                <button
-                  aria-label={`Engajamento e Favoritos cruza relacionamento recebido de pacientes na comunidade com favoritos recebidos. Padrão da plataforma no período: engajamento ${engagementStandardRangeLabel}; favoritos ${favoritesStandardRangeLabel}.`}
-                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  type="button"
-                >
-                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
-                  <span
-                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
-                    role="tooltip"
-                  >
-                    Engajamento e Favoritos cruza relacionamento recebido de pacientes na comunidade
-                    com favoritos recebidos. O relacionamento usa score ponderado de comentários,
-                    compartilhamentos, salvamentos e votos positivos. Padrão da plataforma no
-                    período: engajamento{" "}
-                    <strong className="font-black">{engagementStandardRangeLabel}</strong>
-                    {"; "}
-                    favoritos <strong className="font-black">{favoritesStandardRangeLabel}</strong>.
-                  </span>
-                </button>
-              </span>
-              <p className="mt-1 text-3xl font-black text-foreground">
-                {numberFormatter.format(profileEngagementFavorites.totals.psychologists)}
-              </p>
-              <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
-            </div>
-          </div>
-          <ProfileEngagementFavoritesDonutChart
+        <DashboardProfileSignalCard
+          title="Visibilidade na comunidade"
+          tooltipAriaLabel={`Visibilidade na comunidade mede a atenção recebida em conteúdo autoral nas comunidades. Padrão da plataforma no período: ${communityVisibilityStandardRangeLabel}.`}
+          tooltipContent={
+            <>
+              Visibilidade na comunidade usa atenção recebida em posts e respostas autorais nas
+              comunidades. Não conta listagens nem WhatsApp. Padrão da plataforma no período:{" "}
+              <strong className="font-black">{communityVisibilityStandardRangeLabel}</strong>.
+            </>
+          }
+          total={profileExposure.totals.psychologists}
+        >
+          <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="community" />
+        </DashboardProfileSignalCard>
+
+        <DashboardProfileSignalCard
+          title="Engajamento recebido"
+          tooltipAriaLabel={`Engajamento recebido usa score ponderado de comentários, compartilhamentos, salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no período: ${engagementStandardRangeLabel}.`}
+          tooltipContent={
+            <>
+              Engajamento recebido usa score ponderado de comentários, compartilhamentos,
+              salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no
+              período: <strong className="font-black">{engagementStandardRangeLabel}</strong>.
+            </>
+          }
+          total={profileEngagementFavorites.totals.psychologists}
+        >
+          <ProfileEngagementFavoritesAxisDonutChart
+            axis="engagement"
             profileEngagementFavorites={profileEngagementFavorites}
           />
-        </section>
+        </DashboardProfileSignalCard>
 
-        <section className="min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4 lg:col-span-2 xl:col-span-1">
-          <div>
-            <div className="min-w-[8rem]">
-              <span className="inline-flex items-center gap-2">
-                <h3 className="text-lg font-bold text-foreground">Conversão</h3>
-                <button
-                  aria-label={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
-                  className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  type="button"
-                >
-                  <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
-                  <span
-                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
-                    role="tooltip"
-                  >
-                    Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato
-                    com o paciente. Padrão da plataforma no período:{" "}
-                    <strong className="font-black">{standardRangeLabel}</strong>
-                    {hasConversionStandardRange ? " no WhatsApp." : "."}
-                  </span>
-                </button>
-              </span>
-              <div className="mt-3">
-                <p className="text-3xl font-black text-foreground">
-                  {numberFormatter.format(profileConversion.totals.psychologists)}
-                </p>
-                <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
-              </div>
-            </div>
-          </div>
+        <DashboardProfileSignalCard
+          title="Favoritados recebidos"
+          tooltipAriaLabel={`Favoritados recebidos mede favoritos reais recebidos pelo psicólogo. Padrão da plataforma no período: ${favoritesStandardRangeLabel}.`}
+          tooltipContent={
+            <>
+              Favoritados recebidos mede favoritos reais recebidos pelo psicólogo no período. Padrão
+              da plataforma no período:{" "}
+              <strong className="font-black">{favoritesStandardRangeLabel}</strong>.
+            </>
+          }
+          total={profileEngagementFavorites.totals.psychologists}
+        >
+          <ProfileEngagementFavoritesAxisDonutChart
+            axis="favorites"
+            profileEngagementFavorites={profileEngagementFavorites}
+          />
+        </DashboardProfileSignalCard>
+
+        <DashboardProfileSignalCard
+          title="Conversão"
+          tooltipAriaLabel={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
+          tooltipContent={
+            <>
+              Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o
+              paciente. Padrão da plataforma no período:{" "}
+              <strong className="font-black">{standardRangeLabel}</strong>
+              {hasConversionStandardRange ? " no WhatsApp." : "."}
+            </>
+          }
+          total={profileConversion.totals.psychologists}
+        >
           <ProfileConversionDonutChart profileConversion={profileConversion} />
-        </section>
+        </DashboardProfileSignalCard>
       </div>
     </CardShell>
   );
 };
-const getProfileEngagementFavoritesColorById = (id: string) => {
-  const communityCategoryId = Object.keys(PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS).find(
-    (candidate) => id.startsWith(`${candidate}_`),
-  ) as ProfileEngagementFavoritesCommunityCategoryId | undefined;
+const getProfileExposureCommunityCategoryFromColumnId = (columnId: string) =>
+  PROFILE_EXPOSURE_COMMUNITY_CATEGORY_OPTIONS.find((option) =>
+    columnId.startsWith(`${option.id}_`),
+  ) ?? null;
 
-  return communityCategoryId
-    ? PROFILE_ENGAGEMENT_FAVORITES_CHART_COLORS[communityCategoryId]
-    : PROFILE_ENGAGEMENT_FAVORITES_OTHER_COLOR;
+const getProfileExposureVideoCategoryFromColumnId = (columnId: string) =>
+  PROFILE_EXPOSURE_VIDEO_CATEGORY_OPTIONS.find((option) => columnId.endsWith(`_${option.id}`)) ??
+  null;
+
+const getProfileEngagementCategoryFromColumnId = (columnId: string) =>
+  PROFILE_ENGAGEMENT_CATEGORY_OPTIONS.find((option) => columnId.startsWith(`${option.id}_`)) ??
+  null;
+
+const getProfileFavoritesCategoryFromColumnId = (columnId: string) =>
+  PROFILE_FAVORITES_CATEGORY_OPTIONS.find((option) => columnId.endsWith(`_${option.id}`)) ?? null;
+
+type ProfileConversionMatrixAxisConfig = {
+  columns: Array<{
+    color: string;
+    description: string;
+    id: string;
+    label: string;
+  }>;
+  description: string;
+  resolveColumn: (
+    columnId: string,
+  ) => { color: string; description: string; id: string; label: string } | null;
+  sourceMatrix: "engagement_favorites" | "visibility";
 };
 
-const getProfileExposureColorById = (id: string) => {
-  const communityCategoryId = Object.keys(PROFILE_EXPOSURE_CHART_COLORS).find((candidate) =>
-    id.startsWith(`${candidate}_`),
-  ) as ProfileExposureCommunityCategoryId | undefined;
-
-  return communityCategoryId
-    ? PROFILE_EXPOSURE_CHART_COLORS[communityCategoryId]
-    : PROFILE_EXPOSURE_OTHER_COLOR;
+const PROFILE_CONVERSION_MATRIX_AXIS_CONFIGS: Record<
+  ProfileConversionMatrixMode,
+  ProfileConversionMatrixAxisConfig
+> = {
+  community_visibility: {
+    columns: PROFILE_EXPOSURE_COMMUNITY_CATEGORY_OPTIONS,
+    description:
+      "Matriz observacional entre Conversão e Visibilidade na comunidade, usando as mesmas faixas de Comunidade já calculadas para o dashboard.",
+    resolveColumn: getProfileExposureCommunityCategoryFromColumnId,
+    sourceMatrix: "visibility",
+  },
+  engagement: {
+    columns: PROFILE_ENGAGEMENT_CATEGORY_OPTIONS,
+    description:
+      "Matriz observacional entre Conversão e Engajamento recebido na comunidade, usando o score ponderado já calculado para o dashboard.",
+    resolveColumn: getProfileEngagementCategoryFromColumnId,
+    sourceMatrix: "engagement_favorites",
+  },
+  favorites: {
+    columns: PROFILE_FAVORITES_CATEGORY_OPTIONS,
+    description:
+      "Matriz observacional entre Conversão e Favoritados recebidos, usando as mesmas faixas de favoritos já calculadas para o dashboard.",
+    resolveColumn: getProfileFavoritesCategoryFromColumnId,
+    sourceMatrix: "engagement_favorites",
+  },
+  video_visibility: {
+    columns: PROFILE_EXPOSURE_VIDEO_CATEGORY_OPTIONS,
+    description:
+      "Matriz observacional entre Conversão e Vídeo de apresentação, usando as mesmas faixas de vídeo já calculadas para o dashboard.",
+    resolveColumn: getProfileExposureVideoCategoryFromColumnId,
+    sourceMatrix: "visibility",
+  },
 };
 
-const getProfileConversionMatrixColumnColor = (
-  column: ProfileConversionMatrixColumnItem,
-  mode: ProfileConversionMatrixMode,
+const toProfileConversionDisplayMatrix = (
+  sourceMatrix: ProfileConversionSourceMatrix,
+  sourceMatrixKind: ProfileConversionMatrixAxisConfig["sourceMatrix"],
+): ProfileConversionMatrixResults => ({
+  columns: sourceMatrix.columns.map((column) => {
+    const axisColumn =
+      sourceMatrixKind === "visibility"
+        ? getProfileExposureCommunityCategoryFromColumnId(column.id)
+        : getProfileEngagementCategoryFromColumnId(column.id);
+
+    return {
+      color: axisColumn?.color ?? PROFILE_CONVERSION_CHART_COLORS.insufficient_data,
+      count: column.count,
+      description: column.description,
+      id: column.id,
+      label: column.label,
+      percentage: column.percentage,
+    };
+  }),
+  description: sourceMatrix.description,
+  quadrants: sourceMatrix.quadrants.map((quadrant) => ({
+    column_id: quadrant.column_id,
+    column_label: quadrant.column_label,
+    count: quadrant.count,
+    description: quadrant.description,
+    id: quadrant.id,
+    label: quadrant.label,
+    percentage: quadrant.percentage,
+    row_id: quadrant.row_id,
+    row_label: quadrant.row_label,
+  })),
+  rows: sourceMatrix.rows,
+  source: sourceMatrix.source,
+  totals: {
+    psychologists: sourceMatrix.totals.psychologists,
+  },
+  unavailable_reason: sourceMatrix.unavailable_reason,
+});
+
+const findSourceMatrixQuadrant = (
+  sourceMatrix: ProfileConversionSourceMatrix,
+  rowId: ProfileConversionMatrixRowItem["id"],
+  columnId: string,
 ) =>
-  mode === "engagement_favorites"
-    ? getProfileEngagementFavoritesColorById(column.id)
-    : getProfileExposureColorById(column.id);
+  sourceMatrix.quadrants.find(
+    (quadrant) => quadrant.row_id === rowId && quadrant.column_id === columnId,
+  );
+
+const buildProfileConversionAxisMatrix = (
+  sourceMatrix: ProfileConversionSourceMatrix,
+  mode: ProfileConversionMatrixMode,
+): ProfileConversionMatrixResults => {
+  const config = PROFILE_CONVERSION_MATRIX_AXIS_CONFIGS[mode];
+  const totalPsychologists = Math.max(0, sourceMatrix.totals.psychologists);
+  const columnCounts = new Map<string, number>(config.columns.map((column) => [column.id, 0]));
+  const quadrantCounts = new Map<string, number>(
+    sourceMatrix.rows.flatMap((row) =>
+      config.columns.map((column) => [`${row.id}_${column.id}`, 0] as const),
+    ),
+  );
+
+  for (const sourceColumn of sourceMatrix.columns) {
+    const axisColumn = config.resolveColumn(sourceColumn.id);
+    if (!axisColumn) continue;
+
+    columnCounts.set(axisColumn.id, (columnCounts.get(axisColumn.id) ?? 0) + sourceColumn.count);
+
+    for (const row of sourceMatrix.rows) {
+      const sourceQuadrant = findSourceMatrixQuadrant(sourceMatrix, row.id, sourceColumn.id);
+      if (!sourceQuadrant) continue;
+
+      const quadrantId = `${row.id}_${axisColumn.id}`;
+      quadrantCounts.set(quadrantId, (quadrantCounts.get(quadrantId) ?? 0) + sourceQuadrant.count);
+    }
+  }
+
+  const rowById = new Map(sourceMatrix.rows.map((row) => [row.id, row]));
+
+  return {
+    columns: config.columns.map((column) => {
+      const count = columnCounts.get(column.id) ?? 0;
+
+      return {
+        ...column,
+        count,
+        percentage: calculatePercentage(count, totalPsychologists),
+      };
+    }),
+    description: config.description,
+    quadrants: sourceMatrix.rows.flatMap((row) =>
+      config.columns.map((column) => {
+        const count = quadrantCounts.get(`${row.id}_${column.id}`) ?? 0;
+        const rowLabel = rowById.get(row.id)?.label ?? row.label;
+
+        return {
+          column_id: column.id,
+          column_label: column.label,
+          count,
+          description: `Psicólogos em ${rowLabel} com ${column.label}.`,
+          id: `${row.id}_${column.id}`,
+          label: `${rowLabel} + ${column.label}`,
+          percentage: calculatePercentage(count, totalPsychologists),
+          row_id: row.id,
+          row_label: rowLabel,
+        };
+      }),
+    ),
+    rows: sourceMatrix.rows,
+    source: `${sourceMatrix.source}+axis:${mode}`,
+    totals: {
+      psychologists: totalPsychologists,
+    },
+    unavailable_reason: sourceMatrix.unavailable_reason,
+  };
+};
+
+const getProfileConversionMatrixDetails = ({
+  engagementMatrix,
+  mode,
+  visibilityMatrix,
+}: {
+  engagementMatrix: ProfileConversionEngagementFavoritesMatrix;
+  mode: ProfileConversionMatrixMode;
+  visibilityMatrix: ProfileConversionVisibilityMatrix;
+}) => {
+  const config = PROFILE_CONVERSION_MATRIX_AXIS_CONFIGS[mode];
+  const sourceMatrix = config.sourceMatrix === "visibility" ? visibilityMatrix : engagementMatrix;
+
+  return buildProfileConversionAxisMatrix(sourceMatrix, mode);
+};
 
 const findProfileConversionMatrixQuadrant = (
   matrix: ProfileConversionMatrixResults,
@@ -3066,8 +3359,7 @@ const findProfileConversionMatrixQuadrant = (
 ): ProfileConversionMatrixQuadrantItem =>
   matrix.quadrants.find(
     (quadrant) => quadrant.row_id === row.id && quadrant.column_id === column.id,
-  ) ??
-  ({
+  ) ?? {
     column_id: column.id,
     column_label: column.label,
     count: 0,
@@ -3077,17 +3369,7 @@ const findProfileConversionMatrixQuadrant = (
     percentage: 0,
     row_id: row.id,
     row_label: row.label,
-    totals: {
-      comments_received: 0,
-      community_engagement_score: 0,
-      content_saves: 0,
-      content_shares: 0,
-      favorites: 0,
-      positive_votes: 0,
-      received_community_interactions: 0,
-      whatsapp_clicks: 0,
-    },
-  } as ProfileConversionMatrixQuadrantItem);
+  };
 
 type ProfileConversionMatrixCell = {
   color: string;
@@ -3100,7 +3382,6 @@ type ProfileConversionMatrixCell = {
 const buildProfileConversionMatrixRowCells = (
   matrix: ProfileConversionMatrixResults,
   row: ProfileConversionMatrixRowItem,
-  mode: ProfileConversionMatrixMode,
 ): ProfileConversionMatrixCell[] => {
   const quadrants = matrix.columns.map((column) =>
     findProfileConversionMatrixQuadrant(matrix, row, column),
@@ -3109,16 +3390,16 @@ const buildProfileConversionMatrixRowCells = (
 
   return quadrants.map((quadrant, index) => {
     const column = matrix.columns[index] ?? {
+      color: PROFILE_CONVERSION_CHART_COLORS.insufficient_data,
       count: 0,
       description: quadrant.description,
       id: quadrant.column_id,
       label: quadrant.column_label,
       percentage: 0,
-      totals: quadrant.totals,
     };
 
     return {
-      color: getProfileConversionMatrixColumnColor(column, mode),
+      color: column.color,
       column,
       quadrant,
       row,
@@ -3127,7 +3408,6 @@ const buildProfileConversionMatrixRowCells = (
     };
   });
 };
-
 const ProfileConversionMatrixQuadrantCard = ({
   color,
   description,
@@ -3203,9 +3483,8 @@ const splitProfileConversionFunnelColumnLabel = (label: string) => {
 const getDominantProfileConversionFunnelInsight = (
   matrix: ProfileConversionMatrixResults,
   row: ProfileConversionMatrixRowItem,
-  mode: ProfileConversionMatrixMode,
 ): ProfileConversionFunnelInsight | null => {
-  const cells = buildProfileConversionMatrixRowCells(matrix, row, mode);
+  const cells = buildProfileConversionMatrixRowCells(matrix, row);
   const dominantCell = cells.reduce<ProfileConversionMatrixCell | null>((current, cell) => {
     if (!current) return cell;
     if (cell.quadrant.count > current.quadrant.count) return cell;
@@ -3325,13 +3604,7 @@ const ProfileConversionFunnelStepConnector = ({ color }: { color: string }) => (
   </div>
 );
 
-const ProfileConversionMatrixDetails = ({
-  matrix,
-  mode,
-}: {
-  matrix: ProfileConversionMatrixResults;
-  mode: ProfileConversionMatrixMode;
-}) => {
+const ProfileConversionMatrixDetails = ({ matrix }: { matrix: ProfileConversionMatrixResults }) => {
   if (matrix.totals.psychologists === 0) {
     return (
       <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
@@ -3345,7 +3618,7 @@ const ProfileConversionMatrixDetails = ({
     <div className="mt-5">
       <div className="grid gap-3 lg:hidden">
         {matrix.rows.map((row) => {
-          const rowCells = buildProfileConversionMatrixRowCells(matrix, row, mode);
+          const rowCells = buildProfileConversionMatrixRowCells(matrix, row);
 
           return (
             <section
@@ -3390,7 +3663,7 @@ const ProfileConversionMatrixDetails = ({
           ))}
 
           {matrix.rows.map((row) => {
-            const rowCells = buildProfileConversionMatrixRowCells(matrix, row, mode);
+            const rowCells = buildProfileConversionMatrixRowCells(matrix, row);
 
             return (
               <Fragment key={`psychologist-profile-conversion-matrix-row-${row.id}`}>
@@ -3424,7 +3697,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
     useState<ProfileConversionFunnelCategoryId>("strong_conversion");
   const [isMatrixDetailsExpanded, setIsMatrixDetailsExpanded] = useState(false);
   const [matrixDetailsMode, setMatrixDetailsMode] =
-    useState<ProfileConversionMatrixMode>("engagement_favorites");
+    useState<ProfileConversionMatrixMode>("community_visibility");
   const segmentSummary = getPlanSegmentSummary(summary, "all");
   const profileConversion = segmentSummary.profile_conversion;
   const engagementMatrix = segmentSummary.profile_conversion_engagement_favorites;
@@ -3443,15 +3716,18 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
     return null;
   }
 
+  const visibilityFunnelMatrix = toProfileConversionDisplayMatrix(visibilityMatrix, "visibility");
+  const engagementFunnelMatrix = toProfileConversionDisplayMatrix(
+    engagementMatrix,
+    "engagement_favorites",
+  );
   const visibilityInsight = getDominantProfileConversionFunnelInsight(
-    visibilityMatrix,
+    visibilityFunnelMatrix,
     selectedRow,
-    "visibility",
   );
   const engagementInsight = getDominantProfileConversionFunnelInsight(
-    engagementMatrix,
+    engagementFunnelMatrix,
     selectedRow,
-    "engagement_favorites",
   );
   const conversionColor = PROFILE_CONVERSION_CHART_COLORS[selectedRow.id];
   const visibilityColor =
@@ -3470,8 +3746,11 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
   const conversionLayerCount = selectedRow.count;
   const conversionLayerPercentage = selectedRow.percentage;
   const conversionLayerWhatsappClicks = selectedRow.totals?.whatsapp_clicks ?? 0;
-  const matrixDetails =
-    matrixDetailsMode === "engagement_favorites" ? engagementMatrix : visibilityMatrix;
+  const matrixDetails = getProfileConversionMatrixDetails({
+    engagementMatrix,
+    mode: matrixDetailsMode,
+    visibilityMatrix,
+  });
   const matrixDetailsTitle =
     PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS.find((option) => option.id === matrixDetailsMode)
       ?.label ?? "Matriz de origem";
@@ -3590,7 +3869,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                   Matriz de origem
                 </span>
                 <span className="mt-1 block text-sm font-black text-foreground">
-                  {"Ver detalhes das combina\u00e7\u00f5es que formam o funil"}
+                  {"Ver detalhes das categorias que formam o funil"}
                 </span>
               </span>
               <span className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-2 text-xs font-black text-foreground transition hover:border-primary/40 hover:text-primary">
@@ -3611,9 +3890,8 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                   <div className="min-w-0">
                     <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
                     <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                      Esta {"\u00e9"} a matriz usada para identificar o {"padr\u00e3o"} predominante
-                      exibido no funil. A leitura usa a visÃ£o agregada de todos os planos neste
-                      bloco.
+                      Esta {"\u00e9"} a matriz separada usada para auditar o eixo selecionado. A
+                      leitura usa a visão agregada de todos os planos neste bloco.
                     </p>
                   </div>
                   <ProfileConversionMatrixTitleSelect
@@ -3622,7 +3900,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                     value={matrixDetailsMode}
                   />
                 </div>
-                <ProfileConversionMatrixDetails matrix={matrixDetails} mode={matrixDetailsMode} />
+                <ProfileConversionMatrixDetails matrix={matrixDetails} />
               </div>
             ) : null}
           </div>
