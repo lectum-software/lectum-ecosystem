@@ -3008,7 +3008,7 @@ const buildCommunityTrafficPlatformMetrics = (
           ? [
               buildCommunityTrafficPlatformMetric({
                 id: "average_retention",
-                label: "Reten\u00e7\u00e3o m\u00e9dia",
+                label: "Reten\u00e7\u00e3o",
                 unavailable_reason:
                   averageRetention === null
                     ? "Sem sess\u00f5es reais de v\u00eddeo com dura\u00e7\u00e3o no per\u00edodo."
@@ -3018,7 +3018,7 @@ const buildCommunityTrafficPlatformMetrics = (
               }),
               buildAverageCommunityTrafficMetric(totals, {
                 id: "average_visibility",
-                label: "Visibilidade m\u00e9dia",
+                label: "Visibilidade",
                 total: totals.visibilitySeconds,
                 unit: "seconds",
               }),
@@ -3026,7 +3026,7 @@ const buildCommunityTrafficPlatformMetrics = (
           : [
               buildAverageCommunityTrafficMetric(totals, {
                 id: "average_visibility",
-                label: "Visibilidade m\u00e9dia",
+                label: "Visibilidade",
                 total: totals.visibilitySeconds,
                 unit: "seconds",
               }),

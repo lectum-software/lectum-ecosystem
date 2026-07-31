@@ -4016,6 +4016,16 @@ const TrafficSourcePlatformMetrics = ({
   );
 };
 
+const TrafficSourcePlatformMetricsDescription = ({ source }: { source: TrafficSourceItem }) => {
+  if (!source.platform_metrics?.length) return null;
+
+  return (
+    <p className="mt-1 text-[0.68rem] font-bold leading-4 text-muted">
+      Valores médios de engajamento da categoria.
+    </p>
+  );
+};
+
 const TrafficSourceGroupToggle = ({ expanded }: { expanded: boolean }) => (
   <span
     aria-hidden
@@ -4258,6 +4268,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                             <p className="truncate text-xs font-black text-foreground">
                               {getTrafficSourceDetailLabel(childSource, source.groupKind)}
                             </p>
+                            <TrafficSourcePlatformMetricsDescription source={childSource} />
                             <TrafficSourcePlatformMetrics source={childSource} />
                           </div>
                           <div className="flex justify-center text-center">
@@ -4379,6 +4390,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                             <p className="text-xs font-black text-foreground">
                               {getTrafficSourceDetailLabel(childSource, source.groupKind)}
                             </p>
+                            <TrafficSourcePlatformMetricsDescription source={childSource} />
                             <TrafficSourcePlatformMetrics source={childSource} />
                           </div>
                           <TrafficSourceMetricValue
