@@ -413,6 +413,7 @@ export type AdminPsychologistsDashboardOperatingSystemUsage = {
 
 export type AdminPsychologistsDashboardTrafficSourceItem = {
   badge: "primary_source" | null;
+  considered_count: number | null;
   description: string;
   id:
     | "community_post_text"

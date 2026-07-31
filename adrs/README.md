@@ -175,3 +175,4 @@ Formato recomendado:
 - [ADR-0383 - Label Tempo de permanencia nas metricas de Comunidades do trafego WhatsApp Admin](0383-label-tempo-permanencia-comunidades-trafego-whatsapp-admin.md) - Accepted
 - [ADR-0384 - Expansivo de Perfil com medias de engajamento no trafego WhatsApp Admin](0384-expansivo-perfil-medias-engajamento-trafego-whatsapp-admin.md) - Accepted
 - [ADR-0385 - Medias de engajamento no Video de apresentacao do trafego WhatsApp Admin](0385-medias-engajamento-video-apresentacao-trafego-whatsapp-admin.md) - Accepted
+- [ADR-0386 - Quantidade considerada e carrossel dos donuts no Admin de psicologos](0386-quantidade-considerada-titulos-trafego-whatsapp-admin.md) - Accepted

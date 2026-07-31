@@ -5,6 +5,8 @@ import {
   AlertTriangle,
   Award,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleHelp,
   Funnel,
   type LucideIcon,
@@ -19,7 +21,15 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import { type FocusEvent, Fragment, type ReactNode, useMemo, useState } from "react";
+import {
+  type FocusEvent,
+  Fragment,
+  type ReactNode,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -3023,21 +3033,21 @@ const ProfileEngagementFavoritesAxisDonutChart = ({
 const DashboardProfileSignalCard = ({
   children,
   className,
+  standardValue,
   title,
   tooltipAriaLabel,
   tooltipContent,
-  total,
 }: {
   children: ReactNode;
   className?: string;
+  standardValue: string;
   title: string;
   tooltipAriaLabel: string;
   tooltipContent: ReactNode;
-  total: number;
 }) => (
   <section
     className={cn(
-      "min-w-0 rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4",
+      "flex h-full min-w-0 flex-col rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4",
       className,
     )}
   >
@@ -3059,15 +3069,59 @@ const DashboardProfileSignalCard = ({
             </span>
           </button>
         </span>
-        <div className="mt-3">
-          <p className="text-3xl font-black text-foreground">{numberFormatter.format(total)}</p>
-          <p className="mt-1 text-sm font-bold text-muted">psicólogos considerados</p>
+        <div className="mt-3 rounded-2xl border border-border/70 bg-surface/70 px-3 py-2">
+          <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-subtle">
+            Padrão da plataforma
+          </p>
+          <p className="mt-1 text-base font-black leading-snug text-foreground">{standardValue}</p>
         </div>
       </div>
     </div>
     {children}
   </section>
 );
+
+const DashboardProfileSignalsCarousel = ({ children }: { children: ReactNode }) => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const scrollCards = useCallback((direction: -1 | 1) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    scroller.scrollBy({
+      behavior: "smooth",
+      left: direction * Math.max(340, scroller.clientWidth * 0.9),
+    });
+  }, []);
+
+  return (
+    <div className="mt-5 min-w-0">
+      <div className="relative min-w-0 px-11 sm:px-12">
+        <button
+          aria-label="Rolar gráficos de donut para a esquerda"
+          className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollCards(-1)}
+          type="button"
+        >
+          <ChevronLeft aria-hidden className="h-4 w-4" />
+        </button>
+        <div
+          className="flex min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          ref={scrollerRef}
+        >
+          {children}
+        </div>
+        <button
+          aria-label="Rolar gráficos de donut para a direita"
+          className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+          onClick={() => scrollCards(1)}
+          type="button"
+        >
+          <ChevronRight aria-hidden className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
 const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologistsDashboard }) => {
   const [profileConversionPlanSegment, setProfileConversionPlanSegment] =
     useState<PlanSegmentFilter>("all");
@@ -3117,89 +3171,102 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         />
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-        <DashboardProfileSignalCard
-          title="Vídeo de apresentação"
-          tooltipAriaLabel={`Vídeo de apresentação mede o tempo assistido no vídeo do perfil. Padrão da plataforma no período: ${videoVisibilityStandardRangeLabel}.`}
-          tooltipContent={
-            <>
-              Vídeo de apresentação usa o tempo assistido real no vídeo do perfil. Padrão da
-              plataforma no período:{" "}
-              <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
-            </>
-          }
-          total={profileExposure.totals.psychologists}
-        >
-          <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="video" />
-        </DashboardProfileSignalCard>
+      <DashboardProfileSignalsCarousel>
+        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+          <DashboardProfileSignalCard
+            standardValue={videoVisibilityStandardRangeLabel}
+            title="Vídeo de apresentação"
+            tooltipAriaLabel={`Vídeo de apresentação mede o tempo assistido no vídeo do perfil. Padrão da plataforma no período: ${videoVisibilityStandardRangeLabel}.`}
+            tooltipContent={
+              <>
+                Vídeo de apresentação usa o tempo assistido real no vídeo do perfil. Padrão da
+                plataforma no período:{" "}
+                <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
+              </>
+            }
+          >
+            <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="video" />
+          </DashboardProfileSignalCard>
+        </div>
 
-        <DashboardProfileSignalCard
-          title="Visibilidade na comunidade"
-          tooltipAriaLabel={`Visibilidade na comunidade mede a atenção recebida em conteúdo autoral nas comunidades. Padrão da plataforma no período: ${communityVisibilityStandardRangeLabel}.`}
-          tooltipContent={
-            <>
-              Visibilidade na comunidade usa atenção recebida em posts e respostas autorais nas
-              comunidades. Não conta listagens nem WhatsApp. Padrão da plataforma no período:{" "}
-              <strong className="font-black">{communityVisibilityStandardRangeLabel}</strong>.
-            </>
-          }
-          total={profileExposure.totals.psychologists}
-        >
-          <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="community" />
-        </DashboardProfileSignalCard>
+        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+          <DashboardProfileSignalCard
+            standardValue={communityVisibilityStandardRangeLabel}
+            title="Visibilidade na comunidade"
+            tooltipAriaLabel={`Visibilidade na comunidade mede a atenção recebida em conteúdo autoral nas comunidades. Padrão da plataforma no período: ${communityVisibilityStandardRangeLabel}.`}
+            tooltipContent={
+              <>
+                Visibilidade na comunidade usa atenção recebida em posts e respostas autorais nas
+                comunidades. Não conta listagens nem WhatsApp. Padrão da plataforma no período:{" "}
+                <strong className="font-black">{communityVisibilityStandardRangeLabel}</strong>.
+              </>
+            }
+          >
+            <ProfileExposureSurfaceDonutChart
+              profileExposure={profileExposure}
+              surface="community"
+            />
+          </DashboardProfileSignalCard>
+        </div>
 
-        <DashboardProfileSignalCard
-          title="Engajamento recebido"
-          tooltipAriaLabel={`Engajamento recebido usa score ponderado de comentários, compartilhamentos, salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no período: ${engagementStandardRangeLabel}.`}
-          tooltipContent={
-            <>
-              Engajamento recebido usa score ponderado de comentários, compartilhamentos,
-              salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no
-              período: <strong className="font-black">{engagementStandardRangeLabel}</strong>.
-            </>
-          }
-          total={profileEngagementFavorites.totals.psychologists}
-        >
-          <ProfileEngagementFavoritesAxisDonutChart
-            axis="engagement"
-            profileEngagementFavorites={profileEngagementFavorites}
-          />
-        </DashboardProfileSignalCard>
+        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+          <DashboardProfileSignalCard
+            standardValue={engagementStandardRangeLabel}
+            title="Engajamento recebido"
+            tooltipAriaLabel={`Engajamento recebido usa score ponderado de comentários, compartilhamentos, salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no período: ${engagementStandardRangeLabel}.`}
+            tooltipContent={
+              <>
+                Engajamento recebido usa score ponderado de comentários, compartilhamentos,
+                salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no
+                período: <strong className="font-black">{engagementStandardRangeLabel}</strong>.
+              </>
+            }
+          >
+            <ProfileEngagementFavoritesAxisDonutChart
+              axis="engagement"
+              profileEngagementFavorites={profileEngagementFavorites}
+            />
+          </DashboardProfileSignalCard>
+        </div>
 
-        <DashboardProfileSignalCard
-          title="Favoritados recebidos"
-          tooltipAriaLabel={`Favoritados recebidos mede favoritos reais recebidos pelo psicólogo. Padrão da plataforma no período: ${favoritesStandardRangeLabel}.`}
-          tooltipContent={
-            <>
-              Favoritados recebidos mede favoritos reais recebidos pelo psicólogo no período. Padrão
-              da plataforma no período:{" "}
-              <strong className="font-black">{favoritesStandardRangeLabel}</strong>.
-            </>
-          }
-          total={profileEngagementFavorites.totals.psychologists}
-        >
-          <ProfileEngagementFavoritesAxisDonutChart
-            axis="favorites"
-            profileEngagementFavorites={profileEngagementFavorites}
-          />
-        </DashboardProfileSignalCard>
+        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+          <DashboardProfileSignalCard
+            standardValue={favoritesStandardRangeLabel}
+            title="Favoritados recebidos"
+            tooltipAriaLabel={`Favoritados recebidos mede favoritos reais recebidos pelo psicólogo. Padrão da plataforma no período: ${favoritesStandardRangeLabel}.`}
+            tooltipContent={
+              <>
+                Favoritados recebidos mede favoritos reais recebidos pelo psicólogo no período.
+                Padrão da plataforma no período:{" "}
+                <strong className="font-black">{favoritesStandardRangeLabel}</strong>.
+              </>
+            }
+          >
+            <ProfileEngagementFavoritesAxisDonutChart
+              axis="favorites"
+              profileEngagementFavorites={profileEngagementFavorites}
+            />
+          </DashboardProfileSignalCard>
+        </div>
 
-        <DashboardProfileSignalCard
-          title="Conversão"
-          tooltipAriaLabel={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
-          tooltipContent={
-            <>
-              Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o
-              paciente. Padrão da plataforma no período:{" "}
-              <strong className="font-black">{standardRangeLabel}</strong>
-              {hasConversionStandardRange ? " no WhatsApp." : "."}
-            </>
-          }
-          total={profileConversion.totals.psychologists}
-        >
-          <ProfileConversionDonutChart profileConversion={profileConversion} />
-        </DashboardProfileSignalCard>
-      </div>
+        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+          <DashboardProfileSignalCard
+            standardValue={conversionTooltipStandardText}
+            title="Conversão"
+            tooltipAriaLabel={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
+            tooltipContent={
+              <>
+                Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o
+                paciente. Padrão da plataforma no período:{" "}
+                <strong className="font-black">{standardRangeLabel}</strong>
+                {hasConversionStandardRange ? " no WhatsApp." : "."}
+              </>
+            }
+          >
+            <ProfileConversionDonutChart profileConversion={profileConversion} />
+          </DashboardProfileSignalCard>
+        </div>
+      </DashboardProfileSignalsCarousel>
     </CardShell>
   );
 };
@@ -4036,6 +4103,36 @@ const TrafficSourcePlatformMetricsDescription = ({
   );
 };
 
+const getTrafficSourceConsideredCountLabel = (count: number, context?: TrafficSourceGroupKind) => {
+  const formattedCount = numberFormatter.format(count);
+
+  if (context === "profile") {
+    return `${formattedCount} ${count === 1 ? "perfil considerado" : "perfis considerados"}`;
+  }
+
+  if (context === "presentation_video") {
+    return `${formattedCount} ${count === 1 ? "vídeo considerado" : "vídeos considerados"}`;
+  }
+
+  return `${formattedCount} ${count === 1 ? "conteúdo considerado" : "conteúdos considerados"}`;
+};
+
+const TrafficSourceConsideredBadge = ({
+  context,
+  source,
+}: {
+  context?: TrafficSourceGroupKind;
+  source: Pick<TrafficSourceItem, "considered_count">;
+}) => {
+  if (typeof source.considered_count !== "number") return null;
+
+  return (
+    <span className="shrink-0 text-[0.68rem] font-bold leading-none text-muted">
+      {getTrafficSourceConsideredCountLabel(source.considered_count, context)}
+    </span>
+  );
+};
+
 const TrafficSourceGroupToggle = ({ expanded }: { expanded: boolean }) => (
   <span
     aria-hidden
@@ -4202,7 +4299,10 @@ const TrafficSourceProfileMetricsDetail = ({
   source: TrafficSourceDisplayItem;
 }) => (
   <div className={cn("min-w-0 border-primary/25 border-l-2 pl-4", className)}>
-    <p className="text-xs font-black text-foreground">Engajamento dentro do perfil</p>
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <p className="text-xs font-black text-foreground">Engajamento dentro do perfil</p>
+      <TrafficSourceConsideredBadge context="profile" source={source} />
+    </div>
     <TrafficSourcePlatformMetricsDescription context="profile" source={source} />
     <TrafficSourcePlatformMetrics source={source} />
   </div>
@@ -4307,9 +4407,15 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                             key={childSource.id}
                           >
                             <div className="min-w-0 border-primary/25 border-l-2 pl-4">
-                              <p className="truncate text-xs font-black text-foreground">
-                                {getTrafficSourceDetailLabel(childSource, source.groupKind)}
-                              </p>
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <p className="truncate text-xs font-black text-foreground">
+                                  {getTrafficSourceDetailLabel(childSource, source.groupKind)}
+                                </p>
+                                <TrafficSourceConsideredBadge
+                                  context={source.groupKind}
+                                  source={childSource}
+                                />
+                              </div>
                               <TrafficSourcePlatformMetricsDescription
                                 context={source.groupKind}
                                 source={childSource}
@@ -4443,9 +4549,15 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                             key={childSource.id}
                           >
                             <div className="min-w-0">
-                              <p className="text-xs font-black text-foreground">
-                                {getTrafficSourceDetailLabel(childSource, source.groupKind)}
-                              </p>
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <p className="text-xs font-black text-foreground">
+                                  {getTrafficSourceDetailLabel(childSource, source.groupKind)}
+                                </p>
+                                <TrafficSourceConsideredBadge
+                                  context={source.groupKind}
+                                  source={childSource}
+                                />
+                              </div>
                               <TrafficSourcePlatformMetricsDescription
                                 context={source.groupKind}
                                 source={childSource}

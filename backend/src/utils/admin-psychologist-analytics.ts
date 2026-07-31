@@ -99,6 +99,7 @@ export type AdminPsychologistWhatsappTrafficCommunityReply = {
 
 export type AdminPsychologistWhatsappTrafficOriginSource = {
   badge: "primary_source" | null;
+  considered_count: number | null;
   conversion_rate: null;
   description: string;
   id: AdminPsychologistWhatsappTrafficOriginSourceId;
@@ -911,6 +912,10 @@ export const summarizePsychologistWhatsappTrafficOrigins = (params: {
     AdminPsychologistWhatsappTrafficOriginSourceId,
     AdminPsychologistWhatsappTrafficPlatformMetric[]
   > | null;
+  platformMetricsConsideredCounts?: Map<
+    AdminPsychologistWhatsappTrafficOriginSourceId,
+    number
+  > | null;
   communityPosts: AdminPsychologistWhatsappTrafficCommunityPost[];
   communityReplies: AdminPsychologistWhatsappTrafficCommunityReply[];
 }) => {
@@ -976,6 +981,7 @@ export const summarizePsychologistWhatsappTrafficOrigins = (params: {
       return {
         ...definition,
         badge: definition.id === primarySourceId ? ("primary_source" as const) : null,
+        considered_count: params.platformMetricsConsideredCounts?.get(definition.id) ?? null,
         conversion_rate: null,
         percentage:
           totalWhatsappClicks > 0
