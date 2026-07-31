@@ -129,6 +129,11 @@ const dayMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
   month: "2-digit",
   timeZone: "UTC",
 });
+const dayShortMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
 const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
   hour: "2-digit",
   minute: "2-digit",
@@ -1129,6 +1134,20 @@ const formatDayMonth = (value?: string | null) => {
   return dayMonthFormatter.format(date);
 };
 
+const formatDayShortMonth = (value?: string | null) => {
+  if (!value) return "data indisponível";
+
+  const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})/)?.[0];
+  if (isoDate) {
+    return dayShortMonthFormatter.format(new Date(`${isoDate}T00:00:00.000Z`));
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "data indisponível";
+
+  return dayShortMonthFormatter.format(date);
+};
+
 const toDateInputValue = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -1371,11 +1390,14 @@ const StatisticsGlobalPeriodCard = (props: Omit<StatisticsPeriodControlsProps, "
             Per&iacute;odo das estat&iacute;sticas
           </h2>
           <p className="mt-1 text-sm font-bold leading-6 text-muted">
-            Selecione o per&iacute;odo de an&aacute;lise das estat&iacute;sticas.
+            Selecione o per&iacute;odo de an&aacute;lise.
           </p>
         </div>
       </div>
-      <StatisticsPeriodControls className="xl:w-[min(820px,58vw)]" {...props} />
+      <StatisticsPeriodControls
+        className="lg:w-[min(620px,44vw)] xl:w-[min(680px,44vw)]"
+        {...props}
+      />
     </div>
   </CardShell>
 );
@@ -1802,7 +1824,7 @@ const formatPreviousPeriod = (
 };
 
 const formatStatisticsPeriodSummary = (period: AdminPsychologistStatistics["period"]) =>
-  `${period.label} · ${formatDateOnly(period.from)} - ${formatDateOnly(period.to)}`;
+  `${period.label} · ${formatDayShortMonth(period.from)} a ${formatDayShortMonth(period.to)}`;
 
 const capitalizeOptionLabel = (value?: string | number | null) => {
   const formatted = formatNullable(value);
