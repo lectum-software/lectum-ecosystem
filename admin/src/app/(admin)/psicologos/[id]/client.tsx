@@ -415,6 +415,23 @@ type StatisticsChartMetric = {
   swatchClassName: string;
   unit?: AdminPsychologistEngagementMetric["unit"];
 };
+type VisibilitySeriesPoint =
+  AdminPsychologistStatistics["business"]["visibility"]["series"][number];
+type VisibilityMetricValuePoint = Pick<
+  VisibilitySeriesPoint,
+  "community_content_seconds" | "presentation_video_seconds" | "profile_seconds"
+>;
+type VisibilityChartMetric = {
+  fillClassName: string;
+  getValue: (point: VisibilityMetricValuePoint) => number;
+  icon: LucideIcon;
+  iconClassName: string;
+  iconToneClassName: string;
+  id: "community_content" | "presentation_video" | "profile";
+  label: string;
+  shortLabel: string;
+  swatchClassName: string;
+};
 
 const BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS: Record<
   BusinessProfileConversionQualityId,
@@ -504,6 +521,42 @@ const BUSINESS_CHART_METRICS = [
     swatchClassName: "bg-warning",
   },
 ] as const satisfies readonly StatisticsChartMetric[];
+
+const VISIBILITY_CHART_METRICS = [
+  {
+    fillClassName: "fill-primary",
+    icon: UserRound,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "profile",
+    getValue: (point) => point.profile_seconds,
+    label: "Perfil",
+    shortLabel: "Perfil",
+    swatchClassName: "bg-primary",
+  },
+  {
+    fillClassName: "fill-success",
+    icon: Video,
+    iconClassName: "text-success",
+    iconToneClassName: "bg-success/10",
+    id: "presentation_video",
+    getValue: (point) => point.presentation_video_seconds,
+    label: "Vídeo de apresentação",
+    shortLabel: "Vídeo",
+    swatchClassName: "bg-success",
+  },
+  {
+    fillClassName: "fill-warning",
+    icon: BookOpen,
+    iconClassName: "text-warning",
+    iconToneClassName: "bg-warning/10",
+    id: "community_content",
+    getValue: (point) => point.community_content_seconds,
+    label: "Conteúdo na comunidade",
+    shortLabel: "Comunidade",
+    swatchClassName: "bg-warning",
+  },
+] as const satisfies readonly VisibilityChartMetric[];
 
 const COMMUNITY_CHART_METRICS = [
   {
@@ -601,6 +654,7 @@ const COMMUNITY_CHART_METRICS = [
 
 type BusinessChartMetric = (typeof BUSINESS_CHART_METRICS)[number];
 type BusinessChartMetricId = BusinessChartMetric["id"];
+type VisibilityChartMetricId = (typeof VISIBILITY_CHART_METRICS)[number]["id"];
 type CommunityChartMetric = (typeof COMMUNITY_CHART_METRICS)[number];
 type CommunityChartMetricId = CommunityChartMetric["id"];
 type StatisticsPeriodValue = NonNullable<AdminPsychologistStatisticsQuery["period"]>;
@@ -626,6 +680,13 @@ const BUSINESS_SERIES_METRIC_KEYS = [
   "posts",
   "visibility_seconds",
 ] as const satisfies readonly StatisticsSeriesMetricKey[];
+
+const VISIBILITY_SERIES_METRIC_KEYS = [
+  "community_content_seconds",
+  "presentation_video_seconds",
+  "profile_seconds",
+  "total_seconds",
+] as const satisfies readonly (keyof VisibilitySeriesPoint)[];
 
 const STATISTICS_PERIOD_OPTIONS: { id: StatisticsPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
@@ -3459,6 +3520,9 @@ const defaultStatisticsMetricItemClassName =
 const businessStatisticsMetricItemClassName =
   "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] xl:w-[calc((100%_-_1.5rem)/4)] 2xl:w-[calc((100%_-_2rem)/5)]";
 
+const visibilityStatisticsMetricItemClassName =
+  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)]";
+
 const StatisticsMetricCarousel = ({
   items,
   itemClassName = defaultStatisticsMetricItemClassName,
@@ -3814,6 +3878,291 @@ const StatisticsSeriesChart = ({
     </div>
   );
 };
+
+const aggregateVisibilityChartPoints = (
+  points: AdminPsychologistStatistics["business"]["visibility"]["series"],
+) => aggregateCalendarChartPoints(points, VISIBILITY_SERIES_METRIC_KEYS);
+
+const sumVisibilityChartMetricValue = (
+  points: AdminPsychologistStatistics["business"]["visibility"]["series"],
+  metric: VisibilityChartMetric,
+) => Math.round(points.reduce((total, point) => total + metric.getValue(point), 0));
+
+const VisibilityMetricToggleCard = ({
+  active,
+  config,
+  metric,
+  onToggle,
+}: {
+  active: boolean;
+  config: VisibilityChartMetric;
+  metric: AdminPsychologistEngagementMetric;
+  onToggle: () => void;
+}) => {
+  const displayValue = metric.available ? formatEngagementMetricValue(metric) : "â€”";
+  const Icon = config.icon;
+
+  return (
+    <button
+      aria-pressed={active}
+      className={cn(
+        "h-full w-full min-w-0 overflow-hidden rounded-card border p-4 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        active
+          ? "border-primary/35 bg-surface shadow-admin-soft ring-1 ring-primary/10"
+          : "border-border/80 bg-border/50 shadow-none hover:-translate-y-0.5 hover:border-primary/25 hover:bg-border/60",
+        !metric.available &&
+          "cursor-not-allowed border-border bg-surface-muted opacity-60 shadow-none hover:border-border",
+      )}
+      disabled={!metric.available}
+      onClick={onToggle}
+      title={`${metric.label}: ${displayValue}. ${
+        !metric.available ? "Indisponível" : active ? "Visível no gráfico" : "Oculto no gráfico"
+      }`}
+      type="button"
+    >
+      <span className="block min-w-0 max-w-full">
+        <span className="block">
+          <span
+            className={cn(
+              "grid h-10 w-10 shrink-0 place-items-center rounded-full",
+              config.iconToneClassName,
+              config.iconClassName,
+            )}
+          >
+            <Icon aria-hidden className="h-5 w-5" />
+          </span>
+        </span>
+        <span className="mt-4 block min-w-0 max-w-full">
+          <span className="block max-w-full break-words text-xs font-extrabold leading-snug text-foreground">
+            {metric.label}
+          </span>
+          <span className="mt-2 block text-2xl font-extrabold leading-none text-foreground">
+            {displayValue}
+          </span>
+        </span>
+      </span>
+      {metric.available && metric.comparison ? (
+        <MetricComparisonLine className="mt-3" comparison={metric.comparison} />
+      ) : metric.unavailable_reason ? (
+        <span className="mt-3 block text-xs font-bold text-muted">{metric.unavailable_reason}</span>
+      ) : null}
+      <span className="sr-only">
+        {!metric.available ? "Indisponível" : active ? "visível no gráfico" : "oculto no gráfico"}
+      </span>
+    </button>
+  );
+};
+
+const VisibilityStackedTimeChart = ({
+  metrics,
+  points,
+}: {
+  metrics: readonly VisibilityChartMetric[];
+  points: AdminPsychologistStatistics["business"]["visibility"]["series"];
+}) => {
+  if (metrics.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Selecione pelo menos um contador disponível para visualizar a visibilidade.
+      </div>
+    );
+  }
+  if (points.length === 0) {
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
+        Nenhum ponto real de visibilidade foi encontrado para o período.
+      </div>
+    );
+  }
+
+  const chartPoints = aggregateVisibilityChartPoints(points);
+  const chartWidth = 1120;
+  const chartHeight = 320;
+  const padding = { bottom: 34, left: 54, right: 32, top: 28 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const totalFor = (point: VisibilityMetricValuePoint) =>
+    metrics.reduce((total, metric) => total + metric.getValue(point), 0);
+  const max = Math.max(1, ...chartPoints.map(totalFor));
+  const xFor = (index: number) =>
+    padding.left +
+    (chartPoints.length <= 1 ? innerWidth / 2 : (index / (chartPoints.length - 1)) * innerWidth);
+  const yFor = (value: number) => padding.top + innerHeight - (value / max) * innerHeight;
+  const gridRatios = [0, 0.25, 0.5, 0.75, 1];
+  const barWidth = Math.max(9, Math.min(28, (innerWidth / Math.max(1, chartPoints.length)) * 0.56));
+  const labelStep = Math.max(1, Math.ceil(chartPoints.length / 8));
+  const dateLabels = chartPoints.flatMap((point, index) =>
+    index % labelStep === 0 || index === chartPoints.length - 1
+      ? [{ date: point.date, label: point.chartLabel }]
+      : [],
+  );
+  const linePoints = chartPoints.map((point, index) => ({
+    x: xFor(index),
+    y: yFor(totalFor(point)),
+  }));
+  const linePath = buildSmoothSvgPath(linePoints);
+
+  return (
+    <div className="mt-4 w-full overflow-x-auto rounded-[1.5rem] border border-border/70 bg-surface p-4">
+      <div className="mx-auto w-full min-w-[760px] max-w-[1120px]">
+        <svg
+          aria-label="Visibilidade por tempo de perfil, vídeo e conteúdo"
+          className="block h-auto w-full"
+          height={chartHeight}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          width={chartWidth}
+        >
+          <title>Visibilidade por tempo</title>
+          {gridRatios.map((ratio) => {
+            const y = yFor(max * ratio);
+
+            return (
+              <g key={`visibility-grid-${ratio}`}>
+                <line
+                  className="stroke-border"
+                  opacity="0.44"
+                  strokeDasharray={ratio === 0 ? "0" : "4 6"}
+                  strokeWidth="1"
+                  x1={padding.left}
+                  x2={chartWidth - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+                <text
+                  className="fill-muted text-[10px] font-medium"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding.left - 8}
+                  y={y}
+                >
+                  {formatDurationSeconds(max * ratio)}
+                </text>
+              </g>
+            );
+          })}
+          <line
+            className="stroke-border"
+            opacity="0.72"
+            strokeWidth="1"
+            x1={padding.left}
+            x2={padding.left}
+            y1={padding.top}
+            y2={padding.top + innerHeight}
+          />
+          {chartPoints.map((point, pointIndex) => {
+            let stackStart = 0;
+
+            return (
+              <g key={point.date}>
+                {metrics.map((metric) => {
+                  const value = metric.getValue(point);
+                  const yTop = yFor(stackStart + value);
+                  const yBottom = yFor(stackStart);
+                  stackStart += value;
+
+                  return value > 0 ? (
+                    <rect
+                      className={metric.fillClassName}
+                      height={Math.max(0, yBottom - yTop)}
+                      key={metric.id}
+                      opacity="0.72"
+                      rx="4"
+                      width={barWidth}
+                      x={xFor(pointIndex) - barWidth / 2}
+                      y={yTop}
+                    >
+                      <title>
+                        {point.tooltipLabel} · {metric.label}: {formatDurationSeconds(value)}
+                      </title>
+                    </rect>
+                  ) : null;
+                })}
+              </g>
+            );
+          })}
+          <path
+            className="fill-none stroke-foreground"
+            d={linePath}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2.35"
+          />
+          {linePoints.map((point, index) => {
+            const chartPoint = chartPoints[index];
+
+            return (
+              <circle
+                className="fill-surface stroke-foreground"
+                cx={point.x}
+                cy={point.y}
+                key={`visibility-total-${chartPoint?.date ?? index}`}
+                r={index === linePoints.length - 1 ? "3.7" : "2.7"}
+                strokeWidth="1.65"
+              >
+                <title>
+                  {chartPoint?.tooltipLabel} · Soma:{" "}
+                  {formatDurationSeconds(chartPoint ? totalFor(chartPoint) : 0)}
+                </title>
+              </circle>
+            );
+          })}
+        </svg>
+        <div
+          className="mt-1 grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${dateLabels.length}, 1fr)` }}
+        >
+          {dateLabels.map(({ date, label }) => (
+            <span className="min-w-0 text-center text-[10px] font-bold text-subtle" key={date}>
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const visibilityCounterIcon: Record<
+  AdminPsychologistStatistics["business"]["visibility"]["counters"][number]["id"],
+  LucideIcon
+> = {
+  content_views: Eye,
+  presentation_video_explore_views: Video,
+  profile_opens: UserRound,
+  search_result_views: Search,
+};
+
+const VisibilityCountersGrid = ({
+  counters,
+}: {
+  counters: AdminPsychologistStatistics["business"]["visibility"]["counters"];
+}) => (
+  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    {counters.map((counter) => {
+      const Icon = visibilityCounterIcon[counter.id];
+
+      return (
+        <div
+          className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/55 p-4"
+          key={counter.id}
+          title={counter.source}
+        >
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface text-primary ring-1 ring-border/80">
+              <Icon aria-hidden className="h-4 w-4" />
+            </span>
+            <p className="min-w-0 text-xs font-black leading-snug text-muted">{counter.label}</p>
+          </div>
+          <p className="mt-3 text-2xl font-black leading-none text-foreground">
+            {numberFormatter.format(counter.value)}
+          </p>
+        </div>
+      );
+    })}
+  </div>
+);
 
 const formatVideoAxisTime = (positionPercent: number, durationSeconds?: number | null) => {
   if (!durationSeconds || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
@@ -5222,12 +5571,27 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
     () => BUSINESS_CHART_METRICS.map((item) => item.id),
   );
+  const [visibleVisibilityMetricIds, setVisibleVisibilityMetricIds] = useState<
+    VisibilityChartMetricId[]
+  >(() => VISIBILITY_CHART_METRICS.map((item) => item.id));
   const [visibleCommunityMetricIds, setVisibleCommunityMetricIds] = useState<
     CommunityChartMetricId[]
   >(() => COMMUNITY_CHART_METRICS.map((item) => item.id));
   const availableBusinessMetricIds = useMemo<BusinessChartMetricId[]>(() => {
     return BUSINESS_CHART_METRICS.map((item) => item.id);
   }, []);
+  const availableVisibilityMetricIds = useMemo<VisibilityChartMetricId[]>(() => {
+    const availableIds = new Set(
+      (statisticsQuery.data?.business.visibility.cards ?? [])
+        .filter((metric) => metric.available)
+        .map((metric) => metric.id),
+    );
+    const ids = VISIBILITY_CHART_METRICS.filter((item) => availableIds.has(item.id)).map(
+      (item) => item.id,
+    );
+
+    return ids.length > 0 ? ids : VISIBILITY_CHART_METRICS.map((item) => item.id);
+  }, [statisticsQuery.data?.business.visibility.cards]);
   const availableCommunityMetricIds = useMemo<CommunityChartMetricId[]>(() => {
     const availableIds = new Set(
       (communityStatisticsQuery.data?.community.cards ?? [])
@@ -5293,6 +5657,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const communityMetricMap = new Map(
     communityStatistics.community.cards.map((metric) => [metric.id, metric]),
   );
+  const visibilityMetricMap = new Map(
+    businessStatistics.business.visibility.cards.map((metric) => [metric.id, metric]),
+  );
   const businessCards = BUSINESS_CHART_METRICS.map((config) => {
     const sourceMetric =
       businessMetricMap.get(config.id) ?? businessCommunityMetricMap.get(config.id);
@@ -5314,6 +5681,38 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         metric: sourceMetric,
         points: businessStatistics.business.series,
       }),
+    };
+  });
+  const visibilityCards = VISIBILITY_CHART_METRICS.map((config) => {
+    const metric = visibilityMetricMap.get(config.id);
+    const fallbackValue = sumVisibilityChartMetricValue(
+      businessStatistics.business.visibility.series,
+      config,
+    );
+
+    return {
+      config,
+      metric: metric
+        ? {
+            ...metric,
+            id: config.id,
+            label: config.label,
+            unit: "seconds" as const,
+            value: metric.value ?? fallbackValue,
+          }
+        : {
+            available: businessStatistics.business.visibility.series.length > 0,
+            comparison: null,
+            id: config.id,
+            label: config.label,
+            source: businessStatistics.business.visibility.source,
+            unavailable_reason:
+              businessStatistics.business.visibility.series.length > 0
+                ? null
+                : "Sem pontos reais no período",
+            unit: "seconds" as const,
+            value: fallbackValue,
+          },
     };
   });
   const communityCards = COMMUNITY_CHART_METRICS.flatMap((config) => {
@@ -5353,6 +5752,11 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       ({ config, metric }) => visibleBusinessMetricIds.includes(config.id) && metric.available,
     )
     .map(({ config }) => config);
+  const visibleVisibilityChartKeys = visibilityCards
+    .filter(
+      ({ config, metric }) => visibleVisibilityMetricIds.includes(config.id) && metric.available,
+    )
+    .map(({ config }) => config);
   const visibleCommunityChartKeys = communityCards
     .filter(
       ({ config, metric }) => visibleCommunityMetricIds.includes(config.id) && metric.available,
@@ -5367,6 +5771,19 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
       const next = current.filter((item) => item !== metricId);
       const hasAnotherAvailable = next.some((item) => availableBusinessMetricIds.includes(item));
+
+      return hasAnotherAvailable ? next : current;
+    });
+  };
+  const toggleVisibilityMetric = (metricId: VisibilityChartMetricId) => {
+    const metric = visibilityCards.find(({ config }) => config.id === metricId)?.metric;
+    if (!metric?.available) return;
+
+    setVisibleVisibilityMetricIds((current) => {
+      if (!current.includes(metricId)) return [...current, metricId];
+
+      const next = current.filter((item) => item !== metricId);
+      const hasAnotherAvailable = next.some((item) => availableVisibilityMetricIds.includes(item));
 
       return hasAnotherAvailable ? next : current;
     });
@@ -5450,6 +5867,52 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             keys={visibleBusinessChartKeys}
             points={businessStatistics.business.series}
           />
+        </CardShell>
+
+        <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
+          <div className="grid gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground">Visibilidade</h2>
+                <Badge className="border border-primary/15 bg-primary-soft text-primary">
+                  Unidade: tempo
+                </Badge>
+                {isBusinessRefreshing ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                    <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                    Atualizando
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            <p className="min-w-0 text-xs font-bold leading-5 text-muted">
+              {formatStatisticsPeriodSummary(businessStatistics.period)}
+            </p>
+          </div>
+
+          <StatisticsMetricCarousel
+            itemClassName={visibilityStatisticsMetricItemClassName}
+            items={visibilityCards.map(({ config, metric }) => ({
+              content: (
+                <VisibilityMetricToggleCard
+                  active={visibleVisibilityMetricIds.includes(config.id) && metric.available}
+                  config={config}
+                  metric={metric}
+                  onToggle={() => toggleVisibilityMetric(config.id)}
+                />
+              ),
+              id: config.id,
+            }))}
+            showNavigation={false}
+            title="visibilidade"
+          />
+
+          <VisibilityStackedTimeChart
+            metrics={visibleVisibilityChartKeys}
+            points={businessStatistics.business.visibility.series}
+          />
+
+          <VisibilityCountersGrid counters={businessStatistics.business.visibility.counters} />
         </CardShell>
       </section>
 

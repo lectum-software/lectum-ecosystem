@@ -68,6 +68,8 @@ const TRAFFIC_QUALITY_SOURCE =
   "page_view_event+psychologist_favorite+contact_request+important_action_event" as const;
 const PROFILE_VISIBILITY_TEMPORAL_SOURCE =
   "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds" as const;
+const PROFILE_VISIBILITY_DETAILED_SOURCE =
+  "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type" as const;
 const TRAFFIC_QUALITY_LEVEL_CONFIG = {
   interested: {
     description: "Retornou ao perfil ou favoritou este psicólogo antes do WhatsApp.",
@@ -660,6 +662,51 @@ const buildVisibilitySecondsByDate = (input: {
     }),
   );
 };
+
+type VisibilityBreakdownMapsByDate = {
+  communityContentSeconds: Map<string, number>;
+  presentationVideoSeconds: Map<string, number>;
+  profileSeconds: Map<string, number>;
+};
+
+const buildVisibilityBreakdownMapsByDate = (input: {
+  communityContentAttentionSessions: { attention_seconds: number; createdAt: Date }[];
+  labels: string[];
+  profileAttentionSessions: { attention_seconds: number; createdAt: Date }[];
+  videoSessions: { createdAt: Date; watched_seconds: number }[];
+}): VisibilityBreakdownMapsByDate => ({
+  communityContentSeconds: groupDateSums(
+    input.communityContentAttentionSessions,
+    input.labels,
+    (item) => item.attention_seconds,
+  ),
+  presentationVideoSeconds: groupDateSums(input.videoSessions, input.labels, (item) => {
+    return item.watched_seconds;
+  }),
+  profileSeconds: groupDateSums(input.profileAttentionSessions, input.labels, (item) => {
+    return item.attention_seconds;
+  }),
+});
+
+const buildVisibilityBreakdownSeries = (
+  labels: string[],
+  maps: VisibilityBreakdownMapsByDate,
+): AdminPsychologistStatisticsDTO["business"]["visibility"]["series"] =>
+  labels.map((date) => {
+    const profileSeconds = valueFromMap(maps.profileSeconds, date);
+    const presentationVideoSeconds = valueFromMap(maps.presentationVideoSeconds, date);
+    const communityContentSeconds = valueFromMap(maps.communityContentSeconds, date);
+
+    return {
+      community_content_seconds: communityContentSeconds,
+      date,
+      presentation_video_seconds: presentationVideoSeconds,
+      profile_seconds: profileSeconds,
+      total_seconds: profileSeconds + presentationVideoSeconds + communityContentSeconds,
+    };
+  });
+
+const sumMapValues = (map: Map<string, number>) => sum([...map.values()]);
 
 const sumVisibilitySecondsByDate = (visibilitySecondsByDate: Map<string, number>) =>
   sum([...visibilitySecondsByDate.values()]);
@@ -1640,6 +1687,8 @@ export const showAdminPsychologistStatistics = async (
   const replyIds = communityReplies.map((reply) => reply.id);
   const previousPostIds = previousCommunityPosts.map((post) => post.id);
   const previousReplyIds = previousCommunityReplies.map((reply) => reply.id);
+  const allPostIds = allPosts.map((post) => post.id);
+  const allReplyIds = allReplies.map((reply) => reply.id);
   const [
     postSaves,
     replySaves,
@@ -1662,6 +1711,8 @@ export const showAdminPsychologistStatistics = async (
     previousReplyVotes,
     previousPostShares,
     previousReplyShares,
+    visibilityPostViews,
+    visibilityReplyViews,
   ] = await Promise.all([
     repository.listPostSaves(postIds, period.current.start, period.current.end),
     repository.listReplySaves(replyIds, period.current.start, period.current.end),
@@ -1689,6 +1740,8 @@ export const showAdminPsychologistStatistics = async (
     repository.listReplyVotes(previousReplyIds, period.previous.start, period.previous.end),
     repository.listPostShareEvents(previousPostIds, period.previous.start, period.previous.end),
     repository.listReplyShareEvents(previousReplyIds, period.previous.start, period.previous.end),
+    repository.countPostViews(allPostIds, period.current.start, period.current.end),
+    repository.countReplyViews(allReplyIds, period.current.start, period.current.end),
   ]);
   const savesCount = postSaves.length + replySaves.length;
   const previousSavesCount = previousPostSaves.length + previousReplySaves.length;
@@ -1706,17 +1759,59 @@ export const showAdminPsychologistStatistics = async (
     patientPostsByCommunityCounts.map((item) => [item.community_id, item._count._all]),
   );
   const unavailable: AdminPsychologistAvailabilityMetric[] = [];
+  const currentPresentationVideoSessions = filterCurrentPresentationVideoSessions(
+    videoSessions,
+    profile,
+  );
+  const previousPresentationVideoSessions = filterCurrentPresentationVideoSessions(
+    previousVideoSessions,
+    profile,
+  );
+  const visibilityBreakdownMaps = buildVisibilityBreakdownMapsByDate({
+    communityContentAttentionSessions,
+    labels: period.labels,
+    profileAttentionSessions,
+    videoSessions: currentPresentationVideoSessions,
+  });
+  const previousVisibilityBreakdownMaps = buildVisibilityBreakdownMapsByDate({
+    communityContentAttentionSessions: previousCommunityContentAttentionSessions,
+    labels: labelsFromRange(period.previous.start, period.period.days),
+    profileAttentionSessions: previousProfileAttentionSessions,
+    videoSessions: previousPresentationVideoSessions,
+  });
+  const visibilityBreakdownSeries = buildVisibilityBreakdownSeries(
+    period.labels,
+    visibilityBreakdownMaps,
+  );
+  const profileVisibilitySeconds = sumMapValues(visibilityBreakdownMaps.profileSeconds);
+  const previousProfileVisibilitySeconds = sumMapValues(
+    previousVisibilityBreakdownMaps.profileSeconds,
+  );
+  const presentationVideoSeconds = sumMapValues(visibilityBreakdownMaps.presentationVideoSeconds);
+  const previousPresentationVideoSeconds = sumMapValues(
+    previousVisibilityBreakdownMaps.presentationVideoSeconds,
+  );
+  const communityContentSeconds = sumMapValues(visibilityBreakdownMaps.communityContentSeconds);
+  const previousCommunityContentSeconds = sumMapValues(
+    previousVisibilityBreakdownMaps.communityContentSeconds,
+  );
+  const detailedVisibilitySeconds = sum(
+    visibilityBreakdownSeries.map((point) => point.total_seconds),
+  );
+  const contentViewsCount =
+    sum(visibilityPostViews.map((item) => item._count._all)) +
+    sum(visibilityReplyViews.map((item) => item._count._all));
   const visibilitySecondsByDate = buildVisibilitySecondsByDate({
     communityContentAttentionSessions,
     labels: period.labels,
     profileAttentionSessions,
-    videoSessions,
+    videoSessions: currentPresentationVideoSessions,
   });
   const previousVisibilitySecondsByDate = buildVisibilitySecondsByDate({
     communityContentAttentionSessions: previousCommunityContentAttentionSessions,
     labels: labelsFromRange(period.previous.start, period.period.days),
     profileAttentionSessions: previousProfileAttentionSessions,
-    videoSessions: previousVideoSessions,
+    videoSessions: previousPresentationVideoSessions,
   });
   const visibilitySeconds = sumVisibilitySecondsByDate(visibilitySecondsByDate);
   const previousVisibilitySeconds = sumVisibilitySecondsByDate(previousVisibilitySecondsByDate);
@@ -1922,6 +2017,75 @@ export const showAdminPsychologistStatistics = async (
       ],
       series: businessSeries,
       profile_conversion: businessProfileConversion,
+      visibility: {
+        cards: [
+          metric({
+            comparison: buildComparison(
+              profileVisibilitySeconds,
+              previousProfileVisibilitySeconds,
+              period.period,
+            ),
+            id: "profile",
+            label: "Perfil",
+            source: "page_view_event.page_kind=psychologist_profile.duration_seconds",
+            unit: "seconds",
+            value: profileVisibilitySeconds,
+          }),
+          metric({
+            comparison: buildComparison(
+              presentationVideoSeconds,
+              previousPresentationVideoSeconds,
+              period.period,
+            ),
+            id: "presentation_video",
+            label: "Vídeo de apresentação",
+            source: "profile_video_watch_session.watched_seconds",
+            unit: "seconds",
+            value: presentationVideoSeconds,
+          }),
+          metric({
+            comparison: buildComparison(
+              communityContentSeconds,
+              previousCommunityContentSeconds,
+              period.period,
+            ),
+            id: "community_content",
+            label: "Conteúdo na comunidade",
+            source: "content_attention_session.attention_seconds",
+            unit: "seconds",
+            value: communityContentSeconds,
+          }),
+        ],
+        counters: [
+          {
+            id: "presentation_video_explore_views",
+            label: "Visualizações do vídeo no explorar",
+            source: "profile_video_watch_session",
+            value: currentPresentationVideoSessions.length,
+          },
+          {
+            id: "search_result_views",
+            label: "Visualizações nos resultados de busca",
+            source: "profile_view_event.source=search_result",
+            value: searchResults.length,
+          },
+          {
+            id: "profile_opens",
+            label: "Aberturas do perfil",
+            source: "profile_view_event.source=profile_page",
+            value: profileViews.length,
+          },
+          {
+            id: "content_views",
+            label: "Visualizações de conteúdo",
+            source: "page_view_event.target_type=post|reply",
+            value: contentViewsCount,
+          },
+        ],
+        series: visibilityBreakdownSeries,
+        source: PROFILE_VISIBILITY_DETAILED_SOURCE,
+        total_seconds: detailedVisibilitySeconds,
+      },
     },
     community: {
       cards: [

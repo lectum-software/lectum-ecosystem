@@ -110,6 +110,33 @@ export type AdminPsychologistStatisticsSeriesPoint = {
   posts: number;
 };
 
+export type AdminPsychologistVisibilitySeriesPoint = {
+  community_content_seconds: number;
+  date: string;
+  presentation_video_seconds: number;
+  profile_seconds: number;
+  total_seconds: number;
+};
+
+export type AdminPsychologistVisibilityCounter = {
+  id:
+    | "content_views"
+    | "presentation_video_explore_views"
+    | "profile_opens"
+    | "search_result_views";
+  label: string;
+  source: string;
+  value: number;
+};
+
+export type AdminPsychologistVisibilityBreakdown = {
+  cards: AdminPsychologistAvailabilityMetric[];
+  counters: AdminPsychologistVisibilityCounter[];
+  series: AdminPsychologistVisibilitySeriesPoint[];
+  source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type";
+  total_seconds: number;
+};
+
 export type AdminPsychologistStatisticsVideo = {
   available: boolean;
   comparisons: {
@@ -348,6 +375,7 @@ export type AdminPsychologistStatisticsDTO = {
     cards: AdminPsychologistAvailabilityMetric[];
     series: AdminPsychologistStatisticsSeriesPoint[];
     profile_conversion: AdminPsychologistBusinessProfileConversion;
+    visibility: AdminPsychologistVisibilityBreakdown;
   };
   community: {
     cards: AdminPsychologistAvailabilityMetric[];

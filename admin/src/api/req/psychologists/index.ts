@@ -1618,6 +1618,13 @@ export type AdminPsychologistStatistics = {
       source: PsychologistsProfileConversionSource;
       thresholds: PsychologistsProfileConversionThresholds;
     };
+    visibility: {
+      cards: AdminPsychologistEngagementMetric[];
+      counters: AdminPsychologistVisibilityCounter[];
+      series: AdminPsychologistVisibilityPoint[];
+      source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type";
+      total_seconds: number;
+    };
   };
   community: {
     cards: AdminPsychologistEngagementMetric[];
@@ -1878,6 +1885,25 @@ export type AdminPsychologistStatisticsPoint = {
   whatsapp_clicks: number;
   upvotes: number;
   posts: number;
+};
+
+export type AdminPsychologistVisibilityPoint = {
+  community_content_seconds: number;
+  date: string;
+  presentation_video_seconds: number;
+  profile_seconds: number;
+  total_seconds: number;
+};
+
+export type AdminPsychologistVisibilityCounter = {
+  id:
+    | "content_views"
+    | "presentation_video_explore_views"
+    | "profile_opens"
+    | "search_result_views";
+  label: string;
+  source: string;
+  value: number;
 };
 
 export type AdminPsychologistPublicationMetric = AdminPsychologistEngagementMetric;
