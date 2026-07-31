@@ -2059,13 +2059,13 @@ export const showAdminPsychologistStatistics = async (
         counters: [
           {
             id: "presentation_video_explore_views",
-            label: "Visualizações do vídeo no explorar",
+            label: "Views do vídeo de apresentação no explorar",
             source: "profile_video_watch_session",
             value: currentPresentationVideoSessions.length,
           },
           {
             id: "search_result_views",
-            label: "Visualizações nos resultados de busca",
+            label: "Views do vídeo de apresentação nos resultados de busca",
             source: "profile_view_event.source=search_result",
             value: searchResults.length,
           },
@@ -2077,7 +2077,7 @@ export const showAdminPsychologistStatistics = async (
           },
           {
             id: "content_views",
-            label: "Visualizações de conteúdo",
+            label: "Visualizações de conteúdo na comunidade",
             source: "page_view_event.target_type=post|reply",
             value: contentViewsCount,
           },

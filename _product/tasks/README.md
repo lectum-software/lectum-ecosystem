@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 115 tasks: `TASK-00` a `TASK-108`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 116 tasks: `TASK-00` a `TASK-109`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -190,6 +190,7 @@ ou cortesia manual.
 | 106 | [TASK-106 - Visibilidade temporal no contador principal do psicologo Admin](TASK-106-visibilidade-temporal-contador-psicologo-admin.md) | Completed | 57, 75, 104, 105 |
 | 107 | [TASK-107 - Eixo direito de visibilidade e comparativos dos scores no psicologo Admin](TASK-107-eixo-direito-visibilidade-comparativos-scores-psicologo-admin.md) | Completed | 57, 104, 105, 106 |
 | 108 | [TASK-108 - Bloco Visibilidade nas estatisticas do psicologo Admin](TASK-108-bloco-visibilidade-estatisticas-psicologo-admin.md) | Completed | 57, 75, 104, 105, 106, 107 |
+| 109 | [TASK-109 - Copy dos contadores de Visibilidade do psicologo Admin](TASK-109-copy-contadores-visibilidade-psicologo-admin.md) | Completed | 108 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -272,6 +273,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 72. [TASK-106 - Visibilidade temporal no contador principal do psicologo Admin](TASK-106-visibilidade-temporal-contador-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para trocar o contador Visibilidade do detalhe Admin do psicologo de eventos para duracao temporal real em segundos.
 73. [TASK-107 - Eixo direito de visibilidade e comparativos dos scores no psicologo Admin](TASK-107-eixo-direito-visibilidade-comparativos-scores-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para separar Visibilidade temporal em eixo direito no grafico principal e completar os comparativos dos scores de Engajamento e Atividade.
 74. [TASK-108 - Bloco Visibilidade nas estatisticas do psicologo Admin](TASK-108-bloco-visibilidade-estatisticas-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para inserir, apos Conversao, um bloco de visibilidade com barras empilhadas temporais, curva da soma e contadores reais de visualizacoes/aberturas.
+75. [TASK-109 - Copy dos contadores de Visibilidade do psicologo Admin](TASK-109-copy-contadores-visibilidade-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para refinar os labels dos contadores de views de video e conteudo na comunidade no bloco Visibilidade.
 
 ### 1A. Trilha Admin planejada
 
@@ -339,6 +341,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 60. [TASK-106 - Visibilidade temporal no contador principal do psicologo Admin](TASK-106-visibilidade-temporal-contador-psicologo-admin.md)
 61. [TASK-107 - Eixo direito de visibilidade e comparativos dos scores no psicologo Admin](TASK-107-eixo-direito-visibilidade-comparativos-scores-psicologo-admin.md)
 62. [TASK-108 - Bloco Visibilidade nas estatisticas do psicologo Admin](TASK-108-bloco-visibilidade-estatisticas-psicologo-admin.md)
+63. [TASK-109 - Copy dos contadores de Visibilidade do psicologo Admin](TASK-109-copy-contadores-visibilidade-psicologo-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
