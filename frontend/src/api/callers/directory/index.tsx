@@ -8,6 +8,7 @@ import type {
   DirectoryPsychologistContactResponse,
   DirectoryPsychologistProfileListQuery,
   DirectoryPsychologistProfileViewResponse,
+  DirectoryPsychologistSearchImpressionPayload,
   DirectoryPsychologistsQuery,
   DirectoryPsychologistVideoWatchPayload,
   DirectoryPsychologistVideoWatchResponse,
@@ -160,7 +161,13 @@ export const useDirectoryPsychologistSearchImpression = (callbacks?: {
   onSuccess?: (data: DirectoryPsychologistProfileViewResponse) => void;
 }) =>
   useMutation({
-    mutationFn: (id: string) => api.trackDirectoryPsychologistSearchImpression(id),
+    mutationFn: ({
+      id,
+      position,
+    }: {
+      id: string;
+      position?: DirectoryPsychologistSearchImpressionPayload["position"];
+    }) => api.trackDirectoryPsychologistSearchImpression(id, { position }),
     onError: callbacks?.onError,
     onSuccess: callbacks?.onSuccess,
   });

@@ -347,7 +347,8 @@ continuam sendo fonte real de conversão.
 | `viewer_id` | `String?` | usuario autenticado quando existir; nulo para visitante anonimo |
 | `device_id` | `String?` | header `x-device` para deduplicar visitante anonimo sem identificar pessoa |
 | `source` | `String @default("profile_page")` | origem operacional do evento; no MVP, perfil publico/canonico |
-| `@@index([psychologist_id, createdAt])`, `@@index([viewer_id, createdAt])`, `@@index([device_id, createdAt])` | | analytics por periodo e anti-spam |
+| `search_result_position` | `Int?` | posicao absoluta do card/video na lista de explorar quando `source="search_result"`; nulo para eventos legados ou sem posicao confiavel |
+| `@@index([psychologist_id, createdAt])`, `@@index([psychologist_id, source, createdAt])`, `@@index([viewer_id, createdAt])`, `@@index([device_id, createdAt])` | | analytics por periodo, origem e anti-spam |
 
 Regras: registrar apenas perfil publicado, nunca persistir/contabilizar/notificar visualizacao do proprio psicologo
 autenticado (`viewer_id = psychologist_id`) e aplicar anti-spam de 6 horas por `viewer_id` ou `device_id`.
@@ -361,6 +362,12 @@ impressao de resultado com visita ao perfil. Impressoes de busca nao disparam no
 nao contabilizam autoimpressao do proprio psicologo.
 
 Complemento 2026-07-16: as impressoes `source="search_result"` tambem alimentam a regra de cold start do ranking publico de psicologos. Para psicologos com assinatura profissional/cortesia ativa, a exposicao minima e contada desde `professional_subscription.grant_started_at ?? professional_subscription.createdAt`; o profissional permanece como novato ate ter pelo menos 30 dias de camada profissional e 500 impressoes de busca/listagem ou 30 visualizacoes qualificadas de video. Nao ha backfill, estimativa ou evento simulado para essa regra.
+
+Complemento 2026-07-31: impressoes novas de `source="search_result"` podem gravar
+`search_result_position` com a posicao absoluta do card/video na pagina de explorar. O Admin usa
+apenas eventos reais com esse campo preenchido para calcular a posicao media do video no periodo e
+comparar com a janela anterior; eventos legados permanecem sem backfill e aparecem como **Sem base**
+quando nao houver posicao confiavel.
 
 
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
@@ -972,4 +979,3 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 - O fallback de primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
 - O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
 - O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção.
-

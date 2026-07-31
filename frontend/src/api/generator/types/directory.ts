@@ -127,6 +127,10 @@ export type DirectoryPsychologistProfileViewResponse = {
   tracked: boolean;
 };
 
+export type DirectoryPsychologistSearchImpressionPayload = {
+  position?: number | null;
+};
+
 export type DirectoryPsychologistVideoWatchPayload = {
   completed?: boolean;
   duration_seconds?: number;

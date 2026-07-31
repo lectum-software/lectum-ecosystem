@@ -744,19 +744,21 @@ model contact_request {
 }
 
 model profile_view_event {
-  id              String    @id @default(cuid())
-  deleted         Boolean   @default(false)
-  deletedAt       DateTime? @map("deleted_at")
-  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  psychologist_id String
-  viewer_id       String?
-  device_id       String?
-  source          String    @default("profile_page")
-  psychologist    user      @relation("profile_view_event_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
-  viewer          user?     @relation("profile_view_event_viewer", fields: [viewer_id], references: [id], onDelete: SetNull)
+  id                     String    @id @default(cuid())
+  deleted                Boolean   @default(false)
+  deletedAt              DateTime? @map("deleted_at")
+  updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  psychologist_id        String
+  viewer_id              String?
+  device_id              String?
+  source                 String    @default("profile_page")
+  search_result_position Int?      @map("search_result_position")
+  psychologist           user      @relation("profile_view_event_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
+  viewer                 user?     @relation("profile_view_event_viewer", fields: [viewer_id], references: [id], onDelete: SetNull)
 
   @@index([psychologist_id, createdAt])
+  @@index([psychologist_id, source, createdAt])
   @@index([viewer_id, createdAt])
   @@index([device_id, createdAt])
   @@map("profile_view_events")

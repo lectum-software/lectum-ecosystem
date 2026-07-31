@@ -1292,7 +1292,11 @@ export const PsychologistsLogic = () => {
   );
   const response = directory.data;
   const psychologists = useMemo(() => response?.data ?? [], [response?.data]);
-  const featuredPsychologist = psychologists[activePsychologistIndex] ?? psychologists[0];
+  const featuredPsychologistListIndex =
+    activePsychologistIndex >= 0 && activePsychologistIndex < psychologists.length
+      ? activePsychologistIndex
+      : 0;
+  const featuredPsychologist = psychologists[featuredPsychologistListIndex];
   const backgroundVideoSrc = resolvePublicMediaUrl(featuredPsychologist?.video_url);
   const shouldShowVideo = Boolean(backgroundVideoSrc) && !isVideoPlaybackFailed;
   const isMobileSearchFocusMode = isSearchFocused && !metrics.isDesktopLayout;
@@ -1300,6 +1304,9 @@ export const PsychologistsLogic = () => {
   const featuredBio = featuredPsychologist?.headline?.trim() || "";
   const featuredBenefitChipsCount = buildBenefitChips(featuredPsychologist).length;
   const featuredPsychologistId = featuredPsychologist?.id;
+  const featuredPsychologistExplorePosition = featuredPsychologistId
+    ? ((query.page ?? 1) - 1) * (query.limit ?? PAGE_LIMIT) + featuredPsychologistListIndex + 1
+    : null;
   const activeVideoResetKey = featuredPsychologistId
     ? `${featuredPsychologistId}:${activeVideoSource ?? ""}`
     : null;
@@ -1476,15 +1483,21 @@ export const PsychologistsLogic = () => {
       return;
     }
 
-    const impressionKey = `${searchParamsString || "default"}:${featuredPsychologistId}`;
+    const impressionKey = `${searchParamsString || "default"}:${featuredPsychologistId}:${
+      featuredPsychologistExplorePosition ?? "sem-posicao"
+    }`;
     if (searchImpressionKeysRef.current.has(impressionKey)) return;
 
     searchImpressionKeysRef.current.add(impressionKey);
-    trackSearchResultImpression(featuredPsychologistId);
+    trackSearchResultImpression({
+      id: featuredPsychologistId,
+      position: featuredPsychologistExplorePosition,
+    });
   }, [
     directory.isFetching,
     errorMessage,
     featuredPsychologistId,
+    featuredPsychologistExplorePosition,
     searchParamsString,
     showInitialLoading,
     trackSearchResultImpression,

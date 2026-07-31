@@ -4671,6 +4671,72 @@ const VideoSummaryMetric = ({
   </div>
 );
 
+const formatExplorePositionValue = (metric: AdminPsychologistEngagementMetric) => {
+  if (!metric.available || metric.value === null) return "Sem base";
+
+  return `#${metric.value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: metric.value % 1 === 0 ? 0 : 1,
+  })}`;
+};
+
+const formatExplorePositionMovement = (metric: AdminPsychologistEngagementMetric) => {
+  if (!metric.available || metric.value === null) return "Sem posição confiável no período";
+
+  const comparison = metric.comparison;
+  if (!comparison || comparison.trend === "unavailable") {
+    return `Sem base anterior vs. ${formatPreviousPeriod(comparison)}`;
+  }
+  if (comparison.trend === "flat") return `Estável vs. ${formatPreviousPeriod(comparison)}`;
+
+  const delta = Math.abs(metric.value - comparison.previous_value);
+  const deltaLabel = delta.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: delta % 1 === 0 ? 0 : 1,
+  });
+  const noun = delta === 1 ? "posição" : "posições";
+  const verb = comparison.trend === "up" ? "Subiu" : "Desceu";
+
+  return `${verb} ${deltaLabel} ${noun} vs. ${formatPreviousPeriod(comparison)}`;
+};
+
+const VideoExplorePositionIndicator = ({
+  metric,
+}: {
+  metric: AdminPsychologistEngagementMetric;
+}) => {
+  const trend = metric.comparison?.trend ?? "unavailable";
+  const hasArrow = trend === "up" || trend === "down";
+  const TrendIcon = trend === "down" ? ArrowDown : ArrowUp;
+
+  return (
+    <div className="shrink-0 rounded-2xl border border-border/70 bg-surface-muted/40 px-3 py-2.5 text-left sm:min-w-[230px] sm:text-right">
+      <p className="text-[0.65rem] font-black uppercase tracking-[0.14em] text-muted">
+        Posição média no Explorar
+      </p>
+      <div className="mt-1 flex items-center gap-2 sm:justify-end">
+        {hasArrow ? (
+          <span
+            className={cn(
+              "inline-flex h-6 w-6 items-center justify-center rounded-full",
+              trend === "up" && "bg-success/10 text-success",
+              trend === "down" && "bg-danger/10 text-danger",
+            )}
+          >
+            <TrendIcon aria-hidden className="h-3.5 w-3.5" />
+          </span>
+        ) : null}
+        <span className="text-xl font-black leading-none text-foreground">
+          {formatExplorePositionValue(metric)}
+        </span>
+      </div>
+      <p className="mt-1 text-[0.68rem] font-bold leading-4 text-muted">
+        {formatExplorePositionMovement(metric)}
+      </p>
+    </div>
+  );
+};
+
 const StatisticsVideoCard = ({
   className,
   detail,
@@ -4706,20 +4772,25 @@ const StatisticsVideoCard = ({
     <CardShell className={cn("flex flex-col p-4 sm:p-5", className)}>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-bold leading-tight text-foreground">
-              Análises do vídeo de apresentação
-            </h2>
-            {isRefreshing ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
-                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
-                Atualizando
-              </span>
-            ) : null}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-bold leading-tight text-foreground">
+                  Análises do vídeo de apresentação
+                </h2>
+                {isRefreshing ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                    <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                    Atualizando
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 text-sm font-bold leading-6 text-muted">
+                Consumo, retenção e interações atribuídas ao vídeo de apresentação no período.
+              </p>
+            </div>
+            <VideoExplorePositionIndicator metric={video.explore_position} />
           </div>
-          <p className="mt-1 text-sm font-bold leading-6 text-muted">
-            Consumo, retenção e interações atribuídas ao vídeo de apresentação no período.
-          </p>
         </div>
         {periodControls}
       </div>
@@ -6142,18 +6213,18 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           />
         </CardShell>
 
-        <ActiveCommunitiesBlock
-          communities={activeCommunities}
-          engagementDiagnosis={activeCommunitiesStatistics.community.engagement_diagnosis}
-          isRefreshing={isActiveCommunitiesRefreshing}
-          periodControls={null}
-        />
-
         <StatisticsVideoCard
           detail={detail}
           isRefreshing={isVideoRefreshing}
           periodControls={null}
           statistics={videoStatistics}
+        />
+
+        <ActiveCommunitiesBlock
+          communities={activeCommunities}
+          engagementDiagnosis={activeCommunitiesStatistics.community.engagement_diagnosis}
+          isRefreshing={isActiveCommunitiesRefreshing}
+          periodControls={null}
         />
 
         <ContentFormatDistributionsBlock

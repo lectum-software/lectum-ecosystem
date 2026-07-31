@@ -2,6 +2,7 @@ import prisma from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryPsychologistProfileViewResponse,
+  IProfileSearchImpressionDTO,
   IProfileShowDTO,
 } from "../DTOs/IProfileDTO";
 
@@ -10,6 +11,14 @@ const PROFILE_PAGE_SOURCE = "profile_page";
 const SEARCH_RESULT_SOURCE = "search_result";
 
 const recentWindowStart = () => new Date(Date.now() - PROFILE_VIEW_ANTI_SPAM_WINDOW_MS);
+
+const normalizeSearchResultPosition = (value: unknown) => {
+  const position = Number(value);
+
+  if (!Number.isFinite(position) || position <= 0) return null;
+
+  return Math.min(10000, Math.floor(position));
+};
 
 export class ProfileViewRepository {
   private async findTrackablePsychologist(id: string) {
@@ -110,7 +119,7 @@ export class ProfileViewRepository {
   }
 
   async trackSearchResultImpression(
-    data: IProfileShowDTO,
+    data: IProfileSearchImpressionDTO,
   ): Promise<DirectoryPsychologistProfileViewResponse | null> {
     const psychologist = await this.findTrackablePsychologist(data.p.id);
 
@@ -131,6 +140,7 @@ export class ProfileViewRepository {
       data: {
         device_id: deviceId ?? null,
         psychologist_id: psychologist.id,
+        search_result_position: normalizeSearchResultPosition(data.b?.position),
         source: SEARCH_RESULT_SOURCE,
         viewer_id: viewerId,
       },

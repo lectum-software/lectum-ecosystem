@@ -2,7 +2,11 @@ import { error, msg } from "@/helpers/translate";
 import { notifyProfileView, notifyWhatsappClick } from "@/main/notification/domain-events";
 import type { IContactClickDTO, IContactDTO } from "../DTOs/IContactDTO";
 import type { IIndexDTO } from "../DTOs/IIndexDTO";
-import type { IProfileListDTO, IProfileShowDTO } from "../DTOs/IProfileDTO";
+import type {
+  IProfileListDTO,
+  IProfileSearchImpressionDTO,
+  IProfileShowDTO,
+} from "../DTOs/IProfileDTO";
 import type { IProfileVideoWatchDTO } from "../DTOs/IProfileVideoWatchDTO";
 import { ContactRepository } from "../repositories/ContactRepository";
 import { IndexRepository } from "../repositories/IndexRepository";
@@ -213,7 +217,7 @@ export const view = async (data: IProfileShowDTO) => {
   };
 };
 
-export const searchImpression = async (data: IProfileShowDTO) => {
+export const searchImpression = async (data: IProfileSearchImpressionDTO) => {
   const repository = new ProfileViewRepository();
   const res = await repository.trackSearchResultImpression(data);
 

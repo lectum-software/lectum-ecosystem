@@ -71,6 +71,10 @@ const PROFILE_VISIBILITY_TEMPORAL_SOURCE =
   "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds" as const;
 const PROFILE_VISIBILITY_DETAILED_SOURCE =
   "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type" as const;
+const PRESENTATION_VIDEO_ANALYSIS_SOURCE =
+  "profile_video_watch_session+important_action_event+profile_view_event.search_result_position" as const;
+const VIDEO_EXPLORE_POSITION_SOURCE =
+  "profile_view_event.source=search_result.search_result_position" as const;
 const ACTIVITY_ACTIONS_SOURCE = "community_post.author_id+post_reply.author_id" as const;
 const PATIENT_POST_REPLY_COVERAGE_SOURCE =
   "post_reply.author_id+post_reply.post.author.role=paciente+post_reply.media_type" as const;
@@ -648,6 +652,32 @@ const buildComparison = (
   };
 };
 
+const buildPositionComparison = (
+  current: number,
+  previous: number | null,
+  period: AdminPsychologistStatisticsPeriod,
+): AdminPsychologistMetricComparison => {
+  if (previous === null) {
+    return {
+      change_percent: null,
+      previous_from: period.previous_from,
+      previous_to: period.previous_to,
+      previous_value: 0,
+      trend: "unavailable",
+    };
+  }
+
+  const change = percentageChange(current, previous);
+
+  return {
+    change_percent: change,
+    previous_from: period.previous_from,
+    previous_to: period.previous_to,
+    previous_value: previous,
+    trend: current < previous ? "up" : current > previous ? "down" : "flat",
+  };
+};
+
 const groupDateCounts = <T extends { createdAt: Date }>(items: T[], labels: string[]) => {
   const counts = new Map(labels.map((label) => [label, 0]));
 
@@ -903,6 +933,10 @@ type VideoActionEvents = Awaited<
   ReturnType<AdminPsychologistEngagementRepository["listVideoActionEvents"]>
 >;
 
+type SearchResultImpressions = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listSearchResultImpressions"]>
+>;
+
 type PublicProfilePageViews = Awaited<
   ReturnType<AdminPsychologistEngagementRepository["listPublicProfilePageViews"]>
 >;
@@ -930,6 +964,45 @@ const videoPercentage = (value: number, total: number) => {
   if (total <= 0) return 0;
 
   return Math.round((value / total) * 100);
+};
+
+const averageSearchResultPosition = (impressions: SearchResultImpressions) => {
+  const positions = impressions
+    .map((impression) => impression.search_result_position)
+    .filter(
+      (position): position is number =>
+        typeof position === "number" && Number.isFinite(position) && position > 0,
+    );
+
+  if (positions.length === 0) return null;
+
+  return Math.round((sum(positions) / positions.length) * 10) / 10;
+};
+
+const buildExplorePositionMetric = (
+  current: SearchResultImpressions,
+  previous: SearchResultImpressions,
+  period: AdminPsychologistStatisticsPeriod,
+) => {
+  const currentPosition = averageSearchResultPosition(current);
+  const previousPosition = averageSearchResultPosition(previous);
+
+  return metric({
+    available: currentPosition !== null,
+    comparison:
+      currentPosition !== null
+        ? buildPositionComparison(currentPosition, previousPosition, period)
+        : null,
+    id: "average_explore_position",
+    label: "Posição média no Explorar",
+    source: VIDEO_EXPLORE_POSITION_SOURCE,
+    unavailable_reason:
+      currentPosition !== null
+        ? null
+        : "Nenhuma impressão real com posição confiável foi registrada no Explorar no período.",
+    unit: "position",
+    value: currentPosition,
+  });
 };
 
 const normalizeRetentionBuckets = (value: unknown): number[] => {
@@ -1080,6 +1153,8 @@ const buildVideo = (
   previousSessions: VideoSessions,
   actions: VideoActionEvents,
   previousActions: VideoActionEvents,
+  searchResults: SearchResultImpressions,
+  previousSearchResults: SearchResultImpressions,
   period: AdminPsychologistStatisticsPeriod,
 ): AdminPsychologistStatisticsDTO["video"] => {
   const currentVideoSessions = filterCurrentPresentationVideoSessions(sessions, profile);
@@ -1137,13 +1212,14 @@ const buildVideo = (
     },
     cover_url: profile.video_cover_url ?? profile.cover_image_url,
     duration_seconds: durationSeconds,
+    explore_position: buildExplorePositionMetric(searchResults, previousSearchResults, period),
     metrics: {
       ...metricValues,
       ...actionMetrics,
     },
     retention,
     retention_dropoff: retentionDropoff,
-    source: "profile_video_watch_session+important_action_event",
+    source: PRESENTATION_VIDEO_ANALYSIS_SOURCE,
     unavailable_reason:
       total > 0 ? null : "Nenhuma sessão real de vídeo foi registrada no período.",
     video_url: profile.video_url,
@@ -2496,6 +2572,8 @@ export const showAdminPsychologistStatistics = async (
       previousVideoSessions,
       videoActionEvents,
       previousVideoActionEvents,
+      searchResults,
+      previousSearchResults,
       period.period,
     ),
   };

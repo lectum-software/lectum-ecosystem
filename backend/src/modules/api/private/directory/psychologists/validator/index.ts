@@ -163,6 +163,21 @@ export const profileShowSchema: IValidatorRequest = {
   ],
 };
 
+export const searchImpressionSchema: IValidatorRequest = {
+  ...profileShowSchema,
+  body: [
+    {
+      key: "position",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: 10000,
+      optional: true,
+    },
+  ],
+};
+
 export const profileListSchema: IValidatorRequest = {
   ...profileShowSchema,
   query: [
@@ -277,6 +292,7 @@ export const profileVideoWatchSchema: IValidatorRequest = {
 };
 
 export const profileShowValidator = validator(profileShowSchema);
+export const searchImpressionValidator = validator(searchImpressionSchema);
 export const profileListValidator = validator(profileListSchema);
 export const contactValidator = validator(contactSchema);
 export const profileVideoWatchValidator = validator(profileVideoWatchSchema);

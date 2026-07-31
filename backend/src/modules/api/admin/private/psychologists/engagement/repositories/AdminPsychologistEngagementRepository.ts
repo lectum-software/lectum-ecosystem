@@ -384,13 +384,19 @@ export class AdminPsychologistEngagementRepository {
 
   async listSearchResultImpressions(psychologistId: string, from: Date, to: Date) {
     return prisma.profile_view_event.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
       where: {
         createdAt: { gte: from, lte: to },
         deleted: false,
         psychologist_id: psychologistId,
         source: SEARCH_RESULT_SOURCE,
       },
-      select: { createdAt: true },
+      select: {
+        createdAt: true,
+        search_result_position: true,
+      },
     });
   }
 

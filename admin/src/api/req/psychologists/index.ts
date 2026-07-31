@@ -1827,6 +1827,7 @@ export type AdminPsychologistStatistics = {
     };
     cover_url: string | null;
     duration_seconds: number | null;
+    explore_position: AdminPsychologistEngagementMetric;
     retention_dropoff: {
       from_milestone: number;
       to_milestone: number;
@@ -1846,7 +1847,7 @@ export type AdminPsychologistStatistics = {
       whatsapp_clicks_from_video: number;
     };
     retention: { label: string; percentage: number; position_percent: number }[];
-    source: "profile_video_watch_session+important_action_event";
+    source: "profile_video_watch_session+important_action_event+profile_view_event.search_result_position";
     unavailable_reason: string | null;
     video_url: string | null;
   };

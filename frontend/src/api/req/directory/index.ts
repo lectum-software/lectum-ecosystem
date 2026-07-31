@@ -8,6 +8,7 @@ import type {
   DirectoryPsychologistProfilePostsResponse,
   DirectoryPsychologistProfileReviewsResponse,
   DirectoryPsychologistProfileViewResponse,
+  DirectoryPsychologistSearchImpressionPayload,
   DirectoryPsychologistsQuery,
   DirectoryPsychologistsResponse,
   DirectoryPsychologistVideoWatchPayload,
@@ -105,11 +106,15 @@ export const trackDirectoryPsychologistProfileView = async (id: string) => {
   });
 };
 
-export const trackDirectoryPsychologistSearchImpression = async (id: string) => {
+export const trackDirectoryPsychologistSearchImpression = async (
+  id: string,
+  body: DirectoryPsychologistSearchImpressionPayload = {},
+) => {
   const handle = callEndpoint({
     route: "/api/private/directory/psychologists/:id/search-impression",
     method: "POST",
     params: { id },
+    body,
   });
 
   return handleReq<DirectoryPsychologistProfileViewResponse>({

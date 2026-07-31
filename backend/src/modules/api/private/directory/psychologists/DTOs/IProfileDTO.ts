@@ -118,6 +118,14 @@ export interface IProfileShowDTO {
   headers?: Record<string, string | string[] | undefined>;
 }
 
+export type DirectoryPsychologistSearchImpressionPayload = {
+  position?: number | null;
+};
+
+export interface IProfileSearchImpressionDTO extends IProfileShowDTO {
+  b?: DirectoryPsychologistSearchImpressionPayload;
+}
+
 export interface IProfileListDTO extends IProfileShowDTO {
   q: {
     limit?: number;
