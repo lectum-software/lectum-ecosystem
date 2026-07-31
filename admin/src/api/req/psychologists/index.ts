@@ -467,6 +467,7 @@ export type PsychologistsDashboardTrafficSourceItem = {
           | "profile_reviews_tab_opens"
           | "presentation_video_views"
           | "presentation_video_retention"
+          | "replay_rate"
           | "saves"
           | "shares"
           | "upvotes"

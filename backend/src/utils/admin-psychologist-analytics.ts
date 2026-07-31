@@ -123,6 +123,7 @@ export type AdminPsychologistWhatsappTrafficPlatformMetricId =
   | "profile_reviews_tab_opens"
   | "presentation_video_views"
   | "presentation_video_retention"
+  | "replay_rate"
   | "saves"
   | "shares"
   | "upvotes"
@@ -803,7 +804,7 @@ const normalizeTrafficActionPath = (path: string | null) => (path ?? "").toLower
 const trafficActionPathIncludes = (action: AdminPsychologistWhatsappTrafficAction, value: string) =>
   normalizeTrafficActionPath(action.path).includes(value);
 
-const hasSearchFilterTrafficParams = (path: string | null) => {
+export const hasSearchFilterTrafficParams = (path: string | null) => {
   if (!path?.includes("?")) return false;
 
   try {

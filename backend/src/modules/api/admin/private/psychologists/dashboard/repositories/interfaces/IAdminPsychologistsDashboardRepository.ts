@@ -305,6 +305,7 @@ export type AdminPsychologistProfileTrafficPlatformVideoWatchRecord = {
   max_position_seconds: number;
   milestone_100: boolean;
   psychologist_id: string;
+  replay_count: number;
   viewer_id: string | null;
   watched_seconds: number;
 };
@@ -315,11 +316,19 @@ export type AdminPsychologistProfileTrafficPlatformTabActionRecord = {
   user_id: string | null;
 };
 
+export type AdminPsychologistProfileTrafficPlatformVideoActionRecord = {
+  action_type: string;
+  path: string | null;
+  target_id: string | null;
+  user_id: string | null;
+};
+
 export type AdminPsychologistProfileTrafficPlatformDataset = {
   favorites: AdminPsychologistProfileTrafficPlatformFavoriteRecord[];
   pageViews: AdminPsychologistProfileTrafficPlatformPageViewRecord[];
   profileViews: AdminPsychologistProfileTrafficPlatformProfileViewRecord[];
   tabActions: AdminPsychologistProfileTrafficPlatformTabActionRecord[];
+  videoActions: AdminPsychologistProfileTrafficPlatformVideoActionRecord[];
   videoWatchSessions: AdminPsychologistProfileTrafficPlatformVideoWatchRecord[];
 };
 
