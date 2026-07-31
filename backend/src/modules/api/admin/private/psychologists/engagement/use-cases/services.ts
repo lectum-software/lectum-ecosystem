@@ -53,6 +53,7 @@ import type {
   IAdminPsychologistStatisticsDTO,
 } from "../DTOs/IAdminPsychologistEngagementDTO";
 import {
+  type AdminPsychologistCoveragePatientPost,
   type AdminPsychologistEngagementPost,
   type AdminPsychologistEngagementReply,
   AdminPsychologistEngagementRepository,
@@ -70,10 +71,9 @@ const PROFILE_VISIBILITY_TEMPORAL_SOURCE =
   "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds" as const;
 const PROFILE_VISIBILITY_DETAILED_SOURCE =
   "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type" as const;
-const ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT = 3;
-const ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT = 5;
-const ACTIVITY_SCORE_SOURCE =
-  "community_post.author_id+post_reply.author_id+post_reply.post.author.role=paciente+post_reply.media_type" as const;
+const ACTIVITY_ACTIONS_SOURCE = "community_post.author_id+post_reply.author_id" as const;
+const PATIENT_POST_REPLY_COVERAGE_SOURCE =
+  "post_reply.author_id+post_reply.post.author.role=paciente+post_reply.media_type" as const;
 const TRAFFIC_QUALITY_LEVEL_CONFIG = {
   interested: {
     description: "Retornou ao perfil ou favoritou este psicólogo antes do WhatsApp.",
@@ -824,6 +824,7 @@ const groupCountMap = <T extends { _count: { _all: number } }>(
 
 const buildSeries = (input: {
   commentsReceived: { createdAt: Date }[];
+  coverageRatePercentByDate?: Map<string, number>;
   favorites: { createdAt: Date }[];
   labels: string[];
   postShares: { createdAt: Date }[];
@@ -867,10 +868,12 @@ const buildSeries = (input: {
     input.labels,
   );
   const shares = groupDateCounts([...input.postShares, ...input.replyShares], input.labels);
+  const coverageRatePercentByDate = input.coverageRatePercentByDate ?? new Map<string, number>();
   const visibilitySecondsByDate = input.visibilitySecondsByDate ?? new Map<string, number>();
 
   return input.labels.map((date) => ({
     comments_received: valueFromMap(commentsReceived, date),
+    coverage_rate_percent: valueFromMap(coverageRatePercentByDate, date),
     date,
     downvotes: valueFromMap(downvotes, date),
     favorites: valueFromMap(favorites, date),
@@ -1647,6 +1650,112 @@ const filterRepliesByCommunity = (
     ? replies
     : replies.filter((reply) => matchesCommunityFilter(reply.post.community, communityFilter));
 
+type CommunityReference = { id: string; slug: string };
+
+type CommunityContentAttentionSessions = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listCommunityContentAttentionSessions"]>
+>;
+
+const uniqueCommunityReferences = (communities: CommunityReference[]) => {
+  const map = new Map<string, CommunityReference>();
+
+  for (const community of communities) {
+    map.set(community.id, community);
+  }
+
+  return [...map.values()];
+};
+
+const resolveCommunityFilterIds = (communityFilter: string, communities: CommunityReference[]) => {
+  if (communityFilter === "all") return null;
+
+  const ids = new Set(
+    communities
+      .filter((community) => matchesCommunityFilter(community, communityFilter))
+      .map((community) => community.id),
+  );
+
+  if (ids.size === 0) ids.add(communityFilter);
+
+  return ids;
+};
+
+const filterPatientPostsByCommunity = (
+  posts: AdminPsychologistCoveragePatientPost[],
+  communityFilterIds: Set<string> | null,
+) =>
+  communityFilterIds === null
+    ? posts
+    : posts.filter((post) => communityFilterIds.has(post.community.id));
+
+const filterCommunityContentAttentionSessions = (
+  sessions: CommunityContentAttentionSessions,
+  communityFilterIds: Set<string> | null,
+) =>
+  communityFilterIds === null
+    ? sessions
+    : sessions.filter((session) => communityFilterIds.has(session.community_id));
+
+const countPatientPostsByCommunity = (posts: AdminPsychologistCoveragePatientPost[]) => {
+  const counts = new Map<string, number>();
+
+  for (const post of posts) {
+    counts.set(post.community.id, (counts.get(post.community.id) ?? 0) + 1);
+  }
+
+  return counts;
+};
+
+const countCoveredPatientPosts = (input: {
+  coverageWindow: { end: Date; start: Date };
+  replies: AdminPsychologistEngagementReply[];
+}) =>
+  new Set(
+    input.replies
+      .filter(
+        (reply) =>
+          reply.post.author.role === "paciente" &&
+          reply.post.createdAt >= input.coverageWindow.start &&
+          reply.post.createdAt <= input.coverageWindow.end,
+      )
+      .map((reply) => reply.post.id),
+  ).size;
+
+const coverageRatePercent = (coveredPatientPosts: number, patientPosts: number) =>
+  patientPosts > 0 ? roundPercent((coveredPatientPosts / patientPosts) * 100) : null;
+
+const buildCoverageRatePercentByDate = (input: {
+  coverageWindow: { end: Date; start: Date };
+  labels: string[];
+  patientPosts: AdminPsychologistCoveragePatientPost[];
+  replies: AdminPsychologistEngagementReply[];
+}) => {
+  const patientPostsByDate = groupDateCounts(input.patientPosts, input.labels);
+  const coveredPatientPostsByDate = new Map<string, Set<string>>();
+
+  for (const reply of input.replies) {
+    if (reply.post.author.role !== "paciente") continue;
+    if (reply.post.createdAt < input.coverageWindow.start) continue;
+    if (reply.post.createdAt > input.coverageWindow.end) continue;
+
+    const date = toDateKey(reply.post.createdAt);
+    if (!input.labels.includes(date)) continue;
+
+    const current = coveredPatientPostsByDate.get(date) ?? new Set<string>();
+    current.add(reply.post.id);
+    coveredPatientPostsByDate.set(date, current);
+  }
+
+  return new Map(
+    input.labels.map((date) => {
+      const patientPosts = valueFromMap(patientPostsByDate, date);
+      const coveredPatientPosts = coveredPatientPostsByDate.get(date)?.size ?? 0;
+
+      return [date, coverageRatePercent(coveredPatientPosts, patientPosts) ?? 0] as const;
+    }),
+  );
+};
+
 const notFound = () => ({
   status: 404,
   ...error("not_found", { model: "psychologist" }),
@@ -1697,7 +1806,8 @@ export const showAdminPsychologistStatistics = async (
     pwaInstallAction,
     trafficPageViews,
     importantWhatsappActions,
-    patientPostsByCommunityCounts,
+    patientPostsForCoverage,
+    previousPatientPostsForCoverage,
   ] = await Promise.all([
     repository.listProfileConversionBenchmarkProfiles(),
     repository.listWhatsappClickCountsByPsychologist(period.current.start, period.current.end),
@@ -1747,13 +1857,44 @@ export const showAdminPsychologistStatistics = async (
       period.current.start,
       period.current.end,
     ),
-    repository.countPatientPostsByCommunity(period.current.start, period.current.end),
+    repository.listPatientPostsByCommunityForCoverage(period.current.start, period.current.end),
+    repository.listPatientPostsByCommunityForCoverage(period.previous.start, period.previous.end),
   ]);
 
   const communityPosts = filterPostsByCommunity(posts, query.community);
   const communityReplies = filterRepliesByCommunity(replies, query.community);
   const previousCommunityPosts = filterPostsByCommunity(previousPosts, query.community);
   const previousCommunityReplies = filterRepliesByCommunity(previousReplies, query.community);
+  const psychologistCommunityReferences = uniqueCommunityReferences([
+    ...allPosts.map((post) => post.community),
+    ...allReplies.map((reply) => reply.post.community),
+    ...memberships.map((membership) => membership.community),
+  ]);
+  const communityReferences = uniqueCommunityReferences([
+    ...psychologistCommunityReferences,
+    ...patientPostsForCoverage.map((post) => post.community),
+    ...previousPatientPostsForCoverage.map((post) => post.community),
+  ]);
+  const communityFilterIds = resolveCommunityFilterIds(query.community, communityReferences);
+  const coverageCommunityFilterIds =
+    communityFilterIds ?? new Set(psychologistCommunityReferences.map((community) => community.id));
+  const communityContentAttentionSessionsForFilter = filterCommunityContentAttentionSessions(
+    communityContentAttentionSessions,
+    communityFilterIds,
+  );
+  const previousCommunityContentAttentionSessionsForFilter =
+    filterCommunityContentAttentionSessions(
+      previousCommunityContentAttentionSessions,
+      communityFilterIds,
+    );
+  const patientPostsForCoverageFilter = filterPatientPostsByCommunity(
+    patientPostsForCoverage,
+    coverageCommunityFilterIds,
+  );
+  const previousPatientPostsForCoverageFilter = filterPatientPostsByCommunity(
+    previousPatientPostsForCoverage,
+    coverageCommunityFilterIds,
+  );
   const postIds = communityPosts.map((post) => post.id);
   const replyIds = communityReplies.map((reply) => reply.id);
   const previousPostIds = previousCommunityPosts.map((post) => post.id);
@@ -1845,16 +1986,24 @@ export const showAdminPsychologistStatistics = async (
     previousPatientPostReplyCoverageEntries,
     "video",
   );
-  const activityScore =
-    communityPosts.length +
-    patientPostTextReplyCoverageCount * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
-    patientPostVideoReplyCoverageCount * ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT;
-  const previousActivityScore =
-    previousCommunityPosts.length +
-    previousPatientPostTextReplyCoverageCount * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
-    previousPatientPostVideoReplyCoverageCount * ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT;
-  const patientPostsByCommunity = new Map(
-    patientPostsByCommunityCounts.map((item) => [item.community_id, item._count._all]),
+  const activityActions = communityPosts.length + communityReplies.length;
+  const previousActivityActions = previousCommunityPosts.length + previousCommunityReplies.length;
+  const patientPostsByCommunity = countPatientPostsByCommunity(patientPostsForCoverage);
+  const currentCoveredPatientPosts = countCoveredPatientPosts({
+    coverageWindow: period.current,
+    replies: communityReplies,
+  });
+  const previousCoveredPatientPosts = countCoveredPatientPosts({
+    coverageWindow: period.previous,
+    replies: previousCommunityReplies,
+  });
+  const coverageRate = coverageRatePercent(
+    currentCoveredPatientPosts,
+    patientPostsForCoverageFilter.length,
+  );
+  const previousCoverageRate = coverageRatePercent(
+    previousCoveredPatientPosts,
+    previousPatientPostsForCoverageFilter.length,
   );
   const unavailable: AdminPsychologistAvailabilityMetric[] = [];
   const currentPresentationVideoSessions = filterCurrentPresentationVideoSessions(
@@ -1913,6 +2062,28 @@ export const showAdminPsychologistStatistics = async (
   });
   const visibilitySeconds = sumVisibilitySecondsByDate(visibilitySecondsByDate);
   const previousVisibilitySeconds = sumVisibilitySecondsByDate(previousVisibilitySecondsByDate);
+  const communityVisibilitySecondsByDate = buildVisibilitySecondsByDate({
+    communityContentAttentionSessions: communityContentAttentionSessionsForFilter,
+    labels: period.labels,
+    profileAttentionSessions: [],
+    videoSessions: [],
+  });
+  const previousCommunityVisibilitySecondsByDate = buildVisibilitySecondsByDate({
+    communityContentAttentionSessions: previousCommunityContentAttentionSessionsForFilter,
+    labels: labelsFromRange(period.previous.start, period.period.days),
+    profileAttentionSessions: [],
+    videoSessions: [],
+  });
+  const communityVisibilitySeconds = sumVisibilitySecondsByDate(communityVisibilitySecondsByDate);
+  const previousCommunityVisibilitySeconds = sumVisibilitySecondsByDate(
+    previousCommunityVisibilitySecondsByDate,
+  );
+  const coverageRatePercentByDate = buildCoverageRatePercentByDate({
+    coverageWindow: period.current,
+    labels: period.labels,
+    patientPosts: patientPostsForCoverageFilter,
+    replies: communityReplies,
+  });
   const businessSeries = buildSeries({
     commentsReceived,
     favorites,
@@ -1933,6 +2104,7 @@ export const showAdminPsychologistStatistics = async (
   });
   const communitySeries = buildSeries({
     commentsReceived,
+    coverageRatePercentByDate,
     favorites: [],
     labels: period.labels,
     postShares,
@@ -1946,6 +2118,7 @@ export const showAdminPsychologistStatistics = async (
     replySaves,
     replyVotes,
     searchResults: [],
+    visibilitySecondsByDate: communityVisibilitySecondsByDate,
     whatsappClicks: [],
   });
   const communityItems = await withCommunityRankings({
@@ -2053,7 +2226,6 @@ export const showAdminPsychologistStatistics = async (
     profileAgeDays,
     whatsappClicks: whatsappClicks.length,
   });
-
   const response: AdminPsychologistStatisticsDTO = {
     business: {
       cards: [
@@ -2088,11 +2260,11 @@ export const showAdminPsychologistStatistics = async (
           value: whatsappClicks.length,
         }),
         metric({
-          comparison: buildComparison(activityScore, previousActivityScore, period.period),
+          comparison: buildComparison(activityActions, previousActivityActions, period.period),
           id: "activity_score",
-          label: "Atividade (score)",
-          source: ACTIVITY_SCORE_SOURCE,
-          value: activityScore,
+          label: "Atividade (ações)",
+          source: ACTIVITY_ACTIONS_SOURCE,
+          value: activityActions,
         }),
         metric({
           comparison: buildComparison(favorites.length, previousFavorites.length, period.period),
@@ -2196,6 +2368,18 @@ export const showAdminPsychologistStatistics = async (
       cards: [
         metric({
           comparison: buildComparison(
+            communityVisibilitySeconds,
+            previousCommunityVisibilitySeconds,
+            period.period,
+          ),
+          id: "community_visibility",
+          label: "Visibilidade",
+          source: "content_attention_session.attention_seconds",
+          unit: "seconds",
+          value: communityVisibilitySeconds,
+        }),
+        metric({
+          comparison: buildComparison(
             communityPosts.length,
             previousCommunityPosts.length,
             period.period,
@@ -2217,6 +2401,22 @@ export const showAdminPsychologistStatistics = async (
           value: communityReplies.length,
         }),
         metric({
+          available: coverageRate !== null,
+          comparison:
+            coverageRate !== null
+              ? buildComparison(coverageRate, previousCoverageRate ?? 0, period.period)
+              : null,
+          id: "coverage_rate",
+          label: "Taxa de cobertura",
+          source: "community_post.author.role=paciente+post_reply.author_id",
+          unit: "percentage",
+          unavailable_reason:
+            coverageRate !== null
+              ? null
+              : "Nenhum post de paciente foi encontrado no período selecionado.",
+          value: coverageRate,
+        }),
+        metric({
           comparison: buildComparison(
             patientPostTextReplyCoverageCount,
             previousPatientPostTextReplyCoverageCount,
@@ -2224,7 +2424,7 @@ export const showAdminPsychologistStatistics = async (
           ),
           id: "patient_post_text_reply_coverage",
           label: "Posts de pacientes respondidos sem vídeo",
-          source: ACTIVITY_SCORE_SOURCE,
+          source: PATIENT_POST_REPLY_COVERAGE_SOURCE,
           value: patientPostTextReplyCoverageCount,
         }),
         metric({
@@ -2235,7 +2435,7 @@ export const showAdminPsychologistStatistics = async (
           ),
           id: "patient_post_video_reply_coverage",
           label: "Posts de pacientes respondidos com vídeo",
-          source: ACTIVITY_SCORE_SOURCE,
+          source: PATIENT_POST_REPLY_COVERAGE_SOURCE,
           value: patientPostVideoReplyCoverageCount,
         }),
         metric({

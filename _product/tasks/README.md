@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 117 tasks: `TASK-00` a `TASK-110`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 118 tasks: `TASK-00` a `TASK-111`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -192,6 +192,7 @@ ou cortesia manual.
 | 108 | [TASK-108 - Bloco Visibilidade nas estatisticas do psicologo Admin](TASK-108-bloco-visibilidade-estatisticas-psicologo-admin.md) | Completed | 57, 75, 104, 105, 106, 107 |
 | 109 | [TASK-109 - Copy dos contadores de Visibilidade do psicologo Admin](TASK-109-copy-contadores-visibilidade-psicologo-admin.md) | Completed | 108 |
 | 110 | [TASK-110 - Formula de atividade por cobertura e video no psicologo Admin](TASK-110-formula-atividade-cobertura-video-psicologo-admin.md) | Completed | 57, 104, 105, 107, 108, 109 |
+| 111 | [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) | Completed | 57, 104, 105, 106, 107, 108, 109, 110 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -276,6 +277,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 74. [TASK-108 - Bloco Visibilidade nas estatisticas do psicologo Admin](TASK-108-bloco-visibilidade-estatisticas-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para inserir, apos Conversao, um bloco de visibilidade com barras empilhadas temporais, curva da soma e contadores reais de visualizacoes/aberturas.
 75. [TASK-109 - Copy dos contadores de Visibilidade do psicologo Admin](TASK-109-copy-contadores-visibilidade-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para refinar os labels dos contadores de views de video e conteudo na comunidade no bloco Visibilidade.
 76. [TASK-110 - Formula de atividade por cobertura e video no psicologo Admin](TASK-110-formula-atividade-cobertura-video-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para trocar o score de Atividade para posts criados mais cobertura de posts de pacientes respondidos, com peso maior para respostas em video.
+77. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) foi adicionada e concluida em 2026-07-31 para incluir Visibilidade temporal, Taxa de cobertura, periodo selecionado, tags de atividade/engajamento e trocar Atividade de score ponderado para acoes brutas.
 
 ### 1A. Trilha Admin planejada
 
@@ -345,6 +347,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 62. [TASK-108 - Bloco Visibilidade nas estatisticas do psicologo Admin](TASK-108-bloco-visibilidade-estatisticas-psicologo-admin.md)
 63. [TASK-109 - Copy dos contadores de Visibilidade do psicologo Admin](TASK-109-copy-contadores-visibilidade-psicologo-admin.md)
 64. [TASK-110 - Formula de atividade por cobertura e video no psicologo Admin](TASK-110-formula-atividade-cobertura-video-psicologo-admin.md)
+65. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

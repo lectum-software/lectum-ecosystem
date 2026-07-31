@@ -108,7 +108,6 @@ import type {
   AdminPsychologistReviewItem,
   AdminPsychologistReviewsQuery,
   AdminPsychologistStatistics,
-  AdminPsychologistStatisticsPoint,
   AdminPsychologistStatisticsQuery,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
@@ -445,24 +444,6 @@ const BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS: Record<
   no_conversion: "bg-danger/10 text-danger",
 };
 
-const ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT = 3;
-const ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT = 5;
-
-const getActivityScoreValue = (point: AdminPsychologistStatisticsPoint) => {
-  if (
-    typeof point.patient_post_text_reply_coverage === "number" ||
-    typeof point.patient_post_video_reply_coverage === "number"
-  ) {
-    return (
-      point.posts +
-      (point.patient_post_text_reply_coverage ?? 0) * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
-      (point.patient_post_video_reply_coverage ?? 0) * ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT
-    );
-  }
-
-  return point.posts + point.replies * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT;
-};
-
 const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 4.2,
@@ -519,10 +500,9 @@ const BUSINESS_CHART_METRICS = [
     icon: Activity,
     iconClassName: "text-amber-500",
     iconToneClassName: "bg-amber-50",
-    getValue: getActivityScoreValue,
-    label: "Atividade (score)",
-    source:
-      "community_post.author_id+post_reply.author_id+post_reply.post.author.role=paciente+post_reply.media_type",
+    getValue: (point) => point.posts + point.replies,
+    label: "Atividade (ações)",
+    source: "community_post.author_id+post_reply.author_id",
     shortLabel: "Atividade",
     strokeClassName: "stroke-amber-500",
     swatchClassName: "bg-amber-500",
@@ -580,6 +560,20 @@ const VISIBILITY_CHART_METRICS = [
 
 const COMMUNITY_CHART_METRICS = [
   {
+    dotRadius: 4.4,
+    icon: Eye,
+    iconClassName: "text-primary",
+    iconToneClassName: "bg-primary-soft",
+    id: "community_visibility",
+    getValue: (point) => point.visibility_seconds,
+    label: "Visibilidade",
+    source: "content_attention_session.attention_seconds",
+    shortLabel: "Visibilidade",
+    strokeClassName: "stroke-primary",
+    swatchClassName: "bg-primary",
+    unit: "seconds",
+  },
+  {
     dotRadius: 4.2,
     icon: FileText,
     iconClassName: "text-primary",
@@ -604,6 +598,20 @@ const COMMUNITY_CHART_METRICS = [
     shortLabel: "Respostas",
     strokeClassName: "stroke-blue-500",
     swatchClassName: "bg-blue-500",
+  },
+  {
+    dotRadius: 3.8,
+    icon: ShieldCheck,
+    iconClassName: "text-success",
+    iconToneClassName: "bg-success/10",
+    id: "coverage_rate",
+    getValue: (point) => point.coverage_rate_percent,
+    label: "Taxa de cobertura",
+    source: "community_post.author.role=paciente+post_reply.author_id",
+    shortLabel: "Cobertura",
+    strokeClassName: "stroke-success",
+    swatchClassName: "bg-success",
+    unit: "percentage",
   },
   {
     dotRadius: 3.7,
@@ -687,6 +695,7 @@ type StatisticsMetricComparison = NonNullable<AdminPsychologistEngagementMetric[
 
 const BUSINESS_SERIES_METRIC_KEYS = [
   "comments_received",
+  "coverage_rate_percent",
   "favorites",
   "profile_views",
   "reviews",
@@ -1973,12 +1982,21 @@ const CardShell = ({ children, className }: { children: ReactNode; className?: s
   <section className={cn(CARD, className)}>{children}</section>
 );
 
-const Badge = ({ children, className }: { children: ReactNode; className?: string }) => (
+const Badge = ({
+  children,
+  className,
+  title,
+}: {
+  children: ReactNode;
+  className?: string;
+  title?: string;
+}) => (
   <span
     className={cn(
       "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-black",
       className,
     )}
+    title={title}
   >
     {children}
   </span>
@@ -3111,6 +3129,89 @@ const formatPsychologistCommunityEngagementLabel = (
   diagnosis: AdminPsychologistStatistics["community"]["engagement_diagnosis"],
 ) => PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_LABEL_BY_ID[diagnosis.id] ?? diagnosis.label;
 
+type CommunityActivityBadgeId = "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
+type CommunityReceivedEngagementBadgeId =
+  | "high_engagement"
+  | "low_engagement"
+  | "no_engagement"
+  | "standard_engagement";
+
+const communityReceivedEngagementBadgeClassName = (id: CommunityReceivedEngagementBadgeId) =>
+  cn(
+    "whitespace-nowrap",
+    id === "high_engagement" && "bg-success/10 text-success",
+    id === "standard_engagement" && "bg-primary-soft text-primary",
+    id === "low_engagement" && "bg-warning/10 text-warning",
+    id === "no_engagement" && "bg-surface-muted text-muted",
+  );
+
+const readStatisticsMetricValue = (
+  metrics: Map<string, AdminPsychologistEngagementMetric>,
+  id: string,
+) => {
+  const metric = metrics.get(id);
+
+  return metric?.available && typeof metric.value === "number" ? metric.value : 0;
+};
+
+const classifyCommunityActivityBadge = (
+  metrics: Map<string, AdminPsychologistEngagementMetric>,
+) => {
+  const actions =
+    readStatisticsMetricValue(metrics, "posts") + readStatisticsMetricValue(metrics, "replies");
+  let id: CommunityActivityBadgeId = "sem_base";
+
+  if (actions >= 12) id = "muito_ativo";
+  else if (actions >= 6) id = "ativo";
+  else if (actions >= 3) id = "pouco_ativo";
+
+  const labels = {
+    ativo: "Ativo",
+    muito_ativo: "Muito ativo",
+    pouco_ativo: "Pouco ativo",
+    sem_base: "Sem base",
+  } satisfies Record<CommunityActivityBadgeId, string>;
+
+  return {
+    className: communityEngagementDiagnosisClassName(id),
+    label: labels[id],
+    title:
+      "Diagnóstico de atividade por ações brutas: posts autorais e respostas criadas no período selecionado.",
+  };
+};
+
+const classifyCommunityReceivedEngagementBadge = (
+  metrics: Map<string, AdminPsychologistEngagementMetric>,
+) => {
+  const score = Math.max(
+    0,
+    readStatisticsMetricValue(metrics, "upvotes") * 2 +
+      readStatisticsMetricValue(metrics, "comments_received") * 5 +
+      readStatisticsMetricValue(metrics, "shares") * 8 +
+      readStatisticsMetricValue(metrics, "saves") * 2 -
+      readStatisticsMetricValue(metrics, "downvotes") * 3,
+  );
+  let id: CommunityReceivedEngagementBadgeId = "no_engagement";
+
+  if (score >= 12) id = "high_engagement";
+  else if (score >= 6) id = "standard_engagement";
+  else if (score >= 3) id = "low_engagement";
+
+  const labels = {
+    high_engagement: "Alto engajamento",
+    low_engagement: "Baixo engajamento",
+    no_engagement: "Sem engajamento",
+    standard_engagement: "Engajamento padrão",
+  } satisfies Record<CommunityReceivedEngagementBadgeId, string>;
+
+  return {
+    className: communityReceivedEngagementBadgeClassName(id),
+    label: labels[id],
+    title:
+      "Diagnóstico de engajamento recebido por votos, comentários, salvamentos e compartilhamentos no período selecionado.",
+  };
+};
+
 const getPsychologistCommunityInteractions = (community: PsychologistStatisticsCommunityItem) =>
   community.interactions ?? community.posts + community.replies;
 
@@ -3608,7 +3709,10 @@ const StatisticsMetricCarousel = ({
 
 const aggregateStatisticsChartPoints = (
   points: AdminPsychologistStatistics["business"]["series"],
-) => aggregateCalendarChartPoints(points, BUSINESS_SERIES_METRIC_KEYS);
+) =>
+  aggregateCalendarChartPoints(points, BUSINESS_SERIES_METRIC_KEYS, {
+    metricAggregations: { coverage_rate_percent: "last" },
+  });
 
 const sumStatisticsChartMetricValue = (
   points: AdminPsychologistStatistics["business"]["series"],
@@ -3645,17 +3749,9 @@ const buildDerivedBusinessMetricComparison = ({
   }
 
   if (config.id === "activity_score") {
-    const hasCoverageMetrics =
-      metrics.has("patient_post_text_reply_coverage") ||
-      metrics.has("patient_post_video_reply_coverage");
-    const previous = hasCoverageMetrics
-      ? getPreviousStatisticsMetricValue(metrics, "posts") +
-        getPreviousStatisticsMetricValue(metrics, "patient_post_text_reply_coverage") *
-          ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
-        getPreviousStatisticsMetricValue(metrics, "patient_post_video_reply_coverage") *
-          ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT
-      : getPreviousStatisticsMetricValue(metrics, "posts") +
-        getPreviousStatisticsMetricValue(metrics, "replies") * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT;
+    const previous =
+      getPreviousStatisticsMetricValue(metrics, "posts") +
+      getPreviousStatisticsMetricValue(metrics, "replies");
 
     return buildStatisticsMetricComparison({ current, period, previous });
   }
@@ -3711,6 +3807,12 @@ const buildStatisticsOverviewMetric = ({
 
 const formatStatisticsChartMetricValue = (value: number, metric?: StatisticsChartMetric) => {
   if (metric?.unit === "seconds") return formatDurationSeconds(value);
+  if (metric?.unit === "percentage") {
+    return `${value.toLocaleString("pt-BR", {
+      maximumFractionDigits: 1,
+      minimumFractionDigits: 0,
+    })}%`;
+  }
 
   return numberFormatter.format(value);
 };
@@ -5748,6 +5850,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
     return metric ? [{ config, metric: withStatisticsChartMetricConfig(metric, config) }] : [];
   });
+  const communityActivityBadge = classifyCommunityActivityBadge(communityMetricMap);
+  const communityReceivedEngagementBadge =
+    classifyCommunityReceivedEngagementBadge(communityMetricMap);
   const hasSelectedCommunity =
     communityStatisticsSelectedCommunity === "all" ||
     communityStatistics.community.communities.some(
@@ -5960,6 +6065,21 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-bold text-foreground">Atividade e engajamento</h2>
+                <Badge
+                  className={cn("border border-current/10", communityActivityBadge.className)}
+                  title={communityActivityBadge.title}
+                >
+                  {communityActivityBadge.label}
+                </Badge>
+                <Badge
+                  className={cn(
+                    "border border-current/10",
+                    communityReceivedEngagementBadge.className,
+                  )}
+                  title={communityReceivedEngagementBadge.title}
+                >
+                  {communityReceivedEngagementBadge.label}
+                </Badge>
                 {isCommunityRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                     <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
@@ -5968,8 +6088,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 ) : null}
               </div>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Indicadores de publicação, resposta e engajamento recebido pelo psicólogo nas
-                comunidades.
+                {formatStatisticsPeriodSummary(communityStatistics.period)}
               </p>
             </div>
             <div className="w-full xl:w-72">

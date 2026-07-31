@@ -74,6 +74,14 @@ const postSelect = {
   },
 } satisfies Prisma.community_postSelect;
 
+const coveragePatientPostSelect = {
+  createdAt: true,
+  id: true,
+  community: {
+    select: communitySelect,
+  },
+} satisfies Prisma.community_postSelect;
+
 const replySelect = {
   content: true,
   createdAt: true,
@@ -132,6 +140,10 @@ export type AdminPsychologistPlatformSessionRecord = Prisma.visitor_sessionGetPa
 
 export type AdminPsychologistEngagementPost = Prisma.community_postGetPayload<{
   select: typeof postSelect;
+}>;
+
+export type AdminPsychologistCoveragePatientPost = Prisma.community_postGetPayload<{
+  select: typeof coveragePatientPostSelect;
 }>;
 
 export type AdminPsychologistEngagementReply = Prisma.post_replyGetPayload<{
@@ -352,6 +364,7 @@ export class AdminPsychologistEngagementRepository {
       },
       select: {
         attention_seconds: true,
+        community_id: true,
         createdAt: true,
         target_type: true,
       },
@@ -534,6 +547,24 @@ export class AdminPsychologistEngagementRepository {
         status: "publicado",
       },
       _count: { _all: true },
+    });
+  }
+
+  async listPatientPostsByCommunityForCoverage(from: Date, to: Date) {
+    return prisma.community_post.findMany({
+      orderBy: { createdAt: "asc" },
+      select: coveragePatientPostSelect,
+      where: {
+        author: {
+          active: true,
+          deleted: false,
+          role: "paciente",
+        },
+        community: { deleted: false },
+        createdAt: { gte: from, lte: to },
+        deleted: false,
+        status: "publicado",
+      },
     });
   }
 

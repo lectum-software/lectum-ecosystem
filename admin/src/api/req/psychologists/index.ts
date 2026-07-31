@@ -1872,6 +1872,7 @@ export type AdminPsychologistStatisticsQuery = {
 
 export type AdminPsychologistStatisticsPoint = {
   comments_received: number;
+  coverage_rate_percent: number;
   date: string;
   downvotes: number;
   favorites: number;
