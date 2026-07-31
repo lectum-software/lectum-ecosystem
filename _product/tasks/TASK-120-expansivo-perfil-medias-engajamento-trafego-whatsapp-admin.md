@@ -46,7 +46,7 @@ Todas as dependencias acima estao concluidas.
 - Calcular metricas reais do perfil a partir de `profile_view_event`, `page_view_event.duration_seconds`, `profile_video_watch_session`, `psychologist_favorite` e `important_action_event`.
 - Adicionar tracking first-party para abertura das abas `Publicacoes` e `Avaliacoes` no perfil publico, usando `important_action_event` com novos `action_type` permitidos.
 - No Admin, renderizar **Perfil** com seta de expansao alinhada ao padrao existente; ao expandir, mostrar os chips de engajamento dentro do perfil.
-- Preservar o agrupamento de Comunidades e Video de apresentacao; em Comunidades, ajustar somente `Tempo de permanencia` para media por sessao real de atencao valida.
+- Preservar o agrupamento de Comunidades e Video de apresentacao.
 
 ## Regras de calculo
 
@@ -54,7 +54,6 @@ Todas as dependencias acima estao concluidas.
 - `Tempo de permanencia` e a media de `page_view_event.duration_seconds` em pageviews reais de perfil, excluindo autovisitas quando identificadas.
 - `Retencao` e a media percentual de `watched_seconds / duration_seconds` em sessoes reais do video de apresentacao com duracao positiva.
 - Aberturas das abas Publicacoes/Avaliacoes nao recebem backfill: eventos antigos aparecem como `0` ate que o novo tracking gere eventos reais.
-- Em **Comunidades**, `Tempo de permanencia` e a media de `content_attention_session.attention_seconds` por sessao real de atencao valida (`attention_seconds > 0`); as demais contagens de Comunidades permanecem medias por conteudo.
 
 ## Fora do escopo
 
@@ -71,7 +70,7 @@ Todas as dependencias acima estao concluidas.
 - [x] As metricas usam somente eventos first-party reais e mostram `Sem dados` quando a base temporal nao existe.
 - [x] Aberturas das abas Publicacoes/Avaliacoes passam a ser rastreadas por `important_action_event`, sem backfill.
 - [x] O filtro por plano do bloco continua filtrando tambem as metricas do Perfil.
-- [x] Comunidades e Video de apresentacao preservam seus expansivos; em Comunidades, apenas `Tempo de permanencia` passa a usar media por sessao real de atencao valida.
+- [x] Comunidades e Video de apresentacao preservam seus expansivos e metricas existentes.
 - [x] Nenhum `<img>` cru foi adicionado.
 - [x] Nao foram usados mocks, seeds, dados fake permanentes, backfill ou endpoint simulado.
 - [x] Builder/Quick Copy nao estava callable; imagem local e screenshot do usuario foram usados como referencia.
@@ -89,8 +88,6 @@ Todas as dependencias acima estao concluidas.
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir frontend build`
 - `pnpm check`
-- Script backend comparando `average_visibility` das quatro sublinhas de Comunidades com `sum(attention_seconds) / count(attention_seconds > 0)`.
-- Browser local desktop e mobile ~390px validando 4 chips `Tempo de permanencia` em Comunidades.
 - Smoke backend com `buildPsychologistsDashboard({ period: "30d" })`, confirmando `profile.platform_metrics` com os 7 ids esperados.
 - Browser local via Chrome/CDP em `http://localhost:3002/psicologos`, desktop 1440px e mobile 390px, expandindo **Perfil** e confirmando os sete chips.
 

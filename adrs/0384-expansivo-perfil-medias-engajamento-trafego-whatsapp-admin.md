@@ -17,7 +17,7 @@ As fontes first-party ja existentes permitem medir aberturas de perfil, duracao 
 3. Calcular contagens de Perfil como medias por psicologo do segmento selecionado; calcular `Tempo de permanencia` por media de `page_view_event.duration_seconds`; calcular `Retencao` por media percentual de sessoes reais de `profile_video_watch_session`.
 4. Criar dois `important_action_event.action_type` novos para eventos futuros de abertura das abas do perfil publico: `psychologist_profile_publications_tab_open` e `psychologist_profile_reviews_tab_open`.
 5. Nao fazer backfill das abas: historico anterior permanece zerado/sem base ate que o novo tracking acumule eventos reais.
-6. Preservar os grupos de Comunidades e Video de apresentacao. Em Comunidades, alterar somente `Tempo de permanencia` para `sum(content_attention_session.attention_seconds) / count(sessoes com attention_seconds > 0)`, mantendo as demais contagens como medias por conteudo.
+6. Preservar os grupos e calculos existentes de Comunidades e Video de apresentacao.
 
 ## Consequencias
 
@@ -40,7 +40,5 @@ As fontes first-party ja existentes permitem medir aberturas de perfil, duracao 
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir frontend build`
 - `pnpm check`
-- Script backend comparando `average_visibility` de Comunidades com a media por sessao real de atencao valida.
-- Browser local desktop/mobile validando os chips `Tempo de permanencia` em Comunidades.
 - Smoke backend de `buildPsychologistsDashboard({ period: "30d" })` com os sete ids de `profile.platform_metrics`.
 - Browser local via Chrome/CDP em desktop 1440px e mobile 390px, expandindo **Perfil** e validando os sete chips.
