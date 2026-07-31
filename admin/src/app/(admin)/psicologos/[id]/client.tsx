@@ -1347,6 +1347,26 @@ const StatisticsPeriodControls = ({
     ) : null}
   </div>
 );
+
+const StatisticsGlobalPeriodCard = (props: Omit<StatisticsPeriodControlsProps, "className">) => (
+  <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+      <div className="flex min-w-0 gap-3">
+        <IconCircle icon={CalendarDays} />
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold text-foreground">
+            Per&iacute;odo das estat&iacute;sticas
+          </h2>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">
+            Selecione o per&iacute;odo de an&aacute;lise das estat&iacute;sticas.
+          </p>
+        </div>
+      </div>
+      <StatisticsPeriodControls className="xl:w-[min(820px,58vw)]" {...props} />
+    </div>
+  </CardShell>
+);
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return "Não informado";
 
@@ -5017,61 +5037,24 @@ const PsychologistPlatformActivityHoursCard = ({
 };
 
 const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: string }) => {
-  const businessStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
-  const videoStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
-  const trafficStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
-  const platformStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
-  const communityStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
-  const activeCommunitiesStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
-  const activityHoursStatisticsFilter = useStatisticsPeriodFilter(detail.header.created_at);
+  const statisticsPeriodFilter = useStatisticsPeriodFilter(detail.header.created_at);
   const [communityStatisticsSelectedCommunity, setCommunityStatisticsSelectedCommunity] =
     useState("all");
   const communityStatisticsPeriodQuery = useMemo(
     () => ({
-      ...communityStatisticsFilter.periodQuery,
+      ...statisticsPeriodFilter.periodQuery,
       ...(communityStatisticsSelectedCommunity !== "all"
         ? { community: communityStatisticsSelectedCommunity }
         : {}),
     }),
-    [communityStatisticsFilter.periodQuery, communityStatisticsSelectedCommunity],
+    [statisticsPeriodFilter.periodQuery, communityStatisticsSelectedCommunity],
   );
-  const businessStatisticsQuery = useAdminPsychologistStatistics(
-    id,
-    businessStatisticsFilter.periodQuery,
-  );
-  const videoStatisticsQuery = useAdminPsychologistStatistics(
-    id,
-    videoStatisticsFilter.periodQuery,
-  );
-  const trafficStatisticsQuery = useAdminPsychologistStatistics(
-    id,
-    trafficStatisticsFilter.periodQuery,
-  );
-  const platformStatisticsQuery = useAdminPsychologistStatistics(
-    id,
-    platformStatisticsFilter.periodQuery,
-  );
+  const statisticsQuery = useAdminPsychologistStatistics(id, statisticsPeriodFilter.periodQuery);
   const communityStatisticsQuery = useAdminPsychologistStatistics(
     id,
     communityStatisticsPeriodQuery,
   );
-  const activeCommunitiesStatisticsQuery = useAdminPsychologistStatistics(
-    id,
-    activeCommunitiesStatisticsFilter.periodQuery,
-  );
-  const activityHoursStatisticsQuery = useAdminPsychologistStatistics(
-    id,
-    activityHoursStatisticsFilter.periodQuery,
-  );
-  const statisticsQueries = [
-    businessStatisticsQuery,
-    videoStatisticsQuery,
-    trafficStatisticsQuery,
-    platformStatisticsQuery,
-    communityStatisticsQuery,
-    activeCommunitiesStatisticsQuery,
-    activityHoursStatisticsQuery,
-  ] as const;
+  const statisticsQueries = [statisticsQuery, communityStatisticsQuery] as const;
   const [visibleBusinessMetricIds, setVisibleBusinessMetricIds] = useState<BusinessChartMetricId[]>(
     () => BUSINESS_CHART_METRICS.map((item) => item.id),
   );
@@ -5102,19 +5085,15 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       (!query.data && query.isError && query.error ? resolveApiError(query.error) : null),
     null,
   );
-  const isBusinessRefreshing =
-    businessStatisticsQuery.isFetching && Boolean(businessStatisticsQuery.data);
-  const isVideoRefreshing = videoStatisticsQuery.isFetching && Boolean(videoStatisticsQuery.data);
-  const isTrafficRefreshing =
-    trafficStatisticsQuery.isFetching && Boolean(trafficStatisticsQuery.data);
-  const isPlatformRefreshing =
-    platformStatisticsQuery.isFetching && Boolean(platformStatisticsQuery.data);
+  const isGlobalStatisticsRefreshing = statisticsQuery.isFetching && Boolean(statisticsQuery.data);
   const isCommunityRefreshing =
     communityStatisticsQuery.isFetching && Boolean(communityStatisticsQuery.data);
-  const isActiveCommunitiesRefreshing =
-    activeCommunitiesStatisticsQuery.isFetching && Boolean(activeCommunitiesStatisticsQuery.data);
-  const isActivityHoursRefreshing =
-    activityHoursStatisticsQuery.isFetching && Boolean(activityHoursStatisticsQuery.data);
+  const isBusinessRefreshing = isGlobalStatisticsRefreshing;
+  const isVideoRefreshing = isGlobalStatisticsRefreshing;
+  const isTrafficRefreshing = isGlobalStatisticsRefreshing;
+  const isPlatformRefreshing = isGlobalStatisticsRefreshing;
+  const isActiveCommunitiesRefreshing = isGlobalStatisticsRefreshing;
+  const isActivityHoursRefreshing = isGlobalStatisticsRefreshing;
   const refetchStatisticsQueries = () => {
     statisticsQueries.forEach((query) => {
       void query.refetch();
@@ -5129,25 +5108,17 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       <ErrorState message={initialStatisticsErrorMessage} onRetry={refetchStatisticsQueries} />
     );
   }
-  if (
-    !businessStatisticsQuery.data ||
-    !videoStatisticsQuery.data ||
-    !trafficStatisticsQuery.data ||
-    !platformStatisticsQuery.data ||
-    !communityStatisticsQuery.data ||
-    !activeCommunitiesStatisticsQuery.data ||
-    !activityHoursStatisticsQuery.data
-  ) {
+  if (!statisticsQuery.data || !communityStatisticsQuery.data) {
     return null;
   }
 
-  const businessStatistics = businessStatisticsQuery.data;
-  const videoStatistics = videoStatisticsQuery.data;
-  const trafficStatistics = trafficStatisticsQuery.data;
-  const platformStatistics = platformStatisticsQuery.data;
+  const businessStatistics = statisticsQuery.data;
+  const videoStatistics = statisticsQuery.data;
+  const trafficStatistics = statisticsQuery.data;
+  const platformStatistics = statisticsQuery.data;
   const communityStatistics = communityStatisticsQuery.data;
-  const activeCommunitiesStatistics = activeCommunitiesStatisticsQuery.data;
-  const activityHoursStatistics = activityHoursStatisticsQuery.data;
+  const activeCommunitiesStatistics = statisticsQuery.data;
+  const activityHoursStatistics = statisticsQuery.data;
   const businessProfileConversion = businessStatistics.business.profile_conversion;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
@@ -5240,10 +5211,20 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
       className="max-w-full space-y-5 overflow-x-clip"
       data-psychologist-detail-tab="estatisticas"
     >
+      <StatisticsGlobalPeriodCard
+        idPrefix="psychologist-statistics-global"
+        onDateControlsBlur={statisticsPeriodFilter.handleDateControlsBlur}
+        onDateChange={statisticsPeriodFilter.handleDateChange}
+        onPeriodChange={statisticsPeriodFilter.handlePeriodChange}
+        period={statisticsPeriodFilter.selectedPeriod}
+        range={statisticsPeriodFilter.draftRange}
+        rangeError={statisticsPeriodFilter.rangeError}
+      />
+
       <section aria-busy={isBusinessRefreshing} className="grid max-w-full gap-5 overflow-x-clip">
         <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-            <div className="min-w-0 xl:col-span-2">
+          <div className="grid gap-2">
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-bold text-foreground">
                   Conversão, visibilidade, engajamento e atividade
@@ -5270,15 +5251,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               Visão do desempenho comercial do psicólogo na plataforma, incluindo descoberta,
               interesse e intenção de contato.
             </p>
-            <StatisticsPeriodControls
-              idPrefix="business-statistics"
-              onDateControlsBlur={businessStatisticsFilter.handleDateControlsBlur}
-              onDateChange={businessStatisticsFilter.handleDateChange}
-              onPeriodChange={businessStatisticsFilter.handlePeriodChange}
-              period={businessStatisticsFilter.selectedPeriod}
-              range={businessStatisticsFilter.draftRange}
-              rangeError={businessStatisticsFilter.rangeError}
-            />
           </div>
 
           <ProfileConversionInsightCard conversion={businessProfileConversion} />
@@ -5335,44 +5307,34 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                 comunidades.
               </p>
             </div>
-            <StatisticsPeriodControls
-              className="xl:w-[min(920px,62vw)]"
-              idPrefix="community-statistics"
-              leadingControl={
-                <label
-                  className="block text-xs font-black text-muted"
-                  htmlFor="community-statistics-community"
-                >
-                  Comunidade
-                  <span className="relative mt-2 block">
-                    <select
-                      className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      id="community-statistics-community"
-                      onChange={(event) =>
-                        setCommunityStatisticsSelectedCommunity(event.target.value)
-                      }
-                      value={communitySelectValue}
-                    >
-                      {communityFilterOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      aria-hidden
-                      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
-                    />
-                  </span>
-                </label>
-              }
-              onDateControlsBlur={communityStatisticsFilter.handleDateControlsBlur}
-              onDateChange={communityStatisticsFilter.handleDateChange}
-              onPeriodChange={communityStatisticsFilter.handlePeriodChange}
-              period={communityStatisticsFilter.selectedPeriod}
-              range={communityStatisticsFilter.draftRange}
-              rangeError={communityStatisticsFilter.rangeError}
-            />
+            <div className="w-full xl:w-72">
+              <label
+                className="block text-xs font-black text-muted"
+                htmlFor="community-statistics-community"
+              >
+                Comunidade
+                <span className="relative mt-2 block">
+                  <select
+                    className="h-11 w-full appearance-none rounded-control border border-border bg-surface py-0 pl-3 pr-11 text-sm font-black text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    id="community-statistics-community"
+                    onChange={(event) =>
+                      setCommunityStatisticsSelectedCommunity(event.target.value)
+                    }
+                    value={communitySelectValue}
+                  >
+                    {communityFilterOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    aria-hidden
+                    className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground"
+                  />
+                </span>
+              </label>
+            </div>
           </div>
 
           <StatisticsMetricCarousel
@@ -5400,33 +5362,13 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           communities={activeCommunities}
           engagementDiagnosis={activeCommunitiesStatistics.community.engagement_diagnosis}
           isRefreshing={isActiveCommunitiesRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="active-communities-statistics"
-              onDateControlsBlur={activeCommunitiesStatisticsFilter.handleDateControlsBlur}
-              onDateChange={activeCommunitiesStatisticsFilter.handleDateChange}
-              onPeriodChange={activeCommunitiesStatisticsFilter.handlePeriodChange}
-              period={activeCommunitiesStatisticsFilter.selectedPeriod}
-              range={activeCommunitiesStatisticsFilter.draftRange}
-              rangeError={activeCommunitiesStatisticsFilter.rangeError}
-            />
-          }
+          periodControls={null}
         />
 
         <StatisticsVideoCard
           detail={detail}
           isRefreshing={isVideoRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="video-statistics"
-              onDateControlsBlur={videoStatisticsFilter.handleDateControlsBlur}
-              onDateChange={videoStatisticsFilter.handleDateChange}
-              onPeriodChange={videoStatisticsFilter.handlePeriodChange}
-              period={videoStatisticsFilter.selectedPeriod}
-              range={videoStatisticsFilter.draftRange}
-              rangeError={videoStatisticsFilter.rangeError}
-            />
-          }
+          periodControls={null}
           statistics={videoStatistics}
         />
 
@@ -5437,49 +5379,19 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
         <PsychologistTrafficSourcesCard
           isRefreshing={isTrafficRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="traffic-statistics"
-              onDateControlsBlur={trafficStatisticsFilter.handleDateControlsBlur}
-              onDateChange={trafficStatisticsFilter.handleDateChange}
-              onPeriodChange={trafficStatisticsFilter.handlePeriodChange}
-              period={trafficStatisticsFilter.selectedPeriod}
-              range={trafficStatisticsFilter.draftRange}
-              rangeError={trafficStatisticsFilter.rangeError}
-            />
-          }
+          periodControls={null}
           statistics={trafficStatistics}
         />
 
         <PsychologistPlatformActivityHoursCard
           isRefreshing={isActivityHoursRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="activity-hours-statistics"
-              onDateControlsBlur={activityHoursStatisticsFilter.handleDateControlsBlur}
-              onDateChange={activityHoursStatisticsFilter.handleDateChange}
-              onPeriodChange={activityHoursStatisticsFilter.handlePeriodChange}
-              period={activityHoursStatisticsFilter.selectedPeriod}
-              range={activityHoursStatisticsFilter.draftRange}
-              rangeError={activityHoursStatisticsFilter.rangeError}
-            />
-          }
+          periodControls={null}
           statistics={activityHoursStatistics}
         />
 
         <PsychologistPlatformUsageCard
           isRefreshing={isPlatformRefreshing}
-          periodControls={
-            <StatisticsPeriodControls
-              idPrefix="platform-statistics"
-              onDateControlsBlur={platformStatisticsFilter.handleDateControlsBlur}
-              onDateChange={platformStatisticsFilter.handleDateChange}
-              onPeriodChange={platformStatisticsFilter.handlePeriodChange}
-              period={platformStatisticsFilter.selectedPeriod}
-              range={platformStatisticsFilter.draftRange}
-              rangeError={platformStatisticsFilter.rangeError}
-            />
-          }
+          periodControls={null}
           statistics={platformStatistics}
         />
       </section>
