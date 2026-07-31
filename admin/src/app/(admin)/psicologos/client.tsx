@@ -4264,7 +4264,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
               const isExpanded = expandedTrafficSourceGroups.has(source.id);
 
               return (
-                <div className="bg-surface-muted/35" key={source.id}>
+                <div className="bg-surface" key={source.id}>
                   <button
                     aria-expanded={isExpanded}
                     aria-label={`${isExpanded ? "Ocultar" : "Expandir"} detalhes de ${source.label}`}
@@ -4299,7 +4299,7 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                     </div>
                   </button>
                   {isExpanded ? (
-                    <div className="divide-y divide-border/70 border-border/70 border-t">
+                    <div className="divide-y divide-border/70 border-border/70 border-t bg-surface-muted/35">
                       {source.children?.length ? (
                         source.children.map((childSource) => (
                           <div
@@ -4356,12 +4356,15 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                     {source.description}
                   </p>
                 </div>
-                <div className="flex justify-center text-center">
-                  <TrafficSourceMetricValue
-                    className="text-lg"
-                    percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                    value={formatNullableCount(source.whatsapp_clicks)}
-                  />
+                <div className="grid grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-4 text-center">
+                  <div className="flex justify-center">
+                    <TrafficSourceMetricValue
+                      className="text-lg"
+                      percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
+                      value={formatNullableCount(source.whatsapp_clicks)}
+                    />
+                  </div>
+                  <span aria-hidden className="h-6 w-6" />
                 </div>
               </div>
             );

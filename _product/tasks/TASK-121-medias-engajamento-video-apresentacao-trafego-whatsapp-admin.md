@@ -39,6 +39,8 @@ Todas as dependencias acima estao concluidas.
 - Reusar `important_action_event` com `psychologist_video_profile_access`, `psychologist_video_favorite` e `psychologist_video_share` para Acessos ao perfil, Favoritado e Compartilhado.
 - Manter o filtro por plano aplicando o mesmo recorte de psicologos permitido no segmento.
 - Renderizar os chips nos filhos **Explorar** e **Busca e filtros** usando o mesmo componente visual de `platform_metrics` ja usado em Comunidades e Perfil.
+- Ajustar a tabela desktop para que os headers principais **Comunidades**, **Perfil** e **Video de apresentacao** usem fundo branco, preservando o fundo dos detalhes expandidos.
+- Alinhar a metrica de **Favoritos** com a mesma coluna visual dos resultados dos grupos expansivos.
 
 ## Regras de calculo
 
@@ -66,6 +68,8 @@ Todas as dependencias acima estao concluidas.
 - [x] As metricas usam somente eventos first-party reais e mostram `Sem dados` quando a base temporal nao existe.
 - [x] O filtro por plano do bloco continua filtrando as metricas do Video de apresentacao.
 - [x] Comunidades e Perfil preservam seus expansivos e metricas existentes.
+- [x] Headers principais da tabela (**Comunidades**, **Perfil** e **Video de apresentacao**) usam fundo branco no desktop, mantendo os detalhes com o fundo anterior.
+- [x] O resultado de **Favoritos** fica alinhado com a coluna visual dos resultados de **Comunidades**, **Perfil** e **Video de apresentacao**.
 - [x] Nenhum `<img>` cru foi adicionado.
 - [x] Nao foram usados mocks, seeds, dados fake permanentes, backfill ou endpoint simulado.
 - [x] Builder/Quick Copy nao estava callable; imagem local e screenshot do usuario foram usados como referencia.
@@ -85,6 +89,9 @@ Todas as dependencias acima estao concluidas.
 - `pnpm check`
 - Smoke de API Admin real em `/api/admin/private/psychologists/dashboard?period=30d`, confirmando os 7 labels em `explore.platform_metrics` e `search_filters.platform_metrics`.
 - Browser local com Chrome/CDP headless em `http://localhost:3002/psicologos`, desktop 1440x900 e mobile 390x900, expandindo **Video de apresentacao** e confirmando os 7 chips nas sublinhas.
+- Complemento visual solicitado em 2026-07-31: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir admin build` e `pnpm check` executados com sucesso.
+- Complemento visual solicitado em 2026-07-31: browser local/headless Chrome/CDP em `http://localhost:3002/psicologos`, desktop 1600px e mobile 390px, validando headers principais brancos, detalhes preservados, alinhamento de **Favoritos** e ausencia de overflow. Screenshots em `.tmp/task121-traffic-table-desktop.png` e `.tmp/task121-traffic-table-mobile-390.png`.
+- No complemento visual, um admin temporario real foi criado via `admin:bootstrap`, usado no login real de validacao e removido do banco ao final junto com seus tokens.
 
 ## Observacoes
 

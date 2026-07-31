@@ -15,6 +15,7 @@ O dashboard Admin de psicologos ja usava `traffic_sources.sources[].platform_met
 3. Calcular acoes do video com `important_action_event`: `psychologist_video_profile_access`, `psychologist_video_favorite` e `psychologist_video_share`, separando **Busca e filtros** por parametros reais no `path` e mantendo os demais eventos em **Explorar**.
 4. Usar videos publicados do segmento como denominador das medias de contagem e o mesmo filtro por plano do bloco.
 5. Nao criar migration nem backfill: como `profile_video_watch_session` nao guarda origem/query historica, os indicadores de consumo sao agregados do video e exibidos igualmente em **Explorar** e **Busca e filtros**, sem inventar distribuicao por query.
+6. Manter os headers principais da tabela (**Comunidades**, **Perfil** e **Video de apresentacao**) com fundo branco no desktop, deixando o fundo diferenciado apenas nos detalhes expandidos, e reservar o mesmo slot de chevron na linha **Favoritos** para alinhar seu resultado aos grupos expansivos.
 
 ## Consequencias
 
@@ -22,6 +23,7 @@ O dashboard Admin de psicologos ja usava `traffic_sources.sources[].platform_met
 - Os chips de **Explorar** e **Busca e filtros** usam dados first-party reais ja persistidos.
 - A leitura por origem/query fica honesta: os cliques WhatsApp e as acoes do video usam a origem disponivel, mas o consumo do video permanece agregado ate existir uma dimensao persistida especifica.
 - Nao ha nova tabela, migration, package ou contrato paralelo.
+- A hierarquia visual da tabela fica mais clara: grupos principais parecem linhas de primeiro nivel, enquanto os detalhes continuam subordinados no fundo diferenciado.
 
 ## Task relacionada
 
@@ -36,3 +38,4 @@ O dashboard Admin de psicologos ja usava `traffic_sources.sources[].platform_met
 - `pnpm check`
 - Smoke de API Admin real em `/api/admin/private/psychologists/dashboard?period=30d` validando labels em `explore` e `search_filters`.
 - Browser local Chrome/CDP headless desktop 1440x900 e mobile 390x900 validando os chips do grupo **Video de apresentacao**.
+- Complemento visual: `pnpm --dir admin check`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e browser local Chrome/CDP desktop 1600px/mobile 390px validando headers brancos, detalhes preservados e alinhamento de **Favoritos**.
