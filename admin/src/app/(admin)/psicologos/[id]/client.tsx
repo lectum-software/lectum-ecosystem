@@ -108,6 +108,7 @@ import type {
   AdminPsychologistReviewItem,
   AdminPsychologistReviewsQuery,
   AdminPsychologistStatistics,
+  AdminPsychologistStatisticsPoint,
   AdminPsychologistStatisticsQuery,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
@@ -444,6 +445,24 @@ const BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS: Record<
   no_conversion: "bg-danger/10 text-danger",
 };
 
+const ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT = 3;
+const ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT = 5;
+
+const getActivityScoreValue = (point: AdminPsychologistStatisticsPoint) => {
+  if (
+    typeof point.patient_post_text_reply_coverage === "number" ||
+    typeof point.patient_post_video_reply_coverage === "number"
+  ) {
+    return (
+      point.posts +
+      (point.patient_post_text_reply_coverage ?? 0) * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
+      (point.patient_post_video_reply_coverage ?? 0) * ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT
+    );
+  }
+
+  return point.posts + point.replies * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT;
+};
+
 const BUSINESS_CHART_METRICS = [
   {
     dotRadius: 4.2,
@@ -500,9 +519,10 @@ const BUSINESS_CHART_METRICS = [
     icon: Activity,
     iconClassName: "text-amber-500",
     iconToneClassName: "bg-amber-50",
-    getValue: (point) => point.posts + point.replies * 3,
+    getValue: getActivityScoreValue,
     label: "Atividade (score)",
-    source: "community_post.author_id+post_reply.author_id",
+    source:
+      "community_post.author_id+post_reply.author_id+post_reply.post.author.role=paciente+post_reply.media_type",
     shortLabel: "Atividade",
     strokeClassName: "stroke-amber-500",
     swatchClassName: "bg-amber-500",
@@ -3625,9 +3645,17 @@ const buildDerivedBusinessMetricComparison = ({
   }
 
   if (config.id === "activity_score") {
-    const previous =
-      getPreviousStatisticsMetricValue(metrics, "posts") +
-      getPreviousStatisticsMetricValue(metrics, "replies") * 3;
+    const hasCoverageMetrics =
+      metrics.has("patient_post_text_reply_coverage") ||
+      metrics.has("patient_post_video_reply_coverage");
+    const previous = hasCoverageMetrics
+      ? getPreviousStatisticsMetricValue(metrics, "posts") +
+        getPreviousStatisticsMetricValue(metrics, "patient_post_text_reply_coverage") *
+          ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
+        getPreviousStatisticsMetricValue(metrics, "patient_post_video_reply_coverage") *
+          ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT
+      : getPreviousStatisticsMetricValue(metrics, "posts") +
+        getPreviousStatisticsMetricValue(metrics, "replies") * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT;
 
     return buildStatisticsMetricComparison({ current, period, previous });
   }

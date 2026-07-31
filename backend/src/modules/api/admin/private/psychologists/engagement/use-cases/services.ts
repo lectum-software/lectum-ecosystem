@@ -70,6 +70,10 @@ const PROFILE_VISIBILITY_TEMPORAL_SOURCE =
   "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds" as const;
 const PROFILE_VISIBILITY_DETAILED_SOURCE =
   "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type" as const;
+const ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT = 3;
+const ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT = 5;
+const ACTIVITY_SCORE_SOURCE =
+  "community_post.author_id+post_reply.author_id+post_reply.post.author.role=paciente+post_reply.media_type" as const;
 const TRAFFIC_QUALITY_LEVEL_CONFIG = {
   interested: {
     description: "Retornou ao perfil ou favoritou este psicólogo antes do WhatsApp.",
@@ -439,6 +443,59 @@ const classifyReplyContentFormat = (
   return "text";
 };
 
+type PatientPostReplyCoverageKind = "text" | "video";
+
+type PatientPostReplyCoverageEntry = {
+  createdAt: Date;
+  kind: PatientPostReplyCoverageKind;
+};
+
+const buildPatientPostReplyCoverageEntries = (
+  replies: AdminPsychologistEngagementReply[],
+): PatientPostReplyCoverageEntry[] => {
+  const coverageByPost = new Map<
+    string,
+    {
+      textCreatedAt: Date | null;
+      videoCreatedAt: Date | null;
+    }
+  >();
+
+  for (const reply of replies) {
+    if (reply.post.author.role !== "paciente") continue;
+
+    const current = coverageByPost.get(reply.post.id) ?? {
+      textCreatedAt: null,
+      videoCreatedAt: null,
+    };
+
+    if (classifyReplyContentFormat(reply) === "video") {
+      current.videoCreatedAt = earlierDate(current.videoCreatedAt, reply.createdAt);
+    } else {
+      current.textCreatedAt = earlierDate(current.textCreatedAt, reply.createdAt);
+    }
+
+    coverageByPost.set(reply.post.id, current);
+  }
+
+  return [...coverageByPost.values()].flatMap((coverage): PatientPostReplyCoverageEntry[] => {
+    if (coverage.videoCreatedAt) {
+      return [{ createdAt: coverage.videoCreatedAt, kind: "video" as const }];
+    }
+
+    if (coverage.textCreatedAt) {
+      return [{ createdAt: coverage.textCreatedAt, kind: "text" as const }];
+    }
+
+    return [];
+  });
+};
+
+const countPatientPostReplyCoverage = (
+  entries: PatientPostReplyCoverageEntry[],
+  kind: PatientPostReplyCoverageKind,
+) => entries.filter((entry) => entry.kind === kind).length;
+
 const buildContentFormatDistribution = <T>(
   items: T[],
   classify: (item: T) => AdminPsychologistContentFormatId,
@@ -774,7 +831,7 @@ const buildSeries = (input: {
   postVotes: { createdAt: Date; value: number }[];
   posts: { createdAt: Date }[];
   profileViews: { createdAt: Date }[];
-  replies: { createdAt: Date }[];
+  replies: AdminPsychologistEngagementReply[];
   reviews: { createdAt: Date }[];
   replyShares: { createdAt: Date }[];
   replySaves: { createdAt: Date }[];
@@ -790,6 +847,15 @@ const buildSeries = (input: {
   const searchResults = groupDateCounts(input.searchResults, input.labels);
   const posts = groupDateCounts(input.posts, input.labels);
   const replies = groupDateCounts(input.replies, input.labels);
+  const patientPostReplyCoverageEntries = buildPatientPostReplyCoverageEntries(input.replies);
+  const patientPostTextReplyCoverage = groupDateCounts(
+    patientPostReplyCoverageEntries.filter((entry) => entry.kind === "text"),
+    input.labels,
+  );
+  const patientPostVideoReplyCoverage = groupDateCounts(
+    patientPostReplyCoverageEntries.filter((entry) => entry.kind === "video"),
+    input.labels,
+  );
   const commentsReceived = groupDateCounts(input.commentsReceived, input.labels);
   const saves = groupDateCounts([...input.postSaves, ...input.replySaves], input.labels);
   const upvotes = groupDateCounts(
@@ -808,6 +874,11 @@ const buildSeries = (input: {
     date,
     downvotes: valueFromMap(downvotes, date),
     favorites: valueFromMap(favorites, date),
+    patient_post_reply_coverage:
+      valueFromMap(patientPostTextReplyCoverage, date) +
+      valueFromMap(patientPostVideoReplyCoverage, date),
+    patient_post_text_reply_coverage: valueFromMap(patientPostTextReplyCoverage, date),
+    patient_post_video_reply_coverage: valueFromMap(patientPostVideoReplyCoverage, date),
     profile_views: valueFromMap(profileViews, date),
     replies: valueFromMap(replies, date),
     reviews: valueFromMap(reviews, date),
@@ -1755,6 +1826,33 @@ export const showAdminPsychologistStatistics = async (
   ).length;
   const sharesCount = postShares.length + replyShares.length;
   const previousSharesCount = previousPostShares.length + previousReplyShares.length;
+  const patientPostReplyCoverageEntries = buildPatientPostReplyCoverageEntries(communityReplies);
+  const previousPatientPostReplyCoverageEntries =
+    buildPatientPostReplyCoverageEntries(previousCommunityReplies);
+  const patientPostTextReplyCoverageCount = countPatientPostReplyCoverage(
+    patientPostReplyCoverageEntries,
+    "text",
+  );
+  const previousPatientPostTextReplyCoverageCount = countPatientPostReplyCoverage(
+    previousPatientPostReplyCoverageEntries,
+    "text",
+  );
+  const patientPostVideoReplyCoverageCount = countPatientPostReplyCoverage(
+    patientPostReplyCoverageEntries,
+    "video",
+  );
+  const previousPatientPostVideoReplyCoverageCount = countPatientPostReplyCoverage(
+    previousPatientPostReplyCoverageEntries,
+    "video",
+  );
+  const activityScore =
+    communityPosts.length +
+    patientPostTextReplyCoverageCount * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
+    patientPostVideoReplyCoverageCount * ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT;
+  const previousActivityScore =
+    previousCommunityPosts.length +
+    previousPatientPostTextReplyCoverageCount * ACTIVITY_TEXT_REPLY_COVERAGE_WEIGHT +
+    previousPatientPostVideoReplyCoverageCount * ACTIVITY_VIDEO_REPLY_COVERAGE_WEIGHT;
   const patientPostsByCommunity = new Map(
     patientPostsByCommunityCounts.map((item) => [item.community_id, item._count._all]),
   );
@@ -1990,6 +2088,13 @@ export const showAdminPsychologistStatistics = async (
           value: whatsappClicks.length,
         }),
         metric({
+          comparison: buildComparison(activityScore, previousActivityScore, period.period),
+          id: "activity_score",
+          label: "Atividade (score)",
+          source: ACTIVITY_SCORE_SOURCE,
+          value: activityScore,
+        }),
+        metric({
           comparison: buildComparison(favorites.length, previousFavorites.length, period.period),
           id: "favorites",
           label: "Favoritados",
@@ -2110,6 +2215,28 @@ export const showAdminPsychologistStatistics = async (
           label: "Respostas",
           source: "post_reply.author_id",
           value: communityReplies.length,
+        }),
+        metric({
+          comparison: buildComparison(
+            patientPostTextReplyCoverageCount,
+            previousPatientPostTextReplyCoverageCount,
+            period.period,
+          ),
+          id: "patient_post_text_reply_coverage",
+          label: "Posts de pacientes respondidos sem vídeo",
+          source: ACTIVITY_SCORE_SOURCE,
+          value: patientPostTextReplyCoverageCount,
+        }),
+        metric({
+          comparison: buildComparison(
+            patientPostVideoReplyCoverageCount,
+            previousPatientPostVideoReplyCoverageCount,
+            period.period,
+          ),
+          id: "patient_post_video_reply_coverage",
+          label: "Posts de pacientes respondidos com vídeo",
+          source: ACTIVITY_SCORE_SOURCE,
+          value: patientPostVideoReplyCoverageCount,
         }),
         metric({
           comparison: buildComparison(upvotesCount, previousUpvotesCount, period.period),

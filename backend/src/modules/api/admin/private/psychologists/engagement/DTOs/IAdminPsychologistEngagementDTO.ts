@@ -98,6 +98,9 @@ export type AdminPsychologistStatisticsSeriesPoint = {
   date: string;
   downvotes: number;
   favorites: number;
+  patient_post_reply_coverage: number;
+  patient_post_text_reply_coverage: number;
+  patient_post_video_reply_coverage: number;
   profile_views: number;
   replies: number;
   reviews: number;
