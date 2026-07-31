@@ -528,6 +528,13 @@ export type PsychologistsDashboardProfileExposureCategoryId =
   | `${PsychologistsDashboardProfileExposureCommunityCategoryId}_${PsychologistsDashboardProfileExposureVideoCategoryId}`
   | "insufficient_data";
 
+export type PsychologistsProfileExposureAggregateCategoryId =
+  | "high_exposure"
+  | "insufficient_data"
+  | "low_exposure"
+  | "no_exposure"
+  | "standard_exposure";
+
 export type PsychologistsDashboardProfileExposureTotals = {
   community_post_attention_seconds: number;
   community_post_views: number;
@@ -1583,6 +1590,22 @@ export type AdminPsychologistContentFormatDistribution = {
   total: number;
 };
 
+export type AdminPsychologistVisibilityDiagnosis = {
+  benchmark: PsychologistsProfileExposureBenchmark;
+  description: string;
+  id: PsychologistsProfileExposureAggregateCategoryId;
+  label: string;
+  signals: {
+    community_content_seconds: number;
+    presentation_video_seconds: number;
+    profile_age_days: number;
+    profile_seconds: number;
+    visibility_seconds: number;
+  };
+  source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds";
+  thresholds: PsychologistsProfileExposureThresholds;
+};
+
 export type AdminPsychologistStatistics = {
   business: {
     cards: AdminPsychologistEngagementMetric[];
@@ -1621,6 +1644,7 @@ export type AdminPsychologistStatistics = {
     visibility: {
       cards: AdminPsychologistEngagementMetric[];
       counters: AdminPsychologistVisibilityCounter[];
+      diagnosis: AdminPsychologistVisibilityDiagnosis;
       series: AdminPsychologistVisibilityPoint[];
       source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type";
       total_seconds: number;

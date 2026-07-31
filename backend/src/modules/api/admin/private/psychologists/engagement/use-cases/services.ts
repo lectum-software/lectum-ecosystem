@@ -25,6 +25,13 @@ import {
   classifyAdminProfileConversionQuality,
   normalizeAdminProfileConversionToThirtyDays,
 } from "@/utils/admin-profile-conversion";
+import type { AdminProfileExposureAggregateCategoryId } from "@/utils/admin-profile-exposure";
+import {
+  ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
+  buildAdminProfileExposureBenchmark,
+  classifyAdminProfileExposureAggregateCategory,
+  roundAdminProfileExposureNumber,
+} from "@/utils/admin-profile-exposure";
 import {
   psychologistTrafficOriginDefinitions,
   summarizePlatformHourlyActivity,
@@ -49,6 +56,7 @@ import type {
   AdminPsychologistStatisticsPeriod,
   AdminPsychologistStatisticsSeriesPoint,
   AdminPsychologistTrafficQualityLevelId,
+  AdminPsychologistVisibilityDiagnosis,
   IAdminPsychologistPublicationsDTO,
   IAdminPsychologistStatisticsDTO,
 } from "../DTOs/IAdminPsychologistEngagementDTO";
@@ -117,6 +125,36 @@ const BUSINESS_PROFILE_CONVERSION_CATEGORY_CONFIG =
     AdminPsychologistBusinessProfileConversionCategoryId,
     { description: string; label: string }
   >;
+const BUSINESS_VISIBILITY_DIAGNOSIS_CONFIG = {
+  high_exposure: {
+    description:
+      "Psic?logo fora da adapta??o com tempo real de Visibilidade acima da faixa padr?o da plataforma no per?odo selecionado.",
+    label: "Alta Visibilidade",
+  },
+  insufficient_data: {
+    description:
+      "Psic?logo ainda dentro dos primeiros 30 dias de adapta??o; a Visibilidade ainda n?o ? comparada com a plataforma.",
+    label: "Dados Insuficientes",
+  },
+  low_exposure: {
+    description:
+      "Psic?logo fora da adapta??o, com algum tempo real de Visibilidade, mas abaixo da faixa padr?o da plataforma no per?odo selecionado.",
+    label: "Baixa Visibilidade",
+  },
+  no_exposure: {
+    description:
+      "Psic?logo fora da adapta??o sem tempo real de Visibilidade no perfil, no v?deo de apresenta??o ou em conte?do autoral na comunidade no per?odo selecionado.",
+    label: "Sem Visibilidade",
+  },
+  standard_exposure: {
+    description:
+      "Psic?logo fora da adapta??o com tempo real de Visibilidade dentro da faixa padr?o da plataforma no per?odo selecionado.",
+    label: "Visibilidade Padr?o",
+  },
+} as const satisfies Record<
+  AdminProfileExposureAggregateCategoryId,
+  { description: string; label: string }
+>;
 const pad = (value: number) => String(value).padStart(2, "0");
 const toDateKey = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -391,6 +429,109 @@ const buildBusinessProfileConversion = (input: {
     },
     source: ADMIN_PROFILE_CONVERSION_SOURCE,
     thresholds: ADMIN_PROFILE_CONVERSION_THRESHOLDS,
+  };
+};
+
+type VisibilityAttentionSecondsByPsychologistRecord = {
+  attention_seconds: number | null;
+  psychologist_id: string | null;
+};
+
+const sumAttentionByPsychologist = (records: VisibilityAttentionSecondsByPsychologistRecord[]) => {
+  const counts = new Map<string, number>();
+
+  for (const record of records) {
+    if (!record.psychologist_id) continue;
+
+    counts.set(
+      record.psychologist_id,
+      (counts.get(record.psychologist_id) ?? 0) + normalizeSeconds(record.attention_seconds),
+    );
+  }
+
+  return counts;
+};
+
+const sumCommunityAttentionByPsychologist = sumAttentionByPsychologist;
+const sumVideoAttentionByPsychologist = sumAttentionByPsychologist;
+
+const visibilitySecondsFromAttention = (input: {
+  communityContentSeconds: number;
+  presentationVideoSeconds: number;
+  profileSeconds: number;
+}) =>
+  roundAdminProfileExposureNumber(
+    Math.max(0, input.communityContentSeconds) +
+      Math.max(0, Math.max(input.profileSeconds, input.presentationVideoSeconds)),
+  );
+
+const buildBusinessVisibilityDiagnosis = (input: {
+  benchmarkCommunityContentAttentionSeconds: VisibilityAttentionSecondsByPsychologistRecord[];
+  benchmarkProfileAttentionSeconds: VisibilityAttentionSecondsByPsychologistRecord[];
+  benchmarkProfileVideoAttentionSeconds: VisibilityAttentionSecondsByPsychologistRecord[];
+  benchmarkProfiles: { user: { createdAt: Date }; user_id: string }[];
+  communityContentSeconds: number;
+  periodEnd: Date;
+  presentationVideoSeconds: number;
+  profileAgeDays: number;
+  profileSeconds: number;
+}): AdminPsychologistVisibilityDiagnosis => {
+  const profileAttentionCounts = sumAttentionByPsychologist(input.benchmarkProfileAttentionSeconds);
+  const communityContentAttentionCounts = sumCommunityAttentionByPsychologist(
+    input.benchmarkCommunityContentAttentionSeconds,
+  );
+  const profileVideoAttentionCounts = sumVideoAttentionByPsychologist(
+    input.benchmarkProfileVideoAttentionSeconds,
+  );
+  const eligibleBenchmarkProfiles = input.benchmarkProfiles.filter(
+    (profile) =>
+      getProfileAgeDaysUntil(profile.user.createdAt, input.periodEnd) >=
+      ADMIN_PROFILE_EXPOSURE_THRESHOLDS.adaptation_period_days,
+  );
+  const benchmark = buildAdminProfileExposureBenchmark({
+    communityVisibilitySeconds: eligibleBenchmarkProfiles.map((profile) =>
+      roundAdminProfileExposureNumber(communityContentAttentionCounts.get(profile.user_id) ?? 0),
+    ),
+    eligiblePsychologists: eligibleBenchmarkProfiles.length,
+    exposureScores: eligibleBenchmarkProfiles.map((profile) =>
+      visibilitySecondsFromAttention({
+        communityContentSeconds: communityContentAttentionCounts.get(profile.user_id) ?? 0,
+        presentationVideoSeconds: profileVideoAttentionCounts.get(profile.user_id) ?? 0,
+        profileSeconds: profileAttentionCounts.get(profile.user_id) ?? 0,
+      }),
+    ),
+    presentationVideoSeconds: eligibleBenchmarkProfiles.map((profile) =>
+      roundAdminProfileExposureNumber(profileVideoAttentionCounts.get(profile.user_id) ?? 0),
+    ),
+  });
+  const signals = {
+    community_content_seconds: roundAdminProfileExposureNumber(input.communityContentSeconds),
+    presentation_video_seconds: roundAdminProfileExposureNumber(input.presentationVideoSeconds),
+    profile_age_days: input.profileAgeDays,
+    profile_seconds: roundAdminProfileExposureNumber(input.profileSeconds),
+    visibility_seconds: visibilitySecondsFromAttention({
+      communityContentSeconds: input.communityContentSeconds,
+      presentationVideoSeconds: input.presentationVideoSeconds,
+      profileSeconds: input.profileSeconds,
+    }),
+  } satisfies AdminPsychologistVisibilityDiagnosis["signals"];
+  const categoryId = classifyAdminProfileExposureAggregateCategory({
+    benchmark,
+    signals: {
+      exposureScore: signals.visibility_seconds,
+      profileAgeDays: signals.profile_age_days,
+    },
+  });
+  const config = BUSINESS_VISIBILITY_DIAGNOSIS_CONFIG[categoryId];
+
+  return {
+    benchmark,
+    description: config.description,
+    id: categoryId,
+    label: config.label,
+    signals,
+    source: PROFILE_VISIBILITY_TEMPORAL_SOURCE,
+    thresholds: ADMIN_PROFILE_EXPOSURE_THRESHOLDS,
   };
 };
 
@@ -1936,6 +2077,28 @@ export const showAdminPsychologistStatistics = async (
     repository.listPatientPostsByCommunityForCoverage(period.current.start, period.current.end),
     repository.listPatientPostsByCommunityForCoverage(period.previous.start, period.previous.end),
   ]);
+  const benchmarkPsychologistIds = benchmarkProfiles.map((item) => item.user_id);
+  const [
+    benchmarkProfileAttentionSeconds,
+    benchmarkCommunityContentAttentionSeconds,
+    benchmarkProfileVideoAttentionSeconds,
+  ] = await Promise.all([
+    repository.listPublicProfileAttentionSecondsByPsychologists(
+      benchmarkPsychologistIds,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listCommunityContentAttentionSecondsByPsychologists(
+      benchmarkPsychologistIds,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listProfileVideoAttentionSecondsByPsychologists(
+      benchmarkPsychologistIds,
+      period.current.start,
+      period.current.end,
+    ),
+  ]);
 
   const communityPosts = filterPostsByCommunity(posts, query.community);
   const communityReplies = filterRepliesByCommunity(replies, query.community);
@@ -2302,6 +2465,17 @@ export const showAdminPsychologistStatistics = async (
     profileAgeDays,
     whatsappClicks: whatsappClicks.length,
   });
+  const businessVisibilityDiagnosis = buildBusinessVisibilityDiagnosis({
+    benchmarkCommunityContentAttentionSeconds,
+    benchmarkProfileAttentionSeconds,
+    benchmarkProfileVideoAttentionSeconds,
+    benchmarkProfiles,
+    communityContentSeconds,
+    periodEnd: period.current.end,
+    presentationVideoSeconds,
+    profileAgeDays,
+    profileSeconds: profileVisibilitySeconds,
+  });
   const response: AdminPsychologistStatisticsDTO = {
     business: {
       cards: [
@@ -2435,6 +2609,7 @@ export const showAdminPsychologistStatistics = async (
             value: contentViewsCount,
           },
         ],
+        diagnosis: businessVisibilityDiagnosis,
         series: visibilityBreakdownSeries,
         source: PROFILE_VISIBILITY_DETAILED_SOURCE,
         total_seconds: detailedVisibilitySeconds,

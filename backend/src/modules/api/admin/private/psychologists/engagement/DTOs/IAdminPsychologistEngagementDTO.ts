@@ -8,6 +8,11 @@ import type {
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
+import type {
+  AdminProfileExposureAggregateCategoryId,
+  AdminProfileExposureBenchmark,
+  AdminProfileExposureThresholds,
+} from "@/utils/admin-profile-exposure";
 
 export type AdminPsychologistEngagementQuery = {
   community?: string;
@@ -133,9 +138,26 @@ export type AdminPsychologistVisibilityCounter = {
   value: number;
 };
 
+export type AdminPsychologistVisibilityDiagnosis = {
+  benchmark: AdminProfileExposureBenchmark;
+  description: string;
+  id: AdminProfileExposureAggregateCategoryId;
+  label: string;
+  signals: {
+    community_content_seconds: number;
+    presentation_video_seconds: number;
+    profile_age_days: number;
+    profile_seconds: number;
+    visibility_seconds: number;
+  };
+  source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds";
+  thresholds: AdminProfileExposureThresholds;
+};
+
 export type AdminPsychologistVisibilityBreakdown = {
   cards: AdminPsychologistAvailabilityMetric[];
   counters: AdminPsychologistVisibilityCounter[];
+  diagnosis: AdminPsychologistVisibilityDiagnosis;
   series: AdminPsychologistVisibilitySeriesPoint[];
   source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type";
   total_seconds: number;

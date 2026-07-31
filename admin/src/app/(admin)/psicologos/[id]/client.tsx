@@ -401,6 +401,8 @@ type StatisticsSeriesPoint = AdminPsychologistStatistics["business"]["series"][n
 type StatisticsSeriesMetricKey = Exclude<keyof StatisticsSeriesPoint, "date">;
 type BusinessProfileConversionQualityId =
   AdminPsychologistStatistics["business"]["profile_conversion"]["quality"]["id"];
+type BusinessVisibilityDiagnosisId =
+  AdminPsychologistStatistics["business"]["visibility"]["diagnosis"]["id"];
 type StatisticsChartMetric = {
   dotRadius: number;
   getValue: (point: StatisticsSeriesPoint) => number;
@@ -442,6 +444,22 @@ const BUSINESS_PROFILE_CONVERSION_QUALITY_BADGE_CLASS: Record<
   insufficient_data: "bg-surface-muted text-subtle",
   low_conversion: "bg-warning/10 text-warning",
   no_conversion: "bg-danger/10 text-danger",
+};
+
+const BUSINESS_VISIBILITY_DIAGNOSIS_BADGE_CLASS: Record<BusinessVisibilityDiagnosisId, string> = {
+  high_exposure: "bg-success/10 text-success",
+  insufficient_data: "bg-surface-muted text-subtle",
+  low_exposure: "bg-warning/10 text-warning",
+  no_exposure: "bg-danger/10 text-danger",
+  standard_exposure: "bg-primary-soft text-primary",
+};
+
+const BUSINESS_VISIBILITY_DIAGNOSIS_LABEL: Record<BusinessVisibilityDiagnosisId, string> = {
+  high_exposure: "Alta visibilidade",
+  insufficient_data: "Dados insuficientes",
+  low_exposure: "Baixa visibilidade",
+  no_exposure: "Sem visibilidade",
+  standard_exposure: "Visibilidade padr?o",
 };
 
 const BUSINESS_CHART_METRICS = [
@@ -5849,6 +5867,10 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
   const activeCommunitiesStatistics = statisticsQuery.data;
   const activityHoursStatistics = statisticsQuery.data;
   const businessProfileConversion = businessStatistics.business.profile_conversion;
+  const businessVisibilityDiagnosis = businessStatistics.business.visibility.diagnosis;
+  const businessVisibilityDiagnosisLabel =
+    BUSINESS_VISIBILITY_DIAGNOSIS_LABEL[businessVisibilityDiagnosis.id] ??
+    businessVisibilityDiagnosis.label;
   const businessMetricMap = new Map(
     businessStatistics.business.cards.map((metric) => [metric.id, metric]),
   );
@@ -6078,8 +6100,14 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-bold text-foreground">Visibilidade</h2>
-                <Badge className="border border-primary/15 bg-primary-soft text-primary">
-                  Unidade: tempo
+                <Badge
+                  className={cn(
+                    "border border-current/10",
+                    BUSINESS_VISIBILITY_DIAGNOSIS_BADGE_CLASS[businessVisibilityDiagnosis.id],
+                  )}
+                  title={businessVisibilityDiagnosis.description}
+                >
+                  {businessVisibilityDiagnosisLabel}
                 </Badge>
                 {isBusinessRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
