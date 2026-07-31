@@ -482,6 +482,19 @@ const BUSINESS_CHART_METRICS = [
     strokeClassName: "stroke-amber-500",
     swatchClassName: "bg-amber-500",
   },
+  {
+    dotRadius: 3,
+    id: "reviews",
+    icon: Star,
+    iconClassName: "text-warning",
+    iconToneClassName: "bg-warning/10",
+    getValue: (point) => point.reviews,
+    label: "Avaliações",
+    source: "professional_review",
+    shortLabel: "Avaliações",
+    strokeClassName: "stroke-warning",
+    swatchClassName: "bg-warning",
+  },
 ] as const satisfies readonly StatisticsChartMetric[];
 
 const COMMUNITY_CHART_METRICS = [
@@ -1788,6 +1801,9 @@ const formatPreviousPeriod = (
   return `${formatDayMonth(comparison.previous_from)} - ${formatDayMonth(comparison.previous_to)}`;
 };
 
+const formatStatisticsPeriodSummary = (period: AdminPsychologistStatistics["period"]) =>
+  `${period.label} · ${formatDateOnly(period.from)} - ${formatDateOnly(period.to)}`;
+
 const capitalizeOptionLabel = (value?: string | number | null) => {
   const formatted = formatNullable(value);
   if (formatted === "Não informado") return formatted;
@@ -2118,27 +2134,6 @@ const MetricCard = ({
     </div>
   );
 };
-
-const ProfileConversionInsightCard = ({
-  conversion,
-}: {
-  conversion: BusinessProfileConversion;
-}) => (
-  <div className="grid gap-3 rounded-3xl border border-primary/15 bg-primary-soft/25 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-    <div className="min-w-0">
-      <p className="text-sm font-black leading-5 text-foreground">{conversion.headline}</p>
-      <p className="mt-1 text-xs font-bold leading-5 text-muted">
-        {formatProfileConversionSupport(conversion)}
-      </p>
-    </div>
-    <div className="rounded-2xl border border-border/70 bg-surface/90 px-3 py-2 text-left sm:text-right">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-subtle">
-        Qualidade individual
-      </p>
-      <p className="mt-1 text-sm font-black text-foreground">{conversion.quality.label}</p>
-    </div>
-  </div>
-);
 
 const ProfileConversionMetricCard = ({
   isError,
@@ -3395,7 +3390,7 @@ const defaultStatisticsMetricItemClassName =
   "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]";
 
 const businessStatisticsMetricItemClassName =
-  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] xl:w-[calc((100%_-_1.5rem)/4)]";
+  "flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] xl:w-[calc((100%_-_1.5rem)/4)] 2xl:w-[calc((100%_-_2rem)/5)]";
 
 const StatisticsMetricCarousel = ({
   items,
@@ -5226,9 +5221,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           <div className="grid gap-2">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-bold text-foreground">
-                  Conversão, visibilidade, engajamento e atividade
-                </h2>
+                <h2 className="text-lg font-bold text-foreground">Conversão</h2>
                 <Badge
                   className={cn(
                     "border border-current/10",
@@ -5248,12 +5241,9 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               </div>
             </div>
             <p className="min-w-0 text-xs font-bold leading-5 text-muted">
-              Visão do desempenho comercial do psicólogo na plataforma, incluindo descoberta,
-              interesse e intenção de contato.
+              {formatStatisticsPeriodSummary(businessStatistics.period)}
             </p>
           </div>
-
-          <ProfileConversionInsightCard conversion={businessProfileConversion} />
 
           <StatisticsMetricCarousel
             itemClassName={businessStatisticsMetricItemClassName}
@@ -5269,7 +5259,7 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
               id: config.id,
             }))}
             showNavigation={false}
-            title="conversão, visibilidade, engajamento e atividade"
+            title="conversão"
           />
 
           <StatisticsSeriesChart

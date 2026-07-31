@@ -61,3 +61,14 @@ de perfil e busca; a versao explicitamente baseada em tempo deve aguardar contra
 
 - Criar task futura para contrato de **Visibilidade (tempo)** caso o produto queira medir tempo no
   perfil, tempo no video e tempo em conteudos de comunidade no mesmo bloco principal.
+
+## Ajuste aceito em 2026-07-30
+
+O bloco principal da aba Estatisticas do psicologo no Admin foi simplificado visualmente sem novo
+backend: o titulo exibido passa a ser apenas **Conversao**, a linha de apoio mostra o periodo
+selecionado (`label · from - to`) e a faixa textual de diagnostico de conversao foi removida.
+
+Mantemos o badge de qualidade individual no cabecalho e adicionamos **Avaliacoes** como quinto
+contador, logo apos **Atividade**, usando o campo real `reviews` da serie ja retornada pelo endpoint
+de estatisticas. A decisao continua frontend-only, sem mock, migration, package ou contrato HTTP
+novo.

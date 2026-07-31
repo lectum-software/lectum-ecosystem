@@ -144,3 +144,28 @@ Packages usados:
 Esta task evitou alterar backend justamente para reduzir risco de regressao. Uma task futura pode
 contratar e persistir tempo real de visibilidade em perfil, video e conteudos de comunidade antes de
 exibir uma opcao explicitamente chamada **Visibilidade (tempo)**.
+
+## Ajuste pos-feedback 2026-07-30 - Simplificacao do bloco Conversao
+
+- Pedido do usuario: simplificar o titulo do bloco principal para **Conversao**, trocar a descricao
+  longa pelo periodo selecionado, remover a faixa de diagnostico textual de dados insuficientes e
+  adicionar **Avaliacoes** como contador apos **Atividade**.
+- A alteracao e frontend-only e reaproveita `business.period` e a serie real ja retornada pelo
+  endpoint Admin de estatisticas; `Avaliacoes` usa `professional_review`/`point.reviews`, sem novo
+  contrato HTTP.
+- O badge de qualidade individual ao lado do titulo foi preservado; somente a faixa abaixo do
+  cabecalho foi removida para reduzir redundancia visual.
+- O layout segue mobile-first: os contadores continuam em carrossel/scroll horizontal em telas
+  estreitas e passam a comportar cinco cards visiveis em `2xl`.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; foram usados o
+  screenshot enviado pelo usuario e o PNG local
+  `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png` como referencias
+  auditaveis.
+
+### Criterios de aceite do ajuste
+
+- [x] O titulo visivel do bloco principal e **Conversao**.
+- [x] A descricao longa foi substituida pelo periodo selecionado no formato label + intervalo.
+- [x] A faixa com **Dados insuficientes para avaliar a Conversao.** nao e mais renderizada no bloco.
+- [x] O contador **Avaliacoes** aparece apos **Atividade** e usa a serie real de avaliacoes.
+- [x] Nenhum mock, endpoint simulado, migration, schema Prisma ou package novo foi adicionado.
