@@ -4624,9 +4624,9 @@ const DashboardContent = ({
           />
           <TimelineChart points={summary.timeline.points} visibleMetricKeys={activeMetricKeys} />
         </DashboardOverviewPanel>
+        <DashboardTrafficSourcesCard summary={summary} />
         <DashboardProfileConversionBehaviorFunnelCard summary={summary} />
         <DashboardProfileConversionCard summary={summary} />
-        <DashboardTrafficSourcesCard summary={summary} />
       </section>
 
       <StatsContent summary={summary} />
