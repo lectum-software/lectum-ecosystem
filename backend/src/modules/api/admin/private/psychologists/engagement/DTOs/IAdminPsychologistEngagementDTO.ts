@@ -13,6 +13,7 @@ import type {
   AdminProfileExposureBenchmark,
   AdminProfileExposureThresholds,
 } from "@/utils/admin-profile-exposure";
+import type { AdminPsychologistWhatsappTrafficOriginSource } from "@/utils/admin-psychologist-analytics";
 
 export type AdminPsychologistEngagementQuery = {
   community?: string;
@@ -324,22 +325,12 @@ export type AdminPsychologistPlatformUsage = {
   unavailable_reason: string | null;
 };
 
-export type AdminPsychologistTrafficSourceItem = {
-  badge: "primary_source" | null;
-  conversion_rate: number | null;
-  description: string;
-  id: string;
-  label: string;
-  percentage: number;
-  profile_views: number;
-  sessions: number;
-  whatsapp_clicks: number | null;
-};
+export type AdminPsychologistTrafficSourceItem = AdminPsychologistWhatsappTrafficOriginSource;
 
 export type AdminPsychologistTrafficSources = {
   attribution_unavailable_reason: string | null;
   description: string;
-  source: "page_view_event.traffic_source+target_type=psychologist";
+  source: "important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click";
   sources: AdminPsychologistTrafficSourceItem[];
   total_profile_views: number;
   total_sessions: number;

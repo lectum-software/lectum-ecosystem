@@ -1,4 +1,4 @@
-﻿# ADR-0367: Reorganizacao incremental da aba Estatisticas do psicologo no Admin
+# ADR-0367: Reorganizacao incremental da aba Estatisticas do psicologo no Admin
 
 ## Status
 
@@ -89,3 +89,18 @@ package, mock, seed ou regra de calculo nova.
 Validacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`,
 `pnpm check` e browser local/headless em desktop 1365px e mobile 390px confirmando a nova ordem sem
 overflow horizontal no mobile.
+
+## Ajuste aceito em 2026-08-01 - Origem do trafego expansiva no detalhe
+
+A tabela **Origem do trafego** do detalhe Admin do psicologo passa a compartilhar o mesmo contrato e o mesmo padrao visual da tabela do dashboard Admin de psicologos: linhas principais expansivas para **Comunidades**, **Perfil** e **Video de apresentacao**, cabecalho desktop reduzido para **Fonte** e **WhatsApp** e cards expansivos mobile-first.
+
+Diferenca deliberada em relacao ao dashboard: no detalhe do psicologo, os chips de engajamento/conversao exibem **somatorias do proprio psicologo** no periodo, nao medias por psicologo da plataforma. O backend monta essas somatorias a partir dos eventos first-party reais ja existentes e escopa as atribuicoes ao `psychologist_id` aberto, sem mock, backfill, migration ou endpoint simulado.
+
+Consequencias:
+
+- a leitura de origem de WhatsApp fica consistente entre dashboard e detalhe;
+- o detalhe deixa de exibir a coluna antiga **Perfil** como metrica paralela e passa a tratar **Perfil** como origem expansiva;
+- a API do detalhe fica alinhada ao DTO `PsychologistsDashboardTrafficSources`, reduzindo duplicidade de contrato;
+- a manutencao futura deve preservar a diferenca semantica: dashboard pode mostrar medias agregadas, detalhe mostra somatorias do psicologo selecionado.
+
+Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke API real da rota de estatisticas do psicologo e browser local/headless em desktop 1365px/mobile 390px com screenshots em `.tmp/admin-psychologist-traffic-detail-desktop.png` e `.tmp/admin-psychologist-traffic-detail-mobile.png`.

@@ -32,13 +32,19 @@ import {
   classifyAdminProfileExposureAggregateCategory,
   roundAdminProfileExposureNumber,
 } from "@/utils/admin-profile-exposure";
+import type {
+  AdminPsychologistWhatsappTrafficOriginSourceId,
+  AdminPsychologistWhatsappTrafficPlatformMetric,
+} from "@/utils/admin-psychologist-analytics";
 import {
+  hasSearchFilterTrafficParams,
   psychologistTrafficOriginDefinitions,
+  roundOneDecimal,
   summarizePlatformHourlyActivity,
   summarizePlatformHourlyActivityByWeekday,
   summarizePlatformPeakActivityHours,
   summarizePlatformUsage,
-  summarizePsychologistTrafficOrigins,
+  summarizePsychologistWhatsappTrafficOrigins,
   trafficOriginFromPageViewSource,
 } from "@/utils/admin-psychologist-analytics";
 import type {
@@ -1078,10 +1084,6 @@ type SearchResultImpressions = Awaited<
   ReturnType<AdminPsychologistEngagementRepository["listSearchResultImpressions"]>
 >;
 
-type PublicProfilePageViews = Awaited<
-  ReturnType<AdminPsychologistEngagementRepository["listPublicProfilePageViews"]>
->;
-
 const countVideoActionEvents = (actions: VideoActionEvents) => {
   const counts = new Map<ProfileVideoActionType, number>(
     PROFILE_VIDEO_ACTION_TYPES.map((actionType) => [actionType, 0]),
@@ -1367,15 +1369,688 @@ const buildVideo = (
   };
 };
 
-const buildTrafficSources = (
-  pageViews: PublicProfilePageViews,
-): AdminPsychologistStatisticsDTO["traffic_sources"] => {
-  const summary = summarizePsychologistTrafficOrigins(pageViews);
+type WhatsappTrafficActions = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listWhatsappTrafficActions"]>
+>;
+type CommunityTrafficPlatformMetricDataset = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listCommunityTrafficPlatformMetricDataset"]>
+>;
+type ProfileTrafficPlatformMetricDataset = Awaited<
+  ReturnType<AdminPsychologistEngagementRepository["listProfileTrafficPlatformMetricDataset"]>
+>;
+type CommunityTrafficPlatformMetricSourceId = Extract<
+  AdminPsychologistWhatsappTrafficOriginSourceId,
+  "community_post_text" | "community_post_video" | "community_reply_text" | "community_reply_video"
+>;
+type CommunityTrafficPlatformMetricTotals = {
+  comments: number;
+  contentCount: number;
+  downvotes: number;
+  profileAccesses: number;
+  retentionSamples: number;
+  retentionTotalPercent: number;
+  saves: number;
+  shares: number;
+  upvotes: number;
+  views: number;
+  visibilitySeconds: number;
+};
+
+const COMMUNITY_TRAFFIC_PLATFORM_METRIC_SOURCE =
+  "page_view_event+content_attention_session+content_video_watch_session+post_vote+post_save+post_reply_save+post_share+post_reply" as const;
+const PROFILE_TRAFFIC_PLATFORM_METRIC_SOURCE =
+  "profile_view_event.source=profile_page+page_view_event.page_kind=psychologist_profile.duration_seconds+profile_video_watch_session+psychologist_favorite+important_action_event.action_type=psychologist_profile_publications_tab_open|psychologist_profile_reviews_tab_open" as const;
+const PRESENTATION_VIDEO_TRAFFIC_PLATFORM_METRIC_SOURCE =
+  "profile_video_watch_session+important_action_event.action_type=psychologist_video_profile_access|psychologist_video_favorite|psychologist_video_share" as const;
+const PRESENTATION_VIDEO_PROFILE_ACCESS_ACTION = "psychologist_video_profile_access";
+const PRESENTATION_VIDEO_FAVORITE_ACTION = "psychologist_video_favorite";
+const PRESENTATION_VIDEO_SHARE_ACTION = "psychologist_video_share";
+const PROFILE_TRAFFIC_PLATFORM_PUBLICATIONS_TAB_ACTION =
+  "psychologist_profile_publications_tab_open";
+const PROFILE_TRAFFIC_PLATFORM_REVIEWS_TAB_ACTION = "psychologist_profile_reviews_tab_open";
+const COMMUNITY_TRAFFIC_PROFILE_ACCESS_ATTRIBUTION_WINDOW_MS = 30 * 60 * 1000;
+const COMMUNITY_TRAFFIC_PLATFORM_METRIC_SOURCE_IDS: CommunityTrafficPlatformMetricSourceId[] = [
+  "community_post_video",
+  "community_post_text",
+  "community_reply_video",
+  "community_reply_text",
+];
+
+const emptyCommunityTrafficPlatformMetricTotals = (): CommunityTrafficPlatformMetricTotals => ({
+  comments: 0,
+  contentCount: 0,
+  downvotes: 0,
+  profileAccesses: 0,
+  retentionSamples: 0,
+  retentionTotalPercent: 0,
+  saves: 0,
+  shares: 0,
+  upvotes: 0,
+  views: 0,
+  visibilitySeconds: 0,
+});
+
+const isCommunityTrafficVideoMedia = (item: {
+  media_items?: Array<{ media_type: string | null }>;
+  media_type: string | null;
+}) => {
+  const mediaTypes = [
+    item.media_type,
+    ...(item.media_items?.map((mediaItem) => mediaItem.media_type) ?? []),
+  ];
+
+  return mediaTypes.some((mediaType) => mediaType === "video");
+};
+
+const isCommunityTrafficPostTargetType = (targetType: string | null) =>
+  targetType === "community_post" || targetType === "post";
+
+const isCommunityTrafficReplyTargetType = (targetType: string | null) =>
+  targetType === "post_reply" || targetType === "reply";
+
+const buildTrafficPlatformMetric = (
+  source: string,
+  metric: Omit<AdminPsychologistWhatsappTrafficPlatformMetric, "source" | "unavailable_reason"> & {
+    unavailable_reason?: string | null;
+  },
+): AdminPsychologistWhatsappTrafficPlatformMetric => ({
+  ...metric,
+  source,
+  unavailable_reason: metric.unavailable_reason ?? null,
+});
+
+const metricValueForExistingBase = (total: number, baseCount: number) =>
+  baseCount > 0 ? roundOneDecimal(total) : null;
+
+const buildCommunityTrafficPlatformMetric = (
+  metric: Omit<AdminPsychologistWhatsappTrafficPlatformMetric, "source" | "unavailable_reason"> & {
+    unavailable_reason?: string | null;
+  },
+) => buildTrafficPlatformMetric(COMMUNITY_TRAFFIC_PLATFORM_METRIC_SOURCE, metric);
+
+const buildCommunityTrafficPlatformMetrics = (dataset: CommunityTrafficPlatformMetricDataset) => {
+  const totalsBySource = new Map<
+    CommunityTrafficPlatformMetricSourceId,
+    CommunityTrafficPlatformMetricTotals
+  >(
+    COMMUNITY_TRAFFIC_PLATFORM_METRIC_SOURCE_IDS.map((sourceId) => [
+      sourceId,
+      emptyCommunityTrafficPlatformMetricTotals(),
+    ]),
+  );
+  const postsById = new Map(dataset.posts.map((post) => [post.id, post]));
+  const repliesById = new Map(dataset.replies.map((reply) => [reply.id, reply]));
+  const postSourceById = new Map<string, CommunityTrafficPlatformMetricSourceId>();
+  const replySourceById = new Map<string, CommunityTrafficPlatformMetricSourceId>();
+  const sourceTotals = (sourceId: CommunityTrafficPlatformMetricSourceId) =>
+    totalsBySource.get(sourceId) ?? emptyCommunityTrafficPlatformMetricTotals();
+
+  for (const post of dataset.posts) {
+    const sourceId = isCommunityTrafficVideoMedia(post)
+      ? "community_post_video"
+      : "community_post_text";
+    postSourceById.set(post.id, sourceId);
+    sourceTotals(sourceId).contentCount += 1;
+  }
+
+  for (const reply of dataset.replies) {
+    const sourceId = isCommunityTrafficVideoMedia(reply)
+      ? "community_reply_video"
+      : "community_reply_text";
+    replySourceById.set(reply.id, sourceId);
+    sourceTotals(sourceId).contentCount += 1;
+  }
+
+  const sourceFromTarget = (
+    targetType: string | null,
+    targetId: string | null,
+  ): CommunityTrafficPlatformMetricSourceId | null => {
+    if (!targetId) return null;
+    if (isCommunityTrafficPostTargetType(targetType)) return postSourceById.get(targetId) ?? null;
+    if (isCommunityTrafficReplyTargetType(targetType)) return replySourceById.get(targetId) ?? null;
+
+    return null;
+  };
+
+  for (const pageView of dataset.pageViews) {
+    const sourceId = sourceFromTarget(pageView.target_type, pageView.target_id);
+    if (!sourceId) continue;
+
+    sourceTotals(sourceId).views += 1;
+  }
+
+  for (const session of dataset.attentionSessions) {
+    const sourceId = sourceFromTarget(session.target_type, session.target_id);
+    if (!sourceId) continue;
+
+    sourceTotals(sourceId).visibilitySeconds += Math.max(0, session.attention_seconds);
+  }
+
+  const pageViewsBySession = new Map<string, CommunityTrafficPlatformMetricDataset["pageViews"]>();
+
+  for (const pageView of dataset.pageViews) {
+    const sessionViews = pageViewsBySession.get(pageView.session_id) ?? [];
+    sessionViews.push(pageView);
+    pageViewsBySession.set(pageView.session_id, sessionViews);
+  }
+
+  for (const sessionViews of pageViewsBySession.values()) {
+    const orderedViews = sessionViews.toSorted(
+      (left, right) => left.occurred_at.getTime() - right.occurred_at.getTime(),
+    );
+    let lastContentView: {
+      authorId: string;
+      occurredAt: Date;
+      sourceId: CommunityTrafficPlatformMetricSourceId;
+    } | null = null;
+
+    for (const pageView of orderedViews) {
+      const sourceId = sourceFromTarget(pageView.target_type, pageView.target_id);
+
+      if (sourceId && pageView.target_id) {
+        const authorId = isCommunityTrafficPostTargetType(pageView.target_type)
+          ? postsById.get(pageView.target_id)?.author_id
+          : repliesById.get(pageView.target_id)?.author_id;
+
+        if (authorId) {
+          lastContentView = {
+            authorId,
+            occurredAt: pageView.occurred_at,
+            sourceId,
+          };
+        }
+
+        continue;
+      }
+
+      if (
+        pageView.target_type !== "psychologist" ||
+        !pageView.target_id ||
+        !lastContentView ||
+        pageView.target_id !== lastContentView.authorId
+      ) {
+        continue;
+      }
+
+      const elapsedMs = pageView.occurred_at.getTime() - lastContentView.occurredAt.getTime();
+      if (elapsedMs < 0 || elapsedMs > COMMUNITY_TRAFFIC_PROFILE_ACCESS_ATTRIBUTION_WINDOW_MS) {
+        continue;
+      }
+
+      sourceTotals(lastContentView.sourceId).profileAccesses += 1;
+    }
+  }
+
+  for (const session of dataset.videoWatchSessions) {
+    const sourceId = sourceFromTarget(session.target_type, session.target_id);
+    if (!sourceId) continue;
+
+    const totals = sourceTotals(sourceId);
+    if (session.duration_seconds <= 0) continue;
+
+    totals.retentionSamples += 1;
+    totals.retentionTotalPercent += Math.min(
+      100,
+      (Math.max(0, session.watched_seconds) / session.duration_seconds) * 100,
+    );
+  }
+
+  for (const vote of dataset.votes) {
+    const sourceId = vote.post_id
+      ? postSourceById.get(vote.post_id)
+      : vote.reply_id
+        ? replySourceById.get(vote.reply_id)
+        : null;
+    if (!sourceId) continue;
+
+    if (vote.value === 1) sourceTotals(sourceId).upvotes += 1;
+    if (vote.value === -1) sourceTotals(sourceId).downvotes += 1;
+  }
+
+  for (const comment of dataset.comments) {
+    const postSourceId = postSourceById.get(comment.post_id);
+    if (postSourceId) sourceTotals(postSourceId).comments += 1;
+
+    if (!comment.parent_reply_id) continue;
+
+    const replySourceId = replySourceById.get(comment.parent_reply_id);
+    if (replySourceId) sourceTotals(replySourceId).comments += 1;
+  }
+
+  for (const save of dataset.postSaves) {
+    const sourceId = postSourceById.get(save.post_id);
+    if (sourceId) sourceTotals(sourceId).saves += 1;
+  }
+
+  for (const save of dataset.replySaves) {
+    const sourceId = replySourceById.get(save.reply_id);
+    if (sourceId) sourceTotals(sourceId).saves += 1;
+  }
+
+  for (const share of dataset.shares) {
+    const sourceId = share.reply_id
+      ? replySourceById.get(share.reply_id)
+      : postSourceById.get(share.post_id);
+    if (sourceId) sourceTotals(sourceId).shares += 1;
+  }
+
+  const unavailableForNoContent = (contentCount: number) =>
+    contentCount > 0
+      ? null
+      : "Sem conteúdo publicado nesta categoria até o fim do período selecionado.";
+  const buildTotalCommunityTrafficMetric = (
+    totals: CommunityTrafficPlatformMetricTotals,
+    metric: {
+      id: AdminPsychologistWhatsappTrafficPlatformMetric["id"];
+      label: string;
+      total: number;
+      unit?: AdminPsychologistWhatsappTrafficPlatformMetric["unit"];
+    },
+  ) =>
+    buildCommunityTrafficPlatformMetric({
+      id: metric.id,
+      label: metric.label,
+      unavailable_reason: unavailableForNoContent(totals.contentCount),
+      unit: metric.unit ?? "count",
+      value: metricValueForExistingBase(metric.total, totals.contentCount),
+    });
+
+  const metrics = new Map<
+    AdminPsychologistWhatsappTrafficOriginSourceId,
+    AdminPsychologistWhatsappTrafficPlatformMetric[]
+  >(
+    COMMUNITY_TRAFFIC_PLATFORM_METRIC_SOURCE_IDS.map((sourceId) => {
+      const totals = sourceTotals(sourceId);
+      const isVideoSource =
+        sourceId === "community_post_video" || sourceId === "community_reply_video";
+      const averageRetention =
+        totals.retentionSamples > 0
+          ? roundOneDecimal(totals.retentionTotalPercent / totals.retentionSamples)
+          : null;
+      const commonMetrics: AdminPsychologistWhatsappTrafficPlatformMetric[] = [
+        buildTotalCommunityTrafficMetric(totals, {
+          id: "views",
+          label: "Visualizações",
+          total: totals.views,
+        }),
+        ...(isVideoSource
+          ? [
+              buildCommunityTrafficPlatformMetric({
+                id: "average_retention",
+                label: "Retenção",
+                unavailable_reason:
+                  averageRetention === null
+                    ? "Sem sessões reais de vídeo com duração no período."
+                    : null,
+                unit: "percentage",
+                value: averageRetention,
+              }),
+              buildTotalCommunityTrafficMetric(totals, {
+                id: "average_visibility",
+                label: "Tempo de permanência",
+                total: totals.visibilitySeconds,
+                unit: "seconds",
+              }),
+            ]
+          : [
+              buildTotalCommunityTrafficMetric(totals, {
+                id: "average_visibility",
+                label: "Tempo de permanência",
+                total: totals.visibilitySeconds,
+                unit: "seconds",
+              }),
+            ]),
+        buildTotalCommunityTrafficMetric(totals, {
+          id: "profile_accesses",
+          label: "Acessos ao perfil",
+          total: totals.profileAccesses,
+        }),
+        buildTotalCommunityTrafficMetric(totals, {
+          id: "upvotes",
+          label: "Upvotes",
+          total: totals.upvotes,
+        }),
+        buildTotalCommunityTrafficMetric(totals, {
+          id: "downvotes",
+          label: "Downvotes",
+          total: totals.downvotes,
+        }),
+        buildTotalCommunityTrafficMetric(totals, {
+          id: "comments",
+          label: "Comentários",
+          total: totals.comments,
+        }),
+        buildTotalCommunityTrafficMetric(totals, {
+          id: "saves",
+          label: "Salvamentos",
+          total: totals.saves,
+        }),
+        buildTotalCommunityTrafficMetric(totals, {
+          id: "shares",
+          label: "Compartilhamentos",
+          total: totals.shares,
+        }),
+      ];
+
+      return [sourceId, commonMetrics];
+    }),
+  );
+
+  const consideredCounts = new Map<AdminPsychologistWhatsappTrafficOriginSourceId, number>(
+    COMMUNITY_TRAFFIC_PLATFORM_METRIC_SOURCE_IDS.map((sourceId) => [
+      sourceId,
+      sourceTotals(sourceId).contentCount,
+    ]),
+  );
+
+  return { consideredCounts, metrics };
+};
+
+const buildProfileTrafficPlatformMetric = (
+  metric: Omit<AdminPsychologistWhatsappTrafficPlatformMetric, "source" | "unavailable_reason"> & {
+    unavailable_reason?: string | null;
+  },
+) => buildTrafficPlatformMetric(PROFILE_TRAFFIC_PLATFORM_METRIC_SOURCE, metric);
+
+const hasProfileTrafficVideoViewSignal = (
+  session: ProfileTrafficPlatformMetricDataset["videoWatchSessions"][number],
+) =>
+  session.watched_seconds > 0 ||
+  session.max_position_seconds > 0 ||
+  session.completed ||
+  session.milestone_100;
+
+const buildProfileTrafficPlatformMetrics = (dataset: ProfileTrafficPlatformMetricDataset) => {
+  const pageViewDurations = dataset.pageViews.flatMap((view) => {
+    if (!view.target_id) return [];
+    if (view.user_id && view.user_id === view.target_id) return [];
+    if (typeof view.duration_seconds !== "number" || view.duration_seconds <= 0) return [];
+
+    return [view.duration_seconds];
+  });
+  const videoWatchSessions = dataset.videoWatchSessions.filter(
+    (session) =>
+      (!session.viewer_id || session.viewer_id !== session.psychologist_id) &&
+      hasProfileTrafficVideoViewSignal(session),
+  );
+  const retentionSamples = videoWatchSessions.flatMap((session) => {
+    if (session.duration_seconds <= 0) return [];
+
+    return [Math.min(100, (Math.max(0, session.watched_seconds) / session.duration_seconds) * 100)];
+  });
+  const publicationTabOpens = dataset.tabActions.filter(
+    (event) =>
+      event.action_type === PROFILE_TRAFFIC_PLATFORM_PUBLICATIONS_TAB_ACTION &&
+      event.target_id &&
+      event.user_id !== event.target_id,
+  );
+  const reviewsTabOpens = dataset.tabActions.filter(
+    (event) =>
+      event.action_type === PROFILE_TRAFFIC_PLATFORM_REVIEWS_TAB_ACTION &&
+      event.target_id &&
+      event.user_id !== event.target_id,
+  );
+  const totalDuration = pageViewDurations.reduce((total, value) => total + value, 0);
+  const averageRetention =
+    retentionSamples.length > 0
+      ? roundOneDecimal(
+          retentionSamples.reduce((total, value) => total + value, 0) / retentionSamples.length,
+        )
+      : null;
+
+  const metrics: AdminPsychologistWhatsappTrafficPlatformMetric[] = [
+    buildProfileTrafficPlatformMetric({
+      id: "profile_openings",
+      label: "Aberturas de perfil",
+      unit: "count",
+      value: dataset.profileViews.length,
+    }),
+    buildProfileTrafficPlatformMetric({
+      id: "profile_stay_time",
+      label: "Tempo de permanência",
+      unit: "seconds",
+      value: totalDuration,
+    }),
+    buildProfileTrafficPlatformMetric({
+      id: "presentation_video_views",
+      label: "Views do vídeo de apresentação",
+      unit: "count",
+      value: videoWatchSessions.length,
+    }),
+    buildProfileTrafficPlatformMetric({
+      id: "presentation_video_retention",
+      label: "Retenção",
+      unavailable_reason:
+        averageRetention === null
+          ? "Sem sessões reais do vídeo de apresentação com duração no período."
+          : null,
+      unit: "percentage",
+      value: averageRetention,
+    }),
+    buildProfileTrafficPlatformMetric({
+      id: "favorites",
+      label: "Favoritado",
+      unit: "count",
+      value: dataset.favorites.length,
+    }),
+    buildProfileTrafficPlatformMetric({
+      id: "profile_publications_tab_opens",
+      label: "Abertura da aba Publicações",
+      unit: "count",
+      value: publicationTabOpens.length,
+    }),
+    buildProfileTrafficPlatformMetric({
+      id: "profile_reviews_tab_opens",
+      label: "Abertura da aba Avaliações",
+      unit: "count",
+      value: reviewsTabOpens.length,
+    }),
+  ];
+
+  return { consideredCount: 1, metrics };
+};
+
+const buildPresentationVideoTrafficPlatformMetric = (
+  metric: Omit<AdminPsychologistWhatsappTrafficPlatformMetric, "source" | "unavailable_reason"> & {
+    unavailable_reason?: string | null;
+  },
+) => buildTrafficPlatformMetric(PRESENTATION_VIDEO_TRAFFIC_PLATFORM_METRIC_SOURCE, metric);
+
+const buildPresentationVideoTrafficPlatformMetrics = (
+  profile: { user_id: string; video_url: string | null },
+  dataset: ProfileTrafficPlatformMetricDataset,
+) => {
+  const videoCount = profile.video_url?.trim() ? 1 : 0;
+  const noVideoReason = "Sem vídeo de apresentação publicado até o fim do período selecionado.";
+  const countUnavailableReason = videoCount > 0 ? null : noVideoReason;
+  const videoWatchSessions = dataset.videoWatchSessions.filter(
+    (session) =>
+      session.psychologist_id === profile.user_id &&
+      (!session.viewer_id || session.viewer_id !== session.psychologist_id) &&
+      hasProfileTrafficVideoViewSignal(session),
+  );
+  const retentionSamples = videoWatchSessions.flatMap((session) => {
+    if (session.duration_seconds <= 0) return [];
+
+    return [Math.min(100, (Math.max(0, session.watched_seconds) / session.duration_seconds) * 100)];
+  });
+  const videoStaySeconds = videoWatchSessions.map((session) =>
+    Math.max(0, session.watched_seconds),
+  );
+  const averageRetention =
+    retentionSamples.length > 0
+      ? roundOneDecimal(
+          retentionSamples.reduce((total, value) => total + value, 0) / retentionSamples.length,
+        )
+      : null;
+  const totalStaySeconds = roundOneDecimal(
+    videoStaySeconds.reduce((total, value) => total + value, 0),
+  );
+  const replayRate =
+    videoWatchSessions.length > 0
+      ? roundOneDecimal(
+          (videoWatchSessions.filter((session) => session.replay_count > 0).length /
+            videoWatchSessions.length) *
+            100,
+        )
+      : null;
+  const videoActions = dataset.videoActions.filter(
+    (event) =>
+      event.target_id &&
+      event.target_id === profile.user_id &&
+      (!event.user_id || event.user_id !== event.target_id),
+  );
+  const videoActionsBySource = new Map<
+    Extract<AdminPsychologistWhatsappTrafficOriginSourceId, "explore" | "search_filters">,
+    Map<string, number>
+  >([
+    ["explore", new Map<string, number>()],
+    ["search_filters", new Map<string, number>()],
+  ]);
+
+  for (const event of videoActions) {
+    const sourceId = hasSearchFilterTrafficParams(event.path) ? "search_filters" : "explore";
+    const sourceTotals = videoActionsBySource.get(sourceId);
+    if (!sourceTotals) continue;
+
+    sourceTotals.set(event.action_type, (sourceTotals.get(event.action_type) ?? 0) + 1);
+  }
+
+  const sourceUnavailableReason = (metricUnavailableReason: string) =>
+    videoCount <= 0 ? noVideoReason : metricUnavailableReason;
+  const countValue = (value: number) => (videoCount > 0 ? value : null);
+
+  const metrics = new Map<
+    AdminPsychologistWhatsappTrafficOriginSourceId,
+    AdminPsychologistWhatsappTrafficPlatformMetric[]
+  >(
+    (["explore", "search_filters"] as const).map((sourceId) => {
+      const actionTotals = videoActionsBySource.get(sourceId) ?? new Map<string, number>();
+      const sourceMetrics: AdminPsychologistWhatsappTrafficPlatformMetric[] = [
+        buildPresentationVideoTrafficPlatformMetric({
+          id: "views",
+          label: "Visualizações",
+          unavailable_reason: countUnavailableReason,
+          unit: "count",
+          value: countValue(videoWatchSessions.length),
+        }),
+        buildPresentationVideoTrafficPlatformMetric({
+          id: "average_retention",
+          label: "Retenção",
+          unavailable_reason:
+            averageRetention === null
+              ? sourceUnavailableReason(
+                  "Sem sessões reais do vídeo de apresentação com duração no período.",
+                )
+              : null,
+          unit: "percentage",
+          value: averageRetention,
+        }),
+        buildPresentationVideoTrafficPlatformMetric({
+          id: "average_visibility",
+          label: "Tempo de permanência",
+          unavailable_reason:
+            videoStaySeconds.length === 0
+              ? sourceUnavailableReason("Sem sessões reais do vídeo de apresentação no período.")
+              : null,
+          unit: "seconds",
+          value: videoCount > 0 ? totalStaySeconds : null,
+        }),
+        buildPresentationVideoTrafficPlatformMetric({
+          id: "replay_rate",
+          label: "Taxa de replay",
+          unavailable_reason:
+            replayRate === null
+              ? sourceUnavailableReason("Sem sessões reais do vídeo de apresentação no período.")
+              : null,
+          unit: "percentage",
+          value: replayRate,
+        }),
+        buildPresentationVideoTrafficPlatformMetric({
+          id: "profile_accesses",
+          label: "Acessos ao perfil",
+          unavailable_reason: countUnavailableReason,
+          unit: "count",
+          value: countValue(actionTotals.get(PRESENTATION_VIDEO_PROFILE_ACCESS_ACTION) ?? 0),
+        }),
+        buildPresentationVideoTrafficPlatformMetric({
+          id: "favorites",
+          label: "Favoritado",
+          unavailable_reason: countUnavailableReason,
+          unit: "count",
+          value: countValue(actionTotals.get(PRESENTATION_VIDEO_FAVORITE_ACTION) ?? 0),
+        }),
+        buildPresentationVideoTrafficPlatformMetric({
+          id: "shares",
+          label: "Compartilhado",
+          unavailable_reason: countUnavailableReason,
+          unit: "count",
+          value: countValue(actionTotals.get(PRESENTATION_VIDEO_SHARE_ACTION) ?? 0),
+        }),
+      ];
+
+      return [sourceId, sourceMetrics];
+    }),
+  );
+  const consideredCounts = new Map<AdminPsychologistWhatsappTrafficOriginSourceId, number>([
+    ["explore", videoCount],
+    ["search_filters", videoCount],
+  ]);
+
+  return { consideredCounts, metrics };
+};
+
+const buildTrafficPlatformMetrics = (params: {
+  communityDataset: CommunityTrafficPlatformMetricDataset;
+  profile: { user_id: string; video_url: string | null };
+  profileDataset: ProfileTrafficPlatformMetricDataset;
+}) => {
+  const community = buildCommunityTrafficPlatformMetrics(params.communityDataset);
+  const profile = buildProfileTrafficPlatformMetrics(params.profileDataset);
+  const presentationVideo = buildPresentationVideoTrafficPlatformMetrics(
+    params.profile,
+    params.profileDataset,
+  );
+  const metrics = new Map(community.metrics);
+  const consideredCounts = new Map(community.consideredCounts);
+
+  metrics.set("profile", profile.metrics);
+  consideredCounts.set("profile", profile.consideredCount);
+  for (const [sourceId, sourceMetrics] of presentationVideo.metrics) {
+    metrics.set(sourceId, sourceMetrics);
+  }
+  for (const [sourceId, consideredCount] of presentationVideo.consideredCounts) {
+    consideredCounts.set(sourceId, consideredCount);
+  }
+
+  return { consideredCounts, metrics };
+};
+
+const buildTrafficSources = (params: {
+  actions: WhatsappTrafficActions;
+  communityDataset: CommunityTrafficPlatformMetricDataset;
+  profile: { user: { id: string }; user_id: string; video_url: string | null };
+  profileDataset: ProfileTrafficPlatformMetricDataset;
+}): AdminPsychologistStatisticsDTO["traffic_sources"] => {
+  const trafficPlatformMetrics = buildTrafficPlatformMetrics({
+    communityDataset: params.communityDataset,
+    profile: params.profile,
+    profileDataset: params.profileDataset,
+  });
+  const summary = summarizePsychologistWhatsappTrafficOrigins({
+    actions: params.actions,
+    allowedPsychologistIds: new Set([params.profile.user.id]),
+    communityPlatformMetrics: trafficPlatformMetrics.metrics,
+    platformMetricsConsideredCounts: trafficPlatformMetrics.consideredCounts,
+    communityPosts: params.communityDataset.posts,
+    communityReplies: params.communityDataset.replies,
+  });
 
   return {
     ...summary,
-    description: "Entenda quais canais levam pacientes até o perfil público do psicólogo.",
-    source: "page_view_event.traffic_source+target_type=psychologist",
+    description:
+      "Entenda em quais superfícies os pacientes clicam no WhatsApp deste psicólogo e veja a somatória de engajamento por origem.",
+    source: "important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click",
   };
 };
 
@@ -2023,6 +2698,9 @@ export const showAdminPsychologistStatistics = async (
     pwaInstallAction,
     trafficPageViews,
     importantWhatsappActions,
+    whatsappTrafficActions,
+    communityTrafficPlatformMetricDataset,
+    profileTrafficPlatformMetricDataset,
     patientPostsForCoverage,
     previousPatientPostsForCoverage,
   ] = await Promise.all([
@@ -2070,6 +2748,17 @@ export const showAdminPsychologistStatistics = async (
     repository.findPwaInstallAction(userId),
     repository.listPublicProfilePageViews(userId, period.current.start, period.current.end),
     repository.listImportantPsychologistWhatsappActions(
+      userId,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listWhatsappTrafficActions(period.current.start, period.current.end),
+    repository.listCommunityTrafficPlatformMetricDataset(
+      userId,
+      period.current.start,
+      period.current.end,
+    ),
+    repository.listProfileTrafficPlatformMetricDataset(
       userId,
       period.current.start,
       period.current.end,
@@ -2436,7 +3125,12 @@ export const showAdminPsychologistStatistics = async (
     top_pages: platformUsageSummary.top_pages,
     unavailable_reason: platformUsageSummary.unavailable_reason,
   };
-  const trafficSources = buildTrafficSources(trafficPageViews);
+  const trafficSources = buildTrafficSources({
+    actions: whatsappTrafficActions,
+    communityDataset: communityTrafficPlatformMetricDataset,
+    profile,
+    profileDataset: profileTrafficPlatformMetricDataset,
+  });
   const trafficQuality = buildTrafficQuality({
     favorites,
     importantWhatsappActions,

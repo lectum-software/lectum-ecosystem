@@ -1,4 +1,4 @@
-﻿# TASK-104 - Reorganizacao segura da aba Estatisticas do psicologo no Admin
+# TASK-104 - Reorganizacao segura da aba Estatisticas do psicologo no Admin
 
 ## Metadata
 
@@ -208,3 +208,32 @@ exibir uma opcao explicitamente chamada **Visibilidade (tempo)**.
   video de apresentacao** -> **Atividade e engajamento**, sem overflow horizontal no mobile.
   Screenshots: `.tmp/admin-psychologist-stats-order-desktop.png` e
   `.tmp/admin-psychologist-stats-order-mobile.png`.
+
+## Ajuste pos-feedback 2026-08-01 - Origem do trafego no formato expansivo do dashboard
+
+- Pedido do usuario: na aba **Estatisticas** do detalhe Admin do psicologo, a tabela **Origem do trafego** deve ter o mesmo layout da tabela do dashboard Admin de psicologos, inclusive com grupos expansivos **Comunidades**, **Perfil** e **Video de apresentacao**.
+- O backend passou a montar `traffic_sources` do detalhe com o mesmo contrato real do dashboard (`important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click`), porem escopado ao psicologo aberto e com somatorias dos seus sinais de engajamento/conversao por origem.
+- A UI do detalhe reutiliza o padrao visual do dashboard: coluna **Fonte**, coluna **WhatsApp**, linha principal expansiva, detalhamento mobile-first e breakdown de autoria quando aplicavel. A coluna antiga **Perfil** foi removida da tabela do detalhe.
+- Nenhum mock, seed, package novo, schema Prisma ou migration foi criado; os dados continuam vindo de eventos first-party reais (`important_action_event`, `page_view_event`, `content_attention_session`, `profile_video_watch_session` e eventos de comunidade/perfil ja existentes).
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias auditaveis foram os screenshots enviados pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+
+### Criterios de aceite do ajuste
+
+- [x] **Origem do trafego** no detalhe do psicologo usa o layout expansivo do dashboard de psicologos.
+- [x] A tabela tem grupos expansivos **Comunidades**, **Perfil** e **Video de apresentacao**.
+- [x] O cabecalho desktop mostra somente **Fonte** e **WhatsApp**, sem a coluna antiga **Perfil**.
+- [x] O detalhamento mostra a somatoria dos dados de engajamento/conversao do psicologo por origem.
+- [x] A versao mobile mantem os cards expansivos e nao gera overflow horizontal.
+- [x] Nenhum mock, endpoint simulado, package novo, schema Prisma ou migration foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/psychologists/engagement/DTOs/IAdminPsychologistEngagementDTO.ts" "src/modules/api/admin/private/psychologists/engagement/repositories/AdminPsychologistEngagementRepository.ts" "src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts"`.
+- `pnpm --dir admin exec biome check --write "src/api/req/psychologists/index.ts" "src/app/(admin)/psicologos/[id]/client.tsx"`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Smoke API real em `GET /api/admin/private/psychologists/cmrgztri7000tn0uh1q4n8vxf/statistics?period=all&from=2026-07-11&to=2026-08-01`: confirmou `traffic_sources.source=important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click`, origens de comunidades/perfil/video e `platform_metrics` preenchidos com somatorias do psicologo.
+- Browser local/headless com Admin em `http://localhost:3002` e backend real em `localhost:3001`: desktop 1365px e mobile 390px confirmaram grupos expansivos **Comunidades**, **Perfil** e **Video de apresentacao**, ausencia de coluna **Perfil** no cabecalho desktop, detalhamento de sublinhas e ausencia de overflow mobile. Screenshots: `.tmp/admin-psychologist-traffic-detail-desktop.png` e `.tmp/admin-psychologist-traffic-detail-mobile.png`.

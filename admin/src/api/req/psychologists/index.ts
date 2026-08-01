@@ -2092,26 +2092,7 @@ export type AdminPsychologistStatistics = {
     unattributed_whatsapp_clicks: number;
     unavailable_reason: string | null;
   };
-  traffic_sources: {
-    attribution_unavailable_reason: string | null;
-    description: string;
-    source: "page_view_event.traffic_source+target_type=psychologist";
-    sources: {
-      badge: "primary_source" | null;
-      conversion_rate: number | null;
-      description: string;
-      id: string;
-      label: string;
-      percentage: number;
-      profile_views: number;
-      sessions: number;
-      whatsapp_clicks: number | null;
-    }[];
-    total_profile_views: number;
-    total_sessions: number;
-    unavailable_reason: string | null;
-    updated_at: string | null;
-  };
+  traffic_sources: PsychologistsDashboardTrafficSources;
   unavailable: AdminPsychologistEngagementMetric[];
   video: {
     available: boolean;
