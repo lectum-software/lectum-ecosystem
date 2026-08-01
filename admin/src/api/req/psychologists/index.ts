@@ -958,6 +958,47 @@ export type PsychologistsDashboardProfileConversionActivityMatrixResults = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardProfileConversionBehaviorElementId =
+  | "communities"
+  | "favorite"
+  | "profile"
+  | "presentation_video";
+
+export type PsychologistsDashboardProfileConversionBehaviorMetric = {
+  description: string;
+  id: string;
+  label: string;
+  source: string;
+  unit: "count" | "percentage" | "position" | "score" | "seconds";
+  unavailable_reason: string | null;
+  value: number | null;
+};
+
+export type PsychologistsDashboardProfileConversionBehaviorColumn = {
+  description: string;
+  id: PsychologistsDashboardProfileConversionBehaviorElementId;
+  label: string;
+};
+
+export type PsychologistsDashboardProfileConversionBehaviorCell = {
+  element_id: PsychologistsDashboardProfileConversionBehaviorElementId;
+  headline: string;
+  id: `${PsychologistsDashboardProfileConversionMatrixCategoryId}_${PsychologistsDashboardProfileConversionBehaviorElementId}`;
+  metrics: PsychologistsDashboardProfileConversionBehaviorMetric[];
+  row_id: PsychologistsDashboardProfileConversionMatrixCategoryId;
+  source: string;
+  unavailable_reason: string | null;
+};
+
+export type PsychologistsDashboardProfileConversionBehaviorResults = {
+  cells: PsychologistsDashboardProfileConversionBehaviorCell[];
+  columns: PsychologistsDashboardProfileConversionBehaviorColumn[];
+  description: string;
+  rows: PsychologistsDashboardProfileConversionMatrixRow[];
+  source: string;
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardProfileConversionEngagementFavoritesColumnId = Exclude<
   PsychologistsDashboardProfileEngagementFavoritesCategoryId,
   "insufficient_data"
@@ -1056,6 +1097,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   statistics: PsychologistsDashboardStatistics;
   profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_conversion_activity: PsychologistsDashboardProfileConversionActivityMatrixResults;
+  profile_conversion_behavior: PsychologistsDashboardProfileConversionBehaviorResults;
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_engagement_favorites: PsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;
@@ -2374,6 +2416,7 @@ export type AdminPsychologistsDashboard = {
   };
   profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_conversion_activity: PsychologistsDashboardProfileConversionActivityMatrixResults;
+  profile_conversion_behavior: PsychologistsDashboardProfileConversionBehaviorResults;
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_engagement_favorites: PsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;

@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 132 tasks: `TASK-00` a `TASK-125`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 133 tasks: `TASK-00` a `TASK-126`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -207,6 +207,7 @@ ou cortesia manual.
 | 123 | [TASK-123 - Donut de Atividade no dashboard Admin de psicologos](TASK-123-donut-atividade-dashboard-psicologos-admin.md) | Completed | 53, 76, 87, 111, 122 |
 | 124 | [TASK-124 - Reposicionamento da matriz no dashboard Admin de psicologos](TASK-124-reposicionamento-matriz-dashboard-psicologos-admin.md) | Completed | 53, 100, 101A, 103, 123 |
 | 125 | [TASK-125 - Tabela comportamental por conversao no Admin de psicologos](TASK-125-tabela-comportamental-conversao-admin-psicologos.md) | Completed | 53, 100, 103, 123, 124 |
+| 126 | [TASK-126 - Tags na tabela comportamental por conversao do Admin de psicologos](TASK-126-tags-tabela-comportamental-conversao-admin-psicologos.md) | Completed | 53, 100, 103, 123, 124, 125 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -306,6 +307,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 89. [TASK-123 - Donut de Atividade no dashboard Admin de psicologos](TASK-123-donut-atividade-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para incluir Atividade como primeiro donut do carrossel de sinais agregados dos psicologos, usando acoes reais de posts e respostas no periodo.
 90. [TASK-124 - Reposicionamento da matriz no dashboard Admin de psicologos](TASK-124-reposicionamento-matriz-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para mover a matriz do funil para o bloco de sinais agregados dos psicologos, mantendo dados reais e filtro de plano do bloco.
 91. [TASK-125 - Tabela comportamental por conversao no Admin de psicologos](TASK-125-tabela-comportamental-conversao-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para substituir o funil comportamental por uma tabela Conversao x comportamento com colunas de Video de apresentacao, Comunidades, Atividades, Engajamento e Favoritado usando dados reais.
+92. [TASK-126 - Tags na tabela comportamental por conversao do Admin de psicologos](TASK-126-tags-tabela-comportamental-conversao-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para transformar as celulas em tags comportamentais, adicionar Perfil, consolidar Atividades/Engajamento dentro de Comunidade e tratar Tela de favoritos como origem de cliques WhatsApp por psicologo.
 
 ### 1A. Trilha Admin planejada
 
@@ -390,6 +392,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 77. [TASK-123 - Donut de Atividade no dashboard Admin de psicologos](TASK-123-donut-atividade-dashboard-psicologos-admin.md)
 78. [TASK-124 - Reposicionamento da matriz no dashboard Admin de psicologos](TASK-124-reposicionamento-matriz-dashboard-psicologos-admin.md)
 79. [TASK-125 - Tabela comportamental por conversao no Admin de psicologos](TASK-125-tabela-comportamental-conversao-admin-psicologos.md)
+80. [TASK-126 - Tags na tabela comportamental por conversao do Admin de psicologos](TASK-126-tags-tabela-comportamental-conversao-admin-psicologos.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

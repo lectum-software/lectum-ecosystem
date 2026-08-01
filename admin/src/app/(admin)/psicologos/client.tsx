@@ -77,6 +77,9 @@ type ProfileEngagementFavoritesFavoriteCategoryId = NonNullable<
 type ProfileConversionEngagementFavoritesMatrix =
   AdminPsychologistsDashboard["profile_conversion_engagement_favorites"];
 type ProfileConversionActivityMatrix = AdminPsychologistsDashboard["profile_conversion_activity"];
+type ProfileConversionBehaviorResults = AdminPsychologistsDashboard["profile_conversion_behavior"];
+type ProfileConversionBehaviorCell = ProfileConversionBehaviorResults["cells"][number];
+type ProfileConversionBehaviorMetric = ProfileConversionBehaviorCell["metrics"][number];
 type ProfileConversionVisibilityMatrix =
   AdminPsychologistsDashboard["profile_conversion_visibility"];
 type ProfileConversionMatrixMode =
@@ -978,9 +981,6 @@ const PlanSegmentSelect = ({
   </label>
 );
 
-const getPlanSegmentFilterLabel = (value: PlanSegmentFilter) =>
-  PLAN_SEGMENT_FILTER_OPTIONS.find((option) => option.id === value)?.label ?? "Todos";
-
 const ConversionJourneyTitleSelect = ({
   id,
   onChange,
@@ -1089,6 +1089,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     statistics: summary.statistics,
     profile_activity: summary.profile_activity,
     profile_conversion_activity: summary.profile_conversion_activity,
+    profile_conversion_behavior: summary.profile_conversion_behavior,
     profile_conversion: summary.profile_conversion,
     profile_engagement_favorites: summary.profile_engagement_favorites,
     profile_conversion_engagement: summary.profile_conversion_engagement,
@@ -3163,11 +3164,6 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
   const profileEngagementFavorites = profileConversionSegmentSummary.profile_engagement_favorites;
   const profileExposure = profileConversionSegmentSummary.profile_exposure;
-  const profileConversionEngagementMatrix =
-    profileConversionSegmentSummary.profile_conversion_engagement_favorites;
-  const profileConversionVisibilityMatrix =
-    profileConversionSegmentSummary.profile_conversion_visibility;
-  const selectedPlanSegmentLabel = getPlanSegmentFilterLabel(profileConversionPlanSegment);
   if (!profileActivity || !profileConversion || !profileEngagementFavorites || !profileExposure) {
     return null;
   }
@@ -3321,12 +3317,6 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           </DashboardProfileSignalCard>
         </div>
       </DashboardProfileSignalsCarousel>
-
-      <DashboardProfileConversionMatrixSection
-        engagementMatrix={profileConversionEngagementMatrix}
-        planSegmentLabel={selectedPlanSegmentLabel}
-        visibilityMatrix={profileConversionVisibilityMatrix}
-      />
     </CardShell>
   );
 };
@@ -3393,37 +3383,6 @@ const PROFILE_CONVERSION_MATRIX_AXIS_CONFIGS: Record<
     sourceMatrix: "visibility",
   },
 };
-
-const toProfileConversionActivityDisplayMatrix = (
-  sourceMatrix: ProfileConversionActivityMatrix,
-): ProfileConversionMatrixResults => ({
-  columns: sourceMatrix.columns.map((column) => ({
-    color: PROFILE_ACTIVITY_CHART_COLORS[column.id],
-    count: column.count,
-    description: column.description,
-    id: column.id,
-    label: column.label,
-    percentage: column.percentage,
-  })),
-  description: sourceMatrix.description,
-  quadrants: sourceMatrix.quadrants.map((quadrant) => ({
-    column_id: quadrant.column_id,
-    column_label: quadrant.column_label,
-    count: quadrant.count,
-    description: quadrant.description,
-    id: quadrant.id,
-    label: quadrant.label,
-    percentage: quadrant.percentage,
-    row_id: quadrant.row_id,
-    row_label: quadrant.row_label,
-  })),
-  rows: sourceMatrix.rows,
-  source: sourceMatrix.source,
-  totals: {
-    psychologists: sourceMatrix.totals.psychologists,
-  },
-  unavailable_reason: sourceMatrix.unavailable_reason,
-});
 
 const findSourceMatrixQuadrant = (
   sourceMatrix: ProfileConversionSourceMatrix,
@@ -3631,126 +3590,147 @@ const ProfileConversionMatrixQuadrantCard = ({
   );
 };
 
-type ProfileConversionBehaviorInsight = {
-  cell: ProfileConversionMatrixCell;
-  labels: string[];
-};
-
-type ProfileConversionBehaviorAxis = {
-  description: string;
-  id: "activity" | "community" | "engagement" | "favorite" | "presentation_video";
-  label: string;
-  matrix: ProfileConversionMatrixResults;
-};
-
-const splitProfileConversionBehaviorColumnLabel = (label: string) => {
-  const separator = " e ";
-  const separatorIndex = label.indexOf(separator);
-
-  if (separatorIndex === -1) return [label];
-
-  return [label.slice(0, separatorIndex), label.slice(separatorIndex + separator.length)];
-};
-
-const getDominantProfileConversionBehaviorInsight = (
-  matrix: ProfileConversionMatrixResults,
-  row: ProfileConversionMatrixRowItem,
-): ProfileConversionBehaviorInsight | null => {
-  const cells = buildProfileConversionMatrixRowCells(matrix, row);
-  const dominantCell = cells.reduce<ProfileConversionMatrixCell | null>((current, cell) => {
-    if (!current) return cell;
-    if (cell.quadrant.count > current.quadrant.count) return cell;
-    if (
-      cell.quadrant.count === current.quadrant.count &&
-      cell.rowPercentage > current.rowPercentage
-    ) {
-      return cell;
-    }
-
-    return current;
-  }, null);
-
-  if (!dominantCell || dominantCell.quadrant.count <= 0) return null;
-
-  return {
-    cell: dominantCell,
-    labels: splitProfileConversionBehaviorColumnLabel(dominantCell.column.label),
-  };
-};
-
 const ProfileConversionBehaviorTableCell = ({
-  axis,
-  row,
+  cell,
 }: {
-  axis: ProfileConversionBehaviorAxis;
-  row: ProfileConversionMatrixRowItem;
+  cell: ProfileConversionBehaviorCell | null;
 }) => {
-  const insight = getDominantProfileConversionBehaviorInsight(axis.matrix, row);
+  const tagClassName =
+    "inline-flex max-w-full items-center rounded-full bg-surface-muted px-2.5 py-1 text-[0.72rem] font-normal leading-5 text-foreground";
 
-  if (row.count <= 0) {
+  if (!cell) {
     return (
-      <div className="min-w-0 rounded-2xl border border-dashed border-border bg-surface-muted/70 p-3">
-        <p className="text-xs font-black text-muted">Sem profissionais</p>
-        <p className="mt-1 text-[0.68rem] font-bold leading-4 text-subtle">
-          {"Categoria vazia no per\u00edodo selecionado."}
-        </p>
+      <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
+        <span
+          className={cn(tagClassName, "text-muted")}
+          title={"O backend n\u00e3o retornou a leitura desta c\u00e9lula."}
+        >
+          Sem dados
+        </span>
       </div>
     );
   }
 
-  if (!insight) {
+  if (cell.unavailable_reason) {
     return (
-      <div className="min-w-0 rounded-2xl border border-dashed border-border bg-surface-muted/70 p-3">
-        <p className="text-xs font-black text-muted">{"Sem padr\u00e3o predominante"}</p>
-        <p className="mt-1 text-[0.68rem] font-bold leading-4 text-subtle">
-          {"N\u00e3o h\u00e1 base real suficiente para apontar um comportamento neste eixo."}
-        </p>
+      <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
+        <span className={cn(tagClassName, "text-muted")} title={cell.unavailable_reason}>
+          {getProfileConversionBehaviorUnavailableTag(cell)}
+        </span>
       </div>
     );
   }
 
-  const color = insight.cell.color;
-  const label = insight.labels.join(" + ");
-  const count = insight.cell.quadrant.count;
-  const percentage = insight.cell.rowPercentage;
-  const progressWidth = `${Math.max(8, Math.min(100, Math.max(0, percentage)))}%`;
+  const tags = getProfileConversionBehaviorTags(cell);
+
+  if (tags.length === 0) {
+    return (
+      <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
+        <span className={cn(tagClassName, "text-muted")} title={cell.headline}>
+          Sem sinais mensuráveis
+        </span>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-w-0 rounded-2xl border bg-surface p-3 shadow-control"
-      style={{
-        borderColor: hexToRgba(color, 0.28),
-        boxShadow: `inset 0 0 0 1px ${hexToRgba(color, 0.08)}`,
-      }}
-    >
-      <div className="flex min-w-0 items-start gap-2">
-        <span
-          aria-hidden
-          className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-        <div className="min-w-0">
-          <p className="break-words text-xs font-black leading-4 text-foreground">{label}</p>
-          <p className="mt-1 text-[0.68rem] font-bold leading-4 text-muted">
-            <strong className="font-black text-foreground">{numberFormatter.format(count)}</strong>{" "}
-            {"psic\u00f3logos \u00b7 "}
-            {formatPercentageValue(percentage)} do segmento
-          </p>
-        </div>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-muted">
-        <div
-          aria-hidden
-          className="h-full rounded-full"
-          style={{ backgroundColor: color, width: progressWidth }}
-        />
-      </div>
-      <p className="sr-only">
-        {axis.label}: {label}; {numberFormatter.format(count)} profissionais;{" "}
-        {formatPercentageValue(percentage)} do segmento {row.label}.
-      </p>
+    <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1" title={cell.headline}>
+      {tags.map((tag) => (
+        <span className={tagClassName} key={`${cell.id}-${tag.id}`} title={tag.description}>
+          <span className="truncate">
+            {tag.label}: {tag.value}
+          </span>
+        </span>
+      ))}
     </div>
   );
+};
+
+const PROFILE_CONVERSION_BEHAVIOR_TAG_METRICS_BY_ELEMENT: Record<
+  ProfileConversionBehaviorCell["element_id"],
+  string[]
+> = {
+  communities: [
+    "community_content_count",
+    "activity_actions",
+    "activity_active_psychologists",
+    "activity_actions_per_psychologist",
+    "community_views_per_content",
+    "community_attention_per_content",
+    "community_video_retention",
+    "community_engagement_actions",
+    "engagement_score",
+    "engagement_comments_received",
+    "engagement_content_saves",
+    "engagement_content_shares",
+    "engagement_positive_votes",
+    "community_whatsapp_clicks",
+  ],
+  favorite: ["favorites_screen_whatsapp_clicks_per_psychologist"],
+  presentation_video: [
+    "presentation_video_retention",
+    "presentation_video_engagement_actions",
+    "presentation_video_average_ranking_position",
+    "presentation_video_average_watch_seconds",
+    "presentation_video_views_per_video",
+    "presentation_video_replay_rate",
+    "presentation_video_whatsapp_clicks",
+  ],
+  profile: [
+    "profile_openings",
+    "profile_openings_per_psychologist",
+    "profile_average_stay_seconds",
+    "profile_publications_tab_opens",
+    "profile_reviews_tab_opens",
+    "profile_favorites",
+    "profile_whatsapp_clicks",
+    "profile_whatsapp_rate",
+  ],
+};
+
+const formatProfileConversionBehaviorMetricValue = (metric: ProfileConversionBehaviorMetric) => {
+  if (typeof metric.value !== "number") return null;
+  if (metric.unit === "percentage") return formatPercentageValue(metric.value);
+  if (metric.unit === "seconds") return formatSecondsMetric(metric.value);
+  if (metric.unit === "position") return `${numberFormatter.format(metric.value)}\u00aa`;
+
+  return numberFormatter.format(metric.value);
+};
+
+const getProfileConversionBehaviorTags = (cell: ProfileConversionBehaviorCell) => {
+  const priority = PROFILE_CONVERSION_BEHAVIOR_TAG_METRICS_BY_ELEMENT[cell.element_id] ?? [];
+  const metricsById = new Map(cell.metrics.map((metric) => [metric.id, metric]));
+  const orderedMetrics = [
+    ...priority.flatMap((id) => {
+      const metric = metricsById.get(id);
+      return metric ? [metric] : [];
+    }),
+    ...cell.metrics.filter((metric) => !priority.includes(metric.id)),
+  ];
+
+  return orderedMetrics.flatMap((metric) => {
+    const value = formatProfileConversionBehaviorMetricValue(metric);
+    if (!value) return [];
+
+    return [
+      {
+        description: metric.description,
+        id: metric.id,
+        label: metric.label,
+        value,
+      },
+    ];
+  });
+};
+
+const getProfileConversionBehaviorUnavailableTag = (cell: ProfileConversionBehaviorCell) => {
+  if (cell.unavailable_reason?.startsWith("Sem profissionais")) return "Sem profissionais";
+  if (cell.element_id === "presentation_video") return "Sem vídeo publicado";
+  if (cell.element_id === "profile") return "Sem sinais no perfil";
+  if (cell.element_id === "communities") return "Sem sinais na comunidade";
+  if (cell.element_id === "favorite") return "Sem base na tela de favoritos";
+
+  return "Sem base";
 };
 
 const ProfileConversionBehaviorRowHeader = ({ row }: { row: ProfileConversionMatrixRowItem }) => {
@@ -3863,12 +3843,12 @@ const ProfileConversionMatrixDetails = ({ matrix }: { matrix: ProfileConversionM
 };
 
 function DashboardProfileConversionMatrixSection({
+  basisLabel,
   engagementMatrix,
-  planSegmentLabel,
   visibilityMatrix,
 }: {
+  basisLabel: string;
   engagementMatrix: ProfileConversionEngagementFavoritesMatrix;
-  planSegmentLabel: string;
   visibilityMatrix: ProfileConversionVisibilityMatrix;
 }) {
   const [isMatrixExpanded, setIsMatrixExpanded] = useState(false);
@@ -3914,8 +3894,8 @@ function DashboardProfileConversionMatrixSection({
               <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
                 Esta {"\u00e9"} a matriz separada usada para auditar o eixo selecionado. A leitura
-                acompanha o filtro de plano do bloco:{" "}
-                <strong className="font-black text-foreground">{planSegmentLabel}</strong>.
+                acompanha a base agregada do bloco:{" "}
+                <strong className="font-black text-foreground">{basisLabel}</strong>.
               </p>
             </div>
             <ProfileConversionMatrixTitleSelect
@@ -3937,91 +3917,33 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
   summary: AdminPsychologistsDashboard;
 }) => {
   const segmentSummary = getPlanSegmentSummary(summary, "all");
-  const profileConversion = segmentSummary.profile_conversion;
-  const activityMatrix = segmentSummary.profile_conversion_activity;
-  const engagementMatrix = segmentSummary.profile_conversion_engagement_favorites;
-  const visibilityMatrix = segmentSummary.profile_conversion_visibility;
-  const conversionRows =
-    activityMatrix?.rows ?? engagementMatrix?.rows ?? visibilityMatrix?.rows ?? [];
+  const behaviorTable = segmentSummary.profile_conversion_behavior;
+  const profileConversionEngagementMatrix = segmentSummary.profile_conversion_engagement_favorites;
+  const profileConversionVisibilityMatrix = segmentSummary.profile_conversion_visibility;
+  const conversionRows = behaviorTable?.rows ?? [];
+  const behaviorColumns = behaviorTable?.columns ?? [];
+  const behaviorCellsByKey = new Map(
+    (behaviorTable?.cells ?? []).map((cell) => [`${cell.row_id}:${cell.element_id}`, cell]),
+  );
 
-  if (
-    !profileConversion ||
-    !activityMatrix ||
-    !engagementMatrix ||
-    !visibilityMatrix ||
-    conversionRows.length === 0
-  ) {
+  if (!behaviorTable || conversionRows.length === 0 || behaviorColumns.length === 0) {
     return null;
   }
-
-  const behaviorAxes: ProfileConversionBehaviorAxis[] = [
-    {
-      description:
-        "Tempo assistido no v\u00eddeo de apresenta\u00e7\u00e3o dentro de cada faixa de convers\u00e3o.",
-      id: "presentation_video",
-      label: "V\u00eddeo de apresenta\u00e7\u00e3o",
-      matrix: getProfileConversionMatrixDetails({
-        engagementMatrix,
-        mode: "video_visibility",
-        visibilityMatrix,
-      }),
-    },
-    {
-      description:
-        "Aten\u00e7\u00e3o em conte\u00fado autoral nas comunidades dentro de cada faixa de convers\u00e3o.",
-      id: "community",
-      label: "Comunidades",
-      matrix: getProfileConversionMatrixDetails({
-        engagementMatrix,
-        mode: "community_visibility",
-        visibilityMatrix,
-      }),
-    },
-    {
-      description:
-        "Posts e respostas autorais nas comunidades dentro de cada faixa de convers\u00e3o.",
-      id: "activity",
-      label: "Atividades",
-      matrix: toProfileConversionActivityDisplayMatrix(activityMatrix),
-    },
-    {
-      description:
-        "Score ponderado de coment\u00e1rios, compartilhamentos, salvamentos e votos positivos recebidos.",
-      id: "engagement",
-      label: "Engajamento",
-      matrix: getProfileConversionMatrixDetails({
-        engagementMatrix,
-        mode: "engagement",
-        visibilityMatrix,
-      }),
-    },
-    {
-      description:
-        "Favoritos recebidos pelos psic\u00f3logos dentro de cada faixa de convers\u00e3o.",
-      id: "favorite",
-      label: "Favoritado",
-      matrix: getProfileConversionMatrixDetails({
-        engagementMatrix,
-        mode: "favorites",
-        visibilityMatrix,
-      }),
-    },
-  ];
 
   return (
     <CardShell className="p-5">
       <PanelTitle
-        description={`${formatSelectedPeriod(summary.period)} \u00b7 tabela comportamental por convers\u00e3o`}
+        description={`${formatSelectedPeriod(summary.period)} \u00b7 comportamento predominante detalhado por convers\u00e3o`}
         icon={Funnel}
         title={"Funil comportamental por convers\u00e3o"}
       />
 
       <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface">
         <div className="overflow-x-auto pb-1">
-          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left">
+          <table className="w-full min-w-[1160px] border-separate border-spacing-0 text-left">
             <caption className="sr-only">
               {
-                "Tabela com as faixas de convers\u00e3o no eixo vertical e o comportamento predominante dos psic\u00f3logos por v\u00eddeo de apresenta\u00e7\u00e3o, comunidades, atividades, engajamento e favoritos."
+                "Tabela com as faixas de convers\u00e3o no eixo vertical e tags comportamentais dos psic\u00f3logos por v\u00eddeo de apresenta\u00e7\u00e3o, perfil, comunidade e tela de favoritos."
               }
             </caption>
             <thead>
@@ -4029,16 +3951,16 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                 <th className="sticky left-0 z-20 w-48 border-border border-b bg-surface-muted/95 p-3 text-[0.68rem] font-black uppercase tracking-[0.14em] text-subtle">
                   {"Convers\u00e3o"}
                 </th>
-                {behaviorAxes.map((axis) => (
+                {behaviorColumns.map((column) => (
                   <th
-                    className="min-w-36 border-border border-b p-3 align-top text-xs font-black leading-4 text-foreground"
-                    key={`profile-conversion-behavior-axis-${axis.id}`}
+                    className="min-w-48 border-border border-b p-3 align-top text-xs font-black leading-4 text-foreground"
+                    key={`profile-conversion-behavior-axis-${column.id}`}
                     scope="col"
-                    title={axis.description}
+                    title={column.description}
                   >
-                    {axis.label}
+                    {column.label}
                     <span className="mt-1 block text-[0.65rem] font-bold leading-4 text-muted">
-                      {"Padr\u00e3o predominante no segmento"}
+                      {"Tags do segmento"}
                     </span>
                   </th>
                 ))}
@@ -4053,14 +3975,18 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                   >
                     <ProfileConversionBehaviorRowHeader row={row} />
                   </th>
-                  {behaviorAxes.map((axis) => (
-                    <td
-                      className="border-border border-t p-3 align-top"
-                      key={`profile-conversion-behavior-cell-${row.id}-${axis.id}`}
-                    >
-                      <ProfileConversionBehaviorTableCell axis={axis} row={row} />
-                    </td>
-                  ))}
+                  {behaviorColumns.map((column) => {
+                    const cell = behaviorCellsByKey.get(`${row.id}:${column.id}`) ?? null;
+
+                    return (
+                      <td
+                        className="border-border border-t p-3 align-top"
+                        key={`profile-conversion-behavior-cell-${row.id}-${column.id}`}
+                      >
+                        <ProfileConversionBehaviorTableCell cell={cell} />
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -4069,9 +3995,14 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
       </div>
       <p className="mt-3 text-xs font-bold leading-5 text-muted">
         {
-          "Cada c\u00e9lula mostra o comportamento predominante dentro da pr\u00f3pria faixa de convers\u00e3o, usando apenas sinais reais agregados de todos os planos."
+          "Cada c\u00e9lula resume em tags o comportamento predominante da pr\u00f3pria faixa de convers\u00e3o. Perfil mostra a navega\u00e7\u00e3o no perfil p\u00fablico; atividade autoral e engajamento ficam consolidados na coluna Comunidade; Tela de favoritos mostra somente a m\u00e9dia de cliques de WhatsApp por psic\u00f3logo, sempre com sinais reais agregados."
         }
       </p>
+      <DashboardProfileConversionMatrixSection
+        basisLabel={segmentSummary.label}
+        engagementMatrix={profileConversionEngagementMatrix}
+        visibilityMatrix={profileConversionVisibilityMatrix}
+      />
     </CardShell>
   );
 };
