@@ -5201,15 +5201,82 @@ const formatProfileConversionBehaviorCount = (value: number, singular: string, p
 const describeProfileConversionBehaviorOrdinal = (position: number | null) =>
   typeof position === "number" ? `${formatProfileConversionBehaviorNumber(position)}ª` : null;
 
-const describeProfileConversionBehaviorRanking = (position: number | null) => {
-  if (typeof position !== "number") return "posição média ainda sem base na listagem";
+type ProfileConversionBehaviorMetricTone =
+  AdminPsychologistsDashboardProfileConversionBehaviorMetric["tone"];
 
-  const ordinal = describeProfileConversionBehaviorOrdinal(position);
+type ProfileConversionBehaviorPositionRangeSignal = {
+  count: number;
+  description: string;
+  label: string;
+  percentage: number;
+  tone: ProfileConversionBehaviorMetricTone;
+  total: number;
+};
 
-  if (position <= 10) return `posição média no top 10 da listagem (${ordinal})`;
-  if (position <= 30) return `posição média entre os 30 primeiros da listagem (${ordinal})`;
+const PROFILE_CONVERSION_BEHAVIOR_POSITION_RANGE_TONE = {
+  presentation_video_position_50_plus: "zero",
+  presentation_video_position_top_10: "above",
+  presentation_video_position_top_30: "standard",
+  presentation_video_position_top_50: "below",
+} satisfies Record<PresentationVideoPositionCategoryId, ProfileConversionBehaviorMetricTone>;
 
-  return `posição média em ${ordinal} na listagem`;
+const PROFILE_CONVERSION_BEHAVIOR_POSITION_RANGE_TIE_PRIORITY = {
+  presentation_video_position_50_plus: 4,
+  presentation_video_position_top_50: 3,
+  presentation_video_position_top_30: 2,
+  presentation_video_position_top_10: 1,
+} satisfies Record<PresentationVideoPositionCategoryId, number>;
+
+const describeProfileConversionBehaviorPositionRange = (
+  positions: Array<number | null>,
+): ProfileConversionBehaviorPositionRangeSignal | null => {
+  if (positions.length <= 0) return null;
+
+  const counts = new Map<PresentationVideoPositionCategoryId, number>();
+  for (const position of positions) {
+    const categoryId = classifyPresentationVideoPositionCategory(position);
+    counts.set(categoryId, (counts.get(categoryId) ?? 0) + 1);
+  }
+
+  const selected = PRESENTATION_VIDEO_POSITION_CATEGORY_ORDER.map((id) => ({
+    count: counts.get(id) ?? 0,
+    id,
+  })).toSorted((left, right) => {
+    if (right.count !== left.count) return right.count - left.count;
+
+    return (
+      PROFILE_CONVERSION_BEHAVIOR_POSITION_RANGE_TIE_PRIORITY[right.id] -
+      PROFILE_CONVERSION_BEHAVIOR_POSITION_RANGE_TIE_PRIORITY[left.id]
+    );
+  })[0];
+
+  if (!selected || selected.count <= 0) return null;
+
+  const config = PRESENTATION_VIDEO_POSITION_CATEGORY_CONFIG[selected.id];
+  const percentage = roundOneDecimal((selected.count / positions.length) * 100);
+
+  return {
+    count: selected.count,
+    description: `Faixa predominante de posição entre os profissionais com vídeo publicado: ${config.label} (${formatProfileConversionBehaviorCount(selected.count, "profissional", "profissionais")} de ${formatProfileConversionBehaviorCount(positions.length, "profissional com vídeo", "profissionais com vídeo")}, ${formatProfileConversionBehaviorPercentage(percentage, "0%")}). Profissionais com vídeo sem posição confiável entram em 50+.`,
+    label: config.label,
+    percentage,
+    tone: PROFILE_CONVERSION_BEHAVIOR_POSITION_RANGE_TONE[selected.id],
+    total: positions.length,
+  };
+};
+
+const describeProfileConversionBehaviorRankingRange = (
+  rangeSignal: ProfileConversionBehaviorPositionRangeSignal | null,
+  averagePosition: number | null,
+) => {
+  if (!rangeSignal) return "posição ainda sem base na listagem";
+
+  const ordinal = describeProfileConversionBehaviorOrdinal(averagePosition);
+  const rangeDescription = `posição predominante em ${rangeSignal.label} (${formatProfileConversionBehaviorCount(rangeSignal.count, "profissional", "profissionais")} de ${formatProfileConversionBehaviorCount(rangeSignal.total, "profissional com vídeo", "profissionais com vídeo")})`;
+
+  if (!ordinal) return rangeDescription;
+
+  return `${rangeDescription}, com média ${ordinal}`;
 };
 
 const describeProfileConversionBehaviorVolume = (value: number, thresholds: [number, number]) => {
@@ -5219,9 +5286,6 @@ const describeProfileConversionBehaviorVolume = (value: number, thresholds: [num
 
   return "baixo";
 };
-
-type ProfileConversionBehaviorMetricTone =
-  AdminPsychologistsDashboardProfileConversionBehaviorMetric["tone"];
 
 type ProfileConversionBehaviorSemanticSignal = {
   label: string;
@@ -5518,13 +5582,19 @@ const buildProfileConversionBehaviorResults = (params: {
     const videoWhatsappClicksPerPsychologist =
       row.count > 0 ? roundOneDecimal(videoWhatsappClicks / row.count) : 0;
     const videoEngagementActions = videoProfileAccesses + videoFavorites + videoShares;
-    const videoRankingPositions = videoProfiles.flatMap((profile) => {
+    const videoRankingPositionEntries = videoProfiles.map((profile) => {
       const position = params.rankingPositionsByPsychologistId.get(profile.user.id);
 
-      return typeof position === "number" ? [position] : [];
+      return typeof position === "number" ? position : null;
     });
+    const videoRankingPositions = videoRankingPositionEntries.filter(
+      (position): position is number => typeof position === "number",
+    );
     const averageVideoRankingPosition =
       averageProfileConversionBehaviorValue(videoRankingPositions);
+    const videoRankingRangeSignal = describeProfileConversionBehaviorPositionRange(
+      videoRankingPositionEntries,
+    );
     const videoUnavailableReason =
       row.count <= 0
         ? emptyRowReason
@@ -5755,7 +5825,7 @@ const buildProfileConversionBehaviorResults = (params: {
         : "sem base de replay";
     const videoHeadline =
       videoUnavailableReason ??
-      `${typeof videoRetention === "number" ? `Retenção média de ${formatProfileConversionBehaviorPercentage(videoRetention, "0%")}` : "Retenção média ainda sem base real"}, ${videoEngagementText} (${formatProfileConversionBehaviorCount(videoEngagementActions, "ação", "ações")} no vídeo) e ${describeProfileConversionBehaviorRanking(averageVideoRankingPosition)}. ${videoConsumptionText}, com ${formatProfileConversionBehaviorMetricNumber(videoViewsPerVideo, "sem base de views")} views por vídeo, ${videoReplayText} e ${formatProfileConversionBehaviorCount(videoWhatsappClicks, "clique de WhatsApp vindo do vídeo", "cliques de WhatsApp vindos do vídeo")}.`;
+      `${typeof videoRetention === "number" ? `Retenção média de ${formatProfileConversionBehaviorPercentage(videoRetention, "0%")}` : "Retenção média ainda sem base real"}, ${videoEngagementText} (${formatProfileConversionBehaviorCount(videoEngagementActions, "ação", "ações")} no vídeo) e ${describeProfileConversionBehaviorRankingRange(videoRankingRangeSignal, averageVideoRankingPosition)}. ${videoConsumptionText}, com ${formatProfileConversionBehaviorMetricNumber(videoViewsPerVideo, "sem base de views")} views por vídeo, ${videoReplayText} e ${formatProfileConversionBehaviorCount(videoWhatsappClicks, "clique de WhatsApp vindo do vídeo", "cliques de WhatsApp vindos do vídeo")}.`;
 
     const profileStayText =
       typeof profileAverageStaySeconds === "number"
@@ -5926,16 +5996,18 @@ const buildProfileConversionBehaviorResults = (params: {
             value: videoSharesPerVideo,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Posicao media dos profissionais com video na lista publica ranqueada.",
+            description:
+              videoRankingRangeSignal?.description ??
+              "Faixa predominante de posicao dos profissionais com video na lista publica ranqueada.",
+            display_value: videoUnavailableReason ? null : (videoRankingRangeSignal?.label ?? null),
             id: "presentation_video_average_ranking_position",
-            label: "Posi\u00e7\u00e3o m\u00e9dia",
+            label: "Posi\u00e7\u00e3o",
             source: "shared_psychologist_public_ranking_helper",
-            tone: classifyProfileConversionBehaviorPositionTone(averageVideoRankingPosition),
+            tone:
+              videoRankingRangeSignal?.tone ??
+              classifyProfileConversionBehaviorPositionTone(averageVideoRankingPosition),
             unit: "position",
-            unavailable_reason:
-              averageVideoRankingPosition === null && !videoUnavailableReason
-                ? "Os profissionais com video desta categoria nao aparecem na lista publica ranqueada."
-                : videoUnavailableReason,
+            unavailable_reason: videoUnavailableReason,
             value: averageVideoRankingPosition,
           }),
           buildProfileConversionBehaviorMetric({
