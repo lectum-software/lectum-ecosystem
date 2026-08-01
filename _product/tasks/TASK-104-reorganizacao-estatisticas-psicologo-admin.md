@@ -169,3 +169,42 @@ exibir uma opcao explicitamente chamada **Visibilidade (tempo)**.
 - [x] A faixa com **Dados insuficientes para avaliar a Conversao.** nao e mais renderizada no bloco.
 - [x] O contador **Avaliacoes** aparece apos **Atividade** e usa a serie real de avaliacoes.
 - [x] Nenhum mock, endpoint simulado, migration, schema Prisma ou package novo foi adicionado.
+
+## Ajuste pos-feedback 2026-08-01 - Ordem de trafego, Conversao, Visibilidade e video
+
+- Pedido do usuario: na aba **Estatisticas** do detalhe Admin do psicologo, colocar a tabela
+  **Origem do trafego** antes de **Conversao** e posicionar **Analise do video de apresentacao**
+  imediatamente abaixo de **Visibilidade**.
+- A alteracao e frontend-only: somente a ordem dos componentes existentes foi alterada em
+  `admin/src/app/(admin)/psicologos/[id]/client.tsx`.
+- Os componentes, contratos, dados reais, filtros globais de periodo e estados de carregamento foram
+  preservados; nenhum endpoint, migration, package, seed, mock ou regra de calculo foi criado.
+- O layout mobile-first foi preservado porque os mesmos cards/tabelas responsivos continuaram sendo
+  reutilizados, apenas em nova posicao.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; as referencias
+  auditaveis foram o screenshot enviado pelo usuario e o PNG local
+  `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+
+### Criterios de aceite do ajuste
+
+- [x] **Origem do trafego** aparece antes de **Conversao** na aba **Estatisticas**.
+- [x] **Analise do video de apresentacao** aparece imediatamente abaixo de **Visibilidade**.
+- [x] A ordem restante preserva os blocos de atividade/engajamento, formatos, horarios e uso da
+      plataforma.
+- [x] Nenhum mock, endpoint simulado, migration, schema Prisma ou package novo foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm --dir backend check` apos uma primeira tentativa de `pnpm check` falhar de forma
+  transiente no Windows logo depois de `prisma generate`, sem erro TypeScript emitido.
+- `pnpm check` reexecutado com sucesso.
+- Browser local/headless via Chrome/CDP em build Admin servido temporariamente em
+  `http://127.0.0.1:3012/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`, com backend real
+  em `localhost:3001` e admin temporario real removido ao final: desktop 1365px e mobile 390px
+  confirmaram a ordem **Origem do trafego** -> **Conversao** -> **Visibilidade** -> **Analises do
+  video de apresentacao** -> **Atividade e engajamento**, sem overflow horizontal no mobile.
+  Screenshots: `.tmp/admin-psychologist-stats-order-desktop.png` e
+  `.tmp/admin-psychologist-stats-order-mobile.png`.

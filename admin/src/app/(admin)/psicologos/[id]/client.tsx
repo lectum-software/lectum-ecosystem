@@ -6043,7 +6043,18 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         rangeError={statisticsPeriodFilter.rangeError}
       />
 
-      <section aria-busy={isBusinessRefreshing} className="grid max-w-full gap-5 overflow-x-clip">
+      <section aria-busy={isTrafficRefreshing} className="grid max-w-full gap-5 overflow-x-clip">
+        <PsychologistTrafficSourcesCard
+          isRefreshing={isTrafficRefreshing}
+          periodControls={null}
+          statistics={trafficStatistics}
+        />
+      </section>
+
+      <section
+        aria-busy={isBusinessRefreshing || isVideoRefreshing}
+        className="grid max-w-full gap-5 overflow-x-clip"
+      >
         <CardShell className="min-w-0 max-w-full overflow-x-clip p-5">
           <div className="grid gap-2">
             <div className="min-w-0">
@@ -6146,14 +6157,19 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
           <VisibilityCountersGrid counters={businessStatistics.business.visibility.counters} />
         </CardShell>
+
+        <StatisticsVideoCard
+          detail={detail}
+          isRefreshing={isVideoRefreshing}
+          periodControls={null}
+          statistics={videoStatistics}
+        />
       </section>
 
       <section
         aria-busy={
           isCommunityRefreshing ||
           isActiveCommunitiesRefreshing ||
-          isVideoRefreshing ||
-          isTrafficRefreshing ||
           isActivityHoursRefreshing ||
           isPlatformRefreshing
         }
@@ -6241,13 +6257,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
           />
         </CardShell>
 
-        <StatisticsVideoCard
-          detail={detail}
-          isRefreshing={isVideoRefreshing}
-          periodControls={null}
-          statistics={videoStatistics}
-        />
-
         <ActiveCommunitiesBlock
           communities={activeCommunities}
           engagementDiagnosis={activeCommunitiesStatistics.community.engagement_diagnosis}
@@ -6258,12 +6267,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
         <ContentFormatDistributionsBlock
           distribution={activeCommunitiesStatistics.community.content_distribution}
           isRefreshing={isActiveCommunitiesRefreshing}
-        />
-
-        <PsychologistTrafficSourcesCard
-          isRefreshing={isTrafficRefreshing}
-          periodControls={null}
-          statistics={trafficStatistics}
         />
 
         <PsychologistPlatformActivityHoursCard

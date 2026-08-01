@@ -72,3 +72,20 @@ Mantemos o badge de qualidade individual no cabecalho e adicionamos **Avaliacoes
 contador, logo apos **Atividade**, usando o campo real `reviews` da serie ja retornada pelo endpoint
 de estatisticas. A decisao continua frontend-only, sem mock, migration, package ou contrato HTTP
 novo.
+
+## Ajuste aceito em 2026-08-01
+
+A narrativa da aba foi refinada sem alterar contratos ou calculos:
+
+- **Origem do trafego** passa a abrir a leitura apos o filtro global de periodo, antes de
+  **Conversao**, para deixar a origem dos cliques de WhatsApp visivel antes da leitura de conversao.
+- **Analise do video de apresentacao** passa a ficar imediatamente abaixo de **Visibilidade**, pois
+  o video e um dos sinais de atencao/visibilidade do perfil.
+
+A decisao continua frontend-only e reaproveita os componentes existentes
+`PsychologistTrafficSourcesCard` e `StatisticsVideoCard`. Nao houve endpoint novo, migration,
+package, mock, seed ou regra de calculo nova.
+
+Validacao: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir backend check`,
+`pnpm check` e browser local/headless em desktop 1365px e mobile 390px confirmando a nova ordem sem
+overflow horizontal no mobile.
