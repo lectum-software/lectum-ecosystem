@@ -5333,6 +5333,13 @@ const buildProfileConversionBehaviorResults = (params: {
         rowPsychologistIds.has(event.target_id) &&
         event.user_id !== event.target_id,
     ).length;
+    const profileContentTabOpensPerPsychologist =
+      row.count > 0 ? roundOneDecimal(profilePublicationTabOpens / row.count) : 0;
+    const profileReviewsTabOpensPerPsychologist =
+      row.count > 0 ? roundOneDecimal(profileReviewsTabOpens / row.count) : 0;
+    const profileVideoViewsPerPsychologist =
+      row.count > 0 ? roundOneDecimal(videoWatchSessions.length / row.count) : 0;
+    const profileVideoRetention = videoRetention ?? 0;
     const profileSources = rowTrafficSources.filter((source) =>
       PROFILE_CONVERSION_BEHAVIOR_PROFILE_SOURCE_IDS.includes(source.id),
     );
@@ -5756,6 +5763,7 @@ const buildProfileConversionBehaviorResults = (params: {
           }),
           buildProfileConversionBehaviorMetric({
             description: "Permanencia media registrada em pageviews do perfil publico.",
+            display_value: formatProfileConversionBehaviorSeconds(profileAverageStaySeconds, "0s"),
             id: "profile_average_stay_seconds",
             label: "Perman\u00eancia",
             source: "page_view_event.page_kind=psychologist_profile.duration_seconds",
@@ -5768,7 +5776,56 @@ const buildProfileConversionBehaviorResults = (params: {
               profileAverageStaySeconds === null && !profileUnavailableReason
                 ? "Sem duracao real registrada em pageviews de perfil no periodo."
                 : profileUnavailableReason,
-            value: profileAverageStaySeconds,
+            value: profileAverageStaySeconds ?? 0,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Media de aberturas da aba Avaliacoes por profissional da faixa.",
+            id: "profile_reviews_tab_opens_per_psychologist",
+            label: "Aba Avalia\u00e7\u00f5es",
+            source: "important_action_event.action_type=psychologist_profile_reviews_tab_open",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              profileReviewsTabOpensPerPsychologist,
+              [1, 3],
+            ),
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: profileReviewsTabOpensPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Media de aberturas da aba Conteudo por profissional da faixa.",
+            id: "profile_content_tab_opens_per_psychologist",
+            label: "Aba Conte\u00fado",
+            source: "important_action_event.action_type=psychologist_profile_publications_tab_open",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              profileContentTabOpensPerPsychologist,
+              [1, 3],
+            ),
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: profileContentTabOpensPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Media de views do video de apresentacao por profissional da faixa.",
+            id: "profile_video_views_per_psychologist",
+            label: "Views v\u00eddeo",
+            source: "profile_video_watch_session",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              profileVideoViewsPerPsychologist,
+              [1, 5],
+            ),
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: profileVideoViewsPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Retencao media do video de apresentacao nos perfis da faixa.",
+            id: "profile_video_retention",
+            label: "Reten\u00e7\u00e3o v\u00eddeo",
+            source: "profile_video_watch_session.watched_seconds/duration_seconds",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(videoRetention, [30, 60]),
+            unit: "percentage",
+            unavailable_reason:
+              videoRetention === null && !videoUnavailableReason
+                ? "Sem sessoes reais do video com duracao no periodo."
+                : videoUnavailableReason,
+            value: profileVideoRetention,
           }),
           buildProfileConversionBehaviorMetric({
             description: "Aba interna predominante nas aberturas do perfil publico.",

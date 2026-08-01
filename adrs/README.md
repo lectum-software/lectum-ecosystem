@@ -187,3 +187,4 @@ Formato recomendado:
 - [ADR-0395 - Media secundaria de WhatsApp por linha no trafego Admin](0395-media-whatsapp-trafego-admin-psicologos.md) - Accepted
 
 - [ADR-0396 - Tags medias e cores na tabela comportamental Admin](0396-tags-medias-cores-tabela-comportamental-admin.md) - Accepted
+- [ADR-0397 - Tags de Perfil na tabela comportamental Admin](0397-tags-perfil-tabela-comportamental-admin.md) - Accepted
