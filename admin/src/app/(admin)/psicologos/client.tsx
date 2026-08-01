@@ -3888,6 +3888,135 @@ const TrafficSourceMetricValue = ({
   </span>
 );
 
+
+type TrafficSourceAverageUnit = "content" | "psychologist" | "video";
+type TrafficSourceAverageSource = Pick<
+  TrafficSourceItem,
+  "considered_count" | "whatsapp_clicks"
+> & {
+  id: TrafficSourceDisplayItem["id"];
+};
+type TrafficSourceWhatsappAverage = {
+  label: string;
+  value: number;
+};
+
+const positiveTrafficSourceConsideredCount = (
+  source: Pick<TrafficSourceItem, "considered_count">,
+) =>
+  typeof source.considered_count === "number" && source.considered_count > 0
+    ? source.considered_count
+    : null;
+
+const sumTrafficSourceConsideredCounts = (sources: TrafficSourceItem[]) => {
+  let hasCount = false;
+  const total = sources.reduce((sum, source) => {
+    if (typeof source.considered_count !== "number") return sum;
+
+    hasCount = true;
+    return sum + source.considered_count;
+  }, 0);
+
+  return hasCount ? total : null;
+};
+
+const maxTrafficSourceConsideredCount = (sources: TrafficSourceItem[]) => {
+  let max: number | null = null;
+
+  for (const source of sources) {
+    if (typeof source.considered_count !== "number") continue;
+
+    max = Math.max(max ?? 0, source.considered_count);
+  }
+
+  return max;
+};
+
+const getTrafficSourceAverageUnit = (
+  source: TrafficSourceAverageSource,
+  context?: TrafficSourceGroupKind,
+): TrafficSourceAverageUnit => {
+  if (context === "communities") {
+    return source.id === "community_top_mentors" ? "psychologist" : "content";
+  }
+
+  if (
+    context === "presentation_video" ||
+    source.id === "explore" ||
+    source.id === "search_filters"
+  ) {
+    return "video";
+  }
+
+  return "psychologist";
+};
+
+const getTrafficSourceAverageLabel = (unit: TrafficSourceAverageUnit) => {
+  if (unit === "content") return "por conteúdo";
+  if (unit === "video") return "por vídeo";
+
+  return "por psicólogo";
+};
+
+const getTrafficSourceWhatsappAverage = ({
+  context,
+  fallbackPsychologistsCount,
+  source,
+}: {
+  context?: TrafficSourceGroupKind;
+  fallbackPsychologistsCount: number;
+  source: TrafficSourceAverageSource;
+}): TrafficSourceWhatsappAverage | null => {
+  const unit = getTrafficSourceAverageUnit(source, context);
+  const consideredCount = positiveTrafficSourceConsideredCount(source);
+  const denominator =
+    consideredCount ??
+    (unit === "psychologist" && fallbackPsychologistsCount > 0 ? fallbackPsychologistsCount : null);
+
+  if (!denominator) return null;
+
+  return {
+    label: getTrafficSourceAverageLabel(unit),
+    value: toOneDecimal((source.whatsapp_clicks ?? 0) / denominator),
+  };
+};
+
+const TrafficSourceWhatsappMetric = ({
+  className,
+  context,
+  fallbackPsychologistsCount,
+  percentage,
+  source,
+  valueClassName,
+}: {
+  className?: string;
+  context?: TrafficSourceGroupKind;
+  fallbackPsychologistsCount: number;
+  percentage: number;
+  source: TrafficSourceAverageSource;
+  valueClassName?: string;
+}) => {
+  const average = getTrafficSourceWhatsappAverage({
+    context,
+    fallbackPsychologistsCount,
+    source,
+  });
+
+  return (
+    <span className={cn("inline-flex flex-col items-center gap-0.5", className)}>
+      <TrafficSourceMetricValue
+        className={valueClassName}
+        percentage={percentage}
+        value={formatNullableCount(source.whatsapp_clicks)}
+      />
+      {average ? (
+        <span className="text-[0.68rem] font-bold leading-none text-muted">
+          {numberFormatter.format(average.value)} {average.label}
+        </span>
+      ) : null}
+    </span>
+  );
+};
 const formatTrafficSourcePlatformMetricValue = (
   metric: NonNullable<TrafficSourceItem["platform_metrics"]>[number],
 ) => {
@@ -4081,6 +4210,7 @@ const buildTrafficSourceDisplayRows = (
       ...communitySources[0],
       badge: null,
       children: communityDetails,
+      considered_count: sumTrafficSourceConsideredCounts(communityDetails),
       description: "Somatório dos cliques de WhatsApp originados nas comunidades.",
       groupKind: "communities",
       id: "communities_group",
@@ -4104,6 +4234,7 @@ const buildTrafficSourceDisplayRows = (
       ...presentationVideoSources[0],
       badge: null,
       children: presentationVideoDetails,
+      considered_count: maxTrafficSourceConsideredCount(presentationVideoDetails),
       description:
         "Somatório dos cliques de WhatsApp associados ao vídeo de apresentação em Explorar e buscas/filtros.",
       groupKind: "presentation_video",
@@ -4237,10 +4368,12 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                     </div>
                     <div className="grid grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-4 text-center">
                       <div className="flex justify-center">
-                        <TrafficSourceMetricValue
-                          className="text-lg"
+                        <TrafficSourceWhatsappMetric
+                          context={source.groupKind}
+                          fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
                           percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                          value={formatNullableCount(source.whatsapp_clicks)}
+                          source={source}
+                          valueClassName="text-lg"
                         />
                       </div>
                       <TrafficSourceGroupToggle expanded={isExpanded} />
@@ -4271,12 +4404,16 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                               <TrafficSourcePlatformMetrics source={childSource} />
                             </div>
                             <div className="flex justify-center text-center">
-                              <TrafficSourceMetricValue
-                                className="text-base"
+                              <TrafficSourceWhatsappMetric
+                                context={source.groupKind}
+                                fallbackPsychologistsCount={
+                                  trafficSegmentSummary.psychologists_count
+                                }
                                 percentage={getWhatsappClicksPercentage(
                                   childSource.whatsapp_clicks,
                                 )}
-                                value={formatNullableCount(childSource.whatsapp_clicks)}
+                                source={childSource}
+                                valueClassName="text-base"
                               />
                             </div>
                           </div>
@@ -4312,10 +4449,12 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                 </div>
                 <div className="grid grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-4 text-center">
                   <div className="flex justify-center">
-                    <TrafficSourceMetricValue
-                      className="text-lg"
+                    <TrafficSourceWhatsappMetric
+                      context={source.groupKind}
+                      fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
                       percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                      value={formatNullableCount(source.whatsapp_clicks)}
+                      source={source}
+                      valueClassName="text-lg"
                     />
                   </div>
                   <span aria-hidden className="h-6 w-6" />
@@ -4334,10 +4473,13 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
             <div className="mt-4 rounded-2xl bg-surface p-3">
               <p className="text-[0.68rem] font-black text-muted">WhatsApp</p>
               <div className="mt-1 flex items-center justify-between gap-3">
-                <TrafficSourceMetricValue
-                  className="text-base"
+                <TrafficSourceWhatsappMetric
+                  className="items-start"
+                  context={source.groupKind}
+                  fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
                   percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                  value={formatNullableCount(source.whatsapp_clicks)}
+                  source={source}
+                  valueClassName="text-base"
                 />
                 {isExpandableGroup ? <TrafficSourceGroupToggle expanded={isExpanded} /> : null}
               </div>
@@ -4412,10 +4554,13 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                               />
                               <TrafficSourcePlatformMetrics source={childSource} />
                             </div>
-                            <TrafficSourceMetricValue
-                              className="shrink-0 text-sm"
+                            <TrafficSourceWhatsappMetric
+                              className="shrink-0 items-end text-right"
+                              context={source.groupKind}
+                              fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
                               percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
-                              value={formatNullableCount(childSource.whatsapp_clicks)}
+                              source={childSource}
+                              valueClassName="text-sm"
                             />
                           </div>
                         ))
