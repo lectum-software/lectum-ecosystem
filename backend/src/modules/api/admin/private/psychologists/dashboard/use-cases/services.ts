@@ -3185,6 +3185,19 @@ const isCourtesySubscription = (subscription: AdminPsychologistSubscriptionRecor
 const activeSubscriptionsAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   profile.subscriptions.filter((subscription) => subscriptionActiveAt(subscription, date));
 
+const pickCurrentPlan = (profile: AdminPsychologistProfileRecord, date: Date) => {
+  const active = activeSubscriptionsAt(profile, date);
+  if (active.length === 0) return null;
+
+  return [...active].sort((left, right) => {
+    const leftPaid = Number(isProfessionalPlan(left));
+    const rightPaid = Number(isProfessionalPlan(right));
+    if (leftPaid !== rightPaid) return rightPaid - leftPaid;
+
+    return right.createdAt.getTime() - left.createdAt.getTime();
+  })[0];
+};
+
 const hasActiveFreeAt = (profile: AdminPsychologistProfileRecord, date: Date) =>
   activeSubscriptionsAt(profile, date).some(isFreeSubscription);
 
@@ -5102,10 +5115,9 @@ const PROFILE_CONVERSION_BEHAVIOR_COLUMNS: Array<{
     label: "Comunidade",
   },
   {
-    description:
-      "Média de cliques de WhatsApp originados na tela de favoritos por profissional da faixa.",
+    description: "Média de cliques de WhatsApp originados em favoritos por profissional da faixa.",
     id: "favorite",
-    label: "Tela de favoritos",
+    label: "Favoritos",
   },
 ];
 
@@ -5314,6 +5326,33 @@ const formatProfileConversionBehaviorOpeningsValue = (value: number | null) =>
     ? formatProfileConversionBehaviorCount(value, "abertura", "aberturas")
     : "0 aberturas";
 
+const describeProfileConversionBehaviorDominantPlan = (
+  profiles: AdminPsychologistProfileRecord[],
+  date: Date,
+): ProfileConversionBehaviorSemanticSignal & { value: number } => {
+  const counts = new Map<string, { count: number; label: string }>();
+
+  for (const profile of profiles) {
+    const plan = pickCurrentPlan(profile, date);
+    const key = plan?.plan.slug ?? "none";
+    const label = plan?.plan.name?.trim() || "Sem plano";
+    const current = counts.get(key) ?? { count: 0, label };
+    counts.set(key, { ...current, count: current.count + 1 });
+  }
+
+  const dominant = [...counts.values()].sort((left, right) => {
+    if (right.count !== left.count) return right.count - left.count;
+
+    return left.label.localeCompare(right.label, "pt-BR");
+  })[0];
+
+  if (!dominant || dominant.label === "Sem plano") {
+    return { label: "Sem plano", tone: "zero", value: dominant?.count ?? 0 };
+  }
+
+  return { label: dominant.label, tone: "standard", value: dominant.count };
+};
+
 const describeProfileConversionBehaviorDominantProfileTab = (params: {
   publicationsTabOpens: number;
   reviewsTabOpens: number;
@@ -5461,6 +5500,14 @@ const buildProfileConversionBehaviorResults = (params: {
     );
     const videoActionCount = (actionType: string) =>
       videoActionEvents.filter((event) => event.action_type === actionType).length;
+    const videoProfileAccesses = videoActionCount(PRESENTATION_VIDEO_PROFILE_ACCESS_ACTION);
+    const videoFavorites = videoActionCount(PRESENTATION_VIDEO_FAVORITE_ACTION);
+    const videoShares = videoActionCount(PRESENTATION_VIDEO_SHARE_ACTION);
+    const averageVideoActionPerVideo = (value: number) =>
+      videoProfiles.length > 0 ? roundOneDecimal(value / videoProfiles.length) : null;
+    const videoProfileAccessesPerVideo = averageVideoActionPerVideo(videoProfileAccesses);
+    const videoFavoritesPerVideo = averageVideoActionPerVideo(videoFavorites);
+    const videoSharesPerVideo = averageVideoActionPerVideo(videoShares);
     const videoSources = rowTrafficSources.filter((source) =>
       PROFILE_CONVERSION_BEHAVIOR_VIDEO_SOURCE_IDS.includes(source.id),
     );
@@ -5470,10 +5517,7 @@ const buildProfileConversionBehaviorResults = (params: {
     );
     const videoWhatsappClicksPerPsychologist =
       row.count > 0 ? roundOneDecimal(videoWhatsappClicks / row.count) : 0;
-    const videoEngagementActions =
-      videoActionCount(PRESENTATION_VIDEO_PROFILE_ACCESS_ACTION) +
-      videoActionCount(PRESENTATION_VIDEO_FAVORITE_ACTION) +
-      videoActionCount(PRESENTATION_VIDEO_SHARE_ACTION);
+    const videoEngagementActions = videoProfileAccesses + videoFavorites + videoShares;
     const videoRankingPositions = videoProfiles.flatMap((profile) => {
       const position = params.rankingPositionsByPsychologistId.get(profile.user.id);
 
@@ -5541,6 +5585,10 @@ const buildProfileConversionBehaviorResults = (params: {
       profileViews.length > 0
         ? roundOneDecimal((profileWhatsappClicks / profileViews.length) * 100)
         : null;
+    const profileDominantPlanSignal = describeProfileConversionBehaviorDominantPlan(
+      rowProfiles,
+      params.range.end,
+    );
     const profileSignalCount =
       profileViews.length +
       profilePageViewDurations.length +
@@ -5779,7 +5827,7 @@ const buildProfileConversionBehaviorResults = (params: {
 
     const favoriteHeadline =
       favoriteUnavailableReason ??
-      `Tela de favoritos gerou ${formatProfileConversionBehaviorCount(favoritesScreenWhatsappClicks, "clique de WhatsApp", "cliques de WhatsApp")}, com média de ${formatProfileConversionBehaviorMetricNumber(favoritesScreenWhatsappClicksPerPsychologist, "0")} por psicólogo da categoria.`;
+      `Favoritos geraram ${formatProfileConversionBehaviorCount(favoritesScreenWhatsappClicks, "clique de WhatsApp", "cliques de WhatsApp")}, com média de ${formatProfileConversionBehaviorMetricNumber(favoritesScreenWhatsappClicksPerPsychologist, "0")} por psicólogo da categoria.`;
 
     const cellsByElement: AdminPsychologistsDashboardProfileConversionBehaviorResults["cells"] = [
       {
@@ -5794,7 +5842,7 @@ const buildProfileConversionBehaviorResults = (params: {
               videoWhatsappClicksPerPsychologist,
             ),
             id: "presentation_video_whatsapp_clicks_per_psychologist",
-            label: "Cliques WhatsApp",
+            label: "WhatsApp",
             source:
               "important_action_event.action_type=psychologist_video_whatsapp_click|whatsapp_click",
             tone: classifyProfileConversionBehaviorHigherIsBetterTone(
@@ -5820,7 +5868,7 @@ const buildProfileConversionBehaviorResults = (params: {
           buildProfileConversionBehaviorMetric({
             description: "Views reais do video por video publicado na categoria.",
             id: "presentation_video_views_per_video",
-            label: "Views/v\u00eddeo",
+            label: "Views",
             source: "profile_video_watch_session",
             tone: classifyProfileConversionBehaviorHigherIsBetterTone(videoViewsPerVideo, [1, 5]),
             unavailable_reason: videoUnavailableReason,
@@ -5841,6 +5889,41 @@ const buildProfileConversionBehaviorResults = (params: {
                 ? "Sem sessoes reais do video no periodo."
                 : videoUnavailableReason,
             value: videoAverageWatchSeconds,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description:
+              "Media de acessos ao perfil gerados por video de apresentacao na categoria.",
+            id: "presentation_video_profile_accesses_per_video",
+            label: "Acesso ao perfil",
+            source: "important_action_event.action_type=psychologist_video_profile_access",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              videoProfileAccessesPerVideo,
+              [1, 3],
+            ),
+            unavailable_reason: videoUnavailableReason,
+            value: videoProfileAccessesPerVideo,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Media de favoritos gerados por video de apresentacao na categoria.",
+            id: "presentation_video_favorites_per_video",
+            label: "Favoritado",
+            source: "important_action_event.action_type=psychologist_video_favorite",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              videoFavoritesPerVideo,
+              [1, 3],
+            ),
+            unavailable_reason: videoUnavailableReason,
+            value: videoFavoritesPerVideo,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description:
+              "Media de compartilhamentos gerados por video de apresentacao na categoria.",
+            id: "presentation_video_shares_per_video",
+            label: "Compartilhado",
+            source: "important_action_event.action_type=psychologist_video_share",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(videoSharesPerVideo, [1, 3]),
+            unavailable_reason: videoUnavailableReason,
+            value: videoSharesPerVideo,
           }),
           buildProfileConversionBehaviorMetric({
             description: "Posicao media dos profissionais com video na lista publica ranqueada.",
@@ -5917,7 +6000,7 @@ const buildProfileConversionBehaviorResults = (params: {
               profileWhatsappClicksPerPsychologist,
             ),
             id: "profile_whatsapp_clicks_per_psychologist",
-            label: "Cliques WhatsApp",
+            label: "WhatsApp",
             source: "important_action_event.page_kind=psychologist_profile",
             tone: classifyProfileConversionBehaviorHigherIsBetterTone(
               profileWhatsappClicksPerPsychologist,
@@ -5925,6 +6008,16 @@ const buildProfileConversionBehaviorResults = (params: {
             ),
             unavailable_reason: row.count <= 0 ? emptyRowReason : null,
             value: profileWhatsappClicksPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Plano ativo predominante entre os profissionais da faixa.",
+            display_value: profileDominantPlanSignal.label,
+            id: "profile_dominant_plan",
+            label: "Plano predominante",
+            source: "professional_subscription+subscription_plan",
+            tone: profileDominantPlanSignal.tone,
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: profileDominantPlanSignal.value,
           }),
           buildProfileConversionBehaviorMetric({
             description: "Total de aberturas reais do perfil público dos profissionais da faixa.",
@@ -6102,7 +6195,7 @@ const buildProfileConversionBehaviorResults = (params: {
               communityWhatsappClicksPerPsychologist,
             ),
             id: "community_whatsapp_clicks_per_psychologist",
-            label: "Cliques WhatsApp",
+            label: "WhatsApp",
             source: "important_action_event.action_type=whatsapp_click",
             tone: classifyProfileConversionBehaviorHigherIsBetterTone(
               communityWhatsappClicksPerPsychologist,
@@ -6321,12 +6414,12 @@ const buildProfileConversionBehaviorResults = (params: {
         metrics: [
           buildProfileConversionBehaviorMetric({
             description:
-              "Media de cliques de WhatsApp originados na tela de favoritos por profissional da faixa.",
+              "Media de cliques de WhatsApp originados em favoritos por profissional da faixa.",
             display_value: formatProfileConversionBehaviorPerPsychologistValue(
               favoritesScreenWhatsappClicksPerPsychologist,
             ),
             id: "favorites_screen_whatsapp_clicks_per_psychologist",
-            label: "Cliques WhatsApp",
+            label: "WhatsApp",
             source: "important_action_event.path=/favorites|/favoritos",
             tone: classifyProfileConversionBehaviorHigherIsBetterTone(
               favoritesScreenWhatsappClicksPerPsychologist,
@@ -6348,7 +6441,7 @@ const buildProfileConversionBehaviorResults = (params: {
     cells,
     columns: PROFILE_CONVERSION_BEHAVIOR_COLUMNS,
     description:
-      "Tabela observacional que detalha, em tags, os sinais predominantes de vídeo de apresentação, perfil, comunidade e tela de favoritos para cada faixa de Conversão.",
+      "Tabela observacional que detalha, em tags, os sinais predominantes de vídeo de apresentação, perfil, comunidade e favoritos para cada faixa de Conversão.",
     rows,
     source: PROFILE_CONVERSION_BEHAVIOR_SOURCE,
     unavailable_reason:
@@ -6373,19 +6466,6 @@ const hasVerifiedEntitlementAt = (profile: AdminPsychologistProfileRecord, date:
       subscription.source === "admin_grant" &&
       (subscription.grant_started_at ?? subscription.createdAt) <= date,
   );
-};
-
-const pickCurrentPlan = (profile: AdminPsychologistProfileRecord, date: Date) => {
-  const active = activeSubscriptionsAt(profile, date);
-  if (active.length === 0) return null;
-
-  return [...active].sort((left, right) => {
-    const leftPaid = Number(isProfessionalPlan(left));
-    const rightPaid = Number(isProfessionalPlan(right));
-    if (leftPaid !== rightPaid) return rightPaid - leftPaid;
-
-    return right.createdAt.getTime() - left.createdAt.getTime();
-  })[0];
 };
 
 const flattenSubscriptions = (profiles: AdminPsychologistProfileRecord[]) =>

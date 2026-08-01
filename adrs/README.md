@@ -192,3 +192,4 @@ Formato recomendado:
 - [ADR-0398 - Cobertura no dashboard e matriz Admin de psicologos](0398-cobertura-dashboard-matriz-admin-psicologos.md) - Accepted
 
 - [ADR-0399 - Media no contexto da base e breakdown de autoria no trafego WhatsApp Admin](0399-refino-medias-autoria-whatsapp-trafego-admin.md) - Accepted
+- [ADR-0400 - Ajustes finais da tabela comportamental Admin](0400-copy-tags-video-perfil-tabela-comportamental-admin.md) - Accepted

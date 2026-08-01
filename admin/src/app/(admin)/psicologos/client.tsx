@@ -3484,21 +3484,30 @@ const PROFILE_CONVERSION_BEHAVIOR_VALUE_ONLY_TAG_IDS = new Set([
   "community_engagement_level",
   "community_post_format",
   "community_reply_format",
-  "presentation_video_engagement_level",
   "profile_openings_per_psychologist",
 ]);
 
 const ProfileConversionBehaviorTableCell = ({
+  align = "start",
   cell,
 }: {
+  align?: "end" | "start";
   cell: ProfileConversionBehaviorCell | null;
 }) => {
   const tagClassName =
     "inline-flex max-w-full min-w-0 items-center rounded-2xl border px-2 py-0.5 text-[0.66rem] leading-4";
+  const wrapperClassName = cn(
+    "flex min-w-0 flex-wrap gap-1.5 px-1 py-1",
+    align === "end" && "justify-end text-right",
+  );
+  const contentClassName = cn(
+    "min-w-0 max-w-full",
+    align === "end" ? "whitespace-nowrap" : "whitespace-normal break-words",
+  );
 
   if (!cell) {
     return (
-      <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
+      <div className={wrapperClassName}>
         <span
           className={cn(tagClassName, PROFILE_CONVERSION_BEHAVIOR_TAG_TONE_CLASS.zero)}
           title={"O backend n\u00e3o retornou a leitura desta c\u00e9lula."}
@@ -3513,7 +3522,7 @@ const ProfileConversionBehaviorTableCell = ({
 
   if (tags.length === 0) {
     return (
-      <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
+      <div className={wrapperClassName}>
         <span
           className={cn(tagClassName, PROFILE_CONVERSION_BEHAVIOR_TAG_TONE_CLASS.zero)}
           title={cell.unavailable_reason ?? cell.headline}
@@ -3527,7 +3536,7 @@ const ProfileConversionBehaviorTableCell = ({
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1" title={cell.headline}>
+    <div className={wrapperClassName} title={cell.headline}>
       {tags.map((tag, index) => {
         const isWhatsappAverageTag = tag.id.includes("whatsapp_clicks_per_psychologist");
         const isPrimaryWhatsappTag = isWhatsappAverageTag && index === 0;
@@ -3543,7 +3552,7 @@ const ProfileConversionBehaviorTableCell = ({
             key={`${cell.id}-${tag.id}`}
             title={tag.description}
           >
-            <span className="min-w-0 max-w-full whitespace-normal break-words">
+            <span className={contentClassName}>
               {isValueOnlyTag ? tag.value : `${tag.label}: ${tag.value}`}
             </span>
           </span>
@@ -3569,7 +3578,9 @@ const PROFILE_CONVERSION_BEHAVIOR_TAG_METRICS_BY_ELEMENT: Record<
   presentation_video: [
     "presentation_video_whatsapp_clicks_per_psychologist",
     "presentation_video_retention",
-    "presentation_video_engagement_level",
+    "presentation_video_profile_accesses_per_video",
+    "presentation_video_favorites_per_video",
+    "presentation_video_shares_per_video",
     "presentation_video_average_ranking_position",
     "presentation_video_average_watch_seconds",
     "presentation_video_views_per_video",
@@ -3577,6 +3588,7 @@ const PROFILE_CONVERSION_BEHAVIOR_TAG_METRICS_BY_ELEMENT: Record<
   ],
   profile: [
     "profile_whatsapp_clicks_per_psychologist",
+    "profile_dominant_plan",
     "profile_openings_per_psychologist",
     "profile_average_stay_seconds",
     "profile_reviews_tab_opens_per_psychologist",
@@ -3584,7 +3596,6 @@ const PROFILE_CONVERSION_BEHAVIOR_TAG_METRICS_BY_ELEMENT: Record<
     "profile_video_views_per_psychologist",
     "profile_video_retention",
     "profile_favorites_per_psychologist",
-    "profile_whatsapp_rate",
   ],
 };
 
@@ -3626,10 +3637,23 @@ const getProfileConversionBehaviorUnavailableTag = (cell: ProfileConversionBehav
   if (cell.element_id === "presentation_video") return "Sem vídeo publicado";
   if (cell.element_id === "profile") return "Sem sinais no perfil";
   if (cell.element_id === "communities") return "Sem sinais na comunidade";
-  if (cell.element_id === "favorite") return "Sem base na tela de favoritos";
+  if (cell.element_id === "favorite") return "Sem base em favoritos";
 
   return "Sem base";
 };
+
+const getProfileConversionBehaviorAverageWhatsappClicks = (
+  row: ProfileConversionBehaviorResults["rows"][number],
+) => (row.count > 0 ? toOneDecimal((row.totals?.whatsapp_clicks ?? 0) / row.count) : 0);
+
+const getProfileConversionBehaviorProfilesConsideredLabel = (count: number) =>
+  `${numberFormatter.format(count)} ${count === 1 ? "perfil considerado" : "perfis considerados"}`;
+
+const getProfileConversionBehaviorAverageWhatsappUnitLabel = (value: number) =>
+  value === 1 ? "clique WhatsApp" : "cliques WhatsApp";
+
+const PROFILE_CONVERSION_BEHAVIOR_TABLE_HEADER_CLASS =
+  "border-border border-b p-2.5 align-top text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle";
 
 const ProfileConversionBehaviorRowHeader = ({
   row,
@@ -3637,6 +3661,7 @@ const ProfileConversionBehaviorRowHeader = ({
   row: ProfileConversionBehaviorResults["rows"][number];
 }) => {
   const color = PROFILE_CONVERSION_CHART_COLORS[row.id];
+  const averageWhatsappClicks = getProfileConversionBehaviorAverageWhatsappClicks(row);
 
   return (
     <div className="min-w-0">
@@ -3649,12 +3674,15 @@ const ProfileConversionBehaviorRowHeader = ({
         <p className="break-words text-sm font-black leading-5 text-foreground">{row.label}</p>
       </div>
       <p className="mt-1 text-[0.7rem] font-bold leading-4 text-muted">
-        {numberFormatter.format(row.count)}
-        {" psicólogos · "}
-        {formatPercentageValue(row.percentage)} do total
-      </p>
-      <p className="mt-1 w-fit rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[0.68rem] font-black text-muted">
-        {formatWhatsappClicksValue(row.totals?.whatsapp_clicks ?? 0)}
+        <strong className="font-black text-foreground">
+          {getProfileConversionBehaviorProfilesConsideredLabel(row.count)}
+        </strong>
+        {" \u00b7 M\u00e9dia "}
+        <strong className="font-black text-foreground">
+          {numberFormatter.format(averageWhatsappClicks)}
+        </strong>{" "}
+        {getProfileConversionBehaviorAverageWhatsappUnitLabel(averageWhatsappClicks)}{" "}
+        <strong className="font-black text-foreground">{"por psic\u00f3logo"}</strong>
       </p>
     </div>
   );
@@ -3875,11 +3903,16 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
 
   return (
     <CardShell className="p-5">
-      <PanelTitle
-        description={`${formatSelectedPeriod(summary.period)} · comportamento predominante detalhado por conversão`}
-        icon={Funnel}
-        title={"Funil comportamental por conversão"}
-      />
+      <div>
+        <p className="mb-1 text-xs font-black leading-5 text-muted">
+          Comportamento predominante detalhado por conversão
+        </p>
+        <PanelTitle
+          description={formatSelectedPeriod(summary.period)}
+          icon={Funnel}
+          title={"Análise comportamental por conversão"}
+        />
+      </div>
 
       <div className="mt-5 grid gap-3 lg:hidden">
         {conversionRows.map((row) => (
@@ -3897,7 +3930,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                     className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/30 p-2"
                     key={`profile-conversion-behavior-mobile-cell-${row.id}-${column.id}`}
                   >
-                    <p className="mb-1 text-[0.68rem] font-black uppercase tracking-[0.12em] text-subtle">
+                    <p className="mb-1 text-[0.7rem] font-black uppercase leading-4 tracking-[0.1em] text-subtle">
                       {column.label}
                     </p>
                     <ProfileConversionBehaviorTableCell cell={cell} />
@@ -3913,24 +3946,27 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
         <table className="w-full table-fixed border-separate border-spacing-0 text-left">
           <caption className="sr-only">
             {
-              "Tabela com as faixas de conversão no eixo vertical e tags comportamentais dos psicólogos por vídeo de apresentação, perfil, comunidade e tela de favoritos."
+              "Tabela com as faixas de conversão no eixo vertical e tags comportamentais dos psicólogos por vídeo de apresentação, perfil, comunidade e favoritos."
             }
           </caption>
           <colgroup>
             <col className="w-[16%]" />
-            <col className="w-[18%]" />
-            <col className="w-[18%]" />
-            <col className="w-[32%]" />
-            <col className="w-[16%]" />
+            <col className="w-[24%]" />
+            <col className="w-[24%]" />
+            <col className="w-[24%]" />
+            <col className="w-[12%]" />
           </colgroup>
           <thead>
             <tr className="bg-surface-muted/80">
-              <th className="border-border border-b p-2.5 text-[0.66rem] font-black uppercase tracking-[0.12em] text-subtle">
+              <th className={PROFILE_CONVERSION_BEHAVIOR_TABLE_HEADER_CLASS} scope="col">
                 {"Conversão"}
               </th>
               {behaviorColumns.map((column) => (
                 <th
-                  className="border-border border-b p-2.5 align-top text-[0.72rem] font-black leading-4 text-foreground"
+                  className={cn(
+                    PROFILE_CONVERSION_BEHAVIOR_TABLE_HEADER_CLASS,
+                    column.id === "favorite" && "text-right",
+                  )}
                   key={`profile-conversion-behavior-axis-${column.id}`}
                   scope="col"
                   title={column.description}
@@ -3954,7 +3990,10 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                       className="border-border border-t p-2.5 align-top"
                       key={`profile-conversion-behavior-cell-${row.id}-${column.id}`}
                     >
-                      <ProfileConversionBehaviorTableCell cell={cell} />
+                      <ProfileConversionBehaviorTableCell
+                        align={column.id === "favorite" ? "end" : "start"}
+                        cell={cell}
+                      />
                     </td>
                   );
                 })}
