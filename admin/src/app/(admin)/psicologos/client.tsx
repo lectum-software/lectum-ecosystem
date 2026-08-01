@@ -977,6 +977,9 @@ const PlanSegmentSelect = ({
   </label>
 );
 
+const getPlanSegmentFilterLabel = (value: PlanSegmentFilter) =>
+  PLAN_SEGMENT_FILTER_OPTIONS.find((option) => option.id === value)?.label ?? "Todos";
+
 const ConversionJourneyTitleSelect = ({
   id,
   onChange,
@@ -3198,6 +3201,11 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
   const profileEngagementFavorites = profileConversionSegmentSummary.profile_engagement_favorites;
   const profileExposure = profileConversionSegmentSummary.profile_exposure;
+  const profileConversionEngagementMatrix =
+    profileConversionSegmentSummary.profile_conversion_engagement_favorites;
+  const profileConversionVisibilityMatrix =
+    profileConversionSegmentSummary.profile_conversion_visibility;
+  const selectedPlanSegmentLabel = getPlanSegmentFilterLabel(profileConversionPlanSegment);
   if (!profileActivity || !profileConversion || !profileEngagementFavorites || !profileExposure) {
     return null;
   }
@@ -3351,6 +3359,12 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           </DashboardProfileSignalCard>
         </div>
       </DashboardProfileSignalsCarousel>
+
+      <DashboardProfileConversionMatrixSection
+        engagementMatrix={profileConversionEngagementMatrix}
+        planSegmentLabel={selectedPlanSegmentLabel}
+        visibilityMatrix={profileConversionVisibilityMatrix}
+      />
     </CardShell>
   );
 };
@@ -3885,6 +3899,75 @@ const ProfileConversionMatrixDetails = ({ matrix }: { matrix: ProfileConversionM
   );
 };
 
+function DashboardProfileConversionMatrixSection({
+  engagementMatrix,
+  planSegmentLabel,
+  visibilityMatrix,
+}: {
+  engagementMatrix: ProfileConversionEngagementFavoritesMatrix;
+  planSegmentLabel: string;
+  visibilityMatrix: ProfileConversionVisibilityMatrix;
+}) {
+  const [isMatrixExpanded, setIsMatrixExpanded] = useState(false);
+  const [matrixMode, setMatrixMode] = useState<ProfileConversionMatrixMode>("community_visibility");
+  const matrixDetails = getProfileConversionMatrixDetails({
+    engagementMatrix,
+    mode: matrixMode,
+    visibilityMatrix,
+  });
+  const matrixDetailsTitle =
+    PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS.find((option) => option.id === matrixMode)?.label ??
+    "Matriz de conversão";
+
+  return (
+    <div className="mt-5 rounded-[1.35rem] border border-border/70 bg-surface p-3 sm:p-4">
+      <button
+        aria-expanded={isMatrixExpanded}
+        className="flex w-full flex-col gap-3 text-left sm:flex-row sm:items-center sm:justify-between"
+        onClick={() => setIsMatrixExpanded((current) => !current)}
+        type="button"
+      >
+        <span className="min-w-0">
+          <span className="block text-[0.62rem] font-black uppercase tracking-[0.16em] text-subtle">
+            Matriz de conversão
+          </span>
+          <span className="mt-1 block text-sm font-black text-foreground">
+            {"Ver cruzamentos por visibilidade, engajamento e favoritos"}
+          </span>
+        </span>
+        <span className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-2 text-xs font-black text-foreground transition hover:border-primary/40 hover:text-primary">
+          {isMatrixExpanded ? "Ocultar matriz" : "Ver matriz"}
+          <ChevronDown
+            aria-hidden
+            className={cn("h-4 w-4 transition-transform", isMatrixExpanded && "rotate-180")}
+          />
+        </span>
+      </button>
+
+      {isMatrixExpanded ? (
+        <div className="mt-4 border-border border-t pt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
+              <p className="mt-1 text-xs font-bold leading-5 text-muted">
+                Esta {"\u00e9"} a matriz separada usada para auditar o eixo selecionado. A leitura
+                acompanha o filtro de plano do bloco:{" "}
+                <strong className="font-black text-foreground">{planSegmentLabel}</strong>.
+              </p>
+            </div>
+            <ProfileConversionMatrixTitleSelect
+              id="profile-conversion-card-matrix-mode"
+              onChange={setMatrixMode}
+              value={matrixMode}
+            />
+          </div>
+          <ProfileConversionMatrixDetails matrix={matrixDetails} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 const DashboardProfileConversionBehaviorFunnelCard = ({
   summary,
 }: {
@@ -3892,9 +3975,6 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
 }) => {
   const [selectedCategory, setSelectedCategory] =
     useState<ProfileConversionFunnelCategoryId>("strong_conversion");
-  const [isMatrixDetailsExpanded, setIsMatrixDetailsExpanded] = useState(false);
-  const [matrixDetailsMode, setMatrixDetailsMode] =
-    useState<ProfileConversionMatrixMode>("community_visibility");
   const segmentSummary = getPlanSegmentSummary(summary, "all");
   const profileConversion = segmentSummary.profile_conversion;
   const engagementMatrix = segmentSummary.profile_conversion_engagement_favorites;
@@ -3943,20 +4023,12 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
   const conversionLayerCount = selectedRow.count;
   const conversionLayerPercentage = selectedRow.percentage;
   const conversionLayerWhatsappClicks = selectedRow.totals?.whatsapp_clicks ?? 0;
-  const matrixDetails = getProfileConversionMatrixDetails({
-    engagementMatrix,
-    mode: matrixDetailsMode,
-    visibilityMatrix,
-  });
-  const matrixDetailsTitle =
-    PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS.find((option) => option.id === matrixDetailsMode)
-      ?.label ?? "Matriz de origem";
 
   return (
     <CardShell className="p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <PanelTitle
-          description={`${formatSelectedPeriod(summary.period)} · leitura observacional das matrizes`}
+          description={`${formatSelectedPeriod(summary.period)} · leitura comportamental por conversão`}
           icon={Funnel}
           title="Funil comportamental por conversão"
         />
@@ -4052,54 +4124,6 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
                 style={{ backgroundColor: hexToRgba(conversionColor, 0.5) }}
               />
             </div>
-          </div>
-
-          <div className="mt-4 rounded-[1.35rem] border border-border/70 bg-surface p-3 sm:p-4">
-            <button
-              aria-expanded={isMatrixDetailsExpanded}
-              className="flex w-full flex-col gap-3 text-left sm:flex-row sm:items-center sm:justify-between"
-              onClick={() => setIsMatrixDetailsExpanded((current) => !current)}
-              type="button"
-            >
-              <span className="min-w-0">
-                <span className="block text-[0.62rem] font-black uppercase tracking-[0.16em] text-subtle">
-                  Matriz de origem
-                </span>
-                <span className="mt-1 block text-sm font-black text-foreground">
-                  {"Ver detalhes das categorias que formam o funil"}
-                </span>
-              </span>
-              <span className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-2 text-xs font-black text-foreground transition hover:border-primary/40 hover:text-primary">
-                {isMatrixDetailsExpanded ? "Ocultar detalhes" : "Ver detalhes"}
-                <ChevronDown
-                  aria-hidden
-                  className={cn(
-                    "h-4 w-4 transition-transform",
-                    isMatrixDetailsExpanded && "rotate-180",
-                  )}
-                />
-              </span>
-            </button>
-
-            {isMatrixDetailsExpanded ? (
-              <div className="mt-4 border-border border-t pt-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
-                    <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                      Esta {"\u00e9"} a matriz separada usada para auditar o eixo selecionado. A
-                      leitura usa a visão agregada de todos os planos neste bloco.
-                    </p>
-                  </div>
-                  <ProfileConversionMatrixTitleSelect
-                    id="profile-conversion-funnel-details-matrix-mode"
-                    onChange={setMatrixDetailsMode}
-                    value={matrixDetailsMode}
-                  />
-                </div>
-                <ProfileConversionMatrixDetails matrix={matrixDetails} />
-              </div>
-            ) : null}
           </div>
         </div>
       )}

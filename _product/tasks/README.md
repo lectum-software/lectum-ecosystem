@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 130 tasks: `TASK-00` a `TASK-123`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 131 tasks: `TASK-00` a `TASK-124`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -205,6 +205,7 @@ ou cortesia manual.
 | 121 | [TASK-121 - Medias de engajamento no Video de apresentacao do trafego WhatsApp Admin](TASK-121-medias-engajamento-video-apresentacao-trafego-whatsapp-admin.md) | Completed | 53, 75, 76, 97, 114, 115, 116, 117, 118, 119, 120 |
 | 122 | [TASK-122 - Quantidade considerada e carrossel dos donuts no Admin de psicologos](TASK-122-quantidade-considerada-titulos-trafego-whatsapp-admin.md) | Completed | 53, 75, 76, 114, 115, 116, 117, 118, 119, 120, 121 |
 | 123 | [TASK-123 - Donut de Atividade no dashboard Admin de psicologos](TASK-123-donut-atividade-dashboard-psicologos-admin.md) | Completed | 53, 76, 87, 111, 122 |
+| 124 | [TASK-124 - Reposicionamento da matriz no dashboard Admin de psicologos](TASK-124-reposicionamento-matriz-dashboard-psicologos-admin.md) | Completed | 53, 100, 101A, 103, 123 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -302,6 +303,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 87. [TASK-121 - Medias de engajamento no Video de apresentacao do trafego WhatsApp Admin](TASK-121-medias-engajamento-video-apresentacao-trafego-whatsapp-admin.md) foi adicionada e concluida em 2026-07-31 para exibir medias reais de engajamento nas sublinhas Explorar e Busca e filtros do grupo Video de apresentacao.
 88. [TASK-122 - Quantidade considerada e carrossel dos donuts no Admin de psicologos](TASK-122-quantidade-considerada-titulos-trafego-whatsapp-admin.md) foi adicionada e concluida em 2026-07-31 para exibir, ao lado dos titulos das categorias com medias, quantos conteudos, perfis ou videos foram considerados e ajustar os donuts para carrossel com setas laterais, padrao da plataforma e espacamento equilibrado.
 89. [TASK-123 - Donut de Atividade no dashboard Admin de psicologos](TASK-123-donut-atividade-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para incluir Atividade como primeiro donut do carrossel de sinais agregados dos psicologos, usando acoes reais de posts e respostas no periodo.
+90. [TASK-124 - Reposicionamento da matriz no dashboard Admin de psicologos](TASK-124-reposicionamento-matriz-dashboard-psicologos-admin.md) foi adicionada e concluida em 2026-07-31 para mover a matriz do funil para o bloco de sinais agregados dos psicologos, mantendo dados reais e filtro de plano do bloco.
 
 ### 1A. Trilha Admin planejada
 
@@ -384,6 +386,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 75. [TASK-121 - Medias de engajamento no Video de apresentacao do trafego WhatsApp Admin](TASK-121-medias-engajamento-video-apresentacao-trafego-whatsapp-admin.md)
 76. [TASK-122 - Quantidade considerada e carrossel dos donuts no Admin de psicologos](TASK-122-quantidade-considerada-titulos-trafego-whatsapp-admin.md)
 77. [TASK-123 - Donut de Atividade no dashboard Admin de psicologos](TASK-123-donut-atividade-dashboard-psicologos-admin.md)
+78. [TASK-124 - Reposicionamento da matriz no dashboard Admin de psicologos](TASK-124-reposicionamento-matriz-dashboard-psicologos-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
