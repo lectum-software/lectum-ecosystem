@@ -246,17 +246,17 @@ const PROFILE_COVERAGE_CATEGORY_CONFIG = {
   above_average_coverage: {
     description:
       "Psicólogo respondeu mais posts únicos de pacientes do que a média dos psicólogos no período selecionado.",
-    label: "Acima da média",
+    label: "Alta cobertura",
   },
   average_coverage: {
     description:
       "Psicólogo respondeu exatamente a média de posts únicos de pacientes no período selecionado.",
-    label: "Na média",
+    label: "Cobertura padrão",
   },
   below_average_coverage: {
     description:
       "Psicólogo respondeu ao menos um post único de paciente, mas ficou abaixo da média do período selecionado.",
-    label: "Abaixo da média",
+    label: "Baixa cobertura",
   },
   no_coverage: {
     description: "Psicólogo não respondeu posts únicos de pacientes no período selecionado.",

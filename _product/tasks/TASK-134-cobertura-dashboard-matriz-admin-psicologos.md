@@ -48,9 +48,9 @@ Todas as dependencias acima estao concluidas.
 - Cobertura passou a contar `distinct(post_id)` em respostas do psicologo a posts cujo autor tem papel `paciente`.
 - A media da plataforma/segmento e `posts_unicos_respondidos / total_de_psicologos` no periodo selecionado.
 - Categorias agregadas:
-  - `above_average_coverage`: acima da media;
-  - `average_coverage`: na media;
-  - `below_average_coverage`: abaixo da media, mas com ao menos um post respondido;
+  - `above_average_coverage`: Alta cobertura;
+  - `average_coverage`: Cobertura padrão;
+  - `below_average_coverage`: Baixa cobertura;
   - `no_coverage`: nenhum post de paciente respondido.
 - A matriz de cruzamento recebeu o eixo `coverage`, permitindo combinacoes como `Conversao x Cobertura`.
 
@@ -73,7 +73,7 @@ Todas as dependencias acima estao concluidas.
 - [x] API retorna `profile_coverage` no resumo principal e nos segmentos de plano.
 - [x] A media de cobertura usa posts unicos de pacientes respondidos por psicologo no periodo.
 - [x] Múltiplas respostas do mesmo psicologo no mesmo post contam uma unica vez.
-- [x] Psicologos sao classificados em acima da media, na media, abaixo da media e sem cobertura.
+- [x] Psicologos sao classificados em Alta cobertura, Cobertura padrão, Baixa cobertura e Sem cobertura.
 - [x] O dashboard exibe um grafico/card **Cobertura** junto aos demais sinais.
 - [x] A matriz de cruzamento exibe a opcao **Cobertura** e gera combinacoes com esse eixo.
 - [x] UI mobile-first preservada em 390px e nenhum `<img>` cru foi adicionado.

@@ -24,9 +24,9 @@ com comparacao para identificar faixas acima e abaixo da media.
   - `total de posts unicos de pacientes respondidos pelos psicologos / total de psicologos do segmento`.
 - O dashboard retorna `profile_coverage` no resumo principal e nos segmentos de plano.
 - As categorias agregadas sao:
-  - acima da media;
-  - na media;
-  - abaixo da media;
+  - Alta cobertura;
+  - Cobertura padrão;
+  - Baixa cobertura;
   - sem cobertura.
 - A matriz de cruzamento recebe `coverage` como eixo proprio, reutilizando o contrato dinamico existente de Linha/Coluna.
 - Nao criar schema, migration, tracking, backfill, seed, mock ou package novo.
