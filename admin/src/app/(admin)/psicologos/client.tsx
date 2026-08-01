@@ -74,54 +74,15 @@ type ProfileEngagementFavoritesCommunityCategoryId = NonNullable<
 type ProfileEngagementFavoritesFavoriteCategoryId = NonNullable<
   ProfileEngagementFavoritesCategoryItem["favorites_id"]
 >;
-type ProfileConversionEngagementFavoritesMatrix =
-  AdminPsychologistsDashboard["profile_conversion_engagement_favorites"];
-type ProfileConversionActivityMatrix = AdminPsychologistsDashboard["profile_conversion_activity"];
 type ProfileConversionBehaviorResults = AdminPsychologistsDashboard["profile_conversion_behavior"];
 type ProfileConversionBehaviorCell = ProfileConversionBehaviorResults["cells"][number];
 type ProfileConversionBehaviorMetric = ProfileConversionBehaviorCell["metrics"][number];
-type ProfileConversionVisibilityMatrix =
-  AdminPsychologistsDashboard["profile_conversion_visibility"];
-type ProfileConversionMatrixMode =
-  | "community_visibility"
-  | "engagement"
-  | "favorites"
-  | "video_visibility";
-type ProfileConversionSourceMatrix =
-  | ProfileConversionActivityMatrix
-  | ProfileConversionEngagementFavoritesMatrix
-  | ProfileConversionVisibilityMatrix;
-type ProfileConversionMatrixColumnItem = {
-  color: string;
-  count: number;
-  description: string;
-  id: string;
-  label: string;
-  percentage: number;
-};
-type ProfileConversionMatrixRowItem = ProfileConversionSourceMatrix["rows"][number];
-type ProfileConversionMatrixQuadrantItem = {
-  column_id: string;
-  column_label: string;
-  count: number;
-  description: string;
-  id: string;
-  label: string;
-  percentage: number;
-  row_id: ProfileConversionMatrixRowItem["id"];
-  row_label: string;
-};
-type ProfileConversionMatrixResults = {
-  columns: ProfileConversionMatrixColumnItem[];
-  description: string;
-  quadrants: ProfileConversionMatrixQuadrantItem[];
-  rows: ProfileConversionMatrixRowItem[];
-  source: string;
-  totals: {
-    psychologists: number;
-  };
-  unavailable_reason: string | null;
-};
+type ProfileCrossMatrixResults = AdminPsychologistsDashboard["profile_cross_matrix"];
+type ProfileCrossMatrixAxisId = ProfileCrossMatrixResults["default_row_axis_id"];
+type ProfileCrossMatrixAxis = ProfileCrossMatrixResults["axes"][number];
+type ProfileCrossMatrixCategory = ProfileCrossMatrixAxis["categories"][number];
+type ProfileCrossMatrix = ProfileCrossMatrixResults["matrices"][number];
+type ProfileCrossMatrixQuadrant = ProfileCrossMatrix["quadrants"][number];
 type PsychologistsDonutChartItem = {
   color: string;
   count: number;
@@ -175,16 +136,6 @@ const CONVERSION_JOURNEY_OPTIONS: { id: ConversionJourney; label: string }[] = [
   { id: "registration", label: "Conversão até o cadastro" },
 ];
 
-const PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS: {
-  id: ProfileConversionMatrixMode;
-  label: string;
-}[] = [
-  { id: "community_visibility", label: "Conversão x Visibilidade na Comunidade" },
-  { id: "video_visibility", label: "Conversão x Vídeo de apresentação" },
-  { id: "engagement", label: "Conversão x Engajamento recebido" },
-  { id: "favorites", label: "Conversão x Favoritados recebidos" },
-];
-
 const PLATFORM_PAGES_VIEW_OPTIONS: { id: PlatformPagesView; label: string }[] = [
   { id: "accesses", label: "Páginas mais acessadas" },
   { id: "average_duration", label: "Páginas com maior tempo médio" },
@@ -218,11 +169,7 @@ const PRESENTATION_VIDEO_TRAFFIC_SOURCE_ID_SET = new Set<TrafficSourceItem["id"]
 const toOneDecimal = (value: number) => Math.round(value * 10) / 10;
 
 const normalizeFilterOptionKey = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
+  value.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 
 const DASHBOARD_PERIOD_OPTIONS: { id: DashboardPeriodPreset; label: string }[] = [
   { id: "today", label: "Hoje" },
@@ -1013,27 +960,33 @@ const ConversionJourneyTitleSelect = ({
   </label>
 );
 
-const ProfileConversionMatrixTitleSelect = ({
+const ProfileCrossMatrixAxisSelect = ({
+  axes,
   id,
+  label,
   onChange,
   value,
 }: {
+  axes: ProfileCrossMatrixAxis[];
   id: string;
-  onChange: (value: ProfileConversionMatrixMode) => void;
-  value: ProfileConversionMatrixMode;
+  label: string;
+  onChange: (value: ProfileCrossMatrixAxisId) => void;
+  value: ProfileCrossMatrixAxisId;
 }) => (
-  <label className="inline-flex max-w-full" htmlFor={id}>
-    <span className="sr-only">Selecionar matriz de cruzamento de dados dos psicologos</span>
-    <span className="relative inline-flex max-w-full items-center">
+  <label className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[18rem]" htmlFor={id}>
+    <span className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-subtle">
+      {label}
+    </span>
+    <span className="relative inline-flex max-w-full items-center rounded-2xl border border-border bg-surface-muted px-3 py-2">
       <select
-        className="max-w-full appearance-none truncate rounded-control bg-transparent py-0 pl-0 pr-7 text-left text-lg font-semibold text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
+        className="w-full appearance-none truncate bg-transparent py-0 pl-0 pr-7 text-left text-sm font-black text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
         id={id}
-        onChange={(event) => onChange(event.target.value as ProfileConversionMatrixMode)}
+        onChange={(event) => onChange(event.target.value as ProfileCrossMatrixAxisId)}
         value={value}
       >
-        {PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label}
+        {axes.map((axis) => (
+          <option key={axis.id} value={axis.id}>
+            {axis.label}
           </option>
         ))}
       </select>
@@ -1090,6 +1043,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     profile_activity: summary.profile_activity,
     profile_conversion_activity: summary.profile_conversion_activity,
     profile_conversion_behavior: summary.profile_conversion_behavior,
+    profile_cross_matrix: summary.profile_cross_matrix,
     profile_conversion: summary.profile_conversion,
     profile_engagement_favorites: summary.profile_engagement_favorites,
     profile_conversion_engagement: summary.profile_conversion_engagement,
@@ -2196,7 +2150,7 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
       demand: filterSearches.services,
       icon: ShieldCheck,
       id: "services",
-      label: "Servi\u00e7os",
+      label: "Serviços",
       supply: statistics.services,
     },
     {
@@ -2210,7 +2164,7 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
       demand: filterSearches.target_audiences,
       icon: UsersRound,
       id: "target-audience",
-      label: "P\u00fablico atendido",
+      label: "Público atendido",
       supply: statistics.target_audience,
     },
     {
@@ -2238,21 +2192,21 @@ const StatsContent = ({ summary }: { summary: AdminPsychologistsDashboard }) => 
       demand: filterSearches.genders,
       icon: UserCheck,
       id: "genders",
-      label: "G\u00eanero",
+      label: "Gênero",
       supply: statistics.gender,
     },
     {
       demand: filterSearches.race_colors,
       icon: UsersRound,
       id: "race-colors",
-      label: "Ra\u00e7a",
+      label: "Raça",
       supply: statistics.race_colors,
     },
     {
       demand: filterSearches.religions,
       icon: ShieldCheck,
       id: "religions",
-      label: "Religi\u00e3o",
+      label: "Religião",
       supply: statistics.religions,
     },
     {
@@ -3320,167 +3274,11 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
     </CardShell>
   );
 };
-const getProfileExposureCommunityCategoryFromColumnId = (columnId: string) =>
-  PROFILE_EXPOSURE_COMMUNITY_CATEGORY_OPTIONS.find((option) =>
-    columnId.startsWith(`${option.id}_`),
-  ) ?? null;
-
-const getProfileExposureVideoCategoryFromColumnId = (columnId: string) =>
-  PROFILE_EXPOSURE_VIDEO_CATEGORY_OPTIONS.find((option) => columnId.endsWith(`_${option.id}`)) ??
-  null;
-
-const getProfileEngagementCategoryFromColumnId = (columnId: string) =>
-  PROFILE_ENGAGEMENT_CATEGORY_OPTIONS.find((option) => columnId.startsWith(`${option.id}_`)) ??
-  null;
-
-const getProfileFavoritesCategoryFromColumnId = (columnId: string) =>
-  PROFILE_FAVORITES_CATEGORY_OPTIONS.find((option) => columnId.endsWith(`_${option.id}`)) ?? null;
-
-type ProfileConversionMatrixAxisConfig = {
-  columns: Array<{
-    color: string;
-    description: string;
-    id: string;
-    label: string;
-  }>;
-  description: string;
-  resolveColumn: (
-    columnId: string,
-  ) => { color: string; description: string; id: string; label: string } | null;
-  sourceMatrix: "engagement_favorites" | "visibility";
-};
-
-const PROFILE_CONVERSION_MATRIX_AXIS_CONFIGS: Record<
-  ProfileConversionMatrixMode,
-  ProfileConversionMatrixAxisConfig
-> = {
-  community_visibility: {
-    columns: PROFILE_EXPOSURE_COMMUNITY_CATEGORY_OPTIONS,
-    description:
-      "Matriz observacional entre Conversão e Visibilidade na comunidade, usando as mesmas faixas de Comunidade já calculadas para o dashboard.",
-    resolveColumn: getProfileExposureCommunityCategoryFromColumnId,
-    sourceMatrix: "visibility",
-  },
-  engagement: {
-    columns: PROFILE_ENGAGEMENT_CATEGORY_OPTIONS,
-    description:
-      "Matriz observacional entre Conversão e Engajamento recebido na comunidade, usando o score ponderado já calculado para o dashboard.",
-    resolveColumn: getProfileEngagementCategoryFromColumnId,
-    sourceMatrix: "engagement_favorites",
-  },
-  favorites: {
-    columns: PROFILE_FAVORITES_CATEGORY_OPTIONS,
-    description:
-      "Matriz observacional entre Conversão e Favoritados recebidos, usando as mesmas faixas de favoritos já calculadas para o dashboard.",
-    resolveColumn: getProfileFavoritesCategoryFromColumnId,
-    sourceMatrix: "engagement_favorites",
-  },
-  video_visibility: {
-    columns: PROFILE_EXPOSURE_VIDEO_CATEGORY_OPTIONS,
-    description:
-      "Matriz observacional entre Conversão e Vídeo de apresentação, usando as mesmas faixas de vídeo já calculadas para o dashboard.",
-    resolveColumn: getProfileExposureVideoCategoryFromColumnId,
-    sourceMatrix: "visibility",
-  },
-};
-
-const findSourceMatrixQuadrant = (
-  sourceMatrix: ProfileConversionSourceMatrix,
-  rowId: ProfileConversionMatrixRowItem["id"],
-  columnId: string,
-) =>
-  sourceMatrix.quadrants.find(
-    (quadrant) => quadrant.row_id === rowId && quadrant.column_id === columnId,
-  );
-
-const buildProfileConversionAxisMatrix = (
-  sourceMatrix: ProfileConversionSourceMatrix,
-  mode: ProfileConversionMatrixMode,
-): ProfileConversionMatrixResults => {
-  const config = PROFILE_CONVERSION_MATRIX_AXIS_CONFIGS[mode];
-  const totalPsychologists = Math.max(0, sourceMatrix.totals.psychologists);
-  const columnCounts = new Map<string, number>(config.columns.map((column) => [column.id, 0]));
-  const quadrantCounts = new Map<string, number>(
-    sourceMatrix.rows.flatMap((row) =>
-      config.columns.map((column) => [`${row.id}_${column.id}`, 0] as const),
-    ),
-  );
-
-  for (const sourceColumn of sourceMatrix.columns) {
-    const axisColumn = config.resolveColumn(sourceColumn.id);
-    if (!axisColumn) continue;
-
-    columnCounts.set(axisColumn.id, (columnCounts.get(axisColumn.id) ?? 0) + sourceColumn.count);
-
-    for (const row of sourceMatrix.rows) {
-      const sourceQuadrant = findSourceMatrixQuadrant(sourceMatrix, row.id, sourceColumn.id);
-      if (!sourceQuadrant) continue;
-
-      const quadrantId = `${row.id}_${axisColumn.id}`;
-      quadrantCounts.set(quadrantId, (quadrantCounts.get(quadrantId) ?? 0) + sourceQuadrant.count);
-    }
-  }
-
-  const rowById = new Map(sourceMatrix.rows.map((row) => [row.id, row]));
-
-  return {
-    columns: config.columns.map((column) => {
-      const count = columnCounts.get(column.id) ?? 0;
-
-      return {
-        ...column,
-        count,
-        percentage: calculatePercentage(count, totalPsychologists),
-      };
-    }),
-    description: config.description,
-    quadrants: sourceMatrix.rows.flatMap((row) =>
-      config.columns.map((column) => {
-        const count = quadrantCounts.get(`${row.id}_${column.id}`) ?? 0;
-        const rowLabel = rowById.get(row.id)?.label ?? row.label;
-
-        return {
-          column_id: column.id,
-          column_label: column.label,
-          count,
-          description: `Psicólogos em ${rowLabel} com ${column.label}.`,
-          id: `${row.id}_${column.id}`,
-          label: `${rowLabel} + ${column.label}`,
-          percentage: calculatePercentage(count, totalPsychologists),
-          row_id: row.id,
-          row_label: rowLabel,
-        };
-      }),
-    ),
-    rows: sourceMatrix.rows,
-    source: `${sourceMatrix.source}+axis:${mode}`,
-    totals: {
-      psychologists: totalPsychologists,
-    },
-    unavailable_reason: sourceMatrix.unavailable_reason,
-  };
-};
-
-const getProfileConversionMatrixDetails = ({
-  engagementMatrix,
-  mode,
-  visibilityMatrix,
-}: {
-  engagementMatrix: ProfileConversionEngagementFavoritesMatrix;
-  mode: ProfileConversionMatrixMode;
-  visibilityMatrix: ProfileConversionVisibilityMatrix;
-}) => {
-  const config = PROFILE_CONVERSION_MATRIX_AXIS_CONFIGS[mode];
-  const sourceMatrix = config.sourceMatrix === "visibility" ? visibilityMatrix : engagementMatrix;
-
-  return buildProfileConversionAxisMatrix(sourceMatrix, mode);
-};
-
-const findProfileConversionMatrixQuadrant = (
-  matrix: ProfileConversionMatrixResults,
-  row: ProfileConversionMatrixRowItem,
-  column: ProfileConversionMatrixColumnItem,
-): ProfileConversionMatrixQuadrantItem =>
+const findProfileCrossMatrixQuadrant = (
+  matrix: ProfileCrossMatrix,
+  row: ProfileCrossMatrixCategory,
+  column: ProfileCrossMatrixCategory,
+): ProfileCrossMatrixQuadrant =>
   matrix.quadrants.find(
     (quadrant) => quadrant.row_id === row.id && quadrant.column_id === column.id,
   ) ?? {
@@ -3495,20 +3293,20 @@ const findProfileConversionMatrixQuadrant = (
     row_label: row.label,
   };
 
-type ProfileConversionMatrixCell = {
+type ProfileCrossMatrixCell = {
   color: string;
-  column: ProfileConversionMatrixColumnItem;
-  quadrant: ProfileConversionMatrixQuadrantItem;
-  row: ProfileConversionMatrixRowItem;
+  column: ProfileCrossMatrixCategory;
+  quadrant: ProfileCrossMatrixQuadrant;
+  row: ProfileCrossMatrixCategory;
   rowPercentage: number;
 };
 
-const buildProfileConversionMatrixRowCells = (
-  matrix: ProfileConversionMatrixResults,
-  row: ProfileConversionMatrixRowItem,
-): ProfileConversionMatrixCell[] => {
+const buildProfileCrossMatrixRowCells = (
+  matrix: ProfileCrossMatrix,
+  row: ProfileCrossMatrixCategory,
+): ProfileCrossMatrixCell[] => {
   const quadrants = matrix.columns.map((column) =>
-    findProfileConversionMatrixQuadrant(matrix, row, column),
+    findProfileCrossMatrixQuadrant(matrix, row, column),
   );
   const rowTotal = quadrants.reduce((total, quadrant) => total + Math.max(0, quadrant.count), 0);
 
@@ -3544,7 +3342,7 @@ const ProfileConversionMatrixQuadrantCard = ({
   description: string;
   headingLabel?: string;
   intensityPercentage?: number;
-  quadrant: ProfileConversionMatrixQuadrantItem;
+  quadrant: ProfileCrossMatrixQuadrant;
   showColumnLabel?: boolean;
 }) => {
   const hasData = quadrant.count > 0;
@@ -3603,7 +3401,7 @@ const ProfileConversionBehaviorTableCell = ({
       <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
         <span
           className={cn(tagClassName, "text-muted")}
-          title={"O backend n\u00e3o retornou a leitura desta c\u00e9lula."}
+          title={"O backend não retornou a leitura desta célula."}
         >
           Sem dados
         </span>
@@ -3692,7 +3490,7 @@ const formatProfileConversionBehaviorMetricValue = (metric: ProfileConversionBeh
   if (typeof metric.value !== "number") return null;
   if (metric.unit === "percentage") return formatPercentageValue(metric.value);
   if (metric.unit === "seconds") return formatSecondsMetric(metric.value);
-  if (metric.unit === "position") return `${numberFormatter.format(metric.value)}\u00aa`;
+  if (metric.unit === "position") return `${numberFormatter.format(metric.value)}ª`;
 
   return numberFormatter.format(metric.value);
 };
@@ -3733,7 +3531,11 @@ const getProfileConversionBehaviorUnavailableTag = (cell: ProfileConversionBehav
   return "Sem base";
 };
 
-const ProfileConversionBehaviorRowHeader = ({ row }: { row: ProfileConversionMatrixRowItem }) => {
+const ProfileConversionBehaviorRowHeader = ({
+  row,
+}: {
+  row: ProfileConversionBehaviorResults["rows"][number];
+}) => {
   const color = PROFILE_CONVERSION_CHART_COLORS[row.id];
 
   return (
@@ -3748,7 +3550,7 @@ const ProfileConversionBehaviorRowHeader = ({ row }: { row: ProfileConversionMat
       </div>
       <p className="mt-1 text-[0.7rem] font-bold leading-4 text-muted">
         {numberFormatter.format(row.count)}
-        {" psic\u00f3logos \u00b7 "}
+        {" psicólogos · "}
         {formatPercentageValue(row.percentage)} do total
       </p>
       <p className="mt-1 w-fit rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[0.68rem] font-black text-muted">
@@ -3758,12 +3560,12 @@ const ProfileConversionBehaviorRowHeader = ({ row }: { row: ProfileConversionMat
   );
 };
 
-const ProfileConversionMatrixDetails = ({ matrix }: { matrix: ProfileConversionMatrixResults }) => {
+const ProfileCrossMatrixDetails = ({ matrix }: { matrix: ProfileCrossMatrix }) => {
   if (matrix.totals.psychologists === 0) {
     return (
       <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
         {matrix.unavailable_reason ??
-          "Sem psicólogos ativos no período selecionado para cruzar Conversão com o eixo selecionado."}
+          "Sem psicólogos ativos no período selecionado para cruzar os eixos selecionados."}
       </p>
     );
   }
@@ -3772,14 +3574,18 @@ const ProfileConversionMatrixDetails = ({ matrix }: { matrix: ProfileConversionM
     <div className="mt-5">
       <div className="grid gap-3 lg:hidden">
         {matrix.rows.map((row) => {
-          const rowCells = buildProfileConversionMatrixRowCells(matrix, row);
+          const rowCells = buildProfileCrossMatrixRowCells(matrix, row);
 
           return (
             <section
               className="rounded-[1.35rem] border border-border bg-surface p-3"
-              key={`psychologist-mobile-profile-conversion-matrix-${row.id}`}
+              key={`psychologist-mobile-profile-cross-matrix-${row.id}`}
             >
               <h3 className="text-sm font-black text-foreground">{row.label}</h3>
+              <p className="mt-1 text-[0.68rem] font-bold leading-4 text-muted">
+                {numberFormatter.format(row.count)} psicólogos{" · "}
+                {formatPercentageValue(row.percentage)}
+              </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-4">
                 {rowCells.map((cell) => (
                   <ProfileConversionMatrixQuadrantCard
@@ -3810,17 +3616,17 @@ const ProfileConversionMatrixDetails = ({ matrix }: { matrix: ProfileConversionM
           {matrix.columns.map((column) => (
             <p
               className="rounded-xl bg-surface-muted px-2 py-1.5 text-center text-[0.68rem] font-black leading-4 text-muted"
-              key={`psychologist-profile-conversion-matrix-column-${column.id}`}
+              key={`psychologist-profile-cross-matrix-column-${column.id}`}
             >
               {column.label}
             </p>
           ))}
 
           {matrix.rows.map((row) => {
-            const rowCells = buildProfileConversionMatrixRowCells(matrix, row);
+            const rowCells = buildProfileCrossMatrixRowCells(matrix, row);
 
             return (
-              <Fragment key={`psychologist-profile-conversion-matrix-row-${row.id}`}>
+              <Fragment key={`psychologist-profile-cross-matrix-row-${row.id}`}>
                 <p className="sticky left-0 z-10 grid place-items-center rounded-xl bg-surface-muted px-2 py-2 text-center text-[0.68rem] font-black text-muted">
                   {row.label}
                 </p>
@@ -3842,25 +3648,55 @@ const ProfileConversionMatrixDetails = ({ matrix }: { matrix: ProfileConversionM
   );
 };
 
+const getProfileCrossMatrixByAxes = (
+  crossMatrix: ProfileCrossMatrixResults,
+  rowAxisId: ProfileCrossMatrixAxisId,
+  columnAxisId: ProfileCrossMatrixAxisId,
+) =>
+  crossMatrix.matrices.find(
+    (matrix) => matrix.row_axis_id === rowAxisId && matrix.column_axis_id === columnAxisId,
+  ) ?? null;
+
 function DashboardProfileConversionMatrixSection({
   basisLabel,
-  engagementMatrix,
-  visibilityMatrix,
+  crossMatrix,
 }: {
   basisLabel: string;
-  engagementMatrix: ProfileConversionEngagementFavoritesMatrix;
-  visibilityMatrix: ProfileConversionVisibilityMatrix;
+  crossMatrix: ProfileCrossMatrixResults;
 }) {
   const [isMatrixExpanded, setIsMatrixExpanded] = useState(false);
-  const [matrixMode, setMatrixMode] = useState<ProfileConversionMatrixMode>("community_visibility");
-  const matrixDetails = getProfileConversionMatrixDetails({
-    engagementMatrix,
-    mode: matrixMode,
-    visibilityMatrix,
-  });
+  const [rowAxisId, setRowAxisId] = useState<ProfileCrossMatrixAxisId>(
+    crossMatrix.default_row_axis_id,
+  );
+  const [columnAxisId, setColumnAxisId] = useState<ProfileCrossMatrixAxisId>(
+    crossMatrix.default_column_axis_id,
+  );
+  const axisOptions = crossMatrix.axes;
+  const rowAxis = axisOptions.find((axis) => axis.id === rowAxisId) ?? axisOptions[0];
+  const columnAxis = axisOptions.find((axis) => axis.id === columnAxisId) ?? axisOptions[1];
+  const fallbackMatrix = crossMatrix.matrices[0] ?? null;
+  const matrixDetails =
+    rowAxis && columnAxis
+      ? getProfileCrossMatrixByAxes(crossMatrix, rowAxis.id, columnAxis.id)
+      : null;
+  const selectedMatrix = matrixDetails ?? fallbackMatrix;
   const matrixDetailsTitle =
-    PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS.find((option) => option.id === matrixMode)?.label ??
-    "Matriz de cruzamento de dados";
+    selectedMatrix?.title ??
+    (rowAxis && columnAxis
+      ? `${rowAxis.label} x ${columnAxis.label}`
+      : "Matriz de cruzamento de dados");
+  const rowAxisOptions = axisOptions.filter((axis) => axis.id !== columnAxisId);
+  const columnAxisOptions = axisOptions.filter((axis) => axis.id !== rowAxisId);
+  const alternativeAxisId = (blockedAxisId: ProfileCrossMatrixAxisId) =>
+    axisOptions.find((axis) => axis.id !== blockedAxisId)?.id ?? blockedAxisId;
+  const handleRowAxisChange = (value: ProfileCrossMatrixAxisId) => {
+    setRowAxisId(value);
+    if (value === columnAxisId) setColumnAxisId(alternativeAxisId(value));
+  };
+  const handleColumnAxisChange = (value: ProfileCrossMatrixAxisId) => {
+    setColumnAxisId(value);
+    if (value === rowAxisId) setRowAxisId(alternativeAxisId(value));
+  };
 
   return (
     <div className="mt-5 rounded-[1.35rem] border border-border/70 bg-surface p-3 sm:p-4">
@@ -3886,22 +3722,33 @@ function DashboardProfileConversionMatrixSection({
 
       {isMatrixExpanded ? (
         <div className="mt-4 border-border border-t pt-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
               <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Esta {"\u00e9"} a matriz separada usada para auditar o eixo selecionado. A leitura
-                acompanha a base agregada do funil:{" "}
-                <strong className="font-black text-foreground">{basisLabel}</strong>.
+                Escolha os dois eixos da matriz: o campo Linha controla as faixas verticais e o
+                campo Coluna controla as faixas horizontais. A leitura acompanha a base agregada do
+                funil: <strong className="font-black text-foreground">{basisLabel}</strong>.
               </p>
             </div>
-            <ProfileConversionMatrixTitleSelect
-              id="profile-conversion-funnel-matrix-mode"
-              onChange={setMatrixMode}
-              value={matrixMode}
-            />
+            <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:min-w-[28rem]">
+              <ProfileCrossMatrixAxisSelect
+                axes={rowAxisOptions}
+                id="profile-cross-matrix-row-axis"
+                label="Linha"
+                onChange={handleRowAxisChange}
+                value={rowAxisId}
+              />
+              <ProfileCrossMatrixAxisSelect
+                axes={columnAxisOptions}
+                id="profile-cross-matrix-column-axis"
+                label="Coluna"
+                onChange={handleColumnAxisChange}
+                value={columnAxisId}
+              />
+            </div>
           </div>
-          <ProfileConversionMatrixDetails matrix={matrixDetails} />
+          {selectedMatrix ? <ProfileCrossMatrixDetails matrix={selectedMatrix} /> : null}
         </div>
       ) : null}
     </div>
@@ -3915,8 +3762,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
 }) => {
   const segmentSummary = getPlanSegmentSummary(summary, "all");
   const behaviorTable = segmentSummary.profile_conversion_behavior;
-  const profileConversionEngagementMatrix = segmentSummary.profile_conversion_engagement_favorites;
-  const profileConversionVisibilityMatrix = segmentSummary.profile_conversion_visibility;
+  const profileCrossMatrix = segmentSummary.profile_cross_matrix;
   const conversionRows = behaviorTable?.rows ?? [];
   const behaviorColumns = behaviorTable?.columns ?? [];
   const behaviorCellsByKey = new Map(
@@ -3930,9 +3776,9 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
   return (
     <CardShell className="p-5">
       <PanelTitle
-        description={`${formatSelectedPeriod(summary.period)} \u00b7 comportamento predominante detalhado por convers\u00e3o`}
+        description={`${formatSelectedPeriod(summary.period)} · comportamento predominante detalhado por conversão`}
         icon={Funnel}
-        title={"Funil comportamental por convers\u00e3o"}
+        title={"Funil comportamental por conversão"}
       />
 
       <div className="mt-5 grid gap-3 lg:hidden">
@@ -3967,7 +3813,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
         <table className="w-full table-fixed border-separate border-spacing-0 text-left">
           <caption className="sr-only">
             {
-              "Tabela com as faixas de convers\u00e3o no eixo vertical e tags comportamentais dos psic\u00f3logos por v\u00eddeo de apresenta\u00e7\u00e3o, perfil, comunidade e tela de favoritos."
+              "Tabela com as faixas de conversão no eixo vertical e tags comportamentais dos psicólogos por vídeo de apresentação, perfil, comunidade e tela de favoritos."
             }
           </caption>
           <colgroup>
@@ -3980,7 +3826,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
           <thead>
             <tr className="bg-surface-muted/80">
               <th className="border-border border-b p-2.5 text-[0.66rem] font-black uppercase tracking-[0.12em] text-subtle">
-                {"Convers\u00e3o"}
+                {"Conversão"}
               </th>
               {behaviorColumns.map((column) => (
                 <th
@@ -4019,8 +3865,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
       </div>
       <DashboardProfileConversionMatrixSection
         basisLabel={segmentSummary.label}
-        engagementMatrix={profileConversionEngagementMatrix}
-        visibilityMatrix={profileConversionVisibilityMatrix}
+        crossMatrix={profileCrossMatrix}
       />
     </CardShell>
   );

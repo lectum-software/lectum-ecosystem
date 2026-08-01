@@ -1084,6 +1084,75 @@ export type PsychologistsDashboardProfileConversionVisibilityMatrixResults = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardProfileCrossMatrixAxisId =
+  | "activity"
+  | "community_video_posts"
+  | "community_visibility"
+  | "conversion"
+  | "engagement"
+  | "favorites"
+  | "presentation_video_retention"
+  | "presentation_video_visibility";
+
+export type PsychologistsDashboardProfileCrossMatrixCategory = {
+  color: string;
+  count: number;
+  description: string;
+  id: string;
+  label: string;
+  percentage: number;
+};
+
+export type PsychologistsDashboardProfileCrossMatrixAxis = {
+  categories: PsychologistsDashboardProfileCrossMatrixCategory[];
+  description: string;
+  id: PsychologistsDashboardProfileCrossMatrixAxisId;
+  label: string;
+  source: string;
+  unavailable_reason: string | null;
+};
+
+export type PsychologistsDashboardProfileCrossMatrixQuadrant = {
+  column_id: string;
+  column_label: string;
+  count: number;
+  description: string;
+  id: string;
+  label: string;
+  percentage: number;
+  row_id: string;
+  row_label: string;
+};
+
+export type PsychologistsDashboardProfileCrossMatrix = {
+  column_axis_id: PsychologistsDashboardProfileCrossMatrixAxisId;
+  columns: PsychologistsDashboardProfileCrossMatrixCategory[];
+  description: string;
+  id: string;
+  quadrants: PsychologistsDashboardProfileCrossMatrixQuadrant[];
+  row_axis_id: PsychologistsDashboardProfileCrossMatrixAxisId;
+  rows: PsychologistsDashboardProfileCrossMatrixCategory[];
+  source: string;
+  title: string;
+  totals: {
+    psychologists: number;
+  };
+  unavailable_reason: string | null;
+};
+
+export type PsychologistsDashboardProfileCrossMatrixResults = {
+  axes: PsychologistsDashboardProfileCrossMatrixAxis[];
+  default_column_axis_id: PsychologistsDashboardProfileCrossMatrixAxisId;
+  default_row_axis_id: PsychologistsDashboardProfileCrossMatrixAxisId;
+  description: string;
+  matrices: PsychologistsDashboardProfileCrossMatrix[];
+  source: string;
+  totals: {
+    psychologists: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardPlanSegment = "all" | "courtesy" | "free" | "subscribers";
 
 export type PsychologistsDashboardPlanSegmentSummary = {
@@ -1098,6 +1167,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_conversion_activity: PsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: PsychologistsDashboardProfileConversionBehaviorResults;
+  profile_cross_matrix: PsychologistsDashboardProfileCrossMatrixResults;
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_engagement_favorites: PsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;
@@ -2417,6 +2487,7 @@ export type AdminPsychologistsDashboard = {
   profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_conversion_activity: PsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: PsychologistsDashboardProfileConversionBehaviorResults;
+  profile_cross_matrix: PsychologistsDashboardProfileCrossMatrixResults;
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_engagement_favorites: PsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;

@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 135 tasks: `TASK-00` a `TASK-128`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 136 tasks: `TASK-00` a `TASK-129`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -210,6 +210,7 @@ ou cortesia manual.
 | 126 | [TASK-126 - Tags na tabela comportamental por conversao do Admin de psicologos](TASK-126-tags-tabela-comportamental-conversao-admin-psicologos.md) | Completed | 53, 100, 103, 123, 124, 125 |
 | 127 | [TASK-127 - Matriz expansivel no funil comportamental por conversao do Admin de psicologos](TASK-127-matriz-expansivel-funil-comportamental-conversao-admin-psicologos.md) | Completed | 53, 100, 103, 124, 125, 126 |
 | 128 | [TASK-128 - Ajustes de largura e copy da tabela comportamental por conversao Admin](TASK-128-ajustes-largura-copy-tabela-comportamental-conversao-admin.md) | Completed | 53, 103, 126, 127 |
+| 129 | [TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin](TASK-129-eixos-independentes-matriz-cruzamento-dados-admin-psicologos.md) | Completed | 53, 100, 123, 125, 127, 128 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -312,6 +313,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 92. [TASK-126 - Tags na tabela comportamental por conversao do Admin de psicologos](TASK-126-tags-tabela-comportamental-conversao-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para transformar as celulas em tags comportamentais, adicionar Perfil, consolidar Atividades/Engajamento dentro de Comunidade e tratar Tela de favoritos como origem de cliques WhatsApp por psicologo.
 93. [TASK-127 - Matriz expansivel no funil comportamental por conversao do Admin de psicologos](TASK-127-matriz-expansivel-funil-comportamental-conversao-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para mover a matriz expansivel para dentro do bloco Funil comportamental por conversao, deixando o bloco de sinais agregados apenas com os donuts.
 94. [TASK-128 - Ajustes de largura e copy da tabela comportamental por conversao Admin](TASK-128-ajustes-largura-copy-tabela-comportamental-conversao-admin.md) foi adicionada e concluida em 2026-08-01 para remover a rolagem horizontal da tabela comportamental, simplificar textos auxiliares e renomear a matriz para Matriz de cruzamento de dados.
+95. [TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin](TASK-129-eixos-independentes-matriz-cruzamento-dados-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para substituir o seletor unico por campos **Linha** e **Coluna**, criando `profile_cross_matrix` agregado para cruzar Conversao, Atividade, Engajamento, Favoritados, Visibilidade, Retencao de video e Posts com video sem mocks.
 
 ### 1A. Trilha Admin planejada
 
@@ -399,6 +401,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 80. [TASK-126 - Tags na tabela comportamental por conversao do Admin de psicologos](TASK-126-tags-tabela-comportamental-conversao-admin-psicologos.md)
 81. [TASK-127 - Matriz expansivel no funil comportamental por conversao do Admin de psicologos](TASK-127-matriz-expansivel-funil-comportamental-conversao-admin-psicologos.md)
 82. [TASK-128 - Ajustes de largura e copy da tabela comportamental por conversao Admin](TASK-128-ajustes-largura-copy-tabela-comportamental-conversao-admin.md)
+83. [TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin](TASK-129-eixos-independentes-matriz-cruzamento-dados-admin-psicologos.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
