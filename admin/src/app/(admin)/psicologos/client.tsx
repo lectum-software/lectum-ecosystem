@@ -60,6 +60,9 @@ type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][numb
 type ProfileActivityCategoryItem =
   AdminPsychologistsDashboard["profile_activity"]["categories"][number];
 type ProfileActivityCategoryId = ProfileActivityCategoryItem["id"];
+type ProfileCoverageCategoryItem =
+  AdminPsychologistsDashboard["profile_coverage"]["categories"][number];
+type ProfileCoverageCategoryId = ProfileCoverageCategoryItem["id"];
 type ProfileConversionCategoryItem =
   AdminPsychologistsDashboard["profile_conversion"]["categories"][number];
 type ProfileExposureCategoryItem =
@@ -379,6 +382,13 @@ const PROFILE_ACTIVITY_CHART_COLORS = {
   pouco_ativo: "#f59f00",
   sem_base: "#64748b",
 } satisfies Record<ProfileActivityCategoryId, string>;
+
+const PROFILE_COVERAGE_CHART_COLORS = {
+  above_average_coverage: "#13a85b",
+  average_coverage: "#308ce8",
+  below_average_coverage: "#f59f00",
+  no_coverage: "#64748b",
+} satisfies Record<ProfileCoverageCategoryId, string>;
 
 const PROFILE_EXPOSURE_CHART_COLORS = {
   high_community: "#13a85b",
@@ -1041,6 +1051,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     signup_method: summary.signup_method,
     statistics: summary.statistics,
     profile_activity: summary.profile_activity,
+    profile_coverage: summary.profile_coverage,
     profile_conversion_activity: summary.profile_conversion_activity,
     profile_conversion_behavior: summary.profile_conversion_behavior,
     profile_cross_matrix: summary.profile_cross_matrix,
@@ -2810,6 +2821,43 @@ const ProfileActivityDonutChart = ({
   );
 };
 
+const ProfileCoverageDonutChart = ({
+  profileCoverage,
+}: {
+  profileCoverage: AdminPsychologistsDashboard["profile_coverage"];
+}) => {
+  const total = Math.max(0, profileCoverage.totals.psychologists);
+  const items = profileCoverage.categories.map((item) => ({
+    color: PROFILE_COVERAGE_CHART_COLORS[item.id],
+    count: item.count,
+    description: item.description,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
+  const ariaLabel = `Gráfico de donut de Cobertura dos psicólogos: ${profileCoverage.categories
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+          item.percentage,
+        )})`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        profileCoverage.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Cobertura."
+      }
+      items={items}
+      showDescriptionTooltips={false}
+      total={total}
+    />
+  );
+};
+
 const ProfileConversionDonutChart = ({
   profileConversion,
 }: {
@@ -2882,6 +2930,12 @@ const ProfileExposureSurfaceDonutChart = ({
 
 const formatActivityActionsValue = (value: number) => {
   const label = value === 1 ? "ação" : "ações";
+
+  return `${numberFormatter.format(value)} ${label}`;
+};
+
+const formatPatientPostsAnsweredValue = (value: number) => {
+  const label = value === 1 ? "post" : "posts";
 
   return `${numberFormatter.format(value)} ${label}`;
 };
@@ -3115,14 +3169,24 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
     profileConversionPlanSegment,
   );
   const profileActivity = profileConversionSegmentSummary.profile_activity;
+  const profileCoverage = profileConversionSegmentSummary.profile_coverage;
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
   const profileEngagementFavorites = profileConversionSegmentSummary.profile_engagement_favorites;
   const profileExposure = profileConversionSegmentSummary.profile_exposure;
-  if (!profileActivity || !profileConversion || !profileEngagementFavorites || !profileExposure) {
+  if (
+    !profileActivity ||
+    !profileCoverage ||
+    !profileConversion ||
+    !profileEngagementFavorites ||
+    !profileExposure
+  ) {
     return null;
   }
 
   const activityStandardRangeLabel = formatProfileActivityStandardRange(profileActivity.thresholds);
+  const coverageAverageLabel = `${formatPatientPostsAnsweredValue(
+    profileCoverage.totals.average_patient_posts_answered,
+  )} por psicólogo`;
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
   const communityVisibilityStandardRangeLabel = formatProfileExposureSurfaceStandardRange(
     profileExposure.benchmark.community_visibility,
@@ -3149,7 +3213,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Atividade, visibilidade, engajamento, favoritos e conversão dos psicólogos"
+          title="Atividade, cobertura, visibilidade, engajamento, favoritos e conversão dos psicólogos"
         />
         <PlanSegmentSelect
           id="profile-conversion-plan-segment"
@@ -3173,6 +3237,23 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             }
           >
             <ProfileActivityDonutChart profileActivity={profileActivity} />
+          </DashboardProfileSignalCard>
+        </div>
+
+        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+          <DashboardProfileSignalCard
+            standardValue={coverageAverageLabel}
+            title="Cobertura"
+            tooltipAriaLabel={`Cobertura compara quantos posts únicos de pacientes cada psicólogo respondeu. Média da plataforma no período: ${coverageAverageLabel}.`}
+            tooltipContent={
+              <>
+                Cobertura conta posts diferentes de pacientes que receberam ao menos uma resposta do
+                psicólogo no período. A média da plataforma é{" "}
+                <strong className="font-black">{coverageAverageLabel}</strong>.
+              </>
+            }
+          >
+            <ProfileCoverageDonutChart profileCoverage={profileCoverage} />
           </DashboardProfileSignalCard>
         </div>
 

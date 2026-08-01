@@ -227,6 +227,14 @@ export type AdminPsychologistCommunityTrafficPlatformReplyRecord = {
   id: string;
   media_type: string | null;
   parent_reply_id: string | null;
+  post: {
+    author: {
+      role: string;
+    };
+    author_id: string;
+    createdAt: Date;
+    id: string;
+  };
   post_id: string;
 };
 

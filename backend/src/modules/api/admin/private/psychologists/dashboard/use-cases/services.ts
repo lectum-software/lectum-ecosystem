@@ -117,6 +117,8 @@ import type {
   AdminPsychologistsDashboardProfileConversionResults,
   AdminPsychologistsDashboardProfileConversionVisibilityMatrixQuadrantId,
   AdminPsychologistsDashboardProfileConversionVisibilityMatrixResults,
+  AdminPsychologistsDashboardProfileCoverageCategoryId,
+  AdminPsychologistsDashboardProfileCoverageResults,
   AdminPsychologistsDashboardProfileCrossMatrixAxisId,
   AdminPsychologistsDashboardProfileCrossMatrixCategory,
   AdminPsychologistsDashboardProfileCrossMatrixResults,
@@ -171,6 +173,8 @@ const PROFILE_CONVERSION_ENGAGEMENT_VERY_ENGAGED_INTERACTIONS_30D = 12;
 const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_LIMIT = 6;
 const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_SAMPLE_THRESHOLD = 3;
 const PROFILE_ACTIVITY_SOURCE = "community_post.author_id+post_reply.author_id";
+const PROFILE_COVERAGE_SOURCE =
+  "post_reply.author_id+post_reply.post.author.role=paciente+distinct(post_id)" as const;
 const PROFILE_ACTIVITY_THRESHOLDS = {
   active_min_actions: 6,
   low_activity_min_actions: 3,
@@ -206,6 +210,13 @@ const PROFILE_ACTIVITY_CATEGORY_ORDER: AdminPsychologistsDashboardProfileActivit
   "sem_base",
 ];
 
+const PROFILE_COVERAGE_CATEGORY_ORDER: AdminPsychologistsDashboardProfileCoverageCategoryId[] = [
+  "above_average_coverage",
+  "average_coverage",
+  "below_average_coverage",
+  "no_coverage",
+];
+
 const PROFILE_ACTIVITY_CATEGORY_CONFIG = {
   ativo: {
     description:
@@ -228,6 +239,31 @@ const PROFILE_ACTIVITY_CATEGORY_CONFIG = {
   },
 } satisfies Record<
   AdminPsychologistsDashboardProfileActivityCategoryId,
+  { description: string; label: string }
+>;
+
+const PROFILE_COVERAGE_CATEGORY_CONFIG = {
+  above_average_coverage: {
+    description:
+      "Psicólogo respondeu mais posts únicos de pacientes do que a média dos psicólogos no período selecionado.",
+    label: "Acima da média",
+  },
+  average_coverage: {
+    description:
+      "Psicólogo respondeu exatamente a média de posts únicos de pacientes no período selecionado.",
+    label: "Na média",
+  },
+  below_average_coverage: {
+    description:
+      "Psicólogo respondeu ao menos um post único de paciente, mas ficou abaixo da média do período selecionado.",
+    label: "Abaixo da média",
+  },
+  no_coverage: {
+    description: "Psicólogo não respondeu posts únicos de pacientes no período selecionado.",
+    label: "Sem cobertura",
+  },
+} satisfies Record<
+  AdminPsychologistsDashboardProfileCoverageCategoryId,
   { description: string; label: string }
 >;
 
@@ -1421,6 +1457,123 @@ const buildProfileActivityResults = (params: {
     unavailable_reason:
       params.profiles.length === 0
         ? "Sem psicólogos ativos no fim do período selecionado para classificar Atividade."
+        : null,
+  };
+};
+
+const buildProfileCoverageCountsByPsychologistId = (params: {
+  communityReplies: AdminPsychologistCommunityTrafficPlatformDataset["replies"];
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+}) => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const coveredPatientPostIdsByPsychologistId = new Map<string, Set<string>>();
+
+  for (const reply of params.communityReplies) {
+    if (
+      !analyzedPsychologistIds.has(reply.author_id) ||
+      !dateInRange(reply.createdAt, params.range) ||
+      reply.post.author.role !== "paciente"
+    ) {
+      continue;
+    }
+
+    const current = coveredPatientPostIdsByPsychologistId.get(reply.author_id) ?? new Set<string>();
+    current.add(reply.post_id);
+    coveredPatientPostIdsByPsychologistId.set(reply.author_id, current);
+  }
+
+  return new Map(
+    [...coveredPatientPostIdsByPsychologistId.entries()].map(([psychologistId, postIds]) => [
+      psychologistId,
+      postIds.size,
+    ]),
+  );
+};
+
+const classifyProfileCoverageCategory = (
+  patientPostsAnswered: number,
+  averagePatientPostsAnswered: number,
+): AdminPsychologistsDashboardProfileCoverageCategoryId => {
+  if (patientPostsAnswered <= 0 || averagePatientPostsAnswered <= 0) return "no_coverage";
+  if (patientPostsAnswered > averagePatientPostsAnswered) return "above_average_coverage";
+  if (patientPostsAnswered < averagePatientPostsAnswered) return "below_average_coverage";
+
+  return "average_coverage";
+};
+
+const buildProfileCoverageResults = (params: {
+  communityReplies: AdminPsychologistCommunityTrafficPlatformDataset["replies"];
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+}): AdminPsychologistsDashboardProfileCoverageResults => {
+  const coverageCountsByPsychologistId = buildProfileCoverageCountsByPsychologistId(params);
+  const totalPsychologists = params.profiles.length;
+  const totalPatientPostsAnswered = [...coverageCountsByPsychologistId.values()].reduce(
+    (total, count) => total + count,
+    0,
+  );
+  const averagePatientPostsAnswered =
+    totalPsychologists > 0 ? totalPatientPostsAnswered / totalPsychologists : 0;
+  const categories = new Map(
+    PROFILE_COVERAGE_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: {
+          patient_posts_answered: 0,
+        },
+      },
+    ]),
+  );
+  let psychologistsWithCoverage = 0;
+
+  for (const profile of params.profiles) {
+    const patientPostsAnswered = coverageCountsByPsychologistId.get(profile.user.id) ?? 0;
+    const categoryId = classifyProfileCoverageCategory(
+      patientPostsAnswered,
+      averagePatientPostsAnswered,
+    );
+    const category = categories.get(categoryId);
+
+    if (patientPostsAnswered > 0) psychologistsWithCoverage += 1;
+    if (category) {
+      category.count += 1;
+      category.totals.patient_posts_answered += patientPostsAnswered;
+    }
+  }
+
+  return {
+    categories: PROFILE_COVERAGE_CATEGORY_ORDER.map((id) => {
+      const config = PROFILE_COVERAGE_CATEGORY_CONFIG[id];
+      const values = categories.get(id) ?? {
+        count: 0,
+        totals: {
+          patient_posts_answered: 0,
+        },
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, totalPsychologists),
+        totals: values.totals,
+      };
+    }),
+    description:
+      "Classificação interna e agregada dos psicólogos por quantidade de posts únicos de pacientes que receberam ao menos uma resposta do psicólogo no período selecionado.",
+    source: PROFILE_COVERAGE_SOURCE,
+    totals: {
+      average_patient_posts_answered: roundOneDecimal(averagePatientPostsAnswered),
+      patient_posts_answered: totalPatientPostsAnswered,
+      psychologists: totalPsychologists,
+      psychologists_with_coverage: psychologistsWithCoverage,
+    },
+    unavailable_reason:
+      totalPsychologists === 0
+        ? "Sem psicólogos ativos no fim do período selecionado para classificar Cobertura."
         : null,
   };
 };
@@ -3873,7 +4026,7 @@ const buildTrafficPlatformMetrics = (params: {
   return { consideredCounts, metrics };
 };
 
-const PROFILE_CROSS_MATRIX_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+${PROFILE_ACTIVITY_SOURCE}+${ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE}+${ADMIN_PROFILE_EXPOSURE_SOURCE}+profile_video_watch_session+community_post.media_type+post_reply.media_type+profile_view_event.source=profile_page+professional_review.status=publicada+shared_psychologist_public_ranking_helper`;
+const PROFILE_CROSS_MATRIX_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+${PROFILE_ACTIVITY_SOURCE}+${PROFILE_COVERAGE_SOURCE}+${ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE}+${ADMIN_PROFILE_EXPOSURE_SOURCE}+profile_video_watch_session+community_post.media_type+post_reply.media_type+profile_view_event.source=profile_page+professional_review.status=publicada+shared_psychologist_public_ranking_helper`;
 const PROFILE_CROSS_MATRIX_DEFAULT_ROW_AXIS_ID = "conversion" as const;
 const PROFILE_CROSS_MATRIX_DEFAULT_COLUMN_AXIS_ID = "community_visibility" as const;
 
@@ -4147,6 +4300,26 @@ const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefinition[] 
     id: "activity",
     label: "Atividade comunidade",
     source: PROFILE_ACTIVITY_SOURCE,
+  },
+  {
+    categories: PROFILE_COVERAGE_CATEGORY_ORDER.map((id) =>
+      profileCrossMatrixCategory(
+        id,
+        PROFILE_COVERAGE_CATEGORY_CONFIG[id],
+        id === "above_average_coverage"
+          ? PROFILE_CROSS_MATRIX_COLORS.high
+          : id === "average_coverage"
+            ? PROFILE_CROSS_MATRIX_COLORS.standard
+            : id === "below_average_coverage"
+              ? PROFILE_CROSS_MATRIX_COLORS.low
+              : PROFILE_CROSS_MATRIX_COLORS.none,
+      ),
+    ),
+    description:
+      "Posts únicos de pacientes que receberam ao menos uma resposta do psicólogo no período, comparados à média por psicólogo.",
+    id: "coverage",
+    label: "Cobertura",
+    source: PROFILE_COVERAGE_SOURCE,
   },
   {
     categories: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_COMMUNITY_CATEGORY_ORDER.map((id) =>
@@ -4592,6 +4765,17 @@ const buildProfileCrossMatrixResults = (params: {
     }
   }
 
+  const coverageCountsByPsychologistId = buildProfileCoverageCountsByPsychologistId({
+    communityReplies: params.communityTrafficPlatformMetricDataset.replies,
+    profiles: params.profiles,
+    range: params.range,
+  });
+  const totalPatientPostsAnswered = [...coverageCountsByPsychologistId.values()].reduce(
+    (total, count) => total + count,
+    0,
+  );
+  const averagePatientPostsAnswered =
+    totalPsychologists > 0 ? totalPatientPostsAnswered / totalPsychologists : 0;
   const eligibleConversionProfiles = params.profiles.filter(
     (profile) =>
       getProfileAgeDaysUntil(profile, params.range.end) >=
@@ -4774,6 +4958,10 @@ const buildProfileCrossMatrixResults = (params: {
       activity: classifyProfileActivityCategory(activitySignals.actions),
       community_content_format: communityContentFormatCategory,
       community_visibility: communityVisibilityCategory,
+      coverage: classifyProfileCoverageCategory(
+        coverageCountsByPsychologistId.get(psychologistId) ?? 0,
+        averagePatientPostsAnswered,
+      ),
       conversion: conversionCategory,
       engagement: engagementCategory,
       favorites: favoritesCategory,
@@ -7006,6 +7194,11 @@ const buildPlanSegmentSummaries = (params: {
           profiles: segmentProfiles,
           range: params.range,
         }),
+        profile_coverage: buildProfileCoverageResults({
+          communityReplies: params.communityTrafficPlatformMetricDataset.replies,
+          profiles: segmentProfiles,
+          range: params.range,
+        }),
         profile_conversion_activity: buildProfileConversionActivityMatrixResults({
           communityPosts: params.communityTrafficPlatformMetricDataset.posts,
           communityReplies: params.communityTrafficPlatformMetricDataset.replies,
@@ -7299,6 +7492,7 @@ export const buildPsychologistsDashboard = async (
   const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
   const trafficSources = planSegments.all.traffic_sources;
   const profileActivity = planSegments.all.profile_activity;
+  const profileCoverage = planSegments.all.profile_coverage;
   const profileConversionActivity = planSegments.all.profile_conversion_activity;
   const profileConversionBehavior = planSegments.all.profile_conversion_behavior;
   const profileCrossMatrix = planSegments.all.profile_cross_matrix;
@@ -7430,6 +7624,7 @@ export const buildPsychologistsDashboard = async (
       source: "user+professional_subscription",
     },
     profile_activity: profileActivity,
+    profile_coverage: profileCoverage,
     profile_conversion_activity: profileConversionActivity,
     profile_conversion_behavior: profileConversionBehavior,
     profile_cross_matrix: profileCrossMatrix,
@@ -7452,6 +7647,17 @@ export const buildPsychologistsDashboard = async (
               id: "psychologist_profile_activity",
               label: "Atividade dos psicólogos",
               source: profileActivity.source,
+            },
+          ]
+        : []),
+      ...(profileCoverage.unavailable_reason
+        ? [
+            {
+              description:
+                "A Cobertura depende de ao menos um perfil de psicólogo ativo no período selecionado.",
+              id: "psychologist_profile_coverage",
+              label: "Cobertura dos psicólogos",
+              source: profileCoverage.source,
             },
           ]
         : []),

@@ -929,6 +929,18 @@ export class AdminPsychologistsDashboardRepository
           id: true,
           media_type: true,
           parent_reply_id: true,
+          post: {
+            select: {
+              author: {
+                select: {
+                  role: true,
+                },
+              },
+              author_id: true,
+              createdAt: true,
+              id: true,
+            },
+          },
           post_id: true,
         },
         where: {

@@ -588,6 +588,36 @@ export type PsychologistsDashboardProfileActivityResults = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardProfileCoverageCategoryId =
+  | "above_average_coverage"
+  | "average_coverage"
+  | "below_average_coverage"
+  | "no_coverage";
+
+export type PsychologistsDashboardProfileCoverageCategory = {
+  count: number;
+  description: string;
+  id: PsychologistsDashboardProfileCoverageCategoryId;
+  label: string;
+  percentage: number;
+  totals: {
+    patient_posts_answered: number;
+  };
+};
+
+export type PsychologistsDashboardProfileCoverageResults = {
+  categories: PsychologistsDashboardProfileCoverageCategory[];
+  description: string;
+  source: "post_reply.author_id+post_reply.post.author.role=paciente+distinct(post_id)";
+  totals: {
+    average_patient_posts_answered: number;
+    patient_posts_answered: number;
+    psychologists: number;
+    psychologists_with_coverage: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardProfileExposureCommunityCategoryId =
   | "high_community"
   | "low_community"
@@ -1090,6 +1120,7 @@ export type PsychologistsDashboardProfileCrossMatrixAxisId =
   | "activity"
   | "community_content_format"
   | "community_visibility"
+  | "coverage"
   | "conversion"
   | "engagement"
   | "favorites"
@@ -1170,6 +1201,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;
   profile_activity: PsychologistsDashboardProfileActivityResults;
+  profile_coverage: PsychologistsDashboardProfileCoverageResults;
   profile_conversion_activity: PsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: PsychologistsDashboardProfileConversionBehaviorResults;
   profile_cross_matrix: PsychologistsDashboardProfileCrossMatrixResults;
@@ -2490,6 +2522,7 @@ export type AdminPsychologistsDashboard = {
     source: "user+professional_subscription";
   };
   profile_activity: PsychologistsDashboardProfileActivityResults;
+  profile_coverage: PsychologistsDashboardProfileCoverageResults;
   profile_conversion_activity: PsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: PsychologistsDashboardProfileConversionBehaviorResults;
   profile_cross_matrix: PsychologistsDashboardProfileCrossMatrixResults;

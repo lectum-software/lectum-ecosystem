@@ -517,6 +517,36 @@ export type AdminPsychologistsDashboardProfileActivityResults = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistsDashboardProfileCoverageCategoryId =
+  | "above_average_coverage"
+  | "average_coverage"
+  | "below_average_coverage"
+  | "no_coverage";
+
+export type AdminPsychologistsDashboardProfileCoverageCategory = {
+  count: number;
+  description: string;
+  id: AdminPsychologistsDashboardProfileCoverageCategoryId;
+  label: string;
+  percentage: number;
+  totals: {
+    patient_posts_answered: number;
+  };
+};
+
+export type AdminPsychologistsDashboardProfileCoverageResults = {
+  categories: AdminPsychologistsDashboardProfileCoverageCategory[];
+  description: string;
+  source: "post_reply.author_id+post_reply.post.author.role=paciente+distinct(post_id)";
+  totals: {
+    average_patient_posts_answered: number;
+    patient_posts_answered: number;
+    psychologists: number;
+    psychologists_with_coverage: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistsDashboardProfileConversionActivityColumnId =
   AdminPsychologistsDashboardProfileActivityCategoryId;
 
@@ -906,6 +936,7 @@ export type AdminPsychologistsDashboardProfileCrossMatrixAxisId =
   | "activity"
   | "community_content_format"
   | "community_visibility"
+  | "coverage"
   | "conversion"
   | "engagement"
   | "favorites"
@@ -986,6 +1017,7 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
   signup_method: AdminPsychologistsDashboardSignupMethod;
   statistics: AdminPsychologistsDashboardStatistics;
   profile_activity: AdminPsychologistsDashboardProfileActivityResults;
+  profile_coverage: AdminPsychologistsDashboardProfileCoverageResults;
   profile_conversion_activity: AdminPsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: AdminPsychologistsDashboardProfileConversionBehaviorResults;
   profile_cross_matrix: AdminPsychologistsDashboardProfileCrossMatrixResults;
@@ -1038,6 +1070,7 @@ export type AdminPsychologistsDashboardSummary = {
     source: "user+professional_subscription";
   };
   profile_activity: AdminPsychologistsDashboardProfileActivityResults;
+  profile_coverage: AdminPsychologistsDashboardProfileCoverageResults;
   profile_conversion_activity: AdminPsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: AdminPsychologistsDashboardProfileConversionBehaviorResults;
   profile_cross_matrix: AdminPsychologistsDashboardProfileCrossMatrixResults;
