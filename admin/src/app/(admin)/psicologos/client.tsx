@@ -3100,9 +3100,9 @@ const DashboardProfileSignalCard = ({
             </span>
           </button>
         </span>
-        <div className="mt-3 rounded-2xl border border-border/70 bg-surface/70 px-3 py-2">
-          <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-subtle">
-            Padrão da plataforma
+        <div className="mt-3 rounded-2xl border border-border/70 px-3 py-2">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-subtle">
+            Padrão
           </p>
           <p className="mt-1 text-base font-black leading-snug text-foreground">{standardValue}</p>
         </div>

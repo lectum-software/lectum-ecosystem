@@ -68,6 +68,7 @@ Todas as dependencias acima estao concluidas.
 - [x] Browser local validou desktop e mobile ~390px.
 - [x] ADR criado em `adrs/0386-quantidade-considerada-titulos-trafego-whatsapp-admin.md`.
 - [x] Commit proprio criado e push executado.
+- [x] Ajuste complementar 2026-08-01: o contador dos donuts removeu o fundo do bloco de padrao, reduziu o peso textual do rotulo e trocou **Padrao da plataforma** por **Padrao**.
 
 ## Validacao executada
 
@@ -86,6 +87,12 @@ Todas as dependencias acima estao concluidas.
 - Smoke de API Admin real em `/api/admin/private/psychologists/dashboard?period=30d`, confirmando `considered_count` em `community_post_video`, `community_reply_video`, `profile`, `explore` e `search_filters`.
 - Browser local com Chrome/CDP headless em `http://localhost:3002/psicologos`, desktop 1440x900 e mobile 390x900, validando o texto de quantidade considerada nas categorias expandidas.
 - Browser local com Chrome/CDP headless em `http://localhost:3002/psicologos?period=all`, desktop 1366x900 e mobile 390x844, validando o carrossel de donuts com setas laterais, bloco **Padrao da plataforma**, ausencia do texto fixo **psicologos considerados**, ajuste de largura/espacamento e ausencia de overflow horizontal. Screenshots: `.tmp/task122-dashboard-donut-carousel-desktop.png` e `.tmp/task122-dashboard-donut-carousel-mobile.png`.
+- Ajuste complementar 2026-08-01:
+  - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`;
+  - `pnpm --dir admin check`;
+  - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`;
+  - `pnpm check`;
+  - Browser local Chrome/CDP em `http://localhost:3002/psicologos?period=all`, desktop 1366px e mobile 390px, validando 6 rotulos **Padrao**, 0 rotulos **Padrao da plataforma**, fundo transparente (`rgba(0, 0, 0, 0)`) e peso `600`. Screenshots: `.tmp/standard-counter-desktop.png` e `.tmp/standard-counter-mobile-390.png`.
 
 ## Observacoes
 

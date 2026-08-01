@@ -20,6 +20,7 @@ No mesmo ciclo, o bloco **Visibilidade, engajamento, favoritos e conversao dos p
 6. Nos cards de donut, substituir o texto externo **psicologos considerados** por **Padrao da plataforma** e pelo valor padrao calculado para o item mensurado.
 7. Reusar o modelo visual de setas laterais do carrossel **Atividade e engajamento** no perfil do psicologo, mantendo rolagem horizontal local e mobile-first.
 8. Dimensionar os cards do carrossel por breakpoint com `calc(...)` para preencher melhor a linha visivel: 1 card no mobile, 2 em `sm`, 3 em `xl` e 4 em `2xl`, com gap menor.
+9. Em 2026-08-01, refinar o contador do padrao nos donuts: remover o preenchimento de fundo do bloco, reduzir o peso textual do rotulo e encurtar a copy para **Padrao**.
 
 ## Consequencias
 
@@ -29,6 +30,7 @@ No mesmo ciclo, o bloco **Visibilidade, engajamento, favoritos e conversao dos p
 - Fontes que ainda nao possuem medias permanecem sem texto de quantidade, evitando sinalizar denominador inexistente.
 - Os donuts continuam usando os mesmos dados reais e benchmarks, mas agora comunicam o padrao do item medido de forma mais util que a contagem repetida de psicologos.
 - As setas laterais reduzem a distancia entre acao e conteudo rolavel, mantendo consistencia com o padrao ja validado no perfil do psicologo.
+- O contador de padrao fica visualmente mais leve e integrado ao card, sem alterar dados, benchmarks ou contratos.
 
 ## Task relacionada
 
@@ -48,6 +50,12 @@ No mesmo ciclo, o bloco **Visibilidade, engajamento, favoritos e conversao dos p
 - Smoke de API Admin real em `/api/admin/private/psychologists/dashboard?period=30d` validando `considered_count` nas fontes com medias.
 - Browser local Chrome/CDP headless desktop 1440x900 e mobile 390x900 validando texto simples ao lado dos titulos.
 - Browser local Chrome/CDP headless desktop 1366x900 e mobile 390x844 validando carrossel de donuts, setas laterais, bloco **Padrao da plataforma**, espacamento ajustado e ausencia de overflow horizontal.
+- Ajuste complementar 2026-08-01:
+  - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`;
+  - `pnpm --dir admin check`;
+  - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`;
+  - `pnpm check`;
+  - Browser local Chrome/CDP em `http://localhost:3002/psicologos?period=all`, desktop 1366px e mobile 390px, validando rotulo **Padrao**, ausencia de **Padrao da plataforma**, fundo transparente e peso `600`.
 
 ## Pendencias
 
