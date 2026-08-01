@@ -478,6 +478,45 @@ export type AdminPsychologistsDashboardProfileConversionResults = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistsDashboardProfileActivityCategoryId =
+  | "ativo"
+  | "muito_ativo"
+  | "pouco_ativo"
+  | "sem_base";
+
+export type AdminPsychologistsDashboardProfileActivityTotals = {
+  actions: number;
+  posts: number;
+  replies: number;
+};
+
+export type AdminPsychologistsDashboardProfileActivityCategory = {
+  count: number;
+  description: string;
+  id: AdminPsychologistsDashboardProfileActivityCategoryId;
+  label: string;
+  percentage: number;
+  totals: AdminPsychologistsDashboardProfileActivityTotals;
+};
+
+export type AdminPsychologistsDashboardProfileActivityThresholds = {
+  active_min_actions: number;
+  low_activity_min_actions: number;
+  very_active_min_actions: number;
+};
+
+export type AdminPsychologistsDashboardProfileActivityResults = {
+  categories: AdminPsychologistsDashboardProfileActivityCategory[];
+  description: string;
+  source: "community_post.author_id+post_reply.author_id";
+  thresholds: AdminPsychologistsDashboardProfileActivityThresholds;
+  totals: AdminPsychologistsDashboardProfileActivityTotals & {
+    psychologists: number;
+    psychologists_with_actions: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistsDashboardProfileExposureCommunityCategoryId =
   AdminProfileExposureCommunityCategoryId;
 
@@ -790,6 +829,7 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
   psychologists_count: number;
   signup_method: AdminPsychologistsDashboardSignupMethod;
   statistics: AdminPsychologistsDashboardStatistics;
+  profile_activity: AdminPsychologistsDashboardProfileActivityResults;
   profile_engagement_favorites: AdminPsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion: AdminPsychologistsDashboardProfileConversionResults;
   profile_conversion_engagement: AdminPsychologistsDashboardProfileConversionEngagementResults;
@@ -838,6 +878,7 @@ export type AdminPsychologistsDashboardSummary = {
     points: AdminPsychologistsDashboardDailyPoint[];
     source: "user+professional_subscription";
   };
+  profile_activity: AdminPsychologistsDashboardProfileActivityResults;
   profile_engagement_favorites: AdminPsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion: AdminPsychologistsDashboardProfileConversionResults;
   profile_conversion_engagement: AdminPsychologistsDashboardProfileConversionEngagementResults;

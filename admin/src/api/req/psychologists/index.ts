@@ -549,6 +549,45 @@ export type PsychologistsDashboardProfileConversionResults = {
   unavailable_reason: string | null;
 };
 
+export type PsychologistsDashboardProfileActivityCategoryId =
+  | "ativo"
+  | "muito_ativo"
+  | "pouco_ativo"
+  | "sem_base";
+
+export type PsychologistsDashboardProfileActivityTotals = {
+  actions: number;
+  posts: number;
+  replies: number;
+};
+
+export type PsychologistsDashboardProfileActivityCategory = {
+  count: number;
+  description: string;
+  id: PsychologistsDashboardProfileActivityCategoryId;
+  label: string;
+  percentage: number;
+  totals: PsychologistsDashboardProfileActivityTotals;
+};
+
+export type PsychologistsDashboardProfileActivityThresholds = {
+  active_min_actions: number;
+  low_activity_min_actions: number;
+  very_active_min_actions: number;
+};
+
+export type PsychologistsDashboardProfileActivityResults = {
+  categories: PsychologistsDashboardProfileActivityCategory[];
+  description: string;
+  source: "community_post.author_id+post_reply.author_id";
+  thresholds: PsychologistsDashboardProfileActivityThresholds;
+  totals: PsychologistsDashboardProfileActivityTotals & {
+    psychologists: number;
+    psychologists_with_actions: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type PsychologistsDashboardProfileExposureCommunityCategoryId =
   | "high_community"
   | "low_community"
@@ -974,6 +1013,7 @@ export type PsychologistsDashboardPlanSegmentSummary = {
   psychologists_count: number;
   signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;
+  profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_engagement_favorites: PsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;
@@ -2290,6 +2330,7 @@ export type AdminPsychologistsDashboard = {
     points: PsychologistsDashboardDailyPoint[];
     source: "user+professional_subscription";
   };
+  profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_conversion: PsychologistsDashboardProfileConversionResults;
   profile_engagement_favorites: PsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion_engagement: PsychologistsDashboardProfileConversionEngagementResults;

@@ -894,6 +894,7 @@ export class AdminPsychologistsDashboardRepository
       prisma.community_post.findMany({
         select: {
           author_id: true,
+          createdAt: true,
           id: true,
           media_items: {
             select: {
@@ -924,6 +925,7 @@ export class AdminPsychologistsDashboardRepository
       prisma.post_reply.findMany({
         select: {
           author_id: true,
+          createdAt: true,
           id: true,
           media_type: true,
           parent_reply_id: true,

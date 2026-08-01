@@ -215,6 +215,7 @@ export type AdminPsychologistTrafficCommunityReplyRecord = {
 
 export type AdminPsychologistCommunityTrafficPlatformPostRecord = {
   author_id: string;
+  createdAt: Date;
   id: string;
   media_items: { media_type: string | null }[];
   media_type: string | null;
@@ -222,6 +223,7 @@ export type AdminPsychologistCommunityTrafficPlatformPostRecord = {
 
 export type AdminPsychologistCommunityTrafficPlatformReplyRecord = {
   author_id: string;
+  createdAt: Date;
   id: string;
   media_type: string | null;
   parent_reply_id: string | null;

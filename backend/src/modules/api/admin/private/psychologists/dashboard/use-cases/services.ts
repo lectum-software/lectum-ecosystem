@@ -93,6 +93,9 @@ import type {
   AdminPsychologistsDashboardPlanSegment,
   AdminPsychologistsDashboardPlanSegmentSummary,
   AdminPsychologistsDashboardPreSignupConversion,
+  AdminPsychologistsDashboardProfileActivityCategoryId,
+  AdminPsychologistsDashboardProfileActivityResults,
+  AdminPsychologistsDashboardProfileActivityTotals,
   AdminPsychologistsDashboardProfileConversionCategoryId,
   AdminPsychologistsDashboardProfileConversionEngagementCategoryId,
   AdminPsychologistsDashboardProfileConversionEngagementFavoritesMatrixQuadrantId,
@@ -154,6 +157,12 @@ const PROFILE_CONVERSION_ENGAGEMENT_ENGAGED_INTERACTIONS_30D = 6;
 const PROFILE_CONVERSION_ENGAGEMENT_VERY_ENGAGED_INTERACTIONS_30D = 12;
 const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_LIMIT = 6;
 const PRE_SIGNUP_CONVERSION_FIRST_TOUCH_SAMPLE_THRESHOLD = 3;
+const PROFILE_ACTIVITY_SOURCE = "community_post.author_id+post_reply.author_id";
+const PROFILE_ACTIVITY_THRESHOLDS = {
+  active_min_actions: 6,
+  low_activity_min_actions: 3,
+  very_active_min_actions: 12,
+} as const;
 const PRE_SIGNUP_CONVERSION_SESSION_LABEL = "Sessão sem página capturada";
 const PRE_SIGNUP_CONVERSION_COVERAGE_NOTE =
   "Coorte de psicólogos cadastrados no período; leitura de trás para frente pela ponte visitor_id/session_id salva no cadastro do psicólogo e por eventos vinculados ao mesmo visitor_id. Pacientes e visitantes que não viraram psicólogo não entram neste bloco.";
@@ -176,6 +185,38 @@ const PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER =
 
 const PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER =
   ADMIN_PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER as AdminPsychologistsDashboardProfileConversionMatrixCategoryId[];
+
+const PROFILE_ACTIVITY_CATEGORY_ORDER: AdminPsychologistsDashboardProfileActivityCategoryId[] = [
+  "muito_ativo",
+  "ativo",
+  "pouco_ativo",
+  "sem_base",
+];
+
+const PROFILE_ACTIVITY_CATEGORY_CONFIG = {
+  ativo: {
+    description:
+      "Psicólogo com volume padrão de ações autorais nas comunidades no período selecionado.",
+    label: "Ativo",
+  },
+  muito_ativo: {
+    description:
+      "Psicólogo com volume alto de ações autorais nas comunidades no período selecionado.",
+    label: "Muito ativo",
+  },
+  pouco_ativo: {
+    description: "Psicólogo com poucas ações autorais nas comunidades no período selecionado.",
+    label: "Pouco ativo",
+  },
+  sem_base: {
+    description:
+      "Psicólogo com menos de três ações autorais nas comunidades no período selecionado.",
+    label: "Sem base",
+  },
+} satisfies Record<
+  AdminPsychologistsDashboardProfileActivityCategoryId,
+  { description: string; label: string }
+>;
 
 const PROFILE_CONVERSION_ENGAGEMENT_LEVEL_ORDER: AdminPsychologistsDashboardProfileConversionEngagementLevelId[] =
   ["very_engaged", "engaged", "low_engaged", "no_engagement"];
@@ -1241,6 +1282,132 @@ const buildProfileConversionResults = (params: {
     unavailable_reason:
       totalPsychologists === 0
         ? "Sem psic?logos ativos no fim do per?odo selecionado para classificar convers?o."
+        : null,
+  };
+};
+
+const emptyProfileActivityTotals = (): AdminPsychologistsDashboardProfileActivityTotals => ({
+  actions: 0,
+  posts: 0,
+  replies: 0,
+});
+
+const addProfileActivityTotals = (
+  target: AdminPsychologistsDashboardProfileActivityTotals,
+  source: AdminPsychologistsDashboardProfileActivityTotals,
+) => {
+  target.actions += source.actions;
+  target.posts += source.posts;
+  target.replies += source.replies;
+};
+
+const classifyProfileActivityCategory = (
+  actions: number,
+): AdminPsychologistsDashboardProfileActivityCategoryId => {
+  if (actions >= PROFILE_ACTIVITY_THRESHOLDS.very_active_min_actions) return "muito_ativo";
+  if (actions >= PROFILE_ACTIVITY_THRESHOLDS.active_min_actions) return "ativo";
+  if (actions >= PROFILE_ACTIVITY_THRESHOLDS.low_activity_min_actions) return "pouco_ativo";
+
+  return "sem_base";
+};
+
+const buildProfileActivityResults = (params: {
+  communityPosts: AdminPsychologistCommunityTrafficPlatformDataset["posts"];
+  communityReplies: AdminPsychologistCommunityTrafficPlatformDataset["replies"];
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+}): AdminPsychologistsDashboardProfileActivityResults => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const signalsByPsychologistId = new Map<
+    string,
+    AdminPsychologistsDashboardProfileActivityTotals
+  >();
+  const ensureSignals = (psychologistId: string) => {
+    const current = signalsByPsychologistId.get(psychologistId) ?? emptyProfileActivityTotals();
+    signalsByPsychologistId.set(psychologistId, current);
+
+    return current;
+  };
+
+  for (const post of params.communityPosts) {
+    if (
+      !analyzedPsychologistIds.has(post.author_id) ||
+      !dateInRange(post.createdAt, params.range)
+    ) {
+      continue;
+    }
+
+    const signals = ensureSignals(post.author_id);
+    signals.actions += 1;
+    signals.posts += 1;
+  }
+
+  for (const reply of params.communityReplies) {
+    if (
+      !analyzedPsychologistIds.has(reply.author_id) ||
+      !dateInRange(reply.createdAt, params.range)
+    ) {
+      continue;
+    }
+
+    const signals = ensureSignals(reply.author_id);
+    signals.actions += 1;
+    signals.replies += 1;
+  }
+
+  const categories = new Map(
+    PROFILE_ACTIVITY_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: emptyProfileActivityTotals(),
+      },
+    ]),
+  );
+  const totalSignals = {
+    ...emptyProfileActivityTotals(),
+    psychologists: params.profiles.length,
+    psychologists_with_actions: 0,
+  };
+
+  for (const profile of params.profiles) {
+    const signals = signalsByPsychologistId.get(profile.user.id) ?? emptyProfileActivityTotals();
+    const categoryId = classifyProfileActivityCategory(signals.actions);
+    const category = categories.get(categoryId);
+
+    addProfileActivityTotals(totalSignals, signals);
+    if (signals.actions > 0) totalSignals.psychologists_with_actions += 1;
+    if (category) {
+      category.count += 1;
+      addProfileActivityTotals(category.totals, signals);
+    }
+  }
+
+  return {
+    categories: PROFILE_ACTIVITY_CATEGORY_ORDER.map((id) => {
+      const config = PROFILE_ACTIVITY_CATEGORY_CONFIG[id];
+      const values = categories.get(id) ?? {
+        count: 0,
+        totals: emptyProfileActivityTotals(),
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, params.profiles.length),
+        totals: values.totals,
+      };
+    }),
+    description:
+      "Classificação interna e agregada dos psicólogos por ações autorais reais nas comunidades no período selecionado: posts publicados e respostas criadas.",
+    source: PROFILE_ACTIVITY_SOURCE,
+    thresholds: PROFILE_ACTIVITY_THRESHOLDS,
+    totals: totalSignals,
+    unavailable_reason:
+      params.profiles.length === 0
+        ? "Sem psicólogos ativos no fim do período selecionado para classificar Atividade."
         : null,
   };
 };
@@ -4336,6 +4503,12 @@ const buildPlanSegmentSummaries = (params: {
         psychologists_count: segmentProfiles.length,
         signup_method: buildSignupMethod(segmentNewSignups),
         statistics: buildStatistics(segmentProfilesForSupply, params.date),
+        profile_activity: buildProfileActivityResults({
+          communityPosts: params.communityTrafficPlatformMetricDataset.posts,
+          communityReplies: params.communityTrafficPlatformMetricDataset.replies,
+          profiles: segmentProfiles,
+          range: params.range,
+        }),
         profile_conversion: buildProfileConversionResults({
           profiles: segmentProfiles,
           range: params.range,
@@ -4589,6 +4762,7 @@ export const buildPsychologistsDashboard = async (
   const deviceUsage = planSegments.all.device_usage;
   const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
   const trafficSources = planSegments.all.traffic_sources;
+  const profileActivity = planSegments.all.profile_activity;
   const profileConversion = planSegments.all.profile_conversion;
   const profileConversionEngagement = planSegments.all.profile_conversion_engagement;
   const profileConversionEngagementFavorites =
@@ -4716,6 +4890,7 @@ export const buildPsychologistsDashboard = async (
       }),
       source: "user+professional_subscription",
     },
+    profile_activity: profileActivity,
     profile_conversion: profileConversion,
     profile_engagement_favorites: profileEngagementFavorites,
     profile_conversion_engagement: profileConversionEngagement,
@@ -4727,6 +4902,17 @@ export const buildPsychologistsDashboard = async (
       source: "important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click",
     },
     unavailable: [
+      ...(profileActivity.unavailable_reason
+        ? [
+            {
+              description:
+                "A Atividade depende de ao menos um perfil de psicólogo ativo no período selecionado.",
+              id: "psychologist_profile_activity",
+              label: "Atividade dos psicólogos",
+              source: profileActivity.source,
+            },
+          ]
+        : []),
       ...(profileConversion.unavailable_reason
         ? [
             {

@@ -57,6 +57,9 @@ type DashboardPeriodValue = NonNullable<PsychologistsDashboardQuery["period"]>;
 type DashboardPeriodPreset = Exclude<DashboardPeriodValue, "custom">;
 type DashboardRange = Pick<PsychologistsDashboardQuery, "from" | "to">;
 type DeviceUsageItem = AdminPsychologistsDashboard["device_usage"]["items"][number];
+type ProfileActivityCategoryItem =
+  AdminPsychologistsDashboard["profile_activity"]["categories"][number];
+type ProfileActivityCategoryId = ProfileActivityCategoryItem["id"];
 type ProfileConversionCategoryItem =
   AdminPsychologistsDashboard["profile_conversion"]["categories"][number];
 type ProfileExposureCategoryItem =
@@ -418,6 +421,13 @@ const PROFILE_CONVERSION_CHART_COLORS = {
   standard_conversion: "#308ce8",
   strong_conversion: "#13a85b",
 } satisfies Record<ProfileConversionCategoryItem["id"], string>;
+
+const PROFILE_ACTIVITY_CHART_COLORS = {
+  ativo: "#308ce8",
+  muito_ativo: "#13a85b",
+  pouco_ativo: "#f59f00",
+  sem_base: "#64748b",
+} satisfies Record<ProfileActivityCategoryId, string>;
 
 const PROFILE_EXPOSURE_CHART_COLORS = {
   high_community: "#13a85b",
@@ -1113,6 +1123,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     psychologists_count: summary.cards.total_psychologists.value,
     signup_method: summary.signup_method,
     statistics: summary.statistics,
+    profile_activity: summary.profile_activity,
     profile_conversion: summary.profile_conversion,
     profile_engagement_favorites: summary.profile_engagement_favorites,
     profile_conversion_engagement: summary.profile_conversion_engagement,
@@ -2842,6 +2853,43 @@ const buildProfileEngagementFavoritesAxisDonutItems = (
   ];
 };
 
+const ProfileActivityDonutChart = ({
+  profileActivity,
+}: {
+  profileActivity: AdminPsychologistsDashboard["profile_activity"];
+}) => {
+  const total = Math.max(0, profileActivity.totals.psychologists);
+  const items = profileActivity.categories.map((item) => ({
+    color: PROFILE_ACTIVITY_CHART_COLORS[item.id],
+    count: item.count,
+    description: item.description,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
+  const ariaLabel = `Gráfico de donut de Atividade dos psicólogos: ${profileActivity.categories
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+          item.percentage,
+        )})`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        profileActivity.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Atividade."
+      }
+      items={items}
+      showDescriptionTooltips={false}
+      total={total}
+    />
+  );
+};
+
 const ProfileConversionDonutChart = ({
   profileConversion,
 }: {
@@ -2912,6 +2960,12 @@ const ProfileExposureSurfaceDonutChart = ({
   );
 };
 
+const formatActivityActionsValue = (value: number) => {
+  const label = value === 1 ? "ação" : "ações";
+
+  return `${numberFormatter.format(value)} ${label}`;
+};
+
 const formatWhatsappClicksValue = (value: number) => {
   const label = value === 1 ? "clique" : "cliques";
 
@@ -2957,6 +3011,17 @@ const formatProfileConversionStandardRange = (
   if (min === max) return formatWhatsappClicksValue(min);
 
   return `${formatWhatsappClicksValue(min)} a ${formatWhatsappClicksValue(max)}`;
+};
+
+const formatProfileActivityStandardRange = (
+  thresholds: AdminPsychologistsDashboard["profile_activity"]["thresholds"],
+) => {
+  const min = thresholds.active_min_actions;
+  const max = Math.max(min, thresholds.very_active_min_actions - 1);
+
+  if (min === max) return formatActivityActionsValue(min);
+
+  return `${numberFormatter.format(min)} a ${formatActivityActionsValue(max)}`;
 };
 
 const formatProfileExposureSurfaceStandardRange = (
@@ -3129,13 +3194,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
     summary,
     profileConversionPlanSegment,
   );
+  const profileActivity = profileConversionSegmentSummary.profile_activity;
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
   const profileEngagementFavorites = profileConversionSegmentSummary.profile_engagement_favorites;
   const profileExposure = profileConversionSegmentSummary.profile_exposure;
-  if (!profileConversion || !profileEngagementFavorites || !profileExposure) {
+  if (!profileActivity || !profileConversion || !profileEngagementFavorites || !profileExposure) {
     return null;
   }
 
+  const activityStandardRangeLabel = formatProfileActivityStandardRange(profileActivity.thresholds);
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
   const communityVisibilityStandardRangeLabel = formatProfileExposureSurfaceStandardRange(
     profileExposure.benchmark.community_visibility,
@@ -3162,7 +3229,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Visibilidade, engajamento, favoritos e conversão dos psicólogos"
+          title="Atividade, visibilidade, engajamento, favoritos e conversão dos psicólogos"
         />
         <PlanSegmentSelect
           id="profile-conversion-plan-segment"
@@ -3172,6 +3239,23 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
       </div>
 
       <DashboardProfileSignalsCarousel>
+        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+          <DashboardProfileSignalCard
+            standardValue={activityStandardRangeLabel}
+            title="Atividade"
+            tooltipAriaLabel={`Atividade mede ações autorais do psicólogo nas comunidades. Padrão da plataforma no período: ${activityStandardRangeLabel}.`}
+            tooltipContent={
+              <>
+                Atividade mede ações autorais reais do psicólogo nas comunidades: posts publicados e
+                respostas criadas no período. Padrão da plataforma no período:{" "}
+                <strong className="font-black">{activityStandardRangeLabel}</strong>.
+              </>
+            }
+          >
+            <ProfileActivityDonutChart profileActivity={profileActivity} />
+          </DashboardProfileSignalCard>
+        </div>
+
         <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
           <DashboardProfileSignalCard
             standardValue={videoVisibilityStandardRangeLabel}
