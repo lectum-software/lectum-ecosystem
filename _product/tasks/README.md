@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 137 tasks: `TASK-00` a `TASK-130`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 138 tasks: `TASK-00` a `TASK-131`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -212,6 +212,7 @@ ou cortesia manual.
 | 128 | [TASK-128 - Ajustes de largura e copy da tabela comportamental por conversao Admin](TASK-128-ajustes-largura-copy-tabela-comportamental-conversao-admin.md) | Completed | 53, 103, 126, 127 |
 | 129 | [TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin](TASK-129-eixos-independentes-matriz-cruzamento-dados-admin-psicologos.md) | Completed | 53, 100, 123, 125, 127, 128 |
 | 130 | [TASK-130 - Eixos adicionais na matriz de cruzamento de dados Admin](TASK-130-eixos-adicionais-matriz-cruzamento-dados-admin-psicologos.md) | Completed | 53, 100, 123, 125, 127, 128, 129 |
+| 131 | [TASK-131 - Media de WhatsApp por linha no trafego Admin de psicologos](TASK-131-media-whatsapp-linhas-trafego-admin-psicologos.md) | Completed | 53, 76, 114, 115, 116, 117, 118, 119, 120, 121, 130 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -316,6 +317,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 94. [TASK-128 - Ajustes de largura e copy da tabela comportamental por conversao Admin](TASK-128-ajustes-largura-copy-tabela-comportamental-conversao-admin.md) foi adicionada e concluida em 2026-08-01 para remover a rolagem horizontal da tabela comportamental, simplificar textos auxiliares e renomear a matriz para Matriz de cruzamento de dados.
 95. [TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin](TASK-129-eixos-independentes-matriz-cruzamento-dados-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para substituir o seletor unico por campos **Linha** e **Coluna**, criando `profile_cross_matrix` agregado para cruzar Conversao, Atividade, Engajamento, Favoritados, Visibilidade, Retencao de video e Posts com video sem mocks.
 96. [TASK-130 - Eixos adicionais na matriz de cruzamento de dados Admin](TASK-130-eixos-adicionais-matriz-cruzamento-dados-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para ampliar os seletores Linha/Coluna com Formato de conteudo, Abertura de perfil, Avaliacoes e Posicao video de apresentacao, alem de renomear Atividade/Engajamento para comunidade.
+97. [TASK-131 - Media de WhatsApp por linha no trafego Admin de psicologos](TASK-131-media-whatsapp-linhas-trafego-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para exibir abaixo do total de WhatsApp a media por conteudo, video ou psicologo de cada linha da tabela de origem do trafego.
 
 ### 1A. Trilha Admin planejada
 
@@ -405,6 +407,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 82. [TASK-128 - Ajustes de largura e copy da tabela comportamental por conversao Admin](TASK-128-ajustes-largura-copy-tabela-comportamental-conversao-admin.md)
 83. [TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin](TASK-129-eixos-independentes-matriz-cruzamento-dados-admin-psicologos.md)
 84. [TASK-130 - Eixos adicionais na matriz de cruzamento de dados Admin](TASK-130-eixos-adicionais-matriz-cruzamento-dados-admin-psicologos.md)
+85. [TASK-131 - Media de WhatsApp por linha no trafego Admin de psicologos](TASK-131-media-whatsapp-linhas-trafego-admin-psicologos.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

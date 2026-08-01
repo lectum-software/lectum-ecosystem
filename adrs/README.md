@@ -184,3 +184,4 @@ Formato recomendado:
 - [ADR-0392 - Tabela comportamental sem rolagem horizontal e copy enxuta](0392-ajustes-largura-copy-tabela-comportamental-conversao-admin.md) - Accepted
 - [ADR-0393 - Eixos independentes na matriz de cruzamento de dados Admin](0393-eixos-independentes-matriz-cruzamento-dados-admin.md) - Accepted
 - [ADR-0394 - Eixos adicionais na matriz de cruzamento de dados Admin](0394-eixos-adicionais-matriz-cruzamento-dados-admin.md) - Accepted
+- [ADR-0395 - Media secundaria de WhatsApp por linha no trafego Admin](0395-media-whatsapp-trafego-admin-psicologos.md) - Accepted
