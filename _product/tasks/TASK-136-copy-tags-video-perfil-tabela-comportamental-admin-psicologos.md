@@ -27,13 +27,13 @@ Ajustar a secao de analise comportamental para que:
 - a coluna `Tela de favoritos` passe a ser `Favoritos`;
 - os titulos da coluna **Conversao** e das colunas comportamentais usem o formato de titulo de tabela do painel Admin;
 - a coluna **Favoritos** fique menor e mais proxima da borda direita da tabela;
-- a coluna **Conversao** exiba, junto da base da faixa, a copy `X perfis considerados · Media Y cliques WhatsApp por psicologo`, com destaque para a base, o valor medio e `por psicologo`;
+- a coluna **Conversao** exiba a base como `X (X%) psicólogos` e, em uma nova linha, `X (X%) cliques WhatsApp, em média X por psicólogo`;
 - `Views/video: X` seja exibido como `Views: X`;
 - `WhatsApp/abertura: X%` nao apareca mais como tag da coluna **Perfil**;
 - a coluna **Video de apresentacao** nao exiba mais a tag agregada `Engajamento` e passe a exibir `Acesso ao perfil`, `Favoritado` e `Compartilhado`;
 - as tags de media de WhatsApp exibam `WhatsApp` em vez de `Cliques WhatsApp`;
 - a tag de **Favoritos** (`WhatsApp: X`) nao quebre linha;
-- a coluna **Perfil** exiba `Plano predominante`;
+- a coluna **Perfil** exiba somente o nome do plano predominante, sem o prefixo `Plano predominante`;
 - o contrato tecnico continue preservado para consumidores que precisem das metricas completas.
 
 ## Dependencias
@@ -63,9 +63,9 @@ Todas as dependencias acima estao concluidas.
 - Reposicionar o texto de detalhe comportamental para antes do titulo da secao e deixar a descricao com apenas o periodo selecionado.
 - Padronizar os titulos das colunas no formato de tabela do painel Admin, com uppercase, tracking e cor muted/subtle.
 - Reduzir a coluna **Favoritos** para `12%`, alinhar seu titulo e tags a direita e redistribuir **Video**, **Perfil** e **Comunidade** para `24%` cada, mantendo **Conversao** em `16%`.
-- Exibir na coluna **Conversao** a base da faixa e a media de `row.totals.whatsapp_clicks / row.count`, arredondada para uma casa decimal, na mesma linha: `X perfis considerados · Media Y cliques WhatsApp por psicologo`.
+- Exibir na coluna **Conversao** a base da faixa como `X (X%) psicólogos` e quebrar a leitura de WhatsApp para uma nova linha com `X (X%) cliques WhatsApp, em média X por psicólogo`, usando `row.totals.whatsapp_clicks / row.count` para a média.
 - Renderizar a tag de **Favoritos** com `whitespace-nowrap` para manter `WhatsApp: X` em uma unica linha.
-- Incluir `profile_dominant_plan` na curadoria visual de **Perfil**, mantendo `WhatsApp` como primeira tag.
+- Incluir `profile_dominant_plan` na curadoria visual de **Perfil** como tag sem prefixo, mantendo `WhatsApp` como primeira tag.
 
 ## Fora do escopo
 
@@ -82,7 +82,7 @@ Todas as dependencias acima estao concluidas.
 - [x] Os titulos das colunas usam o formato de titulo de tabela do painel Admin.
 - [x] A coluna **Favoritos** esta menor, alinhada a direita e visualmente mais proxima da borda direita da tabela.
 - [x] A coluna **Conversao** exibe a media de cliques WhatsApp por psicologo da categoria, nao a somatoria.
-- [x] A coluna **Conversao** exibe a copy no formato `X perfis considerados · Media Y cliques WhatsApp por psicologo`, por exemplo `15 perfis considerados · Media 0 cliques WhatsApp por psicologo`.
+- [x] A coluna **Conversao** exibe `X (X%) psicólogos` e quebra a linha para `X (X%) cliques WhatsApp, em média X por psicólogo`.
 - [x] A tag `Views/video: X` aparece como `Views: X` na tabela comportamental.
 - [x] A coluna **Perfil** nao exibe mais `WhatsApp/abertura: X%`.
 - [x] A coluna **Video de apresentacao** nao exibe mais a tag agregada `Engajamento`.
@@ -90,7 +90,7 @@ Todas as dependencias acima estao concluidas.
 - [x] `WhatsApp` substitui `Cliques WhatsApp` como label das tags de media de WhatsApp.
 - [x] `WhatsApp` continua sendo a primeira tag visivel da coluna **Perfil**.
 - [x] Na coluna **Favoritos**, a tag `WhatsApp: X` aparece em uma unica linha.
-- [x] A coluna **Perfil** exibe a tag `Plano predominante`.
+- [x] A coluna **Perfil** exibe somente o nome do plano predominante, sem o prefixo `Plano predominante`.
 - [x] O backend preserva as metricas tecnicas e altera apenas labels/copy visiveis solicitados.
 - [x] UI mobile-first preservada e nenhum `<img>` cru foi adicionado.
 - [x] Nenhum mock, dado fake permanente, seed ou endpoint simulado foi usado.
@@ -116,5 +116,5 @@ Todas as dependencias acima estao concluidas.
 
 - A mudanca e de copy, curadoria visual e calculo de exibicao na coluna **Conversao**; nao altera persistencia.
 - `profile_whatsapp_rate` segue disponivel no payload para auditoria e consumidores tecnicos, mas fora da tabela visual.
-- A media de cliques WhatsApp na coluna **Conversao** usa os totais reais retornados pela API e a base real de psicologos da propria faixa, exibindo a base e a media na copy solicitada pelo produto.
-- O admin temporario `codex-task136-copy-20260801@lectum.local`, criado via bootstrap para validacao local, foi removido apos a validacao para nao manter dado de teste permanente.
+- A leitura de WhatsApp na coluna **Conversao** usa totais reais retornados pela API, a participacao da faixa nos cliques totais e a base real de psicologos da propria faixa para exibir total, percentual e media por psicologo.
+- O admin temporario `codex-validation-task136@lectum.local`, criado via bootstrap para validacao local, foi removido apos a validacao para nao manter dado de teste permanente.

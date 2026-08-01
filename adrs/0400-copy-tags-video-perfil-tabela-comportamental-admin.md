@@ -10,7 +10,7 @@ TASK-136
 
 ## Contexto
 
-A tabela comportamental por Conversao do Admin recebeu refinamentos sucessivos de tags e layout. O produto pediu simplificacao adicional para reduzir ruido visual e alinhar a leitura da secao como analise comportamental, nao funil: trocar o titulo, mover o complemento de comportamento para antes do titulo, encurtar a coluna de favoritos, usar o formato padrao de titulos de tabela do painel Admin, reduzir a largura de **Favoritos** e alinhar seu conteudo a direita, trocar `Views/video` por `Views`, retirar `WhatsApp/abertura` da visualizacao principal do Perfil, remover a tag agregada `Engajamento` em Video de apresentacao, encurtar `Cliques WhatsApp` para `WhatsApp` nas tags, manter `WhatsApp: X` em uma unica linha em **Favoritos**, adicionar `Plano predominante` em **Perfil** e exibir a media de cliques WhatsApp por psicologo na coluna Conversao com a copy `X perfis considerados · Media Y cliques WhatsApp por psicologo`.
+A tabela comportamental por Conversao do Admin recebeu refinamentos sucessivos de tags e layout. O produto pediu simplificacao adicional para reduzir ruido visual e alinhar a leitura da secao como analise comportamental, nao funil: trocar o titulo, mover o complemento de comportamento para antes do titulo, encurtar a coluna de favoritos, usar o formato padrao de titulos de tabela do painel Admin, reduzir a largura de **Favoritos** e alinhar seu conteudo a direita, trocar `Views/video` por `Views`, retirar `WhatsApp/abertura` da visualizacao principal do Perfil, remover a tag agregada `Engajamento` em Video de apresentacao, encurtar `Cliques WhatsApp` para `WhatsApp` nas tags, manter `WhatsApp: X` em uma unica linha em **Favoritos**, exibir somente o nome do plano predominante em **Perfil** e ajustar a coluna Conversao para `X (X%) psicólogos` mais uma segunda linha `X (X%) cliques WhatsApp, em média X por psicólogo`.
 
 ## Decisao
 
@@ -18,13 +18,13 @@ A tabela comportamental por Conversao do Admin recebeu refinamentos sucessivos d
 - A coluna `favorite` passa a usar label `Favoritos` na API agregada e nas superficies renderizadas.
 - As colunas **Video de apresentacao**, **Perfil** e **Comunidade** usam `24%` cada; **Favoritos** usa `12%` e alinha titulo/tags a direita; **Conversao** permanece com `16%`.
 - Os titulos das colunas usam o formato recorrente de tabela do painel Admin: uppercase, tracking e cor muted/subtle no desktop e no mobile.
-- A linha da coluna **Conversao** passa a renderizar a base e a media `row.totals.whatsapp_clicks / row.count`, arredondada para uma casa decimal, no formato `X perfis considerados · Media Y cliques WhatsApp por psicologo`, sem alterar o payload de totais da API.
+- A linha da coluna **Conversao** passa a renderizar a base como `X (X%) psicólogos` e a leitura de WhatsApp em nova linha com total, percentual de cliques da tabela e média por psicólogo calculada por `row.totals.whatsapp_clicks / row.count`, sem alterar o payload de totais da API.
 - A metrica `presentation_video_views_per_video` passa a usar label `Views` na API agregada.
 - A metrica `profile_whatsapp_rate` permanece no payload para auditoria, mas sai da lista curada renderizada na coluna **Perfil**.
 - A tag visivel `presentation_video_engagement_level` sai da curadoria da coluna **Video de apresentacao** e entram as medias reais por video `presentation_video_profile_accesses_per_video`, `presentation_video_favorites_per_video` e `presentation_video_shares_per_video`.
 - As labels visiveis das medias de WhatsApp passam de `Cliques WhatsApp` para `WhatsApp`, preservando IDs, fontes e calculos.
 - A coluna **Favoritos** usa `whitespace-nowrap` no conteudo da tag para manter `WhatsApp: X` em uma unica linha.
-- A coluna **Perfil** recebe a tag `profile_dominant_plan`, calculada pelo plano ativo mais frequente entre os profissionais da faixa no fim do periodo analisado.
+- A coluna **Perfil** recebe a tag `profile_dominant_plan`, calculada pelo plano ativo mais frequente entre os profissionais da faixa no fim do periodo analisado e renderizada sem prefixo para mostrar apenas o nome do plano.
 - Nao alterar ID, source, unidade, tracking, schema, migration, endpoint ou package das metricas existentes.
 
 ## Consequencias

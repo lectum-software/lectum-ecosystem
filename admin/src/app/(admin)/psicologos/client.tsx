@@ -3488,6 +3488,7 @@ const PROFILE_CONVERSION_BEHAVIOR_VALUE_ONLY_TAG_IDS = new Set([
   "community_engagement_level",
   "community_post_format",
   "community_reply_format",
+  "profile_dominant_plan",
   "profile_openings_per_psychologist",
 ]);
 
@@ -3650,22 +3651,33 @@ const getProfileConversionBehaviorAverageWhatsappClicks = (
   row: ProfileConversionBehaviorResults["rows"][number],
 ) => (row.count > 0 ? toOneDecimal((row.totals?.whatsapp_clicks ?? 0) / row.count) : 0);
 
-const getProfileConversionBehaviorProfilesConsideredLabel = (count: number) =>
-  `${numberFormatter.format(count)} ${count === 1 ? "perfil considerado" : "perfis considerados"}`;
+const getProfileConversionBehaviorPsychologistsLabel = (
+  row: ProfileConversionBehaviorResults["rows"][number],
+) =>
+  `${numberFormatter.format(row.count)} (${formatPercentageValue(row.percentage)}) psic\u00f3logos`;
 
-const getProfileConversionBehaviorAverageWhatsappUnitLabel = (value: number) =>
-  value === 1 ? "clique WhatsApp" : "cliques WhatsApp";
+const getProfileConversionBehaviorWhatsappSummaryLabel = (
+  row: ProfileConversionBehaviorResults["rows"][number],
+  totalWhatsappClicks: number,
+) => {
+  const whatsappClicks = row.totals?.whatsapp_clicks ?? 0;
+  const whatsappPercentage = calculatePercentage(whatsappClicks, totalWhatsappClicks);
+  const averageWhatsappClicks = getProfileConversionBehaviorAverageWhatsappClicks(row);
+
+  return `${numberFormatter.format(whatsappClicks)} (${formatPercentageValue(whatsappPercentage)}) cliques WhatsApp, em m\u00e9dia ${numberFormatter.format(averageWhatsappClicks)} por psic\u00f3logo`;
+};
 
 const PROFILE_CONVERSION_BEHAVIOR_TABLE_HEADER_CLASS =
   "border-border border-b p-2.5 align-top text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle";
 
 const ProfileConversionBehaviorRowHeader = ({
   row,
+  totalWhatsappClicks,
 }: {
   row: ProfileConversionBehaviorResults["rows"][number];
+  totalWhatsappClicks: number;
 }) => {
   const color = PROFILE_CONVERSION_CHART_COLORS[row.id];
-  const averageWhatsappClicks = getProfileConversionBehaviorAverageWhatsappClicks(row);
 
   return (
     <div className="min-w-0">
@@ -3679,14 +3691,11 @@ const ProfileConversionBehaviorRowHeader = ({
       </div>
       <p className="mt-1 text-[0.7rem] font-bold leading-4 text-muted">
         <strong className="font-black text-foreground">
-          {getProfileConversionBehaviorProfilesConsideredLabel(row.count)}
+          {getProfileConversionBehaviorPsychologistsLabel(row)}
         </strong>
-        {" \u00b7 M\u00e9dia "}
-        <strong className="font-black text-foreground">
-          {numberFormatter.format(averageWhatsappClicks)}
-        </strong>{" "}
-        {getProfileConversionBehaviorAverageWhatsappUnitLabel(averageWhatsappClicks)}{" "}
-        <strong className="font-black text-foreground">{"por psic\u00f3logo"}</strong>
+      </p>
+      <p className="mt-1 text-[0.7rem] font-bold leading-4 text-muted">
+        {getProfileConversionBehaviorWhatsappSummaryLabel(row, totalWhatsappClicks)}
       </p>
     </div>
   );
@@ -3897,6 +3906,10 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
   const profileCrossMatrix = segmentSummary.profile_cross_matrix;
   const conversionRows = behaviorTable?.rows ?? [];
   const behaviorColumns = behaviorTable?.columns ?? [];
+  const totalBehaviorWhatsappClicks = conversionRows.reduce(
+    (sum, row) => sum + (row.totals?.whatsapp_clicks ?? 0),
+    0,
+  );
   const behaviorCellsByKey = new Map(
     (behaviorTable?.cells ?? []).map((cell) => [`${cell.row_id}:${cell.element_id}`, cell]),
   );
@@ -3924,7 +3937,10 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
             className="rounded-[1.35rem] border border-border/70 bg-surface p-3"
             key={`profile-conversion-behavior-mobile-row-${row.id}`}
           >
-            <ProfileConversionBehaviorRowHeader row={row} />
+            <ProfileConversionBehaviorRowHeader
+              row={row}
+              totalWhatsappClicks={totalBehaviorWhatsappClicks}
+            />
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {behaviorColumns.map((column) => {
                 const cell = behaviorCellsByKey.get(`${row.id}:${column.id}`) ?? null;
@@ -3984,7 +4000,10 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
             {conversionRows.map((row) => (
               <tr key={`profile-conversion-behavior-row-${row.id}`}>
                 <th className="border-border border-t bg-surface p-2.5 align-top" scope="row">
-                  <ProfileConversionBehaviorRowHeader row={row} />
+                  <ProfileConversionBehaviorRowHeader
+                    row={row}
+                    totalWhatsappClicks={totalBehaviorWhatsappClicks}
+                  />
                 </th>
                 {behaviorColumns.map((column) => {
                   const cell = behaviorCellsByKey.get(`${row.id}:${column.id}`) ?? null;
