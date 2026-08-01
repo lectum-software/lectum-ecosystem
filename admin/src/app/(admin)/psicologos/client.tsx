@@ -983,13 +983,13 @@ const ProfileCrossMatrixAxisSelect = ({
   onChange: (value: ProfileCrossMatrixAxisId) => void;
   value: ProfileCrossMatrixAxisId;
 }) => (
-  <label className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[18rem]" htmlFor={id}>
-    <span className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-subtle">
+  <label className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[14rem]" htmlFor={id}>
+    <span className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-subtle">
       {label}
     </span>
-    <span className="relative inline-flex max-w-full items-center rounded-2xl border border-border bg-surface-muted px-3 py-2">
+    <span className="relative inline-flex max-w-full items-center rounded-xl border border-border/70 bg-surface px-2.5 py-1.5">
       <select
-        className="w-full appearance-none truncate bg-transparent py-0 pl-0 pr-7 text-left text-sm font-black text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
+        className="w-full appearance-none truncate bg-transparent py-0 pl-0 pr-6 text-left text-sm font-semibold text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
         id={id}
         onChange={(event) => onChange(event.target.value as ProfileCrossMatrixAxisId)}
         value={value}
@@ -1002,7 +1002,7 @@ const ProfileCrossMatrixAxisSelect = ({
       </select>
       <ChevronDown
         aria-hidden
-        className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+        className="pointer-events-none absolute right-1 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle"
       />
     </span>
   </label>
@@ -3867,12 +3867,11 @@ function DashboardProfileConversionMatrixSection({
             <div className="min-w-0">
               <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Escolha os dois eixos da matriz: o campo Linha controla as faixas verticais e o
-                campo Coluna controla as faixas horizontais. A leitura acompanha a base agregada do
-                funil: <strong className="font-black text-foreground">{basisLabel}</strong>.
+                Escolha os dois eixos para uma análise cruzada. A leitura acompanha a base agregada
+                do funil: <strong className="font-black text-foreground">{basisLabel}.</strong>
               </p>
             </div>
-            <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:min-w-[34rem] 2xl:min-w-[38rem]">
+            <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:min-w-[28rem] 2xl:min-w-[30rem]">
               <ProfileCrossMatrixAxisSelect
                 axes={rowAxisOptions}
                 id="profile-cross-matrix-row-axis"
