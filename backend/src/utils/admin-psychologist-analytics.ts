@@ -82,6 +82,7 @@ export type AdminPsychologistWhatsappTrafficAction = {
   session_id: string;
   target_id: string | null;
   target_type: string | null;
+  user_id: string | null;
 };
 
 export type AdminPsychologistWhatsappTrafficCommunityPost = {
@@ -108,7 +109,16 @@ export type AdminPsychologistWhatsappTrafficOriginSource = {
   platform_metrics: AdminPsychologistWhatsappTrafficPlatformMetric[] | null;
   profile_views: number;
   sessions: number;
+  whatsapp_click_actor_breakdown: AdminPsychologistWhatsappTrafficClickActorBreakdown | null;
   whatsapp_clicks: number;
+};
+
+export type AdminPsychologistWhatsappTrafficClickActorBreakdown = {
+  author_clicks: number;
+  author_percentage: number;
+  other_users_clicks: number;
+  other_users_percentage: number;
+  source: "important_action_event.user_id+community_post.author_id+post_reply.author_id";
 };
 
 export type AdminPsychologistWhatsappTrafficPlatformMetricId =
@@ -779,6 +789,15 @@ const psychologistWhatsappTrafficOriginDefinitions: Array<
 const WHATSAPP_TRAFFIC_DEFINITION_INDEX = new Map(
   psychologistWhatsappTrafficOriginDefinitions.map((definition, index) => [definition.id, index]),
 );
+const WHATSAPP_TRAFFIC_CLICK_ACTOR_BREAKDOWN_SOURCE =
+  "important_action_event.user_id+community_post.author_id+post_reply.author_id" as const;
+const COMMUNITY_CONTENT_WHATSAPP_TRAFFIC_SOURCE_IDS =
+  new Set<AdminPsychologistWhatsappTrafficOriginSourceId>([
+    "community_post_text",
+    "community_post_video",
+    "community_reply_text",
+    "community_reply_video",
+  ]);
 
 const SEARCH_FILTER_TRAFFIC_PARAMS = new Set([
   "accepts_insurance",
@@ -862,6 +881,30 @@ const resolveWhatsappTrafficPsychologistId = (
   return null;
 };
 
+const isCommunityContentWhatsappTrafficSource = (
+  sourceId: AdminPsychologistWhatsappTrafficOriginSourceId,
+) => COMMUNITY_CONTENT_WHATSAPP_TRAFFIC_SOURCE_IDS.has(sourceId);
+
+const resolveWhatsappTrafficContentAuthorId = (
+  sourceId: AdminPsychologistWhatsappTrafficOriginSourceId,
+  action: AdminPsychologistWhatsappTrafficAction,
+  postsById: Map<string, AdminPsychologistWhatsappTrafficCommunityPost>,
+  repliesById: Map<string, AdminPsychologistWhatsappTrafficCommunityReply>,
+) => {
+  const targetId = action.target_id;
+  if (!targetId) return null;
+
+  if (sourceId === "community_post_text" || sourceId === "community_post_video") {
+    return postsById.get(targetId)?.author_id ?? null;
+  }
+
+  if (sourceId === "community_reply_text" || sourceId === "community_reply_video") {
+    return repliesById.get(targetId)?.author_id ?? null;
+  }
+
+  return null;
+};
+
 const classifyWhatsappTrafficAction = (
   action: AdminPsychologistWhatsappTrafficAction,
   postsById: Map<string, AdminPsychologistWhatsappTrafficCommunityPost>,
@@ -923,11 +966,16 @@ export const summarizePsychologistWhatsappTrafficOrigins = (params: {
   const repliesById = new Map(params.communityReplies.map((reply) => [reply.id, reply]));
   const groups = new Map<
     AdminPsychologistWhatsappTrafficOriginSourceId,
-    { sessions: Set<string>; whatsappClicks: number }
+    {
+      authorClicks: number;
+      otherUsersClicks: number;
+      sessions: Set<string>;
+      whatsappClicks: number;
+    }
   >(
     psychologistWhatsappTrafficOriginDefinitions.map((source) => [
       source.id,
-      { sessions: new Set<string>(), whatsappClicks: 0 },
+      { authorClicks: 0, otherUsersClicks: 0, sessions: new Set<string>(), whatsappClicks: 0 },
     ]),
   );
 
@@ -945,6 +993,21 @@ export const summarizePsychologistWhatsappTrafficOrigins = (params: {
 
     group.whatsappClicks += 1;
     group.sessions.add(action.session_id);
+
+    if (isCommunityContentWhatsappTrafficSource(sourceId)) {
+      const authorId = resolveWhatsappTrafficContentAuthorId(
+        sourceId,
+        action,
+        postsById,
+        repliesById,
+      );
+
+      if (action.user_id && authorId && action.user_id === authorId) {
+        group.authorClicks += 1;
+      } else {
+        group.otherUsersClicks += 1;
+      }
+    }
   }
 
   const totalWhatsappClicks = [...groups.values()].reduce(
@@ -977,6 +1040,21 @@ export const summarizePsychologistWhatsappTrafficOrigins = (params: {
     .map((definition) => {
       const group = groups.get(definition.id);
       const whatsappClicks = group?.whatsappClicks ?? 0;
+      const whatsappClickActorBreakdown = isCommunityContentWhatsappTrafficSource(definition.id)
+        ? {
+            author_clicks: group?.authorClicks ?? 0,
+            author_percentage:
+              whatsappClicks > 0
+                ? roundOneDecimal(((group?.authorClicks ?? 0) / whatsappClicks) * 100)
+                : 0,
+            other_users_clicks: group?.otherUsersClicks ?? 0,
+            other_users_percentage:
+              whatsappClicks > 0
+                ? roundOneDecimal(((group?.otherUsersClicks ?? 0) / whatsappClicks) * 100)
+                : 0,
+            source: WHATSAPP_TRAFFIC_CLICK_ACTOR_BREAKDOWN_SOURCE,
+          }
+        : null;
 
       return {
         ...definition,
@@ -990,6 +1068,7 @@ export const summarizePsychologistWhatsappTrafficOrigins = (params: {
         platform_metrics: params.communityPlatformMetrics?.get(definition.id) ?? null,
         profile_views: 0,
         sessions: group?.sessions.size ?? 0,
+        whatsapp_click_actor_breakdown: whatsappClickActorBreakdown,
         whatsapp_clicks: whatsappClicks,
       };
     })

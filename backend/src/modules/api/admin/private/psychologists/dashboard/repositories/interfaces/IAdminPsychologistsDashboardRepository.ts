@@ -198,6 +198,7 @@ export type AdminPsychologistWhatsappTrafficActionRecord = {
   session_id: string;
   target_id: string | null;
   target_type: string | null;
+  user_id: string | null;
 };
 
 export type AdminPsychologistTrafficCommunityPostRecord = {

@@ -817,6 +817,7 @@ export class AdminPsychologistsDashboardRepository
         session_id: true,
         target_id: true,
         target_type: true,
+        user_id: true,
       },
       where: {
         action_type: {

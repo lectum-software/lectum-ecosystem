@@ -4080,20 +4080,14 @@ const getTrafficSourceWhatsappAverage = ({
   };
 };
 
-const TrafficSourceWhatsappMetric = ({
-  className,
+const TrafficSourceAverageBadge = ({
   context,
   fallbackPsychologistsCount,
-  percentage,
   source,
-  valueClassName,
 }: {
-  className?: string;
   context?: TrafficSourceGroupKind;
   fallbackPsychologistsCount: number;
-  percentage: number;
   source: TrafficSourceAverageSource;
-  valueClassName?: string;
 }) => {
   const average = getTrafficSourceWhatsappAverage({
     context,
@@ -4101,21 +4095,49 @@ const TrafficSourceWhatsappMetric = ({
     source,
   });
 
+  if (!average) return null;
+
   return (
-    <span className={cn("inline-flex flex-col items-center gap-0.5", className)}>
-      <TrafficSourceMetricValue
-        className={valueClassName}
-        percentage={percentage}
-        value={formatNullableCount(source.whatsapp_clicks)}
-      />
-      {average ? (
-        <span className="text-[0.68rem] font-bold leading-none text-muted">
-          {numberFormatter.format(average.value)} {average.label}
-        </span>
-      ) : null}
+    <span className="shrink-0 text-[0.68rem] font-bold leading-none text-muted">
+      {numberFormatter.format(average.value)} {average.label}
     </span>
   );
 };
+
+const TrafficSourceWhatsappClickActorBreakdown = ({
+  align = "center",
+  source,
+}: {
+  align?: "center" | "end" | "start";
+  source: Pick<TrafficSourceItem, "whatsapp_click_actor_breakdown">;
+}) => {
+  const breakdown = source.whatsapp_click_actor_breakdown;
+
+  if (!breakdown) return null;
+
+  const authorLabel = `Autor do conteúdo ${formatNullableCount(
+    breakdown.author_clicks,
+  )} (${formatPercentageValue(breakdown.author_percentage)})`;
+  const otherUsersLabel = `Outros usuários ${formatNullableCount(
+    breakdown.other_users_clicks,
+  )} (${formatPercentageValue(breakdown.other_users_percentage)})`;
+
+  return (
+    <span
+      className={cn(
+        "mt-1 inline-flex flex-col gap-0.5 text-[0.68rem] font-bold leading-4 text-muted",
+        align === "start" && "items-start text-left",
+        align === "center" && "items-center text-center",
+        align === "end" && "items-end text-right",
+      )}
+      title={breakdown.source}
+    >
+      <span>{authorLabel}</span>
+      <span>{otherUsersLabel}</span>
+    </span>
+  );
+};
+
 const formatTrafficSourcePlatformMetricValue = (
   metric: NonNullable<TrafficSourceItem["platform_metrics"]>[number],
 ) => {
@@ -4371,15 +4393,22 @@ const buildTrafficSourceDisplayRows = (
 
 const TrafficSourceProfileMetricsDetail = ({
   className,
+  fallbackPsychologistsCount,
   source,
 }: {
   className?: string;
+  fallbackPsychologistsCount: number;
   source: TrafficSourceDisplayItem;
 }) => (
   <div className={cn("min-w-0 border-primary/25 border-l-2 pl-4", className)}>
     <div className="flex min-w-0 flex-wrap items-center gap-2">
       <p className="text-xs font-black text-foreground">Engajamento dentro do perfil</p>
       <TrafficSourceConsideredBadge context="profile" source={source} />
+      <TrafficSourceAverageBadge
+        context="profile"
+        fallbackPsychologistsCount={fallbackPsychologistsCount}
+        source={source}
+      />
     </div>
     <TrafficSourcePlatformMetricsDescription context="profile" source={source} />
     <TrafficSourcePlatformMetrics source={source} />
@@ -4467,12 +4496,10 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                     </div>
                     <div className="grid grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-4 text-center">
                       <div className="flex justify-center">
-                        <TrafficSourceWhatsappMetric
-                          context={source.groupKind}
-                          fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
+                        <TrafficSourceMetricValue
+                          className="text-lg"
                           percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                          source={source}
-                          valueClassName="text-lg"
+                          value={formatNullableCount(source.whatsapp_clicks)}
                         />
                       </div>
                       <TrafficSourceGroupToggle expanded={isExpanded} />
@@ -4495,6 +4522,13 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                                   context={source.groupKind}
                                   source={childSource}
                                 />
+                                <TrafficSourceAverageBadge
+                                  context={source.groupKind}
+                                  fallbackPsychologistsCount={
+                                    trafficSegmentSummary.psychologists_count
+                                  }
+                                  source={childSource}
+                                />
                               </div>
                               <TrafficSourcePlatformMetricsDescription
                                 context={source.groupKind}
@@ -4503,23 +4537,25 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                               <TrafficSourcePlatformMetrics source={childSource} />
                             </div>
                             <div className="flex justify-center text-center">
-                              <TrafficSourceWhatsappMetric
-                                context={source.groupKind}
-                                fallbackPsychologistsCount={
-                                  trafficSegmentSummary.psychologists_count
-                                }
-                                percentage={getWhatsappClicksPercentage(
-                                  childSource.whatsapp_clicks,
-                                )}
-                                source={childSource}
-                                valueClassName="text-base"
-                              />
+                              <span className="inline-flex flex-col items-center gap-0.5">
+                                <TrafficSourceMetricValue
+                                  className="text-base"
+                                  percentage={getWhatsappClicksPercentage(
+                                    childSource.whatsapp_clicks,
+                                  )}
+                                  value={formatNullableCount(childSource.whatsapp_clicks)}
+                                />
+                                <TrafficSourceWhatsappClickActorBreakdown source={childSource} />
+                              </span>
                             </div>
                           </div>
                         ))
                       ) : source.platform_metrics?.length ? (
                         <div className="px-4 py-3">
-                          <TrafficSourceProfileMetricsDetail source={source} />
+                          <TrafficSourceProfileMetricsDetail
+                            fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
+                            source={source}
+                          />
                         </div>
                       ) : null}
                     </div>
@@ -4541,6 +4577,11 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                         Principal origem
                       </span>
                     ) : null}
+                    <TrafficSourceAverageBadge
+                      context={source.groupKind}
+                      fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
+                      source={source}
+                    />
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
                     {source.description}
@@ -4548,12 +4589,10 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                 </div>
                 <div className="grid grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-4 text-center">
                   <div className="flex justify-center">
-                    <TrafficSourceWhatsappMetric
-                      context={source.groupKind}
-                      fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
+                    <TrafficSourceMetricValue
+                      className="text-lg"
                       percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                      source={source}
-                      valueClassName="text-lg"
+                      value={formatNullableCount(source.whatsapp_clicks)}
                     />
                   </div>
                   <span aria-hidden className="h-6 w-6" />
@@ -4572,14 +4611,14 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
             <div className="mt-4 rounded-2xl bg-surface p-3">
               <p className="text-[0.68rem] font-black text-muted">WhatsApp</p>
               <div className="mt-1 flex items-center justify-between gap-3">
-                <TrafficSourceWhatsappMetric
-                  className="items-start"
-                  context={source.groupKind}
-                  fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
-                  percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
-                  source={source}
-                  valueClassName="text-base"
-                />
+                <span className="inline-flex flex-col items-start gap-0.5">
+                  <TrafficSourceMetricValue
+                    className="text-base"
+                    percentage={getWhatsappClicksPercentage(source.whatsapp_clicks)}
+                    value={formatNullableCount(source.whatsapp_clicks)}
+                  />
+                  <TrafficSourceWhatsappClickActorBreakdown align="start" source={source} />
+                </span>
                 {isExpandableGroup ? <TrafficSourceGroupToggle expanded={isExpanded} /> : null}
               </div>
             </div>
@@ -4594,6 +4633,13 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                       <span className="rounded-full bg-primary-soft px-2 py-1 text-[0.68rem] font-black text-primary">
                         Principal origem
                       </span>
+                    ) : null}
+                    {!isExpandableGroup ? (
+                      <TrafficSourceAverageBadge
+                        context={source.groupKind}
+                        fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
+                        source={source}
+                      />
                     ) : null}
                   </div>
                   <p className="mt-1 text-xs leading-5 text-muted">{source.description}</p>
@@ -4646,6 +4692,13 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                                   context={source.groupKind}
                                   source={childSource}
                                 />
+                                <TrafficSourceAverageBadge
+                                  context={source.groupKind}
+                                  fallbackPsychologistsCount={
+                                    trafficSegmentSummary.psychologists_count
+                                  }
+                                  source={childSource}
+                                />
                               </div>
                               <TrafficSourcePlatformMetricsDescription
                                 context={source.groupKind}
@@ -4653,19 +4706,28 @@ const DashboardTrafficSourcesCard = ({ summary }: { summary: AdminPsychologistsD
                               />
                               <TrafficSourcePlatformMetrics source={childSource} />
                             </div>
-                            <TrafficSourceWhatsappMetric
-                              className="shrink-0 items-end text-right"
-                              context={source.groupKind}
-                              fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
-                              percentage={getWhatsappClicksPercentage(childSource.whatsapp_clicks)}
-                              source={childSource}
-                              valueClassName="text-sm"
-                            />
+                            <span className="inline-flex shrink-0 flex-col items-end gap-0.5 text-right">
+                              <TrafficSourceMetricValue
+                                className="text-sm"
+                                percentage={getWhatsappClicksPercentage(
+                                  childSource.whatsapp_clicks,
+                                )}
+                                value={formatNullableCount(childSource.whatsapp_clicks)}
+                              />
+                              <TrafficSourceWhatsappClickActorBreakdown
+                                align="end"
+                                source={childSource}
+                              />
+                            </span>
                           </div>
                         ))
                       ) : source.platform_metrics?.length ? (
                         <div className="py-2 first:pt-0 last:pb-0">
-                          <TrafficSourceProfileMetricsDetail className="pl-3" source={source} />
+                          <TrafficSourceProfileMetricsDetail
+                            className="pl-3"
+                            fallbackPsychologistsCount={trafficSegmentSummary.psychologists_count}
+                            source={source}
+                          />
                         </div>
                       ) : null}
                     </div>

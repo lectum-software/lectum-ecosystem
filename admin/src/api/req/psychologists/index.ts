@@ -482,6 +482,13 @@ export type PsychologistsDashboardTrafficSourceItem = {
     | null;
   profile_views: number;
   sessions: number;
+  whatsapp_click_actor_breakdown: {
+    author_clicks: number;
+    author_percentage: number;
+    other_users_clicks: number;
+    other_users_percentage: number;
+    source: "important_action_event.user_id+community_post.author_id+post_reply.author_id";
+  } | null;
   whatsapp_clicks: number;
 };
 

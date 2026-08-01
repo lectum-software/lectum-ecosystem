@@ -23,7 +23,10 @@ import type {
   AdminProfileExposureThresholds,
   AdminProfileExposureVideoCategoryId,
 } from "@/utils/admin-profile-exposure";
-import type { AdminPsychologistWhatsappTrafficPlatformMetric } from "@/utils/admin-psychologist-analytics";
+import type {
+  AdminPsychologistWhatsappTrafficClickActorBreakdown,
+  AdminPsychologistWhatsappTrafficPlatformMetric,
+} from "@/utils/admin-psychologist-analytics";
 
 export type AdminPsychologistsDashboardQuery = {
   from?: string;
@@ -430,6 +433,7 @@ export type AdminPsychologistsDashboardTrafficSourceItem = {
   platform_metrics: AdminPsychologistWhatsappTrafficPlatformMetric[] | null;
   profile_views: number;
   sessions: number;
+  whatsapp_click_actor_breakdown: AdminPsychologistWhatsappTrafficClickActorBreakdown | null;
   whatsapp_clicks: number;
 };
 
