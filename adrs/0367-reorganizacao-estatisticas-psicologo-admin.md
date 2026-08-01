@@ -104,3 +104,31 @@ Consequencias:
 - a manutencao futura deve preservar a diferenca semantica: dashboard pode mostrar medias agregadas, detalhe mostra somatorias do psicologo selecionado.
 
 Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, smoke API real da rota de estatisticas do psicologo e browser local/headless em desktop 1365px/mobile 390px com screenshots em `.tmp/admin-psychologist-traffic-detail-desktop.png` e `.tmp/admin-psychologist-traffic-detail-mobile.png`.
+
+## Ajuste aceito em 2026-08-01 - Chips comparativas por media em Origem do trafego
+
+A tabela **Origem do trafego** do detalhe Admin do psicologo deixa de usar as chips de
+engajamento/conversao como leitura de somatoria visual e passa a apresentar medias do psicologo por
+base considerada, comparadas com a media global do dashboard Admin no mesmo periodo.
+
+Decisoes:
+
+- manter o backend do detalhe como fonte das somatorias reais e fazer a conversao para media na UI,
+  preservando compatibilidade com o contrato ja usado pela tabela expansiva;
+- buscar a media global pelo endpoint real do dashboard de psicologos com `period=custom`,
+  `from=statistics.period.from` e `to=statistics.period.to`;
+- usar tolerancia de 15% para classificar **na media**, reduzindo oscilacao visual por arredondamento
+  ou amostra pequena;
+- manter cinza para bases com menos de 2 itens considerados, mesmo quando o valor bruto for zero;
+- documentar as cores em legenda no cabecalho: verde acima, azul na media, amarelo abaixo, vermelho
+  zero e cinza base pequena/sem base comparavel.
+
+Consequencias:
+
+- a tabela passa a cumprir a funcao comparativa solicitada sem criar endpoint novo;
+- as somatorias continuam disponiveis para diagnosticos futuros, mas deixam de ser o valor principal
+  das chips nesta tabela;
+- leituras de **Perfil** e **Video de apresentacao** tendem a ficar cinza quando houver apenas uma
+  unidade considerada, evitando superinterpretar base pequena;
+- se a comparacao por media se tornar regra compartilhada entre telas, uma task futura pode mover a
+  classificacao para um helper/contrato backend dedicado.

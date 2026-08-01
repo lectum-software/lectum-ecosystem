@@ -237,3 +237,50 @@ exibir uma opcao explicitamente chamada **Visibilidade (tempo)**.
 - `pnpm check`.
 - Smoke API real em `GET /api/admin/private/psychologists/cmrgztri7000tn0uh1q4n8vxf/statistics?period=all&from=2026-07-11&to=2026-08-01`: confirmou `traffic_sources.source=important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click`, origens de comunidades/perfil/video e `platform_metrics` preenchidos com somatorias do psicologo.
 - Browser local/headless com Admin em `http://localhost:3002` e backend real em `localhost:3001`: desktop 1365px e mobile 390px confirmaram grupos expansivos **Comunidades**, **Perfil** e **Video de apresentacao**, ausencia de coluna **Perfil** no cabecalho desktop, detalhamento de sublinhas e ausencia de overflow mobile. Screenshots: `.tmp/admin-psychologist-traffic-detail-desktop.png` e `.tmp/admin-psychologist-traffic-detail-mobile.png`.
+
+## Ajuste pos-feedback 2026-08-01 - Medias e legenda de cores em Origem do trafego
+
+- Pedido do usuario: manter a tabela expansiva de **Origem do trafego** no detalhe do psicologo,
+  mas trocar as chips de engajamento/conversao para a media do psicologo, comparando com a media
+  global, e adicionar uma legenda de cores no topo da tabela, alinhada a direita do titulo.
+- A alteracao e frontend-only: o detalhe segue consumindo as somatorias reais ja retornadas pelo
+  endpoint de estatisticas do psicologo e calcula a media por base considerada na UI; a media global
+  vem do endpoint real do dashboard Admin de psicologos, no mesmo periodo selecionado.
+- Criterio de cor adotado:
+  - Verde: acima da media global.
+  - Azul: na media global.
+  - Amarelo: abaixo da media global.
+  - Vermelho: valor zero.
+  - Cinza: base pequena ou metrica sem base suficiente para comparar.
+- Para evitar ruido em bases pequenas, qualquer origem com menos de 2 itens considerados permanece
+  cinza, mesmo quando o valor e zero.
+- As somatorias continuam disponiveis como fonte de calculo/diagnostico, mas a tabela passa a
+  priorizar leitura comparativa de medias.
+- Nenhum mock, endpoint simulado, package novo, schema Prisma ou migration foi adicionado.
+
+### Criterios de aceite do ajuste
+
+- [x] As chips de **Origem do trafego** no detalhe mostram medias do psicologo, nao somatorias
+      brutas, para metricas de contagem/tempo.
+- [x] As chips comparam a media do psicologo com a media global do dashboard no mesmo periodo.
+- [x] A tabela exibe legenda no topo, na linha do titulo, com Verde, Azul, Amarelo, Vermelho e
+      Cinza.
+- [x] Bases pequenas permanecem cinza.
+- [x] A versao mobile mantem a legenda e os grupos expansivos sem overflow horizontal.
+- [x] Nenhum mock, endpoint simulado, package novo, schema Prisma ou migration foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Smoke API real confirmou que o detalhe segue retornando somatorias reais por origem e que o
+  dashboard retorna a media global no mesmo periodo usado pela tela.
+- Browser local/headless em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`,
+  com backend real em `localhost:3001` e admin temporario real removido ao final: desktop 1365px e
+  mobile 390px confirmaram legenda, chips coloridas, media `Visualizacoes 0,1` para **Posts sem
+  video** com base 29, base pequena cinza em **Posts com video** e ausencia de overflow horizontal.
+  Screenshots: `.tmp/admin-psychologist-traffic-average-legend-desktop.png`,
+  `.tmp/admin-psychologist-traffic-average-legend-mobile.png` e
+  `.tmp/admin-psychologist-traffic-average-legend-mobile-card.png`.

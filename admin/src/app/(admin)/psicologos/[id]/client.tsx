@@ -84,6 +84,7 @@ import {
   useAdminPsychologistSetTemporaryPassword,
   useAdminPsychologistStatistics,
   useAdminPsychologistSuspendAccount,
+  useAdminPsychologistsDashboard,
   useAdminPsychologistUpdatePersonalData,
   useAdminPsychologistUpdateProfessionalData,
   useAdminPsychologistUpdateRegistryIdentity,
@@ -109,6 +110,7 @@ import type {
   AdminPsychologistReviewsQuery,
   AdminPsychologistStatistics,
   AdminPsychologistStatisticsQuery,
+  PsychologistsDashboardQuery,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
@@ -5053,6 +5055,7 @@ type PsychologistTrafficSourceGroupId =
   | "profile_group";
 type PsychologistTrafficSourceGroupKind = "communities" | "presentation_video" | "profile";
 type PsychologistTrafficSourceDisplayItem = Omit<PsychologistTrafficSourceItem, "id"> & {
+  benchmarkSourceId?: PsychologistTrafficSourceItem["id"];
   children?: PsychologistTrafficSourceItem[];
   groupKind?: PsychologistTrafficSourceGroupKind;
   id: PsychologistTrafficSourceItem["id"] | PsychologistTrafficSourceGroupId;
@@ -5084,7 +5087,141 @@ const PSYCHOLOGIST_PRESENTATION_VIDEO_TRAFFIC_SOURCE_ID_SET = new Set<
   PsychologistTrafficSourceItem["id"]
 >(PSYCHOLOGIST_PRESENTATION_VIDEO_TRAFFIC_SOURCE_IDS);
 
+type PsychologistTrafficSourcePlatformMetric = NonNullable<
+  PsychologistTrafficSourceItem["platform_metrics"]
+>[number];
+type PsychologistTrafficSourceMetricStatus =
+  | "above_average"
+  | "average"
+  | "below_average"
+  | "small_base"
+  | "zero";
+type PsychologistTrafficSourceBenchmarkMap = Map<
+  PsychologistTrafficSourceItem["id"],
+  Map<PsychologistTrafficSourcePlatformMetric["id"], PsychologistTrafficSourcePlatformMetric>
+>;
+
 const roundTrafficOneDecimal = (value: number) => Math.round(value * 10) / 10;
+const PSYCHOLOGIST_TRAFFIC_SOURCE_AVERAGE_TOLERANCE_PERCENT = 15;
+const PSYCHOLOGIST_TRAFFIC_SOURCE_MIN_BASE_COUNT = 2;
+const PSYCHOLOGIST_TRAFFIC_SOURCE_METRIC_STATUS_LABELS = {
+  above_average: "Acima da média",
+  average: "Na média",
+  below_average: "Abaixo da média",
+  small_base: "Base pequena",
+  zero: "Zero",
+} satisfies Record<PsychologistTrafficSourceMetricStatus, string>;
+const PSYCHOLOGIST_TRAFFIC_SOURCE_METRIC_STATUS_CLASSES = {
+  above_average: "border-success/25 bg-success/10 text-success",
+  average: "border-primary/25 bg-primary-soft text-primary",
+  below_average: "border-warning/25 bg-warning/10 text-warning",
+  small_base: "border-border/70 bg-surface text-muted",
+  zero: "border-danger/25 bg-danger/10 text-danger",
+} satisfies Record<PsychologistTrafficSourceMetricStatus, string>;
+const PSYCHOLOGIST_TRAFFIC_SOURCE_METRIC_LEGEND_ITEMS = [
+  { label: "Acima da média", status: "above_average" },
+  { label: "Na média", status: "average" },
+  { label: "Abaixo da média", status: "below_average" },
+  { label: "Zero", status: "zero" },
+  { label: "Base pequena", status: "small_base" },
+] as const satisfies readonly {
+  label: string;
+  status: PsychologistTrafficSourceMetricStatus;
+}[];
+
+const normalizePsychologistTrafficMetricValue = (value: number | null) =>
+  typeof value === "number" && Number.isFinite(value) ? roundTrafficOneDecimal(value) : null;
+
+const getPsychologistTrafficMetricAverageValue = ({
+  consideredCount,
+  metric,
+}: {
+  consideredCount: number | null;
+  metric: PsychologistTrafficSourcePlatformMetric;
+}) => {
+  if (typeof metric.value !== "number" || !Number.isFinite(metric.value)) return null;
+  if (metric.unit === "percentage") return normalizePsychologistTrafficMetricValue(metric.value);
+  if (typeof consideredCount === "number" && consideredCount > 0) {
+    return normalizePsychologistTrafficMetricValue(metric.value / consideredCount);
+  }
+
+  return normalizePsychologistTrafficMetricValue(metric.value);
+};
+
+const getPsychologistTrafficMetricStatus = ({
+  benchmarkValue,
+  consideredCount,
+  value,
+}: {
+  benchmarkValue: number | null;
+  consideredCount: number | null;
+  value: number | null;
+}): PsychologistTrafficSourceMetricStatus => {
+  if (typeof value !== "number") return "small_base";
+  if (
+    typeof consideredCount === "number" &&
+    consideredCount < PSYCHOLOGIST_TRAFFIC_SOURCE_MIN_BASE_COUNT
+  ) {
+    return "small_base";
+  }
+  if (value === 0) return "zero";
+  if (typeof benchmarkValue !== "number") return "small_base";
+  if (benchmarkValue === 0) return value > 0 ? "above_average" : "zero";
+
+  const deltaPercent = ((value - benchmarkValue) / benchmarkValue) * 100;
+
+  if (deltaPercent >= PSYCHOLOGIST_TRAFFIC_SOURCE_AVERAGE_TOLERANCE_PERCENT) {
+    return "above_average";
+  }
+  if (deltaPercent <= -PSYCHOLOGIST_TRAFFIC_SOURCE_AVERAGE_TOLERANCE_PERCENT) {
+    return "below_average";
+  }
+
+  return "average";
+};
+
+const buildPsychologistTrafficSourceBenchmarkMap = (
+  traffic: AdminPsychologistStatistics["traffic_sources"] | undefined,
+) => {
+  const benchmarkMap: PsychologistTrafficSourceBenchmarkMap = new Map();
+
+  for (const source of traffic?.sources ?? []) {
+    const metricMap = new Map<
+      PsychologistTrafficSourcePlatformMetric["id"],
+      PsychologistTrafficSourcePlatformMetric
+    >();
+
+    for (const metric of source.platform_metrics ?? []) {
+      metricMap.set(metric.id, metric);
+    }
+
+    if (metricMap.size > 0) {
+      benchmarkMap.set(source.id, metricMap);
+    }
+  }
+
+  return benchmarkMap;
+};
+
+const PsychologistTrafficSourceMetricLegend = () => (
+  <ul
+    aria-label="Legenda de comparação das médias de engajamento"
+    className="flex flex-wrap items-center gap-1.5 text-[0.68rem] font-black leading-none"
+  >
+    {PSYCHOLOGIST_TRAFFIC_SOURCE_METRIC_LEGEND_ITEMS.map((item) => (
+      <li
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full border px-2 py-1",
+          PSYCHOLOGIST_TRAFFIC_SOURCE_METRIC_STATUS_CLASSES[item.status],
+        )}
+        key={item.status}
+      >
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
+        {item.label}
+      </li>
+    ))}
+  </ul>
+);
 
 const PsychologistTrafficSourceMetricValue = ({
   className,
@@ -5162,23 +5299,45 @@ const PsychologistTrafficSourceWhatsappClickActorBreakdown = ({
 };
 
 const formatPsychologistTrafficSourcePlatformMetricValue = (
-  metric: NonNullable<PsychologistTrafficSourceItem["platform_metrics"]>[number],
+  metric: PsychologistTrafficSourcePlatformMetric,
+  value: number | null = typeof metric.value === "number" ? metric.value : null,
 ) => {
-  if (typeof metric.value !== "number") return "Sem dados";
-  if (metric.unit === "percentage") return formatTrafficPercentage(metric.value);
-  if (metric.unit === "seconds") return formatDurationSeconds(metric.value);
+  if (typeof value !== "number") return "Sem dados";
+  if (metric.unit === "percentage") return formatTrafficPercentage(value);
+  if (metric.unit === "seconds") return formatDurationSeconds(value);
 
-  return numberFormatter.format(metric.value);
+  return numberFormatter.format(value);
 };
 
 const PsychologistTrafficSourcePlatformMetrics = ({
+  benchmarkMetricsBySourceId,
   className,
   source,
 }: {
+  benchmarkMetricsBySourceId: PsychologistTrafficSourceBenchmarkMap;
   className?: string;
-  source: Pick<PsychologistTrafficSourceItem, "description" | "platform_metrics">;
+  source: Pick<
+    PsychologistTrafficSourceDisplayItem,
+    "benchmarkSourceId" | "considered_count" | "description" | "id" | "platform_metrics"
+  >;
 }) => {
   const metrics = source.platform_metrics ?? [];
+  const consideredCount =
+    typeof source.considered_count === "number" ? source.considered_count : null;
+  const benchmarkSourceId =
+    source.benchmarkSourceId ??
+    (PSYCHOLOGIST_COMMUNITY_TRAFFIC_SOURCE_ID_SET.has(
+      source.id as PsychologistTrafficSourceItem["id"],
+    ) ||
+    PSYCHOLOGIST_PRESENTATION_VIDEO_TRAFFIC_SOURCE_ID_SET.has(
+      source.id as PsychologistTrafficSourceItem["id"],
+    ) ||
+    source.id === "profile"
+      ? (source.id as PsychologistTrafficSourceItem["id"])
+      : null);
+  const benchmarkMetrics = benchmarkSourceId
+    ? benchmarkMetricsBySourceId.get(benchmarkSourceId)
+    : undefined;
 
   if (metrics.length === 0) {
     return (
@@ -5188,18 +5347,46 @@ const PsychologistTrafficSourcePlatformMetrics = ({
 
   return (
     <div className={cn("mt-2 flex flex-wrap gap-1.5", className)}>
-      {metrics.map((metric) => (
-        <span
-          className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface px-2 py-1 text-[0.68rem] font-bold leading-none text-muted"
-          key={metric.id}
-          title={metric.unavailable_reason ?? metric.source}
-        >
-          <span>{metric.label}</span>
-          <strong className="font-black text-foreground">
-            {formatPsychologistTrafficSourcePlatformMetricValue(metric)}
-          </strong>
-        </span>
-      ))}
+      {metrics.map((metric) => {
+        const value = getPsychologistTrafficMetricAverageValue({ consideredCount, metric });
+        const benchmarkMetric = benchmarkMetrics?.get(metric.id);
+        const benchmarkValue = normalizePsychologistTrafficMetricValue(
+          typeof benchmarkMetric?.value === "number" ? benchmarkMetric.value : null,
+        );
+        const status = getPsychologistTrafficMetricStatus({
+          benchmarkValue,
+          consideredCount,
+          value,
+        });
+        const formattedBenchmark =
+          typeof benchmarkValue === "number"
+            ? formatPsychologistTrafficSourcePlatformMetricValue(metric, benchmarkValue)
+            : null;
+        const titleParts = [
+          PSYCHOLOGIST_TRAFFIC_SOURCE_METRIC_STATUS_LABELS[status],
+          formattedBenchmark ? `Média global: ${formattedBenchmark}` : null,
+          consideredCount !== null
+            ? `Base do psicólogo: ${numberFormatter.format(consideredCount)}`
+            : null,
+          metric.unavailable_reason ?? metric.source,
+        ].filter((item): item is string => Boolean(item));
+
+        return (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[0.68rem] font-bold leading-none",
+              PSYCHOLOGIST_TRAFFIC_SOURCE_METRIC_STATUS_CLASSES[status],
+            )}
+            key={metric.id}
+            title={titleParts.join(" · ")}
+          >
+            <span>{metric.label}</span>
+            <strong className="font-black text-current">
+              {formatPsychologistTrafficSourcePlatformMetricValue(metric, value)}
+            </strong>
+          </span>
+        );
+      })}
     </div>
   );
 };
@@ -5216,10 +5403,10 @@ const PsychologistTrafficSourcePlatformMetricsDescription = ({
   return (
     <p className="mt-1 text-[0.68rem] font-bold leading-4 text-muted">
       {context === "profile"
-        ? "Somatória dos dados de engajamento e conversão dentro do perfil."
+        ? "Médias do psicólogo dentro do perfil, comparadas à média global."
         : context === "presentation_video"
-          ? "Somatória dos dados de engajamento e conversão do vídeo de apresentação."
-          : "Somatória dos dados de engajamento e conversão da categoria."}
+          ? "Médias do psicólogo no vídeo de apresentação, comparadas à média global."
+          : "Médias do psicólogo na categoria, comparadas à média global."}
     </p>
   );
 };
@@ -5344,6 +5531,7 @@ const buildPsychologistTrafficSourceDisplayRows = (
         index,
         source: {
           ...source,
+          benchmarkSourceId: "profile",
           groupKind: "profile",
           id: "profile_group",
           isExpandableGroup: true,
@@ -5427,9 +5615,11 @@ const buildPsychologistTrafficSourceDisplayRows = (
 };
 
 const PsychologistTrafficSourceMetricsDetail = ({
+  benchmarkMetricsBySourceId,
   className,
   source,
 }: {
+  benchmarkMetricsBySourceId: PsychologistTrafficSourceBenchmarkMap;
   className?: string;
   source: PsychologistTrafficSourceDisplayItem;
 }) => (
@@ -5448,7 +5638,10 @@ const PsychologistTrafficSourceMetricsDetail = ({
       context={source.groupKind}
       source={source}
     />
-    <PsychologistTrafficSourcePlatformMetrics source={source} />
+    <PsychologistTrafficSourcePlatformMetrics
+      benchmarkMetricsBySourceId={benchmarkMetricsBySourceId}
+      source={source}
+    />
   </div>
 );
 
@@ -5465,11 +5658,28 @@ const PsychologistTrafficSourcesCard = ({
     Set<PsychologistTrafficSourceGroupId>
   >(() => new Set());
   const traffic = statistics.traffic_sources;
+  const benchmarkQuery = useMemo<PsychologistsDashboardQuery>(
+    () => ({
+      from: statistics.period.from,
+      period: "custom",
+      to: statistics.period.to,
+    }),
+    [statistics.period.from, statistics.period.to],
+  );
+  const dashboardBenchmark = useAdminPsychologistsDashboard(benchmarkQuery, {
+    enabled: traffic.sources.some((source) => (source.platform_metrics?.length ?? 0) > 0),
+  });
+  const benchmarkMetricsBySourceId = useMemo(
+    () => buildPsychologistTrafficSourceBenchmarkMap(dashboardBenchmark.data?.traffic_sources),
+    [dashboardBenchmark.data?.traffic_sources],
+  );
   const trafficRows = buildPsychologistTrafficSourceDisplayRows(traffic.sources);
   const totalWhatsappClicks = traffic.sources.reduce(
     (total, source) => total + (source.whatsapp_clicks ?? 0),
     0,
   );
+  const trafficDescription =
+    "Entenda em quais superfícies os pacientes clicam no WhatsApp deste psicólogo e compare as médias de engajamento e conversão por origem com a média global.";
   const getWhatsappClicksPercentage = (value: number | null) =>
     roundTrafficOneDecimal(getTrafficPercentageFromTotal(value, totalWhatsappClicks));
   const toggleTrafficSourceGroup = (groupId: PsychologistTrafficSourceGroupId) => {
@@ -5490,21 +5700,24 @@ const PsychologistTrafficSourcesCard = ({
     <CardShell className="p-5">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-bold text-foreground">Origem do tráfego</h2>
-            {traffic.updated_at ? (
-              <Badge className="bg-surface-muted text-muted">
-                Atualizado em {formatDateOnly(traffic.updated_at)}
-              </Badge>
-            ) : null}
-            {isRefreshing ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
-                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
-                Atualizando
-              </span>
-            ) : null}
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h2 className="text-lg font-bold text-foreground">Origem do tráfego</h2>
+              {traffic.updated_at ? (
+                <Badge className="bg-surface-muted text-muted">
+                  Atualizado em {formatDateOnly(traffic.updated_at)}
+                </Badge>
+              ) : null}
+              {isRefreshing ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                  <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                  Atualizando
+                </span>
+              ) : null}
+            </div>
+            <PsychologistTrafficSourceMetricLegend />
           </div>
-          <p className="mt-1 text-sm font-bold leading-6 text-muted">{traffic.description}</p>
+          <p className="mt-1 text-sm font-bold leading-6 text-muted">{trafficDescription}</p>
         </div>
         {periodControls}
       </div>
@@ -5579,7 +5792,10 @@ const PsychologistTrafficSourcesCard = ({
                                 context={source.groupKind}
                                 source={childSource}
                               />
-                              <PsychologistTrafficSourcePlatformMetrics source={childSource} />
+                              <PsychologistTrafficSourcePlatformMetrics
+                                benchmarkMetricsBySourceId={benchmarkMetricsBySourceId}
+                                source={childSource}
+                              />
                             </div>
                             <div className="flex justify-center text-center">
                               <span className="inline-flex flex-col items-center gap-0.5">
@@ -5599,7 +5815,10 @@ const PsychologistTrafficSourcesCard = ({
                         ))
                       ) : source.platform_metrics?.length ? (
                         <div className="px-4 py-3">
-                          <PsychologistTrafficSourceMetricsDetail source={source} />
+                          <PsychologistTrafficSourceMetricsDetail
+                            benchmarkMetricsBySourceId={benchmarkMetricsBySourceId}
+                            source={source}
+                          />
                         </div>
                       ) : null}
                     </div>
@@ -5737,7 +5956,10 @@ const PsychologistTrafficSourcesCard = ({
                                 context={source.groupKind}
                                 source={childSource}
                               />
-                              <PsychologistTrafficSourcePlatformMetrics source={childSource} />
+                              <PsychologistTrafficSourcePlatformMetrics
+                                benchmarkMetricsBySourceId={benchmarkMetricsBySourceId}
+                                source={childSource}
+                              />
                             </div>
                             <span className="inline-flex shrink-0 flex-col items-end gap-0.5 text-right">
                               <PsychologistTrafficSourceMetricValue
@@ -5757,6 +5979,7 @@ const PsychologistTrafficSourcesCard = ({
                       ) : source.platform_metrics?.length ? (
                         <div className="py-2 first:pt-0 last:pb-0">
                           <PsychologistTrafficSourceMetricsDetail
+                            benchmarkMetricsBySourceId={benchmarkMetricsBySourceId}
                             className="pl-3"
                             source={source}
                           />
