@@ -3731,7 +3731,7 @@ function DashboardProfileConversionMatrixSection({
                 funil: <strong className="font-black text-foreground">{basisLabel}</strong>.
               </p>
             </div>
-            <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:min-w-[28rem]">
+            <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:min-w-[34rem] 2xl:min-w-[38rem]">
               <ProfileCrossMatrixAxisSelect
                 axes={rowAxisOptions}
                 id="profile-cross-matrix-row-axis"

@@ -3873,7 +3873,7 @@ const buildTrafficPlatformMetrics = (params: {
   return { consideredCounts, metrics };
 };
 
-const PROFILE_CROSS_MATRIX_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+${PROFILE_ACTIVITY_SOURCE}+${ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE}+${ADMIN_PROFILE_EXPOSURE_SOURCE}+profile_video_watch_session+community_post.media_type`;
+const PROFILE_CROSS_MATRIX_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+${PROFILE_ACTIVITY_SOURCE}+${ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE}+${ADMIN_PROFILE_EXPOSURE_SOURCE}+profile_video_watch_session+community_post.media_type+post_reply.media_type+profile_view_event.source=profile_page+professional_review.status=publicada+shared_psychologist_public_ranking_helper`;
 const PROFILE_CROSS_MATRIX_DEFAULT_ROW_AXIS_ID = "conversion" as const;
 const PROFILE_CROSS_MATRIX_DEFAULT_COLUMN_AXIS_ID = "community_visibility" as const;
 
@@ -3942,27 +3942,159 @@ const PROFILE_VIDEO_RETENTION_CATEGORY_CONFIG = {
   { color: string; description: string; label: string }
 >;
 
-const COMMUNITY_VIDEO_POSTS_CATEGORY_ORDER = [
-  "with_community_video_posts",
-  "without_community_video_posts",
+const COMMUNITY_CONTENT_FORMAT_CATEGORY_ORDER = [
+  "community_post_video",
+  "community_post_without_video",
+  "community_reply_video",
+  "community_reply_without_video",
+  "no_community_content",
 ] as const;
 
-type CommunityVideoPostsCategoryId = (typeof COMMUNITY_VIDEO_POSTS_CATEGORY_ORDER)[number];
+type CommunityContentFormatCategoryId = (typeof COMMUNITY_CONTENT_FORMAT_CATEGORY_ORDER)[number];
 
-const COMMUNITY_VIDEO_POSTS_CATEGORY_CONFIG = {
-  with_community_video_posts: {
+const COMMUNITY_CONTENT_FORMAT_CATEGORY_CONFIG = {
+  community_post_video: {
     color: PROFILE_CROSS_MATRIX_COLORS.high,
     description:
-      "Psicólogo publicou ao menos um post com vídeo em comunidades no período selecionado.",
-    label: "Com posts com vídeo",
+      "Formato autoral predominante: posts em comunidades com pelo menos uma mídia de vídeo no período selecionado.",
+    label: "Posts com vídeo",
   },
-  without_community_video_posts: {
+  community_post_without_video: {
+    color: PROFILE_CROSS_MATRIX_COLORS.standard,
+    description:
+      "Formato autoral predominante: posts em comunidades sem mídia de vídeo no período selecionado.",
+    label: "Posts sem vídeo",
+  },
+  community_reply_video: {
+    color: PROFILE_CROSS_MATRIX_COLORS.high,
+    description:
+      "Formato autoral predominante: respostas em comunidades com mídia de vídeo no período selecionado.",
+    label: "Respostas com vídeo",
+  },
+  community_reply_without_video: {
+    color: PROFILE_CROSS_MATRIX_COLORS.low,
+    description:
+      "Formato autoral predominante: respostas em comunidades sem mídia de vídeo no período selecionado.",
+    label: "Respostas sem vídeo",
+  },
+  no_community_content: {
     color: PROFILE_CROSS_MATRIX_COLORS.none,
-    description: "Psicólogo não publicou posts com vídeo em comunidades no período selecionado.",
-    label: "Sem posts com vídeo",
+    description:
+      "Psicólogo não publicou posts nem respostas em comunidades no período selecionado.",
+    label: "Sem conteúdo",
   },
 } satisfies Record<
-  CommunityVideoPostsCategoryId,
+  CommunityContentFormatCategoryId,
+  { color: string; description: string; label: string }
+>;
+
+const PROFILE_OPENING_CATEGORY_ORDER = [
+  "high_profile_opening",
+  "standard_profile_opening",
+  "low_profile_opening",
+  "no_profile_opening",
+] as const;
+
+type ProfileOpeningCategoryId = (typeof PROFILE_OPENING_CATEGORY_ORDER)[number];
+
+const PROFILE_OPENING_CATEGORY_CONFIG = {
+  high_profile_opening: {
+    color: PROFILE_CROSS_MATRIX_COLORS.high,
+    description:
+      "Aberturas reais do perfil público acima da faixa padrão da plataforma no período selecionado.",
+    label: "Alta abertura",
+  },
+  low_profile_opening: {
+    color: PROFILE_CROSS_MATRIX_COLORS.low,
+    description:
+      "Aberturas reais do perfil público abaixo da faixa padrão da plataforma, mas com sinal no período.",
+    label: "Baixa abertura",
+  },
+  no_profile_opening: {
+    color: PROFILE_CROSS_MATRIX_COLORS.none,
+    description: "Nenhuma abertura real do perfil público no período selecionado.",
+    label: "Sem abertura",
+  },
+  standard_profile_opening: {
+    color: PROFILE_CROSS_MATRIX_COLORS.standard,
+    description:
+      "Aberturas reais do perfil público dentro da faixa padrão da plataforma no período selecionado.",
+    label: "Abertura padrão",
+  },
+} satisfies Record<ProfileOpeningCategoryId, { color: string; description: string; label: string }>;
+
+const REVIEWS_CATEGORY_ORDER = [
+  "high_reviews",
+  "standard_reviews",
+  "low_reviews",
+  "no_reviews",
+] as const;
+
+type ReviewsCategoryId = (typeof REVIEWS_CATEGORY_ORDER)[number];
+
+const REVIEWS_CATEGORY_CONFIG = {
+  high_reviews: {
+    color: PROFILE_CROSS_MATRIX_COLORS.high,
+    description:
+      "Avaliações publicadas recebidas acima da faixa padrão da plataforma no período selecionado.",
+    label: "Muitas avaliações",
+  },
+  low_reviews: {
+    color: PROFILE_CROSS_MATRIX_COLORS.low,
+    description:
+      "Avaliações publicadas recebidas abaixo da faixa padrão da plataforma, mas com sinal no período.",
+    label: "Poucas avaliações",
+  },
+  no_reviews: {
+    color: PROFILE_CROSS_MATRIX_COLORS.none,
+    description: "Nenhuma avaliação publicada recebida no período selecionado.",
+    label: "Sem avaliações",
+  },
+  standard_reviews: {
+    color: PROFILE_CROSS_MATRIX_COLORS.standard,
+    description:
+      "Avaliações publicadas recebidas dentro da faixa padrão da plataforma no período selecionado.",
+    label: "Avaliações padrão",
+  },
+} satisfies Record<ReviewsCategoryId, { color: string; description: string; label: string }>;
+
+const PRESENTATION_VIDEO_POSITION_CATEGORY_ORDER = [
+  "presentation_video_position_top_10",
+  "presentation_video_position_top_30",
+  "presentation_video_position_top_50",
+  "presentation_video_position_50_plus",
+] as const;
+
+type PresentationVideoPositionCategoryId =
+  (typeof PRESENTATION_VIDEO_POSITION_CATEGORY_ORDER)[number];
+
+const PRESENTATION_VIDEO_POSITION_CATEGORY_CONFIG = {
+  presentation_video_position_50_plus: {
+    color: PROFILE_CROSS_MATRIX_COLORS.none,
+    description:
+      "Vídeo de apresentação do psicólogo aparece após a posição 50 ou fora da lista pública ranqueada.",
+    label: "50+",
+  },
+  presentation_video_position_top_10: {
+    color: PROFILE_CROSS_MATRIX_COLORS.high,
+    description:
+      "Vídeo de apresentação do psicólogo aparece entre as 10 primeiras posições da página de psicólogos.",
+    label: "Top 10",
+  },
+  presentation_video_position_top_30: {
+    color: PROFILE_CROSS_MATRIX_COLORS.standard,
+    description:
+      "Vídeo de apresentação do psicólogo aparece entre as posições 11 e 30 da página de psicólogos.",
+    label: "Top 30",
+  },
+  presentation_video_position_top_50: {
+    color: PROFILE_CROSS_MATRIX_COLORS.low,
+    description:
+      "Vídeo de apresentação do psicólogo aparece entre as posições 31 e 50 da página de psicólogos.",
+    label: "Top 50",
+  },
+} satisfies Record<
+  PresentationVideoPositionCategoryId,
   { color: string; description: string; label: string }
 >;
 
@@ -4013,7 +4145,7 @@ const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefinition[] 
     ),
     description: "Volume de posts e respostas autorais criados nas comunidades.",
     id: "activity",
-    label: "Atividade",
+    label: "Atividade comunidade",
     source: PROFILE_ACTIVITY_SOURCE,
   },
   {
@@ -4032,7 +4164,7 @@ const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefinition[] 
     ),
     description: "Score de engajamento recebido em comunidades por comentários e interações reais.",
     id: "engagement",
-    label: "Engajamento",
+    label: "Engajamento comunidade",
     source: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE,
   },
   {
@@ -4053,6 +4185,26 @@ const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefinition[] 
     id: "favorites",
     label: "Favoritados",
     source: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE,
+  },
+  {
+    categories: PROFILE_OPENING_CATEGORY_ORDER.map((id) => ({
+      id,
+      ...PROFILE_OPENING_CATEGORY_CONFIG[id],
+    })),
+    description: "Aberturas reais do perfil público do psicólogo no período selecionado.",
+    id: "profile_opening",
+    label: "Abertura de perfil",
+    source: "profile_view_event.source=profile_page",
+  },
+  {
+    categories: REVIEWS_CATEGORY_ORDER.map((id) => ({
+      id,
+      ...REVIEWS_CATEGORY_CONFIG[id],
+    })),
+    description: "Avaliações publicadas recebidas pelo psicólogo no período selecionado.",
+    id: "reviews",
+    label: "Avaliações",
+    source: "professional_review.status=publicada",
   },
   {
     categories: ADMIN_PROFILE_EXPOSURE_COMMUNITY_CATEGORY_ORDER.map((id) =>
@@ -4103,14 +4255,25 @@ const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefinition[] 
     source: "profile_video_watch_session.watched_seconds/duration_seconds",
   },
   {
-    categories: COMMUNITY_VIDEO_POSTS_CATEGORY_ORDER.map((id) => ({
+    categories: PRESENTATION_VIDEO_POSITION_CATEGORY_ORDER.map((id) => ({
       id,
-      ...COMMUNITY_VIDEO_POSTS_CATEGORY_CONFIG[id],
+      ...PRESENTATION_VIDEO_POSITION_CATEGORY_CONFIG[id],
     })),
-    description: "Presença de posts autorais com vídeo publicados nas comunidades.",
-    id: "community_video_posts",
-    label: "Posts com vídeo",
-    source: "community_post.author_id+community_post.media_type=video",
+    description: "Posição do vídeo de apresentação na página pública de psicólogos.",
+    id: "presentation_video_position",
+    label: "Posição vídeo de apresentação",
+    source: "shared_psychologist_public_ranking_helper",
+  },
+  {
+    categories: COMMUNITY_CONTENT_FORMAT_CATEGORY_ORDER.map((id) => ({
+      id,
+      ...COMMUNITY_CONTENT_FORMAT_CATEGORY_CONFIG[id],
+    })),
+    description:
+      "Formato predominante do conteúdo autoral publicado pelo psicólogo nas comunidades.",
+    id: "community_content_format",
+    label: "Formato de conteúdo",
+    source: "community_post.author_id+post_reply.author_id+media_type",
   },
 ];
 
@@ -4136,6 +4299,65 @@ const classifyProfileVideoRetentionCategory = (input: {
   return "standard_presentation_video_retention";
 };
 
+const classifyProfileCrossMatrixCountCategory = <TCategoryId extends string>(input: {
+  count: number;
+  highCategoryId: TCategoryId;
+  lowCategoryId: TCategoryId;
+  noCategoryId: TCategoryId;
+  standardCategoryId: TCategoryId;
+  standardMax: number | null;
+  standardMin: number | null;
+}): TCategoryId => {
+  if (input.count <= 0) return input.noCategoryId;
+  if (input.standardMin === null || input.standardMax === null) return input.standardCategoryId;
+  if (input.count > input.standardMax) return input.highCategoryId;
+  if (input.count < input.standardMin) return input.lowCategoryId;
+
+  return input.standardCategoryId;
+};
+
+type CommunityContentFormatSignals = Record<
+  "postText" | "postVideo" | "replyText" | "replyVideo",
+  number
+>;
+
+const emptyCommunityContentFormatSignals = (): CommunityContentFormatSignals => ({
+  postText: 0,
+  postVideo: 0,
+  replyText: 0,
+  replyVideo: 0,
+});
+
+const classifyCommunityContentFormatCategory = (
+  signals: CommunityContentFormatSignals,
+): CommunityContentFormatCategoryId => {
+  const rankedFormats: Array<{
+    count: number;
+    id: CommunityContentFormatCategoryId;
+    priority: number;
+  }> = [
+    { count: signals.postVideo, id: "community_post_video", priority: 4 },
+    { count: signals.replyVideo, id: "community_reply_video", priority: 3 },
+    { count: signals.postText, id: "community_post_without_video", priority: 2 },
+    { count: signals.replyText, id: "community_reply_without_video", priority: 1 },
+  ];
+  const selected = rankedFormats
+    .filter((format) => format.count > 0)
+    .sort((left, right) => right.count - left.count || right.priority - left.priority)[0];
+
+  return selected?.id ?? "no_community_content";
+};
+
+const classifyPresentationVideoPositionCategory = (
+  position: number | null,
+): PresentationVideoPositionCategoryId => {
+  if (typeof position !== "number" || position > 50) return "presentation_video_position_50_plus";
+  if (position <= 10) return "presentation_video_position_top_10";
+  if (position <= 30) return "presentation_video_position_top_30";
+
+  return "presentation_video_position_top_50";
+};
+
 const addProfileCrossMatrixCount = <TKey extends string>(counts: Map<TKey, number>, key: TKey) => {
   counts.set(key, (counts.get(key) ?? 0) + 1);
 };
@@ -4147,6 +4369,8 @@ const buildProfileCrossMatrixResults = (params: {
   profileTrafficPlatformMetricDataset: AdminPsychologistProfileTrafficPlatformDataset;
   profileVideoAttentionSeconds: AdminPsychologistAttentionRecord[];
   profiles: AdminPsychologistProfileRecord[];
+  publishedReviews: AdminPsychologistEventRecord[];
+  rankingPositionsByPsychologistId: Map<string, number>;
   range: AdminPsychologistsDashboardDateRange;
   receivedEngagementEvents: AdminPsychologistReceivedEngagementEventRecord[];
   whatsappClicks: AdminPsychologistEventRecord[];
@@ -4308,21 +4532,64 @@ const buildProfileCrossMatrixResults = (params: {
       totals.samples > 0 ? roundTrafficMetricPercent(totals.totalPercent / totals.samples) : null,
     ]),
   );
-  const communityVideoPostsByPsychologistId = new Map<string, number>();
+  const countProfileTrafficRecordsByPsychologist = (
+    records: Array<{ psychologist_id: string }>,
+  ) => {
+    const counts = new Map<string, number>();
+
+    for (const record of records) {
+      if (!analyzedPsychologistIds.has(record.psychologist_id)) continue;
+      counts.set(record.psychologist_id, (counts.get(record.psychologist_id) ?? 0) + 1);
+    }
+
+    return counts;
+  };
+  const profileOpeningCountsByPsychologistId = countProfileTrafficRecordsByPsychologist(
+    params.profileTrafficPlatformMetricDataset.profileViews,
+  );
+  const reviewCountsByPsychologistId = countEventsByPsychologist(
+    params.publishedReviews.filter((event) => analyzedPsychologistIds.has(event.psychologist_id)),
+  );
+  const communityContentFormatByPsychologistId = new Map<string, CommunityContentFormatSignals>();
+  const ensureCommunityContentFormatSignals = (psychologistId: string) => {
+    const current =
+      communityContentFormatByPsychologistId.get(psychologistId) ??
+      emptyCommunityContentFormatSignals();
+    communityContentFormatByPsychologistId.set(psychologistId, current);
+
+    return current;
+  };
 
   for (const post of params.communityTrafficPlatformMetricDataset.posts) {
     if (
       !analyzedPsychologistIds.has(post.author_id) ||
-      !dateInRange(post.createdAt, params.range) ||
-      !isCommunityTrafficVideoMedia(post)
+      !dateInRange(post.createdAt, params.range)
     ) {
       continue;
     }
 
-    communityVideoPostsByPsychologistId.set(
-      post.author_id,
-      (communityVideoPostsByPsychologistId.get(post.author_id) ?? 0) + 1,
-    );
+    const signals = ensureCommunityContentFormatSignals(post.author_id);
+    if (isCommunityTrafficVideoMedia(post)) {
+      signals.postVideo += 1;
+    } else {
+      signals.postText += 1;
+    }
+  }
+
+  for (const reply of params.communityTrafficPlatformMetricDataset.replies) {
+    if (
+      !analyzedPsychologistIds.has(reply.author_id) ||
+      !dateInRange(reply.createdAt, params.range)
+    ) {
+      continue;
+    }
+
+    const signals = ensureCommunityContentFormatSignals(reply.author_id);
+    if (isCommunityTrafficVideoMedia(reply)) {
+      signals.replyVideo += 1;
+    } else {
+      signals.replyText += 1;
+    }
   }
 
   const eligibleConversionProfiles = params.profiles.filter(
@@ -4379,6 +4646,20 @@ const buildProfileCrossMatrixResults = (params: {
   });
   const standardMinRetention = percentileValue(retentionValues, 25);
   const standardMaxRetention = percentileValue(retentionValues, 75);
+  const profileOpeningValues = params.profiles.flatMap((profile) => {
+    const count = profileOpeningCountsByPsychologistId.get(profile.user.id) ?? 0;
+
+    return count > 0 ? [count] : [];
+  });
+  const profileOpeningStandardMin = percentileValue(profileOpeningValues, 25);
+  const profileOpeningStandardMax = percentileValue(profileOpeningValues, 75);
+  const reviewValues = params.profiles.flatMap((profile) => {
+    const count = reviewCountsByPsychologistId.get(profile.user.id) ?? 0;
+
+    return count > 0 ? [count] : [];
+  });
+  const reviewsStandardMin = percentileValue(reviewValues, 25);
+  const reviewsStandardMax = percentileValue(reviewValues, 75);
   const assignments = params.profiles.map((profile): ProfileCrossMatrixAssignments => {
     const psychologistId = profile.user.id;
     const activeDays = getProfileActiveDaysInRange(profile, params.range);
@@ -4462,20 +4743,45 @@ const buildProfileCrossMatrixResults = (params: {
       standardMaxRetention,
       standardMinRetention,
     });
-    const communityVideoPostsCategory: CommunityVideoPostsCategoryId =
-      (communityVideoPostsByPsychologistId.get(psychologistId) ?? 0) > 0
-        ? "with_community_video_posts"
-        : "without_community_video_posts";
+    const profileOpeningCategory =
+      classifyProfileCrossMatrixCountCategory<ProfileOpeningCategoryId>({
+        count: profileOpeningCountsByPsychologistId.get(psychologistId) ?? 0,
+        highCategoryId: "high_profile_opening",
+        lowCategoryId: "low_profile_opening",
+        noCategoryId: "no_profile_opening",
+        standardCategoryId: "standard_profile_opening",
+        standardMax: profileOpeningStandardMax,
+        standardMin: profileOpeningStandardMin,
+      });
+    const reviewsCategory = classifyProfileCrossMatrixCountCategory<ReviewsCategoryId>({
+      count: reviewCountsByPsychologistId.get(psychologistId) ?? 0,
+      highCategoryId: "high_reviews",
+      lowCategoryId: "low_reviews",
+      noCategoryId: "no_reviews",
+      standardCategoryId: "standard_reviews",
+      standardMax: reviewsStandardMax,
+      standardMin: reviewsStandardMin,
+    });
+    const communityContentFormatCategory = classifyCommunityContentFormatCategory(
+      communityContentFormatByPsychologistId.get(psychologistId) ??
+        emptyCommunityContentFormatSignals(),
+    );
+    const presentationVideoPositionCategory = classifyPresentationVideoPositionCategory(
+      params.rankingPositionsByPsychologistId.get(psychologistId) ?? null,
+    );
 
     return {
       activity: classifyProfileActivityCategory(activitySignals.actions),
-      community_video_posts: communityVideoPostsCategory,
+      community_content_format: communityContentFormatCategory,
       community_visibility: communityVisibilityCategory,
       conversion: conversionCategory,
       engagement: engagementCategory,
       favorites: favoritesCategory,
+      presentation_video_position: presentationVideoPositionCategory,
       presentation_video_retention: retentionCategory,
       presentation_video_visibility: videoVisibilityCategory,
+      profile_opening: profileOpeningCategory,
+      reviews: reviewsCategory,
     };
   });
 
@@ -6237,6 +6543,7 @@ const buildPlanSegmentSummaries = (params: {
   profileTrafficPlatformMetricDataset: AdminPsychologistProfileTrafficPlatformDataset;
   profileVideoAttentionSeconds: AdminPsychologistAttentionRecord[];
   profiles: AdminPsychologistProfileRecord[];
+  publishedReviews: AdminPsychologistEventRecord[];
   rankingPositionsByPsychologistId: Map<string, number>;
   range: AdminPsychologistsDashboardDateRange;
   receivedEngagementEvents: AdminPsychologistReceivedEngagementEventRecord[];
@@ -6346,6 +6653,8 @@ const buildPlanSegmentSummaries = (params: {
           profileTrafficPlatformMetricDataset: params.profileTrafficPlatformMetricDataset,
           profileVideoAttentionSeconds: params.profileVideoAttentionSeconds,
           profiles: segmentProfiles,
+          publishedReviews: params.publishedReviews,
+          rankingPositionsByPsychologistId: params.rankingPositionsByPsychologistId,
           range: params.range,
           receivedEngagementEvents: params.receivedEngagementEvents,
           whatsappClicks: params.whatsappContactRequests,
@@ -6494,6 +6803,7 @@ export const buildPsychologistsDashboard = async (
     whatsappContactRequests,
     communityTrafficPlatformMetricDataset,
     profileTrafficPlatformMetricDataset,
+    publishedReviews,
     preSignupConversionLinkedPageViews,
     preSignupConversionLinkedSessions,
     preSignupConversionSignupIdentities,
@@ -6507,6 +6817,7 @@ export const buildPsychologistsDashboard = async (
     repository.listWhatsappContactRequests(current),
     repository.listCommunityTrafficPlatformMetricDataset(current),
     repository.listProfileTrafficPlatformMetricDataset(current, psychologistUserIds),
+    repository.listPublishedReviews(current),
     repository.listPreSignupConversionLinkedPageViews(currentPeriodPsychologistIds),
     repository.listPreSignupConversionLinkedSessions(currentPeriodPsychologistIds),
     repository.listPreSignupConversionSignupIdentities(currentPeriodPsychologistIds),
@@ -6607,6 +6918,7 @@ export const buildPsychologistsDashboard = async (
     profileTrafficPlatformMetricDataset,
     profileVideoAttentionSeconds,
     profiles,
+    publishedReviews,
     rankingPositionsByPsychologistId,
     range: current,
     receivedEngagementEvents,

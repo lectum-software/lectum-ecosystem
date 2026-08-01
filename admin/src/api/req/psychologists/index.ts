@@ -1086,13 +1086,16 @@ export type PsychologistsDashboardProfileConversionVisibilityMatrixResults = {
 
 export type PsychologistsDashboardProfileCrossMatrixAxisId =
   | "activity"
-  | "community_video_posts"
+  | "community_content_format"
   | "community_visibility"
   | "conversion"
   | "engagement"
   | "favorites"
+  | "presentation_video_position"
   | "presentation_video_retention"
-  | "presentation_video_visibility";
+  | "presentation_video_visibility"
+  | "profile_opening"
+  | "reviews";
 
 export type PsychologistsDashboardProfileCrossMatrixCategory = {
   color: string;
