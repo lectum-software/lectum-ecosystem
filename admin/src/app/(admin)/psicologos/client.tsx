@@ -3799,10 +3799,8 @@ const getProfileCrossMatrixByAxes = (
   ) ?? null;
 
 function DashboardProfileConversionMatrixSection({
-  basisLabel,
   crossMatrix,
 }: {
-  basisLabel: string;
   crossMatrix: ProfileCrossMatrixResults;
 }) {
   const [isMatrixExpanded, setIsMatrixExpanded] = useState(false);
@@ -3867,8 +3865,7 @@ function DashboardProfileConversionMatrixSection({
             <div className="min-w-0">
               <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
-                Escolha os dois eixos para uma análise cruzada. A leitura acompanha a base agregada
-                do funil: <strong className="font-black text-foreground">{basisLabel}.</strong>
+                Escolha os dois eixos para uma análise cruzada.
               </p>
             </div>
             <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:min-w-[28rem] 2xl:min-w-[30rem]">
@@ -4024,10 +4021,7 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
           </tbody>
         </table>
       </div>
-      <DashboardProfileConversionMatrixSection
-        basisLabel={segmentSummary.label}
-        crossMatrix={profileCrossMatrix}
-      />
+      <DashboardProfileConversionMatrixSection crossMatrix={profileCrossMatrix} />
     </CardShell>
   );
 };
