@@ -3388,32 +3388,41 @@ const ProfileConversionMatrixQuadrantCard = ({
   );
 };
 
+const PROFILE_CONVERSION_BEHAVIOR_TAG_TONE_CLASS: Record<
+  ProfileConversionBehaviorMetric["tone"],
+  string
+> = {
+  above: "border-success/25 bg-success/10 text-success",
+  below: "border-warning/25 bg-warning/10 text-warning",
+  standard: "border-primary/20 bg-primary-soft text-primary",
+  zero: "border-danger/20 bg-danger/10 text-danger",
+};
+
+const PROFILE_CONVERSION_BEHAVIOR_VALUE_ONLY_TAG_IDS = new Set([
+  "community_activity_level",
+  "community_engagement_level",
+  "community_post_format",
+  "community_reply_format",
+  "presentation_video_engagement_level",
+  "profile_openings_per_psychologist",
+]);
+
 const ProfileConversionBehaviorTableCell = ({
   cell,
 }: {
   cell: ProfileConversionBehaviorCell | null;
 }) => {
   const tagClassName =
-    "inline-flex max-w-full min-w-0 items-center rounded-2xl bg-surface-muted px-2 py-0.5 text-[0.66rem] font-normal leading-4 text-foreground";
+    "inline-flex max-w-full min-w-0 items-center rounded-2xl border px-2 py-0.5 text-[0.66rem] leading-4";
 
   if (!cell) {
     return (
       <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
         <span
-          className={cn(tagClassName, "text-muted")}
-          title={"O backend não retornou a leitura desta célula."}
+          className={cn(tagClassName, PROFILE_CONVERSION_BEHAVIOR_TAG_TONE_CLASS.zero)}
+          title={"O backend n\u00e3o retornou a leitura desta c\u00e9lula."}
         >
           Sem dados
-        </span>
-      </div>
-    );
-  }
-
-  if (cell.unavailable_reason) {
-    return (
-      <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
-        <span className={cn(tagClassName, "text-muted")} title={cell.unavailable_reason}>
-          {getProfileConversionBehaviorUnavailableTag(cell)}
         </span>
       </div>
     );
@@ -3424,8 +3433,13 @@ const ProfileConversionBehaviorTableCell = ({
   if (tags.length === 0) {
     return (
       <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1">
-        <span className={cn(tagClassName, "text-muted")} title={cell.headline}>
-          Sem sinais mensuráveis
+        <span
+          className={cn(tagClassName, PROFILE_CONVERSION_BEHAVIOR_TAG_TONE_CLASS.zero)}
+          title={cell.unavailable_reason ?? cell.headline}
+        >
+          {cell.unavailable_reason
+            ? getProfileConversionBehaviorUnavailableTag(cell)
+            : "Sem sinais mensur\u00e1veis"}
         </span>
       </div>
     );
@@ -3433,13 +3447,27 @@ const ProfileConversionBehaviorTableCell = ({
 
   return (
     <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1" title={cell.headline}>
-      {tags.map((tag) => (
-        <span className={tagClassName} key={`${cell.id}-${tag.id}`} title={tag.description}>
-          <span className="min-w-0 max-w-full whitespace-normal break-words">
-            {tag.label}: {tag.value}
+      {tags.map((tag, index) => {
+        const isWhatsappAverageTag = tag.id.includes("whatsapp_clicks_per_psychologist");
+        const isPrimaryWhatsappTag = isWhatsappAverageTag && index === 0;
+        const isValueOnlyTag = PROFILE_CONVERSION_BEHAVIOR_VALUE_ONLY_TAG_IDS.has(tag.id);
+
+        return (
+          <span
+            className={cn(
+              tagClassName,
+              PROFILE_CONVERSION_BEHAVIOR_TAG_TONE_CLASS[tag.tone],
+              isPrimaryWhatsappTag ? "font-black" : "font-semibold",
+            )}
+            key={`${cell.id}-${tag.id}`}
+            title={tag.description}
+          >
+            <span className="min-w-0 max-w-full whitespace-normal break-words">
+              {isValueOnlyTag ? tag.value : `${tag.label}: ${tag.value}`}
+            </span>
           </span>
-        </span>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -3449,39 +3477,29 @@ const PROFILE_CONVERSION_BEHAVIOR_TAG_METRICS_BY_ELEMENT: Record<
   string[]
 > = {
   communities: [
-    "community_content_count",
-    "activity_actions",
-    "activity_active_psychologists",
-    "activity_actions_per_psychologist",
-    "community_views_per_content",
+    "community_whatsapp_clicks_per_psychologist",
+    "community_activity_level",
+    "community_engagement_level",
+    "community_post_format",
+    "community_reply_format",
     "community_attention_per_content",
-    "community_video_retention",
-    "community_engagement_actions",
-    "engagement_score",
-    "engagement_comments_received",
-    "engagement_content_saves",
-    "engagement_content_shares",
-    "engagement_positive_votes",
-    "community_whatsapp_clicks",
   ],
   favorite: ["favorites_screen_whatsapp_clicks_per_psychologist"],
   presentation_video: [
+    "presentation_video_whatsapp_clicks_per_psychologist",
     "presentation_video_retention",
-    "presentation_video_engagement_actions",
+    "presentation_video_engagement_level",
     "presentation_video_average_ranking_position",
     "presentation_video_average_watch_seconds",
     "presentation_video_views_per_video",
     "presentation_video_replay_rate",
-    "presentation_video_whatsapp_clicks",
   ],
   profile: [
-    "profile_openings",
+    "profile_whatsapp_clicks_per_psychologist",
     "profile_openings_per_psychologist",
     "profile_average_stay_seconds",
-    "profile_publications_tab_opens",
-    "profile_reviews_tab_opens",
-    "profile_favorites",
-    "profile_whatsapp_clicks",
+    "profile_dominant_tab",
+    "profile_favorites_per_psychologist",
     "profile_whatsapp_rate",
   ],
 };
@@ -3498,16 +3516,13 @@ const formatProfileConversionBehaviorMetricValue = (metric: ProfileConversionBeh
 const getProfileConversionBehaviorTags = (cell: ProfileConversionBehaviorCell) => {
   const priority = PROFILE_CONVERSION_BEHAVIOR_TAG_METRICS_BY_ELEMENT[cell.element_id] ?? [];
   const metricsById = new Map(cell.metrics.map((metric) => [metric.id, metric]));
-  const orderedMetrics = [
-    ...priority.flatMap((id) => {
-      const metric = metricsById.get(id);
-      return metric ? [metric] : [];
-    }),
-    ...cell.metrics.filter((metric) => !priority.includes(metric.id)),
-  ];
+  const orderedMetrics = priority.flatMap((id) => {
+    const metric = metricsById.get(id);
+    return metric ? [metric] : [];
+  });
 
   return orderedMetrics.flatMap((metric) => {
-    const value = formatProfileConversionBehaviorMetricValue(metric);
+    const value = metric.display_value ?? formatProfileConversionBehaviorMetricValue(metric);
     if (!value) return [];
 
     return [
@@ -3515,6 +3530,7 @@ const getProfileConversionBehaviorTags = (cell: ProfileConversionBehaviorCell) =
         description: metric.description,
         id: metric.id,
         label: metric.label,
+        tone: metric.tone,
         value,
       },
     ];
@@ -3887,7 +3903,6 @@ const TrafficSourceMetricValue = ({
     </span>
   </span>
 );
-
 
 type TrafficSourceAverageUnit = "content" | "psychologist" | "video";
 type TrafficSourceAverageSource = Pick<

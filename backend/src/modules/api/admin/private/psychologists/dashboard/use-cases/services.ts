@@ -4888,7 +4888,7 @@ const buildProfileCrossMatrixResults = (params: {
   };
 };
 
-const PROFILE_CONVERSION_BEHAVIOR_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+profile_view_event+page_view_event+profile_video_watch_session+important_action_event+content_attention_session+content_video_watch_session+post_reply+post_vote+post_save+post_reply_save+post_share+shared_psychologist_public_ranking_helper`;
+const PROFILE_CONVERSION_BEHAVIOR_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+profile_view_event+page_view_event+profile_video_watch_session+important_action_event+content_attention_session+content_video_watch_session+community_post.media_type+post_reply.media_type+post_vote+post_save+post_reply_save+post_share+shared_psychologist_public_ranking_helper`;
 
 const PROFILE_CONVERSION_BEHAVIOR_COLUMNS: Array<{
   description: string;
@@ -4943,17 +4943,22 @@ const buildProfileConversionBehaviorCellId = (
 
 const buildProfileConversionBehaviorMetric = (metric: {
   description: string;
+  display_value?: string | null;
   id: string;
   label: string;
   source: string;
+  tone?: AdminPsychologistsDashboardProfileConversionBehaviorMetric["tone"];
   unit?: AdminPsychologistsDashboardProfileConversionBehaviorMetric["unit"];
   unavailable_reason?: string | null;
   value: number | null;
 }): AdminPsychologistsDashboardProfileConversionBehaviorMetric => ({
   description: metric.description,
+  display_value: metric.display_value ?? null,
   id: metric.id,
   label: metric.label,
   source: metric.source,
+  tone:
+    metric.tone ?? (typeof metric.value !== "number" || metric.value <= 0 ? "zero" : "standard"),
   unit: metric.unit ?? "count",
   unavailable_reason: metric.unavailable_reason ?? null,
   value: typeof metric.value === "number" ? roundOneDecimal(metric.value) : null,
@@ -5014,6 +5019,112 @@ const describeProfileConversionBehaviorVolume = (value: number, thresholds: [num
 
   return "baixo";
 };
+
+type ProfileConversionBehaviorMetricTone =
+  AdminPsychologistsDashboardProfileConversionBehaviorMetric["tone"];
+
+type ProfileConversionBehaviorSemanticSignal = {
+  label: string;
+  tone: ProfileConversionBehaviorMetricTone;
+};
+
+const classifyProfileConversionBehaviorHigherIsBetterTone = (
+  value: number | null,
+  thresholds: [number, number],
+): ProfileConversionBehaviorMetricTone => {
+  if (typeof value !== "number" || value <= 0) return "zero";
+  if (value >= thresholds[1]) return "above";
+  if (value >= thresholds[0]) return "standard";
+
+  return "below";
+};
+
+const classifyProfileConversionBehaviorPositionTone = (
+  position: number | null,
+): ProfileConversionBehaviorMetricTone => {
+  if (typeof position !== "number" || position <= 0) return "zero";
+  if (position <= 10) return "above";
+  if (position <= 30) return "standard";
+
+  return "below";
+};
+
+const describeProfileConversionBehaviorActivitySignal = (
+  actionsPerPsychologist: number | null,
+): ProfileConversionBehaviorSemanticSignal => {
+  if (typeof actionsPerPsychologist !== "number" || actionsPerPsychologist <= 0) {
+    return { label: "Sem atividade", tone: "zero" };
+  }
+  if (actionsPerPsychologist >= 10) return { label: "Muito ativo", tone: "above" };
+  if (actionsPerPsychologist >= 3) return { label: "Atividade padr\u00e3o", tone: "standard" };
+
+  return { label: "Baixa atividade", tone: "below" };
+};
+
+const describeProfileConversionBehaviorEngagementSignal = (
+  engagementPerPsychologist: number | null,
+): ProfileConversionBehaviorSemanticSignal => {
+  if (typeof engagementPerPsychologist !== "number" || engagementPerPsychologist <= 0) {
+    return { label: "Sem engajamento", tone: "zero" };
+  }
+  if (engagementPerPsychologist >= 10) return { label: "Alto engajamento", tone: "above" };
+  if (engagementPerPsychologist >= 3) return { label: "Engajamento padr\u00e3o", tone: "standard" };
+
+  return { label: "Baixo engajamento", tone: "below" };
+};
+
+const describeProfileConversionBehaviorDominantContentFormat = (params: {
+  text: number;
+  textLabel: string;
+  video: number;
+  videoLabel: string;
+  zeroLabel: string;
+}): ProfileConversionBehaviorSemanticSignal => {
+  const total = params.text + params.video;
+  if (total <= 0) return { label: params.zeroLabel, tone: "zero" };
+
+  if (params.video > params.text) {
+    return {
+      label: `${formatProfileConversionBehaviorPercentage((params.video / total) * 100, "0%")} ${params.videoLabel}`,
+      tone: "above",
+    };
+  }
+
+  if (params.text > params.video) {
+    return {
+      label: `${formatProfileConversionBehaviorPercentage((params.text / total) * 100, "0%")} ${params.textLabel}`,
+      tone: "standard",
+    };
+  }
+
+  return {
+    label: `${formatProfileConversionBehaviorPercentage(50, "50%")} ${params.textLabel} e ${params.videoLabel}`,
+    tone: "standard",
+  };
+};
+
+const describeProfileConversionBehaviorDominantTabSignal = (params: {
+  publicationsTabOpens: number;
+  reviewsTabOpens: number;
+}): ProfileConversionBehaviorSemanticSignal => {
+  const total = params.publicationsTabOpens + params.reviewsTabOpens;
+  if (total <= 0) return { label: "Sem aba predominante", tone: "zero" };
+  if (params.publicationsTabOpens === params.reviewsTabOpens) {
+    return { label: "Publica\u00e7\u00f5es e avalia\u00e7\u00f5es", tone: "standard" };
+  }
+
+  return params.publicationsTabOpens > params.reviewsTabOpens
+    ? { label: "Aba Publica\u00e7\u00f5es", tone: "standard" }
+    : { label: "Aba Avalia\u00e7\u00f5es", tone: "standard" };
+};
+
+const formatProfileConversionBehaviorPerPsychologistValue = (value: number | null) =>
+  formatProfileConversionBehaviorMetricNumber(value, "0");
+
+const formatProfileConversionBehaviorOpeningsValue = (value: number | null) =>
+  typeof value === "number"
+    ? formatProfileConversionBehaviorCount(value, "abertura", "aberturas")
+    : "0 aberturas";
 
 const describeProfileConversionBehaviorDominantProfileTab = (params: {
   publicationsTabOpens: number;
@@ -5169,6 +5280,8 @@ const buildProfileConversionBehaviorResults = (params: {
       (sum, source) => sum + source.whatsapp_clicks,
       0,
     );
+    const videoWhatsappClicksPerPsychologist =
+      row.count > 0 ? roundOneDecimal(videoWhatsappClicks / row.count) : 0;
     const videoEngagementActions =
       videoActionCount(PRESENTATION_VIDEO_PROFILE_ACCESS_ACTION) +
       videoActionCount(PRESENTATION_VIDEO_FAVORITE_ACTION) +
@@ -5227,6 +5340,8 @@ const buildProfileConversionBehaviorResults = (params: {
       (sum, source) => sum + source.whatsapp_clicks,
       0,
     );
+    const profileWhatsappClicksPerPsychologist =
+      row.count > 0 ? roundOneDecimal(profileWhatsappClicks / row.count) : 0;
     const profileWhatsappRate =
       profileViews.length > 0
         ? roundOneDecimal((profileWhatsappClicks / profileViews.length) * 100)
@@ -5247,6 +5362,16 @@ const buildProfileConversionBehaviorResults = (params: {
 
     const communityContentCount =
       rowCommunityTrafficDataset.posts.length + rowCommunityTrafficDataset.replies.length;
+    const communityPostVideoCount = rowCommunityTrafficDataset.posts.filter(
+      isCommunityTrafficVideoMedia,
+    ).length;
+    const communityReplyVideoCount = rowCommunityTrafficDataset.replies.filter(
+      isCommunityTrafficVideoMedia,
+    ).length;
+    const communityPostTextCount =
+      rowCommunityTrafficDataset.posts.length - communityPostVideoCount;
+    const communityReplyTextCount =
+      rowCommunityTrafficDataset.replies.length - communityReplyVideoCount;
     const communityVideoSessions = rowCommunityTrafficDataset.videoWatchSessions.filter(
       (session) => session.duration_seconds > 0,
     );
@@ -5286,6 +5411,8 @@ const buildProfileConversionBehaviorResults = (params: {
       (sum, source) => sum + source.whatsapp_clicks,
       0,
     );
+    const communityWhatsappClicksPerPsychologist =
+      row.count > 0 ? roundOneDecimal(communityWhatsappClicks / row.count) : 0;
     const dominantCommunitySource =
       communitySources
         .filter((source) => source.whatsapp_clicks > 0 || (source.considered_count ?? 0) > 0)
@@ -5360,11 +5487,13 @@ const buildProfileConversionBehaviorResults = (params: {
       0,
     );
     const favoritesScreenWhatsappClicksPerPsychologist =
-      row.count > 0 ? roundOneDecimal(favoritesScreenWhatsappClicks / row.count) : null;
+      row.count > 0 ? roundOneDecimal(favoritesScreenWhatsappClicks / row.count) : 0;
     const favoriteUnavailableReason = row.count <= 0 ? emptyRowReason : null;
 
     const videoEngagementPerVideo =
       videoProfiles.length > 0 ? roundOneDecimal(videoEngagementActions / videoProfiles.length) : 0;
+    const videoEngagementSignal =
+      describeProfileConversionBehaviorEngagementSignal(videoEngagementPerVideo);
     const videoEngagementLevel = describeProfileConversionBehaviorVolume(
       videoEngagementPerVideo,
       [3, 10],
@@ -5397,8 +5526,32 @@ const buildProfileConversionBehaviorResults = (params: {
       profileUnavailableReason ??
       `Perfil teve ${formatProfileConversionBehaviorCount(profileViews.length, "abertura real", "aberturas reais")} (${formatProfileConversionBehaviorMetricNumber(profileOpeningsPerPsychologist, "sem base")} por psicólogo), com ${profileStayText}. Na navegação interna, ${describeProfileConversionBehaviorDominantProfileTab({ publicationsTabOpens: profilePublicationTabOpens, reviewsTabOpens: profileReviewsTabOpens })}. Usuários também favoritaram esses perfis ${formatProfileConversionBehaviorCount(profileFavorites.length, "vez", "vezes")} (${formatProfileConversionBehaviorMetricNumber(profileFavoritesPerPsychologist, "sem base")} por psicólogo) e geraram ${profileWhatsappText}.`;
 
+    const profileDominantTabSignal = describeProfileConversionBehaviorDominantTabSignal({
+      publicationsTabOpens: profilePublicationTabOpens,
+      reviewsTabOpens: profileReviewsTabOpens,
+    });
+
     const communityEngagementPerPsychologist =
       row.count > 0 ? roundOneDecimal(engagementInteractions / row.count) : engagementInteractions;
+    const communityActivitySignal =
+      describeProfileConversionBehaviorActivitySignal(activityPerPsychologist);
+    const communityEngagementSignal = describeProfileConversionBehaviorEngagementSignal(
+      communityEngagementPerPsychologist,
+    );
+    const communityPostFormatSignal = describeProfileConversionBehaviorDominantContentFormat({
+      text: communityPostTextCount,
+      textLabel: "posts de texto",
+      video: communityPostVideoCount,
+      videoLabel: "posts com v\u00eddeo",
+      zeroLabel: "Sem posts",
+    });
+    const communityReplyFormatSignal = describeProfileConversionBehaviorDominantContentFormat({
+      text: communityReplyTextCount,
+      textLabel: "respostas de texto",
+      video: communityReplyVideoCount,
+      videoLabel: "respostas com v\u00eddeo",
+      zeroLabel: "Sem respostas",
+    });
     const communityActivityPerPsychologistText =
       typeof activityPerPsychologist === "number"
         ? `${formatProfileConversionBehaviorNumber(activityPerPsychologist)} ações por psicólogo`
@@ -5440,46 +5593,70 @@ const buildProfileConversionBehaviorResults = (params: {
         id: buildProfileConversionBehaviorCellId(row.id, "presentation_video"),
         metrics: [
           buildProfileConversionBehaviorMetric({
-            description: "Percentual médio assistido nas sessões reais do vídeo de apresentação.",
+            description:
+              "Media de cliques de WhatsApp originados por video por profissional da faixa.",
+            display_value: formatProfileConversionBehaviorPerPsychologistValue(
+              videoWhatsappClicksPerPsychologist,
+            ),
+            id: "presentation_video_whatsapp_clicks_per_psychologist",
+            label: "Cliques WhatsApp",
+            source:
+              "important_action_event.action_type=psychologist_video_whatsapp_click|whatsapp_click",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              videoWhatsappClicksPerPsychologist,
+              [1, 3],
+            ),
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: videoWhatsappClicksPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Percentual medio assistido nas sessoes reais do video de apresentacao.",
             id: "presentation_video_retention",
-            label: "Retenção",
+            label: "Reten\u00e7\u00e3o",
             source: "profile_video_watch_session.watched_seconds/duration_seconds",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(videoRetention, [30, 60]),
             unit: "percentage",
             unavailable_reason:
               videoRetention === null && !videoUnavailableReason
-                ? "Sem sessões reais do vídeo com duração no período."
+                ? "Sem sessoes reais do video com duracao no periodo."
                 : videoUnavailableReason,
             value: videoRetention,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Views reais do vídeo por vídeo publicado na categoria.",
+            description: "Views reais do video por video publicado na categoria.",
             id: "presentation_video_views_per_video",
-            label: "Views/vídeo",
+            label: "Views/v\u00eddeo",
             source: "profile_video_watch_session",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(videoViewsPerVideo, [1, 5]),
             unavailable_reason: videoUnavailableReason,
             value: videoViewsPerVideo,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Tempo médio assistido por sessão real do vídeo de apresentação.",
+            description: "Permanencia media por sessao real do video de apresentacao.",
             id: "presentation_video_average_watch_seconds",
-            label: "Tempo médio",
+            label: "Perman\u00eancia",
             source: "profile_video_watch_session.watched_seconds",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              videoAverageWatchSeconds,
+              [10, 45],
+            ),
             unit: "seconds",
             unavailable_reason:
               videoAverageWatchSeconds === null && !videoUnavailableReason
-                ? "Sem sessões reais do vídeo no período."
+                ? "Sem sessoes reais do video no periodo."
                 : videoUnavailableReason,
             value: videoAverageWatchSeconds,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Posição média dos profissionais com vídeo na lista pública ranqueada.",
+            description: "Posicao media dos profissionais com video na lista publica ranqueada.",
             id: "presentation_video_average_ranking_position",
-            label: "Posição média",
+            label: "Posi\u00e7\u00e3o m\u00e9dia",
             source: "shared_psychologist_public_ranking_helper",
+            tone: classifyProfileConversionBehaviorPositionTone(averageVideoRankingPosition),
             unit: "position",
             unavailable_reason:
               averageVideoRankingPosition === null && !videoUnavailableReason
-                ? "Os profissionais com vídeo desta categoria não aparecem na lista pública ranqueada."
+                ? "Os profissionais com video desta categoria nao aparecem na lista publica ranqueada."
                 : videoUnavailableReason,
             value: averageVideoRankingPosition,
           }),
@@ -5495,6 +5672,18 @@ const buildProfileConversionBehaviorResults = (params: {
           }),
           buildProfileConversionBehaviorMetric({
             description:
+              "Classificacao da media de acoes de engajamento no video por video publicado.",
+            display_value: videoEngagementSignal.label,
+            id: "presentation_video_engagement_level",
+            label: "Engajamento",
+            source:
+              "important_action_event.action_type=psychologist_video_profile_access|psychologist_video_favorite|psychologist_video_share",
+            tone: videoEngagementSignal.tone,
+            unavailable_reason: videoUnavailableReason,
+            value: videoEngagementPerVideo,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description:
               "Ações no vídeo que indicam interesse: acesso ao perfil, favorito e compartilhamento.",
             id: "presentation_video_engagement_actions",
             label: "Engajamento",
@@ -5504,14 +5693,15 @@ const buildProfileConversionBehaviorResults = (params: {
             value: videoEngagementActions,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Percentual de sessões do vídeo com ao menos um replay registrado.",
+            description: "Percentual de sessoes do video com ao menos um replay registrado.",
             id: "presentation_video_replay_rate",
             label: "Replay",
             source: "profile_video_watch_session.replay_count",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(videoReplayRate, [10, 25]),
             unit: "percentage",
             unavailable_reason:
               videoReplayRate === null && !videoUnavailableReason
-                ? "Sem sessões reais do vídeo no período."
+                ? "Sem sessoes reais do video no periodo."
                 : videoUnavailableReason,
             value: videoReplayRate,
           }),
@@ -5526,6 +5716,22 @@ const buildProfileConversionBehaviorResults = (params: {
         id: buildProfileConversionBehaviorCellId(row.id, "profile"),
         metrics: [
           buildProfileConversionBehaviorMetric({
+            description:
+              "Media de cliques de WhatsApp originados no perfil publico por profissional da faixa.",
+            display_value: formatProfileConversionBehaviorPerPsychologistValue(
+              profileWhatsappClicksPerPsychologist,
+            ),
+            id: "profile_whatsapp_clicks_per_psychologist",
+            label: "Cliques WhatsApp",
+            source: "important_action_event.page_kind=psychologist_profile",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              profileWhatsappClicksPerPsychologist,
+              [1, 3],
+            ),
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: profileWhatsappClicksPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
             description: "Total de aberturas reais do perfil público dos profissionais da faixa.",
             id: "profile_openings",
             label: "Aberturas",
@@ -5534,24 +5740,46 @@ const buildProfileConversionBehaviorResults = (params: {
             value: profileViews.length,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Média de aberturas reais do perfil por profissional da faixa.",
+            description: "Media de aberturas reais do perfil por profissional da faixa.",
+            display_value: formatProfileConversionBehaviorOpeningsValue(
+              profileOpeningsPerPsychologist,
+            ),
             id: "profile_openings_per_psychologist",
-            label: "Aberturas/psicólogo",
+            label: "Aberturas",
             source: "profile_view_event.source=profile_page",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              profileOpeningsPerPsychologist,
+              [1, 5],
+            ),
             unavailable_reason: row.count <= 0 ? emptyRowReason : null,
             value: profileOpeningsPerPsychologist,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Tempo médio de permanência registrado em pageviews do perfil público.",
+            description: "Permanencia media registrada em pageviews do perfil publico.",
             id: "profile_average_stay_seconds",
-            label: "Permanência",
+            label: "Perman\u00eancia",
             source: "page_view_event.page_kind=psychologist_profile.duration_seconds",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              profileAverageStaySeconds,
+              [10, 45],
+            ),
             unit: "seconds",
             unavailable_reason:
               profileAverageStaySeconds === null && !profileUnavailableReason
-                ? "Sem duração real registrada em pageviews de perfil no período."
+                ? "Sem duracao real registrada em pageviews de perfil no periodo."
                 : profileUnavailableReason,
             value: profileAverageStaySeconds,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Aba interna predominante nas aberturas do perfil publico.",
+            display_value: profileDominantTabSignal.label,
+            id: "profile_dominant_tab",
+            label: "Aba predominante",
+            source:
+              "important_action_event.action_type=psychologist_profile_publications_tab_open|psychologist_profile_reviews_tab_open",
+            tone: profileDominantTabSignal.tone,
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: profilePublicationTabOpens + profileReviewsTabOpens,
           }),
           buildProfileConversionBehaviorMetric({
             description: "Aberturas da aba Publicações dentro do perfil público.",
@@ -5568,6 +5796,19 @@ const buildProfileConversionBehaviorResults = (params: {
             source: "important_action_event.action_type=psychologist_profile_reviews_tab_open",
             unavailable_reason: row.count <= 0 ? emptyRowReason : null,
             value: profileReviewsTabOpens,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description:
+              "Media de favoritos recebidos pelos perfis publicos por profissional da faixa.",
+            id: "profile_favorites_per_psychologist",
+            label: "Favoritado",
+            source: "psychologist_favorite.user.role=paciente",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              profileFavoritesPerPsychologist,
+              [1, 3],
+            ),
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: profileFavoritesPerPsychologist,
           }),
           buildProfileConversionBehaviorMetric({
             description: "Favoritos recebidos pelos perfis públicos da faixa.",
@@ -5587,10 +5828,11 @@ const buildProfileConversionBehaviorResults = (params: {
           }),
           buildProfileConversionBehaviorMetric({
             description:
-              "Proporção entre cliques de WhatsApp via perfil e aberturas reais do perfil.",
+              "Proporcao entre cliques de WhatsApp via perfil e aberturas reais do perfil.",
             id: "profile_whatsapp_rate",
             label: "WhatsApp/abertura",
             source: "important_action_event.page_kind=psychologist_profile/profile_view_event",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(profileWhatsappRate, [5, 15]),
             unit: "percentage",
             unavailable_reason:
               profileWhatsappRate === null && !profileUnavailableReason
@@ -5609,6 +5851,63 @@ const buildProfileConversionBehaviorResults = (params: {
         id: buildProfileConversionBehaviorCellId(row.id, "communities"),
         metrics: [
           buildProfileConversionBehaviorMetric({
+            description:
+              "Media de cliques de WhatsApp originados na comunidade por profissional da faixa.",
+            display_value: formatProfileConversionBehaviorPerPsychologistValue(
+              communityWhatsappClicksPerPsychologist,
+            ),
+            id: "community_whatsapp_clicks_per_psychologist",
+            label: "Cliques WhatsApp",
+            source: "important_action_event.action_type=whatsapp_click",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              communityWhatsappClicksPerPsychologist,
+              [1, 3],
+            ),
+            unavailable_reason: row.count <= 0 ? emptyRowReason : null,
+            value: communityWhatsappClicksPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Classificacao da media de posts e respostas por profissional da faixa.",
+            display_value: communityActivitySignal.label,
+            id: "community_activity_level",
+            label: "Atividade",
+            source: PROFILE_ACTIVITY_SOURCE,
+            tone: communityActivitySignal.tone,
+            unavailable_reason: activityUnavailableReason,
+            value: activityPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description:
+              "Classificacao da media de interacoes recebidas por profissional da faixa.",
+            display_value: communityEngagementSignal.label,
+            id: "community_engagement_level",
+            label: "Engajamento",
+            source: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE,
+            tone: communityEngagementSignal.tone,
+            unavailable_reason: engagementUnavailableReason,
+            value: communityEngagementPerPsychologist,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Formato predominante dos posts autorais da faixa.",
+            display_value: communityPostFormatSignal.label,
+            id: "community_post_format",
+            label: "Formato posts",
+            source: "community_post.media_type",
+            tone: communityPostFormatSignal.tone,
+            unavailable_reason: activityUnavailableReason,
+            value: rowCommunityTrafficDataset.posts.length,
+          }),
+          buildProfileConversionBehaviorMetric({
+            description: "Formato predominante das respostas autorais da faixa.",
+            display_value: communityReplyFormatSignal.label,
+            id: "community_reply_format",
+            label: "Formato respostas",
+            source: "post_reply.media_type",
+            tone: communityReplyFormatSignal.tone,
+            unavailable_reason: activityUnavailableReason,
+            value: rowCommunityTrafficDataset.replies.length,
+          }),
+          buildProfileConversionBehaviorMetric({
             description: "Posts e respostas autorais publicados por profissionais da categoria.",
             id: "community_content_count",
             label: "Conteúdos",
@@ -5625,10 +5924,14 @@ const buildProfileConversionBehaviorResults = (params: {
             value: communityViewsPerContent,
           }),
           buildProfileConversionBehaviorMetric({
-            description: "Tempo médio de permanência por conteúdo autoral da categoria.",
+            description: "Permanencia media por conteudo autoral da categoria.",
             id: "community_attention_per_content",
-            label: "Permanência",
+            label: "Perman\u00eancia",
             source: "content_attention_session.attention_seconds",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              communityAttentionPerContent,
+              [10, 45],
+            ),
             unit: "seconds",
             unavailable_reason: communityContentUnavailableReason,
             value: communityAttentionPerContent,
@@ -5773,10 +6076,17 @@ const buildProfileConversionBehaviorResults = (params: {
         metrics: [
           buildProfileConversionBehaviorMetric({
             description:
-              "Média de cliques de WhatsApp originados na tela de favoritos por profissional da faixa.",
+              "Media de cliques de WhatsApp originados na tela de favoritos por profissional da faixa.",
+            display_value: formatProfileConversionBehaviorPerPsychologistValue(
+              favoritesScreenWhatsappClicksPerPsychologist,
+            ),
             id: "favorites_screen_whatsapp_clicks_per_psychologist",
-            label: "Cliques WhatsApp/psicólogo",
+            label: "Cliques WhatsApp",
             source: "important_action_event.path=/favorites|/favoritos",
+            tone: classifyProfileConversionBehaviorHigherIsBetterTone(
+              favoritesScreenWhatsappClicksPerPsychologist,
+              [1, 3],
+            ),
             unavailable_reason: favoriteUnavailableReason,
             value: favoritesScreenWhatsappClicksPerPsychologist,
           }),

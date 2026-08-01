@@ -566,9 +566,11 @@ export type AdminPsychologistsDashboardProfileConversionBehaviorElementId =
 
 export type AdminPsychologistsDashboardProfileConversionBehaviorMetric = {
   description: string;
+  display_value: string | null;
   id: string;
   label: string;
   source: string;
+  tone: "above" | "below" | "standard" | "zero";
   unit: "count" | "percentage" | "position" | "score" | "seconds";
   unavailable_reason: string | null;
   value: number | null;
