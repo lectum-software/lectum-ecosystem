@@ -181,3 +181,4 @@ Formato recomendado:
 - [ADR-0389 - Tabela comportamental por conversao no Admin de psicologos](0389-tabela-comportamental-conversao-admin-psicologos.md) - Accepted
 - [ADR-0390 - Tags na tabela comportamental por conversao no Admin de psicologos](0390-tags-tabela-comportamental-conversao-admin-psicologos.md) - Accepted
 - [ADR-0391 - Matriz expansivel dentro do funil comportamental por conversao Admin](0391-matriz-expansivel-funil-comportamental-conversao-admin.md) - Accepted
+- [ADR-0392 - Tabela comportamental sem rolagem horizontal e copy enxuta](0392-ajustes-largura-copy-tabela-comportamental-conversao-admin.md) - Accepted

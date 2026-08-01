@@ -1023,7 +1023,7 @@ const ProfileConversionMatrixTitleSelect = ({
   value: ProfileConversionMatrixMode;
 }) => (
   <label className="inline-flex max-w-full" htmlFor={id}>
-    <span className="sr-only">Selecionar matriz de conversao dos psicologos</span>
+    <span className="sr-only">Selecionar matriz de cruzamento de dados dos psicologos</span>
     <span className="relative inline-flex max-w-full items-center">
       <select
         className="max-w-full appearance-none truncate rounded-control bg-transparent py-0 pl-0 pr-7 text-left text-lg font-semibold text-foreground outline-none transition hover:text-primary focus:text-primary focus:ring-2 focus:ring-primary/20"
@@ -3596,7 +3596,7 @@ const ProfileConversionBehaviorTableCell = ({
   cell: ProfileConversionBehaviorCell | null;
 }) => {
   const tagClassName =
-    "inline-flex max-w-full items-center rounded-full bg-surface-muted px-2.5 py-1 text-[0.72rem] font-normal leading-5 text-foreground";
+    "inline-flex max-w-full min-w-0 items-center rounded-2xl bg-surface-muted px-2 py-0.5 text-[0.66rem] font-normal leading-4 text-foreground";
 
   if (!cell) {
     return (
@@ -3637,7 +3637,7 @@ const ProfileConversionBehaviorTableCell = ({
     <div className="flex min-w-0 flex-wrap gap-1.5 px-1 py-1" title={cell.headline}>
       {tags.map((tag) => (
         <span className={tagClassName} key={`${cell.id}-${tag.id}`} title={tag.description}>
-          <span className="truncate">
+          <span className="min-w-0 max-w-full whitespace-normal break-words">
             {tag.label}: {tag.value}
           </span>
         </span>
@@ -3860,7 +3860,7 @@ function DashboardProfileConversionMatrixSection({
   });
   const matrixDetailsTitle =
     PROFILE_CONVERSION_MATRIX_VIEW_OPTIONS.find((option) => option.id === matrixMode)?.label ??
-    "Matriz de conversão";
+    "Matriz de cruzamento de dados";
 
   return (
     <div className="mt-5 rounded-[1.35rem] border border-border/70 bg-surface p-3 sm:p-4">
@@ -3872,10 +3872,7 @@ function DashboardProfileConversionMatrixSection({
       >
         <span className="min-w-0">
           <span className="block text-[0.62rem] font-black uppercase tracking-[0.16em] text-subtle">
-            Matriz de conversão
-          </span>
-          <span className="mt-1 block text-sm font-black text-foreground">
-            {"Ver cruzamentos de apoio do funil por visibilidade, engajamento e favoritos"}
+            Matriz de cruzamento de dados
           </span>
         </span>
         <span className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-2 text-xs font-black text-foreground transition hover:border-primary/40 hover:text-primary">
@@ -3938,66 +3935,88 @@ const DashboardProfileConversionBehaviorFunnelCard = ({
         title={"Funil comportamental por convers\u00e3o"}
       />
 
-      <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface">
-        <div className="overflow-x-auto pb-1">
-          <table className="w-full min-w-[1160px] border-separate border-spacing-0 text-left">
-            <caption className="sr-only">
-              {
-                "Tabela com as faixas de convers\u00e3o no eixo vertical e tags comportamentais dos psic\u00f3logos por v\u00eddeo de apresenta\u00e7\u00e3o, perfil, comunidade e tela de favoritos."
-              }
-            </caption>
-            <thead>
-              <tr className="bg-surface-muted/80">
-                <th className="sticky left-0 z-20 w-48 border-border border-b bg-surface-muted/95 p-3 text-[0.68rem] font-black uppercase tracking-[0.14em] text-subtle">
-                  {"Convers\u00e3o"}
-                </th>
-                {behaviorColumns.map((column) => (
-                  <th
-                    className="min-w-48 border-border border-b p-3 align-top text-xs font-black leading-4 text-foreground"
-                    key={`profile-conversion-behavior-axis-${column.id}`}
-                    scope="col"
-                    title={column.description}
-                  >
-                    {column.label}
-                    <span className="mt-1 block text-[0.65rem] font-bold leading-4 text-muted">
-                      {"Tags do segmento"}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {conversionRows.map((row) => (
-                <tr key={`profile-conversion-behavior-row-${row.id}`}>
-                  <th
-                    className="sticky left-0 z-10 w-48 border-border border-t bg-surface p-3 align-top"
-                    scope="row"
-                  >
-                    <ProfileConversionBehaviorRowHeader row={row} />
-                  </th>
-                  {behaviorColumns.map((column) => {
-                    const cell = behaviorCellsByKey.get(`${row.id}:${column.id}`) ?? null;
+      <div className="mt-5 grid gap-3 lg:hidden">
+        {conversionRows.map((row) => (
+          <section
+            className="rounded-[1.35rem] border border-border/70 bg-surface p-3"
+            key={`profile-conversion-behavior-mobile-row-${row.id}`}
+          >
+            <ProfileConversionBehaviorRowHeader row={row} />
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {behaviorColumns.map((column) => {
+                const cell = behaviorCellsByKey.get(`${row.id}:${column.id}`) ?? null;
 
-                    return (
-                      <td
-                        className="border-border border-t p-3 align-top"
-                        key={`profile-conversion-behavior-cell-${row.id}-${column.id}`}
-                      >
-                        <ProfileConversionBehaviorTableCell cell={cell} />
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                return (
+                  <div
+                    className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/30 p-2"
+                    key={`profile-conversion-behavior-mobile-cell-${row.id}-${column.id}`}
+                  >
+                    <p className="mb-1 text-[0.68rem] font-black uppercase tracking-[0.12em] text-subtle">
+                      {column.label}
+                    </p>
+                    <ProfileConversionBehaviorTableCell cell={cell} />
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
-      <p className="mt-3 text-xs font-bold leading-5 text-muted">
-        {
-          "Cada c\u00e9lula resume em tags o comportamento predominante da pr\u00f3pria faixa de convers\u00e3o. Perfil mostra a navega\u00e7\u00e3o no perfil p\u00fablico; atividade autoral e engajamento ficam consolidados na coluna Comunidade; Tela de favoritos mostra somente a m\u00e9dia de cliques de WhatsApp por psic\u00f3logo, sempre com sinais reais agregados."
-        }
-      </p>
+
+      <div className="mt-5 hidden overflow-hidden rounded-[1.5rem] border border-border/70 bg-surface lg:block">
+        <table className="w-full table-fixed border-separate border-spacing-0 text-left">
+          <caption className="sr-only">
+            {
+              "Tabela com as faixas de convers\u00e3o no eixo vertical e tags comportamentais dos psic\u00f3logos por v\u00eddeo de apresenta\u00e7\u00e3o, perfil, comunidade e tela de favoritos."
+            }
+          </caption>
+          <colgroup>
+            <col className="w-[16%]" />
+            <col className="w-[18%]" />
+            <col className="w-[18%]" />
+            <col className="w-[32%]" />
+            <col className="w-[16%]" />
+          </colgroup>
+          <thead>
+            <tr className="bg-surface-muted/80">
+              <th className="border-border border-b p-2.5 text-[0.66rem] font-black uppercase tracking-[0.12em] text-subtle">
+                {"Convers\u00e3o"}
+              </th>
+              {behaviorColumns.map((column) => (
+                <th
+                  className="border-border border-b p-2.5 align-top text-[0.72rem] font-black leading-4 text-foreground"
+                  key={`profile-conversion-behavior-axis-${column.id}`}
+                  scope="col"
+                  title={column.description}
+                >
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {conversionRows.map((row) => (
+              <tr key={`profile-conversion-behavior-row-${row.id}`}>
+                <th className="border-border border-t bg-surface p-2.5 align-top" scope="row">
+                  <ProfileConversionBehaviorRowHeader row={row} />
+                </th>
+                {behaviorColumns.map((column) => {
+                  const cell = behaviorCellsByKey.get(`${row.id}:${column.id}`) ?? null;
+
+                  return (
+                    <td
+                      className="border-border border-t p-2.5 align-top"
+                      key={`profile-conversion-behavior-cell-${row.id}-${column.id}`}
+                    >
+                      <ProfileConversionBehaviorTableCell cell={cell} />
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <DashboardProfileConversionMatrixSection
         basisLabel={segmentSummary.label}
         engagementMatrix={profileConversionEngagementMatrix}
