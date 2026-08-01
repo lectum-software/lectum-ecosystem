@@ -3875,7 +3875,7 @@ function DashboardProfileConversionMatrixSection({
             Matriz de conversão
           </span>
           <span className="mt-1 block text-sm font-black text-foreground">
-            {"Ver cruzamentos por visibilidade, engajamento e favoritos"}
+            {"Ver cruzamentos de apoio do funil por visibilidade, engajamento e favoritos"}
           </span>
         </span>
         <span className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-2 text-xs font-black text-foreground transition hover:border-primary/40 hover:text-primary">
@@ -3894,12 +3894,12 @@ function DashboardProfileConversionMatrixSection({
               <h3 className="text-base font-black text-foreground">{matrixDetailsTitle}</h3>
               <p className="mt-1 text-xs font-bold leading-5 text-muted">
                 Esta {"\u00e9"} a matriz separada usada para auditar o eixo selecionado. A leitura
-                acompanha a base agregada do bloco:{" "}
+                acompanha a base agregada do funil:{" "}
                 <strong className="font-black text-foreground">{basisLabel}</strong>.
               </p>
             </div>
             <ProfileConversionMatrixTitleSelect
-              id="profile-conversion-card-matrix-mode"
+              id="profile-conversion-funnel-matrix-mode"
               onChange={setMatrixMode}
               value={matrixMode}
             />

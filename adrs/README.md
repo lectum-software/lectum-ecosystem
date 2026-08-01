@@ -165,7 +165,7 @@ Formato recomendado:
 - [ADR-0342 - Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md) - Accepted
 - [ADR-0343 - VocabulÃ¡rio ConversÃ£o no Admin de psicÃ³logos](0343-vocabulario-conversao-admin.md) - Accepted
 - [ADR-0350 - P?ginas por tempo m?dio no uso da plataforma Admin](0350-paginas-por-tempo-medio-uso-admin.md) - Accepted
-- [ADR-0353 - Qualidade absoluta da conversão no perfil Admin do psicólogo](0353-qualidade-absoluta-conversao-perfil-admin.md) - Accepted
+- [ADR-0353 - Qualidade absoluta da conversï¿½o no perfil Admin do psicï¿½logo](0353-qualidade-absoluta-conversao-perfil-admin.md) - Accepted
 - [ADR-0377 - Tag de resultado no titulo de Visibilidade do psicologo Admin](0377-tag-resultado-titulo-visibilidade-psicologo-admin.md) - Accepted
 - [ADR-0378 - Origem do trafego por WhatsApp no Admin de psicologos](0378-origem-trafego-whatsapp-psicologos-admin.md) - Accepted
 - [ADR-0379 - Grupo visual de Comunidades na tabela de trafego WhatsApp Admin](0379-grupo-comunidades-tabela-trafego-whatsapp-admin.md) - Accepted
@@ -178,3 +178,6 @@ Formato recomendado:
 - [ADR-0386 - Quantidade considerada e carrossel dos donuts no Admin de psicologos](0386-quantidade-considerada-titulos-trafego-whatsapp-admin.md) - Accepted
 - [ADR-0387 - Donut de Atividade no dashboard Admin de psicologos](0387-donut-atividade-dashboard-psicologos-admin.md) - Accepted
 - [ADR-0388 - Reposicionamento da matriz no dashboard Admin de psicologos](0388-reposicionamento-matriz-dashboard-psicologos-admin.md) - Accepted
+- [ADR-0389 - Tabela comportamental por conversao no Admin de psicologos](0389-tabela-comportamental-conversao-admin-psicologos.md) - Accepted
+- [ADR-0390 - Tags na tabela comportamental por conversao no Admin de psicologos](0390-tags-tabela-comportamental-conversao-admin-psicologos.md) - Accepted
+- [ADR-0391 - Matriz expansivel dentro do funil comportamental por conversao Admin](0391-matriz-expansivel-funil-comportamental-conversao-admin.md) - Accepted
