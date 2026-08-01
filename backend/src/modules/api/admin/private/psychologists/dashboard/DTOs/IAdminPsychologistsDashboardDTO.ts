@@ -1,6 +1,8 @@
 import type { Request } from "express";
 import type {
+  AdminProfileConversionAbsoluteThresholds,
   AdminProfileConversionBenchmark,
+  AdminProfileConversionQualityId,
   AdminProfileConversionSource,
   AdminProfileConversionThresholds,
 } from "@/utils/admin-profile-conversion";
@@ -482,6 +484,38 @@ export type AdminPsychologistsDashboardProfileConversionResults = {
   unavailable_reason: string | null;
 };
 
+export type AdminPsychologistsDashboardProfileConversionGoalCategoryId =
+  AdminProfileConversionQualityId;
+
+export type AdminPsychologistsDashboardProfileConversionGoalCategory = {
+  count: number;
+  description: string;
+  id: AdminPsychologistsDashboardProfileConversionGoalCategoryId;
+  label: string;
+  percentage: number;
+  totals: {
+    normalized_whatsapp_clicks_30d: number;
+    whatsapp_clicks: number;
+  };
+};
+
+export type AdminPsychologistsDashboardProfileConversionGoalResults = {
+  categories: AdminPsychologistsDashboardProfileConversionGoalCategory[];
+  description: string;
+  source: AdminProfileConversionSource;
+  thresholds: AdminProfileConversionThresholds & {
+    absolute: AdminProfileConversionAbsoluteThresholds;
+  };
+  totals: {
+    adaptation_psychologists: number;
+    excellent_goal_psychologists: number;
+    goal_psychologists: number;
+    psychologists: number;
+    whatsapp_clicks: number;
+  };
+  unavailable_reason: string | null;
+};
+
 export type AdminPsychologistsDashboardProfileActivityCategoryId =
   | "ativo"
   | "muito_ativo"
@@ -942,6 +976,7 @@ export type AdminPsychologistsDashboardProfileCrossMatrixAxisId =
   | "community_visibility"
   | "coverage"
   | "conversion"
+  | "conversion_goal"
   | "engagement"
   | "favorites"
   | "presentation_video_position"
@@ -1024,6 +1059,7 @@ export type AdminPsychologistsDashboardPlanSegmentSummary = {
   profile_coverage: AdminPsychologistsDashboardProfileCoverageResults;
   profile_conversion_activity: AdminPsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: AdminPsychologistsDashboardProfileConversionBehaviorResults;
+  profile_conversion_goal: AdminPsychologistsDashboardProfileConversionGoalResults;
   profile_cross_matrix: AdminPsychologistsDashboardProfileCrossMatrixResults;
   profile_engagement_favorites: AdminPsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion: AdminPsychologistsDashboardProfileConversionResults;
@@ -1077,6 +1113,7 @@ export type AdminPsychologistsDashboardSummary = {
   profile_coverage: AdminPsychologistsDashboardProfileCoverageResults;
   profile_conversion_activity: AdminPsychologistsDashboardProfileConversionActivityMatrixResults;
   profile_conversion_behavior: AdminPsychologistsDashboardProfileConversionBehaviorResults;
+  profile_conversion_goal: AdminPsychologistsDashboardProfileConversionGoalResults;
   profile_cross_matrix: AdminPsychologistsDashboardProfileCrossMatrixResults;
   profile_engagement_favorites: AdminPsychologistsDashboardProfileEngagementFavoritesResults;
   profile_conversion: AdminPsychologistsDashboardProfileConversionResults;

@@ -8,13 +8,17 @@ import {
   normalizeAdminOperatingSystem,
 } from "@/utils/admin-operating-system";
 import {
+  ADMIN_PROFILE_CONVERSION_ABSOLUTE_THRESHOLDS,
   ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG,
   ADMIN_PROFILE_CONVERSION_CATEGORY_ORDER,
   ADMIN_PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER,
+  ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG,
   ADMIN_PROFILE_CONVERSION_SOURCE,
   ADMIN_PROFILE_CONVERSION_THRESHOLDS,
   buildAdminProfileConversionBenchmark,
   classifyAdminProfileConversionCategory,
+  classifyAdminProfileConversionQuality,
+  normalizeAdminProfileConversionToThirtyDays,
 } from "@/utils/admin-profile-conversion";
 import type {
   AdminProfileEngagementFavoritesCategoryId,
@@ -113,6 +117,8 @@ import type {
   AdminPsychologistsDashboardProfileConversionEngagementLevelId,
   AdminPsychologistsDashboardProfileConversionEngagementQuadrantId,
   AdminPsychologistsDashboardProfileConversionEngagementResults,
+  AdminPsychologistsDashboardProfileConversionGoalCategoryId,
+  AdminPsychologistsDashboardProfileConversionGoalResults,
   AdminPsychologistsDashboardProfileConversionMatrixCategoryId,
   AdminPsychologistsDashboardProfileConversionResults,
   AdminPsychologistsDashboardProfileConversionVisibilityMatrixQuadrantId,
@@ -202,6 +208,15 @@ const PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER =
 
 const PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER =
   ADMIN_PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER as AdminPsychologistsDashboardProfileConversionMatrixCategoryId[];
+
+const PROFILE_CONVERSION_GOAL_CATEGORY_ORDER: AdminPsychologistsDashboardProfileConversionGoalCategoryId[] =
+  [
+    "excellent_conversion",
+    "good_conversion",
+    "low_conversion",
+    "no_conversion",
+    "insufficient_data",
+  ];
 
 const PROFILE_ACTIVITY_CATEGORY_ORDER: AdminPsychologistsDashboardProfileActivityCategoryId[] = [
   "muito_ativo",
@@ -1331,6 +1346,100 @@ const buildProfileConversionResults = (params: {
     unavailable_reason:
       totalPsychologists === 0
         ? "Sem psicólogos ativos no fim do período selecionado para classificar conversão."
+        : null,
+  };
+};
+
+const buildProfileConversionGoalResults = (params: {
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+  whatsappClicks: AdminPsychologistEventRecord[];
+}): AdminPsychologistsDashboardProfileConversionGoalResults => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const whatsappClickEvents = params.whatsappClicks.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const whatsappClickCounts = countEventsByPsychologist(whatsappClickEvents);
+  const categories = new Map(
+    PROFILE_CONVERSION_GOAL_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: {
+          normalized_whatsapp_clicks_30d: 0,
+          whatsapp_clicks: 0,
+        },
+      },
+    ]),
+  );
+
+  for (const profile of params.profiles) {
+    const psychologistId = profile.user.id;
+    const activeDays = getProfileActiveDaysInRange(profile, params.range);
+    const profileAgeDays = getProfileAgeDaysUntil(profile, params.range.end);
+    const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
+    const normalizedWhatsappClicks30d = normalizeAdminProfileConversionToThirtyDays(
+      whatsappClicks,
+      activeDays,
+    );
+    const categoryId = classifyAdminProfileConversionQuality({
+      activeDays,
+      profileAgeDays,
+      whatsappClicks,
+    });
+    const category = categories.get(categoryId);
+
+    if (category) {
+      category.count += 1;
+      category.totals.whatsapp_clicks += whatsappClicks;
+      category.totals.normalized_whatsapp_clicks_30d = roundOneDecimal(
+        category.totals.normalized_whatsapp_clicks_30d + normalizedWhatsappClicks30d,
+      );
+    }
+  }
+
+  const totalPsychologists = params.profiles.length;
+  const goalPsychologists =
+    (categories.get("good_conversion")?.count ?? 0) +
+    (categories.get("excellent_conversion")?.count ?? 0);
+
+  return {
+    categories: PROFILE_CONVERSION_GOAL_CATEGORY_ORDER.map((id) => {
+      const config = ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG[id];
+      const values = categories.get(id) ?? {
+        count: 0,
+        totals: {
+          normalized_whatsapp_clicks_30d: 0,
+          whatsapp_clicks: 0,
+        },
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, totalPsychologists),
+        totals: values.totals,
+      };
+    }),
+    description:
+      "Meta operacional absoluta de Conversão por cliques reais no WhatsApp normalizados para 30 dias: boa a partir de 5 conversões equivalentes e excelente a partir de 10.",
+    source: ADMIN_PROFILE_CONVERSION_SOURCE,
+    thresholds: {
+      ...ADMIN_PROFILE_CONVERSION_THRESHOLDS,
+      absolute: ADMIN_PROFILE_CONVERSION_ABSOLUTE_THRESHOLDS,
+    },
+    totals: {
+      adaptation_psychologists: categories.get("insufficient_data")?.count ?? 0,
+      excellent_goal_psychologists: categories.get("excellent_conversion")?.count ?? 0,
+      goal_psychologists: goalPsychologists,
+      psychologists: totalPsychologists,
+      whatsapp_clicks: whatsappClickEvents.length,
+    },
+    unavailable_reason:
+      totalPsychologists === 0
+        ? "Sem psicólogos ativos no fim do período selecionado para classificar Meta de conversão."
         : null,
   };
 };
@@ -4039,7 +4148,7 @@ const buildTrafficPlatformMetrics = (params: {
   return { consideredCounts, metrics };
 };
 
-const PROFILE_CROSS_MATRIX_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+${PROFILE_ACTIVITY_SOURCE}+${PROFILE_COVERAGE_SOURCE}+${ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE}+${ADMIN_PROFILE_EXPOSURE_SOURCE}+profile_video_watch_session+community_post.media_type+post_reply.media_type+profile_view_event.source=profile_page+professional_review.status=publicada+shared_psychologist_public_ranking_helper`;
+const PROFILE_CROSS_MATRIX_SOURCE = `${ADMIN_PROFILE_CONVERSION_SOURCE}+normalized_30d_absolute_goal+${PROFILE_ACTIVITY_SOURCE}+${PROFILE_COVERAGE_SOURCE}+${ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE}+${ADMIN_PROFILE_EXPOSURE_SOURCE}+profile_video_watch_session+community_post.media_type+post_reply.media_type+profile_view_event.source=profile_page+professional_review.status=publicada+shared_psychologist_public_ranking_helper`;
 const PROFILE_CROSS_MATRIX_DEFAULT_ROW_AXIS_ID = "conversion" as const;
 const PROFILE_CROSS_MATRIX_DEFAULT_COLUMN_AXIS_ID = "community_visibility" as const;
 
@@ -4294,6 +4403,28 @@ const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefinition[] 
     id: "conversion",
     label: "Conversão",
     source: ADMIN_PROFILE_CONVERSION_SOURCE,
+  },
+  {
+    categories: PROFILE_CONVERSION_GOAL_CATEGORY_ORDER.map((id) =>
+      profileCrossMatrixCategory(
+        id,
+        ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG[id],
+        id === "excellent_conversion"
+          ? PROFILE_CROSS_MATRIX_COLORS.high
+          : id === "good_conversion"
+            ? PROFILE_CROSS_MATRIX_COLORS.standard
+            : id === "low_conversion"
+              ? PROFILE_CROSS_MATRIX_COLORS.low
+              : id === "no_conversion"
+                ? PROFILE_CROSS_MATRIX_COLORS.danger
+                : PROFILE_CROSS_MATRIX_COLORS.none,
+      ),
+    ),
+    description:
+      "Meta absoluta de cliques no WhatsApp normalizados para 30 dias: boa a partir de 5 e excelente a partir de 10 conversões equivalentes.",
+    id: "conversion_goal",
+    label: "Meta de conversão",
+    source: `${ADMIN_PROFILE_CONVERSION_SOURCE}+normalized_30d_absolute_goal`,
   },
   {
     categories: PROFILE_ACTIVITY_CATEGORY_ORDER.map((id) =>
@@ -4887,6 +5018,11 @@ const buildProfileCrossMatrixResults = (params: {
       profileAgeDays: forcedConversionAgeDays,
       whatsappClicks,
     });
+    const conversionGoalCategory = classifyAdminProfileConversionQuality({
+      activeDays,
+      profileAgeDays,
+      whatsappClicks,
+    });
     const engagementCategory =
       classifyAdminProfileEngagementFavoritesCommunityCategory({
         benchmark: engagementBenchmark,
@@ -4976,6 +5112,7 @@ const buildProfileCrossMatrixResults = (params: {
         averagePatientPostsAnswered,
       ),
       conversion: conversionCategory,
+      conversion_goal: conversionGoalCategory,
       engagement: engagementCategory,
       favorites: favoritesCategory,
       presentation_video_position: presentationVideoPositionCategory,
@@ -7383,6 +7520,11 @@ const buildPlanSegmentSummaries = (params: {
           whatsappContactRequests: params.whatsappContactRequests,
           whatsappTrafficActions: params.whatsappTrafficActions,
         }),
+        profile_conversion_goal: buildProfileConversionGoalResults({
+          profiles: segmentProfiles,
+          range: params.range,
+          whatsappClicks: params.whatsappContactRequests,
+        }),
         profile_conversion: buildProfileConversionResults({
           profiles: segmentProfiles,
           range: params.range,
@@ -7647,6 +7789,7 @@ export const buildPsychologistsDashboard = async (
   const profileCoverage = planSegments.all.profile_coverage;
   const profileConversionActivity = planSegments.all.profile_conversion_activity;
   const profileConversionBehavior = planSegments.all.profile_conversion_behavior;
+  const profileConversionGoal = planSegments.all.profile_conversion_goal;
   const profileCrossMatrix = planSegments.all.profile_cross_matrix;
   const profileConversion = planSegments.all.profile_conversion;
   const profileConversionEngagement = planSegments.all.profile_conversion_engagement;
@@ -7779,6 +7922,7 @@ export const buildPsychologistsDashboard = async (
     profile_coverage: profileCoverage,
     profile_conversion_activity: profileConversionActivity,
     profile_conversion_behavior: profileConversionBehavior,
+    profile_conversion_goal: profileConversionGoal,
     profile_cross_matrix: profileCrossMatrix,
     profile_conversion: profileConversion,
     profile_engagement_favorites: profileEngagementFavorites,
@@ -7832,6 +7976,17 @@ export const buildPsychologistsDashboard = async (
               id: "psychologist_profile_conversion_behavior",
               label: "Tabela comportamental por Conversao",
               source: profileConversionBehavior.source,
+            },
+          ]
+        : []),
+      ...(profileConversionGoal.unavailable_reason
+        ? [
+            {
+              description:
+                "A Meta de conversao depende de ao menos um perfil de psicologo ativo no periodo selecionado.",
+              id: "psychologist_profile_conversion_goal",
+              label: "Meta de conversao",
+              source: profileConversionGoal.source,
             },
           ]
         : []),

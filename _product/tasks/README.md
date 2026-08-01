@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 145 tasks: `TASK-00` a `TASK-138`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 146 tasks: `TASK-00` a `TASK-139`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -220,6 +220,7 @@ ou cortesia manual.
 | 136 | [TASK-136 - Ajustes finais da tabela comportamental Admin](TASK-136-copy-tags-video-perfil-tabela-comportamental-admin-psicologos.md) | Completed | 53, 103, 126, 132, 133 |
 | 137 | [TASK-137 - Refino de layout dos donuts de indicadores Admin](TASK-137-refino-layout-donuts-indicadores-admin-psicologos.md) | Completed | 53, 87, 122, 123, 134 |
 | 138 | [TASK-138 - Range de posição do vídeo na tabela comportamental Admin](TASK-138-range-posicao-video-tabela-comportamental-admin-psicologos.md) | Completed | 53, 103, 125, 126, 132, 136 |
+| 139 | [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md) | Completed | 53, 95, 129, 137 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -332,6 +333,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 102. [TASK-136 - Ajustes finais da tabela comportamental Admin](TASK-136-copy-tags-video-perfil-tabela-comportamental-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para ajustar titulo, subtitulo, Favoritos, titulos no padrao de tabela Admin, largura/alinhamento de Favoritos, copy `X (X%) psicologos` e `X (X%) cliques WhatsApp, em media X por psicologo` em linhas separadas na coluna Conversao, copy de Views, troca de Cliques WhatsApp por WhatsApp nas tags, no-wrap em Favoritos, nome do plano predominante sem prefixo em Perfil, remocao da tag WhatsApp/abertura em Perfil e tags de acoes do video.
 103. [TASK-137 - Refino de layout dos donuts de indicadores Admin](TASK-137-refino-layout-donuts-indicadores-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para encurtar o titulo dos indicadores, reordenar os donuts para iniciar por Conversao, padronizar a largura dos cards e refinar visualmente donut, padrao e legenda.
 104. [TASK-138 - Range de posição do vídeo na tabela comportamental Admin](TASK-138-range-posicao-video-tabela-comportamental-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para trocar a tag visual `Posição média: Xª` por `Posição: Top 10/Top 30/Top 50/50+`, preservando a media tecnica no payload.
+105. [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para exibir a meta absoluta de conversao apos o grafico de Conversao e incluir Meta de conversao como eixo da matriz de cruzamento.
 
 ### 1A. Trilha Admin planejada
 
@@ -429,6 +431,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 90. [TASK-136 - Ajustes finais da tabela comportamental Admin](TASK-136-copy-tags-video-perfil-tabela-comportamental-admin-psicologos.md)
 91. [TASK-137 - Refino de layout dos donuts de indicadores Admin](TASK-137-refino-layout-donuts-indicadores-admin-psicologos.md)
 92. [TASK-138 - Range de posição do vídeo na tabela comportamental Admin](TASK-138-range-posicao-video-tabela-comportamental-admin-psicologos.md)
+93. [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

@@ -65,6 +65,8 @@ type ProfileCoverageCategoryItem =
 type ProfileCoverageCategoryId = ProfileCoverageCategoryItem["id"];
 type ProfileConversionCategoryItem =
   AdminPsychologistsDashboard["profile_conversion"]["categories"][number];
+type ProfileConversionGoalCategoryItem =
+  AdminPsychologistsDashboard["profile_conversion_goal"]["categories"][number];
 type ProfileExposureCategoryItem =
   AdminPsychologistsDashboard["profile_exposure"]["categories"][number];
 type ProfileExposureCommunityCategoryId = NonNullable<ProfileExposureCategoryItem["community_id"]>;
@@ -376,6 +378,14 @@ const PROFILE_CONVERSION_CHART_COLORS = {
   strong_conversion: "#13a85b",
 } satisfies Record<ProfileConversionCategoryItem["id"], string>;
 
+const PROFILE_CONVERSION_GOAL_CHART_COLORS = {
+  excellent_conversion: "#13a85b",
+  good_conversion: "#308ce8",
+  insufficient_data: "#94a3b8",
+  low_conversion: "#f59f00",
+  no_conversion: "#ef4444",
+} satisfies Record<ProfileConversionGoalCategoryItem["id"], string>;
+
 const PROFILE_ACTIVITY_CHART_COLORS = {
   ativo: "#308ce8",
   muito_ativo: "#13a85b",
@@ -411,27 +421,31 @@ const PROFILE_EXPOSURE_COMMUNITY_CATEGORY_OPTIONS: Array<{
 }> = [
   {
     color: PROFILE_EXPOSURE_CHART_COLORS.high_community,
-    description: "Atenção em conteúdo autoral nas comunidades acima da faixa padrão.",
+    description:
+      "Psicólogos com atenção acima da faixa padrão em posts e respostas autorais nas comunidades.",
     id: "high_community",
-    label: "Alta Comunidade",
+    label: "Alta visibilidade",
   },
   {
     color: PROFILE_EXPOSURE_CHART_COLORS.standard_community,
-    description: "Atenção em conteúdo autoral nas comunidades dentro da faixa padrão.",
+    description:
+      "Psicólogos com atenção dentro da faixa padrão em posts e respostas autorais nas comunidades.",
     id: "standard_community",
-    label: "Comunidade Padrão",
+    label: "Visibilidade padrão",
   },
   {
     color: PROFILE_EXPOSURE_CHART_COLORS.low_community,
-    description: "Atenção em conteúdo autoral nas comunidades abaixo da faixa padrão.",
+    description:
+      "Psicólogos com atenção abaixo da faixa padrão em posts e respostas autorais nas comunidades.",
     id: "low_community",
-    label: "Baixa Comunidade",
+    label: "Baixa visibilidade",
   },
   {
     color: PROFILE_EXPOSURE_CHART_COLORS.no_community,
-    description: "Nenhuma atenção registrada em conteúdo autoral nas comunidades.",
+    description:
+      "Psicólogos sem atenção registrada em conteúdo autoral nas comunidades no período.",
     id: "no_community",
-    label: "Sem Comunidade",
+    label: "Sem visibilidade",
   },
 ];
 
@@ -443,27 +457,27 @@ const PROFILE_EXPOSURE_VIDEO_CATEGORY_OPTIONS: Array<{
 }> = [
   {
     color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.high_video,
-    description: "Tempo assistido no vídeo de apresentação acima da faixa padrão.",
+    description: "Psicólogos com tempo assistido acima da faixa padrão no vídeo de apresentação.",
     id: "high_video",
-    label: "Alto Vídeo",
+    label: "Alta visibilidade",
   },
   {
     color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.standard_video,
-    description: "Tempo assistido no vídeo de apresentação dentro da faixa padrão.",
+    description: "Psicólogos com tempo assistido dentro da faixa padrão no vídeo de apresentação.",
     id: "standard_video",
-    label: "Vídeo Padrão",
+    label: "Visibilidade padrão",
   },
   {
     color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.low_video,
-    description: "Tempo assistido no vídeo de apresentação abaixo da faixa padrão.",
+    description: "Psicólogos com tempo assistido abaixo da faixa padrão no vídeo de apresentação.",
     id: "low_video",
-    label: "Baixo Vídeo",
+    label: "Baixa visibilidade",
   },
   {
     color: PROFILE_VIDEO_VISIBILITY_CHART_COLORS.no_video,
-    description: "Nenhum tempo assistido no vídeo de apresentação no período.",
+    description: "Psicólogos sem tempo assistido no vídeo de apresentação no período.",
     id: "no_video",
-    label: "Vídeo sem view",
+    label: "Sem visibilidade",
   },
 ];
 
@@ -1054,6 +1068,7 @@ const getPlanSegmentSummary = (summary: AdminPsychologistsDashboard, segment: Pl
     profile_coverage: summary.profile_coverage,
     profile_conversion_activity: summary.profile_conversion_activity,
     profile_conversion_behavior: summary.profile_conversion_behavior,
+    profile_conversion_goal: summary.profile_conversion_goal,
     profile_cross_matrix: summary.profile_cross_matrix,
     profile_conversion: summary.profile_conversion,
     profile_engagement_favorites: summary.profile_engagement_favorites,
@@ -2582,85 +2597,80 @@ const PsychologistsDonutChart = ({
   }
 
   return (
-    <figure className="relative z-10 mt-5 flex min-w-0 flex-1 flex-col overflow-visible">
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <div className="mx-auto grid h-44 w-44 shrink-0 place-items-center rounded-full border border-border/70 bg-surface shadow-inner">
-          <svg
-            aria-label={ariaLabel}
-            className="block shrink-0 drop-shadow-sm"
-            height="150"
-            role="img"
-            viewBox="0 0 120 120"
-            width="150"
-          >
+    <figure className="relative z-10 mt-5 overflow-visible">
+      <div className="grid min-w-0 gap-4">
+        <svg
+          aria-label={ariaLabel}
+          className="mx-auto aspect-square w-full max-w-[9.75rem] min-w-0"
+          role="img"
+          viewBox="0 0 120 120"
+        >
+          <circle
+            cx="60"
+            cy="60"
+            fill="none"
+            r={radius}
+            stroke="var(--admin-surface-muted)"
+            strokeWidth="18"
+          />
+          {segments.map(({ dash, item, strokeDashoffset }) => (
             <circle
               cx="60"
               cy="60"
               fill="none"
+              key={item.id}
               r={radius}
-              stroke="var(--admin-surface-muted)"
-              strokeWidth="16"
+              stroke={item.color}
+              strokeDasharray={`${dash} ${circumference - dash}`}
+              strokeDashoffset={strokeDashoffset}
+              strokeWidth="18"
+              transform="rotate(-90 60 60)"
             />
-            {segments.map(({ dash, item, strokeDashoffset }) => (
-              <circle
-                cx="60"
-                cy="60"
-                fill="none"
-                key={item.id}
-                r={radius}
-                stroke={item.color}
-                strokeDasharray={`${dash} ${circumference - dash}`}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                strokeWidth="16"
-                transform="rotate(-90 60 60)"
-              />
-            ))}
-            <text
-              fill="var(--admin-foreground)"
-              fontSize="16"
-              fontWeight="900"
-              textAnchor="middle"
-              x="60"
-              y="58"
-            >
-              {numberFormatter.format(total)}
-            </text>
-            <text
-              fill="var(--admin-muted)"
-              fontSize="8"
-              fontWeight="700"
-              textAnchor="middle"
-              x="60"
-              y="72"
-            >
-              total
-            </text>
-          </svg>
-        </div>
+          ))}
+          <text
+            fill="var(--admin-foreground)"
+            fontSize="15"
+            fontWeight="900"
+            textAnchor="middle"
+            x="60"
+            y="58"
+          >
+            {numberFormatter.format(total)}
+          </text>
+          <text
+            fill="var(--admin-muted)"
+            fontSize="8"
+            fontWeight="700"
+            textAnchor="middle"
+            x="60"
+            y="72"
+          >
+            total
+          </text>
+        </svg>
 
-        <div className="grid min-w-0 gap-2">
+        <div className="min-w-0 space-y-2.5">
           {items.map((item) => (
             <div
-              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2 rounded-2xl border border-border/60 bg-surface/80 px-3 py-2 shadow-[0_8px_18px_rgba(15,23,42,0.04)]"
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
               key={item.id}
             >
-              <span className="flex min-w-0 items-start gap-2 text-xs font-bold leading-5 text-foreground">
+              <span className="flex min-w-0 items-start gap-2 text-sm font-semibold leading-5 text-foreground">
                 <span
                   aria-hidden
-                  className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-surface"
+                  className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
                 <span className="min-w-0 break-words">{item.label}</span>
                 {showDescriptionTooltips && item.description ? (
                   <button
                     aria-label={`${item.label}: ${item.description}`}
-                    className="group relative mt-0.5 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="group/legend-tooltip relative mt-0.5 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     type="button"
                   >
                     <CircleHelp aria-hidden className="h-3.5 w-3.5 text-muted" />
                     <span
-                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 hidden w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
+                      className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 hidden w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover/legend-tooltip:block group-focus/legend-tooltip:block group-focus-within/legend-tooltip:block sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
                       role="tooltip"
                     >
                       {item.description}
@@ -2668,7 +2678,7 @@ const PsychologistsDonutChart = ({
                   </button>
                 ) : null}
               </span>
-              <span className="shrink-0 text-right text-xs font-black text-foreground">
+              <span className="shrink-0 text-right text-sm font-semibold text-foreground">
                 {numberFormatter.format(item.count)}{" "}
                 <span className="text-xs font-medium text-muted">
                   ({formatPercentageValue(item.percentage)})
@@ -2898,6 +2908,43 @@ const ProfileConversionDonutChart = ({
   );
 };
 
+const ProfileConversionGoalDonutChart = ({
+  profileConversionGoal,
+}: {
+  profileConversionGoal: AdminPsychologistsDashboard["profile_conversion_goal"];
+}) => {
+  const total = Math.max(0, profileConversionGoal.totals.psychologists);
+  const items = profileConversionGoal.categories.map((item) => ({
+    color: PROFILE_CONVERSION_GOAL_CHART_COLORS[item.id],
+    count: item.count,
+    description: item.description,
+    id: item.id,
+    label: item.label,
+    percentage: item.percentage,
+  }));
+  const ariaLabel = `Gráfico de donut de Meta de conversão dos psicólogos: ${profileConversionGoal.categories
+    .map(
+      (item) =>
+        `${item.label}: ${numberFormatter.format(item.count)} (${formatPercentageValue(
+          item.percentage,
+        )})`,
+    )
+    .join("; ")}.`;
+
+  return (
+    <PsychologistsDonutChart
+      ariaLabel={ariaLabel}
+      emptyMessage={
+        profileConversionGoal.unavailable_reason ??
+        "Sem psicólogos ativos no período selecionado para classificar Meta de conversão."
+      }
+      items={items}
+      showDescriptionTooltips={false}
+      total={total}
+    />
+  );
+};
+
 const ProfileExposureSurfaceDonutChart = ({
   profileExposure,
   surface,
@@ -2990,6 +3037,13 @@ const formatProfileConversionStandardRange = (
   return `${formatWhatsappClicksValue(min)} a ${formatWhatsappClicksValue(max)}`;
 };
 
+const formatProfileConversionGoalRange = (
+  thresholds: AdminPsychologistsDashboard["profile_conversion_goal"]["thresholds"]["absolute"],
+) =>
+  `Boa ≥ ${numberFormatter.format(
+    thresholds.good_whatsapp_clicks_30d,
+  )} e Excelente ≥ ${numberFormatter.format(thresholds.excellent_whatsapp_clicks_30d)} em 30 dias`;
+
 const formatProfileActivityStandardRange = (
   thresholds: AdminPsychologistsDashboard["profile_activity"]["thresholds"],
 ) => {
@@ -3072,6 +3126,37 @@ const ProfileEngagementFavoritesAxisDonutChart = ({
   );
 };
 
+const DashboardProfileSignalTooltip = ({
+  details = [],
+  guidance,
+  metricDescription,
+  standardLabel,
+}: {
+  details?: string[];
+  guidance: string;
+  metricDescription: string;
+  standardLabel: string;
+}) => (
+  <span className="block space-y-2">
+    <span className="block text-[0.68rem] font-black uppercase tracking-[0.12em] text-subtle">
+      Como interpretar
+    </span>
+    <span className="block text-foreground">{metricDescription}</span>
+    {details.map((detail) => (
+      <span className="block text-muted" key={detail}>
+        {detail}
+      </span>
+    ))}
+    <span className="block rounded-xl border border-border/70 bg-surface-muted px-3 py-2">
+      <span className="block text-[0.68rem] font-black uppercase tracking-[0.1em] text-subtle">
+        Padrão no período
+      </span>
+      <strong className="mt-1 block font-black text-foreground">{standardLabel}</strong>
+    </span>
+    <span className="block text-muted">{guidance}</span>
+  </span>
+);
+
 const DashboardProfileSignalCard = ({
   children,
   className,
@@ -3104,7 +3189,7 @@ const DashboardProfileSignalCard = ({
           >
             <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
             <span
-              className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover/tooltip:block group-focus/tooltip:block"
+              className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover/tooltip:block group-focus/tooltip:block group-focus-within/tooltip:block sm:w-96"
               role="tooltip"
             >
               {tooltipContent}
@@ -3122,7 +3207,7 @@ const DashboardProfileSignalCard = ({
 );
 
 const PROFILE_SIGNAL_CARD_WRAPPER_CLASS =
-  "flex min-h-[34rem] w-full shrink-0 snap-start sm:w-[calc((100%_-_1rem)/2)] xl:w-[calc((100%_-_2rem)/3)] 2xl:w-[calc((100%_-_3rem)/4)]";
+  "flex min-h-[31rem] w-full shrink-0 snap-start sm:w-[calc((100%_-_1rem)/2)] xl:w-[calc((100%_-_2rem)/3)] 2xl:w-[calc((100%_-_3rem)/4)]";
 
 const DashboardProfileSignalsCarousel = ({ children }: { children: ReactNode }) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -3175,12 +3260,14 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
   const profileActivity = profileConversionSegmentSummary.profile_activity;
   const profileCoverage = profileConversionSegmentSummary.profile_coverage;
   const profileConversion = profileConversionSegmentSummary.profile_conversion;
+  const profileConversionGoal = profileConversionSegmentSummary.profile_conversion_goal;
   const profileEngagementFavorites = profileConversionSegmentSummary.profile_engagement_favorites;
   const profileExposure = profileConversionSegmentSummary.profile_exposure;
   if (
     !profileActivity ||
     !profileCoverage ||
     !profileConversion ||
+    !profileConversionGoal ||
     !profileEngagementFavorites ||
     !profileExposure
   ) {
@@ -3192,6 +3279,9 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
     profileCoverage.totals.average_patient_posts_answered,
   )} por psicólogo`;
   const standardRangeLabel = formatProfileConversionStandardRange(profileConversion.benchmark);
+  const conversionGoalRangeLabel = formatProfileConversionGoalRange(
+    profileConversionGoal.thresholds.absolute,
+  );
   const communityVisibilityStandardRangeLabel = formatProfileExposureSurfaceStandardRange(
     profileExposure.benchmark.community_visibility,
   );
@@ -3233,15 +3323,41 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             title="Conversão"
             tooltipAriaLabel={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
             tooltipContent={
-              <>
-                Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o
-                paciente. Padrão da plataforma no período:{" "}
-                <strong className="font-black">{standardRangeLabel}</strong>
-                {hasConversionStandardRange ? " no WhatsApp." : "."}
-              </>
+              <DashboardProfileSignalTooltip
+                details={[
+                  "A classificação usa apenas cliques reais no CTA de WhatsApp atribuídos ao perfil no período selecionado.",
+                  "Não inclui favoritos, visualizações ou outras interações que não indiquem intenção direta de contato.",
+                ]}
+                guidance="Use para encontrar psicólogos que transformam visibilidade em intenção concreta de contato."
+                metricDescription="Agrupa os psicólogos por volume de cliques recebidos no WhatsApp, o sinal mais próximo de uma conversa iniciada com paciente."
+                standardLabel={conversionTooltipStandardText}
+              />
             }
           >
             <ProfileConversionDonutChart profileConversion={profileConversion} />
+          </DashboardProfileSignalCard>
+        </div>
+
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
+          <DashboardProfileSignalCard
+            standardValue={conversionGoalRangeLabel}
+            title="Meta de conversão"
+            tooltipAriaLabel={`Meta de conversão mede cliques de WhatsApp normalizados para 30 dias. Critério: ${conversionGoalRangeLabel}.`}
+            tooltipContent={
+              <DashboardProfileSignalTooltip
+                details={[
+                  "Sem Conversão: 0 cliques reais no período.",
+                  "Conversão Baixa: mais de 0 e menos de 5 conversões equivalentes em 30 dias.",
+                  "Conversão Boa: pelo menos 5 e menos de 10 conversões equivalentes em 30 dias.",
+                  "Conversão Excelente: 10 ou mais conversões equivalentes em 30 dias.",
+                ]}
+                guidance="Use para comparar o resultado absoluto contra a meta operacional saudável, sem depender apenas do padrão relativo da plataforma."
+                metricDescription="Classifica os psicólogos pela meta absoluta de cliques no WhatsApp, normalizando o ritmo para uma janela de 30 dias."
+                standardLabel={conversionGoalRangeLabel}
+              />
+            }
+          >
+            <ProfileConversionGoalDonutChart profileConversionGoal={profileConversionGoal} />
           </DashboardProfileSignalCard>
         </div>
 
@@ -3251,11 +3367,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             title="Atividade"
             tooltipAriaLabel={`Atividade mede ações autorais do psicólogo nas comunidades. Padrão da plataforma no período: ${activityStandardRangeLabel}.`}
             tooltipContent={
-              <>
-                Atividade mede ações autorais reais do psicólogo nas comunidades: posts publicados e
-                respostas criadas no período. Padrão da plataforma no período:{" "}
-                <strong className="font-black">{activityStandardRangeLabel}</strong>.
-              </>
+              <DashboardProfileSignalTooltip
+                details={[
+                  "Conta posts publicados e respostas criadas pelo psicólogo nas comunidades.",
+                  "Ajuda a diferenciar perfis ativos de perfis com pouca base comportamental recente.",
+                ]}
+                guidance="Use para identificar quem está contribuindo com conteúdo e presença contínua na comunidade."
+                metricDescription="Mede a produção autoral real do psicólogo no período selecionado."
+                standardLabel={activityStandardRangeLabel}
+              />
             }
           >
             <ProfileActivityDonutChart profileActivity={profileActivity} />
@@ -3268,11 +3388,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             title="Cobertura"
             tooltipAriaLabel={`Cobertura compara quantos posts únicos de pacientes cada psicólogo respondeu. Média da plataforma no período: ${coverageAverageLabel}.`}
             tooltipContent={
-              <>
-                Cobertura conta posts diferentes de pacientes que receberam ao menos uma resposta do
-                psicólogo no período. A média da plataforma é{" "}
-                <strong className="font-black">{coverageAverageLabel}</strong>.
-              </>
+              <DashboardProfileSignalTooltip
+                details={[
+                  "Conta posts únicos de pacientes com ao menos uma resposta do psicólogo.",
+                  "Evita inflar o resultado quando várias respostas ficam concentradas no mesmo post.",
+                ]}
+                guidance="Use para avaliar amplitude de atendimento nas comunidades, não apenas volume bruto de respostas."
+                metricDescription="Compara quantas demandas diferentes de pacientes cada psicólogo alcançou no período."
+                standardLabel={coverageAverageLabel}
+              />
             }
           >
             <ProfileCoverageDonutChart profileCoverage={profileCoverage} />
@@ -3285,11 +3409,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             title="Engajamento"
             tooltipAriaLabel={`Engajamento recebido usa score ponderado de comentários, compartilhamentos, salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no período: ${engagementStandardRangeLabel}.`}
             tooltipContent={
-              <>
-                Engajamento recebido usa score ponderado de comentários, compartilhamentos,
-                salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no
-                período: <strong className="font-black">{engagementStandardRangeLabel}</strong>.
-              </>
+              <DashboardProfileSignalTooltip
+                details={[
+                  "Considera sinais recebidos no conteúdo do psicólogo, como comentários, compartilhamentos, salvamentos e votos positivos.",
+                  "O score ponderado facilita comparar perfis com interações de pesos diferentes.",
+                ]}
+                guidance="Use para entender quais psicólogos geram resposta da comunidade após publicar ou responder."
+                metricDescription="Mede a reação da comunidade ao conteúdo autoral do psicólogo."
+                standardLabel={engagementStandardRangeLabel}
+              />
             }
           >
             <ProfileEngagementFavoritesAxisDonutChart
@@ -3305,11 +3433,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             title="Visibilidade na comunidade"
             tooltipAriaLabel={`Visibilidade na comunidade mede a atenção recebida em conteúdo autoral nas comunidades. Padrão da plataforma no período: ${communityVisibilityStandardRangeLabel}.`}
             tooltipContent={
-              <>
-                Visibilidade na comunidade usa atenção recebida em posts e respostas autorais nas
-                comunidades. Não conta listagens nem WhatsApp. Padrão da plataforma no período:{" "}
-                <strong className="font-black">{communityVisibilityStandardRangeLabel}</strong>.
-              </>
+              <DashboardProfileSignalTooltip
+                details={[
+                  "Usa atenção recebida em posts e respostas autorais dentro das comunidades.",
+                  "Não mistura listagens, favoritos ou cliques de WhatsApp com a visibilidade comunitária.",
+                ]}
+                guidance="Use para ver quais perfis estão sendo vistos a partir da participação nas comunidades."
+                metricDescription="Mostra a visibilidade conquistada pelo psicólogo por presença e conteúdo na comunidade."
+                standardLabel={communityVisibilityStandardRangeLabel}
+              />
             }
           >
             <ProfileExposureSurfaceDonutChart
@@ -3325,11 +3457,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             title="Vídeo de apresentação"
             tooltipAriaLabel={`Vídeo de apresentação mede o tempo assistido no vídeo do perfil. Padrão da plataforma no período: ${videoVisibilityStandardRangeLabel}.`}
             tooltipContent={
-              <>
-                Vídeo de apresentação usa o tempo assistido real no vídeo do perfil. Padrão da
-                plataforma no período:{" "}
-                <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
-              </>
+              <DashboardProfileSignalTooltip
+                details={[
+                  "Usa tempo assistido real no vídeo de apresentação do perfil.",
+                  "Não classifica pelo simples fato de o psicólogo ter vídeo, e sim pela atenção recebida nele.",
+                ]}
+                guidance="Use para avaliar se o vídeo está gerando descoberta e retenção no perfil."
+                metricDescription="Mostra quanto o vídeo de apresentação contribui para a visibilidade do psicólogo."
+                standardLabel={videoVisibilityStandardRangeLabel}
+              />
             }
           >
             <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="video" />
@@ -3342,11 +3478,15 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
             title="Favoritados"
             tooltipAriaLabel={`Favoritados mede favoritos reais recebidos pelo psicólogo. Padrão da plataforma no período: ${favoritesStandardRangeLabel}.`}
             tooltipContent={
-              <>
-                Favoritados mede favoritos reais recebidos pelo psicólogo no período. Padrão da
-                plataforma no período:{" "}
-                <strong className="font-black">{favoritesStandardRangeLabel}</strong>.
-              </>
+              <DashboardProfileSignalTooltip
+                details={[
+                  "Conta favoritos reais recebidos por cada psicólogo no período selecionado.",
+                  "É um sinal de intenção intermediária: o paciente ainda não chamou no WhatsApp, mas salvou o perfil.",
+                ]}
+                guidance="Use para encontrar psicólogos lembrados pelos pacientes mesmo quando a conversão ainda não aconteceu."
+                metricDescription="Mede quantas vezes o perfil do psicólogo foi salvo pelos pacientes."
+                standardLabel={favoritesStandardRangeLabel}
+              />
             }
           >
             <ProfileEngagementFavoritesAxisDonutChart
