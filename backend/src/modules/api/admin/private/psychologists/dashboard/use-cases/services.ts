@@ -96,6 +96,8 @@ import type {
   AdminPsychologistsDashboardProfileActivityCategoryId,
   AdminPsychologistsDashboardProfileActivityResults,
   AdminPsychologistsDashboardProfileActivityTotals,
+  AdminPsychologistsDashboardProfileConversionActivityMatrixQuadrantId,
+  AdminPsychologistsDashboardProfileConversionActivityMatrixResults,
   AdminPsychologistsDashboardProfileConversionCategoryId,
   AdminPsychologistsDashboardProfileConversionEngagementCategoryId,
   AdminPsychologistsDashboardProfileConversionEngagementFavoritesMatrixQuadrantId,
@@ -1408,6 +1410,196 @@ const buildProfileActivityResults = (params: {
     unavailable_reason:
       params.profiles.length === 0
         ? "Sem psicólogos ativos no fim do período selecionado para classificar Atividade."
+        : null,
+  };
+};
+
+const buildProfileConversionActivityMatrixQuadrantId = (
+  rowId: AdminPsychologistsDashboardProfileConversionMatrixCategoryId,
+  columnId: AdminPsychologistsDashboardProfileActivityCategoryId,
+): AdminPsychologistsDashboardProfileConversionActivityMatrixQuadrantId =>
+  `${rowId}_${columnId}` as AdminPsychologistsDashboardProfileConversionActivityMatrixQuadrantId;
+
+const buildProfileConversionActivityMatrixResults = (params: {
+  communityPosts: AdminPsychologistCommunityTrafficPlatformDataset["posts"];
+  communityReplies: AdminPsychologistCommunityTrafficPlatformDataset["replies"];
+  profiles: AdminPsychologistProfileRecord[];
+  range: AdminPsychologistsDashboardDateRange;
+  whatsappClicks: AdminPsychologistEventRecord[];
+}): AdminPsychologistsDashboardProfileConversionActivityMatrixResults => {
+  const analyzedPsychologistIds = new Set(params.profiles.map((profile) => profile.user.id));
+  const whatsappClickEvents = params.whatsappClicks.filter((event) =>
+    analyzedPsychologistIds.has(event.psychologist_id),
+  );
+  const whatsappClickCounts = countEventsByPsychologist(whatsappClickEvents);
+  const signalsByPsychologistId = new Map<
+    string,
+    AdminPsychologistsDashboardProfileActivityTotals
+  >();
+  const ensureSignals = (psychologistId: string) => {
+    const current = signalsByPsychologistId.get(psychologistId) ?? emptyProfileActivityTotals();
+    signalsByPsychologistId.set(psychologistId, current);
+
+    return current;
+  };
+
+  for (const post of params.communityPosts) {
+    if (
+      !analyzedPsychologistIds.has(post.author_id) ||
+      !dateInRange(post.createdAt, params.range)
+    ) {
+      continue;
+    }
+
+    const signals = ensureSignals(post.author_id);
+    signals.actions += 1;
+    signals.posts += 1;
+  }
+
+  for (const reply of params.communityReplies) {
+    if (
+      !analyzedPsychologistIds.has(reply.author_id) ||
+      !dateInRange(reply.createdAt, params.range)
+    ) {
+      continue;
+    }
+
+    const signals = ensureSignals(reply.author_id);
+    signals.actions += 1;
+    signals.replies += 1;
+  }
+
+  const eligibleConversionProfiles = params.profiles.filter(
+    (profile) =>
+      getProfileAgeDaysUntil(profile, params.range.end) >=
+      ADMIN_PROFILE_CONVERSION_THRESHOLDS.adaptation_period_days,
+  );
+  const profileConversionBenchmark = buildAdminProfileConversionBenchmark({
+    eligiblePsychologists: eligibleConversionProfiles.length,
+    whatsappClicks: eligibleConversionProfiles.map(
+      (profile) => whatsappClickCounts.get(profile.user.id) ?? 0,
+    ),
+  });
+  const rows = new Map(
+    PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: emptyProfileConversionMatrixRowTotals(),
+      },
+    ]),
+  );
+  const columns = new Map(
+    PROFILE_ACTIVITY_CATEGORY_ORDER.map((id) => [
+      id,
+      {
+        count: 0,
+        totals: emptyProfileActivityTotals(),
+      },
+    ]),
+  );
+  const quadrants = new Map(
+    PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER.flatMap((rowId) =>
+      PROFILE_ACTIVITY_CATEGORY_ORDER.map((columnId) => [
+        buildProfileConversionActivityMatrixQuadrantId(rowId, columnId),
+        {
+          count: 0,
+          totals: emptyProfileActivityTotals(),
+        },
+      ]),
+    ),
+  );
+  const totalSignals = {
+    ...emptyProfileActivityTotals(),
+    psychologists: params.profiles.length,
+    psychologists_with_actions: 0,
+  };
+
+  for (const profile of params.profiles) {
+    const psychologistId = profile.user.id;
+    const activeDays = getProfileActiveDaysInRange(profile, params.range);
+    const profileAgeDays = getProfileAgeDaysUntil(profile, params.range.end);
+    const whatsappClicks = whatsappClickCounts.get(psychologistId) ?? 0;
+    const signals = signalsByPsychologistId.get(psychologistId) ?? emptyProfileActivityTotals();
+    const rowId = classifyProfileConversionMatrixCategory({
+      activeDays,
+      benchmark: profileConversionBenchmark,
+      profileAgeDays,
+      whatsappClicks,
+    });
+    const columnId = classifyProfileActivityCategory(signals.actions);
+    const quadrantId = buildProfileConversionActivityMatrixQuadrantId(rowId, columnId);
+    const row = rows.get(rowId);
+    const column = columns.get(columnId);
+    const quadrant = quadrants.get(quadrantId);
+
+    addProfileActivityTotals(totalSignals, signals);
+    if (signals.actions > 0) totalSignals.psychologists_with_actions += 1;
+    if (row) {
+      row.count += 1;
+      row.totals.whatsapp_clicks += whatsappClicks;
+    }
+    if (column) {
+      column.count += 1;
+      addProfileActivityTotals(column.totals, signals);
+    }
+    if (quadrant) {
+      quadrant.count += 1;
+      addProfileActivityTotals(quadrant.totals, signals);
+    }
+  }
+
+  const totalPsychologists = params.profiles.length;
+
+  return {
+    columns: PROFILE_ACTIVITY_CATEGORY_ORDER.map((id) => {
+      const config = PROFILE_ACTIVITY_CATEGORY_CONFIG[id];
+      const values = columns.get(id) ?? {
+        count: 0,
+        totals: emptyProfileActivityTotals(),
+      };
+
+      return {
+        count: values.count,
+        description: config.description,
+        id,
+        label: config.label,
+        percentage: safePercentage(values.count, totalPsychologists),
+        totals: values.totals,
+      };
+    }),
+    description:
+      "Matriz observacional entre Conversao e Atividade autoral nas comunidades, usando posts publicados e respostas criadas no periodo para indicar o comportamento predominante de cada faixa de conversao.",
+    quadrants: PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER.flatMap((rowId) =>
+      PROFILE_ACTIVITY_CATEGORY_ORDER.map((columnId) => {
+        const quadrantId = buildProfileConversionActivityMatrixQuadrantId(rowId, columnId);
+        const rowConfig = PROFILE_CONVERSION_CATEGORY_CONFIG[rowId];
+        const columnConfig = PROFILE_ACTIVITY_CATEGORY_CONFIG[columnId];
+        const values = quadrants.get(quadrantId) ?? {
+          count: 0,
+          totals: emptyProfileActivityTotals(),
+        };
+
+        return {
+          column_id: columnId,
+          column_label: columnConfig.label,
+          count: values.count,
+          description: `Psicologos em ${rowConfig.label} com ${columnConfig.label}.`,
+          id: quadrantId,
+          label: `${rowConfig.label} + ${columnConfig.label}`,
+          percentage: safePercentage(values.count, totalPsychologists),
+          row_id: rowId,
+          row_label: rowConfig.label,
+          totals: values.totals,
+        };
+      }),
+    ),
+    rows: buildProfileConversionMatrixRows(rows, totalPsychologists),
+    source: `${ADMIN_PROFILE_CONVERSION_SOURCE}+${PROFILE_ACTIVITY_SOURCE}`,
+    totals: totalSignals,
+    unavailable_reason:
+      params.profiles.length === 0
+        ? "Sem psicologos ativos no fim do periodo selecionado para cruzar Conversao com Atividade."
         : null,
   };
 };
@@ -4509,6 +4701,13 @@ const buildPlanSegmentSummaries = (params: {
           profiles: segmentProfiles,
           range: params.range,
         }),
+        profile_conversion_activity: buildProfileConversionActivityMatrixResults({
+          communityPosts: params.communityTrafficPlatformMetricDataset.posts,
+          communityReplies: params.communityTrafficPlatformMetricDataset.replies,
+          profiles: segmentProfiles,
+          range: params.range,
+          whatsappClicks: params.whatsappContactRequests,
+        }),
         profile_conversion: buildProfileConversionResults({
           profiles: segmentProfiles,
           range: params.range,
@@ -4763,6 +4962,7 @@ export const buildPsychologistsDashboard = async (
   const operatingSystemUsage = buildOperatingSystemUsage(platformSessions);
   const trafficSources = planSegments.all.traffic_sources;
   const profileActivity = planSegments.all.profile_activity;
+  const profileConversionActivity = planSegments.all.profile_conversion_activity;
   const profileConversion = planSegments.all.profile_conversion;
   const profileConversionEngagement = planSegments.all.profile_conversion_engagement;
   const profileConversionEngagementFavorites =
@@ -4891,6 +5091,7 @@ export const buildPsychologistsDashboard = async (
       source: "user+professional_subscription",
     },
     profile_activity: profileActivity,
+    profile_conversion_activity: profileConversionActivity,
     profile_conversion: profileConversion,
     profile_engagement_favorites: profileEngagementFavorites,
     profile_conversion_engagement: profileConversionEngagement,
@@ -4910,6 +5111,17 @@ export const buildPsychologistsDashboard = async (
               id: "psychologist_profile_activity",
               label: "Atividade dos psicólogos",
               source: profileActivity.source,
+            },
+          ]
+        : []),
+      ...(profileConversionActivity.unavailable_reason
+        ? [
+            {
+              description:
+                "A matriz Conversao x Atividade depende de ao menos um perfil de psicologo ativo no periodo selecionado.",
+              id: "psychologist_profile_conversion_activity",
+              label: "Conversao x Atividade",
+              source: profileConversionActivity.source,
             },
           ]
         : []),
