@@ -2582,70 +2582,73 @@ const PsychologistsDonutChart = ({
   }
 
   return (
-    <figure className="relative z-10 mt-5 overflow-visible">
-      <div className="flex min-w-0 flex-col gap-4">
-        <svg
-          aria-label={ariaLabel}
-          className="mx-auto block shrink-0"
-          height="156"
-          role="img"
-          viewBox="0 0 120 120"
-          width="156"
-        >
-          <circle
-            cx="60"
-            cy="60"
-            fill="none"
-            r={radius}
-            stroke="var(--admin-surface-muted)"
-            strokeWidth="18"
-          />
-          {segments.map(({ dash, item, strokeDashoffset }) => (
+    <figure className="relative z-10 mt-5 flex min-w-0 flex-1 flex-col overflow-visible">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <div className="mx-auto grid h-44 w-44 shrink-0 place-items-center rounded-full border border-border/70 bg-surface shadow-inner">
+          <svg
+            aria-label={ariaLabel}
+            className="block shrink-0 drop-shadow-sm"
+            height="150"
+            role="img"
+            viewBox="0 0 120 120"
+            width="150"
+          >
             <circle
               cx="60"
               cy="60"
               fill="none"
-              key={item.id}
               r={radius}
-              stroke={item.color}
-              strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeDashoffset={strokeDashoffset}
-              strokeWidth="18"
-              transform="rotate(-90 60 60)"
+              stroke="var(--admin-surface-muted)"
+              strokeWidth="16"
             />
-          ))}
-          <text
-            fill="var(--admin-foreground)"
-            fontSize="15"
-            fontWeight="900"
-            textAnchor="middle"
-            x="60"
-            y="58"
-          >
-            {numberFormatter.format(total)}
-          </text>
-          <text
-            fill="var(--admin-muted)"
-            fontSize="8"
-            fontWeight="700"
-            textAnchor="middle"
-            x="60"
-            y="72"
-          >
-            total
-          </text>
-        </svg>
+            {segments.map(({ dash, item, strokeDashoffset }) => (
+              <circle
+                cx="60"
+                cy="60"
+                fill="none"
+                key={item.id}
+                r={radius}
+                stroke={item.color}
+                strokeDasharray={`${dash} ${circumference - dash}`}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                strokeWidth="16"
+                transform="rotate(-90 60 60)"
+              />
+            ))}
+            <text
+              fill="var(--admin-foreground)"
+              fontSize="16"
+              fontWeight="900"
+              textAnchor="middle"
+              x="60"
+              y="58"
+            >
+              {numberFormatter.format(total)}
+            </text>
+            <text
+              fill="var(--admin-muted)"
+              fontSize="8"
+              fontWeight="700"
+              textAnchor="middle"
+              x="60"
+              y="72"
+            >
+              total
+            </text>
+          </svg>
+        </div>
 
-        <div className="min-w-0 space-y-2.5">
+        <div className="grid min-w-0 gap-2">
           {items.map((item) => (
             <div
-              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2"
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2 rounded-2xl border border-border/60 bg-surface/80 px-3 py-2 shadow-[0_8px_18px_rgba(15,23,42,0.04)]"
               key={item.id}
             >
-              <span className="flex min-w-0 items-start gap-2 text-xs font-semibold leading-5 text-foreground xl:text-sm">
+              <span className="flex min-w-0 items-start gap-2 text-xs font-bold leading-5 text-foreground">
                 <span
                   aria-hidden
-                  className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
+                  className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-surface"
                   style={{ backgroundColor: item.color }}
                 />
                 <span className="min-w-0 break-words">{item.label}</span>
@@ -2665,7 +2668,7 @@ const PsychologistsDonutChart = ({
                   </button>
                 ) : null}
               </span>
-              <span className="shrink-0 text-right text-xs font-semibold text-foreground xl:text-sm">
+              <span className="shrink-0 text-right text-xs font-black text-foreground">
                 {numberFormatter.format(item.count)}{" "}
                 <span className="text-xs font-medium text-muted">
                   ({formatPercentageValue(item.percentage)})
@@ -2904,7 +2907,7 @@ const ProfileExposureSurfaceDonutChart = ({
 }) => {
   const total = Math.max(0, profileExposure.totals.psychologists);
   const items = buildProfileExposureSurfaceDonutItems(profileExposure, surface);
-  const title = surface === "community" ? "Visibilidade na Comunidade" : "Vídeo de apresentação";
+  const title = surface === "community" ? "Visibilidade na comunidade" : "Vídeo de apresentação";
   const ariaLabel = `Gráfico de donut de ${title} dos psicólogos: ${items
     .map(
       (item) =>
@@ -3045,7 +3048,7 @@ const ProfileEngagementFavoritesAxisDonutChart = ({
 }) => {
   const total = Math.max(0, profileEngagementFavorites.totals.psychologists);
   const items = buildProfileEngagementFavoritesAxisDonutItems(profileEngagementFavorites, axis);
-  const title = axis === "engagement" ? "Engajamento recebido" : "Favoritados recebidos";
+  const title = axis === "engagement" ? "Engajamento" : "Favoritados";
   const ariaLabel = `Gráfico de donut de ${title} dos psicólogos: ${items
     .map(
       (item) =>
@@ -3086,39 +3089,40 @@ const DashboardProfileSignalCard = ({
 }) => (
   <section
     className={cn(
-      "flex h-full min-w-0 flex-col rounded-[1.6rem] border border-border/75 bg-surface-muted/70 p-4",
+      "group flex h-full w-full min-w-0 flex-col rounded-[1.75rem] border border-border/80 bg-surface p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-admin-soft",
       className,
     )}
   >
-    <div>
-      <div className="min-w-[8rem]">
-        <span className="inline-flex items-center gap-2">
-          <h3 className="text-lg font-bold text-foreground">{title}</h3>
+    <div className="min-w-0">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <span className="inline-flex min-w-0 items-start gap-2">
+          <h3 className="min-w-0 text-lg font-black leading-6 text-foreground">{title}</h3>
           <button
             aria-label={tooltipAriaLabel}
-            className="group relative inline-flex rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="group/tooltip relative mt-1 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             type="button"
           >
             <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
             <span
-              className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover:block group-focus:block"
+              className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover/tooltip:block group-focus/tooltip:block"
               role="tooltip"
             >
               {tooltipContent}
             </span>
           </button>
         </span>
-        <div className="mt-3 rounded-2xl border border-border/70 px-3 py-2">
-          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-subtle">
-            Padrão
-          </p>
-          <p className="mt-1 text-base font-black leading-snug text-foreground">{standardValue}</p>
-        </div>
+      </div>
+      <div className="mt-3 min-h-[4.85rem] rounded-[1.15rem] border border-primary/15 bg-primary-soft/35 px-3 py-2.5">
+        <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-subtle">Padrão</p>
+        <p className="mt-1 text-base font-black leading-snug text-foreground">{standardValue}</p>
       </div>
     </div>
     {children}
   </section>
 );
+
+const PROFILE_SIGNAL_CARD_WRAPPER_CLASS =
+  "flex min-h-[34rem] w-full shrink-0 snap-start sm:w-[calc((100%_-_1rem)/2)] xl:w-[calc((100%_-_2rem)/3)] 2xl:w-[calc((100%_-_3rem)/4)]";
 
 const DashboardProfileSignalsCarousel = ({ children }: { children: ReactNode }) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -3144,7 +3148,7 @@ const DashboardProfileSignalsCarousel = ({ children }: { children: ReactNode }) 
           <ChevronLeft aria-hidden className="h-4 w-4" />
         </button>
         <div
-          className="flex min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex min-w-0 snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           ref={scrollerRef}
         >
           {children}
@@ -3213,7 +3217,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
         <PanelTitle
           description={formatSelectedPeriod(summary.period)}
           icon={Activity}
-          title="Atividade, cobertura, visibilidade, engajamento, favoritos e conversão dos psicólogos"
+          title="Indicadores dos psicólogos"
         />
         <PlanSegmentSelect
           id="profile-conversion-plan-segment"
@@ -3223,7 +3227,25 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
       </div>
 
       <DashboardProfileSignalsCarousel>
-        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
+          <DashboardProfileSignalCard
+            standardValue={conversionTooltipStandardText}
+            title="Conversão"
+            tooltipAriaLabel={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
+            tooltipContent={
+              <>
+                Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o
+                paciente. Padrão da plataforma no período:{" "}
+                <strong className="font-black">{standardRangeLabel}</strong>
+                {hasConversionStandardRange ? " no WhatsApp." : "."}
+              </>
+            }
+          >
+            <ProfileConversionDonutChart profileConversion={profileConversion} />
+          </DashboardProfileSignalCard>
+        </div>
+
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
           <DashboardProfileSignalCard
             standardValue={activityStandardRangeLabel}
             title="Atividade"
@@ -3240,7 +3262,7 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           </DashboardProfileSignalCard>
         </div>
 
-        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
           <DashboardProfileSignalCard
             standardValue={coverageAverageLabel}
             title="Cobertura"
@@ -3257,24 +3279,27 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           </DashboardProfileSignalCard>
         </div>
 
-        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
           <DashboardProfileSignalCard
-            standardValue={videoVisibilityStandardRangeLabel}
-            title="Vídeo de apresentação"
-            tooltipAriaLabel={`Vídeo de apresentação mede o tempo assistido no vídeo do perfil. Padrão da plataforma no período: ${videoVisibilityStandardRangeLabel}.`}
+            standardValue={engagementStandardRangeLabel}
+            title="Engajamento"
+            tooltipAriaLabel={`Engajamento recebido usa score ponderado de comentários, compartilhamentos, salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no período: ${engagementStandardRangeLabel}.`}
             tooltipContent={
               <>
-                Vídeo de apresentação usa o tempo assistido real no vídeo do perfil. Padrão da
-                plataforma no período:{" "}
-                <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
+                Engajamento recebido usa score ponderado de comentários, compartilhamentos,
+                salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no
+                período: <strong className="font-black">{engagementStandardRangeLabel}</strong>.
               </>
             }
           >
-            <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="video" />
+            <ProfileEngagementFavoritesAxisDonutChart
+              axis="engagement"
+              profileEngagementFavorites={profileEngagementFavorites}
+            />
           </DashboardProfileSignalCard>
         </div>
 
-        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
           <DashboardProfileSignalCard
             standardValue={communityVisibilityStandardRangeLabel}
             title="Visibilidade na comunidade"
@@ -3294,35 +3319,32 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           </DashboardProfileSignalCard>
         </div>
 
-        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
           <DashboardProfileSignalCard
-            standardValue={engagementStandardRangeLabel}
-            title="Engajamento recebido"
-            tooltipAriaLabel={`Engajamento recebido usa score ponderado de comentários, compartilhamentos, salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no período: ${engagementStandardRangeLabel}.`}
+            standardValue={videoVisibilityStandardRangeLabel}
+            title="Vídeo de apresentação"
+            tooltipAriaLabel={`Vídeo de apresentação mede o tempo assistido no vídeo do perfil. Padrão da plataforma no período: ${videoVisibilityStandardRangeLabel}.`}
             tooltipContent={
               <>
-                Engajamento recebido usa score ponderado de comentários, compartilhamentos,
-                salvamentos e votos positivos recebidos na comunidade. Padrão da plataforma no
-                período: <strong className="font-black">{engagementStandardRangeLabel}</strong>.
+                Vídeo de apresentação usa o tempo assistido real no vídeo do perfil. Padrão da
+                plataforma no período:{" "}
+                <strong className="font-black">{videoVisibilityStandardRangeLabel}</strong>.
               </>
             }
           >
-            <ProfileEngagementFavoritesAxisDonutChart
-              axis="engagement"
-              profileEngagementFavorites={profileEngagementFavorites}
-            />
+            <ProfileExposureSurfaceDonutChart profileExposure={profileExposure} surface="video" />
           </DashboardProfileSignalCard>
         </div>
 
-        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
+        <div className={PROFILE_SIGNAL_CARD_WRAPPER_CLASS}>
           <DashboardProfileSignalCard
             standardValue={favoritesStandardRangeLabel}
-            title="Favoritados recebidos"
-            tooltipAriaLabel={`Favoritados recebidos mede favoritos reais recebidos pelo psicólogo. Padrão da plataforma no período: ${favoritesStandardRangeLabel}.`}
+            title="Favoritados"
+            tooltipAriaLabel={`Favoritados mede favoritos reais recebidos pelo psicólogo. Padrão da plataforma no período: ${favoritesStandardRangeLabel}.`}
             tooltipContent={
               <>
-                Favoritados recebidos mede favoritos reais recebidos pelo psicólogo no período.
-                Padrão da plataforma no período:{" "}
+                Favoritados mede favoritos reais recebidos pelo psicólogo no período. Padrão da
+                plataforma no período:{" "}
                 <strong className="font-black">{favoritesStandardRangeLabel}</strong>.
               </>
             }
@@ -3331,24 +3353,6 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
               axis="favorites"
               profileEngagementFavorites={profileEngagementFavorites}
             />
-          </DashboardProfileSignalCard>
-        </div>
-
-        <div className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.75rem)/2)] xl:w-[calc((100%_-_1.5rem)/3)] 2xl:w-[calc((100%_-_2.25rem)/4)]">
-          <DashboardProfileSignalCard
-            standardValue={conversionTooltipStandardText}
-            title="Conversão"
-            tooltipAriaLabel={`Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o paciente. Padrão da plataforma no período: ${conversionTooltipStandardText}.`}
-            tooltipContent={
-              <>
-                Conversão mede cliques recebidos no WhatsApp, o sinal mais próximo de contato com o
-                paciente. Padrão da plataforma no período:{" "}
-                <strong className="font-black">{standardRangeLabel}</strong>
-                {hasConversionStandardRange ? " no WhatsApp." : "."}
-              </>
-            }
-          >
-            <ProfileConversionDonutChart profileConversion={profileConversion} />
           </DashboardProfileSignalCard>
         </div>
       </DashboardProfileSignalsCarousel>

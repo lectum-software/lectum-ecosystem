@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 143 tasks: `TASK-00` a `TASK-136`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 144 tasks: `TASK-00` a `TASK-137`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -218,6 +218,7 @@ ou cortesia manual.
 | 134 | [TASK-134 - Cobertura no dashboard e matriz Admin de psicologos](TASK-134-cobertura-dashboard-matriz-admin-psicologos.md) | Completed | 53, 123, 129, 130, 132 |
 | 135 | [TASK-135 - Refino de medias e autoria nos cliques WhatsApp do trafego Admin](TASK-135-refino-medias-autoria-whatsapp-trafego-admin-psicologos.md) | Completed | 53, 76, 114, 115, 116, 117, 118, 119, 120, 121, 131, 134 |
 | 136 | [TASK-136 - Ajustes finais da tabela comportamental Admin](TASK-136-copy-tags-video-perfil-tabela-comportamental-admin-psicologos.md) | Completed | 53, 103, 126, 132, 133 |
+| 137 | [TASK-137 - Refino de layout dos donuts de indicadores Admin](TASK-137-refino-layout-donuts-indicadores-admin-psicologos.md) | Completed | 53, 87, 122, 123, 134 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -328,6 +329,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 100. [TASK-134 - Cobertura no dashboard e matriz Admin de psicologos](TASK-134-cobertura-dashboard-matriz-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para incluir Cobertura como card agregado e eixo da matriz de cruzamento, usando posts unicos de pacientes respondidos por psicologo.
 101. [TASK-135 - Refino de medias e autoria nos cliques WhatsApp do trafego Admin](TASK-135-refino-medias-autoria-whatsapp-trafego-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para mover a media de WhatsApp para junto da base considerada e separar cliques de autor/outros usuarios em posts e respostas.
 102. [TASK-136 - Ajustes finais da tabela comportamental Admin](TASK-136-copy-tags-video-perfil-tabela-comportamental-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para ajustar titulo, subtitulo, Favoritos, titulos no padrao de tabela Admin, largura/alinhamento de Favoritos, copy `X perfis considerados · Media Y cliques WhatsApp por psicologo` na coluna Conversao, copy de Views, troca de Cliques WhatsApp por WhatsApp nas tags, no-wrap em Favoritos, plano predominante em Perfil, remocao da tag WhatsApp/abertura em Perfil e tags de acoes do video.
+103. [TASK-137 - Refino de layout dos donuts de indicadores Admin](TASK-137-refino-layout-donuts-indicadores-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para encurtar o titulo dos indicadores, reordenar os donuts para iniciar por Conversao, padronizar a largura dos cards e refinar visualmente donut, padrao e legenda.
 
 ### 1A. Trilha Admin planejada
 
@@ -423,6 +425,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 88. [TASK-134 - Cobertura no dashboard e matriz Admin de psicologos](TASK-134-cobertura-dashboard-matriz-admin-psicologos.md)
 89. [TASK-135 - Refino de medias e autoria nos cliques WhatsApp do trafego Admin](TASK-135-refino-medias-autoria-whatsapp-trafego-admin-psicologos.md)
 90. [TASK-136 - Ajustes finais da tabela comportamental Admin](TASK-136-copy-tags-video-perfil-tabela-comportamental-admin-psicologos.md)
+91. [TASK-137 - Refino de layout dos donuts de indicadores Admin](TASK-137-refino-layout-donuts-indicadores-admin-psicologos.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 
