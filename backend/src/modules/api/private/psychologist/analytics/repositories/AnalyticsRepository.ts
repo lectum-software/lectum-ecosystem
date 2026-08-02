@@ -27,15 +27,9 @@ const trafficSourceDefinitions: Array<
   Pick<PsychologistAnalyticsTrafficSource, "description" | "id" | "label">
 > = [
   {
-    id: "explore",
-    label: "Explorar",
-    description: "Acessos originados pela página de psicólogos e navegação pelos vídeos.",
-  },
-  {
-    id: "search_filters",
-    label: "Busca e filtros",
-    description:
-      "Acessos originados por pesquisas de nome, especialidades, abordagem, convênio e demais filtros.",
+    id: "presentation_video",
+    label: "Vídeo de apresentação",
+    description: "Acessos originados a partir do vídeo de apresentação do seu perfil.",
   },
   {
     id: "communities",
@@ -45,8 +39,8 @@ const trafficSourceDefinitions: Array<
   },
   {
     id: "direct_link",
-    label: "Link direto",
-    description: "Acessos originados por links compartilhados externamente.",
+    label: "Perfil",
+    description: "Acessos originados pelo link do perfil compartilhado externamente.",
   },
   {
     id: "favorites",
@@ -67,7 +61,7 @@ const toTrafficSources = (): PsychologistAnalyticsTrafficSources => {
 
   return {
     updated_at: null,
-    description: "Entenda quais canais mais levam pacientes ao seu perfil e ao WhatsApp.",
+    description: "Entenda quais canais mais levam pacientes ao seu WhatsApp.",
     source: "traffic_origin_events",
     sources,
   };

@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ChevronDown,
   Clock3,
-  Compass,
   Eye,
   Heart,
   Link2,
@@ -174,30 +173,19 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
 const trafficSourceIcons: Record<PsychologistAnalyticsTrafficSource["id"], LucideIcon> = {
   communities: UsersRound,
   direct_link: Link2,
-  explore: Compass,
   favorites: Heart,
-  search_filters: Search,
+  presentation_video: PlayCircle,
 };
 
 const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
   updated_at: null,
-  description: "Entenda quais canais mais levam pacientes ao seu perfil e ao WhatsApp.",
+  description: "Entenda quais canais mais levam pacientes ao seu WhatsApp.",
   source: "traffic_origin_events",
   sources: [
     {
-      id: "explore",
-      label: "Explorar",
-      description: "Acessos originados pela página de psicólogos e navegação pelos vídeos.",
-      profile_views: 0,
-      whatsapp_clicks: 0,
-      conversion_rate: 0,
-      badge: null,
-    },
-    {
-      id: "search_filters",
-      label: "Busca e filtros",
-      description:
-        "Acessos originados por pesquisas de nome, especialidades, abordagem, convênio e demais filtros.",
+      id: "presentation_video",
+      label: "Vídeo de apresentação",
+      description: "Acessos originados a partir do vídeo de apresentação do seu perfil.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -215,8 +203,8 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     },
     {
       id: "direct_link",
-      label: "Link direto",
-      description: "Acessos originados por links compartilhados externamente.",
+      label: "Perfil",
+      description: "Acessos originados pelo link do seu perfil compartilhado externamente.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -1243,11 +1231,10 @@ type TrafficSourceWithDisplay = PsychologistAnalyticsTrafficSource & {
 };
 
 const TRAFFIC_SOURCE_ORDER: Record<PsychologistAnalyticsTrafficSource["id"], number> = {
-  explore: 0,
-  search_filters: 1,
-  communities: 2,
-  direct_link: 3,
-  favorites: 4,
+  presentation_video: 0,
+  communities: 1,
+  direct_link: 2,
+  favorites: 3,
 };
 
 const toTrafficSourceDisplay = (
@@ -1256,11 +1243,12 @@ const toTrafficSourceDisplay = (
   const baseSources = sources.length ? sources : fallbackTrafficSources.sources;
   const orderedSources = [...baseSources].sort(
     (a, b) =>
-      b.profile_views - a.profile_views || TRAFFIC_SOURCE_ORDER[a.id] - TRAFFIC_SOURCE_ORDER[b.id],
+      b.whatsapp_clicks - a.whatsapp_clicks ||
+      TRAFFIC_SOURCE_ORDER[a.id] - TRAFFIC_SOURCE_ORDER[b.id],
   );
-  const highestViews = Math.max(...orderedSources.map((source) => source.profile_views));
+  const highestWhatsAppClicks = Math.max(...orderedSources.map((source) => source.whatsapp_clicks));
   const primarySource = orderedSources.find(
-    (source) => source.profile_views > 0 && source.profile_views === highestViews,
+    (source) => source.whatsapp_clicks > 0 && source.whatsapp_clicks === highestWhatsAppClicks,
   );
 
   return orderedSources.map((source) => ({
@@ -1309,9 +1297,8 @@ const TrafficSourceSection = ({
       </div>
 
       <div className="hidden overflow-hidden rounded-[22px] border border-primary/10 bg-surface md:block">
-        <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] gap-3 border-border border-b bg-surface-muted px-4 py-3 text-[0.7rem] font-black uppercase tracking-[0.1em] text-subtle">
           <span>Fonte</span>
-          <span className="text-center">PERFIL</span>
           <span className="text-center">WhatsApp</span>
         </div>
         <div className="divide-y divide-border">
@@ -1320,7 +1307,7 @@ const TrafficSourceSection = ({
 
             return (
               <div
-                className="grid grid-cols-[minmax(0,1.25fr)_minmax(92px,0.8fr)_minmax(92px,0.75fr)] items-center gap-3 px-4 py-4"
+                className="grid grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] items-center gap-3 px-4 py-4"
                 key={source.id}
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -1339,14 +1326,6 @@ const TrafficSourceSection = ({
                     </p>
                   </div>
                 </div>
-                <p
-                  className={cn(
-                    "text-center text-lg font-black tracking-[-0.04em] text-foreground",
-                    locked && "select-none blur-[5px]",
-                  )}
-                >
-                  {toCount(source.profile_views)}
-                </p>
                 <p
                   className={cn(
                     "text-center text-lg font-black tracking-[-0.04em] text-foreground",
@@ -1409,12 +1388,6 @@ const TrafficSourceSection = ({
                 <div className="grid gap-2 border-border border-t px-4 py-4 text-sm text-muted">
                   <p className="font-semibold leading-5 text-muted">{source.description}</p>
                   <div className="grid gap-2 rounded-2xl bg-surface p-3">
-                    <p className={cn(locked && "select-none blur-[5px]")}>
-                      <span className="font-extrabold text-foreground">
-                        {toCount(source.profile_views)}
-                      </span>{" "}
-                      visualizações de perfil
-                    </p>
                     <p className={cn(locked && "select-none blur-[5px]")}>
                       <span className="font-extrabold text-foreground">
                         {toCount(source.whatsapp_clicks)}

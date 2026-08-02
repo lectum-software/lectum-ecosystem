@@ -6,37 +6,40 @@ Aceito em 2026-06-18.
 
 ## Contexto
 
-A tela `/app/professional/analytics` deve exibir uma nova secao `Origem do trafego` para que o psicologo entenda quais canais levam pacientes ao perfil e ao WhatsApp.
+A tela `/app/professional/analytics` deve exibir a secao `Origem do trafego` para que o psicologo entenda quais canais levam pacientes ao WhatsApp.
 
 As origens definidas pelo produto sao:
 
-- Explorar;
-- Busca e filtros;
+- Video de apresentacao;
 - Comunidades;
-- Link direto;
+- Perfil;
 - Favoritos.
 
-A metrica desejada por origem e:
+A metrica principal exibida por origem no Analytics do psicologo e:
 
-`taxa de conversao = cliques no WhatsApp / visualizacoes de perfil * 100`.
+`cliques no WhatsApp`.
+
+O contrato ainda preserva `profile_views` e `conversion_rate` para compatibilidade e evolucao futura da atribuicao real, mas a UI do psicologo nao deve exibir a coluna `Perfil` enquanto a leitura de negocio estiver focada em WhatsApp.
 
 No schema atual, ainda nao existem eventos persistidos de visualizacao de perfil com origem, nem campo de origem em `contact_request`. A TASK-20 ja documentava que `profile_view_event` e opcional e que metricas sem evento persistido nao devem ser simuladas.
 
 ## Decisao
 
-O contrato de `GET /api/private/psychologist/analytics` passa a incluir `traffic_sources` com as cinco origens oficiais e valores zerados enquanto a fonte persistida real nao existir.
+O contrato de `GET /api/private/psychologist/analytics` passa a incluir `traffic_sources` com as quatro origens oficiais vigentes e valores zerados enquanto a fonte persistida real nao existir.
 
 A decisao evita distribuir cliques reais de WhatsApp em canais sem origem confiavel e evita criar numeros ficticios. Portanto, mesmo que existam cliques totais de WhatsApp nos indicadores principais, a secao de origem permanece com:
 
-- `0` visualizacoes de perfil;
+- `0` visualizacoes de perfil no contrato;
 - `0` cliques no WhatsApp;
 - `0%` conversao.
 
 A UI foi preparada para consumir dados reais futuros sem alterar a experiencia:
 
-- desktop: layout tabular premium, ordenado por maior quantidade de visualizacoes de perfil;
-- mobile: lista com barras de progresso e acordeao por origem;
-- destaque discreto de melhor conversao/principal origem apenas quando houver dados reais positivos.
+- desktop: layout tabular premium com as colunas `Fonte` e `WhatsApp`;
+- mobile: lista com acordeao por origem exibindo somente cliques no WhatsApp;
+- destaque discreto de principal origem apenas quando houver dados reais positivos de WhatsApp;
+- a origem antes chamada `Link direto` passa a aparecer como `Perfil`, porque representa acessos/conversoes vindos do link do perfil profissional.
+- as origens `Explorar` e `Busca e filtros` deixam de aparecer nesta secao do Analytics do psicologo; `Video de apresentacao` passa a representar o canal relacionado ao video do perfil.
 
 A secao `Busca por especialidades` foi removida porque nao havia fonte persistida especifica e ficou redundante diante da nova organizacao.
 

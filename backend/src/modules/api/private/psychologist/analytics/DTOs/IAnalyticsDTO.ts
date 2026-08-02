@@ -110,11 +110,10 @@ export type PsychologistAnalyticsPresentationVideo = {
 };
 
 export type PsychologistAnalyticsTrafficSourceId =
-  | "explore"
-  | "search_filters"
   | "communities"
   | "direct_link"
-  | "favorites";
+  | "favorites"
+  | "presentation_video";
 
 export type PsychologistAnalyticsTrafficSource = {
   id: PsychologistAnalyticsTrafficSourceId;

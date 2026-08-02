@@ -402,3 +402,35 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3137` e `Invoke-WebRequest` em `/app/professional/analytics` retornando `307` para login sem sessao; a rota privada segue protegida e a copy foi validada no fonte/build.
+
+## Ajuste complementar em 2026-08-02 - origem de trafego focada em WhatsApp
+
+- Pedido do usuario: substituir a origem `Link direto` por `Perfil` e remover a coluna `Perfil` da secao `Origem do trafego`, mantendo somente a coluna `WhatsApp`.
+- Pedido complementar do usuario: remover as categorias `Explorar` e `Busca e filtros` e adicionar a nova categoria `Video de apresentacao`.
+- A UI desktop da tabela de origem de trafego agora exibe apenas `Fonte` e `WhatsApp`; a UI mobile removeu a linha expandida de visualizacoes de perfil e manteve apenas cliques no WhatsApp.
+- A ordenacao e o destaque `Principal origem` passaram a considerar `whatsapp_clicks`, alinhados com a unica metrica exibida por origem.
+- O backend do Analytics do psicologo e os tipos frontend/backend foram atualizados para expor quatro origens vigentes: `presentation_video`, `communities`, `direct_link` e `favorites`.
+- As definicoes compartilhadas do Admin foram atualizadas apenas para rotular `direct_link` como `Perfil`, preservando o identificador tecnico para compatibilidade.
+- O contrato ainda preserva `profile_views` e `conversion_rate` para evolucao futura, mas eles nao sao exibidos nessa secao do Analytics do psicologo.
+- Builder/Quick Copy nao estava exposto como ferramenta direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e capturas enviadas pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A origem `direct_link` aparece como `Perfil` na secao de origem de trafego.
+- [x] As origens `Explorar` e `Busca e filtros` nao aparecem mais no Analytics do psicologo.
+- [x] A origem `Video de apresentacao` aparece no Analytics do psicologo.
+- [x] A tabela desktop nao exibe mais a coluna `Perfil`.
+- [x] O acordeao mobile nao exibe mais `visualizacoes de perfil` por origem.
+- [x] A secao mantem somente a metrica de cliques no WhatsApp por origem.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3137` e request em `/app/professional/analytics` retornando `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada.

@@ -640,9 +640,9 @@ export const psychologistTrafficOriginDefinitions: Array<
     label: "Comunidades",
   },
   {
-    description: "Acessos originados por links compartilhados externamente.",
+    description: "Acessos originados pelo link do perfil compartilhado externamente.",
     id: "direct_link",
-    label: "Link direto",
+    label: "Perfil",
   },
   {
     description:
