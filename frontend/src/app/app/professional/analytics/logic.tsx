@@ -162,7 +162,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "presentation_video",
       label: "Vídeo de apresentação",
-      description: "Cliques no WhatsApp a partir do vídeo de apresentação.",
+      description: "Cliques no WhatsApp a partir do seu vídeo no explorar e resultados de busca.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -193,7 +193,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "communities",
       label: "Comunidades",
-      description: "Cliques no WhatsApp a partir de posts e respostas nas comunidades.",
+      description: "Cliques no WhatsApp a partir dos seus posts e respostas nas comunidades.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -244,7 +244,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "profile",
       label: "Perfil",
-      description: "Cliques no WhatsApp a partir do perfil público.",
+      description: "Cliques no WhatsApp a partir do seu perfil público.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -265,7 +265,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "favorites",
       label: "Favoritos",
-      description: "Cliques no WhatsApp a partir da lista de favoritos.",
+      description: "Cliques no WhatsApp a partir da página de favoritos.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,

@@ -136,3 +136,14 @@ Decidimos manter a leitura da secao como lista simples de `titulo + descricao cu
 O bloco `Diagnostico` tambem foi removido da secao para reduzir redundancia logo apos `Conversoes WhatsApp`; diagnosticos permanecem apenas nas secoes especificas em que o produto ainda precisa dessa leitura contextual.
 
 Consequencia: a mudanca e de copy/apresentacao e reaproveita o campo `description` existente em `traffic_sources.sources[]`; o contrato pode continuar retornando `breakdown` para usos existentes em outras secoes, mas `Origem do trafego` nao renderiza mais esses detalhes. Nao altera schema, migration, endpoint, mock, seed, dado artificial ou package.
+
+## Atualizacao 2026-08-02 - Copy em primeira pessoa nas origens
+
+Por feedback de produto, as descricoes dos cards de origem passam a falar diretamente sobre os canais do proprio psicologo:
+
+- `Comunidades`: posts e respostas do psicologo nas comunidades;
+- `Video de apresentacao`: video do psicologo no explorar e resultados de busca;
+- `Perfil`: perfil publico do psicologo;
+- `Favoritos`: pagina de favoritos.
+
+Consequencia: a mudanca e apenas de copy no campo `description` ja existente; nao altera schema, migration, endpoint, atribuicao de metricas, mock, seed ou package.

@@ -697,5 +697,38 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+- Verificacao estatica via Node confirmou as quatro descricoes em `frontend/src/app/app/professional/analytics/logic.tsx` e `backend/src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts`.
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada, confirmando que a rota local permanece protegida.
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
 - Verificacao estatica do `TrafficSourceSection`: sem `aria-expanded`, sem `onClick`, sem `ChevronDown` e sem texto `Diagnostico`.
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada, confirmando que a rota local permanece protegida; a validacao visual do fonte/build confirmou os cards estaticos mobile-first.
+
+## Ajuste complementar em 2026-08-02 - Copy dos cards de origem do trafego
+
+- Pedido do usuario: ajustar as descricoes dos cards `Comunidades`, `Video de apresentacao`, `Perfil` e `Favoritos` em `Origem do trafego`.
+- `Comunidades` passou a exibir `Cliques no WhatsApp a partir dos seus posts e respostas nas comunidades.`
+- `Video de apresentacao` passou a exibir `Cliques no WhatsApp a partir do seu video no explorar e resultados de busca.`
+- `Perfil` passou a exibir `Cliques no WhatsApp a partir do seu perfil publico.`
+- `Favoritos` passou a exibir `Cliques no WhatsApp a partir da pagina de favoritos.`
+- O backend e o fallback frontend foram mantidos sincronizados para evitar copy divergente entre contrato real e estado fallback.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] `Comunidades` usa a copy em primeira pessoa dos posts/respostas.
+- [x] `Video de apresentacao` usa a copy solicitada para explorar/resultados de busca.
+- [x] `Perfil` usa a copy com `seu perfil publico`.
+- [x] `Favoritos` usa a copy com `pagina de favoritos`.
+- [x] Backend e fallback frontend possuem as mesmas descricoes.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`

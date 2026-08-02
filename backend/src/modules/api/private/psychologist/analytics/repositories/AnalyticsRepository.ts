@@ -57,22 +57,22 @@ const trafficSourceDefinitions: Array<
   {
     id: "presentation_video",
     label: "Vídeo de apresentação",
-    description: "Cliques no WhatsApp a partir do vídeo de apresentação.",
+    description: "Cliques no WhatsApp a partir do seu vídeo no explorar e resultados de busca.",
   },
   {
     id: "communities",
     label: "Comunidades",
-    description: "Cliques no WhatsApp a partir de posts e respostas nas comunidades.",
+    description: "Cliques no WhatsApp a partir dos seus posts e respostas nas comunidades.",
   },
   {
     id: "profile",
     label: "Perfil",
-    description: "Cliques no WhatsApp a partir do perfil público.",
+    description: "Cliques no WhatsApp a partir do seu perfil público.",
   },
   {
     id: "favorites",
     label: "Favoritos",
-    description: "Cliques no WhatsApp a partir da lista de favoritos.",
+    description: "Cliques no WhatsApp a partir da página de favoritos.",
   },
 ];
 
