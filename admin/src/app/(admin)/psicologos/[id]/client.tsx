@@ -5678,8 +5678,7 @@ const PsychologistTrafficSourcesCard = ({
     (total, source) => total + (source.whatsapp_clicks ?? 0),
     0,
   );
-  const trafficDescription =
-    "Entenda em quais superfícies os pacientes clicam no WhatsApp deste psicólogo e compare as médias de engajamento e conversão por origem com a média global.";
+  const trafficDescription = formatStatisticsPeriodSummary(statistics.period);
   const getWhatsappClicksPercentage = (value: number | null) =>
     roundTrafficOneDecimal(getTrafficPercentageFromTotal(value, totalWhatsappClicks));
   const toggleTrafficSourceGroup = (groupId: PsychologistTrafficSourceGroupId) => {
