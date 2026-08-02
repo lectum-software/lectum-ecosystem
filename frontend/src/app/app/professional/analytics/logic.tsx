@@ -5,7 +5,6 @@ import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   Eye,
   Heart,
@@ -163,7 +162,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "presentation_video",
       label: "Vídeo de apresentação",
-      description: "",
+      description: "Cliques no WhatsApp a partir do vídeo de apresentação.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -194,7 +193,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "communities",
       label: "Comunidades",
-      description: "Cliques no WhatsApp originados em posts e respostas nas comunidades.",
+      description: "Cliques no WhatsApp a partir de posts e respostas nas comunidades.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -245,7 +244,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "profile",
       label: "Perfil",
-      description: "Cliques no WhatsApp realizados a partir do perfil público do psicólogo.",
+      description: "Cliques no WhatsApp a partir do perfil público.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -266,7 +265,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "favorites",
       label: "Favoritos",
-      description: "Cliques no WhatsApp realizados a partir da lista de favoritos.",
+      description: "Cliques no WhatsApp a partir da lista de favoritos.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -1679,175 +1678,6 @@ const TrafficBadge = ({ type }: { type: TrafficSourceWithDisplay["displayBadge"]
   );
 };
 
-type TrafficSourceDiagnosis = {
-  description: string;
-  label: string;
-};
-
-const getTrafficSourceDiagnosis = (sources: TrafficSourceWithDisplay[]): TrafficSourceDiagnosis => {
-  const totalWhatsappClicks = sources.reduce((total, source) => total + source.whatsapp_clicks, 0);
-
-  if (totalWhatsappClicks <= 0) {
-    return {
-      label: "Aguardando cliques atribuídos",
-      description:
-        "Quando houver cliques reais com origem rastreável, o diagnóstico indicará quais canais estão gerando mais conversas.",
-    };
-  }
-
-  const leadingSource = sources.reduce<TrafficSourceWithDisplay | null>(
-    (best, source) => (!best || source.whatsapp_clicks > best.whatsapp_clicks ? source : best),
-    null,
-  );
-  if (!leadingSource) {
-    return {
-      label: "Aguardando cliques atribuídos",
-      description:
-        "Quando houver cliques reais com origem rastreável, o diagnóstico indicará quais canais estão gerando mais conversas.",
-    };
-  }
-
-  const activeSources = sources.filter((source) => source.whatsapp_clicks > 0).length;
-  const leadingPercentage = Math.round((leadingSource.whatsapp_clicks / totalWhatsappClicks) * 100);
-
-  if (leadingPercentage >= 60) {
-    return {
-      label: `${leadingSource.label} concentra os contatos`,
-      description: `${toCount(leadingSource.whatsapp_clicks)} de ${toCount(
-        totalWhatsappClicks,
-      )} cliques no WhatsApp vieram dessa origem no período. Priorize manter esse canal atualizado e acompanhe se os demais canais começam a contribuir.`,
-    };
-  }
-
-  if (activeSources >= 3) {
-    return {
-      label: "Tráfego distribuído",
-      description: `${toCount(
-        totalWhatsappClicks,
-      )} cliques no WhatsApp vieram de múltiplas origens. O mix está menos dependente de um único canal.`,
-    };
-  }
-
-  return {
-    label: "Duas origens puxam os contatos",
-    description: `${toCount(
-      totalWhatsappClicks,
-    )} cliques no WhatsApp foram atribuídos no período. Compare os dropdowns para entender onde vale reforçar conteúdo, perfil ou favoritos.`,
-  };
-};
-
-const TrafficSourceDiagnosticPanel = ({
-  diagnosis,
-  locked,
-}: {
-  diagnosis: TrafficSourceDiagnosis;
-  locked?: boolean;
-}) => (
-  <article className="rounded-[24px] border border-primary/10 bg-primary-soft/45 p-4">
-    <div className="flex min-w-0 items-start gap-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface text-primary">
-        <Activity className="h-5 w-5" aria-hidden />
-      </span>
-      <div className="min-w-0">
-        <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
-          Diagnóstico
-        </p>
-        <p
-          className={cn(
-            "mt-1 text-lg font-black tracking-[-0.04em] text-foreground",
-            locked && "select-none blur-[5px]",
-          )}
-        >
-          {diagnosis.label}
-        </p>
-        <p
-          className={cn(
-            "mt-2 text-sm font-semibold leading-6 text-muted",
-            locked && "select-none blur-[4px]",
-          )}
-        >
-          {diagnosis.description}
-        </p>
-      </div>
-    </div>
-  </article>
-);
-
-const getTrafficBreakdownValue = (
-  item: NonNullable<TrafficSourceWithDisplay["breakdown"]>[number],
-) => item.value ?? item.whatsapp_clicks;
-
-const TrafficSourceBreakdown = ({
-  items,
-  locked,
-}: {
-  items: NonNullable<TrafficSourceWithDisplay["breakdown"]>;
-  locked?: boolean;
-}) => (
-  <div className="grid gap-2">
-    {items.map((item) => (
-      <article className="grid gap-3 rounded-2xl bg-surface p-3" key={item.id}>
-        <div className="flex min-w-0 items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-extrabold text-foreground">{item.label}</p>
-            {item.description ? (
-              <p className="mt-1 text-xs font-semibold leading-5 text-muted">{item.description}</p>
-            ) : null}
-          </div>
-          <div className="shrink-0 text-right">
-            <p
-              className={cn(
-                "text-lg font-black leading-none tracking-[-0.04em] text-foreground",
-                locked && "select-none blur-[5px]",
-              )}
-            >
-              {toCount(getTrafficBreakdownValue(item))}
-            </p>
-          </div>
-        </div>
-
-        {item.id === "search_results" ? (
-          <div className="rounded-xl bg-surface-muted/70 p-3">
-            <p className="text-[0.68rem] font-black uppercase tracking-[0.1em] text-subtle">
-              Principais termos pesquisados
-            </p>
-            {item.top_search_terms.length > 0 ? (
-              <ul className="mt-2 grid gap-2">
-                {item.top_search_terms.map((term) => (
-                  <li className="flex items-center justify-between gap-3" key={term.term}>
-                    <span
-                      className={cn(
-                        "min-w-0 truncate text-xs font-extrabold text-foreground",
-                        locked && "select-none blur-[4px]",
-                      )}
-                    >
-                      {term.term}
-                    </span>
-                    <span
-                      className={cn(
-                        "shrink-0 text-xs font-black text-primary",
-                        locked && "select-none blur-[4px]",
-                      )}
-                    >
-                      {toCount(term.whatsapp_clicks)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-2 text-xs font-semibold leading-5 text-muted">
-                {item.whatsapp_clicks > 0
-                  ? "Há cliques por busca/filtro, mas nenhum termo textual foi registrado."
-                  : "Nenhum termo pesquisado gerou clique no período."}
-              </p>
-            )}
-          </div>
-        ) : null}
-      </article>
-    ))}
-  </div>
-);
-
 const TrafficSourceSection = ({
   locked,
   traffic,
@@ -1855,11 +1685,7 @@ const TrafficSourceSection = ({
   locked?: boolean;
   traffic: PsychologistAnalyticsTrafficSources;
 }) => {
-  const [expandedSourceId, setExpandedSourceId] = useState<
-    PsychologistAnalyticsTrafficSource["id"] | null
-  >(null);
   const sources = useMemo(() => toTrafficSourceDisplay(traffic.sources), [traffic.sources]);
-  const diagnosis = useMemo(() => getTrafficSourceDiagnosis(sources), [sources]);
 
   return (
     <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
@@ -1886,10 +1712,12 @@ const TrafficSourceSection = ({
         <div className="divide-y divide-border">
           {sources.map((source) => {
             const Icon = trafficSourceIcons[source.id];
-            const hasBreakdown = Boolean(source.breakdown?.length);
-            const expanded = expandedSourceId === source.id;
-            const rowContent = (
-              <>
+
+            return (
+              <div
+                className="grid grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] items-center gap-3 px-4 py-4"
+                key={source.id}
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
                     <Icon className="h-4 w-4" aria-hidden />
@@ -1908,47 +1736,14 @@ const TrafficSourceSection = ({
                     ) : null}
                   </div>
                 </div>
-                <div className="flex items-center justify-center gap-2">
-                  <p
-                    className={cn(
-                      "text-center text-lg font-black tracking-[-0.04em] text-foreground",
-                      locked && "select-none blur-[5px]",
-                    )}
-                  >
-                    {toCount(source.whatsapp_clicks)}
-                  </p>
-                  {hasBreakdown ? (
-                    <ChevronDown
-                      className={cn("h-4 w-4 text-subtle transition", expanded && "rotate-180")}
-                      aria-hidden
-                    />
-                  ) : null}
-                </div>
-              </>
-            );
-
-            return (
-              <div key={source.id}>
-                {hasBreakdown ? (
-                  <button
-                    aria-expanded={expanded}
-                    className="grid w-full grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] items-center gap-3 px-4 py-4 text-left transition hover:bg-surface-muted/45"
-                    onClick={() => setExpandedSourceId(expanded ? null : source.id)}
-                    type="button"
-                  >
-                    {rowContent}
-                  </button>
-                ) : (
-                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] items-center gap-3 px-4 py-4">
-                    {rowContent}
-                  </div>
-                )}
-
-                {expanded && source.breakdown ? (
-                  <div className="border-border border-t bg-surface-muted/45 px-4 py-4">
-                    <TrafficSourceBreakdown items={source.breakdown} locked={locked} />
-                  </div>
-                ) : null}
+                <p
+                  className={cn(
+                    "text-center text-lg font-black tracking-[-0.04em] text-foreground",
+                    locked && "select-none blur-[5px]",
+                  )}
+                >
+                  {toCount(source.whatsapp_clicks)}
+                </p>
               </div>
             );
           })}
@@ -1958,7 +1753,6 @@ const TrafficSourceSection = ({
       <div className="grid gap-3 md:hidden">
         {sources.map((source) => {
           const Icon = trafficSourceIcons[source.id];
-          const expanded = expandedSourceId === source.id;
 
           return (
             <article
@@ -1968,61 +1762,40 @@ const TrafficSourceSection = ({
               )}
               key={source.id}
             >
-              <button
-                aria-expanded={expanded}
-                className="w-full p-4 text-left"
-                onClick={() => setExpandedSourceId(expanded ? null : source.id)}
-                type="button"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-extrabold text-foreground">
-                          {source.label}
+              <div className="flex min-w-0 items-center gap-3 p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-extrabold text-foreground">
+                        {source.label}
+                      </p>
+                      {source.description ? (
+                        <p className="mt-1 text-xs font-semibold leading-5 text-muted">
+                          {source.description}
                         </p>
-                        <div className="mt-1">
-                          <TrafficBadge type={source.displayBadge} />
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span
-                          className={cn(
-                            "text-sm font-black leading-none tracking-[-0.04em] text-foreground",
-                            locked && "select-none blur-[5px]",
-                          )}
-                        >
-                          {toCount(source.whatsapp_clicks)}
-                        </span>
-                        <ChevronDown
-                          className={cn("h-4 w-4 text-subtle transition", expanded && "rotate-180")}
-                          aria-hidden
-                        />
+                      ) : null}
+                      <div className="mt-2">
+                        <TrafficBadge type={source.displayBadge} />
                       </div>
                     </div>
+                    <span
+                      className={cn(
+                        "shrink-0 text-sm font-black leading-none tracking-[-0.04em] text-foreground",
+                        locked && "select-none blur-[5px]",
+                      )}
+                    >
+                      {toCount(source.whatsapp_clicks)}
+                    </span>
                   </div>
                 </div>
-              </button>
-
-              {expanded ? (
-                <div className="grid gap-2 border-border border-t px-4 py-4 text-sm text-muted">
-                  {source.description ? (
-                    <p className="font-semibold leading-5 text-muted">{source.description}</p>
-                  ) : null}
-                  {source.breakdown ? (
-                    <TrafficSourceBreakdown items={source.breakdown} locked={locked} />
-                  ) : null}
-                </div>
-              ) : null}
+              </div>
             </article>
           );
         })}
       </div>
-
-      <TrafficSourceDiagnosticPanel diagnosis={diagnosis} locked={locked} />
     </section>
   );
 };

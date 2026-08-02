@@ -126,3 +126,13 @@ Por novo feedback de produto, a secao `Origem do trafego` deixa de abrir a area 
 Motivo: `Conversoes WhatsApp` e a sintese numerica principal precisam aparecer antes da explicacao de origem, enquanto o diagnostico de origem continua contextualizando os cliques apos a metrica principal.
 
 Consequencia: a mudanca e apenas de hierarquia frontend; nao altera contrato, schema, migration, endpoint, mock, seed ou package.
+
+## Atualizacao 2026-08-02 - Cards simples em Origem do trafego
+
+Por feedback de produto, cada card mobile da secao `Origem do trafego` passa a mostrar a descricao da origem logo abaixo do titulo e deixa de ter dropdown.
+
+Decidimos manter a leitura da secao como lista simples de `titulo + descricao curta + total de cliques WhatsApp`, sem seta, estado expandido ou detalhamento dentro dos cards. O texto da origem `Video de apresentacao`, antes vazio no contrato privado, passa a ser preenchido para manter todos os cards com o mesmo nivel de contexto.
+
+O bloco `Diagnostico` tambem foi removido da secao para reduzir redundancia logo apos `Conversoes WhatsApp`; diagnosticos permanecem apenas nas secoes especificas em que o produto ainda precisa dessa leitura contextual.
+
+Consequencia: a mudanca e de copy/apresentacao e reaproveita o campo `description` existente em `traffic_sources.sources[]`; o contrato pode continuar retornando `breakdown` para usos existentes em outras secoes, mas `Origem do trafego` nao renderiza mais esses detalhes. Nao altera schema, migration, endpoint, mock, seed, dado artificial ou package.

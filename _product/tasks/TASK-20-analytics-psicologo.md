@@ -666,3 +666,36 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `git diff --check`
 - Verificacao estatica da hierarquia no fonte: `Cards de analytics` aparece antes de `TrafficSourceSection`, que aparece antes de `PresentationVideoAnalyticsSection`.
 - Browser/HTTP local com `pnpm --dir frontend exec next start --hostname 127.0.0.1 --port 3237`: request em `/app/professional/analytics` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada, confirmando que a rota buildada inicia localmente e permanece protegida; a ordem visual foi validada no fonte e no build por causa do redirecionamento sem sessao.
+
+## Ajuste complementar em 2026-08-02 - Origem do trafego sem dropdown e sem diagnostico
+
+- Pedido do usuario: em `Origem do trafego`, colocar a descricao de cada bloco abaixo do titulo; em seguida, remover o dropdown dos blocos (`Comunidades`, `Video de apresentacao`, `Perfil` e `Favoritos`) e remover o bloco de `Diagnostico`.
+- A UI mobile-first agora exibe cada origem como card estatico com icone, titulo, descricao curta, total de cliques WhatsApp e selo de principal origem quando aplicavel.
+- A descricao de `Video de apresentacao` deixou de ficar vazia no contrato privado/fallback para manter todos os cards com contexto equivalente.
+- Os detalhes de `traffic_sources.sources[].breakdown[]` continuam preservados no contrato para usos existentes, mas nao sao mais renderizados como dropdown dentro de `Origem do trafego`.
+- O diagnostico especifico de `Origem do trafego` foi removido; demais diagnosticos de secoes especificas permanecem inalterados.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e capturas enviadas pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Cada card de origem exibe descricao abaixo do titulo.
+- [x] A origem `Comunidades` exibe descricao sobre cliques WhatsApp a partir de posts e respostas nas comunidades.
+- [x] Os cards de `Origem do trafego` nao exibem seta, `aria-expanded`, clique de abertura ou corpo de dropdown.
+- [x] O bloco `Diagnostico` de `Origem do trafego` nao e renderizado.
+- [x] O contrato privado/fallback possui descricao para `Video de apresentacao`.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Verificacao estatica do `TrafficSourceSection`: sem `aria-expanded`, sem `onClick`, sem `ChevronDown` e sem texto `Diagnostico`.
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada, confirmando que a rota local permanece protegida; a validacao visual do fonte/build confirmou os cards estaticos mobile-first.
