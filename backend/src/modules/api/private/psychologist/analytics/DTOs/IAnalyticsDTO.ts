@@ -3,6 +3,7 @@
 export type PsychologistAnalyticsPeriodKey = "7d" | "30d" | "90d" | "365d" | "custom";
 
 export type PsychologistAnalyticsMetricId =
+  | "search_results"
   | "profile_views"
   | "whatsapp_clicks"
   | "reviews_received"
@@ -44,6 +45,7 @@ export type PsychologistAnalyticsPeriod = {
 };
 
 export type PsychologistAnalyticsMetrics = {
+  search_results: number;
   profile_views: number;
   whatsapp_clicks: number;
   reviews_received: number;
@@ -91,10 +93,13 @@ export type PsychologistAnalyticsPresentationVideo = {
   duration_seconds: number | null;
   metrics: {
     views: number;
+    total_watch_seconds: number;
     average_watch_seconds: number;
+    completed_views: number;
     completion_rate: number;
     replay_rate: number;
     abandonment_rate: number;
+    search_results_from_video: number;
     profile_accesses_from_video: number;
     favorites_from_video: number;
     whatsapp_clicks_from_video: number;

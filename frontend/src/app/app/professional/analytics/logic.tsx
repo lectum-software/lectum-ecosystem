@@ -13,9 +13,7 @@ import {
   PlayCircle,
   Repeat2,
   Search,
-  Share2,
   Star,
-  TrendingDown,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -32,7 +30,6 @@ import type {
   PsychologistAnalyticsMetric,
   PsychologistAnalyticsPeriodKey,
   PsychologistAnalyticsPresentationVideo,
-  PsychologistAnalyticsPresentationVideoMetric,
   PsychologistAnalyticsResponse,
   PsychologistAnalyticsTrafficSource,
   PsychologistAnalyticsTrafficSources,
@@ -108,35 +105,13 @@ const formatSeconds = (value?: number) => {
 
 const clampPercent = (value: number) => Math.min(100, Math.max(0, value));
 
-const formatVideoMetricValue = (metric: PsychologistAnalyticsPresentationVideoMetric) => {
-  if (metric.unit === "seconds") return formatSeconds(metric.value);
-  if (metric.unit === "percent") return `${Math.round(metric.value)}%`;
-
-  return toCount(metric.value);
-};
-
-const videoMetricIcons: Record<PsychologistAnalyticsPresentationVideoMetric["id"], LucideIcon> = {
-  abandonment_rate: TrendingDown,
-  average_watch_seconds: Clock3,
-  completion_rate: CheckCircle2,
-  replay_rate: Repeat2,
-  views: PlayCircle,
-};
-
-const VISIBLE_PRESENTATION_VIDEO_CARD_IDS = new Set<
-  PsychologistAnalyticsPresentationVideoMetric["id"]
->(["views", "replay_rate"]);
-
-const getPresentationVideoCards = (video?: PsychologistAnalyticsPresentationVideo) =>
-  (video?.cards ?? []).filter((metric) => VISIBLE_PRESENTATION_VIDEO_CARD_IDS.has(metric.id));
-
 const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] => [
   {
     id: "search_results",
     icon: Search,
     label: "Resultados de busca",
-    value: "0",
-    source: "untracked",
+    value: toCount(data?.metrics.search_results),
+    source: "profile_view_event",
   },
   {
     id: "profile_views",
@@ -468,86 +443,53 @@ const MetricCard = ({ locked, metric }: { locked?: boolean; metric: AnalyticsCar
   );
 };
 
-const PresentationVideoMetricCard = ({
-  locked,
-  metric,
-}: {
-  locked?: boolean;
-  metric: PsychologistAnalyticsPresentationVideoMetric;
-}) => {
-  const Icon = videoMetricIcons[metric.id];
-
-  return (
-    <article className="flex min-h-[112px] min-w-0 flex-col rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <Icon className="h-4 w-4" aria-hidden />
-      </span>
-      <h3 className="mt-2 min-h-8 min-w-0 break-words text-[0.76rem] font-extrabold leading-4 text-muted">
-        {metric.label}
-      </h3>
-      <p
-        className={cn(
-          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
-          locked && "select-none blur-[5px]",
-        )}
-      >
-        {formatVideoMetricValue(metric)}
-      </p>
-    </article>
-  );
-};
-
-type PresentationVideoActionMetric = {
+type PresentationVideoDashboardMetric = {
   icon: AnalyticsCardIcon;
-  id:
-    | "profile_accesses_from_video"
-    | "favorites_from_video"
-    | "whatsapp_clicks_from_video"
-    | "shares_from_video";
+  id: string;
   label: string;
-  value: number;
+  value: string;
 };
 
-const getPresentationVideoActionMetrics = (
+const getPresentationVideoDashboardMetrics = (
   video?: PsychologistAnalyticsPresentationVideo,
-): PresentationVideoActionMetric[] => [
+): PresentationVideoDashboardMetric[] => [
   {
-    id: "profile_accesses_from_video",
-    icon: Eye,
-    label: "Acesso ao perfil",
-    value: video?.metrics.profile_accesses_from_video ?? 0,
+    id: "views",
+    icon: PlayCircle,
+    label: "Visualizações",
+    value: toCount(video?.metrics.views),
   },
   {
-    id: "favorites_from_video",
-    icon: Heart,
-    label: "Favoritado",
-    value: video?.metrics.favorites_from_video ?? 0,
+    id: "total_watch_seconds",
+    icon: Clock3,
+    label: "Tempo total assistido",
+    value: formatSeconds(video?.metrics.total_watch_seconds),
   },
   {
-    id: "whatsapp_clicks_from_video",
-    icon: WhatsAppIcon,
-    label: "Cliques no WhatsApp",
-    value: video?.metrics.whatsapp_clicks_from_video ?? 0,
+    id: "completed_views",
+    icon: CheckCircle2,
+    label: "Assistiram completo",
+    value: toCount(video?.metrics.completed_views),
   },
   {
-    id: "shares_from_video",
-    icon: Share2,
-    label: "Compartilhamento",
-    value: video?.metrics.shares_from_video ?? 0,
+    id: "replay_rate",
+    icon: Repeat2,
+    label: "Taxa de replays",
+    value: `${Math.round(video?.metrics.replay_rate ?? 0)}%`,
   },
 ];
 
-const PresentationVideoActionCard = ({
+const PresentationVideoDashboardMetricCard = ({
   locked,
   metric,
 }: {
   locked?: boolean;
-  metric: PresentationVideoActionMetric;
+  metric: PresentationVideoDashboardMetric;
 }) => {
   const Icon = metric.icon;
 
   return (
-    <article className="flex min-h-[112px] min-w-0 flex-col rounded-[18px] border border-primary/10 bg-surface-muted/70 p-3">
+    <article className="flex min-h-[96px] min-w-0 flex-col rounded-[18px] bg-surface-muted/55 p-3">
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
         <Icon className="h-4 w-4" aria-hidden />
       </span>
@@ -556,72 +498,54 @@ const PresentationVideoActionCard = ({
       </p>
       <p
         className={cn(
-          "mt-auto pt-2 text-2xl font-black leading-none tracking-[-0.05em] text-foreground",
+          "mt-auto pt-2 text-xl font-black leading-none tracking-[-0.05em] text-foreground",
           locked && "select-none blur-[5px]",
         )}
       >
-        {toCount(metric.value)}
+        {metric.value}
       </p>
     </article>
   );
 };
 
-const PresentationVideoInsightsPanel = ({
-  actions,
-  className,
+const PresentationVideoMetricsPanel = ({
   locked,
   metrics,
+}: {
+  locked?: boolean;
+  metrics: PresentationVideoDashboardMetric[];
+}) => (
+  <div className="grid min-w-0 grid-cols-2 gap-2">
+    {metrics.map((metric) => (
+      <PresentationVideoDashboardMetricCard key={metric.id} locked={locked} metric={metric} />
+    ))}
+  </div>
+);
+
+const PresentationVideoDiagnosticPanel = ({
+  locked,
   retentionHealth,
 }: {
-  actions: PresentationVideoActionMetric[];
-  className?: string;
   locked?: boolean;
-  metrics: PsychologistAnalyticsPresentationVideoMetric[];
   retentionHealth: { description: string; label: string };
 }) => (
-  <div
-    className={cn(
-      "grid min-w-0 gap-3 rounded-[22px] border border-primary/10 bg-surface p-3",
-      className,
-    )}
-  >
-    <div className="min-w-0">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
-        Consumo e ações do vídeo
-      </p>
-      <p className="mt-1 text-xs font-semibold leading-5 text-muted">
-        Visualizações, replays e interações reais iniciadas no vídeo de apresentação.
-      </p>
-    </div>
-    <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
-      {metrics.map((metric) => (
-        <PresentationVideoMetricCard key={metric.id} locked={locked} metric={metric} />
-      ))}
-      {actions.map((metric) => (
-        <PresentationVideoActionCard key={metric.id} locked={locked} metric={metric} />
-      ))}
-    </div>
-    <div className="rounded-2xl border border-primary/10 bg-primary-soft/55 px-3 py-3 text-sm leading-6 text-muted">
-      <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
-        Diagnóstico
-      </p>
-      <span
-        className={cn(
-          "mt-2 inline-flex rounded-full border border-primary/10 bg-surface px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
-          locked && "select-none blur-[4px]",
-        )}
-      >
-        {retentionHealth.label}
-      </span>
-      <p
-        className={cn(
-          "mt-2 font-semibold leading-5 text-muted",
-          locked && "select-none blur-[4px]",
-        )}
-      >
-        {retentionHealth.description}
-      </p>
-    </div>
+  <div className="rounded-[22px] border border-primary/10 bg-surface px-3 py-3 text-sm leading-6 text-muted">
+    <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
+      Diagnóstico
+    </p>
+    <span
+      className={cn(
+        "mt-2 inline-flex rounded-full border border-primary/10 bg-primary-soft px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
+        locked && "select-none blur-[4px]",
+      )}
+    >
+      {retentionHealth.label}
+    </span>
+    <p
+      className={cn("mt-2 font-semibold leading-5 text-muted", locked && "select-none blur-[4px]")}
+    >
+      {retentionHealth.description}
+    </p>
   </div>
 );
 
@@ -1063,8 +987,7 @@ const PresentationVideoAnalyticsSection = ({
     dropoff: video?.retention.dropoff,
     views: video?.metrics.views ?? 0,
   });
-  const presentationVideoCards = getPresentationVideoCards(video);
-  const presentationVideoActionMetrics = getPresentationVideoActionMetrics(video);
+  const presentationVideoMetrics = getPresentationVideoDashboardMetrics(video);
 
   const handleVideoElementReady = useCallback((element: HTMLVideoElement | null) => {
     cleanupVideoListenersRef.current?.();
@@ -1160,6 +1083,8 @@ const PresentationVideoAnalyticsSection = ({
         </div>
       </div>
 
+      <PresentationVideoMetricsPanel locked={locked} metrics={presentationVideoMetrics} />
+
       <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:p-5">
         <div className="min-w-0">
           <div className="min-w-0">
@@ -1215,13 +1140,8 @@ const PresentationVideoAnalyticsSection = ({
             />
           </div>
         </div>
-        <PresentationVideoInsightsPanel
-          actions={presentationVideoActionMetrics}
-          locked={locked}
-          metrics={presentationVideoCards}
-          retentionHealth={retentionHealth}
-        />
       </article>
+      <PresentationVideoDiagnosticPanel locked={locked} retentionHealth={retentionHealth} />
     </section>
   );
 };

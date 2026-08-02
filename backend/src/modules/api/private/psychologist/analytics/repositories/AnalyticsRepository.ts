@@ -71,6 +71,14 @@ const toCards = (
   metrics: PsychologistAnalyticsResponse["metrics"],
 ): PsychologistAnalyticsMetric[] => [
   {
+    id: "search_results",
+    label: "Resultados de busca",
+    value: metrics.search_results,
+    source: "profile_view_event",
+    unit: "count",
+    description: "Impressões reais do seu card ou vídeo nos resultados de busca.",
+  },
+  {
     id: "profile_views",
     label: "Visualizações de perfil",
     value: metrics.profile_views,
@@ -247,6 +255,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
 
     const [
       profileViews,
+      searchResults,
       whatsappClicks,
       reviewsReceived,
       profile,
@@ -260,6 +269,24 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           deleted: false,
           createdAt: createdAtWindow,
           source: "profile_page",
+          OR: [
+            {
+              viewer_id: null,
+            },
+            {
+              viewer_id: {
+                not: userId,
+              },
+            },
+          ],
+        },
+      }),
+      prisma.profile_view_event.count({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+          createdAt: createdAtWindow,
+          source: "search_result",
           OR: [
             {
               viewer_id: null,
@@ -403,6 +430,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
     const postUpvotes = postsAggregate._sum.upvotes_count || 0;
     const postReplies = postsAggregate._sum.replies_count || 0;
     const metrics = {
+      search_results: searchResults,
       profile_views: profileViews,
       whatsapp_clicks: whatsappClicks,
       reviews_received: reviewsReceived,
@@ -498,10 +526,13 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
         : 0;
     const presentationVideoMetrics = {
       views: videoViews,
+      total_watch_seconds: totalWatchedSeconds,
       average_watch_seconds: averageWatchSeconds,
+      completed_views: completedViews,
       completion_rate: percentage(completedViews, videoViews),
       replay_rate: percentage(replayedViews, videoViews),
       abandonment_rate: videoViews > 0 ? percentage(videoViews - completedViews, videoViews) : 0,
+      search_results_from_video: searchResults,
       ...actionMetrics,
     };
     const presentationVideo: PsychologistAnalyticsPresentationVideo = {

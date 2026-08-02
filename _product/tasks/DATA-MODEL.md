@@ -369,6 +369,12 @@ apenas eventos reais com esse campo preenchido para calcular a posicao media do 
 comparar com a janela anterior; eventos legados permanecem sem backfill e aparecem como **Sem base**
 quando nao houver posicao confiavel.
 
+Complemento 2026-08-02: o Analytics privado do psicologo tambem usa impressoes reais
+`source="search_result"` no periodo selecionado para preencher `metrics.search_results` e
+`presentation_video.metrics.search_results_from_video`. A metrica fica disponivel no contrato
+privado e no contador geral **Resultados de busca**, sem backfill, sem estimativa e sem misturar
+com `source="profile_page"`.
+
 
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
 
@@ -391,6 +397,13 @@ quando nao houver posicao confiavel.
 Regra: sessão de vídeo autenticada do próprio psicólogo no próprio perfil (`viewer_id = psychologist_id`) não deve ser
 persistida nem entrar nas métricas de Analytics. Visitantes anônimos não podem ser associados com segurança ao dono do
 perfil e seguem contabilizados como anônimos.
+
+Complemento 2026-08-02: o contrato privado do Analytics do psicologo expoe
+`presentation_video.metrics.total_watch_seconds` como a soma real de `watched_seconds` das sessoes
+qualificadas do video vigente e `presentation_video.metrics.completed_views` como a quantidade de
+sessoes que chegaram ao bucket/marco de 100%. Esses campos alimentam os blocos **Tempo total
+assistido** e **Assistiram completo** antes da retencao, sem criar schema novo, backfill ou
+estimativa.
 
 `content_video_watch_session` (TASK-75, analytics de retenção de vídeo em posts/respostas de comunidade):
 

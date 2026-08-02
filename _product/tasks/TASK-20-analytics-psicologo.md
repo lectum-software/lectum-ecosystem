@@ -434,3 +434,38 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3137` e request em `/app/professional/analytics` retornando `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada.
+
+
+## Ajuste complementar em 2026-08-02 - metricas do video antes da retencao
+
+- Pedido do usuario: transformar os blocos de acoes do video em lista para ocupar menos espaco vertical, adicionar o numero de `Resultados de busca`, renomear `Consumo e acoes do video` para `Acoes do video`, reduzir o peso visual da lista, deixar `Cliques no WhatsApp` por ultimo, retirar `Acoes do video`/`Diagnostico` do bloco azul de retencao, posicionar as metricas do video antes da retencao em duas colunas com blocos lado a lado e, por fim, remover titulo/descricao, sombra, borda cinza e as metricas de acao comercial dessa grade.
+- A UI mobile-first do painel do video agora exibe as metricas antes do bloco azul de `Retencao do video`, em duas colunas com quatro blocos leves: `Visualizacoes`, `Tempo total assistido`, `Assistiram completo` e `Taxa de replays`.
+- Os blocos de metricas nao usam sombra nem borda cinza; a grade tambem nao mostra titulo `Metricas do video` nem descricao auxiliar.
+- O `Diagnostico` permanece fora do card azul de `Retencao do video`, mantendo a area azul focada apenas na permanencia/curva do video.
+- `Resultados de busca` usa contagem real de `profile_view_event.source="search_result"` no periodo selecionado, sem estimativa, backfill, mock ou mistura com visitas reais ao perfil.
+- O backend expos `metrics.search_results`, `presentation_video.metrics.search_results_from_video`, `presentation_video.metrics.total_watch_seconds` e `presentation_video.metrics.completed_views` no contrato privado do Analytics do psicologo; os tipos frontend/backend foram sincronizados manualmente.
+- Builder/Quick Copy nao estava exposto como ferramenta direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e capturas enviadas pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0175-analytics-video-retencao-orientada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A grade `Metricas do video` aparece antes do bloco azul de retencao.
+- [x] As metricas do video aparecem em duas colunas com blocos lado a lado, sem sombra e sem borda cinza.
+- [x] A grade inclui apenas `Visualizacoes`, `Tempo total assistido`, `Assistiram completo` e `Taxa de replays`.
+- [x] A grade nao exibe titulo `Metricas do video` nem descricao auxiliar.
+- [x] As metricas `Acesso ao perfil`, `Favoritado`, `Compartilhamento` e `Cliques no WhatsApp` nao aparecem mais nessa grade.
+- [x] As metricas/acoes do video e `Diagnostico` nao ficam dentro do bloco azul de retencao do video.
+- [x] O contrato backend/frontend inclui `search_results`, `search_results_from_video`, `total_watch_seconds` e `completed_views`.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3137` e request em `/app/professional/analytics` retornando `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada.

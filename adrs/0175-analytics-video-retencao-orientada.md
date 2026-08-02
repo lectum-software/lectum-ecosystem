@@ -42,6 +42,23 @@ Consequencias:
 - Mantem a transparencia da secao `Dados iniciais`, sem esconder que a metrica ainda existe, mas reduz o risco de orientar mudancas indevidas.
 - Nao altera contrato, backend, schema, tracking nem limiares de agregacao; a decisao e de interpretacao/copy no frontend.
 
+## Atualizacao 2026-08-02 - Metricas do video antes da retencao
+
+O painel `Consumo e acoes do video` ocupava altura excessiva no mobile e ficava visualmente misturado ao bloco azul de retencao. Decidimos separar a leitura em tres partes: uma grade de `Metricas do video` antes da retencao, o bloco azul apenas para permanencia/curva do video e um `Diagnostico` separado fora do card azul.
+
+A grade de metricas fica em duas colunas com quatro blocos lado a lado no mobile: `Visualizacoes`, `Tempo total assistido`, `Assistiram completo` e `Taxa de replays`. Para reduzir peso visual, essa grade nao exibe titulo/descricao auxiliar, nao usa sombra e nao usa borda cinza nos blocos. As acoes comerciais `Acesso ao perfil`, `Favoritado`, `Compartilhamento` e `Cliques no WhatsApp` deixam de aparecer nessa grade.
+
+Tambem passamos a calcular no contrato privado `presentation_video.metrics.total_watch_seconds` pela soma real de `watched_seconds` e `presentation_video.metrics.completed_views` pela quantidade real de sessoes que chegaram ao bucket/marco de 100%. `Resultados de busca` permanece disponivel em `metrics.search_results` e `presentation_video.metrics.search_results_from_video` usando `profile_view_event.source="search_result"`, sem backfill, estimativa, mock nem eventos de `source="profile_page"`.
+
+Consequencias:
+
+- A leitura mobile do video fica mais clara: primeiro indicadores essenciais de consumo em blocos comparaveis, depois retencao, depois diagnostico.
+- A remocao de titulo, descricao, sombras e bordas reduz o peso visual antes do card azul de retencao.
+- A hierarquia visual separa retencao do video das acoes derivadas, evitando que a area azul pareca conter blocos heterogeneos.
+- `Resultados de busca` diferencia impressoes reais de listagem/busca das visitas efetivas ao perfil.
+- O contrato privado do Analytics do psicologo ganha campos numericos reais para `search_results`, `search_results_from_video`, `total_watch_seconds` e `completed_views`, sem schema Prisma, migration ou package novo.
+
+
 ## Validacao
 
 - `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`
@@ -49,6 +66,7 @@ Consequencias:
 - `pnpm --dir frontend build`
 - `Invoke-WebRequest` em `/app/professional/analytics` retornando `307` para login sem sessao.
 - Atualizacao 2026-07-07: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e `next start` local com `Invoke-WebRequest` em `/app/professional/analytics` retornando `307` para login sem sessao.
+- Atualizacao 2026-08-02: `pnpm --dir frontend exec biome check src/app/app/professional/analytics/logic.tsx`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `next start` local com request em `/app/professional/analytics` retornando `307` para login sem sessao.
 
 ## Pendencias
 
