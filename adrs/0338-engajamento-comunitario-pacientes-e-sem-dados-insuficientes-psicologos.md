@@ -52,6 +52,33 @@ Builder/Quick Copy nao estava exposto como ferramenta callable neste ambiente. A
 - Service smoke: `buildPatientsDashboard({ period: "all" })`, `listAdminPatients({ limit: 5 })` e `buildPsychologistsDashboard({ period: "all" })` retornaram dados reais sem mocks.
 - Browser local/headless autenticado validou `/pacientes`, `/pacientes/lista`, `/psicologos` e `/psicologos/lista?profile_conversion_engagement=low_conversion_no_engagement` em mobile 390px, sem overflow horizontal.
 
+
+## Atualizacao 2026-08-02 - Nomenclatura Atividade na lista de pacientes
+
+Novo feedback de produto pediu que a coluna **Engajamento** de `/pacientes/lista` fosse apresentada como **Atividade**, pois a classificacao mostrada ali representa padrao de atividade comunitaria do paciente.
+
+Decisao:
+
+- Manter o calculo existente e as fontes reais ja definidas nesta ADR: `community_post`, `post_reply`, `post_vote`, `post_save` e `post_reply_save`.
+- Confirmar que posts e comentarios/respostas ja participam do score: posts tem peso maior que comentarios/respostas, e votos/salvamentos continuam como sinais leves de atividade comunitaria.
+- Alterar somente a nomenclatura visivel da lista Admin para **Atividade**, com labels **Sem atividade**, **Pouco ativo**, **Ativo** e **Muito ativo**.
+- Preservar ids e nomes internos do contrato (`engagement`, `intent_engagement`) para evitar migracao desnecessaria de API/query params e manter compatibilidade com os filtros da matriz.
+
+Consequencias:
+
+- A lista passa a comunicar melhor que a coluna mede atividade comunitaria do paciente, nao intencao de busca/contato.
+- Dashboards, filtros compostos e contratos permanecem estaveis.
+- Nao houve schema Prisma, migration, package novo, endpoint simulado, seed, mock ou backfill.
+
+Validacao:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke de servico local `listAdminPatients({ limit: 1 })` retornou source com `community_post+post_reply+post_vote+post_save+post_reply_save`.
+- Browser local/headless em `/pacientes/lista`, viewport 390px, validou **Atividade**, **Sem atividade**, ausencia de **Engajamento** na lista e ausencia de overflow horizontal; admin temporario de validacao removido ao final.
+
 ## Pendencias
 
 - Nenhuma pendencia externa.

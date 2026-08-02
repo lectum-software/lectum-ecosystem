@@ -1136,3 +1136,32 @@ Frontend esperado:
 - Browser local/headless autenticado em `http://localhost:3002/pacientes?period=all` validou em 390px e 1366px: select inicial em **Páginas mais acessadas**, alternância para **Páginas com maior tempo médio**, estado honesto sem duração confiável na base local e `scrollWidth <= viewport`. Screenshots: `.tmp/admin-patients-platform-pages-duration-mobile.png` e `.tmp/admin-patients-platform-pages-duration-desktop.png`.
 - API local autenticada confirmou `platform_usage.top_pages_by_average_duration` no dashboard de pacientes; a base local retornou lista vazia por não haver duração confiável no recorte validado, preservando o estado honesto.
 - Admin temporário de validação `codex-pages-duration-20260729@example.com` foi removido do banco após a verificação.
+
+
+## Ajuste pos-feedback 2026-08-02 - Coluna Atividade na lista de pacientes
+
+- Pedido do usuario: alterar a coluna **Engajamento** do paciente para **Atividade** e confirmar se ja existe calculo de padrao de atividade por posts e comentarios.
+- Confirmacao tecnica: a lista `/pacientes/lista` ja recebe do backend uma classificacao real por paciente calculada a partir de atividade comunitaria persistida. Posts (`community_post`) e comentarios/respostas (`post_reply`) entram no score, junto de votos e salvamentos reais (`post_vote`, `post_save`, `post_reply_save`) conforme a decisao vigente de engajamento comunitario.
+- Frontend Admin: a tabela desktop e os cards mobile passaram a exibir o cabecalho/label **Atividade**. Os textos visiveis da classificacao foram ajustados para **Sem atividade**, **Pouco ativo**, **Ativo** e **Muito ativo**, sem alterar ids internos, filtros, query params ou contrato HTTP.
+- O calculo, os pesos, as fontes reais, o endpoint `GET /api/admin/private/patients`, a paginacao e o filtro composto `intent_engagement` permaneceram inalterados; a mudanca e de nomenclatura/apresentacao da lista.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o screenshot enviado pelo usuario em 2026-08-02.
+- Nenhuma alteracao em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`; `pnpm --dir backend db:migrate` nao se aplica.
+- ADR atualizado: `adrs/0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md`.
+
+### Criterios complementares
+
+- [x] A coluna desktop de `/pacientes/lista` exibe **Atividade** em vez de **Engajamento**.
+- [x] O card mobile de paciente exibe **Atividade** em vez de **Engajamento**.
+- [x] Os valores visiveis usam nomenclatura de atividade: **Sem atividade**, **Pouco ativo**, **Ativo** e **Muito ativo**.
+- [x] O calculo real existente de atividade comunitaria nao foi alterado nem substituido por mock.
+- [x] Nenhum schema Prisma, migration, package novo, endpoint simulado, seed, backfill artificial ou `<img>` foi adicionado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm check`
+- Smoke de servico local `listAdminPatients({ limit: 1 })` retornou `status=200`, `count=155` e `source` com `community_post+post_reply+post_vote+post_save+post_reply_save`, confirmando calculo real sem mock.
+- Browser local/headless em `http://localhost:3002/pacientes/lista`, mobile `390x844`, validou **Atividade**, **Sem atividade**, ausencia de **Engajamento** na lista e `scrollWidth=390`; screenshot salvo em `.tmp/admin-patients-list-activity-mobile.png`.
+- Admin temporario de validacao `codex-activity-list-20260802@example.com` foi removido do banco apos a verificacao.

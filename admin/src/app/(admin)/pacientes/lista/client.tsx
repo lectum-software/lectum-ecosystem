@@ -256,11 +256,18 @@ const INTENT_VISUAL_EXAMPLES = [
 ] as const satisfies readonly VisualExample[];
 
 const ENGAGEMENT_VISUAL_EXAMPLES = [
-  { label: "Sem engajamento", tone: "inactive" },
-  { label: "Pouco engajado", tone: "warning" },
-  { label: "Engajado", tone: "info" },
-  { label: "Muito engajado", tone: "active" },
+  { label: "Sem atividade", tone: "inactive" },
+  { label: "Pouco ativo", tone: "warning" },
+  { label: "Ativo", tone: "info" },
+  { label: "Muito ativo", tone: "active" },
 ] as const satisfies readonly VisualExample[];
+
+const PATIENT_ACTIVITY_LABELS = {
+  engaged: "Ativo",
+  low_engagement: "Pouco ativo",
+  no_engagement: "Sem atividade",
+  very_engaged: "Muito ativo",
+} as const satisfies Record<PatientsListItem["engagement"]["id"], string>;
 
 const StatusText = ({
   children,
@@ -349,7 +356,7 @@ const PatientEngagementValue = ({
 
   return (
     <ValueWithVisualExample
-      actual={item.engagement.label}
+      actual={PATIENT_ACTIVITY_LABELS[item.engagement.id]}
       example={engagementExample}
       tone={engagementTone}
     />
@@ -397,7 +404,7 @@ const PatientMobileCard = ({
         </dd>
       </div>
       <div>
-        <dt className="font-semibold text-muted">Engajamento</dt>
+        <dt className="font-semibold text-muted">Atividade</dt>
         <dd className="mt-1">
           <PatientEngagementValue item={item} rowIndex={rowIndex} />
         </dd>
@@ -441,7 +448,7 @@ const PatientsTable = ({
             <th className="px-3 py-4 font-semibold">Data de cadastro</th>
             <th className="px-3 py-4 font-semibold">Perfil</th>
             <th className="px-3 py-4 font-semibold">Intenção</th>
-            <th className="px-3 py-4 font-semibold">Engajamento</th>
+            <th className="px-3 py-4 font-semibold">Atividade</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
