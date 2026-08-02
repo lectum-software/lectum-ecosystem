@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   ArrowRight,
   BarChart3,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Heart,
   Link2,
   type LucideIcon,
+  MessageCircle,
   PlayCircle,
   Repeat2,
   Search,
@@ -27,6 +29,7 @@ import {
 } from "react";
 import { usePsychologistAnalytics } from "@/api/callers/psychologist-analytics";
 import type {
+  PsychologistAnalyticsCommunities,
   PsychologistAnalyticsMetric,
   PsychologistAnalyticsPeriodKey,
   PsychologistAnalyticsPresentationVideo,
@@ -165,16 +168,36 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
       whatsapp_clicks: 0,
       conversion_rate: 0,
       badge: null,
+      breakdown: [
+        {
+          id: "explore",
+          label: "Explorar",
+          description: "Cliques no WhatsApp feitos a partir do vídeo na navegação de descoberta.",
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+        {
+          id: "search_results",
+          label: "Resultados de busca",
+          description:
+            "Cliques no WhatsApp feitos a partir do vídeo depois de pesquisa ou filtro no diretório.",
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+      ],
     },
     {
       id: "communities",
       label: "Comunidades",
       description:
-        "Acessos originados por posts, comentários, respostas, ranking Top Mentor e demais interações dentro das comunidades.",
+        "Acessos originados por posts, respostas e demais interações dentro das comunidades.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
       badge: null,
+      breakdown: null,
     },
     {
       id: "direct_link",
@@ -184,6 +207,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
       whatsapp_clicks: 0,
       conversion_rate: 0,
       badge: null,
+      breakdown: null,
     },
     {
       id: "favorites",
@@ -194,12 +218,82 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
       whatsapp_clicks: 0,
       conversion_rate: 0,
       badge: null,
+      breakdown: null,
     },
   ],
 };
 
+const fallbackCommunitiesAnalytics: PsychologistAnalyticsCommunities = {
+  updated_at: null,
+  description:
+    "Compare seus posts e respostas com e sem vídeo e veja quais formatos levam pacientes ao WhatsApp.",
+  source: "community_member+community_post+post_reply+important_action_event",
+  diagnosis: {
+    active_communities: 0,
+    description: "Você ainda não segue comunidades nem tem participação comunitária registrada.",
+    label: "Sem atividade recente",
+    level: "none",
+    score: 0,
+    source: "community_member+community_post+post_reply+important_action_event",
+    total_posts: 0,
+    total_replies: 0,
+    total_whatsapp_clicks: 0,
+  },
+  following_communities: 0,
+  participating_communities: 0,
+  content: {
+    posts: {
+      total: 0,
+      with_video: 0,
+      without_video: 0,
+    },
+    replies: {
+      total: 0,
+      with_video: 0,
+      without_video: 0,
+    },
+    whatsapp_clicks_by_content: [
+      {
+        id: "post_with_video",
+        label: "Posts com vídeo",
+        content_type: "post",
+        media_scope: "with_video",
+        content_count: 0,
+        whatsapp_clicks: 0,
+      },
+      {
+        id: "post_without_video",
+        label: "Posts sem vídeo",
+        content_type: "post",
+        media_scope: "without_video",
+        content_count: 0,
+        whatsapp_clicks: 0,
+      },
+      {
+        id: "reply_with_video",
+        label: "Respostas com vídeo",
+        content_type: "reply",
+        media_scope: "with_video",
+        content_count: 0,
+        whatsapp_clicks: 0,
+      },
+      {
+        id: "reply_without_video",
+        label: "Respostas sem vídeo",
+        content_type: "reply",
+        media_scope: "without_video",
+        content_count: 0,
+        whatsapp_clicks: 0,
+      },
+    ],
+  },
+};
+
 const getTrafficSources = (data?: PsychologistAnalyticsResponse) =>
   data?.traffic_sources ?? fallbackTrafficSources;
+
+const getCommunitiesAnalytics = (data?: PsychologistAnalyticsResponse) =>
+  data?.communities ?? fallbackCommunitiesAnalytics;
 
 const PeriodTabs = ({
   customPopoverOpen,
@@ -1146,6 +1240,209 @@ const PresentationVideoAnalyticsSection = ({
   );
 };
 
+const CommunityContentDonut = ({
+  icon: Icon,
+  label,
+  locked,
+  totals,
+}: {
+  icon: AnalyticsCardIcon;
+  label: string;
+  locked?: boolean;
+  totals: PsychologistAnalyticsCommunities["content"]["posts"];
+}) => {
+  const withVideoRate =
+    totals.total > 0 ? clampPercent((totals.with_video / totals.total) * 100) : 0;
+  const roundedWithVideoRate = Math.round(withVideoRate);
+  const donutBackground =
+    totals.total > 0
+      ? `conic-gradient(var(--lectum-primary) 0 ${withVideoRate}%, var(--lectum-border-strong) ${withVideoRate}% 100%)`
+      : "conic-gradient(var(--lectum-border) 0 100%)";
+
+  return (
+    <article className="grid min-w-0 gap-3 rounded-[24px] border border-primary/10 bg-surface p-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+          <Icon className="h-4 w-4" aria-hidden />
+        </span>
+        <p className="truncate text-sm font-black tracking-[-0.03em] text-foreground">{label}</p>
+      </div>
+
+      <div className="grid justify-items-center gap-3">
+        <div
+          aria-label={`${label}: ${toCount(totals.with_video)} com vídeo e ${toCount(
+            totals.without_video,
+          )} sem vídeo`}
+          className="grid h-28 w-28 place-items-center rounded-full p-3"
+          role="img"
+          style={{ background: donutBackground }}
+        >
+          <div className="grid h-full w-full place-items-center rounded-full bg-surface text-center">
+            <div>
+              <p
+                className={cn(
+                  "text-2xl font-black leading-none tracking-[-0.06em] text-foreground",
+                  locked && "select-none blur-[5px]",
+                )}
+              >
+                {toCount(totals.total)}
+              </p>
+              <p className="mt-1 text-[0.62rem] font-black uppercase tracking-[0.1em] text-subtle">
+                total
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid w-full gap-2">
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="inline-flex min-w-0 items-center gap-2 font-extrabold text-muted">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
+              Com vídeo
+            </span>
+            <span className={cn("font-black text-foreground", locked && "select-none blur-[5px]")}>
+              {toCount(totals.with_video)} ({roundedWithVideoRate}%)
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="inline-flex min-w-0 items-center gap-2 font-extrabold text-muted">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-border-strong" />
+              Sem vídeo
+            </span>
+            <span className={cn("font-black text-foreground", locked && "select-none blur-[5px]")}>
+              {toCount(totals.without_video)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+const CommunityWhatsappContentTable = ({
+  items,
+  locked,
+}: {
+  items: PsychologistAnalyticsCommunities["content"]["whatsapp_clicks_by_content"];
+  locked?: boolean;
+}) => (
+  <article className="overflow-hidden rounded-[24px] border border-primary/10 bg-surface">
+    <div className="flex min-w-0 items-center gap-2 border-border border-b bg-surface-muted/70 px-4 py-3">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <WhatsAppIcon className="h-4 w-4" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-black tracking-[-0.03em] text-foreground">
+          Cliques por conteúdo
+        </p>
+        <p className="text-xs font-semibold text-muted">
+          WhatsApp atribuído aos formatos rastreados
+        </p>
+      </div>
+    </div>
+
+    <table className="w-full border-separate border-spacing-0 text-left">
+      <thead>
+        <tr className="text-[0.66rem] font-black uppercase tracking-[0.08em] text-subtle">
+          <th className="px-4 py-3">Conteúdo</th>
+          <th className="px-4 py-3 text-right">WhatsApp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item) => (
+          <tr className="border-border border-t" key={item.id}>
+            <td className="border-border border-t px-4 py-3 text-sm font-extrabold text-foreground">
+              {item.label}
+            </td>
+            <td
+              className={cn(
+                "border-border border-t px-4 py-3 text-right text-lg font-black tracking-[-0.04em] text-foreground",
+                locked && "select-none blur-[5px]",
+              )}
+            >
+              {toCount(item.whatsapp_clicks)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </article>
+);
+
+const CommunityActivitySection = ({
+  communities,
+  locked,
+}: {
+  communities: PsychologistAnalyticsCommunities;
+  locked?: boolean;
+}) => {
+  const diagnosis = communities.diagnosis;
+  const content = communities.content;
+
+  return (
+    <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <UsersRound className="h-6 w-6" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Comunidade</p>
+          <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
+            Participação nas comunidades
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">{communities.description}</p>
+        </div>
+      </div>
+
+      <article className="rounded-[24px] border border-primary/10 bg-primary-soft/45 p-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface text-primary">
+            <Activity className="h-5 w-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
+              Diagnóstico
+            </p>
+            <p
+              className={cn(
+                "mt-1 text-lg font-black tracking-[-0.04em] text-foreground",
+                locked && "select-none blur-[5px]",
+              )}
+            >
+              {diagnosis.label}
+            </p>
+            <p
+              className={cn(
+                "mt-2 text-sm font-semibold leading-6 text-muted",
+                locked && "select-none blur-[4px]",
+              )}
+            >
+              {diagnosis.description}
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <div className="grid grid-cols-2 gap-3">
+        <CommunityContentDonut
+          icon={BarChart3}
+          label="Posts"
+          locked={locked}
+          totals={content.posts}
+        />
+        <CommunityContentDonut
+          icon={MessageCircle}
+          label="Respostas"
+          locked={locked}
+          totals={content.replies}
+        />
+      </div>
+
+      <CommunityWhatsappContentTable items={content.whatsapp_clicks_by_content} locked={locked} />
+    </section>
+  );
+};
+
 type TrafficSourceWithDisplay = PsychologistAnalyticsTrafficSource & {
   displayBadge: "primary_source" | null;
 };
@@ -1187,6 +1484,78 @@ const TrafficBadge = ({ type }: { type: TrafficSourceWithDisplay["displayBadge"]
   );
 };
 
+const TrafficSourceBreakdown = ({
+  items,
+  locked,
+}: {
+  items: NonNullable<TrafficSourceWithDisplay["breakdown"]>;
+  locked?: boolean;
+}) => (
+  <div className="grid gap-2">
+    {items.map((item) => (
+      <article className="grid gap-3 rounded-2xl bg-surface p-3" key={item.id}>
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-extrabold text-foreground">{item.label}</p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-muted">{item.description}</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p
+              className={cn(
+                "text-lg font-black leading-none tracking-[-0.04em] text-foreground",
+                locked && "select-none blur-[5px]",
+              )}
+            >
+              {toCount(item.whatsapp_clicks)}
+            </p>
+            <p className="mt-1 text-[0.66rem] font-black uppercase tracking-[0.08em] text-subtle">
+              WhatsApp
+            </p>
+          </div>
+        </div>
+
+        {item.id === "search_results" ? (
+          <div className="rounded-xl bg-surface-muted/70 p-3">
+            <p className="text-[0.68rem] font-black uppercase tracking-[0.1em] text-subtle">
+              Principais termos pesquisados
+            </p>
+            {item.top_search_terms.length > 0 ? (
+              <ul className="mt-2 grid gap-2">
+                {item.top_search_terms.map((term) => (
+                  <li className="flex items-center justify-between gap-3" key={term.term}>
+                    <span
+                      className={cn(
+                        "min-w-0 truncate text-xs font-extrabold text-foreground",
+                        locked && "select-none blur-[4px]",
+                      )}
+                    >
+                      {term.term}
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 text-xs font-black text-primary",
+                        locked && "select-none blur-[4px]",
+                      )}
+                    >
+                      {toCount(term.whatsapp_clicks)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-xs font-semibold leading-5 text-muted">
+                {item.whatsapp_clicks > 0
+                  ? "Há cliques por busca/filtro, mas nenhum termo textual foi registrado."
+                  : "Nenhum termo pesquisado gerou clique no período."}
+              </p>
+            )}
+          </div>
+        ) : null}
+      </article>
+    ))}
+  </div>
+);
+
 const TrafficSourceSection = ({
   locked,
   traffic,
@@ -1224,12 +1593,10 @@ const TrafficSourceSection = ({
         <div className="divide-y divide-border">
           {sources.map((source) => {
             const Icon = trafficSourceIcons[source.id];
-
-            return (
-              <div
-                className="grid grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] items-center gap-3 px-4 py-4"
-                key={source.id}
-              >
+            const hasBreakdown = Boolean(source.breakdown?.length);
+            const expanded = expandedSourceId === source.id;
+            const rowContent = (
+              <>
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
                     <Icon className="h-4 w-4" aria-hidden />
@@ -1246,14 +1613,47 @@ const TrafficSourceSection = ({
                     </p>
                   </div>
                 </div>
-                <p
-                  className={cn(
-                    "text-center text-lg font-black tracking-[-0.04em] text-foreground",
-                    locked && "select-none blur-[5px]",
-                  )}
-                >
-                  {toCount(source.whatsapp_clicks)}
-                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <p
+                    className={cn(
+                      "text-center text-lg font-black tracking-[-0.04em] text-foreground",
+                      locked && "select-none blur-[5px]",
+                    )}
+                  >
+                    {toCount(source.whatsapp_clicks)}
+                  </p>
+                  {hasBreakdown ? (
+                    <ChevronDown
+                      className={cn("h-4 w-4 text-subtle transition", expanded && "rotate-180")}
+                      aria-hidden
+                    />
+                  ) : null}
+                </div>
+              </>
+            );
+
+            return (
+              <div key={source.id}>
+                {hasBreakdown ? (
+                  <button
+                    aria-expanded={expanded}
+                    className="grid w-full grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] items-center gap-3 px-4 py-4 text-left transition hover:bg-surface-muted/45"
+                    onClick={() => setExpandedSourceId(expanded ? null : source.id)}
+                    type="button"
+                  >
+                    {rowContent}
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(92px,0.28fr)] items-center gap-3 px-4 py-4">
+                    {rowContent}
+                  </div>
+                )}
+
+                {expanded && source.breakdown ? (
+                  <div className="border-border border-t bg-surface-muted/45 px-4 py-4">
+                    <TrafficSourceBreakdown items={source.breakdown} locked={locked} />
+                  </div>
+                ) : null}
               </div>
             );
           })}
@@ -1315,6 +1715,9 @@ const TrafficSourceSection = ({
                       cliques no WhatsApp
                     </p>
                   </div>
+                  {source.breakdown ? (
+                    <TrafficSourceBreakdown items={source.breakdown} locked={locked} />
+                  ) : null}
                 </div>
               ) : null}
             </article>
@@ -1380,6 +1783,13 @@ export const ProfessionalAnalyticsLogic = () => {
           <PresentationVideoAnalyticsSection
             locked={isAnalyticsPreview}
             video={data?.presentation_video}
+          />
+        ) : null}
+
+        {!shouldShowError ? (
+          <CommunityActivitySection
+            communities={getCommunitiesAnalytics(data)}
+            locked={isAnalyticsPreview}
           />
         ) : null}
 

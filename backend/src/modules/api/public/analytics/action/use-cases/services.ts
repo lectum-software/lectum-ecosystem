@@ -1,11 +1,11 @@
 ﻿import type { Request } from "express";
 import { msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
+import { sanitizeAnalyticsPathWithTrafficQuery } from "@/utils/analytics-traffic-path";
 import {
   derivePageTarget,
   normalizeDisplayMode,
   normalizeOccurredAt,
-  sanitizePath,
 } from "../../helpers/tracking";
 import type { IImportantActionDTO, ImportantActionResult } from "../DTOs/IImportantActionDTO";
 import { ImportantActionRepository } from "../repositories/ImportantActionRepository";
@@ -19,7 +19,7 @@ export const store = async (req: Request) => {
   const userId = auth?.id ?? null;
   const visitorId = data.b.visitor_id;
   const sessionId = data.b.session_id;
-  const path = data.b.path ? sanitizePath(data.b.path) : null;
+  const path = data.b.path ? sanitizeAnalyticsPathWithTrafficQuery(data.b.path) : null;
   const derivedTarget = derivePageTarget(path || "/");
   const explicitTargetType = data.b.target_type?.trim() || null;
   const explicitTargetId = data.b.target_id?.trim() || null;

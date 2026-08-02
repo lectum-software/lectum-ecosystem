@@ -122,6 +122,23 @@ export type PsychologistAnalyticsTrafficSourceId =
   | "favorites"
   | "presentation_video";
 
+export type PsychologistAnalyticsTrafficSourceBreakdownId = "explore" | "search_results";
+
+export type PsychologistAnalyticsTrafficSearchTerm = {
+  term: string;
+  whatsapp_clicks: number;
+  percentage: number;
+};
+
+export type PsychologistAnalyticsTrafficSourceBreakdownItem = {
+  id: PsychologistAnalyticsTrafficSourceBreakdownId;
+  label: string;
+  description: string;
+  whatsapp_clicks: number;
+  percentage: number;
+  top_search_terms: PsychologistAnalyticsTrafficSearchTerm[];
+};
+
 export type PsychologistAnalyticsTrafficSource = {
   id: PsychologistAnalyticsTrafficSourceId;
   label: string;
@@ -130,6 +147,7 @@ export type PsychologistAnalyticsTrafficSource = {
   whatsapp_clicks: number;
   conversion_rate: number;
   badge: "best_conversion" | "primary_source" | null;
+  breakdown: PsychologistAnalyticsTrafficSourceBreakdownItem[] | null;
 };
 
 export type PsychologistAnalyticsTrafficSources = {
@@ -137,6 +155,61 @@ export type PsychologistAnalyticsTrafficSources = {
   description: string;
   source: "traffic_origin_events";
   sources: PsychologistAnalyticsTrafficSource[];
+};
+
+export type PsychologistAnalyticsCommunityActivityLevel = "high" | "low" | "moderate" | "none";
+
+export type PsychologistAnalyticsCommunityActivityDiagnosis = {
+  active_communities: number;
+  description: string;
+  label: string;
+  level: PsychologistAnalyticsCommunityActivityLevel;
+  score: number;
+  source: "community_member+community_post+post_reply+important_action_event";
+  total_posts: number;
+  total_replies: number;
+  total_whatsapp_clicks: number;
+};
+
+export type PsychologistAnalyticsCommunityContentMediaScope = "with_video" | "without_video";
+
+export type PsychologistAnalyticsCommunityContentType = "post" | "reply";
+
+export type PsychologistAnalyticsCommunityContentBreakdownId =
+  | "post_with_video"
+  | "post_without_video"
+  | "reply_with_video"
+  | "reply_without_video";
+
+export type PsychologistAnalyticsCommunityContentTotals = {
+  total: number;
+  with_video: number;
+  without_video: number;
+};
+
+export type PsychologistAnalyticsCommunityContentBreakdownItem = {
+  id: PsychologistAnalyticsCommunityContentBreakdownId;
+  label: string;
+  content_type: PsychologistAnalyticsCommunityContentType;
+  media_scope: PsychologistAnalyticsCommunityContentMediaScope;
+  content_count: number;
+  whatsapp_clicks: number;
+};
+
+export type PsychologistAnalyticsCommunityContentSummary = {
+  posts: PsychologistAnalyticsCommunityContentTotals;
+  replies: PsychologistAnalyticsCommunityContentTotals;
+  whatsapp_clicks_by_content: PsychologistAnalyticsCommunityContentBreakdownItem[];
+};
+
+export type PsychologistAnalyticsCommunities = {
+  content: PsychologistAnalyticsCommunityContentSummary;
+  description: string;
+  diagnosis: PsychologistAnalyticsCommunityActivityDiagnosis;
+  following_communities: number;
+  participating_communities: number;
+  source: "community_member+community_post+post_reply+important_action_event";
+  updated_at: string | null;
 };
 
 export type PsychologistAnalyticsResponse = {
@@ -148,6 +221,7 @@ export type PsychologistAnalyticsResponse = {
   metrics: PsychologistAnalyticsMetrics;
   cards: PsychologistAnalyticsMetric[];
   presentation_video: PsychologistAnalyticsPresentationVideo;
+  communities: PsychologistAnalyticsCommunities;
   traffic_sources: PsychologistAnalyticsTrafficSources;
   unavailable: PsychologistAnalyticsUnavailableMetric[];
 };

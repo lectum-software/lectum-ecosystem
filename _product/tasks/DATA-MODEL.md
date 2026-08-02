@@ -711,10 +711,20 @@ A penalidade de posts removidos e progressiva por comunidade: `30 * removed_post
 `reply_coverage_count` conta no maximo uma cobertura por post de paciente respondido pelo psicologo no periodo, mesmo que
 ele publique varias respostas no mesmo post. Upvotes, downvotes, salvamentos e compartilhamentos executados pelo proprio
 psicologo no proprio conteudo nao entram no score. `shares_received` deriva de `post_share` para posts e respostas;
-`community_whatsapp_clicks` permanece zerado ate existir fonte persistida com origem de comunidade. Nao usar mocks para
-preencher componentes sem fonte real. Se for necessario materializar para performance, criar `mentor_score_snapshot`
+`community_whatsapp_clicks` so pode ser preenchido quando existir `important_action_event.action_type="whatsapp_click"`
+com `target_type`/`target_id` apontando para `community_post` ou `post_reply` de autoria do psicologo; sem alvo
+comunitario rastreavel, a metrica permanece zerada. Nao usar mocks para preencher componentes sem fonte real. Se for
+necessario materializar para performance, criar `mentor_score_snapshot`
 (`psychologist_id`, `community_id`, `score Int`, `period String`, `position Int`) ou modelo equivalente apos ADR
 especifica de snapshot.
+
+Complemento 2026-08-02: o bloco `communities` do `GET /api/private/psychologist/analytics` lista comunidades ativas
+em que o psicologo segue (`community_member`) ou tem participacao real por posts/respostas. As metricas por comunidade
+usam somente fontes persistidas no periodo selecionado: posts publicados (`community_post.author_id`), respostas
+ativas em posts publicados (`post_reply.author_id`) e cliques de WhatsApp rastreados em `important_action_event` para
+posts/respostas comunitarias do proprio psicologo, sempre excluindo autoacoes autenticadas (`user_id = psychologist_id`).
+O ranking exibido por comunidade reutiliza o ranking Top Mentor derivado; o diagnostico de atividade e calculado a
+partir desses totais reais, sem schema novo, snapshot, backfill ou estimativa.
 
 ---
 
@@ -908,6 +918,20 @@ Adicionado na TASK-49 para sustentar a aba Admin Tráfego sem integração de te
 | `path`, `page_kind`, `target_type`, `target_id`, `display_mode`, `occurred_at` | | Contexto mínimo para futuras agregações. |
 
 Ambos seguem soft delete, relação opcional com `user` por `onDelete: SetNull` e índices por período, sessão, visitante, usuário e dimensões de agregação.
+
+Complemento 2026-08-02: em Analytics do psicologo, `important_action_event.action_type="whatsapp_click"` e fonte de
+atribuicao por comunidade somente quando `target_type`/`target_id` apontam para `community_post` ou `post_reply`
+persistido e de autoria do psicologo. `contact_request` continua fonte do total geral de conversoes WhatsApp, mas nao
+tem `community_id`; por isso nao deve ser distribuido por comunidade sem evento de acao com alvo rastreavel. Cliques do
+proprio psicologo autenticado continuam excluidos de diagnosticos, ranking e metricas por comunidade.
+
+Complemento 2026-08-02: para detalhar o dropdown de `Video de apresentacao` em Analytics do psicologo,
+`important_action_event.path` passa a preservar somente parametros permitidos de busca/filtro do diretorio
+(`search`, `q`, `specialty`, `service`, `approach`, `city`, etc.) em novos eventos de acao importante. O agregado
+`traffic_sources.sources[].breakdown` usa `psychologist_video_whatsapp_click` real para separar cliques entre
+`Explorar` e `Resultados de busca`; os principais termos exibidos em `Resultados de busca` derivam apenas de `search`
+ou `q` presentes no path permitido. Eventos historicos que ja foram gravados sem query nao recebem backfill e continuam
+classificados honestamente como exploracao sem termo textual.
 
 Complemento TASK-85B (2026-07-27): o cadastro de paciente passa a aceitar, de forma opcional, `analytics_visitor_id` e `analytics_session_id` vindos do storage first-party do frontend. Quando `role="paciente"` e `analytics_visitor_id` é válido, o backend grava um `user_background` com `type="patient_signup_analytics_identity"`, `device_id` do cadastro real e `data` seguro:
 

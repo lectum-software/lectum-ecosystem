@@ -1,3 +1,5 @@
+import { hasSearchFilterTrafficParams as hasSearchFilterTrafficParamsFromPath } from "@/utils/analytics-traffic-path";
+
 const MS_PER_DAY = 86_400_000;
 const FREE_PLAN_SLUG = "gratuito";
 const PAID_SOURCE = "mercadopago";
@@ -799,47 +801,12 @@ const COMMUNITY_CONTENT_WHATSAPP_TRAFFIC_SOURCE_IDS =
     "community_reply_video",
   ]);
 
-const SEARCH_FILTER_TRAFFIC_PARAMS = new Set([
-  "accepts_insurance",
-  "approach",
-  "available_today",
-  "city",
-  "discount_first_session",
-  "gender",
-  "language",
-  "modality",
-  "q",
-  "race_color",
-  "religion",
-  "search",
-  "service",
-  "social_value",
-  "specialty",
-  "state",
-  "target_audience",
-]);
+export const hasSearchFilterTrafficParams = hasSearchFilterTrafficParamsFromPath;
 
 const normalizeTrafficActionPath = (path: string | null) => (path ?? "").toLowerCase();
 
 const trafficActionPathIncludes = (action: AdminPsychologistWhatsappTrafficAction, value: string) =>
   normalizeTrafficActionPath(action.path).includes(value);
-
-export const hasSearchFilterTrafficParams = (path: string | null) => {
-  if (!path?.includes("?")) return false;
-
-  try {
-    const url = new URL(path, "https://lectum.local");
-
-    return [...url.searchParams.entries()].some(([key, value]) => {
-      if (!SEARCH_FILTER_TRAFFIC_PARAMS.has(key)) return false;
-
-      const normalizedValue = value.trim().toLowerCase();
-      return normalizedValue !== "" && normalizedValue !== "false";
-    });
-  } catch {
-    return false;
-  }
-};
 
 const isCommunityPostTarget = (targetType: string | null) =>
   targetType === "community_post" || targetType === "post";

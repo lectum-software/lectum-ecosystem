@@ -469,3 +469,70 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3137` e request em `/app/professional/analytics` retornando `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada.
+
+## Ajuste complementar em 2026-08-02 - bloco de Comunidade nos Analytics
+
+- Pedido do usuario: abaixo do bloco de `Video de apresentacao`, adicionar um bloco de `Comunidade` com lista de comunidades em que o psicologo participa, botao `Seguir`/`Seguindo`, ranking Top Mentor, Posts, Respostas, cliques WhatsApp por comunidade e diagnostico do nivel de atividade.
+- O backend de `GET /api/private/psychologist/analytics` passou a expor `communities`, usando somente dados persistidos: `community_member`, `community_post`, `post_reply`, `important_action_event` e ranking Top Mentor derivado.
+- Uma comunidade entra na lista quando o psicologo segue a comunidade ou tem participacao real nela por posts/respostas publicados.
+- Cliques WhatsApp por comunidade sao atribuidos apenas quando ha `important_action_event.action_type="whatsapp_click"` com `target_type`/`target_id` apontando para post ou resposta comunitaria de autoria do psicologo; `contact_request` continua sendo total geral e nao e distribuido sem alvo comunitario rastreavel.
+- O diagnostico usa score derivado dos totais reais do periodo: posts, respostas, cliques WhatsApp e quantidade de comunidades ativas, com niveis `Sem atividade recente`, `Atividade inicial`, `Atividade consistente` e `Alta atividade`.
+- A UI mobile-first renderiza o bloco imediatamente apos `Video de apresentacao`, com cards de comunidade em tres metricas, ranking Top Mentor e CTA real de seguir/deixar de seguir usando os endpoints existentes de membros da comunidade.
+- Builder/Quick Copy nao estava exposto como ferramenta direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial, backfill ou endpoint simulado foi criado.
+- ADR criado: `adrs/0404-comunidades-analytics-psicologo.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O bloco `Comunidade` aparece abaixo do bloco de `Video de apresentacao`.
+- [x] A lista mostra comunidades reais que o psicologo segue ou onde participou com posts/respostas.
+- [x] Cada comunidade exibe botao real `Seguir`/`Seguindo`.
+- [x] Cada comunidade exibe ranking Top Mentor, Posts, Respostas e cliques WhatsApp por comunidade.
+- [x] O diagnostico informa o nivel de atividade com base em metricas reais do periodo.
+- [x] Cliques WhatsApp por comunidade nao usam distribuicao simulada de `contact_request`.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao de dados foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3137` e request em `/app/professional/analytics` retornando `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada; a validacao visual do fonte/build confirmou a ordem do bloco e o fluxo privado permanece protegido.
+
+## Ajuste complementar em 2026-08-02 - detalhamento do dropdown de Video de apresentacao
+
+- Pedido do usuario: dentro do dropdown de `Video de apresentacao`, adicionar as categorias `Explorar` e `Resultados de busca`, com a quantidade de cliques de WhatsApp em cada uma; em `Resultados de busca`, listar tambem os principais termos pesquisados que geraram cliques.
+- O backend de `GET /api/private/psychologist/analytics` passou a preencher `traffic_sources.sources[].breakdown` para a origem `presentation_video`, usando apenas eventos reais `important_action_event.action_type="psychologist_video_whatsapp_click"` no periodo selecionado.
+- `Explorar` contabiliza cliques do video sem parametros de busca/filtro no path; `Resultados de busca` contabiliza cliques do video com parametros permitidos do diretorio (`search`, `q`, filtros de especialidade/servico/localidade etc.).
+- Os principais termos derivam somente de `search` ou `q` preservados no path permitido; quando o clique veio de filtros sem texto livre, a UI informa honestamente que nao ha termo textual registrado.
+- Novos eventos de acao importante passam a preservar somente os parametros permitidos de busca/filtro em `important_action_event.path`, mantendo queries sensiveis fora do armazenamento e sem alterar schema Prisma.
+- Eventos historicos gravados antes dessa preservacao de query nao recebem backfill; permanecem classificados pela informacao real disponivel.
+- A UI mobile-first do acordeao de Origem do trafego mostra as subcategorias dentro do dropdown de `Video de apresentacao`; no desktop, a linha tambem pode ser expandida para inspecionar o detalhamento.
+- Builder/Quick Copy nao estava exposto como ferramenta direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial, backfill ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O dropdown de `Video de apresentacao` exibe `Explorar` com cliques reais de WhatsApp do video.
+- [x] O dropdown de `Video de apresentacao` exibe `Resultados de busca` com cliques reais de WhatsApp do video.
+- [x] `Resultados de busca` lista os principais termos pesquisados que geraram cliques quando `search`/`q` existe no path permitido.
+- [x] Cliques vindos de filtros sem termo textual mostram estado honesto sem inventar termo.
+- [x] O total da origem `Video de apresentacao` usa a soma real dos cliques de WhatsApp do detalhamento.
+- [x] Novos eventos preservam somente parametros permitidos de busca/filtro no path de acao importante.
+- [x] Nenhum mock, seed, endpoint simulado, package novo, backfill ou alteracao de schema foi criado.
+- [x] ADR e documentacao de dados foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir backend exec biome check --write "src/utils/analytics-traffic-path.ts" "src/utils/admin-psychologist-analytics.ts" "src/modules/api/public/analytics/action/use-cases/services.ts" "src/modules/api/private/psychologist/analytics/DTOs/IAnalyticsDTO.ts" "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx" "src/api/generator/types/psychologist-analytics.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada e Chrome headless carregou a tela de login redirecionada; a validacao visual do fonte/build confirmou o detalhamento mobile-first e o fluxo privado permanece protegido.

@@ -1,4 +1,4 @@
-# ADR-0126: Origem do trafego em Analytics sem atribuicao persistida
+# ADR-0126: Origem do trafego em Analytics do psicologo
 
 ## Status
 
@@ -49,6 +49,33 @@ A secao `Busca por especialidades` foi removida porque nao havia fonte persistid
 - O backend mantem um unico contrato de Analytics para Plano Profissional e modo preview.
 - A atribuicao real de origem ainda exige uma evolucao futura de schema/eventos, provavelmente adicionando fonte/canal em `profile_view_event` e origem em `contact_request` ou em um evento de conversao separado.
 - Nenhum schema Prisma, migration, pacote novo, seed, dado fake ou endpoint simulado foi criado nesta etapa.
+
+## Atualizacao 2026-08-02 - Detalhamento do Video de apresentacao
+
+A origem `Video de apresentacao` ganhou uma atribuicao parcial e auditavel porque ja existe um evento first-party
+especifico para esse CTA: `important_action_event.action_type="psychologist_video_whatsapp_click"`, com
+`target_type="psychologist"` e `target_id` do psicologo. Esse evento nao substitui `contact_request` como total geral
+de conversoes WhatsApp, mas pode detalhar a origem do clique dentro do dropdown do video sem estimativa.
+
+Decidimos preencher `traffic_sources.sources[].breakdown` apenas para `presentation_video`, com:
+
+- `Explorar`: cliques do video sem parametros de busca/filtro no path;
+- `Resultados de busca`: cliques do video com parametros permitidos do diretorio no path;
+- `top_search_terms`: principais termos geradores de clique, derivados exclusivamente de `search` ou `q`.
+
+Para viabilizar a leitura daqui em diante, novos eventos de acao importante passam a preservar somente parametros
+permitidos de busca/filtro no campo `important_action_event.path`. A allowlist evita armazenar queries sensiveis
+arbitrarias e limita a leitura ao que a feature precisa. Eventos historicos gravados antes dessa preservacao de query
+nao recebem backfill e continuam classificados pela informacao real disponivel.
+
+Consequencias:
+
+- O psicologo passa a ver quantos cliques de WhatsApp vieram do video em `Explorar` e em `Resultados de busca`.
+- Termos de busca so aparecem quando `search` ou `q` existe no evento real; filtros sem texto livre exibem estado
+  honesto sem inventar termo.
+- As demais origens (`Comunidades`, `Perfil` e `Favoritos`) continuam sem distribuicao por `contact_request`, salvo
+  quando houver evento first-party com alvo rastreavel em complemento especifico.
+- Nao ha schema Prisma, migration, backfill, seed, mock, endpoint paralelo ou package novo.
 
 ## Validacao
 

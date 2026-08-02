@@ -193,3 +193,7 @@ Formato recomendado:
 
 - [ADR-0399 - Media no contexto da base e breakdown de autoria no trafego WhatsApp Admin](0399-refino-medias-autoria-whatsapp-trafego-admin.md) - Accepted
 - [ADR-0400 - Ajustes finais da tabela comportamental Admin](0400-copy-tags-video-perfil-tabela-comportamental-admin.md) - Accepted
+- [ADR-0401 - Layout padronizado dos donuts de indicadores Admin](0401-layout-donuts-indicadores-admin-psicologos.md) - Accepted
+- [ADR-0402 - Range predominante na tag Posicao do video na tabela comportamental Admin](0402-range-posicao-video-tabela-comportamental-admin.md) - Accepted
+- [ADR-0403 - Meta de conversao no dashboard e matriz Admin](0403-meta-conversao-dashboard-matriz-admin.md) - Accepted
+- [ADR-0404 - Comunidades no Analytics privado do psicologo](0404-comunidades-analytics-psicologo.md) - Accepted
