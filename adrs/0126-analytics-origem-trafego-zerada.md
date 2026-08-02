@@ -117,3 +117,12 @@ Consequencia: nao distribuimos `contact_request` por origem quando nao ha evento
 Por feedback de produto, a secao `Origem do trafego` permanece antes de `Video de apresentacao` e ganha um bloco de `Diagnostico` logo apos a lista de origens. O diagnostico e derivado exclusivamente dos `whatsapp_clicks` ja atribuidos por evento first-party em `traffic_sources.sources[]`; quando nao ha cliques rastreaveis, a UI informa que ainda esta aguardando atribuicao real.
 
 Consequencia: nao criamos novo contrato, endpoint, schema, migration, mock ou redistribuicao de `contact_request`. A leitura e apenas uma interpretacao frontend dos agregados reais ja retornados pelo endpoint privado.
+
+
+## Atualizacao 2026-08-02 - Origem abaixo de Conversoes WhatsApp
+
+Por novo feedback de produto, a secao `Origem do trafego` deixa de abrir a area analitica e passa a ficar logo abaixo do card largo `Conversoes WhatsApp`, mantendo-se antes de `Video de apresentacao`.
+
+Motivo: `Conversoes WhatsApp` e a sintese numerica principal precisam aparecer antes da explicacao de origem, enquanto o diagnostico de origem continua contextualizando os cliques apos a metrica principal.
+
+Consequencia: a mudanca e apenas de hierarquia frontend; nao altera contrato, schema, migration, endpoint, mock, seed ou package.

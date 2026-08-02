@@ -637,3 +637,32 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - `git diff --check`
 - Browser/HTTP local com `pnpm --dir frontend exec next start --hostname 127.0.0.1 --port 3137`: request em `/app/professional/analytics` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada, e Chrome headless 390x844 carregou a tela de login redirecionada. A validacao visual do fonte/build confirmou a hierarquia mobile-first solicitada.
+
+
+## Ajuste complementar em 2026-08-02 - Origem do trafego abaixo de Conversoes WhatsApp
+
+- Pedido do usuario: reposicionar o bloco `Origem do trafego` para ficar abaixo do card largo `Conversoes WhatsApp` e antes de `Video de apresentacao`.
+- A UI mobile-first agora renderiza primeiro os cards principais, incluindo `Conversoes WhatsApp`, e em seguida mostra `Origem do trafego` com seus dropdowns e diagnostico.
+- O bloco `Video de apresentacao` continua abaixo de `Origem do trafego`, preservando as metricas e a separacao de cliques WhatsApp por `Explorar` e `Resultados de busca`.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e capturas enviadas pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] `Origem do trafego` aparece abaixo do card `Conversoes WhatsApp` na pagina carregada.
+- [x] `Origem do trafego` permanece antes de `Video de apresentacao`.
+- [x] O diagnostico de `Origem do trafego` continua no final do proprio bloco.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir frontend exec biome check "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Verificacao estatica da hierarquia no fonte: `Cards de analytics` aparece antes de `TrafficSourceSection`, que aparece antes de `PresentationVideoAnalyticsSection`.
+- Browser/HTTP local com `pnpm --dir frontend exec next start --hostname 127.0.0.1 --port 3237`: request em `/app/professional/analytics` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada, confirmando que a rota buildada inicia localmente e permanece protegida; a ordem visual foi validada no fonte e no build por causa do redirecionamento sem sessao.

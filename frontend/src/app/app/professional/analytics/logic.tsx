@@ -2057,10 +2057,6 @@ export const ProfessionalAnalyticsLogic = () => {
           onCustomRangeApply={setCustomRange}
         />
 
-        {!analytics.isLoading && !shouldShowError ? (
-          <TrafficSourceSection locked={isAnalyticsPreview} traffic={getTrafficSources(data)} />
-        ) : null}
-
         {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
         {shouldShowError ? (
@@ -2080,6 +2076,10 @@ export const ProfessionalAnalyticsLogic = () => {
               <MetricCard key={metric.id} locked={isAnalyticsPreview} metric={metric} />
             ))}
           </section>
+        ) : null}
+
+        {!analytics.isLoading && !shouldShowError ? (
+          <TrafficSourceSection locked={isAnalyticsPreview} traffic={getTrafficSources(data)} />
         ) : null}
 
         {!shouldShowError ? (
