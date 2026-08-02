@@ -5702,11 +5702,6 @@ const PsychologistTrafficSourcesCard = ({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h2 className="text-lg font-bold text-foreground">Origem do tráfego</h2>
-              {traffic.updated_at ? (
-                <Badge className="bg-surface-muted text-muted">
-                  Atualizado em {formatDateOnly(traffic.updated_at)}
-                </Badge>
-              ) : null}
               {isRefreshing ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                   <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
