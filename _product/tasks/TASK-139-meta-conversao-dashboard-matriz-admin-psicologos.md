@@ -28,11 +28,11 @@ browser local, registrando a limitaÃ§Ã£o.
 - Adicionar o bloco **Meta de conversÃ£o** no carrossel de indicadores, imediatamente apÃ³s
   **ConversÃ£o**.
 - Expor a opÃ§Ã£o **Meta de conversÃ£o** nos seletores Linha/Coluna da matriz de cruzamento.
-- Reutilizar os critÃ©rios de TASK-95/ADR-0353:
-  - `0` cliques reais no perÃ­odo: **Sem ConversÃ£o**;
-  - `> 0` e `< 5` conversÃµes equivalentes em 30 dias: **ConversÃ£o Baixa**;
-  - `>= 5` e `< 10` conversÃµes equivalentes em 30 dias: **ConversÃ£o Boa**;
-  - `>= 10` conversÃµes equivalentes em 30 dias: **ConversÃ£o Excelente**.
+- Reutilizar os cortes absolutos de TASK-95/ADR-0353, com nomenclatura operacional simplificada:
+  - `< 5` conversÃµes equivalentes em 30 dias, incluindo `0` cliques reais: **Abaixo da meta**;
+  - `>= 5` e `< 10` conversÃµes equivalentes em 30 dias: **Na Meta**;
+  - `>= 10` conversÃµes equivalentes em 30 dias: **Acima da meta**;
+  - primeiros 30 dias de adaptaÃ§Ã£o: **Dados insuficientes**.
 
 ## DependÃªncias
 
@@ -49,7 +49,7 @@ Todas as dependÃªncias acima estÃ£o concluÃ­das.
 
 - Criar `profile_conversion_goal` agregado por segmento de plano no contrato real do dashboard.
 - Classificar psicÃ³logos pela meta absoluta usando cliques WhatsApp reais normalizados para 30 dias.
-- Preservar perÃ­odo de adaptaÃ§Ã£o de 30 dias como **Dados Insuficientes**, conforme TASK-95.
+- Preservar perÃ­odo de adaptaÃ§Ã£o de 30 dias como **Dados insuficientes**, conforme TASK-95.
 - Adicionar eixo `conversion_goal` em `profile_cross_matrix`.
 - NÃ£o alterar schema Prisma, migrations, tracking, ranking, seeds ou backfill.
 
@@ -57,7 +57,7 @@ Todas as dependÃªncias acima estÃ£o concluÃ­das.
 
 - Tipar o novo contrato.
 - Renderizar o bloco **Meta de conversÃ£o** apÃ³s **ConversÃ£o** no carrossel de indicadores.
-- Exibir tooltip com os critÃ©rios da meta.
+- Exibir tooltip apenas com o texto descritivo da mÃ©trica.
 - Permitir selecionar **Meta de conversÃ£o** como Linha ou Coluna na matriz.
 
 ## Fora do escopo
@@ -73,9 +73,14 @@ Todas as dependÃªncias acima estÃ£o concluÃ­das.
 - [x] O bloco **Meta de conversÃ£o** aparece imediatamente apÃ³s **ConversÃ£o** no carrossel de
       indicadores.
 - [x] O bloco usa cliques WhatsApp reais normalizados para 30 dias.
-- [x] O tooltip/legenda apresenta os cortes `0`, `>0 e <5`, `>=5 e <10`, `>=10`.
-- [x] **ConversÃ£o Boa** comeÃ§a em `5` conversÃµes equivalentes em 30 dias.
-- [x] **ConversÃ£o Excelente** comeÃ§a em `10` conversÃµes equivalentes em 30 dias.
+- [x] O grÃ¡fico e a matriz usam as opÃ§Ãµes **Na Meta**, **Acima da meta**, **Abaixo da meta** e
+      **Dados insuficientes**.
+- [x] O padrÃ£o visÃ­vel da meta exibe **Entre 5 e 9 em 30 dias**.
+- [x] **Na Meta** comeÃ§a em `5` conversÃµes equivalentes em 30 dias.
+- [x] **Acima da meta** comeÃ§a em `10` conversÃµes equivalentes em 30 dias.
+- [x] Tooltips dos indicadores exibem apenas o texto descritivo da mÃ©trica.
+- [x] Hover dos cards de grÃ¡fico preserva a borda superior visÃ­vel.
+- [x] Tooltips dos cards nas extremidades do carrossel nÃ£o ficam escondidas/cortadas.
 - [x] A matriz de cruzamento oferece **Meta de conversÃ£o** nos seletores Linha e Coluna.
 - [x] O eixo `conversion_goal` cruza com os demais eixos usando dados reais agregados.
 - [x] UI mobile-first preservada e nenhum `<img>` cru foi adicionado.
@@ -99,13 +104,14 @@ Todas as dependÃªncias acima estÃ£o concluÃ­das.
 - `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`.
 - `pnpm check`.
 - `node .tmp/validate-task139.mjs`.
+- `node .tmp/validate-task139-tooltip-position.mjs`.
 
 ## Evidencia browser
 
 - Chrome headless local em `http://localhost:3002/psicologos`, com admin temporario real criado por `admin:bootstrap` e removido do banco ao final, confirmou:
-  - `profile_conversion_goal` na API com meta boa em `5` e excelente em `10`;
+  - `profile_conversion_goal` na API com **Na Meta** em `5` a `9` e **Acima da meta** a partir de `10`;
   - card **Meta de conversao** imediatamente apos **Conversao** e antes de **Atividade**;
-  - tooltip com os cortes `0`, `>0 e <5`, `>=5 e <10`, `>=10`;
+  - tooltip somente com texto descritivo;
   - opcao **Meta de conversao** nos selects **Linha** e **Coluna**;
   - matriz **Meta de conversao x Conversao** renderizada sem overflow em desktop e 390px.
 - Screenshots locais gerados:

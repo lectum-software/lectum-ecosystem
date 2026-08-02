@@ -560,8 +560,7 @@ export type PsychologistsDashboardProfileConversionGoalCategoryId =
   | "excellent_conversion"
   | "good_conversion"
   | "insufficient_data"
-  | "low_conversion"
-  | "no_conversion";
+  | "low_conversion";
 
 export type PsychologistsDashboardProfileConversionGoalCategory = {
   count: number;

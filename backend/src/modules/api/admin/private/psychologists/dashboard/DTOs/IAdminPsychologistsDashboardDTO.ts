@@ -484,8 +484,10 @@ export type AdminPsychologistsDashboardProfileConversionResults = {
   unavailable_reason: string | null;
 };
 
-export type AdminPsychologistsDashboardProfileConversionGoalCategoryId =
-  AdminProfileConversionQualityId;
+export type AdminPsychologistsDashboardProfileConversionGoalCategoryId = Exclude<
+  AdminProfileConversionQualityId,
+  "no_conversion"
+>;
 
 export type AdminPsychologistsDashboardProfileConversionGoalCategory = {
   count: number;

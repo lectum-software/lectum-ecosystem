@@ -106,27 +106,28 @@ export const ADMIN_PROFILE_CONVERSION_CATEGORY_CONFIG = {
 export const ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG = {
   excellent_conversion: {
     description:
-      "Ritmo mensal estimado de WhatsApp igual ou superior ao patamar excelente definido para o perfil individual.",
-    label: "Conversão Excelente",
+      "Ritmo mensal estimado de WhatsApp igual ou superior a 10 conversões equivalentes em 30 dias.",
+    label: "Acima da meta",
   },
   good_conversion: {
     description:
-      "Ritmo mensal estimado de WhatsApp igual ou superior ao mínimo saudável definido para o perfil individual.",
-    label: "Conversão Boa",
+      "Ritmo mensal estimado de WhatsApp entre 5 e 9 conversões equivalentes em 30 dias.",
+    label: "Na Meta",
   },
   insufficient_data: {
     description:
-      "Psicólogo ainda dentro dos primeiros 30 dias de adaptação; a qualidade absoluta de Conversão ainda não é avaliada.",
-    label: "Dados Insuficientes",
+      "Psicólogo ainda dentro dos primeiros 30 dias de adaptação; a Meta de conversão ainda não é avaliada.",
+    label: "Dados insuficientes",
   },
   low_conversion: {
     description:
-      "Ritmo mensal estimado de WhatsApp abaixo do mínimo saudável definido para o perfil individual.",
-    label: "Conversão Baixa",
+      "Ritmo mensal estimado de WhatsApp abaixo de 5 conversões equivalentes em 30 dias.",
+    label: "Abaixo da meta",
   },
   no_conversion: {
-    description: "Psicólogo não recebeu nenhum clique no WhatsApp no período selecionado.",
-    label: "Sem Conversão",
+    description:
+      "Psicólogo sem cliques reais no WhatsApp no período selecionado, abaixo da meta operacional.",
+    label: "Abaixo da meta",
   },
 } satisfies Record<AdminProfileConversionQualityId, { description: string; label: string }>;
 
@@ -241,7 +242,7 @@ export const classifyAdminProfileConversionQuality = (
     return "insufficient_data";
   }
 
-  if (signals.whatsappClicks <= 0) return "no_conversion";
+  if (signals.whatsappClicks <= 0) return "low_conversion";
 
   const normalizedWhatsappClicks30d = normalizeAdminProfileConversionToThirtyDays(
     signals.whatsappClicks,

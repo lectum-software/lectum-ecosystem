@@ -210,13 +210,12 @@ const PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER =
   ADMIN_PROFILE_CONVERSION_ENGAGEMENT_CATEGORY_ORDER as AdminPsychologistsDashboardProfileConversionMatrixCategoryId[];
 
 const PROFILE_CONVERSION_GOAL_CATEGORY_ORDER: AdminPsychologistsDashboardProfileConversionGoalCategoryId[] =
-  [
-    "excellent_conversion",
-    "good_conversion",
-    "low_conversion",
-    "no_conversion",
-    "insufficient_data",
-  ];
+  ["good_conversion", "excellent_conversion", "low_conversion", "insufficient_data"];
+
+const normalizeProfileConversionGoalCategory = (
+  categoryId: ReturnType<typeof classifyAdminProfileConversionQuality>,
+): AdminPsychologistsDashboardProfileConversionGoalCategoryId =>
+  categoryId === "no_conversion" ? "low_conversion" : categoryId;
 
 const PROFILE_ACTIVITY_CATEGORY_ORDER: AdminPsychologistsDashboardProfileActivityCategoryId[] = [
   "muito_ativo",
@@ -1382,11 +1381,13 @@ const buildProfileConversionGoalResults = (params: {
       whatsappClicks,
       activeDays,
     );
-    const categoryId = classifyAdminProfileConversionQuality({
-      activeDays,
-      profileAgeDays,
-      whatsappClicks,
-    });
+    const categoryId = normalizeProfileConversionGoalCategory(
+      classifyAdminProfileConversionQuality({
+        activeDays,
+        profileAgeDays,
+        whatsappClicks,
+      }),
+    );
     const category = categories.get(categoryId);
 
     if (category) {
@@ -1424,7 +1425,7 @@ const buildProfileConversionGoalResults = (params: {
       };
     }),
     description:
-      "Meta operacional absoluta de Conversão por cliques reais no WhatsApp normalizados para 30 dias: boa a partir de 5 conversões equivalentes e excelente a partir de 10.",
+      "Meta operacional absoluta de Conversão por cliques reais no WhatsApp normalizados para 30 dias: Na Meta entre 5 e 9 conversões equivalentes e Acima da meta a partir de 10.",
     source: ADMIN_PROFILE_CONVERSION_SOURCE,
     thresholds: {
       ...ADMIN_PROFILE_CONVERSION_THRESHOLDS,
@@ -4409,19 +4410,17 @@ const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefinition[] 
       profileCrossMatrixCategory(
         id,
         ADMIN_PROFILE_CONVERSION_QUALITY_CONFIG[id],
-        id === "excellent_conversion"
-          ? PROFILE_CROSS_MATRIX_COLORS.high
-          : id === "good_conversion"
-            ? PROFILE_CROSS_MATRIX_COLORS.standard
+        id === "good_conversion"
+          ? PROFILE_CROSS_MATRIX_COLORS.standard
+          : id === "excellent_conversion"
+            ? PROFILE_CROSS_MATRIX_COLORS.high
             : id === "low_conversion"
               ? PROFILE_CROSS_MATRIX_COLORS.low
-              : id === "no_conversion"
-                ? PROFILE_CROSS_MATRIX_COLORS.danger
-                : PROFILE_CROSS_MATRIX_COLORS.none,
+              : PROFILE_CROSS_MATRIX_COLORS.none,
       ),
     ),
     description:
-      "Meta absoluta de cliques no WhatsApp normalizados para 30 dias: boa a partir de 5 e excelente a partir de 10 conversões equivalentes.",
+      "Meta absoluta de cliques no WhatsApp normalizados para 30 dias: Na Meta entre 5 e 9 e Acima da meta a partir de 10 conversões equivalentes.",
     id: "conversion_goal",
     label: "Meta de conversão",
     source: `${ADMIN_PROFILE_CONVERSION_SOURCE}+normalized_30d_absolute_goal`,
@@ -5018,11 +5017,13 @@ const buildProfileCrossMatrixResults = (params: {
       profileAgeDays: forcedConversionAgeDays,
       whatsappClicks,
     });
-    const conversionGoalCategory = classifyAdminProfileConversionQuality({
-      activeDays,
-      profileAgeDays,
-      whatsappClicks,
-    });
+    const conversionGoalCategory = normalizeProfileConversionGoalCategory(
+      classifyAdminProfileConversionQuality({
+        activeDays,
+        profileAgeDays,
+        whatsappClicks,
+      }),
+    );
     const engagementCategory =
       classifyAdminProfileEngagementFavoritesCommunityCategory({
         benchmark: engagementBenchmark,

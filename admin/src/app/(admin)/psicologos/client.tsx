@@ -30,6 +30,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { useAdminPsychologistsDashboard } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -383,7 +384,6 @@ const PROFILE_CONVERSION_GOAL_CHART_COLORS = {
   good_conversion: "#308ce8",
   insufficient_data: "#94a3b8",
   low_conversion: "#f59f00",
-  no_conversion: "#ef4444",
 } satisfies Record<ProfileConversionGoalCategoryItem["id"], string>;
 
 const PROFILE_ACTIVITY_CHART_COLORS = {
@@ -3039,10 +3039,14 @@ const formatProfileConversionStandardRange = (
 
 const formatProfileConversionGoalRange = (
   thresholds: AdminPsychologistsDashboard["profile_conversion_goal"]["thresholds"]["absolute"],
-) =>
-  `Boa ≥ ${numberFormatter.format(
-    thresholds.good_whatsapp_clicks_30d,
-  )} e Excelente ≥ ${numberFormatter.format(thresholds.excellent_whatsapp_clicks_30d)} em 30 dias`;
+) => {
+  const minGoal = thresholds.good_whatsapp_clicks_30d;
+  const maxGoal = Math.max(minGoal, thresholds.excellent_whatsapp_clicks_30d - 1);
+
+  if (minGoal === maxGoal) return `${numberFormatter.format(minGoal)} em 30 dias`;
+
+  return `Entre ${numberFormatter.format(minGoal)} e ${numberFormatter.format(maxGoal)} em 30 dias`;
+};
 
 const formatProfileActivityStandardRange = (
   thresholds: AdminPsychologistsDashboard["profile_activity"]["thresholds"],
@@ -3127,35 +3131,77 @@ const ProfileEngagementFavoritesAxisDonutChart = ({
 };
 
 const DashboardProfileSignalTooltip = ({
-  details = [],
-  guidance,
   metricDescription,
-  standardLabel,
 }: {
   details?: string[];
-  guidance: string;
+  guidance?: string;
   metricDescription: string;
-  standardLabel: string;
-}) => (
-  <span className="block space-y-2">
-    <span className="block text-[0.68rem] font-black uppercase tracking-[0.12em] text-subtle">
-      Como interpretar
-    </span>
-    <span className="block text-foreground">{metricDescription}</span>
-    {details.map((detail) => (
-      <span className="block text-muted" key={detail}>
-        {detail}
-      </span>
-    ))}
-    <span className="block rounded-xl border border-border/70 bg-surface-muted px-3 py-2">
-      <span className="block text-[0.68rem] font-black uppercase tracking-[0.1em] text-subtle">
-        Padrão no período
-      </span>
-      <strong className="mt-1 block font-black text-foreground">{standardLabel}</strong>
-    </span>
-    <span className="block text-muted">{guidance}</span>
-  </span>
-);
+  standardLabel?: string;
+}) => <span className="block text-foreground">{metricDescription}</span>;
+
+const DashboardProfileSignalHelpTooltip = ({
+  ariaLabel,
+  children,
+}: {
+  ariaLabel: string;
+  children: ReactNode;
+}) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState<{
+    left: number;
+    top: number;
+    width: number;
+  } | null>(null);
+  const showTooltip = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const width = Math.min(360, Math.max(240, viewportWidth - 32));
+    const left = Math.min(Math.max(16, rect.left - 16), Math.max(16, viewportWidth - width - 16));
+
+    setPosition({
+      left,
+      top: rect.bottom + 6,
+      width,
+    });
+  }, []);
+  const hideTooltip = useCallback(() => {
+    setPosition(null);
+  }, []);
+
+  return (
+    <button
+      aria-label={ariaLabel}
+      className="relative mt-1 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      onBlur={hideTooltip}
+      onFocus={showTooltip}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      ref={buttonRef}
+      type="button"
+    >
+      <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
+      {position && typeof document !== "undefined"
+        ? createPortal(
+            <span
+              className="pointer-events-none fixed z-[9999] rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft"
+              role="tooltip"
+              style={{
+                left: position.left,
+                top: position.top,
+                width: position.width,
+              }}
+            >
+              {children}
+            </span>,
+            document.body,
+          )
+        : null}
+    </button>
+  );
+};
 
 const DashboardProfileSignalCard = ({
   children,
@@ -3174,7 +3220,7 @@ const DashboardProfileSignalCard = ({
 }) => (
   <section
     className={cn(
-      "group flex h-full w-full min-w-0 flex-col rounded-[1.75rem] border border-border/80 bg-surface p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-admin-soft",
+      "group flex h-full w-full min-w-0 flex-col rounded-[1.75rem] border border-border/80 bg-surface p-4 shadow-sm transition duration-200 hover:border-primary/25 hover:shadow-admin-soft",
       className,
     )}
   >
@@ -3182,19 +3228,9 @@ const DashboardProfileSignalCard = ({
       <div className="flex min-w-0 items-start justify-between gap-3">
         <span className="inline-flex min-w-0 items-start gap-2">
           <h3 className="min-w-0 text-lg font-black leading-6 text-foreground">{title}</h3>
-          <button
-            aria-label={tooltipAriaLabel}
-            className="group/tooltip relative mt-1 inline-flex shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            type="button"
-          >
-            <CircleHelp aria-hidden className="h-4 w-4 text-muted" />
-            <span
-              className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 hidden w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-border bg-surface p-3 text-left text-xs font-medium leading-5 text-foreground shadow-admin-soft group-hover/tooltip:block group-focus/tooltip:block group-focus-within/tooltip:block sm:w-96"
-              role="tooltip"
-            >
-              {tooltipContent}
-            </span>
-          </button>
+          <DashboardProfileSignalHelpTooltip ariaLabel={tooltipAriaLabel}>
+            {tooltipContent}
+          </DashboardProfileSignalHelpTooltip>
         </span>
       </div>
       <div className="mt-3 min-h-[4.85rem] rounded-[1.15rem] border border-primary/15 bg-primary-soft/35 px-3 py-2.5">
@@ -3342,19 +3378,9 @@ const DashboardProfileConversionCard = ({ summary }: { summary: AdminPsychologis
           <DashboardProfileSignalCard
             standardValue={conversionGoalRangeLabel}
             title="Meta de conversão"
-            tooltipAriaLabel={`Meta de conversão mede cliques de WhatsApp normalizados para 30 dias. Critério: ${conversionGoalRangeLabel}.`}
+            tooltipAriaLabel="Classifica os psicólogos pela meta absoluta de cliques no WhatsApp, normalizando o ritmo para uma janela de 30 dias."
             tooltipContent={
-              <DashboardProfileSignalTooltip
-                details={[
-                  "Sem Conversão: 0 cliques reais no período.",
-                  "Conversão Baixa: mais de 0 e menos de 5 conversões equivalentes em 30 dias.",
-                  "Conversão Boa: pelo menos 5 e menos de 10 conversões equivalentes em 30 dias.",
-                  "Conversão Excelente: 10 ou mais conversões equivalentes em 30 dias.",
-                ]}
-                guidance="Use para comparar o resultado absoluto contra a meta operacional saudável, sem depender apenas do padrão relativo da plataforma."
-                metricDescription="Classifica os psicólogos pela meta absoluta de cliques no WhatsApp, normalizando o ritmo para uma janela de 30 dias."
-                standardLabel={conversionGoalRangeLabel}
-              />
+              <DashboardProfileSignalTooltip metricDescription="Classifica os psicólogos pela meta absoluta de cliques no WhatsApp, normalizando o ritmo para uma janela de 30 dias." />
             }
           >
             <ProfileConversionGoalDonutChart profileConversionGoal={profileConversionGoal} />
