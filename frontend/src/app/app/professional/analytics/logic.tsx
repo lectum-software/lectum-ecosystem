@@ -163,7 +163,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "presentation_video",
       label: "Vídeo de apresentação",
-      description: "Acessos originados a partir do vídeo de apresentação do seu perfil.",
+      description: "",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
@@ -172,7 +172,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
         {
           id: "explore",
           label: "Explorar",
-          description: "Cliques no WhatsApp feitos a partir do vídeo na navegação de descoberta.",
+          description: "Cliques no WhatsApp feitos a partir da navegação de descoberta.",
           whatsapp_clicks: 0,
           percentage: 0,
           top_search_terms: [],
@@ -180,8 +180,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
         {
           id: "search_results",
           label: "Resultados de busca",
-          description:
-            "Cliques no WhatsApp feitos a partir do vídeo depois de pesquisa ou filtro no diretório.",
+          description: "Cliques no WhatsApp feitos a partir de pesquisa no filtro de busca",
           whatsapp_clicks: 0,
           percentage: 0,
           top_search_terms: [],
@@ -1508,9 +1507,6 @@ const TrafficSourceBreakdown = ({
             >
               {toCount(item.whatsapp_clicks)}
             </p>
-            <p className="mt-1 text-[0.66rem] font-black uppercase tracking-[0.08em] text-subtle">
-              WhatsApp
-            </p>
           </div>
         </div>
 
@@ -1595,6 +1591,7 @@ const TrafficSourceSection = ({
             const Icon = trafficSourceIcons[source.id];
             const hasBreakdown = Boolean(source.breakdown?.length);
             const expanded = expandedSourceId === source.id;
+            const isPresentationVideoSource = source.id === "presentation_video";
             const rowContent = (
               <>
                 <div className="flex min-w-0 items-center gap-3">
@@ -1608,9 +1605,11 @@ const TrafficSourceSection = ({
                       </p>
                       <TrafficBadge type={source.displayBadge} />
                     </div>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                      {source.description}
-                    </p>
+                    {!isPresentationVideoSource && source.description ? (
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                        {source.description}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center justify-center gap-2">
@@ -1664,6 +1663,7 @@ const TrafficSourceSection = ({
         {sources.map((source) => {
           const Icon = trafficSourceIcons[source.id];
           const expanded = expandedSourceId === source.id;
+          const isPresentationVideoSource = source.id === "presentation_video";
 
           return (
             <article
@@ -1694,6 +1694,16 @@ const TrafficSourceSection = ({
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
+                        {isPresentationVideoSource ? (
+                          <span
+                            className={cn(
+                              "text-sm font-black leading-none tracking-[-0.04em] text-foreground",
+                              locked && "select-none blur-[5px]",
+                            )}
+                          >
+                            {toCount(source.whatsapp_clicks)}
+                          </span>
+                        ) : null}
                         <ChevronDown
                           className={cn("h-4 w-4 text-subtle transition", expanded && "rotate-180")}
                           aria-hidden
@@ -1706,15 +1716,19 @@ const TrafficSourceSection = ({
 
               {expanded ? (
                 <div className="grid gap-2 border-border border-t px-4 py-4 text-sm text-muted">
-                  <p className="font-semibold leading-5 text-muted">{source.description}</p>
-                  <div className="grid gap-2 rounded-2xl bg-surface p-3">
-                    <p className={cn(locked && "select-none blur-[5px]")}>
-                      <span className="font-extrabold text-foreground">
-                        {toCount(source.whatsapp_clicks)}
-                      </span>{" "}
-                      cliques no WhatsApp
-                    </p>
-                  </div>
+                  {!isPresentationVideoSource && source.description ? (
+                    <p className="font-semibold leading-5 text-muted">{source.description}</p>
+                  ) : null}
+                  {!isPresentationVideoSource ? (
+                    <div className="grid gap-2 rounded-2xl bg-surface p-3">
+                      <p className={cn(locked && "select-none blur-[5px]")}>
+                        <span className="font-extrabold text-foreground">
+                          {toCount(source.whatsapp_clicks)}
+                        </span>{" "}
+                        cliques no WhatsApp
+                      </p>
+                    </div>
+                  ) : null}
                   {source.breakdown ? (
                     <TrafficSourceBreakdown items={source.breakdown} locked={locked} />
                   ) : null}

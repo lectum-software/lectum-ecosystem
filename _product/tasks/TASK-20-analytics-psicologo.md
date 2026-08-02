@@ -540,3 +540,33 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada e Chrome headless carregou a tela de login redirecionada; a validacao visual do fonte/build confirmou o detalhamento mobile-first e o fluxo privado permanece protegido.
+
+## Ajuste complementar em 2026-08-02 - compactacao do dropdown de Video de apresentacao
+
+- Pedido do usuario: remover do corpo do dropdown o texto `Acessos originados a partir do video de apresentacao do seu perfil` e a faixa branca de total `0 cliques no WhatsApp`.
+- O header mobile do dropdown de `Video de apresentacao` passou a exibir, na mesma linha do titulo, somente o numero total de cliques WhatsApp da origem.
+- As descricoes das categorias foram ajustadas para `Cliques no WhatsApp feitos a partir da navegacao de descoberta.` e `Cliques no WhatsApp feitos a partir de pesquisa no filtro de busca`.
+- Os cards de `Explorar` e `Resultados de busca` deixaram de repetir o termo `WhatsApp` abaixo do numero.
+- O contrato e a atribuicao real permanecem iguais; nao houve schema Prisma, migration, package novo, mock, seed ou endpoint simulado.
+- ADR atualizado: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O corpo do dropdown de `Video de apresentacao` nao exibe o texto descritivo da origem.
+- [x] O corpo do dropdown de `Video de apresentacao` nao exibe a faixa branca de total `0 cliques no WhatsApp`.
+- [x] O header do dropdown exibe o total de cliques WhatsApp da origem como numero isolado ao lado do titulo.
+- [x] As descricoes de `Explorar` e `Resultados de busca` usam os novos textos solicitados.
+- [x] `Explorar` e `Resultados de busca` nao exibem `WhatsApp` abaixo do numero.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+
+### Validacao do complemento
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada; a validacao visual do fonte/build confirmou a compactacao mobile-first do dropdown e o fluxo privado permanece protegido.

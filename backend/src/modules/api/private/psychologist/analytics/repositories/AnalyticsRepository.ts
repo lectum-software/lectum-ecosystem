@@ -49,7 +49,7 @@ const trafficSourceDefinitions: Array<
   {
     id: "presentation_video",
     label: "Vídeo de apresentação",
-    description: "Acessos originados a partir do vídeo de apresentação do seu perfil.",
+    description: "",
   },
   {
     id: "communities",
@@ -76,13 +76,12 @@ const presentationVideoTrafficBreakdownDefinitions: Array<
   {
     id: "explore",
     label: "Explorar",
-    description: "Cliques no WhatsApp feitos a partir do vídeo na navegação de descoberta.",
+    description: "Cliques no WhatsApp feitos a partir da navegação de descoberta.",
   },
   {
     id: "search_results",
     label: "Resultados de busca",
-    description:
-      "Cliques no WhatsApp feitos a partir do vídeo depois de pesquisa ou filtro no diretório.",
+    description: "Cliques no WhatsApp feitos a partir de pesquisa no filtro de busca",
   },
 ];
 

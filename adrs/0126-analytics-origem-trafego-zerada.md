@@ -85,3 +85,14 @@ Consequencias:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+
+## Atualizacao 2026-08-02 - Compactacao do dropdown de Video de apresentacao
+
+Apos validacao visual mobile-first, decidimos compactar o dropdown de `Video de apresentacao` para priorizar o detalhamento acionavel:
+
+- o total de cliques WhatsApp da origem fica no header do acordeao, ao lado do titulo, exibindo somente o numero;
+- o texto descritivo da origem e a faixa interna de total foram removidos do corpo do dropdown para evitar redundancia;
+- as subcategorias `Explorar` e `Resultados de busca` continuam exibindo somente o numero de cliques, sem repetir o rotulo `WhatsApp` abaixo;
+- as descricoes das subcategorias foram ajustadas para nao atribuir o clique ao video quando a leitura desejada e a navegacao de descoberta ou a pesquisa no filtro de busca.
+
+Consequencia: o contrato preserva os mesmos campos e a mesma atribuicao real; a mudanca e apenas de copy/apresentacao, sem schema, migration, mock, seed ou package novo.
