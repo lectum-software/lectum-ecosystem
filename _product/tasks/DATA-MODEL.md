@@ -718,13 +718,14 @@ necessario materializar para performance, criar `mentor_score_snapshot`
 (`psychologist_id`, `community_id`, `score Int`, `period String`, `position Int`) ou modelo equivalente apos ADR
 especifica de snapshot.
 
-Complemento 2026-08-02: o bloco `communities` do `GET /api/private/psychologist/analytics` lista comunidades ativas
-em que o psicologo segue (`community_member`) ou tem participacao real por posts/respostas. As metricas por comunidade
-usam somente fontes persistidas no periodo selecionado: posts publicados (`community_post.author_id`), respostas
-ativas em posts publicados (`post_reply.author_id`) e cliques de WhatsApp rastreados em `important_action_event` para
-posts/respostas comunitarias do proprio psicologo, sempre excluindo autoacoes autenticadas (`user_id = psychologist_id`).
-O ranking exibido por comunidade reutiliza o ranking Top Mentor derivado; o diagnostico de atividade e calculado a
-partir desses totais reais, sem schema novo, snapshot, backfill ou estimativa.
+Complemento 2026-08-02: o bloco `communities` do `GET /api/private/psychologist/analytics` considera comunidades
+ativas em que o psicologo segue (`community_member`) ou tem participacao real por posts/respostas, mas a UI nao expõe
+mais detalhes por comunidade. O contrato agrega conteudo comunitario em quatro grupos: posts com video, posts sem video,
+respostas com video e respostas sem video. Os totais de posts/respostas usam `community_post.author_id` e
+`post_reply.author_id` no periodo selecionado; cliques WhatsApp por grupo usam `important_action_event` do periodo com
+alvo rastreavel para `community_post` ou `post_reply` do proprio psicologo, sempre excluindo autoacoes autenticadas
+(`user_id = psychologist_id`). O diagnostico de atividade e calculado a partir desses totais reais, sem schema novo,
+snapshot, backfill, ranking exposto por comunidade ou estimativa.
 
 ---
 

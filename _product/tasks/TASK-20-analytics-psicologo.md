@@ -472,12 +472,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste complementar em 2026-08-02 - bloco de Comunidade nos Analytics
 
-- Pedido do usuario: abaixo do bloco de `Video de apresentacao`, adicionar um bloco de `Comunidade` com lista de comunidades em que o psicologo participa, botao `Seguir`/`Seguindo`, ranking Top Mentor, Posts, Respostas, cliques WhatsApp por comunidade e diagnostico do nivel de atividade.
-- O backend de `GET /api/private/psychologist/analytics` passou a expor `communities`, usando somente dados persistidos: `community_member`, `community_post`, `post_reply`, `important_action_event` e ranking Top Mentor derivado.
-- Uma comunidade entra na lista quando o psicologo segue a comunidade ou tem participacao real nela por posts/respostas publicados.
-- Cliques WhatsApp por comunidade sao atribuidos apenas quando ha `important_action_event.action_type="whatsapp_click"` com `target_type`/`target_id` apontando para post ou resposta comunitaria de autoria do psicologo; `contact_request` continua sendo total geral e nao e distribuido sem alvo comunitario rastreavel.
+- Pedido do usuario: abaixo do bloco de `Video de apresentacao`, adicionar um bloco de `Comunidade` e, no refinamento seguinte, remover detalhes por comunidade para exibir analise agregada por conteudo.
+- O backend de `GET /api/private/psychologist/analytics` passou a expor `communities.content`, usando somente dados persistidos: `community_member`, `community_post`, `post_reply` e `important_action_event`.
+- As comunidades consideradas sao ativas e entram quando o psicologo segue a comunidade ou tem participacao real nela por posts/respostas publicados, mas a UI nao lista detalhes por comunidade.
+- Os donuts agregam posts e respostas do periodo em `com video` e `sem video`, usando `media_type="video"` como criterio real de video em `community_post`/`post_reply`.
+- A tabela de cliques WhatsApp exibe quatro grupos: `Posts com video`, `Posts sem video`, `Respostas com video` e `Respostas sem video`.
+- Cliques WhatsApp por grupo sao atribuidos apenas quando ha `important_action_event.action_type="whatsapp_click"` com `target_type`/`target_id` apontando para post ou resposta comunitaria de autoria do psicologo; `contact_request` continua sendo total geral e nao e distribuido sem alvo comunitario rastreavel.
 - O diagnostico usa score derivado dos totais reais do periodo: posts, respostas, cliques WhatsApp e quantidade de comunidades ativas, com niveis `Sem atividade recente`, `Atividade inicial`, `Atividade consistente` e `Alta atividade`.
-- A UI mobile-first renderiza o bloco imediatamente apos `Video de apresentacao`, com cards de comunidade em tres metricas, ranking Top Mentor e CTA real de seguir/deixar de seguir usando os endpoints existentes de membros da comunidade.
+- A UI mobile-first renderiza o bloco imediatamente apos `Video de apresentacao`, com diagnostico, dois donuts e tabela de cliques por tipo de conteudo.
 - Builder/Quick Copy nao estava exposto como ferramenta direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
 - Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial, backfill ou endpoint simulado foi criado.
 - ADR criado: `adrs/0404-comunidades-analytics-psicologo.md`.
@@ -485,11 +487,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ### Criterios de aceite do complemento
 
 - [x] O bloco `Comunidade` aparece abaixo do bloco de `Video de apresentacao`.
-- [x] A lista mostra comunidades reais que o psicologo segue ou onde participou com posts/respostas.
-- [x] Cada comunidade exibe botao real `Seguir`/`Seguindo`.
-- [x] Cada comunidade exibe ranking Top Mentor, Posts, Respostas e cliques WhatsApp por comunidade.
+- [x] Os detalhes por comunidade nao aparecem mais no bloco.
+- [x] O bloco exibe donut de posts com totais `com video` e `sem video`.
+- [x] O bloco exibe donut de respostas com totais `com video` e `sem video`.
+- [x] A tabela exibe `Posts com video`, `Posts sem video`, `Respostas com video` e `Respostas sem video`.
+- [x] A tabela mostra a quantidade de cliques WhatsApp de cada grupo.
 - [x] O diagnostico informa o nivel de atividade com base em metricas reais do periodo.
-- [x] Cliques WhatsApp por comunidade nao usam distribuicao simulada de `contact_request`.
+- [x] Cliques WhatsApp por grupo nao usam distribuicao simulada de `contact_request`.
 - [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
 - [x] ADR e documentacao de dados foram atualizados.
 
