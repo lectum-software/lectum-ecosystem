@@ -555,3 +555,34 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - Smoke direto do helper confirmou `["Muito engajado","Engajado","Pouco engajado","Sem base"]` para 12, 6, 3 e 0 interacoes.
 - Browser local/headless em `http://localhost:3002/psicologos/lista?sort=relevance&limit=8` confirmou **Muito engajado** e ausencia de **Muito engajamento**/**Muito ativo** na lista.
 - Browser local/headless em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou **Muito engajado**, **Engajado**, **Pouco engajado**, **Sem base**, ausencia de **Engajamento geral:**/**Muito engajamento**/**Muito ativo** e `4 Comunidades`. Admin temporario real usado na validacao foi removido ao final.
+
+
+## Ajuste pos-feedback 2026-08-02 - consolidacao de Atividade e engajamento
+
+- Pedido do usuario: unificar, dentro do bloco branco **Atividade e engajamento**, a tabela de comunidades e os blocos **Posts** e **Respostas**.
+- A UI mobile-first da aba Admin **Estatisticas** removeu os badges gerais **Muito ativo** e **Alto engajamento** do cabecalho de **Atividade e engajamento**.
+- O bloco separado **Atividade e engajamento por comunidade** foi removido como card independente; sua tabela agora fica logo abaixo do grafico da propria secao **Atividade e engajamento**.
+- Os textos visiveis **Atividade e engajamento por comunidade** e **Tabela por comunidade com producao, cobertura, ranking e engajamento do psicologo no periodo.** foram removidos.
+- Os blocos **Posts** e **Respostas** agora aparecem em duas colunas logo abaixo da tabela, dentro do mesmo card branco da secao.
+- A tabela e a distribuicao de formatos passam a usar a mesma query/filtro de comunidade da secao, enquanto as opcoes do seletor continuam vindo da lista global real de comunidades do psicologo.
+- Nao houve alteracao de contrato backend, Prisma schema, migrations, packages, mocks, seeds ou dados artificiais.
+- Builder/Quick Copy foi tentado via CLI fora do projeto com o Quick Copy ativo, mas a execucao expirou com EPIPE; a referencia visual auditavel usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png` e o screenshot enviado pelo usuario.
+- ADR atualizado: `adrs/0300-diagnostico-engajamento-comunidades-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O card separado **Atividade e engajamento por comunidade** nao e mais renderizado na aba **Estatisticas**.
+- [x] Os textos visiveis removidos pelo usuario nao aparecem na UI.
+- [x] Os badges gerais **Muito ativo** e **Alto engajamento** nao aparecem no cabecalho de **Atividade e engajamento**.
+- [x] A tabela de comunidades aparece no mesmo bloco branco, logo abaixo do grafico de **Atividade e engajamento**.
+- [x] **Posts** e **Respostas** aparecem em duas colunas abaixo da tabela e dentro do mesmo bloco branco.
+- [x] A implementacao nao adiciona mock, endpoint simulado, package novo, migration ou alteracao de schema.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless via Chrome/CDP em `http://localhost:3022/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com admin temporario real removido ao final, confirmando heading unico **Atividade e engajamento**, ausencia dos textos/tags removidos, tabela dentro da secao e blocos **Posts**/**Respostas** no mesmo card.
+- `pnpm check` foi executado, mas ficou bloqueado por formatacao em alteracao preexistente fora deste ajuste: `backend/src/modules/api/private/psychologist/analytics/DTOs/IAnalyticsDTO.ts`.

@@ -117,3 +117,13 @@ Tambem foi solicitado separar votos em **Upvotes** e **Downvotes** para entender
 - Mantemos os ids tecnicos `muito_ativo`, `ativo`, `pouco_ativo` e `sem_base` para preservar filtros, URLs, historico de decisoes e compatibilidade de integracao.
 - O mapeamento de labels foi especializado para os endpoints administrativos de psicologos; a regra compartilhada de calculo e prioridade continua inalterada.
 - **Sem base** permanece como label compartilhada para ausencia/amostra insuficiente.
+
+
+## Ajuste visual 2026-08-02 - consolidacao no card Atividade e engajamento
+
+- Pedido do usuario: remover o card separado **Atividade e engajamento por comunidade** e consolidar tabela de comunidades, **Posts** e **Respostas** no mesmo card branco de **Atividade e engajamento**.
+- A decisao e puramente de composicao visual no Admin do psicologo: os dados continuam vindo do contrato real de estatisticas e nao ha novo endpoint, mock, migration, package ou schema.
+- Os badges gerais de atividade/engajamento do cabecalho foram removidos para evitar redundancia visual com os KPIs e a tabela.
+- A tabela de comunidades fica logo abaixo do grafico da secao e os blocos **Posts**/**Respostas** ficam abaixo da tabela em grid responsivo mobile-first.
+- Ao usar uma comunidade especifica no filtro da secao, a tabela e as distribuicoes de formato seguem a mesma query/filtro; o seletor continua usando a lista global real de comunidades do psicologo para nao perder opcoes.
+- Builder/Quick Copy foi tentado via CLI fora do projeto, mas expirou com EPIPE; a decisao visual foi validada com o PNG local da TASK-57 e screenshot do usuario.
