@@ -347,6 +347,7 @@ continuam sendo fonte real de conversão.
 | `viewer_id` | `String?` | usuario autenticado quando existir; nulo para visitante anonimo |
 | `device_id` | `String?` | header `x-device` para deduplicar visitante anonimo sem identificar pessoa |
 | `source` | `String @default("profile_page")` | origem operacional do evento; no MVP, perfil publico/canonico |
+| `search_context_path` | `String?` | path sanitizado com somente parametros permitidos de busca/filtro quando `source="search_result"`; nulo para eventos legados ou sem contexto |
 | `search_result_position` | `Int?` | posicao absoluta do card/video na lista de explorar quando `source="search_result"`; nulo para eventos legados ou sem posicao confiavel |
 | `@@index([psychologist_id, createdAt])`, `@@index([psychologist_id, source, createdAt])`, `@@index([viewer_id, createdAt])`, `@@index([device_id, createdAt])` | | analytics por periodo, origem e anti-spam |
 
@@ -372,8 +373,13 @@ quando nao houver posicao confiavel.
 Complemento 2026-08-02: o Analytics privado do psicologo tambem usa impressoes reais
 `source="search_result"` no periodo selecionado para preencher `metrics.search_results` e
 `presentation_video.metrics.search_results_from_video`. A metrica fica disponivel no contrato
-privado e no contador geral **Resultados de busca**, sem backfill, sem estimativa e sem misturar
-com `source="profile_page"`.
+privado e no contador geral **Resultados de busca**, sem backfill, sem estimativa e sem misturar impressoes de busca com visitas de perfil `source="profile_page"`.
+
+Complemento 2026-08-02: impressoes novas de `source="search_result"` podem gravar
+`search_context_path`, sanitizado pela allowlist de parametros de busca/filtro ja usada em
+`important_action_event.path`. O Analytics privado do psicologo usa esse campo para listar ate 5
+principais termos pesquisados que exibiram o video nos resultados de busca. Eventos legados sem
+`search_context_path` nao recebem backfill e ficam fora da lista de termos, sem inventar dados.
 
 
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):

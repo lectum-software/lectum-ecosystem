@@ -34,7 +34,6 @@ import type {
   PsychologistAnalyticsPeriodKey,
   PsychologistAnalyticsPresentationVideo,
   PsychologistAnalyticsResponse,
-  PsychologistAnalyticsTrafficSearchTerm,
   PsychologistAnalyticsTrafficSource,
   PsychologistAnalyticsTrafficSources,
 } from "@/api/generator/types/psychologist-analytics";
@@ -718,34 +717,28 @@ const PresentationVideoMetricsPanel = ({
   </div>
 );
 
-const SEARCH_TERMS_TOOLTIP = "Principais filtros de busca que geraram cliques para o seu WhatsApp.";
+const SEARCH_TERMS_TOOLTIP =
+  "Principais termos de busca que exibiram seu vídeo nos resultados de busca.";
 
 type PresentationVideoSearchTermsSummary = {
-  terms: PsychologistAnalyticsTrafficSearchTerm[];
-  whatsappClicks: number;
+  searchResultImpressions: number;
+  terms: PsychologistAnalyticsPresentationVideo["search_terms"];
 };
 
 const getPresentationVideoSearchTermsSummary = (
-  traffic?: PsychologistAnalyticsTrafficSources,
+  video?: PsychologistAnalyticsPresentationVideo,
 ): PresentationVideoSearchTermsSummary => {
-  const presentationVideoSource = (traffic?.sources ?? fallbackTrafficSources.sources).find(
-    (source) => source.id === "presentation_video",
-  );
-  const searchResultsBreakdown = presentationVideoSource?.breakdown?.find(
-    (item) => item.id === "search_results",
-  );
-
   return {
-    terms: [...(searchResultsBreakdown?.top_search_terms ?? [])]
+    searchResultImpressions: video?.metrics.search_results_from_video ?? 0,
+    terms: [...(video?.search_terms ?? [])]
       .sort((left, right) => {
-        if (right.whatsapp_clicks !== left.whatsapp_clicks) {
-          return right.whatsapp_clicks - left.whatsapp_clicks;
+        if (right.impressions !== left.impressions) {
+          return right.impressions - left.impressions;
         }
 
         return left.term.localeCompare(right.term, "pt-BR");
       })
       .slice(0, 5),
-    whatsappClicks: searchResultsBreakdown?.whatsapp_clicks ?? searchResultsBreakdown?.value ?? 0,
   };
 };
 
@@ -758,9 +751,9 @@ const PresentationVideoSearchTermsPanel = ({
 }) => {
   const hasTerms = summary.terms.length > 0;
   const emptyDescription =
-    summary.whatsappClicks > 0
-      ? "Há cliques vindos de busca ou filtros, mas nenhum filtro textual foi registrado neste período."
-      : "Nenhum filtro pesquisado gerou clique para WhatsApp neste período.";
+    summary.searchResultImpressions > 0
+      ? "Há exibições do vídeo em resultados de busca, mas nenhum termo textual foi registrado neste período."
+      : "Nenhum termo pesquisado exibiu seu vídeo nos resultados neste período.";
 
   return (
     <div className="rounded-[22px] border border-primary/10 bg-surface px-3 py-3 text-sm leading-6 text-muted">
@@ -810,7 +803,7 @@ const PresentationVideoSearchTermsPanel = ({
                     locked && "select-none blur-[4px]",
                   )}
                 >
-                  {Math.round(clampPercent(term.percentage))}% dos cliques em resultados de busca
+                  {Math.round(clampPercent(term.percentage))}% das exibições em resultados de busca
                 </p>
               </div>
               <span
@@ -819,7 +812,7 @@ const PresentationVideoSearchTermsPanel = ({
                   locked && "select-none blur-[5px]",
                 )}
               >
-                {toCount(term.whatsapp_clicks)}
+                {toCount(term.impressions)}
               </span>
             </li>
           ))}
@@ -1172,11 +1165,9 @@ const RetentionChart = ({
 
 const PresentationVideoAnalyticsSection = ({
   locked,
-  traffic,
   video,
 }: {
   locked?: boolean;
-  traffic: PsychologistAnalyticsTrafficSources;
   video?: PsychologistAnalyticsPresentationVideo;
 }) => {
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -1189,7 +1180,7 @@ const PresentationVideoAnalyticsSection = ({
   const averageWatchSeconds = video?.metrics.average_watch_seconds ?? 0;
   const durationSeconds = playerDurationSeconds ?? video?.duration_seconds ?? null;
   const presentationVideoMetrics = getPresentationVideoDashboardMetrics(video);
-  const searchTermsSummary = getPresentationVideoSearchTermsSummary(traffic);
+  const searchTermsSummary = getPresentationVideoSearchTermsSummary(video);
 
   const handleVideoElementReady = useCallback((element: HTMLVideoElement | null) => {
     cleanupVideoListenersRef.current?.();
@@ -1772,7 +1763,6 @@ export const ProfessionalAnalyticsLogic = () => {
         {!shouldShowError ? (
           <PresentationVideoAnalyticsSection
             locked={isAnalyticsPreview}
-            traffic={getTrafficSources(data)}
             video={data?.presentation_video}
           />
         ) : null}

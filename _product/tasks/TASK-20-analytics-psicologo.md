@@ -760,3 +760,41 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - `git diff --check`
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada; a validacao visual foi acompanhada no Chrome local do usuario durante o hot reload da tela autenticada.
+
+## Ajuste complementar em 2026-08-02 - Termos pesquisados abaixo da retencao do video
+
+- Pedido do usuario: abaixo do bloco azul de retencao do video, substituir o bloco `Diagnostico` por `Termos pesquisados`; depois, corrigir a fonte para mostrar os principais termos que exibiram o video do psicologo nos resultados de busca, e nao termos que geraram cliques WhatsApp.
+- A UI mobile-first do bloco `Video de apresentacao` agora renderiza `Termos pesquisados` logo apos o card azul de retencao e lista ate 5 termos vindos de `presentation_video.search_terms`.
+- O tracking real de impressoes de busca passou a persistir `profile_view_event.search_context_path`, sanitizado com a allowlist de parametros de busca/filtro, para que novas impressoes `source="search_result"` carreguem o contexto necessario sem query sensivel arbitraria.
+- O backend de `GET /api/private/psychologist/analytics` agrega esses caminhos reais para preencher `presentation_video.search_terms` com `term`, `impressions` e `percentage`, sem usar cliques WhatsApp, sem redistribuir `contact_request` e sem backfill historico.
+- O tooltip usa o texto `Principais termos de busca que exibiram seu video nos resultados de busca.` e fica acessivel no icone de informacao por `title`, foco e hover, com fundo neutro sem destaque azul.
+- O chip de total `0 cliques` foi removido do cabecalho; quando existem impressoes sem termo textual salvo, a UI mostra estado honesto sem inventar termo.
+- Migration aplicada: `20260802181732_add_profile_search_context_path`.
+- Nenhum package novo, mock, seed, dado artificial, endpoint simulado ou backfill foi criado.
+- ADRs atualizados: `adrs/0126-analytics-origem-trafego-zerada.md` e `adrs/0175-analytics-video-retencao-orientada.md`; `DATA-MODEL.md` documentado.
+
+### Criterios de aceite do complemento
+
+- [x] O bloco abaixo da retencao do video exibe `Termos pesquisados` no lugar de `Diagnostico`.
+- [x] A lista exibe ate 5 termos pesquisados que exibiram o video em resultados de busca, nao termos de clique WhatsApp.
+- [x] O contrato privado expoe `presentation_video.search_terms` com dados reais de `profile_view_event.search_context_path`.
+- [x] Novas impressoes de busca persistem somente contexto sanitizado pela allowlist de parametros permitidos.
+- [x] O chip de total `0 cliques` nao e renderizado no bloco.
+- [x] A tooltip usa fundo neutro, sem fundo azul, e informa `Principais termos de busca que exibiram seu video nos resultados de busca.`.
+- [x] Estados sem termo textual ou sem impressao usam mensagens honestas, sem inventar dados.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou backfill foi criado.
+- [x] ADR, DATA-MODEL e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir backend db:migrate -- --name add_profile_search_context_path`
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/directory/psychologists/DTOs/IProfileDTO.ts" "src/modules/api/private/directory/psychologists/validator/index.ts" "src/modules/api/private/directory/psychologists/repositories/ProfileViewRepository.ts" "src/modules/api/private/psychologist/analytics/DTOs/IAnalyticsDTO.ts" "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir frontend exec biome check --write "src/api/callers/directory/index.tsx" "src/api/generator/types/directory.ts" "src/api/generator/types/psychologist-analytics.ts" "src/app/app/psychologists/logic.tsx" "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend exec prisma format`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check` (primeira execucao expirou por timeout da ferramenta; reexecucao concluida sem erros)
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307`, confirmando que a rota local responde e permanece protegida sem sessao autenticada; a hierarquia visual foi validada no fonte/build e pela captura mobile enviada pelo usuario.

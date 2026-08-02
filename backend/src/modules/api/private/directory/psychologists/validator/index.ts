@@ -167,6 +167,13 @@ export const searchImpressionSchema: IValidatorRequest = {
   ...profileShowSchema,
   body: [
     {
+      key: "path",
+      coerse: "string",
+      method: "string",
+      max: 512,
+      optional: true,
+    },
+    {
       key: "position",
       coerse: "number",
       method: "numeric",

@@ -163,11 +163,13 @@ export const useDirectoryPsychologistSearchImpression = (callbacks?: {
   useMutation({
     mutationFn: ({
       id,
+      path,
       position,
     }: {
       id: string;
+      path?: DirectoryPsychologistSearchImpressionPayload["path"];
       position?: DirectoryPsychologistSearchImpressionPayload["position"];
-    }) => api.trackDirectoryPsychologistSearchImpression(id, { position }),
+    }) => api.trackDirectoryPsychologistSearchImpression(id, { path, position }),
     onError: callbacks?.onError,
     onSuccess: callbacks?.onSuccess,
   });

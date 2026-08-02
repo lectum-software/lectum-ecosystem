@@ -1491,6 +1491,7 @@ export const PsychologistsLogic = () => {
     searchImpressionKeysRef.current.add(impressionKey);
     trackSearchResultImpression({
       id: featuredPsychologistId,
+      path: currentAnalyticsPath(),
       position: featuredPsychologistExplorePosition,
     });
   }, [

@@ -128,6 +128,7 @@ export type DirectoryPsychologistProfileViewResponse = {
 };
 
 export type DirectoryPsychologistSearchImpressionPayload = {
+  path?: string | null;
   position?: number | null;
 };
 

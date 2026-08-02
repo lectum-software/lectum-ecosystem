@@ -1,4 +1,5 @@
 import prisma from "@/infra/database/prisma";
+import { sanitizeAnalyticsPathWithTrafficQuery } from "@/utils/analytics-traffic-path";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryPsychologistProfileViewResponse,
@@ -135,11 +136,15 @@ export class ProfileViewRepository {
     const rawDevice = data.headers?.["x-device"];
     const deviceId = Array.isArray(rawDevice) ? rawDevice[0] : rawDevice;
     const viewerId = data.auth?.id ?? null;
+    const searchContextPath = data.b?.path
+      ? sanitizeAnalyticsPathWithTrafficQuery(data.b.path)
+      : null;
 
     await prisma.profile_view_event.create({
       data: {
         device_id: deviceId ?? null,
         psychologist_id: psychologist.id,
+        search_context_path: searchContextPath,
         search_result_position: normalizeSearchResultPosition(data.b?.position),
         source: SEARCH_RESULT_SOURCE,
         viewer_id: viewerId,

@@ -119,6 +119,7 @@ export interface IProfileShowDTO {
 }
 
 export type DirectoryPsychologistSearchImpressionPayload = {
+  path?: string | null;
   position?: number | null;
 };
 

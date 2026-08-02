@@ -15,6 +15,7 @@ import type {
   PsychologistAnalyticsPresentationVideo,
   PsychologistAnalyticsPresentationVideoMetric,
   PsychologistAnalyticsPresentationVideoRetentionPoint,
+  PsychologistAnalyticsPresentationVideoSearchTerm,
   PsychologistAnalyticsResponse,
   PsychologistAnalyticsTrafficSource,
   PsychologistAnalyticsTrafficSourceBreakdownItem,
@@ -41,6 +42,9 @@ type PresentationVideoActionEvent = {
   action_type: string;
   occurred_at: Date;
   path: string | null;
+};
+type ProfileSearchImpressionEvent = {
+  search_context_path: string | null;
 };
 type PsychologistWhatsappActionEvent = {
   occurred_at: Date;
@@ -165,6 +169,47 @@ const buildPresentationVideoTrafficBreakdown = (
       whatsapp_clicks: whatsappClicks,
     };
   });
+};
+
+const buildPresentationVideoSearchTerms = (
+  impressions: ProfileSearchImpressionEvent[],
+): PsychologistAnalyticsPresentationVideoSearchTerm[] => {
+  const searchTerms = new Map<string, { impressions: number; term: string }>();
+
+  for (const impression of impressions) {
+    const terms = extractSearchTermsFromTrafficPath(impression.search_context_path);
+
+    for (const term of terms) {
+      const key = normalizeSearchTermKey(term);
+      if (!key) continue;
+
+      const current = searchTerms.get(key);
+      searchTerms.set(key, {
+        impressions: (current?.impressions ?? 0) + 1,
+        term: current?.term ?? term,
+      });
+    }
+  }
+
+  const totalTermImpressions = [...searchTerms.values()].reduce(
+    (total, term) => total + term.impressions,
+    0,
+  );
+
+  return [...searchTerms.values()]
+    .sort((left, right) => {
+      if (right.impressions !== left.impressions) {
+        return right.impressions - left.impressions;
+      }
+
+      return left.term.localeCompare(right.term, "pt-BR");
+    })
+    .slice(0, TOP_VIDEO_SEARCH_TERMS_LIMIT)
+    .map((term) => ({
+      term: term.term,
+      impressions: term.impressions,
+      percentage: percentage(term.impressions, totalTermImpressions),
+    }));
 };
 
 const buildTrafficBreakdownItem = (input: {
@@ -1019,6 +1064,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
     const [
       profileViews,
       searchResults,
+      presentationVideoSearchImpressions,
       whatsappClicks,
       reviewsReceived,
       profile,
@@ -1063,6 +1109,27 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
               },
             },
           ],
+        },
+      }),
+      prisma.profile_view_event.findMany({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+          createdAt: createdAtWindow,
+          source: "search_result",
+          OR: [
+            {
+              viewer_id: null,
+            },
+            {
+              viewer_id: {
+                not: userId,
+              },
+            },
+          ],
+        },
+        select: {
+          search_context_path: true,
         },
       }),
       prisma.contact_request.count({
@@ -1348,6 +1415,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       duration_seconds: durationSeconds,
       metrics: presentationVideoMetrics,
       cards: toPresentationVideoCards(presentationVideoMetrics),
+      search_terms: buildPresentationVideoSearchTerms(presentationVideoSearchImpressions),
       retention: {
         average_retention_rate: averageWatchPercent,
         dropoff: retentionDropoff,

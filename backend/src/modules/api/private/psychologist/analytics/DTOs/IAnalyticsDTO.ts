@@ -89,6 +89,12 @@ export type PsychologistAnalyticsPresentationVideoRetentionDropoff = {
   to_seconds: number;
 };
 
+export type PsychologistAnalyticsPresentationVideoSearchTerm = {
+  term: string;
+  impressions: number;
+  percentage: number;
+};
+
 export type PsychologistAnalyticsPresentationVideo = {
   updated_at: Date | null;
   video_url: string | null;
@@ -109,6 +115,7 @@ export type PsychologistAnalyticsPresentationVideo = {
     shares_from_video: number;
   };
   cards: PsychologistAnalyticsPresentationVideoMetric[];
+  search_terms: PsychologistAnalyticsPresentationVideoSearchTerm[];
   retention: {
     average_retention_rate: number;
     dropoff: PsychologistAnalyticsPresentationVideoRetentionDropoff | null;

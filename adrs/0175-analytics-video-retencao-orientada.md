@@ -89,3 +89,13 @@ Decidimos remover da secao de video o bloco adicional Cliques no WhatsApp por or
 Os cards de metrica passam a seguir a hierarquia label leve acima do numero, com icone alinhado verticalmente ao label. A decisao reduz rolagem e peso visual no mobile sem alterar contratos, schema, tracking ou fontes persistidas.
 
 Consequencia: a secao fica mais curta e objetiva, mantendo todos os totais principais reais (Visualizacoes, Tempo total assistido, Assistiram completo, Taxa de replays, Compartilhamento, Acesso ao perfil, Favoritado e Cliques WhatsApp) antes da retencao. Nao ha migration, endpoint paralelo, mock, seed, dado artificial ou package novo.
+
+## Atualizacao 2026-08-02 - Diagnostico substituido por termos pesquisados
+
+Por feedback de produto, o bloco separado abaixo da retencao do video deixa de exibir o diagnostico textual de retencao e passa a exibir `Termos pesquisados`.
+
+A decisao mantém o card azul dedicado a permanencia/curva do video e usa a area logo abaixo para uma leitura mais acionavel de descoberta: ate 5 principais termos pesquisados que exibiram o video do psicologo nos resultados de busca. Essa leitura nao mede clique WhatsApp e nao deve usar `traffic_sources.sources[].breakdown[].top_search_terms`, que continua relacionado a cliques atribuidos quando existir.
+
+Para sustentar a leitura sem inferencia, novas impressoes de busca passam a gravar `profile_view_event.search_context_path`, sanitizado pela allowlist de parametros permitidos. O contrato privado `presentation_video.search_terms` agrega esses eventos reais em `term`, `impressions` e `percentage`.
+
+Consequencia: a recomendacao textual de retencao sai da tela do psicologo nesta posicao; o chip de total de cliques nao e exibido nessa area; eventos legados sem contexto de busca nao recebem backfill e ficam fora da lista de termos. Ha migration de coluna nullable, mas nao ha endpoint paralelo, mock, seed, dado artificial, package novo ou backfill.

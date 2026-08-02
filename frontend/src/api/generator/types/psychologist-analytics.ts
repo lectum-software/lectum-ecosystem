@@ -91,6 +91,12 @@ export type PsychologistAnalyticsPresentationVideoRetentionDropoff = {
   to_seconds: number;
 };
 
+export type PsychologistAnalyticsPresentationVideoSearchTerm = {
+  term: string;
+  impressions: number;
+  percentage: number;
+};
+
 export type PsychologistAnalyticsPresentationVideo = {
   updated_at: string | null;
   video_url: string | null;
@@ -117,6 +123,7 @@ export type PsychologistAnalyticsPresentationVideo = {
     points: PsychologistAnalyticsPresentationVideoRetentionPoint[];
     source: "bucket_5_percent";
   };
+  search_terms: PsychologistAnalyticsPresentationVideoSearchTerm[];
 };
 
 export type PsychologistAnalyticsTrafficSourceId =

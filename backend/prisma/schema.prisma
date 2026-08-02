@@ -753,6 +753,7 @@ model profile_view_event {
   viewer_id              String?
   device_id              String?
   source                 String    @default("profile_page")
+  search_context_path    String?   @map("search_context_path")
   search_result_position Int?      @map("search_result_position")
   psychologist           user      @relation("profile_view_event_psychologist", fields: [psychologist_id], references: [id], onDelete: Cascade)
   viewer                 user?     @relation("profile_view_event_viewer", fields: [viewer_id], references: [id], onDelete: SetNull)

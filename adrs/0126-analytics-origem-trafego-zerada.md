@@ -147,3 +147,16 @@ Por feedback de produto, as descricoes dos cards de origem passam a falar direta
 - `Favoritos`: pagina de favoritos.
 
 Consequencia: a mudanca e apenas de copy no campo `description` ja existente; nao altera schema, migration, endpoint, atribuicao de metricas, mock, seed ou package.
+
+## Atualizacao 2026-08-02 - Termos pesquisados no bloco do video
+
+Por feedback de produto, a lista `Termos pesquisados` dentro da secao `Video de apresentacao` deve representar os termos que exibiram o video do psicologo nos resultados de busca, e nao os termos que geraram cliques para WhatsApp.
+
+Decidimos separar as leituras:
+
+- `traffic_sources.sources[].breakdown[].top_search_terms` permanece como detalhamento de cliques WhatsApp quando a origem de trafego do video precisar dessa leitura.
+- `presentation_video.search_terms` passa a ser a fonte da UI abaixo da retencao do video, calculada a partir de `profile_view_event.source="search_result"` e `profile_view_event.search_context_path`.
+
+O tooltip da UI usa o texto `Principais termos de busca que exibiram seu video nos resultados de busca.` e aparece com fundo neutro, sem fundo azul. A UI lista ate 5 termos por impressoes reais do video em resultados de busca e nao exibe chip de total de cliques.
+
+Consequencia: a secao `Origem do trafego` continua simples e sem dropdown, enquanto o detalhamento de busca fica proximo do video analisado e mede descoberta, nao conversao. A mudanca adiciona coluna nullable para contexto sanitizado de busca, sem endpoint novo, pacote novo, mock, seed, dado artificial ou backfill.
