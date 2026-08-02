@@ -35,8 +35,8 @@ A restricao principal e que o Analytics nao pode distribuir conversoes de forma 
 - Autoacoes autenticadas do proprio psicologo sao excluidas das metricas comunitarias.
 - O diagnostico de atividade e derivado de score simples sobre posts, respostas, WhatsApp e quantidade
   de comunidades ativas no periodo.
-- A UI exibe diagnostico, donut de posts, donut de respostas e uma tabela com os quatro grupos e seus
-  cliques WhatsApp.
+- A UI exibe donut de posts, donut de respostas e uma tabela com os quatro grupos e seus
+  cliques WhatsApp; o diagnostico permanece no contrato privado, mas nao e renderizado no bloco.
 
 ## Consequencias
 
@@ -68,3 +68,9 @@ A restricao principal e que o Analytics nao pode distribuir conversoes de forma 
 Por ajuste de leitura mobile-first, o bloco `Comunidade` passa a exibir primeiro os donuts de posts/respostas e a tabela de cliques por conteudo; o `Diagnostico` foi movido para o final do bloco.
 
 Consequencia: a regra de calculo do diagnostico comunitario nao muda. A alteracao e somente de hierarquia visual, mantendo os dados reais de `community_member`, `community_post`, `post_reply` e `important_action_event`.
+
+## Atualizacao 2026-08-02 - Remocao do diagnostico visual
+
+Produto pediu remover o bloco `Diagnostico` da secao `Comunidade` no Analytics privado do psicologo. A decisao e somente de apresentacao: o frontend deixa de renderizar o card e preserva os donuts de posts/respostas e a tabela de cliques por conteudo.
+
+Consequencia: o contrato `communities.diagnosis` continua disponivel para compatibilidade e uso futuro, mas nao aparece na tela mobile-first atual. Nao ha mudanca de fonte de dados, schema, migration, mock, seed ou package.

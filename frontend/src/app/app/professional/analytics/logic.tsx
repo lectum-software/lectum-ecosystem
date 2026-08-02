@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Activity,
   ArrowRight,
   BarChart3,
   CheckCircle2,
@@ -1474,7 +1473,6 @@ const CommunityActivitySection = ({
   communities: PsychologistAnalyticsCommunities;
   locked?: boolean;
 }) => {
-  const diagnosis = communities.diagnosis;
   const content = communities.content;
 
   return (
@@ -1508,35 +1506,6 @@ const CommunityActivitySection = ({
       </div>
 
       <CommunityWhatsappContentTable items={content.whatsapp_clicks_by_content} locked={locked} />
-
-      <article className="rounded-[24px] border border-primary/10 bg-primary-soft/45 p-4">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface text-primary">
-            <Activity className="h-5 w-5" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
-              Diagnóstico
-            </p>
-            <p
-              className={cn(
-                "mt-1 text-lg font-black tracking-[-0.04em] text-foreground",
-                locked && "select-none blur-[5px]",
-              )}
-            >
-              {diagnosis.label}
-            </p>
-            <p
-              className={cn(
-                "mt-2 text-sm font-semibold leading-6 text-muted",
-                locked && "select-none blur-[4px]",
-              )}
-            >
-              {diagnosis.description}
-            </p>
-          </div>
-        </div>
-      </article>
     </section>
   );
 };

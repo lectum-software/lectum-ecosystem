@@ -798,3 +798,29 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - `git diff --check`
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307`, confirmando que a rota local responde e permanece protegida sem sessao autenticada; a hierarquia visual foi validada no fonte/build e pela captura mobile enviada pelo usuario.
+
+## Ajuste complementar em 2026-08-02 - Remocao do diagnostico em Comunidade
+
+- Pedido do usuario: remover o bloco `Diagnostico` da secao `Comunidade` no Analytics privado do psicologo.
+- A UI mobile-first agora encerra a secao `Comunidade` apos a tabela `Cliques por conteudo`, mantendo os donuts de posts/respostas e os cliques WhatsApp por formato rastreado.
+- O contrato privado `communities.diagnosis` foi preservado para compatibilidade, mas nao e mais renderizado no bloco.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0404-comunidades-analytics-psicologo.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O bloco `Diagnostico` nao e renderizado dentro da secao `Comunidade`.
+- [x] A secao `Comunidade` preserva os donuts `Posts` e `Respostas`.
+- [x] A tabela `Cliques por conteudo` permanece visivel apos os donuts.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: rota privada validada sem sessao por redirecionamento `307` para login; a remocao visual foi confirmada no fonte/build por se tratar de bloco autenticado.
