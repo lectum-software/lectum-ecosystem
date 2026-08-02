@@ -620,20 +620,6 @@ const COMMUNITY_CHART_METRICS = [
     swatchClassName: "bg-blue-500",
   },
   {
-    dotRadius: 3.8,
-    icon: ShieldCheck,
-    iconClassName: "text-success",
-    iconToneClassName: "bg-success/10",
-    id: "coverage_rate",
-    getValue: (point) => point.coverage_rate_percent,
-    label: "Taxa de cobertura",
-    source: "community_post.author.role=paciente+post_reply.author_id",
-    shortLabel: "Cobertura",
-    strokeClassName: "stroke-success",
-    swatchClassName: "bg-success",
-    unit: "percentage",
-  },
-  {
     dotRadius: 3.7,
     icon: ArrowUp,
     iconClassName: "text-emerald-500",
@@ -3119,7 +3105,7 @@ const formatActiveCommunitiesColumnHeading = (count: number) =>
 
 const communityEngagementDiagnosisClassName = (id: string | undefined) =>
   cn(
-    "whitespace-nowrap",
+    "gap-1.5 whitespace-nowrap",
     id === "muito_ativo" && "bg-success/10 text-success",
     id === "ativo" && "bg-primary-soft text-primary",
     id === "pouco_ativo" && "bg-warning/10 text-warning",
@@ -3139,10 +3125,10 @@ const PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_LABEL_BY_ID: Record<
   AdminPsychologistStatistics["community"]["engagement_diagnosis"]["id"],
   string
 > = {
-  ativo: "Engajado",
-  muito_ativo: "Muito engajado",
-  pouco_ativo: "Pouco engajado",
-  sem_base: "Sem base",
+  ativo: "Engajamento padr\u00e3o",
+  muito_ativo: "Alto engajamento",
+  pouco_ativo: "Baixo engajamento",
+  sem_base: "Sem engajamento",
 };
 
 const formatPsychologistCommunityEngagementLabel = (
@@ -3151,6 +3137,42 @@ const formatPsychologistCommunityEngagementLabel = (
 
 const getPsychologistCommunityInteractions = (community: PsychologistStatisticsCommunityItem) =>
   community.interactions ?? community.posts + community.replies;
+
+type PsychologistCommunityActivityDiagnosisId =
+  AdminPsychologistStatistics["community"]["engagement_diagnosis"]["id"];
+
+const PSYCHOLOGIST_COMMUNITY_ACTIVITY_LABEL_BY_ID: Record<
+  PsychologistCommunityActivityDiagnosisId,
+  string
+> = {
+  ativo: "Ativo",
+  muito_ativo: "Muito ativo",
+  pouco_ativo: "Pouco ativo",
+  sem_base: "Sem atividade",
+};
+
+const resolvePsychologistCommunityActivityDiagnosis = (
+  actions: number,
+): {
+  id: PsychologistCommunityActivityDiagnosisId;
+  label: string;
+} => {
+  const normalizedActions = Math.max(0, Math.trunc(actions));
+  let id: PsychologistCommunityActivityDiagnosisId = "pouco_ativo";
+
+  if (normalizedActions <= 0) {
+    id = "sem_base";
+  } else if (normalizedActions >= 12) {
+    id = "muito_ativo";
+  } else if (normalizedActions >= 6) {
+    id = "ativo";
+  }
+
+  return {
+    id,
+    label: PSYCHOLOGIST_COMMUNITY_ACTIVITY_LABEL_BY_ID[id],
+  };
+};
 
 const formatCommunityVideoRatePercentage = (value: number) =>
   `${value.toLocaleString("pt-BR", {
@@ -6685,6 +6707,12 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
 
     return metric ? [{ config, metric: withStatisticsChartMetricConfig(metric, config) }] : [];
   });
+  const communityActivityActions =
+    Math.max(0, Math.trunc(communityMetricMap.get("posts")?.value ?? 0)) +
+    Math.max(0, Math.trunc(communityMetricMap.get("replies")?.value ?? 0));
+  const communityActivityDiagnosis =
+    resolvePsychologistCommunityActivityDiagnosis(communityActivityActions);
+  const communityEngagementDiagnosis = communityStatistics.community.engagement_diagnosis;
   const hasSelectedCommunity =
     communityStatisticsSelectedCommunity === "all" ||
     statisticsQuery.data.community.communities.some(
@@ -6919,6 +6947,22 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-bold text-foreground">Atividade e engajamento</h2>
+                <Badge
+                  className={communityEngagementDiagnosisClassName(communityActivityDiagnosis.id)}
+                  title={`Atividade: ${communityActivityDiagnosis.label}`}
+                >
+                  <Activity aria-hidden className="h-3.5 w-3.5" />
+                  {communityActivityDiagnosis.label}
+                </Badge>
+                <Badge
+                  className={communityEngagementDiagnosisClassName(communityEngagementDiagnosis.id)}
+                  title={`Engajamento: ${formatPsychologistCommunityEngagementLabel(
+                    communityEngagementDiagnosis,
+                  )}`}
+                >
+                  <Heart aria-hidden className="h-3.5 w-3.5" />
+                  {formatPsychologistCommunityEngagementLabel(communityEngagementDiagnosis)}
+                </Badge>
                 {isCommunityRefreshing ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                     <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />

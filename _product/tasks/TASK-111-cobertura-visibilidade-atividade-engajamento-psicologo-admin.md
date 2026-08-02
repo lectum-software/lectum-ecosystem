@@ -165,3 +165,36 @@ Pedido complementar do produto para a mesma superficie `/psicologos/[id]?tab=est
 - Browser local Admin em `localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` - OK,
   com tag **Muito ativo** no titulo do bloco, taxas **Com video/Sem video** abaixo de Posts/Respostas e
   coluna **Engajamento** com a nova copy.
+
+## Ajuste pos-feedback 2026-08-02 - contador e tags no titulo principal
+
+Pedido complementar do produto para a mesma superficie `/psicologos/[id]?tab=estatisticas`:
+
+- remover o contador/card **Taxa de cobertura** do carrossel principal de **Atividade e engajamento**, mantendo a
+  coluna **Cobertura** da tabela por comunidade como leitura detalhada;
+- garantir que a coluna **Engajamento** da tabela por comunidade exiba somente as tags
+  **Alto engajamento**, **Engajamento padrao**, **Baixo engajamento** e **Sem engajamento**;
+- exibir, ao lado do titulo **Atividade e engajamento**, duas tags resumidas: atividade por `posts + replies` e
+  engajamento recebido.
+
+### Criterios pos-feedback
+
+- [x] O contador/card **Taxa de cobertura** foi removido do carrossel principal do bloco.
+- [x] A coluna **Engajamento** da tabela por comunidade nao usa mais **Muito engajado**,
+  **Engajado**, **Pouco engajado** ou **Sem base**.
+- [x] O titulo **Atividade e engajamento** mostra uma tag de atividade calculada por `posts + replies`.
+- [x] O titulo **Atividade e engajamento** mostra uma tag de engajamento recebido com a mesma copy da tabela.
+- [x] Nenhum package novo, schema Prisma ou migration foi criado.
+- [x] ADR-0374 foi atualizado com a decisao pos-feedback.
+
+### Validacao pos-feedback
+
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- Browser local Admin em
+  `localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` - OK, via Chrome headless autenticado com
+  sessao administrativa real existente; screenshot salvo em `.tmp/admin-activity-engagement-title-tags.png`.
+- Smoke visual/DOM confirmou cabecalho **Atividade e engajamento** com tags **Muito ativo** e
+  **Alto engajamento**, ausencia de **Taxa de cobertura** no carrossel e coluna **Engajamento** com
+  **Alto engajamento**, **Engajamento padrao**, **Baixo engajamento** e **Sem engajamento**.

@@ -50,6 +50,12 @@ deve mostrar volume bruto de acoes reais do psicologo.
 - Complemento de 2026-08-02: labels de engajamento do psicologo em comunidade usam copy de intensidade de engajamento
   recebido (**Alto engajamento**, **Engajamento padrao**, **Baixo engajamento**, **Sem engajamento**) em vez de
   adjetivar o profissional como engajado.
+- Ajuste pos-feedback de 2026-08-02: o contador/card **Taxa de cobertura** deixa de aparecer no carrossel principal
+  de **Atividade e engajamento** para reduzir ruido visual; a cobertura permanece disponivel como coluna detalhada da
+  tabela por comunidade.
+- Ajuste pos-feedback de 2026-08-02: o titulo principal **Atividade e engajamento** passa a exibir duas tags
+  sinteticas, uma de atividade por `posts + replies` e outra de engajamento recebido com a mesma nomenclatura
+  Alto/Padrao/Baixo/Sem engajamento usada na tabela.
 
 ## Consequencias
 
@@ -60,6 +66,10 @@ deve mostrar volume bruto de acoes reais do psicologo.
 - Os diagnosticos do titulo sao resumidos e nao alteram rankings, filtros publicos ou dashboards agregados.
 - As novas taxas com/sem video sao percentuais descritivos por comunidade; quando nao ha posts ou respostas, a UI exibe
   ausencia de base em vez de inventar distribuicao.
+- A remocao do card de taxa de cobertura nao remove o calculo nem o detalhe operacional; apenas evita duplicidade no
+  topo do bloco.
+- As tags no titulo principal usam os dados reais ja carregados pela aba Estatisticas, sem endpoint, mock, migration ou
+  package adicional.
 - A API preserva o endpoint existente, sem migration, package novo, seed ou backfill.
 - A ADR-0373 fica superada para a metrica principal de Atividade; sua cobertura por tipo de resposta permanece
   disponivel apenas como sinal auxiliar.
@@ -78,6 +88,10 @@ deve mostrar volume bruto de acoes reais do psicologo.
 - Browser local Admin: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`.
 - Browser local complementar de 2026-08-02 confirmou, na tabela por comunidade, tag **Muito ativo** no titulo,
   taxas **Com video/Sem video** em Posts/Respostas e a nova copy da coluna Engajamento.
+- Browser local pos-feedback de 2026-08-02 em
+  `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou cabecalho com tags
+  **Muito ativo** e **Alto engajamento**, ausencia do contador **Taxa de cobertura** no carrossel principal e coluna
+  **Engajamento** com **Alto engajamento**, **Engajamento padrao**, **Baixo engajamento** e **Sem engajamento**.
 
 ## Pendencias
 
