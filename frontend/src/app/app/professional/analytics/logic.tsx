@@ -14,6 +14,7 @@ import {
   PlayCircle,
   Repeat2,
   Search,
+  Share2,
   Star,
   UsersRound,
 } from "lucide-react";
@@ -617,6 +618,13 @@ type PresentationVideoDashboardMetric = {
   value: string;
 };
 
+type PresentationVideoWhatsappBreakdownItem = {
+  description: string;
+  id: "explore" | "search_results";
+  label: string;
+  value: number;
+};
+
 const getPresentationVideoDashboardMetrics = (
   video?: PsychologistAnalyticsPresentationVideo,
 ): PresentationVideoDashboardMetric[] => [
@@ -644,7 +652,70 @@ const getPresentationVideoDashboardMetrics = (
     label: "Taxa de replays",
     value: `${Math.round(video?.metrics.replay_rate ?? 0)}%`,
   },
+  {
+    id: "shares_from_video",
+    icon: Share2,
+    label: "Compartilhamento",
+    value: toCount(video?.metrics.shares_from_video),
+  },
+  {
+    id: "profile_accesses_from_video",
+    icon: Eye,
+    label: "Acesso ao perfil",
+    value: toCount(video?.metrics.profile_accesses_from_video),
+  },
+  {
+    id: "favorites_from_video",
+    icon: Heart,
+    label: "Favoritado",
+    value: toCount(video?.metrics.favorites_from_video),
+  },
+  {
+    id: "whatsapp_clicks_from_video",
+    icon: WhatsAppIcon,
+    label: "Cliques WhatsApp",
+    value: toCount(video?.metrics.whatsapp_clicks_from_video),
+  },
 ];
+
+const getPresentationVideoWhatsappBreakdown = (
+  traffic?: PsychologistAnalyticsTrafficSources,
+): PresentationVideoWhatsappBreakdownItem[] => {
+  const presentationVideoSource = (traffic?.sources ?? fallbackTrafficSources.sources).find(
+    (source) => source.id === "presentation_video",
+  );
+  const breakdownById = new Map(
+    (presentationVideoSource?.breakdown ?? [])
+      .filter((item) => item.id === "explore" || item.id === "search_results")
+      .map((item) => [item.id, item]),
+  );
+  const fallbackItems = fallbackTrafficSources.sources.find(
+    (source) => source.id === "presentation_video",
+  )?.breakdown;
+
+  return [
+    {
+      id: "explore",
+      label: "Explorar",
+      description: "Cliques feitos a partir da navegação de descoberta.",
+      value:
+        breakdownById.get("explore")?.value ??
+        breakdownById.get("explore")?.whatsapp_clicks ??
+        fallbackItems?.find((item) => item.id === "explore")?.value ??
+        0,
+    },
+    {
+      id: "search_results",
+      label: "Resultados de busca",
+      description: "Cliques feitos a partir de pesquisas e filtros.",
+      value:
+        breakdownById.get("search_results")?.value ??
+        breakdownById.get("search_results")?.whatsapp_clicks ??
+        fallbackItems?.find((item) => item.id === "search_results")?.value ??
+        0,
+    },
+  ];
+};
 
 const PresentationVideoDashboardMetricCard = ({
   locked,
@@ -675,17 +746,61 @@ const PresentationVideoDashboardMetricCard = ({
   );
 };
 
+const PresentationVideoWhatsappBreakdownPanel = ({
+  items,
+  locked,
+}: {
+  items: PresentationVideoWhatsappBreakdownItem[];
+  locked?: boolean;
+}) => (
+  <article className="col-span-2 grid min-w-0 gap-3 rounded-[18px] bg-surface-muted/55 p-3">
+    <div className="flex min-w-0 items-center gap-2">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <WhatsAppIcon className="h-4 w-4" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-black tracking-[-0.03em] text-foreground">Cliques no WhatsApp</p>
+        <p className="text-xs font-semibold leading-5 text-muted">
+          Separados por onde o vídeo foi encontrado
+        </p>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-2">
+      {items.map((item) => (
+        <div className="rounded-2xl bg-surface px-3 py-3" key={item.id}>
+          <p className="min-h-8 text-[0.76rem] font-extrabold leading-4 text-muted">{item.label}</p>
+          <p
+            className={cn(
+              "mt-2 text-xl font-black leading-none tracking-[-0.05em] text-foreground",
+              locked && "select-none blur-[5px]",
+            )}
+          >
+            {toCount(item.value)}
+          </p>
+          <p className="mt-1 text-[0.68rem] font-semibold leading-4 text-subtle">
+            {item.description}
+          </p>
+        </div>
+      ))}
+    </div>
+  </article>
+);
+
 const PresentationVideoMetricsPanel = ({
   locked,
   metrics,
+  whatsappBreakdown,
 }: {
   locked?: boolean;
   metrics: PresentationVideoDashboardMetric[];
+  whatsappBreakdown: PresentationVideoWhatsappBreakdownItem[];
 }) => (
   <div className="grid min-w-0 grid-cols-2 gap-2">
     {metrics.map((metric) => (
       <PresentationVideoDashboardMetricCard key={metric.id} locked={locked} metric={metric} />
     ))}
+    <PresentationVideoWhatsappBreakdownPanel items={whatsappBreakdown} locked={locked} />
   </div>
 );
 
@@ -1135,9 +1250,11 @@ const getRetentionHealth = ({
 
 const PresentationVideoAnalyticsSection = ({
   locked,
+  traffic,
   video,
 }: {
   locked?: boolean;
+  traffic: PsychologistAnalyticsTrafficSources;
   video?: PsychologistAnalyticsPresentationVideo;
 }) => {
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -1155,6 +1272,7 @@ const PresentationVideoAnalyticsSection = ({
     views: video?.metrics.views ?? 0,
   });
   const presentationVideoMetrics = getPresentationVideoDashboardMetrics(video);
+  const presentationVideoWhatsappBreakdown = getPresentationVideoWhatsappBreakdown(traffic);
 
   const handleVideoElementReady = useCallback((element: HTMLVideoElement | null) => {
     cleanupVideoListenersRef.current?.();
@@ -1241,7 +1359,7 @@ const PresentationVideoAnalyticsSection = ({
               Vídeo de apresentação
             </p>
             <h2 className="mt-2 text-xl font-extrabold tracking-[-0.03em] text-foreground">
-              Métricas principais do vídeo
+              Métricas principais
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
               Acompanhe como os visitantes assistem seu vídeo de apresentação.
@@ -1250,7 +1368,11 @@ const PresentationVideoAnalyticsSection = ({
         </div>
       </div>
 
-      <PresentationVideoMetricsPanel locked={locked} metrics={presentationVideoMetrics} />
+      <PresentationVideoMetricsPanel
+        locked={locked}
+        metrics={presentationVideoMetrics}
+        whatsappBreakdown={presentationVideoWhatsappBreakdown}
+      />
 
       <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:p-5">
         <div className="min-w-0">
@@ -1467,6 +1589,23 @@ const CommunityActivitySection = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <CommunityContentDonut
+          icon={BarChart3}
+          label="Posts"
+          locked={locked}
+          totals={content.posts}
+        />
+        <CommunityContentDonut
+          icon={MessageCircle}
+          label="Respostas"
+          locked={locked}
+          totals={content.replies}
+        />
+      </div>
+
+      <CommunityWhatsappContentTable items={content.whatsapp_clicks_by_content} locked={locked} />
+
       <article className="rounded-[24px] border border-primary/10 bg-primary-soft/45 p-4">
         <div className="flex min-w-0 items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface text-primary">
@@ -1495,23 +1634,6 @@ const CommunityActivitySection = ({
           </div>
         </div>
       </article>
-
-      <div className="grid grid-cols-2 gap-3">
-        <CommunityContentDonut
-          icon={BarChart3}
-          label="Posts"
-          locked={locked}
-          totals={content.posts}
-        />
-        <CommunityContentDonut
-          icon={MessageCircle}
-          label="Respostas"
-          locked={locked}
-          totals={content.replies}
-        />
-      </div>
-
-      <CommunityWhatsappContentTable items={content.whatsapp_clicks_by_content} locked={locked} />
     </section>
   );
 };
@@ -1556,6 +1678,100 @@ const TrafficBadge = ({ type }: { type: TrafficSourceWithDisplay["displayBadge"]
     </span>
   );
 };
+
+type TrafficSourceDiagnosis = {
+  description: string;
+  label: string;
+};
+
+const getTrafficSourceDiagnosis = (sources: TrafficSourceWithDisplay[]): TrafficSourceDiagnosis => {
+  const totalWhatsappClicks = sources.reduce((total, source) => total + source.whatsapp_clicks, 0);
+
+  if (totalWhatsappClicks <= 0) {
+    return {
+      label: "Aguardando cliques atribuídos",
+      description:
+        "Quando houver cliques reais com origem rastreável, o diagnóstico indicará quais canais estão gerando mais conversas.",
+    };
+  }
+
+  const leadingSource = sources.reduce<TrafficSourceWithDisplay | null>(
+    (best, source) => (!best || source.whatsapp_clicks > best.whatsapp_clicks ? source : best),
+    null,
+  );
+  if (!leadingSource) {
+    return {
+      label: "Aguardando cliques atribuídos",
+      description:
+        "Quando houver cliques reais com origem rastreável, o diagnóstico indicará quais canais estão gerando mais conversas.",
+    };
+  }
+
+  const activeSources = sources.filter((source) => source.whatsapp_clicks > 0).length;
+  const leadingPercentage = Math.round((leadingSource.whatsapp_clicks / totalWhatsappClicks) * 100);
+
+  if (leadingPercentage >= 60) {
+    return {
+      label: `${leadingSource.label} concentra os contatos`,
+      description: `${toCount(leadingSource.whatsapp_clicks)} de ${toCount(
+        totalWhatsappClicks,
+      )} cliques no WhatsApp vieram dessa origem no período. Priorize manter esse canal atualizado e acompanhe se os demais canais começam a contribuir.`,
+    };
+  }
+
+  if (activeSources >= 3) {
+    return {
+      label: "Tráfego distribuído",
+      description: `${toCount(
+        totalWhatsappClicks,
+      )} cliques no WhatsApp vieram de múltiplas origens. O mix está menos dependente de um único canal.`,
+    };
+  }
+
+  return {
+    label: "Duas origens puxam os contatos",
+    description: `${toCount(
+      totalWhatsappClicks,
+    )} cliques no WhatsApp foram atribuídos no período. Compare os dropdowns para entender onde vale reforçar conteúdo, perfil ou favoritos.`,
+  };
+};
+
+const TrafficSourceDiagnosticPanel = ({
+  diagnosis,
+  locked,
+}: {
+  diagnosis: TrafficSourceDiagnosis;
+  locked?: boolean;
+}) => (
+  <article className="rounded-[24px] border border-primary/10 bg-primary-soft/45 p-4">
+    <div className="flex min-w-0 items-start gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface text-primary">
+        <Activity className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
+          Diagnóstico
+        </p>
+        <p
+          className={cn(
+            "mt-1 text-lg font-black tracking-[-0.04em] text-foreground",
+            locked && "select-none blur-[5px]",
+          )}
+        >
+          {diagnosis.label}
+        </p>
+        <p
+          className={cn(
+            "mt-2 text-sm font-semibold leading-6 text-muted",
+            locked && "select-none blur-[4px]",
+          )}
+        >
+          {diagnosis.description}
+        </p>
+      </div>
+    </div>
+  </article>
+);
 
 const getTrafficBreakdownValue = (
   item: NonNullable<TrafficSourceWithDisplay["breakdown"]>[number],
@@ -1643,6 +1859,7 @@ const TrafficSourceSection = ({
     PsychologistAnalyticsTrafficSource["id"] | null
   >(null);
   const sources = useMemo(() => toTrafficSourceDisplay(traffic.sources), [traffic.sources]);
+  const diagnosis = useMemo(() => getTrafficSourceDiagnosis(sources), [sources]);
 
   return (
     <section className="grid min-w-0 gap-4 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)] md:p-6">
@@ -1804,6 +2021,8 @@ const TrafficSourceSection = ({
           );
         })}
       </div>
+
+      <TrafficSourceDiagnosticPanel diagnosis={diagnosis} locked={locked} />
     </section>
   );
 };
@@ -1866,6 +2085,7 @@ export const ProfessionalAnalyticsLogic = () => {
         {!shouldShowError ? (
           <PresentationVideoAnalyticsSection
             locked={isAnalyticsPreview}
+            traffic={getTrafficSources(data)}
             video={data?.presentation_video}
           />
         ) : null}

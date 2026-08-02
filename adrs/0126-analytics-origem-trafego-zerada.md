@@ -111,3 +111,9 @@ Fontes usadas:
 - `Favoritos`: cliques WhatsApp vindos da lista de favoritos por path real; favoritos por video via `psychologist_video_favorite`; favoritos sem origem de video registrada ficam no bucket `Pelo perfil` porque `psychologist_favorite` nao possui coluna de origem.
 
 Consequencia: nao distribuimos `contact_request` por origem quando nao ha evento first-party, nao criamos schema/migration e aceitamos que favoritos historicos sem origem de video nao permitam separar outras superficies alem do bucket de perfil/legado.
+
+## Atualizacao 2026-08-02 - Diagnostico na origem do trafego
+
+Por feedback de produto, a secao `Origem do trafego` permanece antes de `Video de apresentacao` e ganha um bloco de `Diagnostico` logo apos a lista de origens. O diagnostico e derivado exclusivamente dos `whatsapp_clicks` ja atribuidos por evento first-party em `traffic_sources.sources[]`; quando nao ha cliques rastreaveis, a UI informa que ainda esta aguardando atribuicao real.
+
+Consequencia: nao criamos novo contrato, endpoint, schema, migration, mock ou redistribuicao de `contact_request`. A leitura e apenas uma interpretacao frontend dos agregados reais ja retornados pelo endpoint privado.

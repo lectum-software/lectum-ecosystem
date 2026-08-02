@@ -62,3 +62,9 @@ A restricao principal e que o Analytics nao pode distribuir conversoes de forma 
 ## Pendencias
 
 - Nenhuma pendencia externa para a entrega atual.
+
+## Atualizacao 2026-08-02 - Diagnostico no final do bloco
+
+Por ajuste de leitura mobile-first, o bloco `Comunidade` passa a exibir primeiro os donuts de posts/respostas e a tabela de cliques por conteudo; o `Diagnostico` foi movido para o final do bloco.
+
+Consequencia: a regra de calculo do diagnostico comunitario nao muda. A alteracao e somente de hierarquia visual, mantendo os dados reais de `community_member`, `community_post`, `post_reply` e `important_action_event`.

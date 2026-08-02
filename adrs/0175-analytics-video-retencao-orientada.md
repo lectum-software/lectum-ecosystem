@@ -71,3 +71,11 @@ Consequencias:
 ## Pendencias
 
 - A calibragem dos limiares de diagnostico deve ser revista quando houver maior volume real de sessoes de video por perfil.
+
+## Atualizacao 2026-08-02 - Acoes principais voltam ao bloco de video
+
+Produto pediu que a secao `Video de apresentacao` volte a mostrar, junto das metricas principais, as acoes reais de `Compartilhamento`, `Acesso ao perfil`, `Favoritado` e `Cliques WhatsApp`. Mantemos a separacao de retencao: a area azul continua focada na permanencia/curva, enquanto as acoes ficam na grade de metricas antes dela.
+
+Para evitar misturar atribuicao, os cliques de WhatsApp do video tambem aparecem separados entre `Explorar` e `Resultados de busca`, usando o detalhamento real ja presente em `traffic_sources.sources[].breakdown` para a origem `presentation_video`.
+
+Consequencia: reaproveitamos campos existentes do contrato privado (`shares_from_video`, `profile_accesses_from_video`, `favorites_from_video`, `whatsapp_clicks_from_video` e o breakdown da origem de trafego), sem schema, migration, endpoint paralelo, mock, seed ou package novo.

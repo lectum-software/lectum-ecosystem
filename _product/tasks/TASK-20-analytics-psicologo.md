@@ -605,3 +605,35 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - `git diff --check`
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada; a validacao de fonte/build confirmou o bloco de Origem do trafego como primeira secao apos o seletor e os dropdowns por origem.
+
+## Ajuste complementar em 2026-08-02 - refinamentos de origem, video e comunidade
+
+- Pedido do usuario: manter `Origem do trafego` antes de `Video de apresentacao`, adicionar diagnostico abaixo de `Favoritos`, ampliar as metricas do video, renomear `Metricas principais do video` para `Metricas principais` e mover o diagnostico de `Comunidade` para o final do bloco.
+- A UI mobile-first preserva `Origem do trafego` como bloco anterior ao video e adiciona um diagnostico derivado dos `whatsapp_clicks` reais de `traffic_sources.sources[]`, sem distribuir `contact_request` sem origem rastreavel.
+- O bloco `Video de apresentacao` agora exibe `Compartilhamento`, `Acesso ao perfil`, `Favoritado`, `Cliques WhatsApp` e uma leitura separada de WhatsApp por `Explorar` e `Resultados de busca`, reutilizando os campos reais do contrato privado e o breakdown ja existente da origem `presentation_video`.
+- O titulo do bloco de video foi alterado para `Metricas principais`.
+- O diagnostico de `Comunidade` foi movido para o final do bloco, apos donuts e tabela de cliques por conteudo, sem alterar regra de calculo.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e capturas enviadas pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADRs atualizados: `adrs/0126-analytics-origem-trafego-zerada.md`, `adrs/0175-analytics-video-retencao-orientada.md` e `adrs/0404-comunidades-analytics-psicologo.md`.
+
+### Criterios de aceite do complemento
+
+- [x] `Origem do trafego` permanece antes de `Video de apresentacao` na pagina carregada.
+- [x] `Origem do trafego` exibe um bloco `Diagnostico` abaixo da lista de origens.
+- [x] O bloco `Video de apresentacao` exibe as metricas `Compartilhamento`, `Acesso ao perfil`, `Favoritado` e `Cliques WhatsApp`.
+- [x] Os cliques WhatsApp do video aparecem separados por `Explorar` e `Resultados de busca`.
+- [x] O texto `Metricas principais do video` foi alterado para `Metricas principais`.
+- [x] No bloco `Comunidade`, o diagnostico fica no final do bloco.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir frontend exec biome check "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser/HTTP local com `pnpm --dir frontend exec next start --hostname 127.0.0.1 --port 3137`: request em `/app/professional/analytics` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada, e Chrome headless 390x844 carregou a tela de login redirecionada. A validacao visual do fonte/build confirmou a hierarquia mobile-first solicitada.
