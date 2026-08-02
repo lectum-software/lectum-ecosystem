@@ -717,8 +717,7 @@ const PresentationVideoMetricsPanel = ({
   </div>
 );
 
-const SEARCH_TERMS_TOOLTIP =
-  "Principais termos de busca que exibiram seu vídeo nos resultados de busca.";
+const SEARCH_TERMS_TOOLTIP = "Principais termos que exibiram seu vídeo nos resultados de busca.";
 
 type PresentationVideoSearchTermsSummary = {
   searchResultImpressions: number;
