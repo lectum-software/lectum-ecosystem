@@ -79,3 +79,13 @@ Produto pediu que a secao `Video de apresentacao` volte a mostrar, junto das met
 Para evitar misturar atribuicao, os cliques de WhatsApp do video tambem aparecem separados entre `Explorar` e `Resultados de busca`, usando o detalhamento real ja presente em `traffic_sources.sources[].breakdown` para a origem `presentation_video`.
 
 Consequencia: reaproveitamos campos existentes do contrato privado (`shares_from_video`, `profile_accesses_from_video`, `favorites_from_video`, `whatsapp_clicks_from_video` e o breakdown da origem de trafego), sem schema, migration, endpoint paralelo, mock, seed ou package novo.
+
+## Atualizacao 2026-08-02 - Compactacao visual das metricas do video
+
+Por feedback visual no browser mobile/desktop, os cards de metricas do Video de apresentacao estavam ocupando altura excessiva antes do bloco de retencao.
+
+Decidimos remover da secao de video o bloco adicional Cliques no WhatsApp por origem (Explorar e Resultados de busca) e manter apenas o card agregado Cliques WhatsApp junto das demais metricas principais. A leitura por origem continua disponivel no contrato privado e pode ser usada em outra area, mas nao deve duplicar espaco dentro deste painel compacto.
+
+Os cards de metrica passam a seguir a hierarquia label leve acima do numero, com icone alinhado verticalmente ao label. A decisao reduz rolagem e peso visual no mobile sem alterar contratos, schema, tracking ou fontes persistidas.
+
+Consequencia: a secao fica mais curta e objetiva, mantendo todos os totais principais reais (Visualizacoes, Tempo total assistido, Assistiram completo, Taxa de replays, Compartilhamento, Acesso ao perfil, Favoritado e Cliques WhatsApp) antes da retencao. Nao ha migration, endpoint paralelo, mock, seed, dado artificial ou package novo.

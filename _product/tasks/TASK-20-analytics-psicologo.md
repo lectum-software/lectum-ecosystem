@@ -732,3 +732,31 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
 - `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+
+## Ajuste complementar em 2026-08-02 - Compactacao das metricas do video
+
+- Pedido do usuario: reduzir o espaco ocupado pelos blocos de metricas do `Video de apresentacao`, remover o bloco `Cliques no WhatsApp por origem` e alinhar o texto de cada metrica com o respectivo icone.
+- Builder/Quick Copy nao estava exposto como ferramenta direta neste ambiente; foram usadas `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e as capturas enviadas pelo usuario como referencia auditavel.
+- A UI mobile-first dos cards de video agora usa cards mais baixos, com label leve acima do numero e valor destacado abaixo.
+- O detalhamento `Explorar`/`Resultados de busca` deixou de ser renderizado dentro do bloco de video; o total de `Cliques WhatsApp` permanece como card de metrica real.
+- O alinhamento vertical entre icone e label foi ajustado para evitar desalinhamento perceptivel em `Visualizacoes`, `Tempo total assistido` e demais metricas.
+- Nenhum contrato de API, schema Prisma, migration, package novo, mock, seed ou dado artificial foi criado.
+- ADR atualizado: `adrs/0175-analytics-video-retencao-orientada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O bloco `Cliques no WhatsApp` por origem nao e renderizado dentro de `Video de apresentacao`.
+- [x] Os cards de metricas do video exibem o label acima do numero.
+- [x] O label da metrica usa peso visual menor que o numero.
+- [x] O label fica alinhado verticalmente com o icone do proprio card.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada; a validacao visual foi acompanhada no Chrome local do usuario durante o hot reload da tela autenticada.

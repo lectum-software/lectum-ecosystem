@@ -8,6 +8,7 @@ import {
   Clock3,
   Eye,
   Heart,
+  Info,
   type LucideIcon,
   MessageCircle,
   PlayCircle,
@@ -33,6 +34,7 @@ import type {
   PsychologistAnalyticsPeriodKey,
   PsychologistAnalyticsPresentationVideo,
   PsychologistAnalyticsResponse,
+  PsychologistAnalyticsTrafficSearchTerm,
   PsychologistAnalyticsTrafficSource,
   PsychologistAnalyticsTrafficSources,
 } from "@/api/generator/types/psychologist-analytics";
@@ -617,13 +619,6 @@ type PresentationVideoDashboardMetric = {
   value: string;
 };
 
-type PresentationVideoWhatsappBreakdownItem = {
-  description: string;
-  id: "explore" | "search_results";
-  label: string;
-  value: number;
-};
-
 const getPresentationVideoDashboardMetrics = (
   video?: PsychologistAnalyticsPresentationVideo,
 ): PresentationVideoDashboardMetric[] => [
@@ -677,45 +672,6 @@ const getPresentationVideoDashboardMetrics = (
   },
 ];
 
-const getPresentationVideoWhatsappBreakdown = (
-  traffic?: PsychologistAnalyticsTrafficSources,
-): PresentationVideoWhatsappBreakdownItem[] => {
-  const presentationVideoSource = (traffic?.sources ?? fallbackTrafficSources.sources).find(
-    (source) => source.id === "presentation_video",
-  );
-  const breakdownById = new Map(
-    (presentationVideoSource?.breakdown ?? [])
-      .filter((item) => item.id === "explore" || item.id === "search_results")
-      .map((item) => [item.id, item]),
-  );
-  const fallbackItems = fallbackTrafficSources.sources.find(
-    (source) => source.id === "presentation_video",
-  )?.breakdown;
-
-  return [
-    {
-      id: "explore",
-      label: "Explorar",
-      description: "Cliques feitos a partir da navegação de descoberta.",
-      value:
-        breakdownById.get("explore")?.value ??
-        breakdownById.get("explore")?.whatsapp_clicks ??
-        fallbackItems?.find((item) => item.id === "explore")?.value ??
-        0,
-    },
-    {
-      id: "search_results",
-      label: "Resultados de busca",
-      description: "Cliques feitos a partir de pesquisas e filtros.",
-      value:
-        breakdownById.get("search_results")?.value ??
-        breakdownById.get("search_results")?.whatsapp_clicks ??
-        fallbackItems?.find((item) => item.id === "search_results")?.value ??
-        0,
-    },
-  ];
-};
-
 const PresentationVideoDashboardMetricCard = ({
   locked,
   metric,
@@ -726,16 +682,19 @@ const PresentationVideoDashboardMetricCard = ({
   const Icon = metric.icon;
 
   return (
-    <article className="flex min-h-[96px] min-w-0 flex-col rounded-[18px] bg-surface-muted/55 p-3">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <Icon className="h-4 w-4" aria-hidden />
-      </span>
-      <p className="mt-2 min-h-8 min-w-0 break-words text-[0.76rem] font-extrabold leading-4 text-muted">
-        {metric.label}
-      </p>
+    <article className="grid min-h-[68px] min-w-0 gap-1 rounded-[16px] bg-surface-muted/55 px-2.5 py-2 sm:min-h-[76px] sm:px-3 sm:py-2.5">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary-soft text-primary sm:h-7 sm:w-7">
+          <Icon className="h-3.5 w-3.5" aria-hidden />
+        </span>
+        <p className="min-w-0 break-words text-[0.66rem] font-semibold leading-4 text-muted sm:text-[0.72rem]">
+          {metric.label}
+        </p>
+      </div>
+
       <p
         className={cn(
-          "mt-auto pt-2 text-xl font-black leading-none tracking-[-0.05em] text-foreground",
+          "pl-[1.875rem] text-lg font-black leading-none tracking-[-0.05em] text-foreground sm:pl-[2.125rem] sm:text-xl",
           locked && "select-none blur-[5px]",
         )}
       >
@@ -745,90 +704,134 @@ const PresentationVideoDashboardMetricCard = ({
   );
 };
 
-const PresentationVideoWhatsappBreakdownPanel = ({
-  items,
-  locked,
-}: {
-  items: PresentationVideoWhatsappBreakdownItem[];
-  locked?: boolean;
-}) => (
-  <article className="col-span-2 grid min-w-0 gap-3 rounded-[18px] bg-surface-muted/55 p-3">
-    <div className="flex min-w-0 items-center gap-2">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-        <WhatsAppIcon className="h-4 w-4" aria-hidden />
-      </span>
-      <div className="min-w-0">
-        <p className="text-sm font-black tracking-[-0.03em] text-foreground">Cliques no WhatsApp</p>
-        <p className="text-xs font-semibold leading-5 text-muted">
-          Separados por onde o vídeo foi encontrado
-        </p>
-      </div>
-    </div>
-
-    <div className="grid grid-cols-2 gap-2">
-      {items.map((item) => (
-        <div className="rounded-2xl bg-surface px-3 py-3" key={item.id}>
-          <p className="min-h-8 text-[0.76rem] font-extrabold leading-4 text-muted">{item.label}</p>
-          <p
-            className={cn(
-              "mt-2 text-xl font-black leading-none tracking-[-0.05em] text-foreground",
-              locked && "select-none blur-[5px]",
-            )}
-          >
-            {toCount(item.value)}
-          </p>
-          <p className="mt-1 text-[0.68rem] font-semibold leading-4 text-subtle">
-            {item.description}
-          </p>
-        </div>
-      ))}
-    </div>
-  </article>
-);
-
 const PresentationVideoMetricsPanel = ({
   locked,
   metrics,
-  whatsappBreakdown,
 }: {
   locked?: boolean;
   metrics: PresentationVideoDashboardMetric[];
-  whatsappBreakdown: PresentationVideoWhatsappBreakdownItem[];
 }) => (
-  <div className="grid min-w-0 grid-cols-2 gap-2">
+  <div className="grid min-w-0 grid-cols-2 gap-1.5 sm:gap-2">
     {metrics.map((metric) => (
       <PresentationVideoDashboardMetricCard key={metric.id} locked={locked} metric={metric} />
     ))}
-    <PresentationVideoWhatsappBreakdownPanel items={whatsappBreakdown} locked={locked} />
   </div>
 );
 
-const PresentationVideoDiagnosticPanel = ({
+const SEARCH_TERMS_TOOLTIP = "Principais filtros de busca que geraram cliques para o seu WhatsApp.";
+
+type PresentationVideoSearchTermsSummary = {
+  terms: PsychologistAnalyticsTrafficSearchTerm[];
+  whatsappClicks: number;
+};
+
+const getPresentationVideoSearchTermsSummary = (
+  traffic?: PsychologistAnalyticsTrafficSources,
+): PresentationVideoSearchTermsSummary => {
+  const presentationVideoSource = (traffic?.sources ?? fallbackTrafficSources.sources).find(
+    (source) => source.id === "presentation_video",
+  );
+  const searchResultsBreakdown = presentationVideoSource?.breakdown?.find(
+    (item) => item.id === "search_results",
+  );
+
+  return {
+    terms: [...(searchResultsBreakdown?.top_search_terms ?? [])]
+      .sort((left, right) => {
+        if (right.whatsapp_clicks !== left.whatsapp_clicks) {
+          return right.whatsapp_clicks - left.whatsapp_clicks;
+        }
+
+        return left.term.localeCompare(right.term, "pt-BR");
+      })
+      .slice(0, 5),
+    whatsappClicks: searchResultsBreakdown?.whatsapp_clicks ?? searchResultsBreakdown?.value ?? 0,
+  };
+};
+
+const PresentationVideoSearchTermsPanel = ({
   locked,
-  retentionHealth,
+  summary,
 }: {
   locked?: boolean;
-  retentionHealth: { description: string; label: string };
-}) => (
-  <div className="rounded-[22px] border border-primary/10 bg-surface px-3 py-3 text-sm leading-6 text-muted">
-    <p className="text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
-      Diagnóstico
-    </p>
-    <span
-      className={cn(
-        "mt-2 inline-flex rounded-full border border-primary/10 bg-primary-soft px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.1em] text-primary",
-        locked && "select-none blur-[4px]",
+  summary: PresentationVideoSearchTermsSummary;
+}) => {
+  const hasTerms = summary.terms.length > 0;
+  const emptyDescription =
+    summary.whatsappClicks > 0
+      ? "Há cliques vindos de busca ou filtros, mas nenhum filtro textual foi registrado neste período."
+      : "Nenhum filtro pesquisado gerou clique para WhatsApp neste período.";
+
+  return (
+    <div className="rounded-[22px] border border-primary/10 bg-surface px-3 py-3 text-sm leading-6 text-muted">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <p className="min-w-0 text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
+            Termos pesquisados
+          </p>
+          <button
+            aria-describedby="presentation-video-search-terms-tooltip"
+            aria-label={SEARCH_TERMS_TOOLTIP}
+            className="group relative grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border bg-surface text-primary transition hover:border-primary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+            title={SEARCH_TERMS_TOOLTIP}
+            type="button"
+          >
+            <Info className="h-3.5 w-3.5" aria-hidden />
+            <span
+              className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-60 rounded-2xl border border-border bg-surface px-3 py-2 text-left text-xs font-semibold leading-5 text-foreground shadow-[var(--lectum-shadow-soft)] group-focus:block group-hover:block"
+              id="presentation-video-search-terms-tooltip"
+              role="tooltip"
+            >
+              {SEARCH_TERMS_TOOLTIP}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {hasTerms ? (
+        <ul className="mt-3 grid gap-2">
+          {summary.terms.map((term) => (
+            <li
+              className="flex min-w-0 items-center justify-between gap-3 rounded-2xl bg-surface-muted/70 px-3 py-2.5"
+              key={term.term}
+            >
+              <div className="min-w-0">
+                <p
+                  className={cn(
+                    "truncate text-sm font-extrabold tracking-[-0.03em] text-foreground",
+                    locked && "select-none blur-[4px]",
+                  )}
+                >
+                  {term.term}
+                </p>
+                <p
+                  className={cn(
+                    "mt-0.5 text-xs font-semibold leading-5 text-muted",
+                    locked && "select-none blur-[4px]",
+                  )}
+                >
+                  {Math.round(clampPercent(term.percentage))}% dos cliques em resultados de busca
+                </p>
+              </div>
+              <span
+                className={cn(
+                  "shrink-0 text-sm font-black tracking-[-0.04em] text-foreground",
+                  locked && "select-none blur-[5px]",
+                )}
+              >
+                {toCount(term.whatsapp_clicks)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 rounded-2xl bg-surface-muted/70 px-3 py-2.5 text-xs font-semibold leading-5 text-muted">
+          {emptyDescription}
+        </p>
       )}
-    >
-      {retentionHealth.label}
-    </span>
-    <p
-      className={cn("mt-2 font-semibold leading-5 text-muted", locked && "select-none blur-[4px]")}
-    >
-      {retentionHealth.description}
-    </p>
-  </div>
-);
+    </div>
+  );
+};
 
 type RetentionChartProps = {
   currentTimeSeconds?: number;
@@ -1167,86 +1170,6 @@ const RetentionChart = ({
   );
 };
 
-type RetentionHealth = {
-  description: string;
-  label: string;
-};
-
-const MIN_RETENTION_SAMPLE_FOR_CONFIDENCE = 30;
-
-const getDropoffMoment = (
-  dropoff?: PsychologistAnalyticsPresentationVideo["retention"]["dropoff"],
-) => {
-  if (!dropoff) return "sem uma queda concentrada";
-  if (dropoff.from_milestone >= 75) return "no final";
-  if (dropoff.from_milestone >= 50) return "na segunda metade";
-  if (dropoff.from_milestone >= 25) return "antes da metade";
-
-  return "logo no começo";
-};
-
-const getRetentionHealth = ({
-  averageRetention,
-  dropoff,
-  views,
-}: {
-  averageRetention: number;
-  dropoff?: PsychologistAnalyticsPresentationVideo["retention"]["dropoff"];
-  views: number;
-}): RetentionHealth => {
-  if (views <= 0) {
-    return {
-      description:
-        "Assim que o vídeo receber visualizações reais, mostraremos uma leitura do desempenho.",
-      label: "Aguardando dados",
-    };
-  }
-
-  const dropoffMoment = getDropoffMoment(dropoff);
-  const hasSmallSample = views < MIN_RETENTION_SAMPLE_FOR_CONFIDENCE;
-
-  if (hasSmallSample) {
-    return {
-      description:
-        averageRetention >= 60
-          ? "Os primeiros sinais são bons, mas ainda há poucas visualizações. Mantenha o vídeo atual por enquanto e acompanhe se esse padrão se repete com mais visitas."
-          : "Ainda há poucas visualizações para concluir. Mantenha o vídeo atual por enquanto e acompanhe a retenção quando houver mais visitas.",
-      label: averageRetention >= 60 ? "Primeiros sinais bons" : "Dados iniciais",
-    };
-  }
-
-  if (averageRetention >= 75 && (!dropoff || dropoff.from_milestone >= 75)) {
-    return {
-      description: dropoff
-        ? `A maior queda acontece ${dropoffMoment}. O desempenho está bom; teste encerrar de forma mais breve para manter a atenção até o fim.`
-        : "A retenção está boa e não há uma queda concentrada. Mantenha a apresentação objetiva e acompanhe se esse padrão se repete.",
-      label: "Bom desempenho",
-    };
-  }
-
-  if (averageRetention >= 60) {
-    return {
-      description:
-        "Há bom interesse no vídeo. Vale testar uma abertura mais clara, frases mais curtas e exemplos práticos para manter a atenção por mais tempo.",
-      label: "Desempenho saudável",
-    };
-  }
-
-  if (averageRetention >= 40) {
-    return {
-      description:
-        "Parte relevante dos visitantes sai antes de avançar no vídeo. Teste encurtar a apresentação, reduzir pausas e chegar mais rápido aos pontos principais.",
-      label: "Ponto de atenção",
-    };
-  }
-
-  return {
-    description:
-      "A maioria dos visitantes sai cedo. Teste uma abertura mais objetiva, diga logo para quem você atende e mantenha os primeiros segundos mais diretos.",
-    label: "Precisa melhorar",
-  };
-};
-
 const PresentationVideoAnalyticsSection = ({
   locked,
   traffic,
@@ -1265,13 +1188,8 @@ const PresentationVideoAnalyticsSection = ({
   const averageRetention = video?.retention.average_retention_rate ?? 0;
   const averageWatchSeconds = video?.metrics.average_watch_seconds ?? 0;
   const durationSeconds = playerDurationSeconds ?? video?.duration_seconds ?? null;
-  const retentionHealth = getRetentionHealth({
-    averageRetention,
-    dropoff: video?.retention.dropoff,
-    views: video?.metrics.views ?? 0,
-  });
   const presentationVideoMetrics = getPresentationVideoDashboardMetrics(video);
-  const presentationVideoWhatsappBreakdown = getPresentationVideoWhatsappBreakdown(traffic);
+  const searchTermsSummary = getPresentationVideoSearchTermsSummary(traffic);
 
   const handleVideoElementReady = useCallback((element: HTMLVideoElement | null) => {
     cleanupVideoListenersRef.current?.();
@@ -1367,11 +1285,7 @@ const PresentationVideoAnalyticsSection = ({
         </div>
       </div>
 
-      <PresentationVideoMetricsPanel
-        locked={locked}
-        metrics={presentationVideoMetrics}
-        whatsappBreakdown={presentationVideoWhatsappBreakdown}
-      />
+      <PresentationVideoMetricsPanel locked={locked} metrics={presentationVideoMetrics} />
 
       <article className="grid min-w-0 gap-4 rounded-[26px] border border-primary/10 bg-primary-soft/55 p-4 md:p-5">
         <div className="min-w-0">
@@ -1429,7 +1343,7 @@ const PresentationVideoAnalyticsSection = ({
           </div>
         </div>
       </article>
-      <PresentationVideoDiagnosticPanel locked={locked} retentionHealth={retentionHealth} />
+      <PresentationVideoSearchTermsPanel locked={locked} summary={searchTermsSummary} />
     </section>
   );
 };
