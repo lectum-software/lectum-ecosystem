@@ -633,3 +633,32 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
+
+## Ajuste complementar: remocao da coluna Engajamento (2026-08-02)
+
+- Pedido do usuario: remover a coluna **Engajamento** da tabela de `/psicologos/lista` no Admin.
+- Frontend Admin: a tabela desktop removeu o header/celula **Engajamento** e redistribuiu as larguras das colunas restantes para manter a leitura operacional em uma linha por psicologo.
+- Frontend Admin: o resumo mobile-first dos cards tambem deixou de exibir o sinal textual de **Engajamento**, mantendo **Conversao** visivel como ultimo indicador comportamental da lista.
+- Os filtros por **Engajamento** e o contrato da API foram preservados, pois o pedido foi apenas visual sobre a coluna exibida na lista.
+- Nao houve alteracao de backend, Prisma/migrations, packages, dados, filtros disponiveis, ordenacao, paginacao ou contratos de API.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, a referencia `_product/proto/admin/Psicologos/Psicologos- Lista.png` e a captura enviada pelo usuario.
+- ADR novo nao se aplica: ajuste visual local sem nova decisao arquitetural, integracao, regra de dominio ou trade-off relevante.
+
+### Criterios complementares
+
+- [x] A tabela desktop nao exibe mais a coluna **Engajamento**.
+- [x] As linhas da tabela mantem a mesma quantidade de celulas dos headers apos a remocao.
+- [x] Os cards mobile-first nao exibem mais o sinal **Engajamento**.
+- [x] **Conversao** permanece visivel na tabela e nos cards.
+- [x] A UI permanece mobile-first na base aproximada de `390px` e sem overflow horizontal de viewport.
+- [x] Nenhum backend, Prisma/migrations, package, mock, seed ou endpoint paralelo foi criado.
+
+### Validacao complementar
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/lista/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- Browser local/headless/CDP com `next start` do Admin em `localhost:3023` e admin temporario real removido ao final:
+  - desktop `1536x1024`: headers `Rank, Psicologo, Data de cadastro, Plano, Perfil, Registro, Conversao, Acoes`, 8 celulas por linha, **Engajamento** ausente, **Conversao** presente e sem overflow horizontal;
+  - mobile base `390x844`: 8 cards reais, **Engajamento** ausente, **Conversao** presente, tabela desktop oculta e `scrollWidth=390`.
+  - screenshots salvos em `.tmp/admin-psychologists-list-no-engagement-desktop.png` e `.tmp/admin-psychologists-list-no-engagement-mobile-390.png`.

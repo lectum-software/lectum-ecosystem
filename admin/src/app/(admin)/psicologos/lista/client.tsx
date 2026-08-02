@@ -264,12 +264,6 @@ const ENGAGEMENT_FILTER_OPTIONS: PsychologistsListOption[] = [
   { count: 0, id: "pouco_ativo", label: "Pouco engajado" },
   { count: 0, id: "sem_base", label: "Sem engajamento" },
 ];
-const PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID: Record<PsychologistsListEngagementId, string> = {
-  ativo: "Engajado",
-  muito_ativo: "Muito engajado",
-  pouco_ativo: "Pouco engajado",
-  sem_base: "Sem engajamento",
-};
 const listProfileConversionCategories = new Set<PsychologistsListProfileConversionCategoryId>(
   PROFILE_CONVERSION_FILTER_OPTIONS.map(
     (option) => option.id as PsychologistsListProfileConversionCategoryId,
@@ -909,24 +903,6 @@ const resolveProfileConversionLabel = (item: PsychologistsListItem) => {
   return { label: item.profile_conversion.label, tone: "inactive" as const };
 };
 
-const resolveEngagementLabel = (item: PsychologistsListItem) => {
-  if (item.engagement.signals.interactions <= 0) {
-    return { label: "Sem engajamento", tone: "inactive" as const };
-  }
-
-  const label =
-    item.engagement.id === "sem_base"
-      ? "Pouco engajado"
-      : (PSYCHOLOGIST_ENGAGEMENT_LABEL_BY_ID[item.engagement.id] ?? item.engagement.label);
-
-  if (item.engagement.id === "muito_ativo") return { label, tone: "active" as const };
-  if (item.engagement.id === "ativo") return { label, tone: "info" as const };
-  if (item.engagement.id === "pouco_ativo" || item.engagement.id === "sem_base")
-    return { label, tone: "warning" as const };
-
-  return { label, tone: "inactive" as const };
-};
-
 const RowActions = ({ item }: { item: PsychologistsListItem }) => (
   <div className="flex shrink-0 items-center justify-center gap-1.5">
     <Link
@@ -957,7 +933,6 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
   const profile = resolveProfileLabel(item);
   const registry = resolveRegistryLabel(item);
   const profileConversion = resolveProfileConversionLabel(item);
-  const engagement = resolveEngagementLabel(item);
 
   return (
     <article
@@ -991,7 +966,6 @@ const PsychologistCard = ({ item }: { item: PsychologistsListItem }) => {
         <StatusText tone={profile.tone}>Perfil {profile.label}</StatusText>
         <StatusText tone={registry.tone}>Registro {registry.label}</StatusText>
         <StatusText tone={profileConversion.tone}>{profileConversion.label}</StatusText>
-        <StatusText tone={engagement.tone}>Engajamento {engagement.label}</StatusText>
       </div>
 
       <dl className="mt-4 grid max-w-xs gap-2 text-xs text-muted">
@@ -1025,14 +999,13 @@ const PsychologistsTable = ({
         <caption className="sr-only">Lista administrativa de psicólogos</caption>
         <colgroup>
           <col className="w-[6%]" />
-          <col className="w-[25%]" />
-          <col className="w-[12%]" />
-          <col className="w-[10%]" />
-          <col className="w-[8%]" />
-          <col className="w-[9%]" />
+          <col className="w-[28%]" />
           <col className="w-[13%]" />
           <col className="w-[10%]" />
-          <col className="w-[7%]" />
+          <col className="w-[9%]" />
+          <col className="w-[10%]" />
+          <col className="w-[16%]" />
+          <col className="w-[8%]" />
         </colgroup>
         <thead className="border-b border-border bg-surface-muted/70 text-xs text-muted">
           <tr>
@@ -1043,7 +1016,6 @@ const PsychologistsTable = ({
             <th className="px-2 py-4 font-semibold">Perfil</th>
             <th className="px-2 py-4 font-semibold">Registro</th>
             <th className="px-2 py-4 font-semibold">Conversão</th>
-            <th className="px-2 py-4 font-semibold">Engajamento</th>
             <th className="px-2 py-4 text-center font-semibold">Ações</th>
           </tr>
         </thead>
@@ -1053,7 +1025,6 @@ const PsychologistsTable = ({
             const profile = resolveProfileLabel(item);
             const registry = resolveRegistryLabel(item);
             const profileConversion = resolveProfileConversionLabel(item);
-            const engagement = resolveEngagementLabel(item);
 
             return (
               <tr
@@ -1106,9 +1077,6 @@ const PsychologistsTable = ({
                 </td>
                 <td className="px-2 py-3">
                   <StatusText tone={profileConversion.tone}>{profileConversion.label}</StatusText>
-                </td>
-                <td className="px-2 py-3">
-                  <StatusText tone={engagement.tone}>{engagement.label}</StatusText>
                 </td>
                 <td className="px-2 py-3 text-center">
                   <RowActions item={item} />
