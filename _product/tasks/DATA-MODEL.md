@@ -1017,3 +1017,16 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 - O fallback de primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
 - O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
 - O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção.
+
+Complemento 2026-08-02: em Analytics do psicologo, a secao `traffic_sources` passa a priorizar a leitura por
+origem logo apos o seletor de periodo. A origem tecnica `direct_link` deixa de ser usada no contrato privado e e
+substituida por `profile`, porque representa o perfil publico do psicologo, nao um link direto externo. Cada item de
+`traffic_sources.sources[].breakdown[]` passa a expor `metric` e `value` para suportar detalhamentos que nao sao
+cliques WhatsApp, mantendo `whatsapp_clicks` preenchido somente quando o item mede WhatsApp. As fontes reais sao:
+`important_action_event.action_type=psychologist_video_whatsapp_click` para Video de apresentacao; eventos
+`important_action_event.action_type=whatsapp_click` com alvo rastreavel para posts/respostas para Comunidades;
+`profile_view_event.source=profile_page` para acessos no dropdown Perfil; e `psychologist_favorite` combinado com
+`important_action_event.action_type=psychologist_video_favorite` para separar favoritos por video e favoritos
+persistidos sem origem de video registrada. Cliques WhatsApp de Perfil e Favoritos usam somente
+`important_action_event.action_type=whatsapp_click` com `target_type="psychologist"`, `target_id` do psicologo e
+contexto de pagina/caminho real; `contact_request` continua sendo total geral e nao e redistribuido sem origem.

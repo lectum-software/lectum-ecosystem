@@ -96,3 +96,18 @@ Apos validacao visual mobile-first, decidimos compactar o dropdown de `Video de 
 - as descricoes das subcategorias foram ajustadas para nao atribuir o clique ao video quando a leitura desejada e a navegacao de descoberta ou a pesquisa no filtro de busca.
 
 Consequencia: o contrato preserva os mesmos campos e a mesma atribuicao real; a mudanca e apenas de copy/apresentacao, sem schema, migration, mock, seed ou package novo.
+
+## Atualizacao 2026-08-02 - Origem do trafego como leitura principal
+
+Por feedback de produto, `Origem do trafego` passa a ser o primeiro bloco analitico apos o seletor de periodo. A leitura principal da secao continua sendo cliques WhatsApp atribuidos por evento first-party, mas cada dropdown pode exibir uma metrica secundaria quando ela tem fonte persistida propria.
+
+Decidimos substituir a origem privada `direct_link` por `profile`, porque `Perfil` representa o perfil publico do psicologo e nao um link direto externo. Para manter o contrato evolutivo sem criar endpoint paralelo, `traffic_sources.sources[].breakdown[]` ganhou os campos genericos `metric` e `value`, preservando `whatsapp_clicks` para itens cujo valor tambem e clique WhatsApp.
+
+Fontes usadas:
+
+- `Video de apresentacao`: `important_action_event.action_type="psychologist_video_whatsapp_click"`, com detalhamento Explorar/Resultados de busca.
+- `Comunidades`: `important_action_event.action_type="whatsapp_click"` com alvo em post/resposta autoral rastreavel, reaproveitando o agregado real por conteudo.
+- `Perfil`: cliques WhatsApp via `important_action_event.action_type="whatsapp_click"` no perfil publico e acessos via `profile_view_event.source="profile_page"`.
+- `Favoritos`: cliques WhatsApp vindos da lista de favoritos por path real; favoritos por video via `psychologist_video_favorite`; favoritos sem origem de video registrada ficam no bucket `Pelo perfil` porque `psychologist_favorite` nao possui coluna de origem.
+
+Consequencia: nao distribuimos `contact_request` por origem quando nao ha evento first-party, nao criamos schema/migration e aceitamos que favoritos historicos sem origem de video nao permitam separar outras superficies alem do bucket de perfil/legado.

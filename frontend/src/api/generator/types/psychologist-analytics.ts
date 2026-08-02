@@ -7,6 +7,7 @@ export type PsychologistAnalyticsQuery = {
 };
 
 export type PsychologistAnalyticsMetricId =
+  | "favorites_received"
   | "search_results"
   | "profile_views"
   | "whatsapp_clicks"
@@ -18,6 +19,7 @@ export type PsychologistAnalyticsMetricId =
 export type PsychologistAnalyticsMetricSource =
   | "profile_view_event"
   | "contact_request"
+  | "psychologist_favorite"
   | "professional_review"
   | "psychologist_profile"
   | "community_post";
@@ -49,6 +51,7 @@ export type PsychologistAnalyticsPeriod = {
 export type PsychologistAnalyticsMetrics = {
   search_results: number;
   profile_views: number;
+  favorites_received: number;
   whatsapp_clicks: number;
   reviews_received: number;
   rating_average: number;
@@ -118,11 +121,25 @@ export type PsychologistAnalyticsPresentationVideo = {
 
 export type PsychologistAnalyticsTrafficSourceId =
   | "communities"
-  | "direct_link"
   | "favorites"
+  | "profile"
   | "presentation_video";
 
-export type PsychologistAnalyticsTrafficSourceBreakdownId = "explore" | "search_results";
+export type PsychologistAnalyticsTrafficSourceBreakdownId =
+  | "explore"
+  | "favorites_from_profile"
+  | "favorites_from_video"
+  | "post_with_video"
+  | "post_without_video"
+  | "profile_accesses"
+  | "reply_with_video"
+  | "reply_without_video"
+  | "search_results";
+
+export type PsychologistAnalyticsTrafficSourceBreakdownMetric =
+  | "favorites"
+  | "profile_views"
+  | "whatsapp_clicks";
 
 export type PsychologistAnalyticsTrafficSearchTerm = {
   term: string;
@@ -134,6 +151,8 @@ export type PsychologistAnalyticsTrafficSourceBreakdownItem = {
   id: PsychologistAnalyticsTrafficSourceBreakdownId;
   label: string;
   description: string;
+  metric: PsychologistAnalyticsTrafficSourceBreakdownMetric;
+  value: number;
   whatsapp_clicks: number;
   percentage: number;
   top_search_terms: PsychologistAnalyticsTrafficSearchTerm[];

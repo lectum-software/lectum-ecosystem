@@ -570,3 +570,38 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - `git diff --check`
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada; a validacao visual do fonte/build confirmou a compactacao mobile-first do dropdown e o fluxo privado permanece protegido.
+
+## Ajuste complementar em 2026-08-02 - Origem do trafego como bloco principal
+
+- Pedido do usuario: mover `Origem do trafego` para a primeira posicao apos o seletor de periodo e detalhar os dropdowns de `Comunidades`, `Perfil` e `Favoritos`.
+- A UI mobile-first agora renderiza `Origem do trafego` imediatamente apos o seletor de periodo quando a consulta carregou sem erro.
+- A origem `Perfil` passou a representar o perfil publico do psicologo; no contrato privado, o identificador deixa de ser `direct_link` e passa a ser `profile`.
+- Todos os headers de origem exibem o numero geral de cliques WhatsApp atribuiveis por evento first-party daquela origem.
+- O dropdown de `Comunidades` usa os totais reais ja agregados em `communities.content.whatsapp_clicks_by_content`: `Post com video`, `Post sem video`, `Resposta com video` e `Resposta sem video`.
+- O dropdown de `Perfil` exibe `Acessos ao perfil` a partir de `profile_view_event.source=profile_page`.
+- O dropdown de `Favoritos` separa `Pelo perfil` e `Pelo video de apresentacao`; o video usa `important_action_event.action_type=psychologist_video_favorite` e o perfil usa favoritos persistidos no periodo sem origem de video registrada.
+- O card `Favoritado` deixou de ser zerado/untracked e passou a usar `psychologist_favorite` real do periodo.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0126-analytics-origem-trafego-zerada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] `Origem do trafego` aparece como primeiro bloco apos o seletor de periodo na pagina carregada.
+- [x] `Perfil` nao e descrito como link direto e usa a origem tecnica `profile` no contrato privado.
+- [x] `Comunidades`, `Perfil`, `Favoritos` e `Video de apresentacao` exibem o total de cliques WhatsApp no header do dropdown.
+- [x] O dropdown de `Comunidades` mostra cliques WhatsApp por `Post com video`, `Post sem video`, `Resposta com video` e `Resposta sem video`.
+- [x] O dropdown de `Perfil` mostra a quantidade de acessos ao perfil.
+- [x] O dropdown de `Favoritos` mostra favoritos pelo perfil e pelo video de apresentacao com dados persistidos/rastreados.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+
+### Validacao do complemento
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/DTOs/IAnalyticsDTO.ts" "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir frontend exec biome check --write "src/api/generator/types/psychologist-analytics.ts" "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: `Invoke-WebRequest` retornou `307` sem sessao autenticada; a validacao de fonte/build confirmou o bloco de Origem do trafego como primeira secao apos o seletor e os dropdowns por origem.

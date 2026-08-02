@@ -9,7 +9,6 @@ import {
   Clock3,
   Eye,
   Heart,
-  Link2,
   type LucideIcon,
   MessageCircle,
   PlayCircle,
@@ -124,11 +123,11 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
     source: "profile_view_event",
   },
   {
-    id: "favorited",
+    id: "favorites_received",
     icon: Heart,
     label: "Favoritado",
-    value: "0",
-    source: "untracked",
+    value: toCount(data?.metrics.favorites_received),
+    source: "psychologist_favorite",
   },
   {
     id: "reviews_received",
@@ -150,8 +149,8 @@ const metricCards = (data?: PsychologistAnalyticsResponse): AnalyticsCardView[] 
 
 const trafficSourceIcons: Record<PsychologistAnalyticsTrafficSource["id"], LucideIcon> = {
   communities: UsersRound,
-  direct_link: Link2,
   favorites: Heart,
+  profile: Eye,
   presentation_video: PlayCircle,
 };
 
@@ -173,6 +172,8 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
           id: "explore",
           label: "Explorar",
           description: "Cliques no WhatsApp feitos a partir da navegação de descoberta.",
+          metric: "whatsapp_clicks",
+          value: 0,
           whatsapp_clicks: 0,
           percentage: 0,
           top_search_terms: [],
@@ -181,6 +182,8 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
           id: "search_results",
           label: "Resultados de busca",
           description: "Cliques no WhatsApp feitos a partir de pesquisa no filtro de busca",
+          metric: "whatsapp_clicks",
+          value: 0,
           whatsapp_clicks: 0,
           percentage: 0,
           top_search_terms: [],
@@ -190,34 +193,105 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
     {
       id: "communities",
       label: "Comunidades",
-      description:
-        "Acessos originados por posts, respostas e demais interações dentro das comunidades.",
+      description: "Cliques no WhatsApp originados em posts e respostas nas comunidades.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
       badge: null,
-      breakdown: null,
+      breakdown: [
+        {
+          id: "post_with_video",
+          label: "Post com vídeo",
+          description: "Cliques no WhatsApp vindos de posts com vídeo nas comunidades.",
+          metric: "whatsapp_clicks",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+        {
+          id: "post_without_video",
+          label: "Post sem vídeo",
+          description: "Cliques no WhatsApp vindos de posts sem vídeo nas comunidades.",
+          metric: "whatsapp_clicks",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+        {
+          id: "reply_with_video",
+          label: "Resposta com vídeo",
+          description: "Cliques no WhatsApp vindos de respostas com vídeo nas comunidades.",
+          metric: "whatsapp_clicks",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+        {
+          id: "reply_without_video",
+          label: "Resposta sem vídeo",
+          description: "Cliques no WhatsApp vindos de respostas sem vídeo nas comunidades.",
+          metric: "whatsapp_clicks",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+      ],
     },
     {
-      id: "direct_link",
+      id: "profile",
       label: "Perfil",
-      description: "Acessos originados pelo link do seu perfil compartilhado externamente.",
+      description: "Cliques no WhatsApp realizados a partir do perfil público do psicólogo.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
       badge: null,
-      breakdown: null,
+      breakdown: [
+        {
+          id: "profile_accesses",
+          label: "Acessos ao perfil",
+          description: "Aberturas reais do perfil público registradas no período.",
+          metric: "profile_views",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+      ],
     },
     {
       id: "favorites",
       label: "Favoritos",
-      description:
-        "Acessos originados a partir da área de psicólogos favoritos, retorno de usuários que já favoritaram seu perfil antes.",
+      description: "Cliques no WhatsApp realizados a partir da lista de favoritos.",
       profile_views: 0,
       whatsapp_clicks: 0,
       conversion_rate: 0,
       badge: null,
-      breakdown: null,
+      breakdown: [
+        {
+          id: "favorites_from_profile",
+          label: "Pelo perfil",
+          description: "Favoritos persistidos no perfil ou sem origem de vídeo registrada.",
+          metric: "favorites",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+        {
+          id: "favorites_from_video",
+          label: "Pelo vídeo de apresentação",
+          description: "Favoritos registrados a partir do vídeo de apresentação.",
+          metric: "favorites",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
+      ],
     },
   ],
 };
@@ -1449,7 +1523,7 @@ type TrafficSourceWithDisplay = PsychologistAnalyticsTrafficSource & {
 const TRAFFIC_SOURCE_ORDER: Record<PsychologistAnalyticsTrafficSource["id"], number> = {
   presentation_video: 0,
   communities: 1,
-  direct_link: 2,
+  profile: 2,
   favorites: 3,
 };
 
@@ -1483,6 +1557,10 @@ const TrafficBadge = ({ type }: { type: TrafficSourceWithDisplay["displayBadge"]
   );
 };
 
+const getTrafficBreakdownValue = (
+  item: NonNullable<TrafficSourceWithDisplay["breakdown"]>[number],
+) => item.value ?? item.whatsapp_clicks;
+
 const TrafficSourceBreakdown = ({
   items,
   locked,
@@ -1496,7 +1574,9 @@ const TrafficSourceBreakdown = ({
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-extrabold text-foreground">{item.label}</p>
-            <p className="mt-1 text-xs font-semibold leading-5 text-muted">{item.description}</p>
+            {item.description ? (
+              <p className="mt-1 text-xs font-semibold leading-5 text-muted">{item.description}</p>
+            ) : null}
           </div>
           <div className="shrink-0 text-right">
             <p
@@ -1505,7 +1585,7 @@ const TrafficSourceBreakdown = ({
                 locked && "select-none blur-[5px]",
               )}
             >
-              {toCount(item.whatsapp_clicks)}
+              {toCount(getTrafficBreakdownValue(item))}
             </p>
           </div>
         </div>
@@ -1591,7 +1671,6 @@ const TrafficSourceSection = ({
             const Icon = trafficSourceIcons[source.id];
             const hasBreakdown = Boolean(source.breakdown?.length);
             const expanded = expandedSourceId === source.id;
-            const isPresentationVideoSource = source.id === "presentation_video";
             const rowContent = (
               <>
                 <div className="flex min-w-0 items-center gap-3">
@@ -1605,7 +1684,7 @@ const TrafficSourceSection = ({
                       </p>
                       <TrafficBadge type={source.displayBadge} />
                     </div>
-                    {!isPresentationVideoSource && source.description ? (
+                    {source.description ? (
                       <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
                         {source.description}
                       </p>
@@ -1663,7 +1742,6 @@ const TrafficSourceSection = ({
         {sources.map((source) => {
           const Icon = trafficSourceIcons[source.id];
           const expanded = expandedSourceId === source.id;
-          const isPresentationVideoSource = source.id === "presentation_video";
 
           return (
             <article
@@ -1694,16 +1772,14 @@ const TrafficSourceSection = ({
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        {isPresentationVideoSource ? (
-                          <span
-                            className={cn(
-                              "text-sm font-black leading-none tracking-[-0.04em] text-foreground",
-                              locked && "select-none blur-[5px]",
-                            )}
-                          >
-                            {toCount(source.whatsapp_clicks)}
-                          </span>
-                        ) : null}
+                        <span
+                          className={cn(
+                            "text-sm font-black leading-none tracking-[-0.04em] text-foreground",
+                            locked && "select-none blur-[5px]",
+                          )}
+                        >
+                          {toCount(source.whatsapp_clicks)}
+                        </span>
                         <ChevronDown
                           className={cn("h-4 w-4 text-subtle transition", expanded && "rotate-180")}
                           aria-hidden
@@ -1716,18 +1792,8 @@ const TrafficSourceSection = ({
 
               {expanded ? (
                 <div className="grid gap-2 border-border border-t px-4 py-4 text-sm text-muted">
-                  {!isPresentationVideoSource && source.description ? (
+                  {source.description ? (
                     <p className="font-semibold leading-5 text-muted">{source.description}</p>
-                  ) : null}
-                  {!isPresentationVideoSource ? (
-                    <div className="grid gap-2 rounded-2xl bg-surface p-3">
-                      <p className={cn(locked && "select-none blur-[5px]")}>
-                        <span className="font-extrabold text-foreground">
-                          {toCount(source.whatsapp_clicks)}
-                        </span>{" "}
-                        cliques no WhatsApp
-                      </p>
-                    </div>
                   ) : null}
                   {source.breakdown ? (
                     <TrafficSourceBreakdown items={source.breakdown} locked={locked} />
@@ -1772,6 +1838,10 @@ export const ProfessionalAnalyticsLogic = () => {
           onCustomRangeApply={setCustomRange}
         />
 
+        {!analytics.isLoading && !shouldShowError ? (
+          <TrafficSourceSection locked={isAnalyticsPreview} traffic={getTrafficSources(data)} />
+        ) : null}
+
         {analytics.isLoading ? <LoadingState label="Carregando analytics reais" /> : null}
 
         {shouldShowError ? (
@@ -1805,10 +1875,6 @@ export const ProfessionalAnalyticsLogic = () => {
             communities={getCommunitiesAnalytics(data)}
             locked={isAnalyticsPreview}
           />
-        ) : null}
-
-        {!shouldShowError ? (
-          <TrafficSourceSection locked={isAnalyticsPreview} traffic={getTrafficSources(data)} />
         ) : null}
       </section>
     </PrivateTemplate>

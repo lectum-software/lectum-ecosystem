@@ -42,6 +42,14 @@ type PresentationVideoActionEvent = {
   occurred_at: Date;
   path: string | null;
 };
+type PsychologistWhatsappActionEvent = {
+  occurred_at: Date;
+  page_kind: string;
+  path: string | null;
+};
+type FavoriteReceivedEvent = {
+  createdAt: Date;
+};
 
 const trafficSourceDefinitions: Array<
   Pick<PsychologistAnalyticsTrafficSource, "description" | "id" | "label">
@@ -54,19 +62,17 @@ const trafficSourceDefinitions: Array<
   {
     id: "communities",
     label: "Comunidades",
-    description:
-      "Acessos originados por posts, respostas e demais interações dentro das comunidades.",
+    description: "Cliques no WhatsApp originados em posts e respostas nas comunidades.",
   },
   {
-    id: "direct_link",
+    id: "profile",
     label: "Perfil",
-    description: "Acessos originados pelo link do perfil compartilhado externamente.",
+    description: "Cliques no WhatsApp realizados a partir do perfil público do psicólogo.",
   },
   {
     id: "favorites",
     label: "Favoritos",
-    description:
-      "Acessos originados a partir da área de psicólogos favoritos, retorno de usuários que já favoritaram seu perfil antes.",
+    description: "Cliques no WhatsApp realizados a partir da lista de favoritos.",
   },
 ];
 
@@ -152,34 +158,173 @@ const buildPresentationVideoTrafficBreakdown = (
 
     return {
       ...definition,
+      metric: "whatsapp_clicks",
       percentage: percentage(whatsappClicks, totalWhatsappClicks),
       top_search_terms: definition.id === "search_results" ? topSearchTerms : [],
+      value: whatsappClicks,
       whatsapp_clicks: whatsappClicks,
     };
   });
 };
 
-const toTrafficSources = (
-  presentationVideoActions: PresentationVideoActionEvent[] = [],
-): PsychologistAnalyticsTrafficSources => {
+const buildTrafficBreakdownItem = (input: {
+  description: string;
+  id: PsychologistAnalyticsTrafficSourceBreakdownItem["id"];
+  label: string;
+  metric: PsychologistAnalyticsTrafficSourceBreakdownItem["metric"];
+  total?: number;
+  value: number;
+}): PsychologistAnalyticsTrafficSourceBreakdownItem => ({
+  id: input.id,
+  label: input.label,
+  description: input.description,
+  metric: input.metric,
+  percentage: input.metric === "whatsapp_clicks" ? percentage(input.value, input.total ?? 0) : 0,
+  top_search_terms: [],
+  value: input.value,
+  whatsapp_clicks: input.metric === "whatsapp_clicks" ? input.value : 0,
+});
+
+const buildCommunityTrafficBreakdown = (
+  communities: PsychologistAnalyticsCommunities,
+): PsychologistAnalyticsTrafficSourceBreakdownItem[] => {
+  const totalWhatsappClicks = communities.content.whatsapp_clicks_by_content.reduce(
+    (total, item) => total + item.whatsapp_clicks,
+    0,
+  );
+  const labels: Record<PsychologistAnalyticsCommunityContentBreakdownId, string> = {
+    post_with_video: "Post com vídeo",
+    post_without_video: "Post sem vídeo",
+    reply_with_video: "Resposta com vídeo",
+    reply_without_video: "Resposta sem vídeo",
+  };
+  const descriptions: Record<PsychologistAnalyticsCommunityContentBreakdownId, string> = {
+    post_with_video: "Cliques no WhatsApp vindos de posts com vídeo nas comunidades.",
+    post_without_video: "Cliques no WhatsApp vindos de posts sem vídeo nas comunidades.",
+    reply_with_video: "Cliques no WhatsApp vindos de respostas com vídeo nas comunidades.",
+    reply_without_video: "Cliques no WhatsApp vindos de respostas sem vídeo nas comunidades.",
+  };
+
+  return communities.content.whatsapp_clicks_by_content.map((item) =>
+    buildTrafficBreakdownItem({
+      id: item.id,
+      label: labels[item.id],
+      description: descriptions[item.id],
+      metric: "whatsapp_clicks",
+      total: totalWhatsappClicks,
+      value: item.whatsapp_clicks,
+    }),
+  );
+};
+
+const isFavoritesTrafficPath = (path: string | null) => {
+  const normalized = (path ?? "").toLowerCase();
+
+  return normalized.includes("/favorites") || normalized.includes("/favoritos");
+};
+
+const toTrafficSources = (input: {
+  communities: PsychologistAnalyticsCommunities;
+  favoriteEvents: FavoriteReceivedEvent[];
+  presentationVideoActions?: PresentationVideoActionEvent[];
+  profileViews: number;
+  psychologistWhatsappActions: PsychologistWhatsappActionEvent[];
+}): PsychologistAnalyticsTrafficSources => {
+  const presentationVideoActions = input.presentationVideoActions ?? [];
   const presentationVideoBreakdown =
     buildPresentationVideoTrafficBreakdown(presentationVideoActions);
   const presentationVideoWhatsappClicks = presentationVideoBreakdown.reduce(
     (total, item) => total + item.whatsapp_clicks,
     0,
   );
-  const sources = trafficSourceDefinitions.map((source) => ({
-    ...source,
-    breakdown: source.id === "presentation_video" ? presentationVideoBreakdown : null,
-    profile_views: 0,
-    whatsapp_clicks: source.id === "presentation_video" ? presentationVideoWhatsappClicks : 0,
-    conversion_rate: 0,
-    badge: null,
-  }));
+  const communityBreakdown = buildCommunityTrafficBreakdown(input.communities);
+  const communityWhatsappClicks = input.communities.diagnosis.total_whatsapp_clicks;
+  const favoritesWhatsappClicks = input.psychologistWhatsappActions.filter((action) =>
+    isFavoritesTrafficPath(action.path),
+  ).length;
+  const profileWhatsappClicks = input.psychologistWhatsappActions.filter(
+    (action) => action.page_kind === "psychologist_profile" && !isFavoritesTrafficPath(action.path),
+  ).length;
+  const favoritesFromVideo = presentationVideoActions.filter(
+    (action) => action.action_type === "psychologist_video_favorite",
+  ).length;
+  const favoritesFromProfile = Math.max(0, input.favoriteEvents.length - favoritesFromVideo);
+  const favoriteBreakdown = [
+    buildTrafficBreakdownItem({
+      id: "favorites_from_profile",
+      label: "Pelo perfil",
+      description: "Favoritos persistidos no perfil ou sem origem de vídeo registrada.",
+      metric: "favorites",
+      value: favoritesFromProfile,
+    }),
+    buildTrafficBreakdownItem({
+      id: "favorites_from_video",
+      label: "Pelo vídeo de apresentação",
+      description: "Favoritos registrados a partir do vídeo de apresentação.",
+      metric: "favorites",
+      value: favoritesFromVideo,
+    }),
+  ];
+  const profileBreakdown = [
+    buildTrafficBreakdownItem({
+      id: "profile_accesses",
+      label: "Acessos ao perfil",
+      description: "Aberturas reais do perfil público registradas no período.",
+      metric: "profile_views",
+      value: input.profileViews,
+    }),
+  ];
+  const sources = trafficSourceDefinitions.map((source) => {
+    const sourceMetrics = {
+      communities: {
+        breakdown: communityBreakdown,
+        profile_views: 0,
+        whatsapp_clicks: communityWhatsappClicks,
+      },
+      favorites: {
+        breakdown: favoriteBreakdown,
+        profile_views: 0,
+        whatsapp_clicks: favoritesWhatsappClicks,
+      },
+      presentation_video: {
+        breakdown: presentationVideoBreakdown,
+        profile_views: 0,
+        whatsapp_clicks: presentationVideoWhatsappClicks,
+      },
+      profile: {
+        breakdown: profileBreakdown,
+        profile_views: input.profileViews,
+        whatsapp_clicks: profileWhatsappClicks,
+      },
+    } satisfies Record<
+      PsychologistAnalyticsTrafficSource["id"],
+      {
+        breakdown: PsychologistAnalyticsTrafficSourceBreakdownItem[];
+        profile_views: number;
+        whatsapp_clicks: number;
+      }
+    >;
+    const metrics = sourceMetrics[source.id];
+
+    return {
+      ...source,
+      breakdown: metrics.breakdown,
+      profile_views: metrics.profile_views,
+      whatsapp_clicks: metrics.whatsapp_clicks,
+      conversion_rate: 0,
+      badge: null,
+    };
+  });
   const updatedAt =
-    presentationVideoActions
-      .filter((action) => action.action_type === PROFILE_VIDEO_WHATSAPP_ACTION)
-      .map((action) => action.occurred_at)
+    [
+      ...presentationVideoActions
+        .filter((action) => action.action_type === PROFILE_VIDEO_WHATSAPP_ACTION)
+        .map((action) => action.occurred_at),
+      ...input.psychologistWhatsappActions.map((action) => action.occurred_at),
+      ...input.favoriteEvents.map((event) => event.createdAt),
+      input.communities.updated_at,
+    ]
+      .filter((date): date is Date => Boolean(date))
       .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
 
   return {
@@ -208,6 +353,14 @@ const toCards = (
     source: "profile_view_event",
     unit: "count",
     description: "Aberturas reais do perfil profissional registradas no período selecionado.",
+  },
+  {
+    id: "favorites_received",
+    label: "Favoritos recebidos",
+    value: metrics.favorites_received,
+    source: "psychologist_favorite",
+    unit: "count",
+    description: "Pacientes que favoritaram seu perfil no período selecionado.",
   },
   {
     id: "whatsapp_clicks",
@@ -872,6 +1025,8 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       postsAggregate,
       presentationVideoSessions,
       presentationVideoActionEvents,
+      psychologistWhatsappActionEvents,
+      favoriteEvents,
       communities,
     ] = await Promise.all([
       prisma.profile_view_event.count({
@@ -1034,6 +1189,43 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           path: true,
         },
       }),
+      prisma.important_action_event.findMany({
+        where: {
+          action_type: "whatsapp_click",
+          deleted: false,
+          occurred_at: createdAtWindow,
+          target_id: userId,
+          target_type: "psychologist",
+          OR: [
+            {
+              user_id: null,
+            },
+            {
+              user_id: {
+                not: userId,
+              },
+            },
+          ],
+        },
+        select: {
+          occurred_at: true,
+          page_kind: true,
+          path: true,
+        },
+      }),
+      prisma.psychologist_favorite.findMany({
+        where: {
+          psychologist_id: userId,
+          deleted: false,
+          createdAt: createdAtWindow,
+          user_id: {
+            not: userId,
+          },
+        },
+        select: {
+          createdAt: true,
+        },
+      }),
       this.buildCommunities(userId, createdAtWindow),
     ]);
     const currentPresentationVideoSessions = profile?.video_url
@@ -1045,6 +1237,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
     const metrics = {
       search_results: searchResults,
       profile_views: profileViews,
+      favorites_received: favoriteEvents.length,
       whatsapp_clicks: whatsappClicks,
       reviews_received: reviewsReceived,
       rating_average: profile?.rating_avg || 0,
@@ -1173,7 +1366,13 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       cards: toCards(metrics),
       presentation_video: presentationVideo,
       communities,
-      traffic_sources: toTrafficSources(presentationVideoActionEvents),
+      traffic_sources: toTrafficSources({
+        communities,
+        favoriteEvents,
+        presentationVideoActions: presentationVideoActionEvents,
+        profileViews,
+        psychologistWhatsappActions: psychologistWhatsappActionEvents,
+      }),
       unavailable: [],
     };
   }
