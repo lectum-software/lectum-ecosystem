@@ -56,6 +56,8 @@ deve mostrar volume bruto de acoes reais do psicologo.
 - Ajuste pos-feedback de 2026-08-02: o titulo principal **Atividade e engajamento** passa a exibir duas tags
   sinteticas, uma de atividade por `posts + replies` e outra de engajamento recebido com a mesma nomenclatura
   Alto/Padrao/Baixo/Sem engajamento usada na tabela.
+- Ajuste visual de 2026-08-02: as tags do titulo principal deixam de renderizar icones internos e permanecem apenas
+  com texto, preservando o diagnostico, a cor e a fonte real de dados.
 
 ## Consequencias
 
@@ -70,6 +72,8 @@ deve mostrar volume bruto de acoes reais do psicologo.
   topo do bloco.
 - As tags no titulo principal usam os dados reais ja carregados pela aba Estatisticas, sem endpoint, mock, migration ou
   package adicional.
+- Remover os icones das tags reduz ruido visual no cabecalho e nao altera contrato, fonte de dados, thresholds ou
+  calculos de atividade/engajamento.
 - A API preserva o endpoint existente, sem migration, package novo, seed ou backfill.
 - A ADR-0373 fica superada para a metrica principal de Atividade; sua cobertura por tipo de resposta permanece
   disponivel apenas como sinal auxiliar.
@@ -92,6 +96,8 @@ deve mostrar volume bruto de acoes reais do psicologo.
   `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou cabecalho com tags
   **Muito ativo** e **Alto engajamento**, ausencia do contador **Taxa de cobertura** no carrossel principal e coluna
   **Engajamento** com **Alto engajamento**, **Engajamento padrao**, **Baixo engajamento** e **Sem engajamento**.
+- Browser local do ajuste visual de 2026-08-02 confirmou que as tags **Muito ativo** e **Alto engajamento** no
+  cabecalho principal renderizam somente texto, sem `svg` interno.
 
 ## Pendencias
 

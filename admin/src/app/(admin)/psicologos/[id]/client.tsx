@@ -3105,7 +3105,7 @@ const formatActiveCommunitiesColumnHeading = (count: number) =>
 
 const communityEngagementDiagnosisClassName = (id: string | undefined) =>
   cn(
-    "gap-1.5 whitespace-nowrap",
+    "whitespace-nowrap",
     id === "muito_ativo" && "bg-success/10 text-success",
     id === "ativo" && "bg-primary-soft text-primary",
     id === "pouco_ativo" && "bg-warning/10 text-warning",
@@ -6951,7 +6951,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                   className={communityEngagementDiagnosisClassName(communityActivityDiagnosis.id)}
                   title={`Atividade: ${communityActivityDiagnosis.label}`}
                 >
-                  <Activity aria-hidden className="h-3.5 w-3.5" />
                   {communityActivityDiagnosis.label}
                 </Badge>
                 <Badge
@@ -6960,7 +6959,6 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: st
                     communityEngagementDiagnosis,
                   )}`}
                 >
-                  <Heart aria-hidden className="h-3.5 w-3.5" />
                   {formatPsychologistCommunityEngagementLabel(communityEngagementDiagnosis)}
                 </Badge>
                 {isCommunityRefreshing ? (

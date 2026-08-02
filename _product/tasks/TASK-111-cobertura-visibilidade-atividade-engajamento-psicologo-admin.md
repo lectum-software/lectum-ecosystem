@@ -198,3 +198,26 @@ Pedido complementar do produto para a mesma superficie `/psicologos/[id]?tab=est
 - Smoke visual/DOM confirmou cabecalho **Atividade e engajamento** com tags **Muito ativo** e
   **Alto engajamento**, ausencia de **Taxa de cobertura** no carrossel e coluna **Engajamento** com
   **Alto engajamento**, **Engajamento padrao**, **Baixo engajamento** e **Sem engajamento**.
+
+## Ajuste visual 2026-08-02 - tags sem icones
+
+Pedido complementar do produto para a mesma superficie `/psicologos/[id]?tab=estatisticas`:
+
+- remover os icones das tags **Muito ativo** e **Alto engajamento** ao lado do titulo
+  **Atividade e engajamento**, mantendo somente o texto e a mesma cor/diagnostico.
+
+### Criterios do ajuste visual
+
+- [x] As tags do titulo **Atividade e engajamento** exibem somente texto, sem icones internos.
+- [x] A regra de atividade e engajamento continua usando apenas dados reais ja carregados pela aba.
+- [x] Nenhum package novo, schema Prisma ou migration foi criado.
+- [x] ADR-0374 foi atualizado com a decisao visual.
+
+### Validacao do ajuste visual
+
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir admin build` - OK.
+- Browser local Admin em
+  `localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` - OK, via Chrome headless autenticado com
+  sessao administrativa real existente; smoke DOM confirmou as tags **Muito ativo** e **Alto engajamento** sem `svg`
+  interno.
