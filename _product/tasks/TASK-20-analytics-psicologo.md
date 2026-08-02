@@ -767,7 +767,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A UI mobile-first do bloco `Video de apresentacao` agora renderiza `Termos pesquisados` logo apos o card azul de retencao e lista ate 5 termos vindos de `presentation_video.search_terms`.
 - O tracking real de impressoes de busca passou a persistir `profile_view_event.search_context_path`, sanitizado com a allowlist de parametros de busca/filtro, para que novas impressoes `source="search_result"` carreguem o contexto necessario sem query sensivel arbitraria.
 - O backend de `GET /api/private/psychologist/analytics` agrega esses caminhos reais para preencher `presentation_video.search_terms` com `term`, `impressions` e `percentage`, sem usar cliques WhatsApp, sem redistribuir `contact_request` e sem backfill historico.
-- O tooltip usa o texto `Principais termos que exibiram seu video nos resultados de busca.` e fica acessivel no icone de informacao por `title`, foco e hover, com fundo neutro sem destaque azul.
+- O tooltip usa o texto `Principais termos que exibiram seu video nos resultados de busca.` e alterna exibicao/ocultacao no clique do icone de informacao, com `aria-expanded` e fundo neutro sem destaque azul.
 - O chip de total `0 cliques` foi removido do cabecalho; quando existem impressoes sem termo textual salvo, a UI mostra estado honesto sem inventar termo.
 - Migration aplicada: `20260802181732_add_profile_search_context_path`.
 - Nenhum package novo, mock, seed, dado artificial, endpoint simulado ou backfill foi criado.
@@ -780,7 +780,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] O contrato privado expoe `presentation_video.search_terms` com dados reais de `profile_view_event.search_context_path`.
 - [x] Novas impressoes de busca persistem somente contexto sanitizado pela allowlist de parametros permitidos.
 - [x] O chip de total `0 cliques` nao e renderizado no bloco.
-- [x] A tooltip usa fundo neutro, sem fundo azul, e informa `Principais termos que exibiram seu video nos resultados de busca.`.
+- [x] A tooltip usa fundo neutro, sem fundo azul, informa `Principais termos que exibiram seu video nos resultados de busca.` e abre/fecha no clique do icone.
 - [x] Estados sem termo textual ou sem impressao usam mensagens honestas, sem inventar dados.
 - [x] Nenhum mock, seed, endpoint simulado, package novo ou backfill foi criado.
 - [x] ADR, DATA-MODEL e documentacao da task foram atualizados.

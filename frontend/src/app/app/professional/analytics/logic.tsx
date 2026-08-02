@@ -747,11 +747,18 @@ const PresentationVideoSearchTermsPanel = ({
   locked?: boolean;
   summary: PresentationVideoSearchTermsSummary;
 }) => {
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const hasTerms = summary.terms.length > 0;
   const emptyDescription =
     summary.searchResultImpressions > 0
       ? "Há exibições do vídeo em resultados de busca, mas nenhum termo textual foi registrado neste período."
       : "Nenhum termo pesquisado exibiu seu vídeo nos resultados neste período.";
+  const closeTooltip = useCallback(() => {
+    setIsTooltipVisible(false);
+  }, []);
+  const toggleTooltip = useCallback(() => {
+    setIsTooltipVisible((current) => !current);
+  }, []);
 
   return (
     <div className="rounded-[22px] border border-primary/10 bg-surface px-3 py-3 text-sm leading-6 text-muted">
@@ -761,15 +768,24 @@ const PresentationVideoSearchTermsPanel = ({
             Termos pesquisados
           </p>
           <button
-            aria-describedby="presentation-video-search-terms-tooltip"
+            aria-controls="presentation-video-search-terms-tooltip"
+            aria-describedby={
+              isTooltipVisible ? "presentation-video-search-terms-tooltip" : undefined
+            }
+            aria-expanded={isTooltipVisible}
             aria-label={SEARCH_TERMS_TOOLTIP}
-            className="group relative grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border bg-surface text-primary transition hover:border-primary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-            title={SEARCH_TERMS_TOOLTIP}
+            className="relative grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border bg-surface text-primary transition hover:border-primary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+            onBlur={closeTooltip}
+            onClick={toggleTooltip}
             type="button"
           >
             <Info className="h-3.5 w-3.5" aria-hidden />
             <span
-              className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-60 rounded-2xl border border-border bg-surface px-3 py-2 text-left text-xs font-semibold leading-5 text-foreground shadow-[var(--lectum-shadow-soft)] group-focus:block group-hover:block"
+              aria-hidden={!isTooltipVisible}
+              className={cn(
+                "pointer-events-none absolute right-0 top-full z-20 mt-2 w-60 rounded-2xl border border-border bg-surface px-3 py-2 text-left text-xs font-semibold leading-5 text-foreground shadow-[var(--lectum-shadow-soft)]",
+                isTooltipVisible ? "block" : "hidden",
+              )}
               id="presentation-video-search-terms-tooltip"
               role="tooltip"
             >
