@@ -127,3 +127,41 @@ comunidade, pois perfil publico e video de apresentacao ja sao detalhados no blo
 
 Por decisao de produto nesta execucao, **Atividade** voltou a ser uma metrica bruta de volume de acoes. Cobertura,
 video e qualidade permanecem como leituras separadas para analise posterior, sem aumentar a contagem de atividade.
+
+## Complemento 2026-08-02 - tabela por comunidade
+
+Pedido complementar do produto para a mesma superficie `/psicologos/[id]?tab=estatisticas`:
+
+- a coluna **Engajamento** da tabela por comunidade deve usar copy de intensidade de engajamento recebido
+  (**Alto engajamento**, **Engajamento padrao**, **Baixo engajamento**, **Sem engajamento**), em vez de
+  **Muito engajado**/**Engajado**;
+- as colunas **Posts** e **Respostas** devem exibir, abaixo do numero, a taxa real **Com video** e **Sem video**,
+  calculada por comunidade com `community_post.media_type`, `community_post_media` e `post_reply.media_type`;
+- o titulo do bloco **Atividade e engajamento por comunidade** deve exibir tambem a tag de atividade
+  (**Muito ativo**, **Ativo**, etc.) calculada somente por `posts + replies` do periodo.
+
+### Criterios complementares
+
+- [x] A coluna **Engajamento** da tabela por comunidade usa labels **Alto engajamento**,
+  **Engajamento padrao**, **Baixo engajamento** e **Sem engajamento**.
+- [x] Cada linha exibe, em **Posts**, as taxas reais **Com video** e **Sem video** abaixo do total.
+- [x] Cada linha exibe, em **Respostas**, as taxas reais **Com video** e **Sem video** abaixo do total.
+- [x] As taxas por comunidade sao calculadas no backend com formatos reais de posts/respostas, sem mocks,
+  seeds, backfill ou endpoint paralelo.
+- [x] O titulo do bloco mostra uma tag de atividade calculada por `posts + replies` do periodo selecionado.
+- [x] Nenhum package novo, schema Prisma ou migration foi criado.
+- [x] ADR-0374 foi atualizado com a decisao complementar.
+
+### Validacao complementar
+
+- `pnpm --dir backend check` - OK.
+- `pnpm --dir admin check` - OK.
+- `pnpm --dir backend build` - OK.
+- `pnpm --dir admin build` - OK.
+- `pnpm check` - OK.
+- Smoke backend real via `showAdminPsychologistStatistics({ period: "all" })` para
+  `cmrgztri7000tn0uh1q4n8vxf` - OK, retornando `posts_video_rate`, `replies_video_rate` e labels
+  **Alto/Padrao/Baixo/Sem engajamento**.
+- Browser local Admin em `localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` - OK,
+  com tag **Muito ativo** no titulo do bloco, taxas **Com video/Sem video** abaixo de Posts/Respostas e
+  coluna **Engajamento** com a nova copy.

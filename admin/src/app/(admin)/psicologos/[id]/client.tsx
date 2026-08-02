@@ -3131,7 +3131,7 @@ const getCommunityEngagementDiagnosis = (
 ): NonNullable<PsychologistStatisticsCommunityItem["engagement_diagnosis"]> =>
   community.engagement_diagnosis ?? {
     id: "sem_base",
-    label: "Sem base",
+    label: "Sem engajamento",
     source: "community_post+post_reply+post_vote.user_id",
   };
 
@@ -3139,10 +3139,10 @@ const PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_LABEL_BY_ID: Record<
   AdminPsychologistStatistics["community"]["engagement_diagnosis"]["id"],
   string
 > = {
-  ativo: "Engajado",
-  muito_ativo: "Muito engajado",
-  pouco_ativo: "Pouco engajado",
-  sem_base: "Sem base",
+  ativo: "Engajamento padrão",
+  muito_ativo: "Alto engajamento",
+  pouco_ativo: "Baixo engajamento",
+  sem_base: "Sem engajamento",
 };
 
 const formatPsychologistCommunityEngagementLabel = (
@@ -3174,11 +3174,7 @@ const readStatisticsMetricValue = (
   return metric?.available && typeof metric.value === "number" ? metric.value : 0;
 };
 
-const classifyCommunityActivityBadge = (
-  metrics: Map<string, AdminPsychologistEngagementMetric>,
-) => {
-  const actions =
-    readStatisticsMetricValue(metrics, "posts") + readStatisticsMetricValue(metrics, "replies");
+const classifyCommunityActivityBadgeByActions = (actions: number) => {
   let id: CommunityActivityBadgeId = "sem_base";
 
   if (actions >= 12) id = "muito_ativo";
@@ -3199,6 +3195,11 @@ const classifyCommunityActivityBadge = (
       "Diagnóstico de atividade por ações brutas: posts autorais e respostas criadas no período selecionado.",
   };
 };
+
+const classifyCommunityActivityBadge = (metrics: Map<string, AdminPsychologistEngagementMetric>) =>
+  classifyCommunityActivityBadgeByActions(
+    readStatisticsMetricValue(metrics, "posts") + readStatisticsMetricValue(metrics, "replies"),
+  );
 
 const classifyCommunityReceivedEngagementBadge = (
   metrics: Map<string, AdminPsychologistEngagementMetric>,
@@ -3234,6 +3235,39 @@ const classifyCommunityReceivedEngagementBadge = (
 
 const getPsychologistCommunityInteractions = (community: PsychologistStatisticsCommunityItem) =>
   community.interactions ?? community.posts + community.replies;
+
+const getPsychologistCommunityProductionActions = (
+  community: PsychologistStatisticsCommunityItem,
+) => community.posts + community.replies;
+
+const formatCommunityVideoRatePercentage = (value: number) =>
+  `${value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: value > 0 && value < 1 ? 1 : 0,
+  })}%`;
+
+const CommunityVideoRateBreakdown = ({
+  rate,
+  total,
+}: {
+  rate?: PsychologistStatisticsCommunityItem["posts_video_rate"];
+  total: number;
+}) => {
+  if (!rate || total === 0) {
+    return (
+      <span className="mt-1 block text-[11px] font-extrabold leading-4 text-subtle">
+        Sem base de vídeo
+      </span>
+    );
+  }
+
+  return (
+    <span className="mt-1 grid gap-0.5 text-[11px] font-extrabold leading-4 text-subtle">
+      <span>Com vídeo {formatCommunityVideoRatePercentage(rate.with_video.rate_percent)}</span>
+      <span>Sem vídeo {formatCommunityVideoRatePercentage(rate.without_video.rate_percent)}</span>
+    </span>
+  );
+};
 
 const ActiveCommunityAvatar = ({
   community,
@@ -3275,138 +3309,165 @@ const ActiveCommunitiesBlock = ({
   engagementDiagnosis: AdminPsychologistStatistics["community"]["engagement_diagnosis"];
   isRefreshing: boolean;
   periodControls: ReactNode;
-}) => (
-  <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-bold text-foreground">
-            Atividade e engajamento por comunidade
-          </h2>
-          <Badge
-            className={cn(
-              "border border-current/10",
-              communityEngagementDiagnosisClassName(engagementDiagnosis.id),
-            )}
-          >
-            {formatPsychologistCommunityEngagementLabel(engagementDiagnosis)}
-          </Badge>
-          {isRefreshing ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
-              <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
-              Atualizando
-            </span>
-          ) : null}
+}) => {
+  const activityBadge = classifyCommunityActivityBadgeByActions(
+    communities.reduce(
+      (total, community) => total + getPsychologistCommunityProductionActions(community),
+      0,
+    ),
+  );
+
+  return (
+    <CardShell className="min-w-0 max-w-full overflow-hidden p-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-bold text-foreground">
+              Atividade e engajamento por comunidade
+            </h2>
+            <Badge
+              className={cn("border border-current/10", activityBadge.className)}
+              title={activityBadge.title}
+            >
+              {activityBadge.label}
+            </Badge>
+            <Badge
+              className={cn(
+                "border border-current/10",
+                communityEngagementDiagnosisClassName(engagementDiagnosis.id),
+              )}
+            >
+              {formatPsychologistCommunityEngagementLabel(engagementDiagnosis)}
+            </Badge>
+            {isRefreshing ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
+                <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+                Atualizando
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs font-bold leading-5 text-muted">
+            Tabela por comunidade com produção, cobertura, ranking e engajamento do psicólogo no
+            período.
+          </p>
         </div>
-        <p className="mt-1 text-xs font-bold leading-5 text-muted">
-          Tabela por comunidade com produção, cobertura, ranking e engajamento do psicólogo no
-          período.
+        {periodControls}
+      </div>
+
+      {communities.length === 0 ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
+          Nenhuma comunidade com atividade real do psicólogo foi encontrada no período.
         </p>
-      </div>
-      {periodControls}
-    </div>
+      ) : (
+        <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
+          <table className="w-full min-w-[1080px] border-collapse text-left">
+            <caption className="sr-only">
+              Atividade e engajamento do psicólogo por comunidade, com ranking, posts, respostas,
+              taxas com e sem vídeo, cobertura e status de seguimento junto ao nome.
+            </caption>
+            <thead className="bg-surface-muted/80">
+              <tr className="text-xs font-black text-muted">
+                <th className="px-4 py-3" scope="col">
+                  {formatActiveCommunitiesColumnHeading(communities.length)}
+                </th>
+                <th className="px-4 py-3 text-center" scope="col">
+                  Ranking
+                </th>
+                <th className="px-4 py-3 text-center" scope="col">
+                  Posts
+                </th>
+                <th className="px-4 py-3 text-center" scope="col">
+                  Respostas
+                </th>
+                <th className="px-4 py-3 text-center" scope="col">
+                  Cobertura
+                </th>
+                <th className="px-4 py-3 text-center" scope="col">
+                  Engajamento
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {communities.map((community) => {
+                const interactions = getPsychologistCommunityInteractions(community);
+                const coverage = community.coverage;
+                const diagnosis = getCommunityEngagementDiagnosis(community);
 
-    {communities.length === 0 ? (
-      <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        Nenhuma comunidade com atividade real do psicólogo foi encontrada no período.
-      </p>
-    ) : (
-      <div className="mt-5 overflow-x-auto rounded-[1.35rem] border border-border bg-surface">
-        <table className="w-full min-w-[980px] border-collapse text-left">
-          <caption className="sr-only">
-            Atividade e engajamento do psicólogo por comunidade, com ranking, posts, respostas,
-            cobertura e status de seguimento junto ao nome.
-          </caption>
-          <thead className="bg-surface-muted/80">
-            <tr className="text-xs font-black text-muted">
-              <th className="px-4 py-3" scope="col">
-                {formatActiveCommunitiesColumnHeading(communities.length)}
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Ranking
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Posts
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Respostas
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Cobertura
-              </th>
-              <th className="px-4 py-3 text-center" scope="col">
-                Engajamento
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {communities.map((community) => {
-              const interactions = getPsychologistCommunityInteractions(community);
-              const coverage = community.coverage;
-              const diagnosis = getCommunityEngagementDiagnosis(community);
-
-              return (
-                <tr
-                  className="align-middle transition hover:bg-surface-muted/45"
-                  key={community.id}
-                >
-                  <th className="px-4 py-4" scope="row">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <ActiveCommunityAvatar community={community} />
-                      <span className="min-w-0">
-                        <span className="flex min-w-0 items-center gap-2">
-                          <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
-                            {community.name}
+                return (
+                  <tr
+                    className="align-middle transition hover:bg-surface-muted/45"
+                    key={community.id}
+                  >
+                    <th className="px-4 py-4" scope="row">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <ActiveCommunityAvatar community={community} />
+                        <span className="min-w-0">
+                          <span className="flex min-w-0 items-center gap-2">
+                            <span className="block max-w-[18rem] truncate text-sm font-black text-foreground">
+                              {community.name}
+                            </span>
+                            <Badge
+                              className={cn(
+                                "shrink-0 whitespace-nowrap",
+                                community.following
+                                  ? "bg-success/10 text-success"
+                                  : "bg-surface-muted text-muted",
+                              )}
+                            >
+                              {community.following ? "Seguindo" : "Não seguindo"}
+                            </Badge>
                           </span>
-                          <Badge
-                            className={cn(
-                              "shrink-0 whitespace-nowrap",
-                              community.following
-                                ? "bg-success/10 text-success"
-                                : "bg-surface-muted text-muted",
-                            )}
-                          >
-                            {community.following ? "Seguindo" : "Não seguindo"}
-                          </Badge>
+                          <span className="mt-1 block text-xs font-bold text-muted">
+                            {formatCommunityPeriodActions(interactions)}
+                          </span>
                         </span>
-                        <span className="mt-1 block text-xs font-bold text-muted">
-                          {formatCommunityPeriodActions(interactions)}
-                        </span>
+                      </div>
+                    </th>
+                    <td className="px-4 py-4 text-center text-sm font-black text-foreground">
+                      {formatCommunityRanking(community)}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="block text-sm font-bold text-muted">
+                        {numberFormatter.format(community.posts)}
                       </span>
-                    </div>
-                  </th>
-                  <td className="px-4 py-4 text-center text-sm font-black text-foreground">
-                    {formatCommunityRanking(community)}
-                  </td>
-                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                    {numberFormatter.format(community.posts)}
-                  </td>
-                  <td className="px-4 py-4 text-center text-sm font-bold text-muted">
-                    {numberFormatter.format(community.replies)}
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className="block text-sm font-black text-foreground">
-                      {formatCoverageRate(community)}
-                    </span>
-                    <span className="mt-1 block text-xs font-bold leading-5 text-muted">
-                      {numberFormatter.format(coverage.covered_patient_posts)} de{" "}
-                      {numberFormatter.format(coverage.patient_posts)} posts
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <Badge className={communityEngagementDiagnosisClassName(diagnosis.id)}>
-                      {formatPsychologistCommunityEngagementLabel(diagnosis)}
-                    </Badge>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </CardShell>
-);
+                      <CommunityVideoRateBreakdown
+                        rate={community.posts_video_rate}
+                        total={community.posts}
+                      />
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="block text-sm font-bold text-muted">
+                        {numberFormatter.format(community.replies)}
+                      </span>
+                      <CommunityVideoRateBreakdown
+                        rate={community.replies_video_rate}
+                        total={community.replies}
+                      />
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="block text-sm font-black text-foreground">
+                        {formatCoverageRate(community)}
+                      </span>
+                      <span className="mt-1 block text-xs font-bold leading-5 text-muted">
+                        {numberFormatter.format(coverage.covered_patient_posts)} de{" "}
+                        {numberFormatter.format(coverage.patient_posts)} posts
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <Badge className={communityEngagementDiagnosisClassName(diagnosis.id)}>
+                        {formatPsychologistCommunityEngagementLabel(diagnosis)}
+                      </Badge>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </CardShell>
+  );
+};
 
 type PsychologistContentFormatDistribution =
   AdminPsychologistStatistics["community"]["content_distribution"];

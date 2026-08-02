@@ -1870,7 +1870,7 @@ export type AdminPsychologistEngagementMetric = {
 
 export type AdminCommunityEngagementDiagnosis = {
   id: "ativo" | "muito_ativo" | "pouco_ativo" | "sem_base";
-  label: "Engajado" | "Muito engajado" | "Pouco engajado" | "Sem base";
+  label: "Alto engajamento" | "Baixo engajamento" | "Engajamento padrão" | "Sem engajamento";
   source: string;
 };
 
@@ -1905,6 +1905,18 @@ export type AdminPsychologistContentFormatDistribution = {
     percentage: number;
   }[];
   total: number;
+};
+
+export type AdminPsychologistCommunityVideoRate = {
+  source: "community_post.media_type+community_post_media+post_reply.media_type";
+  with_video: {
+    count: number;
+    rate_percent: number;
+  };
+  without_video: {
+    count: number;
+    rate_percent: number;
+  };
 };
 
 export type AdminPsychologistVisibilityDiagnosis = {
@@ -1986,11 +1998,13 @@ export type AdminPsychologistStatistics = {
       member_since: string | null;
       name: string;
       posts: number;
+      posts_video_rate: AdminPsychologistCommunityVideoRate;
       ranking: {
         position: number;
         score: number;
       } | null;
       replies: number;
+      replies_video_rate: AdminPsychologistCommunityVideoRate;
       slug: string;
       upvotes: number;
     }[];

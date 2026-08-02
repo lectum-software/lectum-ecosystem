@@ -670,6 +670,52 @@ const buildContentFormatDistribution = <T>(
   };
 };
 
+const COMMUNITY_VIDEO_RATE_SOURCE =
+  "community_post.media_type+community_post_media+post_reply.media_type" as const;
+
+const emptyCommunityVideoRate =
+  (): AdminPsychologistStatisticsDTO["community"]["communities"][number]["posts_video_rate"] => ({
+    source: COMMUNITY_VIDEO_RATE_SOURCE,
+    with_video: {
+      count: 0,
+      rate_percent: 0,
+    },
+    without_video: {
+      count: 0,
+      rate_percent: 0,
+    },
+  });
+
+const incrementCommunityVideoRate = (
+  rate: AdminPsychologistStatisticsDTO["community"]["communities"][number]["posts_video_rate"],
+  hasVideo: boolean,
+) => {
+  if (hasVideo) {
+    rate.with_video.count += 1;
+    return;
+  }
+
+  rate.without_video.count += 1;
+};
+
+const finalizeCommunityVideoRate = (
+  rate: AdminPsychologistStatisticsDTO["community"]["communities"][number]["posts_video_rate"],
+) => {
+  const total = rate.with_video.count + rate.without_video.count;
+
+  return {
+    ...rate,
+    with_video: {
+      ...rate.with_video,
+      rate_percent: total > 0 ? roundPercent((rate.with_video.count / total) * 100) : 0,
+    },
+    without_video: {
+      ...rate.without_video,
+      rate_percent: total > 0 ? roundPercent((rate.without_video.count / total) * 100) : 0,
+    },
+  };
+};
+
 const PLATFORM_DEVICE_TYPES = ["desktop", "mobile", "tablet", "unknown"] as const;
 type PlatformDeviceType = (typeof PLATFORM_DEVICE_TYPES)[number];
 
@@ -2382,8 +2428,10 @@ const buildCommunityItems = (input: {
       member_since: null,
       name: community.name,
       posts: 0,
+      posts_video_rate: emptyCommunityVideoRate(),
       ranking: null,
       replies: 0,
+      replies_video_rate: emptyCommunityVideoRate(),
       slug: community.slug,
       upvotes: 0,
     };
@@ -2413,12 +2461,20 @@ const buildCommunityItems = (input: {
     const current = ensureItem(post.community);
     current.interactions += 1;
     current.posts += 1;
+    incrementCommunityVideoRate(
+      current.posts_video_rate,
+      classifyPostContentFormat(post) === "video",
+    );
   }
 
   for (const reply of input.replies) {
     const current = ensureItem(reply.post.community);
     current.interactions += 1;
     current.replies += 1;
+    incrementCommunityVideoRate(
+      current.replies_video_rate,
+      classifyReplyContentFormat(reply) === "video",
+    );
   }
 
   for (const vote of input.postVotesByUser) {
@@ -2472,6 +2528,8 @@ const buildCommunityItems = (input: {
           source: "community_post+post_reply+post_vote.user_id",
         }),
       ),
+      posts_video_rate: finalizeCommunityVideoRate(community.posts_video_rate),
+      replies_video_rate: finalizeCommunityVideoRate(community.replies_video_rate),
     }))
     .sort((left, right) => {
       if (left.interactions !== right.interactions) return right.interactions - left.interactions;

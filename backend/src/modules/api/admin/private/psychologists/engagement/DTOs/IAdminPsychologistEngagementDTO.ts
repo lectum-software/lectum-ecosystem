@@ -216,6 +216,18 @@ export type AdminPsychologistContentFormatDistribution = {
   total: number;
 };
 
+export type AdminPsychologistCommunityVideoRate = {
+  source: "community_post.media_type+community_post_media+post_reply.media_type";
+  with_video: {
+    count: number;
+    rate_percent: number;
+  };
+  without_video: {
+    count: number;
+    rate_percent: number;
+  };
+};
+
 export type AdminPsychologistStatisticsCommunityItem = {
   avatar_url: string | null;
   color: string | null;
@@ -233,11 +245,13 @@ export type AdminPsychologistStatisticsCommunityItem = {
   member_since: Date | null;
   name: string;
   posts: number;
+  posts_video_rate: AdminPsychologistCommunityVideoRate;
   ranking: {
     position: number;
     score: number;
   } | null;
   replies: number;
+  replies_video_rate: AdminPsychologistCommunityVideoRate;
   slug: string;
   upvotes: number;
 };

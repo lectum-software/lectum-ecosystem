@@ -334,6 +334,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 103. [TASK-137 - Refino de layout dos donuts de indicadores Admin](TASK-137-refino-layout-donuts-indicadores-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para encurtar o titulo dos indicadores, reordenar os donuts para iniciar por Conversao, padronizar a largura dos cards e refinar visualmente donut, padrao e legenda.
 104. [TASK-138 - Range de posição do vídeo na tabela comportamental Admin](TASK-138-range-posicao-video-tabela-comportamental-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para trocar a tag visual `Posição média: Xª` por `Posição: Top 10/Top 30/Top 50/50+`, preservando a media tecnica no payload.
 105. [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para exibir a meta absoluta de conversao apos o grafico de Conversao e incluir Meta de conversao como eixo da matriz de cruzamento.
+106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 
 ### 1A. Trilha Admin planejada
 

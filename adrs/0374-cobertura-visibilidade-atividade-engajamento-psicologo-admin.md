@@ -41,6 +41,15 @@ deve mostrar volume bruto de acoes reais do psicologo.
   usam o eixo direito ja existente.
 - As tags do titulo sao leituras operacionais derivadas dos contadores reais ja retornados pela API: atividade por
   posts/respostas e engajamento recebido por votos, comentarios, salvamentos e compartilhamentos.
+- Complemento de 2026-08-02: a tabela **Atividade e engajamento por comunidade** tambem expõe a leitura de atividade
+  no titulo do proprio bloco, calculada somente por `posts + replies` do periodo, para nao confundir volume de autoria
+  com votos ou outros sinais de engajamento.
+- Complemento de 2026-08-02: o contrato de `GET /api/admin/private/psychologists/:id/statistics` passa a retornar, em
+  cada comunidade, `posts_video_rate` e `replies_video_rate`, com contagem e percentual **Com video**/**Sem video**
+  derivados dos campos reais `community_post.media_type`, `community_post_media` e `post_reply.media_type`.
+- Complemento de 2026-08-02: labels de engajamento do psicologo em comunidade usam copy de intensidade de engajamento
+  recebido (**Alto engajamento**, **Engajamento padrao**, **Baixo engajamento**, **Sem engajamento**) em vez de
+  adjetivar o profissional como engajado.
 
 ## Consequencias
 
@@ -49,6 +58,9 @@ deve mostrar volume bruto de acoes reais do psicologo.
 - A visibilidade deste bloco nao inclui perfil publico nem video de apresentacao; essas superficies continuam no bloco
   **Visibilidade** dedicado.
 - Os diagnosticos do titulo sao resumidos e nao alteram rankings, filtros publicos ou dashboards agregados.
+- As novas taxas com/sem video sao percentuais descritivos por comunidade; quando nao ha posts ou respostas, a UI exibe
+  ausencia de base em vez de inventar distribuicao.
+- A API preserva o endpoint existente, sem migration, package novo, seed ou backfill.
 - A ADR-0373 fica superada para a metrica principal de Atividade; sua cobertura por tipo de resposta permanece
   disponivel apenas como sinal auxiliar.
 
@@ -61,7 +73,11 @@ deve mostrar volume bruto de acoes reais do psicologo.
 - `pnpm check`
 - Smoke backend real de `showAdminPsychologistStatistics({ period: "all" })` confirmou `community_visibility`,
   `coverage_rate` e `coverage_rate_percent`.
+- Smoke complementar de 2026-08-02 para `cmrgztri7000tn0uh1q4n8vxf` confirmou `posts_video_rate`,
+  `replies_video_rate` e labels **Alto/Padrao/Baixo/Sem engajamento** por comunidade.
 - Browser local Admin: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`.
+- Browser local complementar de 2026-08-02 confirmou, na tabela por comunidade, tag **Muito ativo** no titulo,
+  taxas **Com video/Sem video** em Posts/Respostas e a nova copy da coluna Engajamento.
 
 ## Pendencias
 
