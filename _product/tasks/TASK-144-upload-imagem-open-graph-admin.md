@@ -70,3 +70,9 @@ O upload persiste o arquivo no storage real imediatamente; a troca do metadado p
 - [x] Copy reduzida para `Envie uma imagem JPG, PNG ou WebP.`
 - [x] Botoes de trocar/remover imagem mantidos dentro do bloco de upload, em linha unica e com o mesmo tamanho textual.
 - [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `git diff --check` e rota local Admin `200`.
+
+## Ajuste pos-feedback 2026-08-03 - miniatura Open Graph
+
+- [x] Miniatura da imagem Open Graph reduzida para tamanho compacto dentro do bloco de upload.
+- [x] Preview trocado de recorte/zoom (`object-cover`) para exibicao completa da imagem (`object-contain`).
+- [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build` e rota local Admin `200`.
