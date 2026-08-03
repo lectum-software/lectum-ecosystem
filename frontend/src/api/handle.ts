@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import api from "@/api";
 import type { ApiMethod } from "@/api/generator";
 import { signOut } from "@/hooks/cookies/signout";
+import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
 
 type ApiResponse<T = unknown> = {
   success: boolean;
@@ -75,7 +76,7 @@ export const handleReq = async <T = unknown>({
 
       const message = res?.error || res?.message || err?.message || "Erro de conexão";
 
-      if (!isGetMethod && !hideError) {
+      if (!isGetMethod && !hideError && !isAdminViewAsReadOnlyError(res)) {
         toast.error(message);
       }
 

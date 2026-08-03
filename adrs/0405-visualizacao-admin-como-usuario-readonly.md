@@ -23,6 +23,7 @@ Implementar **Visualizar como usuário** com estas restrições:
 - auditoria sem JWT, senha, hash, código ou segredo;
 - bloqueio backend para métodos não seguros quando o bearer token tiver `device_id` `admin_view_as:*`;
 - frontend do usuário com banner global de **modo somente leitura** e saída para o Admin;
+- frontend sem toast vermelho redundante para o erro esperado `admin_view_as_read_only`, porque o banner global já comunica o bloqueio de escrita;
 - analytics/location/PWA desativados durante a visualização administrativa.
 
 ## Consequências

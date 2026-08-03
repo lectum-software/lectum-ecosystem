@@ -4,6 +4,7 @@ import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@ta
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
 
 export const Provider = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(
@@ -20,6 +21,8 @@ export const Provider = ({ children }: { children: ReactNode }) => {
         },
         queryCache: new QueryCache({
           onError: (error) => {
+            if (isAdminViewAsReadOnlyError(error)) return;
+
             if (error instanceof Error) {
               toast.error(error.message);
             }
@@ -27,6 +30,8 @@ export const Provider = ({ children }: { children: ReactNode }) => {
         }),
         mutationCache: new MutationCache({
           onError: (error) => {
+            if (isAdminViewAsReadOnlyError(error)) return;
+
             if (error instanceof Error) {
               toast.error(error.message);
             }

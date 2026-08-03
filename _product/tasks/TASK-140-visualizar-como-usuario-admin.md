@@ -117,6 +117,7 @@ Permitir que um Admin autenticado abra a experiência real de paciente ou psicó
 - O frontend do usuário recebeu `/auth/admin-view-as`, storage local da sessão, banner global e saída para o Admin.
 - Pageviews, localização e eventos PWA são ignorados durante a visualização administrativa.
 - Correção pós-teste em browser: a aba é pré-aberta de forma síncrona no submit, antes da chamada assíncrona ao backend, evitando bloqueio de popup e evitando toast falso quando o navegador bloquear a nova aba.
+- Feedback pós-teste em browser: toasts vermelhos redundantes de `admin_view_as_read_only` foram suprimidos no frontend; o banner global já comunica o modo somente leitura.
 - Não houve schema Prisma, migration, package novo, seed, mock, endpoint simulado ou auditoria com segredo.
 
 ## Validações executadas
@@ -129,6 +130,7 @@ Permitir que um Admin autenticado abra a experiência real de paciente ou psicó
 - `pnpm --dir admin check` — OK.
 - `pnpm --dir admin build` — OK.
 - `pnpm --dir frontend exec biome check --write ...` nos arquivos frontend da task — OK.
+- `pnpm --dir frontend exec biome check --write ...` nos arquivos frontend do ajuste de toast — OK.
 - `pnpm --dir frontend check` — OK.
 - `pnpm --dir frontend build` — OK após aguardar finalização de build Next concorrente já em andamento no ambiente local.
 - `pnpm check` — OK após isolar temporariamente alterações preexistentes fora do escopo, validando o estado final apenas com os arquivos desta task.
