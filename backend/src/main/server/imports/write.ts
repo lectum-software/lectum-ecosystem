@@ -28,6 +28,7 @@ import apiAdminPrivatePsychologistsProfileEdit from "@/modules/api/admin/private
 import apiAdminPrivatePsychologistsRegistryVerification from "@/modules/api/admin/private/psychologists/registry-verification";
 import apiAdminPrivateSettingsCatalogs from "@/modules/api/admin/private/settings/catalogs";
 import apiAdminPrivateSettingsSeo from "@/modules/api/admin/private/settings/seo";
+import apiAdminPrivateSettingsSubscriptionPlan from "@/modules/api/admin/private/settings/subscription-plan";
 import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/export";
 import apiAdminPrivateTrafficSummary from "@/modules/api/admin/private/traffic/summary";
 import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
@@ -186,6 +187,10 @@ mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsFeedb
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsActivities);
 mountRoute("/api/admin/private/settings/catalogs", apiAdminPrivateSettingsCatalogs);
 mountRoute("/api/admin/private/settings/seo", apiAdminPrivateSettingsSeo);
+mountRoute(
+  "/api/admin/private/settings/subscription-plan",
+  apiAdminPrivateSettingsSubscriptionPlan,
+);
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
 mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);

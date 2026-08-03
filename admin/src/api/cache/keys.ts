@@ -429,4 +429,5 @@ export const adminSettingsKeys = {
   all: ["admin", "settings"] as const,
   catalogs: () => [...adminSettingsKeys.all, "catalogs"] as const,
   seo: () => [...adminSettingsKeys.all, "seo"] as const,
+  subscriptionPlan: () => [...adminSettingsKeys.all, "subscription-plan"] as const,
 };

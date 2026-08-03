@@ -13,6 +13,7 @@ import {
   deleteAdminSpecialtyCategory,
   getAdminSeoMetadataSettings,
   getAdminSettingsCatalogs,
+  getAdminSubscriptionPlanSetting,
   reorderAdminSettingsCatalog,
   restoreAdminSettingsCatalogDefaults,
   updateAdminCatalogItem,
@@ -130,6 +131,12 @@ export const useAdminSeoMetadataSettings = () =>
   useQuery({
     queryFn: getAdminSeoMetadataSettings,
     queryKey: adminSettingsKeys.seo(),
+  });
+
+export const useAdminSubscriptionPlanSetting = () =>
+  useQuery({
+    queryFn: getAdminSubscriptionPlanSetting,
+    queryKey: adminSettingsKeys.subscriptionPlan(),
   });
 
 export const useAdminSeoMetadataUpdate = () => {

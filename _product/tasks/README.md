@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 148 tasks: `TASK-00` a `TASK-141`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 149 tasks: `TASK-00` a `TASK-142`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -223,6 +223,7 @@ ou cortesia manual.
 | 139 | [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md) | Completed | 53, 95, 129, 137 |
 | 140 | [TASK-140 - Visualização administrativa como usuário](TASK-140-visualizar-como-usuario-admin.md) | Completed | 45, 46, 61, 68, 73 |
 | 141 | [TASK-141 - Configurações Admin de SEO e Metadados](TASK-141-configuracoes-admin-seo-metadados.md) | Completed | 39, 40, 45, 46, 65 |
+| 142 | [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md) | Completed | 31, 45, 46, 62, 141 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -337,6 +338,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 104. [TASK-138 - Range de posição do vídeo na tabela comportamental Admin](TASK-138-range-posicao-video-tabela-comportamental-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para trocar a tag visual `Posição média: Xª` por `Posição: Top 10/Top 30/Top 50/50+`, preservando a media tecnica no payload.
 105. [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md) foi adicionada e concluida em 2026-08-01 para exibir a meta absoluta de conversao apos o grafico de Conversao e incluir Meta de conversao como eixo da matriz de cruzamento.
 106. [TASK-140 - Visualização administrativa como usuário](TASK-140-visualizar-como-usuario-admin.md) foi adicionada e concluida em 2026-08-02 para permitir que o Admin abra pacientes e psicologos em modo somente leitura a partir da aba Conta, com TTL curto, auditoria e bloqueio backend de escrita.
+107. [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md) foi adicionada e concluída em 2026-08-03 para exibir em `/configuracoes/assinatura` o valor atual do Plano Profissional lido de `subscription_plan.price_cents`, sem edição administrativa de preço e sem repetir a listagem financeira de assinaturas vinculadas.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
@@ -440,6 +442,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 93. [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md)
 94. [TASK-140 - Visualização administrativa como usuário](TASK-140-visualizar-como-usuario-admin.md)
 95. [TASK-141 - Configurações Admin de SEO e Metadados](TASK-141-configuracoes-admin-seo-metadados.md)
+96. [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

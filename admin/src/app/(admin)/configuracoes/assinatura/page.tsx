@@ -1,10 +1,10 @@
 ﻿import { Suspense } from "react";
-import { AdminFinanceSubscriptionsClient } from "../../financeiro/assinaturas/client";
+import { AdminSubscriptionSettingsClient } from "./client";
 
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <AdminFinanceSubscriptionsClient />
+      <AdminSubscriptionSettingsClient />
     </Suspense>
   );
 }

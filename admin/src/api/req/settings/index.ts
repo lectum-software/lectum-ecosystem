@@ -110,8 +110,27 @@ export type AdminSeoMetadataPayload = {
   title: string;
 };
 
+export type AdminSubscriptionPlanSetting = {
+  active: boolean;
+  created_at: string;
+  currency: "BRL";
+  gateway_plan_configured: boolean;
+  id: string;
+  interval: string;
+  name: string;
+  price_cents: number;
+  slug: string;
+  source: "subscription_plan";
+  updated_at: string;
+};
+
+export type AdminSubscriptionPlanSettings = {
+  plan: AdminSubscriptionPlanSetting;
+};
+
 const baseUrl = "/api/admin/private/settings/catalogs";
 const seoBaseUrl = "/api/admin/private/settings/seo";
+const subscriptionPlanBaseUrl = "/api/admin/private/settings/subscription-plan";
 
 export const getAdminSettingsCatalogs = async () => {
   const response = await adminApi.get<ApiResponse<AdminSettingsCatalogs>>(baseUrl);
@@ -233,6 +252,13 @@ export const updateAdminSeoMetadataSetting = async (
     `${seoBaseUrl}/${encodeURIComponent(pageKey)}`,
     input,
   );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminSubscriptionPlanSetting = async () => {
+  const response =
+    await adminApi.get<ApiResponse<AdminSubscriptionPlanSettings>>(subscriptionPlanBaseUrl);
 
   return resolveApiData(response.data);
 };

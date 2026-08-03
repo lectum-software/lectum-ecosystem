@@ -836,6 +836,14 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `active` | `Boolean @default(true)` | |
 | `gateway_plan_id` | `String?` | identificador do plano recorrente no gateway (`preapproval_plan_id` no Mercado Pago), criado uma vez no backend ou importado por env e reutilizado no checkout |
 
+Complemento TASK-142 (2026-08-03): a tela Admin `Configurações > Assinatura` usa o endpoint
+read-only `GET /api/admin/private/settings/subscription-plan` para exibir o Plano Profissional
+vigente. O contrato retorna apenas dados operacionais seguros de `subscription_plan` com
+`slug="profissional"` e `deleted=false`: `id`, `slug`, `name`, `price_cents`, `currency="BRL"`,
+`interval`, `active`, `gateway_plan_configured`, `source="subscription_plan"`, `created_at` e
+`updated_at`. A tela não edita preço, não cria auditoria de alteração e não faz fallback frontend
+com valor hardcoded; ausência do plano deve retornar erro honesto.
+
 `professional_subscription` (TASK-31/32/33):
 
 | Campo | Tipo | Notas |
