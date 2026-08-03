@@ -1453,8 +1453,7 @@ export const PsychologistsLogic = () => {
   });
 
   const errorMessage = directory.isError ? resolveDirectoryErrorMessage(directory.error) : null;
-  const hasActiveFilters =
-    Boolean(filterValues.search?.trim()) ||
+  const hasSelectedSearchFilters =
     Boolean(filterValues.specialty) ||
     Boolean(filterValues.service) ||
     Boolean(filterValues.modality) ||
@@ -1472,6 +1471,7 @@ export const PsychologistsLogic = () => {
     Boolean(filterValues.social_value) ||
     Boolean(filterValues.available_today) ||
     Boolean(filterValues.verified);
+  const hasActiveFilters = Boolean(filterValues.search?.trim()) || hasSelectedSearchFilters;
   const activeFilterChips = useMemo(
     () => buildActiveFilterChips(filterValues, response?.filters),
     [filterValues, response?.filters],
@@ -1479,7 +1479,13 @@ export const PsychologistsLogic = () => {
 
   const showInitialLoading = directory.isLoading && !response;
   useEffect(() => {
-    if (showInitialLoading || directory.isFetching || errorMessage || !featuredPsychologistId) {
+    if (
+      !hasSelectedSearchFilters ||
+      showInitialLoading ||
+      directory.isFetching ||
+      errorMessage ||
+      !featuredPsychologistId
+    ) {
       return;
     }
 
@@ -1499,6 +1505,7 @@ export const PsychologistsLogic = () => {
     errorMessage,
     featuredPsychologistId,
     featuredPsychologistExplorePosition,
+    hasSelectedSearchFilters,
     searchParamsString,
     showInitialLoading,
     trackSearchResultImpression,

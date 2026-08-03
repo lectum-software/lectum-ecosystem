@@ -99,3 +99,11 @@ A decisao mantém o card azul dedicado a permanencia/curva do video e usa a area
 Para sustentar a leitura sem inferencia, novas impressoes de busca passam a gravar `profile_view_event.search_context_path`, sanitizado pela allowlist de parametros permitidos. O contrato privado `presentation_video.search_terms` agrega esses eventos reais em `term`, `impressions` e `percentage`.
 
 Consequencia: a recomendacao textual de retencao sai da tela do psicologo nesta posicao; o chip de total de cliques nao e exibido nessa area; eventos legados sem contexto de busca nao recebem backfill e ficam fora da lista de termos. Ha migration de coluna nullable, mas nao ha endpoint paralelo, mock, seed, dado artificial, package novo ou backfill.
+
+## Atualizacao 2026-08-02 - Termos pesquisados passam a ser filtros de Minha Busca
+
+Produto esclareceu que a lista abaixo da retencao do video nao deve depender de termo textual livre. No fluxo do paciente, uma exibicao em `Minha Busca` existe apenas quando ha filtros selecionados; exibicoes sem filtros pertencem ao `Explorar` e nao devem entrar nessa lista.
+
+Decidimos manter o campo contratual legado `presentation_video.search_terms` para nao quebrar frontend/backend, mas mudar sua semantica de exibicao: a UI passa a rotular o bloco como `Filtros pesquisados` e cada item representa um filtro interno selecionado no modal (`Especialidade: ...`, `Modalidade: ...`, `Disponivel hoje`, etc.). O backend deriva esses itens de `profile_view_event.search_context_path`, resolve nomes por catalogos reais quando disponiveis e ignora impressoes antigas/sem query filtrada na metrica privada `search_results_from_video`.
+
+Consequencia: o estado vazio deixa de falar em "termo textual"; novas impressoes sem filtros nao sao persistidas como `source="search_result"`; historico de `search_result` sem contexto filtrado nao e redistribuido como filtro; nao ha schema, migration, package novo, seed, mock ou backfill.

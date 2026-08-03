@@ -857,3 +857,36 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `git diff --check`
 - Verificacao estatica com `rg` confirmou ausencia da copy antiga e do subtitulo removido em `frontend/src` e `backend/src`, alem do uso de `FileText` no card `Posts`.
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: rota privada validada sem sessao por redirecionamento `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics`; a tela autenticada foi validada por fonte/build e pela captura enviada pelo usuario.
+
+## Ajuste complementar em 2026-08-02 - Filtros pesquisados em Minha Busca
+
+- Pedido do usuario: a lista abaixo da retencao do video deve exibir somente os filtros que pacientes selecionam em `Minha Busca`; se o video aparece sem filtro aplicado, a origem correta e `Explorar`, nao `Minha Busca`.
+- O tracking de impressao de resultado agora so persiste `profile_view_event.source="search_result"` quando o `search_context_path` contem filtros internos selecionados, ignorando exibicoes sem filtro e buscas apenas textuais nessa leitura privada.
+- O backend do Analytics filtra eventos legados/sem filtros antes de preencher `metrics.search_results`, `presentation_video.metrics.search_results_from_video` e `presentation_video.search_terms`.
+- A UI preserva o campo contratual legado `presentation_video.search_terms`, mas renomeia a leitura para `Filtros pesquisados` e exibe rotulos derivados dos filtros permitidos (especialidade, servico, modalidade, abordagem, publico, localizacao, demograficos e flags como `available_today`, `more_experienced` e `verified`).
+- Nomes de catalogo sao resolvidos a partir das tabelas reais de especialidades/servicos/abordagens/opcoes de perfil quando disponiveis; caso contrario, a UI recebe rotulo humanizado do parametro permitido, sem mock, seed, backfill ou redistribuicao de eventos do Explorar.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADRs atualizados: `adrs/0126-analytics-origem-trafego-zerada.md` e `adrs/0175-analytics-video-retencao-orientada.md`; `DATA-MODEL.md` documentado.
+
+### Criterios de aceite do complemento
+
+- [x] Exibicoes sem filtros selecionados nao sao persistidas como `source="search_result"`.
+- [x] `metrics.search_results` e `presentation_video.metrics.search_results_from_video` consideram somente impressoes de busca filtrada/Minha Busca.
+- [x] `presentation_video.search_terms` lista filtros internos pesquisados, nao texto livre `q`/`search`.
+- [x] A UI mostra `Filtros pesquisados`, tooltip sobre filtros de Minha Busca e estados vazios sem mencao a termo textual.
+- [x] Nenhum mock, seed, endpoint simulado, package novo, backfill ou alteracao de schema foi criado.
+- [x] ADR e documentacao de dados foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir backend exec biome check --write "src/utils/analytics-traffic-path.ts" "src/modules/api/private/directory/psychologists/repositories/ProfileViewRepository.ts" "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir frontend exec biome check --write "src/app/app/psychologists/logic.tsx" "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Smoke runtime do utilitario de trafego confirmou que `search` sozinho nao vira filtro de Minha Busca e que filtros/flags permitidos geram rotulos rastreaveis.
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: rota privada validada sem sessao por redirecionamento `307` para login; a copy foi validada no fonte/build por se tratar de bloco autenticado.

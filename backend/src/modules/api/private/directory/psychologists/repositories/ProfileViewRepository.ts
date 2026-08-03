@@ -1,5 +1,8 @@
 import prisma from "@/infra/database/prisma";
-import { sanitizeAnalyticsPathWithTrafficQuery } from "@/utils/analytics-traffic-path";
+import {
+  hasDirectorySelectedFilterParams,
+  sanitizeAnalyticsPathWithTrafficQuery,
+} from "@/utils/analytics-traffic-path";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryPsychologistProfileViewResponse,
@@ -139,6 +142,13 @@ export class ProfileViewRepository {
     const searchContextPath = data.b?.path
       ? sanitizeAnalyticsPathWithTrafficQuery(data.b.path)
       : null;
+
+    if (!hasDirectorySelectedFilterParams(searchContextPath)) {
+      return {
+        notification_event_id: null,
+        tracked: false,
+      };
+    }
 
     await prisma.profile_view_event.create({
       data: {

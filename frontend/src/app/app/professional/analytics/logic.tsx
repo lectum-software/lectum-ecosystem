@@ -716,7 +716,8 @@ const PresentationVideoMetricsPanel = ({
   </div>
 );
 
-const SEARCH_TERMS_TOOLTIP = "Principais termos que exibiram seu vídeo nos resultados de busca.";
+const SEARCH_TERMS_TOOLTIP =
+  "Filtros selecionados em Minha Busca que exibiram seu vídeo nos resultados.";
 
 type PresentationVideoSearchTermsSummary = {
   searchResultImpressions: number;
@@ -751,8 +752,8 @@ const PresentationVideoSearchTermsPanel = ({
   const hasTerms = summary.terms.length > 0;
   const emptyDescription =
     summary.searchResultImpressions > 0
-      ? "Há exibições do vídeo em resultados de busca, mas nenhum termo textual foi registrado neste período."
-      : "Nenhum termo pesquisado exibiu seu vídeo nos resultados neste período.";
+      ? "Há exibições vindas de buscas filtradas, mas os filtros não foram identificados neste período."
+      : "Nenhuma exibição vinda de buscas filtradas neste período.";
   const closeTooltip = useCallback(() => {
     setIsTooltipVisible(false);
   }, []);
@@ -765,7 +766,7 @@ const PresentationVideoSearchTermsPanel = ({
       <div className="flex min-w-0 items-start gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <p className="min-w-0 text-[0.68rem] font-black uppercase tracking-[0.12em] text-primary">
-            Termos pesquisados
+            Filtros pesquisados
           </p>
           <button
             aria-controls="presentation-video-search-terms-tooltip"
@@ -817,7 +818,7 @@ const PresentationVideoSearchTermsPanel = ({
                     locked && "select-none blur-[4px]",
                   )}
                 >
-                  {Math.round(clampPercent(term.percentage))}% das exibições em resultados de busca
+                  {Math.round(clampPercent(term.percentage))}% das exibições em buscas filtradas
                 </p>
               </div>
               <span

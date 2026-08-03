@@ -1,8 +1,9 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import {
-  extractSearchTermsFromTrafficPath,
-  hasSearchFilterTrafficParams,
+  extractSearchFiltersFromTrafficPath,
+  hasDirectorySelectedFilterParams,
+  type TrafficFilterLabelLookup,
 } from "@/utils/analytics-traffic-path";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
@@ -100,8 +101,116 @@ const normalizeSearchTermKey = (term: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
+    .replace(/[-_]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+type CatalogLabelItem = {
+  name: string;
+  slug: string;
+};
+
+const catalogLabelSelect = {
+  name: true,
+  slug: true,
+} satisfies Prisma.profile_catalog_optionSelect;
+
+const toFilterLabelDictionary = (items: CatalogLabelItem[]) => {
+  const labels = new Map<string, string>();
+
+  for (const item of items) {
+    labels.set(normalizeSearchTermKey(item.slug), item.name);
+    labels.set(normalizeSearchTermKey(item.name), item.name);
+  }
+
+  return labels;
+};
+
+const buildSearchFilterLabelLookup = async (): Promise<TrafficFilterLabelLookup> => {
+  const [
+    specialties,
+    services,
+    approaches,
+    targetAudiences,
+    genders,
+    raceColors,
+    religions,
+    languages,
+  ] = await Promise.all([
+    prisma.specialty.findMany({
+      where: {
+        active: true,
+        deleted: false,
+      },
+      select: catalogLabelSelect,
+    }),
+    prisma.service.findMany({
+      where: {
+        active: true,
+        deleted: false,
+      },
+      select: catalogLabelSelect,
+    }),
+    prisma.approach.findMany({
+      where: {
+        active: true,
+        deleted: false,
+      },
+      select: catalogLabelSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        type: "target_audience",
+      },
+      select: catalogLabelSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        type: "gender",
+      },
+      select: catalogLabelSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        type: "race_color",
+      },
+      select: catalogLabelSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        type: "religion",
+      },
+      select: catalogLabelSelect,
+    }),
+    prisma.profile_catalog_option.findMany({
+      where: {
+        active: true,
+        deleted: false,
+        type: "language",
+      },
+      select: catalogLabelSelect,
+    }),
+  ]);
+
+  return {
+    approach: toFilterLabelDictionary(approaches),
+    gender: toFilterLabelDictionary(genders),
+    language: toFilterLabelDictionary(languages),
+    race_color: toFilterLabelDictionary(raceColors),
+    religion: toFilterLabelDictionary(religions),
+    service: toFilterLabelDictionary(services),
+    specialty: toFilterLabelDictionary(specialties),
+    target_audience: toFilterLabelDictionary(targetAudiences),
+  };
+};
 
 const buildPresentationVideoTrafficBreakdown = (
   actions: PresentationVideoActionEvent[],
@@ -117,7 +226,7 @@ const buildPresentationVideoTrafficBreakdown = (
   for (const action of actions) {
     if (action.action_type !== PROFILE_VIDEO_WHATSAPP_ACTION) continue;
 
-    const sourceId = hasSearchFilterTrafficParams(action.path) ? "search_results" : "explore";
+    const sourceId = hasDirectorySelectedFilterParams(action.path) ? "search_results" : "explore";
     const group = groups.get(sourceId);
     if (!group) continue;
 
@@ -125,7 +234,7 @@ const buildPresentationVideoTrafficBreakdown = (
 
     if (sourceId !== "search_results") continue;
 
-    for (const term of extractSearchTermsFromTrafficPath(action.path)) {
+    for (const term of extractSearchFiltersFromTrafficPath(action.path)) {
       const key = normalizeSearchTermKey(term);
       if (!key) continue;
 
@@ -173,11 +282,12 @@ const buildPresentationVideoTrafficBreakdown = (
 
 const buildPresentationVideoSearchTerms = (
   impressions: ProfileSearchImpressionEvent[],
+  labelLookup: TrafficFilterLabelLookup,
 ): PsychologistAnalyticsPresentationVideoSearchTerm[] => {
   const searchTerms = new Map<string, { impressions: number; term: string }>();
 
   for (const impression of impressions) {
-    const terms = extractSearchTermsFromTrafficPath(impression.search_context_path);
+    const terms = extractSearchFiltersFromTrafficPath(impression.search_context_path, labelLookup);
 
     for (const term of terms) {
       const key = normalizeSearchTermKey(term);
@@ -191,10 +301,7 @@ const buildPresentationVideoSearchTerms = (
     }
   }
 
-  const totalTermImpressions = [...searchTerms.values()].reduce(
-    (total, term) => total + term.impressions,
-    0,
-  );
+  const totalSearchResultImpressions = impressions.length;
 
   return [...searchTerms.values()]
     .sort((left, right) => {
@@ -208,7 +315,7 @@ const buildPresentationVideoSearchTerms = (
     .map((term) => ({
       term: term.term,
       impressions: term.impressions,
-      percentage: percentage(term.impressions, totalTermImpressions),
+      percentage: percentage(term.impressions, totalSearchResultImpressions),
     }));
 };
 
@@ -1063,7 +1170,6 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
 
     const [
       profileViews,
-      searchResults,
       presentationVideoSearchImpressions,
       whatsappClicks,
       reviewsReceived,
@@ -1074,6 +1180,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       psychologistWhatsappActionEvents,
       favoriteEvents,
       communities,
+      searchFilterLabelLookup,
     ] = await Promise.all([
       prisma.profile_view_event.count({
         where: {
@@ -1093,29 +1200,14 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           ],
         },
       }),
-      prisma.profile_view_event.count({
-        where: {
-          psychologist_id: userId,
-          deleted: false,
-          createdAt: createdAtWindow,
-          source: "search_result",
-          OR: [
-            {
-              viewer_id: null,
-            },
-            {
-              viewer_id: {
-                not: userId,
-              },
-            },
-          ],
-        },
-      }),
       prisma.profile_view_event.findMany({
         where: {
           psychologist_id: userId,
           deleted: false,
           createdAt: createdAtWindow,
+          search_context_path: {
+            contains: "?",
+          },
           source: "search_result",
           OR: [
             {
@@ -1294,7 +1386,12 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
         },
       }),
       this.buildCommunities(userId, createdAtWindow),
+      buildSearchFilterLabelLookup(),
     ]);
+    const trackedSearchResultImpressions = presentationVideoSearchImpressions.filter((impression) =>
+      hasDirectorySelectedFilterParams(impression.search_context_path),
+    );
+    const searchResults = trackedSearchResultImpressions.length;
     const currentPresentationVideoSessions = profile?.video_url
       ? presentationVideoSessions.filter((session) => session.video_url === profile.video_url)
       : [];
@@ -1415,7 +1512,10 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       duration_seconds: durationSeconds,
       metrics: presentationVideoMetrics,
       cards: toPresentationVideoCards(presentationVideoMetrics),
-      search_terms: buildPresentationVideoSearchTerms(presentationVideoSearchImpressions),
+      search_terms: buildPresentationVideoSearchTerms(
+        trackedSearchResultImpressions,
+        searchFilterLabelLookup,
+      ),
       retention: {
         average_retention_rate: averageWatchPercent,
         dropoff: retentionDropoff,

@@ -381,6 +381,16 @@ Complemento 2026-08-02: impressoes novas de `source="search_result"` podem grava
 principais termos pesquisados que exibiram o video nos resultados de busca. Eventos legados sem
 `search_context_path` nao recebem backfill e ficam fora da lista de termos, sem inventar dados.
 
+Complemento 2026-08-02: no Analytics privado do psicologo, `source="search_result"` representa
+apenas exibicoes vindas de **Minha Busca**/busca filtrada. Exibicoes sem parametros de filtro
+pertencem ao Explorar e nao devem ser persistidas nem contabilizadas nessa leitura privada. O campo
+legado `presentation_video.search_terms` continua no contrato por compatibilidade, mas a UI passa a
+exibi-lo como filtros pesquisados: cada item deriva dos filtros internos permitidos no
+`search_context_path` (`specialty`, `service`, `modality`, `approach`, `target_audience`,
+localizacao, demograficos e flags como `available_today`, `more_experienced` e `verified`), com
+rotulo resolvido por catalogo quando existir. Nao ha dependencia de termo textual livre, backfill ou
+redistribuicao de eventos do Explorar.
+
 
 `profile_video_watch_session` (analytics do vídeo de apresentação, extensão da TASK-20):
 
