@@ -779,6 +779,26 @@ const buildAdminViewAsUrl = (session: AdminPatientAccountViewAsResponse) => {
   return url.toString();
 };
 
+const adminViewAsPopupBlockedMessage =
+  "O navegador bloqueou a nova aba. Permita pop-ups para o Lectum Admin e tente novamente.";
+
+const openPendingAdminViewAsTab = () => {
+  const tab = window.open("about:blank", "_blank");
+  if (!tab) return null;
+
+  tab.opener = null;
+  tab.document.title = "Preparando visualização administrativa";
+  tab.document.body.style.margin = "0";
+  tab.document.body.style.fontFamily =
+    "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  tab.document.body.style.padding = "24px";
+  tab.document.body.style.color = "#05183F";
+  tab.document.body.textContent =
+    "Preparando visualização administrativa em modo somente leitura...";
+
+  return tab;
+};
+
 const formatNullable = (value: string | null | undefined) => {
   const normalized = String(value ?? "").trim();
   return normalized || "N\u00e3o informado";
@@ -5003,12 +5023,24 @@ const AccountViewAsForm = ({ account, id }: { account: AdminPatientAccount; id: 
   const disabled = !account.capabilities.can_view_as_user || mutation.isPending;
 
   const onSubmit: SubmitHandler<AccountReasonFormValues> = async (values) => {
+    const tab = openPendingAdminViewAsTab();
+    if (!tab) {
+      toast.error(adminViewAsPopupBlockedMessage);
+      return;
+    }
+
     try {
       const session = await mutation.mutateAsync({ reason: values.reason.trim() });
       form.reset();
-      window.open(buildAdminViewAsUrl(session), "_blank", "noopener,noreferrer");
+      if (tab.closed) {
+        toast.error("A nova aba foi fechada antes da visualização carregar.");
+        return;
+      }
+
+      tab.location.replace(buildAdminViewAsUrl(session));
       toast.success("Visualização como paciente aberta em nova aba.");
     } catch (error) {
+      tab.close();
       toast.error(resolveApiError(error));
     }
   };

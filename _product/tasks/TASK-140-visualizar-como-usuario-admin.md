@@ -116,6 +116,7 @@ Permitir que um Admin autenticado abra a experiência real de paciente ou psicó
 - A aba **Conta** de pacientes e psicólogos recebeu card **Visualização administrativa** com formulário de motivo obrigatório.
 - O frontend do usuário recebeu `/auth/admin-view-as`, storage local da sessão, banner global e saída para o Admin.
 - Pageviews, localização e eventos PWA são ignorados durante a visualização administrativa.
+- Correção pós-teste em browser: a aba é pré-aberta de forma síncrona no submit, antes da chamada assíncrona ao backend, evitando bloqueio de popup e evitando toast falso quando o navegador bloquear a nova aba.
 - Não houve schema Prisma, migration, package novo, seed, mock, endpoint simulado ou auditoria com segredo.
 
 ## Validações executadas
@@ -124,6 +125,7 @@ Permitir que um Admin autenticado abra a experiência real de paciente ou psicó
 - `pnpm --dir backend typecheck` — OK.
 - `pnpm --dir backend build` — OK.
 - `pnpm --dir admin exec biome check --write ...` nos arquivos Admin da task — OK.
+- `pnpm --dir admin exec biome check --write ...` nos arquivos Admin do ajuste de popup — OK.
 - `pnpm --dir admin check` — OK.
 - `pnpm --dir admin build` — OK.
 - `pnpm --dir frontend exec biome check --write ...` nos arquivos frontend da task — OK.
