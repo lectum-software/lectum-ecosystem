@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 import type { PublicCommunitySeoDTO } from "../DTOs/IPublicCommunitySeoDTO";
@@ -55,7 +55,9 @@ export const show = async ({ slug }: CommunitySeoParams): Promise<Resolve> => {
     description,
     name,
     og_description: description,
+    og_image_height: community.avatar_url ? 512 : null,
     og_image_url: community.avatar_url,
+    og_image_width: community.avatar_url ? 512 : null,
     og_title: name,
     slug: community.slug,
     title: `${name} | Lectum`,

@@ -1,4 +1,4 @@
-export type PublicCommunitySeoDTO = {
+export type PublicPsychologistSeoDTO = {
   canonical_url: string;
   description: string;
   name: string;
@@ -7,7 +7,6 @@ export type PublicCommunitySeoDTO = {
   og_image_url: string | null;
   og_image_width: number | null;
   og_title: string;
-  slug: string;
   title: string;
   updated_at: Date | null;
 };

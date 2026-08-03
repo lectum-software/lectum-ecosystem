@@ -86,6 +86,7 @@ import apiPublicGoogleMe from "@/modules/api/public/google/me";
 import apiPublicSeoCommunity from "@/modules/api/public/seo/community";
 import apiPublicSeoCommunityPost from "@/modules/api/public/seo/community-post";
 import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
+import apiPublicSeoPsychologist from "@/modules/api/public/seo/psychologist";
 import apiPublicUser from "@/modules/api/public/user";
 
 const endpoint = Router();
@@ -160,6 +161,7 @@ mountRoute("/api/public/google/me", apiPublicGoogleMe);
 mountRoute("/api/public/seo/community", apiPublicSeoCommunity);
 mountRoute("/api/public/seo/community-post", apiPublicSeoCommunityPost);
 mountRoute("/api/public/seo/metadata", apiPublicSeoMetadata);
+mountRoute("/api/public/seo/psychologist", apiPublicSeoPsychologist);
 mountRoute("/api/public/user", apiPublicUser);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
 mountRoute("/api/admin/private/auth/hidrate", apiAdminPrivateAuthHidrate);

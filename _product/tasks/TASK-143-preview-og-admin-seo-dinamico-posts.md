@@ -93,3 +93,10 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] O Admin SEO/Metadados passa a ter a chave **Comunidade** (`community_detail`) para a rota técnica `/community/[slug]`, separada da listagem **Comunidades** (`/community`).
 - [x] Posts continuam usando o título real do post como título compartilhado; o sufixo `| Lectum` fica restrito ao título HTML/documento, com fetch dinâmico `no-store` para evitar cache interno stale do Next nas páginas compartilhadas.
 - [x] Revalidado com checks/builds de backend, frontend e admin, `pnpm check` e smoke HTTP local para comunidade/post reais.
+
+## Ajuste pos-feedback 2026-08-03 - imagens OG quadradas por entidade
+
+- [x] Comunidades específicas (`/community/[slug]`) usam `community.avatar_url` como `og:image` dinâmico e publicam dimensões quadradas `512x512` quando há avatar.
+- [x] Perfis públicos de psicólogo (`/psychologists/[id]`) usam a foto/avatar do psicólogo como `og:image` dinâmico e publicam dimensões quadradas `512x512` quando há foto.
+- [x] O helper de metadata resolve ícones legados de comunidade de `/community/icons/*` para assets públicos equivalentes do frontend antes de montar a URL absoluta do Open Graph.
+- [x] Revalidado com `pnpm --dir backend check`, `pnpm --dir frontend check`, builds backend/frontend, `pnpm check` e smoke HTTP local confirmando `og:image:width`/`height` quadrados em comunidade e perfil.

@@ -2,6 +2,8 @@
 import { absoluteUrl } from "@/lib/seo";
 
 const DEFAULT_API_URL = "http://localhost:3001";
+const COMMUNITY_ICON_MEDIA_PATH_PREFIX = "/community/icons/";
+const COMMUNITY_ICON_FRONTEND_PATH_PREFIX = "/images/community/explore/";
 
 export type SeoMetadataPageKey =
   | "default"
@@ -90,21 +92,50 @@ type PublicCommunitySeo = {
   description: string;
   name: string;
   og_description: string;
+  og_image_height: number | null;
   og_image_url: string | null;
+  og_image_width: number | null;
   og_title: string;
   slug: string;
   title: string;
 };
 
+type PublicPsychologistSeo = {
+  canonical_url: string;
+  description: string;
+  name: string;
+  og_description: string;
+  og_image_height: number | null;
+  og_image_url: string | null;
+  og_image_width: number | null;
+  og_title: string;
+  title: string;
+};
+
 const apiBaseUrl = () => (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
+
+const resolveCommunityIconAssetPath = (pathname: string, search = "") => {
+  if (!pathname.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) return null;
+
+  const filename = pathname.slice(COMMUNITY_ICON_MEDIA_PATH_PREFIX.length);
+  if (!filename || filename.includes("/")) return null;
+
+  return `${COMMUNITY_ICON_FRONTEND_PATH_PREFIX}${filename}${search}`;
+};
 
 const resolveAbsoluteUrl = (value?: string | null) => {
   if (!value) return undefined;
 
   if (value.startsWith("/public/files/")) return `${apiBaseUrl()}${value}`;
+  if (value.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) {
+    return absoluteUrl(resolveCommunityIconAssetPath(value) ?? value);
+  }
 
   try {
-    return new URL(value).toString();
+    const url = new URL(value);
+    const communityIconPath = resolveCommunityIconAssetPath(url.pathname, url.search);
+
+    return communityIconPath ? absoluteUrl(communityIconPath) : url.toString();
   } catch {
     return absoluteUrl(value);
   }
@@ -278,6 +309,28 @@ const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
   }
 };
 
+const getPublicPsychologistSeo = async ({ id }: { id: string }) => {
+  const encodedId = encodeURIComponent(id);
+
+  try {
+    const response = await fetch(`${apiBaseUrl()}/api/public/seo/psychologist/${encodedId}`, {
+      cache: "no-store",
+      headers: {
+        "Accept-Language": "pt",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const body = (await response.json()) as ApiResponse<PublicPsychologistSeo>;
+
+    return body.success ? (body.data ?? null) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const resolveCommunitySeoMetadata = async ({
   fallback,
   slug,
@@ -293,6 +346,31 @@ export const resolveCommunitySeoMetadata = async ({
     canonical: seo.canonical_url,
     description: seo.description,
     image: seo.og_image_url,
+    imageHeight: seo.og_image_height,
+    imageWidth: seo.og_image_width,
+    ogDescription: seo.og_description,
+    ogTitle: seo.og_title,
+    title: seo.title,
+  });
+};
+
+export const resolvePsychologistSeoMetadata = async ({
+  fallback,
+  id,
+}: {
+  fallback: SeoMetadataFallback;
+  id: string;
+}): Promise<Metadata> => {
+  const seo = await getPublicPsychologistSeo({ id });
+
+  if (!seo) return resolveSeoMetadata("psychologist_profile", fallback);
+
+  return resolveSeoMetadata("psychologist_profile", fallback, {
+    canonical: seo.canonical_url,
+    description: seo.description,
+    image: seo.og_image_url,
+    imageHeight: seo.og_image_height,
+    imageWidth: seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
     title: seo.title,

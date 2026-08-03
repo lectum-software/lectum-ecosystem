@@ -56,3 +56,9 @@ Decisão complementar: a página pública de detalhe da comunidade (`/community/
 Para posts, o endpoint dinâmico mantém o `title` HTML com sufixo `| Lectum`, mas o `og:title` passa a ser o título limpo do post, sem o sufixo de marca, porque o produto definiu que o título compartilhado deve ser exatamente o título do conteúdo. O mesmo princípio foi aplicado às threads de resposta: o `og:title` usa o título contextual da resposta sem sufixo adicional. As consultas server-side de comunidade/post usam `cache: "no-store"` para evitar que o cache interno do Next preserve títulos antigos em previews de compartilhamento durante edição/testes.
 
 Essa separação preserva SEO/browser title com marca quando útil e, ao mesmo tempo, deixa cards de compartilhamento mais fiéis ao objeto compartilhado: comunidade mostra nome da comunidade; post mostra título do post; resposta mostra o contexto da resposta.
+
+## Complemento 2026-08-03 - imagens Open Graph quadradas de comunidade e perfil
+
+Decisão complementar: objetos públicos com identidade visual própria devem sobrescrever a imagem Open Graph genérica configurada no Admin. Para `/community/[slug]`, a imagem compartilhada passa a ser `community.avatar_url`; para `/psychologists/[id]`, passa a ser a foto/avatar do psicólogo (`user.avatar`). Quando esses campos existem, o metadata publica `og:image:width=512` e `og:image:height=512`, explicitando o formato quadrado esperado para avatares.
+
+A imagem configurada no Admin para **Comunidade** e **Perfil público de psicólogo** permanece como fallback quando a entidade não tiver avatar/foto ou quando o endpoint dinâmico não puder resolver o registro. Para comunidades antigas que armazenam `/community/icons/*`, o frontend de metadata traduz esse caminho para o asset público equivalente em `/images/community/explore/*`, evitando que crawlers recebam uma URL de frontend inexistente.
