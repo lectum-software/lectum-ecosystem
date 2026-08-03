@@ -62,3 +62,11 @@ Substituir a edicao manual do link da Imagem Open Graph por upload de arquivo no
 ## Observacoes
 
 O upload persiste o arquivo no storage real imediatamente; a troca do metadado publico da pagina so acontece ao clicar em **Salvar metadados**, para preservar o comportamento de formulario e a auditoria consolidada do `PUT`.
+
+## Ajuste pos-feedback 2026-08-03
+
+- [x] Removida a tag visual `Upload` do campo Imagem Open Graph.
+- [x] Removido o texto `Arquivo gerenciado internamente`.
+- [x] Copy reduzida para `Envie uma imagem JPG, PNG ou WebP.`
+- [x] Botoes de trocar/remover imagem mantidos dentro do bloco de upload, em linha unica e com o mesmo tamanho textual.
+- [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `git diff --check` e rota local Admin `200`.

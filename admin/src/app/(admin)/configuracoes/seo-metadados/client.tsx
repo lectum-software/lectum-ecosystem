@@ -348,19 +348,12 @@ const OpenGraphImageField = ({
         <label className="text-sm font-bold text-foreground" htmlFor={inputId}>
           Imagem Open Graph
         </label>
-        <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-bold text-primary">
-          Upload
-        </span>
       </div>
       <div className="rounded-[1.35rem] border border-border bg-surface-muted/45 p-3">
-        <div className="grid gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] sm:items-center">
+        <div className="grid gap-3">
           <OpenGraphImagePreview value={value} />
           <div className="min-w-0">
-            <p className="text-sm font-bold text-foreground">Arquivo gerenciado internamente</p>
-            <p className="mt-1 text-xs leading-5 text-muted">
-              Envie uma imagem JPG, PNG ou WebP. O link público é gerado automaticamente após o
-              upload e salvo junto dos metadados.
-            </p>
+            <p className="text-xs leading-5 text-muted">Envie uma imagem JPG, PNG ou WebP.</p>
             {src ? (
               <a
                 className="mt-2 block truncate text-xs font-bold text-primary hover:underline"
@@ -385,30 +378,30 @@ const OpenGraphImageField = ({
               ref={inputRef}
               type="file"
             />
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <div className="mt-3 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
               <label
                 aria-disabled={actionDisabled}
                 className={cn(
-                  "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-xs font-bold text-white shadow-admin-soft transition hover:bg-primary-hover",
+                  "inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-primary px-4 text-sm font-bold text-white shadow-admin-soft transition hover:bg-primary-hover",
                   actionDisabled && "pointer-events-none cursor-not-allowed opacity-60",
                 )}
                 htmlFor={actionDisabled ? undefined : inputId}
               >
                 {isUploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                 ) : (
-                  <ImagePlus className="h-4 w-4" />
+                  <ImagePlus className="h-4 w-4 shrink-0" />
                 )}
                 {src ? "Trocar imagem" : "Enviar imagem"}
               </label>
               {value ? (
                 <button
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-border px-4 text-xs font-bold text-muted transition hover:text-foreground disabled:opacity-60"
+                  className="inline-flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border border-border px-4 text-sm font-bold text-muted transition hover:text-foreground disabled:opacity-60"
                   disabled={actionDisabled}
                   onClick={onRemove}
                   type="button"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4 shrink-0" />
                   Remover
                 </button>
               ) : null}
