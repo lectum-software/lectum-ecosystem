@@ -1613,6 +1613,7 @@ export type AdminPsychologistAccount = {
     can_set_temporary_password: boolean;
     can_suspend_account: boolean;
     can_revoke_sessions: boolean;
+    can_view_as_user: boolean;
   };
   confirmed: boolean;
   confirmed_at: string | null;
@@ -1663,6 +1664,20 @@ export type AdminPsychologistAccountDeleteResponse = {
   deleted: true;
   id: string;
   source: "user+psychologist_profile+admin_activity_log";
+};
+
+export type AdminPsychologistAccountViewAsResponse = {
+  mode: "admin_view_as";
+  read_only: true;
+  token: string;
+  token_expires_in_seconds: number;
+  target: {
+    id: string;
+    name: string;
+    role: "psicologo";
+  };
+  start_path: string;
+  source: "user_token+admin_activity_log";
 };
 
 export type AdminPsychologistBillingPaymentHistoryItem = {
@@ -2818,6 +2833,18 @@ export const deleteAdminPsychologistAccount = async (
 ) => {
   const response = await adminApi.post<ApiResponse<AdminPsychologistAccountDeleteResponse>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/delete`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const startAdminPsychologistAccountViewAs = async (
+  id: string,
+  input: AdminPsychologistAccountReasonInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistAccountViewAsResponse>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/account/view-as`,
     input,
   );
 

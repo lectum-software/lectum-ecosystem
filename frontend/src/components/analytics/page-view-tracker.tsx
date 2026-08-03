@@ -8,6 +8,7 @@ import {
   sendPageViewDurationBeacon,
   updatePageViewDuration,
 } from "@/api/req/analytics";
+import { isAdminViewAsActive } from "@/utils/admin-view-as";
 import { documentHasUserAttention } from "./attention";
 import { getOrCreateAnalyticsIdentity, safeGetItem, safeSetItem } from "./storage";
 
@@ -160,6 +161,8 @@ export const PageViewTracker = () => {
 
   const trackPwaAction = useCallback(
     (actionType: "pwa_install_prompt_accepted" | "pwa_installed") => {
+      if (isAdminViewAsActive()) return;
+
       const identity = getOrCreateAnalyticsIdentity();
       if (!identity) return;
 
@@ -183,6 +186,7 @@ export const PageViewTracker = () => {
 
     flushCurrentDuration(false, true);
     lastRouteKeyRef.current = routeKey;
+    if (pathname === "/auth/admin-view-as" || isAdminViewAsActive()) return;
 
     const identity = getOrCreateAnalyticsIdentity();
     if (!identity) return;

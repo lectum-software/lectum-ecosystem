@@ -43,6 +43,7 @@ import {
   sendAdminPsychologistAccountEmailConfirmation,
   sendAdminPsychologistAccountPasswordReset,
   setAdminPsychologistAccountTemporaryPassword,
+  startAdminPsychologistAccountViewAs,
   suspendAdminPsychologistAccount,
   updateAdminPsychologistPersonalData,
   updateAdminPsychologistProfessionalData,
@@ -301,6 +302,16 @@ export const useAdminPsychologistDeleteAccount = (id: string) => {
         queryClient.invalidateQueries({ queryKey: adminDashboardKeys.all }),
       ]);
     },
+  });
+};
+
+export const useAdminPsychologistStartViewAs = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPsychologistAccountReasonInput) =>
+      startAdminPsychologistAccountViewAs(id, input),
+    onSuccess: () => invalidatePsychologistAccount(queryClient, id),
   });
 };
 

@@ -37,6 +37,7 @@ export type AdminPsychologistActivityType =
   | "account_sessions_revoked"
   | "account_suspended"
   | "account_temporary_password_set"
+  | "account_view_as_started"
   | "post_created"
   | "post_saved"
   | "profile_created"

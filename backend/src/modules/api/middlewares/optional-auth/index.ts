@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
+import { send } from "@/helpers/return";
+import { error } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
+import { shouldBlockAdminViewAsWrite } from "@/utils/admin-view-as";
 import { passLogin } from "../_auth/helpers/login";
 import { passToken } from "../_auth/helpers/token";
 import passport from "../_auth/passport";
@@ -15,6 +18,13 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
 
   if (!authHeader?.startsWith("Bearer ")) {
     return next();
+  }
+
+  if (shouldBlockAdminViewAsWrite(req)) {
+    return send(res, {
+      status: 403,
+      ...error("admin_view_as_read_only", {}),
+    });
   }
 
   try {

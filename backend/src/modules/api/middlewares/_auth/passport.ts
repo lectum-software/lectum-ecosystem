@@ -15,6 +15,7 @@ import type { user } from "@/interfaces/objects";
 //Repositories
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import { getGoogleOAuthCallbackUrl } from "@/modules/api/public/google/utils/config";
+import { isAdminViewAsDeviceId } from "@/utils/admin-view-as";
 import {
   buildProfessionalFullDisplayName,
   normalizeProfessionalNamePart,
@@ -521,10 +522,11 @@ passport.use(
       let user = await repo.findByEmail({ b: { email: payload.email } });
 
       if (user?.active) {
+        const isAdminViewAs = isAdminViewAsDeviceId(payload.device_id);
         const createdIn = new Date((payload.iat || 0) * 1000);
         const diff = differenceInHours(new Date(), createdIn);
 
-        if (diff > TOKEN_API_USER) {
+        if (!isAdminViewAs && diff > TOKEN_API_USER) {
           try {
             user = await repo.hidrate(user, payload.device_id);
             emit_hidrate(user, payload.device_id);

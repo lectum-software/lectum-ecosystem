@@ -6,6 +6,7 @@ import type { Resolve } from "@/helpers/return";
 //Libs
 import { error, msg } from "@/helpers/translate";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
+import { getAdminViewAsPayloadFromRequest } from "@/utils/admin-view-as";
 //Utils
 import { getDevice } from "../../../../middlewares/_auth/utils/device";
 //DTOs
@@ -34,6 +35,14 @@ export default async (data: IHidrateDTO): Promise<Resolve> => {
       entity: "c",
       type: 4,
     };
+
+  if (getAdminViewAsPayloadFromRequest(data)) {
+    return {
+      status: 200,
+      ...msg("auth_success", {}),
+      data: user,
+    };
+  }
 
   const res = await _LOGIN.hidrate(user, device.id);
   return {

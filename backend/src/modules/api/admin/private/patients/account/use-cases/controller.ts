@@ -9,6 +9,7 @@ import {
   sendAdminPatientAccountPasswordReset,
   setAdminPatientAccountTemporaryPassword,
   showAdminPatientAccount,
+  startAdminPatientAccountViewAs,
   suspendAdminPatientAccount,
 } from "./services";
 
@@ -105,6 +106,18 @@ export const deleteAccount = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_patient_account_delete", err);
+  }
+};
+
+export const startViewAs = async (req: Request, res: Response) => {
+  try {
+    const resolve = await startAdminPatientAccountViewAs(
+      req as unknown as Parameters<typeof startAdminPatientAccountViewAs>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_patient_account_view_as", err);
   }
 };
 

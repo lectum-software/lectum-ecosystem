@@ -7,9 +7,15 @@ const DASHBOARD_PATH = "/dashboard";
 const TOKEN_COOKIE_NAME = process.env.NEXT_PUBLIC_TOKEN_LOCAL || "lectum.token";
 const USER_COOKIE_NAME = process.env.NEXT_PUBLIC_USER_LOCAL || "lectum.user";
 
-const PUBLIC_ROUTES = ["/auth/profile-selection", "/auth/login", "/auth/redirect", "/auth/error"];
+const PUBLIC_ROUTES = [
+  "/auth/profile-selection",
+  "/auth/login",
+  "/auth/redirect",
+  "/auth/error",
+  "/auth/admin-view-as",
+];
 const AUTH_REQUIRED_ROUTES = ["/auth/verify-email"];
-const AUTH_RESULT_ROUTES = ["/auth/redirect", "/auth/error"];
+const AUTH_RESULT_ROUTES = ["/auth/redirect", "/auth/error", "/auth/admin-view-as"];
 const PRIVATE_PREFIXES = [DASHBOARD_PATH, APP_PATH, "/patient"];
 const INLINE_AUTH_PROMPT_ROUTES = ["/app/favorites", "/app/notifications", "/app/profile"];
 const PUBLIC_APP_EXACT_ROUTES = [

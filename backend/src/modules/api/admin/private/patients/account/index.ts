@@ -9,6 +9,7 @@ import {
   sendPasswordReset,
   setTemporaryPassword,
   show,
+  startViewAs,
   suspendAccount,
 } from "./use-cases/controller";
 import {
@@ -36,5 +37,6 @@ routes.post("/:id/account/suspend", suspendAccountValidator, suspendAccount);
 routes.post("/:id/account/deactivate", revokeSessionsValidator, deactivateAccount);
 routes.post("/:id/account/delete", revokeSessionsValidator, deleteAccount);
 routes.post("/:id/account/revoke-sessions", revokeSessionsValidator, revokeSessions);
+routes.post("/:id/account/view-as", reasonOnlyValidator, startViewAs);
 
 export default routes;

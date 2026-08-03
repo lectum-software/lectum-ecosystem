@@ -1,11 +1,12 @@
 import { createId } from "@paralleldrive/cuid2";
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import { getJwtSecret } from "./jwt-secret";
 
 export const generateToken = (
   data: { id: string; email: string },
   type: string,
   device_id: string,
+  signOptions?: SignOptions,
 ) => {
   const randomId = createId();
 
@@ -17,5 +18,5 @@ export const generateToken = (
     device_id,
   };
 
-  return jwt.sign(options, getJwtSecret());
+  return jwt.sign(options, getJwtSecret(), signOptions);
 };

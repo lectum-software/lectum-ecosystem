@@ -67,7 +67,8 @@ export type AdminPatientAccountAudit = {
     | "patient_account_password_reset_sent"
     | "patient_account_temporary_password_set"
     | "patient_account_suspended"
-    | "patient_account_sessions_revoked";
+    | "patient_account_sessions_revoked"
+    | "patient_account_view_as_started";
   adminId: string;
   changedFields: string[];
   metadata: Prisma.InputJsonObject;
@@ -222,6 +223,26 @@ export class AdminPatientAccountRepository {
         where: {
           user_id: input.userId,
         },
+      });
+
+      await this.createAuditLog(tx, input.audit);
+    });
+  }
+
+  async createViewAsSession(input: {
+    audit: AdminPatientAccountAudit;
+    deviceId: string;
+    token: string;
+    userId: string;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      await tx.user_token.create({
+        data: {
+          device_id: input.deviceId,
+          token: input.token,
+          user_id: input.userId,
+        },
+        select: { id: true },
       });
 
       await this.createAuditLog(tx, input.audit);

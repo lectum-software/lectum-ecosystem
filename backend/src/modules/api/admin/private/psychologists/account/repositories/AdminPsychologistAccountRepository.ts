@@ -77,7 +77,8 @@ export type AdminPsychologistAccountAudit = {
     | "psychologist_account_password_reset_sent"
     | "psychologist_account_temporary_password_set"
     | "psychologist_account_suspended"
-    | "psychologist_account_sessions_revoked";
+    | "psychologist_account_sessions_revoked"
+    | "psychologist_account_view_as_started";
   adminId: string;
   changedFields: string[];
   metadata: Prisma.InputJsonObject;
@@ -213,6 +214,26 @@ export class AdminPsychologistAccountRepository {
         where: {
           user_id: input.userId,
         },
+      });
+
+      await this.createAuditLog(tx, input.audit);
+    });
+  }
+
+  async createViewAsSession(input: {
+    audit: AdminPsychologistAccountAudit;
+    deviceId: string;
+    token: string;
+    userId: string;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      await tx.user_token.create({
+        data: {
+          device_id: input.deviceId,
+          token: input.token,
+          user_id: input.userId,
+        },
+        select: { id: true },
       });
 
       await this.createAuditLog(tx, input.audit);

@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Suspense } from "react";
 
 import "@/app/globals.css";
+import { AdminViewAsBanner } from "@/components/admin-view-as-banner";
 import { LocationCapture } from "@/components/analytics/location-capture";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { ProgressiveConversionBoundary } from "@/components/conversion/progressive-conversion-provider";
@@ -113,6 +114,7 @@ export default function RootLayout({
           <Progress />
           <Redux>
             <Query>
+              <AdminViewAsBanner />
               <LocationCapture />
               <Suspense fallback={null}>
                 <PageViewTracker />

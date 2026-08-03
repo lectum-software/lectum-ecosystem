@@ -82,6 +82,7 @@ import {
   useAdminPsychologistSendEmailConfirmation,
   useAdminPsychologistSendPasswordReset,
   useAdminPsychologistSetTemporaryPassword,
+  useAdminPsychologistStartViewAs,
   useAdminPsychologistStatistics,
   useAdminPsychologistSuspendAccount,
   useAdminPsychologistsDashboard,
@@ -93,6 +94,7 @@ import { useAdminSettingsCatalogs } from "@/api/callers/settings";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPsychologistAccount,
+  AdminPsychologistAccountViewAsResponse,
   AdminPsychologistActivitiesQuery,
   AdminPsychologistBilling,
   AdminPsychologistCatalogItem,
@@ -1112,6 +1114,29 @@ const toPublicHref = (url: string) => {
   if (/^https?:\/\//.test(url)) return url;
 
   return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
+};
+
+const buildAdminViewAsUrl = (session: AdminPsychologistAccountViewAsResponse) => {
+  const url = new URL("/auth/admin-view-as", publicFrontendUrl);
+  const adminReturnUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}${window.location.search}`
+      : "";
+  const hash = new URLSearchParams({
+    adminReturnUrl,
+    expiresIn: String(session.token_expires_in_seconds),
+    mode: session.mode,
+    readOnly: String(session.read_only),
+    role: session.target.role,
+    startPath: session.start_path,
+    subjectId: session.target.id,
+    subjectName: session.target.name,
+    token: session.token,
+  });
+
+  url.hash = hash.toString();
+
+  return url.toString();
 };
 
 const publicationAdminDetailHref = (item: AdminPsychologistPublicationItem) =>
@@ -9554,6 +9579,60 @@ const AccountRevokeSessionsForm = ({
   );
 };
 
+const AccountViewAsForm = ({ account, id }: { account: AdminPsychologistAccount; id: string }) => {
+  const mutation = useAdminPsychologistStartViewAs(id);
+  const form = useForm<AccountReasonFormValues>({
+    defaultValues: { reason: "" },
+    mode: "onSubmit",
+    resolver: zodResolver(accountReasonSchema),
+  });
+  const disabled = !account.capabilities.can_view_as_user || mutation.isPending;
+
+  const onSubmit: SubmitHandler<AccountReasonFormValues> = async (values) => {
+    try {
+      const session = await mutation.mutateAsync({ reason: values.reason.trim() });
+      form.reset();
+      window.open(buildAdminViewAsUrl(session), "_blank", "noopener,noreferrer");
+      toast.success("Visualização como psicólogo aberta em nova aba.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        {!account.capabilities.can_view_as_user ? (
+          <AccountUnavailableNotice>
+            Disponível apenas para conta ativa e não excluída. Contas suspensas ou desativadas não
+            podem ser visualizadas como usuário.
+          </AccountUnavailableNotice>
+        ) : null}
+        <TextareaController<AccountReasonFormValues>
+          disabled={disabled}
+          label="Motivo/observação interna"
+          name="reason"
+          placeholder="Explique por que a equipe precisa visualizar a experiência do psicólogo."
+          required
+          rows={3}
+        />
+        <button
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-primary bg-surface px-4 text-sm font-black text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+          disabled={disabled}
+          type="submit"
+        >
+          {mutation.isPending ? (
+            <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          ) : (
+            <Eye aria-hidden className="h-4 w-4" />
+          )}
+          Visualizar como usuário
+        </button>
+      </form>
+    </FormProvider>
+  );
+};
+
 type AccountStatusActionKind = "deactivate" | "delete" | "suspend";
 
 const ACCOUNT_STATUS_ACTION_CONFIG: Record<
@@ -9832,6 +9911,16 @@ const AccountTab = ({ id }: { id: string }) => {
           </div>
         </InfoCard>
       </div>
+
+      <InfoCard icon={Eye} title="Visualização administrativa">
+        <div className="grid gap-4">
+          <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
+            Abre a experiência do psicólogo em modo somente leitura. A abertura é auditada e ações
+            de escrita são bloqueadas no backend.
+          </div>
+          <AccountViewAsForm account={account} id={id} />
+        </div>
+      </InfoCard>
 
       <InfoCard icon={AlertTriangle} title="Ações da conta">
         <div className="grid gap-5">

@@ -28,6 +28,7 @@ export type AdminPatientActivityType =
   | "account_sessions_revoked"
   | "account_suspended"
   | "account_temporary_password_set"
+  | "account_view_as_started"
   | "admin_personal_data_updated"
   | "community_joined"
   | "onboarding_completed"

@@ -40,6 +40,7 @@ const TYPE_LABELS: Record<AdminPatientActivityType, string> = {
   account_sessions_revoked: "Sessões encerradas",
   account_suspended: "Conta suspensa",
   account_temporary_password_set: "Senha temporária definida",
+  account_view_as_started: "Visualização como usuário iniciada",
   admin_personal_data_updated: "Dados pessoais atualizados",
   community_joined: "Entrada em comunidade",
   onboarding_completed: "Onboarding concluído",
@@ -254,6 +255,7 @@ const adminLogType = (action: string): AdminPatientActivityType | null => {
   }
   if (action === "patient_account_suspended") return "account_suspended";
   if (action === "patient_account_sessions_revoked") return "account_sessions_revoked";
+  if (action === "patient_account_view_as_started") return "account_view_as_started";
 
   return null;
 };
@@ -268,6 +270,7 @@ const adminAccountActionLabel = (action: string) => {
     patient_account_sessions_revoked: "encerrou as sessões do paciente",
     patient_account_suspended: "suspendeu a conta do paciente",
     patient_account_temporary_password_set: "definiu senha temporária",
+    patient_account_view_as_started: "iniciou visualização como paciente em modo somente leitura",
   };
 
   return labels[action] ?? "atualizou a conta";

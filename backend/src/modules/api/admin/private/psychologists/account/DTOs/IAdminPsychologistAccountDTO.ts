@@ -10,6 +10,7 @@ export type AdminPsychologistAccountCapabilities = {
   can_set_temporary_password: boolean;
   can_suspend_account: boolean;
   can_revoke_sessions: boolean;
+  can_view_as_user: boolean;
 };
 
 export type AdminPsychologistAccountStatus = "active" | "deactivated" | "deleted" | "suspended";
@@ -110,4 +111,18 @@ export type AdminPsychologistAccountDeleteDTO = {
   deleted: true;
   id: string;
   source: "user+psychologist_profile+admin_activity_log";
+};
+
+export type AdminPsychologistAccountViewAsDTO = {
+  mode: "admin_view_as";
+  read_only: true;
+  token: string;
+  token_expires_in_seconds: number;
+  target: {
+    id: string;
+    name: string;
+    role: "psicologo";
+  };
+  start_path: string;
+  source: "user_token+admin_activity_log";
 };

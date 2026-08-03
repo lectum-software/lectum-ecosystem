@@ -9,6 +9,7 @@ import {
   sendAdminPsychologistAccountPasswordReset,
   setAdminPsychologistAccountTemporaryPassword,
   showAdminPsychologistAccount,
+  startAdminPsychologistAccountViewAs,
   suspendAdminPsychologistAccount,
 } from "./services";
 
@@ -105,6 +106,18 @@ export const deleteAccount = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "admin_psychologist_account_delete", err);
+  }
+};
+
+export const startViewAs = async (req: Request, res: Response) => {
+  try {
+    const resolve = await startAdminPsychologistAccountViewAs(
+      req as unknown as Parameters<typeof startAdminPsychologistAccountViewAs>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "admin_psychologist_account_view_as", err);
   }
 };
 

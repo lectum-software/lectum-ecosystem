@@ -3,12 +3,18 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
 import { recoveryEmailSend } from "@/modules/api/config/nodemailer/messages/recovery";
+import { generateToken } from "@/modules/api/middlewares/_auth/utils/generateToken";
 import { AccountRepository } from "@/modules/api/private/account/repositories/AccountRepository";
 import {
   isSuspensionExpired,
   isValidSuspensionDurationDays,
   suspensionExpiresAtFromDays,
 } from "@/utils/account-status";
+import {
+  ADMIN_VIEW_AS_TOKEN_TTL_SECONDS,
+  buildAdminViewAsDeviceId,
+  isAdminViewAsDeviceId,
+} from "@/utils/admin-view-as";
 import { code } from "@/utils/code";
 import { encrypt } from "@/utils/crypt";
 import { encrypt as encryptBcrypt } from "@/utils/crypt/bcrypt";
@@ -16,6 +22,7 @@ import type {
   AdminPatientAccountDeleteDTO,
   AdminPatientAccountDTO,
   AdminPatientAccountStatus,
+  AdminPatientAccountViewAsDTO,
   IAdminPatientAccountChangeEmailDTO,
   IAdminPatientAccountReasonDTO,
   IAdminPatientAccountRevokeSessionsDTO,
@@ -35,6 +42,7 @@ const DELETE_ACCOUNT_CONFIRMATION = "EXCLUIR CONTA";
 const TEMP_PASSWORD_CONFIRMATION = "ALTERAR SENHA";
 const REVOKE_SESSIONS_CONFIRMATION = "ENCERRAR SESSÕES";
 const SUSPEND_ACCOUNT_CONFIRMATION = "SUSPENDER CONTA";
+const VIEW_AS_START_PATH = "/app/profile";
 
 const normalizeStrongConfirmation = (value: string) =>
   value
@@ -128,6 +136,11 @@ const invalidSuspensionDuration = () => ({
   ...error("admin_patient_account_suspension_duration_invalid", {}),
 });
 
+const viewAsUnavailable = () => ({
+  status: 400,
+  ...error("admin_patient_account_view_as_unavailable", {}),
+});
+
 const normalizeAccountStatus = (
   user: AdminPatientAccountRecord["user"],
 ): AdminPatientAccountStatus => {
@@ -146,12 +159,13 @@ const deleteBlockedReason = () => null;
 const buildAccountDto = (profile: AdminPatientAccountRecord): AdminPatientAccountDTO => {
   const user = profile.user;
   const hasPassword = Boolean(user.password);
-  const activeTokens = user.user_tokens;
+  const activeTokens = user.user_tokens.filter((token) => !isAdminViewAsDeviceId(token.device_id));
   const deviceIds = new Set(activeTokens.map((token) => token.device_id).filter(Boolean));
   const lastAccess = latestAccessAt(activeTokens);
   const accountStatus = normalizeAccountStatus(user);
   const deleted = accountStatus === "deleted";
   const blockedReason = deleteBlockedReason();
+  const canViewAsUser = !deleted && accountStatus === "active" && Boolean(user.active);
 
   return {
     active: Boolean(user.active),
@@ -168,6 +182,7 @@ const buildAccountDto = (profile: AdminPatientAccountRecord): AdminPatientAccoun
       can_set_temporary_password: hasPassword && !deleted,
       can_suspend_account: !deleted && accountStatus !== "suspended",
       can_revoke_sessions: activeTokens.length > 0 && !deleted,
+      can_view_as_user: canViewAsUser,
     },
     confirmed: Boolean(user.confirmed),
     confirmed_at: user.confirmed_date,
@@ -700,6 +715,80 @@ export const deleteAdminPatientAccount = async (
   return {
     status: 200,
     ...msg("admin_patient_account_deleted", {}),
+    data: response,
+  };
+};
+
+export const startAdminPatientAccountViewAs = async (
+  data: IAdminPatientAccountReasonDTO,
+): Promise<Resolve> => {
+  const admin = data.admin;
+  if (!admin?.id) return adminRequired();
+
+  const { profile, repository } = await loadAccount(data.p.id);
+  if (!profile) return profileNotFound();
+
+  const account = buildAccountDto(profile);
+  if (!account.capabilities.can_view_as_user) return viewAsUnavailable();
+
+  const deviceId = buildAdminViewAsDeviceId({
+    adminId: admin.id,
+    targetId: profile.user.id,
+    targetRole: "paciente",
+  });
+  const token = generateToken(
+    { email: profile.user.email, id: profile.user.id },
+    "user",
+    deviceId,
+    { expiresIn: ADMIN_VIEW_AS_TOKEN_TTL_SECONDS },
+  );
+
+  await repository.createViewAsSession({
+    audit: createAudit({
+      action: "patient_account_view_as_started",
+      adminId: admin.id,
+      changedFields: ["Visualização administrativa"],
+      metadata: {
+        mode: "admin_view_as",
+        read_only: true,
+        start_path: VIEW_AS_START_PATH,
+        target_role: "paciente",
+        token_expires_in_seconds: ADMIN_VIEW_AS_TOKEN_TTL_SECONDS,
+      },
+      reason: data.b.reason,
+      safeAfter: {
+        "Modo de acesso": "Somente leitura",
+        "Sessão de visualização": "Iniciada",
+        "Validade da sessão": `${ADMIN_VIEW_AS_TOKEN_TTL_SECONDS} segundos`,
+      },
+      safeBefore: {
+        "Modo de acesso": "Admin autenticado no painel",
+        "Sessão de visualização": "Ausente",
+      },
+      targetId: profile.user.id,
+    }),
+    deviceId,
+    token,
+    userId: profile.user.id,
+  });
+
+  const response: AdminPatientAccountViewAsDTO = {
+    mode: "admin_view_as",
+    read_only: true,
+    source: "user_token+admin_activity_log",
+    start_path: VIEW_AS_START_PATH,
+    target: {
+      id: profile.user.id,
+      name: profile.user.name || profile.user.email,
+      role: "paciente",
+    },
+    token,
+    token_expires_in_seconds: ADMIN_VIEW_AS_TOKEN_TTL_SECONDS,
+  };
+
+  return {
+    status: 200,
+    ...msg("admin_patient_account_view_as_started", {}),
     data: response,
   };
 };

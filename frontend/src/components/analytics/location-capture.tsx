@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useLocationCapture } from "@/api/callers/analytics";
 import type { LocationCaptureRequest } from "@/api/req/analytics";
 import { useAppSelector } from "@/hooks/redux";
+import { isAdminViewAsActive } from "@/utils/admin-view-as";
 import {
   getOrCreateStorageId,
   SESSION_ID_KEY,
@@ -115,6 +116,7 @@ export const LocationCapture = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (isAdminViewAsActive()) return;
 
     const visitorId = getOrCreateStorageId(window.localStorage, VISITOR_ID_KEY);
     const sessionId = getOrCreateStorageId(window.sessionStorage, SESSION_ID_KEY);

@@ -43,6 +43,7 @@ const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   account_sessions_revoked: "Sess\u00f5es encerradas",
   account_suspended: "Conta suspensa",
   account_temporary_password_set: "Senha tempor\u00e1ria definida",
+  account_view_as_started: "Visualização como usuário iniciada",
   admin_personal_data_updated: "Dados pessoais atualizados",
   admin_professional_data_updated: "Dados profissionais atualizados",
   post_created: "Criação de post",
@@ -287,6 +288,7 @@ const adminLogType = (action: string): AdminPsychologistActivityType | null => {
   }
   if (action === "psychologist_account_suspended") return "account_suspended";
   if (action === "psychologist_account_sessions_revoked") return "account_sessions_revoked";
+  if (action === "psychologist_account_view_as_started") return "account_view_as_started";
   if (action === "psychologist_report_review_started") return "report_review_started";
   if (action === "psychologist_report_decision_reviewed") return "report_decision_reviewed";
   if (action === "psychologist_report_dismissed") return "report_dismissed";
@@ -306,6 +308,8 @@ const adminAccountActionLabel = (action: string) => {
     psychologist_account_sessions_revoked: "encerrou as sess\u00f5es do psic\u00f3logo",
     psychologist_account_suspended: "suspendeu a conta do psicólogo",
     psychologist_account_temporary_password_set: "definiu senha tempor\u00e1ria",
+    psychologist_account_view_as_started:
+      "iniciou visualização como psicólogo em modo somente leitura",
   };
 
   return labels[action] ?? "atualizou a conta";

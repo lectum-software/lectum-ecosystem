@@ -5,6 +5,7 @@ import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 //Types
 import type { user } from "@/interfaces/objects";
+import { shouldBlockAdminViewAsWrite } from "@/utils/admin-view-as";
 import { passLogin } from "./helpers/login";
 import { passToken } from "./helpers/token";
 //Libs
@@ -37,6 +38,13 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
         //If you need a custom text
       }),
     });
+
+  if (shouldBlockAdminViewAsWrite(req)) {
+    return send(res, {
+      status: 403,
+      ...error("admin_view_as_read_only", {}),
+    });
+  }
 
   try {
     passport.authenticate("jwt-user-api", async (authError: Not_Authorized, login: user) => {

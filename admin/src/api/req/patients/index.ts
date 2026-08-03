@@ -35,6 +35,7 @@ export type AdminPatientAccount = {
     can_set_temporary_password: boolean;
     can_suspend_account: boolean;
     can_revoke_sessions: boolean;
+    can_view_as_user: boolean;
   };
   confirmed: boolean;
   confirmed_at: string | null;
@@ -85,6 +86,20 @@ export type AdminPatientAccountDeleteResponse = {
   deleted: true;
   id: string;
   source: "user+patient_profile+admin_activity_log";
+};
+
+export type AdminPatientAccountViewAsResponse = {
+  mode: "admin_view_as";
+  read_only: true;
+  token: string;
+  token_expires_in_seconds: number;
+  target: {
+    id: string;
+    name: string;
+    role: "paciente";
+  };
+  start_path: string;
+  source: "user_token+admin_activity_log";
 };
 
 export type AdminPatientActivitiesQuery = {
@@ -1118,6 +1133,18 @@ export const deleteAdminPatientAccount = async (
 ) => {
   const response = await adminApi.post<ApiResponse<AdminPatientAccountDeleteResponse>>(
     `/api/admin/private/patients/${encodeURIComponent(id)}/account/delete`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const startAdminPatientAccountViewAs = async (
+  id: string,
+  input: AdminPatientAccountReasonInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPatientAccountViewAsResponse>>(
+    `/api/admin/private/patients/${encodeURIComponent(id)}/account/view-as`,
     input,
   );
 

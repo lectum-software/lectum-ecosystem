@@ -24,6 +24,7 @@ import {
   sendAdminPatientAccountEmailConfirmation,
   sendAdminPatientAccountPasswordReset,
   setAdminPatientAccountTemporaryPassword,
+  startAdminPatientAccountViewAs,
   suspendAdminPatientAccount,
   updateAdminPatientPersonalData,
 } from "@/api/req/patients";
@@ -182,5 +183,15 @@ export const useAdminPatientDeleteAccount = (id: string) => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: adminPatientsKeys.all });
     },
+  });
+};
+
+export const useAdminPatientStartViewAs = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminPatientAccountReasonInput) =>
+      startAdminPatientAccountViewAs(id, input),
+    onSuccess: () => invalidatePatientAccount(queryClient, id),
   });
 };

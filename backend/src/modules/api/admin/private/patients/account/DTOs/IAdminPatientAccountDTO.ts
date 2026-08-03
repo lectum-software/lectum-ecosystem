@@ -10,6 +10,7 @@ export type AdminPatientAccountCapabilities = {
   can_set_temporary_password: boolean;
   can_suspend_account: boolean;
   can_revoke_sessions: boolean;
+  can_view_as_user: boolean;
 };
 
 export type AdminPatientAccountStatus = "active" | "deactivated" | "deleted" | "suspended";
@@ -110,4 +111,18 @@ export type AdminPatientAccountDeleteDTO = {
   deleted: true;
   id: string;
   source: "user+patient_profile+admin_activity_log";
+};
+
+export type AdminPatientAccountViewAsDTO = {
+  mode: "admin_view_as";
+  read_only: true;
+  token: string;
+  token_expires_in_seconds: number;
+  target: {
+    id: string;
+    name: string;
+    role: "paciente";
+  };
+  start_path: string;
+  source: "user_token+admin_activity_log";
 };
