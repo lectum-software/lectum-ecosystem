@@ -69,6 +69,7 @@ export const ADMIN_SEO_METADATA_PAGE_KEYS = [
   "psychologists",
   "psychologist_profile",
   "community",
+  "community_detail",
   "community_post",
   "top_mentors",
 ] as const;

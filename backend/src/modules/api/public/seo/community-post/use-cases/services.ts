@@ -147,7 +147,7 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
 
   if (!post) return notFound();
 
-  const title = compactTitle(post.title) || "Pergunta da comunidade";
+  const title = normalizeSpaces(post.title) || "Pergunta da comunidade";
   const description = compactDescription(post.content) || "Discussão pública na comunidade Lectum.";
   const mediaPreview = resolveMediaPreview(firstPostMedia(post));
   const data: PublicCommunityPostSeoDTO = {
@@ -159,7 +159,7 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
     og_image_height: mediaPreview.ogImageHeight,
     og_image_url: mediaPreview.ogImageUrl,
     og_image_width: mediaPreview.ogImageWidth,
-    og_title: `${title} | Lectum`,
+    og_title: title,
     og_video_url: mediaPreview.ogVideoUrl,
     published_at: post.createdAt,
     source: "community_post",
@@ -252,7 +252,7 @@ export const showReply = async ({ id, replyId, slug }: ReplySeoParams): Promise<
     og_image_height: replyMedia.ogImageHeight ?? postMedia.ogImageHeight,
     og_image_url: replyMedia.ogImageUrl ?? postMedia.ogImageUrl,
     og_image_width: replyMedia.ogImageWidth ?? postMedia.ogImageWidth,
-    og_title: `${title} | Lectum`,
+    og_title: title,
     og_video_url: replyMedia.ogVideoUrl ?? postMedia.ogVideoUrl,
     published_at: reply.createdAt,
     source: "post_reply",

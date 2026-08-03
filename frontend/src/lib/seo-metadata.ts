@@ -9,6 +9,7 @@ export type SeoMetadataPageKey =
   | "psychologists"
   | "psychologist_profile"
   | "community"
+  | "community_detail"
   | "community_post"
   | "top_mentors";
 
@@ -81,6 +82,17 @@ type PublicCommunityPostSeo = {
   og_image_width: number | null;
   og_title: string;
   og_video_url: string | null;
+  title: string;
+};
+
+type PublicCommunitySeo = {
+  canonical_url: string;
+  description: string;
+  name: string;
+  og_description: string;
+  og_image_url: string | null;
+  og_title: string;
+  slug: string;
   title: string;
 };
 
@@ -227,11 +239,11 @@ const getPublicCommunityPostSeo = async ({
 
   try {
     const response = await fetch(`${apiBaseUrl()}${path}`, {
+      cache: "no-store",
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
       },
-      next: { revalidate: 300 },
     });
 
     if (!response.ok) return null;
@@ -242,6 +254,49 @@ const getPublicCommunityPostSeo = async ({
   } catch {
     return null;
   }
+};
+
+const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
+  const encodedSlug = encodeURIComponent(slug);
+
+  try {
+    const response = await fetch(`${apiBaseUrl()}/api/public/seo/community/${encodedSlug}`, {
+      cache: "no-store",
+      headers: {
+        "Accept-Language": "pt",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const body = (await response.json()) as ApiResponse<PublicCommunitySeo>;
+
+    return body.success ? (body.data ?? null) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const resolveCommunitySeoMetadata = async ({
+  fallback,
+  slug,
+}: {
+  fallback: SeoMetadataFallback;
+  slug: string;
+}): Promise<Metadata> => {
+  const seo = await getPublicCommunitySeo({ slug });
+
+  if (!seo) return resolveSeoMetadata("community_detail", fallback);
+
+  return resolveSeoMetadata("community_detail", fallback, {
+    canonical: seo.canonical_url,
+    description: seo.description,
+    image: seo.og_image_url,
+    ogDescription: seo.og_description,
+    ogTitle: seo.og_title,
+    title: seo.title,
+  });
 };
 
 export const resolveCommunityPostSeoMetadata = async ({

@@ -85,3 +85,11 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] Endpoint publico de SEO passa a expor dimensoes `og_image_width=1080` e `og_image_height=1920` quando o `og:image` vem de miniatura de video no formato vertical.
 - [x] `generateMetadata` passa a publicar metadados Open Graph de video como `video.other`, mantendo `og:image` com a miniatura vertical e `og:video` com o arquivo de video.
 - [x] Revalidado com `pnpm --dir frontend check`, `pnpm --dir backend check`, builds de frontend/backend, `pnpm check` e smoke HTTP local.
+
+## Ajuste pos-feedback 2026-08-03 - comunidade dinâmica e título compartilhado
+
+- [x] Criado endpoint público `GET /api/public/seo/community/:slug` para resolver metadados reais de comunidades ativas por slug.
+- [x] A rota pública `/community/[slug]` passa a usar o nome real da comunidade como `og:title` e canonical `/community/{slug}`.
+- [x] O Admin SEO/Metadados passa a ter a chave **Comunidade** (`community_detail`) para a rota técnica `/community/[slug]`, separada da listagem **Comunidades** (`/community`).
+- [x] Posts continuam usando o título real do post como título compartilhado; o sufixo `| Lectum` fica restrito ao título HTML/documento, com fetch dinâmico `no-store` para evitar cache interno stale do Next nas páginas compartilhadas.
+- [x] Revalidado com checks/builds de backend, frontend e admin, `pnpm check` e smoke HTTP local para comunidade/post reais.

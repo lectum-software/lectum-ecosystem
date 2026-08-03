@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CommunityRouteLogic } from "@/app/app/community/[slug]/logic";
 import { COMMUNITY_FEED_DESCRIPTION, SITE_NAME } from "@/lib/seo";
-import { resolveSeoMetadata } from "@/lib/seo-metadata";
+import { resolveCommunitySeoMetadata, resolveSeoMetadata } from "@/lib/seo-metadata";
 import { COMMUNITY_FEED_SLUG } from "@/utils/community";
 
 type CommunityRoutePageProps = {
@@ -22,10 +22,15 @@ export async function generateMetadata({ params }: CommunityRoutePageProps): Pro
     });
   }
 
-  return resolveSeoMetadata("community", {
-    canonical: slug ? `/community/${slug}` : "/community",
-    description: "Comunidade pública da Lectum com perguntas, relatos e respostas de psicólogos.",
-    title: `Comunidade | ${SITE_NAME}`,
+  const canonical = slug ? `/community/${slug}` : "/community";
+
+  return resolveCommunitySeoMetadata({
+    fallback: {
+      canonical,
+      description: "Comunidade pública da Lectum com perguntas, relatos e respostas de psicólogos.",
+      title: `Comunidade | ${SITE_NAME}`,
+    },
+    slug: slug ?? "",
   });
 }
 

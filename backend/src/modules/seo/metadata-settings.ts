@@ -6,6 +6,7 @@ export const SEO_METADATA_PAGE_KEYS = [
   "psychologists",
   "psychologist_profile",
   "community",
+  "community_detail",
   "community_post",
   "top_mentors",
 ] as const;
@@ -130,6 +131,23 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     robots_index: true,
     route_path: "/community",
     title: "Comunidades | Lectum",
+  },
+  {
+    canonical_url: null,
+    description:
+      "Comunidade pública da Lectum com perguntas, relatos e respostas responsáveis sobre saúde mental.",
+    id: "site-seo-community-detail",
+    keywords: ["comunidade de saúde mental", "perguntas sobre psicologia", "psicólogos"],
+    label: "Comunidade",
+    og_description:
+      "Comunidade pública da Lectum com perguntas, relatos e respostas responsáveis sobre saúde mental.",
+    og_image_url: "/logo-light.png",
+    og_title: "Comunidade | Lectum",
+    page_key: "community_detail",
+    robots_follow: true,
+    robots_index: true,
+    route_path: "/community/[slug]",
+    title: "Comunidade | Lectum",
   },
   {
     canonical_url: null,
