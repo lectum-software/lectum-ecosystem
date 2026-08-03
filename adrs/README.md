@@ -197,3 +197,4 @@ Formato recomendado:
 - [ADR-0402 - Range predominante na tag Posicao do video na tabela comportamental Admin](0402-range-posicao-video-tabela-comportamental-admin.md) - Accepted
 - [ADR-0403 - Meta de conversao no dashboard e matriz Admin](0403-meta-conversao-dashboard-matriz-admin.md) - Accepted
 - [ADR-0404 - Comunidades no Analytics privado do psicologo](0404-comunidades-analytics-psicologo.md) - Accepted
+- [ADR-0406 - Preço do Plano Profissional em R$ 29,90](0406-preco-plano-profissional-2990.md) - Accepted

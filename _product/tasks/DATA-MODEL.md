@@ -830,7 +830,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 |---|---|---|
 | `slug` | `String @unique` | `"gratuito" \| "profissional"` |
 | `name` | `String` | |
-| `price_cents` | `Int @default(0)` | profissional = `990` (R$ 9,90/mês, sem trial; confirmado em TASK-03) |
+| `price_cents` | `Int @default(0)` | profissional = `2990` (R$ 29,90/mês, sem trial; atualizado por decisão de produto em 2026-08-03) |
 | `interval` | `String @default("month")` | |
 | `features` | `Json?` | flags (selo, analytics, ranking; `profile_video` permanece verdadeiro em todos os planos atuais) |
 | `active` | `Boolean @default(true)` | |

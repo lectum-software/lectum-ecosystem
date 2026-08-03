@@ -171,7 +171,7 @@ O card `Plano atual` passou a concentrar a leitura e a acao de cortesia ativa. A
 Decisao:
 
 - Remover do card `Plano atual` a frase tecnica sobre `professional_subscription`, as etiquetas de status/source e o bloco `Acoes financeiras pelo Admin`.
-- Exibir assinatura paga como nome do plano e preco mensal (`R$ 9,90/mês`) sem etiquetas redundantes.
+- Exibir assinatura paga como nome do plano e preco mensal (`R$ 29,90/mês`) sem etiquetas redundantes.
 - Exibir cortesia ativa como `Plano de cortesia`, preservando dados de vigencia e operador em `Concedida por`.
 - Mover o botao `Revogar cortesia` para a base do proprio card `Plano atual`, abaixo de `Concedida por`.
 

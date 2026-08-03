@@ -1,6 +1,6 @@
 # Decisões de Integração Lectum
 
-Última atualização: 2026-06-05.
+Última atualização: 2026-08-03.
 
 Este documento registra decisões externas necessárias para evitar implementação falsa de integrações. Quando uma credencial real estiver ausente, a task futura deve pedir ao usuário e parar antes de simular sucesso.
 
@@ -14,7 +14,7 @@ Ambiente: sandbox e produção pendentes de credenciais reais.
 
 Webhooks: `subscription_preapproval`, `subscription_authorized_payment` e `payment`.
 
-Plano: Profissional por R$ 9,90/mês, sem período de teste.
+Plano: Profissional por R$ 29,90/mês, sem período de teste.
 
 Pacotes:
 

@@ -10,7 +10,7 @@ TASK-31, TASK-32, TASK-33 (assinatura/checkout/gestão). Modelo e contrato em `_
 
 ## Contexto
 
-O PRD prevê o Plano Profissional recorrente (R$ 9,90/mês). O cliente definiu o provedor: **Mercado Pago**. Requisitos do produto antes de implementar:
+O PRD previa o Plano Profissional recorrente por R$ 9,90/mês, e a decisão direta de produto de 2026-08-03 atualizou o valor para R$ 29,90/mês. O cliente definiu o provedor: **Mercado Pago**. Requisitos do produto antes de implementar:
 
 1. Checkout transparente (UX 100% no app, sem redirect/marca do provedor).
 2. Não ficar preso ao gateway nem depender dele como fonte de verdade dos dados.
@@ -49,5 +49,5 @@ Detalhes de campos, mapa de status e modo de integração estão em `DATA-MODEL.
 ## Pendências
 
 - **Credenciais Mercado Pago** (access token + public key, sandbox e produção) — bloqueio operacional das TASK-32/33 até serem providas. Registrar em `_product/decisions.md` (TASK-03).
-- Preço final e eventual período de teste (free trial) do Plano Profissional — confirmar em TASK-03.
+- Preço vigente do Plano Profissional: R$ 29,90/mês, sem período de teste, conforme `_product/decisions.md` e ADR-0406.
 - Demais integrações (storage, CFP, WhatsApp, e-mail/SMS, push, LGPD, moderação) permanecem pendentes na TASK-03 / ADR-0004.

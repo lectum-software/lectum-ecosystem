@@ -25,6 +25,10 @@ export type GatewaySubscriptionPlanResult = {
   raw: unknown;
 };
 
+export type GatewaySubscriptionPlan = GatewaySubscriptionPlanResult & {
+  amount_cents: number | null;
+};
+
 export type GatewaySubscriptionResult = {
   gateway_subscription_id: string;
   status: BillingSubscriptionStatus;
@@ -79,6 +83,7 @@ export interface PaymentGateway {
   createSubscriptionPlan(
     input: GatewaySubscriptionPlanInput,
   ): Promise<GatewaySubscriptionPlanResult>;
+  getSubscriptionPlan(gatewayPlanId: string): Promise<GatewaySubscriptionPlan>;
   createSubscription(input: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult>;
   updateSubscriptionCard(
     input: GatewayUpdateSubscriptionCardInput,

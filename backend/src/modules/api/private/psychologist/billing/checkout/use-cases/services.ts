@@ -145,6 +145,56 @@ const resolveGatewayBackUrl = () => {
 const buildPlanIdempotencyKey = (plan: ProfessionalPlan) =>
   `lectum-preapproval-plan-${plan.slug || plan.id}-${plan.price_cents}`;
 
+const readCompatibleGatewayPlanId = async ({
+  gateway,
+  gatewayPlanId,
+  plan,
+}: {
+  gateway: PaymentGateway;
+  gatewayPlanId: string;
+  plan: ProfessionalPlan;
+}) => {
+  const gatewayPlan = await gateway.getSubscriptionPlan(gatewayPlanId);
+  const expectedAmountCents = plan.price_cents ?? null;
+
+  if (gatewayPlan.amount_cents === expectedAmountCents) {
+    return gatewayPlan.gateway_plan_id || gatewayPlanId;
+  }
+
+  console.warn("[BILLING] Mercado Pago plan amount mismatch", {
+    expected_amount_cents: expectedAmountCents,
+    gateway_amount_cents: gatewayPlan.amount_cents,
+    gateway_plan_id: gatewayPlanId,
+    plan_id: plan.id,
+    plan_slug: plan.slug,
+  });
+
+  return null;
+};
+
+const createAndPersistGatewayPlanId = async ({
+  gateway,
+  plan,
+  repository,
+  returnUrl,
+}: {
+  gateway: PaymentGateway;
+  plan: ProfessionalPlan;
+  repository: CheckoutRepository;
+  returnUrl: string;
+}) => {
+  const gatewayPlan = await gateway.createSubscriptionPlan({
+    amountCents: plan.price_cents!,
+    idempotencyKey: buildPlanIdempotencyKey(plan),
+    planName: plan.name || "Plano Profissional Lectum",
+    returnUrl,
+  });
+
+  await repository.setGatewayPlanId(plan.id!, gatewayPlan.gateway_plan_id);
+
+  return gatewayPlan.gateway_plan_id;
+};
+
 const ensureGatewayPlanId = async ({
   gateway,
   plan,
@@ -157,26 +207,40 @@ const ensureGatewayPlanId = async ({
   returnUrl: string;
 }) => {
   if (plan.gateway_plan_id) {
-    return plan.gateway_plan_id;
+    const compatibleGatewayPlanId = await readCompatibleGatewayPlanId({
+      gateway,
+      gatewayPlanId: plan.gateway_plan_id,
+      plan,
+    });
+
+    if (compatibleGatewayPlanId) {
+      return compatibleGatewayPlanId;
+    }
+
+    await repository.setGatewayPlanId(plan.id!, null);
   }
 
   const configuredGatewayPlanId = getConfiguredGatewayPlanId();
 
   if (configuredGatewayPlanId) {
-    await repository.setGatewayPlanId(plan.id!, configuredGatewayPlanId);
-    return configuredGatewayPlanId;
+    const compatibleConfiguredPlanId = await readCompatibleGatewayPlanId({
+      gateway,
+      gatewayPlanId: configuredGatewayPlanId,
+      plan,
+    });
+
+    if (compatibleConfiguredPlanId) {
+      await repository.setGatewayPlanId(plan.id!, compatibleConfiguredPlanId);
+      return compatibleConfiguredPlanId;
+    }
   }
 
-  const gatewayPlan = await gateway.createSubscriptionPlan({
-    amountCents: plan.price_cents!,
-    idempotencyKey: buildPlanIdempotencyKey(plan),
-    planName: plan.name || "Plano Profissional Lectum",
+  return createAndPersistGatewayPlanId({
+    gateway,
+    plan,
+    repository,
     returnUrl,
   });
-
-  await repository.setGatewayPlanId(plan.id!, gatewayPlan.gateway_plan_id);
-
-  return gatewayPlan.gateway_plan_id;
 };
 
 const isGatewayConfigError = (err: unknown) => {

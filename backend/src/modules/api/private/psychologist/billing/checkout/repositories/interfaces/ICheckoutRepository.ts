@@ -41,7 +41,7 @@ export interface ICheckoutRepository {
   ): Promise<professional_subscription | null>;
   hasBillingAddress(data: { profile: CheckoutProfile; userId: string }): Promise<boolean>;
   savePaymentMethodReference(userId: string, data: PaymentMethodDisplay): Promise<payment_method>;
-  setGatewayPlanId(planId: string, gatewayPlanId: string): Promise<subscription_plan>;
+  setGatewayPlanId(planId: string, gatewayPlanId: string | null): Promise<subscription_plan>;
   setGatewaySubscriptionId(
     subscriptionId: string,
     gatewaySubscriptionId: string,

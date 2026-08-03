@@ -27,7 +27,7 @@ Adotar as decisões registradas em `_product/decisions.md`:
 - LGPD/termos: telas padrão e aceite explícito no MVP; revisão posterior.
 - Moderação: reativa manual no MVP.
 - Observabilidade: Sentry decidido, implementação em task dedicada.
-- Pagamento: Mercado Pago confirmado; plano Profissional R$ 9,90/mês, sem trial; credenciais solicitadas quando a task de checkout iniciar.
+- Pagamento: Mercado Pago confirmado; plano Profissional R$ 29,90/mês, sem trial; preço atualizado por decisão de produto em 2026-08-03.
 
 ## Consequências
 

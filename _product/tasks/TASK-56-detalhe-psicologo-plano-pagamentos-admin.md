@@ -200,7 +200,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 
 - Pedido do usuario: simplificar o card `Plano atual` na aba `Plano e pagamentos`.
 - O card deixou de exibir a frase operacional sobre `professional_subscription`, as tags de status/source e o bloco `Acoes financeiras pelo Admin`.
-- Assinaturas pagas ativas exibem o nome do plano e preco no formato mensal visual, por exemplo `Plano Profissional` e `R$ 9,90/mês`.
+- Assinaturas pagas ativas exibem o nome do plano e preco no formato mensal visual, por exemplo `Plano Profissional` e `R$ 29,90/mês`.
 - Cortesias ativas exibem `Plano de cortesia` no resumo principal, mantendo os dados de vigencia e `Concedida por`.
 - A acao `Revogar cortesia` passou para a base do card `Plano atual`, abaixo de `Concedida por`; o card separado de revogacao deixou de aparecer para cortesia ativa.
 - Nao houve alteracao de backend, endpoint, schema Prisma, migrations, packages ou regra de dominio.

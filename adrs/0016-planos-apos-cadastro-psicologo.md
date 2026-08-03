@@ -43,8 +43,9 @@ credenciais reais.
   - `professional_subscription` para a assinatura atual do psicologo quando ela
     existir.
 - A migration insere os dois planos reais definidos pelo PRD/TASK-31
-  (`gratuito` e `profissional`, R$ 9,90/mes em centavos no banco). O frontend
-  formata preco a partir de `subscription_plan.price_cents`.
+  (`gratuito` e `profissional`). O frontend formata preco a partir de
+  `subscription_plan.price_cents`, atualizado para R$ 29,90/mes no Plano
+  Profissional pela decisao de produto registrada no ADR-0406.
 - O CTA do plano profissional nao simula checkout. Enquanto a TASK-32 nao estiver
   pronta com credenciais reais do Mercado Pago, ele registra pendencia visual ao
   usuario e nao cria cobranca nem assinatura ativa.
@@ -194,8 +195,9 @@ psicologo: visibilidade, autoridade, reputacao e oportunidades.
 ### Decisao
 
 - Manter `subscription_plan.price_cents` como unica fonte de verdade para preco.
-- Ajustar somente a formatacao da UI para exibir duas casas decimais, evitando
-  `R$ 9,9` e preservando o valor real `990` centavos como `R$ 9,90`.
+- Ajustar somente a formatacao da UI para exibir duas casas decimais. Desde
+  2026-08-03, o valor vigente do Plano Profissional e `2990` centavos
+  (`R$ 29,90`).
 - Remover da interface o bloco operacional sobre as etapas gratuitas e pagas,
   sem remover a documentacao tecnica nem alterar o fluxo real de checkout,
   WhatsApp, endereco, CRP ou perfil.

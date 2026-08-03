@@ -39,7 +39,7 @@ Exibir planos profissionais reais e preparar upgrade sem escolher gateway no có
 ## Pré-requisitos e bloqueios
 
 - Provedor **decidido: Mercado Pago** (ADR-0003). Esta task de planos é **listagem read-only** de planos e da assinatura atual de qualquer forma (a compra real é a TASK-32); não faz chamada de cobrança. Não depende de credenciais MP.
-- Preço do Plano Profissional = `990` centavos (R$ 9,90/mês, PRD §13), em `subscription_plan.price_cents`; preço final confirmado em TASK-03. Não hardcodar preço fora desse modelo.
+- Preço do Plano Profissional = `2990` centavos (R$ 29,90/mês), em `subscription_plan.price_cents`; preço atualizado por decisão direta de produto em 2026-08-03. Não hardcodar preço fora desse modelo.
 
 Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 
@@ -69,7 +69,7 @@ Implementação esperada:
 
 Modelos/tabelas envolvidos (ver `DATA-MODEL.md` › "Assinatura e cobrança"; usar nomes/campos exatos, sem inventar):
 
-- `subscription_plan` (read-only: `slug` `"gratuito"|"profissional"`, `price_cents` = `990` no profissional, `features Json`, `active`).
+- `subscription_plan` (read-only: `slug` `"gratuito"|"profissional"`, `price_cents` = `2990` no profissional, `features Json`, `active`).
 - `professional_subscription` (status atual da assinatura do psicólogo; somente leitura nesta task).
 
 Endpoints esperados (autogestão do psicólogo; assinatura/billing sob `/api/private/psychologist/billing/*`):
@@ -263,3 +263,20 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/professional/billing`, viewport 390x844, com psicólogo temporário real no Plano Gratuito removido ao final, confirmou `Respostas nas comunidades com mídia`, ausência de `Atendimento prioritário`/`Suporte prioritário via WhatsApp` e `scrollWidth=390`.
 - Cleanup confirmado com `codex_smoke_users=0`.
+
+## Ajuste de preço em 2026-08-03: Plano Profissional por R$ 29,90
+
+- Pedido direto de produto: alterar a assinatura do Plano Profissional de R$ 9,90/mês para R$ 29,90/mês.
+- A fonte de verdade permanece `subscription_plan.price_cents`; frontend, Admin, checkout, MRR e listagens continuam apenas formatando ou agregando o valor retornado pelo backend.
+- Criada migration `20260803090000_update_professional_plan_price` para atualizar `subscription_plan.price_cents` de `990` para `2990` e limpar `gateway_plan_id` quando o plano interno ainda apontava para o valor antigo, forçando novo plano recorrente Mercado Pago nas próximas assinaturas.
+- O checkout passou a validar o valor do `preapproval_plan` do Mercado Pago antes de reutilizar `gateway_plan_id` persistido ou `MERCADO_PAGO_PREAPPROVAL_PLAN_ID`; se o valor externo divergir de `subscription_plan.price_cents`, o backend cria um novo plano recorrente no gateway.
+- Não houve hardcode de preço em frontend/Admin e nenhuma assinatura, pagamento ou webhook foi simulado.
+- ADR criado: `adrs/0406-preco-plano-profissional-2990.md`.
+
+### Validação do ajuste
+
+- `pnpm --dir backend db:migrate`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Consulta local Prisma confirmou `slug="profissional"`, `price_cents=2990` e `gateway_plan_id=null` após a migration.

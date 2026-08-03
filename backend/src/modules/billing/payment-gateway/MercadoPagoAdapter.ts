@@ -7,6 +7,7 @@ import type {
   GatewaySubscription,
   GatewaySubscriptionInput,
   GatewaySubscriptionPaymentSummary,
+  GatewaySubscriptionPlan,
   GatewaySubscriptionPlanInput,
   GatewaySubscriptionPlanResult,
   GatewaySubscriptionResult,
@@ -271,6 +272,23 @@ export class MercadoPagoAdapter implements PaymentGateway {
       gateway_plan_id: response.id,
       gateway_status: response.status ?? null,
       init_point: response.init_point ?? null,
+      raw: response,
+    };
+  }
+
+  async getSubscriptionPlan(gatewayPlanId: string): Promise<GatewaySubscriptionPlan> {
+    const response = await this.runGatewayOperation("get_subscription_plan", () =>
+      this.preApprovalPlan.get({
+        preApprovalPlanId: gatewayPlanId,
+        requestOptions: this.withRequestOptions(),
+      }),
+    );
+
+    return {
+      gateway_plan_id: response.id || gatewayPlanId,
+      gateway_status: response.status ?? null,
+      init_point: response.init_point ?? null,
+      amount_cents: toAmountCentsOrNull(response.auto_recurring?.transaction_amount),
       raw: response,
     };
   }

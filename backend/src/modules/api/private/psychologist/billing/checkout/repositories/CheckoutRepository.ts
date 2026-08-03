@@ -122,7 +122,7 @@ export class CheckoutRepository implements ICheckoutRepository {
     });
   }
 
-  async setGatewayPlanId(planId: string, gatewayPlanId: string): Promise<subscription_plan> {
+  async setGatewayPlanId(planId: string, gatewayPlanId: string | null): Promise<subscription_plan> {
     return this.planRepository.update({
       where: {
         id: planId,
