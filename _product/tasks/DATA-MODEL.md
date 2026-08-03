@@ -1000,7 +1000,7 @@ Adicionado na TASK-141 para permitir que o Admin configure metadados das página
 | `title` | `String` | Título SEO renderizado server-side quando a página usa a configuração. |
 | `description` | `String` | Descrição SEO. |
 | `keywords` | `Json?` | Lista de palavras-chave normalizadas a partir de texto separado por vírgulas. |
-| `og_title`, `og_description`, `og_image_url` | `String?` | Campos Open Graph/social sharing. `og_image_url` aceita caminho público do frontend ou URL absoluta. |
+| `og_title`, `og_description`, `og_image_url` | `String?` | Campos Open Graph/social sharing. `og_image_url` e tecnico: na UI Admin a imagem e enviada por upload real e o caminho publico e gerado internamente; caminhos publicos do frontend existentes continuam aceitos como fallback. |
 | `canonical_url` | `String?` | URL/caminho canônico opcional. Quando vazio, a página usa sua rota canônica conhecida. |
 | `robots_index`, `robots_follow` | `Boolean` | Controle por página para `index/follow`; áreas privadas continuam bloqueadas pelos metadados e `robots.ts` existentes. |
 | `updated_by_admin_id` | `String?` | ID do admin que fez a última edição. A auditoria detalhada fica em `admin_activity_log`. |
@@ -1009,6 +1009,9 @@ Adicionado na TASK-141 para permitir que o Admin configure metadados das página
 A edição administrativa usa `PUT /api/admin/private/settings/seo/:page_key`, valida payload com o validator do backend, persiste em `site_seo_setting` e registra `admin_activity_log` com `domain="site_seo_setting"`, `target_type="seo_metadata"` e `area="seo_metadados"` quando há alteração real. O consumo público usa `GET /api/public/seo/metadata` para retornar apenas metadados seguros, sem dados de auditoria sensível.
 
 Complemento TASK-143: `GET /api/public/seo/community-post/:slug/:id` e `GET /api/public/seo/community-post/:slug/:id/replies/:replyId` expoem metadados publicos derivados somente de `community_post.status="publicado"`, `deleted=false`, comunidade ativa e conteudo ja publico. Para posts com imagem, `og_image_url` usa a imagem publica persistida; para videos, `og_image_url` usa `thumbnail_url` quando existir e `og_video_url` usa `media_url`. Threads preferem a midia/miniatura da `post_reply` e caem para a midia do post raiz. Esses endpoints nao retornam dados de auditoria, autor privado ou campos sensiveis.
+
+Complemento TASK-144: a UI Admin nao edita `site_seo_setting.og_image_url` como campo textual. O operador faz upload de JPG/PNG/WebP em `POST /api/admin/private/settings/seo/:page_key/og-image`; o backend grava o arquivo no storage publico em `seo/og-image/` e retorna um caminho publico gerado internamente para o formulario salvar em `og_image_url`. O update de metadados continua sendo `PUT /api/admin/private/settings/seo/:page_key`, com auditoria em `admin_activity_log` quando `og_image_url` mudar.
+
 
 ## Convencao de rotas (frontend e backend)
 

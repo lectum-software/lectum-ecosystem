@@ -323,7 +323,8 @@
     "admin_settings_seo_no_changes": "Nenhuma alteração de SEO foi identificada.",
     "admin_settings_seo_updated": "Metadados de SEO atualizados com auditoria administrativa.",
     "admin_psychologist_account_view_as_started": "Visualiza??o como psic?logo iniciada em modo somente leitura.",
-    "admin_patient_account_view_as_started": "Visualiza??o como paciente iniciada em modo somente leitura."
+    "admin_patient_account_view_as_started": "Visualiza??o como paciente iniciada em modo somente leitura.",
+    "admin_settings_seo_og_image_uploaded": "Imagem Open Graph enviada com sucesso."
   },
   "gender": {
     "o": "o"

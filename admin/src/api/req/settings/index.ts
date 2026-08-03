@@ -98,6 +98,10 @@ export type AdminSeoMetadataSettings = {
   updated_at: string | null;
 };
 
+export type AdminSeoMetadataImageUpload = {
+  og_image_url: string;
+};
+
 export type AdminSeoMetadataPayload = {
   canonical_url?: string | null;
   description: string;
@@ -251,6 +255,23 @@ export const updateAdminSeoMetadataSetting = async (
   const response = await adminApi.put<ApiResponse<AdminSeoMetadataSettings>>(
     `${seoBaseUrl}/${encodeURIComponent(pageKey)}`,
     input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const uploadAdminSeoMetadataImage = async (pageKey: AdminSeoMetadataPageKey, file: File) => {
+  const formData = new FormData();
+  formData.append("og-image", file);
+
+  const response = await adminApi.post<ApiResponse<AdminSeoMetadataImageUpload>>(
+    `${seoBaseUrl}/${encodeURIComponent(pageKey)}/og-image`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
   );
 
   return resolveApiData(response.data);

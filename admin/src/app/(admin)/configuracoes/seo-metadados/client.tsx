@@ -5,18 +5,24 @@ import {
   Eye,
   FileSearch,
   Globe2,
+  ImagePlus,
   Link2,
   Loader2,
   Save,
   Search,
   ShieldCheck,
   Tags,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
-import { useAdminSeoMetadataSettings, useAdminSeoMetadataUpdate } from "@/api/callers/settings";
+import {
+  useAdminSeoMetadataImageUpload,
+  useAdminSeoMetadataSettings,
+  useAdminSeoMetadataUpdate,
+} from "@/api/callers/settings";
 import { resolveApiError } from "@/api/handle";
 import type { AdminSeoMetadataPageKey, AdminSeoMetadataSetting } from "@/api/req/settings";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
@@ -32,6 +38,10 @@ import {
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const DEFAULT_API_URL = "http://localhost:3001";
+const OG_IMAGE_MAX_SIZE_MB = 5;
+const OG_IMAGE_MAX_SIZE_BYTES = OG_IMAGE_MAX_SIZE_MB * 1024 * 1024;
+const OG_IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
+const OG_IMAGE_ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const apiBaseUrl = () => (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
 
@@ -273,46 +283,140 @@ const OpenGraphImagePreview = ({ value }: { value?: string | null }) => {
   const canRender = src ? canRenderOpenGraphPreview(src) : false;
 
   return (
-    <div className="rounded-[1.35rem] border border-border bg-surface-muted/45 p-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative aspect-[1.91/1] w-full overflow-hidden rounded-2xl border border-border bg-surface sm:w-44 sm:shrink-0">
-          {src && canRender ? (
-            <Image
-              alt="Prévia da imagem Open Graph"
-              className="object-cover"
-              fill
-              sizes="(min-width: 640px) 176px, calc(100vw - 4rem)"
-              src={src}
-              unoptimized={src.startsWith("http://") || src.startsWith("https://")}
-            />
-          ) : (
-            <div className="grid h-full place-items-center px-4 text-center text-xs font-semibold text-muted">
-              {src ? "Host externo não habilitado" : "Sem imagem configurada"}
-            </div>
-          )}
+    <div className="relative aspect-[1.91/1] w-full overflow-hidden rounded-2xl border border-border bg-surface">
+      {src && canRender ? (
+        <Image
+          alt="Prévia da imagem Open Graph"
+          className="object-cover"
+          fill
+          sizes="(min-width: 1024px) 420px, calc(100vw - 4rem)"
+          src={src}
+          unoptimized={src.startsWith("http://") || src.startsWith("https://")}
+        />
+      ) : (
+        <div className="grid h-full place-items-center px-4 text-center text-xs font-semibold text-muted">
+          {src ? "Host externo não habilitado" : "Sem imagem configurada"}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-foreground">Miniatura Open Graph</p>
-          <p className="mt-1 text-xs leading-5 text-muted">
-            Esta é a imagem que buscadores e redes tendem a usar quando a URL for compartilhada.
-          </p>
-          {src ? (
-            <a
-              className="mt-2 block truncate text-xs font-bold text-primary hover:underline"
-              href={src}
-              rel="noreferrer"
-              target="_blank"
-            >
-              {src}
-            </a>
-          ) : null}
-          {src && !canRender ? (
-            <p className="mt-2 text-xs font-semibold text-warning">
-              Adicione o host em NEXT_PUBLIC_IMAGE_REMOTE_HOSTS para exibir a miniatura no Admin.
+      )}
+    </div>
+  );
+};
+
+const OpenGraphImageField = ({
+  disabled,
+  error,
+  isUploading,
+  onRemove,
+  onUpload,
+  value,
+}: {
+  disabled?: boolean;
+  error?: string;
+  isUploading?: boolean;
+  onRemove: () => void;
+  onUpload: (file: File) => Promise<void>;
+  value?: string | null;
+}) => {
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const src = resolveOpenGraphPreviewSource(value);
+  const canRender = src ? canRenderOpenGraphPreview(src) : false;
+  const actionDisabled = Boolean(disabled || isUploading);
+
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!OG_IMAGE_ACCEPTED_TYPES.has(file.type)) {
+      toast.error("Envie uma imagem JPG, PNG ou WebP.");
+      return;
+    }
+
+    if (file.size > OG_IMAGE_MAX_SIZE_BYTES) {
+      toast.error(`A imagem deve ter até ${OG_IMAGE_MAX_SIZE_MB}MB.`);
+      return;
+    }
+
+    await onUpload(file);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <label className="text-sm font-bold text-foreground" htmlFor={inputId}>
+          Imagem Open Graph
+        </label>
+        <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-bold text-primary">
+          Upload
+        </span>
+      </div>
+      <div className="rounded-[1.35rem] border border-border bg-surface-muted/45 p-3">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] sm:items-center">
+          <OpenGraphImagePreview value={value} />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-foreground">Arquivo gerenciado internamente</p>
+            <p className="mt-1 text-xs leading-5 text-muted">
+              Envie uma imagem JPG, PNG ou WebP. O link público é gerado automaticamente após o
+              upload e salvo junto dos metadados.
             </p>
-          ) : null}
+            {src ? (
+              <a
+                className="mt-2 block truncate text-xs font-bold text-primary hover:underline"
+                href={src}
+                rel="noreferrer"
+                target="_blank"
+              >
+                URL atual da imagem
+              </a>
+            ) : null}
+            {src && !canRender ? (
+              <p className="mt-2 text-xs font-semibold text-warning">
+                Adicione o host em NEXT_PUBLIC_IMAGE_REMOTE_HOSTS para exibir a miniatura no Admin.
+              </p>
+            ) : null}
+            <input
+              accept={OG_IMAGE_ACCEPT}
+              className="sr-only"
+              disabled={actionDisabled}
+              id={inputId}
+              onChange={handleChange}
+              ref={inputRef}
+              type="file"
+            />
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <label
+                aria-disabled={actionDisabled}
+                className={cn(
+                  "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-xs font-bold text-white shadow-admin-soft transition hover:bg-primary-hover",
+                  actionDisabled && "pointer-events-none cursor-not-allowed opacity-60",
+                )}
+                htmlFor={actionDisabled ? undefined : inputId}
+              >
+                {isUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ImagePlus className="h-4 w-4" />
+                )}
+                {src ? "Trocar imagem" : "Enviar imagem"}
+              </label>
+              {value ? (
+                <button
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-border px-4 text-xs font-bold text-muted transition hover:text-foreground disabled:opacity-60"
+                  disabled={actionDisabled}
+                  onClick={onRemove}
+                  type="button"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remover
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
+      <p className="min-h-5 px-1 text-xs font-semibold text-danger">{error || " "}</p>
     </div>
   );
 };
@@ -348,6 +452,7 @@ const TechnicalNotes = ({ setting }: { setting?: AdminSeoMetadataSetting }) => (
 export const AdminSeoMetadataClient = () => {
   const query = useAdminSeoMetadataSettings();
   const update = useAdminSeoMetadataUpdate();
+  const uploadImage = useAdminSeoMetadataImageUpload();
   const [selectedKey, setSelectedKey] = useState<AdminSeoMetadataPageKey>("default");
   const form = useSeoMetadataForm();
   const { reset } = form;
@@ -365,6 +470,34 @@ export const AdminSeoMetadataClient = () => {
   }, [reset, selectedSetting]);
 
   const watchedValues = form.watch();
+
+  const handleOpenGraphImageUpload = async (file: File) => {
+    if (!selectedSetting) return;
+
+    try {
+      const result = await uploadImage.mutateAsync({
+        file,
+        pageKey: selectedSetting.page_key,
+      });
+      form.setValue("og_image_url", result.og_image_url, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      toast.success("Imagem enviada. Salve os metadados para publicar a alteração.");
+    } catch (error) {
+      toast.error(resolveApiError(error));
+    }
+  };
+
+  const handleOpenGraphImageRemove = () => {
+    form.setValue("og_image_url", "", {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    toast.info("Imagem removida do formulário. Salve os metadados para publicar.");
+  };
 
   const onSubmit: SubmitHandler<SeoMetadataForm> = async (values) => {
     if (!selectedSetting) return;
@@ -456,14 +589,15 @@ export const AdminSeoMetadataClient = () => {
                   name="og_title"
                   placeholder="Título para compartilhamento social"
                 />
-                <InputController<SeoMetadataForm>
-                  label="Imagem Open Graph"
-                  name="og_image_url"
-                  placeholder="/logo-light.png ou URL absoluta"
+                <OpenGraphImageField
+                  disabled={!selectedSetting || update.isPending}
+                  isUploading={uploadImage.isPending}
+                  onRemove={handleOpenGraphImageRemove}
+                  onUpload={handleOpenGraphImageUpload}
+                  value={watchedValues.og_image_url}
+                  error={form.formState.errors.og_image_url?.message}
                 />
               </div>
-
-              <OpenGraphImagePreview value={watchedValues.og_image_url} />
 
               <TextareaController<SeoMetadataForm>
                 label="Descrição Open Graph"
@@ -496,7 +630,7 @@ export const AdminSeoMetadataClient = () => {
               <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                 <button
                   className="inline-flex h-12 items-center justify-center rounded-2xl border border-border px-5 text-sm font-bold text-muted hover:text-foreground"
-                  disabled={update.isPending || !selectedSetting}
+                  disabled={update.isPending || uploadImage.isPending || !selectedSetting}
                   onClick={() => reset(toSeoMetadataFormValues(selectedSetting))}
                   type="button"
                 >
@@ -504,7 +638,7 @@ export const AdminSeoMetadataClient = () => {
                 </button>
                 <button
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-bold text-white shadow-admin-soft transition hover:bg-primary-hover disabled:opacity-60"
-                  disabled={update.isPending || !selectedSetting}
+                  disabled={update.isPending || uploadImage.isPending || !selectedSetting}
                   type="submit"
                 >
                   {update.isPending ? (

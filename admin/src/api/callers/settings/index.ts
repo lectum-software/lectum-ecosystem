@@ -19,6 +19,7 @@ import {
   updateAdminCatalogItem,
   updateAdminSeoMetadataSetting,
   updateAdminSpecialtyCategory,
+  uploadAdminSeoMetadataImage,
 } from "@/api/req/settings";
 
 export const useAdminSettingsCatalogs = () =>
@@ -153,3 +154,9 @@ export const useAdminSeoMetadataUpdate = () => {
     onSuccess: () => invalidateSettings(queryClient),
   });
 };
+
+export const useAdminSeoMetadataImageUpload = () =>
+  useMutation({
+    mutationFn: ({ file, pageKey }: { file: File; pageKey: AdminSeoMetadataPageKey }) =>
+      uploadAdminSeoMetadataImage(pageKey, file),
+  });

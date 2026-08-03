@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 150 tasks: `TASK-00` a `TASK-143`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 151 tasks: `TASK-00` a `TASK-144`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -225,6 +225,7 @@ ou cortesia manual.
 | 141 | [TASK-141 - Configurações Admin de SEO e Metadados](TASK-141-configuracoes-admin-seo-metadados.md) | Completed | 39, 40, 45, 46, 65 |
 | 142 | [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md) | Completed | 31, 45, 46, 62, 141 |
 | 143 | [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) | Completed | 39, 40, 42, 141 |
+| 144 | [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md) | Completed | 141, 143 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -341,6 +342,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 106. [TASK-140 - Visualização administrativa como usuário](TASK-140-visualizar-como-usuario-admin.md) foi adicionada e concluida em 2026-08-02 para permitir que o Admin abra pacientes e psicologos em modo somente leitura a partir da aba Conta, com TTL curto, auditoria e bloqueio backend de escrita.
 107. [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md) foi adicionada e concluída em 2026-08-03 para exibir em `/configuracoes/assinatura` o valor atual do Plano Profissional lido de `subscription_plan.price_cents`, sem edição administrativa de preço e sem repetir a listagem financeira de assinaturas vinculadas.
 108. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) foi adicionada e concluida em 2026-08-03 para exibir miniatura da Imagem Open Graph no Admin, persistir miniaturas geradas de videos em posts/respostas e publicar metadados dinamicos reais para compartilhamento social de posts e threads.
+109. [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md) foi adicionada e concluida em 2026-08-03 para trocar a edicao manual do link da Imagem Open Graph por upload real de arquivo, mantendo a URL publica gerada internamente e salva no campo tecnico `og_image_url`.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
@@ -446,6 +448,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 95. [TASK-141 - Configurações Admin de SEO e Metadados](TASK-141-configuracoes-admin-seo-metadados.md)
 96. [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md)
 97. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md)
+98. [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

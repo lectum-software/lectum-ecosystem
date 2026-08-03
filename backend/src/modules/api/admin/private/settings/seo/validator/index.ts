@@ -55,4 +55,5 @@ const seoBody = [
 ] satisfies IValidatorRequest["body"];
 
 export const indexValidator = validator({});
+export const uploadImageValidator = validator({ params: pageKeyParam });
 export const updateValidator = validator({ body: seoBody, params: pageKeyParam });

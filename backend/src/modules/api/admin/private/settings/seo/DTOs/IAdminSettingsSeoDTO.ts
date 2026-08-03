@@ -1,4 +1,5 @@
-﻿import type { admin } from "@/interfaces/objects";
+import type { Request } from "express";
+import type { admin } from "@/interfaces/objects";
 import type { SeoMetadataPageKey } from "@/modules/seo/metadata-settings";
 
 export type AdminSeoMetadataPayload = {
@@ -17,6 +18,14 @@ export type IAdminSettingsSeoDTO = {
   admin: admin;
   b?: AdminSeoMetadataPayload;
   p?: {
+    page_key?: SeoMetadataPageKey | string;
+  };
+};
+
+export type IAdminSettingsSeoUploadImageDTO = Request & {
+  admin: admin;
+  file?: Express.Multer.File & { key?: string; path?: string };
+  p: {
     page_key?: SeoMetadataPageKey | string;
   };
 };

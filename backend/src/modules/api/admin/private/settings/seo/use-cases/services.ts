@@ -3,12 +3,16 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import {
   isSeoMetadataPageKey,
+  type SeoMetadataPageKey,
   type SeoMetadataSettingDTO,
   type SeoMetadataSettingPayload,
   toSeoMetadataSettingDTO,
 } from "@/modules/seo/metadata-settings";
 import { SeoMetadataRepository } from "@/modules/seo/repositories/SeoMetadataRepository";
-import type { IAdminSettingsSeoDTO } from "../DTOs/IAdminSettingsSeoDTO";
+import type {
+  IAdminSettingsSeoDTO,
+  IAdminSettingsSeoUploadImageDTO,
+} from "../DTOs/IAdminSettingsSeoDTO";
 
 const FIELD_LABELS: Record<keyof SeoMetadataSettingPayload, string> = {
   canonical_url: "URL canônica",
@@ -42,6 +46,23 @@ const isPathOrHttpUrl = (value?: string | null) => {
     return false;
   }
 };
+
+const isOpenGraphImagePath = (value?: string | null) => {
+  if (!value) return true;
+
+  if (value.startsWith("/public/files/")) return value.startsWith("/public/files/seo/og-image/");
+  if (value.startsWith("/")) return true;
+
+  try {
+    const url = new URL(value);
+
+    return url.pathname.startsWith("/public/files/seo/og-image/");
+  } catch {
+    return false;
+  }
+};
+
+const publicSeoImagePath = (key: string) => `/public/files/${key}`;
 
 const parseKeywords = (value?: string | null) =>
   Array.from(
@@ -106,6 +127,61 @@ export const index = async (): Promise<Resolve> => {
   };
 };
 
+const findSetting = async (pageKey?: SeoMetadataPageKey | string) => {
+  if (!isSeoMetadataPageKey(pageKey)) return null;
+
+  const repository = new SeoMetadataRepository();
+
+  return repository.findByKey(pageKey);
+};
+
+export const authorizeUploadImage = async (data: IAdminSettingsSeoDTO): Promise<Resolve> => {
+  const current = await findSetting(data.p?.page_key);
+
+  if (!current) {
+    return {
+      status: isSeoMetadataPageKey(data.p?.page_key) ? 404 : 422,
+      ...error(isSeoMetadataPageKey(data.p?.page_key) ? "not_found" : "invalid", {
+        model: isSeoMetadataPageKey(data.p?.page_key) ? "seo_metadata" : "seo_metadata_page",
+      }),
+    };
+  }
+
+  return {
+    status: 200,
+    success: true,
+  };
+};
+
+export const uploadImage = async (data: IAdminSettingsSeoUploadImageDTO): Promise<Resolve> => {
+  const current = await findSetting(data.p?.page_key);
+
+  if (!current) {
+    return {
+      status: isSeoMetadataPageKey(data.p?.page_key) ? 404 : 422,
+      ...error(isSeoMetadataPageKey(data.p?.page_key) ? "not_found" : "invalid", {
+        model: isSeoMetadataPageKey(data.p?.page_key) ? "seo_metadata" : "seo_metadata_page",
+      }),
+    };
+  }
+
+  const key = data.file?.path || data.file?.key;
+  if (!key?.startsWith("seo/og-image/")) {
+    return {
+      status: 400,
+      ...error("upload_error", {}),
+    };
+  }
+
+  return {
+    status: 200,
+    ...msg("admin_settings_seo_og_image_uploaded"),
+    data: {
+      og_image_url: publicSeoImagePath(key),
+    },
+  };
+};
+
 export const update = async (data: IAdminSettingsSeoDTO): Promise<Resolve> => {
   const pageKey = data.p?.page_key;
   if (!isSeoMetadataPageKey(pageKey)) return invalid("seo_metadata_page");
@@ -137,7 +213,11 @@ export const update = async (data: IAdminSettingsSeoDTO): Promise<Resolve> => {
     title,
   };
 
-  if (!isPathOrHttpUrl(payload.canonical_url) || !isPathOrHttpUrl(payload.og_image_url)) {
+  if (
+    !isPathOrHttpUrl(payload.canonical_url) ||
+    !isPathOrHttpUrl(payload.og_image_url) ||
+    !isOpenGraphImagePath(payload.og_image_url)
+  ) {
     return invalid();
   }
 
