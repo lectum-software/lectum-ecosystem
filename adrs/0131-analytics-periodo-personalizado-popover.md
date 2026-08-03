@@ -26,9 +26,28 @@ Substituímos a seção fixa por um popover contextual ancorado à barra de per�
 - Não foi necessário instalar pacote de popover nem criar componente de design system paralelo.
 - O filtro continua usando o contrato real já existente de analytics; não há mudança em API, schema ou dados.
 
+## Complemento 2026-08-03 — presets canônicos da leitura profissional
+
+A barra de períodos do Analytics privado do psicólogo passa a exibir somente:
+
+- `7 dias`;
+- `30 dias`;
+- `Este ano`;
+- `Todo o período`;
+- `Personalizado`.
+
+`Todo o período` é o preset selecionado por padrão. O backend agora aceita `period=year` para a janela do ano
+corrente e `period=all` para incluir todos os eventos persistidos desde o início da série histórica, sem criar
+schema, migration, pacote novo ou dados simulados. Os presets legados de 90 e 365 dias continuam apenas como
+compatibilidade técnica de contrato, mas não aparecem mais na UI da tela.
+
 ## Validações
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `Invoke-WebRequest` em `/app/professional/analytics` sem sessão autenticada retornando `307` para o fluxo privado.
+- Complemento 2026-08-03: `pnpm --dir backend check`, `pnpm --dir backend build`,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, verificação estática dos
+  novos labels/default e `next start` local em `/app/professional/analytics` com redirecionamento
+  `307` sem sessão.

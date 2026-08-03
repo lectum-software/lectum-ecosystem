@@ -6,15 +6,25 @@ import type {
 } from "../DTOs/IAnalyticsDTO";
 import { PsychologistAnalyticsRepository } from "../repositories/AnalyticsRepository";
 
-const PERIODS: Record<PsychologistAnalyticsPeriodKey, { days: number; label: string }> = {
+const RELATIVE_PERIODS: Record<
+  Extract<PsychologistAnalyticsPeriodKey, "7d" | "30d" | "90d" | "365d">,
+  { days: number; label: string }
+> = {
   "7d": { days: 7, label: "Últimos 7 dias" },
   "30d": { days: 30, label: "Últimos 30 dias" },
   "90d": { days: 90, label: "Últimos 3 meses" },
   "365d": { days: 365, label: "Últimos 12 meses" },
-  custom: { days: 0, label: "Período personalizado" },
 };
 
-const DEFAULT_PERIOD: PsychologistAnalyticsPeriodKey = "30d";
+const PERIOD_KEYS = new Set<PsychologistAnalyticsPeriodKey>([
+  ...Object.keys(RELATIVE_PERIODS),
+  "year",
+  "all",
+  "custom",
+] as PsychologistAnalyticsPeriodKey[]);
+
+const DEFAULT_PERIOD: PsychologistAnalyticsPeriodKey = "all";
+const ALL_PERIOD_START_AT = new Date("1970-01-01T00:00:00.000Z");
 
 const ensurePsychologist = (data: { auth: { role?: string | null } }) => {
   if (data.auth.role === "psicologo") return null;
@@ -22,7 +32,10 @@ const ensurePsychologist = (data: { auth: { role?: string | null } }) => {
 };
 
 const normalizePeriod = (period?: string): PsychologistAnalyticsPeriodKey => {
-  if (period && period in PERIODS) return period as PsychologistAnalyticsPeriodKey;
+  if (period && PERIOD_KEYS.has(period as PsychologistAnalyticsPeriodKey)) {
+    return period as PsychologistAnalyticsPeriodKey;
+  }
+
   return DEFAULT_PERIOD;
 };
 
@@ -67,12 +80,31 @@ const buildPeriod = (
   }
 
   const endAt = new Date();
+
+  if (key === "year") {
+    return {
+      key,
+      label: "Este ano",
+      start_at: new Date(endAt.getFullYear(), 0, 1, 0, 0, 0, 0),
+      end_at: endAt,
+    };
+  }
+
+  if (key === "all") {
+    return {
+      key,
+      label: "Todo o período",
+      start_at: ALL_PERIOD_START_AT,
+      end_at: endAt,
+    };
+  }
+
   const startAt = new Date(endAt);
-  startAt.setDate(startAt.getDate() - PERIODS[key].days);
+  startAt.setDate(startAt.getDate() - RELATIVE_PERIODS[key].days);
 
   return {
     key,
-    label: PERIODS[key].label,
+    label: RELATIVE_PERIODS[key].label,
     start_at: startAt,
     end_at: endAt,
   };

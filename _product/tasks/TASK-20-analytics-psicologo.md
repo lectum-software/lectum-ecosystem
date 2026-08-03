@@ -890,3 +890,35 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `git diff --check`
 - Smoke runtime do utilitario de trafego confirmou que `search` sozinho nao vira filtro de Minha Busca e que filtros/flags permitidos geram rotulos rastreaveis.
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: rota privada validada sem sessao por redirecionamento `307` para login; a copy foi validada no fonte/build por se tratar de bloco autenticado.
+
+## Ajuste complementar em 2026-08-03 - Presets de periodo do Analytics privado
+
+- Pedido do usuario: alterar as opcoes do seletor de periodo para `7 dias`, `30 dias`, `Este ano`, `Todo o periodo` e `Personalizado`, mantendo `Todo o periodo` selecionado por default.
+- A UI mobile-first da rota `/app/professional/analytics` removeu `3 meses` e `Anual`, incluiu os novos labels solicitados e inicializa a consulta com `period="all"`.
+- O backend de `GET /api/private/psychologist/analytics` passou a aceitar `period="year"` para o ano corrente e `period="all"` para toda a serie historica persistida.
+- Os presets legados `90d` e `365d` foram preservados apenas como compatibilidade tecnica de contrato, mas nao sao renderizados na barra da tela.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0131-analytics-periodo-personalizado-popover.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A barra de periodo exibe `7 dias`, `30 dias`, `Este ano`, `Todo o periodo` e `Personalizado`.
+- [x] `Todo o periodo` e selecionado por default na rota `/app/professional/analytics`.
+- [x] A consulta default enviada ao endpoint usa `period="all"`.
+- [x] O backend resolve `period="year"` como ano corrente e `period="all"` como toda a serie persistida.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx" "src/api/generator/types/psychologist-analytics.ts"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/DTOs/IAnalyticsDTO.ts" "src/modules/api/private/psychologist/analytics/use-cases/services.ts"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Verificacao estatica com `Select-String` confirmou `Todo o periodo`, `Personalizado`, default `useState(... "all")` e labels backend `Este ano`/`Todo o periodo`.
+- Browser/HTTP local com `pnpm --dir frontend exec next start --hostname 127.0.0.1 --port 3237`: request em `/app/professional/analytics` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada, confirmando que a rota buildada inicia localmente e permanece protegida; a alteracao visual autenticada foi validada por fonte/build por se tratar de rota privada.

@@ -50,9 +50,9 @@ import { resolvePublicMediaUrl } from "@/utils/media";
 const PERIOD_OPTIONS: Array<{ label: string; value: PsychologistAnalyticsPeriodKey }> = [
   { label: "7 dias", value: "7d" },
   { label: "30 dias", value: "30d" },
-  { label: "3 meses", value: "90d" },
-  { label: "Anual", value: "365d" },
-  { label: "Período", value: "custom" },
+  { label: "Este ano", value: "year" },
+  { label: "Todo o período", value: "all" },
+  { label: "Personalizado", value: "custom" },
 ];
 
 const toInputDate = (date: Date) => {
@@ -1688,7 +1688,7 @@ const TrafficSourceSection = ({
 };
 
 export const ProfessionalAnalyticsLogic = () => {
-  const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("30d");
+  const [period, setPeriod] = useState<PsychologistAnalyticsPeriodKey>("all");
   const [customRange, setCustomRange] = useState(getDefaultCustomRange);
   const [customPopoverOpen, setCustomPopoverOpen] = useState(false);
   const query = useMemo(

@@ -1,4 +1,11 @@
-export type PsychologistAnalyticsPeriodKey = "7d" | "30d" | "90d" | "365d" | "custom";
+export type PsychologistAnalyticsPeriodKey =
+  | "7d"
+  | "30d"
+  | "90d"
+  | "365d"
+  | "year"
+  | "all"
+  | "custom";
 
 export type PsychologistAnalyticsQuery = {
   period?: PsychologistAnalyticsPeriodKey;
