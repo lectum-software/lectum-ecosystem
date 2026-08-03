@@ -1,0 +1,50 @@
+# ADR-0407: Metadados SEO administráveis com fallback público server-side
+
+## Status
+
+Accepted
+
+## Task relacionada
+
+TASK-141
+
+## Contexto
+
+O Admin precisava de uma tela em Configurações para editar metadados usados por mecanismos de busca. As páginas públicas da Lectum já tinham metadados codificados no Next.js após a fundação de SEO, enquanto áreas privadas permanecem `noindex`. A solução precisava persistir dados reais, manter auditoria administrativa e não depender de mocks, Builder output ou packages novos.
+
+Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual auditável usada foi `_product/proto/admin/Configurações.png` e a captura enviada pelo usuário.
+
+## Decisão
+
+Criar a tabela `site_seo_setting` para armazenar metadados por chave de página pública (`default`, `home`, `psychologists`, `psychologist_profile`, `community`, `community_post`, `top_mentors`). A edição acontece em endpoints Admin privados sob `/api/admin/private/settings/seo`, com validação backend e auditoria em `admin_activity_log` quando há mudança real.
+
+Também foi criado `GET /api/public/seo/metadata`, que expõe somente metadados seguros para consumo server-side do frontend público. As páginas públicas principais passam a usar helper de metadata dinâmica com fallback para os valores codificados existentes quando a API estiver indisponível.
+
+No Admin, `Configurações` passa a ter submenu. `SEO / Metadados` usa formulário React Hook Form + Zod + controllers locais. `Assinatura` aponta para uma rota sob Configurações que reaproveita a tela real de assinaturas, evitando submenu quebrado ou placeholder.
+
+## Consequências
+
+- Metadados podem ser alterados por Admin sem deploy de código.
+- Alterações ficam auditáveis.
+- Search engines recebem metadata renderizada server-side nas rotas públicas principais.
+- A indisponibilidade temporária do backend não quebra build/render: o frontend mantém fallback honesto com os metadados anteriores.
+- Upload/gestão de assets Open Graph fica fora do escopo; a tela aceita caminho público ou URL absoluta.
+- JSON-LD/schema.org avançado fica para uma task futura.
+
+## Validação
+
+- `pnpm --dir backend db:migrate` aplicado com sucesso após remover BOM da migration.
+- `pnpm --dir backend exec prisma generate`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local com Chrome headless em viewport 390px abrindo `http://localhost:3002/configuracoes/seo-metadados` e renderizando o gate do shell Admin autenticado; `GET` da rota retornou `200`.
+- Smoke local do endpoint público em `http://localhost:3001/api/public/seo/metadata` retornando `200` e payload seguro.
+## Pendências
+
+- Definir em task futura se haverá upload próprio de imagem Open Graph.
+- Definir em task futura se haverá editor de dados estruturados JSON-LD por página.

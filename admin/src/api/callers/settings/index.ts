@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminSettingsKeys } from "@/api/cache/keys";
 import {
+  type AdminSeoMetadataPageKey,
+  type AdminSeoMetadataPayload,
   type AdminSettingsCatalogPayload,
   type AdminSettingsCatalogType,
   type AdminSettingsDeletePayload,
@@ -9,10 +11,12 @@ import {
   createAdminSpecialtyCategory,
   deleteAdminCatalogItem,
   deleteAdminSpecialtyCategory,
+  getAdminSeoMetadataSettings,
   getAdminSettingsCatalogs,
   reorderAdminSettingsCatalog,
   restoreAdminSettingsCatalogDefaults,
   updateAdminCatalogItem,
+  updateAdminSeoMetadataSetting,
   updateAdminSpecialtyCategory,
 } from "@/api/req/settings";
 
@@ -118,6 +122,27 @@ export const useAdminSettingsRestoreDefaults = () => {
 
   return useMutation({
     mutationFn: restoreAdminSettingsCatalogDefaults,
+    onSuccess: () => invalidateSettings(queryClient),
+  });
+};
+
+export const useAdminSeoMetadataSettings = () =>
+  useQuery({
+    queryFn: getAdminSeoMetadataSettings,
+    queryKey: adminSettingsKeys.seo(),
+  });
+
+export const useAdminSeoMetadataUpdate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      input,
+      pageKey,
+    }: {
+      input: AdminSeoMetadataPayload;
+      pageKey: AdminSeoMetadataPageKey;
+    }) => updateAdminSeoMetadataSetting(pageKey, input),
     onSuccess: () => invalidateSettings(queryClient),
   });
 };

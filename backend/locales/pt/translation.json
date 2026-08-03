@@ -320,6 +320,8 @@
     "admin_patient_account_suspended": "Conta do paciente suspensa com auditoria administrativa e sessões encerradas.",
     "admin_patient_account_temporary_password_set": "Senha temporária do paciente definida com troca obrigatória no próximo login.",
     "admin_settings_catalog_deleted": "Catálogo excluído com soft delete.",
+    "admin_settings_seo_no_changes": "Nenhuma alteração de SEO foi identificada.",
+    "admin_settings_seo_updated": "Metadados de SEO atualizados com auditoria administrativa.",
     "admin_psychologist_account_view_as_started": "Visualiza??o como psic?logo iniciada em modo somente leitura.",
     "admin_patient_account_view_as_started": "Visualiza??o como paciente iniciada em modo somente leitura."
   },
@@ -363,7 +365,9 @@
     "important_action_event": "evento importante",
     "admin_notification_campaign": "campanha administrativa de notifica??o",
     "notification_delivery": "entrega de notifica??o",
-    "content_moderation_event": "evento de modera??o de conte?do"
+    "content_moderation_event": "evento de modera??o de conte?do",
+    "seo_metadata": "metadados de SEO",
+    "seo_metadata_page": "página de SEO"
   },
   "property": {
     "email": "email",

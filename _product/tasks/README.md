@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 147 tasks: `TASK-00` a `TASK-140`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 148 tasks: `TASK-00` a `TASK-141`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -222,6 +222,7 @@ ou cortesia manual.
 | 138 | [TASK-138 - Range de posição do vídeo na tabela comportamental Admin](TASK-138-range-posicao-video-tabela-comportamental-admin-psicologos.md) | Completed | 53, 103, 125, 126, 132, 136 |
 | 139 | [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md) | Completed | 53, 95, 129, 137 |
 | 140 | [TASK-140 - Visualização administrativa como usuário](TASK-140-visualizar-como-usuario-admin.md) | Completed | 45, 46, 61, 68, 73 |
+| 141 | [TASK-141 - Configurações Admin de SEO e Metadados](TASK-141-configuracoes-admin-seo-metadados.md) | Completed | 39, 40, 45, 46, 65 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -438,6 +439,7 @@ Execute uma por vez, sempre validando, marcando critérios, ADR e commit/push:
 92. [TASK-138 - Range de posição do vídeo na tabela comportamental Admin](TASK-138-range-posicao-video-tabela-comportamental-admin-psicologos.md)
 93. [TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos](TASK-139-meta-conversao-dashboard-matriz-admin-psicologos.md)
 94. [TASK-140 - Visualização administrativa como usuário](TASK-140-visualizar-como-usuario-admin.md)
+95. [TASK-141 - Configurações Admin de SEO e Metadados](TASK-141-configuracoes-admin-seo-metadados.md)
 
 ### 1. Trilha executavel agora apos TASK-10
 

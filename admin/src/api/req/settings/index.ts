@@ -63,7 +63,55 @@ export type AdminSettingsDeletePayload = {
   confirmation: string;
 };
 
+export const ADMIN_SEO_METADATA_PAGE_KEYS = [
+  "default",
+  "home",
+  "psychologists",
+  "psychologist_profile",
+  "community",
+  "community_post",
+  "top_mentors",
+] as const;
+
+export type AdminSeoMetadataPageKey = (typeof ADMIN_SEO_METADATA_PAGE_KEYS)[number];
+
+export type AdminSeoMetadataSetting = {
+  canonical_url: string | null;
+  created_at: string;
+  description: string;
+  id: string;
+  keywords: string[];
+  label: string;
+  og_description: string | null;
+  og_image_url: string | null;
+  og_title: string | null;
+  page_key: AdminSeoMetadataPageKey;
+  robots_follow: boolean;
+  robots_index: boolean;
+  route_path: string | null;
+  title: string;
+  updated_at: string;
+};
+
+export type AdminSeoMetadataSettings = {
+  settings: AdminSeoMetadataSetting[];
+  updated_at: string | null;
+};
+
+export type AdminSeoMetadataPayload = {
+  canonical_url?: string | null;
+  description: string;
+  keywords?: string;
+  og_description?: string | null;
+  og_image_url?: string | null;
+  og_title?: string | null;
+  robots_follow: boolean;
+  robots_index: boolean;
+  title: string;
+};
+
 const baseUrl = "/api/admin/private/settings/catalogs";
+const seoBaseUrl = "/api/admin/private/settings/seo";
 
 export const getAdminSettingsCatalogs = async () => {
   const response = await adminApi.get<ApiResponse<AdminSettingsCatalogs>>(baseUrl);
@@ -166,6 +214,24 @@ export const restoreAdminSettingsCatalogDefaults = async (confirmation: string) 
   const response = await adminApi.post<ApiResponse<AdminSettingsCatalogs>>(
     `${baseUrl}/restore-defaults`,
     { confirmation },
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const getAdminSeoMetadataSettings = async () => {
+  const response = await adminApi.get<ApiResponse<AdminSeoMetadataSettings>>(seoBaseUrl);
+
+  return resolveApiData(response.data);
+};
+
+export const updateAdminSeoMetadataSetting = async (
+  pageKey: AdminSeoMetadataPageKey,
+  input: AdminSeoMetadataPayload,
+) => {
+  const response = await adminApi.put<ApiResponse<AdminSeoMetadataSettings>>(
+    `${seoBaseUrl}/${encodeURIComponent(pageKey)}`,
+    input,
   );
 
   return resolveApiData(response.data);

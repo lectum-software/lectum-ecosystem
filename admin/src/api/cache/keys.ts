@@ -428,4 +428,5 @@ export const adminModerationKeys = {
 export const adminSettingsKeys = {
   all: ["admin", "settings"] as const,
   catalogs: () => [...adminSettingsKeys.all, "catalogs"] as const,
+  seo: () => [...adminSettingsKeys.all, "seo"] as const,
 };

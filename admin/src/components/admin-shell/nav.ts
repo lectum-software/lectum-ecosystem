@@ -68,5 +68,14 @@ export const adminNavItems = [
     ],
   },
   { label: "Notificações", href: "/notificacoes", icon: Bell },
-  { label: "Configurações", href: "/configuracoes", icon: Settings },
+  {
+    label: "Configurações",
+    href: "/configuracoes",
+    icon: Settings,
+    children: [
+      { label: "Filtros", href: "/configuracoes" },
+      { label: "SEO / Metadados", href: "/configuracoes/seo-metadados" },
+      { label: "Assinatura", href: "/configuracoes/assinatura" },
+    ],
+  },
 ] as const;

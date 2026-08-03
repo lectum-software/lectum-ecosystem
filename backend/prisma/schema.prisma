@@ -167,6 +167,31 @@ model admin_activity_log {
   @@map("admin_activity_logs")
 }
 
+model site_seo_setting {
+  id                  String    @id @default(cuid())
+  deleted             Boolean   @default(false)
+  deletedAt           DateTime? @map("deleted_at")
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  page_key            String    @unique @map("page_key")
+  route_path          String?   @map("route_path")
+  label               String
+  title               String
+  description         String
+  keywords            Json?
+  og_title            String?   @map("og_title")
+  og_description      String?   @map("og_description")
+  og_image_url        String?   @map("og_image_url")
+  canonical_url       String?   @map("canonical_url")
+  robots_index        Boolean   @default(true) @map("robots_index")
+  robots_follow       Boolean   @default(true) @map("robots_follow")
+  updated_by_admin_id String?   @map("updated_by_admin_id")
+
+  @@index([route_path, deleted])
+  @@index([robots_index, deleted])
+  @@map("site_seo_settings")
+}
+
 model notification_preference {
   id        String    @id @default(cuid())
   deleted   Boolean   @default(false)

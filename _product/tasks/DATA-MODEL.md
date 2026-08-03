@@ -976,6 +976,27 @@ O dashboard `/psicologos` usa `psychologist_signup_analytics_identity` somente p
 
 Complemento TASK-88 (2026-07-27): `AdminPsychologistsDashboardPlanSegmentSummary` tambem expoe `pre_signup_conversion`. Cada segmento (`all`, `subscribers`, `free`, `courtesy`) reutiliza a mesma coorte de psicologos cadastrados no periodo, mas filtra os perfis pelo segmento de plano antes de resumir a trilha pre-cadastro. Nao ha nova tabela, migration, backfill ou identificacao cross-device; o filtro de plano e apenas uma visao segmentada dos eventos first-party reais ja descritos na TASK-86.
 
+## SEO e metadados públicos
+
+Adicionado na TASK-141 para permitir que o Admin configure metadados das páginas públicas sem editar código e sem afetar áreas privadas/noindex.
+
+`site_seo_setting`:
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `page_key` | `String @unique` | Chave operacional fechada: `default`, `home`, `psychologists`, `psychologist_profile`, `community`, `community_post`, `top_mentors`. |
+| `route_path` | `String?` | Rota pública correspondente; pode ser `null` no fallback global e pode conter placeholders de rota dinâmica como `/psychologists/[id]`. |
+| `label` | `String` | Nome exibido no Admin; não é editável pela tela. |
+| `title` | `String` | Título SEO renderizado server-side quando a página usa a configuração. |
+| `description` | `String` | Descrição SEO. |
+| `keywords` | `Json?` | Lista de palavras-chave normalizadas a partir de texto separado por vírgulas. |
+| `og_title`, `og_description`, `og_image_url` | `String?` | Campos Open Graph/social sharing. `og_image_url` aceita caminho público do frontend ou URL absoluta. |
+| `canonical_url` | `String?` | URL/caminho canônico opcional. Quando vazio, a página usa sua rota canônica conhecida. |
+| `robots_index`, `robots_follow` | `Boolean` | Controle por página para `index/follow`; áreas privadas continuam bloqueadas pelos metadados e `robots.ts` existentes. |
+| `updated_by_admin_id` | `String?` | ID do admin que fez a última edição. A auditoria detalhada fica em `admin_activity_log`. |
+| `@@index([route_path, deleted])`, `@@index([robots_index, deleted])`, `@@map("site_seo_settings")` | | Consultas por rota e status de indexação. |
+
+A edição administrativa usa `PUT /api/admin/private/settings/seo/:page_key`, valida payload com o validator do backend, persiste em `site_seo_setting` e registra `admin_activity_log` com `domain="site_seo_setting"`, `target_type="seo_metadata"` e `area="seo_metadados"` quando há alteração real. O consumo público usa `GET /api/public/seo/metadata` para retornar apenas metadados seguros, sem dados de auditoria sensível.
 ## Convencao de rotas (frontend e backend)
 
 A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-40:

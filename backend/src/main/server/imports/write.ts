@@ -27,6 +27,7 @@ import apiAdminPrivatePsychologistsList from "@/modules/api/admin/private/psycho
 import apiAdminPrivatePsychologistsProfileEdit from "@/modules/api/admin/private/psychologists/profile-edit";
 import apiAdminPrivatePsychologistsRegistryVerification from "@/modules/api/admin/private/psychologists/registry-verification";
 import apiAdminPrivateSettingsCatalogs from "@/modules/api/admin/private/settings/catalogs";
+import apiAdminPrivateSettingsSeo from "@/modules/api/admin/private/settings/seo";
 import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/export";
 import apiAdminPrivateTrafficSummary from "@/modules/api/admin/private/traffic/summary";
 import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
@@ -81,6 +82,7 @@ import apiPublicGoogleCallback from "@/modules/api/public/google/callback";
 import apiPublicGoogleLink from "@/modules/api/public/google/link";
 import apiPublicGoogleLogin from "@/modules/api/public/google/login";
 import apiPublicGoogleMe from "@/modules/api/public/google/me";
+import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
 import apiPublicUser from "@/modules/api/public/user";
 
 const endpoint = Router();
@@ -152,6 +154,7 @@ mountRoute("/api/public/google/callback", apiPublicGoogleCallback);
 mountRoute("/api/public/google/link", apiPublicGoogleLink);
 mountRoute("/api/public/google/login", apiPublicGoogleLogin);
 mountRoute("/api/public/google/me", apiPublicGoogleMe);
+mountRoute("/api/public/seo/metadata", apiPublicSeoMetadata);
 mountRoute("/api/public/user", apiPublicUser);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
 mountRoute("/api/admin/private/auth/hidrate", apiAdminPrivateAuthHidrate);
@@ -182,6 +185,7 @@ mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsEngag
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsFeedback);
 mountRoute("/api/admin/private/psychologists", apiAdminPrivatePsychologistsActivities);
 mountRoute("/api/admin/private/settings/catalogs", apiAdminPrivateSettingsCatalogs);
+mountRoute("/api/admin/private/settings/seo", apiAdminPrivateSettingsSeo);
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
 mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);
