@@ -12,7 +12,7 @@ Na aba Admin **Estatisticas** do psicologo, o bloco **Posts**/**Respostas** ja m
 1. O contrato real `GET /api/admin/private/psychologists/:id/statistics` passa a incluir, em `community.content_distribution.posts|replies`, `items[].whatsapp_clicks` e `total_whatsapp_clicks`.
 2. Os cliques sao contados por `important_action_event.action_type="whatsapp_click"`, no mesmo periodo selecionado, vinculados aos ids reais de `community_post` ou `post_reply` autorais do psicologo e ao mesmo filtro de comunidade aplicado ao bloco.
 3. A classificacao de formato permanece a mesma: texto, video, imagem e carrossel. Apenas a leitura de conversao por formato foi adicionada.
-4. A UI Admin mostra `N posts/respostas · N cliques WhatsApp` em cada linha de formato e substitui a badge superior do card **Posts** por `N cliques WhatsApp`, somando Posts e Respostas.
+4. A UI Admin mostra `N posts/respostas · N cliques WhatsApp` em cada linha de formato, substitui a badge superior do card **Posts** por `N cliques WhatsApp` somando Posts e Respostas, e substitui a badge superior de **Respostas** por `replies.total_whatsapp_clicks`.
 
 ## Consequencias
 
@@ -32,6 +32,7 @@ Na aba Admin **Estatisticas** do psicologo, o bloco **Posts**/**Respostas** ja m
 - `pnpm check`
 - Smoke direto do service confirmou, para `cmrgztri7000tn0uh1q4n8vxf` em `period=all`, `posts.total=20`, `replies.total=2`, `posts.total_whatsapp_clicks=11`, `replies.total_whatsapp_clicks=0` e `items[].whatsapp_clicks` preenchido.
 - Browser local/headless autenticado em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`: desktop 1350px e mobile 390px confirmaram `11 cliques WhatsApp`, `19 posts · 0 cliques WhatsApp`, ausencia de `20 posts` na badge do card **Posts** e ausencia de overflow horizontal no viewport mobile. Evidencias: `.tmp/admin-psychologist-whatsapp-formats-desktop.png` e `.tmp/admin-psychologist-whatsapp-formats-mobile.png`.
+- Complemento visual pos-feedback: `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e browser local/headless confirmaram badge **Posts** `11 cliques WhatsApp`, badge **Respostas** `0 cliques WhatsApp` e mobile `scrollWidth=390/clientWidth=390`. Evidencias: `.tmp/admin-psychologist-replies-whatsapp-badge-desktop.png` e `.tmp/admin-psychologist-replies-whatsapp-badge-mobile.png`.
 
 ## Pendencias
 

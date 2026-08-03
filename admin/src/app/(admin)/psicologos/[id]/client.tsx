@@ -3661,6 +3661,9 @@ const ContentFormatDistributionsBlock = ({
       totalLabels={{ plural: "posts", singular: "post" }}
     />
     <ContentFormatDistributionCard
+      badgeLabel={formatContentFormatWhatsappClicks(
+        distribution.replies.total_whatsapp_clicks ?? 0,
+      )}
       className={cardClassName}
       description="Quantidade e taxa por formato das respostas no mesmo período selecionado."
       distribution={distribution.replies}

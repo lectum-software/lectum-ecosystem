@@ -616,3 +616,26 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm check`
 - Smoke direto do service `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` confirmou `posts.total=20`, `replies.total=2`, `posts.total_whatsapp_clicks=11`, `replies.total_whatsapp_clicks=0` e cliques por item de formato.
 - Browser local/headless autenticado em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou em desktop 1350px e mobile 390px: `11 cliques WhatsApp`, `19 posts · 0 cliques WhatsApp`, ausencia de `20 posts` na badge do card **Posts** e `scrollWidth=390/clientWidth=390` no mobile. Evidencias locais: `.tmp/admin-psychologist-whatsapp-formats-desktop.png` e `.tmp/admin-psychologist-whatsapp-formats-mobile.png`. Admin temporario real usado na validacao foi removido ao final.
+
+## Ajuste pos-feedback 2026-08-03 - Badge de cliques WhatsApp em Respostas
+
+- Pedido do usuario: no card **Respostas**, a tag superior de quantidade de respostas tambem deve ser substituida pela quantidade de cliques WhatsApp.
+- A UI Admin agora renderiza a badge superior de **Respostas** com `replies.total_whatsapp_clicks`, mantendo a badge de **Posts** como o total combinado de cliques WhatsApp de Posts + Respostas.
+- O ajuste reaproveita o contrato real ja criado para `community.content_distribution.replies.total_whatsapp_clicks`; nao houve alteracao de backend, endpoint, schema Prisma, migration, package novo, mock, seed ou dado artificial.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; foram usados o screenshot enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png` como referencias auditaveis.
+- ADR atualizado: `adrs/0411-whatsapp-cliques-formatos-posts-respostas-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A badge superior de **Respostas** nao exibe mais a quantidade de respostas.
+- [x] A badge superior de **Respostas** exibe a quantidade de cliques WhatsApp das respostas no periodo/filtro selecionado.
+- [x] A badge superior de **Posts** continua exibindo o total combinado de cliques WhatsApp de Posts + Respostas.
+- [x] Nenhum mock, seed, endpoint simulado, migration, package novo ou alteracao de schema Prisma foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir admin exec biome check "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless autenticado em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou a badge **Respostas** como `0 cliques WhatsApp`, a badge **Posts** como `11 cliques WhatsApp`, e mobile sem overflow (`scrollWidth=390/clientWidth=390`). Evidencias locais: `.tmp/admin-psychologist-replies-whatsapp-badge-desktop.png` e `.tmp/admin-psychologist-replies-whatsapp-badge-mobile.png`.
