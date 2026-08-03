@@ -41,7 +41,9 @@ const resolveMediaPreview = (media?: MediaCandidate | null) => {
   if (!media?.media_url) {
     return {
       mediaType: null,
+      ogImageHeight: null,
       ogImageUrl: null,
+      ogImageWidth: null,
       ogVideoUrl: null,
     };
   }
@@ -49,22 +51,30 @@ const resolveMediaPreview = (media?: MediaCandidate | null) => {
   if (media.media_type === "image") {
     return {
       mediaType: "image",
+      ogImageHeight: null,
       ogImageUrl: media.media_url,
+      ogImageWidth: null,
       ogVideoUrl: null,
     };
   }
 
   if (media.media_type === "video") {
+    const hasThumbnail = Boolean(media.thumbnail_url);
+
     return {
       mediaType: "video",
       ogImageUrl: media.thumbnail_url || null,
+      ogImageHeight: hasThumbnail ? 1920 : null,
+      ogImageWidth: hasThumbnail ? 1080 : null,
       ogVideoUrl: media.media_url,
     };
   }
 
   return {
     mediaType: null,
+    ogImageHeight: null,
     ogImageUrl: null,
+    ogImageWidth: null,
     ogVideoUrl: null,
   };
 };
@@ -146,7 +156,9 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
     description,
     media_type: mediaPreview.mediaType,
     og_description: description,
+    og_image_height: mediaPreview.ogImageHeight,
     og_image_url: mediaPreview.ogImageUrl,
+    og_image_width: mediaPreview.ogImageWidth,
     og_title: `${title} | Lectum`,
     og_video_url: mediaPreview.ogVideoUrl,
     published_at: post.createdAt,
@@ -237,7 +249,9 @@ export const showReply = async ({ id, replyId, slug }: ReplySeoParams): Promise<
     description,
     media_type: replyMedia.mediaType ?? postMedia.mediaType,
     og_description: description,
+    og_image_height: replyMedia.ogImageHeight ?? postMedia.ogImageHeight,
     og_image_url: replyMedia.ogImageUrl ?? postMedia.ogImageUrl,
+    og_image_width: replyMedia.ogImageWidth ?? postMedia.ogImageWidth,
     og_title: `${title} | Lectum`,
     og_video_url: replyMedia.ogVideoUrl ?? postMedia.ogVideoUrl,
     published_at: reply.createdAt,

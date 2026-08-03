@@ -24,7 +24,11 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
-import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
+import {
+  createVideoThumbnailFile,
+  type LectumVideoThumbnailFrameOptions,
+} from "@/utils/video-thumbnail";
 
 const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 const COMMUNITY_POST_MEDIA_ACCEPT =
@@ -537,8 +541,23 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
               ),
             )
           : [];
+      const thumbnailFrame =
+        selectedVideo && post.author.role === "psicologo"
+          ? ({
+              cardLabel: "Postado na Lectum",
+              professional: {
+                avatar: post.author.avatar,
+                name: post.author.name,
+                roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
+                verified: post.author.verified,
+              },
+              sourceText: values.title,
+            } satisfies LectumVideoThumbnailFrameOptions)
+          : null;
       const thumbnailFile = selectedVideo
-        ? await createVideoThumbnailFile(selectedVideo.file)
+        ? await createVideoThumbnailFile(selectedVideo.file, {
+            lectumShareFrame: thumbnailFrame,
+          })
         : null;
       const uploadedThumbnail = thumbnailFile
         ? await uploadMutation.mutateAsync({

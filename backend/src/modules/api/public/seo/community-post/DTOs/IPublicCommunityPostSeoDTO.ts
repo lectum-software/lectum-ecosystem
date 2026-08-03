@@ -9,7 +9,9 @@ export type PublicCommunityPostSeoDTO = {
   description: string;
   media_type: string | null;
   og_description: string;
+  og_image_height: number | null;
   og_image_url: string | null;
+  og_image_width: number | null;
   og_title: string;
   og_video_url: string | null;
   published_at: Date;

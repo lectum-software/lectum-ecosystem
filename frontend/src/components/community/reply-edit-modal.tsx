@@ -20,7 +20,11 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
-import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
+import {
+  createVideoThumbnailFile,
+  type LectumVideoThumbnailFrameOptions,
+} from "@/utils/video-thumbnail";
 
 const replyEditSchema = z.object({
   content: z.string().trim().max(2000, "Use no máximo 2000 caracteres no texto"),
@@ -52,6 +56,7 @@ type ReplyEditModalProps = {
   open: boolean;
   postId: string;
   reply: EditableReply;
+  sourceText?: string | null;
 };
 
 const fields = [
@@ -102,7 +107,14 @@ const resolveMediaUploadError = (error: unknown) => {
   return rawMessage || "Não foi possível anexar a mídia agora. Tente novamente.";
 };
 
-export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: ReplyEditModalProps) {
+export function ReplyEditModal({
+  onClose,
+  onUpdated,
+  open,
+  postId,
+  reply,
+  sourceText,
+}: ReplyEditModalProps) {
   const storedUser = useAppSelector((state) => state.user);
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const canManageMedia = mediaPermission.canAttach && reply.author.role === "psicologo";
@@ -240,9 +252,24 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
             id: postId,
           })
         : null;
+      const thumbnailFrame =
+        selectedMedia && reply.author.role === "psicologo"
+          ? ({
+              cardLabel: "Respondido na Lectum",
+              professional: {
+                avatar: reply.author.avatar,
+                name: reply.author.name,
+                roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
+                verified: reply.author.verified,
+              },
+              sourceText: sourceText ?? reply.content,
+            } satisfies LectumVideoThumbnailFrameOptions)
+          : null;
       const thumbnailFile =
         selectedMedia && uploadedMedia?.media_type === "video"
-          ? await createVideoThumbnailFile(selectedMedia.file)
+          ? await createVideoThumbnailFile(selectedMedia.file, {
+              lectumShareFrame: thumbnailFrame,
+            })
           : null;
       const uploadedThumbnail = thumbnailFile
         ? await uploadMutation.mutateAsync({

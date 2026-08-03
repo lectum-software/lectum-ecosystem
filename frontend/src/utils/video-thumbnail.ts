@@ -1,11 +1,50 @@
-﻿const DEFAULT_THUMBNAIL_TIMEOUT_MS = 8000;
+﻿import {
+  createLectumShareFrameImageFile,
+  type LectumShareFrameTarget,
+} from "@/utils/lectum-share-media";
+
+const DEFAULT_THUMBNAIL_TIMEOUT_MS = 8000;
 const DEFAULT_THUMBNAIL_QUALITY = 0.86;
 const DEFAULT_THUMBNAIL_WIDTH = 1200;
 
-const safeThumbnailName = (fileName: string) => {
-  const baseName = fileName.replace(/\.[^.]+$/, "").trim() || "video";
+export type LectumVideoThumbnailFrameOptions = {
+  cardLabel: LectumShareFrameTarget["cardLabel"];
+  professional: LectumShareFrameTarget["professional"];
+  sourceText?: string | null;
+};
 
-  return `${baseName}-thumbnail.jpg`;
+type CreateVideoThumbnailOptions = {
+  lectumShareFrame?: LectumVideoThumbnailFrameOptions | null;
+};
+
+const safeThumbnailName = (fileName: string, frame?: "lectum-share" | "raw") => {
+  const baseName = fileName.replace(/\.[^.]+$/, "").trim() || "video";
+  const suffix = frame === "lectum-share" ? "lectum-og" : "thumbnail";
+
+  return `${baseName}-${suffix}.jpg`;
+};
+
+const toLectumShareFrameTarget = (
+  options?: LectumVideoThumbnailFrameOptions | null,
+): LectumShareFrameTarget | null => {
+  if (!options) return null;
+
+  const sourceText = String(options.sourceText ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const professionalName = options.professional.name.replace(/\s+/g, " ").trim();
+
+  return {
+    cardLabel: options.cardLabel,
+    mediaType: "video",
+    professional: {
+      avatar: options.professional.avatar ?? null,
+      name: professionalName || "Profissional Lectum",
+      roleLabel: options.professional.roleLabel,
+      verified: options.professional.verified,
+    },
+    sourceText: sourceText || "Conteúdo publicado na Lectum.",
+  };
 };
 
 const calculateThumbnailSize = (videoWidth: number, videoHeight: number) => {
@@ -24,13 +63,17 @@ const calculateThumbnailSize = (videoWidth: number, videoHeight: number) => {
   };
 };
 
-export const createVideoThumbnailFile = async (file: File): Promise<File | null> => {
+export const createVideoThumbnailFile = async (
+  file: File,
+  options: CreateVideoThumbnailOptions = {},
+): Promise<File | null> => {
   if (typeof document === "undefined") return null;
   if (!file.type.startsWith("video/")) return null;
 
   return new Promise<File | null>((resolve) => {
     const video = document.createElement("video");
     const objectUrl = URL.createObjectURL(file);
+    const lectumShareFrameTarget = toLectumShareFrameTarget(options.lectumShareFrame);
     let settled = false;
     let timeoutId: number | null = null;
 
@@ -50,6 +93,19 @@ export const createVideoThumbnailFile = async (file: File): Promise<File | null>
 
     const captureFrame = () => {
       try {
+        if (lectumShareFrameTarget) {
+          void createLectumShareFrameImageFile({
+            fileName: safeThumbnailName(file.name, "lectum-share"),
+            media: video,
+            quality: DEFAULT_THUMBNAIL_QUALITY,
+            target: lectumShareFrameTarget,
+            type: "image/jpeg",
+          })
+            .then((thumbnail) => finish(thumbnail))
+            .catch(() => finish(null));
+          return;
+        }
+
         const { height, width } = calculateThumbnailSize(video.videoWidth, video.videoHeight);
         const canvas = document.createElement("canvas");
         canvas.width = width;
@@ -70,7 +126,7 @@ export const createVideoThumbnailFile = async (file: File): Promise<File | null>
             }
 
             finish(
-              new File([blob], safeThumbnailName(file.name), {
+              new File([blob], safeThumbnailName(file.name, "raw"), {
                 lastModified: Date.now(),
                 type: "image/jpeg",
               }),

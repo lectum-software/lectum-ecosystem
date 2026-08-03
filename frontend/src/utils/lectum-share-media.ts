@@ -28,6 +28,11 @@ type ShareExportResult = {
   mode: "download" | "file";
 };
 
+export type LectumShareFrameTarget = Pick<
+  LectumShareSocialTarget,
+  "cardLabel" | "mediaType" | "professional" | "sourceText"
+>;
+
 type ShareCanvasPalette = {
   foreground: string;
   primary: string;
@@ -364,7 +369,7 @@ const drawVerifiedBadge = (
 const drawQuestionCard = (
   ctx: CanvasRenderingContext2D,
   layout: ShareCanvasLayout,
-  target: LectumShareSocialTarget,
+  target: LectumShareFrameTarget,
   palette: ShareCanvasPalette,
 ) => {
   const { card } = layout;
@@ -426,7 +431,7 @@ const drawQuestionCard = (
 const drawProfessionalTag = (
   ctx: CanvasRenderingContext2D,
   layout: ShareCanvasLayout,
-  target: LectumShareSocialTarget,
+  target: LectumShareFrameTarget,
 ) => {
   const { professionalTag: tag } = layout;
   const name = truncateLectumShareProfessionalTagName(target.professional.name);
@@ -477,7 +482,7 @@ const drawLectumShareFrame = (
   ctx: CanvasRenderingContext2D,
   media: ShareMediaElement,
   layout: ShareCanvasLayout,
-  target: LectumShareSocialTarget,
+  target: LectumShareFrameTarget,
   palette: ShareCanvasPalette,
 ) => {
   ctx.fillStyle = "#000000";
@@ -516,7 +521,19 @@ const extensionFromMimeType = (mimeType: string) => (mimeType.includes("mp4") ? 
 const safeFileName = (target: LectumShareSocialTarget, extension: string) =>
   `${target.kind === "post_media" ? "lectum-postado" : "lectum-respondido"}-vertical-9x16.${extension}`;
 
-const createImageShareFile = async (target: LectumShareSocialTarget, media: ShareMediaElement) => {
+export const createLectumShareFrameImageFile = async ({
+  fileName,
+  media,
+  quality,
+  target,
+  type = "image/png",
+}: {
+  fileName: string;
+  media: ShareMediaElement;
+  quality?: number;
+  target: LectumShareFrameTarget;
+  type?: "image/jpeg" | "image/png";
+}) => {
   const layout = storyCanvasLayout;
   const canvas = createCanvas(layout);
   const ctx = canvas.getContext("2d");
@@ -526,12 +543,19 @@ const createImageShareFile = async (target: LectumShareSocialTarget, media: Shar
   }
 
   drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette());
-  const blob = await canvasToBlob(canvas, "image/png");
+  const blob = await canvasToBlob(canvas, type, quality);
 
-  return new File([blob], safeFileName(target, "png"), {
-    type: "image/png",
+  return new File([blob], fileName, {
+    type,
   });
 };
+
+const createImageShareFile = async (target: LectumShareSocialTarget, media: ShareMediaElement) =>
+  createLectumShareFrameImageFile({
+    fileName: safeFileName(target, "png"),
+    media,
+    target,
+  });
 
 const createVideoShareFile = async (
   target: LectumShareSocialTarget,

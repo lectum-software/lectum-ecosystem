@@ -28,7 +28,10 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
-import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import {
+  createVideoThumbnailFile,
+  type LectumVideoThumbnailFrameOptions,
+} from "@/utils/video-thumbnail";
 import { CommunityRouteLogic } from "../../logic";
 import {
   type CreateCommunityPostForm,
@@ -515,8 +518,25 @@ export const CreateCommunityPostLogic = ({
               ),
             )
           : [];
+      const thumbnailFrame = isPsychologist
+        ? ({
+            cardLabel: "Postado na Lectum",
+            professional: {
+              avatar: storedUser?.avatar ?? null,
+              name: storedUser?.name || "Profissional Lectum",
+              roleLabel: "Psicólogo",
+              verified: Boolean(
+                storedUser?.psychologist_profile?.cfp_verified_at ||
+                  storedUser?.psychologist_profile?.crp_status === "aprovado",
+              ),
+            },
+            sourceText: values.title,
+          } satisfies LectumVideoThumbnailFrameOptions)
+        : null;
       const thumbnailFile = selectedVideo
-        ? await createVideoThumbnailFile(selectedVideo.file)
+        ? await createVideoThumbnailFile(selectedVideo.file, {
+            lectumShareFrame: thumbnailFrame,
+          })
         : null;
       const uploadedThumbnail = thumbnailFile
         ? await uploadMutation.mutateAsync({

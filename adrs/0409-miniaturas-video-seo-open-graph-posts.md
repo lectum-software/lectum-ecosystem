@@ -39,6 +39,14 @@ Restrições relevantes:
 - Redes sociais podem cachear metadados ja coletados; apos mudancas de imagem, pode ser necessario usar ferramentas de debug/refresh da propria rede.
 - Hosts externos para preview no Admin devem estar em `NEXT_PUBLIC_IMAGE_REMOTE_HOSTS` e no `next.config` correspondente.
 
+## Complemento 2026-08-03 - frame vertical para previews de videos no WhatsApp
+
+Decisao complementar: as miniaturas persistidas para videos novos/editados deixam de ser apenas um frame cru do arquivo e passam a usar o mesmo frame vertical 9:16 do layout Lectum de compartilhamento social. Para posts com video, o card usa `Postado na Lectum`; para respostas com video, usa `Respondido na Lectum`. O canvas reaproveita a composicao de compartilhamento ja existente: midia em `object-contain`, card superior com contexto do post/comentario e tag textual do profissional.
+
+O endpoint publico de SEO passa a informar dimensoes `og_image_width=1080` e `og_image_height=1920` quando o `og:image` vem de `thumbnail_url` de video. O frontend publica esses valores no `generateMetadata` e usa `openGraph.type="video.other"` para conteudos com video, mantendo o arquivo em `og:video`.
+
+Essa decisao aproxima o preview de links no WhatsApp do comportamento de Instagram/TikTok para videos verticais, preservando a imagem inteira e o layout editorial definido pela Lectum. Videos antigos permanecem dependentes da miniatura ja persistida ate edicao ou backfill real.
+
 ## Validacao
 
 - `pnpm --dir backend exec prisma format`

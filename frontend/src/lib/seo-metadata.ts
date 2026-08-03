@@ -12,6 +12,8 @@ export type SeoMetadataPageKey =
   | "community_post"
   | "top_mentors";
 
+type SeoOpenGraphType = "article" | "video.other" | "website";
+
 type PublicSeoMetadataSetting = {
   canonical_url: string | null;
   description: string;
@@ -39,24 +41,34 @@ export type SeoMetadataFallback = {
   canonical?: string;
   description: string;
   image?: string;
+  imageHeight?: number | null;
+  imageWidth?: number | null;
   ogDescription?: string;
   ogTitle?: string;
   robotsFollow?: boolean;
   robotsIndex?: boolean;
   title: string;
-  type?: "article" | "website";
+  type?: SeoOpenGraphType;
   video?: string;
+  videoHeight?: number | null;
+  videoType?: string | null;
+  videoWidth?: number | null;
 };
 
 type SeoMetadataOverrides = {
   canonical?: string | null;
   description?: string | null;
   image?: string | null;
+  imageHeight?: number | null;
+  imageWidth?: number | null;
   ogDescription?: string | null;
   ogTitle?: string | null;
   title?: string | null;
-  type?: "article" | "website";
+  type?: SeoOpenGraphType;
   video?: string | null;
+  videoHeight?: number | null;
+  videoType?: string | null;
+  videoWidth?: number | null;
 };
 
 type PublicCommunityPostSeo = {
@@ -64,7 +76,9 @@ type PublicCommunityPostSeo = {
   description: string;
   media_type: string | null;
   og_description: string;
+  og_image_height: number | null;
   og_image_url: string | null;
+  og_image_width: number | null;
   og_title: string;
   og_video_url: string | null;
   title: string;
@@ -82,6 +96,16 @@ const resolveAbsoluteUrl = (value?: string | null) => {
   } catch {
     return absoluteUrl(value);
   }
+};
+
+const resolveVideoType = (value?: string | null) => {
+  const normalized = value?.split("?")[0]?.toLowerCase() ?? "";
+
+  if (normalized.endsWith(".mp4")) return "video/mp4";
+  if (normalized.endsWith(".webm")) return "video/webm";
+  if (normalized.endsWith(".mov") || normalized.endsWith(".qt")) return "video/quicktime";
+
+  return undefined;
 };
 
 const getPublicSeoSettings = async () => {
@@ -123,6 +147,11 @@ export const resolveSeoMetadata = async (
   const robotsFollow = setting?.robots_follow ?? fallback.robotsFollow ?? true;
   const resolvedImage = resolveAbsoluteUrl(image);
   const resolvedVideo = resolveAbsoluteUrl(video);
+  const imageWidth = overrides.imageWidth ?? fallback.imageWidth ?? undefined;
+  const imageHeight = overrides.imageHeight ?? fallback.imageHeight ?? undefined;
+  const videoWidth = overrides.videoWidth ?? fallback.videoWidth ?? undefined;
+  const videoHeight = overrides.videoHeight ?? fallback.videoHeight ?? undefined;
+  const videoType = overrides.videoType ?? fallback.videoType ?? resolveVideoType(resolvedVideo);
   const routePath = setting?.route_path?.includes("[") ? undefined : setting?.route_path;
   const resolvedCanonical = resolveAbsoluteUrl(canonical || routePath);
 
@@ -141,7 +170,9 @@ export const resolveSeoMetadata = async (
         ? [
             {
               alt: title,
+              height: imageHeight,
               url: resolvedImage,
+              width: imageWidth,
             },
           ]
         : undefined,
@@ -151,7 +182,10 @@ export const resolveSeoMetadata = async (
       videos: resolvedVideo
         ? [
             {
+              height: videoHeight,
+              type: videoType,
               url: resolvedVideo,
+              width: videoWidth,
             },
           ]
         : undefined,
@@ -229,10 +263,14 @@ export const resolveCommunityPostSeoMetadata = async ({
     canonical: seo.canonical_url,
     description: seo.description,
     image: seo.og_image_url,
+    imageHeight: seo.og_image_height,
+    imageWidth: seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
     title: seo.title,
-    type: "article",
+    type: seo.media_type === "video" ? "video.other" : "article",
     video: seo.og_video_url,
+    videoHeight: seo.media_type === "video" ? 1920 : undefined,
+    videoWidth: seo.media_type === "video" ? 1080 : undefined,
   });
 };

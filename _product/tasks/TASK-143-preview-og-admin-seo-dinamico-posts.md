@@ -77,3 +77,11 @@ Exibir uma miniatura da Imagem Open Graph no Admin e publicar metadados dinamico
 ## Observacoes
 
 Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma task futura criar backfill real. Nesses casos, a pagina segue retornando `og:video` e cai para a imagem OG configurada no Admin para `og:image`.
+
+## Ajuste pos-feedback 2026-08-03 - preview WhatsApp de videos verticais
+
+- [x] Referencia visual de WhatsApp para video vertical registrada em `_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg`.
+- [x] Miniaturas geradas para videos novos/editados passam a usar o mesmo frame vertical 9:16 do layout Lectum de compartilhamento (`Postado na Lectum`/`Respondido na Lectum`, card superior e tag profissional), em vez de apenas o frame cru do video.
+- [x] Endpoint publico de SEO passa a expor dimensoes `og_image_width=1080` e `og_image_height=1920` quando o `og:image` vem de miniatura de video no formato vertical.
+- [x] `generateMetadata` passa a publicar metadados Open Graph de video como `video.other`, mantendo `og:image` com a miniatura vertical e `og:video` com o arquivo de video.
+- [x] Revalidado com `pnpm --dir frontend check`, `pnpm --dir backend check`, builds de frontend/backend, `pnpm check` e smoke HTTP local.

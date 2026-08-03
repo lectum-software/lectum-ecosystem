@@ -28,12 +28,13 @@ type OwnerActionReply = Pick<
   | "id"
   | "media_type"
   | "media_url"
+  | "parent_content"
   | "parent_reply_id"
   | "replies_received_count"
   | "thumbnail_url"
 >;
 
-type OwnerActionPost = Pick<PostListPost, "id" | "muted_by_current_user">;
+type OwnerActionPost = Pick<PostListPost, "id" | "muted_by_current_user" | "title">;
 
 type ReplyOwnerActionMenuProps = {
   className?: string;
@@ -361,6 +362,7 @@ export const ReplyOwnerActionMenu = ({
           open={editModalOpen}
           postId={post.id}
           reply={reply}
+          sourceText={reply.parent_content ?? post.title}
         />
       ) : null}
 

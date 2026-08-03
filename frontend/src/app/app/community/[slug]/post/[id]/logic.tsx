@@ -93,11 +93,15 @@ import {
   findPostReplyInTree,
   type LectumShareChannel,
   type LectumShareVideoTarget,
+  normalizeLectumShareProfessionalRole,
 } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
-import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
+import {
+  createVideoThumbnailFile,
+  type LectumVideoThumbnailFrameOptions,
+} from "@/utils/video-thumbnail";
 import {
   type PostReportForm,
   type ReplyComposerForm,
@@ -1274,6 +1278,7 @@ const ReplyCard = ({
   focusReplyId,
   maxInlineDepth = MAX_REPLY_TREE_DEPTH,
   postId,
+  postSourceText,
   professionalThread,
   reply,
   replyApiError,
@@ -1302,6 +1307,7 @@ const ReplyCard = ({
   maxInlineDepth?: number;
   onVote: (replyId: string, value: 1 | -1) => void;
   postId: string;
+  postSourceText: string;
   professionalThread?: boolean;
   reply: PostReply;
   replyApiError?: string | null;
@@ -1561,6 +1567,7 @@ const ReplyCard = ({
               open={editModalOpen}
               postId={postId}
               reply={reply}
+              sourceText={postSourceText}
             />
           ) : null}
 
@@ -1624,6 +1631,7 @@ const ReplyCard = ({
                 onSubmitReply={onSubmitReply}
                 onVote={onVote}
                 postId={postId}
+                postSourceText={postSourceText}
                 professionalThread={highlightedProfessionalThread}
                 reply={child}
                 replyApiError={replyApiError}
@@ -2143,6 +2151,7 @@ const RepliesList = ({
   onVote,
   focusReplyId,
   postId,
+  postSourceText,
   replies,
   replyApiError,
   replyDisabled,
@@ -2172,6 +2181,7 @@ const RepliesList = ({
   onVote: (replyId: string, value: 1 | -1) => void;
   focusReplyId?: string | null;
   postId: string;
+  postSourceText: string;
   replies: PostReply[];
   replyApiError?: string | null;
   replyDisabled?: boolean;
@@ -2238,6 +2248,7 @@ const RepliesList = ({
                   onSubmitReply={onSubmitReply}
                   onVote={onVote}
                   postId={postId}
+                  postSourceText={postSourceText}
                   professionalThread={professionalTree}
                   reply={reply}
                   replyApiError={replyApiError}
@@ -2657,8 +2668,29 @@ export const PostDetailLogic = () => {
           id: post.id,
         })
       : null;
+    const parentReply = parentReplyId ? findPostReplyInTree(replies, parentReplyId) : null;
+    const thumbnailFrame =
+      mediaFile && currentUser?.role === "psicologo"
+        ? ({
+            cardLabel: "Respondido na Lectum",
+            professional: {
+              avatar: currentUser.avatar ?? null,
+              name: currentUser.name || "Profissional Lectum",
+              roleLabel: normalizeLectumShareProfessionalRole(null),
+              verified: Boolean(
+                currentUser.psychologist_profile?.cfp_verified_at ||
+                  currentUser.psychologist_profile?.crp_status === "aprovado",
+              ),
+            },
+            sourceText: parentReply?.content ?? post.title,
+          } satisfies LectumVideoThumbnailFrameOptions)
+        : null;
     const thumbnailFile =
-      mediaFile && media?.media_type === "video" ? await createVideoThumbnailFile(mediaFile) : null;
+      mediaFile && media?.media_type === "video"
+        ? await createVideoThumbnailFile(mediaFile, {
+            lectumShareFrame: thumbnailFrame,
+          })
+        : null;
     const thumbnail = thumbnailFile
       ? await uploadReplyMediaMutation.mutateAsync({
           file: thumbnailFile,
@@ -2956,6 +2988,7 @@ export const PostDetailLogic = () => {
                 }
                 onVote={handleVoteReply}
                 postId={post.id}
+                postSourceText={post.title}
                 replies={replies}
                 replyApiError={replyError}
                 replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
@@ -3026,7 +3059,8 @@ export const PostReplyThreadLogic = () => {
   const replyId = typeof params.replyId === "string" ? params.replyId : "";
   const communitySlug = typeof params.slug === "string" ? params.slug : "";
   const isMobile = useIsPostDetailMobile();
-  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
+  const currentUser = useAppSelector((state) => state.user);
+  const currentUserId = currentUser?.id ?? null;
   const conversion = useProgressiveConversion();
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(null);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
@@ -3205,8 +3239,29 @@ export const PostReplyThreadLogic = () => {
           id: post.id,
         })
       : null;
+    const parentReply = findPostReplyInTree([rootReply], parentReplyId ?? rootReply.id);
+    const thumbnailFrame =
+      mediaFile && currentUser?.role === "psicologo"
+        ? ({
+            cardLabel: "Respondido na Lectum",
+            professional: {
+              avatar: currentUser.avatar ?? null,
+              name: currentUser.name || "Profissional Lectum",
+              roleLabel: normalizeLectumShareProfessionalRole(null),
+              verified: Boolean(
+                currentUser.psychologist_profile?.cfp_verified_at ||
+                  currentUser.psychologist_profile?.crp_status === "aprovado",
+              ),
+            },
+            sourceText: parentReply?.content ?? post.title,
+          } satisfies LectumVideoThumbnailFrameOptions)
+        : null;
     const thumbnailFile =
-      mediaFile && media?.media_type === "video" ? await createVideoThumbnailFile(mediaFile) : null;
+      mediaFile && media?.media_type === "video"
+        ? await createVideoThumbnailFile(mediaFile, {
+            lectumShareFrame: thumbnailFrame,
+          })
+        : null;
     const thumbnail = thumbnailFile
       ? await uploadReplyMediaMutation.mutateAsync({
           file: thumbnailFile,
@@ -3406,6 +3461,7 @@ export const PostReplyThreadLogic = () => {
               }
               onVote={handleVoteThreadReply}
               postId={post.id}
+              postSourceText={post.title}
               replies={[rootReply]}
               replyApiError={replyError}
               replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
