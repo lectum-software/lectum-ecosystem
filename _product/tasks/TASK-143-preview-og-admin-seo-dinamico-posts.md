@@ -1,4 +1,4 @@
-﻿# TASK-143: Previa Open Graph Admin e SEO dinamico de posts
+# TASK-143: Previa Open Graph Admin e SEO dinamico de posts
 
 Status: Completed  
 Data: 2026-08-03  
@@ -100,3 +100,8 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] Perfis públicos de psicólogo (`/psychologists/[id]`) usam a foto/avatar do psicólogo como `og:image` dinâmico e publicam dimensões quadradas `512x512` quando há foto.
 - [x] O helper de metadata resolve ícones legados de comunidade de `/community/icons/*` para assets públicos equivalentes do frontend antes de montar a URL absoluta do Open Graph.
 - [x] Revalidado com `pnpm --dir backend check`, `pnpm --dir frontend check`, builds backend/frontend, `pnpm check` e smoke HTTP local confirmando `og:image:width`/`height` quadrados em comunidade e perfil.
+
+## Ajuste pos-feedback 2026-08-03 - label da listagem de comunidades
+
+- [x] A lista **Páginas públicas** do Admin SEO/Metadados passa a exibir a rota `/community` como **Explorar comunidades**, diferenciando a listagem pública do template de comunidade específica (`/community/[slug]`).
+- [x] O DTO de SEO resolve labels sistêmicos a partir dos defaults atuais, preservando metadados editáveis já salvos e refletindo o novo nome mesmo em bases de desenvolvimento com a linha antiga persistida.

@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 
 export const SEO_METADATA_PAGE_KEYS = [
   "default",
@@ -121,7 +121,7 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
       "Comunidades públicas da Lectum com perguntas, relatos e respostas responsáveis sobre saúde mental.",
     id: "site-seo-community",
     keywords: ["comunidade de saúde mental", "perguntas sobre psicologia", "psicólogos"],
-    label: "Comunidades",
+    label: "Explorar comunidades",
     og_description:
       "Comunidades públicas da Lectum com perguntas, relatos e respostas responsáveis sobre saúde mental.",
     og_image_url: "/logo-light.png",
@@ -186,6 +186,14 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
 export const isSeoMetadataPageKey = (value: unknown): value is SeoMetadataPageKey =>
   typeof value === "string" && SEO_METADATA_PAGE_KEYS.includes(value as SeoMetadataPageKey);
 
+const SEO_METADATA_DEFAULT_BY_PAGE_KEY = new Map<
+  SeoMetadataPageKey,
+  (typeof SEO_METADATA_DEFAULTS)[number]
+>(SEO_METADATA_DEFAULTS.map((setting) => [setting.page_key, setting] as const));
+
+const resolveSeoMetadataLabel = (pageKey: string, fallback: string) =>
+  SEO_METADATA_DEFAULT_BY_PAGE_KEY.get(pageKey as SeoMetadataPageKey)?.label ?? fallback;
+
 const keywordsFromJson = (value: Prisma.JsonValue | null): string[] => {
   if (!Array.isArray(value)) return [];
 
@@ -214,7 +222,7 @@ export const toSeoMetadataSettingDTO = (setting: {
   description: setting.description,
   id: setting.id,
   keywords: keywordsFromJson(setting.keywords),
-  label: setting.label,
+  label: resolveSeoMetadataLabel(setting.page_key, setting.label),
   og_description: setting.og_description,
   og_image_url: setting.og_image_url,
   og_title: setting.og_title,
