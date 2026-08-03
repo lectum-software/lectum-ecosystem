@@ -1914,11 +1914,7 @@ const formatProfileConversionReference = (conversion: BusinessProfileConversion)
 
 const formatProfileConversionSupport = (conversion: BusinessProfileConversion) => {
   if (conversion.quality.id === "insufficient_data") {
-    return `Perfil com ${numberFormatter.format(
-      conversion.signals.profile_age_days,
-    )} de ${numberFormatter.format(
-      conversion.thresholds.adaptation_period_days,
-    )} dias mínimos de adaptação`;
+    return "";
   }
 
   return `${formatProfileConversionPace(conversion)} · ${formatProfileConversionReference(
@@ -2335,9 +2331,11 @@ const DetailHeader = ({
 
 const MetricCard = ({
   footer,
+  footerPlacement = "below",
   metric,
 }: {
   footer?: ReactNode;
+  footerPlacement?: "below" | "inline";
   metric: AdminPsychologistDetailMetric;
 }) => {
   const Icon = METRIC_ICONS[metric.id] ?? Trophy;
@@ -2346,8 +2344,15 @@ const MetricCard = ({
     <div className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft">
       <MetricIconCircle icon={Icon} metricId={metric.id} />
       <p className="mt-4 text-sm font-extrabold text-muted">{formatMetricLabel(metric)}</p>
-      <p className="mt-2 text-3xl font-extrabold text-foreground">{formatMetricValue(metric)}</p>
-      {footer ? <p className="mt-2 text-xs font-bold text-subtle">{footer}</p> : null}
+      <p className="mt-2 flex items-baseline gap-2 text-3xl font-extrabold text-foreground">
+        <span>{formatMetricValue(metric)}</span>
+        {footer && footerPlacement === "inline" ? (
+          <span className="text-xs font-bold text-subtle">{footer}</span>
+        ) : null}
+      </p>
+      {footer && footerPlacement === "below" ? (
+        <p className="mt-2 text-xs font-bold text-subtle">{footer}</p>
+      ) : null}
     </div>
   );
 };
@@ -2375,7 +2380,7 @@ const ProfileConversionMetricCard = ({
       <p className="mt-2 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
         {value}
       </p>
-      {profileConversion ? (
+      {profileConversion && profileConversion.quality.id !== "insufficient_data" ? (
         <div className="mt-2 space-y-1 text-xs font-bold leading-5 text-subtle">
           <p>{profileConversion.platform_position.label}</p>
           <p>{formatProfileConversionSupport(profileConversion)}</p>
@@ -2407,7 +2412,6 @@ const EngagementMetricCard = ({
       <p className="mt-2 text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
         {value}
       </p>
-      <p className="mt-2 text-xs font-bold text-subtle">Diagnóstico geral nas comunidades</p>
     </div>
   );
 };
@@ -2903,6 +2907,7 @@ const GeneralTab = ({ detail, id }: { detail: AdminPsychologistDetail; id: strin
           {ratingMetric ? (
             <MetricCard
               footer={formatRatingCountLabel(detail.header.rating_count)}
+              footerPlacement="inline"
               metric={ratingMetric}
             />
           ) : null}

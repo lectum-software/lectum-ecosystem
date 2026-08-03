@@ -47,3 +47,26 @@ Validacao complementar:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
+
+## Atualizacao 2026-08-03 - Resumo Geral sem textos auxiliares de baixa confianca
+
+O produto solicitou enxugar os cards superiores da aba **Geral** do detalhe Admin do psicologo.
+
+Decisao complementar:
+
+- Quando a conversao esta em `insufficient_data`, o card **Conversao** exibe somente o resultado principal, sem renderizar a posicao de plataforma "Sem comparacao durante adaptacao" nem a frase de dias minimos de adaptacao.
+- O card **Engajamento** exibe somente o diagnostico principal retornado por `community.engagement_diagnosis.label`, sem a legenda fixa "Diagnostico geral nas comunidades".
+- O contador de **Avaliacoes** mantem a media real como destaque e passa a exibir a quantidade real de avaliacoes na mesma linha, ao lado da nota, reduzindo altura e ruido visual.
+
+Consequencia:
+
+- O resumo evita explicar ausencia de base no mesmo nivel visual dos indicadores principais, sem alterar contrato, calculo, tracking, backend, schema Prisma, package ou dado persistido.
+
+Validacao complementar:
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.

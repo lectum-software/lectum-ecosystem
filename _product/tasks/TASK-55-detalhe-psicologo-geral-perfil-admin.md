@@ -464,3 +464,33 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
+
+## Ajuste pos-feedback 2026-08-03 - Cards superiores mais enxutos na aba Geral
+
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicologo.
+- O card `Conversao` deixa de renderizar textos auxiliares quando a classificacao real esta em `insufficient_data`, removendo da tela `Sem comparacao durante adaptacao` e a frase com dias minimos de adaptacao.
+- O card `Engajamento` deixa de renderizar a legenda fixa `Diagnostico geral nas comunidades`, mantendo apenas o diagnostico real retornado pelo endpoint de estatisticas.
+- O card `Avaliacoes` passa a mostrar a quantidade real de avaliacoes na mesma linha da nota, por exemplo `3,6 8 avaliacoes`, sem alterar a fonte dos dados.
+- Nao houve alteracao de backend, endpoint, contrato, schema Prisma, migration, package novo, mock, seed ou dado persistido.
+- UI permanece mobile-first: os quatro cards continuam empilhando em largura base e a quantidade de avaliacoes usa alinhamento inline sem introduzir overflow.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable neste ambiente; as referencias auditaveis foram a captura enviada pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Geral.png`.
+- ADR atualizado: `adrs/0329-admin-psicologo-contadores-conversao-engajamento.md`.
+
+### Criterios do ajuste pos-feedback
+
+- [x] `Sem comparacao durante adaptacao` nao aparece mais no card `Conversao` quando a base e insuficiente.
+- [x] A frase com dias minimos de adaptacao nao aparece mais no card `Conversao`.
+- [x] `Diagnostico geral nas comunidades` nao aparece mais no card `Engajamento`.
+- [x] A quantidade de avaliacoes aparece ao lado da nota no card `Avaliacoes`.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validacao complementar do ajuste pos-feedback 2026-08-03
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
+- Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
+- Validacao visual autenticada em browser interativo nao foi executada porque o ambiente nao expoe a sessao Admin do navegador do usuario; a validacao local ficou limitada ao build, checks, referencia visual e smoke HTTP da rota.
