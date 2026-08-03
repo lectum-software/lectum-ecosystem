@@ -804,3 +804,31 @@ Validacoes executadas:
 - `pnpm --dir frontend check`.
 - `pnpm --dir frontend build`.
 - Chrome headless/CDP mobile 390x844 em `/psychologists/cmrgztri7000tn0uh1q4n8vxf`, confirmando `Especialidades` presente e `Registro profissional`, `Regional CRP`, `No CRP` e `Data de inscricao` ausentes.
+
+## Registro de ajuste complementar em 2026-08-03 - histórico interno das abas
+
+- Pedido do usuário: ao abrir `Publicações` ou `Avaliações` a partir da aba `Geral` do perfil público do psicólogo, o botão voltar do navegador/dispositivo deve retornar primeiro para a aba `Geral`, sem tirar o usuário do perfil e voltar para a tela de origem.
+- Fonte visual auditável: `_product/proto/Perfil Profissional - Sobre.jpg`, `_product/proto/Perfil Profissional - Publicações.jpg` e `_product/proto/Perfil Profissional - Avaliações.jpg`. Builder/Quick Copy não ficou exposto como ferramenta callable nesta sessão; a validação visual usou as imagens locais já inventariadas e browser local.
+- A navegação de troca de abas em `/psychologists/[id]` passa a usar entrada real de histórico (`router.push`) para preservar a aba anterior.
+- As ações explícitas de voltar para `Geral` dentro da própria tela usam `router.replace`, evitando empilhar estados duplicados quando o usuário toca na seta da seção.
+- O botão de voltar do hero, quando a aba atual é `Publicações` ou `Avaliações`, retorna para `Geral` antes de sair do perfil.
+- Não houve alteração de backend, banco, Prisma, contratos, packages, dados persistidos, WhatsApp, publicações ou avaliações.
+- ADR criado: `adrs/0407-historico-abas-perfil-publico-psicologo.md`.
+
+### Critérios complementares
+
+- [x] Navegar da aba `Geral` para `Avaliações` cria histórico interno e `history.back()` retorna para `Geral`.
+- [x] O botão de voltar do hero em `Publicações` retorna para `Geral`, sem sair do perfil.
+- [x] A seta do cabeçalho de `Publicações`/`Avaliações` continua retornando para `Geral` sem adicionar histórico redundante.
+- [x] Nenhum mock, endpoint simulado, package novo, `<img>` cru ou dado fake permanente foi usado.
+
+### Validações do complemento
+
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/logic.tsx"`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Chrome headless/CDP mobile 390x844 em `http://localhost:3010/psychologists/cmrgztri7000tn0uh1q4n8vxf`, com backend real local, confirmando:
+  - clique em `Ver todas` de `Avaliações` abre `?tab=avaliacoes`;
+  - `history.back()` retorna para `/psychologists/cmrgztri7000tn0uh1q4n8vxf` sem `tab`;
+  - acesso direto a `?tab=publicacoes` e clique em `Voltar para a tela anterior` no hero retorna para `Geral`;
+  - não há `<img>` cru (`img:not([data-nimg])` ausente).

@@ -96,7 +96,10 @@ const PROFILE_TABS = ["geral", "publicacoes", "avaliacoes"] as const;
 
 type ProfileTab = (typeof PROFILE_TABS)[number];
 
+type ProfileTabHistoryMode = "push" | "replace";
+
 type ProfileTabNavigationOptions = {
+  history?: ProfileTabHistoryMode;
   scrollToContentTop?: boolean;
 };
 
@@ -2432,32 +2435,51 @@ export const PsychologistProfileLogic = () => {
   }, [activeTab, id, loadedProfileId, trackProfileTabOpen]);
 
   const navigateWithParams = useCallback(
-    (mutate: (next: URLSearchParams) => void) => {
+    (mutate: (next: URLSearchParams) => void, historyMode: ProfileTabHistoryMode = "push") => {
       const next = new URLSearchParams(searchParamsString);
       mutate(next);
       const queryString = next.toString();
+      const href = `/psychologists/${id}${queryString ? `?${queryString}` : ""}`;
 
-      router.replace(`/psychologists/${id}${queryString ? `?${queryString}` : ""}`, {
-        scroll: false,
-      });
+      if (
+        typeof window !== "undefined" &&
+        `${window.location.pathname}${window.location.search}` === href
+      ) {
+        return;
+      }
+
+      if (historyMode === "replace") {
+        router.replace(href, { scroll: false });
+        return;
+      }
+
+      router.push(href, { scroll: false });
     },
     [id, router, searchParamsString],
   );
 
-  const setActiveTab = (tab: ProfileTab, options?: ProfileTabNavigationOptions) => {
-    if (options?.scrollToContentTop) {
-      setPendingScrollTab(tab);
-    } else {
-      setPendingScrollTab(null);
-    }
+  const setActiveTab = useCallback(
+    (tab: ProfileTab, options?: ProfileTabNavigationOptions) => {
+      if (tab === activeTab) {
+        setPendingScrollTab(null);
+        return;
+      }
 
-    navigateWithParams((next) => {
-      if (tab === "geral") next.delete("tab");
-      else next.set("tab", tab);
-      next.delete("postsPage");
-      next.delete("reviewsPage");
-    });
-  };
+      if (options?.scrollToContentTop) {
+        setPendingScrollTab(tab);
+      } else {
+        setPendingScrollTab(null);
+      }
+
+      navigateWithParams((next) => {
+        if (tab === "geral") next.delete("tab");
+        else next.set("tab", tab);
+        next.delete("postsPage");
+        next.delete("reviewsPage");
+      }, options?.history ?? "push");
+    },
+    [activeTab, navigateWithParams],
+  );
 
   useEffect(() => {
     if (!pendingScrollTab) return;
@@ -2587,6 +2609,11 @@ export const PsychologistProfileLogic = () => {
   };
 
   const goBack = () => {
+    if (activeTab !== "geral") {
+      setActiveTab("geral", { history: "replace" });
+      return;
+    }
+
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;
@@ -2738,7 +2765,7 @@ export const PsychologistProfileLogic = () => {
                       isFetching={publications.isFetching}
                       isFetchingNextPage={publications.isFetchingNextPage}
                       isLoading={publications.isLoading}
-                      onBackToOverview={() => setActiveTab("geral")}
+                      onBackToOverview={() => setActiveTab("geral", { history: "replace" })}
                       onLoadMore={loadMorePublications}
                       onShare={sharePost}
                       posts={publicationItems}
@@ -2755,7 +2782,7 @@ export const PsychologistProfileLogic = () => {
                       isFetching={profileReviews.isFetching}
                       isFetchingNextPage={profileReviews.isFetchingNextPage}
                       isLoading={profileReviews.isLoading}
-                      onBackToOverview={() => setActiveTab("geral")}
+                      onBackToOverview={() => setActiveTab("geral", { history: "replace" })}
                       onLoadMore={loadMoreReviews}
                       profileId={profile.id}
                       reviews={reviewItems}
