@@ -299,8 +299,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
 
 const fallbackCommunitiesAnalytics: PsychologistAnalyticsCommunities = {
   updated_at: null,
-  description:
-    "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
+  description: "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
   source: "community_member+community_post+post_reply+important_action_event",
   diagnosis: {
     active_communities: 0,
