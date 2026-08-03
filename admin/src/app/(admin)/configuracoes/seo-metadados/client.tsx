@@ -5,7 +5,6 @@ import {
   Eye,
   FileSearch,
   Globe2,
-  Info,
   Link2,
   Loader2,
   Save,
@@ -64,7 +63,7 @@ const compactDescription = (value: string) =>
 
 const SettingsHeader = () => (
   <section className={cn(cardClass, "p-5 md:p-6")}>
-    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-5">
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
           Configurações de busca
@@ -74,16 +73,8 @@ const SettingsHeader = () => (
         </h1>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
           Configure títulos, descrições, Open Graph e regras de indexação das páginas públicas da
-          Lectum renderizadas para motores de busca.
+          Lectum renderizadas para motores de busca. Áreas privadas permanecem fora de indexação.
         </p>
-      </div>
-      <div className="rounded-[1.35rem] border border-primary/15 bg-primary-soft p-4 text-sm text-primary lg:max-w-sm">
-        <div className="flex gap-3">
-          <Info className="mt-0.5 h-5 w-5 shrink-0" />
-          <p className="font-semibold leading-6">
-            Áreas privadas como /app, /auth e dashboards permanecem fora de indexação.
-          </p>
-        </div>
       </div>
     </div>
   </section>
