@@ -70,7 +70,7 @@ const reportFields = [
 export const toCreatePostReplyPayload = (
   values: ReplyComposerForm,
   parentReplyId?: string | null,
-  media?: { mediaType: "image" | "video"; mediaUrl: string } | null,
+  media?: { mediaType: "image" | "video"; mediaUrl: string; thumbnailUrl?: string } | null,
 ): CreatePostReplyPayload => ({
   content: values.content.trim(),
   ...(media ? media : {}),

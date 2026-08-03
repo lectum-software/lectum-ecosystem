@@ -330,6 +330,7 @@ export const createReply = async (data: IPostCreateReplyDTO) => {
       mediaType: data.b.mediaType,
       mediaUrl: data.b.mediaUrl?.trim() || undefined,
       parentReplyId: data.b.parentReplyId?.trim() || undefined,
+      thumbnailUrl: data.b.thumbnailUrl?.trim() || undefined,
     },
   });
 
@@ -368,6 +369,7 @@ export const updatePost = async (data: IPostUpdateDTO) => {
   const mediaChangeRequested =
     hasOwnBodyKey(data.b, "mediaUrl") ||
     hasOwnBodyKey(data.b, "mediaType") ||
+    hasOwnBodyKey(data.b, "thumbnailUrl") ||
     mediaItemsChangeRequested;
   const body: IPostUpdateDTO["b"] = {
     content,
@@ -385,6 +387,7 @@ export const updatePost = async (data: IPostUpdateDTO) => {
     const hasMediaItems = requestedMediaItems.length > 0;
     const mediaUrl = data.b.mediaUrl === null ? null : data.b.mediaUrl?.trim();
     const mediaType = data.b.mediaType === null ? null : normalizePostMediaType(data.b.mediaType);
+    const thumbnailUrl = data.b.thumbnailUrl === null ? null : data.b.thumbnailUrl?.trim();
     const clearingMedia = mediaItemsClearing || (mediaUrl === null && mediaType === null);
     let replacingMedia =
       typeof mediaUrl === "string" &&
@@ -409,6 +412,7 @@ export const updatePost = async (data: IPostUpdateDTO) => {
       replacingMedia = true;
       body.mediaUrl = requestedMediaItems[0]?.mediaUrl;
       body.mediaType = "image";
+      body.thumbnailUrl = null;
       body.mediaItems = requestedMediaItems.map((item) => ({
         mediaType: "image",
         mediaUrl: item.mediaUrl,
@@ -417,14 +421,22 @@ export const updatePost = async (data: IPostUpdateDTO) => {
     } else if (clearingMedia) {
       body.mediaUrl = null;
       body.mediaType = null;
+      body.thumbnailUrl = null;
       body.mediaItems = [];
     } else if (replacingMedia) {
+      if (thumbnailUrl && !isPublicPostMediaUrl(thumbnailUrl)) return invalidPostMedia();
+
       body.mediaUrl = mediaUrl as string;
       body.mediaType = mediaType as "image" | "video";
+      body.thumbnailUrl = mediaType === "video" ? (thumbnailUrl ?? null) : null;
       body.mediaItems =
         mediaType === "image"
           ? [{ mediaType: "image", mediaUrl: mediaUrl as string, position: 0 }]
           : [];
+    } else if (hasOwnBodyKey(data.b, "thumbnailUrl")) {
+      if (thumbnailUrl && !isPublicPostMediaUrl(thumbnailUrl)) return invalidPostMedia();
+
+      body.thumbnailUrl = thumbnailUrl;
     } else {
       return invalidPostMedia();
     }
@@ -449,7 +461,9 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
 
   const repository = new PostRepository();
   const mediaChangeRequested =
-    hasOwnBodyKey(data.b, "mediaUrl") || hasOwnBodyKey(data.b, "mediaType");
+    hasOwnBodyKey(data.b, "mediaUrl") ||
+    hasOwnBodyKey(data.b, "mediaType") ||
+    hasOwnBodyKey(data.b, "thumbnailUrl");
   const contentChangeRequested = hasOwnBodyKey(data.b, "content");
   const body: IPostUpdateReplyDTO["b"] = {};
 
@@ -460,6 +474,7 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
   if (mediaChangeRequested) {
     const mediaUrl = data.b.mediaUrl === null ? null : data.b.mediaUrl?.trim();
     const mediaType = data.b.mediaType === null ? null : normalizePostMediaType(data.b.mediaType);
+    const thumbnailUrl = data.b.thumbnailUrl === null ? null : data.b.thumbnailUrl?.trim();
     const clearingMedia = mediaUrl === null && mediaType === null;
     const replacingMedia =
       typeof mediaUrl === "string" &&
@@ -467,7 +482,10 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
       Boolean(mediaType) &&
       isPublicPostMediaUrl(mediaUrl);
 
-    if (!clearingMedia && !replacingMedia) return invalidMedia();
+    if (thumbnailUrl && !isPublicPostMediaUrl(thumbnailUrl)) return invalidMedia();
+    if (!clearingMedia && !replacingMedia && !hasOwnBodyKey(data.b, "thumbnailUrl")) {
+      return invalidMedia();
+    }
 
     if (replacingMedia) {
       const canAttachMedia = await repository.canAttachReplyMedia(data.auth.id!);
@@ -477,9 +495,17 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
     if (clearingMedia) {
       body.mediaUrl = null;
       body.mediaType = null;
+      body.thumbnailUrl = null;
     } else {
-      body.mediaUrl = mediaUrl as string;
-      body.mediaType = mediaType as "image" | "video";
+      if (replacingMedia) {
+        body.mediaUrl = mediaUrl as string;
+        body.mediaType = mediaType as "image" | "video";
+      }
+      body.thumbnailUrl = replacingMedia
+        ? mediaType === "video"
+          ? (thumbnailUrl ?? null)
+          : null
+        : thumbnailUrl;
     }
   }
 

@@ -103,6 +103,7 @@ const postSelect = {
   content: true,
   media_url: true,
   media_type: true,
+  thumbnail_url: true,
   media_items: {
     where: {
       deleted: false,
@@ -112,6 +113,7 @@ const postSelect = {
       id: true,
       media_url: true,
       media_type: true,
+      thumbnail_url: true,
       position: true,
     },
   },
@@ -154,6 +156,7 @@ const listPostSelect = {
       content: true,
       media_url: true,
       media_type: true,
+      thumbnail_url: true,
       upvotes_count: true,
       downvotes_count: true,
       createdAt: true,
@@ -177,6 +180,7 @@ const replyBaseSelect = {
   content: true,
   media_url: true,
   media_type: true,
+  thumbnail_url: true,
   upvotes_count: true,
   downvotes_count: true,
   createdAt: true,
@@ -408,7 +412,7 @@ const getDeviceId = (headers?: Record<string, string | string[] | undefined>) =>
 };
 
 const toPostMediaItemsResponse = (
-  item: Pick<PostResult, "media_items" | "media_type" | "media_url">,
+  item: Pick<PostResult, "media_items" | "media_type" | "media_url" | "thumbnail_url">,
 ): PostDetailDTO["media_items"] => {
   const storedItems = item.media_items
     .filter((mediaItem) => mediaItem.media_url && mediaItem.media_type)
@@ -419,6 +423,7 @@ const toPostMediaItemsResponse = (
         id: mediaItem.id,
         media_url: mediaItem.media_url,
         media_type: mediaType,
+        thumbnail_url: mediaItem.thumbnail_url,
         position: mediaItem.position,
       };
     });
@@ -432,6 +437,7 @@ const toPostMediaItemsResponse = (
       id: null,
       media_url: item.media_url,
       media_type: item.media_type,
+      thumbnail_url: item.thumbnail_url,
       position: 0,
     },
   ];
@@ -470,6 +476,7 @@ const toPostResponse = (
     featured_badge: author.featured_badge,
     media_url: item.media_url,
     media_type: item.media_type,
+    thumbnail_url: item.thumbnail_url,
     media_items: toPostMediaItemsResponse(item),
     current_user_vote: currentUserVote,
     saved,
@@ -501,6 +508,7 @@ const toHighlightedProfessionalReply = (
     content: reply.content,
     media_url: reply.media_url,
     media_type: reply.media_type,
+    thumbnail_url: reply.thumbnail_url,
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
     edited_at: reply.edited_at,
@@ -578,6 +586,7 @@ const toReplyResponse = (
     content: item.content,
     media_url: item.media_url,
     media_type: item.media_type,
+    thumbnail_url: item.thumbnail_url,
     upvotes_count: item.upvotes_count,
     downvotes_count: item.downvotes_count,
     replies_count: item._count.replies,
@@ -950,6 +959,7 @@ export class PostRepository implements IPostRepository {
     const mediaChangeRequested =
       Object.hasOwn(data.b, "mediaUrl") ||
       Object.hasOwn(data.b, "mediaType") ||
+      Object.hasOwn(data.b, "thumbnailUrl") ||
       mediaItemsChangeRequested;
     const updateData: Prisma.community_postUpdateInput = {
       content: data.b.content,
@@ -958,8 +968,11 @@ export class PostRepository implements IPostRepository {
     };
 
     if (mediaChangeRequested) {
-      updateData.media_url = data.b.mediaUrl ?? null;
-      updateData.media_type = data.b.mediaType ?? null;
+      if (Object.hasOwn(data.b, "mediaUrl")) updateData.media_url = data.b.mediaUrl ?? null;
+      if (Object.hasOwn(data.b, "mediaType")) updateData.media_type = data.b.mediaType ?? null;
+      if (Object.hasOwn(data.b, "thumbnailUrl")) {
+        updateData.thumbnail_url = data.b.thumbnailUrl ?? null;
+      }
     }
 
     if (mediaItemsChangeRequested) {
@@ -1077,6 +1090,7 @@ export class PostRepository implements IPostRepository {
               content: true,
               media_url: true,
               media_type: true,
+              thumbnail_url: true,
               upvotes_count: true,
               downvotes_count: true,
               createdAt: true,
@@ -1286,6 +1300,7 @@ export class PostRepository implements IPostRepository {
         content: reply.content,
         media_url: reply.media_url,
         media_type: reply.media_type,
+        thumbnail_url: reply.thumbnail_url,
         upvotes_count: reply.upvotes_count,
         downvotes_count: reply.downvotes_count,
         saves_count: reply._count.saves,
@@ -1390,6 +1405,7 @@ export class PostRepository implements IPostRepository {
                   content: true,
                   media_url: true,
                   media_type: true,
+                  thumbnail_url: true,
                   upvotes_count: true,
                   downvotes_count: true,
                   createdAt: true,
@@ -1544,6 +1560,7 @@ export class PostRepository implements IPostRepository {
         content: item.reply.content,
         media_url: item.reply.media_url,
         media_type: item.reply.media_type,
+        thumbnail_url: item.reply.thumbnail_url,
         upvotes_count: item.reply.upvotes_count,
         downvotes_count: item.reply.downvotes_count,
         saves_count: item.reply._count.saves,
@@ -1834,6 +1851,7 @@ export class PostRepository implements IPostRepository {
     const content = String(data.b.content ?? "").trim();
     const mediaUrl = data.b.mediaUrl?.trim() || null;
     const mediaType = normalizeReplyMediaType(data.b.mediaType);
+    const thumbnailUrl = data.b.thumbnailUrl?.trim() || null;
     const hasMedia = Boolean(mediaUrl || data.b.mediaType);
 
     if (!content && !hasMedia) {
@@ -1842,6 +1860,10 @@ export class PostRepository implements IPostRepository {
 
     if (hasMedia) {
       if (!mediaUrl || !mediaType || !isPublicReplyMediaUrl(mediaUrl)) {
+        return { kind: "invalid_media" };
+      }
+
+      if (thumbnailUrl && !isPublicReplyMediaUrl(thumbnailUrl)) {
         return { kind: "invalid_media" };
       }
 
@@ -1881,6 +1903,7 @@ export class PostRepository implements IPostRepository {
           content,
           media_type: mediaType,
           media_url: mediaUrl,
+          thumbnail_url: mediaType === "video" ? thumbnailUrl : null,
         },
         select: replyBaseSelect,
       });
@@ -1924,6 +1947,7 @@ export class PostRepository implements IPostRepository {
         content: true,
         media_type: true,
         media_url: true,
+        thumbnail_url: true,
         author: {
           select: {
             role: true,
@@ -1936,13 +1960,22 @@ export class PostRepository implements IPostRepository {
     if (reply.author_id !== data.auth.id) return { kind: "forbidden" };
 
     const mediaChangeRequested =
-      Object.hasOwn(data.b, "mediaUrl") || Object.hasOwn(data.b, "mediaType");
+      Object.hasOwn(data.b, "mediaUrl") ||
+      Object.hasOwn(data.b, "mediaType") ||
+      Object.hasOwn(data.b, "thumbnailUrl");
     const contentChangeRequested = Object.hasOwn(data.b, "content");
     const content = contentChangeRequested
       ? String(data.b.content ?? "").trim()
       : reply.content.trim();
-    const nextMediaUrl = mediaChangeRequested ? (data.b.mediaUrl ?? null) : reply.media_url;
-    const nextMediaType = mediaChangeRequested ? (data.b.mediaType ?? null) : reply.media_type;
+    const nextMediaUrl = Object.hasOwn(data.b, "mediaUrl")
+      ? (data.b.mediaUrl ?? null)
+      : reply.media_url;
+    const nextMediaType = Object.hasOwn(data.b, "mediaType")
+      ? (data.b.mediaType ?? null)
+      : reply.media_type;
+    const nextThumbnailUrl = Object.hasOwn(data.b, "thumbnailUrl")
+      ? (data.b.thumbnailUrl ?? null)
+      : reply.thumbnail_url;
 
     if (!content && !nextMediaUrl && !nextMediaType) {
       return { kind: "invalid_content" };
@@ -1954,8 +1987,11 @@ export class PostRepository implements IPostRepository {
     };
 
     if (mediaChangeRequested) {
-      updateData.media_url = data.b.mediaUrl ?? null;
-      updateData.media_type = data.b.mediaType ?? null;
+      if (Object.hasOwn(data.b, "mediaUrl")) updateData.media_url = data.b.mediaUrl ?? null;
+      if (Object.hasOwn(data.b, "mediaType")) updateData.media_type = data.b.mediaType ?? null;
+      if (Object.hasOwn(data.b, "thumbnailUrl") || Object.hasOwn(data.b, "mediaType")) {
+        updateData.thumbnail_url = nextMediaType === "video" ? nextThumbnailUrl : null;
+      }
     }
 
     const updated = await prisma.post_reply.update({

@@ -16,6 +16,7 @@ export type PostDetail = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   media_items: CommunityPostMediaItem[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;
@@ -31,6 +32,7 @@ export type PostReply = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   downvotes_count: number;
   replies_count: number;
@@ -58,6 +60,7 @@ export type PostProfessionalReply = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   created_at: string;
   edited_at: string | null;
@@ -77,6 +80,7 @@ export type UserPostReply = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   downvotes_count: number;
   saves_count: number;
@@ -137,6 +141,7 @@ export type CreatePostReplyPayload = {
   content: string;
   mediaType?: "image" | "video";
   mediaUrl?: string;
+  thumbnailUrl?: string;
   parentReplyId?: string;
 };
 
@@ -145,6 +150,7 @@ export type UpdatePostPayload = {
   content: string;
   mediaType?: "image" | "video" | null;
   mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
   mediaItems?: Array<{
     mediaType: "image";
     mediaUrl: string;
@@ -158,6 +164,7 @@ export type UpdatePostReplyPayload = {
   content: string;
   mediaType?: "image" | "video" | null;
   mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
 };
 
 export type PostReplyUpdateResponse = PostReply;

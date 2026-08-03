@@ -83,6 +83,7 @@ import apiPublicGoogleCallback from "@/modules/api/public/google/callback";
 import apiPublicGoogleLink from "@/modules/api/public/google/link";
 import apiPublicGoogleLogin from "@/modules/api/public/google/login";
 import apiPublicGoogleMe from "@/modules/api/public/google/me";
+import apiPublicSeoCommunityPost from "@/modules/api/public/seo/community-post";
 import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
 import apiPublicUser from "@/modules/api/public/user";
 
@@ -155,6 +156,7 @@ mountRoute("/api/public/google/callback", apiPublicGoogleCallback);
 mountRoute("/api/public/google/link", apiPublicGoogleLink);
 mountRoute("/api/public/google/login", apiPublicGoogleLogin);
 mountRoute("/api/public/google/me", apiPublicGoogleMe);
+mountRoute("/api/public/seo/community-post", apiPublicSeoCommunityPost);
 mountRoute("/api/public/seo/metadata", apiPublicSeoMetadata);
 mountRoute("/api/public/user", apiPublicUser);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);

@@ -290,6 +290,7 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
             content: trimmedContent,
             mediaType: undefined,
             mediaUrl: undefined,
+            thumbnailUrl: undefined,
             mediaItems: [],
             anonymous: data.b.anonymous === true,
           },
@@ -322,6 +323,7 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
 
   const mediaUrl = data.b.mediaUrl?.trim() || undefined;
   const mediaType = normalizePostMediaType(data.b.mediaType);
+  const thumbnailUrl = data.b.thumbnailUrl?.trim() || undefined;
   const rawRequestedMediaItems = data.b.mediaItems ?? [];
   if (rawRequestedMediaItems.length > MAX_POST_CAROUSEL_IMAGES) {
     return invalidPostMedia();
@@ -334,6 +336,7 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
   let normalizedMediaItems: { mediaType: "image"; mediaUrl: string; position: number }[] = [];
   let nextMediaUrl = mediaUrl;
   let nextMediaType = mediaType;
+  let nextThumbnailUrl = thumbnailUrl;
 
   if (hasMediaItems) {
     const invalidItems = requestedMediaItems.some(
@@ -356,13 +359,21 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     }));
     nextMediaUrl = requestedMediaItems[0]?.mediaUrl;
     nextMediaType = "image";
+    nextThumbnailUrl = undefined;
   } else if (hasLegacyMedia) {
     if (!mediaUrl || !mediaType || !isPublicPostMediaUrl(mediaUrl)) {
       return invalidPostMedia();
     }
 
+    if (thumbnailUrl && !isPublicPostMediaUrl(thumbnailUrl)) {
+      return invalidPostMedia();
+    }
+
     normalizedMediaItems =
       mediaType === "image" ? [{ mediaType: "image", mediaUrl, position: 0 }] : [];
+    nextThumbnailUrl = mediaType === "video" ? thumbnailUrl : undefined;
+  } else if (thumbnailUrl) {
+    return invalidPostMedia();
   }
 
   if (hasMedia) {
@@ -377,6 +388,7 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
       content: trimmedContent,
       mediaType: nextMediaType ?? undefined,
       mediaUrl: nextMediaUrl,
+      thumbnailUrl: nextThumbnailUrl,
       mediaItems: normalizedMediaItems,
       anonymous: data.auth.role === "paciente" ? data.b.anonymous === true : false,
     },

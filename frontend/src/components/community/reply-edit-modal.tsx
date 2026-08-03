@@ -20,6 +20,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 
 const replyEditSchema = z.object({
   content: z.string().trim().max(2000, "Use no máximo 2000 caracteres no texto"),
@@ -29,7 +30,7 @@ type ReplyEditForm = z.infer<typeof replyEditSchema>;
 
 type EditableReply = Pick<
   UserPostReply,
-  "author" | "content" | "id" | "media_type" | "media_url" | "parent_reply_id"
+  "author" | "content" | "id" | "media_type" | "media_url" | "parent_reply_id" | "thumbnail_url"
 > & {
   replies_count?: number;
   replies_received_count?: number;
@@ -239,6 +240,16 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
             id: postId,
           })
         : null;
+      const thumbnailFile =
+        selectedMedia && uploadedMedia?.media_type === "video"
+          ? await createVideoThumbnailFile(selectedMedia.file)
+          : null;
+      const uploadedThumbnail = thumbnailFile
+        ? await uploadMutation.mutateAsync({
+            file: thumbnailFile,
+            id: postId,
+          })
+        : null;
 
       await updateMutation.mutateAsync({
         body: {
@@ -247,11 +258,15 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
             ? {
                 mediaType: uploadedMedia.media_type,
                 mediaUrl: uploadedMedia.media_url,
+                ...(uploadedMedia.media_type === "video" && uploadedThumbnail
+                  ? { thumbnailUrl: uploadedThumbnail.media_url }
+                  : {}),
               }
             : removeMedia
               ? {
                   mediaType: null,
                   mediaUrl: null,
+                  thumbnailUrl: null,
                 }
               : {}),
         },

@@ -97,6 +97,7 @@ import {
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
   type PostReportForm,
   type ReplyComposerForm,
@@ -2656,6 +2657,14 @@ export const PostDetailLogic = () => {
           id: post.id,
         })
       : null;
+    const thumbnailFile =
+      mediaFile && media?.media_type === "video" ? await createVideoThumbnailFile(mediaFile) : null;
+    const thumbnail = thumbnailFile
+      ? await uploadReplyMediaMutation.mutateAsync({
+          file: thumbnailFile,
+          id: post.id,
+        })
+      : null;
 
     const createdReply = await createReplyMutation.mutateAsync({
       id: post.id,
@@ -2666,6 +2675,9 @@ export const PostDetailLogic = () => {
           ? {
               mediaType: media.media_type,
               mediaUrl: media.media_url,
+              ...(media.media_type === "video" && thumbnail
+                ? { thumbnailUrl: thumbnail.media_url }
+                : {}),
             }
           : null,
       ),
@@ -3193,6 +3205,14 @@ export const PostReplyThreadLogic = () => {
           id: post.id,
         })
       : null;
+    const thumbnailFile =
+      mediaFile && media?.media_type === "video" ? await createVideoThumbnailFile(mediaFile) : null;
+    const thumbnail = thumbnailFile
+      ? await uploadReplyMediaMutation.mutateAsync({
+          file: thumbnailFile,
+          id: post.id,
+        })
+      : null;
 
     const createdReply = await createReplyMutation.mutateAsync({
       id: post.id,
@@ -3203,6 +3223,9 @@ export const PostReplyThreadLogic = () => {
           ? {
               mediaType: media.media_type,
               mediaUrl: media.media_url,
+              ...(media.media_type === "video" && thumbnail
+                ? { thumbnailUrl: thumbnail.media_url }
+                : {}),
             }
           : null,
       ),

@@ -93,6 +93,7 @@ const profilePostSelect = {
   content: true,
   media_url: true,
   media_type: true,
+  thumbnail_url: true,
   media_items: {
     where: {
       deleted: false,
@@ -102,6 +103,7 @@ const profilePostSelect = {
       id: true,
       media_url: true,
       media_type: true,
+      thumbnail_url: true,
       position: true,
     },
   },
@@ -140,6 +142,7 @@ const profilePostSelect = {
       content: true,
       media_url: true,
       media_type: true,
+      thumbnail_url: true,
       upvotes_count: true,
       downvotes_count: true,
       createdAt: true,
@@ -163,6 +166,7 @@ const profileReplySelect = {
   content: true,
   media_url: true,
   media_type: true,
+  thumbnail_url: true,
   upvotes_count: true,
   downvotes_count: true,
   createdAt: true,
@@ -592,6 +596,7 @@ const toHighlightedProfessionalReply = (
     content: reply.content,
     media_url: reply.media_url,
     media_type: reply.media_type,
+    thumbnail_url: reply.thumbnail_url,
     upvotes_count: reply.upvotes_count,
     created_at: reply.createdAt,
     edited_at: reply.edited_at,
@@ -603,7 +608,7 @@ const toHighlightedProfessionalReply = (
 };
 
 const toPostMediaItemsResponse = (
-  item: Pick<ProfilePostResult, "media_items" | "media_type" | "media_url">,
+  item: Pick<ProfilePostResult, "media_items" | "media_type" | "media_url" | "thumbnail_url">,
 ): CommunityPostDTO["media_items"] => {
   if (item.media_items.length > 0) {
     return item.media_items
@@ -615,6 +620,7 @@ const toPostMediaItemsResponse = (
           id: mediaItem.id,
           media_url: mediaItem.media_url,
           media_type: mediaType,
+          thumbnail_url: mediaItem.thumbnail_url,
           position: mediaItem.position,
         };
       });
@@ -629,6 +635,7 @@ const toPostMediaItemsResponse = (
       id: null,
       media_url: item.media_url,
       media_type: item.media_type,
+      thumbnail_url: item.thumbnail_url,
       position: 0,
     },
   ];
@@ -714,6 +721,7 @@ const toPostResponse = (
     featured_badge: author.featured_badge,
     media_url: item.media_url,
     media_type: item.media_type,
+    thumbnail_url: item.thumbnail_url,
     media_items: toPostMediaItemsResponse(item),
     current_user_vote: currentUserVote,
     saved,

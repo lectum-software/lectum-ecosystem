@@ -48,6 +48,7 @@ export type CommunityCreatePostBody = {
   anonymous?: boolean;
   mediaType?: "image" | "video";
   mediaUrl?: string;
+  thumbnailUrl?: string;
   mediaItems?: CommunityPostMediaItemInput[];
 };
 
@@ -115,6 +116,7 @@ export type CommunityProfessionalReplyDTO = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   created_at: Date;
   edited_at: Date | null;
@@ -144,6 +146,7 @@ export type CommunityPostMediaItemDTO = {
   id: string | null;
   media_url: string;
   media_type: "image" | "video";
+  thumbnail_url: string | null;
   position: number;
 };
 
@@ -163,6 +166,7 @@ export type CommunityPostDTO = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   media_items: CommunityPostMediaItemDTO[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;

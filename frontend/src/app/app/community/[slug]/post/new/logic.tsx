@@ -28,6 +28,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import { CommunityRouteLogic } from "../../logic";
 import {
   type CreateCommunityPostForm,
@@ -496,8 +497,15 @@ export const CreateCommunityPostLogic = ({
   const onSubmit = hook.handleSubmit(async (values) => {
     try {
       const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];
-      const uploadedMedia =
-        mediaFiles.length > 0
+      const selectedVideo = mediaFiles.find((mediaItem) => mediaItem.type === "video") ?? null;
+      const uploadedMedia = selectedVideo
+        ? [
+            await uploadMutation.mutateAsync({
+              file: selectedVideo.file,
+              slug: values.community_slug,
+            }),
+          ]
+        : mediaFiles.length > 0
           ? await Promise.all(
               mediaFiles.map((mediaItem) =>
                 uploadMutation.mutateAsync({
@@ -507,6 +515,15 @@ export const CreateCommunityPostLogic = ({
               ),
             )
           : [];
+      const thumbnailFile = selectedVideo
+        ? await createVideoThumbnailFile(selectedVideo.file)
+        : null;
+      const uploadedThumbnail = thumbnailFile
+        ? await uploadMutation.mutateAsync({
+            file: thumbnailFile,
+            slug: values.community_slug,
+          })
+        : null;
       const firstMedia = uploadedMedia[0] ?? null;
       const imageMediaItems = uploadedMedia
         .filter((media) => media.media_type === "image")
@@ -524,6 +541,9 @@ export const CreateCommunityPostLogic = ({
             ? {
                 mediaType: firstMedia.media_type,
                 mediaUrl: firstMedia.media_url,
+                ...(firstMedia.media_type === "video" && uploadedThumbnail
+                  ? { thumbnailUrl: uploadedThumbnail.media_url }
+                  : {}),
               }
             : {}),
           ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),

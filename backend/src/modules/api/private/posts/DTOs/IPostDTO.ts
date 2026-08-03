@@ -25,12 +25,14 @@ export type PostCreateReplyBody = {
   mediaType?: "image" | "video";
   mediaUrl?: string;
   parentReplyId?: string;
+  thumbnailUrl?: string;
 };
 
 export type PostUpdateReplyBody = {
   content?: string | null;
   mediaType?: "image" | "video" | null;
   mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
 };
 
 export type PostUpdateBody = {
@@ -38,6 +40,7 @@ export type PostUpdateBody = {
   content: string;
   mediaType?: "image" | "video" | null;
   mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
   mediaItems?: PostMediaItemInput[] | null;
 };
 
@@ -97,6 +100,7 @@ export type PostDetailDTO = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   media_items: PostMediaItemDTO[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;
@@ -116,6 +120,7 @@ export type PostMediaItemDTO = {
   id: string | null;
   media_url: string;
   media_type: "image" | "video";
+  thumbnail_url: string | null;
   position: number;
 };
 
@@ -125,6 +130,7 @@ export type PostReplyDTO = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   downvotes_count: number;
   replies_count: number;
@@ -144,6 +150,7 @@ export type PostProfessionalReplyDTO = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   created_at: Date;
   edited_at: Date | null;
@@ -163,6 +170,7 @@ export type PostListReplyDTO = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   downvotes_count: number;
   saves_count: number;

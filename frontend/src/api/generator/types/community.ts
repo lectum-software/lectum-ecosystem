@@ -86,6 +86,7 @@ export type CommunityProfessionalReply = {
   content: string;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   upvotes_count: number;
   created_at: string;
   edited_at: string | null;
@@ -99,6 +100,7 @@ export type CommunityPostMediaItem = {
   id: string | null;
   media_url: string;
   media_type: "image" | "video";
+  thumbnail_url: string | null;
   position: number;
 };
 
@@ -134,6 +136,7 @@ export type CommunityPost = {
   featured_badge: string | null;
   media_url: string | null;
   media_type: string | null;
+  thumbnail_url: string | null;
   media_items: CommunityPostMediaItem[];
   current_user_vote: 1 | -1 | null;
   saved: boolean;
@@ -271,6 +274,7 @@ export type CreateCommunityPostPayload = {
   anonymous?: boolean;
   mediaType?: "image" | "video";
   mediaUrl?: string;
+  thumbnailUrl?: string;
   mediaItems?: Array<{
     mediaType: "image";
     mediaUrl: string;

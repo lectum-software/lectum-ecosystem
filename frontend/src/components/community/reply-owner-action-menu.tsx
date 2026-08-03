@@ -30,6 +30,7 @@ type OwnerActionReply = Pick<
   | "media_url"
   | "parent_reply_id"
   | "replies_received_count"
+  | "thumbnail_url"
 >;
 
 type OwnerActionPost = Pick<PostListPost, "id" | "muted_by_current_user">;

@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Tags,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { toast } from "sonner";
@@ -30,6 +31,54 @@ import {
 
 const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
+const DEFAULT_API_URL = "http://localhost:3001";
+
+const apiBaseUrl = () => (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
+
+const configuredImageHosts = () => {
+  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+
+  const addHost = (value?: string | null) => {
+    const normalized = value?.trim();
+    if (!normalized) return;
+
+    try {
+      hosts.add(
+        new URL(normalized.includes("://") ? normalized : `https://${normalized}`).hostname,
+      );
+    } catch {
+      // Ignora entradas inválidas para manter a prévia segura.
+    }
+  };
+
+  addHost(process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL);
+  process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",").forEach(addHost);
+
+  return hosts;
+};
+
+const resolveOpenGraphPreviewSource = (value?: string | null) => {
+  const normalized = value?.trim();
+  if (!normalized) return null;
+
+  if (normalized.startsWith("http://") || normalized.startsWith("https://")) return normalized;
+  if (normalized.startsWith("/public/files/")) return `${apiBaseUrl()}${normalized}`;
+  if (normalized.startsWith("/")) return normalized;
+
+  return null;
+};
+
+const canRenderOpenGraphPreview = (src: string) => {
+  if (src.startsWith("/")) return true;
+
+  try {
+    const url = new URL(src);
+
+    return configuredImageHosts().has(url.hostname);
+  } catch {
+    return false;
+  }
+};
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "Ainda não atualizado";
@@ -219,6 +268,55 @@ const SearchPreview = ({
   );
 };
 
+const OpenGraphImagePreview = ({ value }: { value?: string | null }) => {
+  const src = resolveOpenGraphPreviewSource(value);
+  const canRender = src ? canRenderOpenGraphPreview(src) : false;
+
+  return (
+    <div className="rounded-[1.35rem] border border-border bg-surface-muted/45 p-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative aspect-[1.91/1] w-full overflow-hidden rounded-2xl border border-border bg-surface sm:w-44 sm:shrink-0">
+          {src && canRender ? (
+            <Image
+              alt="Prévia da imagem Open Graph"
+              className="object-cover"
+              fill
+              sizes="(min-width: 640px) 176px, calc(100vw - 4rem)"
+              src={src}
+              unoptimized={src.startsWith("http://") || src.startsWith("https://")}
+            />
+          ) : (
+            <div className="grid h-full place-items-center px-4 text-center text-xs font-semibold text-muted">
+              {src ? "Host externo não habilitado" : "Sem imagem configurada"}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-foreground">Miniatura Open Graph</p>
+          <p className="mt-1 text-xs leading-5 text-muted">
+            Esta é a imagem que buscadores e redes tendem a usar quando a URL for compartilhada.
+          </p>
+          {src ? (
+            <a
+              className="mt-2 block truncate text-xs font-bold text-primary hover:underline"
+              href={src}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {src}
+            </a>
+          ) : null}
+          {src && !canRender ? (
+            <p className="mt-2 text-xs font-semibold text-warning">
+              Adicione o host em NEXT_PUBLIC_IMAGE_REMOTE_HOSTS para exibir a miniatura no Admin.
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TechnicalNotes = ({ setting }: { setting?: AdminSeoMetadataSetting }) => (
   <section className={cn(cardClass, "p-4 md:p-5")}>
     <div className="mb-4 flex items-center gap-3">
@@ -364,6 +462,8 @@ export const AdminSeoMetadataClient = () => {
                   placeholder="/logo-light.png ou URL absoluta"
                 />
               </div>
+
+              <OpenGraphImagePreview value={watchedValues.og_image_url} />
 
               <TextareaController<SeoMetadataForm>
                 label="Descrição Open Graph"

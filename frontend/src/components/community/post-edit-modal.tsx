@@ -24,6 +24,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 
 const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 const COMMUNITY_POST_MEDIA_ACCEPT =
@@ -60,6 +61,7 @@ type EditablePost = Pick<
   | "media_items"
   | "media_type"
   | "media_url"
+  | "thumbnail_url"
   | "replies_count"
   | "title"
 >;
@@ -87,6 +89,7 @@ type PostMediaPreviewItem = {
   id: string;
   orientation?: "landscape" | "portrait";
   src: string;
+  thumbnailUrl?: string | null;
   type: "image" | "video";
 };
 
@@ -279,6 +282,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
           item.media_type === "video" ? "Vídeo atual anexado" : `Imagem atual anexada ${index + 1}`,
         id: item.id ?? `${item.media_url}-${item.position}`,
         src: item.media_url,
+        thumbnailUrl: item.thumbnail_url,
         type: item.media_type,
       }));
 
@@ -292,10 +296,11 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
           normalizedPostMediaType === "video" ? "Vídeo atual anexado" : "Imagem atual anexada",
         id: "legacy-media",
         src: post.media_url,
+        thumbnailUrl: post.thumbnail_url,
         type: normalizedPostMediaType,
       },
     ];
-  }, [normalizedPostMediaType, post.media_items, post.media_url]);
+  }, [normalizedPostMediaType, post.media_items, post.media_url, post.thumbnail_url]);
   const canShowMediaControls = isPsychologistPost || storedMediaItems.length > 0;
   const visibleStoredMediaItems = useMemo<EditablePostMediaPreviewItem[]>(
     () =>
@@ -513,8 +518,16 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
 
   const handleSubmit = hook.handleSubmit(async (values) => {
     try {
-      const uploadedMedia =
-        selectedMediaItems.length > 0
+      const selectedVideo =
+        selectedMediaItems.find((mediaItem) => mediaItem.type === "video") ?? null;
+      const uploadedMedia = selectedVideo
+        ? [
+            await uploadMutation.mutateAsync({
+              file: selectedVideo.file,
+              slug: post.community.slug,
+            }),
+          ]
+        : selectedMediaItems.length > 0
           ? await Promise.all(
               selectedMediaItems.map((mediaItem) =>
                 uploadMutation.mutateAsync({
@@ -524,6 +537,15 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
               ),
             )
           : [];
+      const thumbnailFile = selectedVideo
+        ? await createVideoThumbnailFile(selectedVideo.file)
+        : null;
+      const uploadedThumbnail = thumbnailFile
+        ? await uploadMutation.mutateAsync({
+            file: thumbnailFile,
+            slug: post.community.slug,
+          })
+        : null;
       const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video") ?? null;
       const uploadedImageMediaItems = uploadedMedia
         .filter((media) => media.media_type === "image")
@@ -553,11 +575,13 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
           ? {
               mediaType: "video" as const,
               mediaUrl: uploadedVideo.media_url,
+              thumbnailUrl: uploadedThumbnail?.media_url ?? null,
             }
           : retainedVideoMedia
             ? {
                 mediaType: "video" as const,
                 mediaUrl: retainedVideoMedia.src,
+                thumbnailUrl: retainedVideoMedia.thumbnailUrl ?? null,
               }
             : nextImageMediaItems.length > 0
               ? {

@@ -939,6 +939,7 @@ model community_post {
   content              String
   media_url            String?
   media_type           String?
+  thumbnail_url        String?                       @map("thumbnail_url")
   anonymous            Boolean                       @default(true)
   status               String                        @default("publicado")
   upvotes_count        Int                           @default(0)
@@ -964,16 +965,17 @@ model community_post {
 }
 
 model community_post_media {
-  id         String         @id @default(cuid())
-  deleted    Boolean        @default(false)
-  deletedAt  DateTime?      @map("deleted_at")
-  updatedAt  DateTime       @default(now()) @updatedAt @map("updated_at")
-  createdAt  DateTime       @default(now()) @map("created_at")
-  post_id    String
-  media_url  String
-  media_type String
-  position   Int            @default(0)
-  post       community_post @relation("community_post_media_post", fields: [post_id], references: [id], onDelete: Cascade)
+  id            String         @id @default(cuid())
+  deleted       Boolean        @default(false)
+  deletedAt     DateTime?      @map("deleted_at")
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  post_id       String
+  media_url     String
+  media_type    String
+  thumbnail_url String?        @map("thumbnail_url")
+  position      Int            @default(0)
+  post          community_post @relation("community_post_media_post", fields: [post_id], references: [id], onDelete: Cascade)
 
   @@index([post_id, position])
   @@map("community_post_media")
@@ -993,6 +995,7 @@ model post_reply {
   content              String
   media_url            String?
   media_type           String?
+  thumbnail_url        String?                       @map("thumbnail_url")
   upvotes_count        Int                           @default(0)
   downvotes_count      Int                           @default(0)
   post                 community_post                @relation("post_reply_post", fields: [post_id], references: [id], onDelete: Cascade)

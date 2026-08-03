@@ -217,6 +217,14 @@ export const createPostSchema: IValidatorRequest = {
       optional: true,
     },
     {
+      key: "thumbnailUrl",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 500,
+      optional: true,
+    },
+    {
       key: "mediaItems",
       custom: z
         .array(

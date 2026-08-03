@@ -31,6 +31,7 @@ type OwnerActionPost = Pick<
   | "media_items"
   | "media_type"
   | "media_url"
+  | "thumbnail_url"
   | "muted_by_current_user"
   | "replies_count"
   | "title"
