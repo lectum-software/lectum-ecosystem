@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { BadgeCheck, Bookmark, ChevronLeft, ChevronRight, Reply } from "lucide-react";
 import Image from "next/image";
@@ -115,7 +115,7 @@ const formatAuthorMeta = (author: CommunityAuthor, createdAt: string) => {
 };
 
 const savedReplyHref = (post: PostListPost, replyId: string) =>
-  `/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+  `/comunidades/${post.community.slug}/publicacao/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
 
 const isSavedCardInteractiveTarget = (target: EventTarget | null) => {
   const targetElement =
@@ -188,7 +188,7 @@ const SavedReplyAuthorHeader = ({
   createdAt: string;
 }) => {
   const isPsychologist = author.role === "psicologo";
-  const profileHref = isPsychologist ? `/psychologists/${author.id}` : undefined;
+  const profileHref = isPsychologist ? `/psicologos/${author.id}` : undefined;
 
   return (
     <div className="flex items-start gap-3">
@@ -369,7 +369,7 @@ const SavedReplyCard = ({
         <span className="shrink-0">Respondido em</span>
         <Link
           className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] underline-offset-4 hover:text-primary hover:underline dark:text-muted md:no-underline md:hover:text-[#475569] md:hover:no-underline dark:md:hover:text-muted"
-          href={`/community/${item.post.community.slug}`}
+          href={`/comunidades/${item.post.community.slug}`}
         >
           {item.post.community.name}
         </Link>
@@ -511,7 +511,7 @@ export const SavedPostsLogic = () => {
 
     const relativeUrl = replyId
       ? savedReplyHref(post, replyId)
-      : `/community/${post.community.slug}/post/${post.id}`;
+      : `/comunidades/${post.community.slug}/publicacao/${post.id}`;
     setShareVideoTarget(
       createLectumShareLinkTarget(post, {
         relativeUrl,
@@ -545,7 +545,7 @@ export const SavedPostsLogic = () => {
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] px-5 py-5 sm:max-w-2xl md:py-8 lg:max-w-3xl">
         <AppPageHeader
-          backHref="/app/profile"
+          backHref="/app/perfil"
           backLabel="Voltar para perfil"
           className="mb-4"
           title="Salvos"

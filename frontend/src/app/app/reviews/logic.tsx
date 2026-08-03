@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ArrowUpRight, MessageSquareReply, Star, UserRound } from "lucide-react";
 import Image from "next/image";
@@ -90,7 +90,7 @@ const ReviewCard = ({ review }: { review: PatientReview }) => (
       </div>
 
       <Button asChild className="h-9 w-9 shrink-0 rounded-full p-0 text-muted" variant="ghost">
-        <Link href={`/psychologists/${review.psychologist_id}`} aria-label="Abrir perfil">
+        <Link href={`/psicologos/${review.psychologist_id}`} aria-label="Abrir perfil">
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </Button>
@@ -143,7 +143,7 @@ export const ReviewsLogic = () => {
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8">
         <AppPageHeader
-          backHref="/app/profile"
+          backHref="/app/perfil"
           backLabel="Voltar para perfil"
           className="mb-4"
           title="Avaliações feitas"
@@ -169,7 +169,7 @@ export const ReviewsLogic = () => {
               className="border-border bg-surface shadow-[var(--lectum-shadow-soft)]"
               action={
                 <Button asChild className="rounded-full px-5">
-                  <Link href="/psychologists">Encontrar psicólogos</Link>
+                  <Link href="/psicologos">Encontrar psicólogos</Link>
                 </Button>
               }
             />

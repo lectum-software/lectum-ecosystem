@@ -509,8 +509,8 @@ const reportPublicUrl = (report: AdminPsychologistReportRecord) => {
   const postId = reportPostId(report);
 
   return report.reply
-    ? `/community/${community.slug}/post/${postId}/thread/${report.reply.id}`
-    : `/community/${community.slug}/post/${postId}`;
+    ? `/comunidades/${community.slug}/publicacao/${postId}/resposta/${report.reply.id}`
+    : `/comunidades/${community.slug}/publicacao/${postId}`;
 };
 
 const safeCommunity = (report: AdminPsychologistReportRecord) => {

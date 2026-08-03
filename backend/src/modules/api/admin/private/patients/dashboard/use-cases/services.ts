@@ -1734,10 +1734,10 @@ const snippet = (text: string | null | undefined, fallback: string) => {
 };
 
 const postUrl = (post: { community: { slug: string }; id: string }) =>
-  `/community/${post.community.slug}/post/${post.id}`;
+  `/comunidades/${post.community.slug}/publicacao/${post.id}`;
 
 const replyUrl = (reply: { id: string; post: { community: { slug: string }; id: string } }) =>
-  `/community/${reply.post.community.slug}/post/${reply.post.id}/thread/${reply.id}`;
+  `/comunidades/${reply.post.community.slug}/publicacao/${reply.post.id}/resposta/${reply.id}`;
 
 const pickRecentActivity = (
   patient: AdminPatientRecentRecord,
@@ -1753,7 +1753,7 @@ const pickRecentActivity = (
     },
     ...patient.community_members.map((member) => ({
       description: `Entrou na comunidade ${member.community.name}.`,
-      detail_url: `/community/${member.community.slug}`,
+      detail_url: `/comunidades/${member.community.slug}`,
       label: "Entrou em comunidade",
       occurred_at: member.createdAt,
       source: "community_member",

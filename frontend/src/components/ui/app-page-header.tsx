@@ -14,7 +14,7 @@ type AppPageHeaderProps = {
 };
 
 export const AppPageHeader = ({
-  backHref = "/app/profile",
+  backHref = "/app/perfil",
   backLabel = "Voltar",
   className,
   rightActionHref,

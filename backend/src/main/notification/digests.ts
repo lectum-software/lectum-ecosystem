@@ -505,7 +505,7 @@ const buildPsychologistDigestContent = (candidate: PsychologistActivityCandidate
 };
 
 const buildPostRedirect = (communitySlug: string, postId: string) =>
-  `/community/${communitySlug}/post/${postId}`;
+  `/comunidades/${communitySlug}/publicacao/${postId}`;
 
 const markDigestChecked = (
   state: DigestState,
@@ -840,7 +840,7 @@ const processProfessionalDailyDigest = async (
   const content = buildProfessionalDailyDigestContent(counts);
   const sent = await sendDigestPush(user, {
     ...content,
-    redirect: "/app/professional/analytics",
+    redirect: "/app/profissional/estatisticas",
     type: "professional_daily_digest",
   });
 

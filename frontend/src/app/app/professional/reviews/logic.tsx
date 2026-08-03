@@ -160,7 +160,7 @@ const PremiumReviewsState = () => (
 
     <div className="mt-7 flex justify-center">
       <Button asChild className="h-12 w-full rounded-full text-base sm:w-auto sm:px-8">
-        <Link href="/app/professional/billing">
+        <Link href="/app/profissional/assinatura">
           Fazer upgrade
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
@@ -350,8 +350,8 @@ export const ProfessionalReviewsLogic = () => {
   const firstUnansweredId = displayItems.find((review) => !review.response)?.id;
   const reviewLink =
     typeof window === "undefined"
-      ? "lectum.com.br/app/reviews/new"
-      : `${window.location.origin}/app/reviews/new${user?.id ? `?psychologist_id=${user.id}` : ""}`;
+      ? "lectum.com.br/app/avaliacoes/nova"
+      : `${window.location.origin}/app/avaliacoes/nova${user?.id ? `?psychologist_id=${user.id}` : ""}`;
 
   return (
     <PrivateTemplate desktopSidebarDefaultCollapsed showMobileNavigation={false}>

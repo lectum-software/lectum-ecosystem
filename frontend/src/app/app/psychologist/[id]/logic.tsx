@@ -398,10 +398,10 @@ const InactivePublicProfileState = ({
             asChild
             className="h-12 rounded-full bg-primary text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(47,141,235,0.22)] hover:bg-primary/90"
           >
-            <Link href="/app/professional/profile/setup">Completar perfil</Link>
+            <Link href="/app/profissional/perfil/configurar">Completar perfil</Link>
           </Button>
           <Button asChild className="h-11 rounded-full" variant="outline">
-            <Link href="/app/profile">Voltar ao perfil</Link>
+            <Link href="/app/perfil">Voltar ao perfil</Link>
           </Button>
         </div>
       </article>
@@ -627,7 +627,7 @@ const getProfilePublicationReplyId = (post: PostListPost) => {
 };
 
 const profilePublicationHref = (post: PostListPost) => {
-  const baseHref = `/community/${post.community.slug}/post/${post.id}`;
+  const baseHref = `/comunidades/${post.community.slug}/publicacao/${post.id}`;
   const replyId = getProfilePublicationReplyId(post);
 
   if (!replyId) return baseHref;
@@ -1591,7 +1591,7 @@ const ReviewsPreviewSection = ({
     hasReviews ? (
       <ViewAllChipButton onClick={onViewAll}>Ver todas</ViewAllChipButton>
     ) : canReviewProfile ? (
-      <SectionChipLink href={`/app/reviews/new?psychologist_id=${psychologistId}`}>
+      <SectionChipLink href={`/app/avaliacoes/nova?psychologist_id=${psychologistId}`}>
         Avaliar
       </SectionChipLink>
     ) : null
@@ -1705,7 +1705,7 @@ const PublicationTopMentorCommunity = ({
   <Link
     className="group flex w-[132px] min-w-[132px] snap-start flex-col items-center rounded-[18px] px-1 py-1.5 text-center no-underline transition hover:bg-[#F8FBFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:w-[140px] sm:min-w-[140px]"
     data-top-mentor-community="true"
-    href={`/community/${community.slug}`}
+    href={`/comunidades/${community.slug}`}
   >
     <span className="relative flex w-full justify-center pb-4">
       <PublicationCommunityAvatar community={community} />
@@ -2073,7 +2073,7 @@ const ReviewSummaryCard = ({
             className="h-10 shrink-0 cursor-pointer rounded-full border-[#CFE4FA] bg-white px-4 text-[12.5px] font-extrabold text-[#247BD1] hover:border-[#B8D9F8] hover:bg-[#F4FAFF] hover:text-[#1769B8] focus-visible:outline-[#2F8DEB] sm:px-[18px] sm:text-[13px]"
             variant="outline"
           >
-            <Link href={`/app/reviews/new?psychologist_id=${psychologistId}`}>Avaliar</Link>
+            <Link href={`/app/avaliacoes/nova?psychologist_id=${psychologistId}`}>Avaliar</Link>
           </Button>
         ) : null}
       </div>
@@ -2241,7 +2241,7 @@ const WhatsAppCta = ({
   const whatsappIdentity = toPsychologistWhatsAppIdentity(profile);
   const whatsappName = getPsychologistWhatsappDisplayName(whatsappIdentity);
   const whatsappTrackingPath =
-    trafficOrigin === "community_top_mentors" ? "/community/top-mentors" : undefined;
+    trafficOrigin === "community_top_mentors" ? "/comunidades/top-mentores" : undefined;
   const whatsappTrackingContext = {
     pageKind: "psychologist_profile",
     ...(whatsappTrackingPath ? { path: whatsappTrackingPath } : {}),
@@ -2439,7 +2439,7 @@ export const PsychologistProfileLogic = () => {
       const next = new URLSearchParams(searchParamsString);
       mutate(next);
       const queryString = next.toString();
-      const href = `/psychologists/${id}${queryString ? `?${queryString}` : ""}`;
+      const href = `/psicologos/${id}${queryString ? `?${queryString}` : ""}`;
 
       if (
         typeof window !== "undefined" &&
@@ -2619,11 +2619,11 @@ export const PsychologistProfileLogic = () => {
       return;
     }
 
-    router.push("/psychologists");
+    router.push("/psicologos");
   };
 
   const goToProfileEdit = () => {
-    router.push("/app/professional/profile/setup");
+    router.push("/app/profissional/perfil/configurar");
   };
 
   const favoritePendingId =
@@ -2704,7 +2704,7 @@ export const PsychologistProfileLogic = () => {
                   {profileErrorMessage}
                 </InlineAlert>
                 <Button asChild variant="outline">
-                  <Link href="/psychologists">Voltar para a busca</Link>
+                  <Link href="/psicologos">Voltar para a busca</Link>
                 </Button>
               </div>
             ) : null}

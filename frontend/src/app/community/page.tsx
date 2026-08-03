@@ -5,7 +5,7 @@ import { resolveSeoMetadata } from "@/lib/seo-metadata";
 
 export const generateMetadata = async (): Promise<Metadata> =>
   resolveSeoMetadata("community", {
-    canonical: "/community",
+    canonical: "/comunidades",
     description: SITE_DESCRIPTION,
     title: `Comunidades | ${SITE_NAME}`,
   });

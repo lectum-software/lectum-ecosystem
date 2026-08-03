@@ -76,7 +76,7 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
-const PROFESSIONAL_PROFILE_MENU_HREF = "/app/profile";
+const PROFESSIONAL_PROFILE_MENU_HREF = "/app/perfil";
 const PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR = '[data-psychologist-tip-target="profile-video"]';
 
 const resolveApiError = (error: unknown) => {
@@ -994,7 +994,7 @@ export const ProfessionalProfileSetupLogic = () => {
     deleteVideo.isPending;
   const isSubmitting = update.isPending || isSavingMedia;
   const publicProfileHref = profile.data?.user.id
-    ? `/psychologists/${profile.data.user.id}`
+    ? `/psicologos/${profile.data.user.id}`
     : undefined;
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
@@ -1993,7 +1993,7 @@ export const ProfessionalProfileSetupLogic = () => {
                     </p>
                     <Link
                       className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-primary-soft px-4 py-2 text-xs font-bold text-primary"
-                      href="/app/professional/profile/setup"
+                      href="/app/profissional/perfil/configurar"
                     >
                       <UploadCloud className="h-4 w-4" aria-hidden="true" />
                       Atualizar tela

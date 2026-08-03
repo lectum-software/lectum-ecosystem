@@ -557,7 +557,7 @@ export const AdminSeoMetadataClient = () => {
                 <InputController<SeoMetadataForm>
                   label="URL canônica"
                   name="canonical_url"
-                  placeholder="/psychologists ou https://lectum.com.br/psychologists"
+                  placeholder="/psicologos ou https://lectum.com.br/psicologos"
                 />
               </div>
 

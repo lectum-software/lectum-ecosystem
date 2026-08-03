@@ -51,7 +51,7 @@ type FilterTabValue = Extract<UserPostsType, "posts" | "replies">;
 type FilterTabCounts = Partial<Record<FilterTabValue, number>>;
 
 const focusedReplyHref = (post: PostListPost, replyId: string) =>
-  `/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+  `/comunidades/${post.community.slug}/publicacao/${post.id}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
 
 const isReplyCardInteractiveTarget = (target: EventTarget | null) => {
   const targetElement =
@@ -262,7 +262,7 @@ const MyPostsHeader = ({ interactionCopy }: { interactionCopy: InteractionCopy }
       <Link
         aria-label="Voltar para perfil"
         className="inline-flex h-9 w-9 items-center justify-center justify-self-start rounded-full border border-[#DDE7F2] bg-white text-[#334155] shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition hover:-translate-x-0.5 hover:border-[#C8DDF3] hover:bg-[#F8FBFF] hover:text-[#173F72] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8DEB]/35 dark:border-border dark:bg-surface dark:text-foreground"
-        href="/app/profile"
+        href="/app/perfil"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
       </Link>
@@ -434,7 +434,7 @@ const ReplyItemCard = ({
           <span className="shrink-0">{interactionCopy.contextLabel}</span>
           <Link
             className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-extrabold text-[#475569] no-underline hover:text-[#475569] hover:no-underline dark:text-muted dark:hover:text-muted"
-            href={`/community/${item.post.community.slug}`}
+            href={`/comunidades/${item.post.community.slug}`}
           >
             {item.post.community.name}
           </Link>
@@ -640,7 +640,7 @@ export const MyPostsLogic = () => {
 
     const relativeUrl = replyId
       ? focusedReplyHref(post, replyId)
-      : `/community/${post.community.slug}/post/${post.id}`;
+      : `/comunidades/${post.community.slug}/publicacao/${post.id}`;
     setShareVideoTarget(
       createLectumShareLinkTarget(post, {
         relativeUrl,

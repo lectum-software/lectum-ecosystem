@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { PostReplyThreadLogic } from "@/app/app/community/[slug]/post/[id]/logic";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
@@ -16,7 +16,7 @@ export const generateMetadata = async ({ params }: PostReplyThreadPageProps): Pr
 
   return resolveCommunityPostSeoMetadata({
     fallback: {
-      canonical: `/community/${slug}/post/${id}/thread/${replyId}`,
+      canonical: `/comunidades/${slug}/publicacao/${id}/resposta/${replyId}`,
       description: "Discussão pública de uma resposta em comunidade na Lectum.",
       title: `Discussão da comunidade | ${SITE_NAME}`,
     },

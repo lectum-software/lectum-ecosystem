@@ -62,7 +62,7 @@ export const createIntent = async (data: IGoogleLinkDTO) => {
 
   url.searchParams.set("intent", "link");
   url.searchParams.set("link_token", token);
-  url.searchParams.set("callbackUrl", "/app/settings/account?google=connected");
+  url.searchParams.set("callbackUrl", "/app/configuracoes/conta?google=connected");
 
   const response: GoogleLinkIntentResponse = {
     url: url.toString(),

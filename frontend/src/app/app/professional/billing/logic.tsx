@@ -42,7 +42,7 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
 });
 
-const COURTESY_CARD_HREF = "/app/professional/billing/checkout?intent=courtesy-renewal";
+const COURTESY_CARD_HREF = "/app/profissional/assinatura/pagamento?intent=courtesy-renewal";
 
 const formatPrice = (priceCents?: number | null) => {
   if (!priceCents) return "R$ 0,00";
@@ -301,7 +301,7 @@ export const ProfessionalBillingLogic = () => {
     [isCourtesy, subscription?.plan?.price_cents],
   );
   const paymentActionHref = canManageCard
-    ? "/app/professional/billing/card"
+    ? "/app/profissional/assinatura/cartao"
     : isCourtesy
       ? COURTESY_CARD_HREF
       : null;
@@ -341,7 +341,7 @@ export const ProfessionalBillingLogic = () => {
         )}
       >
         <AppPageHeader
-          backHref="/app/profile"
+          backHref="/app/perfil"
           backLabel="Voltar ao perfil"
           title="Minha Assinatura"
         />
@@ -358,7 +358,7 @@ export const ProfessionalBillingLogic = () => {
           <EmptyState
             action={
               <Button asChild className="h-11 rounded-full">
-                <Link href="/app/professional/billing/plans">
+                <Link href="/app/profissional/assinatura/planos">
                   Escolher plano
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>

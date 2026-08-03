@@ -85,8 +85,8 @@ type NavigationItem = {
   title: string;
 };
 
-const NOTIFICATIONS_HREF = "/app/notifications";
-const NEED_RESET_PATH = "/app/account/need-reset";
+const NOTIFICATIONS_HREF = "/app/notificacoes";
+const NEED_RESET_PATH = "/app/conta/redefinir-senha";
 const DEFAULT_RESTRICTED_AREA_COPY = {
   description:
     "Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar sua experiência na Lectum.",
@@ -99,10 +99,10 @@ const COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY = {
 };
 
 const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_AREA_COPY>([
-  ["/app/community/top-mentors", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
-  ["/community/top-mentors", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
+  ["/app/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
+  ["/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
   [
-    "/app/favorites",
+    "/app/favoritos",
     {
       description:
         "Crie uma conta gratuita para salvar psicólogos, posts e respostas que quiser consultar depois.",
@@ -110,7 +110,7 @@ const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_A
     },
   ],
   [
-    "/app/notifications",
+    "/app/notificacoes",
     {
       description:
         "Entre ou crie sua conta para acompanhar respostas, interações e atualizações das comunidades.",
@@ -118,7 +118,7 @@ const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_A
     },
   ],
   [
-    "/app/profile",
+    "/app/perfil",
     {
       description:
         "Crie sua conta gratuita para salvar suas preferências e continuar sua experiência na Lectum.",
@@ -142,25 +142,25 @@ const fallbackNavigation: NavigationItem[] = [
     title: "Início",
   },
   {
-    href: "/psychologists",
+    href: "/psicologos",
     icon: Search,
     label: "Psicólogos",
     title: "Encontre seu psicólogo",
   },
   {
-    href: "/app/favorites",
+    href: "/app/favoritos",
     icon: Heart,
     label: "Favoritos",
     title: "Favoritos",
   },
   {
-    href: "/app/notifications",
+    href: "/app/notificacoes",
     icon: Bell,
     label: "Notificações",
     title: "Notificações",
   },
   {
-    href: "/app/profile",
+    href: "/app/perfil",
     icon: UserRound,
     label: "Perfil",
     title: "Meu Perfil",
@@ -176,25 +176,25 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       title: "Início",
     },
     {
-      href: "/psychologists",
+      href: "/psicologos",
       icon: Search,
       label: "Psicólogos",
       title: "Encontre seu psicólogo",
     },
     {
-      href: "/app/favorites",
+      href: "/app/favoritos",
       icon: Heart,
       label: "Favoritos",
       title: "Favoritos",
     },
     {
-      href: "/app/notifications",
+      href: "/app/notificacoes",
       icon: Bell,
       label: "Notificações",
       title: "Notificações",
     },
     {
-      href: "/app/profile",
+      href: "/app/perfil",
       icon: UserRound,
       label: "Perfil",
       title: "Meu Perfil",
@@ -208,25 +208,25 @@ const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, Navi
       title: "Início",
     },
     {
-      href: "/psychologists",
+      href: "/psicologos",
       icon: Search,
       label: "Psicólogos",
       title: "Psicólogos",
     },
     {
-      href: "/app/favorites",
+      href: "/app/favoritos",
       icon: Heart,
       label: "Favoritos",
       title: "Favoritos",
     },
     {
-      href: "/app/notifications",
+      href: "/app/notificacoes",
       icon: Bell,
       label: "Notificações",
       title: "Notificações",
     },
     {
-      href: "/app/profile",
+      href: "/app/perfil",
       icon: UserRound,
       label: "Perfil",
       title: "Meu Perfil",
@@ -272,34 +272,34 @@ const getNavigationContextPathname = (pathname: string) => {
   if (
     segments.length === 5 &&
     segments[0] === "app" &&
-    segments[1] === "community" &&
-    segments[3] === "post" &&
-    segments[4] === "new"
+    (segments[1] === "community" || segments[1] === "comunidades") &&
+    (segments[3] === "post" || segments[3] === "publicacao") &&
+    (segments[4] === "new" || segments[4] === "nova")
   ) {
     if (segments[2] === COMMUNITY_FEED_SLUG) {
       return DEFAULT_COMMUNITY_FEED_HREF;
     }
 
-    return `/community/${segments[2]}`;
+    return `/comunidades/${segments[2]}`;
   }
 
   return normalizedPathname;
 };
 
 const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
-  "/psychologists",
-  "/app/favorites",
+  "/psicologos",
+  "/app/favoritos",
   DEFAULT_COMMUNITY_FEED_HREF,
-  "/app/notifications",
-  "/app/profile",
+  "/app/notificacoes",
+  "/app/perfil",
 ]);
 
 const PAID_ONBOARDING_MANAGEMENT_PATHS = new Set([
-  "/app/professional/billing",
-  "/app/professional/billing/card",
-  "/app/professional/billing/plans",
-  "/app/professional/billing/subscription",
-  "/app/settings/account",
+  "/app/profissional/assinatura",
+  "/app/profissional/assinatura/cartao",
+  "/app/profissional/assinatura/planos",
+  "/app/profissional/assinatura/gerenciar",
+  "/app/configuracoes/conta",
   NEED_RESET_PATH,
 ]);
 
@@ -312,18 +312,20 @@ const isDesktopActivePath = (pathname: string, item: NavigationItem) => {
 };
 
 const MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH = new Map<string, string>([
-  ["/psychologists", "/psychologists"],
-  ["/app/favorites", "/app/favorites"],
+  ["/psicologos", "/psicologos"],
+  ["/app/favoritos", "/app/favoritos"],
   [DEFAULT_COMMUNITY_FEED_HREF, DEFAULT_COMMUNITY_FEED_HREF],
-  ["/app/notifications", "/app/notifications"],
-  ["/app/profile", "/app/profile"],
+  ["/app/notificacoes", "/app/notificacoes"],
+  ["/app/perfil", "/app/perfil"],
 ]);
 
 const COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS = new Set([
   COMMUNITY_FEED_SLUG,
+  "publicacao",
   "post",
   "suggest",
   "top-mentors",
+  "top-mentores",
 ]);
 
 const isCommunityMainMobileNavigationPath = (pathname: string) => {
@@ -331,7 +333,7 @@ const isCommunityMainMobileNavigationPath = (pathname: string) => {
 
   return (
     segments.length === 2 &&
-    segments[0] === "community" &&
+    (segments[0] === "community" || segments[0] === "comunidades") &&
     !COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS.has(segments[1])
   );
 };
@@ -339,7 +341,7 @@ const isCommunityMainMobileNavigationPath = (pathname: string) => {
 const isPsychologistProfileMobileNavigationPath = (pathname: string) => {
   const segments = normalizePathname(pathname).split("/").filter(Boolean);
 
-  return segments.length === 2 && segments[0] === "psychologists";
+  return segments.length === 2 && (segments[0] === "psychologists" || segments[0] === "psicologos");
 };
 
 const shouldShowMobileNavigationForPath = (pathname: string) => {
@@ -356,7 +358,7 @@ const getMobileNavigationActiveHref = (pathname: string) => {
   const normalizedPathname = normalizePathname(pathname);
 
   if (isPsychologistProfileMobileNavigationPath(normalizedPathname)) {
-    return "/psychologists";
+    return "/psicologos";
   }
 
   return MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.get(normalizedPathname) ?? null;
@@ -693,7 +695,7 @@ export const PrivateTemplate = ({
               ? "h-12 w-12 justify-center"
               : "h-12 flex-1 justify-start overflow-hidden",
           )}
-          href="/psychologists"
+          href="/psicologos"
           title={isDesktopSidebarCollapsed ? "Lectum" : undefined}
         >
           <span

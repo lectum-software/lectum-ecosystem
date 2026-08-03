@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { PostDetailLogic } from "@/app/app/community/[slug]/post/[id]/logic";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
@@ -15,7 +15,7 @@ export const generateMetadata = async ({ params }: PostDetailPageProps): Promise
 
   return resolveCommunityPostSeoMetadata({
     fallback: {
-      canonical: `/community/${slug}/post/${id}`,
+      canonical: `/comunidades/${slug}/publicacao/${id}`,
       description:
         "Pergunta ou relato público de comunidade na Lectum, com respostas e contexto responsável.",
       title: `Pergunta da comunidade | ${SITE_NAME}`,

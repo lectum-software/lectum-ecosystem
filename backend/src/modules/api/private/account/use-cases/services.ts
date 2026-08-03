@@ -31,8 +31,8 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 const sanitizeDeleteCallbackUrl = (value?: string | null, role?: string | null) => {
   const fallback =
     role === "psicologo"
-      ? "/app/professional/profile/setup?deleteReauth=ok"
-      : "/app/profile/edit?deleteReauth=ok";
+      ? "/app/profissional/perfil/configurar?deleteReauth=ok"
+      : "/app/perfil/editar?deleteReauth=ok";
   const raw = value?.trim() || fallback;
 
   if (!raw.startsWith("/app/")) return fallback;

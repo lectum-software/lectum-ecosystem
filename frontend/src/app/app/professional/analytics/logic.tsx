@@ -562,7 +562,7 @@ const PremiumAnalyticsBanner = () => (
         </p>
       </div>
       <Button asChild className="h-12 w-full rounded-full px-6 text-base md:w-auto">
-        <Link href="/app/professional/billing">
+        <Link href="/app/profissional/assinatura">
           Fazer upgrade
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>

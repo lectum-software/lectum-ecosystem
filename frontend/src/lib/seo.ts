@@ -1,4 +1,9 @@
 import type { Metadata } from "next";
+import {
+  PUBLIC_COMMUNITIES_HREF,
+  PUBLIC_PSYCHOLOGISTS_HREF,
+  PUBLIC_TOP_MENTORS_HREF,
+} from "@/utils/public-routes";
 
 const DEFAULT_SITE_URL = "http://localhost:3000";
 
@@ -23,17 +28,17 @@ export const PUBLIC_INDEXABLE_ROUTES = [
     priority: 1,
   },
   {
-    path: "/psychologists",
+    path: PUBLIC_PSYCHOLOGISTS_HREF,
     changeFrequency: "daily" as const,
     priority: 0.9,
   },
   {
-    path: "/community",
+    path: PUBLIC_COMMUNITIES_HREF,
     changeFrequency: "weekly" as const,
     priority: 0.8,
   },
   {
-    path: "/community/top-mentors",
+    path: PUBLIC_TOP_MENTORS_HREF,
     changeFrequency: "weekly" as const,
     priority: 0.7,
   },
@@ -44,6 +49,7 @@ export const NON_INDEXABLE_ROUTES = [
   "/auth/",
   "/dashboard/",
   "/patient/",
+  "/paciente/",
   "/psychologist/cfp/",
   "/api/",
 ];

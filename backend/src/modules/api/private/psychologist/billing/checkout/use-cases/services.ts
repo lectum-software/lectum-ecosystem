@@ -284,8 +284,8 @@ const resolveCourtesyNextPath = async ({
   });
 
   return hasBillingAddress
-    ? "/app/professional/billing"
-    : "/app/professional/billing/address?intent=courtesy-renewal";
+    ? "/app/profissional/assinatura"
+    : "/app/profissional/assinatura/endereco?intent=courtesy-renewal";
 };
 
 const normalizeLast4 = (last4?: string | null) => {

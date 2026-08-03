@@ -210,7 +210,7 @@ fluxo.
 | `headline` | `String?` | bio curta exibida no card/perfil; opcional para publicação pública |
 | `bio` | `String?` | texto de apresentação/"Sobre"/experiência; opcional para publicação pública |
 | `cover_image_url` | `String?` | imagem pública independente de capa do perfil; não reutiliza thumbnail/frame de vídeo |
-| `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para publicação/exibição pública do perfil e elegibilidade na listagem `/psychologists` |
+| `video_url` | `String?` | vídeo de apresentação público permitido para todos os psicólogos, inclusive Plano Gratuito; obrigatório para publicação/exibição pública do perfil e elegibilidade na listagem `/psicologos` |
 | `video_cover_url` | `String?` | imagem pública opcional de capa do vídeo de apresentação; deve ser limpa junto ao vídeo |
 | `cpf` | `String?` | usado na consulta CFP; dado sensível (LGPD) |
 | `birthdate` | `DateTime?` | data de nascimento informada na edição privada do perfil; obrigatória no contrato de atualização, mas nullable no banco para compatibilidade com perfis legados até próxima edição |
@@ -637,7 +637,7 @@ Contratos da tela interna do post (TASK-26):
 
 Complemento 2026-07-01: autoações autenticadas do autor sobre o próprio `community_post` ou
 `post_reply` (comentar no próprio post/comentário, upvote ativo, salvamento ou compartilhamento do
-próprio conteúdo) não devem criar `notification`, não aparecem em `/app/notifications` e não
+próprio conteúdo) não devem criar `notification`, não aparecem em `/app/notificacoes` e não
 enviam push imediato. Para pacientes, o digest push `community_evening_digest` também deve excluir
 posts de autoria do próprio destinatário para que engajamento gerado no próprio post não vire push
 do navegador. Autores anônimos continuam sendo identificados internamente por `author_id` para essa
@@ -872,7 +872,7 @@ produto ainda não possui campo dedicado `cancelled_at`.
 
 `source="admin_grant"` com plano `profissional`, `status="ativa"` e `current_period_end` futuro concede a mesma experiência de perfil do Plano Profissional até expirar: selo, até 10 especialidades e seleção de todos os serviços/abordagens ativos. Vídeo de apresentação é permitido a todos os planos.
 
-Complemento 2026-07-04: no fluxo pago via gateway (`source="mercadopago"`), assinatura profissional ativa e verificação profissional são estados separados. A assinatura paga ativa concede direito ao próximo passo de onboarding, mas **não** concede selo público de verificado nem libera edição do perfil profissional enquanto `psychologist_profile.cfp_verified_at` estiver nulo. Complemento 2026-07-11: a ordem vigente do onboarding pago é endereço de faturamento → WhatsApp → verificação profissional → perfil; a etapa pendente deve ser retomável e redirecionar para `/app/professional/whatsapp/verify` quando faltar WhatsApp e para `/app/professional/cfp` quando o WhatsApp já estiver cadastrado e a verificação profissional ainda estiver pendente. O Plano Gratuito (`slug="gratuito"`, `source="free_signup"`) não entra nesse gate de CFP e segue a jornada gratuita por WhatsApp/perfil. Cortesia administrativa ativa (`source="admin_grant"`) permanece como equivalência operacional de verificação pública quando concedida manualmente, conforme ADRs de cortesia.
+Complemento 2026-07-04: no fluxo pago via gateway (`source="mercadopago"`), assinatura profissional ativa e verificação profissional são estados separados. A assinatura paga ativa concede direito ao próximo passo de onboarding, mas **não** concede selo público de verificado nem libera edição do perfil profissional enquanto `psychologist_profile.cfp_verified_at` estiver nulo. Complemento 2026-07-11: a ordem vigente do onboarding pago é endereço de faturamento → WhatsApp → verificação profissional → perfil; a etapa pendente deve ser retomável e redirecionar para `/app/profissional/whatsapp/verificar` quando faltar WhatsApp e para `/app/profissional/cfp` quando o WhatsApp já estiver cadastrado e a verificação profissional ainda estiver pendente. O Plano Gratuito (`slug="gratuito"`, `source="free_signup"`) não entra nesse gate de CFP e segue a jornada gratuita por WhatsApp/perfil. Cortesia administrativa ativa (`source="admin_grant"`) permanece como equivalência operacional de verificação pública quando concedida manualmente, conforme ADRs de cortesia.
 
 Complemento 2026-07-11: cortesia administrativa ativa não entra no fluxo de assinatura paga. Psicólogos com `source="admin_grant"` ativo não devem ser direcionados para checkout, cartão ou endereço de faturamento; se houver onboarding pendente, a próxima etapa é WhatsApp/perfil, sem cobrança. O endereço de faturamento pertence somente ao fluxo pago com assinatura real `source="mercadopago"`, `gateway="mercadopago"` e `gateway_subscription_id` persistido.
 
@@ -995,7 +995,7 @@ Adicionado na TASK-141 para permitir que o Admin configure metadados das página
 | Campo | Tipo | Notas |
 |---|---|---|
 | `page_key` | `String @unique` | Chave operacional fechada: `default`, `home`, `psychologists`, `psychologist_profile`, `community`, `community_post`, `top_mentors`. |
-| `route_path` | `String?` | Rota pública correspondente; pode ser `null` no fallback global e pode conter placeholders de rota dinâmica como `/psychologists/[id]`. |
+| `route_path` | `String?` | Rota publica correspondente; pode ser `null` no fallback global e pode conter placeholders de rota dinamica como `/psicologos/[id]`. |
 | `label` | `String` | Nome exibido no Admin; não é editável pela tela. |
 | `title` | `String` | Título SEO renderizado server-side quando a página usa a configuração. |
 | `description` | `String` | Descrição SEO. |
@@ -1012,22 +1012,24 @@ Complemento TASK-143: `GET /api/public/seo/community-post/:slug/:id` e `GET /api
 
 Complemento TASK-144: a UI Admin nao edita `site_seo_setting.og_image_url` como campo textual. O operador faz upload de JPG/PNG/WebP em `POST /api/admin/private/settings/seo/:page_key/og-image`; o backend grava o arquivo no storage publico em `seo/og-image/` e retorna um caminho publico gerado internamente para o formulario salvar em `og_image_url`. O update de metadados continua sendo `PUT /api/admin/private/settings/seo/:page_key`, com auditoria em `admin_activity_log` quando `og_image_url` mudar.
 
+Complemento TASK-145: `route_path` e `canonical_url` gerenciados passam a usar URLs publicas canonicas em PT-BR (`/psicologos`, `/psicologos/[id]`, `/comunidades`, `/comunidades/[slug]`, `/comunidades/[slug]/publicacao/[id]`, `/comunidades/top-mentores`). Registros existentes com canonicos legados em ingles sao sincronizados para PT-BR sem sobrescrever customizacoes reais.
+
 
 ## Convencao de rotas (frontend e backend)
 
-A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-40:
+A auditoria achou namespaces conflitantes nas tasks de comunidade (`/communities` vs `/community` vs `/posts`). Padrao canonico apos TASK-145:
 
 - Frontend publico indexavel fora de `/app`:
   - home/feed agregado: `/` (rota canônica do feed público da comunidade);
-  - psicologos: `/psychologists`, perfil em `/psychologists/[id]` (`[id]` = `user.id`) e contato em `/psychologists/[id]/contact`;
-  - comunidades: explorar/lista em `/community`, feed agregado legado/compatível em `/community/feed`, detalhe em `/community/[slug]`, post em `/community/[slug]/post/[id]` e thread em `/community/[slug]/post/[id]/thread/[replyId]`;
-  - ranking de mentores: `/community/top-mentors`.
-- Frontend autenticado sob `/app`: perfil do usuario, favoritos, notificacoes, configuracoes, posts do usuario, area profissional e fluxos de interacao/autoria. Exemplos: `/app/community/suggest`, `/app/community/[slug]/post/new`, `/app/posts/mine`, `/app/posts/saved`, `/app/professional/*`, `/app/profile`.
+  - psicologos: `/psicologos`, perfil em `/psicologos/[id]` (`[id]` = `user.id`) e contato em `/psicologos/[id]/contato`;
+  - comunidades: explorar/lista em `/comunidades`, feed agregado em `/`, detalhe em `/comunidades/[slug]`, post em `/comunidades/[slug]/publicacao/[id]` e thread em `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`;
+  - ranking de mentores: `/comunidades/top-mentores`. Rotas publicas antigas em ingles (`/psychologists*`, `/community*`) permanecem somente como redirects permanentes para preservar SEO e links externos.
+- Frontend autenticado sob `/app`: perfil do usuario, favoritos, notificacoes, configuracoes, posts do usuario, area profissional e fluxos de interacao/autoria. Exemplos canonicos em PT-BR: `/app/comunidades/sugerir`, `/app/comunidades/[slug]/publicacao/nova`, `/app/publicacoes/minhas`, `/app/publicacoes/salvas`, `/app/profissional/*`, `/app/perfil`.
 - `/app` nao deve hospedar paginas publicas indexaveis. URLs legadas sob `/app/community*` e `/app/psychologist*` podem existir apenas como compatibilidade autenticada/noindex ou redirecionamento, nunca como canonicas publicas.
 
 Backend privado/publico operacional:
 
-- **Descoberta/leitura de psicologos**: manter o namespace historico `/api/private/directory/psychologists`, `/api/private/directory/psychologists/:id`, posts/reviews/contact/contact-click/video-watch relacionados. Leituras publicas e abertura/registro de WhatsApp nao exigem sessao; quando o visitante nao estiver autenticado, `contact_request.user_id` fica `null` e a navegacao permanece livre, exibindo apenas dicas/prompts de cadastro quando algum gatilho de produto estiver definido, sem gate bloqueante no CTA de WhatsApp. Interacoes que dependem de identidade do usuario, como favoritos e avaliacoes, validam autenticacao no handler. **Nao** usar `/api/private/psychologists` para descoberta - esse namespace e confundivel com autogestao.
+- **Descoberta/leitura de psicologos**: manter o namespace historico `/api/private/directory/psicologos`, `/api/private/directory/psychologists/:id`, posts/reviews/contact/contact-click/video-watch relacionados. Leituras publicas e abertura/registro de WhatsApp nao exigem sessao; quando o visitante nao estiver autenticado, `contact_request.user_id` fica `null` e a navegacao permanece livre, exibindo apenas dicas/prompts de cadastro quando algum gatilho de produto estiver definido, sem gate bloqueante no CTA de WhatsApp. Interacoes que dependem de identidade do usuario, como favoritos e avaliacoes, validam autenticacao no handler. **Nao** usar `/api/private/psicologos` para descoberta - esse namespace e confundivel com autogestao.
 - **Autogestao do psicologo**: `/api/private/psychologist/*` (perfil, CRP, CFP, analytics, assinatura) -> `requireRole("psicologo")`.
 - **Relacionamentos/avaliacoes de psicologos por usuario**: `/api/private/user/favorites`, `/api/private/user/favorites/:id`, `/api/private/user/reviews` e `/api/private/user/reviews/eligibility/:id` -> so `_auth`, porque favorito e avaliacao exigem usuario autenticado.
 - **Autogestao do paciente**: `/api/private/patient/*` (onboarding; favoritos/follows/avaliacoes legados se mantidos) -> `requireRole("paciente")`.

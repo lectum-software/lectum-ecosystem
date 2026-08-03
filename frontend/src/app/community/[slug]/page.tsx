@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: CommunityRoutePageProps): Pro
     });
   }
 
-  const canonical = slug ? `/community/${slug}` : "/community";
+  const canonical = slug ? `/comunidades/${slug}` : "/comunidades";
 
   return resolveCommunitySeoMetadata({
     fallback: {

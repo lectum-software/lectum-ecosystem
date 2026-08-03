@@ -20,8 +20,8 @@ type GoogleCallbackUser = {
   };
 };
 
-const DELETE_ACCOUNT_PATIENT_CALLBACK = "/app/profile/edit?deleteReauth=ok";
-const DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK = "/app/professional/profile/setup?deleteReauth=ok";
+const DELETE_ACCOUNT_PATIENT_CALLBACK = "/app/perfil/editar?deleteReauth=ok";
+const DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK = "/app/profissional/perfil/configurar?deleteReauth=ok";
 const GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS = new Set([
   "analytics_session_id",
   "analytics_visitor_id",

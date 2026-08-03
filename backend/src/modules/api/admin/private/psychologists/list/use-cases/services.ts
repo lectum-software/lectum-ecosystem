@@ -724,7 +724,7 @@ const buildItem = (
     name: normalizeName(profile.user.name),
     plan_name: plan?.plan.name ?? null,
     plan_slug: plan?.plan.slug ?? null,
-    public_profile_url: `/psychologists/${userId}`,
+    public_profile_url: `/psicologos/${userId}`,
     published: profile.published,
     ranking_position: ranking?.position ?? null,
     ranking_score: ranking?.score ?? null,

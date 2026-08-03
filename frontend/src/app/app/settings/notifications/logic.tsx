@@ -419,7 +419,7 @@ export const NotificationSettingsLogic = () => {
             type="button"
             variant="ghost"
           >
-            <Link aria-label="Voltar para notificações" href="/app/notifications">
+            <Link aria-label="Voltar para notificações" href="/app/notificacoes">
               <ArrowLeft className="h-5 w-5" aria-hidden={true} />
             </Link>
           </Button>

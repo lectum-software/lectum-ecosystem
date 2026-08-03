@@ -218,16 +218,16 @@ const excerpt = (value: string | null | undefined, max = 90) => {
 };
 
 const postUrl = (post: AdminPsychologistActivityPost) =>
-  `/community/${post.community.slug}/post/${post.id}`;
+  `/comunidades/${post.community.slug}/publicacao/${post.id}`;
 
 const replyUrl = (reply: AdminPsychologistActivityReply) =>
-  `/community/${reply.post.community.slug}/post/${reply.post.id}/thread/${reply.id}`;
+  `/comunidades/${reply.post.community.slug}/publicacao/${reply.post.id}/resposta/${reply.id}`;
 
 const reportContent = (report: AdminPsychologistActivityReport) => {
   if (report.reply) {
     return {
       community: report.reply.post.community,
-      detailUrl: `/community/${report.reply.post.community.slug}/post/${report.reply.post.id}/thread/${report.reply.id}`,
+      detailUrl: `/comunidades/${report.reply.post.community.slug}/publicacao/${report.reply.post.id}/resposta/${report.reply.id}`,
       title: report.reply.title || `Resposta em: ${report.reply.post.title}`,
       typeLabel: "resposta",
     };
@@ -235,7 +235,7 @@ const reportContent = (report: AdminPsychologistActivityReport) => {
 
   return {
     community: report.post.community,
-    detailUrl: `/community/${report.post.community.slug}/post/${report.post.id}`,
+    detailUrl: `/comunidades/${report.post.community.slug}/publicacao/${report.post.id}`,
     title: report.post.title,
     typeLabel: "post",
   };

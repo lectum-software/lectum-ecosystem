@@ -246,7 +246,7 @@ const RowActions = ({ item }: { item: AdminCommunitiesListItem }) => (
     </Link>
     <a
       className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
-      href={toPublicHref(`/community/${encodeURIComponent(item.slug)}`)}
+      href={toPublicHref(`/comunidades/${encodeURIComponent(item.slug)}`)}
       onClick={(event) => event.stopPropagation()}
       rel="noreferrer"
       target="_blank"

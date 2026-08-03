@@ -37,11 +37,11 @@ type DispatchEvent = {
   props?: Record<string, unknown>;
 };
 
-const professionalProfileRedirect = (psychologistId: string) => `/psychologists/${psychologistId}`;
-const professionalReviewsRedirect = "/app/professional/reviews";
-const professionalAnalyticsRedirect = "/app/professional/analytics";
+const professionalProfileRedirect = (psychologistId: string) => `/psicologos/${psychologistId}`;
+const professionalReviewsRedirect = "/app/profissional/avaliacoes";
+const professionalAnalyticsRedirect = "/app/profissional/estatisticas";
 const communityPostRedirect = (communitySlug: string, postId: string) =>
-  `/community/${communitySlug}/post/${postId}`;
+  `/comunidades/${communitySlug}/publicacao/${postId}`;
 
 const opaqueSourceId = (value: string) =>
   createHash("sha256").update(value).digest("hex").slice(0, 32);

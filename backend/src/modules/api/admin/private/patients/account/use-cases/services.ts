@@ -42,7 +42,7 @@ const DELETE_ACCOUNT_CONFIRMATION = "EXCLUIR CONTA";
 const TEMP_PASSWORD_CONFIRMATION = "ALTERAR SENHA";
 const REVOKE_SESSIONS_CONFIRMATION = "ENCERRAR SESSÕES";
 const SUSPEND_ACCOUNT_CONFIRMATION = "SUSPENDER CONTA";
-const VIEW_AS_START_PATH = "/app/profile";
+const VIEW_AS_START_PATH = "/app/perfil";
 
 const normalizeStrongConfirmation = (value: string) =>
   value

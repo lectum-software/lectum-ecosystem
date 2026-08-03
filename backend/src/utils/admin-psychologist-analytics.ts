@@ -880,7 +880,12 @@ const classifyWhatsappTrafficAction = (
   const targetId = action.target_id;
   const targetType = action.target_type;
 
-  if (trafficActionPathIncludes(action, "/community/top-mentors")) return "community_top_mentors";
+  if (
+    trafficActionPathIncludes(action, "/community/top-mentors") ||
+    trafficActionPathIncludes(action, "/comunidades/top-mentores")
+  ) {
+    return "community_top_mentors";
+  }
 
   if (targetId && isCommunityPostTarget(targetType)) {
     return hasVideoMedia(postsById.get(targetId)) ? "community_post_video" : "community_post_text";

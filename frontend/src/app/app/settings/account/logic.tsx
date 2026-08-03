@@ -263,7 +263,7 @@ export const AccountSettingsLogic = () => {
 
   useEffect(() => {
     if (googleConnectedFromRedirect) {
-      router.replace("/app/settings/account");
+      router.replace("/app/configuracoes/conta");
     }
   }, [googleConnectedFromRedirect, router]);
 
@@ -375,7 +375,7 @@ export const AccountSettingsLogic = () => {
     >
       <section className="mx-auto min-h-screen w-full max-w-[430px] bg-background px-5 py-5 sm:max-w-xl md:py-8">
         <AppPageHeader
-          backHref="/app/profile"
+          backHref="/app/perfil"
           backLabel="Voltar para meu perfil"
           className="mb-4"
           title="Email e senha"

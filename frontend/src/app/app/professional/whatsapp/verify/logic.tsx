@@ -175,7 +175,7 @@ export const WhatsappVerificationLogic = () => {
         ) : !activeProfessionalSubscription ? (
           <Link
             className="inline-flex items-center gap-2 text-sm font-semibold text-muted"
-            href="/app/professional/billing/plans"
+            href="/app/profissional/assinatura/planos"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar para planos

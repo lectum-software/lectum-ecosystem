@@ -10,9 +10,9 @@ import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { CenterTemplate } from "@/templates/center";
 
-const DEFAULT_AUTHENTICATED_REDIRECT = "/psychologists";
-const DELETE_ACCOUNT_PATIENT_REDIRECT = "/app/profile/edit?deleteReauth=ok";
-const DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT = "/app/professional/profile/setup?deleteReauth=ok";
+const DEFAULT_AUTHENTICATED_REDIRECT = "/psicologos";
+const DELETE_ACCOUNT_PATIENT_REDIRECT = "/app/perfil/editar?deleteReauth=ok";
+const DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT = "/app/profissional/perfil/configurar?deleteReauth=ok";
 
 export const RedirectLogic = () => {
   const searchParams = useSearchParams();

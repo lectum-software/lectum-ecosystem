@@ -15,7 +15,7 @@ const TOTAL_STEPS = 2;
 type SelectedGoal = (typeof goalOptions)[number]["value"];
 
 const patientWelcomeRedirectPaths = {
-  encontrar_psicologo: "/psychologists",
+  encontrar_psicologo: "/psicologos",
   conhecer_comunidade: "/",
 } as const satisfies Record<SelectedGoal, string>;
 

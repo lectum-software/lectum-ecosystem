@@ -51,7 +51,7 @@ export const show = async ({ slug }: CommunitySeoParams): Promise<Resolve> => {
     compactDescription(community.description) ||
     "Comunidade pública da Lectum com perguntas, relatos e respostas de psicólogos.";
   const data: PublicCommunitySeoDTO = {
-    canonical_url: `/community/${community.slug}`,
+    canonical_url: `/comunidades/${community.slug}`,
     description,
     name,
     og_description: description,

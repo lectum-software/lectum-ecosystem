@@ -173,14 +173,14 @@ const buildPublicUrl = (
   if (event.decision !== "allow_sensitive") return null;
 
   if (event.target_type === "community_post" && event.community?.slug) {
-    return `/community/${event.community.slug}/post/${event.target_id}`;
+    return `/comunidades/${event.community.slug}/publicacao/${event.target_id}`;
   }
 
   if (event.target_type === "post_reply") {
     const reply = replies.get(event.target_id);
     if (!reply) return null;
 
-    return `/community/${reply.post.community.slug}/post/${reply.post_id}/thread/${event.target_id}`;
+    return `/comunidades/${reply.post.community.slug}/publicacao/${reply.post_id}/resposta/${event.target_id}`;
   }
 
   return null;
@@ -573,8 +573,8 @@ const reportPublicUrl = (report: AdminPostReportRecord) => {
   const postId = reportPostId(report);
 
   return report.reply
-    ? `/community/${community.slug}/post/${postId}/thread/${report.reply.id}`
-    : `/community/${community.slug}/post/${postId}`;
+    ? `/comunidades/${community.slug}/publicacao/${postId}/resposta/${report.reply.id}`
+    : `/comunidades/${community.slug}/publicacao/${postId}`;
 };
 
 const reportContentDTO = (report: AdminPostReportRecord) => {

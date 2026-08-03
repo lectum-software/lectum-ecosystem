@@ -146,7 +146,7 @@ export const ProfessionalBillingSubscriptionView = ({
         }`}
       >
         <AppPageHeader
-          backHref="/app/profile"
+          backHref="/app/perfil"
           backLabel="Voltar ao perfil"
           title="Minha assinatura"
         />
@@ -220,7 +220,7 @@ export const ProfessionalBillingSubscriptionView = ({
                 </InlineAlert>
 
                 <Button asChild className="mt-6 h-12 w-full rounded-full">
-                  <Link href="/app/professional/billing/checkout?intent=courtesy-renewal">
+                  <Link href="/app/profissional/assinatura/pagamento?intent=courtesy-renewal">
                     <CreditCard className="h-4 w-4" aria-hidden="true" />
                     Inserir dados do cartão
                   </Link>

@@ -174,7 +174,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
           setCheckoutResult(data);
           if (isCourtesyRenewal) {
             toast.success("Cartão cadastrado para cobrança futura");
-            router.replace(data.next_path || "/app/professional/billing");
+            router.replace(data.next_path || "/app/profissional/assinatura");
           }
         },
       },
@@ -207,7 +207,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const activeProfessional = isActiveProfessional(current);
   const activeCourtesy = isAdministrativeCourtesySubscription(current);
   const courtesyRedirectPath = user
-    ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/professional/billing")
+    ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/profissional/assinatura")
     : null;
   const shouldBypassActiveRedirect = isCourtesyRenewal && activeCourtesy;
   const pendingProfessional =

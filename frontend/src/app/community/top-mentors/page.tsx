@@ -5,7 +5,7 @@ import { resolveSeoMetadata } from "@/lib/seo-metadata";
 
 export const generateMetadata = async (): Promise<Metadata> =>
   resolveSeoMetadata("top_mentors", {
-    canonical: "/community/top-mentors",
+    canonical: "/comunidades/top-mentores",
     description: "Ranking público de mentores das comunidades da Lectum.",
     title: `Top Mentores | ${SITE_NAME}`,
   });

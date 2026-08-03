@@ -32,11 +32,11 @@ export const COMMUNITY_FEED_CHIPS = [
 ] as const;
 
 export const DEFAULT_COMMUNITY_SLUG = COMMUNITY_FEED_CHIPS[0].slug;
-export const COMMUNITY_EXPLORE_HREF = "/community";
+export const COMMUNITY_EXPLORE_HREF = "/comunidades";
 export const COMMUNITY_FEED_SLUG = "feed";
-export const LEGACY_COMMUNITY_FEED_HREF = `/community/${COMMUNITY_FEED_SLUG}`;
+export const LEGACY_COMMUNITY_FEED_HREF = `/comunidades/${COMMUNITY_FEED_SLUG}`;
 export const DEFAULT_COMMUNITY_FEED_HREF = "/";
-export const COMMUNITY_CREATE_POST_HREF = `/app/community/${COMMUNITY_FEED_SLUG}/post/new`;
+export const COMMUNITY_CREATE_POST_HREF = `/app/comunidades/${COMMUNITY_FEED_SLUG}/publicacao/nova`;
 
 export const getCommunityFeedChip = (slug?: string | null) => {
   return COMMUNITY_FEED_CHIPS.find((item) => item.slug === slug) ?? null;

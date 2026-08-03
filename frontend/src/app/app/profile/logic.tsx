@@ -120,7 +120,7 @@ const Section = ({ rows, title }: { rows: ProfileRow[]; title: string }) => {
 const ProfessionalUpgradeCard = () => (
   <Link
     className="group relative isolate overflow-hidden rounded-[var(--lectum-card-radius)] border border-primary/15 bg-primary-soft/85 p-4 text-primary shadow-[var(--lectum-shadow-soft)] transition hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-    href="/app/professional/billing"
+    href="/app/profissional/assinatura"
   >
     <span
       aria-hidden="true"
@@ -194,7 +194,7 @@ export const ProfileLogic = () => {
 
   const accountRows: ProfileRow[] = [
     {
-      href: isPsychologist ? "/app/professional/profile/setup" : "/app/profile/edit",
+      href: isPsychologist ? "/app/profissional/perfil/configurar" : "/app/perfil/editar",
       icon: Edit3,
       label: "Editar perfil",
       trailing: showProfileActivationAlert ? (
@@ -209,16 +209,16 @@ export const ProfileLogic = () => {
     },
     ...(isPsychologist
       ? [
-          { href: "/app/professional/analytics", icon: BarChart3, label: "Meus Analytics" },
-          { href: "/app/professional/reviews", icon: Star, label: "Minhas Avaliações" },
+          { href: "/app/profissional/estatisticas", icon: BarChart3, label: "Meus Analytics" },
+          { href: "/app/profissional/avaliacoes", icon: Star, label: "Minhas Avaliações" },
           {
-            href: "/app/professional/billing",
+            href: "/app/profissional/assinatura",
             icon: BadgeCheck,
             label: "Minha Assinatura",
           },
         ]
-      : [{ href: "/app/reviews", icon: Star, label: "Avaliações" }]),
-    { href: "/app/settings/account", icon: Lock, label: "E-mail e senha" },
+      : [{ href: "/app/avaliacoes", icon: Star, label: "Avaliações" }]),
+    { href: "/app/configuracoes/conta", icon: Lock, label: "E-mail e senha" },
     {
       hideChevron: true,
       icon: Moon,
@@ -229,13 +229,13 @@ export const ProfileLogic = () => {
 
   const communityRows: ProfileRow[] = [
     {
-      href: "/app/posts/mine",
+      href: "/app/publicacoes/minhas",
       icon: MessagesSquare,
       label: isPsychologist ? "Meus posts e respostas" : "Meus posts e comentários",
     },
-    { href: "/app/posts/saved", icon: Bookmark, label: "Salvos" },
-    { href: "/app/following", icon: UsersRound, label: "Comunidades seguidas" },
-    { href: "/community", icon: Compass, label: "Explorar comunidades" },
+    { href: "/app/publicacoes/salvas", icon: Bookmark, label: "Salvos" },
+    { href: "/app/comunidades-seguidas", icon: UsersRound, label: "Comunidades seguidas" },
+    { href: "/comunidades", icon: Compass, label: "Explorar comunidades" },
   ];
 
   return (
@@ -270,7 +270,7 @@ export const ProfileLogic = () => {
             {user.email ? <p className="mt-2 text-xs text-subtle">{user.email}</p> : null}
             {isPsychologist ? (
               <Button asChild className="mt-3 h-10 rounded-full" variant="outline">
-                <Link href={`/psychologists/${user.id}`}>Ver perfil público</Link>
+                <Link href={`/psicologos/${user.id}`}>Ver perfil público</Link>
               </Button>
             ) : null}
           </div>

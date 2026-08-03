@@ -23,8 +23,8 @@ type ParsedViewAsHash = {
 };
 
 const DEFAULT_START_PATH_BY_ROLE: Record<ParsedViewAsHash["subjectRole"], string> = {
-  paciente: "/app/profile",
-  psicologo: "/app/professional/profile/setup",
+  paciente: "/app/perfil",
+  psicologo: "/app/profissional/perfil/configurar",
 };
 
 const sanitizeRelativePath = (value: string | null, fallback: string) => {

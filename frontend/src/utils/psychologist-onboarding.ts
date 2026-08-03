@@ -2,12 +2,12 @@ import type { user } from "@/api/generator/types";
 import type { ProfessionalSubscription } from "@/api/generator/types/billing";
 
 export const PSYCHOLOGIST_ONBOARDING_PATHS = {
-  plans: "/app/professional/billing/plans",
-  checkout: "/app/professional/billing/checkout",
-  phone: "/app/professional/whatsapp/verify",
-  billingAddress: "/app/professional/billing/address",
-  cfp: "/app/professional/cfp",
-  profileSetup: "/app/professional/profile/setup",
+  plans: "/app/profissional/assinatura/planos",
+  checkout: "/app/profissional/assinatura/pagamento",
+  phone: "/app/profissional/whatsapp/verificar",
+  billingAddress: "/app/profissional/assinatura/endereco",
+  cfp: "/app/profissional/cfp",
+  profileSetup: "/app/profissional/perfil/configurar",
 } as const;
 
 type SubscriptionValue = Pick<ProfessionalSubscription, "status" | "plan" | "source">;

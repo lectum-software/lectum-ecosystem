@@ -363,7 +363,7 @@ const NotificationsHeaderActions = ({
       ) : null}
 
       <Button asChild className="h-11 w-11 rounded-full p-0" type="button" variant="ghost">
-        <Link aria-label="Configurações de notificações" href="/app/settings/notifications">
+        <Link aria-label="Configurações de notificações" href="/app/configuracoes/notificacoes">
           <Settings className="h-6 w-6" aria-hidden={true} />
         </Link>
       </Button>

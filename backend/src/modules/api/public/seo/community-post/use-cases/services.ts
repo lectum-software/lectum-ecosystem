@@ -151,7 +151,7 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
   const description = compactDescription(post.content) || "Discussão pública na comunidade Lectum.";
   const mediaPreview = resolveMediaPreview(firstPostMedia(post));
   const data: PublicCommunityPostSeoDTO = {
-    canonical_url: `/community/${post.community.slug}/post/${id}`,
+    canonical_url: `/comunidades/${post.community.slug}/publicacao/${id}`,
     community: post.community,
     description,
     media_type: mediaPreview.mediaType,
@@ -244,7 +244,7 @@ export const showReply = async ({ id, replyId, slug }: ReplySeoParams): Promise<
   });
   const postMedia = resolveMediaPreview(firstPostMedia(reply.post));
   const data: PublicCommunityPostSeoDTO = {
-    canonical_url: `/community/${reply.post.community.slug}/post/${id}/thread/${replyId}`,
+    canonical_url: `/comunidades/${reply.post.community.slug}/publicacao/${id}/resposta/${replyId}`,
     community: reply.post.community,
     description,
     media_type: replyMedia.mediaType ?? postMedia.mediaType,

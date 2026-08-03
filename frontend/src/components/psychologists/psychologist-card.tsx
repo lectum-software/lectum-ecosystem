@@ -587,7 +587,7 @@ export function PsychologistCard({
   const whatsappName =
     psychologist.whatsapp_name ||
     getPsychologistWhatsappDisplayName({ id: psychologist.id, name: displayName });
-  const route = `/psychologists/${psychologist.id}`;
+  const route = `/psicologos/${psychologist.id}`;
   const overlayRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLElement>(null);

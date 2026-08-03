@@ -5,8 +5,8 @@ import {
 } from "./psychologist-onboarding";
 
 export const USER_HOME_PATHS = {
-  paciente: "/psychologists",
-  psicologo: "/psychologists",
+  paciente: "/psicologos",
+  psicologo: "/psicologos",
 } as const;
 
 type RedirectFallback = string | null;
@@ -16,7 +16,7 @@ export function getUserHomePath(
   fallback: string,
 ) {
   if (data?.role === "paciente" && !data.patient_profile?.onboarding_completed_at) {
-    return "/patient/welcome";
+    return "/paciente/boas-vindas";
   }
 
   if (data?.role && data.role in USER_HOME_PATHS) {

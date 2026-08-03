@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CheckCircle2, Circle, KeyRound, Loader2, ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -23,7 +23,7 @@ type ApiError = Error & {
   data?: ApiErrorData;
 };
 
-const NEED_RESET_PATH = "/app/account/need-reset";
+const NEED_RESET_PATH = "/app/conta/redefinir-senha";
 
 const resolveNeedResetErrorMessage = (error: unknown) => {
   const apiError = error as ApiError;
@@ -87,8 +87,8 @@ export const NeedResetPasswordLogic = () => {
           toast.success("Senha atualizada com sucesso");
 
           const redirectTo = normalizeSafeRedirect(searchParams.get("redirectTo"));
-          const target = resolveAuthRedirect(data, redirectTo, "/psychologists");
-          router.replace(target || "/psychologists");
+          const target = resolveAuthRedirect(data, redirectTo, "/psicologos");
+          router.replace(target || "/psicologos");
         },
         onError: (error) => {
           setApiError(resolveNeedResetErrorMessage(error));

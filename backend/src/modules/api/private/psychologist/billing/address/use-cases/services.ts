@@ -132,7 +132,7 @@ export default async (data: IAddressDTO) => {
     ...msg("billing_address_saved", {}),
     data: {
       address,
-      next_path: "/app/professional/whatsapp/verify",
+      next_path: "/app/profissional/whatsapp/verificar",
     },
   };
 };

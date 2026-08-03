@@ -36,14 +36,14 @@ export const CommunityPostSuccessLogic = ({
     const publicationSlug = communitySlug || (slug && slug !== COMMUNITY_FEED_SLUG ? slug : null);
 
     if (publicationSlug && postId) {
-      return `/community/${publicationSlug}/post/${postId}`;
+      return `/comunidades/${publicationSlug}/publicacao/${postId}`;
     }
 
     if (storedPublicationHref) {
       return storedPublicationHref;
     }
 
-    return publicationSlug ? `/community/${publicationSlug}` : DEFAULT_COMMUNITY_FEED_HREF;
+    return publicationSlug ? `/comunidades/${publicationSlug}` : DEFAULT_COMMUNITY_FEED_HREF;
   });
 
   const handleViewPublication = () => {

@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
-- A fila operacional agora possui 151 tasks: `TASK-00` a `TASK-144`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 152 tasks: `TASK-00` a `TASK-145`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Inventário visual ativo
 
@@ -36,13 +36,13 @@ O fluxo operacional de cadastro profissional, atualizado em 2026-06-07, e:
 
 1. Cadastro com Google ou e-mail/senha.
 2. Se e-mail/senha, confirmar e-mail por codigo.
-3. Entrar em `/app/professional/billing/plans`.
+3. Entrar em `/app/profissional/assinatura/planos`.
 4. Se escolher **Plano Gratuito**:
    - persistir `professional_subscription` real com plano `gratuito` e status `ativa`;
-   - seguir para `/app/professional/whatsapp/verify`;
-   - depois ir para `/app/professional/profile/setup`.
+   - seguir para `/app/profissional/whatsapp/verificar`;
+   - depois ir para `/app/profissional/perfil/configurar`.
 5. Se escolher **Plano Profissional**:
-   - seguir para `/app/professional/billing/checkout`;
+   - seguir para `/app/profissional/assinatura/pagamento`;
    - so avancar com pagamento real Mercado Pago na TASK-32;
    - apos confirmacao real do pagamento/assinatura ativa, seguir para endereco de faturamento,
      telefone, CRP e perfil.
@@ -226,6 +226,7 @@ ou cortesia manual.
 | 142 | [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md) | Completed | 31, 45, 46, 62, 141 |
 | 143 | [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) | Completed | 39, 40, 42, 141 |
 | 144 | [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md) | Completed | 141, 143 |
+| 145 | [TASK-145 - Rotas em PT-BR e SEO can�nico](TASK-145-rotas-publicas-pt-br-seo.md) | Completed | 40, 141, 143, 144 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -243,7 +244,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 8. [TASK-41 - Páginas legais públicas: Termos de Serviço e Política de Privacidade](TASK-41-paginas-legais-termos-privacidade.md) foi adicionada em 2026-06-29 para publicar rotas legais públicas indexáveis com minutas em `_product/legal`, pendentes de aprovação do fundador e revisão jurídica antes da implementação.
 9. [TASK-42 - Layout de compartilhamento social para vídeo-resposta](TASK-42-layout-compartilhamento-video-resposta.md) foi adicionada e concluída em 2026-06-30 para padronizar o SHARE de vídeo-respostas profissionais em formato social vertical e quadrado.
 10. [TASK-43 - Scrollbar mobile app-like em telas principais](TASK-43-scrollbar-mobile-telas-principais.md) foi adicionada e concluída em 2026-07-01 para ocultar scrollbars visuais somente nos scrolls principais mobile/tablet de feed/comunidade e psicólogos, preservando desktop e containers internos.
-11. [TASK-44 - Verificação de registro retomável no fluxo pago](TASK-44-verificacao-registro-assinatura-retomavel.md) foi adicionada e concluída em 2026-07-04 para diferenciar assinatura paga ativa de verificação CFP concluída, retomando `/app/professional/cfp`, bloqueando edição do perfil profissional pago pendente e removendo selo de verificado baseado apenas em pagamento.
+11. [TASK-44 - Verificação de registro retomável no fluxo pago](TASK-44-verificacao-registro-assinatura-retomavel.md) foi adicionada e concluída em 2026-07-04 para diferenciar assinatura paga ativa de verificação CFP concluída, retomando `/app/profissional/cfp`, bloqueando edição do perfil profissional pago pendente e removendo selo de verificado baseado apenas em pagamento.
 12. [TASK-45 - Fundação backend do Admin](TASK-45-fundacao-backend-admin.md) foi adicionada em 2026-07-08 para criar admin como audiência separada, sem `user.role="admin"`.
 13. [TASK-46 - Aplicação Admin separada e shell lateral](TASK-46-app-admin-shell-lateral.md) foi adicionada em 2026-07-08 para iniciar o app `admin/` com login real e menu lateral.
 14. [TASK-47 - Captura de sessão e tipo de dispositivo para analytics admin](TASK-47-captura-sessao-tipo-dispositivo.md) foi adicionada em 2026-07-08 porque o produto já tem `x-device`/localização, mas ainda não persiste `mobile`/`desktop`/`tablet`.
@@ -348,6 +349,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 112. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para gerar miniaturas Open Graph de videos no frame vertical 9:16 do compartilhamento Lectum, alinhado ao preview de WhatsApp enviado como referencia.
 113. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para separar **Comunidades** (`/community`) de **Comunidade** (`/community/[slug]`), publicar metadados dinamicos por slug e usar o nome real da comunidade/post como titulo compartilhado.
 114. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para usar imagens Open Graph quadradas de entidade: avatar da comunidade em `/community/[slug]` e foto/avatar do psicologo em `/psychologists/[id]`.
+115. [TASK-145 - Rotas em PT-BR e SEO can�nico](TASK-145-rotas-publicas-pt-br-seo.md) foi adicionada e concluida em 2026-08-03 para tornar canonicos os slugs publicos (`/psicologos`, `/comunidades`) e privados (`/app/notificacoes`, `/app/perfil`, `/app/profissional/*`) em PT-BR, mantendo redirects permanentes das URLs antigas em ingles.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
@@ -547,15 +549,15 @@ Uma task só pode ser marcada como concluída quando:
 ## Atualiza��o de fluxo em 2026-06-07
 
 - A etapa de WhatsApp profissional deixa de ser verifica��o por SMS/OTP e passa a ser apenas cadastro do n�mero para gera��o interna do link `wa.me` ap�s inten��o de contato.
-- O fluxo visual ainda usa `/app/professional/whatsapp/verify` por compatibilidade de rota, mas a c�pia e a regra de dom�nio tratam a tela como inser��o/salvamento do WhatsApp.
+- O fluxo visual ainda usa `/app/profissional/whatsapp/verificar` por compatibilidade de rota, mas a c�pia e a regra de dom�nio tratam a tela como inser��o/salvamento do WhatsApp.
 
 ## Atualizacao de fluxo em 2026-06-07: gratuito sem CRP API
 
-- Psicologos no plano gratuito seguem da escolha do plano para `/app/professional/whatsapp/verify` e depois para `/app/professional/profile/setup`.
+- Psicologos no plano gratuito seguem da escolha do plano para `/app/profissional/whatsapp/verificar` e depois para `/app/profissional/perfil/configurar`.
 - O plano gratuito exige apenas insercao do WhatsApp antes do perfil; nao exige consulta/validacao CFP/CRP via API.
 
 ## Atualizacao de fluxo em 2026-07-11: WhatsApp antes da verificacao profissional no plano pago
 
-- Psicologos no Plano Profissional pago seguem, apos pagamento real e endereco de faturamento, para `/app/professional/whatsapp/verify`.
-- Depois de cadastrar o WhatsApp, psicologos pagos com verificacao profissional pendente seguem para `/app/professional/cfp`.
+- Psicologos no Plano Profissional pago seguem, apos pagamento real e endereco de faturamento, para `/app/profissional/whatsapp/verificar`.
+- Depois de cadastrar o WhatsApp, psicologos pagos com verificacao profissional pendente seguem para `/app/profissional/cfp`.
 - A edicao/publicacao do perfil profissional pago permanece bloqueada ate a verificacao profissional ser aprovada por API automatica ou aprovacao manual auditada.

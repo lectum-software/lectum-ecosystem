@@ -42,7 +42,7 @@ const DELETE_ACCOUNT_CONFIRMATION = "EXCLUIR CONTA";
 const TEMP_PASSWORD_CONFIRMATION = "ALTERAR SENHA";
 const REVOKE_SESSIONS_CONFIRMATION = "ENCERRAR SESSOES";
 const SUSPEND_ACCOUNT_CONFIRMATION = "SUSPENDER CONTA";
-const VIEW_AS_START_PATH = "/app/professional/profile/setup";
+const VIEW_AS_START_PATH = "/app/profissional/perfil/configurar";
 
 const ACCOUNT_STATUS_LABELS: Record<AdminPsychologistAccountStatus, string> = {
   active: "Ativa",

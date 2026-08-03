@@ -6,6 +6,7 @@ import {
   SITE_DESCRIPTION,
   SITE_NAME,
 } from "@/lib/seo";
+import { PUBLIC_COMMUNITIES_HREF, PUBLIC_PSYCHOLOGISTS_HREF } from "@/utils/public-routes";
 
 export const dynamic = "force-static";
 
@@ -23,8 +24,8 @@ export function GET() {
     "",
     "## URLs úteis",
     `- Feed inicial: ${absoluteUrl("/")}`,
-    `- Psicólogos: ${absoluteUrl("/psychologists")}`,
-    `- Comunidades: ${absoluteUrl("/community")}`,
+    `- Psicólogos: ${absoluteUrl(PUBLIC_PSYCHOLOGISTS_HREF)}`,
+    `- Comunidades: ${absoluteUrl(PUBLIC_COMMUNITIES_HREF)}`,
     `- Sitemap: ${absoluteUrl("/sitemap.xml")}`,
     `- Robots: ${absoluteUrl("/robots.txt")}`,
     "",

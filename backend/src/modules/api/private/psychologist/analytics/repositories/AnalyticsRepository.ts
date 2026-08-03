@@ -351,6 +351,7 @@ const isCommunityTopMentorsTrafficPath = (path: string | null) => {
   const normalized = (path ?? "").toLowerCase();
 
   return (
+    normalized.includes("/comunidades/top-mentores") ||
     normalized.includes("/community/top-mentors") ||
     normalized.includes("traffic_origin=community_top_mentors")
   );
@@ -1146,6 +1147,12 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
               },
               {
                 OR: [
+                  {
+                    path: {
+                      contains: "/comunidades/top-mentores",
+                      mode: "insensitive",
+                    },
+                  },
                   {
                     path: {
                       contains: "/community/top-mentors",

@@ -689,9 +689,7 @@ const PostHeader = ({
 }) => {
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
-  const psychologistProfileHref = isPsychologistPost
-    ? `/psychologists/${post.author.id}`
-    : undefined;
+  const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
   const authorDisplayName = getCommunityAuthorDisplayName(post.author);
   const currentUserId = useAppSelector((state) => state.user?.id);
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
@@ -754,7 +752,7 @@ const PostHeader = ({
         <span className="shrink-0">Postado em</span>
         <Link
           className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-bold text-[#64748B] no-underline hover:text-[#64748B] hover:no-underline dark:text-muted dark:hover:text-muted"
-          href={`/community/${post.community.slug}`}
+          href={`/comunidades/${post.community.slug}`}
         >
           {post.community.name}
         </Link>
@@ -833,7 +831,7 @@ const PostBody = ({ post }: { post: PostDetail }) => {
       stopPropagation
       trackingContext={{
         pageKind: "community_post",
-        path: `/community/${post.community.slug}/post/${post.id}`,
+        path: `/comunidades/${post.community.slug}/publicacao/${post.id}`,
         targetId: post.id,
         targetType: "community_post",
       }}
@@ -881,11 +879,9 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const [contentExpanded, setContentExpanded] = useState(false);
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
-  const psychologistProfileHref = isPsychologistPost
-    ? `/psychologists/${post.author.id}`
-    : undefined;
+  const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
   const authorDisplayName = getCommunityAuthorDisplayName(post.author);
-  const postHref = `/community/${post.community.slug}/post/${post.id}`;
+  const postHref = `/comunidades/${post.community.slug}/publicacao/${post.id}`;
   const postImageMediaItems = (post.media_items ?? []).filter(
     (item) => item.media_type === "image",
   );
@@ -931,7 +927,7 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
         <span aria-hidden="true">•</span>
         <Link
           className="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-bold text-[#64748B] no-underline hover:text-[#64748B] hover:no-underline dark:text-muted dark:hover:text-muted"
-          href={`/community/${post.community.slug}`}
+          href={`/comunidades/${post.community.slug}`}
         >
           {post.community.name}
         </Link>
@@ -1322,7 +1318,7 @@ const ReplyCard = ({
   const highlightedProfessionalThread = professionalThread ?? isVerifiedProfessional;
   const saveReplyMutation = useSaveReply(postId, reply.id);
   const conversion = useProgressiveConversion();
-  const psychologistProfileHref = isProfessional ? `/psychologists/${reply.author.id}` : null;
+  const psychologistProfileHref = isProfessional ? `/psicologos/${reply.author.id}` : null;
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
   const [contentExpanded, setContentExpanded] = useState(false);
@@ -1432,7 +1428,7 @@ const ReplyCard = ({
                   {isProfessional ? (
                     <Link
                       className="truncate text-sm font-black text-inherit no-underline hover:text-inherit hover:no-underline"
-                      href={`/psychologists/${reply.author.id}`}
+                      href={`/psicologos/${reply.author.id}`}
                       onClick={stopReplyTreeCollapsePropagation}
                     >
                       {authorDisplayName}
@@ -2514,7 +2510,7 @@ export const PostDetailLogic = () => {
 
     setShareVideoTarget(
       createLectumShareLinkTarget(post, {
-        relativeUrl: `/community/${post.community.slug}/post/${post.id}#reply-${reply.id}`,
+        relativeUrl: `/comunidades/${post.community.slug}/publicacao/${post.id}#reply-${reply.id}`,
         replyId: reply.id,
         text: reply.content,
         title: "Resposta na Lectum",
@@ -2905,8 +2901,10 @@ export const PostDetailLogic = () => {
           <>
             <article className="overflow-hidden bg-white shadow-[0_10px_26px_rgba(15,23,42,0.04)] dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
               <PostHeader
-                onBack={() => navigateBackWithFallback(router, `/community/${post.community.slug}`)}
-                onDeleted={() => router.replace(`/community/${post.community.slug}`)}
+                onBack={() =>
+                  navigateBackWithFallback(router, `/comunidades/${post.community.slug}`)
+                }
+                onDeleted={() => router.replace(`/comunidades/${post.community.slug}`)}
                 onReport={() => {
                   setReportError(null);
                   setReportTarget({ type: "post" });
@@ -2992,7 +2990,7 @@ export const PostDetailLogic = () => {
                 replies={replies}
                 replyApiError={replyError}
                 replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
-                threadHrefBase={`/community/${post.community.slug}/post/${post.id}/thread`}
+                threadHrefBase={`/comunidades/${post.community.slug}/publicacao/${post.id}/resposta`}
                 votePending={voteMutation.isPending}
               />
 
@@ -3100,9 +3098,9 @@ export const PostReplyThreadLogic = () => {
   const post = postQuery.data?.post;
   const rootReply = threadQuery.data?.reply;
   const threadBackFallbackHref = post
-    ? `/community/${post.community.slug}`
+    ? `/comunidades/${post.community.slug}`
     : communitySlug
-      ? `/community/${communitySlug}`
+      ? `/comunidades/${communitySlug}`
       : DEFAULT_COMMUNITY_FEED_HREF;
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
   const threadError = threadQuery.isError ? resolvePostError(threadQuery.error) : null;
@@ -3129,7 +3127,7 @@ export const PostReplyThreadLogic = () => {
     const threadRootId = rootReply?.id ?? reply.id;
     setShareVideoTarget(
       createLectumShareLinkTarget(post, {
-        relativeUrl: `/community/${post.community.slug}/post/${post.id}/thread/${threadRootId}#reply-${reply.id}`,
+        relativeUrl: `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${threadRootId}#reply-${reply.id}`,
         replyId: reply.id,
         text: reply.content,
         title: "Resposta na Lectum",
@@ -3405,7 +3403,7 @@ export const PostReplyThreadLogic = () => {
                   <Link
                     href={
                       post
-                        ? `/community/${post.community.slug}/post/${post.id}`
+                        ? `/comunidades/${post.community.slug}/publicacao/${post.id}`
                         : DEFAULT_COMMUNITY_FEED_HREF
                     }
                   >
@@ -3466,7 +3464,7 @@ export const PostReplyThreadLogic = () => {
               replyApiError={replyError}
               replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
               showSectionTitle={false}
-              threadHrefBase={`/community/${post.community.slug}/post/${post.id}/thread`}
+              threadHrefBase={`/comunidades/${post.community.slug}/publicacao/${post.id}/resposta`}
               votePending={voteMutation.isPending}
             />
 

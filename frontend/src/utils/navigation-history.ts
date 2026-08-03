@@ -88,7 +88,10 @@ export const canNavigateBackInApp = () => {
   return hasSameOriginReferrer();
 };
 
-export const navigateBackWithFallback = (router: NavigationRouter, fallbackHref = "/community") => {
+export const navigateBackWithFallback = (
+  router: NavigationRouter,
+  fallbackHref = "/comunidades",
+) => {
   if (canNavigateBackInApp()) {
     const currentHref = getCurrentAppHref();
 

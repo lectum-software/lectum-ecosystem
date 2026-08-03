@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
@@ -330,8 +330,8 @@ const reportPublicUrl = (report: AdminPatientReportRecord) => {
   const postId = reportPostId(report);
 
   return report.reply
-    ? `/community/${community.slug}/post/${postId}/thread/${report.reply.id}`
-    : `/community/${community.slug}/post/${postId}`;
+    ? `/comunidades/${community.slug}/publicacao/${postId}/resposta/${report.reply.id}`
+    : `/comunidades/${community.slug}/publicacao/${postId}`;
 };
 
 const safeCommunity = (report: AdminPatientReportRecord) => {

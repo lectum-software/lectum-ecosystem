@@ -82,7 +82,7 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     title: "Início | Lectum",
   },
   {
-    canonical_url: "/psychologists",
+    canonical_url: "/psicologos",
     description:
       "Encontre psicólogos na Lectum por especialidade, abordagem, serviço, idioma e disponibilidade.",
     id: "site-seo-psychologists",
@@ -95,7 +95,7 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     page_key: "psychologists",
     robots_follow: true,
     robots_index: true,
-    route_path: "/psychologists",
+    route_path: "/psicologos",
     title: "Psicólogos | Lectum",
   },
   {
@@ -112,11 +112,11 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     page_key: "psychologist_profile",
     robots_follow: true,
     robots_index: true,
-    route_path: "/psychologists/[id]",
+    route_path: "/psicologos/[id]",
     title: "Perfil de psicólogo | Lectum",
   },
   {
-    canonical_url: "/community",
+    canonical_url: "/comunidades",
     description:
       "Comunidades públicas da Lectum com perguntas, relatos e respostas responsáveis sobre saúde mental.",
     id: "site-seo-community",
@@ -129,7 +129,7 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     page_key: "community",
     robots_follow: true,
     robots_index: true,
-    route_path: "/community",
+    route_path: "/comunidades",
     title: "Comunidades | Lectum",
   },
   {
@@ -146,7 +146,7 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     page_key: "community_detail",
     robots_follow: true,
     robots_index: true,
-    route_path: "/community/[slug]",
+    route_path: "/comunidades/[slug]",
     title: "Comunidade | Lectum",
   },
   {
@@ -163,11 +163,11 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     page_key: "community_post",
     robots_follow: true,
     robots_index: true,
-    route_path: "/community/[slug]/post/[id]",
+    route_path: "/comunidades/[slug]/publicacao/[id]",
     title: "Pergunta da comunidade | Lectum",
   },
   {
-    canonical_url: "/community/top-mentors",
+    canonical_url: "/comunidades/top-mentores",
     description: "Ranking público de mentores das comunidades da Lectum.",
     id: "site-seo-top-mentors",
     keywords: ["mentores", "psicólogos", "comunidades de saúde mental"],
@@ -178,7 +178,7 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     page_key: "top_mentors",
     robots_follow: true,
     robots_index: true,
-    route_path: "/community/top-mentors",
+    route_path: "/comunidades/top-mentores",
     title: "Top Mentores | Lectum",
   },
 ] as const;

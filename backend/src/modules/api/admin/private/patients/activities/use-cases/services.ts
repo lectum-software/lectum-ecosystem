@@ -206,10 +206,10 @@ const excerpt = (value: string | null | undefined, max = 90) => {
 };
 
 const postUrl = (post: AdminPatientActivityPost) =>
-  `/community/${post.community.slug}/post/${post.id}`;
+  `/comunidades/${post.community.slug}/publicacao/${post.id}`;
 
 const replyUrl = (reply: AdminPatientActivityReply) =>
-  `/community/${reply.post.community.slug}/post/${reply.post.id}/thread/${reply.id}`;
+  `/comunidades/${reply.post.community.slug}/publicacao/${reply.post.id}/resposta/${reply.id}`;
 
 const voteTargetUrl = (vote: AdminPatientActivityVote) => {
   if (vote.reply) return replyUrl(vote.reply);
@@ -541,7 +541,7 @@ export const buildAdminPatientActivityItems = async ({
         actor: patientActor,
         area: "comunidade",
         description: `Entrou na comunidade ${member.community.name}.`,
-        detail_url: `/community/${member.community.slug}`,
+        detail_url: `/comunidades/${member.community.slug}`,
         id: `member-${member.id}`,
         occurred_at: member.createdAt,
         source: "community_member.user_id",

@@ -1010,7 +1010,7 @@ const PopularPostRow = ({
   communitySlug: string;
   post: AdminCommunityPopularPost;
 }) => {
-  const postHref = toPublicHref(`/community/${communitySlug}/post/${post.id}`);
+  const postHref = toPublicHref(`/comunidades/${communitySlug}/publicacao/${post.id}`);
   const title = post.title.trim() || "Post sem título";
 
   return (
@@ -1341,7 +1341,7 @@ const CommunityHeader = ({
       {community.active ? (
         <Link
           className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary/45 bg-surface px-5 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft"
-          href={`/community/${community.slug}`}
+          href={`/comunidades/${community.slug}`}
           rel="noreferrer"
           target="_blank"
         >

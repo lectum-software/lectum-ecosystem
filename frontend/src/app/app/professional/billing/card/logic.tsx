@@ -108,7 +108,7 @@ export const ProfessionalBillingCardLogic = () => {
       paymentMethod: {
         onSuccess: () => {
           toast.success("Cartão atualizado com sucesso");
-          router.replace("/app/professional/billing/card?status=success", { scroll: true });
+          router.replace("/app/profissional/assinatura/cartao?status=success", { scroll: true });
         },
       },
     },
@@ -204,7 +204,7 @@ export const ProfessionalBillingCardLogic = () => {
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
         <AppPageHeader
-          backHref="/app/professional/billing"
+          backHref="/app/profissional/assinatura"
           backLabel="Voltar"
           title="Alterar cartão"
         />
@@ -221,7 +221,7 @@ export const ProfessionalBillingCardLogic = () => {
           <EmptyState
             action={
               <Button asChild className="h-11 rounded-full">
-                <Link href="/app/professional/billing/plans">
+                <Link href="/app/profissional/assinatura/planos">
                   Ver planos
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
@@ -268,11 +268,11 @@ export const ProfessionalBillingCardLogic = () => {
                   </div>
                   <div className="grid w-full gap-3 sm:max-w-sm sm:grid-cols-2">
                     <Button asChild className="h-12 rounded-full">
-                      <Link href="/app/professional/billing">Concluir</Link>
+                      <Link href="/app/profissional/assinatura">Concluir</Link>
                     </Button>
                     <Button
                       className="h-12 rounded-full"
-                      onClick={() => router.replace("/app/professional/billing/card")}
+                      onClick={() => router.replace("/app/profissional/assinatura/cartao")}
                       type="button"
                       variant="outline"
                     >
@@ -303,7 +303,7 @@ export const ProfessionalBillingCardLogic = () => {
                     <EmptyState
                       action={
                         <Button asChild className="h-11 rounded-full">
-                          <Link href="/app/professional/billing/plans">Ver planos</Link>
+                          <Link href="/app/profissional/assinatura/planos">Ver planos</Link>
                         </Button>
                       }
                       description="A troca de cartão exige uma assinatura profissional ativa com método de pagamento cadastrado."

@@ -101,7 +101,7 @@ const sessionStorageSafe = () => {
 };
 
 const getCurrentReturnTo = () => {
-  if (typeof window === "undefined") return "/psychologists";
+  if (typeof window === "undefined") return "/psicologos";
 
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 };
@@ -212,17 +212,21 @@ const isPublicDiscoveryPath = (pathname: string) => {
   const normalizedPathname = normalizePath(pathname);
 
   return (
+    normalizedPathname === "/comunidades" ||
+    normalizedPathname.startsWith("/comunidades/") ||
     normalizedPathname === "/community" ||
     normalizedPathname.startsWith("/community/") ||
+    normalizedPathname === "/psicologos" ||
+    normalizedPathname.startsWith("/psicologos/") ||
     normalizedPathname === "/psychologists" ||
     normalizedPathname.startsWith("/psychologists/")
   );
 };
 
 const CONVERSION_PROMPT_SUPPRESSED_PATHS = new Set([
-  "/app/favorites",
-  "/app/notifications",
-  "/app/profile",
+  "/app/favoritos",
+  "/app/notificacoes",
+  "/app/perfil",
 ]);
 
 const isConversionPromptSuppressedPath = (pathname: string) =>
@@ -231,28 +235,45 @@ const isConversionPromptSuppressedPath = (pathname: string) =>
 const isPsychologistProfilePath = (pathname: string) => {
   const segments = getPathSegments(pathname);
 
-  return segments.length === 2 && segments[0] === "psychologists";
+  return segments.length === 2 && (segments[0] === "psychologists" || segments[0] === "psicologos");
 };
 
 const isPublicPsychologistsPath = (pathname: string) => {
   const normalizedPathname = normalizePath(pathname);
 
   return (
-    normalizedPathname === "/psychologists" || normalizedPathname.startsWith("/psychologists/")
+    normalizedPathname === "/psicologos" ||
+    normalizedPathname.startsWith("/psicologos/") ||
+    normalizedPathname === "/psychologists" ||
+    normalizedPathname.startsWith("/psychologists/")
   );
 };
 
 const isCommunityPostPath = (pathname: string) => {
   const segments = getPathSegments(pathname);
 
-  return segments.length >= 4 && segments[0] === "community" && segments[2] === "post";
+  return (
+    (segments.length >= 4 && segments[0] === "community" && segments[2] === "post") ||
+    (segments.length >= 4 && segments[0] === "comunidades" && segments[2] === "publicacao")
+  );
 };
 
 const isCommunityDetailPath = (pathname: string) => {
   const segments = getPathSegments(pathname);
-  const reservedSegments = new Set(["feed", "post", "suggest", "top-mentors"]);
+  const reservedSegments = new Set([
+    "feed",
+    "post",
+    "publicacao",
+    "suggest",
+    "top-mentors",
+    "top-mentores",
+  ]);
 
-  return segments.length === 2 && segments[0] === "community" && !reservedSegments.has(segments[1]);
+  return (
+    segments.length === 2 &&
+    (segments[0] === "community" || segments[0] === "comunidades") &&
+    !reservedSegments.has(segments[1])
+  );
 };
 
 const noopContext: ProgressiveConversionContextValue = {

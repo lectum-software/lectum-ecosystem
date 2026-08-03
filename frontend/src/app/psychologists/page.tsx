@@ -5,7 +5,7 @@ import { resolveSeoMetadata } from "@/lib/seo-metadata";
 
 export const generateMetadata = async (): Promise<Metadata> =>
   resolveSeoMetadata("psychologists", {
-    canonical: "/psychologists",
+    canonical: "/psicologos",
     description: SITE_DESCRIPTION,
     title: `Psicólogos | ${SITE_NAME}`,
   });

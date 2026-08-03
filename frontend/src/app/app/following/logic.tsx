@@ -152,7 +152,7 @@ const FeaturedCommunity = ({ community }: { community: Community }) => (
     <SectionTitle>Em destaque</SectionTitle>
     <Link
       className="group relative min-h-[168px] overflow-hidden rounded-[22px] bg-[#101A22] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
-      href={`/community/${community.slug}`}
+      href={`/comunidades/${community.slug}`}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_28%,rgba(255,255,255,0.28),transparent_18%),linear-gradient(180deg,rgba(120,143,150,0.70)_0%,rgba(24,37,43,0.86)_52%,rgba(6,12,18,0.98)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-24 bg-[radial-gradient(ellipse_at_center,rgba(44,67,76,0.95),rgba(5,11,16,0.92)_62%,rgba(0,0,0,0.96))]" />
@@ -174,7 +174,7 @@ const FeaturedCommunity = ({ community }: { community: Community }) => (
 const MyCommunityCard = ({ community }: { community: Community }) => (
   <Link
     className="grid min-h-[158px] justify-items-center gap-3 rounded-[18px] bg-white px-4 py-6 text-center shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]"
-    href={`/community/${community.slug}`}
+    href={`/comunidades/${community.slug}`}
   >
     <CommunityVisual community={community} />
     <div className="grid gap-3">
@@ -270,7 +270,7 @@ export const FollowingCommunitiesLogic = () => {
     >
       <main className="mx-auto min-h-screen w-full max-w-[430px] px-5 py-5 sm:max-w-2xl md:py-8 lg:max-w-3xl">
         <AppPageHeader
-          backHref="/app/profile"
+          backHref="/app/perfil"
           backLabel="Voltar ao perfil"
           className="mb-4"
           title="Comunidades seguidas"
@@ -307,7 +307,7 @@ export const FollowingCommunitiesLogic = () => {
                   <EmptyState
                     action={
                       <Button asChild className="rounded-full">
-                        <Link href="/community">
+                        <Link href="/comunidades">
                           <Compass className="h-4 w-4" aria-hidden="true" />
                           Explorar comunidades
                         </Link>
@@ -325,7 +325,7 @@ export const FollowingCommunitiesLogic = () => {
                   <SectionTitle>Recomendados para você</SectionTitle>
                   <Link
                     className="inline-flex items-center gap-1 text-xs font-black text-primary"
-                    href="/community"
+                    href="/comunidades"
                   >
                     Ver todos
                     <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />

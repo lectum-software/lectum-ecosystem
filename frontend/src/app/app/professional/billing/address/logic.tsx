@@ -105,7 +105,7 @@ export const ProfessionalBillingAddressLogic = () => {
   const activeProfessional = isActiveProfessional(current);
   const activeCourtesy = isAdministrativeCourtesySubscription(current);
   const courtesyRedirectPath = user
-    ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/professional/billing")
+    ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/profissional/assinatura")
     : null;
   const isLoading = billing.current.isLoading;
 

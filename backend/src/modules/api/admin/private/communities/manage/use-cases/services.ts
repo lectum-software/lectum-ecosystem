@@ -654,8 +654,8 @@ const replyPublicUrl = (
   reply: AdminCommunityContentReplyRecord,
 ) =>
   reply.parent_reply_id
-    ? `/community/${community.slug}/post/${reply.post_id}/thread/${reply.parent_reply_id}#reply-${reply.id}`
-    : `/community/${community.slug}/post/${reply.post_id}?focusReplyId=${encodeURIComponent(
+    ? `/comunidades/${community.slug}/publicacao/${reply.post_id}/resposta/${reply.parent_reply_id}#reply-${reply.id}`
+    : `/comunidades/${community.slug}/publicacao/${reply.post_id}?focusReplyId=${encodeURIComponent(
         reply.id,
       )}#reply-${reply.id}`;
 
@@ -702,7 +702,7 @@ const mapPostContent = (
     origin_preview: null,
     parent_post_title: null,
     post_id: post.id,
-    public_url: `/community/${community.slug}/post/${post.id}`,
+    public_url: `/comunidades/${community.slug}/publicacao/${post.id}`,
     status,
     title: post.title,
     type: "post",
@@ -1158,15 +1158,15 @@ const reportPublicUrl = (
   parentReplyId: string | null | undefined,
 ) => {
   if (!postId || !contentId) return null;
-  if (type === "post") return `/community/${community.slug}/post/${postId}`;
+  if (type === "post") return `/comunidades/${community.slug}/publicacao/${postId}`;
 
   if (parentReplyId) {
     return (
-      "/community/" +
+      "/comunidades/" +
       community.slug +
-      "/post/" +
+      "/publicacao/" +
       postId +
-      "/thread/" +
+      "/resposta/" +
       parentReplyId +
       "#reply-" +
       contentId
@@ -1174,9 +1174,9 @@ const reportPublicUrl = (
   }
 
   return (
-    "/community/" +
+    "/comunidades/" +
     community.slug +
-    "/post/" +
+    "/publicacao/" +
     postId +
     "?focusReplyId=" +
     encodeURIComponent(contentId) +
@@ -3691,7 +3691,7 @@ export const listRanking = async (data: IAdminCommunityRankingDTO): Promise<Reso
           headline: profile?.headline ?? null,
           id: item.member.user.id,
           name,
-          profile_url: `/psychologists/${item.member.user.id}`,
+          profile_url: `/psicologos/${item.member.user.id}`,
           rating_avg: Number(profile?.rating_avg ?? 0),
           rating_count: Number(profile?.rating_count ?? 0),
           verified: verifiedMentor(item.member),

@@ -138,7 +138,7 @@ export const show = async ({ id }: PsychologistSeoParams): Promise<Resolve> => {
     compactDescription(profile.headline || profile.bio) ||
     "Perfil público de psicólogo na Lectum, com informações profissionais e participação em comunidades.";
   const data: PublicPsychologistSeoDTO = {
-    canonical_url: `/psychologists/${psychologist.id}`,
+    canonical_url: `/psicologos/${psychologist.id}`,
     description,
     name,
     og_description: description,

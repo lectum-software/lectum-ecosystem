@@ -1217,12 +1217,24 @@ const pathLabel = (path: string) => {
   if (normalized.includes("signup/psychologist")) return "Cadastro de psicólogo";
   if (normalized.includes("signup/patient")) return "Cadastro de paciente";
   if (normalized.includes("cadastro") || normalized.includes("signup")) return "Cadastro";
-  if (normalized === "/psychologists") return "Página de Psicólogos";
-  if (normalized.startsWith("/psychologists/")) return "Perfil de Psicólogo";
-  if (normalized === "/community" || normalized === "/community/feed") return "Comunidades";
-  if (normalized.startsWith("/community/") && normalized.includes("/post/"))
+  if (normalized === "/psicologos" || normalized === "/psychologists")
+    return "Página de Psicólogos";
+  if (normalized.startsWith("/psicologos/") || normalized.startsWith("/psychologists/"))
+    return "Perfil de Psicólogo";
+  if (
+    normalized === "/comunidades" ||
+    normalized === "/comunidades/feed" ||
+    normalized === "/community" ||
+    normalized === "/community/feed"
+  )
+    return "Comunidades";
+  if (
+    (normalized.startsWith("/comunidades/") && normalized.includes("/publicacao/")) ||
+    (normalized.startsWith("/community/") && normalized.includes("/post/"))
+  )
     return "Post específico";
-  if (normalized.startsWith("/community/")) return "Comunidade";
+  if (normalized.startsWith("/comunidades/") || normalized.startsWith("/community/"))
+    return "Comunidade";
 
   return normalized;
 };
@@ -1231,21 +1243,21 @@ const ENTRY_PAGE_GROUPS = {
   communities: {
     id: "entry_group:communities",
     label: "Comunidades",
-    path: "/community/*",
+    path: "/comunidades/*",
   },
   communityPosts: {
     id: "entry_group:community_posts",
     label: "Posts",
-    path: "/community/*/post/*",
+    path: "/comunidades/*/publicacao/*",
   },
   psychologistProfiles: {
     id: "entry_group:psychologist_profiles",
     label: "Perfis de psicólogos",
-    path: "/psychologists/*",
+    path: "/psicologos/*",
   },
 } as const;
 
-const NON_COMMUNITY_DETAIL_SEGMENTS = new Set(["feed", "suggest", "top-mentors"]);
+const NON_COMMUNITY_DETAIL_SEGMENTS = new Set(["feed", "suggest", "top-mentors", "top-mentores"]);
 
 const entryPath = (entry: TrafficPageViewRecord) => entry.entry_path || entry.path || "/";
 
@@ -1253,8 +1265,8 @@ const pathSegments = (path: string) => (path || "/").split("/").filter(Boolean);
 
 const communitySlugFromPath = (path: string) => {
   const [first, second, third] = pathSegments(path);
-  if (first === "community") return second ?? null;
-  if (first === "app" && second === "community") return third ?? null;
+  if (first === "community" || first === "comunidades") return second ?? null;
+  if (first === "app" && (second === "community" || second === "comunidades")) return third ?? null;
 
   return null;
 };
@@ -1263,12 +1275,15 @@ const isCommunityPostEntryPage = (entry: TrafficPageViewRecord, path: string) =>
   entry.page_kind === "community_post" ||
   entry.target_type === "community_post" ||
   entry.target_type === "post" ||
+  path.includes("/publicacao/") ||
   path.includes("/post/");
 
 const isPsychologistProfileEntryPage = (entry: TrafficPageViewRecord, path: string) =>
   entry.page_kind === "psychologist_profile" ||
   entry.target_type === "psychologist" ||
+  path.startsWith("/psicologos/") ||
   path.startsWith("/psychologists/") ||
+  path.startsWith("/app/psicologo/") ||
   path.startsWith("/app/psychologist/");
 
 const isCommunityEntryPage = (entry: TrafficPageViewRecord, path: string) => {

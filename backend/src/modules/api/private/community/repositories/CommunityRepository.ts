@@ -2255,7 +2255,7 @@ export class CommunityRepository implements ICommunityRepository {
           crp: profile?.crp ?? null,
           rating_avg: profile?.rating_avg ?? 0,
           rating_count: profile?.rating_count ?? 0,
-          profile_url: `/psychologists/${item.mentor.id}`,
+          profile_url: `/psicologos/${item.mentor.id}`,
         },
         metrics: {
           upvotes_received: item.metrics.upvotes_received,

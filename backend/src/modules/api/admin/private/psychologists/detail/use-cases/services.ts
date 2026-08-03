@@ -498,7 +498,7 @@ const buildDetail = async (
       name: normalizeName(profile.user.name),
       plan_name: currentSubscription.plan_name,
       plan_slug: currentSubscription.plan_slug,
-      public_profile_url: `/psychologists/${userId}`,
+      public_profile_url: `/psicologos/${userId}`,
       published: profile.published,
       rating_avg: ratingAverage(profile.rating_avg),
       rating_count: profile.rating_count,

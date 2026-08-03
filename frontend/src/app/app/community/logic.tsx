@@ -66,7 +66,7 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
   return (
     <Link
       className="group relative block min-h-[190px] overflow-hidden rounded-[24px] border border-white/70 bg-[#101827] p-4 text-white transition duration-300 sm:min-h-[224px] sm:p-5"
-      href={`/community/${community.slug}`}
+      href={`/comunidades/${community.slug}`}
     >
       <Image
         alt={`Imagem da comunidade ${community.name}`}
@@ -107,7 +107,7 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
       className="group relative flex h-[286px] w-[min(calc(100vw-2.5rem),212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white transition duration-300 sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-full lg:min-w-0 lg:shrink"
-      href={`/community/${community.slug}`}
+      href={`/comunidades/${community.slug}`}
     >
       <Image
         alt={`Imagem da comunidade ${community.name}`}
@@ -355,7 +355,7 @@ export const CommunityLogic = () => {
           <EmptyState
             action={
               <Button asChild>
-                <Link href="/app/community/suggest">
+                <Link href="/app/comunidades/sugerir">
                   <PlusCircle className="h-4 w-4" aria-hidden="true" />
                   Solicitar nova comunidade
                 </Link>
@@ -408,7 +408,7 @@ export const CommunityLogic = () => {
             </p>
           </div>
           <Button asChild className="h-10 w-full max-w-xs rounded-full text-sm shadow-none">
-            <Link href="/app/community/suggest">Solicitar Nova Comunidade</Link>
+            <Link href="/app/comunidades/sugerir">Solicitar Nova Comunidade</Link>
           </Button>
         </section>
 

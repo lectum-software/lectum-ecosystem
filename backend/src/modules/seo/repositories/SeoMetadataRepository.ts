@@ -12,6 +12,17 @@ const settingsOrder = SEO_METADATA_DEFAULTS.map((setting) => setting.page_key);
 
 const asJsonArray = (value?: string[] | null): Prisma.InputJsonValue => value ?? [];
 
+const legacyRouteDataByPageKey: Partial<
+  Record<SeoMetadataPageKey, { canonical_url?: string | null; route_path?: string | null }>
+> = {
+  community: { canonical_url: "/community", route_path: "/community" },
+  community_detail: { route_path: "/community/[slug]" },
+  community_post: { route_path: "/community/[slug]/post/[id]" },
+  psychologist_profile: { route_path: "/psychologists/[id]" },
+  psychologists: { canonical_url: "/psychologists", route_path: "/psychologists" },
+  top_mentors: { canonical_url: "/community/top-mentors", route_path: "/community/top-mentors" },
+};
+
 const defaultCreateData = (setting: (typeof SEO_METADATA_DEFAULTS)[number]) => ({
   canonical_url: setting.canonical_url,
   description: setting.description,
@@ -37,6 +48,57 @@ export type SeoMetadataAuditInput = {
 };
 
 export class SeoMetadataRepository {
+  private async syncManagedRouteDefaults() {
+    const defaultsByKey = new Map(
+      SEO_METADATA_DEFAULTS.map((setting) => [setting.page_key, setting]),
+    );
+    const settings = await prisma.site_seo_setting.findMany({
+      select: {
+        canonical_url: true,
+        id: true,
+        page_key: true,
+        route_path: true,
+      },
+      where: { deleted: false, page_key: { in: [...settingsOrder] } },
+    });
+    const operations: Array<ReturnType<typeof prisma.site_seo_setting.update>> = [];
+
+    for (const setting of settings) {
+      const pageKey = setting.page_key as SeoMetadataPageKey;
+      const defaultSetting = defaultsByKey.get(pageKey);
+      if (!defaultSetting) continue;
+
+      const legacyRouteData = legacyRouteDataByPageKey[pageKey];
+      const data: Prisma.site_seo_settingUpdateInput = {};
+
+      if (setting.route_path !== defaultSetting.route_path) {
+        data.route_path = defaultSetting.route_path;
+      }
+
+      const shouldSyncCanonical =
+        typeof defaultSetting.canonical_url === "string" &&
+        (setting.canonical_url === legacyRouteData?.canonical_url ||
+          setting.canonical_url === legacyRouteData?.route_path);
+
+      if (shouldSyncCanonical) {
+        data.canonical_url = defaultSetting.canonical_url;
+      }
+
+      if (Object.keys(data).length > 0) {
+        operations.push(
+          prisma.site_seo_setting.update({
+            data,
+            where: { id: setting.id },
+          }),
+        );
+      }
+    }
+
+    if (operations.length > 0) {
+      await prisma.$transaction(operations);
+    }
+  }
+
   async ensureDefaults() {
     const existing = await prisma.site_seo_setting.findMany({
       select: { page_key: true },
@@ -47,15 +109,17 @@ export class SeoMetadataRepository {
       (setting) => !existingKeys.has(setting.page_key),
     );
 
-    if (missingDefaults.length === 0) return;
+    if (missingDefaults.length > 0) {
+      await prisma.$transaction(
+        missingDefaults.map((setting) =>
+          prisma.site_seo_setting.create({
+            data: defaultCreateData(setting),
+          }),
+        ),
+      );
+    }
 
-    await prisma.$transaction(
-      missingDefaults.map((setting) =>
-        prisma.site_seo_setting.create({
-          data: defaultCreateData(setting),
-        }),
-      ),
-    );
+    await this.syncManagedRouteDefaults();
   }
 
   async list(): Promise<SeoMetadataSettingsDTO> {

@@ -766,11 +766,11 @@ const getCommunityAuthorDisplayName = (author: Pick<CommunityPost["author"], "na
     ? normalizeProfessionalDisplayName(author.name) || author.name
     : author.name;
 
-const communityDetailHref = (communitySlug: string) => `/community/${communitySlug}`;
+const communityDetailHref = (communitySlug: string) => `/comunidades/${communitySlug}`;
 const communityCreatePostHref = (communitySlug: string) =>
-  `/app/community/${communitySlug}/post/new`;
+  `/app/comunidades/${communitySlug}/publicacao/nova`;
 const communityPostDetailHref = (post: CommunityPost) =>
-  `/community/${post.community.slug}/post/${post.id}`;
+  `/comunidades/${post.community.slug}/publicacao/${post.id}`;
 
 const isPostCardInteractiveTarget = (target: EventTarget | null) => {
   const targetElement =
@@ -1211,7 +1211,7 @@ const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
 
   if (!reply || !isPatientAuthoredPost) return null;
 
-  const profileHref = `/psychologists/${reply.author.id}`;
+  const profileHref = `/psicologos/${reply.author.id}`;
   const replyWhatsappCta = reply.author.whatsapp_url ? (
     <CommunityWhatsAppCta
       attached={Boolean(reply.media_url)}
@@ -1316,9 +1316,7 @@ const PostCard = ({
   const conversion = useProgressiveConversion();
   const postDetailHref = communityPostDetailHref(post);
   const hasPostMedia = Boolean(post.media_url || (post.media_items ?? []).length > 0);
-  const psychologistProfileHref = isPsychologistPost
-    ? `/psychologists/${post.author.id}`
-    : undefined;
+  const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
   const authorWhatsappCta =
     isPsychologistPost && post.author.whatsapp_url ? (
       <CommunityWhatsAppCta
@@ -1940,7 +1938,7 @@ const CommunityHeader = ({
           )}
           <Link
             className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-[var(--community-soft-color)] px-3 py-1.5 text-xs font-black text-[var(--community-text-color)] transition hover:bg-[var(--community-primary-color)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--community-primary-color)] focus-visible:ring-offset-2"
-            href={`/community/top-mentors?community=${community.slug}`}
+            href={`/comunidades/top-mentores?community=${community.slug}`}
           >
             <Award className="h-3.5 w-3.5" aria-hidden="true" />
             Ver Top 5 mentores da comunidade

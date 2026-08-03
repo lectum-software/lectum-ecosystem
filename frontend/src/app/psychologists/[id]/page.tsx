@@ -16,7 +16,7 @@ export const generateMetadata = async ({
 
   return resolvePsychologistSeoMetadata({
     fallback: {
-      canonical: `/psychologists/${id}`,
+      canonical: `/psicologos/${id}`,
       description:
         "Perfil público de psicólogo na Lectum, com informações profissionais e participação em comunidades.",
       title: `Perfil de psicólogo | ${SITE_NAME}`,

@@ -539,7 +539,7 @@ const toPublicHref = (path: string) => {
 
 const communityPostPublicHref = (
   post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id">,
-) => toPublicHref(`/community/${post.community_slug}/post/${post.id}`);
+) => toPublicHref(`/comunidades/${post.community_slug}/publicacao/${post.id}`);
 
 const communityPostAdminDetailHref = (
   post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id">,
@@ -549,7 +549,7 @@ const communityPostAdminDetailHref = (
   )}`;
 
 const communityPublicHref = (community: Pick<CommunitiesDashboardTopCommunity, "slug">) =>
-  toPublicHref(`/community/${encodeURIComponent(community.slug)}`);
+  toPublicHref(`/comunidades/${encodeURIComponent(community.slug)}`);
 
 const communityAdminDetailHref = (community: Pick<CommunitiesDashboardTopCommunity, "slug">) =>
   `/comunidades/${encodeURIComponent(community.slug)}`;

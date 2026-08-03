@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/seo";
 
 const DEFAULT_API_URL = "http://localhost:3001";

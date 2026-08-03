@@ -153,7 +153,7 @@ export const normalizePathForAggregation = (path: string) => {
 const getSegments = (path: string) => sanitizePath(path).split("/").filter(Boolean);
 
 const deriveCommunityTarget = (segments: string[]): AnalyticsTarget => {
-  const postIndex = segments.indexOf("post");
+  const postIndex = Math.max(segments.indexOf("post"), segments.indexOf("publicacao"));
 
   if (postIndex >= 0 && segments[postIndex + 1]) {
     return {
@@ -164,7 +164,10 @@ const deriveCommunityTarget = (segments: string[]): AnalyticsTarget => {
   }
 
   const slug = segments[0] === "app" ? segments[2] : segments[1];
-  if (slug && slug !== "feed" && slug !== "suggest") {
+  if (
+    slug &&
+    !["feed", "publicacao", "suggest", "sugerir", "top-mentors", "top-mentores"].includes(slug)
+  ) {
     return {
       pageKind: "community",
       targetType: "community",
@@ -194,11 +197,16 @@ export const derivePageTarget = (path: string): AnalyticsTarget => {
     return { pageKind: "signup", targetType: null, targetId: null };
   }
 
-  if (segments.includes("billing") || segments.includes("checkout")) {
+  if (
+    segments.includes("assinatura") ||
+    segments.includes("billing") ||
+    segments.includes("checkout") ||
+    segments.includes("pagamento")
+  ) {
     return { pageKind: "billing", targetType: null, targetId: null };
   }
 
-  if (first === "psychologists") {
+  if (first === "psychologists" || first === "psicologos") {
     if (second) {
       return { pageKind: "psychologist_profile", targetType: "psychologist", targetId: second };
     }
@@ -206,15 +214,19 @@ export const derivePageTarget = (path: string): AnalyticsTarget => {
     return { pageKind: "psychologists", targetType: null, targetId: null };
   }
 
-  if (first === "app" && second === "psychologists") {
+  if (first === "app" && (second === "psychologists" || second === "psicologos")) {
     return { pageKind: "psychologists", targetType: null, targetId: null };
   }
 
-  if (first === "app" && second === "psychologist" && third) {
+  if (first === "app" && (second === "psychologist" || second === "psicologo") && third) {
     return { pageKind: "psychologist_profile", targetType: "psychologist", targetId: third };
   }
 
-  if (first === "community" || (first === "app" && second === "community")) {
+  if (
+    first === "community" ||
+    first === "comunidades" ||
+    (first === "app" && (second === "community" || second === "comunidades"))
+  ) {
     return deriveCommunityTarget(segments);
   }
 

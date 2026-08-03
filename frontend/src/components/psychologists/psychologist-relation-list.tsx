@@ -329,7 +329,7 @@ const FavoritePsychologistCard = ({
   onToggleFavorite: (psychologist: PatientRelationPsychologist) => void;
   psychologist: PatientRelationPsychologist;
 }) => {
-  const route = `/psychologists/${psychologist.id}`;
+  const route = `/psicologos/${psychologist.id}`;
   const favoriteBio = getFavoriteBio(psychologist);
   const displayName = normalizeProfessionalDisplayName(psychologist.name) || psychologist.name;
   const whatsappName =
@@ -421,7 +421,7 @@ const FavoritePsychologistCard = ({
             stopPropagation
             trackingContext={{
               pageKind: "psychologists",
-              path: "/app/favorites",
+              path: "/app/favoritos",
               targetId: psychologist.id,
               targetType: "psychologist",
             }}
@@ -510,7 +510,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
       next.set(filter, "true");
     }
 
-    router.replace(`/app/favorites${next.toString() ? `?${next}` : ""}`, {
+    router.replace(`/app/favoritos${next.toString() ? `?${next}` : ""}`, {
       scroll: false,
     });
   };
@@ -520,7 +520,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
     if (page > 1) next.set("page", String(page));
     else next.delete("page");
 
-    router.replace(`/app/favorites${next.toString() ? `?${next}` : ""}`, {
+    router.replace(`/app/favoritos${next.toString() ? `?${next}` : ""}`, {
       scroll: false,
     });
   };
@@ -570,7 +570,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
           <EmptyState
             action={
               <Button asChild className="rounded-full">
-                <Link href="/psychologists">
+                <Link href="/psicologos">
                   <Sparkles className="h-4 w-4" aria-hidden="true" />
                   Explorar psicólogos
                 </Link>

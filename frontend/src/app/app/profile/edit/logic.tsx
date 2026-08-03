@@ -82,7 +82,7 @@ export const ProfileEditLogic = () => {
       }),
     );
     toast.success("Perfil atualizado com sucesso");
-    router.push("/app/profile");
+    router.push("/app/perfil");
   };
 
   const handleAvatarUpdated = (data: PatientProfileAvatarUpload | PatientProfileAvatarRemoval) => {
@@ -185,7 +185,7 @@ export const ProfileEditLogic = () => {
   return (
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-4 pb-6 sm:max-w-xl lg:max-w-2xl">
-        <AppPageHeader backHref="/app/profile" backLabel="Voltar ao perfil" title="Editar perfil" />
+        <AppPageHeader backHref="/app/perfil" backLabel="Voltar ao perfil" title="Editar perfil" />
 
         {!isPatient ? (
           <InlineAlert title="Perfil pessoal" variant="warning">

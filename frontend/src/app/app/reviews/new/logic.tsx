@@ -72,7 +72,7 @@ export const ReviewsNewLogic = () => {
   const { Form, formProps, hook } = form;
   const mutation = useCreatePatientReview({
     onSuccess: (data) =>
-      router.replace(`/app/reviews/success?psychologist_id=${data.psychologist_id}`),
+      router.replace(`/app/avaliacoes/sucesso?psychologist_id=${data.psychologist_id}`),
   });
   const professional = eligibility.data;
   const stars = useMemo(() => Array.from({ length: 5 }, (_, index) => index + 1), []);
@@ -117,7 +117,7 @@ export const ReviewsNewLogic = () => {
           description="A avaliação precisa estar vinculada a um profissional real da Lectum."
           action={
             <Button asChild>
-              <Link href="/psychologists">Buscar psicólogos</Link>
+              <Link href="/psicologos">Buscar psicólogos</Link>
             </Button>
           }
         />
@@ -130,7 +130,7 @@ export const ReviewsNewLogic = () => {
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-2xl">
         <header className="flex items-center justify-between px-1 pb-1">
           <Button asChild variant="ghost" className="h-10 w-10 px-0">
-            <Link aria-label="Voltar" href={`/psychologists/${psychologistId}`}>
+            <Link aria-label="Voltar" href={`/psicologos/${psychologistId}`}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
@@ -155,8 +155,8 @@ export const ReviewsNewLogic = () => {
                 <Link
                   href={
                     professional.reason === "already_reviewed"
-                      ? "/app/reviews"
-                      : `/psychologists/${psychologistId}`
+                      ? "/app/avaliacoes"
+                      : `/psicologos/${psychologistId}`
                   }
                 >
                   Continuar

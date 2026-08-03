@@ -27,7 +27,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { type CfpSearchForm, useForm } from "./use-form";
 
-const nextStepHref = "/app/professional/profile/setup";
+const nextStepHref = "/app/profissional/perfil/configurar";
 const supportMessage =
   "Ol\u00e1, preciso de ajuda com a verifica\u00e7\u00e3o profissional na Lectum.";
 const supportHref = `https://wa.me/5537998739534?text=${encodeURIComponent(supportMessage)}`;

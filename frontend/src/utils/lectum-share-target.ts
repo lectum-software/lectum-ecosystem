@@ -1,4 +1,4 @@
-﻿import type { CommunityAuthor, CommunityPostMediaItem } from "@/api/generator/types/community";
+import type { CommunityAuthor, CommunityPostMediaItem } from "@/api/generator/types/community";
 import type {
   PostListPost,
   PostProfessionalReply,
@@ -100,7 +100,7 @@ const toAbsoluteShareUrl = (relativeUrl: string) =>
   typeof window === "undefined" ? relativeUrl : `${window.location.origin}${relativeUrl}`;
 
 const postRelativeUrl = (post: Pick<PostListPost, "community" | "id">) =>
-  `/community/${post.community.slug}/post/${post.id}`;
+  `/comunidades/${post.community.slug}/publicacao/${post.id}`;
 
 const normalizePostMediaItem = (
   mediaUrl: string | null | undefined,
@@ -196,7 +196,7 @@ export const createLectumShareVideoTarget = (
   const responseText = reply.content?.trim() || null;
   const relativeUrl =
     options.relativeUrl ??
-    `/community/${post.community.slug}/post/${post.id}?focusReplyId=${encodeURIComponent(
+    `/comunidades/${post.community.slug}/publicacao/${post.id}?focusReplyId=${encodeURIComponent(
       reply.id,
     )}#reply-${reply.id}`;
 

@@ -10,7 +10,7 @@ Frontend e backend estão no mesmo repositório apenas para desenvolvimento. Em 
 
 Ver `adrs/0187-escopo-v1-psicologia-expansao-multiprofissional.md`.
 
-A V1 da Lectum é explicitamente focada em psicólogos. A arquitetura atual mantém `user.role` com `"paciente" | "psicologo"`, `psychologist_profile`, rotas públicas `/psychologists` e validação CFP/CRP real.
+A V1 da Lectum e explicitamente focada em psicologos. A arquitetura atual mantem `user.role` com `"paciente" | "psicologo"`, `psychologist_profile`, rotas publicas canonicas `/psicologos` e validacao CFP/CRP real.
 
 Não generalize o produto para outras categorias de saúde dentro de tasks da V1. Nutricionistas, médicos, cardiologistas e demais profissionais devem entrar em versão futura por task própria, com ADR, migração de dados e contratos novos ou compatíveis. Até lá, não crie suporte parcial, mockado ou antecipado para CRM, CRN, CREFITO ou outros conselhos.
 
@@ -148,10 +148,15 @@ Templates/shells devem viver em `frontend/src/templates`.
 
 - Sessão real usa cookie de token e Redux Persist.
 - `proxy.ts` protege rotas privadas.
-- Após a TASK-40, `/app` é namespace autenticado/noindex: páginas públicas de descoberta/leitura vivem fora de
-  `/app` (`/`, `/psychologists`, `/psychologists/[id]`, `/community`, `/community/feed` legado/compatibilidade,
-  `/community/[slug]/post/[id]`). Interações que exigem conta podem continuar sob `/app`, como criação de post,
-  sugestão de comunidade, favoritos, notificações, perfil, posts do usuário e área profissional.
+- Apos a TASK-145, `/app` e namespace autenticado/noindex: paginas publicas de descoberta/leitura vivem fora de
+  `/app` (`/`, `/psicologos`, `/psicologos/[id]`, `/comunidades`, `/comunidades/[slug]`,
+  `/comunidades/[slug]/publicacao/[id]`, `/comunidades/top-mentores`). Rotas antigas em ingles existem apenas
+  como compatibilidade por redirect permanente. Interacoes que exigem conta podem continuar sob `/app`, como criacao de post,
+  sugestao de comunidade, favoritos, notificacoes, perfil, posts do usuario e area profissional.
+- Os slugs privados visiveis tambem usam PT-BR sob `/app`: `/app/notificacoes`, `/app/perfil`,
+  `/app/favoritos`, `/app/publicacoes/*`, `/app/avaliacoes/*`, `/app/configuracoes/*`,
+  `/app/profissional/*`, `/app/comunidades/*` e `/app/psicologo/*`. Rotas privadas antigas em ingles
+  existem apenas por redirect de compatibilidade.
 - `useUserSet` é o caminho para gravar usuário/token pós-login.
 - Não criar usuário fake em store para passar por rota privada.
 

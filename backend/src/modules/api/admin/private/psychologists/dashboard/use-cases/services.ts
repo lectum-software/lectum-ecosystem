@@ -7903,7 +7903,7 @@ export const buildPsychologistsDashboard = async (
         id: item.user.id,
         name: normalizeName(profileNameByUserId.get(item.user.id) ?? "Psicólogo"),
         position: index + 1,
-        public_profile_url: `/psychologists/${item.user.id}`,
+        public_profile_url: `/psicologos/${item.user.id}`,
         score: roundRankingScore(ranking.score),
         verified: ranking.isVerified,
       })),
