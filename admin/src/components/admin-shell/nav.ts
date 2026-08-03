@@ -2,11 +2,11 @@ import {
   Bell,
   ChartNoAxesCombined,
   CircleDollarSign,
-  Gauge,
   LayoutGrid,
   MessageCircleMore,
   Settings,
   ShieldAlert,
+  UserRound,
   UsersRound,
 } from "lucide-react";
 
@@ -51,7 +51,7 @@ export const adminNavItems = [
   {
     label: "Pacientes",
     href: "/pacientes",
-    icon: Gauge,
+    icon: UserRound,
     children: [
       { label: "Visão geral", href: "/pacientes" },
       { label: "Lista de pacientes", href: "/pacientes/lista" },
