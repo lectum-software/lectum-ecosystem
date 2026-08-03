@@ -74,3 +74,14 @@ Consequencia: a regra de calculo do diagnostico comunitario nao muda. A alteraca
 Produto pediu remover o bloco `Diagnostico` da secao `Comunidade` no Analytics privado do psicologo. A decisao e somente de apresentacao: o frontend deixa de renderizar o card e preserva os donuts de posts/respostas e a tabela de cliques por conteudo.
 
 Consequencia: o contrato `communities.diagnosis` continua disponivel para compatibilidade e uso futuro, mas nao aparece na tela mobile-first atual. Nao ha mudanca de fonte de dados, schema, migration, mock, seed ou package.
+
+
+## Atualizacao 2026-08-02 - Copy e icone do card Posts
+
+Produto pediu simplificar a descricao do bloco `Comunidade`, removendo a enfase textual `com e sem video`, e remover o subtitulo redundante da tabela de cliques por conteudo.
+
+A decisao e manter a comparacao de formatos nos donuts e nas linhas de dados, mas usar a copy curta `Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.` tanto no contrato privado quanto no fallback frontend. A tabela preserva o titulo `Cliques por conteudo` e os dados reais, sem o subtitulo `WhatsApp atribuido aos formatos rastreados`.
+
+O card `Posts` passa a usar `FileText`, o mesmo simbolo semantico de postagem usado em outras telas do produto. Isso diferencia o card de conteudo do icone `BarChart3`, que permanece reservado para blocos analiticos gerais como `Origem do trafego` e banner premium.
+
+Consequencia: a mudanca e somente de copy/iconografia e nao altera regra de calculo, contrato de dados, schema, migration, mock, seed, package ou endpoint.

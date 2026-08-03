@@ -824,3 +824,36 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check`
 - `git diff --check`
 - Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: rota privada validada sem sessao por redirecionamento `307` para login; a remocao visual foi confirmada no fonte/build por se tratar de bloco autenticado.
+
+
+## Ajuste complementar em 2026-08-02 - Copy e icone de Posts em Comunidade
+
+- Pedido do usuario: no bloco `Comunidade` do Analytics privado do psicologo, remover a mencao `com e sem video` da descricao principal, remover o subtitulo `WhatsApp atribuido aos formatos rastreados` da tabela `Cliques por conteudo` e alterar o icone do donut `Posts`.
+- O backend e o fallback frontend foram sincronizados para a descricao `Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.`.
+- A tabela `Cliques por conteudo` manteve o titulo e os dados reais por formato, mas deixou de renderizar o subtitulo redundante.
+- O donut `Posts` passou a usar `FileText`, alinhado ao padrao de postagens ja usado em outras telas do frontend, enquanto `Respostas` permanece com `MessageCircle`.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado foi criado.
+- ADR atualizado: `adrs/0404-comunidades-analytics-psicologo.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A descricao do bloco `Comunidade` nao menciona mais `com e sem video`.
+- [x] Backend e fallback frontend possuem a mesma descricao atualizada.
+- [x] O subtitulo `WhatsApp atribuido aos formatos rastreados` nao e renderizado na tabela `Cliques por conteudo`.
+- [x] O card `Posts` usa icone de postagem (`FileText`) em vez de grafico (`BarChart3`).
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir frontend exec biome check --write "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check` (executado com sucesso antes de mudancas concorrentes de outra task reaparecerem no workspace)
+- `git diff --check`
+- Verificacao estatica com `rg` confirmou ausencia da copy antiga e do subtitulo removido em `frontend/src` e `backend/src`, alem do uso de `FileText` no card `Posts`.
+- Browser/HTTP local em `http://localhost:3000/app/professional/analytics`: rota privada validada sem sessao por redirecionamento `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics`; a tela autenticada foi validada por fonte/build e pela captura enviada pelo usuario.

@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock3,
   Eye,
+  FileText,
   Heart,
   Info,
   type LucideIcon,
@@ -299,7 +300,7 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
 const fallbackCommunitiesAnalytics: PsychologistAnalyticsCommunities = {
   updated_at: null,
   description:
-    "Compare seus posts e respostas com e sem vídeo e veja quais formatos levam pacientes ao WhatsApp.",
+    "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
   source: "community_member+community_post+post_reply+important_action_event",
   diagnosis: {
     active_communities: 0,
@@ -1448,9 +1449,6 @@ const CommunityWhatsappContentTable = ({
         <p className="text-sm font-black tracking-[-0.03em] text-foreground">
           Cliques por conteúdo
         </p>
-        <p className="text-xs font-semibold text-muted">
-          WhatsApp atribuído aos formatos rastreados
-        </p>
       </div>
     </div>
 
@@ -1508,7 +1506,7 @@ const CommunityActivitySection = ({
 
       <div className="grid grid-cols-2 gap-3">
         <CommunityContentDonut
-          icon={BarChart3}
+          icon={FileText}
           label="Posts"
           locked={locked}
           totals={content.posts}

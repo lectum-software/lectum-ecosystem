@@ -757,7 +757,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       return {
         content: emptyCommunityContentSummary(),
         description:
-          "Compare seus posts e respostas com e sem vídeo e veja quais formatos levam pacientes ao WhatsApp.",
+          "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
         diagnosis: toCommunityActivityDiagnosis(emptyActivityTotals, 0),
         following_communities: 0,
         participating_communities: 0,
@@ -1041,7 +1041,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
     return {
       content,
       description:
-        "Compare seus posts e respostas com e sem vídeo e veja quais formatos levam pacientes ao WhatsApp.",
+        "Compare seus posts e respostas e veja quais formatos levam pacientes ao WhatsApp.",
       diagnosis: toCommunityActivityDiagnosis(activityTotals, communities.length),
       following_communities: followingCommunities,
       participating_communities: communities.length,
