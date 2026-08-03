@@ -1476,12 +1476,13 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
-  async countPostWhatsappClicks(postIds: string[]) {
+  async countPostWhatsappClicks(postIds: string[], from?: Date, to?: Date) {
     if (postIds.length === 0) return [];
 
     return prisma.important_action_event.groupBy({
       by: ["target_id"],
       where: {
+        ...(from && to ? { occurred_at: { gte: from, lte: to } } : {}),
         action_type: "whatsapp_click",
         deleted: false,
         target_id: { in: postIds },
@@ -1491,12 +1492,13 @@ export class AdminPsychologistEngagementRepository {
     });
   }
 
-  async countReplyWhatsappClicks(replyIds: string[]) {
+  async countReplyWhatsappClicks(replyIds: string[], from?: Date, to?: Date) {
     if (replyIds.length === 0) return [];
 
     return prisma.important_action_event.groupBy({
       by: ["target_id"],
       where: {
+        ...(from && to ? { occurred_at: { gte: from, lte: to } } : {}),
         action_type: "whatsapp_click",
         deleted: false,
         target_id: { in: replyIds },

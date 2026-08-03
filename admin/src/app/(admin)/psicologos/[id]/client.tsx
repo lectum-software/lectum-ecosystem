@@ -3424,7 +3424,11 @@ const formatContentFormatPercentage = (percentage: number) =>
 const formatContentFormatTotal = (total: number, labels: { plural: string; singular: string }) =>
   `${numberFormatter.format(total)} ${total === 1 ? labels.singular : labels.plural}`;
 
+const formatContentFormatWhatsappClicks = (total: number) =>
+  `${numberFormatter.format(total)} ${total === 1 ? "clique WhatsApp" : "cliques WhatsApp"}`;
+
 const ContentFormatDistributionCard = ({
+  badgeLabel,
   className,
   description,
   distribution,
@@ -3432,6 +3436,7 @@ const ContentFormatDistributionCard = ({
   title,
   totalLabels,
 }: {
+  badgeLabel?: string;
   className?: string;
   description: string;
   distribution: PsychologistContentFormatDistributionGroup;
@@ -3478,7 +3483,7 @@ const ContentFormatDistributionCard = ({
           (item) =>
             `${item.label}: ${numberFormatter.format(item.count)}, ${formatContentFormatPercentage(
               item.percentage,
-            )}`,
+            )}, ${formatContentFormatWhatsappClicks(item.whatsapp_clicks ?? 0)}`,
         )
         .join("; ")}.`
     : `Gráfico de donut de formatos de ${title.toLowerCase()}: sem conteúdo no período selecionado.`;
@@ -3499,7 +3504,7 @@ const ContentFormatDistributionCard = ({
           <p className="mt-1 text-xs font-bold leading-5 text-muted">{description}</p>
         </div>
         <Badge className="shrink-0 bg-surface-muted text-muted">
-          {formatContentFormatTotal(distribution.total, totalLabels)}
+          {badgeLabel ?? formatContentFormatTotal(distribution.total, totalLabels)}
         </Badge>
       </div>
 
@@ -3616,8 +3621,12 @@ const ContentFormatDistributionCard = ({
                   {formatContentFormatPercentage(item.percentage)}
                 </span>
               </div>
-              <p className="mt-1 text-xs font-bold text-muted">
-                {formatContentFormatTotal(item.count, totalLabels)}
+              <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs font-bold text-muted">
+                <span>{formatContentFormatTotal(item.count, totalLabels)}</span>
+                <span aria-hidden className="text-subtle">
+                  ·
+                </span>
+                <span>{formatContentFormatWhatsappClicks(item.whatsapp_clicks ?? 0)}</span>
               </p>
             </div>
           ))}
@@ -3640,6 +3649,10 @@ const ContentFormatDistributionsBlock = ({
 }) => (
   <div className={cn("grid gap-5 lg:grid-cols-2", className)}>
     <ContentFormatDistributionCard
+      badgeLabel={formatContentFormatWhatsappClicks(
+        (distribution.posts.total_whatsapp_clicks ?? 0) +
+          (distribution.replies.total_whatsapp_clicks ?? 0),
+      )}
       className={cardClassName}
       description="Quantidade e taxa por formato dos posts no mesmo período selecionado."
       distribution={distribution.posts}

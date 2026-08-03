@@ -1918,8 +1918,10 @@ export type AdminPsychologistContentFormatDistribution = {
     id: AdminPsychologistContentFormatId;
     label: "Apenas texto" | "Carrossel de imagens" | "Imagem" | "Vídeo";
     percentage: number;
+    whatsapp_clicks: number;
   }[];
   total: number;
+  total_whatsapp_clicks: number;
 };
 
 export type AdminPsychologistCommunityVideoRate = {
@@ -2026,7 +2028,7 @@ export type AdminPsychologistStatistics = {
     content_distribution: {
       posts: AdminPsychologistContentFormatDistribution;
       replies: AdminPsychologistContentFormatDistribution;
-      source: "community_post.media_type+community_post_media+post_reply.media_type";
+      source: "community_post.media_type+community_post_media+post_reply.media_type+important_action_event.action_type=whatsapp_click";
     };
     engagement_diagnosis: AdminCommunityEngagementDiagnosis;
     series: AdminPsychologistStatisticsPoint[];

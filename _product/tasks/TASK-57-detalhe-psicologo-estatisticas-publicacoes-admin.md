@@ -586,3 +586,33 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - `pnpm --dir admin build`
 - Browser local/headless via Chrome/CDP em `http://localhost:3022/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com admin temporario real removido ao final, confirmando heading unico **Atividade e engajamento**, ausencia dos textos/tags removidos, tabela dentro da secao e blocos **Posts**/**Respostas** no mesmo card.
 - `pnpm check` foi executado, mas ficou bloqueado por formatacao em alteracao preexistente fora deste ajuste: `backend/src/modules/api/private/psychologist/analytics/DTOs/IAnalyticsDTO.ts`.
+
+## Ajuste pos-feedback 2026-08-03 - Cliques WhatsApp em formatos de Posts e Respostas
+
+- Pedido do usuario: no bloco **Posts**/**Respostas**, adicionar ao lado da quantidade de cada formato a quantidade de cliques WhatsApp daquele formato e trocar a badge **20 posts** pelo total de cliques somando Posts e Respostas.
+- O endpoint real `GET /api/admin/private/psychologists/:id/statistics` passou a retornar `items[].whatsapp_clicks` e `total_whatsapp_clicks` em `community.content_distribution.posts` e `community.content_distribution.replies`.
+- A contagem usa apenas `important_action_event.action_type="whatsapp_click"` com alvo rastreavel para `community_post`/`post_reply` autoral do psicologo, dentro do periodo e filtro de comunidade selecionados; nao usa `contact_request` para distribuir origem sem alvo.
+- A UI Admin exibe `N posts/respostas · N cliques WhatsApp` em cada formato e mostra a badge superior do card **Posts** como total de cliques WhatsApp de Posts + Respostas.
+- A implementacao preserva o layout mobile-first, sem criar endpoint paralelo, mock, seed, migration, package novo ou alteracao de schema Prisma.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a referencia visual auditavel usada foi o screenshot enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
+- ADR criado: `adrs/0411-whatsapp-cliques-formatos-posts-respostas-admin.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Cada linha de formato em **Posts** exibe quantidade de posts e quantidade de cliques WhatsApp do formato.
+- [x] Cada linha de formato em **Respostas** exibe quantidade de respostas e quantidade de cliques WhatsApp do formato.
+- [x] A badge superior do card **Posts** nao exibe mais **20 posts** e mostra o total de cliques WhatsApp somando Posts e Respostas.
+- [x] O backend calcula os cliques por formato com eventos first-party reais de `important_action_event`, no mesmo periodo/filtro do bloco.
+- [x] Nenhum mock, seed, endpoint simulado, migration, package novo ou alteracao de schema Prisma foi adicionado.
+
+### Validacao complementar executada
+
+- `pnpm --dir backend exec biome check src/modules/api/admin/private/psychologists/engagement/DTOs/IAdminPsychologistEngagementDTO.ts src/modules/api/admin/private/psychologists/engagement/repositories/AdminPsychologistEngagementRepository.ts src/modules/api/admin/private/psychologists/engagement/use-cases/services.ts`
+- `pnpm --dir admin exec biome check src/api/req/psychologists/index.ts "src/app/(admin)/psicologos/[id]/client.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build` (primeira tentativa bloqueada por outro `next build` em andamento; repeticao passou)
+- `pnpm check`
+- Smoke direto do service `showAdminPsychologistStatistics({ id: "cmrgztri7000tn0uh1q4n8vxf", period: "all" })` confirmou `posts.total=20`, `replies.total=2`, `posts.total_whatsapp_clicks=11`, `replies.total_whatsapp_clicks=0` e cliques por item de formato.
+- Browser local/headless autenticado em `http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` confirmou em desktop 1350px e mobile 390px: `11 cliques WhatsApp`, `19 posts · 0 cliques WhatsApp`, ausencia de `20 posts` na badge do card **Posts** e `scrollWidth=390/clientWidth=390` no mobile. Evidencias locais: `.tmp/admin-psychologist-whatsapp-formats-desktop.png` e `.tmp/admin-psychologist-whatsapp-formats-mobile.png`. Admin temporario real usado na validacao foi removido ao final.

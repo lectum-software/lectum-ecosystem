@@ -647,17 +647,22 @@ const countPatientPostReplyCoverage = (
   kind: PatientPostReplyCoverageKind,
 ) => entries.filter((entry) => entry.kind === kind).length;
 
-const buildContentFormatDistribution = <T>(
+const buildContentFormatDistribution = <T extends { id: string }>(
   items: T[],
   classify: (item: T) => AdminPsychologistContentFormatId,
+  whatsappClicksByItemId = new Map<string, number>(),
 ): AdminPsychologistContentFormatDistribution => {
   const counts = emptyContentFormatCounts();
+  const whatsappClicks = emptyContentFormatCounts();
 
   for (const item of items) {
-    counts[classify(item)] += 1;
+    const format = classify(item);
+    counts[format] += 1;
+    whatsappClicks[format] += whatsappClicksByItemId.get(item.id) ?? 0;
   }
 
   const total = items.length;
+  const totalWhatsappClicks = sum(Object.values(whatsappClicks));
 
   return {
     items: CONTENT_FORMAT_ORDER.map((id) => ({
@@ -665,8 +670,10 @@ const buildContentFormatDistribution = <T>(
       id,
       label: CONTENT_FORMAT_LABELS[id],
       percentage: total > 0 ? roundPercent((counts[id] / total) * 100) : 0,
+      whatsapp_clicks: whatsappClicks[id],
     })),
     total,
+    total_whatsapp_clicks: totalWhatsappClicks,
   };
 };
 
@@ -2911,6 +2918,8 @@ export const showAdminPsychologistStatistics = async (
     previousReplyShares,
     visibilityPostViews,
     visibilityReplyViews,
+    contentPostWhatsappClicks,
+    contentReplyWhatsappClicks,
   ] = await Promise.all([
     repository.listPostSaves(postIds, period.current.start, period.current.end),
     repository.listReplySaves(replyIds, period.current.start, period.current.end),
@@ -2940,6 +2949,8 @@ export const showAdminPsychologistStatistics = async (
     repository.listReplyShareEvents(previousReplyIds, period.previous.start, period.previous.end),
     repository.countPostViews(allPostIds, period.current.start, period.current.end),
     repository.countReplyViews(allReplyIds, period.current.start, period.current.end),
+    repository.countPostWhatsappClicks(postIds, period.current.start, period.current.end),
+    repository.countReplyWhatsappClicks(replyIds, period.current.start, period.current.end),
   ]);
   const savesCount = postSaves.length + replySaves.length;
   const previousSavesCount = previousPostSaves.length + previousReplySaves.length;
@@ -3034,6 +3045,14 @@ export const showAdminPsychologistStatistics = async (
   const contentViewsCount =
     sum(visibilityPostViews.map((item) => item._count._all)) +
     sum(visibilityReplyViews.map((item) => item._count._all));
+  const contentPostWhatsappClicksByPost = groupCountMap(
+    contentPostWhatsappClicks,
+    (item) => item.target_id,
+  );
+  const contentReplyWhatsappClicksByReply = groupCountMap(
+    contentReplyWhatsappClicks,
+    (item) => item.target_id,
+  );
   const visibilitySecondsByDate = buildVisibilitySecondsByDate({
     communityContentAttentionSessions,
     labels: period.labels,
@@ -3129,9 +3148,18 @@ export const showAdminPsychologistStatistics = async (
     }),
   );
   const communityContentDistribution = {
-    posts: buildContentFormatDistribution(communityPosts, classifyPostContentFormat),
-    replies: buildContentFormatDistribution(communityReplies, classifyReplyContentFormat),
-    source: "community_post.media_type+community_post_media+post_reply.media_type" as const,
+    posts: buildContentFormatDistribution(
+      communityPosts,
+      classifyPostContentFormat,
+      contentPostWhatsappClicksByPost,
+    ),
+    replies: buildContentFormatDistribution(
+      communityReplies,
+      classifyReplyContentFormat,
+      contentReplyWhatsappClicksByReply,
+    ),
+    source:
+      "community_post.media_type+community_post_media+post_reply.media_type+important_action_event.action_type=whatsapp_click" as const,
   };
   const platformUsageSummary = summarizePlatformUsage({
     eligiblePsychologistsCount: 1,
