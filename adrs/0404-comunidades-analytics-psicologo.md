@@ -85,3 +85,28 @@ A decisao e manter a comparacao de formatos nos donuts e nas linhas de dados, ma
 O card `Posts` passa a usar `FileText`, o mesmo simbolo semantico de postagem usado em outras telas do produto. Isso diferencia o card de conteudo do icone `BarChart3`, que permanece reservado para blocos analiticos gerais como `Origem do trafego` e banner premium.
 
 Consequencia: a mudanca e somente de copy/iconografia e nao altera regra de calculo, contrato de dados, schema, migration, mock, seed, package ou endpoint.
+
+## Atualizacao 2026-08-03 - Linha Top Mentores em Cliques por conteudo
+
+Produto pediu adicionar a linha `Top Mentores` abaixo de `Respostas sem video` na tabela
+`Cliques por conteudo` do Analytics privado do psicologo, informando explicitamente quando o
+psicologo nao esta no Top 5 de nenhuma comunidade.
+
+A decisao e tratar `Top Mentores` como origem comunitaria rastreavel, nao como formato de conteudo:
+
+- `communities.content.whatsapp_clicks_by_content` continua restrito aos quatro grupos de posts e
+  respostas com/sem video.
+- O contrato privado passa a expor `communities.top_mentors`, com status, mensagem, comunidades em
+  que o psicologo aparece no Top 5 e cliques reais de WhatsApp atribuidos ao Ranking Top Mentores.
+- A elegibilidade e posicao usam a mesma base do Ranking Top Mentores: psicologos ativos, perfil
+  publicado, video de apresentacao, verificacao profissional/entitlement e
+  `getCommunityMentorRankingSignals`.
+- Cliques de WhatsApp do Top Mentores usam apenas `important_action_event` real com
+  `target_type="psychologist"`, `target_id` do psicologo e `path` contendo
+  `/community/top-mentors` ou `traffic_origin=community_top_mentors`, excluindo autoacoes.
+- Esses cliques entram no total comunitario e no breakdown da origem `Comunidades`; tambem deixam de
+  ser classificados como `Perfil`.
+
+Consequencia: a tela ganha a linha solicitada sem misturar ranking com tipo de conteudo e sem
+redistribuir conversoes por estimativa. Nao ha schema Prisma, migration, backfill, mock, seed,
+endpoint paralelo ou package novo.

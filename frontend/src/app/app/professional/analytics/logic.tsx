@@ -240,6 +240,16 @@ const fallbackTrafficSources: PsychologistAnalyticsTrafficSources = {
           percentage: 0,
           top_search_terms: [],
         },
+        {
+          id: "community_top_mentors",
+          label: "Top Mentores",
+          description: "Cliques no WhatsApp originados pela navegação no Ranking Top Mentores.",
+          metric: "whatsapp_clicks",
+          value: 0,
+          whatsapp_clicks: 0,
+          percentage: 0,
+          top_search_terms: [],
+        },
       ],
     },
     {
@@ -359,6 +369,13 @@ const fallbackCommunitiesAnalytics: PsychologistAnalyticsCommunities = {
         whatsapp_clicks: 0,
       },
     ],
+  },
+  top_mentors: {
+    communities: [],
+    message: "Você ainda não está no Top 5 de nenhuma comunidade.",
+    source: "community_mentor_ranking+important_action_event",
+    status: "not_in_top_5",
+    whatsapp_clicks: 0,
   },
 };
 
@@ -1436,9 +1453,11 @@ const CommunityContentDonut = ({
 const CommunityWhatsappContentTable = ({
   items,
   locked,
+  topMentors,
 }: {
   items: PsychologistAnalyticsCommunities["content"]["whatsapp_clicks_by_content"];
   locked?: boolean;
+  topMentors: PsychologistAnalyticsCommunities["top_mentors"];
 }) => (
   <article className="overflow-hidden rounded-[24px] border border-primary/10 bg-surface">
     <div className="flex min-w-0 items-center gap-2 border-border border-b bg-surface-muted/70 px-4 py-3">
@@ -1475,6 +1494,27 @@ const CommunityWhatsappContentTable = ({
             </td>
           </tr>
         ))}
+        <tr className="border-border border-t" key="top-mentors">
+          <td className="border-border border-t px-4 py-3 text-sm text-foreground">
+            <span className="font-extrabold">Top Mentores</span>
+            <p
+              className={cn(
+                "mt-1 text-xs font-semibold leading-5",
+                topMentors.status === "in_top_5" ? "text-muted" : "text-subtle",
+              )}
+            >
+              {topMentors.message}
+            </p>
+          </td>
+          <td
+            className={cn(
+              "border-border border-t px-4 py-3 text-right text-lg font-black tracking-[-0.04em] text-foreground",
+              locked && "select-none blur-[5px]",
+            )}
+          >
+            {toCount(topMentors.whatsapp_clicks)}
+          </td>
+        </tr>
       </tbody>
     </table>
   </article>
@@ -1519,7 +1559,11 @@ const CommunityActivitySection = ({
         />
       </div>
 
-      <CommunityWhatsappContentTable items={content.whatsapp_clicks_by_content} locked={locked} />
+      <CommunityWhatsappContentTable
+        items={content.whatsapp_clicks_by_content}
+        locked={locked}
+        topMentors={communities.top_mentors}
+      />
     </section>
   );
 };

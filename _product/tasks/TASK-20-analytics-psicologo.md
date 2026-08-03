@@ -922,3 +922,57 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `git diff --check`
 - Verificacao estatica com `Select-String` confirmou `Todo o periodo`, `Personalizado`, default `useState(... "all")` e labels backend `Este ano`/`Todo o periodo`.
 - Browser/HTTP local com `pnpm --dir frontend exec next start --hostname 127.0.0.1 --port 3237`: request em `/app/professional/analytics` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada, confirmando que a rota buildada inicia localmente e permanece protegida; a alteracao visual autenticada foi validada por fonte/build por se tratar de rota privada.
+
+## Ajuste complementar em 2026-08-03 - Linha Top Mentores em Comunidade
+
+- Pedido do usuario: na tabela `Cliques por conteudo`, adicionar uma linha `Top Mentores` abaixo de
+  `Respostas sem video`; quando o psicologo nao estiver no Top 5 de nenhuma comunidade, informar
+  explicitamente esse estado.
+- O backend passou a expor `communities.top_mentors` em
+  `GET /api/private/psychologist/analytics`, com status `in_top_5`/`not_in_top_5`, mensagem,
+  comunidades onde o psicologo aparece no Top 5 e cliques reais de WhatsApp originados do Ranking
+  Top Mentores.
+- A elegibilidade e a posicao usam `getCommunityMentorRankingSignals` e a mesma regra de perfil
+  publicado, video, verificacao/entitlement e profissional ativo do ranking publico.
+- Os cliques da linha `Top Mentores` derivam apenas de `important_action_event` real com
+  `path` `/community/top-mentors` ou `traffic_origin=community_top_mentors`, excluindo autoacoes.
+- A origem `Comunidades` do bloco `Origem do trafego` tambem inclui a nova quebra
+  `community_top_mentors`; esses eventos deixam de ser classificados como `Perfil`.
+- A UI mobile-first da rota `/app/professional/analytics` renderiza a linha solicitada logo depois
+  de `Respostas sem video` e exibe `Você ainda não está no Top 5 de nenhuma comunidade.` no estado
+  sem ranking.
+- Builder/Quick Copy nao estava exposto como ferramenta MCP direta neste ambiente; a referencia
+  visual ativa foi consultada via `_product/tasks/PROTO-INVENTORY.md`,
+  `_product/proto/Meus Analytics - Psicologo.jpg` e captura enviada pelo usuario.
+- Nenhum schema Prisma, migration, package novo, mock, seed, dado artificial ou endpoint simulado
+  foi criado.
+- ADR atualizado: `adrs/0404-comunidades-analytics-psicologo.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A tabela `Cliques por conteudo` renderiza `Top Mentores` abaixo de `Respostas sem video`.
+- [x] Quando nao ha comunidade no Top 5, a mensagem de nao participacao no Top 5 e exibida.
+- [x] O backend usa ranking real e eventos reais de WhatsApp, sem score ou clique enviado pelo
+      frontend.
+- [x] `Top Mentores` entra na origem `Comunidades` e nao e contabilizado como origem `Perfil`.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+- [x] ADR e documentacao da task foram atualizados.
+
+### Validacao do complemento
+
+- `pnpm --dir backend exec biome check --write "src/modules/api/private/psychologist/analytics/DTOs/IAnalyticsDTO.ts" "src/modules/api/private/psychologist/analytics/repositories/AnalyticsRepository.ts"`
+- `pnpm --dir frontend exec biome check --write "src/api/generator/types/psychologist-analytics.ts" "src/app/app/professional/analytics/logic.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`
+- Validacao estatica com Node confirmou `Top Mentores`, `community_top_mentors`,
+  `communities.top_mentors`, mensagem de nao Top 5 e a ordem da linha depois das linhas de
+  conteudo.
+- Browser/HTTP local com `next start --hostname 127.0.0.1 --port 3240`: request em
+  `/app/professional/analytics` retornou `307` para
+  `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fanalytics` sem sessao autenticada; Chrome
+  headless 390x844 capturou o DOM de login/redirecionamento da rota protegida. A tela autenticada
+  foi validada por fonte/build por depender de sessao privada.

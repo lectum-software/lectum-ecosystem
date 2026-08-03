@@ -139,6 +139,7 @@ export type PsychologistAnalyticsTrafficSourceId =
 
 export type PsychologistAnalyticsTrafficSourceBreakdownId =
   | "explore"
+  | "community_top_mentors"
   | "favorites_from_profile"
   | "favorites_from_video"
   | "post_with_video"
@@ -233,6 +234,22 @@ export type PsychologistAnalyticsCommunityContentSummary = {
   whatsapp_clicks_by_content: PsychologistAnalyticsCommunityContentBreakdownItem[];
 };
 
+export type PsychologistAnalyticsCommunityTopMentorCommunity = {
+  id: string;
+  name: string;
+  position: number;
+  score: number;
+  slug: string;
+};
+
+export type PsychologistAnalyticsCommunityTopMentors = {
+  communities: PsychologistAnalyticsCommunityTopMentorCommunity[];
+  message: string;
+  source: "community_mentor_ranking+important_action_event";
+  status: "in_top_5" | "not_in_top_5";
+  whatsapp_clicks: number;
+};
+
 export type PsychologistAnalyticsCommunities = {
   content: PsychologistAnalyticsCommunityContentSummary;
   description: string;
@@ -240,6 +257,7 @@ export type PsychologistAnalyticsCommunities = {
   following_communities: number;
   participating_communities: number;
   source: "community_member+community_post+post_reply+important_action_event";
+  top_mentors: PsychologistAnalyticsCommunityTopMentors;
   updated_at: Date | null;
 };
 

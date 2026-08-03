@@ -5,7 +5,11 @@ import {
   hasDirectorySelectedFilterParams,
   type TrafficFilterLabelLookup,
 } from "@/utils/analytics-traffic-path";
-import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
+import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import {
+  activeProfessionalEntitlementWhere,
+  verifiedProfessionalProfileWhere,
+} from "@/utils/subscription-entitlement";
 import type {
   IPsychologistAnalyticsIndexDTO,
   PsychologistAnalyticsCommunities,
@@ -36,6 +40,7 @@ const COMMUNITY_ANALYTICS_SOURCE =
   "community_member+community_post+post_reply+important_action_event" as const;
 const COMMUNITY_WHATSAPP_POST_TARGET_TYPES = ["community_post", "post"] as const;
 const COMMUNITY_WHATSAPP_REPLY_TARGET_TYPES = ["post_reply", "reply"] as const;
+const TOP_MENTOR_COMMUNITIES_LIMIT = 5;
 const TOP_VIDEO_SEARCH_TERMS_LIMIT = 5;
 
 type ProfileVideoActionType = (typeof PROFILE_VIDEO_ACTION_TYPES)[number];
@@ -54,6 +59,11 @@ type PsychologistWhatsappActionEvent = {
 };
 type FavoriteReceivedEvent = {
   createdAt: Date;
+};
+type PsychologistCommunityReference = {
+  id: string;
+  name: string;
+  slug: string;
 };
 
 const trafficSourceDefinitions: Array<
@@ -337,13 +347,23 @@ const buildTrafficBreakdownItem = (input: {
   whatsapp_clicks: input.metric === "whatsapp_clicks" ? input.value : 0,
 });
 
+const isCommunityTopMentorsTrafficPath = (path: string | null) => {
+  const normalized = (path ?? "").toLowerCase();
+
+  return (
+    normalized.includes("/community/top-mentors") ||
+    normalized.includes("traffic_origin=community_top_mentors")
+  );
+};
+
 const buildCommunityTrafficBreakdown = (
   communities: PsychologistAnalyticsCommunities,
 ): PsychologistAnalyticsTrafficSourceBreakdownItem[] => {
-  const totalWhatsappClicks = communities.content.whatsapp_clicks_by_content.reduce(
+  const contentWhatsappClicks = communities.content.whatsapp_clicks_by_content.reduce(
     (total, item) => total + item.whatsapp_clicks,
     0,
   );
+  const totalWhatsappClicks = contentWhatsappClicks + communities.top_mentors.whatsapp_clicks;
   const labels: Record<PsychologistAnalyticsCommunityContentBreakdownId, string> = {
     post_with_video: "Post com vídeo",
     post_without_video: "Post sem vídeo",
@@ -357,16 +377,26 @@ const buildCommunityTrafficBreakdown = (
     reply_without_video: "Cliques no WhatsApp vindos de respostas sem vídeo nas comunidades.",
   };
 
-  return communities.content.whatsapp_clicks_by_content.map((item) =>
+  return [
+    ...communities.content.whatsapp_clicks_by_content.map((item) =>
+      buildTrafficBreakdownItem({
+        id: item.id,
+        label: labels[item.id],
+        description: descriptions[item.id],
+        metric: "whatsapp_clicks",
+        total: totalWhatsappClicks,
+        value: item.whatsapp_clicks,
+      }),
+    ),
     buildTrafficBreakdownItem({
-      id: item.id,
-      label: labels[item.id],
-      description: descriptions[item.id],
+      id: "community_top_mentors",
+      label: "Top Mentores",
+      description: "Cliques no WhatsApp originados pela navegação no Ranking Top Mentores.",
       metric: "whatsapp_clicks",
       total: totalWhatsappClicks,
-      value: item.whatsapp_clicks,
+      value: communities.top_mentors.whatsapp_clicks,
     }),
-  );
+  ];
 };
 
 const isFavoritesTrafficPath = (path: string | null) => {
@@ -395,7 +425,10 @@ const toTrafficSources = (input: {
     isFavoritesTrafficPath(action.path),
   ).length;
   const profileWhatsappClicks = input.psychologistWhatsappActions.filter(
-    (action) => action.page_kind === "psychologist_profile" && !isFavoritesTrafficPath(action.path),
+    (action) =>
+      action.page_kind === "psychologist_profile" &&
+      !isFavoritesTrafficPath(action.path) &&
+      !isCommunityTopMentorsTrafficPath(action.path),
   ).length;
   const favoritesFromVideo = presentationVideoActions.filter(
     (action) => action.action_type === "psychologist_video_favorite",
@@ -700,6 +733,133 @@ const emptyCommunityContentSummary = (): PsychologistAnalyticsCommunities["conte
   })),
 });
 
+const emptyCommunityTopMentors = (): PsychologistAnalyticsCommunities["top_mentors"] => ({
+  communities: [],
+  message: "Você ainda não está no Top 5 de nenhuma comunidade.",
+  source: "community_mentor_ranking+important_action_event",
+  status: "not_in_top_5",
+  whatsapp_clicks: 0,
+});
+
+const formatCommunityTopMentorLabels = (
+  communities: PsychologistAnalyticsCommunities["top_mentors"]["communities"],
+) => {
+  const labels = communities.map((community) => `${community.name} (#${community.position})`);
+
+  if (labels.length <= 1) return labels[0] ?? "";
+
+  return `${labels.slice(0, -1).join(", ")} e ${labels.at(-1)}`;
+};
+
+const buildCommunityTopMentorsMessage = (
+  totalCommunities: number,
+  displayedCommunities: PsychologistAnalyticsCommunities["top_mentors"]["communities"],
+) => {
+  if (totalCommunities === 0) {
+    return "Você ainda não está no Top 5 de nenhuma comunidade.";
+  }
+
+  const labels = formatCommunityTopMentorLabels(displayedCommunities);
+
+  if (totalCommunities === 1) return `Você está no Top 5 em ${labels}.`;
+
+  if (totalCommunities > displayedCommunities.length) {
+    return `Você está no Top 5 em ${totalCommunities} comunidades, incluindo ${labels}.`;
+  }
+
+  return `Você está no Top 5 em ${totalCommunities} comunidades: ${labels}.`;
+};
+
+const topMentorEligiblePsychologistWhere = (): Prisma.userWhereInput => ({
+  active: true,
+  deleted: false,
+  role: "psicologo",
+  psychologist_profile: {
+    is: {
+      deleted: false,
+      published: true,
+      video_url: {
+        not: null,
+      },
+      NOT: [
+        {
+          video_url: "",
+        },
+      ],
+      ...verifiedProfessionalProfileWhere(),
+    },
+  },
+});
+
+const buildCommunityTopMentors = async (
+  userId: string,
+  communities: PsychologistCommunityReference[],
+  whatsappClicks: number,
+): Promise<PsychologistAnalyticsCommunities["top_mentors"]> => {
+  const empty = {
+    ...emptyCommunityTopMentors(),
+    whatsapp_clicks: whatsappClicks,
+  };
+
+  if (communities.length === 0) return empty;
+
+  const eligibleMentors = await prisma.user.findMany({
+    where: topMentorEligiblePsychologistWhere(),
+    select: {
+      id: true,
+    },
+  });
+  const eligibleMentorIds = eligibleMentors.map((mentor) => mentor.id);
+
+  if (!eligibleMentorIds.includes(userId)) return empty;
+
+  const rankedCommunities = (
+    await Promise.all(
+      communities.map(async (community) => {
+        const ranking = await getCommunityMentorRankingSignals(community.id, eligibleMentorIds);
+        const signal = ranking.get(userId);
+
+        if (!signal || signal.position > TOP_MENTOR_COMMUNITIES_LIMIT) return null;
+
+        return {
+          id: community.id,
+          name: community.name,
+          position: signal.position,
+          score: signal.score,
+          slug: community.slug,
+        };
+      }),
+    )
+  )
+    .filter(
+      (
+        community,
+      ): community is PsychologistAnalyticsCommunities["top_mentors"]["communities"][number] =>
+        community !== null,
+    )
+    .sort((a, b) => {
+      const positionDiff = a.position - b.position;
+      if (positionDiff !== 0) return positionDiff;
+
+      const scoreDiff = b.score - a.score;
+      if (scoreDiff !== 0) return scoreDiff;
+
+      const nameDiff = a.name.localeCompare(b.name, "pt-BR");
+      if (nameDiff !== 0) return nameDiff;
+
+      return a.id.localeCompare(b.id);
+    });
+  const displayedCommunities = rankedCommunities.slice(0, TOP_MENTOR_COMMUNITIES_LIMIT);
+
+  return {
+    communities: displayedCommunities,
+    message: buildCommunityTopMentorsMessage(rankedCommunities.length, displayedCommunities),
+    source: "community_mentor_ranking+important_action_event",
+    status: rankedCommunities.length > 0 ? "in_top_5" : "not_in_top_5",
+    whatsapp_clicks: whatsappClicks,
+  };
+};
+
 const isVideoCommunityContent = (mediaType: string | null) => mediaType === "video";
 
 const toCommunityContentBreakdownId = (
@@ -847,6 +1007,8 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
           },
           take: 1,
         },
+        name: true,
+        slug: true,
       },
     });
     const communityIds = communities.map((community) => community.id);
@@ -869,98 +1031,142 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
         following_communities: 0,
         participating_communities: 0,
         source: COMMUNITY_ANALYTICS_SOURCE,
+        top_mentors: emptyCommunityTopMentors(),
         updated_at: null,
       };
     }
 
-    const [postItems, replyItems, authoredPosts, authoredReplies] = await Promise.all([
-      prisma.community_post.findMany({
-        where: {
-          author_id: userId,
-          community_id: {
-            in: communityIds,
-          },
-          createdAt: createdAtWindow,
-          deleted: false,
-          status: "publicado",
-        },
-        select: {
-          community_id: true,
-          createdAt: true,
-          id: true,
-          media_type: true,
-        },
-      }),
-      prisma.post_reply.findMany({
-        where: {
-          author_id: userId,
-          createdAt: createdAtWindow,
-          deleted: false,
-          post: {
-            community: {
-              active: true,
-              deleted: false,
+    const [postItems, replyItems, authoredPosts, authoredReplies, topMentorWhatsappActions] =
+      await Promise.all([
+        prisma.community_post.findMany({
+          where: {
+            author_id: userId,
+            community_id: {
+              in: communityIds,
             },
+            createdAt: createdAtWindow,
+            deleted: false,
+            status: "publicado",
+          },
+          select: {
+            community_id: true,
+            createdAt: true,
+            id: true,
+            media_type: true,
+          },
+        }),
+        prisma.post_reply.findMany({
+          where: {
+            author_id: userId,
+            createdAt: createdAtWindow,
+            deleted: false,
+            post: {
+              community: {
+                active: true,
+                deleted: false,
+              },
+              community_id: {
+                in: communityIds,
+              },
+              deleted: false,
+              status: "publicado",
+            },
+          },
+          select: {
+            createdAt: true,
+            id: true,
+            media_type: true,
+            post: {
+              select: {
+                community_id: true,
+              },
+            },
+          },
+        }),
+        prisma.community_post.findMany({
+          where: {
+            author_id: userId,
             community_id: {
               in: communityIds,
             },
             deleted: false,
             status: "publicado",
           },
-        },
-        select: {
-          createdAt: true,
-          id: true,
-          media_type: true,
-          post: {
-            select: {
-              community_id: true,
-            },
+          select: {
+            community_id: true,
+            id: true,
+            media_type: true,
           },
-        },
-      }),
-      prisma.community_post.findMany({
-        where: {
-          author_id: userId,
-          community_id: {
-            in: communityIds,
-          },
-          deleted: false,
-          status: "publicado",
-        },
-        select: {
-          community_id: true,
-          id: true,
-          media_type: true,
-        },
-      }),
-      prisma.post_reply.findMany({
-        where: {
-          author_id: userId,
-          deleted: false,
-          post: {
-            community: {
-              active: true,
-              deleted: false,
-            },
-            community_id: {
-              in: communityIds,
-            },
+        }),
+        prisma.post_reply.findMany({
+          where: {
+            author_id: userId,
             deleted: false,
-            status: "publicado",
-          },
-        },
-        select: {
-          id: true,
-          media_type: true,
-          post: {
-            select: {
-              community_id: true,
+            post: {
+              community: {
+                active: true,
+                deleted: false,
+              },
+              community_id: {
+                in: communityIds,
+              },
+              deleted: false,
+              status: "publicado",
             },
           },
-        },
-      }),
-    ]);
+          select: {
+            id: true,
+            media_type: true,
+            post: {
+              select: {
+                community_id: true,
+              },
+            },
+          },
+        }),
+        prisma.important_action_event.findMany({
+          where: {
+            action_type: "whatsapp_click",
+            deleted: false,
+            occurred_at: createdAtWindow,
+            target_id: userId,
+            target_type: "psychologist",
+            AND: [
+              {
+                OR: [
+                  {
+                    user_id: null,
+                  },
+                  {
+                    user_id: {
+                      not: userId,
+                    },
+                  },
+                ],
+              },
+              {
+                OR: [
+                  {
+                    path: {
+                      contains: "/community/top-mentors",
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    path: {
+                      contains: "traffic_origin=community_top_mentors",
+                      mode: "insensitive",
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          select: {
+            occurred_at: true,
+          },
+        }),
+      ]);
 
     const postIdToCommunityId = new Map(
       authoredPosts.map((post) => [post.id, post.community_id] as const),
@@ -1121,7 +1327,16 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       content_count: contentCountByBreakdownId.get(item.id) ?? 0,
       whatsapp_clicks: whatsappClicksByContentId.get(item.id) ?? 0,
     }));
-    const activityTotals = [...metricsByCommunityId.values()].reduce(
+    const topMentors = await buildCommunityTopMentors(
+      userId,
+      communities.map((community) => ({
+        id: community.id,
+        name: community.name,
+        slug: community.slug,
+      })),
+      topMentorWhatsappActions.length,
+    );
+    const communityActivityTotals = [...metricsByCommunityId.values()].reduce(
       (acc, metrics) => ({
         active_communities:
           acc.active_communities +
@@ -1136,11 +1351,17 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       }),
       emptyActivityTotals,
     );
+    const activityTotals = {
+      ...communityActivityTotals,
+      total_whatsapp_clicks:
+        communityActivityTotals.total_whatsapp_clicks + topMentors.whatsapp_clicks,
+    };
     const updatedAt =
       [
         ...postItems.map((post) => post.createdAt),
         ...replyItems.map((reply) => reply.createdAt),
         ...whatsappActions.map((action) => action.occurred_at),
+        ...topMentorWhatsappActions.map((action) => action.occurred_at),
       ]
         .filter((date): date is Date => Boolean(date))
         .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
@@ -1153,6 +1374,7 @@ export class PsychologistAnalyticsRepository implements IPsychologistAnalyticsRe
       following_communities: followingCommunities,
       participating_communities: communities.length,
       source: COMMUNITY_ANALYTICS_SOURCE,
+      top_mentors: topMentors,
       updated_at: updatedAt,
     };
   }
