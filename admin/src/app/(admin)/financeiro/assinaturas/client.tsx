@@ -482,8 +482,7 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
           <time dateTime={item.occurred_at}>{formatDateTime(item.occurred_at)}</time> ·{" "}
           {item.gateway}
         </p>
-        <IdentifierLine className="mt-1" label="ID cobrança" value={item.event_id} />
-        <IdentifierLine label="ID Mercado Pago" value={item.external_id} />
+        <IdentifierLine className="mt-1" label="ID" value={item.event_id} />
       </div>
       <div className="text-left sm:text-right">
         <p className="text-sm font-black text-foreground">
@@ -669,7 +668,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                     <StatusBadge item={item} />
                   </div>
                   <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
-                  <IdentifierLine className="mt-2" label="ID assinatura" value={item.id} />
+                  <IdentifierLine className="mt-2" label="ID" value={item.id} />
                   <div className="mt-3">
                     <PaymentHealthBadge health={item.payment_health} />
                   </div>
@@ -726,7 +725,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
               <th className="w-12 px-5 py-4">
                 <span className="sr-only">Expandir</span>
               </th>
-              <th className="px-5 py-4">ID assinatura</th>
+              <th className="px-5 py-4">ID</th>
               <th className="px-5 py-4">Psicólogo</th>
               <th className="px-5 py-4">Início</th>
               <th className="px-5 py-4">Próxima</th>

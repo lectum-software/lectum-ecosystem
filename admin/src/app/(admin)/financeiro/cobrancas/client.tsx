@@ -283,15 +283,12 @@ const formatChargeSubscriptionPlanState = (item: FinanceChargeItem) => {
 
 const ChargeSubscriptionIdentifier = ({ item }: { item: FinanceChargeItem }) => {
   if (!item.subscription) {
-    return <p className="mt-1 text-xs font-semibold text-muted">Sem ID de assinatura local</p>;
+    return <IdentifierLine className="mt-1" label="ID" value="—" />;
   }
 
   return (
     <div className="mt-1">
-      <IdentifierLine label="ID assinatura" value={item.subscription.id} />
-      {item.subscription.gateway_subscription_id ? (
-        <IdentifierLine label="ID Mercado Pago" value={item.subscription.gateway_subscription_id} />
-      ) : null}
+      <IdentifierLine label="ID" value={item.subscription.id} />
     </div>
   );
 };
@@ -363,10 +360,9 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 <ChargeStatusBadge item={item} />
               </div>
               <p className="truncate text-xs font-bold text-muted">
-                {item.subscription?.psychologist.email ?? item.external_id}
+                {item.subscription?.psychologist.email ?? "Sem vínculo local"}
               </p>
-              <IdentifierLine className="mt-2" label="ID cobrança" value={item.event_id} />
-              <IdentifierLine label="ID Mercado Pago" value={item.external_id} />
+              <IdentifierLine className="mt-2" label="ID" value={item.event_id} />
               <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <dt className="font-semibold text-muted">Data</dt>
@@ -401,7 +397,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
         <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
           <tr>
             <th className="px-5 py-4">Data</th>
-            <th className="px-5 py-4">ID cobrança</th>
+            <th className="px-5 py-4">ID</th>
             <th className="px-5 py-4">Psicólogo</th>
             <th className="px-5 py-4">Assinatura</th>
             <th className="px-5 py-4">Valor</th>
@@ -415,8 +411,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 {formatDateTime(item.occurred_at)}
               </td>
               <td className="max-w-[210px] px-5 py-4">
-                <IdentifierLine label="ID cobrança" value={item.event_id} />
-                <IdentifierLine label="ID Mercado Pago" value={item.external_id} />
+                <IdentifierLine label="ID" value={item.event_id} />
               </td>
               <td className="px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">

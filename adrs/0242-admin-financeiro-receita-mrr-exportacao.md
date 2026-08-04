@@ -247,3 +247,20 @@ Consequências:
 - O operador Admin ganha rastreabilidade para conciliar assinatura e cobrança entre a UI, o banco local e o Mercado Pago.
 - A tela fica um pouco mais densa, mitigada com tipografia monoespaçada pequena, quebra de linha e rolagem horizontal apenas no desktop, preservando cards mobile-first.
 - A rastreabilidade é ampliada sem expor dados sensíveis de cartão nem payload bruto de pagamento.
+
+## Ajuste 2026-08-04: IDs internos com rótulo simples
+
+Feedback de produto refinou a decisão anterior: a UI deve manter somente identificadores internos e usar o rótulo genérico **ID**, sem expor IDs externos do gateway nem repetir labels como **ID cobrança** ou **ID assinatura**.
+
+Decisões:
+
+- Exibir `professional_subscription.id` como **ID** na relação principal de assinaturas e na área de assinatura da relação de cobranças.
+- Exibir `payment_event.id` como **ID** na relação de cobranças e no histórico de pagamentos das assinaturas.
+- Remover da apresentação visual `payment_event.external_id` e `gateway_subscription_id`; esses campos continuam disponíveis no contrato/dados internos quando necessários para conciliação técnica, mas não aparecem na tabela operacional.
+- Para cobranças confirmadas sem assinatura vinculada, mostrar ausência de identificador interno de assinatura como `ID: —`, sem gerar ID artificial.
+
+Consequências:
+
+- A tela fica menos ruidosa para operação diária, mantendo rastreabilidade interna suficiente para localizar registros no banco local.
+- A conciliação com Mercado Pago continua possível por dados internos/contrato, mas deixa de ocupar a lista visual principal.
+- Não há alteração de schema, endpoint, cálculo financeiro, CSV, package, mock ou dado persistido.

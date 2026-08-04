@@ -817,3 +817,37 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
 - Scan estático: `rg -n "ID assinatura|ID cobrança|Assinatura|Plano" "admin/src/app/(admin)/financeiro/assinaturas/client.tsx" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx"` confirmou os novos rótulos e a substituição visual na página de cobranças.
+
+## Ajuste pós-feedback 2026-08-04 - IDs internos com rótulo simples
+
+- Pedido do usuário: manter somente IDs internos e simplificar a cópia visível para **ID**, sem rótulos específicos como **ID cobrança** ou **ID assinatura**.
+- Em `/financeiro/assinaturas`, a tabela principal e os cards mobile agora rotulam o identificador da assinatura apenas como **ID**, exibindo somente `professional_subscription.id`.
+- No histórico de pagamentos de `/financeiro/assinaturas`, cada item exibe apenas **ID** com `payment_event.id`; o `payment_event.external_id` do Mercado Pago deixou de aparecer na UI.
+- Em `/financeiro/cobrancas`, a coluna de identificador passou a chamar apenas **ID** e exibe somente `payment_event.id`; o `external_id` do Mercado Pago foi removido da lista visual.
+- Na coluna **Assinatura** de `/financeiro/cobrancas`, o identificador exibido também passou a ser apenas **ID** com `professional_subscription.id`; `gateway_subscription_id` deixou de aparecer na UI.
+- Eventos confirmados sem assinatura vinculada continuam sem ID artificial e exibem **ID: —** na área da assinatura.
+- A alteração é somente de apresentação e reutiliza campos internos já existentes; não houve contrato HTTP, backend, Prisma/migration, package, mock, seed ou endpoint simulado novo.
+
+### Critérios de aceite do ajuste
+
+- [x] Nenhuma lista financeira completa exibe `payment_event.external_id` ou `gateway_subscription_id` como ID Mercado Pago.
+- [x] Os rótulos visíveis de identificadores nas duas páginas usam somente **ID**.
+- [x] `/financeiro/assinaturas` preserva o ID interno da assinatura na tabela/card principal.
+- [x] O histórico de pagamentos preserva apenas o ID interno da cobrança (`payment_event.id`).
+- [x] `/financeiro/cobrancas` preserva apenas o ID interno da cobrança e o ID interno da assinatura vinculada.
+- [x] Eventos sem assinatura vinculada não recebem identificador artificial.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock, seed ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin typecheck`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
+- Scan estático: `rg -n "ID cobrança|ID assinatura|ID Mercado Pago|gateway_subscription_id|external_id" "admin/src/app/(admin)/financeiro/assinaturas/client.tsx" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx"` não retornou ocorrências.
