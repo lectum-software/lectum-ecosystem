@@ -3,8 +3,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const isProductionRuntime = process.env.NODE_ENV?.includes("prod");
+
 export const schema = {
-  base: "src/modules",
+  base: isProductionRuntime ? "dist/modules" : "src/modules",
   modules: [
     {
       options: {

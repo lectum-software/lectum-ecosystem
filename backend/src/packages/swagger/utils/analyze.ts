@@ -9,10 +9,14 @@ export const analyzeRoutesWithAST = (file) => {
 
   file.cases.forEach((item) => {
     const validatorPath = `${file.base}/${file.module}/${file.model}/${file.folder}/${item}/index.ts`;
+    const routePath =
+      fs.existsSync(validatorPath) || !validatorPath.endsWith(".ts")
+        ? validatorPath
+        : validatorPath.replace(/\.ts$/, ".js");
 
-    if (!fs.existsSync(validatorPath)) return;
+    if (!fs.existsSync(routePath)) return;
 
-    const code = fs.readFileSync(validatorPath, "utf-8");
+    const code = fs.readFileSync(routePath, "utf-8");
     const ast = parse(code, { sourceType: "module", plugins: ["typescript"] });
 
     traverse(ast, {

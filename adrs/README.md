@@ -205,3 +205,5 @@ Formato recomendado:
 - [ADR-0411 - WhatsApp em formatos de posts/respostas no Admin](0411-whatsapp-cliques-formatos-posts-respostas-admin.md) - Accepted
 - [ADR-0412 - Rotas públicas e privadas canônicas em PT-BR](0412-rotas-publicas-pt-br-seo.md) - Accepted
 - [ADR-0413 - SEO administrável para respostas de comentários públicas](0413-seo-respostas-comentarios-publicas.md) - Accepted
+
+- [ADR-0415 - Dockerfile de produção para o backend](0415-dockerfile-backend-producao.md) - Accepted

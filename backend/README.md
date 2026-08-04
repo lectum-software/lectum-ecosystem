@@ -41,3 +41,39 @@ Configurações obrigatórias em `backend/.env`:
 As validações de segurança continuam ativas mesmo com `--force`: `NODE_ENV=production/prod`, URLs
 que pareçam produção, bancos não locais/remotos, bucket R2 com nome de produção e token Mercado Pago
 fora de sandbox são bloqueados por padrão.
+
+## Docker do backend
+
+O Dockerfile do backend deve ser buildado usando `backend/` como contexto, mantendo frontend/admin como apps separadas:
+
+```bash
+docker build -t lectum-backend ./backend
+```
+
+O build usa uma `DATABASE_URL` dummy apenas para `prisma generate`; a imagem de produção exige as envs reais em runtime, principalmente:
+
+- `DATABASE_URL`
+- `JWT_SECRET_KEY`
+- `ADMIN_JWT_SECRET`
+- `BASE`
+- `WEB_URL`
+- `GOOGLE_CLIENT_ID_API_USER`
+- `GOOGLE_CLIENT_SECRET_API_USER`
+- `CALLBACK_URL_API_USER`
+
+Exemplo de smoke local sem acessar banco nas rotas de health:
+
+```bash
+docker run --rm -p 3001:3001 \
+  -e DATABASE_URL="postgresql://postgres:postgres@host.docker.internal:5432/lectum" \
+  -e JWT_SECRET_KEY="change-me-with-a-strong-32-characters-minimum-secret" \
+  -e ADMIN_JWT_SECRET="change-me-with-a-different-strong-admin-secret" \
+  -e BASE="http://localhost:3001" \
+  -e WEB_URL="http://localhost:3000" \
+  -e GOOGLE_CLIENT_ID_API_USER="docker-smoke-client-id" \
+  -e GOOGLE_CLIENT_SECRET_API_USER="docker-smoke-client-secret" \
+  -e CALLBACK_URL_API_USER="http://localhost:3000/auth/redirect" \
+  lectum-backend
+```
+
+Por padrão a imagem define `SWAGGER=false`. Para expor a documentação em produção, habilite `SWAGGER=true` conscientemente e garanta que `BASE` aponte para a URL pública correta.
