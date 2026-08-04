@@ -671,6 +671,7 @@ model subscription_plan {
 
 model professional_subscription {
   id                      String               @id @default(cuid())
+  internal_id             Int                  @unique @default(autoincrement()) @map("internal_id")
   deleted                 Boolean              @default(false)
   deletedAt               DateTime?            @map("deleted_at")
   updatedAt               DateTime             @default(now()) @updatedAt @map("updated_at")
@@ -718,6 +719,7 @@ model billing_address {
 
 model payment_event {
   id          String    @id @default(cuid())
+  internal_id Int       @unique @default(autoincrement()) @map("internal_id")
   deleted     Boolean   @default(false)
   deletedAt   DateTime? @map("deleted_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")

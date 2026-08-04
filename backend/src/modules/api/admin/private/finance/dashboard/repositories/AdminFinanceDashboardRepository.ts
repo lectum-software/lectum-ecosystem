@@ -40,6 +40,7 @@ const paidSubscriptionRelationWhere = (
   filters: AdminFinanceSubscriptionRelationFilters = {},
 ): Prisma.professional_subscriptionWhereInput => {
   const query = filters.q?.trim();
+  const queryNumber = query && /^\d+$/.test(query) ? Number(query) : null;
 
   return {
     ...paidGatewaySubscriptionWhere,
@@ -52,6 +53,7 @@ const paidSubscriptionRelationWhere = (
           OR: [
             { id: { contains: query, mode: "insensitive" } },
             { gateway_subscription_id: { contains: query, mode: "insensitive" } },
+            ...(queryNumber ? [{ internal_id: queryNumber }] : []),
             {
               psychologist: {
                 crp: { contains: query, mode: "insensitive" },
@@ -83,6 +85,7 @@ const subscriptionSelect = {
   gateway: true,
   gateway_subscription_id: true,
   id: true,
+  internal_id: true,
   source: true,
   status: true,
   updatedAt: true,
@@ -387,6 +390,7 @@ export class AdminFinanceDashboardRepository {
         createdAt: true,
         external_id: true,
         id: true,
+        internal_id: true,
         payload: true,
         type: true,
       },
@@ -406,6 +410,7 @@ export class AdminFinanceDashboardRepository {
         createdAt: true,
         external_id: true,
         id: true,
+        internal_id: true,
         payload: true,
         type: true,
       },

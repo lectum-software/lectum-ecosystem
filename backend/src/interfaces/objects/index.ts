@@ -296,6 +296,7 @@ export interface subscription_plan {
 
 export interface professional_subscription {
   id?: string | null;
+  internal_id?: number | null;
   deleted?: boolean | null;
   deletedAt?: Date | null;
   updatedAt?: Date | null;
@@ -334,6 +335,7 @@ export interface billing_address {
 
 export interface payment_event {
   id?: string | null;
+  internal_id?: number | null;
   deleted?: boolean | null;
   deletedAt?: Date | null;
   updatedAt?: Date | null;

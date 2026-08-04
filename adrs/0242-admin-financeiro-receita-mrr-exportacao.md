@@ -264,3 +264,23 @@ Consequências:
 - A tela fica menos ruidosa para operação diária, mantendo rastreabilidade interna suficiente para localizar registros no banco local.
 - A conciliação com Mercado Pago continua possível por dados internos/contrato, mas deixa de ocupar a lista visual principal.
 - Não há alteração de schema, endpoint, cálculo financeiro, CSV, package, mock ou dado persistido.
+
+## Ajuste 2026-08-04: identificadores financeiros internos numéricos
+
+Feedback de produto pediu que o ID interno mostrado nas listas financeiras fosse numérico, não string. O modelo existente usa `String @id @default(cuid())` como chave primária em `professional_subscription` e `payment_event`, e esses valores são usados por relações internas, payloads de gateway, busca, reconciliação e compatibilidade de contrato.
+
+Decisões:
+
+- Manter as chaves primárias string existentes (`id`) para evitar quebra relacional e alteração ampla de contratos já persistidos.
+- Adicionar um identificador operacional numérico e persistido, `internal_id Int @unique @default(autoincrement())`, em `professional_subscription` e `payment_event`.
+- Usar `internal_id` como o **ID** visível no Admin Financeiro para assinaturas, cobranças e histórico de pagamentos.
+- Manter `id`, `external_id` e `gateway_subscription_id` no backend/contrato quando necessários à compatibilidade técnica, mas não como ID operacional visível nas listas solicitadas.
+- Permitir busca por `professional_subscription.internal_id` na relação de assinaturas e incluir `internal_id` de cobrança/assinatura na busca mapeada de cobranças.
+- Não criar IDs numéricos derivados no frontend nem extrair sufixos de strings existentes, porque isso viraria convenção visual frágil e não um identificador real.
+
+Consequências:
+
+- O operador vê IDs numéricos estáveis e reais sem migração destrutiva de chaves primárias.
+- O banco passa a manter duas camadas de identificação financeira: chave técnica string para relações/integrações e `internal_id` numérico para leitura operacional Admin.
+- A migration preenche linhas existentes e futuras via sequência PostgreSQL/autoincrement, sem seed, mock ou dado artificial.
+- A decisão adiciona schema/migration, mas não altera provider, package, gateway, CSV ou endpoints novos.

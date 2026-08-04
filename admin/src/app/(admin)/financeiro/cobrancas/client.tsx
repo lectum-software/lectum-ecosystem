@@ -263,7 +263,7 @@ const IdentifierLine = ({
 }: {
   className?: string;
   label: string;
-  value: string;
+  value: number | string;
 }) => (
   <p
     className={cn("min-w-0 break-all text-[11px] font-semibold leading-5 text-muted", className)}
@@ -288,7 +288,7 @@ const ChargeSubscriptionIdentifier = ({ item }: { item: FinanceChargeItem }) => 
 
   return (
     <div className="mt-1">
-      <IdentifierLine label="ID" value={item.subscription.id} />
+      <IdentifierLine label="ID" value={item.subscription.internal_id} />
     </div>
   );
 };
@@ -362,7 +362,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
               <p className="truncate text-xs font-bold text-muted">
                 {item.subscription?.psychologist.email ?? "Sem vínculo local"}
               </p>
-              <IdentifierLine className="mt-2" label="ID" value={item.event_id} />
+              <IdentifierLine className="mt-2" label="ID" value={item.internal_id} />
               <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <dt className="font-semibold text-muted">Data</dt>
@@ -411,7 +411,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 {formatDateTime(item.occurred_at)}
               </td>
               <td className="max-w-[210px] px-5 py-4">
-                <IdentifierLine label="ID" value={item.event_id} />
+                <IdentifierLine label="ID" value={item.internal_id} />
               </td>
               <td className="px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">

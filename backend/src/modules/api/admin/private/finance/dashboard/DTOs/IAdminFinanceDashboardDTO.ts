@@ -88,6 +88,7 @@ export type AdminFinancePaymentHistoryItem = {
   event_type: string;
   external_id: string;
   gateway: "mercadopago";
+  internal_id: number;
   occurred_at: string;
   reference: string | null;
   status: AdminFinancePaymentHistoryStatus;
@@ -141,6 +142,7 @@ export type AdminFinanceSubscriptionItem = {
   gateway: string | null;
   gateway_subscription_id: string | null;
   id: string;
+  internal_id: number;
   plan: {
     id: string;
     interval: string;
@@ -176,6 +178,7 @@ export type AdminFinanceChargeItem = {
   event_type: string;
   external_id: string;
   gateway: "mercadopago";
+  internal_id: number;
   occurred_at: string;
   reference: string | null;
   status: "confirmed";

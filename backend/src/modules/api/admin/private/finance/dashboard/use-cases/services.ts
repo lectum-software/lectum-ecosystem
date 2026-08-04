@@ -684,6 +684,7 @@ const mapPaymentHistoryItem = (event: PaymentEventRecord): AdminFinancePaymentHi
     event_type: event.type,
     external_id: event.external_id,
     gateway: "mercadopago",
+    internal_id: event.internal_id,
     occurred_at: event.createdAt.toISOString(),
     reference: extractPaymentReference(event.payload),
     status: status.status,
@@ -929,6 +930,7 @@ const mapSubscription = (
     gateway: subscription.gateway,
     gateway_subscription_id: subscription.gateway_subscription_id,
     id: subscription.id,
+    internal_id: subscription.internal_id,
     last_charge_at: latestPayment?.createdAt.toISOString() ?? null,
     next_charge_at: subscription.current_period_end?.toISOString() ?? null,
     payment_health: paymentInsights.health,
@@ -983,6 +985,7 @@ const mapCharge = (
     event_type: event.type,
     external_id: event.external_id,
     gateway: "mercadopago",
+    internal_id: event.internal_id,
     occurred_at: event.createdAt.toISOString(),
     reference:
       subscription?.gateway_subscription_id ??
@@ -1032,12 +1035,14 @@ const matchesChargeSearch = (item: AdminFinanceChargeItem, q?: string) => {
 
   const searchableValues = [
     item.event_id,
+    String(item.internal_id),
     item.event_type,
     item.external_id,
     item.reference,
     item.status_label,
     item.subscription?.gateway_subscription_id,
     item.subscription?.id,
+    item.subscription ? String(item.subscription.internal_id) : null,
     item.subscription?.plan.name,
     item.subscription?.plan.slug,
     item.subscription?.psychologist.crp,

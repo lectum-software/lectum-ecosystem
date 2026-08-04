@@ -404,7 +404,7 @@ const IdentifierLine = ({
 }: {
   className?: string;
   label: string;
-  value: string;
+  value: number | string;
 }) => (
   <p
     className={cn("min-w-0 break-all text-[11px] font-semibold leading-5 text-muted", className)}
@@ -482,7 +482,7 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
           <time dateTime={item.occurred_at}>{formatDateTime(item.occurred_at)}</time> ·{" "}
           {item.gateway}
         </p>
-        <IdentifierLine className="mt-1" label="ID" value={item.event_id} />
+        <IdentifierLine className="mt-1" label="ID" value={item.internal_id} />
       </div>
       <div className="text-left sm:text-right">
         <p className="text-sm font-black text-foreground">
@@ -668,7 +668,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                     <StatusBadge item={item} />
                   </div>
                   <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
-                  <IdentifierLine className="mt-2" label="ID" value={item.id} />
+                  <IdentifierLine className="mt-2" label="ID" value={item.internal_id} />
                   <div className="mt-3">
                     <PaymentHealthBadge health={item.payment_health} />
                   </div>
@@ -761,7 +761,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                       </button>
                     </td>
                     <td className="max-w-[190px] px-5 py-4">
-                      <IdentifierLine label="ID" value={item.id} />
+                      <IdentifierLine label="ID" value={item.internal_id} />
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex min-w-0 items-center gap-3">

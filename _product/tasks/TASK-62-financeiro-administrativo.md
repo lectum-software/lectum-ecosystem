@@ -851,3 +851,50 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
 - Scan estático: `rg -n "ID cobrança|ID assinatura|ID Mercado Pago|gateway_subscription_id|external_id" "admin/src/app/(admin)/financeiro/assinaturas/client.tsx" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx"` não retornou ocorrências.
+
+## Ajuste pós-feedback 2026-08-04 - IDs financeiros internos numéricos
+
+- Pedido do usuário: fazer o ID interno exibido no Financeiro ser um número.
+- Decisão arquitetural: não trocar as chaves primárias string (`id`) de `professional_subscription` e `payment_event`, porque elas já são referenciadas por relações, payloads de gateway, histórico e integrações. Em vez disso, foram adicionados identificadores internos numéricos, reais e persistidos: `internal_id Int @unique @default(autoincrement())` em `professional_subscription` e `payment_event`.
+- A migration `20260804150500_add_finance_numeric_internal_ids` adiciona `internal_id` numérico e único em `professional_subscriptions` e `payment_events`, com valores gerados por sequência para linhas existentes e futuras.
+- O contrato financeiro Admin passou a retornar `internal_id` para assinaturas, cobranças e itens do histórico de pagamento, mantendo os IDs string técnicos no contrato para compatibilidade interna.
+- `/financeiro/assinaturas` agora exibe somente o `internal_id` numérico da assinatura na coluna/card **ID**.
+- O histórico de pagamentos em `/financeiro/assinaturas` agora exibe somente o `internal_id` numérico da cobrança na linha **ID**.
+- `/financeiro/cobrancas` agora exibe somente o `internal_id` numérico da cobrança na coluna **ID** e o `internal_id` numérico da assinatura na coluna **Assinatura**.
+- A busca por ID em `/financeiro/assinaturas` também aceita o `internal_id` numérico real; a busca em `/financeiro/cobrancas` passa a considerar o `internal_id` da cobrança e da assinatura após o mapeamento seguro.
+- Eventos confirmados sem assinatura vinculada continuam sem ID artificial de assinatura e exibem **ID: —** na área de assinatura.
+- Não houve package novo, mock, seed ou endpoint simulado.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png`, `_product/tasks/PROTO-INVENTORY.md` e as capturas autenticadas enviadas pelo usuário em 2026-08-04.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] `professional_subscription` possui ID interno numérico real e único em `internal_id`.
+- [x] `payment_event` possui ID interno numérico real e único em `internal_id`.
+- [x] IDs string existentes permanecem como chaves técnicas para compatibilidade e não são exibidos como ID operacional nas listas solicitadas.
+- [x] `/financeiro/assinaturas` exibe número na coluna/card **ID** da assinatura.
+- [x] O histórico de pagamentos exibe número na linha **ID** de cada cobrança.
+- [x] `/financeiro/cobrancas` exibe número na coluna **ID** da cobrança.
+- [x] `/financeiro/cobrancas` exibe número como **ID** da assinatura vinculada.
+- [x] Eventos sem assinatura vinculada não recebem ID numérico artificial de assinatura.
+- [x] `pnpm --dir backend db:migrate` foi executado nesta task para aplicar a migration.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, mock, seed ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir backend db:migrate --name add_finance_numeric_internal_ids` foi tentado após alterar o schema e falhou por limitação não interativa do Prisma com aviso de unique constraint; a migration foi então criada de forma explícita e validada sem reset/destruição.
+- `pnpm --dir backend db:migrate` foi executado novamente e retornou banco/schema em sincronia com a migration `20260804150500_add_finance_numeric_internal_ids`.
+- `pnpm --dir backend exec prisma migrate status` confirmou **Database schema is up to date**.
+- `pnpm --dir backend exec prisma format`.
+- `pnpm --dir backend exec biome check --write prisma/schema.prisma prisma/migrations/20260804150500_add_finance_numeric_internal_ids/migration.sql src/interfaces/objects/index.ts src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts src/modules/api/admin/private/finance/dashboard/use-cases/services.ts`.
+- `pnpm --dir admin exec biome check --write src/api/req/finance/index.ts "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir backend check`.
+- `pnpm --dir admin check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Smoke de service real: `listAdminFinanceSubscriptions({ period: "all", limit: 2 })` retornou `status=200`, `count=6` e `internal_id` numérico nas assinaturas.
+- Smoke de service real: `listAdminFinanceCharges({ period: "all", limit: 2 })` retornou `status=200`, `count=8`, `internal_id` numérico nas cobranças e `subscription.internal_id` numérico quando havia vínculo.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
