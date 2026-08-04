@@ -780,3 +780,40 @@ Frontend esperado:
 - `pnpm --dir admin build` no checkout principal foi tentado, mas ficou bloqueado pelo `.next/lock` de outro build/servidor Next ativo.
 - `pnpm --dir ".tmp/admin-build-plan-active-20260723191907/admin" build` passou em worktree tempor?rio contendo os arquivos alterados.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro` e `GET http://localhost:3002/financeiro/cobrancas?period=all` retornaram `200`.
+
+## Ajuste pós-feedback 2026-08-04 - IDs de assinatura e cobrança nas listas financeiras
+
+- Pedido do usuário: em `/financeiro/assinaturas`, exibir o ID da assinatura na tabela principal e o ID de cada cobrança no histórico de pagamentos; em `/financeiro/cobrancas`, exibir o ID da cobrança, substituir a coluna **Plano** por **Assinatura** e informar o ID da assinatura.
+- A tabela principal de `/financeiro/assinaturas` agora exibe **ID assinatura** em coluna própria no desktop e nos cards mobile, usando `professional_subscription.id` já retornado pelo endpoint financeiro real.
+- O histórico de pagamentos expandido de cada assinatura agora exibe **ID cobrança** (`payment_event.id`) e **ID Mercado Pago** (`payment_event.external_id`) em cada item de cobrança, sem expor payload bruto do gateway.
+- A tabela completa de `/financeiro/cobrancas` agora exibe a coluna **ID cobrança** e trocou **Plano** por **Assinatura**; a coluna mantém nome do plano/estado operacional e acrescenta o ID local da assinatura, além do ID Mercado Pago da assinatura quando disponível.
+- Eventos confirmados sem vínculo local continuam visíveis com indicação honesta de ausência de ID de assinatura local.
+- A alteração reutiliza somente campos já existentes no contrato financeiro; não houve backend, endpoint, cálculo financeiro, CSV, Prisma/migration, package, mock, seed ou dado artificial novo.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png`, o inventário `_product/tasks/PROTO-INVENTORY.md` e as capturas autenticadas enviadas pelo usuário em 2026-08-04.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] `/financeiro/assinaturas` exibe `professional_subscription.id` na tabela principal desktop.
+- [x] `/financeiro/assinaturas` exibe `professional_subscription.id` nos cards mobile da lista principal.
+- [x] O histórico de pagamentos de assinaturas exibe o ID local de cada cobrança (`payment_event.id`).
+- [x] O histórico de pagamentos de assinaturas exibe também o ID externo Mercado Pago (`payment_event.external_id`) sem payload bruto.
+- [x] `/financeiro/cobrancas` exibe uma coluna **ID cobrança** com os identificadores da cobrança.
+- [x] `/financeiro/cobrancas` não exibe mais a coluna **Plano**; a coluna foi substituída por **Assinatura**.
+- [x] A coluna **Assinatura** em `/financeiro/cobrancas` informa o ID local da assinatura quando há vínculo real.
+- [x] Eventos confirmados sem assinatura vinculada não recebem ID artificial e indicam ausência de vínculo local.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum package, schema Prisma, migration, mock, seed ou endpoint simulado foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin typecheck`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
+- Scan estático: `rg -n "ID assinatura|ID cobrança|Assinatura|Plano" "admin/src/app/(admin)/financeiro/assinaturas/client.tsx" "admin/src/app/(admin)/financeiro/cobrancas/client.tsx"` confirmou os novos rótulos e a substituição visual na página de cobranças.

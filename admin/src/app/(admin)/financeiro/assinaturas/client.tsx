@@ -397,6 +397,24 @@ const PaymentHistoryStatusBadge = ({ item }: { item: FinancePaymentHistoryItem }
   </span>
 );
 
+const IdentifierLine = ({
+  className,
+  label,
+  value,
+}: {
+  className?: string;
+  label: string;
+  value: string;
+}) => (
+  <p
+    className={cn("min-w-0 break-all text-[11px] font-semibold leading-5 text-muted", className)}
+    title={`${label}: ${value}`}
+  >
+    <span>{label}: </span>
+    <code className="font-mono text-foreground">{value}</code>
+  </p>
+);
+
 const HealthMetric = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="rounded-3xl border border-border bg-surface px-4 py-3">
     <dt className="text-xs font-semibold text-muted">{label}</dt>
@@ -464,6 +482,8 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
           <time dateTime={item.occurred_at}>{formatDateTime(item.occurred_at)}</time> ·{" "}
           {item.gateway}
         </p>
+        <IdentifierLine className="mt-1" label="ID cobrança" value={item.event_id} />
+        <IdentifierLine label="ID Mercado Pago" value={item.external_id} />
       </div>
       <div className="text-left sm:text-right">
         <p className="text-sm font-black text-foreground">
@@ -649,6 +669,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                     <StatusBadge item={item} />
                   </div>
                   <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
+                  <IdentifierLine className="mt-2" label="ID assinatura" value={item.id} />
                   <div className="mt-3">
                     <PaymentHealthBadge health={item.payment_health} />
                   </div>
@@ -698,13 +719,14 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
       </div>
 
       <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-[1040px] text-left text-sm">
+        <table className="w-full min-w-[1160px] text-left text-sm">
           <caption className="sr-only">Relação de assinaturas do plano profissional</caption>
           <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
             <tr>
               <th className="w-12 px-5 py-4">
                 <span className="sr-only">Expandir</span>
               </th>
+              <th className="px-5 py-4">ID assinatura</th>
               <th className="px-5 py-4">Psicólogo</th>
               <th className="px-5 py-4">Início</th>
               <th className="px-5 py-4">Próxima</th>
@@ -739,6 +761,9 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                         </span>
                       </button>
                     </td>
+                    <td className="max-w-[190px] px-5 py-4">
+                      <IdentifierLine label="ID" value={item.id} />
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex min-w-0 items-center gap-3">
                         <InitialsAvatar name={item.psychologist.name} />
@@ -771,7 +796,7 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                   </tr>
                   {expanded ? (
                     <tr className="bg-primary-soft/15">
-                      <td className="px-5 py-5" colSpan={7} id={detailsId}>
+                      <td className="px-5 py-5" colSpan={8} id={detailsId}>
                         <PaymentHealthDetails item={item} />
                       </td>
                     </tr>

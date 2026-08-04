@@ -256,11 +256,44 @@ const ChargeStatusBadge = ({ item }: { item: FinanceChargeItem }) => (
   </span>
 );
 
+const IdentifierLine = ({
+  className,
+  label,
+  value,
+}: {
+  className?: string;
+  label: string;
+  value: string;
+}) => (
+  <p
+    className={cn("min-w-0 break-all text-[11px] font-semibold leading-5 text-muted", className)}
+    title={`${label}: ${value}`}
+  >
+    <span>{label}: </span>
+    <code className="font-mono text-foreground">{value}</code>
+  </p>
+);
+
 const formatChargeSubscriptionPlanState = (item: FinanceChargeItem) => {
   if (!item.subscription) return "—";
   if (item.subscription.status === "ativa") return "Ativo";
 
   return item.subscription.status_label;
+};
+
+const ChargeSubscriptionIdentifier = ({ item }: { item: FinanceChargeItem }) => {
+  if (!item.subscription) {
+    return <p className="mt-1 text-xs font-semibold text-muted">Sem ID de assinatura local</p>;
+  }
+
+  return (
+    <div className="mt-1">
+      <IdentifierLine label="ID assinatura" value={item.subscription.id} />
+      {item.subscription.gateway_subscription_id ? (
+        <IdentifierLine label="ID Mercado Pago" value={item.subscription.gateway_subscription_id} />
+      ) : null}
+    </div>
+  );
 };
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
@@ -332,9 +365,11 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
               <p className="truncate text-xs font-bold text-muted">
                 {item.subscription?.psychologist.email ?? item.external_id}
               </p>
+              <IdentifierLine className="mt-2" label="ID cobrança" value={item.event_id} />
+              <IdentifierLine label="ID Mercado Pago" value={item.external_id} />
               <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <dt className="font-semibold text-muted">Cobrança</dt>
+                  <dt className="font-semibold text-muted">Data</dt>
                   <dd className="mt-1 font-bold text-foreground">
                     {formatDateTime(item.occurred_at)}
                   </dd>
@@ -345,12 +380,13 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                     {formatMoney(item.amount_cents)}
                   </dd>
                 </div>
-                <div>
-                  <dt className="font-semibold text-muted">Plano</dt>
+                <div className="col-span-2">
+                  <dt className="font-semibold text-muted">Assinatura</dt>
                   <dd className="mt-1 font-bold text-foreground">
                     {item.subscription?.plan.name ?? "Não identificado"}
                   </dd>
                   <p className="mt-1 text-muted">{formatChargeSubscriptionPlanState(item)}</p>
+                  <ChargeSubscriptionIdentifier item={item} />
                 </div>
               </dl>
             </div>
@@ -360,13 +396,14 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
     </div>
 
     <div className="hidden overflow-x-auto lg:block">
-      <table className="w-full min-w-[860px] text-left text-sm">
+      <table className="w-full min-w-[1080px] text-left text-sm">
         <caption className="sr-only">Relação completa de cobranças confirmadas</caption>
         <thead className="border-b border-border text-xs font-bold uppercase tracking-[0.08em] text-muted">
           <tr>
             <th className="px-5 py-4">Data</th>
+            <th className="px-5 py-4">ID cobrança</th>
             <th className="px-5 py-4">Psicólogo</th>
-            <th className="px-5 py-4">Plano</th>
+            <th className="px-5 py-4">Assinatura</th>
             <th className="px-5 py-4">Valor</th>
             <th className="px-5 py-4">Status</th>
           </tr>
@@ -376,6 +413,10 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
             <tr className="transition hover:bg-primary-soft/35" key={item.event_id}>
               <td className="whitespace-nowrap px-5 py-4 text-muted">
                 {formatDateTime(item.occurred_at)}
+              </td>
+              <td className="max-w-[210px] px-5 py-4">
+                <IdentifierLine label="ID cobrança" value={item.event_id} />
+                <IdentifierLine label="ID Mercado Pago" value={item.external_id} />
               </td>
               <td className="px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">
@@ -395,6 +436,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                   {item.subscription?.plan.name ?? "Não identificado"}
                 </p>
                 <p className="text-xs text-muted">{formatChargeSubscriptionPlanState(item)}</p>
+                <ChargeSubscriptionIdentifier item={item} />
               </td>
               <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">
                 {formatMoney(item.amount_cents)}

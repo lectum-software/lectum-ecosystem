@@ -228,3 +228,22 @@ Consequ?ncias:
 
 - A pr?via do Financeiro fica consistente com `/financeiro/assinaturas` e reduz redund?ncia com a tabela de cobran?as realizadas.
 - A mudan?a ? somente de apresenta??o: n?o altera contrato HTTP, c?lculo financeiro, CSV, Prisma/migrations, packages, seeds, mocks ou dados persistidos.
+
+## Ajuste 2026-08-04: IDs operacionais em assinaturas e cobranças
+
+Feedback de produto pediu que as listas financeiras completas expusessem identificadores rastreáveis: ID da assinatura em `/financeiro/assinaturas`, ID de cada cobrança no histórico de pagamentos e ID da cobrança/assinatura em `/financeiro/cobrancas`.
+
+Decisões:
+
+- Expor na tabela principal de `/financeiro/assinaturas` o `professional_subscription.id` como **ID assinatura**, mantendo os demais dados financeiros derivados do contrato existente.
+- Expor no histórico de pagamentos de cada assinatura o `payment_event.id` como **ID cobrança** e o `payment_event.external_id` como **ID Mercado Pago**, sem exibir payload bruto do gateway.
+- Em `/financeiro/cobrancas`, adicionar a coluna **ID cobrança** usando `payment_event.id` e `external_id`, e renomear a antiga coluna **Plano** para **Assinatura**.
+- Na coluna **Assinatura** de cobranças, manter o nome do plano/estado operacional e exibir `professional_subscription.id`; quando houver, exibir também `gateway_subscription_id` como ID Mercado Pago da assinatura.
+- Manter eventos confirmados sem vínculo local visíveis de forma honesta com indicação de ausência de ID de assinatura local.
+- Não alterar contrato HTTP, cálculo financeiro, CSV, Prisma/migrations, packages, seed, mock ou endpoint simulado, porque todos os identificadores já existem no payload tipado retornado pelo backend financeiro.
+
+Consequências:
+
+- O operador Admin ganha rastreabilidade para conciliar assinatura e cobrança entre a UI, o banco local e o Mercado Pago.
+- A tela fica um pouco mais densa, mitigada com tipografia monoespaçada pequena, quebra de linha e rolagem horizontal apenas no desktop, preservando cards mobile-first.
+- A rastreabilidade é ampliada sem expor dados sensíveis de cartão nem payload bruto de pagamento.
