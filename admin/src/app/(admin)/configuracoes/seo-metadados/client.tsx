@@ -120,6 +120,20 @@ const resolvePreviewUrl = (setting?: AdminSeoMetadataSetting, canonical?: string
 const compactDescription = (value: string) =>
   value.length > 168 ? `${value.slice(0, 165).trim()}...` : value;
 
+const compactOpenGraphText = (value: string, limit: number) =>
+  value.length > limit ? `${value.slice(0, limit - 3).trim()}...` : value;
+
+const resolveOpenGraphDomain = (value: string) => {
+  try {
+    return new URL(value.startsWith("http") ? value : `https://${value}`).hostname.replace(
+      /^www\./,
+      "",
+    );
+  } catch {
+    return "lectum.com.br";
+  }
+};
+
 const SettingsHeader = () => (
   <section className={cn(cardClass, "p-5 md:p-6")}>
     <div className="flex flex-col gap-5">
@@ -272,6 +286,80 @@ const SearchPreview = ({
         <div className="flex items-center gap-2">
           <Tags className="h-4 w-4 text-primary" />
           <span>{values.keywords.trim() || "Sem palavras-chave adicionais"}</span>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const OpenGraphCardImage = ({ value }: { value?: string | null }) => {
+  const src = resolveOpenGraphPreviewSource(value);
+  const canRender = src ? canRenderOpenGraphPreview(src) : false;
+
+  return (
+    <div className="relative aspect-[1.91/1] w-full overflow-hidden bg-surface-muted">
+      {src && canRender ? (
+        <Image
+          alt="Prévia da imagem do card Open Graph"
+          className="object-contain object-center"
+          fill
+          sizes="(min-width: 1280px) 31vw, (min-width: 1024px) 45vw, 92vw"
+          src={src}
+          unoptimized={src.startsWith("http://") || src.startsWith("https://")}
+        />
+      ) : (
+        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-xs font-semibold text-muted">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+            <ImagePlus className="h-5 w-5" />
+          </span>
+          <span>{src ? "Host externo não habilitado para prévia" : "Sem imagem Open Graph"}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const OpenGraphPreview = ({
+  setting,
+  values,
+}: {
+  setting?: AdminSeoMetadataSetting;
+  values: SeoMetadataForm;
+}) => {
+  const previewUrl = resolvePreviewUrl(setting, values.canonical_url);
+  const title =
+    values.og_title || values.title || setting?.og_title || setting?.title || "Título Open Graph";
+  const description =
+    values.og_description ||
+    values.description ||
+    setting?.og_description ||
+    setting?.description ||
+    "Descrição usada em cards de compartilhamento.";
+
+  return (
+    <section className={cn(cardClass, "min-w-0 p-4 md:p-5")}>
+      <div className="mb-4 flex items-center gap-3">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+          <Eye className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold text-foreground">Prévia Open Graph</h2>
+          <p className="text-sm text-muted">Simulação do card de compartilhamento.</p>
+        </div>
+      </div>
+      <div className="overflow-hidden rounded-[1.35rem] border border-border bg-surface">
+        <OpenGraphCardImage value={values.og_image_url} />
+        <div className="space-y-2 p-4">
+          <p className="truncate text-xs font-bold uppercase tracking-[0.08em] text-muted">
+            {resolveOpenGraphDomain(previewUrl)}
+          </p>
+          <h3 className="line-clamp-2 text-base font-bold leading-6 text-foreground">
+            {compactOpenGraphText(title, 92)}
+          </h3>
+          <p className="line-clamp-2 text-sm leading-5 text-muted">
+            {compactOpenGraphText(description, 140)}
+          </p>
+          <p className="truncate text-xs font-semibold text-primary">{previewUrl}</p>
         </div>
       </div>
     </section>
@@ -645,8 +733,9 @@ export const AdminSeoMetadataClient = () => {
             </Form>
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
             <SearchPreview setting={selectedSetting} values={watchedValues} />
+            <OpenGraphPreview setting={selectedSetting} values={watchedValues} />
             <TechnicalNotes setting={selectedSetting} />
           </div>
         </div>

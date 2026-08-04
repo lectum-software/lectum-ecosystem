@@ -154,3 +154,11 @@ Validações executadas:
 - [x] A grade entre o seletor e o editor SEO passou a conter largura mínima zero nos wrappers relevantes, mantendo o editor no próprio bloco em telas desktop e preservando o empilhamento mobile-first.
 - [x] Nenhum package novo foi instalado, nenhum mock foi criado e não houve alteração em Prisma schema/migrations; `db:migrate` não se aplicou.
 - [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e browser local em Chrome em `http://localhost:3002/configuracoes/seo-metadados`, confirmando que a opção **Resposta de comentário** fica truncada dentro do card e não vaza para o editor.
+
+## Ajuste pós-feedback 2026-08-03 - prévia Open Graph no Admin
+
+- [x] A tela Admin **SEO / Metadados** ganhou o card **Prévia Open Graph**, renderizado a partir dos campos reais do formulário (`og_title`, `og_description`, `og_image_url`, canônica e fallbacks SEO).
+- [x] A prévia usa `next/image`, respeita os hosts permitidos já usados no upload/miniatura Open Graph e exibe estado seguro quando não há imagem ou o host externo não está habilitado.
+- [x] O layout permanece mobile-first: uma coluna em telas menores, duas colunas em desktop e três cards apenas em telas amplas, sem criar estrutura paralela.
+- [x] Nenhum package novo foi instalado, nenhum mock foi criado e não houve alteração em Prisma schema/migrations; `db:migrate` não se aplicou.
+- [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e browser local em Chrome em `http://localhost:3002/configuracoes/seo-metadados`, confirmando a prévia Open Graph ao lado da prévia de busca.
