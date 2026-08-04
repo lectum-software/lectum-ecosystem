@@ -35,12 +35,29 @@ export type AdminFinanceSubscriptionRelationFilters = {
   status?: string;
 };
 
+const parseSubscriptionOperationalCode = (value?: string) => {
+  const query = value?.trim();
+  if (!query) return null;
+
+  const numericValue = /^\d+$/.test(query) ? Number(query) : null;
+  if (numericValue !== null) {
+    return Number.isSafeInteger(numericValue) && numericValue > 0 ? numericValue : null;
+  }
+
+  const prefixedValue = query.match(/^a0*(\d+)$/i);
+  if (!prefixedValue) return null;
+
+  const parsed = Number(prefixedValue[1]);
+
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 const paidSubscriptionRelationWhere = (
   range: AdminFinanceDateRange,
   filters: AdminFinanceSubscriptionRelationFilters = {},
 ): Prisma.professional_subscriptionWhereInput => {
   const query = filters.q?.trim();
-  const queryNumber = query && /^\d+$/.test(query) ? Number(query) : null;
+  const queryNumber = parseSubscriptionOperationalCode(query);
 
   return {
     ...paidGatewaySubscriptionWhere,
@@ -53,7 +70,7 @@ const paidSubscriptionRelationWhere = (
           OR: [
             { id: { contains: query, mode: "insensitive" } },
             { gateway_subscription_id: { contains: query, mode: "insensitive" } },
-            ...(queryNumber ? [{ internal_id: queryNumber }] : []),
+            ...(queryNumber !== null ? [{ internal_id: queryNumber }] : []),
             {
               psychologist: {
                 crp: { contains: query, mode: "insensitive" },

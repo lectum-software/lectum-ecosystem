@@ -33,6 +33,10 @@ import type {
   FinancePeriodValue,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
+import {
+  formatFinanceChargeCode,
+  formatFinanceSubscriptionCode,
+} from "@/lib/finance-operational-code";
 import { cn } from "@/lib/utils";
 
 type DateFilterDraft = {
@@ -210,7 +214,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
       <input
         className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-medium text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-primary/15"
         onChange={(event) => setDraft(event.target.value)}
-        placeholder="Nome, e-mail ou ID..."
+        placeholder="Nome, e-mail ou código..."
         type="search"
         value={draft}
       />
@@ -482,7 +486,11 @@ const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem }) => (
           <time dateTime={item.occurred_at}>{formatDateTime(item.occurred_at)}</time> ·{" "}
           {item.gateway}
         </p>
-        <IdentifierLine className="mt-1" label="ID" value={item.internal_id} />
+        <IdentifierLine
+          className="mt-1"
+          label="ID"
+          value={formatFinanceChargeCode(item.internal_id)}
+        />
       </div>
       <div className="text-left sm:text-right">
         <p className="text-sm font-black text-foreground">
@@ -668,7 +676,11 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                     <StatusBadge item={item} />
                   </div>
                   <p className="truncate text-xs font-bold text-muted">{item.psychologist.email}</p>
-                  <IdentifierLine className="mt-2" label="ID" value={item.internal_id} />
+                  <IdentifierLine
+                    className="mt-2"
+                    label="ID"
+                    value={formatFinanceSubscriptionCode(item.internal_id)}
+                  />
                   <div className="mt-3">
                     <PaymentHealthBadge health={item.payment_health} />
                   </div>
@@ -761,7 +773,10 @@ const SubscriptionsTable = ({ items }: { items: FinanceSubscriptionItem[] }) => 
                       </button>
                     </td>
                     <td className="max-w-[190px] px-5 py-4">
-                      <IdentifierLine label="ID" value={item.internal_id} />
+                      <IdentifierLine
+                        label="ID"
+                        value={formatFinanceSubscriptionCode(item.internal_id)}
+                      />
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex min-w-0 items-center gap-3">

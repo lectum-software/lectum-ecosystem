@@ -284,3 +284,23 @@ Consequências:
 - O banco passa a manter duas camadas de identificação financeira: chave técnica string para relações/integrações e `internal_id` numérico para leitura operacional Admin.
 - A migration preenche linhas existentes e futuras via sequência PostgreSQL/autoincrement, sem seed, mock ou dado artificial.
 - A decisão adiciona schema/migration, mas não altera provider, package, gateway, CSV ou endpoints novos.
+
+## Ajuste 2026-08-04: códigos operacionais C/A para cobranças e assinaturas
+
+Feedback de produto pediu que o ID operacional exibido no Admin Financeiro também identifique visualmente o tipo do registro, sem voltar a labels longos nas células.
+
+Decisões:
+
+- Manter `professional_subscription.internal_id` e `payment_event.internal_id` como identificadores numéricos reais e persistidos.
+- Derivar apenas na apresentação os códigos operacionais:
+  - cobrança: `C` + `internal_id` com 5 dígitos mínimos, por exemplo `C00001`;
+  - assinatura: `A` + `internal_id` com 5 dígitos mínimos, por exemplo `A00020`.
+- Não truncar valores acima de 99999; o código cresce naturalmente, como `C100000`.
+- Não criar coluna nova, migration, seed ou código artificial persistido, porque o identificador continua sendo o `internal_id` real.
+- Aceitar busca por código operacional nas listas completas: `/financeiro/assinaturas` entende `A00020` como assinatura `internal_id=20`, e `/financeiro/cobrancas` localiza tanto cobranças `C00001` quanto assinaturas vinculadas `A00020`.
+
+Consequências:
+
+- O operador distingue cobrança e assinatura pela própria célula de ID, preservando uma tabela curta e sem prefixo textual `ID:`.
+- O padrão é reversível e auditável a partir do banco local: remover o prefixo e zeros à esquerda recupera o `internal_id`.
+- A decisão não altera schema, chaves primárias, contratos financeiros centrais, gateway Mercado Pago, CSV ou packages.

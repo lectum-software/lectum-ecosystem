@@ -931,3 +931,42 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
 - Chrome headless local abriu `/financeiro/cobrancas`; sem sessão Admin no perfil temporário, a validação visual autenticada ficou limitada às capturas enviadas pelo usuário, ao build e à inspeção estática da UI.
+
+## Ajuste pós-feedback 2026-08-04 - Códigos C/A para IDs financeiros
+
+- Pedido do usuário: exibir IDs com prefixo curto que identifique o tipo do registro, usando `C00001` para cobrança e `A00001` para assinatura.
+- Foi criado um helper Admin em `admin/src/lib/finance-operational-code.ts` para derivar códigos visuais de `internal_id` real, sem persistir novo campo e sem truncar números acima de 99999.
+- `/financeiro/cobrancas` agora exibe cobranças como `C00001` na coluna/card **ID** e assinaturas vinculadas como `A00020` na coluna/card **Assinatura**.
+- `/financeiro/assinaturas` agora exibe assinaturas como `A00020` na tabela/card principal e cobranças do histórico como `C00001`.
+- As buscas reais foram ajustadas para aceitar os códigos operacionais: `A00020` na relação de assinaturas e `C00001`/`A00020` na relação de cobranças.
+- A alteração reutiliza `internal_id` persistido em `professional_subscription` e `payment_event`; não houve schema Prisma, migration, endpoint novo, package, mock, seed ou dado artificial.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png`, `_product/tasks/PROTO-INVENTORY.md` e as capturas autenticadas enviadas pelo usuário em 2026-08-04.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] IDs de cobranças são exibidos no padrão `C00001`, derivado de `payment_event.internal_id`.
+- [x] IDs de assinaturas são exibidos no padrão `A00001`, derivado de `professional_subscription.internal_id`.
+- [x] A coluna/card **Assinatura** em `/financeiro/cobrancas` exibe somente o código da assinatura vinculada, como `A00020`.
+- [x] O histórico de pagamentos em `/financeiro/assinaturas` exibe cobranças no padrão `C00001`.
+- [x] Eventos de cobrança sem assinatura vinculada continuam sem identificador artificial de assinatura e exibem `—`.
+- [x] A busca de assinaturas aceita `A00001`; a busca de cobranças aceita `C00001` e `A00001`.
+- [x] Nenhum schema Prisma, migration, endpoint novo, package, mock, seed ou dado artificial foi adicionado.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/lib/finance-operational-code.ts" "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`.
+- `pnpm --dir admin exec biome check "src/lib/finance-operational-code.ts" "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir backend exec biome check "src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts" "src/modules/api/admin/private/finance/dashboard/use-cases/services.ts"`.
+- `pnpm --dir admin exec eslint "src/lib/finance-operational-code.ts" "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir backend check`.
+- `pnpm --dir admin build`.
+- `pnpm --dir backend build`.
+- `pnpm check`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
+- Chrome headless local abriu `/financeiro/cobrancas`; sem sessão Admin no perfil temporário, a validação visual autenticada ficou limitada às capturas enviadas pelo usuário, ao build e à inspeção estática da UI.
+- Smoke de service real: `listAdminFinanceCharges({ period: "all", q: "C00001" })` retornou `status=200`, `count=1`; `listAdminFinanceCharges({ period: "all", q: "A00020" })` retornou `status=200`, `count=2`; `listAdminFinanceSubscriptions({ period: "all", q: "A00020" })` retornou `status=200`, `count=1`.

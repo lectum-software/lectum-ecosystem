@@ -21,6 +21,10 @@ import {
 import { useAdminFinanceCharges } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
 import type { FinanceChargeItem, FinanceListQuery, FinancePeriodValue } from "@/api/req/finance";
+import {
+  formatFinanceChargeCode,
+  formatFinanceSubscriptionCode,
+} from "@/lib/finance-operational-code";
 import { cn } from "@/lib/utils";
 
 type DateFilterDraft = {
@@ -148,7 +152,7 @@ const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; val
       <input
         className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-medium text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-primary/15"
         onChange={(event) => setDraft(event.target.value)}
-        placeholder="Nome, e-mail ou ID..."
+        placeholder="Nome, e-mail ou código..."
         type="search"
         value={draft}
       />
@@ -279,7 +283,12 @@ const ChargeSubscriptionIdentifier = ({ item }: { item: FinanceChargeItem }) => 
     return <IdentifierLine label="ID da assinatura" value="—" />;
   }
 
-  return <IdentifierLine label="ID da assinatura" value={item.subscription.internal_id} />;
+  return (
+    <IdentifierLine
+      label="ID da assinatura"
+      value={formatFinanceSubscriptionCode(item.subscription.internal_id)}
+    />
+  );
 };
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
@@ -351,7 +360,11 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
               <p className="truncate text-xs font-bold text-muted">
                 {item.subscription?.psychologist.email ?? "Sem vínculo local"}
               </p>
-              <IdentifierLine className="mt-2" label="ID" value={item.internal_id} />
+              <IdentifierLine
+                className="mt-2"
+                label="ID"
+                value={formatFinanceChargeCode(item.internal_id)}
+              />
               <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <dt className="font-semibold text-muted">Data</dt>
@@ -398,7 +411,7 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 {formatDateTime(item.occurred_at)}
               </td>
               <td className="max-w-[210px] px-5 py-4">
-                <IdentifierLine label="ID" value={item.internal_id} />
+                <IdentifierLine label="ID" value={formatFinanceChargeCode(item.internal_id)} />
               </td>
               <td className="px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">

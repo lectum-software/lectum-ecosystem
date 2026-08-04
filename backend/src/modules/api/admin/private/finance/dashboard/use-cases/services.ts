@@ -354,6 +354,9 @@ const normalizeText = (value: unknown) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
+const formatFinanceOperationalCode = (prefix: "A" | "C", internalId: number) =>
+  `${prefix}${String(internalId).padStart(5, "0")}`;
+
 const toAmountCents = (value: unknown): number | null => {
   if (typeof value === "number" && Number.isFinite(value) && value > 0) {
     return Math.round(value * 100);
@@ -1036,6 +1039,7 @@ const matchesChargeSearch = (item: AdminFinanceChargeItem, q?: string) => {
   const searchableValues = [
     item.event_id,
     String(item.internal_id),
+    formatFinanceOperationalCode("C", item.internal_id),
     item.event_type,
     item.external_id,
     item.reference,
@@ -1043,6 +1047,7 @@ const matchesChargeSearch = (item: AdminFinanceChargeItem, q?: string) => {
     item.subscription?.gateway_subscription_id,
     item.subscription?.id,
     item.subscription ? String(item.subscription.internal_id) : null,
+    item.subscription ? formatFinanceOperationalCode("A", item.subscription.internal_id) : null,
     item.subscription?.plan.name,
     item.subscription?.plan.slug,
     item.subscription?.psychologist.crp,
