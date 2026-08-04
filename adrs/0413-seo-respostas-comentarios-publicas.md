@@ -27,3 +27,14 @@ No entanto, a tela Admin **SEO / Metadados** listava apenas o template de post r
 ## Validação
 
 Registrada no ajuste pós-feedback da TASK-145.
+
+## Complemento 2026-08-03 - contenção visual no Admin
+
+Após expor a rota longa de respostas no seletor **Páginas públicas**, a coluna podia crescer além do tamanho definido pela grid e invadir o bloco de edição de metadados. A decisão complementar é tratar caminhos públicos dinâmicos como conteúdo potencialmente longo no Admin:
+
+- wrappers da grid/seletor usam `min-w-0`;
+- o card do seletor usa `overflow-hidden`;
+- o texto da rota permanece truncado;
+- o badge `index` não encolhe.
+
+Com isso, a lista continua mostrando o slug compartilhável de respostas sem alterar a arquitetura, os dados reais de SEO ou a experiência mobile-first.

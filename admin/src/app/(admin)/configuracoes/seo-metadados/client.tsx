@@ -179,17 +179,17 @@ const PageSelector = ({
   selectedKey: AdminSeoMetadataPageKey;
   settings: AdminSeoMetadataSetting[];
 }) => (
-  <section className={cn(cardClass, "p-4 md:p-5")}>
+  <section className={cn(cardClass, "min-w-0 overflow-hidden p-4 md:p-5")}>
     <div className="mb-4 flex items-center gap-3">
       <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft text-primary">
         <Globe2 className="h-5 w-5" />
       </span>
-      <div>
+      <div className="min-w-0">
         <h2 className="text-lg font-bold text-foreground">Páginas públicas</h2>
         <p className="text-sm text-muted">Selecione uma página para editar os metadados.</p>
       </div>
     </div>
-    <div className="grid gap-2">
+    <div className="grid min-w-0 gap-2">
       {settings.map((setting) => {
         const isSelected = setting.page_key === selectedKey;
 
@@ -197,7 +197,7 @@ const PageSelector = ({
           <button
             aria-pressed={isSelected}
             className={cn(
-              "w-full rounded-[1.35rem] border p-4 text-left transition",
+              "w-full min-w-0 overflow-hidden rounded-[1.35rem] border p-4 text-left transition",
               isSelected
                 ? "border-primary bg-primary-soft text-primary ring-2 ring-primary/10"
                 : "border-border bg-surface text-foreground hover:border-primary/30 hover:bg-surface-muted",
@@ -206,7 +206,7 @@ const PageSelector = ({
             onClick={() => onSelect(setting.page_key)}
             type="button"
           >
-            <span className="flex items-start justify-between gap-3">
+            <span className="flex min-w-0 items-start justify-between gap-3">
               <span className="min-w-0">
                 <span className="block truncate text-sm font-bold">{setting.label}</span>
                 <span className="mt-1 block truncate text-xs font-semibold text-muted">
@@ -215,7 +215,7 @@ const PageSelector = ({
               </span>
               <span
                 className={cn(
-                  "rounded-full px-2.5 py-1 text-[11px] font-bold",
+                  "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold",
                   setting.robots_index
                     ? "bg-primary-soft text-primary"
                     : "bg-surface-muted text-muted",
@@ -519,14 +519,14 @@ export const AdminSeoMetadataClient = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <SettingsHeader />
       <SummaryCards settings={settings} />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(260px,340px)_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(260px,340px)_minmax(0,1fr)]">
         <PageSelector onSelect={setSelectedKey} selectedKey={selectedKey} settings={settings} />
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <section className={cn(cardClass, "p-4 md:p-6")}>
             <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>

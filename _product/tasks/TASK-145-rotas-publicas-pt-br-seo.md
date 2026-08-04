@@ -147,3 +147,10 @@ Validações executadas:
 - [x] A chave operacional `community_post_reply` foi adicionada aos defaults reais de SEO, sem migration, porque `site_seo_setting.page_key` é string e `SeoMetadataRepository.ensureDefaults()` cria a linha ausente em bases existentes.
 - [x] O fallback de metadata das páginas públicas de thread/resposta usa `community_post_reply`, enquanto posts raiz continuam usando `community_post`; o endpoint dinâmico real de SEO de respostas permanece o mesmo.
 - [x] Revalidado com checks/builds de backend, frontend e admin, `pnpm check`, `git diff --check`, smoke HTTP de `GET /api/public/seo/metadata` confirmando a nova rota e Chrome headless mobile em `/configuracoes/seo-metadados` (sem sessão administrativa no perfil headless, exibindo o login do Admin).
+
+## Ajuste pós-feedback 2026-08-03 - contenção da lista de páginas públicas
+
+- [x] O seletor Admin **Páginas públicas** recebeu contenção com `min-w-0`, `overflow-hidden`, truncamento do caminho e badge sem encolhimento para que rotas longas, como a de resposta de comentário, não expandam a coluna.
+- [x] A grade entre o seletor e o editor SEO passou a conter largura mínima zero nos wrappers relevantes, mantendo o editor no próprio bloco em telas desktop e preservando o empilhamento mobile-first.
+- [x] Nenhum package novo foi instalado, nenhum mock foi criado e não houve alteração em Prisma schema/migrations; `db:migrate` não se aplicou.
+- [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e browser local em Chrome em `http://localhost:3002/configuracoes/seo-metadados`, confirmando que a opção **Resposta de comentário** fica truncada dentro do card e não vaza para o editor.
