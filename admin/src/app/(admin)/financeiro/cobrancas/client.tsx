@@ -266,31 +266,20 @@ const IdentifierLine = ({
   value: number | string;
 }) => (
   <p
-    className={cn("min-w-0 break-all text-[11px] font-semibold leading-5 text-muted", className)}
-    title={`${label}: ${value}`}
+    className={cn("min-w-0 break-all text-sm font-semibold leading-5 text-foreground", className)}
+    title={String(value)}
   >
-    <span>{label}: </span>
-    <code className="font-mono text-foreground">{value}</code>
+    <span className="sr-only">{label} </span>
+    {value}
   </p>
 );
 
-const formatChargeSubscriptionPlanState = (item: FinanceChargeItem) => {
-  if (!item.subscription) return "—";
-  if (item.subscription.status === "ativa") return "Ativo";
-
-  return item.subscription.status_label;
-};
-
 const ChargeSubscriptionIdentifier = ({ item }: { item: FinanceChargeItem }) => {
   if (!item.subscription) {
-    return <IdentifierLine className="mt-1" label="ID" value="—" />;
+    return <IdentifierLine label="ID da assinatura" value="—" />;
   }
 
-  return (
-    <div className="mt-1">
-      <IdentifierLine label="ID" value={item.subscription.internal_id} />
-    </div>
-  );
+  return <IdentifierLine label="ID da assinatura" value={item.subscription.internal_id} />;
 };
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
@@ -378,11 +367,9 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 </div>
                 <div className="col-span-2">
                   <dt className="font-semibold text-muted">Assinatura</dt>
-                  <dd className="mt-1 font-bold text-foreground">
-                    {item.subscription?.plan.name ?? "Não identificado"}
+                  <dd className="mt-1">
+                    <ChargeSubscriptionIdentifier item={item} />
                   </dd>
-                  <p className="mt-1 text-muted">{formatChargeSubscriptionPlanState(item)}</p>
-                  <ChargeSubscriptionIdentifier item={item} />
                 </div>
               </dl>
             </div>
@@ -427,10 +414,6 @@ const ChargesTable = ({ items }: { items: FinanceChargeItem[] }) => (
                 </div>
               </td>
               <td className="px-5 py-4">
-                <p className="font-black text-foreground">
-                  {item.subscription?.plan.name ?? "Não identificado"}
-                </p>
-                <p className="text-xs text-muted">{formatChargeSubscriptionPlanState(item)}</p>
                 <ChargeSubscriptionIdentifier item={item} />
               </td>
               <td className="whitespace-nowrap px-5 py-4 font-black text-foreground">

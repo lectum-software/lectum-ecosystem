@@ -898,3 +898,36 @@ Frontend esperado:
 - Smoke de service real: `listAdminFinanceCharges({ period: "all", limit: 2 })` retornou `status=200`, `count=8`, `internal_id` numérico nas cobranças e `subscription.internal_id` numérico quando havia vínculo.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
+
+## Ajuste pós-feedback 2026-08-04 - IDs financeiros sem prefixo visual
+
+- Pedido do usuário: remover o prefixo visual **ID:** das colunas **ID** em `/financeiro/assinaturas` e `/financeiro/cobrancas`, manter somente o número na coluna **Assinatura** de cobranças e usar a mesma fonte textual das demais colunas.
+- As colunas **ID** das relações completas de assinaturas e cobranças agora renderizam apenas o `internal_id` numérico, sem prefixo visível **ID:**, sem `<code>` e sem fonte monoespaçada.
+- A coluna **Assinatura** em `/financeiro/cobrancas` agora renderiza somente o `internal_id` numérico da assinatura vinculada; eventos sem vínculo real continuam exibindo `—`, sem ID artificial.
+- Os cards mobile das mesmas listas seguem a mesma apresentação mobile-first: número puro para IDs e fonte textual padrão.
+- A alteração é somente de UI e reutiliza dados reais já retornados pelo contrato financeiro; não houve backend, endpoint, cálculo financeiro, CSV, schema Prisma, migration, package, mock, seed ou dado artificial novo.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png`, `_product/tasks/PROTO-INVENTORY.md` e as capturas autenticadas enviadas pelo usuário em 2026-08-04.
+- ADR não criado/alterado: não houve nova decisão arquitetural, integração, regra de domínio ou trade-off persistente além do refinamento visual solicitado.
+
+### Critérios de aceite do ajuste
+
+- [x] `/financeiro/assinaturas` exibe somente o número na coluna/card **ID**, sem prefixo visual **ID:**.
+- [x] `/financeiro/cobrancas` exibe somente o número na coluna/card **ID**, sem prefixo visual **ID:**.
+- [x] A coluna/card **Assinatura** em `/financeiro/cobrancas` exibe somente o número do ID interno da assinatura vinculada.
+- [x] Eventos de cobrança sem assinatura vinculada continuam sem identificador artificial de assinatura e exibem `—`.
+- [x] IDs financeiros usam a fonte textual padrão das demais colunas, sem `<code>` e sem `font-mono`.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi usado.
+- [x] Nenhum backend, endpoint, schema Prisma, migration, package, mock, seed ou dado artificial foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec biome check "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin exec eslint "src/app/(admin)/financeiro/assinaturas/client.tsx" "src/app/(admin)/financeiro/cobrancas/client.tsx"`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`.
+- Scan estático: `ID:`, `font-mono`, `<code>`, `formatChargeSubscriptionPlanState`, `subscription?.plan.name` e `Não identificado` não aparecem nos arquivos financeiros alterados.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
+- Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
+- Chrome headless local abriu `/financeiro/cobrancas`; sem sessão Admin no perfil temporário, a validação visual autenticada ficou limitada às capturas enviadas pelo usuário, ao build e à inspeção estática da UI.

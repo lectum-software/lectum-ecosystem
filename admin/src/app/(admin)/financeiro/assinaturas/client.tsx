@@ -407,11 +407,11 @@ const IdentifierLine = ({
   value: number | string;
 }) => (
   <p
-    className={cn("min-w-0 break-all text-[11px] font-semibold leading-5 text-muted", className)}
-    title={`${label}: ${value}`}
+    className={cn("min-w-0 break-all text-sm font-semibold leading-5 text-foreground", className)}
+    title={String(value)}
   >
-    <span>{label}: </span>
-    <code className="font-mono text-foreground">{value}</code>
+    <span className="sr-only">{label} </span>
+    {value}
   </p>
 );
 
