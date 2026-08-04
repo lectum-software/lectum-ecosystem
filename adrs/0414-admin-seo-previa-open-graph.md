@@ -29,3 +29,12 @@ A tela Admin **SEO / Metadados** já possuía uma prévia de busca baseada nos c
 ## Validação
 
 Registrada no ajuste pós-feedback da TASK-145.
+
+## Complemento 2026-08-04 - grid das prévias em largura total
+
+Após a inclusão da prévia Open Graph, os três cards de apoio ficavam dentro da coluna direita, enquanto o card **Páginas públicas** era esticado até a base desses cards por herança da grid. A decisão complementar é separar a composição em duas regiões:
+
+- primeira grid: **Páginas públicas** e **Página selecionada**, com bases alinhadas;
+- segunda grid: **Prévia de busca**, **Prévia Open Graph** e **Publicação**, ocupando a largura completa disponível.
+
+Essa divisão remove o vazio abaixo do seletor, amplia a área útil dos três cards de prévia/publicação em desktop e mantém o comportamento mobile-first sem alterar dados, API ou persistência.

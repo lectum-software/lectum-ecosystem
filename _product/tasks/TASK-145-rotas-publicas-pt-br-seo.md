@@ -162,3 +162,11 @@ Validações executadas:
 - [x] O layout permanece mobile-first: uma coluna em telas menores, duas colunas em desktop e três cards apenas em telas amplas, sem criar estrutura paralela.
 - [x] Nenhum package novo foi instalado, nenhum mock foi criado e não houve alteração em Prisma schema/migrations; `db:migrate` não se aplicou.
 - [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e browser local em Chrome em `http://localhost:3002/configuracoes/seo-metadados`, confirmando a prévia Open Graph ao lado da prévia de busca.
+
+## Ajuste pós-feedback 2026-08-04 - alinhamento dos blocos e espaço das prévias
+
+- [x] O seletor **Páginas públicas** e o bloco **Página selecionada** passaram a compor a mesma linha de grid, com bases alinhadas pelo item stretch dessa linha.
+- [x] Os blocos **Prévia de busca**, **Prévia Open Graph** e **Publicação** foram movidos para uma grid própria abaixo, ocupando a largura completa da área de conteúdo em desktop amplo.
+- [x] O layout continua mobile-first: a linha principal empilha em telas menores e as prévias passam de uma coluna para duas/três conforme a largura disponível.
+- [x] Nenhum package novo foi instalado, nenhum mock foi criado e não houve alteração em Prisma schema/migrations; `db:migrate` não se aplicou.
+- [x] Revalidado com `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e browser local em Chrome em `http://localhost:3002/configuracoes/seo-metadados`, confirmando a base alinhada e as três prévias com mais largura útil.
