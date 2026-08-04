@@ -140,3 +140,10 @@ Validações executadas:
   - `GET /api/public/seo/community-post/:slug/:id` retorna canônico `/comunidades/:slug/publicacao/:id`;
   - `GET /api/public/seo/community-post/:slug/:id/replies/:replyId` retorna canônico `/comunidades/:slug/publicacao/:id/resposta/:replyId`;
   - `GET /api/public/seo/psychologist/:id` retorna canônico `/psicologos/:id`.
+
+## Ajuste pós-feedback 2026-08-03 - slug público de resposta compartilhável
+
+- [x] O Admin SEO/Metadados passa a listar também **Resposta de comentário** com rota pública `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`.
+- [x] A chave operacional `community_post_reply` foi adicionada aos defaults reais de SEO, sem migration, porque `site_seo_setting.page_key` é string e `SeoMetadataRepository.ensureDefaults()` cria a linha ausente em bases existentes.
+- [x] O fallback de metadata das páginas públicas de thread/resposta usa `community_post_reply`, enquanto posts raiz continuam usando `community_post`; o endpoint dinâmico real de SEO de respostas permanece o mesmo.
+- [x] Revalidado com checks/builds de backend, frontend e admin, `pnpm check`, `git diff --check`, smoke HTTP de `GET /api/public/seo/metadata` confirmando a nova rota e Chrome headless mobile em `/configuracoes/seo-metadados` (sem sessão administrativa no perfil headless, exibindo o login do Admin).

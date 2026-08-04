@@ -13,6 +13,7 @@ export type SeoMetadataPageKey =
   | "community"
   | "community_detail"
   | "community_post"
+  | "community_post_reply"
   | "top_mentors";
 
 type SeoOpenGraphType = "article" | "video.other" | "website";
@@ -389,10 +390,11 @@ export const resolveCommunityPostSeoMetadata = async ({
   slug: string;
 }): Promise<Metadata> => {
   const seo = await getPublicCommunityPostSeo({ id, replyId, slug });
+  const pageKey: SeoMetadataPageKey = replyId ? "community_post_reply" : "community_post";
 
-  if (!seo) return resolveSeoMetadata("community_post", fallback);
+  if (!seo) return resolveSeoMetadata(pageKey, fallback);
 
-  return resolveSeoMetadata("community_post", fallback, {
+  return resolveSeoMetadata(pageKey, fallback, {
     canonical: seo.canonical_url,
     description: seo.description,
     image: seo.og_image_url,

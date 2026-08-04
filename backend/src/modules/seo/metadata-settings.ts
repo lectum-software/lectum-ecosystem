@@ -8,6 +8,7 @@ export const SEO_METADATA_PAGE_KEYS = [
   "community",
   "community_detail",
   "community_post",
+  "community_post_reply",
   "top_mentors",
 ] as const;
 
@@ -165,6 +166,23 @@ export const SEO_METADATA_DEFAULTS: readonly SeoMetadataDefault[] = [
     robots_index: true,
     route_path: "/comunidades/[slug]/publicacao/[id]",
     title: "Pergunta da comunidade | Lectum",
+  },
+  {
+    canonical_url: null,
+    description:
+      "Resposta pública de comentário na Lectum, com contexto da publicação e discussão da comunidade.",
+    id: "site-seo-community-post-reply",
+    keywords: ["resposta de psicólogo", "comentário de comunidade", "saúde mental"],
+    label: "Resposta de comentário",
+    og_description:
+      "Resposta pública de comentário na Lectum, com contexto da publicação e discussão da comunidade.",
+    og_image_url: "/logo-light.png",
+    og_title: "Resposta da comunidade | Lectum",
+    page_key: "community_post_reply",
+    robots_follow: true,
+    robots_index: true,
+    route_path: "/comunidades/[slug]/publicacao/[id]/resposta/[replyId]",
+    title: "Resposta da comunidade | Lectum",
   },
   {
     canonical_url: "/comunidades/top-mentores",

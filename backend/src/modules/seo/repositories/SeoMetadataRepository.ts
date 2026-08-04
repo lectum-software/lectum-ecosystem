@@ -18,6 +18,7 @@ const legacyRouteDataByPageKey: Partial<
   community: { canonical_url: "/community", route_path: "/community" },
   community_detail: { route_path: "/community/[slug]" },
   community_post: { route_path: "/community/[slug]/post/[id]" },
+  community_post_reply: { route_path: "/community/[slug]/post/[id]/thread/[replyId]" },
   psychologist_profile: { route_path: "/psychologists/[id]" },
   psychologists: { canonical_url: "/psychologists", route_path: "/psychologists" },
   top_mentors: { canonical_url: "/community/top-mentors", route_path: "/community/top-mentors" },

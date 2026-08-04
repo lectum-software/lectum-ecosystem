@@ -994,7 +994,7 @@ Adicionado na TASK-141 para permitir que o Admin configure metadados das página
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `page_key` | `String @unique` | Chave operacional fechada: `default`, `home`, `psychologists`, `psychologist_profile`, `community`, `community_post`, `top_mentors`. |
+| `page_key` | `String @unique` | Chave operacional fechada: `default`, `home`, `psychologists`, `psychologist_profile`, `community`, `community_detail`, `community_post`, `community_post_reply`, `top_mentors`. |
 | `route_path` | `String?` | Rota publica correspondente; pode ser `null` no fallback global e pode conter placeholders de rota dinamica como `/psicologos/[id]`. |
 | `label` | `String` | Nome exibido no Admin; não é editável pela tela. |
 | `title` | `String` | Título SEO renderizado server-side quando a página usa a configuração. |
@@ -1012,7 +1012,9 @@ Complemento TASK-143: `GET /api/public/seo/community-post/:slug/:id` e `GET /api
 
 Complemento TASK-144: a UI Admin nao edita `site_seo_setting.og_image_url` como campo textual. O operador faz upload de JPG/PNG/WebP em `POST /api/admin/private/settings/seo/:page_key/og-image`; o backend grava o arquivo no storage publico em `seo/og-image/` e retorna um caminho publico gerado internamente para o formulario salvar em `og_image_url`. O update de metadados continua sendo `PUT /api/admin/private/settings/seo/:page_key`, com auditoria em `admin_activity_log` quando `og_image_url` mudar.
 
-Complemento TASK-145: `route_path` e `canonical_url` gerenciados passam a usar URLs publicas canonicas em PT-BR (`/psicologos`, `/psicologos/[id]`, `/comunidades`, `/comunidades/[slug]`, `/comunidades/[slug]/publicacao/[id]`, `/comunidades/top-mentores`). Registros existentes com canonicos legados em ingles sao sincronizados para PT-BR sem sobrescrever customizacoes reais.
+Complemento TASK-145: `route_path` e `canonical_url` gerenciados passam a usar URLs publicas canonicas em PT-BR (`/psicologos`, `/psicologos/[id]`, `/comunidades`, `/comunidades/[slug]`, `/comunidades/[slug]/publicacao/[id]`, `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, `/comunidades/top-mentores`). Registros existentes com canonicos legados em ingles sao sincronizados para PT-BR sem sobrescrever customizacoes reais.
+
+Complemento 2026-08-03: o link publico de compartilhamento de respostas/comentarios usa `page_key="community_post_reply"` e `route_path="/comunidades/[slug]/publicacao/[id]/resposta/[replyId]"`, separado de `community_post` para aparecer explicitamente no Admin SEO/Metadados e permitir fallback/robots/OG especificos quando o SEO dinamico da resposta nao estiver disponivel.
 
 
 ## Convencao de rotas (frontend e backend)

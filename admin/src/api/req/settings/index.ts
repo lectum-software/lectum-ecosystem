@@ -71,6 +71,7 @@ export const ADMIN_SEO_METADATA_PAGE_KEYS = [
   "community",
   "community_detail",
   "community_post",
+  "community_post_reply",
   "top_mentors",
 ] as const;
 

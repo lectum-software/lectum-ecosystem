@@ -198,3 +198,10 @@ Formato recomendado:
 - [ADR-0403 - Meta de conversao no dashboard e matriz Admin](0403-meta-conversao-dashboard-matriz-admin.md) - Accepted
 - [ADR-0404 - Comunidades no Analytics privado do psicologo](0404-comunidades-analytics-psicologo.md) - Accepted
 - [ADR-0406 - Preço do Plano Profissional em R$ 29,90](0406-preco-plano-profissional-2990.md) - Accepted
+- [ADR-0407 - SEO e Metadados administráveis](0407-seo-metadados-admin.md) - Accepted
+- [ADR-0408 - Visualização readonly do plano em Configurações Admin](0408-visualizacao-readonly-plano-assinatura-admin.md) - Accepted
+- [ADR-0409 - Miniaturas persistidas para Open Graph de vídeos de posts](0409-miniaturas-video-seo-open-graph-posts.md) - Accepted
+- [ADR-0410 - Upload gerenciado para Imagem Open Graph no Admin](0410-upload-imagem-open-graph-admin.md) - Accepted
+- [ADR-0411 - WhatsApp em formatos de posts/respostas no Admin](0411-whatsapp-cliques-formatos-posts-respostas-admin.md) - Accepted
+- [ADR-0412 - Rotas públicas e privadas canônicas em PT-BR](0412-rotas-publicas-pt-br-seo.md) - Accepted
+- [ADR-0413 - SEO administrável para respostas de comentários públicas](0413-seo-respostas-comentarios-publicas.md) - Accepted
