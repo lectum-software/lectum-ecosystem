@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
       },
     ]),
   },
-  outputFileTracingRoot: process.cwd(),
+  // outputFileTracingRoot: process.cwd(),
   poweredByHeader: false,
 };
 
