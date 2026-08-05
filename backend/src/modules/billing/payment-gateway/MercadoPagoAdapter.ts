@@ -44,6 +44,7 @@ type MercadoPagoPreApprovalRaw = {
 
 const GATEWAY = "mercadopago";
 const TRANSIENT_GATEWAY_RETRY_DELAY_MS = 2_500;
+const SUBSCRIPTION_PLAN_PROPAGATION_RETRY_DELAYS_MS = [2_500, 5_000, 10_000] as const;
 
 type MercadoPagoSafeErrorDetails = {
   operation: string;
@@ -145,6 +146,17 @@ const isTransientGatewayError = (err: unknown) => {
   if (details.status && details.status >= 500) return true;
 
   return details.cause_message?.toLowerCase().includes("internal server error") ?? false;
+};
+
+const isPlanTemplateNotFoundError = (err: unknown) => {
+  const details = sanitizeMercadoPagoError("template_check", err);
+  const message = details.cause_message?.toLowerCase() ?? "";
+
+  return (
+    details.status === 404 &&
+    message.includes("template with id") &&
+    message.includes("does not exist")
+  );
 };
 
 const sanitizeMercadoPagoError = (operation: string, err: unknown): MercadoPagoSafeErrorDetails => {
@@ -346,19 +358,35 @@ export class MercadoPagoAdapter implements PaymentGateway {
       });
 
     const response = await this.runGatewayOperation("create_subscription", async () => {
-      try {
-        return await createPreApproval();
-      } catch (err) {
-        if (!isTransientGatewayError(err)) throw err;
+      let retryAttempt = 0;
 
-        console.warn("[BILLING] Mercado Pago transient subscription error, retrying", {
-          ...sanitizeMercadoPagoError("create_subscription", err),
-          gateway_plan_id: gatewayPlanId ?? null,
-        });
+      while (true) {
+        try {
+          return await createPreApproval();
+        } catch (err) {
+          const isRetryablePlanPropagationError =
+            Boolean(gatewayPlanId) && isPlanTemplateNotFoundError(err);
+          const isRetryableTransientError = isTransientGatewayError(err) && retryAttempt === 0;
+          const retryDelayMs =
+            isRetryablePlanPropagationError && gatewayPlanId
+              ? SUBSCRIPTION_PLAN_PROPAGATION_RETRY_DELAYS_MS[retryAttempt]
+              : TRANSIENT_GATEWAY_RETRY_DELAY_MS;
+          const canRetry =
+            isRetryableTransientError ||
+            (isRetryablePlanPropagationError && retryDelayMs !== undefined);
 
-        await delay(TRANSIENT_GATEWAY_RETRY_DELAY_MS);
+          if (!canRetry || retryDelayMs === undefined) throw err;
 
-        return createPreApproval();
+          console.warn("[BILLING] Mercado Pago subscription error, retrying", {
+            ...sanitizeMercadoPagoError("create_subscription", err),
+            gateway_plan_id: gatewayPlanId ?? null,
+            retry_attempt: retryAttempt + 1,
+            retry_delay_ms: retryDelayMs,
+          });
+
+          await delay(retryDelayMs);
+          retryAttempt += 1;
+        }
       }
     });
 
