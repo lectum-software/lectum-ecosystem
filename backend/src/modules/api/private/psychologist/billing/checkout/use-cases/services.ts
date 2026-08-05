@@ -178,6 +178,33 @@ const readCompatibleGatewayPlanId = async ({
   return null;
 };
 
+const readPersistedGatewayPlanId = async ({
+  gateway,
+  gatewayPlanId,
+  plan,
+}: {
+  gateway: PaymentGateway;
+  gatewayPlanId: string;
+  plan: ProfessionalPlan;
+}) => {
+  try {
+    return await readCompatibleGatewayPlanId({
+      gateway,
+      gatewayPlanId,
+      plan,
+    });
+  } catch (err) {
+    console.warn("[BILLING] Mercado Pago persisted plan inaccessible, resetting local reference", {
+      ...sanitizeGatewayError(err),
+      gateway_plan_id: gatewayPlanId,
+      plan_id: plan.id,
+      plan_slug: plan.slug,
+    });
+
+    return null;
+  }
+};
+
 const createAndPersistGatewayPlanId = async ({
   gateway,
   plan,
@@ -213,7 +240,7 @@ const ensureGatewayPlanId = async ({
   returnUrl: string;
 }) => {
   if (plan.gateway_plan_id) {
-    const compatibleGatewayPlanId = await readCompatibleGatewayPlanId({
+    const compatibleGatewayPlanId = await readPersistedGatewayPlanId({
       gateway,
       gatewayPlanId: plan.gateway_plan_id,
       plan,
