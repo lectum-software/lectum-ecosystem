@@ -43,6 +43,7 @@ type MercadoPagoPreApprovalRaw = {
 };
 
 const GATEWAY = "mercadopago";
+const TRANSIENT_GATEWAY_RETRY_DELAY_MS = 2_500;
 
 type MercadoPagoSafeErrorDetails = {
   operation: string;
@@ -131,6 +132,19 @@ const toIsoDateString = (value?: Date | string | null) => {
   const date = value instanceof Date ? value : new Date(value);
 
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+};
+
+const delay = (milliseconds: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+
+const isTransientGatewayError = (err: unknown) => {
+  const details = sanitizeMercadoPagoError("transient_check", err);
+
+  if (details.status && details.status >= 500) return true;
+
+  return details.cause_message?.toLowerCase().includes("internal server error") ?? false;
 };
 
 const sanitizeMercadoPagoError = (operation: string, err: unknown): MercadoPagoSafeErrorDetails => {
@@ -307,8 +321,13 @@ export class MercadoPagoAdapter implements PaymentGateway {
     startDate,
   }: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult> {
     const recurringStartDate = toIsoDateString(startDate);
-
-    const response = await this.runGatewayOperation("create_subscription", () =>
+    const requestOptions = this.withRequestOptions(
+      {
+        idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+      },
+      { stageScope: true },
+    );
+    const createPreApproval = () =>
       this.preApproval.create({
         body: {
           ...(gatewayPlanId ? { preapproval_plan_id: gatewayPlanId } : {}),
@@ -326,14 +345,25 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "authorized",
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: `lectum-preapproval-${subscriptionId}`,
-          },
-          { stageScope: true },
-        ),
-      }),
-    );
+        requestOptions,
+      });
+
+    const response = await this.runGatewayOperation("create_subscription", async () => {
+      try {
+        return await createPreApproval();
+      } catch (err) {
+        if (!isTransientGatewayError(err)) throw err;
+
+        console.warn("[BILLING] Mercado Pago transient subscription error, retrying", {
+          ...sanitizeMercadoPagoError("create_subscription", err),
+          gateway_plan_id: gatewayPlanId ?? null,
+        });
+
+        await delay(TRANSIENT_GATEWAY_RETRY_DELAY_MS);
+
+        return createPreApproval();
+      }
+    });
 
     if (!response.id) {
       throw new Error("MERCADO_PAGO_PREAPPROVAL_ID_MISSING");
