@@ -13,6 +13,16 @@ should_run_migrations() {
 }
 
 if should_run_migrations; then
+  if [ -z "${DATABASE_URL:-}" ]; then
+    echo "DATABASE_URL is required to run Prisma migrations." >&2
+    exit 1
+  fi
+
+  if [ ! -f "prisma.config.ts" ]; then
+    echo "prisma.config.ts is required to run Prisma migrations with Prisma 7." >&2
+    exit 1
+  fi
+
   echo "Applying Prisma migrations with prisma migrate deploy..."
   ./node_modules/.bin/prisma migrate deploy
 else

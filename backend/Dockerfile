@@ -51,6 +51,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma.config.ts ./prisma.config.ts
 COPY --from=deps /app/node_modules ./node_modules
 RUN pnpm prune --prod
 

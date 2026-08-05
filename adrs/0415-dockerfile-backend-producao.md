@@ -29,6 +29,7 @@ Era necessário criar uma imagem Docker capaz de buildar o backend de forma repr
 - Manter `backend/pnpm-workspace.yaml` como workspace válido de aplicação única (`packages: ['.']`) para evitar falhas de builders PNPM que validam o manifesto antes de usar o Dockerfile.
 - Executar `prisma migrate deploy` no entrypoint do container antes de iniciar a API, com opt-out via `RUN_DB_MIGRATIONS=false`, para que deploys em Dokploy apliquem migrations sem comando manual adicional.
 - Manter o pacote `prisma` em `dependencies` para que o CLI de migrations exista na imagem final após `pnpm prune --prod`.
+- Copiar `prisma.config.ts` para a imagem final, pois o Prisma 7 lê `datasource.url` desse arquivo durante `prisma migrate deploy`; sem ele, a env `DATABASE_URL` existe mas o migrate não encontra a configuração de datasource.
 
 ## Consequências
 

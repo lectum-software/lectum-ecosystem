@@ -52,7 +52,7 @@ docker build -t lectum-backend ./backend
 
 A imagem usa `PORT=3001` apenas como padrão. Para homologação/produção, configure `PORT` nas envs do runtime da aplicação; se a plataforma depender do metadata `EXPOSE`, passe também `--build-arg PORT=<porta>` no build.
 
-Ao iniciar, o container executa `prisma migrate deploy` antes de subir a API. Esse comportamento é controlado por `RUN_DB_MIGRATIONS` e vem ativo por padrão; defina `RUN_DB_MIGRATIONS=false` apenas se o deploy já executar as migrations em um job/comando separado.
+Ao iniciar, o container executa `prisma migrate deploy` antes de subir a API. Esse comportamento é controlado por `RUN_DB_MIGRATIONS` e vem ativo por padrão; defina `RUN_DB_MIGRATIONS=false` apenas se o deploy já executar as migrations em um job/comando separado. Como o projeto usa Prisma 7 com `datasource.url` em `prisma.config.ts`, esse arquivo também é copiado para a imagem final.
 
 O build usa uma `DATABASE_URL` dummy apenas para `prisma generate`; a imagem de produção exige as envs reais em runtime, principalmente:
 
