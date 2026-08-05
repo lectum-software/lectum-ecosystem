@@ -8,6 +8,7 @@ const isGatewayConfigError = (err: unknown) => {
 
   return (
     message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
+    message.includes("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH") ||
     message.includes("MERCADO_PAGO_ENV_INVALID")
   );
 };

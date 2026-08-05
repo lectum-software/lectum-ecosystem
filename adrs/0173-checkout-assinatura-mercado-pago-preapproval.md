@@ -1,5 +1,9 @@
 # ADR-0173: Checkout de assinatura com Mercado Pago Preapproval
 
+> **Correção vigente:** a estratégia de credenciais para Card Payment Brick em homologação foi
+> substituída pela ADR-0416. Os registros abaixo sobre credenciais produtivas de conta vendedora de
+> teste permanecem apenas como histórico da investigação e não devem orientar novas configurações.
+
 ## Status
 
 Accepted

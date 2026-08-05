@@ -207,3 +207,4 @@ Formato recomendado:
 - [ADR-0413 - SEO administrável para respostas de comentários públicas](0413-seo-respostas-comentarios-publicas.md) - Accepted
 
 - [ADR-0415 - Dockerfile de produção para o backend](0415-dockerfile-backend-producao.md) - Accepted
+- [ADR-0416 - Homologação Mercado Pago com credenciais de teste do Card Payment Brick](0416-homologacao-mercado-pago-card-payment-brick.md) - Accepted

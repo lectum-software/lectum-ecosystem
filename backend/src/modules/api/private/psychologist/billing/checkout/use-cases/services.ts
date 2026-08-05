@@ -76,16 +76,10 @@ const shouldUseAutomaticGatewayPlan = () => !shouldSkipGatewayPlan();
 
 const resolvePayerEmail = (authenticatedEmail?: string | null) => {
   if (getGatewayEnv() === "sandbox") {
-    const sandboxPayerEmail = getSandboxPayerEmail();
-
-    if (!sandboxPayerEmail) {
-      throw new Error("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED");
-    }
-
-    return sandboxPayerEmail;
+    return getSandboxPayerEmail() || authenticatedEmail?.trim() || null;
   }
 
-  return authenticatedEmail || null;
+  return authenticatedEmail?.trim() || null;
 };
 
 const isPrivateIpv4 = (hostname: string) => {
@@ -328,8 +322,8 @@ const isGatewayConfigError = (err: unknown) => {
 
   return (
     message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
+    message.includes("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH") ||
     message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED") ||
     message.includes("MERCADO_PAGO_ENV_INVALID") ||
     message.includes("MERCADO_PAGO_PREAPPROVAL_PLAN_INCOMPATIBLE")
   );

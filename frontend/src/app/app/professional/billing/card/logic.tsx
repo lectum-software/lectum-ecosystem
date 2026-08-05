@@ -16,18 +16,12 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import {
+  isMercadoPagoPublicConfigurationValid,
+  mercadoPagoPublicKey,
+  resolveMercadoPagoPayerEmail,
+} from "@/utils/mercado-pago";
 
-const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
-const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
-const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
-
-const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
-  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
-    return sandboxPayerEmail;
-  }
-
-  return authenticatedEmail;
-};
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
 
 type CardPaymentFormData = {
@@ -120,9 +114,9 @@ export const ProfessionalBillingCardLogic = () => {
   }, [billing.paymentMethod.mutateAsync]);
 
   useEffect(() => {
-    if (!publicKey) return;
+    if (!isMercadoPagoPublicConfigurationValid || !mercadoPagoPublicKey) return;
 
-    initMercadoPago(publicKey, {
+    initMercadoPago(mercadoPagoPublicKey, {
       locale: "pt-BR",
       advancedFraudPrevention: true,
     });
@@ -312,14 +306,14 @@ export const ProfessionalBillingCardLogic = () => {
                     />
                   ) : null}
 
-                  {!publicKey ? (
+                  {!isMercadoPagoPublicConfigurationValid ? (
                     <InlineAlert title="Formulário de cartão indisponível" variant="error">
                       Não foi possível carregar o formulário seguro de cartão. Tente novamente mais
                       tarde.
                     </InlineAlert>
                   ) : null}
 
-                  {publicKey && canSubmit && amount > 0 ? (
+                  {isMercadoPagoPublicConfigurationValid && canSubmit && amount > 0 ? (
                     <div
                       className={cn(
                         "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",

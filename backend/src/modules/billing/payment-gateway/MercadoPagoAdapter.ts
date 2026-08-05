@@ -215,8 +215,15 @@ export class MercadoPagoAdapter implements PaymentGateway {
       throw new Error("MERCADO_PAGO_ENV_INVALID");
     }
 
+    const isSandbox = gatewayEnv === "sandbox";
+    const isTestAccessToken = accessToken.startsWith("TEST-");
+
+    if (isSandbox !== isTestAccessToken) {
+      throw new Error("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH");
+    }
+
     this.accessToken = accessToken;
-    this.usesStageScope = gatewayEnv === "sandbox" && accessToken.startsWith("TEST-");
+    this.usesStageScope = isSandbox;
 
     const subscriptionConfig = new MercadoPagoConfig({
       accessToken,

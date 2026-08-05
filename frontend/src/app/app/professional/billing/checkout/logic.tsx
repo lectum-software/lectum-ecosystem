@@ -19,25 +19,18 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
+  isMercadoPagoPublicConfigurationValid,
+  mercadoPagoPublicKey,
+  resolveMercadoPagoPayerEmail,
+} from "@/utils/mercado-pago";
+import {
   getPsychologistRegistrationRequirementPath,
   isAdministrativeCourtesySubscription,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
 
-const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY;
-const mercadoPagoEnv = process.env.NEXT_PUBLIC_MERCADO_PAGO_ENV?.trim().toLowerCase();
-const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
-
-const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
-  if (mercadoPagoEnv === "sandbox" && sandboxPayerEmail) {
-    return sandboxPayerEmail;
-  }
-
-  return authenticatedEmail;
-};
-
-if (publicKey) {
-  initMercadoPago(publicKey, {
+if (isMercadoPagoPublicConfigurationValid && mercadoPagoPublicKey) {
+  initMercadoPago(mercadoPagoPublicKey, {
     locale: "pt-BR",
     advancedFraudPrevention: true,
   });
@@ -213,7 +206,9 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
-  const canRenderCardPayment = Boolean(publicKey && amount > 0 && payerEmail);
+  const canRenderCardPayment = Boolean(
+    isMercadoPagoPublicConfigurationValid && amount > 0 && payerEmail,
+  );
   const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}-${
     isCourtesyRenewal ? "courtesy" : "checkout"
   }`;
@@ -426,14 +421,14 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
             <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] md:p-6">
               <div className="grid gap-5">
-                {!publicKey ? (
+                {!isMercadoPagoPublicConfigurationValid ? (
                   <InlineAlert title="Formulário de cartão indisponível" variant="error">
                     Não foi possível carregar o formulário seguro de cartão. Tente novamente mais
                     tarde.
                   </InlineAlert>
                 ) : null}
 
-                {publicKey && amount > 0 && !payerEmail ? (
+                {isMercadoPagoPublicConfigurationValid && amount > 0 && !payerEmail ? (
                   <InlineAlert title="E-mail do pagador ausente" variant="error">
                     Recarregue a sessão antes de abrir o formulário de cartão. O e-mail da sua conta
                     é necessário para iniciar o pagamento.
