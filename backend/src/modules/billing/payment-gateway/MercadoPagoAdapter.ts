@@ -266,9 +266,6 @@ export class MercadoPagoAdapter implements PaymentGateway {
             currency_id: "BRL",
           },
           back_url: returnUrl || undefined,
-          payment_methods_allowed: {
-            payment_types: [{ id: "credit_card" }],
-          },
           reason: planName,
           status: "active",
         },
