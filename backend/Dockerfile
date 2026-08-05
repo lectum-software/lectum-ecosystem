@@ -37,8 +37,12 @@ RUN pnpm build
 
 FROM base AS runner
 
+# Build-time default used for Docker image metadata. Runtime can override PORT
+# through the container environment; the API reads process.env.PORT on boot.
+ARG PORT=3001
+
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=${PORT}
 # API docs can be enabled at runtime with SWAGGER=true after envs are configured.
 ENV SWAGGER=false
 
@@ -61,6 +65,6 @@ RUN chown -R node:node /app
 
 USER node
 
-EXPOSE 3001
+EXPOSE ${PORT}
 
 CMD ["node", "dist/index.js"]

@@ -50,11 +50,14 @@ O Dockerfile do backend deve ser buildado usando `backend/` como contexto, mante
 docker build -t lectum-backend ./backend
 ```
 
+A imagem usa `PORT=3001` apenas como padrão. Para homologação/produção, configure `PORT` nas envs do runtime da aplicação; se a plataforma depender do metadata `EXPOSE`, passe também `--build-arg PORT=<porta>` no build.
+
 O build usa uma `DATABASE_URL` dummy apenas para `prisma generate`; a imagem de produção exige as envs reais em runtime, principalmente:
 
 - `DATABASE_URL`
 - `JWT_SECRET_KEY`
 - `ADMIN_JWT_SECRET`
+- `PORT`
 - `BASE`
 - `WEB_URL`
 - `GOOGLE_CLIENT_ID_API_USER`
@@ -65,6 +68,7 @@ Exemplo de smoke local sem acessar banco nas rotas de health:
 
 ```bash
 docker run --rm -p 3001:3001 \
+  -e PORT=3001 \
   -e DATABASE_URL="postgresql://postgres:postgres@host.docker.internal:5432/lectum" \
   -e JWT_SECRET_KEY="change-me-with-a-strong-32-characters-minimum-secret" \
   -e ADMIN_JWT_SECRET="change-me-with-a-different-strong-admin-secret" \
