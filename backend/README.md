@@ -52,9 +52,12 @@ docker build -t lectum-backend ./backend
 
 A imagem usa `PORT=3001` apenas como padrão. Para homologação/produção, configure `PORT` nas envs do runtime da aplicação; se a plataforma depender do metadata `EXPOSE`, passe também `--build-arg PORT=<porta>` no build.
 
+Ao iniciar, o container executa `prisma migrate deploy` antes de subir a API. Esse comportamento é controlado por `RUN_DB_MIGRATIONS` e vem ativo por padrão; defina `RUN_DB_MIGRATIONS=false` apenas se o deploy já executar as migrations em um job/comando separado.
+
 O build usa uma `DATABASE_URL` dummy apenas para `prisma generate`; a imagem de produção exige as envs reais em runtime, principalmente:
 
 - `DATABASE_URL`
+- `RUN_DB_MIGRATIONS`
 - `JWT_SECRET_KEY`
 - `ADMIN_JWT_SECRET`
 - `PORT`
@@ -69,6 +72,7 @@ Exemplo de smoke local sem acessar banco nas rotas de health:
 ```bash
 docker run --rm -p 3001:3001 \
   -e PORT=3001 \
+  -e RUN_DB_MIGRATIONS=false \
   -e DATABASE_URL="postgresql://postgres:postgres@host.docker.internal:5432/lectum" \
   -e JWT_SECRET_KEY="change-me-with-a-strong-32-characters-minimum-secret" \
   -e ADMIN_JWT_SECRET="change-me-with-a-different-strong-admin-secret" \

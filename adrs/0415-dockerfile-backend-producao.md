@@ -27,11 +27,13 @@ Era necessário criar uma imagem Docker capaz de buildar o backend de forma repr
 - Definir `SWAGGER=false` por padrão na imagem, permitindo habilitar via env quando necessário.
 - Ajustar a geração de docs para usar `dist/modules` em runtime de produção, evitando dependência da árvore TypeScript `src/` dentro da imagem.
 - Manter `backend/pnpm-workspace.yaml` como workspace válido de aplicação única (`packages: ['.']`) para evitar falhas de builders PNPM que validam o manifesto antes de usar o Dockerfile.
+- Executar `prisma migrate deploy` no entrypoint do container antes de iniciar a API, com opt-out via `RUN_DB_MIGRATIONS=false`, para que deploys em Dokploy apliquem migrations sem comando manual adicional.
+- Manter o pacote `prisma` em `dependencies` para que o CLI de migrations exista na imagem final após `pnpm prune --prod`.
 
 ## Consequências
 
 - A imagem pode ser construída sem credenciais reais de banco.
-- O container exige envs reais em runtime, especialmente `PORT`, `DATABASE_URL`, `JWT_SECRET_KEY`, `ADMIN_JWT_SECRET`, `BASE`, `WEB_URL` e as envs de Google OAuth atualmente necessárias no boot (`GOOGLE_CLIENT_ID_API_USER`, `GOOGLE_CLIENT_SECRET_API_USER`, `CALLBACK_URL_API_USER`).
+- O container exige envs reais em runtime, especialmente `PORT`, `RUN_DB_MIGRATIONS`, `DATABASE_URL`, `JWT_SECRET_KEY`, `ADMIN_JWT_SECRET`, `BASE`, `WEB_URL` e as envs de Google OAuth atualmente necessárias no boot (`GOOGLE_CLIENT_ID_API_USER`, `GOOGLE_CLIENT_SECRET_API_USER`, `CALLBACK_URL_API_USER`).
 - Dependências nativas são compiladas/instaladas em imagem Debian slim compatível com o runtime.
 - A documentação Swagger/Scalar permanece desativada por padrão na imagem para reduzir superfície pública; se habilitada, passa a funcionar a partir dos arquivos compilados em `dist/`.
 
@@ -41,4 +43,5 @@ Era necessário criar uma imagem Docker capaz de buildar o backend de forma repr
 - `pnpm --dir backend build`
 - `pnpm --dir backend install --frozen-lockfile --prefer-offline`
 - `docker build -t lectum-backend:local ./backend`
-- Smoke local do container com `PORT` customizado e `GET /health`
+- Smoke local do container com `PORT` customizado, `RUN_DB_MIGRATIONS=false` e `GET /health`
+- Verificação da presença do CLI Prisma na imagem final após `pnpm prune --prod`

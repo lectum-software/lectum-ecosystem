@@ -107,6 +107,9 @@ importers:
       pg:
         specifier: ^8.21.0
         version: 8.21.0
+      prisma:
+        specifier: ^7.8.0
+        version: 7.8.0(@types/react@19.2.16)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3)
       socket.io:
         specifier: ^4.8.3
         version: 4.8.3
@@ -180,9 +183,6 @@ importers:
       '@types/web-push':
         specifier: ^3.6.4
         version: 3.6.4
-      prisma:
-        specifier: ^7.8.0
-        version: 7.8.0(@types/react@19.2.16)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3)
       tsc-alias:
         specifier: ^1.8.17
         version: 1.8.17

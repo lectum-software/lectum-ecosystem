@@ -55,16 +55,18 @@ COPY --from=deps /app/node_modules ./node_modules
 RUN pnpm prune --prod
 
 COPY --from=builder /app/dist ./dist
+COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 COPY locales ./locales
 COPY prisma ./prisma
 COPY public ./public
 COPY swagger ./swagger
 COPY templates ./templates
 
-RUN chown -R node:node /app
+RUN chmod +x ./scripts/docker-entrypoint.sh \
+  && chown -R node:node /app
 
 USER node
 
 EXPOSE ${PORT}
 
-CMD ["node", "dist/index.js"]
+CMD ["./scripts/docker-entrypoint.sh"]
