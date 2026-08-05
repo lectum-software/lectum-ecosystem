@@ -258,9 +258,12 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "active",
         },
-        requestOptions: this.withRequestOptions({
-          idempotencyKey: idempotencyKey || undefined,
-        }),
+        requestOptions: this.withRequestOptions(
+          {
+            idempotencyKey: idempotencyKey || undefined,
+          },
+          { stageScope: true },
+        ),
       }),
     );
 
@@ -280,7 +283,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription_plan", () =>
       this.preApprovalPlan.get({
         preApprovalPlanId: gatewayPlanId,
-        requestOptions: this.withRequestOptions(),
+        requestOptions: this.withRequestOptions(undefined, { stageScope: true }),
       }),
     );
 
