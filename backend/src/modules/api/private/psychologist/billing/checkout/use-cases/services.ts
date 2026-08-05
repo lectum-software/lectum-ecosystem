@@ -66,11 +66,7 @@ const getGatewayEnv = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() |
 
 const getSandboxPayerEmail = () => process.env.MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim() || null;
 
-const hasMercadoPagoTestCredentials = () =>
-  process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim().startsWith("TEST-") ?? false;
-
-const shouldUseAutomaticGatewayPlan = () =>
-  !(getGatewayEnv() === "sandbox" && hasMercadoPagoTestCredentials());
+const shouldUseAutomaticGatewayPlan = () => getGatewayEnv() !== "sandbox";
 
 const resolvePayerEmail = (authenticatedEmail?: string | null) => {
   if (getGatewayEnv() === "sandbox") {
