@@ -66,6 +66,12 @@ const getGatewayEnv = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() |
 
 const getSandboxPayerEmail = () => process.env.MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim() || null;
 
+const hasMercadoPagoTestCredentials = () =>
+  process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim().startsWith("TEST-") ?? false;
+
+const shouldUseAutomaticGatewayPlan = () =>
+  !(getGatewayEnv() === "sandbox" && hasMercadoPagoTestCredentials());
+
 const resolvePayerEmail = (authenticatedEmail?: string | null) => {
   if (getGatewayEnv() === "sandbox") {
     const sandboxPayerEmail = getSandboxPayerEmail();
@@ -243,6 +249,51 @@ const ensureGatewayPlanId = async ({
   });
 };
 
+const resolveGatewayPlanId = async ({
+  gateway,
+  plan,
+  repository,
+  returnUrl,
+}: {
+  gateway: PaymentGateway;
+  plan: ProfessionalPlan;
+  repository: CheckoutRepository;
+  returnUrl: string;
+}) => {
+  const configuredGatewayPlanId = getConfiguredGatewayPlanId();
+
+  if (configuredGatewayPlanId) {
+    const compatibleConfiguredPlanId = await readCompatibleGatewayPlanId({
+      gateway,
+      gatewayPlanId: configuredGatewayPlanId,
+      plan,
+    });
+
+    if (compatibleConfiguredPlanId) {
+      await repository.setGatewayPlanId(plan.id!, compatibleConfiguredPlanId);
+      return compatibleConfiguredPlanId;
+    }
+
+    await repository.setGatewayPlanId(plan.id!, null);
+    throw new Error("MERCADO_PAGO_PREAPPROVAL_PLAN_INCOMPATIBLE");
+  }
+
+  if (!shouldUseAutomaticGatewayPlan()) {
+    if (plan.gateway_plan_id) {
+      await repository.setGatewayPlanId(plan.id!, null);
+    }
+
+    return null;
+  }
+
+  return ensureGatewayPlanId({
+    gateway,
+    plan,
+    repository,
+    returnUrl,
+  });
+};
+
 const isGatewayConfigError = (err: unknown) => {
   const message = err instanceof Error ? err.message : "";
 
@@ -250,7 +301,8 @@ const isGatewayConfigError = (err: unknown) => {
     message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
     message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED") ||
     message.includes("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_ENV_INVALID")
+    message.includes("MERCADO_PAGO_ENV_INVALID") ||
+    message.includes("MERCADO_PAGO_PREAPPROVAL_PLAN_INCOMPATIBLE")
   );
 };
 
@@ -382,13 +434,13 @@ export default async (data: ICheckoutDTO) => {
   }
 
   let gateway: PaymentGateway;
-  let gatewayPlanId: string;
+  let gatewayPlanId: string | null;
   let gatewayReturnUrl: string;
 
   try {
     gatewayReturnUrl = resolveGatewayBackUrl();
     gateway = getPaymentGateway();
-    gatewayPlanId = await ensureGatewayPlanId({
+    gatewayPlanId = await resolveGatewayPlanId({
       gateway,
       plan: professionalPlan,
       repository,
