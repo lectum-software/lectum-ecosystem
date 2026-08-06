@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { isPaymentGatewayConfigurationError } from "@/modules/billing/payment-gateway";
 import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
 import type { IAddressDTO } from "../DTOs/IAddressDTO";
 import { AddressRepository } from "../repositories/AddressRepository";
@@ -39,16 +40,6 @@ const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   return {
     message: "Unknown gateway error",
   };
-};
-
-const isGatewayConfigError = (err: unknown) => {
-  const message = err instanceof Error ? err.message : "";
-
-  return (
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH") ||
-    message.includes("MERCADO_PAGO_ENV_INVALID")
-  );
 };
 
 const refreshActiveProfessionalSubscription = async ({
@@ -107,7 +98,7 @@ export default async (data: IAddressDTO) => {
         repository,
       });
     } catch (err) {
-      const configError = isGatewayConfigError(err);
+      const configError = isPaymentGatewayConfigurationError(err);
 
       return {
         status: configError ? 503 : 502,

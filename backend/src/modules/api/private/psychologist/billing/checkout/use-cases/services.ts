@@ -1,6 +1,9 @@
 ﻿import { isIP } from "node:net";
 import { error, msg } from "@/helpers/translate";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import {
+  getPaymentGateway,
+  isPaymentGatewayConfigurationError,
+} from "@/modules/billing/payment-gateway";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
 import { CheckoutRepository } from "../repositories/CheckoutRepository";
@@ -57,6 +60,8 @@ const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   };
 };
 
+const isGatewayResourceNotFoundError = (err: unknown) => sanitizeGatewayError(err).status === 404;
+
 const getConfiguredGatewayPlanId = () =>
   process.env.MERCADO_PAGO_PREAPPROVAL_PLAN_ID?.trim() || null;
 
@@ -66,17 +71,15 @@ const getGatewayEnv = () => process.env.MERCADO_PAGO_ENV?.trim().toLowerCase() |
 
 const getSandboxPayerEmail = () => process.env.MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim() || null;
 
-const shouldSkipGatewayPlan = () => {
-  const value = process.env.MERCADO_PAGO_SKIP_PREAPPROVAL_PLAN?.trim().toLowerCase();
-
-  return value === "1" || value === "true" || value === "yes";
-};
-
-const shouldUseAutomaticGatewayPlan = () => !shouldSkipGatewayPlan();
-
 const resolvePayerEmail = (authenticatedEmail?: string | null) => {
   if (getGatewayEnv() === "sandbox") {
-    return getSandboxPayerEmail() || authenticatedEmail?.trim() || null;
+    const sandboxPayerEmail = getSandboxPayerEmail();
+
+    if (!sandboxPayerEmail) {
+      throw new Error("MERCADO_PAGO_SANDBOX_PAYER_EMAIL_NOT_CONFIGURED");
+    }
+
+    return sandboxPayerEmail;
   }
 
   return authenticatedEmail?.trim() || null;
@@ -190,7 +193,11 @@ const readPersistedGatewayPlanId = async ({
       plan,
     });
   } catch (err) {
-    console.warn("[BILLING] Mercado Pago persisted plan inaccessible, resetting local reference", {
+    if (!isGatewayResourceNotFoundError(err)) {
+      throw err;
+    }
+
+    console.warn("[BILLING] Mercado Pago persisted plan not found, resetting local reference", {
       ...sanitizeGatewayError(err),
       gateway_plan_id: gatewayPlanId,
       plan_id: plan.id,
@@ -301,32 +308,12 @@ const resolveGatewayPlanId = async ({
     throw new Error("MERCADO_PAGO_PREAPPROVAL_PLAN_INCOMPATIBLE");
   }
 
-  if (!shouldUseAutomaticGatewayPlan()) {
-    if (plan.gateway_plan_id) {
-      await repository.setGatewayPlanId(plan.id!, null);
-    }
-
-    return null;
-  }
-
   return ensureGatewayPlanId({
     gateway,
     plan,
     repository,
     returnUrl,
   });
-};
-
-const isGatewayConfigError = (err: unknown) => {
-  const message = err instanceof Error ? err.message : "";
-
-  return (
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH") ||
-    message.includes("MERCADO_PAGO_BACK_URL_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_ENV_INVALID") ||
-    message.includes("MERCADO_PAGO_PREAPPROVAL_PLAN_INCOMPATIBLE")
-  );
 };
 
 const isActiveCourtesySubscription = (subscription?: ActiveProfessionalSubscription | null) =>
@@ -457,7 +444,7 @@ export default async (data: ICheckoutDTO) => {
   }
 
   let gateway: PaymentGateway;
-  let gatewayPlanId: string | null;
+  let gatewayPlanId: string;
   let gatewayReturnUrl: string;
 
   try {
@@ -473,9 +460,9 @@ export default async (data: ICheckoutDTO) => {
     console.error("[BILLING] Mercado Pago plan setup failed", sanitizeGatewayError(err));
 
     return {
-      status: isGatewayConfigError(err) ? 503 : 502,
+      status: isPaymentGatewayConfigurationError(err) ? 503 : 502,
       ...error(
-        isGatewayConfigError(err)
+        isPaymentGatewayConfigurationError(err)
           ? "billing_gateway_config_error"
           : "billing_gateway_checkout_failed",
         {},
@@ -589,7 +576,7 @@ export default async (data: ICheckoutDTO) => {
 
     console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));
 
-    const configError = isGatewayConfigError(err);
+    const configError = isPaymentGatewayConfigurationError(err);
 
     return {
       status: configError ? 503 : 502,

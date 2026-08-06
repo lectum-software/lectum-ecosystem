@@ -119,7 +119,7 @@ Config obrigatória em backend/.env:
   CLOUDFLARE_R2_ACCESS_KEY_SECRET
   CLOUDFLARE_R2_PUBLIC_BUCKET_NAME
   MERCADO_PAGO_ENV=sandbox
-  MERCADO_PAGO_ACCESS_TOKEN=TEST-... ou APP_USR-... de conta Mercado Pago de teste
+  MERCADO_PAGO_ACCESS_TOKEN=APP_USR-... de conta Mercado Pago vendedora de teste
 `);
 }
 
@@ -224,13 +224,9 @@ async function buildMercadoPagoConfig() {
 }
 
 async function assertMercadoPagoSandboxAccessToken(accessToken) {
-  if (accessToken.startsWith("TEST-")) {
-    return;
-  }
-
   if (!accessToken.startsWith("APP_USR-")) {
     fail(
-      "Reset bloqueado: MERCADO_PAGO_ACCESS_TOKEN precisa ser TEST-* ou APP_USR-* de uma conta Mercado Pago de teste.",
+      "Reset bloqueado: MERCADO_PAGO_ACCESS_TOKEN precisa ser APP_USR-* de uma conta Mercado Pago vendedora de teste.",
     );
   }
 
@@ -242,6 +238,7 @@ async function assertMercadoPagoSandboxAccessToken(accessToken) {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      signal: AbortSignal.timeout(10_000),
     });
     user = await response.json();
   } catch (err) {
@@ -250,13 +247,13 @@ async function assertMercadoPagoSandboxAccessToken(accessToken) {
     );
   }
 
-  const email = typeof user?.email === "string" ? user.email.toLowerCase() : "";
+  const tags = Array.isArray(user?.tags) ? user.tags : [];
 
-  if (!response.ok || !email.endsWith("@testuser.com")) {
+  if (!response.ok || !tags.includes("test_user")) {
     fail(
       [
         "Reset bloqueado: APP_USR-* só é permitido quando pertence a uma conta Mercado Pago de teste.",
-        "Use credenciais da conta vendedora de teste ou uma credencial TEST-*.",
+        "Use as credenciais da aplicação criada dentro da conta vendedora de teste.",
       ].join("\n"),
     );
   }

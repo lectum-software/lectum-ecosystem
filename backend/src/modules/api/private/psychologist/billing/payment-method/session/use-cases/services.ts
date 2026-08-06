@@ -1,5 +1,8 @@
 ﻿import { error, msg } from "@/helpers/translate";
-import { getPaymentGateway } from "@/modules/billing/payment-gateway";
+import {
+  getPaymentGateway,
+  isPaymentGatewayConfigurationError,
+} from "@/modules/billing/payment-gateway";
 import type { IPaymentMethodSessionDTO } from "../DTOs/IPaymentMethodSessionDTO";
 import { PaymentMethodSessionRepository } from "../repositories/PaymentMethodSessionRepository";
 
@@ -70,11 +73,7 @@ export default async (data: IPaymentMethodSessionDTO) => {
       },
     };
   } catch (err) {
-    const message = err instanceof Error ? err.message : "";
-    const configError =
-      message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-      message.includes("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH") ||
-      message.includes("MERCADO_PAGO_ENV_INVALID");
+    const configError = isPaymentGatewayConfigurationError(err);
 
     return {
       status: configError ? 503 : 502,

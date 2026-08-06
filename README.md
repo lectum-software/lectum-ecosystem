@@ -56,7 +56,7 @@ DEV_TUNNEL_PROVIDER=ngrok
 DEV_TUNNEL_PROXY_PORT=3005
 DEV_TUNNEL_URL=https://seu-dev-domain.ngrok-free.dev
 WEB_URL=http://localhost:3000,https://seu-dev-domain.ngrok-free.dev
-MERCADO_PAGO_BACK_URL=https://seu-dev-domain.ngrok-free.dev/app/professional/billing/address
+MERCADO_PAGO_BACK_URL=https://seu-dev-domain.ngrok-free.dev/app/profissional/assinatura/endereco
 ```
 
 E, quando quiser acessar o frontend pelo próprio tunnel e manter chamadas same-origin via proxy,
@@ -118,7 +118,7 @@ DEV_TUNNEL_PROXY_PORT=3005
 DEV_TUNNEL_NAME=<nome-do-tunnel>
 DEV_TUNNEL_URL=https://lectum-dev.seudominio.com
 WEB_URL=http://localhost:3000,https://lectum-dev.seudominio.com
-MERCADO_PAGO_BACK_URL=https://lectum-dev.seudominio.com/app/professional/billing/address
+MERCADO_PAGO_BACK_URL=https://lectum-dev.seudominio.com/app/profissional/assinatura/endereco
 ```
 
 E, quando quiser acessar o frontend pelo próprio tunnel e manter chamadas same-origin via proxy,
@@ -147,11 +147,20 @@ O proxy local roteia:
 
 O fluxo local deve permanecer o mais próximo possível da experiência real:
 
-- o frontend usa o Card Payment Brick real com `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY`;
-- o backend usa `MERCADO_PAGO_ACCESS_TOKEN`, `MERCADO_PAGO_ENV=sandbox`,
-  `MERCADO_PAGO_WEBHOOK_SECRET` e `MERCADO_PAGO_BACK_URL`;
-- o e-mail do pagador é sempre o e-mail autenticado do usuário Lectum;
-- não há payer de teste via env, assinatura pendente automática, sync manual ou mock de aprovação.
+- crie uma conta Mercado Pago **vendedora de teste**, entre nela e crie a aplicação usada pela
+  Lectum;
+- frontend e backend usam, respectivamente, a Public Key e o Access Token `APP_USR-*` dessa mesma
+  aplicação; credenciais `TEST-*` com `X-scope: stage` não pertencem a este fluxo;
+- o backend mantém `MERCADO_PAGO_ENV=sandbox` e valida em `/users/me` que o token pertence a um
+  usuário marcado como `test_user`, impedindo uso acidental da conta vendedora real;
+- `MERCADO_PAGO_SANDBOX_PAYER_EMAIL` e
+  `NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL` são obrigatórios e devem conter o mesmo e-mail da
+  conta Mercado Pago **compradora de teste**;
+- o checkout usa assinatura com plano associado; deixe `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` vazio
+  para o backend criar e persistir o plano da conta vendedora configurada;
+- configure a URL de webhook na aba **Modo de produção** da aplicação da conta vendedora de teste,
+  pois esse ambiente usa as credenciais `APP_USR-*` da própria conta;
+- não há plano sem template, fallback de aprovação, retry especulativo nem mock.
 
 Se uma configuração obrigatória estiver ausente ou inválida, o checkout deve retornar erro de
 configuração em vez de contornar o fluxo.

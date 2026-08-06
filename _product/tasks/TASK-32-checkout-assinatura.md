@@ -207,3 +207,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A criação de `/preapproval_plan` exige `MERCADO_PAGO_BACK_URL` público e válido; `localhost` é rejeitado pelo Mercado Pago, então testes locais precisam de domínio/túnel HTTPS ou de um `MERCADO_PAGO_PREAPPROVAL_PLAN_ID` já criado no painel/API.
 - A criação da assinatura via `/preapproval` passa a enviar `preapproval_plan_id`, `card_token_id`, `payer_email`, `external_reference` e `status="authorized"`, herdando a recorrência do plano do gateway.
 - Logs seguros do adapter foram enriquecidos com operação/status/código quando disponíveis, sem expor access token, public key, webhook secret, PAN, CVV ou token de cartão.
+
+## Correção de homologação em 2026-08-06
+
+- A configuração local que já possuía assinaturas `authorized` foi adotada como baseline, evitando
+  novas mudanças por tentativa e erro.
+- Desenvolvimento e homologação usam plano associado com Public Key/Access Token `APP_USR-*` da
+  aplicação criada dentro de uma conta Mercado Pago vendedora de teste, sem `X-scope: stage`.
+- O backend valida em `/users/me` que a credencial sandbox possui a tag `test_user`; token da conta
+  real ou credencial `TEST-*` falha antes da criação de recursos.
+- O e-mail da conta compradora de teste é obrigatório e idêntico no frontend e no backend.
+- O caminho alternativo sem plano e os retries experimentais foram removidos. Uma referência de
+  plano só é limpa automaticamente quando o Mercado Pago confirma `404`.
+- Decisão e configuração operacional consolidadas em `adrs/0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md`.

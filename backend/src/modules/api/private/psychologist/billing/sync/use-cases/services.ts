@@ -1,4 +1,5 @@
 import { error, msg } from "@/helpers/translate";
+import { isPaymentGatewayConfigurationError } from "@/modules/billing/payment-gateway";
 import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
 import type { ISyncDTO } from "../DTOs/ISyncDTO";
 import { SyncRepository } from "../repositories/SyncRepository";
@@ -39,16 +40,6 @@ const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
   return {
     message: "Unknown gateway error",
   };
-};
-
-const isGatewayConfigError = (err: unknown) => {
-  const message = err instanceof Error ? err.message : "";
-
-  return (
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED") ||
-    message.includes("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH") ||
-    message.includes("MERCADO_PAGO_ENV_INVALID")
-  );
 };
 
 export default async (data: ISyncDTO) => {
@@ -97,9 +88,9 @@ export default async (data: ISyncDTO) => {
     console.error("[BILLING] Mercado Pago subscription sync failed", sanitizeGatewayError(err));
 
     return {
-      status: isGatewayConfigError(err) ? 503 : 502,
+      status: isPaymentGatewayConfigurationError(err) ? 503 : 502,
       ...error(
-        isGatewayConfigError(err)
+        isPaymentGatewayConfigurationError(err)
           ? "billing_gateway_config_error"
           : "billing_gateway_checkout_failed",
         {},

@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-0182](0182-checkout-mercado-pago-sandbox-com-tunnel-sem-fallback.md) and
+[ADR-0417](0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md)
 
 ## Data
 

@@ -5,15 +5,15 @@ export const mercadoPagoEnvironment =
 const sandboxPayerEmail = process.env.NEXT_PUBLIC_MERCADO_PAGO_SANDBOX_PAYER_EMAIL?.trim();
 const isSandbox = mercadoPagoEnvironment === "sandbox";
 const isProduction = ["prod", "production"].includes(mercadoPagoEnvironment || "");
-const isTestPublicKey = mercadoPagoPublicKey?.startsWith("TEST-") ?? false;
+const isAppPublicKey = mercadoPagoPublicKey?.startsWith("APP_USR-") ?? false;
 
 export const isMercadoPagoPublicConfigurationValid = Boolean(
-  mercadoPagoPublicKey && ((isSandbox && isTestPublicKey) || (isProduction && !isTestPublicKey)),
+  mercadoPagoPublicKey && isAppPublicKey && ((isSandbox && sandboxPayerEmail) || isProduction),
 );
 
 export const resolveMercadoPagoPayerEmail = (authenticatedEmail: string) => {
-  if (isSandbox && sandboxPayerEmail) {
-    return sandboxPayerEmail;
+  if (isSandbox) {
+    return sandboxPayerEmail || "";
   }
 
   return authenticatedEmail.trim();

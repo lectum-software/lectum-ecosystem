@@ -1,6 +1,5 @@
 ﻿import { createHmac, timingSafeEqual } from "node:crypto";
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
-import type { Options as MercadoPagoOptions } from "mercadopago/dist/types";
 import type {
   BillingSubscriptionStatus,
   GatewayCancelSubscriptionInput,
@@ -18,9 +17,6 @@ import type {
 } from "./PaymentGateway";
 
 type RecordBody = Record<string, unknown>;
-type MercadoPagoRequestOptions = MercadoPagoOptions & {
-  headers?: Record<string, string>;
-};
 
 type MercadoPagoWebhookBody = {
   id?: string | number;
@@ -43,8 +39,8 @@ type MercadoPagoPreApprovalRaw = {
 };
 
 const GATEWAY = "mercadopago";
-const TRANSIENT_GATEWAY_RETRY_DELAY_MS = 2_500;
-const SUBSCRIPTION_PLAN_PROPAGATION_RETRY_DELAYS_MS = [2_500, 5_000, 10_000] as const;
+const MERCADO_PAGO_CURRENT_USER_URL = "https://api.mercadopago.com/users/me";
+const MERCADO_PAGO_REQUEST_TIMEOUT_MS = 10_000;
 
 type MercadoPagoSafeErrorDetails = {
   operation: string;
@@ -135,30 +131,6 @@ const toIsoDateString = (value?: Date | string | null) => {
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 };
 
-const delay = (milliseconds: number) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, milliseconds);
-  });
-
-const isTransientGatewayError = (err: unknown) => {
-  const details = sanitizeMercadoPagoError("transient_check", err);
-
-  if (details.status && details.status >= 500) return true;
-
-  return details.cause_message?.toLowerCase().includes("internal server error") ?? false;
-};
-
-const isPlanTemplateNotFoundError = (err: unknown) => {
-  const details = sanitizeMercadoPagoError("template_check", err);
-  const message = details.cause_message?.toLowerCase() ?? "";
-
-  return (
-    details.status === 404 &&
-    message.includes("template with id") &&
-    message.includes("does not exist")
-  );
-};
-
 const sanitizeMercadoPagoError = (operation: string, err: unknown): MercadoPagoSafeErrorDetails => {
   if (err instanceof Error) {
     return {
@@ -197,13 +169,14 @@ export class MercadoPagoAdapterError extends Error {
 
 export class MercadoPagoAdapter implements PaymentGateway {
   private readonly accessToken: string;
-  private readonly usesStageScope: boolean;
   private readonly preApproval: PreApproval;
   private readonly preApprovalPlan: PreApprovalPlan;
+  private readonly shouldValidateSandboxSeller: boolean;
   private readonly webhookSecret: string | null;
+  private sandboxSellerValidation: Promise<void> | null = null;
 
   constructor() {
-    const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+    const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim();
 
     if (!accessToken) {
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN_NOT_CONFIGURED");
@@ -216,25 +189,28 @@ export class MercadoPagoAdapter implements PaymentGateway {
     }
 
     const isSandbox = gatewayEnv === "sandbox";
-    const isTestAccessToken = accessToken.startsWith("TEST-");
 
-    if (isSandbox !== isTestAccessToken) {
+    if (isSandbox && accessToken.startsWith("TEST-")) {
+      throw new Error("MERCADO_PAGO_SANDBOX_TEST_SELLER_ACCESS_TOKEN_REQUIRED");
+    }
+
+    if (!accessToken.startsWith("APP_USR-")) {
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN_ENV_MISMATCH");
     }
 
     this.accessToken = accessToken;
-    this.usesStageScope = isSandbox;
+    this.shouldValidateSandboxSeller = isSandbox;
 
     const subscriptionConfig = new MercadoPagoConfig({
       accessToken,
       options: {
-        timeout: 10_000,
+        timeout: MERCADO_PAGO_REQUEST_TIMEOUT_MS,
       },
     });
     const planConfig = new MercadoPagoConfig({
       accessToken,
       options: {
-        timeout: 10_000,
+        timeout: MERCADO_PAGO_REQUEST_TIMEOUT_MS,
       },
     });
 
@@ -243,25 +219,51 @@ export class MercadoPagoAdapter implements PaymentGateway {
     this.webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET || null;
   }
 
-  private withRequestOptions(
-    extra?: MercadoPagoRequestOptions,
-    options: { stageScope?: boolean } = {},
-  ): MercadoPagoRequestOptions | undefined {
-    if (this.usesStageScope && options.stageScope) {
-      return {
-        ...extra,
+  private async validateSandboxSellerAccount(): Promise<void> {
+    let response: Response;
+    let body: unknown;
+
+    try {
+      response = await fetch(MERCADO_PAGO_CURRENT_USER_URL, {
         headers: {
-          ...(extra?.headers ?? {}),
           Authorization: `Bearer ${this.accessToken}`,
-          "X-scope": "stage",
         },
-      };
+        signal: AbortSignal.timeout(MERCADO_PAGO_REQUEST_TIMEOUT_MS),
+      });
+      body = await response.json();
+    } catch {
+      throw new Error("MERCADO_PAGO_SANDBOX_SELLER_VALIDATION_FAILED");
     }
 
-    return extra;
+    if (!response.ok) {
+      throw new Error("MERCADO_PAGO_SANDBOX_SELLER_VALIDATION_FAILED");
+    }
+
+    const tags = isObject(body) && Array.isArray(body.tags) ? body.tags : [];
+
+    if (!tags.includes("test_user")) {
+      throw new Error("MERCADO_PAGO_SANDBOX_SELLER_ACCOUNT_REQUIRED");
+    }
+  }
+
+  private async ensureCredentialContext(): Promise<void> {
+    if (!this.shouldValidateSandboxSeller) return;
+
+    if (!this.sandboxSellerValidation) {
+      this.sandboxSellerValidation = this.validateSandboxSellerAccount();
+    }
+
+    try {
+      await this.sandboxSellerValidation;
+    } catch (err) {
+      this.sandboxSellerValidation = null;
+      throw err;
+    }
   }
 
   private async runGatewayOperation<T>(operation: string, action: () => Promise<T>): Promise<T> {
+    await this.ensureCredentialContext();
+
     try {
       return await action();
     } catch (err) {
@@ -285,15 +287,15 @@ export class MercadoPagoAdapter implements PaymentGateway {
             currency_id: "BRL",
           },
           back_url: returnUrl || undefined,
+          payment_methods_allowed: {
+            payment_types: [{ id: "credit_card" }],
+          },
           reason: planName,
           status: "active",
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: idempotencyKey || undefined,
-          },
-          { stageScope: true },
-        ),
+        requestOptions: {
+          idempotencyKey: idempotencyKey || undefined,
+        },
       }),
     );
 
@@ -313,7 +315,6 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription_plan", () =>
       this.preApprovalPlan.get({
         preApprovalPlanId: gatewayPlanId,
-        requestOptions: this.withRequestOptions(undefined, { stageScope: true }),
       }),
     );
 
@@ -337,13 +338,8 @@ export class MercadoPagoAdapter implements PaymentGateway {
     startDate,
   }: GatewaySubscriptionInput): Promise<GatewaySubscriptionResult> {
     const recurringStartDate = toIsoDateString(startDate);
-    const requestOptions = this.withRequestOptions(
-      {
-        idempotencyKey: `lectum-preapproval-${subscriptionId}`,
-      },
-      { stageScope: true },
-    );
-    const createPreApproval = () =>
+
+    const response = await this.runGatewayOperation("create_subscription", () =>
       this.preApproval.create({
         body: {
           ...(gatewayPlanId ? { preapproval_plan_id: gatewayPlanId } : {}),
@@ -361,41 +357,11 @@ export class MercadoPagoAdapter implements PaymentGateway {
           reason: planName,
           status: "authorized",
         },
-        requestOptions,
-      });
-
-    const response = await this.runGatewayOperation("create_subscription", async () => {
-      let retryAttempt = 0;
-
-      while (true) {
-        try {
-          return await createPreApproval();
-        } catch (err) {
-          const isRetryablePlanPropagationError =
-            Boolean(gatewayPlanId) && isPlanTemplateNotFoundError(err);
-          const isRetryableTransientError = isTransientGatewayError(err) && retryAttempt === 0;
-          const retryDelayMs =
-            isRetryablePlanPropagationError && gatewayPlanId
-              ? SUBSCRIPTION_PLAN_PROPAGATION_RETRY_DELAYS_MS[retryAttempt]
-              : TRANSIENT_GATEWAY_RETRY_DELAY_MS;
-          const canRetry =
-            isRetryableTransientError ||
-            (isRetryablePlanPropagationError && retryDelayMs !== undefined);
-
-          if (!canRetry || retryDelayMs === undefined) throw err;
-
-          console.warn("[BILLING] Mercado Pago subscription error, retrying", {
-            ...sanitizeMercadoPagoError("create_subscription", err),
-            gateway_plan_id: gatewayPlanId ?? null,
-            retry_attempt: retryAttempt + 1,
-            retry_delay_ms: retryDelayMs,
-          });
-
-          await delay(retryDelayMs);
-          retryAttempt += 1;
-        }
-      }
-    });
+        requestOptions: {
+          idempotencyKey: `lectum-preapproval-${subscriptionId}`,
+        },
+      }),
+    );
 
     if (!response.id) {
       throw new Error("MERCADO_PAGO_PREAPPROVAL_ID_MISSING");
@@ -421,12 +387,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
         body: {
           card_token_id: cardToken,
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: `lectum-preapproval-card-${gatewaySubscriptionId}`,
-          },
-          { stageScope: true },
-        ),
+        requestOptions: {
+          idempotencyKey: `lectum-preapproval-card-${gatewaySubscriptionId}`,
+        },
       }),
     );
 
@@ -449,12 +412,9 @@ export class MercadoPagoAdapter implements PaymentGateway {
         body: {
           status: "cancelled",
         },
-        requestOptions: this.withRequestOptions(
-          {
-            idempotencyKey: `lectum-preapproval-cancel-${gatewaySubscriptionId}`,
-          },
-          { stageScope: true },
-        ),
+        requestOptions: {
+          idempotencyKey: `lectum-preapproval-cancel-${gatewaySubscriptionId}`,
+        },
       }),
     );
 
@@ -472,7 +432,6 @@ export class MercadoPagoAdapter implements PaymentGateway {
     const response = await this.runGatewayOperation("get_subscription", () =>
       this.preApproval.get({
         id: gatewaySubscriptionId,
-        requestOptions: this.withRequestOptions(undefined, { stageScope: true }),
       }),
     );
 

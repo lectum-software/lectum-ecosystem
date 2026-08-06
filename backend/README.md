@@ -36,11 +36,12 @@ Configurações obrigatórias em `backend/.env`:
 - `DATABASE_URL` apontando para banco local/privado de desenvolvimento;
 - `CLOUDFLARE_R2_ENDPOINT`, `CLOUDFLARE_R2_ACCESS_KEY_ID`,
   `CLOUDFLARE_R2_ACCESS_KEY_SECRET`, `CLOUDFLARE_R2_PUBLIC_BUCKET_NAME`;
-- `MERCADO_PAGO_ENV=sandbox` e `MERCADO_PAGO_ACCESS_TOKEN=TEST-...`.
+- `MERCADO_PAGO_ENV=sandbox` e `MERCADO_PAGO_ACCESS_TOKEN=APP_USR-...` da aplicação criada dentro
+  de uma conta Mercado Pago vendedora de teste.
 
 As validações de segurança continuam ativas mesmo com `--force`: `NODE_ENV=production/prod`, URLs
-que pareçam produção, bancos não locais/remotos, bucket R2 com nome de produção e token Mercado Pago
-fora de sandbox são bloqueados por padrão.
+que pareçam produção, bancos não locais/remotos, bucket R2 com nome de produção e conta Mercado
+Pago sem a marca `test_user` são bloqueados por padrão.
 
 ## Docker do backend
 

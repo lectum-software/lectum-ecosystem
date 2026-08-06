@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Accepted; consolidated by
+[ADR-0417](0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md)
 
 ## Data
 
