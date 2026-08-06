@@ -239,6 +239,12 @@ Todos os criterios aplicaveis foram atendidos. A confirmacao real de um CPF prof
 - O provider InfoSimples CFP passa a usar timeout padrao de 90s, configuravel por `DOCUMENT_REQUEST_TIMEOUT_MS`, e registra logs sanitizados de erro operacional.
 - `code=609` passa a ser indisponibilidade temporaria (`cfp_provider_unavailable`) em vez de rate limit/saldo; o fluxo permanece sem mock e sem aprovacao automatica quando a origem falha.
 
+## Compatibilidade de indisponibilidade InfoSimples em 2026-08-06
+
+- Caso real de homologacao retornou HTTP 200 com `code=615` e mensagem de indisponibilidade do site/aplicativo de origem apos aproximadamente 5,3s, confirmando que token, rede e timeout estavam operacionais.
+- O backend passa a reconhecer `code=609` e `code=615` como `cfp_provider_unavailable`, mantendo a resposta HTTP 502 e encaminhando a interface para a orientacao de suporte.
+- O fallback de produto e exclusivamente a aprovacao humana auditada pelo Admin (TASK-66/ADR-0251): a falha automatica nao altera `crp_status`, nao preenche `cfp_verified_at` e nao aprova o profissional.
+
 ## Observabilidade InfoSimples em 2026-07-04
 
 - O fluxo CFP passa a emitir logs estruturados e sanitizados com `traceId` para correlacionar request, provider e classificacao final.

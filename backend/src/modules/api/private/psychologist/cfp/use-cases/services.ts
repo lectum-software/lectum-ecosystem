@@ -16,6 +16,7 @@ import {
 import { CfpRepository } from "../repositories/CfpRepository";
 
 const CPF_SEARCH_ATTEMPT_LIMIT = 3;
+const PROVIDER_UNAVAILABLE_CODES = new Set([609, 615]);
 
 const normalizeDigits = (value?: string | null) => (value || "").replace(/\D/g, "");
 const normalizeText = (value?: string | null) => {
@@ -27,7 +28,8 @@ const normalizeUf = (value?: string | null) => normalizeText(value)?.toUpperCase
 const isProviderConfigError = (code: number | null) => code === 601 || code === 602 || code === 603;
 const isProviderValidationError = (code: number | null) => code === 606;
 const isProviderNotFound = (code: number | null) => code === 612;
-const isProviderUnavailable = (code: number | null) => code === 609;
+const isProviderUnavailable = (code: number | null) =>
+  code !== null && PROVIDER_UNAVAILABLE_CODES.has(code);
 const isProviderRateLimit = (code: number | null, message: string | null) => {
   const text = (message || "").toLowerCase();
   if (isProviderUnavailable(code)) return false;

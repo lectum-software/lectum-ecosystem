@@ -82,3 +82,10 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - A mensagem de erro backend de `cfp_provider_unavailable` passa a refletir essa orientacao operacional.
 - A pagina CFP tambem exibe no rodape o CTA "Problemas? Fale com o suporte" apontando para o WhatsApp operacional `wa.me/5537998739534`.
 - Como falhas de proxy/backend podem chegar ao frontend apenas como HTTP 5xx generico, sem `code` JSON do backend, a tela CFP tambem trata status >= 500 como indisponibilidade operacional e mostra a orientacao de suporte/aprovacao manual.
+
+## Compatibilidade com o codigo de indisponibilidade 615 em 2026-08-06
+
+- Em homologacao, uma consulta real chegou a InfoSimples e recebeu HTTP 200 em aproximadamente 5,3s, mas o payload funcional retornou `code=615` e informou que o site ou aplicativo de origem estava indisponivel.
+- O backend passa a classificar tanto `code=609` quanto `code=615` como indisponibilidade temporaria da origem (`cfp_provider_unavailable`), preservando compatibilidade com os dois codigos observados em operacao.
+- Esse tratamento nao aprova automaticamente o psicologo, nao preenche `cfp_verified_at` e nao cria mock ou retry cego. A tentativa permanece auditada e o caminho alternativo e a aprovacao humana existente no Admin, conforme ADR-0251.
+- A resposta HTTP permanece `502`, pois a dependencia externa nao concluiu a consulta; o codigo de dominio permite que a interface apresente a orientacao correta de suporte e aprovacao manual, em vez de erro inesperado generico.
