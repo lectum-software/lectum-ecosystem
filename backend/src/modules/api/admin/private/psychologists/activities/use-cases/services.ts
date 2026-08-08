@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { daysBetweenInclusive, parseDateOnly, toDateKey } from "@/utils/date-range";
 import type {
   AdminPsychologistActivitiesDTO,
   AdminPsychologistActivitiesFilterOption,
@@ -21,7 +22,6 @@ import {
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
 const MAX_CUSTOM_PERIOD_DAYS = 365;
-const MS_PER_DAY = 86_400_000;
 
 const AREA_LABELS: Record<AdminPsychologistActivityArea, string> = {
   atendimento: "Atendimento",
@@ -64,43 +64,6 @@ const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   subscription_started: "Assinatura registrada",
   whatsapp_click: "Clique no WhatsApp",
   whatsapp_verified: "WhatsApp verificado",
-};
-
-const pad = (value: number) => String(value).padStart(2, "0");
-const toDateKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const endOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return boundary === "start" ? startOfDate(date) : endOfDate(date);
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
 };
 
 type PeriodResult =

@@ -21,7 +21,7 @@ export const getPsychologistFreeProfile = async () => {
 
 export const updatePsychologistFreeProfile = async (body: FreeProfessionalProfilePayload) => {
   const handle = callEndpoint({ route, method: "PUT", body });
-  return handleReq<FreeProfessionalProfile>(handle);
+  return handleReq<FreeProfessionalProfile>({ ...handle, hideError: true });
 };
 
 export const uploadPsychologistFreeProfileAvatar = async (file: File) => {
@@ -29,12 +29,12 @@ export const uploadPsychologistFreeProfileAvatar = async (file: File) => {
   body.append("avatar", file);
 
   const handle = callEndpoint({ route: `${route}/avatar`, method: "POST", body });
-  return handleReq<FreeProfessionalProfileAvatarUpload>(handle);
+  return handleReq<FreeProfessionalProfileAvatarUpload>({ ...handle, hideError: true });
 };
 
 export const deletePsychologistFreeProfileAvatar = async () => {
   const handle = callEndpoint({ route: `${route}/avatar`, method: "DELETE" });
-  return handleReq<FreeProfessionalProfileAvatarRemoval>(handle);
+  return handleReq<FreeProfessionalProfileAvatarRemoval>({ ...handle, hideError: true });
 };
 
 export const uploadPsychologistFreeProfileCoverImage = async (file: File) => {
@@ -42,12 +42,12 @@ export const uploadPsychologistFreeProfileCoverImage = async (file: File) => {
   body.append("cover-image", file);
 
   const handle = callEndpoint({ route: `${route}/cover-image`, method: "POST", body });
-  return handleReq<FreeProfessionalProfileCoverImageUpload>(handle);
+  return handleReq<FreeProfessionalProfileCoverImageUpload>({ ...handle, hideError: true });
 };
 
 export const deletePsychologistFreeProfileCoverImage = async () => {
   const handle = callEndpoint({ route: `${route}/cover-image`, method: "DELETE" });
-  return handleReq<FreeProfessionalProfileCoverImageRemoval>(handle);
+  return handleReq<FreeProfessionalProfileCoverImageRemoval>({ ...handle, hideError: true });
 };
 
 export const uploadPsychologistFreeProfileVideo = async (file: File) => {
@@ -55,7 +55,7 @@ export const uploadPsychologistFreeProfileVideo = async (file: File) => {
   body.append("video", file);
 
   const handle = callEndpoint({ route: `${route}/video`, method: "POST", body });
-  return handleReq<FreeProfessionalProfileVideoUpload>(handle);
+  return handleReq<FreeProfessionalProfileVideoUpload>({ ...handle, hideError: true });
 };
 
 export const uploadPsychologistFreeProfileVideoCover = async (file: File) => {
@@ -63,10 +63,10 @@ export const uploadPsychologistFreeProfileVideoCover = async (file: File) => {
   body.append("video-cover", file);
 
   const handle = callEndpoint({ route: `${route}/video/cover`, method: "POST", body });
-  return handleReq<FreeProfessionalProfileVideoCoverUpload>(handle);
+  return handleReq<FreeProfessionalProfileVideoCoverUpload>({ ...handle, hideError: true });
 };
 
 export const deletePsychologistFreeProfileVideo = async () => {
   const handle = callEndpoint({ route: `${route}/video`, method: "DELETE" });
-  return handleReq<FreeProfessionalProfileVideoRemoval>(handle);
+  return handleReq<FreeProfessionalProfileVideoRemoval>({ ...handle, hideError: true });
 };

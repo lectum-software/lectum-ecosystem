@@ -1,14 +1,19 @@
-import { faker } from "@faker-js/faker";
+import { randomCharacter, shuffled } from "./random";
+
+const LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
+const UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const DIGITS = "0123456789";
+const SPECIAL = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?";
+const PASSWORD_ALPHABET = `${LOWERCASE}${UPPERCASE}${DIGITS}${SPECIAL}`;
 
 export function password(): string {
-  const strongRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/;
+  const required = [
+    randomCharacter(LOWERCASE),
+    randomCharacter(UPPERCASE),
+    randomCharacter(DIGITS),
+    randomCharacter(SPECIAL),
+  ];
+  const remaining = Array.from({ length: 8 }, () => randomCharacter(PASSWORD_ALPHABET));
 
-  let value: string;
-  do {
-    value = faker.internet.password({
-      length: 12,
-    });
-  } while (!strongRegex.test(value));
-
-  return value;
+  return shuffled([...required, ...remaining].join(""));
 }

@@ -3,30 +3,37 @@ type SanitizeOptions = {
 };
 
 const sensitiveResponseKeys = new Set([
-  "access_token",
-  "ai_api_key",
-  "api_key",
-  "auth_token",
-  "client_secret",
-  "code_hash",
-  "confirm_code",
-  "gateway_token",
+  "accesstoken",
+  "aiapikey",
+  "apikey",
+  "authorization",
+  "authtoken",
+  "cardtoken",
+  "clientsecret",
+  "codehash",
+  "confirmcode",
+  "cookie",
+  "cvv",
+  "gatewaytoken",
   "password",
-  "password_confirm",
-  "private_key",
-  "provider_message_id",
-  "recovery_code",
-  "refresh_token",
+  "passwordconfirm",
+  "privatekey",
+  "providermessageid",
+  "recoverycode",
+  "refreshtoken",
   "secret",
-  "secret_access_key",
-  "secret_key",
-  "webhook_secret",
+  "secretaccesskey",
+  "secretkey",
+  "setcookie",
+  "webhooksecret",
 ]);
 
 const sensitiveLogOnlyKeys = new Set(["token"]);
 
+const normalizeSensitiveKey = (key: string) => key.toLowerCase().replace(/[^a-z0-9]/g, "");
+
 const shouldRemoveKey = (key: string, options: SanitizeOptions) => {
-  const normalizedKey = key.toLowerCase();
+  const normalizedKey = normalizeSensitiveKey(key);
 
   if (sensitiveResponseKeys.has(normalizedKey)) return true;
 

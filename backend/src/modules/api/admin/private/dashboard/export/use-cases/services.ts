@@ -1,5 +1,6 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
+import { csvRow } from "@/utils/csv";
 import type {
   AdminDashboardDailyPoint,
   AdminDashboardFinancialPoint,
@@ -7,13 +8,6 @@ import type {
   IAdminDashboardSummaryDTO,
 } from "../../summary/DTOs/IAdminDashboardSummaryDTO";
 import { buildDashboardSummary } from "../../summary/use-cases/services";
-
-const csvCell = (value: unknown) => {
-  const normalized = value === null || value === undefined ? "" : String(value);
-  return `"${normalized.replace(/"/g, '""')}"`;
-};
-
-const csvRow = (values: unknown[]) => values.map(csvCell).join(",");
 
 const appendMetricRows = (summary: AdminDashboardSummary, rows: string[]) => {
   rows.push(csvRow(["section", "id", "label", "date", "value", "source", "extra"]));

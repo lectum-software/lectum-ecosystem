@@ -19,6 +19,7 @@ import {
   useCreateCommunityPost,
   useUploadCommunityPostMedia,
 } from "@/api/callers/community";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { components } from "@/components/controllers";
 import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import { resolveMediaUploadError } from "@/utils/media-upload-error";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
   createVideoThumbnailFile,
@@ -68,10 +70,7 @@ const normalizeParam = (value: string | string[] | undefined) => {
 
 const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const code = apiError?.data?.code;
   const normalized = rawMessage.toLowerCase();
 
@@ -125,33 +124,6 @@ const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
   return {
     message: rawMessage || "Não foi possível publicar agora. Tente novamente em instantes.",
   };
-};
-
-const resolveMediaUploadError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
-  const normalized = rawMessage.toLowerCase();
-
-  if (
-    normalized.includes("tamanho") ||
-    normalized.includes("limite") ||
-    normalized.includes("50")
-  ) {
-    return "A m\u00eddia precisa ter at\u00e9 50MB.";
-  }
-
-  if (normalized.includes("tipo") || normalized.includes("permit")) {
-    return "Envie uma imagem ou v\u00eddeo em formato permitido.";
-  }
-
-  if (normalized.includes("plano") || normalized.includes("verific")) {
-    return "M\u00eddia dispon\u00edvel apenas para psic\u00f3logos verificados.";
-  }
-
-  return rawMessage || "N\u00e3o foi poss\u00edvel anexar a m\u00eddia agora. Tente novamente.";
 };
 
 const guidanceText =

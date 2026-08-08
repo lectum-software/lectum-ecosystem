@@ -6,6 +6,7 @@ import { error, msg } from "@/helpers/translate";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 //Utils
 import { encrypt } from "@/utils/crypt";
+import { isPrismaErrorCode } from "@/utils/prisma-transaction";
 import {
   buildProfessionalFullDisplayName,
   normalizeProfessionalNamePart,
@@ -68,33 +69,45 @@ export default async (data: IStoreDTO) => {
 
   //Encrypt password
   if (data.b.password) data.b.password = await encrypt(data.b.password);
-  //Encrypt password_confirm
-  if (data.b.password_confirm) data.b.password_confirm = await encrypt(data.b.password_confirm);
 
-  const res = await _USER.store({
-    ...data,
-    b: {
-      ...data.b,
-      name:
-        role === "psicologo"
-          ? buildProfessionalFullDisplayName({
-              fallbackName: data.b.name,
-              firstName: professionalFirstName,
-              lastName: professionalLastName,
-            })
-          : data.b.name,
-      professional_first_name: role === "psicologo" ? professionalFirstName : undefined,
-      professional_last_name: role === "psicologo" ? professionalLastName : undefined,
-      role,
-    },
-    device_id: device.id,
-  });
+  let res: Awaited<ReturnType<StoreRepository["store"]>>;
+  try {
+    res = await _USER.store({
+      ...data,
+      b: {
+        ...data.b,
+        name:
+          role === "psicologo"
+            ? buildProfessionalFullDisplayName({
+                fallbackName: data.b.name,
+                firstName: professionalFirstName,
+                lastName: professionalLastName,
+              })
+            : data.b.name,
+        professional_first_name: role === "psicologo" ? professionalFirstName : undefined,
+        professional_last_name: role === "psicologo" ? professionalLastName : undefined,
+        role,
+      },
+      device_id: device.id,
+    });
+  } catch (storeError) {
+    if (isPrismaErrorCode(storeError, "P2002")) {
+      return {
+        status: 400,
+        ...error("unique", { model: "user", property: "email" }),
+        type: 1,
+      };
+    }
+
+    throw storeError;
+  }
 
   //
   const _LOGIN = new LoginRepository(device.id);
   const user = await _LOGIN.hidrate(res, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("store", {
       //If you need a custom text

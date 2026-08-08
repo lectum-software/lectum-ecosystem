@@ -1,10 +1,9 @@
 "use client";
 
-import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { isAdminViewAsReadOnlyError } from "@/utils/admin-view-as";
+import { isRetryableApiError } from "@/api/errors";
 
 export const Provider = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(
@@ -12,31 +11,14 @@ export const Provider = ({ children }: { children: ReactNode }) => {
       new QueryClient({
         defaultOptions: {
           queries: {
-            retry: false,
+            retry: (failureCount, error) => failureCount < 2 && isRetryableApiError(error),
+            retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 2_000),
             staleTime: 1000 * 60,
           },
           mutations: {
             retry: false,
           },
         },
-        queryCache: new QueryCache({
-          onError: (error) => {
-            if (isAdminViewAsReadOnlyError(error)) return;
-
-            if (error instanceof Error) {
-              toast.error(error.message);
-            }
-          },
-        }),
-        mutationCache: new MutationCache({
-          onError: (error) => {
-            if (isAdminViewAsReadOnlyError(error)) return;
-
-            if (error instanceof Error) {
-              toast.error(error.message);
-            }
-          },
-        }),
       }),
   );
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+
 export const ADMIN_VIEW_AS_STORAGE_KEY = "lectum.adminViewAs";
 export const ADMIN_VIEW_AS_STORAGE_EVENT = "lectum:admin-view-as-change";
 export const ADMIN_VIEW_AS_READ_ONLY_ERROR_CODE = "admin_view_as_read_only";
@@ -20,6 +22,23 @@ const notifyAdminViewAsChange = () => {
   if (typeof window === "undefined") return;
 
   window.dispatchEvent(new Event(ADMIN_VIEW_AS_STORAGE_EVENT));
+};
+
+export const normalizeAdminReturnUrl = (value?: string | null) => {
+  const internalPath = normalizeSafeInternalRedirect(value);
+  if (internalPath) return internalPath;
+
+  const configuredAdminUrl = process.env.NEXT_PUBLIC_ADMIN_URL?.trim();
+  if (!configuredAdminUrl || !value) return null;
+
+  try {
+    const trustedOrigin = new URL(configuredAdminUrl).origin;
+    const candidate = new URL(value);
+
+    return candidate.origin === trustedOrigin ? candidate.toString() : null;
+  } catch {
+    return null;
+  }
 };
 
 const isExpired = (expiresAt?: string | null) => {
@@ -63,8 +82,12 @@ export const isAdminViewAsReadOnlyError = (error: unknown) => {
 export const readAdminViewAsSession = (): AdminViewAsSession | null => {
   if (typeof window === "undefined") return null;
 
-  const raw = window.localStorage.getItem(ADMIN_VIEW_AS_STORAGE_KEY);
+  const raw =
+    window.sessionStorage.getItem(ADMIN_VIEW_AS_STORAGE_KEY) ??
+    window.localStorage.getItem(ADMIN_VIEW_AS_STORAGE_KEY);
   if (!raw) return null;
+
+  window.localStorage.removeItem(ADMIN_VIEW_AS_STORAGE_KEY);
 
   try {
     const parsed = JSON.parse(raw) as Partial<AdminViewAsSession>;
@@ -73,7 +96,10 @@ export const readAdminViewAsSession = (): AdminViewAsSession | null => {
       return null;
     }
 
-    return parsed;
+    return {
+      ...parsed,
+      adminReturnUrl: normalizeAdminReturnUrl(parsed.adminReturnUrl),
+    };
   } catch {
     clearAdminViewAsSession();
     return null;
@@ -83,7 +109,8 @@ export const readAdminViewAsSession = (): AdminViewAsSession | null => {
 export const writeAdminViewAsSession = (session: AdminViewAsSession) => {
   if (typeof window === "undefined") return;
 
-  window.localStorage.setItem(ADMIN_VIEW_AS_STORAGE_KEY, JSON.stringify(session));
+  window.localStorage.removeItem(ADMIN_VIEW_AS_STORAGE_KEY);
+  window.sessionStorage.setItem(ADMIN_VIEW_AS_STORAGE_KEY, JSON.stringify(session));
   notifyAdminViewAsChange();
 };
 
@@ -91,6 +118,7 @@ export const clearAdminViewAsSession = () => {
   if (typeof window === "undefined") return;
 
   window.localStorage.removeItem(ADMIN_VIEW_AS_STORAGE_KEY);
+  window.sessionStorage.removeItem(ADMIN_VIEW_AS_STORAGE_KEY);
   notifyAdminViewAsChange();
 };
 

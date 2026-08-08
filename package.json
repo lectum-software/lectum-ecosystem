@@ -6,7 +6,11 @@
   "scripts": {
     "prepare": "lefthook install",
     "run": "pnpm dev",
-    "check": "pnpm check:frontend && pnpm check:backend && pnpm check:admin",
+    "check": "pnpm check:secrets && pnpm check:env && pnpm check:source-size && pnpm check:frontend && pnpm check:backend && pnpm check:admin",
+    "check:deploy-branch": "node scripts/check-deploy-branch.mjs",
+    "check:env": "node scripts/check-env-examples.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:source-size": "node scripts/check-source-size.mjs",
     "check:frontend": "pnpm --dir frontend check",
     "check:backend": "pnpm --dir backend check",
     "check:admin": "pnpm --dir admin check",
@@ -20,5 +24,11 @@
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "lefthook": "^2.1.9"
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-uri": "3.1.5",
+      "js-yaml": "4.3.1"
+    }
   }
 }

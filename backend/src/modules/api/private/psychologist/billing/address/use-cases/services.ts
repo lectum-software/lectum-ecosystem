@@ -1,46 +1,11 @@
 import { error, msg } from "@/helpers/translate";
-import { isPaymentGatewayConfigurationError } from "@/modules/billing/payment-gateway";
+import {
+  isPaymentGatewayConfigurationError,
+  sanitizePaymentGatewayError,
+} from "@/modules/billing/payment-gateway";
 import { syncMercadoPagoSubscriptionRecord } from "@/modules/billing/sync-mercado-pago-subscription";
 import type { IAddressDTO } from "../DTOs/IAddressDTO";
 import { AddressRepository } from "../repositories/AddressRepository";
-
-type GatewayErrorLog = {
-  name?: string;
-  message?: string;
-  operation?: string;
-  cause_message?: string;
-  status?: number;
-  code?: string;
-  blocked_by?: string;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
-
-const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
-
-const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
-  if (err instanceof Error) {
-    const errorWithDetails = err as Error & { details?: unknown };
-    const details = isRecord(errorWithDetails.details) ? errorWithDetails.details : null;
-
-    return {
-      name: err.name,
-      message: err.message,
-      operation: toSafeString(details?.operation),
-      cause_message: toSafeString(details?.cause_message),
-      status: toSafeNumber(details?.status),
-      code: toSafeString(details?.code),
-      blocked_by: toSafeString(details?.blocked_by),
-    };
-  }
-
-  return {
-    message: "Unknown gateway error",
-  };
-};
 
 const refreshActiveProfessionalSubscription = async ({
   profileId,
@@ -63,7 +28,7 @@ const refreshActiveProfessionalSubscription = async ({
   } catch (err) {
     console.error(
       "[BILLING] Mercado Pago address subscription confirmation failed",
-      sanitizeGatewayError(err),
+      sanitizePaymentGatewayError(err),
     );
     throw err;
   }

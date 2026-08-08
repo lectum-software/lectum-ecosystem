@@ -15,6 +15,7 @@ import {
   diagnoseAdminProfileReceivedEngagement,
   normalizeAdminProfileReceivedEngagementToThirtyDays,
 } from "@/utils/admin-profile-received-engagement";
+import { daysBetweenInclusive, startOfDate } from "@/utils/date-range";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
@@ -45,7 +46,6 @@ const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
 const STATUS_ACTIVE = "ativa";
 const FREE_PLAN_SLUG = "gratuito";
-const MS_PER_DAY = 86_400_000;
 const COMMUNITY_ENGAGEMENT_SOURCE = ADMIN_PROFILE_RECEIVED_ENGAGEMENT_SOURCE;
 const COMMUNITY_ENGAGEMENT_MINIMUM_SIGNAL_30D = 3;
 const COMMUNITY_ENGAGEMENT_ACTIVE_30D = 6;
@@ -538,20 +538,6 @@ const matchesFilters = (
 
 const roundScore = (value: number) => Math.round(value * 1000) / 10;
 const ratingAverage = (value: number) => Math.round((value / 100) * 10) / 10;
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-
-  return next;
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
-};
 
 const profileActiveDaysUntil = (profileCreatedAt: Date, date: Date) => {
   const createdAt = startOfDate(profileCreatedAt);

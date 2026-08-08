@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AlertTriangle,
   ArrowRight,
   BadgeDollarSign,
   ChevronDown,
@@ -10,7 +9,6 @@ import {
   Download,
   Loader2,
   type LucideIcon,
-  RefreshCw,
   TrendingDown,
   TrendingUp,
   UserPlus,
@@ -30,6 +28,7 @@ import type {
   FinanceSeriesPoint,
   FinanceSubscriptionItem,
 } from "@/api/req/finance";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 
@@ -410,27 +409,11 @@ const LoadingGrid = () => (
 );
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <CardShell className="p-6">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-black">Não foi possível carregar Financeiro</h2>
-          <p className="mt-1 text-sm text-muted">{message}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-border-strong"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </CardShell>
+  <AdminQueryErrorState
+    message={message}
+    onRetry={onRetry}
+    title="Não foi possível carregar Financeiro"
+  />
 );
 
 const FinanceHeader = ({

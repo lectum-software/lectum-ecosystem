@@ -1,4 +1,4 @@
-﻿import { v4 } from "uuid";
+import { v4 } from "uuid";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
@@ -790,8 +790,8 @@ export const startAdminPsychologistAccountViewAs = async (
     token,
     token_expires_in_seconds: ADMIN_VIEW_AS_TOKEN_TTL_SECONDS,
   };
-
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("admin_psychologist_account_view_as_started", {}),
     data: response,

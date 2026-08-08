@@ -28,6 +28,7 @@ import {
   useState,
 } from "react";
 import { usePsychologistAnalytics } from "@/api/callers/psychologist-analytics";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   PsychologistAnalyticsCommunities,
   PsychologistAnalyticsMetric,
@@ -86,15 +87,11 @@ type AnalyticsCardView = {
   value: string;
 };
 
-const resolveApiError = (error: unknown) => {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "object" && error && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") return message;
-  }
-
-  return "Não foi possível conectar à API agora. Tente novamente em instantes.";
-};
+const resolveApiError = (error: unknown) =>
+  getSafeApiErrorMessage(
+    error,
+    "Não foi possível conectar à API agora. Tente novamente em instantes.",
+  );
 
 const toCount = (value?: number) => (value ?? 0).toLocaleString("pt-BR");
 

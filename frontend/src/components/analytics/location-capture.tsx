@@ -14,7 +14,7 @@ import {
 } from "./storage";
 
 const SESSION_CAPTURED_KEY = "lectum:analytics:location-captured-session";
-const LAST_USER_ID_KEY = "lectum:analytics:location-captured-user-id";
+const AUTH_LINKED_KEY = "lectum:analytics:authenticated-user-linked";
 
 type NavigatorWithUserAgentData = Navigator & {
   userAgentData?: {
@@ -120,10 +120,11 @@ export const LocationCapture = () => {
 
     const visitorId = getOrCreateStorageId(window.localStorage, VISITOR_ID_KEY);
     const sessionId = getOrCreateStorageId(window.sessionStorage, SESSION_ID_KEY);
-    const lastUserId = safeGetItem(window.localStorage, LAST_USER_ID_KEY);
+    const hasLinkedAuthenticatedUser =
+      safeGetItem(window.sessionStorage, AUTH_LINKED_KEY) === "true";
     const alreadyCapturedInSession =
       safeGetItem(window.sessionStorage, SESSION_CAPTURED_KEY) === "true";
-    const shouldLinkAuthenticatedUser = Boolean(userId && lastUserId !== userId);
+    const shouldLinkAuthenticatedUser = Boolean(userId && !hasLinkedAuthenticatedUser);
 
     if (alreadyCapturedInSession && !shouldLinkAuthenticatedUser) return;
 
@@ -143,7 +144,7 @@ export const LocationCapture = () => {
         safeSetItem(window.sessionStorage, SESSION_CAPTURED_KEY, "true");
 
         if (userId && response.authenticated) {
-          safeSetItem(window.localStorage, LAST_USER_ID_KEY, userId);
+          safeSetItem(window.sessionStorage, AUTH_LINKED_KEY, "true");
         }
       })
       .catch(() => {

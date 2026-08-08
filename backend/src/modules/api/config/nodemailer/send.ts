@@ -18,8 +18,22 @@ type Send = {
 
 type TemplateContext = Record<string, unknown>;
 
-const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "erro desconhecido";
+const getErrorName = (error: unknown) =>
+  error instanceof Error ? error.name : "UnknownEmailError";
+
+export const isTransactionalEmailConfigured = () => {
+  const port = Number(process.env.EMAIL_API_PORT);
+
+  return Boolean(
+    process.env.EMAIL_API_HOST?.trim() &&
+      Number.isInteger(port) &&
+      port > 0 &&
+      port <= 65_535 &&
+      process.env.EMAIL_API_EMAIL?.trim() &&
+      process.env.EMAIL_API_KEY?.trim() &&
+      process.env.EMAIL_API_SENDER?.trim(),
+  );
+};
 
 const getTemplateValue = (context: TemplateContext, key: string) => {
   return key.split(".").reduce<unknown>((acc, item) => {
@@ -84,18 +98,16 @@ const send = async ({
   messageProps,
 }: Send): Promise<boolean> => {
   try {
-    if (process.env.NODE_ENV === "test") return Promise.resolve(true);
-
     const user = process.env.EMAIL_API_EMAIL;
     //Replace all ' and all ""
     const pass = process.env.EMAIL_API_KEY?.replace(/'/g, "").replace(/"/g, "");
 
-    if (!user || !pass) {
-      console.warn("[EMAIL] Credenciais SMTP ausentes; envio ignorado.");
-      return Promise.resolve(true);
+    if (!isTransactionalEmailConfigured() || !user || !pass) {
+      console.warn("[EMAIL] Configuração SMTP ausente ou inválida; envio cancelado.");
+      return false;
     }
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_API_HOST,
         port: Number(process.env.EMAIL_API_PORT),
@@ -160,18 +172,20 @@ const send = async ({
         if (error) {
           console.error("[EMAIL] Falha ao enviar mensagem", {
             code: (error as { code?: string }).code,
-            message: getErrorMessage(error),
+            name: getErrorName(error),
           });
-          return reject(new Error(`Failed to send email: ${error.message}`));
+          return reject(new Error("EMAIL_SEND_FAILED"));
         } else {
-          console.log(`Email sent: ${info.response}`);
+          console.log("[EMAIL] Mensagem aceita pelo provedor.", {
+            accepted: info.accepted.length,
+          });
           resolve(true);
         }
       });
     });
   } catch (e) {
     console.error("[EMAIL] Erro inesperado no envio", {
-      message: getErrorMessage(e),
+      name: getErrorName(e),
     });
     return false;
   }

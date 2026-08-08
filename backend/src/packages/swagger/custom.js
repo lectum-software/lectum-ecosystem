@@ -3,13 +3,18 @@ window.addEventListener("load", () => {
   // 1) Cria o elemento do painel (sem posicionamento absoluto)
   const panel = document.createElement("div");
   panel.id = "hdr-panel";
-  panel.innerHTML = `
-    <div class="hdr-header">
-      <strong>Custom Headers</strong>
-      <button id="hdr-add">➕</button>
-    </div>
-    <div id="hdr-list"></div>
-  `;
+  const header = document.createElement("div");
+  header.className = "hdr-header";
+  const title = document.createElement("strong");
+  title.textContent = "Custom Headers";
+  const addButton = document.createElement("button");
+  addButton.id = "hdr-add";
+  addButton.type = "button";
+  addButton.textContent = "➕";
+  const list = document.createElement("div");
+  list.id = "hdr-list";
+  header.append(title, addButton);
+  panel.append(header, list);
 
   // estilos inline básicos — você pode mover para o CSS
   Object.assign(panel.style, {
@@ -32,28 +37,33 @@ window.addEventListener("load", () => {
   }
 
   // 3) Setup das interações internas do painel
-  const list = panel.querySelector("#hdr-list");
-  const addBtn = panel.querySelector("#hdr-add");
-
   function createRow(name = "", value = "") {
     const row = document.createElement("div");
     row.className = "hdr-row";
-    row.innerHTML = `
-      <input class="hdr-name" placeholder="Header name" value="${name}" />
-      <input class="hdr-value" placeholder="Value" value="${value}" />
-      <button class="hdr-remove">✖️</button>
-    `;
+    const nameInput = document.createElement("input");
+    nameInput.className = "hdr-name";
+    nameInput.placeholder = "Header name";
+    nameInput.value = name;
+    const valueInput = document.createElement("input");
+    valueInput.className = "hdr-value";
+    valueInput.placeholder = "Value";
+    valueInput.value = value;
+    const removeButton = document.createElement("button");
+    removeButton.className = "hdr-remove";
+    removeButton.type = "button";
+    removeButton.textContent = "✖️";
+    removeButton.onclick = () => row.remove();
+    row.append(nameInput, valueInput, removeButton);
     Object.assign(row.style, {
       display: "flex",
       gap: "0.5em",
       alignItems: "center",
       flexWrap: "wrap",
     });
-    row.querySelector(".hdr-remove").onclick = () => row.remove();
     return row;
   }
 
-  addBtn.onclick = () => list.appendChild(createRow());
+  addButton.onclick = () => list.appendChild(createRow());
   list.appendChild(createRow());
 
   // 4) Intercepta todas as chamadas fetch para injetar headers

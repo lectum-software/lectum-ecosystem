@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
+import { csvRow } from "@/utils/csv";
 import type {
   AdminTrafficBreakdownItem,
   AdminTrafficConversion,
@@ -16,13 +17,6 @@ import type {
   IAdminTrafficSummaryDTO,
 } from "../../summary/DTOs/IAdminTrafficSummaryDTO";
 import { buildTrafficSummary } from "../../summary/use-cases/services";
-
-const csvCell = (value: unknown) => {
-  const normalized = value === null || value === undefined ? "" : String(value);
-  return `"${normalized.replace(/"/g, '""')}"`;
-};
-
-const csvRow = (values: unknown[]) => values.map(csvCell).join(",");
 
 const appendMetricRows = (rows: string[], section: string, metrics: AdminTrafficMetric[]) => {
   for (const metric of metrics) {

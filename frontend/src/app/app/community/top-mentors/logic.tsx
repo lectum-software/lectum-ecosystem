@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityTopMentor } from "@/api/generator/types/community";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -28,10 +29,7 @@ type ApiError = Error & {
 
 const resolveRankingError = (error: unknown) => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (apiError?.data?.status === 404 || normalized.includes("não encontr")) {

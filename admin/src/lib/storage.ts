@@ -6,6 +6,7 @@ const SIDEBAR_KEY = "lectum.admin.sidebar.collapsed";
 const DEVICE_KEY = "lectum.admin.device";
 
 const isBrowser = () => typeof window !== "undefined";
+let transientAdminToken: string | null = null;
 
 export type StoredAdmin = Omit<Admin, "admin_tokens" | "password" | "password_confirm">;
 
@@ -19,31 +20,39 @@ export const sanitizeAdmin = (admin: Admin): StoredAdmin => {
 
 export const getAdminToken = () => {
   if (!isBrowser()) return null;
-  return window.localStorage.getItem(TOKEN_KEY);
-};
 
-export const getStoredAdmin = (): StoredAdmin | null => {
-  if (!isBrowser()) return null;
+  if (transientAdminToken) return transientAdminToken;
 
-  const raw = window.localStorage.getItem(ADMIN_KEY);
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as StoredAdmin;
-  } catch {
-    window.localStorage.removeItem(ADMIN_KEY);
-    return null;
+  const sessionToken = window.sessionStorage.getItem(TOKEN_KEY);
+  if (sessionToken) {
+    transientAdminToken = sessionToken;
+    return transientAdminToken;
   }
+
+  const legacyToken = window.localStorage.getItem(TOKEN_KEY);
+  if (legacyToken) transientAdminToken = legacyToken;
+
+  window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem(ADMIN_KEY);
+  if (transientAdminToken) window.sessionStorage.setItem(TOKEN_KEY, transientAdminToken);
+  return transientAdminToken;
 };
 
-export const storeAdminSession = (admin: Admin, token: string) => {
+export const storeAdminSession = (token?: string | null) => {
   if (!isBrowser()) return;
-  window.localStorage.setItem(TOKEN_KEY, token);
-  window.localStorage.setItem(ADMIN_KEY, JSON.stringify(sanitizeAdmin(admin)));
+
+  transientAdminToken = token || null;
+  if (transientAdminToken) window.sessionStorage.setItem(TOKEN_KEY, transientAdminToken);
+  else window.sessionStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem(ADMIN_KEY);
 };
 
 export const clearAdminSession = () => {
   if (!isBrowser()) return;
+
+  transientAdminToken = null;
+  window.sessionStorage.removeItem(TOKEN_KEY);
   window.localStorage.removeItem(TOKEN_KEY);
   window.localStorage.removeItem(ADMIN_KEY);
 };

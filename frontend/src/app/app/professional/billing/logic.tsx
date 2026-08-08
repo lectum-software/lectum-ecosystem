@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   AlertTriangle,
@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   BillingPaymentHistoryItem,
   BillingPaymentMethod,
@@ -86,7 +87,7 @@ const formatCardBrand = (brand?: string | null) => {
 };
 
 const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Não foi possível carregar sua assinatura agora.";
+  getSafeApiErrorMessage(error, "Não foi possível carregar sua assinatura agora.");
 
 const statusLabel: Record<string, string> = {
   ativa: "Ativo",

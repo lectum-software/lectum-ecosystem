@@ -68,7 +68,6 @@ import {
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPatientAccount,
-  AdminPatientAccountViewAsResponse,
   AdminPatientActivitiesQuery,
   AdminPatientDetail,
   AdminPatientReportItem,
@@ -82,8 +81,17 @@ import type {
   PatientsDetailQuery,
   PatientsDetailSeriesPoint,
 } from "@/api/req/patients";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { isPublicMediaPath, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
+import {
+  adminViewAsPopupBlockedMessage,
+  buildAdminViewAsUrl,
+  openPendingAdminViewAsTab,
+} from "@/lib/admin-view-as";
+import { adminApiUrl } from "@/lib/api-url";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 const LOADING_PLACEHOLDERS = ["profile", "engagement", "activity", "communities"] as const;
@@ -98,9 +106,6 @@ const PATIENT_DETAIL_TABS = [
 ] as const;
 type PatientDetailTab = (typeof PATIENT_DETAIL_TABS)[number]["id"];
 const numberFormatter = new Intl.NumberFormat("pt-BR");
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const CARD = "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const metricIcons: Record<PatientsDetailMetric["id"], LucideIcon> = {
   comments_created: MessageCircle,
@@ -659,7 +664,7 @@ const formatChange = (value: number | null) => {
 const safeAvatarSrc = (src: string | null) => {
   if (!src) return null;
   if (src.startsWith("/public/files/") || src.startsWith("/community/icons/")) {
-    return `${apiUrl}${src}`;
+    return `${adminApiUrl}${src}`;
   }
   if (src.startsWith("/")) return src;
   try {
@@ -670,70 +675,10 @@ const safeAvatarSrc = (src: string | null) => {
   }
   return null;
 };
-const isApiMediaSrc = (src: string | null) => Boolean(src?.startsWith(apiUrl));
-const isPublicMediaPath = (pathname: string) =>
-  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
-const resolveAdminMediaUrl = (src?: string | null) => {
-  const value = src?.trim();
-  if (!value) return null;
-
-  const apiBase = apiUrl.replace(/\/$/, "");
-
-  try {
-    const parsed = new URL(value, apiBase);
-    if (isPublicMediaPath(parsed.pathname)) {
-      return `${apiBase}${parsed.pathname}${parsed.search}`;
-    }
-    if (value.startsWith("http")) return value;
-    return value.startsWith("/") ? value : `${apiBase}/${value}`;
-  } catch {
-    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
-      return `${apiBase}${value}`;
-    }
-    return value.startsWith("/") || value.startsWith("http") ? value : null;
-  }
-};
-const allowedRemoteImageHosts = () => {
-  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
-
-  for (const candidate of [
-    apiUrl,
-    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
-  ]) {
-    const normalized = candidate.trim();
-    if (!normalized) continue;
-
-    try {
-      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
-      if (url.hostname) hosts.add(url.hostname);
-    } catch {
-      // Entradas inválidas de env não devem quebrar a renderização de mídia.
-    }
-  }
-
-  return hosts;
-};
-const canRenderImage = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-  if (resolved.startsWith("/")) return true;
-
-  try {
-    const url = new URL(resolved);
-
-    return allowedRemoteImageHosts().has(url.hostname);
-  } catch {
-    return false;
-  }
-};
-const renderableImageSrc = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-
-  return resolved && canRenderImage(resolved) ? resolved : null;
-};
+const isApiMediaSrc = (src: string | null) => Boolean(src?.startsWith(adminApiUrl));
 const isPublicAdminMediaSrc = (src: string) => {
   try {
-    return isPublicMediaPath(new URL(src, apiUrl).pathname);
+    return isPublicMediaPath(new URL(src, adminApiUrl).pathname);
   } catch {
     return false;
   }
@@ -750,54 +695,6 @@ const isPatientDetailTab = (value: string | null): value is PatientDetailTab =>
   PATIENT_DETAIL_TABS.some((tab) => tab.id === value);
 const patientTabHref = (id: string, tab: PatientDetailTab) =>
   tab === "geral" ? `/pacientes/${id}` : `/pacientes/${id}?tab=${tab}`;
-const toPublicHref = (url: string) => {
-  if (/^https?:\/\//.test(url)) return url;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
-};
-
-const buildAdminViewAsUrl = (session: AdminPatientAccountViewAsResponse) => {
-  const url = new URL("/auth/admin-view-as", publicFrontendUrl);
-  const adminReturnUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}${window.location.pathname}${window.location.search}`
-      : "";
-  const hash = new URLSearchParams({
-    adminReturnUrl,
-    expiresIn: String(session.token_expires_in_seconds),
-    mode: session.mode,
-    readOnly: String(session.read_only),
-    role: session.target.role,
-    startPath: session.start_path,
-    subjectId: session.target.id,
-    subjectName: session.target.name,
-    token: session.token,
-  });
-
-  url.hash = hash.toString();
-
-  return url.toString();
-};
-
-const adminViewAsPopupBlockedMessage =
-  "O navegador bloqueou a nova aba. Permita pop-ups para o Lectum Admin e tente novamente.";
-
-const openPendingAdminViewAsTab = () => {
-  const tab = window.open("about:blank", "_blank");
-  if (!tab) return null;
-
-  tab.opener = null;
-  tab.document.title = "Preparando visualização administrativa";
-  tab.document.body.style.margin = "0";
-  tab.document.body.style.fontFamily =
-    "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-  tab.document.body.style.padding = "24px";
-  tab.document.body.style.color = "#05183F";
-  tab.document.body.textContent =
-    "Preparando visualização administrativa em modo somente leitura...";
-
-  return tab;
-};
 
 const formatNullable = (value: string | null | undefined) => {
   const normalized = String(value ?? "").trim();
@@ -1152,27 +1049,11 @@ const PatientStatisticsMetricCarousel = ({
 };
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <CardShell className="p-6">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold">Não foi possível carregar o paciente</h2>
-          <p className="mt-1 text-sm text-muted">{message}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-border-strong"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </CardShell>
+  <AdminQueryErrorState
+    message={message}
+    onRetry={onRetry}
+    title="Não foi possível carregar o paciente"
+  />
 );
 
 const Header = ({
@@ -2148,553 +2029,6 @@ const normalizePatientPlatformHourlyActivityPoint = (
   };
 };
 
-const PATIENT_STATISTICS_VISUAL_EXAMPLE_PATIENT_ID = "cmrqsrab5001f1guh2ve5oy90";
-const PATIENT_STATISTICS_VISUAL_EXAMPLE_ENABLED = process.env.NODE_ENV === "development";
-
-const PATIENT_STATISTICS_VISUAL_EXAMPLE_METRICS: Partial<
-  Record<PatientsDetailMetric["id"], number>
-> = {
-  comments_created: 18,
-  downvotes_received: 3,
-  posts_created: 6,
-  reports_received: 2,
-  saves_received: 9,
-  shares_received: 5,
-  upvotes_received: 31,
-  verified_psychologist_responses: 4,
-};
-
-const PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES = {
-  comments_created: [2, 4, 5, 3, 4],
-  downvotes_received: [0, 1, 0, 1, 1],
-  posts_created: [0, 1, 2, 1, 2],
-  reports_received: [0, 0, 1, 0, 1],
-  saves_received: [1, 2, 2, 1, 3],
-  shares_received: [0, 1, 1, 1, 2],
-  upvotes_received: [4, 6, 8, 5, 8],
-  verified_psychologist_responses: [0, 1, 1, 1, 1],
-} satisfies Record<PatientStatisticsSeriesMetricKey, number[]>;
-
-const PATIENT_STATISTICS_VISUAL_EXAMPLE_ACTIVITY_HOURS = [
-  { accesses: 2, engagement: 1, hour: 8, replies: 1, reviews: 1, total: 5 },
-  { accesses: 4, hour: 10, posts: 2, replies: 3, reviews: 2, total: 11 },
-  { accesses: 3, engagement: 3, hour: 14, posts: 1, replies: 3, total: 10 },
-  { accesses: 5, engagement: 4, hour: 18, posts: 2, replies: 3, total: 14 },
-  { accesses: 2, engagement: 2, hour: 21, replies: 3, total: 7 },
-] satisfies Array<{
-  accesses?: number;
-  engagement?: number;
-  hour: number;
-  posts?: number;
-  replies?: number;
-  reviews?: number;
-  total: number;
-}>;
-
-const PATIENT_INTENT_ANALYSIS_VISUAL_EXAMPLE_METRICS = {
-  favorites: { previousValue: 0, value: 1 },
-  profile_views: { previousValue: 4, value: 7 },
-  repeated_profile_views: { previousValue: 1, value: 2 },
-  whatsapp_clicks: { previousValue: 0, value: 1 },
-} satisfies Record<
-  PatientsDetailIntentMetric["id"],
-  {
-    previousValue: number;
-    value: number;
-  }
->;
-
-const patientStatisticsVisualExampleChartMetricIds = new Set<PatientsDetailMetric["id"]>(
-  PATIENT_COMMUNITY_CHART_METRICS.map((metric) => metric.id),
-);
-
-const patientStatisticsVisualExampleNumber = (value: number | null | undefined) =>
-  Math.max(0, Number(value ?? 0));
-
-const isPatientStatisticsVisualExampleEligible = (id: string) =>
-  PATIENT_STATISTICS_VISUAL_EXAMPLE_ENABLED && id === PATIENT_STATISTICS_VISUAL_EXAMPLE_PATIENT_ID;
-
-const hasPatientIntentAnalysisData = (detail: AdminPatientDetail) => {
-  const intent = detail.intent_analysis;
-
-  return (
-    intent.score > 0 ||
-    intent.total_signals > 0 ||
-    intent.unique_psychologists_contacted > 0 ||
-    intent.unique_psychologists_favorited > 0 ||
-    intent.unique_psychologists_viewed > 0 ||
-    intent.metrics.some((metric) => metric.value > 0)
-  );
-};
-
-const shouldUsePatientIntentVisualExample = (id: string, detail: AdminPatientDetail) =>
-  isPatientStatisticsVisualExampleEligible(id) && !hasPatientIntentAnalysisData(detail);
-
-const hasPatientStatisticsCommunityChartData = (detail: AdminPatientDetail) =>
-  detail.metrics.some(
-    (metric) => patientStatisticsVisualExampleChartMetricIds.has(metric.id) && metric.value > 0,
-  ) ||
-  detail.series.points.some((point) =>
-    PATIENT_STATISTICS_SERIES_METRIC_KEYS.some((key) => point[key] > 0),
-  );
-
-const hasPatientStatisticsActiveCommunitiesData = (detail: AdminPatientDetail) =>
-  detail.communities.items.length > 0;
-
-const hasPatientStatisticsActivityHoursData = (detail: AdminPatientDetail) => {
-  const hasHourlyActivity = detail.platform_usage.hourly_activity.some(
-    (point) => patientStatisticsVisualExampleNumber(point.total) > 0,
-  );
-  const hasWeekdayActivity = detail.platform_usage.hourly_activity_by_weekday.some((day) =>
-    day.hours.some((point) => patientStatisticsVisualExampleNumber(point.total) > 0),
-  );
-
-  return hasHourlyActivity || hasWeekdayActivity;
-};
-
-const hasPatientStatisticsPlatformUsageData = (detail: AdminPatientDetail) => {
-  const usage = detail.platform_usage;
-
-  return (
-    patientStatisticsVisualExampleNumber(usage.sessions_count) > 0 ||
-    patientStatisticsVisualExampleNumber(usage.access_days_count) > 0 ||
-    patientStatisticsVisualExampleNumber(usage.device_usage.total_sessions) > 0 ||
-    usage.top_pages.some((page) => patientStatisticsVisualExampleNumber(page.count) > 0)
-  );
-};
-
-const shouldUsePatientStatisticsVisualExample = (id: string, detail: AdminPatientDetail) =>
-  isPatientStatisticsVisualExampleEligible(id) &&
-  (!hasPatientStatisticsCommunityChartData(detail) ||
-    !hasPatientStatisticsActiveCommunitiesData(detail) ||
-    !hasPatientStatisticsActivityHoursData(detail) ||
-    !hasPatientStatisticsPlatformUsageData(detail));
-
-const formatPatientStatisticsVisualExampleDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-const parsePatientStatisticsVisualExampleDate = (value: string | null | undefined) => {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(`${value}T12:00:00`);
-
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-type PatientIntentLevelId = AdminPatientDetail["intent_analysis"]["level"]["id"];
-
-const patientIntentVisualExampleLevelLabel = (
-  id: PatientIntentLevelId,
-): AdminPatientDetail["intent_analysis"]["level"]["label"] =>
-  (
-    ({
-      high: "Qualificado",
-      low: "Curioso",
-      medium: "Interessado",
-      no_signals: "Frio",
-    }) as Record<PatientIntentLevelId, AdminPatientDetail["intent_analysis"]["level"]["label"]>
-  )[id];
-
-const buildPatientIntentVisualExampleLevel = (
-  score: number,
-): AdminPatientDetail["intent_analysis"]["level"] => {
-  if (score >= 70) {
-    return { id: "high", label: patientIntentVisualExampleLevelLabel("high"), tone: "hot" };
-  }
-
-  if (score >= 40) {
-    return { id: "medium", label: patientIntentVisualExampleLevelLabel("medium"), tone: "warm" };
-  }
-
-  if (score > 0) {
-    return { id: "low", label: patientIntentVisualExampleLevelLabel("low"), tone: "cool" };
-  }
-
-  return {
-    id: "no_signals",
-    label: patientIntentVisualExampleLevelLabel("no_signals"),
-    tone: "neutral",
-  };
-};
-
-const buildPatientIntentVisualExampleMetrics = (
-  metrics: PatientsDetailIntentMetric[],
-): PatientsDetailIntentMetric[] =>
-  metrics.map((metric) => {
-    const example = PATIENT_INTENT_ANALYSIS_VISUAL_EXAMPLE_METRICS[metric.id];
-    const previousValue = Math.max(0, example.previousValue);
-    const value = Math.max(0, example.value);
-    const changePercent =
-      previousValue > 0 ? ((value - previousValue) / previousValue) * 100 : null;
-    const trend =
-      changePercent === null
-        ? "unavailable"
-        : value > previousValue
-          ? "up"
-          : value < previousValue
-            ? "down"
-            : "flat";
-
-    return {
-      ...metric,
-      change_percent: changePercent,
-      previous_value: previousValue,
-      score_contribution: value * metric.score_weight,
-      trend,
-      value,
-    };
-  });
-
-const buildPatientIntentVisualExampleDetail = (detail: AdminPatientDetail): AdminPatientDetail => {
-  const metrics = buildPatientIntentVisualExampleMetrics(detail.intent_analysis.metrics);
-  const score = Math.min(
-    detail.intent_analysis.max_score,
-    metrics.reduce((total, metric) => total + metric.score_contribution, 0),
-  );
-  const periodTo = formatPatientStatisticsVisualExampleDate(
-    parsePatientStatisticsVisualExampleDate(detail.period.to) ?? new Date(),
-  );
-
-  return {
-    ...detail,
-    intent_analysis: {
-      ...detail.intent_analysis,
-      coverage_note:
-        "Indicador interno do Admin para avaliar visualmente a proximidade do contato no período selecionado.",
-      last_signal_at: `${periodTo}T18:40:00-03:00`,
-      level: buildPatientIntentVisualExampleLevel(score),
-      metrics,
-      score,
-      summary:
-        "Paciente com múltiplos sinais de descoberta, favoritos e intenção de contato no período selecionado.",
-      total_signals: metrics.reduce((total, metric) => total + metric.value, 0),
-      unique_psychologists_contacted: 1,
-      unique_psychologists_favorited: 1,
-      unique_psychologists_viewed: 5,
-    },
-  };
-};
-
-const buildPatientStatisticsVisualExampleDates = (detail: AdminPatientDetail) => {
-  const existingDates = detail.series.points.map((point) => point.date).filter(Boolean);
-
-  if (existingDates.length >= 5) {
-    return existingDates.slice(-5);
-  }
-
-  const toDate =
-    parsePatientStatisticsVisualExampleDate(detail.period.to) ??
-    parsePatientStatisticsVisualExampleDate(detail.period.from) ??
-    new Date();
-
-  return Array.from({ length: 5 }, (_, index) => {
-    const date = new Date(toDate);
-    date.setDate(toDate.getDate() - (4 - index));
-
-    return formatPatientStatisticsVisualExampleDate(date);
-  });
-};
-
-const buildPatientStatisticsVisualExampleSeries = (detail: AdminPatientDetail) =>
-  buildPatientStatisticsVisualExampleDates(detail).map((date, index) => ({
-    date,
-    comments_created: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.comments_created[index] ?? 0,
-    downvotes_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.downvotes_received[index] ?? 0,
-    posts_created: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.posts_created[index] ?? 0,
-    reports_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.reports_received[index] ?? 0,
-    saves_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.saves_received[index] ?? 0,
-    shares_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.shares_received[index] ?? 0,
-    upvotes_received: PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.upvotes_received[index] ?? 0,
-    verified_psychologist_responses:
-      PATIENT_STATISTICS_VISUAL_EXAMPLE_SERIES.verified_psychologist_responses[index] ?? 0,
-  }));
-
-const buildPatientStatisticsVisualExampleMetrics = (metrics: AdminPatientDetail["metrics"]) =>
-  metrics.map((metric) => {
-    const value = PATIENT_STATISTICS_VISUAL_EXAMPLE_METRICS[metric.id];
-
-    if (typeof value !== "number") {
-      return metric;
-    }
-
-    const previousValue = Math.max(0, value - Math.ceil(value * 0.25));
-    const changePercent =
-      previousValue > 0 ? ((value - previousValue) / previousValue) * 100 : null;
-    const trend: PatientsDetailMetric["trend"] =
-      value > previousValue ? "up" : value < previousValue ? "down" : "flat";
-
-    return {
-      ...metric,
-      change_percent: changePercent,
-      previous_value: previousValue,
-      trend,
-      value,
-    };
-  });
-
-const buildPatientStatisticsVisualExampleCommunities = (
-  detail: AdminPatientDetail,
-): AdminPatientDetail["communities"]["items"] => {
-  const periodStart = detail.period.from ?? formatPatientStatisticsVisualExampleDate(new Date());
-  const diagnosisSource = "community_post+post_reply+post_vote+post_save+post_reply_save";
-
-  return [
-    {
-      avatar_url: null,
-      color: "#2F80ED",
-      comments: 8,
-      downvotes: 1,
-      engagement_diagnosis: {
-        id: "muito_ativo",
-        label: "Muito ativo",
-        source: diagnosisSource,
-      },
-      id: "visual-example-community-ansiedade",
-      interactions: 19,
-      is_member: true,
-      member_since: periodStart,
-      name: "Ansiedade e rotina",
-      posts: 3,
-      saves: 4,
-      slug: "visual-example-ansiedade-rotina",
-      upvotes: 14,
-      votes: 15,
-    },
-    {
-      avatar_url: null,
-      color: "#19A463",
-      comments: 6,
-      downvotes: 0,
-      engagement_diagnosis: {
-        id: "ativo",
-        label: "Ativo",
-        source: diagnosisSource,
-      },
-      id: "visual-example-community-autocuidado",
-      interactions: 14,
-      is_member: true,
-      member_since: periodStart,
-      name: "Autocuidado diário",
-      posts: 2,
-      saves: 3,
-      slug: "visual-example-autocuidado-diario",
-      upvotes: 11,
-      votes: 11,
-    },
-    {
-      avatar_url: null,
-      color: "#9B51E0",
-      comments: 4,
-      downvotes: 2,
-      engagement_diagnosis: {
-        id: "pouco_ativo",
-        label: "Pouco ativo",
-        source: diagnosisSource,
-      },
-      id: "visual-example-community-sono",
-      interactions: 10,
-      is_member: false,
-      member_since: null,
-      name: "Sono e descanso",
-      posts: 1,
-      saves: 2,
-      slug: "visual-example-sono-descanso",
-      upvotes: 6,
-      votes: 8,
-    },
-  ];
-};
-
-const buildPatientStatisticsVisualExampleHourlyActivity = (scale = 1) =>
-  Array.from({ length: 24 }, (_, hour) => {
-    const example = PATIENT_STATISTICS_VISUAL_EXAMPLE_ACTIVITY_HOURS.find(
-      (point) => point.hour === hour,
-    );
-
-    return normalizePatientPlatformHourlyActivityPoint(
-      {
-        accesses: Math.round((example?.accesses ?? 0) * scale),
-        engagement: Math.round((example?.engagement ?? 0) * scale),
-        posts: Math.round((example?.posts ?? 0) * scale),
-        replies: Math.round((example?.replies ?? 0) * scale),
-        reviews: Math.round((example?.reviews ?? 0) * scale),
-        total: Math.round((example?.total ?? 0) * scale),
-      },
-      hour,
-    );
-  });
-
-const buildPatientStatisticsVisualExampleWeekdayActivity = () => {
-  const multipliers = {
-    0: 0.2,
-    1: 0.55,
-    2: 0.7,
-    3: 1,
-    4: 0.85,
-    5: 0.65,
-    6: 0.35,
-  } satisfies Record<(typeof patientPlatformWeekdayDisplayOrder)[number], number>;
-
-  return patientPlatformWeekdayDisplayOrder.map((day) => ({
-    day,
-    hours: buildPatientStatisticsVisualExampleHourlyActivity(multipliers[day]),
-    label: patientPlatformWeekdayLabel(day),
-  }));
-};
-
-const buildPatientStatisticsVisualExamplePeakHours = (
-  hourlyActivity: PatientPlatformHourlyActivityPoint[],
-) => {
-  const totalActivity = hourlyActivity.reduce(
-    (total, point) => total + patientStatisticsVisualExampleNumber(point.total),
-    0,
-  );
-
-  return hourlyActivity
-    .filter((point) => patientStatisticsVisualExampleNumber(point.total) > 0)
-    .sort(
-      (first, second) =>
-        patientStatisticsVisualExampleNumber(second.total) -
-        patientStatisticsVisualExampleNumber(first.total),
-    )
-    .slice(0, 3)
-    .map((point) => ({
-      count: patientStatisticsVisualExampleNumber(point.total),
-      hour: point.hour,
-      label: point.label,
-      percentage:
-        totalActivity > 0
-          ? (patientStatisticsVisualExampleNumber(point.total) / totalActivity) * 100
-          : 0,
-    }));
-};
-
-const buildPatientStatisticsVisualExamplePlatformUsage = (
-  usage: AdminPatientDetail["platform_usage"],
-  shouldFillActivityHours: boolean,
-  shouldFillPlatformUsage: boolean,
-): AdminPatientDetail["platform_usage"] => {
-  const hourlyActivity = shouldFillActivityHours
-    ? buildPatientStatisticsVisualExampleHourlyActivity()
-    : usage.hourly_activity;
-  const weekdayActivity = shouldFillActivityHours
-    ? buildPatientStatisticsVisualExampleWeekdayActivity()
-    : usage.hourly_activity_by_weekday;
-  const peakActivityHours = shouldFillActivityHours
-    ? buildPatientStatisticsVisualExamplePeakHours(hourlyActivity)
-    : usage.peak_activity_hours;
-
-  if (!shouldFillPlatformUsage) {
-    return {
-      ...usage,
-      hourly_activity: hourlyActivity,
-      hourly_activity_by_weekday: weekdayActivity,
-      peak_activity_hours: peakActivityHours,
-    };
-  }
-
-  const visualExampleLastAccessAt = usage.last_access_at ?? `${usage.period_to}T18:30:00.000Z`;
-
-  return {
-    ...usage,
-    access_days_count: 5,
-    average_duration_seconds: 742,
-    device_usage: {
-      ...usage.device_usage,
-      items: [
-        {
-          count: 21,
-          device_type: "desktop",
-          id: "desktop",
-          label: "Desktop",
-          operating_systems: [],
-          percentage: 60,
-        },
-        {
-          count: 12,
-          device_type: "mobile",
-          id: "mobile",
-          label: "Mobile",
-          operating_systems: [],
-          percentage: 34.3,
-        },
-        {
-          count: 2,
-          device_type: "tablet",
-          id: "tablet",
-          label: "Tablet",
-          operating_systems: [],
-          percentage: 5.7,
-        },
-        {
-          count: 0,
-          device_type: "unknown",
-          id: "unknown",
-          label: "Não identificado",
-          operating_systems: [],
-          percentage: 0,
-        },
-      ],
-      total_sessions: 35,
-      unavailable_reason: null,
-    },
-    duration_unavailable_reason: null,
-    hourly_activity: hourlyActivity,
-    hourly_activity_by_weekday: weekdayActivity,
-    last_access_at: visualExampleLastAccessAt,
-    peak_activity_hours: peakActivityHours,
-    pwa_installation_recorded: true,
-    pwa_installed_at: usage.pwa_installed_at ?? visualExampleLastAccessAt,
-    sessions_count: 35,
-    top_pages: [
-      { count: 14, label: "Comunidades", percentage: 40 },
-      { count: 9, label: "Perfil", percentage: 25.7 },
-      { count: 7, label: "Sessões", percentage: 20 },
-      { count: 5, label: "Notificações", percentage: 14.3 },
-    ],
-    unavailable_reason: null,
-  };
-};
-
-const buildPatientStatisticsVisualExampleDetail = (
-  detail: AdminPatientDetail,
-): AdminPatientDetail => {
-  const shouldFillCommunityChart = !hasPatientStatisticsCommunityChartData(detail);
-  const shouldFillActiveCommunities = !hasPatientStatisticsActiveCommunitiesData(detail);
-  const shouldFillActivityHours = !hasPatientStatisticsActivityHoursData(detail);
-  const shouldFillPlatformUsage = !hasPatientStatisticsPlatformUsageData(detail);
-
-  return {
-    ...detail,
-    communities: shouldFillActiveCommunities
-      ? {
-          ...detail.communities,
-          items: buildPatientStatisticsVisualExampleCommunities(detail),
-        }
-      : detail.communities,
-    metrics: shouldFillCommunityChart
-      ? buildPatientStatisticsVisualExampleMetrics(detail.metrics)
-      : detail.metrics,
-    platform_usage: buildPatientStatisticsVisualExamplePlatformUsage(
-      detail.platform_usage,
-      shouldFillActivityHours,
-      shouldFillPlatformUsage,
-    ),
-    series: shouldFillCommunityChart
-      ? {
-          ...detail.series,
-          points: buildPatientStatisticsVisualExampleSeries(detail),
-        }
-      : detail.series,
-  };
-};
 type PatientPlatformDeviceUsage = AdminPatientDetail["platform_usage"]["device_usage"];
 type PatientPlatformDeviceUsageItem = PatientPlatformDeviceUsage["items"][number];
 
@@ -3828,22 +3162,11 @@ const StatisticsTab = ({ detail, id }: { detail: AdminPatientDetail; id: string 
   );
   const activityHoursSlice = usePatientStatisticsDetailSlice(id, detail, activityHoursFilter);
   const platformUsageSlice = usePatientStatisticsDetailSlice(id, detail, platformUsageFilter);
-  const visualExampleEnabled = shouldUsePatientStatisticsVisualExample(id, detail);
-  const intentDetail = shouldUsePatientIntentVisualExample(id, intentSlice.detail)
-    ? buildPatientIntentVisualExampleDetail(intentSlice.detail)
-    : intentSlice.detail;
-  const communityDetail = visualExampleEnabled
-    ? buildPatientStatisticsVisualExampleDetail(communitySlice.detail)
-    : communitySlice.detail;
-  const activeCommunitiesDetail = visualExampleEnabled
-    ? buildPatientStatisticsVisualExampleDetail(activeCommunitiesSlice.detail)
-    : activeCommunitiesSlice.detail;
-  const activityHoursDetail = visualExampleEnabled
-    ? buildPatientStatisticsVisualExampleDetail(activityHoursSlice.detail)
-    : activityHoursSlice.detail;
-  const platformUsageDetail = visualExampleEnabled
-    ? buildPatientStatisticsVisualExampleDetail(platformUsageSlice.detail)
-    : platformUsageSlice.detail;
+  const intentDetail = intentSlice.detail;
+  const communityDetail = communitySlice.detail;
+  const activeCommunitiesDetail = activeCommunitiesSlice.detail;
+  const activityHoursDetail = activityHoursSlice.detail;
+  const platformUsageDetail = platformUsageSlice.detail;
 
   if (communitySlice.query.isError && !communitySlice.query.data && communitySlice.errorMessage) {
     return (
@@ -4073,7 +3396,7 @@ const PublicationsTab = ({ detail }: { detail: AdminPatientDetail }) => {
                   <Link
                     aria-label="Ver publicação no site"
                     className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
-                    href={toPublicHref(item.public_url)}
+                    href={toPublicFrontendHref(item.public_url)}
                     rel="noreferrer"
                     target="_blank"
                     title="Ver no site"
@@ -4311,7 +3634,7 @@ const PatientReportListItem = ({ report }: { report: AdminPatientReportItem }) =
           <Link
             aria-label="Ver conteúdo público"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
-            href={toPublicHref(report.content.public_url)}
+            href={toPublicFrontendHref(report.content.public_url)}
             rel="noreferrer"
             target="_blank"
             title="Ver conteúdo público"

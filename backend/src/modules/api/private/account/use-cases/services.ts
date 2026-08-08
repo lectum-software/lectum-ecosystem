@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import jwt from "jsonwebtoken";
 import { error, msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
@@ -12,6 +13,7 @@ import {
 } from "@/modules/api/public/google/utils/config";
 import { code } from "@/utils/code";
 import { compare, encrypt } from "@/utils/crypt";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import type {
   AccountDeleteGoogleIntentResponse,
   AccountOnboardingTipsResponse,
@@ -78,6 +80,26 @@ const validateCurrentPassword = async (user: user, currentPassword: string) => {
 const hydrateUpdatedUser = async (user: user, deviceId: string) => {
   const loginRepository = new LoginRepository(deviceId);
   return loginRepository.hidrate(user, deviceId);
+};
+
+export const logout = async (data: IAccountDTO) => {
+  const device = getDevice(data);
+  const token = getUserRequestToken(data as unknown as Request);
+
+  if (device.err || !data.auth.id || !token) {
+    return {
+      status: 401,
+      ...error("token_not_authorized", {}),
+    };
+  }
+
+  const repository = new AccountRepository();
+  await repository.deleteToken(data.auth.id, device.id, token);
+
+  return {
+    status: 200,
+    success: true,
+  };
 };
 
 export const security = async (data: IAccountDTO) => {
@@ -267,11 +289,17 @@ export const updateEmail = async (data: IAccountEmailDTO) => {
 
   const confirmCode = code();
 
-  await confirmEmailSend({
+  const emailSent = await confirmEmailSend({
     email: nextEmail,
     name: current.name || nextEmail,
     code: confirmCode,
   });
+  if (!emailSent) {
+    return {
+      status: 503,
+      ...error("email_provider_unavailable", {}),
+    };
+  }
 
   const updated = await repository.updateUserAndClearTokens(current.id, {
     email: nextEmail,
@@ -283,6 +311,7 @@ export const updateEmail = async (data: IAccountEmailDTO) => {
   const hydrated = await hydrateUpdatedUser(updated, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("account_email_update_success", {}),
     data: hydrated,
@@ -316,12 +345,13 @@ export const updatePassword = async (data: IAccountPasswordDTO) => {
 
   const updated = await repository.updateUserAndClearTokens(current.id, {
     password,
-    password_confirm: password,
+    password_confirm: null,
     need_reset: false,
   });
   const hydrated = await hydrateUpdatedUser(updated, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("account_password_update_success", {}),
     data: hydrated,

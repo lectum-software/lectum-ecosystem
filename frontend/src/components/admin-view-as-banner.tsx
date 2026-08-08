@@ -2,13 +2,13 @@
 
 import { Eye, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
-import { removeToken } from "@/hooks/cookies/token";
-import { removeUser } from "@/hooks/cookies/user";
+import { revokeSession } from "@/hooks/cookies/signout";
 import { cn } from "@/lib/utils";
 import {
   ADMIN_VIEW_AS_STORAGE_EVENT,
   type AdminViewAsSession,
   clearAdminViewAsSession,
+  normalizeAdminReturnUrl,
   readAdminViewAsSession,
 } from "@/utils/admin-view-as";
 
@@ -49,11 +49,10 @@ export const AdminViewAsBanner = () => {
 
   const expiresAt = formatExpiresAt(session);
 
-  const exitViewAs = () => {
-    const returnUrl = session.adminReturnUrl || "/auth/login";
+  const exitViewAs = async () => {
+    const returnUrl = normalizeAdminReturnUrl(session.adminReturnUrl) || "/auth/login";
+    await revokeSession();
     clearAdminViewAsSession();
-    removeToken();
-    removeUser();
     window.location.href = returnUrl;
   };
 

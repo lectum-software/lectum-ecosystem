@@ -1,19 +1,16 @@
 "use client";
 
 import {
-  AlertTriangle,
   Award,
   BadgePercent,
   CalendarCheck,
   Check,
-  ChevronLeft,
   ChevronRight,
   ExternalLink,
   Eye,
   Filter,
   HandHeart,
   type LucideIcon,
-  RefreshCw,
   Search,
   Stethoscope,
   UsersRound,
@@ -43,6 +40,10 @@ import type {
   PsychologistsListQuery,
   PsychologistsListSort,
 } from "@/api/req/psychologists";
+import { AdminPagination } from "@/components/admin-shell/pagination";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
+import { canRenderImage } from "@/lib/admin-media";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS: Array<{ id: PsychologistsListSort; label: string }> = [
@@ -61,8 +62,6 @@ const registrationDateFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
   year: "numeric",
 });
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
 const listSorts = new Set(SORT_OPTIONS.map((item) => item.id));
 const LOADING_ROWS = ["loading-1", "loading-2", "loading-3", "loading-4", "loading-5", "loading-6"];
 const FILTER_MODAL_CLOSE_DELAY_MS = 260;
@@ -357,26 +356,6 @@ const parseQuery = (params: URLSearchParams): PsychologistsListQuery => {
       params.get("profile_conversion_engagement"),
     ),
   };
-};
-
-const toPublicHref = (url: string) => {
-  if (/^https?:\/\//.test(url)) return url;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
-};
-
-const canRenderImage = (src: string | null) => {
-  if (!src) return false;
-  if (src.startsWith("/")) return true;
-
-  try {
-    const url = new URL(src);
-    const apiHost = new URL(apiUrl).hostname;
-
-    return ["localhost", "127.0.0.1", apiHost].includes(url.hostname);
-  } catch {
-    return false;
-  }
 };
 
 const initials = (name: string) =>
@@ -916,7 +895,7 @@ const RowActions = ({ item }: { item: PsychologistsListItem }) => (
     </Link>
     <a
       className="grid h-8 w-8 place-items-center rounded-full border border-border bg-surface text-foreground shadow-control transition hover:border-primary hover:text-primary"
-      href={toPublicHref(item.public_profile_url)}
+      href={toPublicFrontendHref(item.public_profile_url)}
       onClick={(event) => event.stopPropagation()}
       rel="noreferrer"
       target="_blank"
@@ -1099,27 +1078,11 @@ const LoadingState = () => (
 );
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <CardShell className="p-6">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold">Não foi possível carregar a lista</h2>
-          <p className="mt-1 text-sm text-muted">{message}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:border-border-strong"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </CardShell>
+  <AdminQueryErrorState
+    message={message}
+    onRetry={onRetry}
+    title="Não foi possível carregar a lista"
+  />
 );
 
 const EmptyState = () => (
@@ -1131,87 +1094,6 @@ const EmptyState = () => (
     </p>
   </div>
 );
-
-const pageNumbers = (current: number, pages: number) => {
-  const window = new Set([1, pages, current - 1, current, current + 1, current + 2]);
-
-  return [...window]
-    .filter((value) => value >= 1 && value <= pages)
-    .sort((left, right) => left - right);
-};
-
-const Pagination = ({
-  onChangePage,
-  onLimit,
-  page,
-  pages,
-  perPage,
-}: {
-  onChangePage: (page: number) => void;
-  onLimit: (limit: number) => void;
-  page: number;
-  pages: number;
-  perPage: number;
-}) => {
-  const numbers = pageNumbers(page, pages);
-
-  return (
-    <div className="flex flex-col gap-4 border-t border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          className="grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface text-foreground disabled:opacity-40"
-          disabled={page <= 1}
-          onClick={() => onChangePage(page - 1)}
-          type="button"
-        >
-          <ChevronLeft aria-hidden className="h-4 w-4" />
-          <span className="sr-only">Página anterior</span>
-        </button>
-        {numbers.map((number, index) => (
-          <div className="flex items-center gap-2" key={number}>
-            {index > 0 && number - numbers[index - 1] > 1 ? (
-              <span className="px-1 text-sm font-semibold text-muted">...</span>
-            ) : null}
-            <button
-              aria-current={number === page ? "page" : undefined}
-              className={cn(
-                "grid h-10 min-w-10 place-items-center rounded-2xl border border-border bg-surface px-3 text-sm font-semibold text-foreground",
-                number === page && "border-primary bg-primary text-white",
-              )}
-              onClick={() => onChangePage(number)}
-              type="button"
-            >
-              {number}
-            </button>
-          </div>
-        ))}
-        <button
-          className="grid h-10 w-10 place-items-center rounded-2xl border border-border bg-surface text-foreground disabled:opacity-40"
-          disabled={page >= pages}
-          onClick={() => onChangePage(page + 1)}
-          type="button"
-        >
-          <ChevronRight aria-hidden className="h-4 w-4" />
-          <span className="sr-only">Próxima página</span>
-        </button>
-      </div>
-      <label className="text-xs font-semibold text-muted">
-        Itens por página
-        <select
-          className="ml-2 h-10 rounded-control border border-border bg-surface px-3 text-sm font-bold text-foreground shadow-control"
-          onChange={(event) => onLimit(Number(event.target.value))}
-          value={perPage}
-        >
-          {[8, 12, 20, 50].map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-      </label>
-    </div>
-  );
-};
 
 export const AdminPsychologistsListClient = () => {
   const router = useRouter();
@@ -1457,7 +1339,7 @@ export const AdminPsychologistsListClient = () => {
           </div>
 
           {summary ? (
-            <Pagination
+            <AdminPagination
               onChangePage={(nextPage) => replaceParams({ page: nextPage }, { resetPage: false })}
               onLimit={(limit) => replaceParams({ limit, page: 1 }, { resetPage: false })}
               page={page}

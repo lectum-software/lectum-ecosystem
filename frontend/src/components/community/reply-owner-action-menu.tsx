@@ -13,6 +13,7 @@ import {
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDeleteReply, useMutePost } from "@/api/callers/posts";
+import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostListPost, UserPostReply } from "@/api/generator/types/posts";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -44,31 +45,8 @@ type ReplyOwnerActionMenuProps = {
   reply: OwnerActionReply;
 };
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
-const errorMessageFromUnknown = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
-
-  return rawMessage || "Não foi possível concluir a ação. Tente novamente.";
-};
-
-const errorStatusFromUnknown = (error: unknown) => {
-  const apiError = error as ApiError;
-
-  return apiError?.data?.status;
-};
+const errorMessageFromUnknown = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível concluir a ação. Tente novamente.");
 
 const ReplyActionModal = ({
   action,
@@ -252,7 +230,7 @@ export const ReplyOwnerActionMenu = ({
       { postId: post.id, replyId: reply.id },
       {
         onError: (error) => {
-          if (errorStatusFromUnknown(error) === 409) {
+          if (getApiErrorStatus(error) === 409) {
             setDeleteModalOpen(false);
             setBlockedModalOpen(true);
             return;

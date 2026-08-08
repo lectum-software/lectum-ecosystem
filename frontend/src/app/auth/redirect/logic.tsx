@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { user } from "@/api/generator/types";
 import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
@@ -31,8 +32,10 @@ export const RedirectLogic = () => {
       googleMe: {
         onSuccess: setter,
         onError: (error) => {
-          const message =
-            error instanceof Error ? error.message : "Nao foi possivel concluir o login";
+          const message = getSafeApiErrorMessage(
+            error,
+            "Não foi possível concluir o login com o Google.",
+          );
           toast.error(message);
           window.location.href = `/auth/error?error=${encodeURIComponent(message)}&clearSession=1`;
         },

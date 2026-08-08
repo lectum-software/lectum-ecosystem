@@ -1,5 +1,4 @@
-﻿import { Router } from "express";
-import adminAuth from "../../middlewares/_auth";
+import { Router } from "express";
 import {
   detail,
   events,
@@ -19,7 +18,6 @@ import {
 
 const routes = Router();
 
-routes.use(adminAuth);
 routes.get("/summary", summary);
 routes.get("/operational-alerts", operationalAlertsValidator, operationalAlerts);
 routes.post("/reports/:reportId/resolve", reportResolveValidator, reportResolve);

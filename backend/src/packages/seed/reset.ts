@@ -3,6 +3,7 @@
 import { readFileSync } from "node:fs";
 
 import { getDMMF } from "@prisma/internals";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 import { prisma } from "../../external/prisma/client";
 
@@ -74,7 +75,7 @@ async function clearAllData(dmmf) {
         await prisma[modelName].deleteMany();
         console.log(`  ✅ Cleared ${modelName}`);
       } catch (err) {
-        console.warn(`  ⚠️ Failed to clear ${modelName}: ${err.message}`);
+        console.warn(`  ⚠️ Failed to clear ${modelName}.`, toSafeErrorLog(err, "SeedResetError"));
         failed.push(modelName);
       }
     }

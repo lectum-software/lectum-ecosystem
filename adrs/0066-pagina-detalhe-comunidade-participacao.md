@@ -249,18 +249,18 @@ Validacao complementar:
 - `pnpm check`
 - Chrome/CDP em mobile 390px e desktop 1365px confirmando `box-shadow` transparente no chip ativo inicial `Em destaque` e no fluxo de dropdown de `Mais comentados`.
 
-## AtualizaÁ„o 2026-06-20: alinhamento do bot„o Seguir no header da comunidade
+## Atualiza√ß√£o 2026-06-20: alinhamento do bot√£o Seguir no header da comunidade
 
 ### Contexto
 
-No header da p·gina interna de comunidade, o bot„o `Seguir`/`Seguindo` estava centralizado verticalmente em relaÁ„o ao avatar da comunidade. Isso deixava a base do bot„o mais alta que a base da foto/avatar, criando desalinhamento visual no bloco superior.
+No header da p√°gina interna de comunidade, o bot√£o `Seguir`/`Seguindo` estava centralizado verticalmente em rela√ß√£o ao avatar da comunidade. Isso deixava a base do bot√£o mais alta que a base da foto/avatar, criando desalinhamento visual no bloco superior.
 
-### Decis„o
+### Decis√£o
 
-- Alinhar o grupo superior do avatar e do bot„o pela base (`items-end`), mantendo o avatar sobreposto ‡ capa e preservando o tamanho, variante e comportamento do `CommunityFollowButton`.
-- N„o alterar dados, contratos, persistÍncia de participaÁ„o, CTA de busca/compartilhamento ou responsividade do header.
+- Alinhar o grupo superior do avatar e do bot√£o pela base (`items-end`), mantendo o avatar sobreposto √† capa e preservando o tamanho, variante e comportamento do `CommunityFollowButton`.
+- N√£o alterar dados, contratos, persist√™ncia de participa√ß√£o, CTA de busca/compartilhamento ou responsividade do header.
 
-### ValidaÁ„o
+### Valida√ß√£o
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`

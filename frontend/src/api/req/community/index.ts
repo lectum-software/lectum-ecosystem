@@ -1,4 +1,4 @@
-﻿import { callEndpoint } from "@/api/generator";
+import { callEndpoint } from "@/api/generator";
 import type {
   CommunityDetailResponse,
   CommunityFeedQuery,
@@ -83,6 +83,7 @@ export const suggestCommunity = async (body: SuggestCommunityPayload) => {
 
   return handleReq<CommunitySuggestion>({
     ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };
@@ -105,7 +106,7 @@ export const createCommunityPost = async (slug: string, body: CreateCommunityPos
     body,
   });
 
-  return handleReq<CommunityPost>(handle);
+  return handleReq<CommunityPost>({ ...handle, hideError: true });
 };
 
 export const uploadCommunityPostMedia = async (slug: string, file: File) => {

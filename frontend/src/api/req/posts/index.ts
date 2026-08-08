@@ -84,6 +84,7 @@ export const createPostReply = async (id: string, body: CreatePostReplyPayload) 
 
   return handleReq<PostReply>({
     ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };
@@ -149,6 +150,7 @@ export const reportPost = async (id: string, body: PostReportPayload) => {
 
   return handleReq<PostReportResponse>({
     ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };
@@ -163,6 +165,7 @@ export const reportReply = async (id: string, replyId: string, body: PostReportP
 
   return handleReq<PostReportResponse>({
     ...handle,
+    hideError: true,
     showSuccess: true,
   });
 };

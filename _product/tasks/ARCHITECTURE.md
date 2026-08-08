@@ -4,7 +4,55 @@ Este documento é obrigatório para qualquer task de produto. Ele existe para im
 
 ## Princípio
 
-Frontend e backend estão no mesmo repositório apenas para desenvolvimento. Em código, decisões e validação, trate-os como aplicações separadas.
+Frontend, backend e admin estão no mesmo repositório apenas para desenvolvimento. Em código, decisões, deploy e validação, trate-os como aplicações separadas.
+
+## Operação em ambientes publicados
+
+Desde **2026-08-07**, `frontend/`, `backend/` e `admin/` possuem homologação e produção publicadas. A arquitetura deve assumir dados persistentes e deploys independentes, não um projeto descartável de desenvolvimento.
+
+### Branches e rollout
+
+- `homolog` dispara automaticamente o ambiente de homologação.
+- `main` dispara automaticamente produção.
+- Toda mudança nasce e é publicada primeiro em `homolog`. Se o trabalho estiver em `main`, interromper antes de editar/commitar e orientar o usuário a trocar de branch.
+- Push direto em `main` é proibido. A promoção ocorre por merge revisado após checks, builds e smoke test de homologação.
+- Backend, frontend e admin podem permanecer temporariamente em versões diferentes. Contratos novos devem ser aditivos, consumidores devem tolerar campos ausentes e remoções só podem ocorrer depois que nenhum consumidor antigo depender delas.
+- Um push em `homolog` já é uma operação de deploy e deve ser comunicado como tal.
+
+### Evolução segura do banco
+
+Usar o padrão **expandir → migrar → contrair**:
+
+1. expandir com tabela/campo/índice compatível com registros e código existentes;
+2. publicar backend que aceite os formatos antigo e novo;
+3. executar backfill pequeno, observável, retomável e seguro para repetição;
+4. validar contagens e comportamento em homologação;
+5. somente em task/deploy posterior tornar campo obrigatório, remover fallback ou contrair schema.
+
+Regras:
+
+- migration aplicada é imutável; correções entram em uma migration nova;
+- não adicionar coluna `NOT NULL` sem default seguro ou backfill prévio de todas as linhas;
+- não renomear/remover tabela, coluna ou enum no mesmo deploy que remove seu uso;
+- não usar `prisma db push` em homologação/produção;
+- não executar reset, truncate, seed destrutivo ou exclusão em massa em ambiente publicado;
+- alteração de banco exige ADR com compatibilidade, volume esperado, ordem de deploy, verificação e rollback;
+- `pnpm --dir backend db:migrate` continua obrigatório no banco local quando schema/migrations mudarem; isso não substitui `prisma migrate deploy` do pipeline publicado.
+
+### Evolução segura de configuração
+
+- Preferir env opcional/default seguro no primeiro deploy e só exigir o valor depois de provisioná-lo em todos os ambientes.
+- Se uma env precisar nascer obrigatória, emitir **ALERTA DE DEPLOY** antes do commit/push com: nome da chave, app afetado, se é segredo, ordem de cadastro em homologação e produção, comportamento se faltar e forma de validar. Nunca registrar o valor.
+- Variável backend-only nunca usa prefixo `NEXT_PUBLIC_`; segredos nunca entram no bundle, Git, logs ou relatório.
+- Remover env também exige rollout em duas etapas: primeiro código deixa de depender dela; depois a configuração é removida.
+
+### Segurança operacional
+
+- Não retornar nem exibir stack trace, SQL, nomes internos, mensagens cruas de provider, URLs internas, token, segredo ou PII.
+- Logs devem usar contexto mínimo, identificadores de correlação e dados sanitizados.
+- Jobs, campanhas e migrações de dados que possam produzir efeitos reais começam desabilitados e exigem ativação explícita depois de inspecionar registros pendentes.
+- Para mudança backend, validar `/health` (processo) e `/ready` (dependências) após deploy em homologação.
+- Toda task deve declarar riscos de deploy, rollback e ações manuais; “nenhum” também deve ser registrado quando confirmado.
 
 ## Escopo profissional V1
 
@@ -84,9 +132,22 @@ Para rotas simples de listagem, é aceitável começar com menos arquivos, mas a
 
 ### Autenticação e sessão
 
-- Fluxos privados dependem de token JWT e header `x-device`.
-- Não contornar `getDevice`, `passToken`, `LoginRepository.hidrate` ou cookies/store no frontend.
-- Login Google precisa preservar token real retornado pelo backend.
+- Fluxos privados dependem de JWT, cookie de sessão `HttpOnly` e header `x-device`.
+- Em produção, o frontend usa `lectum_user_session` (`HttpOnly`, `Secure`, `SameSite=Lax`) e o admin
+  usa `lectum_admin_session` (`HttpOnly`, `Secure`, `SameSite=Strict`, restrito a `/api/admin`).
+- O backend aceita temporariamente `Authorization: Bearer` antes do cookie para permitir rollout
+  independente e sessões de clientes antigos. Esse fallback é compatibilidade de deploy, não o
+  padrão para código novo.
+- Os headers de capacidade `X-Requested-With: Lectum-User-Cookie-Auth` e
+  `X-Requested-With: Lectum-Admin-Cookie-Auth` permitem ao backend omitir JWTs do JSON somente para
+  clientes que já entendem cookie. Não remover o fallback bearer antes de confirmar que versões
+  antigas não estão mais em uso.
+- O cookie legível pelo frontend é apenas um marcador de navegação. Ele nunca substitui a validação
+  da API e não pode conter JWT no cliente atual.
+- Não contornar `getDevice`, `passToken`, `LoginRepository.hidrate`, cookies de sessão ou o fluxo de
+  logout/revogação.
+- Login Google e “visualizar como” devem trocar o token transitório por cookie `HttpOnly`; nunca
+  persistir o JWT em URL, `localStorage` ou Redux.
 
 ### Documentação de API
 
@@ -101,7 +162,7 @@ Stack atual:
 - React 19;
 - Tailwind CSS 4;
 - TanStack Query 5;
-- Redux Toolkit + Redux Persist;
+- Redux Toolkit;
 - Axios;
 - React Hook Form + Zod;
 - Sonner;
@@ -146,7 +207,12 @@ Templates/shells devem viver em `frontend/src/templates`.
 
 ### Estado, sessão e guards
 
-- Sessão real usa cookie de token e Redux Persist.
+- A sessão real é validada pelo backend por cookie `HttpOnly` + `x-device`; Redux mantém apenas o
+  usuário da aba em memória e é reidratado pela API.
+- O frontend mantém somente um marcador não sensível para decidir se tenta hidratar. `proxy.ts` e
+  esse marcador melhoram navegação, mas não são controle de autorização; a API é a autoridade.
+- O admin não persiste usuário ou JWT em `localStorage`. Durante o rollout, um bearer legado pode
+  existir apenas em memória/`sessionStorage` e deve desaparecer depois da hidratação por cookie.
 - `proxy.ts` protege rotas privadas.
 - Apos a TASK-145, `/app` e namespace autenticado/noindex: paginas publicas de descoberta/leitura vivem fora de
   `/app` (`/`, `/psicologos`, `/psicologos/[id]`, `/comunidades`, `/comunidades/[slug]`,
@@ -157,7 +223,8 @@ Templates/shells devem viver em `frontend/src/templates`.
   `/app/favoritos`, `/app/publicacoes/*`, `/app/avaliacoes/*`, `/app/configuracoes/*`,
   `/app/profissional/*`, `/app/comunidades/*` e `/app/psicologo/*`. Rotas privadas antigas em ingles
   existem apenas por redirect de compatibilidade.
-- `useUserSet` é o caminho para gravar usuário/token pós-login.
+- `useUserSet` é o caminho para gravar o usuário pós-login; o JWT é responsabilidade do cookie
+  `HttpOnly` emitido pelo backend.
 - Não criar usuário fake em store para passar por rota privada.
 
 ### Forms

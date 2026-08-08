@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type MouseEvent, useMemo, useState } from "react";
 import keys from "@/api/cache/keys";
 import { usePatient } from "@/api/callers/patient";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PatientRelationPsychologist, PatientRelationQuery } from "@/api/generator/types";
 import { getFavoritePsychologists } from "@/api/req/patient";
 import {
@@ -34,16 +35,6 @@ type RelationMode = "favorites";
 
 type PsychologistRelationListProps = {
   mode: RelationMode;
-};
-
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
 };
 
 type FavoriteFilterKey =
@@ -157,11 +148,7 @@ const getPageFromParams = (params: URLSearchParams) => {
 };
 
 const resolveRelationErrorMessage = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("token") || normalized.includes("sess")) {

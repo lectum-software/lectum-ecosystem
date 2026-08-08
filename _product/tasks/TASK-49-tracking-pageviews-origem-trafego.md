@@ -208,16 +208,16 @@ Regras anti-recria√ß√£o:
 - Validacao em browser autenticado definiu cookie de token real transitorio, navegou em `/psychologists` e confirmou `user_id` associado no `page_view_event`, sem query sensivel persistida.
 - Migrations aplicadas com `pnpm --dir backend db:migrate`; apos a criacao da migration, o comando foi reexecutado e confirmou schema em sincronia.
 
-## Ajuste complementar 2026-07-14 - DuraÁ„o ativa por visibilidade
+## Ajuste complementar 2026-07-14 - Dura√ß√£o ativa por visibilidade
 
-- Pedido do usu·rio: ao minimizar o navegador no mobile, a duraÁ„o n„o deve continuar correndo; ao voltar para a mesma rota, a mediÁ„o deve retomar sem exigir navegaÁ„o/reload.
-- O `PageViewTracker` global passou a acumular apenas segmentos visÌveis do pageview atual, pausando em `visibilitychange=hidden`/`pagehide` e retomando em `visibilitychange=visible` para todos os visitantes autenticados ou anÙnimos.
-- A atualizaÁ„o continua best-effort via endpoint real `/api/public/analytics/page-view/:id/duration`, sem tracking de terceiros, sem payload sensÌvel e sem evento artificial retroativo.
-- O backend segue recebendo `duration_seconds` acumulado e idempotente por pageview; n„o houve alteraÁ„o em Prisma schema, migrations ou packages.
+- Pedido do usu√°rio: ao minimizar o navegador no mobile, a dura√ß√£o n√£o deve continuar correndo; ao voltar para a mesma rota, a medi√ß√£o deve retomar sem exigir navega√ß√£o/reload.
+- O `PageViewTracker` global passou a acumular apenas segmentos vis√≠veis do pageview atual, pausando em `visibilitychange=hidden`/`pagehide` e retomando em `visibilitychange=visible` para todos os visitantes autenticados ou an√¥nimos.
+- A atualiza√ß√£o continua best-effort via endpoint real `/api/public/analytics/page-view/:id/duration`, sem tracking de terceiros, sem payload sens√≠vel e sem evento artificial retroativo.
+- O backend segue recebendo `duration_seconds` acumulado e idempotente por pageview; n√£o houve altera√ß√£o em Prisma schema, migrations ou packages.
 
-### ValidaÁ„o complementar executada
+### Valida√ß√£o complementar executada
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- O ajuste n„o altera Prisma schema/migrations; `db:migrate` n„o foi necess·rio.
+- O ajuste n√£o altera Prisma schema/migrations; `db:migrate` n√£o foi necess√°rio.

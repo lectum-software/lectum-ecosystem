@@ -7,6 +7,7 @@ import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { usePatient } from "@/api/callers/patient";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   PatientPrivateProfile,
   PatientProfileAvatarRemoval,
@@ -24,16 +25,6 @@ import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { toPatientProfilePayload, usePatientProfileForm } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const AVATAR_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
@@ -47,11 +38,7 @@ const getInitials = (name?: string | null, email?: string | null) => {
 };
 
 const resolvePatientProfileError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("telefone")) return "Informe um telefone válido ou deixe o campo vazio.";

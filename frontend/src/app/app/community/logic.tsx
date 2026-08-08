@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useCommunities } from "@/api/callers/community";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -27,22 +28,8 @@ import { buildCommunityExploreCard, type CommunityExploreCard } from "./explore-
 
 const PAGE_LIMIT = 10;
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const resolveCommunityError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("token") || normalized.includes("sess")) {

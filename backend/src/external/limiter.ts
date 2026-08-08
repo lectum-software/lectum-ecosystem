@@ -12,6 +12,8 @@ type LimiterEntry = {
   resetAt: number;
 };
 
+const DEFAULT_MAX_STORE_ENTRIES = 50_000;
+
 const parsePositiveNumber = (value: unknown, fallback: number) => {
   const parsed = Number(value);
 
@@ -23,6 +25,9 @@ export const getLimiter = (options: LimiterOptions = {}): RequestHandler => {
   const defaultMaxRequests = parsePositiveNumber(process.env.RATE_LIMIT_RETRIES, 1000);
   const windowMs = parsePositiveNumber(options.window, defaultWindowMinutes) * 60 * 1000;
   const maxRequests = parsePositiveNumber(options.max, defaultMaxRequests);
+  const maxStoreEntries = Math.floor(
+    parsePositiveNumber(process.env.RATE_LIMIT_STORE_MAX_ENTRIES, DEFAULT_MAX_STORE_ENTRIES),
+  );
   const store = new Map<string, LimiterEntry>();
   let lastCleanup = Date.now();
 
@@ -38,15 +43,29 @@ export const getLimiter = (options: LimiterOptions = {}): RequestHandler => {
       }
     }
 
+    const setRateLimitHeaders = (entry: LimiterEntry) => {
+      res.setHeader("RateLimit-Limit", String(maxRequests));
+      res.setHeader("RateLimit-Remaining", String(Math.max(0, maxRequests - entry.count)));
+      res.setHeader("RateLimit-Reset", String(Math.ceil(entry.resetAt / 1000)));
+    };
+
     if (!current || current.resetAt <= now) {
-      store.set(key, {
+      if (!current && store.size >= maxStoreEntries) {
+        const oldestKey = store.keys().next().value;
+        if (oldestKey) store.delete(oldestKey);
+      }
+
+      const nextEntry = {
         count: 1,
         resetAt: now + windowMs,
-      });
+      };
+      store.set(key, nextEntry);
+      setRateLimitHeaders(nextEntry);
       return next();
     }
 
     current.count += 1;
+    setRateLimitHeaders(current);
 
     if (current.count > maxRequests) {
       res.setHeader("Retry-After", Math.ceil((current.resetAt - now) / 1000));

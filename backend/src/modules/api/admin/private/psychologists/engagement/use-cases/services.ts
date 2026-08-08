@@ -47,6 +47,14 @@ import {
   summarizePsychologistWhatsappTrafficOrigins,
   trafficOriginFromPageViewSource,
 } from "@/utils/admin-psychologist-analytics";
+import {
+  daysBetweenInclusive,
+  endOfDate,
+  buildDateLabels as labelsFromRange,
+  resolveCalendarPeriod,
+  startOfDate,
+  toDateKey,
+} from "@/utils/date-range";
 import type {
   AdminPsychologistAvailabilityMetric,
   AdminPsychologistBusinessProfileConversion,
@@ -78,7 +86,6 @@ import {
 
 const DEFAULT_PERIOD_DAYS = 30;
 const MAX_PERIOD_DAYS = 3660;
-const MS_PER_DAY = 86_400_000;
 const TRAFFIC_QUALITY_SOURCE =
   "page_view_event+psychologist_favorite+contact_request+important_action_event" as const;
 const PROFILE_VISIBILITY_TEMPORAL_SOURCE =
@@ -134,91 +141,33 @@ const BUSINESS_PROFILE_CONVERSION_CATEGORY_CONFIG =
 const BUSINESS_VISIBILITY_DIAGNOSIS_CONFIG = {
   high_exposure: {
     description:
-      "Psic?logo fora da adapta??o com tempo real de Visibilidade acima da faixa padr?o da plataforma no per?odo selecionado.",
+      "Psicólogo fora da adaptação com tempo real de Visibilidade acima da faixa padrão da plataforma no período selecionado.",
     label: "Alta Visibilidade",
   },
   insufficient_data: {
     description:
-      "Psic?logo ainda dentro dos primeiros 30 dias de adapta??o; a Visibilidade ainda n?o ? comparada com a plataforma.",
+      "Psicólogo ainda dentro dos primeiros 30 dias de adaptação; a Visibilidade ainda não é comparada com a plataforma.",
     label: "Dados Insuficientes",
   },
   low_exposure: {
     description:
-      "Psic?logo fora da adapta??o, com algum tempo real de Visibilidade, mas abaixo da faixa padr?o da plataforma no per?odo selecionado.",
+      "Psicólogo fora da adaptação, com algum tempo real de Visibilidade, mas abaixo da faixa padrão da plataforma no período selecionado.",
     label: "Baixa Visibilidade",
   },
   no_exposure: {
     description:
-      "Psic?logo fora da adapta??o sem tempo real de Visibilidade no perfil, no v?deo de apresenta??o ou em conte?do autoral na comunidade no per?odo selecionado.",
+      "Psicólogo fora da adaptação sem tempo real de Visibilidade no perfil, no vídeo de apresentação ou em conteúdo autoral na comunidade no período selecionado.",
     label: "Sem Visibilidade",
   },
   standard_exposure: {
     description:
-      "Psic?logo fora da adapta??o com tempo real de Visibilidade dentro da faixa padr?o da plataforma no per?odo selecionado.",
-    label: "Visibilidade Padr?o",
+      "Psicólogo fora da adaptação com tempo real de Visibilidade dentro da faixa padrão da plataforma no período selecionado.",
+    label: "Visibilidade Padrão",
   },
 } as const satisfies Record<
   AdminProfileExposureAggregateCategoryId,
   { description: string; label: string }
 >;
-const pad = (value: number) => String(value).padStart(2, "0");
-const toDateKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const labelsFromRange = (start: Date, days: number) =>
-  Array.from({ length: days }, (_, index) => toDateKey(addDays(start, index)));
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const startOfMonth = (date: Date) => startOfDate(new Date(date.getFullYear(), date.getMonth(), 1));
-
-const startOfWeek = (date: Date) => {
-  const next = startOfDate(date);
-  const day = next.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-
-  return addDays(next, diff);
-};
-
-const startOfYear = (date: Date) => startOfDate(new Date(date.getFullYear(), 0, 1));
-
-const endOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return boundary === "start" ? startOfDate(date) : endOfDate(date);
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
-};
-
 type PeriodResult =
   | {
       current: { end: Date; start: Date };
@@ -233,79 +182,17 @@ const resolvePeriod = (
   query: { from?: string; period?: string; to?: string } = {},
   allPeriodStartDate?: Date,
 ): PeriodResult => {
-  const hasCustomFrom = Boolean(query.from);
-  const hasCustomTo = Boolean(query.to);
-  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
-  let start: Date;
-  let end: Date;
-  let label = "Últimos 30 dias";
+  const resolved = resolveCalendarPeriod(query, {
+    allPeriodStartDate,
+    defaultDays: DEFAULT_PERIOD_DAYS,
+    maxDays: MAX_PERIOD_DAYS,
+  });
+  if (!resolved) return { code: "invalid_analytics_date_range", success: false };
 
-  if (preset === "custom") {
-    if (!hasCustomFrom || !hasCustomTo)
-      return { success: false, code: "invalid_analytics_date_range" };
-
-    const customStart = parseDateOnly(query.from, "start");
-    const customEnd = parseDateOnly(query.to, "end");
-
-    if (!customStart || !customEnd || customStart > customEnd) {
-      return { success: false, code: "invalid_analytics_date_range" };
-    }
-
-    start = customStart;
-    end = customEnd;
-    label = "Período personalizado";
-  } else if (preset === "today") {
-    const today = new Date();
-    start = startOfDate(today);
-    end = endOfDate(today);
-    label = "Hoje";
-  } else if (preset === "week") {
-    const today = new Date();
-    start = startOfWeek(today);
-    end = endOfDate(today);
-    label = "Esta semana";
-  } else if (preset === "month") {
-    const today = new Date();
-    start = startOfMonth(today);
-    end = endOfDate(today);
-    label = "Este mês";
-  } else if (preset === "year") {
-    const today = new Date();
-    start = startOfYear(today);
-    end = endOfDate(today);
-    label = "Este ano";
-  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
-    const today = new Date();
-    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
-    start = startOfDate(addDays(today, -(days - 1)));
-    end = endOfDate(today);
-    label = `Últimos ${days} dias`;
-  } else if (preset === "all") {
-    const today = new Date();
-    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
-    end = endOfDate(today);
-    label = "Todo o período";
-  } else if (preset) {
-    return { success: false, code: "invalid_analytics_date_range" };
-  } else {
-    const today = new Date();
-    end = endOfDate(today);
-    start = startOfDate(addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
-  }
-
-  const days = daysBetweenInclusive(start, end);
-  if (days < 1 || days > MAX_PERIOD_DAYS) {
-    return { success: false, code: "invalid_analytics_date_range" };
-  }
-
-  const labels = labelsFromRange(start, days);
-  const previousEnd = endOfDate(addDays(start, -1));
-  const previousStart = startOfDate(addDays(start, -days));
-
+  const { days, end, label, previousEnd, previousStart, start } = resolved;
   return {
-    success: true,
     current: { end, start },
-    labels,
+    labels: labelsFromRange(start, days),
     period: {
       days,
       from: toDateKey(start),
@@ -317,6 +204,7 @@ const resolvePeriod = (
       to: toDateKey(end),
     },
     previous: { end: previousEnd, start: previousStart },
+    success: true,
   };
 };
 

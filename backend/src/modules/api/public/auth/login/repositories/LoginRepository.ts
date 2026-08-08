@@ -17,6 +17,7 @@ import {
 import { loginInclude } from "@/query/login";
 import { isSuspensionExpired } from "@/utils/account-status";
 import { log } from "@/utils/logs";
+import { getUserTokenLimit } from "@/utils/runtime-config";
 import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
 import type { IFindToEmitDTO } from "../DTOs/IFindToEmitDTO";
@@ -27,7 +28,7 @@ import type { IUpdateDTO } from "../DTOs/IUpdateDTO";
 //Types
 import type { ILoginRepository } from "./interfaces/ILoginRepository";
 
-const _MAX = Number(process.env.TOKEN_API_USER_MAX);
+const _MAX = getUserTokenLimit();
 type SensitiveField = { model: string; columns: string[] };
 
 export class LoginRepository implements ILoginRepository {
@@ -44,7 +45,7 @@ export class LoginRepository implements ILoginRepository {
       where: {
         device_id,
       },
-      take: _MAX,
+      take: 1,
       orderBy: { createdAt: "desc" },
     };
   }
@@ -257,6 +258,25 @@ export class LoginRepository implements ILoginRepository {
       },
     });
     return res;
+  }
+
+  async updateAndClearTokens(data: IUpdateDTO): Promise<user | null> {
+    return prisma.$transaction(async (tx) => {
+      await tx.user_token.deleteMany({
+        where: { user_id: data.p.id },
+      });
+
+      const user = await tx.user.update({
+        where: { id: data.p.id },
+        data: data.b,
+        include: {
+          user_tokens: this.tokens,
+          ...loginInclude(),
+        },
+      });
+
+      return user;
+    });
   }
 
   async tokenByDevice(where: ITokenByDeviceDTO): Promise<user_token | null> {

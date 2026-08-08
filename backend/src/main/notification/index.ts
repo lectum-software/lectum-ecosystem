@@ -1,6 +1,7 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { notification as emitNotification } from "@/main/socket/events/notification";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { messages } from "./constants";
 import { createNotificationDelivery } from "./deliveries";
 import { isChannelAllowed } from "./preferences";
@@ -261,6 +262,9 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       `[WEB NOTIFICATION] push "${meta.message_key}": ${targeted} alvo(s), ${sent} enviado(s), ${failed} falha(s), ${skipped} ignorado(s).`,
     );
   } catch (error) {
-    console.error("[WEB NOTIFICATION] erro no dispatcher:", (error as Error)?.message);
+    console.error(
+      "[WEB NOTIFICATION] erro no dispatcher:",
+      toSafeErrorLog(error, "WebNotificationDispatchError"),
+    );
   }
 };

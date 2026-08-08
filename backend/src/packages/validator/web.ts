@@ -5,6 +5,7 @@ import { z } from "zod";
 import { setI18n } from "./i18n";
 import mocks from "./mocks";
 import schema from "./schema";
+import { buildValidationObjectMap } from "./schema/_internal/build-object-map";
 import { custom } from "./schema/_internal/handlers/custom";
 import type { ICustomValidation, IValidationParams } from "./schema/_internal/validations/types";
 
@@ -47,49 +48,10 @@ const validatorWeb = (data: IValidatorRequest, i18n?: any, language?: any) => {
   const { bodyF, paramsF, queryF, bodyRelation, paramsRelation, queryRelation } =
     schema.preFire(data);
 
-  //Each Map
-  const eachMap = (local) => {
-    const objectMapper = {};
-
-    new Promise((resolve) => {
-      local?.forEach(async (item) => {
-        const funcMethod = schema.f[item.method];
-        if (!funcMethod && !item.custom) throw new Error(`Método "${item.method}" não encontrado!`);
-
-        let method;
-        try {
-          method = item.custom || funcMethod(item);
-        } catch {
-          throw new Error(`Ocorreu um erro na função validadora ${item.method}`);
-        }
-
-        try {
-          if (item.optional && item.nullable) {
-            objectMapper[item.key] = method.optional().nullable();
-          } else if (item.optional) {
-            objectMapper[item.key] = method.optional();
-          } else if (item.nullable) {
-            objectMapper[item.key] = method.nullable();
-          } else {
-            objectMapper[item.key] = method;
-          }
-
-          resolve();
-        } catch {
-          throw new Error(
-            `Ocorreu um erro ao fazer inclusão de parâmetros no método ${item.method}`,
-          );
-        }
-      });
-    });
-
-    return objectMapper;
-  };
-
   //Params
-  const paramsObject = eachMap(paramsF);
-  const queryObject = eachMap(queryF);
-  const bodyObject = eachMap(bodyF);
+  const paramsObject = buildValidationObjectMap(paramsF, schema.f);
+  const queryObject = buildValidationObjectMap(queryF, schema.f);
+  const bodyObject = buildValidationObjectMap(bodyF, schema.f);
 
   const modifiersValidator = (obj, cont, ctx, refine, local) => {
     const keys = Object.keys(cont);

@@ -6,6 +6,8 @@ import { error } from "@/helpers/translate";
 //Types
 import type { user } from "@/interfaces/objects";
 import { shouldBlockAdminViewAsWrite } from "@/utils/admin-view-as";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import { passLogin } from "./helpers/login";
 import { passToken } from "./helpers/token";
 //Libs
@@ -23,7 +25,8 @@ const isAuthUnavailable = (authError?: Not_Authorized) =>
 
 const privateRouteVerifier = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req?.headers?.authorization;
-  if (!authHeader)
+  const requestToken = getUserRequestToken(req);
+  if (!requestToken)
     return send(res, {
       status: 401,
       ...error("token_not_provided", {
@@ -31,7 +34,7 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
       }),
     });
 
-  if (!authHeader.startsWith("Bearer "))
+  if (authHeader && !authHeader.startsWith("Bearer "))
     return send(res, {
       status: 401,
       ...error("token_mal_formatted", {
@@ -43,6 +46,14 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
     return send(res, {
       status: 403,
       ...error("admin_view_as_read_only", {}),
+    });
+  }
+
+  const device = getDevice(req);
+  if (device.err) {
+    return send(res, {
+      status: 403,
+      ...error(device.err, {}),
     });
   }
 
@@ -58,16 +69,12 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
 
         if (login) {
           //Token
-          const device_id = req?.headers?.["x-device"] as string;
-          const token = await passToken(login, device_id, authHeader.split(" ")[1]);
+          const token = await passToken(login, device.id, requestToken);
           if (token.err) return send(res, token.err);
 
           //Login
           const logged = await passLogin(login);
           if (logged.err) return send(res, logged.err);
-
-          const device = getDevice(req);
-          if (device.err) return send(res, { error: device.err, success: false });
 
           req.device = device.id;
 
@@ -82,7 +89,10 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
           }),
         });
       } catch (err) {
-        console.error("[USER AUTH] Falha ao hidratar sessão de usuário.", err);
+        console.error(
+          "[USER AUTH] Falha ao hidratar sessão de usuário.",
+          toSafeErrorLog(err, "UnknownUserSessionError"),
+        );
         return send(res, {
           status: 503,
           ...error("auth_unavailable", {}),

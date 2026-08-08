@@ -14,6 +14,10 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "Lectum Admin",
   description: "Painel administrativo separado da plataforma Lectum.",
+  icons: {
+    icon: [{ type: "image/svg+xml", url: "/logo-icon.svg" }],
+    shortcut: "/logo-icon.svg",
+  },
 };
 
 export const viewport: Viewport = {

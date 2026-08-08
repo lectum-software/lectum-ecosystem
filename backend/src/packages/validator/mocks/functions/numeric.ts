@@ -1,6 +1,6 @@
-import { faker } from "@faker-js/faker";
+import { randomDigits } from "./random";
 
 export function numeric(): number {
-  const fiveDigits = faker.string.numeric(5);
+  const fiveDigits = randomDigits(5);
   return Number(fiveDigits);
 }

@@ -1,13 +1,9 @@
 ﻿import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { getAdminRequestToken } from "@/modules/api/admin/shared/auth/cookie";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
 import { AdminLoginRepository } from "../../../../public/auth/login/repositories/AdminLoginRepository";
 import type { IAdminLogoutDTO } from "../DTOs/IAdminLogoutDTO";
-
-const getBearerToken = (authorization?: string) => {
-  if (!authorization?.startsWith("Bearer ")) return "";
-  return authorization.split(" ")[1] || "";
-};
 
 export default async (data: IAdminLogoutDTO): Promise<Resolve> => {
   const device = getDevice(data);
@@ -19,7 +15,7 @@ export default async (data: IAdminLogoutDTO): Promise<Resolve> => {
   }
 
   const admin = data.auth;
-  const token = getBearerToken(data.headers.authorization);
+  const token = getAdminRequestToken(data);
 
   if (!admin?.id || !token) {
     return {

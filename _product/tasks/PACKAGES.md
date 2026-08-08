@@ -1,7 +1,7 @@
 # Packages e Política de Dependências
 
-Última verificação no registry: 2026-06-30, via `pnpm view` e `pnpm audit --prod`.
-Revisão técnica de frontend em junho/2026: React Hook Form permanece como padrão de formulários; TanStack Query permanece como padrão de server state.
+Última auditoria dos manifests/lockfiles: **2026-08-07**, com `pnpm audit --prod` separado na raiz, backend, frontend e admin.
+Resultado: **zero vulnerabilidades conhecidas** nos quatro escopos no momento da auditoria. React Hook Form permanece como padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
 
@@ -11,6 +11,7 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 - Registrar em ADR quando uma task adicionar dependência.
 - Para integrações externas, escolher provedor na TASK-03 antes de instalar SDK definitivo.
 - Manter frontend e backend com dependências separadas.
+- Manter também o `admin/` como aplicação e lockfile separados; compartilhar decisões e contratos, não instalação/runtime.
 - Não trocar Next App Router por TanStack Router neste projeto.
 - Não trocar React Hook Form por TanStack Form sem ADR forte; a fundação de forms deve seguir `TASK-02`.
 - Pacotes TanStack adicionais devem ser adotados por problema concreto: tabela, virtualização, lint/devtools ou server state.
@@ -19,20 +20,19 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 
 | Pacote | Versão instalada | Última verificada | Uso |
 |---|---:|---:|---|
-| `next` | `16.2.9` | `16.2.9` | App Router, SSR, build |
+| `next` | `16.2.11` | `16.2.11` | App Router, SSR, build |
 | `react` | `19.2.4` | `19.2.7` | UI |
 | `react-dom` | `19.2.4` | `19.2.7` | UI |
 | `tailwindcss` | `^4` | `4.3.0` | Estilo |
 | `@tailwindcss/postcss` | `^4` | `4.3.0` | PostCSS |
 | `@tanstack/react-query` | `^5.101.0` | `5.101.0` | Server state |
-| `axios` | `^1.18.1` | `1.18.1` | HTTP client |
+| `axios` | `^1.19.0` | `1.19.0` | HTTP client |
 | `react-hook-form` | `^7.77.0` | `7.77.0` | Formulários |
 | `@hookform/resolvers` | `^5.4.0` | `5.4.0` | Zod resolver |
 | `zod` | `^4.4.3` | `4.4.3` | Schema validation |
 | `@mercadopago/sdk-react` | `^1.0.7` | `1.0.7` | Checkout Bricks/Card Payment Brick |
 | `@reduxjs/toolkit` | `^2.12.0` | `2.12.0` | Client state |
 | `react-redux` | `^9.3.0` | `9.3.0` | Redux bindings |
-| `redux-persist` | `^6.0.0` | `6.0.0` | Persistência local |
 | `js-cookie` | `^3.0.8` | `3.0.8` | Cookies |
 | `socket.io-client` | `^4.8.3` | `4.8.3` | Tempo real |
 | `lucide-react` | `^1.17.0` | `1.17.0` | Ícones |
@@ -55,6 +55,9 @@ Revisão técnica de frontend em junho/2026: React Hook Form permanece como padr
 | URL state | Considerar `nuqs` em filtros complexos | Next expõe `useSearchParams`, mas validação/tipagem de filtros avançados pode justificar package dedicado. |
 | Tabelas/listas densas | Considerar `@tanstack/react-table` e `@tanstack/react-virtual` | São headless e preservam controle visual, úteis para filtros/listas longas sem design system paralelo. |
 | Query quality | Considerar `@tanstack/react-query-devtools` e `@tanstack/eslint-plugin-query` | Melhoram depuração e evitam mau uso de keys/deps em tasks futuras. |
+
+`redux-persist` foi removido na auditoria de produção de 07/08/2026. Estado de usuário fica em
+memória e é reidratado pela API; JWTs ficam em cookies `HttpOnly`, não em storage JavaScript.
 
 ## Configuração frontend sem package novo
 
@@ -109,9 +112,9 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | Pacote | Versão instalada | Última verificada | Uso |
 |---|---:|---:|---|
 | `express` | `^5.2.1` | `5.2.1` | API HTTP |
-| `prisma` | `^7.8.0` | `7.8.0` | ORM CLI |
-| `@prisma/client` | `^7.8.0` | `7.8.0` | ORM client |
-| `@prisma/adapter-pg` | `^7.8.0` | `7.8.0` | Adapter PostgreSQL |
+| `prisma` | `^7.9.1` | `7.9.1` | ORM CLI |
+| `@prisma/client` | `^7.9.1` | `7.9.1` | ORM client |
+| `@prisma/adapter-pg` | `^7.9.1` | `7.9.1` | Adapter PostgreSQL |
 | `pg` | `^8.21.0` | `8.21.0` | PostgreSQL driver |
 | `passport` | `^0.7.0` | `0.7.0` | Auth strategies |
 | `passport-jwt` | `^4.0.1` | `4.0.1` | JWT auth |
@@ -121,14 +124,13 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `bcrypt` | `^6.0.0` | `6.0.0` | Compat senha |
 | `zod` | `^4.4.3` | `4.4.3` | Validation |
 | `i18next` | `^26.3.0` | `26.3.0` | i18n |
-| `nodemailer` | `^9.0.1` | `9.0.1` | E-mail transacional via Resend SMTP |
+| `nodemailer` | `^9.0.5` | `9.0.5` | E-mail transacional via Resend SMTP |
 | `twilio` | `^6.0.2` | `6.0.2` | SMS/OTP para verificação de telefone/WhatsApp |
 | `web-push` | `^3.6.7` | `3.6.7` | Push web |
 | `socket.io` | `^4.8.3` | `4.8.3` | Tempo real |
 | `helmet` | `^8.2.0` | `8.2.0` | Segurança HTTP |
 | `cors` | `^2.8.6` | `2.8.6` | CORS |
 | `cookie-parser` | `^1.4.7` | `1.4.7` | Cookies |
-| `express-session` | `^1.19.0` | `1.19.0` | Sessão OAuth |
 | `multer` | `^2.2.0` | `2.2.0` | Upload |
 | `@aws-sdk/client-s3` | `^3.1059.0` | `3.1060.0` | Cloudflare R2 via API S3-compatible |
 | `mercadopago` | `^3.1.0` | `3.1.0` | Gateway Mercado Pago via adapter backend |
@@ -137,6 +139,25 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `@scalar/express-api-reference` | `^0.9.20` | `0.9.20` | API docs |
 | `swagger-ui-express` | `^5.0.1` | `5.0.1` | Swagger UI |
 | `libphonenumber-js` | `^1.13.4` | `1.13.4` | Telefone |
+| `dotenv` | `^17.4.2` | `17.4.2` | Carregamento de env no processo backend |
+| `uuid` | `^14.0.0` | `14.0.0` | Identificadores de correlação |
+
+O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnly`; `express-session` foi removido por não ser necessário para esse fluxo. O verificador mantém transição temporária para states assinados pela versão anterior durante o rollout.
+
+## Admin já instalado
+
+| Pacote | Versão instalada | Última verificada | Uso |
+|---|---:|---:|---|
+| `next` | `16.2.11` | `16.2.11` | App Router e build do painel separado |
+| `react` / `react-dom` | `19.2.4` | `19.2.4` | UI |
+| `tailwindcss` | `^4` | `4.x` | Estilo |
+| `@tanstack/react-query` | `^5.101.0` | `5.101.0` | Server state |
+| `axios` | `^1.19.0` | `1.19.0` | HTTP client |
+| `react-hook-form` + `@hookform/resolvers` | `^7.77.0` / `^5.4.0` | manifests atuais | Formulários |
+| `zod` | `^4.4.3` | `4.4.3` | Validação |
+| `sonner` | `^2.0.7` | `2.0.7` | Feedback não técnico |
+| `@fingerprintjs/fingerprintjs` | `^5.2.0` | `5.2.0` | Identificação do dispositivo admin |
+| `lucide-react` | `^1.17.0` | `1.17.0` | Ícones |
 
 ## Candidatos condicionais
 
@@ -150,23 +171,26 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 
 ## Overrides transitivos de segurança
 
-Aplicados em `frontend/package.json` e `backend/package.json` porque frontend e backend são aplicações separadas, mesmo estando no mesmo repositório de desenvolvimento. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo operacional nem invalidar overrides por aplicação.
+Aplicados no manifest de cada aplicação porque raiz, frontend, backend e admin têm instalações separadas. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo operacional nem invalidar overrides por aplicação.
 
 | Aplicação | Override | Motivo |
 |---|---:|---|
 | Frontend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io-client > engine.io-client > ws`. |
 | Frontend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `axios > form-data`. |
-| Frontend | `postcss@8.5.16` | Corrige advisory de XSS transitivo em `next > postcss`. |
+| Frontend | `postcss@8.5.26` | Mantém a correção de advisories transitivos do pipeline CSS/Next. |
+| Frontend | `sharp@0.35.3`, `socket.io-parser@4.2.7`, `nanoid@3.3.17` | Correções transitivas preservando as majors exigidas pela aplicação. |
 | Backend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io > engine.io > ws`. |
 | Backend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `twilio > axios > form-data`. |
-| Backend | `hono@4.12.27` | Corrige advisories transitivos trazidos pelo pacote Prisma dev incluído por `@prisma/client`. |
-| Backend | `@hono/node-server@1.19.13` | Corrige advisory transitivo de `@hono/node-server` mantendo major compatível. |
+| Backend | `hono@4.12.34`, `@hono/node-server@2.0.5` | Corrige advisories transitivos do tooling Prisma. |
+| Backend | `axios@1.19.0`, `body-parser@2.3.0`, `brace-expansion@5.0.9`, `fast-uri@3.1.5`, `nanoid@5.1.16`, `socket.io-parser@4.2.7`, `valibot@1.4.2` | Patches transitivos fixados após auditoria. |
+| Admin | `form-data@4.0.6`, `postcss@8.5.26`, `sharp@0.35.3`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
+| Raiz | `fast-uri@3.1.5`, `js-yaml@4.3.1` | Correções transitivas das ferramentas de commit/hook. |
 
-Validação obrigatória após alteração de dependências de produção: `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`, `pnpm check`, `pnpm --dir backend build` e `pnpm --dir frontend build`.
+Validação obrigatória após alteração de dependências de produção: `pnpm audit --prod`, `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`, `pnpm --dir admin audit --prod`, `pnpm check` e os três builds.
 
 ## Testes e qualidade candidatos
 
-Atualmente o projeto valida com Biome, ESLint e TypeScript. Para uma suíte automatizada futura:
+Atualmente o backend também possui testes unitários com o test runner nativo do Node + `tsx`, sem framework adicional. Frontend/admin validam Biome sem warnings, ESLint com `--max-warnings=0` e TypeScript. Para uma suíte automatizada futura:
 
 | Pacote | Versão verificada | Uso |
 |---|---:|---|

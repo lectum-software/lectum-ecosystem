@@ -11,4 +11,12 @@ const S3 = new S3Client({
 
 const PUBLIC_BUCKET = process.env.CLOUDFLARE_R2_PUBLIC_BUCKET_NAME!;
 
-export { PUBLIC_BUCKET, S3 };
+const isR2Configured = () =>
+  Boolean(
+    process.env.CLOUDFLARE_R2_ENDPOINT?.trim() &&
+      process.env.CLOUDFLARE_R2_ACCESS_KEY_ID?.trim() &&
+      process.env.CLOUDFLARE_R2_ACCESS_KEY_SECRET?.trim() &&
+      process.env.CLOUDFLARE_R2_PUBLIC_BUCKET_NAME?.trim(),
+  );
+
+export { isR2Configured, PUBLIC_BUCKET, S3 };

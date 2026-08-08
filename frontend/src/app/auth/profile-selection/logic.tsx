@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 import { AuthTemplate } from "@/templates/auth";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 const profileOptions = [
   {
@@ -24,7 +25,9 @@ const profileOptions = [
 
 export const ProfileSelectionLogic = () => {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? searchParams.get("callbackUrl");
+  const redirectTo = normalizeSafeInternalRedirect(
+    searchParams.get("redirectTo") ?? searchParams.get("callbackUrl"),
+  );
   const appendRedirect = (href: string) => {
     if (!redirectTo) return href;
 

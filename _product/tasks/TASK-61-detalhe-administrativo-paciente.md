@@ -1008,7 +1008,7 @@ Frontend esperado:
 - Escopo: label do backend, labels exibidos pelo Admin e documentacao/ADR da TASK-61, sem alterar calculo, schema, migrations, pacotes ou tracking.
 - Validacao executada: Biome nos arquivos alterados, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `cmd /c pnpm check` e browser local/headless via Chrome CDP no mobile `390x844`, confirmando **Upvotes (recebidos)** presente, label singular antigo ausente e `scrollWidth=390`; admin temporario real removido ao final.
 
-## Ajuste pos-feedback 2026-07-23 - Copy e opções das estatísticas do paciente
+## Ajuste pos-feedback 2026-07-23 - Copy e opÃ§Ãµes das estatÃ­sticas do paciente
 
 - Pedido do usuario: ajustar a copy de **Estatisticas de comunidade** e **Comunidades ativas** e simplificar as opcoes do carrossel/grafico de estatisticas.
 - A descricao de **Estatisticas de comunidade** passou para: "Publicacoes que realizou e respostas, votos, denuncias, salvamentos e compartilhamentos que recebeu.".

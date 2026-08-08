@@ -3,6 +3,7 @@ import {
   getPsychologistPlanSelectionRequirementPath,
   getPsychologistRegistrationEntryPath,
 } from "./psychologist-onboarding";
+import { normalizeSafeInternalRedirect } from "./safe-redirect";
 
 export const USER_HOME_PATHS = {
   paciente: "/psicologos",
@@ -36,7 +37,7 @@ export function resolveAuthRedirect(
   legacyCallbackUrl?: string | null,
 ) {
   if (data && "confirmed" in data && data.confirmed === false) {
-    const pendingRedirect = explicitRedirect ?? legacyCallbackUrl;
+    const pendingRedirect = normalizeSafeInternalRedirect(explicitRedirect ?? legacyCallbackUrl);
 
     if (pendingRedirect) {
       return `/auth/verify-email?redirectTo=${encodeURIComponent(pendingRedirect)}`;
@@ -48,9 +49,12 @@ export function resolveAuthRedirect(
   const psychologistPlanSelectionRequirement = getPsychologistPlanSelectionRequirementPath(data);
   if (psychologistPlanSelectionRequirement) return psychologistPlanSelectionRequirement;
 
-  if (explicitRedirect) return explicitRedirect;
-  if (legacyCallbackUrl) return legacyCallbackUrl;
+  const safeExplicitRedirect = normalizeSafeInternalRedirect(explicitRedirect);
+  const safeLegacyCallbackUrl = normalizeSafeInternalRedirect(legacyCallbackUrl);
+
+  if (safeExplicitRedirect) return safeExplicitRedirect;
+  if (safeLegacyCallbackUrl) return safeLegacyCallbackUrl;
   if (!fallback) return null;
 
-  return getUserHomePath(data, fallback);
+  return normalizeSafeInternalRedirect(getUserHomePath(data, fallback), "/psicologos");
 }

@@ -1,8 +1,10 @@
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
+import { getSafePublicErrorMessage } from "@/api/errors";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { CenterTemplate } from "@/templates/center";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import { AuthErrorSessionReset } from "./session-reset";
 
 type PageProps = {
@@ -16,7 +18,7 @@ type PageProps = {
 
 const buildSignupHref = (redirectTo?: string, callbackUrl?: string) => {
   const params = new URLSearchParams();
-  const returnTo = redirectTo || callbackUrl;
+  const returnTo = normalizeSafeInternalRedirect(redirectTo || callbackUrl);
 
   if (returnTo) {
     params.set("redirectTo", returnTo);
@@ -28,7 +30,10 @@ const buildSignupHref = (redirectTo?: string, callbackUrl?: string) => {
 
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
-  const error = params.error || "Não foi possível concluir o login.";
+  const error = getSafePublicErrorMessage(
+    params.error,
+    "Não foi possível concluir o login. Tente novamente.",
+  );
   const shouldResetSession = params.clearSession === "1";
   const signupHref = buildSignupHref(params.redirectTo, params.callbackUrl);
 

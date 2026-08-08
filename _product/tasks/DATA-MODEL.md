@@ -82,7 +82,7 @@ Verificação de e-mail **reaproveita os campos já existentes** `user.confirmed
 
 Resumo dos campos relevantes do `user` atual (fonte: `schema.prisma`):
 
-- `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?`.
+- `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?` legado.
 - `active @default(true)`, `account_status @default("active")`, `account_status_changed_at?`, `account_status_expires_at?`, `need_reset @default(false)`.
 - `confirmed @default(false)`, `confirmed_date?`, `confirm_code?`, `confirm_date?` → verificação de e-mail.
 - `has_seen_discover_psychologists_tip @default(false)`, `has_seen_psychologists_my_search_tip @default(false)`, `has_seen_psychologist_whatsapp_tip @default(false)`, `has_seen_psychologist_profile_video_tip @default(false)`, `has_seen_psychologist_reply_tip @default(false)`, `has_seen_psychologist_original_post_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
@@ -141,7 +141,7 @@ Não construir no MVP. Reservado aqui para que nenhuma task trate admin como `us
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `name`, `email`, `password?`, `password_confirm?` | | mesma forma de auth do `user` |
+| `name`, `email`, `password?`, `password_confirm?` legado | | mesma forma de auth do `user` |
 | `active @default(true)`, `confirmed`, `confirmed_date?`, `confirm_code?`, `confirm_date?`, `recovery_code?`, `recovery_date?`, `need_reset` | | fluxo de login/recovery/confirm próprio |
 | `admin_tokens` | `admin_token[]` | |
 | `@@index([email, deleted])`, `@@map("admins")` | | |
@@ -163,7 +163,7 @@ Não construir no MVP. Reservado aqui para que nenhuma task trate admin como `us
 
 Complemento TASK-67 (2026-07-11): edição administrativa de Dados pessoais e Dados profissionais do psicólogo usa endpoints Admin próprios, não impersona o psicólogo, não altera `user.email`, credenciais, plano, gateway, cortesia, `crp_status` ou `cfp_verified_at`. Alteração de CPF em psicólogo aprovado exige confirmação e motivo, mas não revalida nem invalida CRP automaticamente. Eventos novos entram em `/api/admin/private/psychologists/:id/activities` a partir de `admin_activity_log`; histórico anterior não é retroagido.
 
-Complemento TASK-68 (2026-07-11): suporte administrativo de Conta e acesso do psicólogo usa somente campos existentes de `user`, `user_token` e `admin_activity_log`. Alteração administrativa de e-mail atualiza `user.email`, gera novo `user.confirm_code`/`confirm_date`, marca `confirmed=false`, limpa `confirmed_date` e remove sessões do psicólogo em `user_token`. Reenvio de confirmação e link de redefinição usam `user.confirm_code`/`confirm_date` e `user.recovery_code`/`recovery_date` sem expor códigos. Senha temporária salva somente hash em `user.password`/`password_confirm`, limpa recovery, define `need_reset=true` e exige troca no próximo login via `/api/private/auth/need_reset`. Eventos administrativos entram em `admin_activity_log` com `domain="psychologist_account"`, `area="conta_e_acesso"` e payload seguro sem senha, hash, códigos ou tokens.
+Complemento TASK-68 (2026-07-11), atualizado pela auditoria de 2026-08-07: suporte administrativo de Conta e acesso do psicólogo usa somente campos existentes de `user`, `user_token` e `admin_activity_log`. Alteração administrativa de e-mail atualiza `user.email`, gera novo `user.confirm_code`/`confirm_date`, marca `confirmed=false`, limpa `confirmed_date` e remove sessões do psicólogo em `user_token`. Reenvio de confirmação e link de redefinição usam `user.confirm_code`/`confirm_date` e `user.recovery_code`/`recovery_date` sem expor códigos. Senha temporária salva somente o hash em `user.password`, mantém `password_confirm=null`, limpa recovery, define `need_reset=true` e exige troca no próximo login via `/api/private/auth/need_reset`. O campo `password_confirm` permanece nullable apenas por compatibilidade de schema; confirmação é payload transitório e nunca deve ser persistida. Eventos administrativos entram em `admin_activity_log` com `domain="psychologist_account"`, `area="conta_e_acesso"` e payload seguro sem senha, hash, códigos ou tokens.
 
 Complemento TASK-73 (2026-07-14): ações administrativas de status da conta do psicólogo usam `user.account_status` com valores `"active" | "suspended" | "deactivated" | "deleted"` e `user.account_status_changed_at` como trilha operacional mínima. Suspensão e desativação mantêm o usuário em `deleted=false`, mas gravam `active=false`, encerram `user_token` e removem o perfil da descoberta pública pelos filtros existentes. Exclusão administrativa usa o mesmo soft delete/anonymization do fluxo próprio de exclusão de conta, grava `account_status="deleted"`, bloqueia login e preserva auditoria em `admin_activity_log`; contas com assinatura paga vinculada a gateway ou inadimplente continuam bloqueadas para exclusão até regularização/cancelamento operacional.
 
@@ -671,24 +671,24 @@ Acompanhamento de comentarios do usuario em `GET /api/private/posts/mine?type=re
 
 Complemento 2026-06-29: o painel administrativo ainda e reservado/futuro e nao deve ser criado na audiencia `user`; a preparacao desta etapa e persistir denuncias com alvo normalizado e unicidade transacional para que uma futura audiencia admin consiga listar/tria-las sem migrar dados historicos.
 
-`content_moderation_event` / `content_moderation_events` (TASK-74, modera??o textual determin?stica de pacientes):
+`content_moderation_event` / `content_moderation_events` (TASK-74, moderação textual determinística de pacientes):
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `target_type` | `String` | `"community_post" | "post_reply" | "submitted_post" | "submitted_reply"`; posts raiz bloqueados/segurados a partir de 2026-07-26 usam `community_post` com registro interno `status="bloqueado"`; snapshots legados e respostas bloqueadas podem usar `submitted_*` sem conteudo publico persistido |
 | `target_id` | `String?` | id de `community_post`/`post_reply` quando `allow_sensitive`; id de `community_post.status="bloqueado"` para post raiz bloqueado/segurado; `null` quando o evento for snapshot-only antes da publicacao |
 | `community_id` | `String?` | FK opcional para `community`, `onDelete: SetNull` |
-| `author_id` | `String` | FK para `user`; V1 aplica regras autom?ticas apenas quando `user.role="paciente"` |
-| `decision` | `String` | `"allow_sensitive" | "block" | "safety_hold"`; `allow` n?o gera evento |
+| `author_id` | `String` | FK para `user`; V1 aplica regras automáticas apenas quando `user.role="paciente"` |
+| `decision` | `String` | `"allow_sensitive" | "block" | "safety_hold"`; `allow` não gera evento |
 | `categories` | `Json` | lista de categorias internas: `external_link`, `sexual_health`, `explicit_sexual`, `minor_sexual_risk`, `self_harm_suicide`, `abuse_violence`, `spam_scam`, `other` |
 | `severity` | `String` | `"low" | "medium" | "high" | "urgent"`; `safety_hold` usa `urgent` |
 | `status` | `String @default("pending")` | `"pending" | "reviewing" | "resolved"` para fila Admin |
-| `reason_code` | `String` | c?digo interno da regra determin?stica, sem publicar lista completa de bypass |
-| `matched_rules` | `Json?` | nomes internos de regras para revis?o Admin, n?o exibidos ao paciente |
-| `title_snapshot` | `String?` | t?tulo original enviado, quando houver |
+| `reason_code` | `String` | código interno da regra determinística, sem publicar lista completa de bypass |
+| `matched_rules` | `Json?` | nomes internos de regras para revisão Admin, não exibidos ao paciente |
+| `title_snapshot` | `String?` | título original enviado, quando houver |
 | `content_excerpt` | `String` | trecho seguro para listas Admin |
 | `content_snapshot` | `String?` | snapshot completo restrito ao detalhe Admin autenticado |
-| `reviewed_by_admin_id`, `reviewed_at`, `resolved_at`, `admin_note` | `String?` / `DateTime?` | auditoria operacional de revis?o/resolu??o; a??es criam `admin_activity_log` |
+| `reviewed_by_admin_id`, `reviewed_at`, `resolved_at`, `admin_note` | `String?` / `DateTime?` | auditoria operacional de revisão/resolução; ações criam `admin_activity_log` |
 | `@@index([status, severity, createdAt])`, `@@index([decision, createdAt])`, `@@index([target_type, target_id])`, `@@index([community_id, createdAt])`, `@@index([author_id, createdAt])` | | consultas da central Admin e dashboard de comunidades |
 
 Contratos TASK-74: `POST /api/private/community/:slug/posts` e `POST /api/private/posts/:id/replies` classificam texto de pacientes antes da persistencia. `allow_sensitive` publica e cria evento pendente; `block`/`safety_hold` de post raiz cria `community_post.status="bloqueado"` apenas interno/Admin, cria evento pendente apontando para esse post e retorna erro 422 com mensagem publica conservadora; `block`/`safety_hold` de resposta/comentario segue sem criar `post_reply` e usa snapshot protegido no evento. URLs/dominios digitados por pacientes sao bloqueados mesmo que a UI renderize texto puro. Endpoints Admin privados: `GET /api/admin/private/moderation/summary`, `GET /events`, `GET /events/:id`, `POST /events/:id/review` e `POST /events/:id/resolve`.

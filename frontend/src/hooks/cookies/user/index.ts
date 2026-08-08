@@ -9,7 +9,12 @@ export interface UserInfos {
 const USER_KEY = process.env.NEXT_PUBLIC_USER_LOCAL || "lectum.user";
 
 export const getUser = (): Partial<UserInfos> => {
-  return JSON.parse(Cookies.get(USER_KEY) || "{}");
+  try {
+    return JSON.parse(Cookies.get(USER_KEY) || "{}") as Partial<UserInfos>;
+  } catch {
+    Cookies.remove(USER_KEY);
+    return {};
+  }
 };
 
 export const setUser = (data: UserInfos) => {

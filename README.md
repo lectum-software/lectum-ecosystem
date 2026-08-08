@@ -1,7 +1,20 @@
 # Lectum Ecosystem
 
-Este repositório reúne `backend/` e `frontend/` apenas para desenvolvimento local. Em produção,
-trate as aplicações separadamente.
+Este repositório reúne `backend/`, `frontend/` e `admin/` apenas para desenvolvimento local. Nos
+ambientes publicados, trate as três aplicações e seus deploys separadamente.
+
+## Ambientes publicados
+
+- Desde **07/08/2026**, homologação e produção podem conter dados reais.
+- Push em `homolog` publica homologação automaticamente.
+- Merge/push em `main` publica produção automaticamente.
+- Desenvolvimento e commits devem ocorrer em `homolog`; push direto em `main` é bloqueado.
+- Só promova para `main` depois de checks, builds e smoke test em homologação.
+- Nunca execute reset, seed destrutivo, `db push` ou limpeza de storage em ambiente publicado.
+
+As regras completas de banco, env e rollout estão em
+[`_product/tasks/ARCHITECTURE.md`](_product/tasks/ARCHITECTURE.md). O resumo da auditoria atual está
+em [`_product/AUDITORIA-CORRECOES-2026-08-07.md`](_product/AUDITORIA-CORRECOES-2026-08-07.md).
 
 ## Desenvolvimento local
 

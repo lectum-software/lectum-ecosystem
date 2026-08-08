@@ -55,11 +55,11 @@ O schema atual jÃ¡ possui fontes reais para contas de pacientes (`user.role="pac
 - NÃ£o foi criada exportaÃ§Ã£o de pacientes porque nÃ£o hÃ¡ endpoint real neste escopo.
 - NÃ£o foi executada migration Prisma porque a task nÃ£o alterou `backend/prisma/schema.prisma` nem `backend/prisma/migrations`.
 
-## Complemento 2026-07-14 - Tempo médio do paciente por pageview autenticado
+## Complemento 2026-07-14 - Tempo mÃ©dio do paciente por pageview autenticado
 
-O dashboard Admin de pacientes passa a exibir **Tempo médio do paciente** a partir de `page_view_event.duration_seconds` filtrado por `user.role="paciente"` e pelo período selecionado. A métrica usa apenas pageviews autenticados, não inclui navegação anônima nem dados de conteúdo, e só é exibida quando ao menos 50% dos pageviews do recorte possuem duração positiva. Caso contrário, o contrato retorna motivo de indisponibilidade.
+O dashboard Admin de pacientes passa a exibir **Tempo mÃ©dio do paciente** a partir de `page_view_event.duration_seconds` filtrado por `user.role="paciente"` e pelo perÃ­odo selecionado. A mÃ©trica usa apenas pageviews autenticados, nÃ£o inclui navegaÃ§Ã£o anÃ´nima nem dados de conteÃºdo, e sÃ³ Ã© exibida quando ao menos 50% dos pageviews do recorte possuem duraÃ§Ã£o positiva. Caso contrÃ¡rio, o contrato retorna motivo de indisponibilidade.
 
-A decisão mantém a V1 sem retenção/cohort retention: o novo dado mede permanência média por pageview confiável, não retenção, engajamento clínico ou sessão terapêutica. Não há alteração de schema, migration, package ou exportação.
+A decisÃ£o mantÃ©m a V1 sem retenÃ§Ã£o/cohort retention: o novo dado mede permanÃªncia mÃ©dia por pageview confiÃ¡vel, nÃ£o retenÃ§Ã£o, engajamento clÃ­nico ou sessÃ£o terapÃªutica. NÃ£o hÃ¡ alteraÃ§Ã£o de schema, migration, package ou exportaÃ§Ã£o.
 
 ## Complemento 2026-07-19 - Forma de cadastro como categoria de produto
 
@@ -94,19 +94,19 @@ Decisoes:
 
 Consequencia: Pacientes passa a ter a mesma leitura operacional de uso first-party que Psicologos, preservando privacidade e dados reais; nao houve schema Prisma, migration, package novo, mock ou alteracao de dados sensiveis.
 
-## Complemento 2026-07-19 - Localização como mapa e rankings agregados
+## Complemento 2026-07-19 - LocalizaÃ§Ã£o como mapa e rankings agregados
 
-Por feedback direto de produto, o card **Localização** de `/pacientes` passa a ser uma leitura visual com mapa e rankings, inspirada no padrão de tráfego, mas preservando minimização de dados.
+Por feedback direto de produto, o card **LocalizaÃ§Ã£o** de `/pacientes` passa a ser uma leitura visual com mapa e rankings, inspirada no padrÃ£o de trÃ¡fego, mas preservando minimizaÃ§Ã£o de dados.
 
-Decisões:
+DecisÃµes:
 
-- Calcular localizações de pacientes a partir de capturas reais de `visitor_location` vinculadas a `user.role="paciente"` no período selecionado.
-- Usar `visitor_location` como fonte coarse de acesso/localização agregada; não persistir nem retornar IP, coordenadas, endereço ou localização precisa.
-- Renderizar mapa SVG simplificado de UFs brasileiras no frontend Admin, sem instalar pacote de mapa e sem usar imagem de protótipo como gráfico final.
-- Exibir **Top estados** e **Top cidades** com contagens agregadas. Cidades com frequência menor que 2 capturas são agrupadas em **Outras cidades** para reduzir risco de reidentificação geográfica em contexto de saúde.
-- Manter locais fora do Brasil nas listagens; o mapa informa quando não há UF brasileira identificada.
+- Calcular localizaÃ§Ãµes de pacientes a partir de capturas reais de `visitor_location` vinculadas a `user.role="paciente"` no perÃ­odo selecionado.
+- Usar `visitor_location` como fonte coarse de acesso/localizaÃ§Ã£o agregada; nÃ£o persistir nem retornar IP, coordenadas, endereÃ§o ou localizaÃ§Ã£o precisa.
+- Renderizar mapa SVG simplificado de UFs brasileiras no frontend Admin, sem instalar pacote de mapa e sem usar imagem de protÃ³tipo como grÃ¡fico final.
+- Exibir **Top estados** e **Top cidades** com contagens agregadas. Cidades com frequÃªncia menor que 2 capturas sÃ£o agrupadas em **Outras cidades** para reduzir risco de reidentificaÃ§Ã£o geogrÃ¡fica em contexto de saÃºde.
+- Manter locais fora do Brasil nas listagens; o mapa informa quando nÃ£o hÃ¡ UF brasileira identificada.
 
-Consequência: o Admin ganha leitura geográfica mais útil sem ampliar coleta, sem schema Prisma/migration, sem package novo, sem mock e sem backfill artificial.
+ConsequÃªncia: o Admin ganha leitura geogrÃ¡fica mais Ãºtil sem ampliar coleta, sem schema Prisma/migration, sem package novo, sem mock e sem backfill artificial.
 
 ## Complemento 2026-07-19 - Preview local de layout para localizacao vazia
 

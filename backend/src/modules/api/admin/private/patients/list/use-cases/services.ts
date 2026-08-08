@@ -4,6 +4,7 @@ import {
   calculateAdminPatientCommunityEngagementScore,
   diagnoseAdminCommunityEngagement,
 } from "@/utils/admin-community-engagement-diagnosis";
+import { daysBetweenInclusive, startOfDate } from "@/utils/date-range";
 import type {
   AdminPatientsListEngagementId,
   AdminPatientsListFilters,
@@ -25,7 +26,6 @@ import {
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
-const MS_PER_DAY = 86_400_000;
 
 type PatientsListIntentSignals = Awaited<
   ReturnType<AdminPatientsListRepository["listIntentSignals"]>
@@ -165,20 +165,6 @@ const normalizeSort = (value?: string): AdminPatientsListSort => {
   if (value && SORTS.has(value as AdminPatientsListSort)) return value as AdminPatientsListSort;
 
   return "recent";
-};
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-
-  return next;
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
 };
 
 const patientActiveDaysUntil = (patientCreatedAt: Date, date: Date) => {

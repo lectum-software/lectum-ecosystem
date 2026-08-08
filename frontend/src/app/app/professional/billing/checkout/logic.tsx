@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   BillingCheckoutResponse,
   ProfessionalSubscription,
@@ -28,6 +29,7 @@ import {
   isAdministrativeCourtesySubscription,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 if (isMercadoPagoPublicConfigurationValid && mercadoPagoPublicKey) {
   initMercadoPago(mercadoPagoPublicKey, {
@@ -60,7 +62,7 @@ const formatDate = (value?: string | null) => {
 };
 
 const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Não foi possível carregar o checkout agora.";
+  getSafeApiErrorMessage(error, "Não foi possível carregar o checkout agora.");
 
 const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
   if (!currentPeriodEnd) return true;
@@ -167,7 +169,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
           setCheckoutResult(data);
           if (isCourtesyRenewal) {
             toast.success("Cartão cadastrado para cobrança futura");
-            router.replace(data.next_path || "/app/profissional/assinatura");
+            router.replace(
+              normalizeSafeInternalRedirect(data.next_path, "/app/profissional/assinatura") ||
+                "/app/profissional/assinatura",
+            );
           }
         },
       },
@@ -293,7 +298,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
           payment_type_id: CREDIT_CARD_PAYMENT_TYPE,
         });
       } catch {
-        // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
+        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
       }
     },
     [isCourtesyRenewal],
@@ -303,8 +308,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
     // Callback obrigatório do Brick; mantém a renderização real sem efeitos paralelos.
   }, []);
 
-  const handleBrickError = useCallback((error: unknown) => {
-    console.error("[Billing CardPayment]", error);
+  const handleBrickError = useCallback(() => {
     toast.error("Não foi possível carregar o formulário de cartão.");
   }, []);
 
@@ -314,7 +318,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
       await currentRefetchRef.current();
       toast.success("Status da assinatura atualizado");
     } catch {
-      // handleReq já exibe o erro real da API.
+      // handleReq já exibe o erro público sanitizado.
     }
   }, []);
 

@@ -45,6 +45,7 @@ export default async (data: ILoginDTO): Promise<Resolve> => {
 
   const res = await _LOGIN.hidrate(user, device.id);
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("auth_success", {
       //If you need a custom text

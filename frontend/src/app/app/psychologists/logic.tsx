@@ -50,6 +50,7 @@ import {
   useDirectoryPsychologistVideoWatch,
 } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologist,
@@ -82,16 +83,6 @@ import {
   type PsychologistsFilterForm,
   usePsychologistsFilterForm,
 } from "./use-form";
-
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
 
 type NavigatorWithStandalone = Navigator & { standalone?: boolean };
 
@@ -1061,11 +1052,7 @@ const buildBenefitChips = (
 };
 
 const resolveDirectoryErrorMessage = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("token") || normalized.includes("sess")) {

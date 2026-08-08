@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import type {
   AdminNotificationAudience,
@@ -105,6 +105,40 @@ export class AdminNotificationsRepository {
       where: {
         deleted: false,
         id,
+      },
+    });
+  }
+
+  async claimCampaign(id: string, statuses: AdminNotificationCampaignStatus[]) {
+    return this.transitionCampaign(id, statuses, { status: "sending" });
+  }
+
+  async transitionCampaign(
+    id: string,
+    statuses: AdminNotificationCampaignStatus[],
+    data: Prisma.admin_notification_campaignUpdateManyMutationInput,
+  ) {
+    const transitioned = await prisma.admin_notification_campaign.updateMany({
+      data,
+      where: {
+        deleted: false,
+        id,
+        status: { in: statuses },
+      },
+    });
+
+    return transitioned.count === 1 ? this.findCampaign(id) : null;
+  }
+
+  async listDueScheduledCampaignIds(now: Date, limit: number) {
+    return prisma.admin_notification_campaign.findMany({
+      orderBy: [{ scheduled_at: "asc" }, { createdAt: "asc" }],
+      select: { id: true },
+      take: limit,
+      where: {
+        deleted: false,
+        scheduled_at: { lte: now },
+        status: "scheduled",
       },
     });
   }

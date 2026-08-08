@@ -5,6 +5,10 @@
 pre-commit:
   parallel: true
   commands:
+    secrets:
+      run: pnpm check:secrets
+    env-examples:
+      run: pnpm check:env
     frontend-biome:
       root: frontend/
       glob:
@@ -41,6 +45,21 @@ pre-commit:
           pnpm typecheck
         fi
 
+    admin-biome:
+      root: admin/
+      glob:
+        - "*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    admin-typecheck:
+      root: admin/
+      glob:
+        - "*.{ts,tsx}"
+        - "**/*.{ts,tsx}"
+      run: pnpm typecheck
+
 commit-msg:
   commands:
     commitlint:
@@ -49,6 +68,12 @@ commit-msg:
 pre-push:
   parallel: false
   commands:
+    deploy-branch:
+      run: pnpm check:deploy-branch
+
+    repository-guards:
+      run: pnpm check:secrets && pnpm check:env && pnpm check:source-size
+
     frontend-check:
       glob:
         - "frontend/**/*.{js,jsx,ts,tsx,json,jsonc,css}"
@@ -70,3 +95,14 @@ pre-push:
         - "backend/eslint.config.*"
         - "backend/.eslintrc*"
       run: pnpm check:backend
+
+    admin-check:
+      glob:
+        - "admin/**/*.{js,jsx,ts,tsx,json,jsonc,css}"
+        - "admin/package.json"
+        - "admin/pnpm-lock.yaml"
+        - "admin/tsconfig.json"
+        - "admin/next.config.*"
+        - "admin/eslint.config.*"
+        - "admin/postcss.config.*"
+      run: pnpm check:admin

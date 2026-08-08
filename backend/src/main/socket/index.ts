@@ -4,8 +4,12 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import type { DefaultEventsMap } from "socket.io";
 import io from "socket.io";
 import { resolve } from "@/helpers/translate/resolve";
+import prisma from "@/infra/database/prisma";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getUserJwtTtlSeconds, parsePositiveInteger } from "@/utils/runtime-config";
+import { readUserTokenFromCookieHeader } from "@/utils/user-auth-cookie";
 import { emitAsync } from "./db/async";
+import { connectedClients } from "./registry";
 
 type Soc = io.Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
 type SocketPayload = JwtPayload & {
@@ -17,7 +21,35 @@ type SocketPayload = JwtPayload & {
 export let soc: Soc | null = null;
 export let aiSoc: Soc | null = null;
 
-const clients = new Map();
+const SOCKET_AUTH_RECHECK_INTERVAL_MS = parsePositiveInteger(
+  process.env.SOCKET_AUTH_RECHECK_INTERVAL_MS,
+  60_000,
+  { max: 10 * 60_000, min: 15_000 },
+);
+
+const validateSocketSession = async (token: string) => {
+  const payload = jwt.verify(token, getJwtSecret(), {
+    maxAge: getUserJwtTtlSeconds(),
+  }) as SocketPayload;
+
+  if (payload.type !== "user" || !payload.id || !payload.device_id) return null;
+
+  const persistedToken = await prisma.user_token.findFirst({
+    select: { id: true },
+    where: {
+      deleted: false,
+      device_id: payload.device_id,
+      token,
+      user_id: payload.id,
+      user: {
+        active: true,
+        deleted: false,
+      },
+    },
+  });
+
+  return persistedToken ? payload : null;
+};
 
 const normalizeOrigin = (value?: string | string[] | null) => {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -68,7 +100,7 @@ export const socket = (server: Express) => {
       .filter((origin): origin is string => Boolean(origin)),
   );
 
-  const httpServer = http.createServer({ maxHeaderSize: 12800000 }, server);
+  const httpServer = http.createServer(server);
 
   const web = new io.Server(httpServer, {
     path: "/socket.io",
@@ -80,25 +112,36 @@ export const socket = (server: Express) => {
     },
   });
 
-  web.use((socket, next) => {
+  web.use(async (socket, next) => {
     const origin = resolveHandshakeOrigin(socket.handshake.headers);
 
     if (!origin || !allowedOrigins.has(origin)) {
       console.warn("[SOCKET] Origem não permitida", origin);
       return next(new Error(resolve("error.origin_not_allowed")));
     }
-    const token = socket.handshake.auth?.token || socket.handshake.headers.authorization;
-    if (!token) {
+    const providedToken =
+      socket.handshake.auth?.token ||
+      socket.handshake.headers.authorization ||
+      readUserTokenFromCookieHeader(socket.handshake.headers.cookie);
+    const token =
+      typeof providedToken === "string" && providedToken.startsWith("Bearer ")
+        ? providedToken.slice("Bearer ".length)
+        : providedToken;
+    if (typeof token !== "string" || !token) {
       console.warn("[SOCKET] Token não fornecido");
       return next(new Error(resolve("error.token_not_provided")));
     }
     try {
-      const payload = jwt.verify(token, getJwtSecret()) as SocketPayload;
+      const payload = await validateSocketSession(token);
+      if (!payload) return next(new Error(resolve("error.token_invalid")));
 
+      (socket as any).authToken = token;
       (socket as any).payload = payload;
       return next();
-    } catch (err: any) {
-      console.warn("[SOCKET] Token inválido", err?.message);
+    } catch (err: unknown) {
+      console.warn("[SOCKET] Token inválido", {
+        name: err instanceof Error ? err.name : "UnknownSocketAuthError",
+      });
       return next(new Error(resolve("error.token_invalid")));
     }
   });
@@ -106,33 +149,53 @@ export const socket = (server: Express) => {
   setSoc(web);
 
   web.on("connection", (socket) => {
+    let registered = false;
+    let authCheckInProgress = false;
+    const authTimer = setInterval(async () => {
+      if (authCheckInProgress) return;
+
+      authCheckInProgress = true;
+      try {
+        const token = (socket as any).authToken;
+        if (typeof token !== "string" || !(await validateSocketSession(token))) {
+          socket.disconnect(true);
+        }
+      } catch {
+        socket.disconnect(true);
+      } finally {
+        authCheckInProgress = false;
+      }
+    }, SOCKET_AUTH_RECHECK_INTERVAL_MS);
+
     socket.on("client", () => {
+      if (registered) return;
+
       const payload = (socket as any).payload as SocketPayload;
       if (!payload.id) {
         socket.disconnect(true);
         return;
       }
 
-      console.log(`[SOCKET] Client connected: ${socket.id}`, {
-        device_id: payload.device_id ? "[redacted]" : undefined,
+      registered = true;
+      console.log("[SOCKET] Cliente conectado", {
         role: payload.type,
-        user_id: payload.id,
       });
-      clients.set(socket.id, { socket, data: payload });
+      connectedClients.set(socket.id, { socket, data: payload });
       emitAsync(payload.id, payload.device_id);
       socket.emit("server", "Server response!");
     });
 
     socket.on("disconnect", () => {
-      const client = clients.get(socket.id);
+      clearInterval(authTimer);
+      const client = connectedClients.get(socket.id);
       if (client) {
-        console.log(`[SOCKET] Client disconnected: ${socket.id}`);
-        clients.delete(socket.id);
+        console.log("[SOCKET] Cliente desconectado");
+        connectedClients.delete(socket.id);
       }
     });
   });
 
-  return { web, httpServer, clients };
+  return { web, httpServer, clients: connectedClients };
 };
 
-export { clients };
+export { connectedClients as clients };

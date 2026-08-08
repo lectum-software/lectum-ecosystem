@@ -3,6 +3,7 @@ import {
   deleteGoogleIntent,
   destroy,
   email,
+  logout,
   onboardingTips,
   password,
   security,
@@ -20,6 +21,7 @@ const routes = Router();
 
 routes.get("/security", security);
 routes.get("/tips", onboardingTips);
+routes.post("/logout", logout);
 routes.post("/delete/google-intent", deleteGoogleIntentValidator, deleteGoogleIntent);
 routes.post("/delete", deleteValidator, destroy);
 routes.put("/email", emailValidator, email);

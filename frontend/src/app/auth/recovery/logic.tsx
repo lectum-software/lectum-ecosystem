@@ -4,16 +4,17 @@ import { ArrowLeftToLine, Loader2, MailCheck, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/api/callers/auth";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { type RecoveryForm, useForm } from "./use-form";
 
-const resolveRecoveryErrorMessage = (error: unknown) => {
-  const message = error instanceof Error ? error.message : null;
-
-  return message || "Não foi possível enviar o link agora. Tente novamente em alguns instantes.";
-};
+const resolveRecoveryErrorMessage = (error: unknown) =>
+  getSafeApiErrorMessage(
+    error,
+    "Não foi possível enviar o link agora. Tente novamente em alguns instantes.",
+  );
 
 export const RecoveryLogic = () => {
   const { Form, formProps, hook } = useForm();

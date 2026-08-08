@@ -1,9 +1,10 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
-import { ensureCommunityMembership } from "@/utils/community-membership";
+import { ensureCommunityMembership, removeCommunityMembership } from "@/utils/community-membership";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -2399,7 +2400,7 @@ export class CommunityRepository implements ICommunityRepository {
     const mediaItems = data.b.mediaItems ?? [];
     const firstMediaItem = mediaItems[0];
     const status = options.status ?? "publicado";
-    const post = await prisma.$transaction(async (transaction) => {
+    const post = await withSerializableTransaction(async (transaction) => {
       await ensureCommunityMembership({
         client: transaction,
         communityId: community.id,
@@ -2447,7 +2448,7 @@ export class CommunityRepository implements ICommunityRepository {
 
     if (!community) return null;
 
-    const membership = await prisma.$transaction((transaction) =>
+    const membership = await withSerializableTransaction((transaction) =>
       ensureCommunityMembership({
         client: transaction,
         communityId: community.id,
@@ -2488,44 +2489,10 @@ export class CommunityRepository implements ICommunityRepository {
 
     if (!community) return null;
 
-    const existing = await prisma.community_member.findUnique({
-      where: {
-        community_id_user_id: {
-          community_id: community.id,
-          user_id: data.auth.id!,
-        },
-      },
-      select: {
-        deleted: true,
-      },
+    await removeCommunityMembership({
+      communityId: community.id,
+      userId: data.auth.id!,
     });
-
-    if (existing && !existing.deleted) {
-      await prisma.$transaction([
-        prisma.community_member.update({
-          where: {
-            community_id_user_id: {
-              community_id: community.id,
-              user_id: data.auth.id!,
-            },
-          },
-          data: {
-            deleted: true,
-            deletedAt: new Date(),
-          },
-        }),
-        prisma.community.update({
-          where: {
-            id: community.id,
-          },
-          data: {
-            members_count: {
-              decrement: community.members_count > 0 ? 1 : 0,
-            },
-          },
-        }),
-      ]);
-    }
 
     const postsCount = await prisma.community_post.count({
       where: {

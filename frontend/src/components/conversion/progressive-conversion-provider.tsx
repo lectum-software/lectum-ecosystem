@@ -25,6 +25,7 @@ import {
 import { getToken } from "@/hooks/cookies/token";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
 
 export type ConversionTrigger =
   | "trigger_tempo"
@@ -358,11 +359,10 @@ export const ProgressiveConversionProvider = ({
   const requestWhatsAppAccess = useCallback(
     (whatsappUrl: string, returnTo?: string) => {
       if (isAuthenticated) return true;
-      if (!whatsappUrl) return false;
-
+      const trustedUrl = normalizeTrustedWhatsAppUrl(whatsappUrl);
+      if (!trustedUrl) return false;
       const nextCount = readNumber(WHATSAPP_CLICK_COUNT_KEY) + 1;
       writeNumber(WHATSAPP_CLICK_COUNT_KEY, nextCount);
-
       if (isPublicPsychologistsPath(pathnameRef.current)) return true;
 
       if (nextCount < 2 || hasPromptBeenShown()) return true;
@@ -370,7 +370,7 @@ export const ProgressiveConversionProvider = ({
       return requestConversion("trigger_whatsapp", {
         intent: {
           payload: {
-            whatsappUrl,
+            whatsappUrl: trustedUrl,
           },
           returnTo: returnTo ?? getCurrentReturnTo(),
           type: "open_whatsapp",
@@ -399,7 +399,7 @@ export const ProgressiveConversionProvider = ({
 
     clearPendingIntent();
 
-    const whatsappUrl = String(intent.payload?.whatsappUrl ?? "");
+    const whatsappUrl = normalizeTrustedWhatsAppUrl(String(intent.payload?.whatsappUrl ?? ""));
     if (!whatsappUrl) return;
 
     window.setTimeout(() => {

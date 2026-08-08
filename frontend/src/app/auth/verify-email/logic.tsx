@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { user } from "@/api/generator/types";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -36,13 +37,7 @@ const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 const getRawErrorMessage = (error: unknown) => {
-  const apiError = error as ApiError;
-
-  return (
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "")
-  );
+  return getSafeApiErrorMessage(error, "");
 };
 
 const resolveVerificationErrorMessage = (error: unknown) => {

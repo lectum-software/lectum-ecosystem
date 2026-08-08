@@ -34,6 +34,9 @@
       "name": "[API] - PSYCHOLOGIST (Private)"
     },
     {
+      "name": "[API] - SEO (Public)"
+    },
+    {
       "name": "[API] - USER (Public)"
     }
   ],
@@ -4876,6 +4879,195 @@
         ]
       }
     },
+    "/api/public/seo/community-post/:slug/:id": {
+      "get": {
+        "tags": ["[API] - SEO (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [
+          {
+            "description": "Parâmetro slug do path.",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/seo/community-post/:slug/:id/replies/:replyId": {
+      "get": {
+        "tags": ["[API] - SEO (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [
+          {
+            "description": "Parâmetro slug do path.",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parâmetro replyId do path.",
+            "in": "path",
+            "name": "replyId",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/seo/community/:slug": {
+      "get": {
+        "tags": ["[API] - SEO (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [
+          {
+            "description": "Parâmetro slug do path.",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/seo/metadata/": {
+      "get": {
+        "tags": ["[API] - SEO (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
+    "/api/public/seo/psychologist/:id": {
+      "get": {
+        "tags": ["[API] - SEO (Public)"],
+        "description": "Endpoint (Public)",
+        "parameters": [
+          {
+            "description": "Parâmetro id do path.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "nullable": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "deviceHeader": []
+          }
+        ]
+      }
+    },
     "/api/public/user/store": {
       "post": {
         "tags": ["[API] - USER (Public)"],
@@ -4911,12 +5103,6 @@
             "application/x-www-form-urlencoded": {
               "schema": {
                 "properties": {
-                  "active": {
-                    "description": "Parâmetro active do body.",
-                    "nullable": false,
-                    "required": false,
-                    "type": "string"
-                  },
                   "analytics_session_id": {
                     "description": "Parâmetro analytics_session_id do body.",
                     "nullable": false,

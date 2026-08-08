@@ -2,13 +2,18 @@
 import { Router } from "express";
 
 //Middlewares
-import session from "@/modules/api/middlewares/_auth/_session";
 import passport from "@/modules/api/middlewares/_auth/passport";
+import { isProductionRuntime } from "@/utils/runtime-config";
+import {
+  GOOGLE_OAUTH_STATE_COOKIE,
+  googleOAuthStateClearCookieOptions,
+  verifyGoogleOAuthState,
+} from "../utils/state";
 
 //Route Infos
 const routes = Router();
 
-session(routes);
+routes.use(passport.initialize());
 
 type GoogleCallbackQuery = Record<string, string | string[] | undefined>;
 type GoogleCallbackUser = {
@@ -22,6 +27,7 @@ type GoogleCallbackUser = {
 
 const DELETE_ACCOUNT_PATIENT_CALLBACK = "/app/perfil/editar?deleteReauth=ok";
 const DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK = "/app/profissional/perfil/configurar?deleteReauth=ok";
+const GOOGLE_EXCHANGE_COOKIE_TTL_MS = 2 * 60 * 1000;
 const GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS = new Set([
   "analytics_session_id",
   "analytics_visitor_id",
@@ -77,33 +83,17 @@ const resolveFailureCallbackUrl = (fallbackPath: string, message: string) => {
   return isAbsolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
 };
 
-const parseGoogleStateQuery = (state: unknown) => {
+const parseGoogleStateQuery = (state: unknown, cookieNonce: unknown) => {
   const query: GoogleCallbackQuery = {};
   const params = new URLSearchParams();
+  const statePayload = verifyGoogleOAuthState(state, cookieNonce);
 
-  try {
-    const stateObj = JSON.parse(typeof state === "string" ? state : "{}");
-    if (stateObj?.query) {
-      Object.entries(stateObj.query as Record<string, unknown>).forEach(([key, value]) => {
-        if (GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS.has(key) || value === undefined || value === null) {
-          return;
-        }
+  if (statePayload) {
+    Object.entries(statePayload.query).forEach(([key, value]) => {
+      if (GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS.has(key)) return;
 
-        if (Array.isArray(value)) {
-          query[key] = value.map((item) => String(item));
-          value.forEach((item) => {
-            params.append(key, String(item));
-          });
-          return;
-        }
-
-        query[key] = String(value);
-        params.set(key, String(value));
-      });
-    }
-  } catch (e) {
-    console.warn("[GOOGLE] Estado OAuth inválido ou ausente no callback.", {
-      message: e instanceof Error ? e.message : "unknown",
+      query[key] = value;
+      params.set(key, value);
     });
   }
 
@@ -114,43 +104,62 @@ const parseGoogleStateQuery = (state: unknown) => {
 };
 
 //Routes
-routes.get("", passport.authenticate("google", { failureRedirect: "/" }), (_req, res) => {
-  //
+routes.get(
+  "",
+  passport.authenticate("google", {
+    failureRedirect: process.env.CALLBACK_FAIL_URL_API_USER || "/",
+    session: false,
+  }),
+  (_req, res) => {
+    //
 
-  const failPath = process.env.CALLBACK_FAIL_URL_API_USER;
-  const user = _req?.user as GoogleCallbackUser;
-  const state = _req.query.state as string;
-  const { query: originalQuery, queryString: originalQueryStr } = parseGoogleStateQuery(state);
-
-  if (!user?.success) {
-    const fallbackPath = failPath || process.env.CALLBACK_URL_API_USER || "/";
-    return res.redirect(
-      resolveFailureCallbackUrl(
-        fallbackPath,
-        user?.error || "N\u00e3o foi poss\u00edvel concluir a autentica\u00e7\u00e3o com o Google.",
-      ),
+    const failPath = process.env.CALLBACK_FAIL_URL_API_USER;
+    const user = _req?.user as GoogleCallbackUser;
+    const state = _req.query.state as string;
+    const { query: originalQuery, queryString: originalQueryStr } = parseGoogleStateQuery(
+      state,
+      _req.cookies?.[GOOGLE_OAUTH_STATE_COOKIE],
     );
-  }
+    res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, googleOAuthStateClearCookieOptions());
 
-  if (originalQuery.intent === "delete_account") {
-    return res.redirect(resolveDeleteAccountCallbackUrl(originalQuery, user));
-  }
+    if (!user?.success) {
+      const fallbackPath = failPath || process.env.CALLBACK_URL_API_USER || "/";
+      return res.redirect(
+        resolveFailureCallbackUrl(
+          fallbackPath,
+          "Não foi possível concluir a autenticação com o Google.",
+        ),
+      );
+    }
 
-  const token = user?.data?.user_tokens?.[0].token;
-  const isProduction = process.env.NODE_ENV?.includes("prod");
+    if (originalQuery.intent === "delete_account") {
+      return res.redirect(resolveDeleteAccountCallbackUrl(originalQuery, user));
+    }
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-    maxAge: 1000 * 60 * 1, // 1 minuto
-  });
+    const token = user?.data?.user_tokens?.[0].token;
+    if (!token) {
+      return res.redirect(
+        resolveFailureCallbackUrl(
+          failPath || process.env.CALLBACK_URL_API_USER || "/",
+          "Não foi possível concluir a autenticação com o Google.",
+        ),
+      );
+    }
 
-  const baseUrl = process.env.CALLBACK_URL_API_USER!;
-  const separator = baseUrl.includes("?") ? "&" : "?";
-  const finalUrl = originalQueryStr ? `${baseUrl}${separator}${originalQueryStr}` : baseUrl;
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: isProductionRuntime(),
+      sameSite: "lax",
+      maxAge: GOOGLE_EXCHANGE_COOKIE_TTL_MS,
+      path: "/api/public/google/me",
+    });
 
-  res.redirect(finalUrl);
-});
+    const baseUrl = process.env.CALLBACK_URL_API_USER || "/";
+    const separator = baseUrl.includes("?") ? "&" : "?";
+    const finalUrl = originalQueryStr ? `${baseUrl}${separator}${originalQueryStr}` : baseUrl;
+
+    res.redirect(finalUrl);
+  },
+);
 
 export default routes;

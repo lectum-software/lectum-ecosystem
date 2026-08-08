@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 
 type CommunityMembershipClient = Pick<ORM, "community" | "community_member">;
 
@@ -95,3 +96,41 @@ export const ensureCommunityMembership = async (input: {
     reactivated: false,
   };
 };
+
+export const removeCommunityMembership = async (input: { communityId: string; userId: string }) =>
+  withSerializableTransaction(async (transaction) => {
+    const where = {
+      community_id_user_id: {
+        community_id: input.communityId,
+        user_id: input.userId,
+      },
+    };
+    const existing = await transaction.community_member.findUnique({
+      where,
+      select: { deleted: true },
+    });
+
+    if (!existing || existing.deleted) return false;
+
+    const community = await transaction.community.findUniqueOrThrow({
+      where: { id: input.communityId },
+      select: { members_count: true },
+    });
+    await transaction.community_member.update({
+      where,
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
+      },
+    });
+    await transaction.community.update({
+      where: { id: input.communityId },
+      data: {
+        members_count: {
+          decrement: community.members_count > 0 ? 1 : 0,
+        },
+      },
+    });
+
+    return true;
+  });

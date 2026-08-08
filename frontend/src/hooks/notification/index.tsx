@@ -8,6 +8,7 @@ import { useNotificationSubscription } from "@/api/callers/notification_subscrip
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { reportClientFailure } from "@/utils/client-log";
 import {
   clearPromptDismissalState,
   hasCompletedRegistrationForPrompts,
@@ -139,7 +140,7 @@ const registerNotificationServiceWorker = async () => {
   try {
     return await navigator.serviceWorker.register("/sw.js");
   } catch (error) {
-    console.error("Falha ao registrar o service worker:", error);
+    reportClientFailure("service-worker-registration", error);
     return null;
   }
 };
@@ -190,7 +191,7 @@ export const useNotificationPushPermission = () => {
 
       return nextKey;
     } catch (error) {
-      console.error("Erro ao obter chave VAPID para notificações:", error);
+      reportClientFailure("notification-vapid-key", error);
       setVapidPublicKey(null);
 
       return null;
@@ -265,7 +266,7 @@ export const useNotificationPushPermission = () => {
         try {
           await ensurePushSubscription(publicKey);
         } catch (error) {
-          console.error("Erro ao revalidar subscription de notificações push:", error);
+          reportClientFailure("notification-push-subscription", error);
         }
       }
     };

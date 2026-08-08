@@ -3,11 +3,12 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 
 //Objects
 import type { user } from "@/interfaces/objects";
+import { getUserTokenLimit } from "@/utils/runtime-config";
 
 //Types
 import type { IRecoveryRepository } from "./interfaces/IRecoveryRepository";
 
-const _MAX = Number(process.env.TOKEN_API_USER_MAX);
+const _MAX = getUserTokenLimit();
 
 export class RecoveryRepository implements IRecoveryRepository {
   readonly repository: ORM["user"];

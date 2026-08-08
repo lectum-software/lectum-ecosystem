@@ -29,6 +29,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 type NotificationItem = ApiNotification;
 type NotificationActor = NonNullable<NotificationItem["actor"]>;
@@ -422,11 +423,12 @@ export const NotificationsLogic = () => {
     const className = cn(
       "group flex w-full items-start gap-4 rounded-3xl border border-transparent px-3 py-3 text-left transition hover:bg-surface-muted/70",
     );
+    const redirect = normalizeSafeInternalRedirect(item.redirect);
 
     return (
       <li key={item.id}>
-        {item.redirect ? (
-          <Link className={className} href={item.redirect} onClick={markAsRead}>
+        {redirect ? (
+          <Link className={className} href={redirect} onClick={markAsRead}>
             {content}
           </Link>
         ) : (

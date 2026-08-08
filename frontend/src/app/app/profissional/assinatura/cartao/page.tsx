@@ -4,7 +4,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 
 export default function ProfessionalBillingCardPage() {
   return (
-    <Suspense fallback={<LoadingState label="Carregando cart?o" />}>
+    <Suspense fallback={<LoadingState label="Carregando cartão" />}>
       <ProfessionalBillingCardLogic />
     </Suspense>
   );

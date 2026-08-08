@@ -2,6 +2,7 @@ import { createId } from "@paralleldrive/cuid2";
 import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 
 export const ADMIN_VIEW_AS_DEVICE_PREFIX = "admin_view_as:";
 export const ADMIN_VIEW_AS_TOKEN_TTL_SECONDS = 30 * 60;
@@ -28,15 +29,8 @@ export const buildAdminViewAsDeviceId = ({
   targetRole: AdminViewAsTargetRole;
 }) => `${ADMIN_VIEW_AS_DEVICE_PREFIX}${targetRole}:${adminId}:${targetId}:${createId()}`;
 
-const bearerTokenFromRequest = (req: Request) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  return authHeader.split(" ")[1] || null;
-};
-
 export const getAdminViewAsPayloadFromRequest = (req: Request): AdminViewAsJwtPayload | null => {
-  const token = bearerTokenFromRequest(req);
+  const token = getUserRequestToken(req);
   if (!token) return null;
 
   try {

@@ -14,7 +14,6 @@ import {
   FileText,
   type LucideIcon,
   MessageCircle,
-  RefreshCw,
   Reply,
   UserRound,
   Users,
@@ -37,8 +36,11 @@ import type {
   CommunitiesDashboardTopCommunity,
   CommunitiesPostContentFormatDistribution,
 } from "@/api/req/communities";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
+import { isAdminPublicMediaUrl, renderableImageSrc } from "@/lib/admin-media";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 const MAX_COMMUNITY_DASHBOARD_DAYS = 3660;
@@ -64,9 +66,6 @@ const percentageFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
   minimumFractionDigits: 0,
 });
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 type DashboardStatisticDailyKey = Exclude<keyof CommunitiesDashboardStatisticsDailyPoint, "date">;
 type DashboardStatisticMetricId =
   | "active_patients"
@@ -453,93 +452,9 @@ const normalizeDashboardHourlyActivityPoint = (
   };
 };
 
-const isPublicMediaPath = (pathname: string) =>
-  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
-
-const resolveAdminMediaUrl = (src?: string | null) => {
-  const value = src?.trim();
-  if (!value) return null;
-
-  const apiBase = apiUrl.replace(/\/$/, "");
-
-  try {
-    const parsed = new URL(value, apiBase);
-    if (isPublicMediaPath(parsed.pathname)) {
-      return `${apiBase}${parsed.pathname}${parsed.search}`;
-    }
-    if (value.startsWith("http")) return value;
-    return value.startsWith("/") ? value : `${apiBase}/${value}`;
-  } catch {
-    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
-      return `${apiBase}${value}`;
-    }
-    return value.startsWith("/") || value.startsWith("http") ? value : null;
-  }
-};
-
-const allowedRemoteImageHosts = () => {
-  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
-
-  for (const candidate of [
-    apiUrl,
-    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
-  ]) {
-    const normalized = candidate.trim();
-    if (!normalized) continue;
-
-    try {
-      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
-      if (url.hostname) hosts.add(url.hostname);
-    } catch {
-      // Entradas inválidas de env não devem quebrar a renderização administrativa.
-    }
-  }
-
-  return hosts;
-};
-
-const canRenderImage = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-  if (resolved.startsWith("/")) return true;
-
-  try {
-    const url = new URL(resolved);
-
-    return allowedRemoteImageHosts().has(url.hostname);
-  } catch {
-    return false;
-  }
-};
-
-const renderableImageSrc = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-
-  return resolved && canRenderImage(resolved) ? resolved : null;
-};
-
-const isAdminPublicMediaUrl = (src?: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-
-  try {
-    return isPublicMediaPath(new URL(resolved).pathname);
-  } catch {
-    return publicMediaPathPrefixes.some(
-      (prefix) => resolved.startsWith(prefix) || resolved.includes(prefix),
-    );
-  }
-};
-
-const toPublicHref = (path: string) => {
-  if (/^https?:\/\//.test(path)) return path;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
-};
-
 const communityPostPublicHref = (
   post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id">,
-) => toPublicHref(`/comunidades/${post.community_slug}/publicacao/${post.id}`);
+) => toPublicFrontendHref(`/comunidades/${post.community_slug}/publicacao/${post.id}`);
 
 const communityPostAdminDetailHref = (
   post: Pick<CommunitiesDashboardRecentPost, "community_slug" | "id">,
@@ -549,7 +464,7 @@ const communityPostAdminDetailHref = (
   )}`;
 
 const communityPublicHref = (community: Pick<CommunitiesDashboardTopCommunity, "slug">) =>
-  toPublicHref(`/comunidades/${encodeURIComponent(community.slug)}`);
+  toPublicFrontendHref(`/comunidades/${encodeURIComponent(community.slug)}`);
 
 const communityAdminDetailHref = (community: Pick<CommunitiesDashboardTopCommunity, "slug">) =>
   `/comunidades/${encodeURIComponent(community.slug)}`;
@@ -981,27 +896,11 @@ const LoadingGrid = () => (
 );
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <CardShell className="p-6">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold">Não foi possível carregar Comunidades</h2>
-          <p className="mt-1 text-sm text-muted">{message}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:border-border-strong"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </CardShell>
+  <AdminQueryErrorState
+    message={message}
+    onRetry={onRetry}
+    title="Não foi possível carregar Comunidades"
+  />
 );
 
 const EmptyState = ({ period }: { period: AdminCommunitiesDashboard["period"] }) => (

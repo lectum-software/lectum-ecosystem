@@ -5,6 +5,7 @@ import { differenceInMinutes } from "date-fns";
 //Types
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { getCodeValidityMinutes } from "@/utils/runtime-config";
 //Utils
 import { getDevice } from "../../../../middlewares/_auth/utils/device";
 import { LoginRepository } from "../../../../public/auth/login/repositories/LoginRepository";
@@ -13,7 +14,7 @@ import { LoginRepository } from "../../../../public/auth/login/repositories/Logi
 import type { IConfirmDTO } from "../DTOs/IConfirmDTO";
 import { ConfirmRepository } from "../repositories/ConfirmRepository";
 
-const _VALID = Number(process.env.CODE_API_USER_VALID_MINUTES);
+const _VALID = getCodeValidityMinutes();
 
 export default async (data: IConfirmDTO): Promise<Resolve> => {
   const device = getDevice(data);
@@ -71,6 +72,7 @@ export default async (data: IConfirmDTO): Promise<Resolve> => {
   const res = await _LOGIN.hidrate(find, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("confirmed_success", {
       //If you need a custom text

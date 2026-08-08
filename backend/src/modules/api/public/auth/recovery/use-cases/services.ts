@@ -4,9 +4,10 @@
 import { v4 } from "uuid";
 //Types
 import type { Resolve } from "@/helpers/return";
-import { msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 //
 import { recoveryEmailSend } from "@/modules/api/config/nodemailer/messages/recovery";
+import { isTransactionalEmailConfigured } from "@/modules/api/config/nodemailer/send";
 
 //Utils
 import { encrypt } from "@/utils/crypt/bcrypt";
@@ -18,6 +19,13 @@ import { RecoveryRepository } from "../repositories/RecoveryRepository";
 export default async (data: IRecoveryDTO): Promise<Resolve> => {
   const _LOGIN = new LoginRepository();
   const _RECOVERY = new RecoveryRepository();
+
+  if (!isTransactionalEmailConfigured()) {
+    return {
+      status: 503,
+      ...error("email_provider_unavailable", {}),
+    };
+  }
 
   const find = await _LOGIN.findByEmail(data);
   //
@@ -44,11 +52,21 @@ export default async (data: IRecoveryDTO): Promise<Resolve> => {
 
   //
   if (find) {
-    recoveryEmailSend({
+    const sent = await recoveryEmailSend({
       name: find.name!,
       email: find.email!,
       code: recovery_code,
     });
+    if (!sent) {
+      await _RECOVERY.recoveryCode({
+        ...find,
+        recovery_code: null,
+        recovery_date: null,
+      });
+      // A resposta pública deve ser idêntica para contas existentes e inexistentes.
+      // O provedor já registra a falha sem expor endereço ou detalhes técnicos.
+      console.warn("[AUTH_RECOVERY] E-mail de recuperação não foi aceito pelo provedor.");
+    }
   }
 
   return {

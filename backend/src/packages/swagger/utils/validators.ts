@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { toSafeErrorLog } from "../../../utils/safe-error-log";
 
 const zodToSwagger = (zodSchema, location = "body") => {
   if (!zodSchema?._def) return [];
@@ -100,7 +101,10 @@ export async function loadValidations(route) {
     return [body, params, query].flat();
   } catch (e) {
     if (process.env.SWAGGER_DEBUG === "true") {
-      console.warn("[SWAGGER]: Falha ao carregar validação de rota", e);
+      console.warn(
+        "[SWAGGER]: Falha ao carregar validação de rota",
+        toSafeErrorLog(e, "SwaggerValidationLoadError"),
+      );
     }
     return [];
   }

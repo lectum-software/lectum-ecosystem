@@ -55,12 +55,20 @@ export const login = async (body: LoginPayload) => {
   return handleReq<user>({
     ...handle,
     hideError: true,
+    signOutOnUnauthorized: false,
   });
 };
 
-export const hidrate = async () => {
+export const hidrate = async (bearerToken?: string) => {
   const handle = callEndpoint({
     route: "/api/private/auth/hidrate",
+    config: bearerToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${bearerToken}`,
+          },
+        }
+      : undefined,
   });
 
   return handleReq<user>(handle);

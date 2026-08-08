@@ -6,9 +6,9 @@
     "dev": "next dev --webpack --port 3002",
     "build": "next build --webpack && node scripts/sync-route-group-manifests.mjs",
     "start": "next start -p 3002",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings=0",
     "typecheck": "tsc --noEmit --pretty false",
-    "biome:check": "biome check .",
+    "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
     "check": "pnpm biome:check && pnpm lint && pnpm typecheck"
   },
@@ -16,10 +16,10 @@
     "@fingerprintjs/fingerprintjs": "^5.2.0",
     "@hookform/resolvers": "^5.4.0",
     "@tanstack/react-query": "^5.101.0",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
-    "next": "16.2.9",
+    "next": "16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.77.0",
@@ -34,14 +34,16 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.2.11",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
   "pnpm": {
     "overrides": {
       "form-data": "4.0.6",
-      "postcss": "8.5.16",
+      "nanoid@<3.3.17": "3.3.17",
+      "postcss": "8.5.26",
+      "sharp": "0.35.3",
       "ws": "8.21.0"
     }
   }

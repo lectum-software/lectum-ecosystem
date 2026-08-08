@@ -1,12 +1,15 @@
-﻿import type { JwtPayload } from "jsonwebtoken";
+import type { JwtPayload } from "jsonwebtoken";
 import passport from "passport";
 import { ExtractJwt, Strategy as JWTStrategy, type VerifiedCallback } from "passport-jwt";
 import prisma from "@/infra/database/prisma";
+import { getAdminRequestToken } from "@/modules/api/admin/shared/auth/cookie";
 import {
   ADMIN_JWT_AUDIENCE,
   ADMIN_JWT_ISSUER,
   getAdminJwtSecret,
 } from "@/modules/api/admin/shared/auth/jwt";
+import { getAdminJwtTtlSeconds } from "@/utils/runtime-config";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 const notAuthorized = { status: 401 };
 const authUnavailable = { message: "admin_auth_unavailable", status: 503 };
@@ -24,7 +27,13 @@ passport.use(
     {
       audience: ADMIN_JWT_AUDIENCE,
       issuer: ADMIN_JWT_ISSUER,
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jsonWebTokenOptions: {
+        maxAge: getAdminJwtTtlSeconds(),
+      },
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        getAdminRequestToken,
+      ]),
       secretOrKeyProvider: (_request, _rawJwtToken, done) => {
         try {
           done(null, getAdminJwtSecret());
@@ -62,7 +71,10 @@ passport.use(
 
         return done(null, admin);
       } catch (error) {
-        console.error("[ADMIN AUTH] Falha ao validar token administrativo.", error);
+        console.error(
+          "[ADMIN AUTH] Falha ao validar token administrativo.",
+          toSafeErrorLog(error, "UnknownAdminAuthError"),
+        );
         return done(authUnavailable, false);
       }
     },

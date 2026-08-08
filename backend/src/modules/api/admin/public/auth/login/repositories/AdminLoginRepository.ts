@@ -1,14 +1,9 @@
-﻿import { createId } from "@paralleldrive/cuid2";
+import { createId } from "@paralleldrive/cuid2";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { admin, admin_token } from "@/interfaces/objects";
 import { signAdminJwt } from "@/modules/api/admin/shared/auth/jwt";
+import { getAdminTokenLimit } from "@/utils/runtime-config";
 import type { AdminTokenLookup, IAdminLoginRepository } from "./interfaces/IAdminLoginRepository";
-
-const DEFAULT_MAX_TOKENS = 5;
-const getMaxTokens = () => {
-  const parsed = Number(process.env.TOKEN_API_ADMIN_MAX || process.env.TOKEN_API_USER_MAX);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_TOKENS;
-};
 
 export class AdminLoginRepository implements IAdminLoginRepository {
   readonly admin_token: ORM["admin_token"];
@@ -22,7 +17,7 @@ export class AdminLoginRepository implements IAdminLoginRepository {
       where: {
         device_id,
       },
-      take: getMaxTokens(),
+      take: 1,
       orderBy: { createdAt: "desc" },
     };
   }
@@ -69,7 +64,7 @@ export class AdminLoginRepository implements IAdminLoginRepository {
       },
     });
 
-    const maxTokens = getMaxTokens();
+    const maxTokens = getAdminTokenLimit();
     const deviceTokens = await this.admin_token.findMany({
       where: {
         admin_id: data.id,

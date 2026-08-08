@@ -1,4 +1,5 @@
 //Types
+import type { Request } from "express";
 import type {
   //*
   Prisma,
@@ -23,6 +24,7 @@ export interface IStoreDTO {
     analytics_session_id?: string;
   };
   device_id?: string;
+  headers?: Request["headers"];
   select?: Prisma.userSelect;
   include?: Prisma.userInclude;
 }

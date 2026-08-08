@@ -286,7 +286,7 @@ A aba "Posts" em `/app/posts/mine` ainda reutilizava o card completo do feed, co
 
 - Adicionar props opt-in ao `CommunityPostCard` para ocultar o header de autor, incluir o tempo de publicacao na linha de comunidade e escolher a apresentacao da `CommunityActionBar`.
 - Usar essas props apenas em `/app/posts/mine` na aba "Posts", preservando o comportamento padrao do feed, comunidade, perfil e salvos.
-- Manter a linha de contexto como `Postado em [comunidade] ï [tempo]`, com label em cinza discreto e comunidade em destaque leve, seguindo o tratamento visual da linha `Comentado em`.
+- Manter a linha de contexto como `Postado em [comunidade] ‚Ä¢ [tempo]`, com label em cinza discreto e comunidade em destaque leve, seguindo o tratamento visual da linha `Comentado em`.
 - Padronizar a barra de acoes dos posts da tela com a apresentacao inline ja usada nos comentarios: upvote, downvote, comentarios, salvamentos e compartilhar.
 
 ### Consequencias
@@ -302,26 +302,26 @@ A aba "Posts" em `/app/posts/mine` ainda reutilizava o card completo do feed, co
 - `pnpm check`
 - Browser local via Chrome/CDP em `/app/posts/mine` mobile confirmou ausencia de avatar/nome nos posts, contexto com tempo na linha superior e ausencia de overflow horizontal.
 
-## Complemento 2026-06-20: foco tempor·rio em respostas e navegaÁ„o consistente
+## Complemento 2026-06-20: foco tempor√°rio em respostas e navega√ß√£o consistente
 
 ### Contexto
 
-O fluxo de abrir uma resposta salva usa `focusReplyId` para carregar a ·rvore correta, rolar atÈ o coment·rio e aplicar um destaque azul tempor·rio. Em revalidaÁıes do TanStack Query, o efeito podia ser desmontado antes do timeout de remoÁ„o e deixar as classes de destaque presas no coment·rio. AlÈm disso, os cards de respostas/coment·rios em `/app/posts/mine` ainda dependiam de um overlay de `Link`, enquanto Salvos j· usava navegaÁ„o program·tica com proteÁ„o explÌcita para controles internos.
+O fluxo de abrir uma resposta salva usa `focusReplyId` para carregar a √°rvore correta, rolar at√© o coment√°rio e aplicar um destaque azul tempor√°rio. Em revalida√ß√µes do TanStack Query, o efeito podia ser desmontado antes do timeout de remo√ß√£o e deixar as classes de destaque presas no coment√°rio. Al√©m disso, os cards de respostas/coment√°rios em `/app/posts/mine` ainda dependiam de um overlay de `Link`, enquanto Salvos j√° usava navega√ß√£o program√°tica com prote√ß√£o expl√≠cita para controles internos.
 
-### Decis„o
+### Decis√£o
 
-- Remover as classes de destaque tambÈm no cleanup do efeito de foco, garantindo que o fundo azul pisque e desapareÁa mesmo se houver re-fetch durante o timer.
+- Remover as classes de destaque tamb√©m no cleanup do efeito de foco, garantindo que o fundo azul pisque e desapare√ßa mesmo se houver re-fetch durante o timer.
 - Reduzir o tempo visual do destaque para 2,2s, mantendo o scroll suave e a busca por `reply-:id`.
-- Em `/app/posts/mine`, abrir respostas/coment·rios por clique nas ·reas neutras do card via `router.push` para a mesma URL com `focusReplyId` e `#reply-:id`.
-- Preservar independentes os controles internos da barra de aÁıes por detecÁ„o de alvo interativo (`a`, `button`, campos, mÌdia, menu e roles interativas).
+- Em `/app/posts/mine`, abrir respostas/coment√°rios por clique nas √°reas neutras do card via `router.push` para a mesma URL com `focusReplyId` e `#reply-:id`.
+- Preservar independentes os controles internos da barra de a√ß√µes por detec√ß√£o de alvo interativo (`a`, `button`, campos, m√≠dia, menu e roles interativas).
 
-### ConsequÍncias
+### Consequ√™ncias
 
-- Respostas vindas de Salvos e de Meus posts/coment·rios mantÍm o mesmo destino e foco no detalhe do post.
-- O destaque azul deixa de ficar fixo apÛs navegaÁ„o para coment·rio salvo ou prÛprio.
-- N„o houve alteraÁ„o de backend, schema Prisma, persistÍncia, votos, salvos ou contratos HTTP.
+- Respostas vindas de Salvos e de Meus posts/coment√°rios mant√™m o mesmo destino e foco no detalhe do post.
+- O destaque azul deixa de ficar fixo ap√≥s navega√ß√£o para coment√°rio salvo ou pr√≥prio.
+- N√£o houve altera√ß√£o de backend, schema Prisma, persist√™ncia, votos, salvos ou contratos HTTP.
 
-### ValidaÁ„o
+### Valida√ß√£o
 
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`

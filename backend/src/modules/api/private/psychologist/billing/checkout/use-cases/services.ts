@@ -1,66 +1,21 @@
-﻿import { isIP } from "node:net";
+import { isIP } from "node:net";
 import { error, msg } from "@/helpers/translate";
 import {
   getPaymentGateway,
   isPaymentGatewayConfigurationError,
+  sanitizePaymentGatewayError,
 } from "@/modules/billing/payment-gateway";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
 import { CheckoutRepository } from "../repositories/CheckoutRepository";
-
-type GatewayErrorLog = {
-  name?: string;
-  message?: string;
-  operation?: string;
-  cause_message?: string;
-  status?: number;
-  code?: string;
-  blocked_by?: string;
-};
 
 type ProfessionalPlan = NonNullable<Awaited<ReturnType<CheckoutRepository["findPlanBySlug"]>>>;
 type ActiveProfessionalSubscription = NonNullable<
   Awaited<ReturnType<CheckoutRepository["findActiveProfessionalSubscription"]>>
 >;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
-
-const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
-
-const sanitizeGatewayError = (err: unknown): GatewayErrorLog => {
-  if (err instanceof Error) {
-    const errorWithDetails = err as Error & { details?: unknown };
-    const details = isRecord(errorWithDetails.details) ? errorWithDetails.details : null;
-
-    return {
-      name: err.name,
-      message: err.message,
-      operation: toSafeString(details?.operation),
-      cause_message: toSafeString(details?.cause_message),
-      status: toSafeNumber(details?.status),
-      code: toSafeString(details?.code),
-      blocked_by: toSafeString(details?.blocked_by),
-    };
-  }
-
-  if (!isRecord(err)) {
-    return {
-      message: "Unknown gateway error",
-    };
-  }
-
-  return {
-    message: toSafeString(err.message),
-    status: toSafeNumber(err.status),
-    code: toSafeString(err.code),
-    blocked_by: toSafeString(err.blocked_by),
-  };
-};
-
-const isGatewayResourceNotFoundError = (err: unknown) => sanitizeGatewayError(err).status === 404;
+const isGatewayResourceNotFoundError = (err: unknown) =>
+  sanitizePaymentGatewayError(err).status === 404;
 
 const getConfiguredGatewayPlanId = () =>
   process.env.MERCADO_PAGO_PREAPPROVAL_PLAN_ID?.trim() || null;
@@ -198,7 +153,7 @@ const readPersistedGatewayPlanId = async ({
     }
 
     console.warn("[BILLING] Mercado Pago persisted plan not found, resetting local reference", {
-      ...sanitizeGatewayError(err),
+      ...sanitizePaymentGatewayError(err),
       gateway_plan_id: gatewayPlanId,
       plan_id: plan.id,
       plan_slug: plan.slug,
@@ -428,7 +383,7 @@ export default async (data: ICheckoutDTO) => {
   try {
     payerEmail = resolvePayerEmail(data.auth.email);
   } catch (err) {
-    console.error("[BILLING] Mercado Pago payer setup failed", sanitizeGatewayError(err));
+    console.error("[BILLING] Mercado Pago payer setup failed", sanitizePaymentGatewayError(err));
 
     return {
       status: 503,
@@ -457,7 +412,7 @@ export default async (data: ICheckoutDTO) => {
       returnUrl: gatewayReturnUrl,
     });
   } catch (err) {
-    console.error("[BILLING] Mercado Pago plan setup failed", sanitizeGatewayError(err));
+    console.error("[BILLING] Mercado Pago plan setup failed", sanitizePaymentGatewayError(err));
 
     return {
       status: isPaymentGatewayConfigurationError(err) ? 503 : 502,
@@ -574,7 +529,7 @@ export default async (data: ICheckoutDTO) => {
       await repository.cancelSubscription(pendingSubscription.id);
     }
 
-    console.error("[BILLING] Mercado Pago checkout failed", sanitizeGatewayError(err));
+    console.error("[BILLING] Mercado Pago checkout failed", sanitizePaymentGatewayError(err));
 
     const configError = isPaymentGatewayConfigurationError(err);
 

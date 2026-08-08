@@ -561,13 +561,13 @@ Esta task deve ser conclu√≠da em um commit pr√≥prio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check` e HTTP local `200` em `/app/favorites`.
 
-## Complemento 2026-07-05 - bloquear auto-favorito no prÛprio perfil/vÌdeo
+## Complemento 2026-07-05 - bloquear auto-favorito no pr√≥prio perfil/v√≠deo
 
-- Pedido do usu·rio: quando o psicÛlogo autenticado estiver no prÛprio perfil p˙blico ou no prÛprio vÌdeo de apresentaÁ„o em `/psychologists`, o bot„o de coraÁ„o deve ficar desabilitado; psicÛlogos n„o podem favoritar a si mesmos.
-- Fonte visual/audit·vel: prints do usu·rio, `_product/proto/PsicÛlogos.jpg` e `_product/proto/Perfil Profissional - Sobre.jpg`. Builder/Quick Copy foi testado com `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`; a validaÁ„o visual seguiu com imagens locais e browser local.
-- Backend: `POST /api/private/user/favorites/:id` e a rota legada equivalente agora retornam `403 favorite_own_profile` quando `req.auth.id` È igual ao psicÛlogo alvo.
-- Backend: leituras contextuais do diretÛrio/perfil e a listagem de favoritos ignoram relaÁıes antigas de auto-favorito, mantendo `favorited=false` para o prÛprio psicÛlogo.
-- Frontend: o coraÁ„o do prÛprio perfil p˙blico e o coraÁ„o do prÛprio vÌdeo/card em `/psychologists` renderizam desabilitados, sem estado vermelho, com `aria-label`/`title` em PT-BR: `VocÍ n„o pode favoritar o prÛprio perfil`.
-- Escopo: sem alteraÁ„o de Prisma schema/migrations, sem packages novos, sem mocks e sem endpoints simulados.
+- Pedido do usu√°rio: quando o psic√≥logo autenticado estiver no pr√≥prio perfil p√∫blico ou no pr√≥prio v√≠deo de apresenta√ß√£o em `/psychologists`, o bot√£o de cora√ß√£o deve ficar desabilitado; psic√≥logos n√£o podem favoritar a si mesmos.
+- Fonte visual/audit√°vel: prints do usu√°rio, `_product/proto/Psic√≥logos.jpg` e `_product/proto/Perfil Profissional - Sobre.jpg`. Builder/Quick Copy foi testado com `npx "@builder.io/dev-tools@latest" auth status`, mas retornou `Not Authenticated to Builder.io`; a valida√ß√£o visual seguiu com imagens locais e browser local.
+- Backend: `POST /api/private/user/favorites/:id` e a rota legada equivalente agora retornam `403 favorite_own_profile` quando `req.auth.id` √© igual ao psic√≥logo alvo.
+- Backend: leituras contextuais do diret√≥rio/perfil e a listagem de favoritos ignoram rela√ß√µes antigas de auto-favorito, mantendo `favorited=false` para o pr√≥prio psic√≥logo.
+- Frontend: o cora√ß√£o do pr√≥prio perfil p√∫blico e o cora√ß√£o do pr√≥prio v√≠deo/card em `/psychologists` renderizam desabilitados, sem estado vermelho, com `aria-label`/`title` em PT-BR: `Voc√™ n√£o pode favoritar o pr√≥prio perfil`.
+- Escopo: sem altera√ß√£o de Prisma schema/migrations, sem packages novos, sem mocks e sem endpoints simulados.
 - ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
-- ValidaÁıes executadas: `npx "@builder.io/dev-tools@latest" auth status`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, smoke HTTP local `POST /api/private/user/favorites/:id` retornando `403 favorite_own_profile` para auto-favorito e Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` e `/psychologists?search=Rezende`, confirmando coraÁ„o desabilitado (`disabled=true`, `aria-pressed=false`) no prÛprio perfil/vÌdeo.
+- Valida√ß√µes executadas: `npx "@builder.io/dev-tools@latest" auth status`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, smoke HTTP local `POST /api/private/user/favorites/:id` retornando `403 favorite_own_profile` para auto-favorito e Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` e `/psychologists?search=Rezende`, confirmando cora√ß√£o desabilitado (`disabled=true`, `aria-pressed=false`) no pr√≥prio perfil/v√≠deo.

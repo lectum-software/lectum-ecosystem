@@ -4,10 +4,23 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 
 ## Contexto do Projeto
 
-- O repositório reúne `backend/` e `frontend/` apenas para facilitar o desenvolvimento.
-- Em produção, frontend e backend devem continuar sendo tratados como aplicações separadas.
+- O repositório reúne `backend/`, `frontend/` e `admin/` apenas para facilitar o desenvolvimento.
+- Em produção, as três aplicações devem continuar separadas.
 - O produto Lectum é uma plataforma web responsiva para psicólogos e pacientes.
 - O desenvolvimento deve seguir spec-driven development: a IA executa uma task bem definida, valida, registra decisões e só então avança.
+
+## Ambientes Publicados e Segurança de Deploy
+
+- Desde **2026-08-07**, Lectum está publicado em homologação e produção. Trate dados, filas, uploads, pagamentos e integrações desses ambientes como reais e persistentes.
+- A branch `homolog` publica automaticamente em **homologação**; a branch `main` publica automaticamente em **produção**.
+- Toda implementação deve começar em `homolog`. Se a branch atual for `main`, pare antes de editar, commitar ou fazer push e oriente o usuário a mudar para `homolog`.
+- Nunca faça commit ou push direto em `main`. A promoção para produção ocorre somente depois de validar o deploy de homologação e por merge revisado de `homolog` para `main`.
+- Antes de qualquer push, avise que o push em `homolog` inicia um deploy. Depois dele, registre smoke test e resultado de `/health` e `/ready` quando o backend for afetado.
+- Nunca execute reset, seed destrutivo, `db push`, exclusão em massa ou limpeza de bucket em homologação/produção.
+- Alterações de banco devem ser compatíveis com versões anterior e nova durante o deploy: usar expansão segura, backfill retomável e só depois contração. Não tornar coluna obrigatória sem tratar todos os registros existentes; não editar migration já aplicada; não remover/renomear campo no mesmo deploy que deixa de usá-lo.
+- Variável nova deve ter fallback seguro ou ser opcional no primeiro deploy. Se ela precisar ser obrigatória, emitir **ALERTA DE DEPLOY** antes do commit/push com nome da variável (nunca o valor), aplicações afetadas, ordem de configuração em homologação/produção e sintoma esperado se faltar.
+- Mudanças de contrato devem ser aditivas e tolerar frontend/backend em versões diferentes durante o rollout.
+- Logs, toasts e respostas públicas nunca podem expor segredo, PII, stack trace, SQL, URL interna ou mensagem técnica de provider.
 
 ## Fontes de Verdade
 
@@ -32,6 +45,7 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 - Cada task concluída deve atualizar seus critérios de aceite de `[ ]` para `[x]`.
 - Cada task concluída deve criar ou atualizar pelo menos um ADR quando houver decisão arquitetural, integração, regra de domínio, fluxo crítico ou trade-off relevante.
 - Cada task concluída deve gerar commit próprio e executar `git push` para publicar a branch/remoto correspondente; não deixe commits apenas locais. Se o push falhar por credenciais, rede ou permissão, reporte o bloqueio explicitamente.
+- O commit e o push da task devem ocorrer em `homolog`; lembre que o push dispara deploy automático de homologação.
 - Não usar a pasta `sample/` como fonte ativa de implementação futura, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Antes de criar estrutura nova, verificar `_product/tasks/ARCHITECTURE.md`.
 - Antes de instalar pacote novo, verificar `_product/tasks/PACKAGES.md` e registrar ADR.
@@ -46,6 +60,7 @@ Use estes comandos como baseline:
 - Backend: `pnpm --dir backend check` e, quando houver mudança estrutural, `pnpm --dir backend build`
 - Backend com mudança de banco: `pnpm --dir backend db:migrate`
 - Frontend: `pnpm --dir frontend check` e, quando houver mudança visual/rota, `pnpm --dir frontend build`
+- Admin: `pnpm --dir admin check` e, quando houver mudança visual/rota, `pnpm --dir admin build`
 
 Para mudanças de interface, também validar manualmente no browser local depois de subir o dev server apropriado.
 

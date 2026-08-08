@@ -1,4 +1,5 @@
 import { type RequestHandler, Router } from "express";
+import adminAuth from "@/modules/api/admin/middlewares/_auth";
 import apiAdminPrivateAuthHidrate from "@/modules/api/admin/private/auth/hidrate";
 import apiAdminPrivateAuthLogout from "@/modules/api/admin/private/auth/logout";
 import apiAdminPrivateCommunitiesDashboard from "@/modules/api/admin/private/communities/dashboard";
@@ -94,6 +95,7 @@ type ExpressRouter = ReturnType<typeof Router>;
 type MountHandler = ExpressRouter | RequestHandler;
 type RoleGuard = "paciente" | "psicologo";
 type MountedRoute = {
+  adminProtected?: boolean;
   path: string;
   role?: RoleGuard;
 };
@@ -105,8 +107,9 @@ const endpointUse = endpoint.use.bind(endpoint) as (
 ) => void;
 
 const mountRoute = (path: string, ...handlers: MountHandler[]) => {
-  mountedRoutes.push({ path });
-  endpointUse(path, ...handlers);
+  const adminProtected = path.startsWith("/api/admin/private/");
+  mountedRoutes.push({ adminProtected, path });
+  endpointUse(path, ...(adminProtected ? [adminAuth, ...handlers] : handlers));
 };
 
 const mountRoleGuardedRoute = (path: string, role: RoleGuard, router: ExpressRouter) => {
@@ -115,6 +118,9 @@ const mountRoleGuardedRoute = (path: string, role: RoleGuard, router: ExpressRou
 };
 
 const getExpectedRole = (path: string): RoleGuard | null => {
+  if (["/api/private/user/favorites", "/api/private/user/reviews"].includes(path)) {
+    return "paciente";
+  }
   if (path.startsWith("/api/private/patient/")) return "paciente";
   if (path.startsWith("/api/private/psychologist/")) return "psicologo";
 
@@ -132,6 +138,18 @@ const assertPrivateRoleGuards = () => {
     throw new Error(
       `[security] Rotas privadas sem requireRole correto: ${violations
         .map((route) => `${route.path}=>${route.role || "sem-role"}`)
+        .join(", ")}`,
+    );
+  }
+
+  const unprotectedAdminRoutes = mountedRoutes.filter(
+    (route) => route.path.startsWith("/api/admin/private/") && !route.adminProtected,
+  );
+
+  if (unprotectedAdminRoutes.length > 0) {
+    throw new Error(
+      `[security] Rotas administrativas privadas sem autenticação central: ${unprotectedAdminRoutes
+        .map((route) => route.path)
         .join(", ")}`,
     );
   }
@@ -199,8 +217,8 @@ mountRoute(
 );
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
-mountRoute("/api/private/user/favorites", privateAuth, apiPrivatePatientFavorites);
-mountRoute("/api/private/user/reviews", privateAuth, apiPrivatePatientReviews);
+mountRoleGuardedRoute("/api/private/user/favorites", "paciente", apiPrivatePatientFavorites);
+mountRoleGuardedRoute("/api/private/user/reviews", "paciente", apiPrivatePatientReviews);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);

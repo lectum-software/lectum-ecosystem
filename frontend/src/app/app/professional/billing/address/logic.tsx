@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { ProfessionalSubscription } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -26,31 +27,15 @@ import {
   isAdministrativeCourtesySubscription,
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import {
   type BillingAddressForm,
   toBillingAddressPayload,
   useBillingAddressForm,
 } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
-const resolveApiError = (error: unknown) => {
-  const apiError = error as ApiError;
-
-  return (
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "") ||
-    "Não foi possível salvar o endereço agora."
-  );
-};
+const resolveApiError = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível salvar o endereço agora.");
 
 const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
   if (!currentPeriodEnd) return true;
@@ -94,7 +79,10 @@ export const ProfessionalBillingAddressLogic = () => {
       address: {
         onSuccess: (data) => {
           toast.success("Endereço de faturamento salvo");
-          router.push(data.next_path || PSYCHOLOGIST_ONBOARDING_PATHS.phone);
+          router.push(
+            normalizeSafeInternalRedirect(data.next_path, PSYCHOLOGIST_ONBOARDING_PATHS.phone) ||
+              PSYCHOLOGIST_ONBOARDING_PATHS.phone,
+          );
         },
         onError: (error) => toast.error(resolveApiError(error)),
       },
@@ -125,7 +113,7 @@ export const ProfessionalBillingAddressLogic = () => {
       await billing.current.refetch();
       toast.success("Status da assinatura atualizado");
     } catch {
-      // handleReq já exibe o erro real da API.
+      // handleReq já exibe o erro público sanitizado.
     }
   };
 

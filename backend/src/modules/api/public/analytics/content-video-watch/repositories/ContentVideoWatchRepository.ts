@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { visitor_session } from "@/interfaces/objects";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import type {
   ContentVideoWatchTarget,
   ContentVideoWatchTargetType,
@@ -26,16 +27,10 @@ const videoWatchSelect = {
   watched_seconds: true,
 } satisfies Prisma.content_video_watch_sessionSelect;
 
-type ContentVideoWatchRecord = Prisma.content_video_watch_sessionGetPayload<{
-  select: typeof videoWatchSelect;
-}>;
-
 export class ContentVideoWatchRepository {
-  readonly repository: ORM["content_video_watch_session"];
   readonly sessionRepository: ORM["visitor_session"];
 
   constructor() {
-    this.repository = prisma.content_video_watch_session;
     this.sessionRepository = prisma.visitor_session;
   }
 
@@ -132,91 +127,76 @@ export class ContentVideoWatchRepository {
     return type === "post" ? this.findPostTarget(targetId) : this.findReplyTarget(targetId);
   }
 
-  async findSession(
-    targetType: ContentVideoWatchTargetType,
-    targetId: string,
-    sessionKey: string,
-  ): Promise<ContentVideoWatchRecord | null> {
-    return this.repository.findUnique({
-      select: videoWatchSelect,
-      where: {
-        target_type_target_id_session_key: {
-          session_key: sessionKey,
-          target_id: targetId,
-          target_type: targetType,
-        },
-      },
-    });
-  }
-
-  async createSession(input: ContentVideoWatchUpsertInput): Promise<ContentVideoWatchRecord> {
-    return this.repository.create({
-      data: {
-        community_id: input.communityId,
-        completed: input.completed,
-        duration_seconds: input.durationSeconds,
-        max_position_seconds: input.maxPositionSeconds,
-        milestone_25: input.milestone25,
-        milestone_50: input.milestone50,
-        milestone_75: input.milestone75,
-        milestone_100: input.milestone100,
-        post_id: input.postId,
-        replay_count: input.replayCount,
-        reply_id: input.replyId,
-        retention_buckets: input.retentionBuckets,
-        session_id: input.sessionId,
-        session_key: input.sessionKey,
-        target_id: input.targetId,
-        target_type: input.targetType,
-        video_url: input.videoUrl,
-        viewer_id: input.viewerId,
-        visitor_id: input.visitorId,
-        watched_seconds: input.watchedSeconds,
-      },
-      select: videoWatchSelect,
-    });
-  }
-
-  async updateSession(
-    id: string,
-    input: ContentVideoWatchUpsertInput,
-    existing: ContentVideoWatchRecord,
-  ): Promise<ContentVideoWatchRecord> {
-    const currentBuckets = Array.isArray(existing.retention_buckets)
-      ? existing.retention_buckets.filter(
-          (bucket): bucket is number => typeof bucket === "number" && Number.isFinite(bucket),
-        )
-      : [];
-    const retentionBuckets = [...new Set([...currentBuckets, ...input.retentionBuckets])].sort(
-      (left, right) => left - right,
-    );
-
-    return this.repository.update({
-      data: {
-        completed: existing.completed || input.completed,
-        duration_seconds: Math.max(existing.duration_seconds, input.durationSeconds),
-        last_event_at: new Date(),
-        max_position_seconds: Math.max(existing.max_position_seconds, input.maxPositionSeconds),
-        milestone_25: existing.milestone_25 || input.milestone25,
-        milestone_50: existing.milestone_50 || input.milestone50,
-        milestone_75: existing.milestone_75 || input.milestone75,
-        milestone_100: existing.milestone_100 || input.milestone100,
-        replay_count: Math.max(existing.replay_count, input.replayCount),
-        retention_buckets: retentionBuckets,
-        video_url: input.videoUrl,
-        viewer_id: input.viewerId ?? undefined,
-        watched_seconds: Math.max(existing.watched_seconds, input.watchedSeconds),
-      },
-      select: videoWatchSelect,
-      where: { id },
-    });
-  }
-
   async upsertSession(input: ContentVideoWatchUpsertInput) {
-    const existing = await this.findSession(input.targetType, input.targetId, input.sessionKey);
-    if (existing) return this.updateSession(existing.id, input, existing);
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.content_video_watch_session.findUnique({
+        select: videoWatchSelect,
+        where: {
+          target_type_target_id_session_key: {
+            session_key: input.sessionKey,
+            target_id: input.targetId,
+            target_type: input.targetType,
+          },
+        },
+      });
 
-    return this.createSession(input);
+      if (existing) {
+        const currentBuckets = Array.isArray(existing.retention_buckets)
+          ? existing.retention_buckets.filter(
+              (bucket): bucket is number => typeof bucket === "number" && Number.isFinite(bucket),
+            )
+          : [];
+        const retentionBuckets = [...new Set([...currentBuckets, ...input.retentionBuckets])].sort(
+          (left, right) => left - right,
+        );
+
+        return transaction.content_video_watch_session.update({
+          data: {
+            completed: existing.completed || input.completed,
+            duration_seconds: Math.max(existing.duration_seconds, input.durationSeconds),
+            last_event_at: new Date(),
+            max_position_seconds: Math.max(existing.max_position_seconds, input.maxPositionSeconds),
+            milestone_25: existing.milestone_25 || input.milestone25,
+            milestone_50: existing.milestone_50 || input.milestone50,
+            milestone_75: existing.milestone_75 || input.milestone75,
+            milestone_100: existing.milestone_100 || input.milestone100,
+            replay_count: Math.max(existing.replay_count, input.replayCount),
+            retention_buckets: retentionBuckets,
+            video_url: input.videoUrl,
+            viewer_id: input.viewerId ?? undefined,
+            watched_seconds: Math.max(existing.watched_seconds, input.watchedSeconds),
+          },
+          select: videoWatchSelect,
+          where: { id: existing.id },
+        });
+      }
+
+      return transaction.content_video_watch_session.create({
+        data: {
+          community_id: input.communityId,
+          completed: input.completed,
+          duration_seconds: input.durationSeconds,
+          max_position_seconds: input.maxPositionSeconds,
+          milestone_25: input.milestone25,
+          milestone_50: input.milestone50,
+          milestone_75: input.milestone75,
+          milestone_100: input.milestone100,
+          post_id: input.postId,
+          replay_count: input.replayCount,
+          reply_id: input.replyId,
+          retention_buckets: input.retentionBuckets,
+          session_id: input.sessionId,
+          session_key: input.sessionKey,
+          target_id: input.targetId,
+          target_type: input.targetType,
+          video_url: input.videoUrl,
+          viewer_id: input.viewerId,
+          visitor_id: input.visitorId,
+          watched_seconds: input.watchedSeconds,
+        },
+        select: videoWatchSelect,
+      });
+    });
   }
 
   async upsertVisitorSession(

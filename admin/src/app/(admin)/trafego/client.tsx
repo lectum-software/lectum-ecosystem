@@ -2,7 +2,6 @@
 
 import {
   Activity,
-  AlertTriangle,
   ChevronDown,
   ChevronRight,
   ExternalLink,
@@ -17,7 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { type FocusEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { type FocusEvent, useEffect, useMemo, useState } from "react";
 import { useAdminTrafficSummary } from "@/api/callers/traffic";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -34,6 +33,7 @@ import type {
   TrafficSummaryQuery,
   TrafficTimelinePoint,
 } from "@/api/req/traffic";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { BRAZIL_STATE_MAP_PATHS } from "@/lib/brazil-state-map";
 import { buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
@@ -151,60 +151,6 @@ const COUNTRY_WORLD_MAP_ID_BY_KEY: Record<string, string> = {
   us: "840",
   usa: "840",
 };
-
-const LOCAL_TRAFFIC_LOCATION_SAMPLE_HOSTS = new Set(["localhost", "127.0.0.1"]);
-const subscribeToTrafficLocationPreviewSnapshot = () => () => undefined;
-const getLocalTrafficLocationPreviewSnapshot = () =>
-  typeof window !== "undefined" &&
-  LOCAL_TRAFFIC_LOCATION_SAMPLE_HOSTS.has(window.location.hostname);
-const getServerTrafficLocationPreviewSnapshot = () => false;
-const useLocalTrafficLocationPreviewEnabled = () =>
-  useSyncExternalStore(
-    subscribeToTrafficLocationPreviewSnapshot,
-    getLocalTrafficLocationPreviewSnapshot,
-    getServerTrafficLocationPreviewSnapshot,
-  );
-
-const TRAFFIC_LOCATION_VISUAL_SAMPLE_TOTAL = 1652;
-const makeTrafficLocationSampleItem = (
-  id: string,
-  label: string,
-  count: number,
-): TrafficLocationItem => ({
-  count,
-  id,
-  label,
-  percentage: Number(((count / TRAFFIC_LOCATION_VISUAL_SAMPLE_TOTAL) * 100).toFixed(1)),
-});
-const TRAFFIC_LOCATION_VISUAL_SAMPLE = {
-  cities: [
-    makeTrafficLocationSampleItem("São Paulo:SP:Brasil", "São Paulo, SP", 284),
-    makeTrafficLocationSampleItem("Rio de Janeiro:RJ:Brasil", "Rio de Janeiro, RJ", 156),
-    makeTrafficLocationSampleItem("Belo Horizonte:MG:Brasil", "Belo Horizonte, MG", 108),
-    makeTrafficLocationSampleItem("Curitiba:PR:Brasil", "Curitiba, PR", 86),
-    makeTrafficLocationSampleItem("Salvador:BA:Brasil", "Salvador, BA", 72),
-    makeTrafficLocationSampleItem("Lisboa:Portugal", "Lisboa, Portugal", 64),
-    makeTrafficLocationSampleItem("Porto:Portugal", "Porto, Portugal", 48),
-    makeTrafficLocationSampleItem("Luanda:Angola", "Luanda, Angola", 32),
-  ],
-  countries: [
-    makeTrafficLocationSampleItem("Brasil", "Brasil", 1432),
-    makeTrafficLocationSampleItem("Portugal", "Portugal", 96),
-    makeTrafficLocationSampleItem("Estados Unidos", "Estados Unidos", 78),
-    makeTrafficLocationSampleItem("Angola", "Angola", 46),
-  ],
-  states: [
-    makeTrafficLocationSampleItem("SP:Brasil", "São Paulo", 482),
-    makeTrafficLocationSampleItem("RJ:Brasil", "Rio de Janeiro", 252),
-    makeTrafficLocationSampleItem("MG:Brasil", "Minas Gerais", 206),
-    makeTrafficLocationSampleItem("PR:Brasil", "Paraná", 156),
-    makeTrafficLocationSampleItem("BA:Brasil", "Bahia", 112),
-    makeTrafficLocationSampleItem("RS:Brasil", "Rio Grande do Sul", 98),
-    makeTrafficLocationSampleItem("PE:Brasil", "Pernambuco", 74),
-    makeTrafficLocationSampleItem("CE:Brasil", "Ceará", 52),
-  ],
-  total: TRAFFIC_LOCATION_VISUAL_SAMPLE_TOTAL,
-} satisfies Pick<AdminTrafficSummary["locations"], "cities" | "countries" | "states" | "total">;
 
 const normalizeTextKey = (value: string) =>
   value
@@ -606,27 +552,11 @@ const OnlineNowPanel = ({ onlineNow }: { onlineNow: TrafficOnlineNow }) => {
 };
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <CardShell className="p-6">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-muted text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold">Não foi possível carregar Tráfego</h2>
-          <p className="mt-1 text-sm text-muted">{message}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:border-border-strong"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </CardShell>
+  <AdminQueryErrorState
+    message={message}
+    onRetry={onRetry}
+    title="Não foi possível carregar Tráfego"
+  />
 );
 
 const EmptyState = ({ period }: { period: AdminTrafficSummary["period"] }) => (
@@ -1660,10 +1590,8 @@ const LocationMapPanel = ({
 
 const LocationOverview = ({
   locations,
-  preview = false,
 }: {
   locations: Pick<AdminTrafficSummary["locations"], "cities" | "countries" | "states" | "total">;
-  preview?: boolean;
 }) => {
   const [preferredScope, setPreferredScope] = useState<TrafficLocationMapScope>("states");
   const hasCountries = locations.countries.length > 0;
@@ -1678,7 +1606,7 @@ const LocationOverview = ({
   return (
     <div className="mt-5 space-y-4">
       <LocationSummaryStats locations={locations} />
-      {locations.total === 0 && !preview ? (
+      {locations.total === 0 ? (
         <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
           Nenhum acesso com localização agregada real foi capturado no período selecionado.
         </p>
@@ -1703,14 +1631,8 @@ const LocationOverview = ({
             />
           </div>
           <p className="text-xs font-bold leading-5 text-muted">
-            {preview ? (
-              <>Preview local: {formatLocationAccessCount(locations.total)} para validar layout.</>
-            ) : (
-              <>
-                Total considerado: {formatLocationAccessCount(locations.total)} de visitor_location.
-                Cidades com frequência muito baixa podem aparecer agrupadas para reduzir exposição.
-              </>
-            )}
+            Total considerado: {formatLocationAccessCount(locations.total)} de visitor_location.
+            Cidades com frequência muito baixa podem aparecer agrupadas para reduzir exposição.
           </p>
         </>
       )}
@@ -1725,30 +1647,15 @@ const LocationPanel = ({
   locations: AdminTrafficSummary["locations"];
   periodDescription: string;
 }) => {
-  const allowLocalPreview = useLocalTrafficLocationPreviewEnabled();
-  const hasLocationData =
-    locations.total > 0 ||
-    locations.states.length > 0 ||
-    locations.countries.length > 0 ||
-    locations.cities.length > 0;
-  const showLocationPreview = allowLocalPreview && !hasLocationData;
-  const displayLocations = showLocationPreview ? TRAFFIC_LOCATION_VISUAL_SAMPLE : locations;
-
   return (
     <CardShell className="p-5 md:p-6">
       <PanelTitle
         icon={MapPinned}
         periodDescription={periodDescription}
-        source={showLocationPreview ? "exemplo visual local" : locations.source}
+        source={locations.source}
         title="Acessos por localização"
       />
-      {showLocationPreview ? (
-        <p className="mt-4 rounded-2xl border border-primary/20 bg-primary-soft/70 p-3 text-xs font-bold leading-5 text-primary">
-          Dados de exemplo exibidos somente no ambiente local para visualização. Não representam
-          registros reais de `visitor_location`.
-        </p>
-      ) : null}
-      <LocationOverview locations={displayLocations} preview={showLocationPreview} />
+      <LocationOverview locations={locations} />
     </CardShell>
   );
 };

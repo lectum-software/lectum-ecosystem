@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { SubscriptionPlan } from "@/api/generator/types/billing";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -43,9 +44,8 @@ const formatPrice = (priceCents: number) => {
   return currencyFormatter.format(priceCents / 100);
 };
 
-const getErrorMessage = (error: unknown) => {
-  return error instanceof Error ? error.message : "Não foi possível carregar os planos agora.";
-};
+const getErrorMessage = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível carregar os planos agora.");
 
 const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
   if (plan.slug === "gratuito") {

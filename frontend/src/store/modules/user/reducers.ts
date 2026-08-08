@@ -1,6 +1,4 @@
 import type { user } from "@/api/generator/types";
-import { setToken } from "@/hooks/cookies/token";
-import { setUser } from "@/hooks/cookies/user";
 
 import * as types from "./types";
 
@@ -40,15 +38,6 @@ export default function userReducer(
 
 const parseUser = (data?: user | null): UserState => {
   if (!data) return null;
-
-  setUser({
-    confirm: !data.confirmed,
-    welcome: false,
-    plans: false,
-  });
-
-  const token = data.user_tokens?.[0]?.token;
-  if (token) setToken(token);
 
   const rest: Record<string, unknown> = { ...data };
 

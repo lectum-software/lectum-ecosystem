@@ -1,20 +1,17 @@
 import axios, { AxiosHeaders } from "axios";
+import { adminApiUrl } from "@/lib/api-url";
 import { getAdminDeviceId } from "@/lib/fingerprint";
 import { clearAdminSession, getAdminToken } from "@/lib/storage";
 
-const normalizeApiUrl = (value?: string | null) => {
-  const normalized = value?.trim();
-  return normalized ? normalized.replace(/\/+$/, "") : "http://localhost:3001";
-};
-
-export const adminApiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
-
 export const adminApi = axios.create({
   baseURL: adminApiUrl,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     "Accept-Language": "pt-BR",
+    "X-Requested-With": "Lectum-Admin-Cookie-Auth",
   },
+  timeout: 30_000,
 });
 
 adminApi.interceptors.request.use(async (config) => {

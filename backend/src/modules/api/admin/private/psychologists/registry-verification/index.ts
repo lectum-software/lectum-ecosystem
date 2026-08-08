@@ -1,5 +1,4 @@
-﻿import { Router } from "express";
-import adminAuth from "../../../middlewares/_auth";
+import { Router } from "express";
 import { approve, reject, show, updateIdentity } from "./use-cases/controller";
 import {
   approveValidator,
@@ -10,7 +9,6 @@ import {
 
 const routes = Router();
 
-routes.use(adminAuth);
 routes.get("/:id/registry-verification", showValidator, show);
 routes.put("/:id/registry-verification/identity", updateIdentityValidator, updateIdentity);
 routes.post("/:id/registry-verification/approve", approveValidator, approve);

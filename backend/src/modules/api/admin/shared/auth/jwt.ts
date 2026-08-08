@@ -1,4 +1,5 @@
-﻿import jwt, { type SignOptions } from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
+import { getAdminJwtTtlSeconds } from "@/utils/runtime-config";
 
 export const ADMIN_JWT_AUDIENCE = "lectum-admin";
 export const ADMIN_JWT_ISSUER = "lectum-api";
@@ -33,6 +34,7 @@ export const assertAdminJwtConfigured = () => {
 export const signAdminJwt = (payload: AdminJwtPayload, options: SignOptions = {}) => {
   return jwt.sign(payload, getAdminJwtSecret(), {
     audience: ADMIN_JWT_AUDIENCE,
+    expiresIn: getAdminJwtTtlSeconds(),
     issuer: ADMIN_JWT_ISSUER,
     ...options,
   });

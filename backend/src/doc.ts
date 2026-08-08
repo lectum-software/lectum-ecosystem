@@ -1,5 +1,6 @@
 import express from "express";
 import swagger from "./main/server/documents";
+import { toSafeErrorLog } from "./utils/safe-error-log";
 
 const app = express();
 const PORT = 62155;
@@ -20,7 +21,7 @@ async function startServer() {
       console.log(`🚀 Docs in ${PORT}`);
     });
   } catch (error) {
-    console.error("Erro ao inicializar o Swagger:", error);
+    console.error("Erro ao inicializar o Swagger.", toSafeErrorLog(error, "SwaggerStartupError"));
   }
 }
 

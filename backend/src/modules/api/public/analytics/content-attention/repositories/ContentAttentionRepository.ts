@@ -1,6 +1,7 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { visitor_session } from "@/interfaces/objects";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import type {
   ContentAttentionTarget,
   ContentAttentionTargetType,
@@ -12,16 +13,10 @@ const attentionSelect = {
   id: true,
 } satisfies Prisma.content_attention_sessionSelect;
 
-type ContentAttentionRecord = Prisma.content_attention_sessionGetPayload<{
-  select: typeof attentionSelect;
-}>;
-
 export class ContentAttentionRepository {
-  readonly repository: ORM["content_attention_session"];
   readonly sessionRepository: ORM["visitor_session"];
 
   constructor() {
-    this.repository = prisma.content_attention_session;
     this.sessionRepository = prisma.visitor_session;
   }
 
@@ -105,67 +100,52 @@ export class ContentAttentionRepository {
     return type === "post" ? this.findPostTarget(targetId) : this.findReplyTarget(targetId);
   }
 
-  async findSession(
-    targetType: ContentAttentionTargetType,
-    targetId: string,
-    sessionKey: string,
-  ): Promise<ContentAttentionRecord | null> {
-    return this.repository.findUnique({
-      select: attentionSelect,
-      where: {
-        target_type_target_id_session_key: {
-          session_key: sessionKey,
-          target_id: targetId,
-          target_type: targetType,
-        },
-      },
-    });
-  }
-
-  async createSession(input: ContentAttentionUpsertInput): Promise<ContentAttentionRecord> {
-    return this.repository.create({
-      data: {
-        attention_seconds: input.attentionSeconds,
-        community_id: input.communityId,
-        post_id: input.postId,
-        psychologist_id: input.psychologistId,
-        reply_id: input.replyId,
-        session_id: input.sessionId,
-        session_key: input.sessionKey,
-        source_path: input.sourcePath,
-        target_id: input.targetId,
-        target_type: input.targetType,
-        viewer_id: input.viewerId,
-        visitor_id: input.visitorId,
-      },
-      select: attentionSelect,
-    });
-  }
-
-  async updateSession(
-    id: string,
-    input: ContentAttentionUpsertInput,
-    existing: ContentAttentionRecord,
-  ): Promise<ContentAttentionRecord> {
-    return this.repository.update({
-      data: {
-        attention_seconds: Math.max(existing.attention_seconds, input.attentionSeconds),
-        deleted: false,
-        deletedAt: null,
-        last_event_at: new Date(),
-        source_path: input.sourcePath ?? undefined,
-        viewer_id: input.viewerId ?? undefined,
-      },
-      select: attentionSelect,
-      where: { id },
-    });
-  }
-
   async upsertSession(input: ContentAttentionUpsertInput) {
-    const existing = await this.findSession(input.targetType, input.targetId, input.sessionKey);
-    if (existing) return this.updateSession(existing.id, input, existing);
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.content_attention_session.findUnique({
+        select: attentionSelect,
+        where: {
+          target_type_target_id_session_key: {
+            session_key: input.sessionKey,
+            target_id: input.targetId,
+            target_type: input.targetType,
+          },
+        },
+      });
 
-    return this.createSession(input);
+      if (existing) {
+        return transaction.content_attention_session.update({
+          data: {
+            attention_seconds: Math.max(existing.attention_seconds, input.attentionSeconds),
+            deleted: false,
+            deletedAt: null,
+            last_event_at: new Date(),
+            source_path: input.sourcePath ?? undefined,
+            viewer_id: input.viewerId ?? undefined,
+          },
+          select: attentionSelect,
+          where: { id: existing.id },
+        });
+      }
+
+      return transaction.content_attention_session.create({
+        data: {
+          attention_seconds: input.attentionSeconds,
+          community_id: input.communityId,
+          post_id: input.postId,
+          psychologist_id: input.psychologistId,
+          reply_id: input.replyId,
+          session_id: input.sessionId,
+          session_key: input.sessionKey,
+          source_path: input.sourcePath,
+          target_id: input.targetId,
+          target_type: input.targetType,
+          viewer_id: input.viewerId,
+          visitor_id: input.visitorId,
+        },
+        select: attentionSelect,
+      });
+    });
   }
 
   async upsertVisitorSession(

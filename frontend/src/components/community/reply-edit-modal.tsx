@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
 import {
   detectReplyMediaOrientation,
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
+import { resolveMediaUploadError } from "@/utils/media-upload-error";
 import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
@@ -38,16 +40,6 @@ type EditableReply = Pick<
 > & {
   replies_count?: number;
   replies_received_count?: number;
-};
-
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
 };
 
 type ReplyEditModalProps = {
@@ -73,39 +65,6 @@ const fields = [
       "min-h-[5rem] resize-none rounded-[1.35rem] border-border bg-surface px-4 py-3.5 text-[0.95rem] leading-6 shadow-none",
   },
 ] satisfies Field<ReplyEditForm>[];
-
-const errorMessageFromUnknown = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
-
-  return rawMessage || "Não foi possível salvar as alterações agora. Tente novamente.";
-};
-
-const resolveMediaUploadError = (error: unknown) => {
-  const rawMessage = errorMessageFromUnknown(error);
-  const normalized = rawMessage.toLowerCase();
-
-  if (
-    normalized.includes("tamanho") ||
-    normalized.includes("limite") ||
-    normalized.includes("50")
-  ) {
-    return "A mídia precisa ter até 50MB.";
-  }
-
-  if (normalized.includes("tipo") || normalized.includes("permit")) {
-    return "Envie uma imagem ou vídeo em formato permitido.";
-  }
-
-  if (normalized.includes("plano") || normalized.includes("verific")) {
-    return "Mídia disponível apenas para psicólogos verificados.";
-  }
-
-  return rawMessage || "Não foi possível anexar a mídia agora. Tente novamente.";
-};
 
 export function ReplyEditModal({
   onClose,
@@ -143,7 +102,7 @@ export function ReplyEditModal({
       onClose();
     },
     onError: (error) => {
-      setActionError(errorMessageFromUnknown(error));
+      setActionError(getSafeApiErrorMessage(error, "Não foi possível atualizar o comentário."));
     },
   });
   const isSubmitting = uploadMutation.isPending || updateMutation.isPending;

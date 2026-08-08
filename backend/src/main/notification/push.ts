@@ -1,5 +1,6 @@
-﻿import webPush, { isWebPushConfigured } from "@/config/webPush";
+import webPush, { isWebPushConfigured } from "@/config/webPush";
 import type { Prisma } from "@/external/generated/prisma/client";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 const BASE = process.env.BASE || "";
 
@@ -46,8 +47,6 @@ export const sendWebPushToSubscriptions = async (params: {
 
   let sentCount = 0;
   let failedCount = 0;
-  const failures: string[] = [];
-
   const payload = JSON.stringify({
     data: {
       campaign_id: params.campaignId ?? undefined,
@@ -70,13 +69,10 @@ export const sendWebPushToSubscriptions = async (params: {
       sentCount++;
     } catch (error) {
       failedCount++;
-      const message = (error as Error)?.message || "push_send_failed";
-      failures.push(message);
-      console.error(
-        "[WEB NOTIFICATION] erro ao enviar push:",
-        (error as { statusCode?: number })?.statusCode,
-        message,
-      );
+      console.error("[WEB NOTIFICATION] erro ao enviar push:", {
+        ...toSafeErrorLog(error, "WebPushSendError"),
+        status_code: (error as { statusCode?: number })?.statusCode,
+      });
     }
   }
 
@@ -92,7 +88,7 @@ export const sendWebPushToSubscriptions = async (params: {
 
   return {
     failedCount,
-    failureReason: failures[0] ?? "push_send_failed",
+    failureReason: "push_send_failed",
     sentCount,
     status: "failed",
     targetedCount: activeSubscriptions.length,

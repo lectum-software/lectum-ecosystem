@@ -3,6 +3,7 @@ import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { patient_profile } from "@/interfaces/objects";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import type { IUpdateProfileDTO, PatientPrivateProfileResponse } from "../DTOs/IProfileDTO";
 import type { IProfileRepository } from "./interfaces/IProfileRepository";
 
@@ -56,30 +57,32 @@ export class ProfileRepository implements IProfileRepository {
   }
 
   async getOrCreate(userId: string): Promise<patient_profile> {
-    const existing = await this.repository.findUnique({
-      where: {
-        user_id: userId,
-      },
-    });
-
-    if (existing && !existing.deleted) return existing;
-
-    if (existing?.deleted) {
-      return this.repository.update({
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.patient_profile.findUnique({
         where: {
           user_id: userId,
         },
+      });
+
+      if (existing && !existing.deleted) return existing;
+
+      if (existing?.deleted) {
+        return transaction.patient_profile.update({
+          where: {
+            user_id: userId,
+          },
+          data: {
+            deleted: false,
+            deletedAt: null,
+          },
+        });
+      }
+
+      return transaction.patient_profile.create({
         data: {
-          deleted: false,
-          deletedAt: null,
+          user_id: userId,
         },
       });
-    }
-
-    return this.repository.create({
-      data: {
-        user_id: userId,
-      },
     });
   }
 

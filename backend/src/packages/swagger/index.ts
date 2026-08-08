@@ -6,6 +6,7 @@ import path from "node:path";
 import { apiReference } from "@scalar/express-api-reference";
 import express, { Router } from "express";
 import swaggerUi from "swagger-ui-express";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 //Types
 import type { EndPoints, ScalarOptions } from "./types";
 import { analyzeRoutesWithAST } from "./utils/analyze";
@@ -37,7 +38,10 @@ const swagger = async (
 
     return true;
   } catch (error) {
-    console.error("\x1b[31m[SWAGGER]: Erro durante o processo\x1b[0m", error);
+    console.error(
+      "\x1b[31m[SWAGGER]: Erro durante o processo\x1b[0m",
+      toSafeErrorLog(error, "SwaggerGenerationError"),
+    );
     return false;
   }
 };

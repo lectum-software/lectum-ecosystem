@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { ProfessionalSubscription } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -39,9 +40,8 @@ const formatDate = (value?: string | null) => {
   return dateFormatter.format(date);
 };
 
-const getErrorMessage = (error: unknown) => {
-  return error instanceof Error ? error.message : "Não foi possível carregar sua assinatura agora.";
-};
+const getErrorMessage = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível carregar sua assinatura agora.");
 
 type BenefitGroup = {
   icon: LucideIcon;

@@ -94,7 +94,6 @@ import { useAdminSettingsCatalogs } from "@/api/callers/settings";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminPsychologistAccount,
-  AdminPsychologistAccountViewAsResponse,
   AdminPsychologistActivitiesQuery,
   AdminPsychologistBilling,
   AdminPsychologistCatalogItem,
@@ -114,8 +113,17 @@ import type {
   AdminPsychologistStatisticsQuery,
   PsychologistsDashboardQuery,
 } from "@/api/req/psychologists";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { isPublicMediaPath, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
+import {
+  adminViewAsPopupBlockedMessage,
+  buildAdminViewAsUrl,
+  openPendingAdminViewAsTab,
+} from "@/lib/admin-view-as";
+import { adminApiUrl } from "@/lib/api-url";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -142,9 +150,6 @@ const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
   hour: "2-digit",
   minute: "2-digit",
 });
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 
 const TABS = [
   { id: "geral", label: "Geral", ready: true },
@@ -463,7 +468,7 @@ const BUSINESS_VISIBILITY_DIAGNOSIS_LABEL: Record<BusinessVisibilityDiagnosisId,
   insufficient_data: "Dados insuficientes",
   low_exposure: "Baixa visibilidade",
   no_exposure: "Sem visibilidade",
-  standard_exposure: "Visibilidade padr?o",
+  standard_exposure: "Visibilidade padrão",
 };
 
 const BUSINESS_CHART_METRICS = [
@@ -1110,128 +1115,14 @@ type ReportDismissFormValues = z.infer<typeof reportDismissSchema>;
 type ReportReviewFormValues = z.infer<typeof reportReviewSchema>;
 type ReportUpholdFormValues = z.infer<typeof reportUpholdSchema>;
 
-const toPublicHref = (url: string) => {
-  if (/^https?:\/\//.test(url)) return url;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
-};
-
-const buildAdminViewAsUrl = (session: AdminPsychologistAccountViewAsResponse) => {
-  const url = new URL("/auth/admin-view-as", publicFrontendUrl);
-  const adminReturnUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}${window.location.pathname}${window.location.search}`
-      : "";
-  const hash = new URLSearchParams({
-    adminReturnUrl,
-    expiresIn: String(session.token_expires_in_seconds),
-    mode: session.mode,
-    readOnly: String(session.read_only),
-    role: session.target.role,
-    startPath: session.start_path,
-    subjectId: session.target.id,
-    subjectName: session.target.name,
-    token: session.token,
-  });
-
-  url.hash = hash.toString();
-
-  return url.toString();
-};
-
-const adminViewAsPopupBlockedMessage =
-  "O navegador bloqueou a nova aba. Permita pop-ups para o Lectum Admin e tente novamente.";
-
-const openPendingAdminViewAsTab = () => {
-  const tab = window.open("about:blank", "_blank");
-  if (!tab) return null;
-
-  tab.opener = null;
-  tab.document.title = "Preparando visualização administrativa";
-  tab.document.body.style.margin = "0";
-  tab.document.body.style.fontFamily =
-    "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-  tab.document.body.style.padding = "24px";
-  tab.document.body.style.color = "#05183F";
-  tab.document.body.textContent =
-    "Preparando visualização administrativa em modo somente leitura...";
-
-  return tab;
-};
-
 const publicationAdminDetailHref = (item: AdminPsychologistPublicationItem) =>
   `/comunidades/${encodeURIComponent(item.community.slug)}/conteudo/${encodeURIComponent(
     item.type,
   )}/${encodeURIComponent(item.id)}`;
 
-const isPublicMediaPath = (pathname: string) =>
-  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
-
-const resolveAdminMediaUrl = (src?: string | null) => {
-  const value = src?.trim();
-  if (!value) return null;
-
-  const apiBase = apiUrl.replace(/\/$/, "");
-
-  try {
-    const parsed = new URL(value, apiBase);
-    if (isPublicMediaPath(parsed.pathname)) {
-      return `${apiBase}${parsed.pathname}${parsed.search}`;
-    }
-    if (value.startsWith("http")) return value;
-    return value.startsWith("/") ? value : `${apiBase}/${value}`;
-  } catch {
-    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
-      return `${apiBase}${value}`;
-    }
-    return value.startsWith("/") || value.startsWith("http") ? value : null;
-  }
-};
-
-const allowedRemoteImageHosts = () => {
-  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
-
-  for (const candidate of [
-    apiUrl,
-    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
-  ]) {
-    const normalized = candidate.trim();
-    if (!normalized) continue;
-
-    try {
-      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
-      if (url.hostname) hosts.add(url.hostname);
-    } catch {
-      // Entradas inválidas de env não devem quebrar o header.
-    }
-  }
-
-  return hosts;
-};
-
-const canRenderImage = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-  if (resolved.startsWith("/")) return true;
-
-  try {
-    const url = new URL(resolved);
-
-    return allowedRemoteImageHosts().has(url.hostname);
-  } catch {
-    return false;
-  }
-};
-
-const renderableImageSrc = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-
-  return resolved && canRenderImage(resolved) ? resolved : null;
-};
-
 const isPublicAdminMediaSrc = (src: string) => {
   try {
-    return isPublicMediaPath(new URL(src, apiUrl).pathname);
+    return isPublicMediaPath(new URL(src, adminApiUrl).pathname);
   } catch {
     return false;
   }
@@ -2132,29 +2023,11 @@ const LoadingState = () => (
 );
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <CardShell className="p-6" data-psychologist-detail-error="true">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="text-xl font-black text-foreground">
-            Não foi possível carregar o psicólogo
-          </h1>
-          <p className="mt-1 text-sm text-muted">{message}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </CardShell>
+  <AdminQueryErrorState
+    message={message}
+    onRetry={onRetry}
+    title="Não foi possível carregar o psicólogo"
+  />
 );
 
 const DetailHeader = ({
@@ -2244,7 +2117,7 @@ const DetailHeader = ({
         <div className="flex flex-col gap-2 sm:flex-row md:flex-col xl:flex-row">
           <a
             className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary/45 bg-surface px-5 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft"
-            href={toPublicHref(header.public_profile_url)}
+            href={toPublicFrontendHref(header.public_profile_url)}
             rel="noreferrer"
             target="_blank"
           >
@@ -7791,7 +7664,7 @@ const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: string }) =
                     <Link
                       aria-label="Ver publicação no site"
                       className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
-                      href={toPublicHref(item.public_url)}
+                      href={toPublicFrontendHref(item.public_url)}
                       rel="noreferrer"
                       target="_blank"
                       title="Ver no site"
@@ -8312,7 +8185,7 @@ const PsychologistReportListItem = ({
           <Link
             aria-label="Ver conteúdo público"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
-            href={toPublicHref(report.content.public_url)}
+            href={toPublicFrontendHref(report.content.public_url)}
             rel="noreferrer"
             target="_blank"
             title="Ver conteúdo público"

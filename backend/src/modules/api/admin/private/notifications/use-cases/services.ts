@@ -9,6 +9,7 @@ import { isChannelAllowed } from "@/main/notification/preferences";
 import { sendWebPushToSubscriptions } from "@/main/notification/push";
 import { notification as emitNotification } from "@/main/socket/events/notification";
 import { send as sendEmail } from "@/modules/api/config/nodemailer/send";
+import { resolveCalendarPeriod, toDateKey } from "@/utils/date-range";
 import {
   ADMIN_NOTIFICATION_AUDIENCES,
   ADMIN_NOTIFICATION_CHANNELS,
@@ -46,6 +47,9 @@ const REQUIRED_EMAIL_ENV_KEYS = [
 ] as const;
 
 const repository = new AdminNotificationsRepository();
+
+export const isNotificationCampaignSchedulerEnabled = () =>
+  process.env.NOTIFICATION_CAMPAIGNS_SCHEDULER_ENABLED?.trim().toLowerCase() === "true";
 
 const fail = (code: string, status = 400): Resolve => ({
   status,
@@ -124,120 +128,16 @@ const adminNotificationEmailHtml = (campaign: CampaignRecord) => {
   </div>`;
 };
 
-const getErrorMessage = (value: unknown) =>
-  value instanceof Error ? value.message : String(value);
-
-const pad = (value: number) => String(value).padStart(2, "0");
-const toDateKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const endOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const startOfMonth = (date: Date) => startOfDate(new Date(date.getFullYear(), date.getMonth(), 1));
-
-const startOfWeek = (date: Date) => {
-  const next = startOfDate(date);
-  const day = next.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-
-  return addDays(next, diff);
-};
-
-const startOfYear = (date: Date) => startOfDate(new Date(date.getFullYear(), 0, 1));
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return boundary === "start" ? startOfDate(date) : endOfDate(date);
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / 86_400_000) + 1;
-};
-
 const resolvePeriod = (query: AdminNotificationsQuery | undefined, allPeriodStartDate?: Date) => {
-  const hasCustomFrom = Boolean(query?.from);
-  const hasCustomTo = Boolean(query?.to);
-  const preset = query?.period || (hasCustomFrom || hasCustomTo ? "custom" : "all");
-  let start: Date;
-  let end: Date;
-  let label = "Todo o período";
+  const resolved = resolveCalendarPeriod(query, {
+    allPeriodStartDate,
+    defaultDays: DEFAULT_PERIOD_DAYS,
+    defaultPreset: "all",
+    maxDays: MAX_PERIOD_DAYS,
+  });
+  if (!resolved) return null;
 
-  if (preset === "custom") {
-    if (!hasCustomFrom || !hasCustomTo) return null;
-
-    const customStart = parseDateOnly(query?.from, "start");
-    const customEnd = parseDateOnly(query?.to, "end");
-    if (!customStart || !customEnd || customStart > customEnd) return null;
-
-    start = customStart;
-    end = customEnd;
-    label = "Período personalizado";
-  } else if (preset === "today") {
-    const today = new Date();
-    start = startOfDate(today);
-    end = endOfDate(today);
-    label = "Hoje";
-  } else if (preset === "week") {
-    const today = new Date();
-    start = startOfWeek(today);
-    end = endOfDate(today);
-    label = "Esta semana";
-  } else if (preset === "month") {
-    const today = new Date();
-    start = startOfMonth(today);
-    end = endOfDate(today);
-    label = "Este mês";
-  } else if (preset === "year") {
-    const today = new Date();
-    start = startOfYear(today);
-    end = endOfDate(today);
-    label = "Este ano";
-  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
-    const today = new Date();
-    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
-    start = startOfDate(addDays(today, -(days - 1)));
-    end = endOfDate(today);
-    label = `Últimos ${days} dias`;
-  } else if (preset === "all") {
-    const today = new Date();
-    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
-    end = endOfDate(today);
-    label = "Todo o período";
-  } else {
-    return null;
-  }
-
-  const days = daysBetweenInclusive(start, end);
-  if (days < 1 || days > MAX_PERIOD_DAYS) return null;
-
+  const { days, end, label, start } = resolved;
   return {
     end,
     period: {
@@ -622,12 +522,15 @@ const materializeCampaignDeliveries = async (campaign: CampaignRecord) => {
             });
           }
         } catch (error) {
+          console.error("[NOTIFICATION CAMPAIGNS] Falha no envio de e-mail.", {
+            name: error instanceof Error ? error.name : "UnknownEmailDeliveryError",
+          });
           summary.failed++;
           summary.total_deliveries++;
           await createNotificationDelivery({
             campaignId: campaign.id,
             channel: "email",
-            failureReason: getErrorMessage(error).slice(0, 512),
+            failureReason: "email_send_failed",
             metadata: { campaign_id: campaign.id },
             source: "manual",
             status: "failed",
@@ -644,6 +547,67 @@ const materializeCampaignDeliveries = async (campaign: CampaignRecord) => {
   }
 
   return summary;
+};
+
+const dispatchClaimedCampaign = async (campaign: CampaignRecord) => {
+  try {
+    const summary = await materializeCampaignDeliveries(campaign);
+    await repository.updateCampaign(campaign.id, {
+      sent_at: new Date(),
+      status: "sent",
+    });
+    const updated = await repository.findCampaign(campaign.id);
+
+    if (!updated) throw new Error("NOTIFICATION_CAMPAIGN_DISAPPEARED_AFTER_SEND");
+
+    return { campaign: updated, summary };
+  } catch (error) {
+    await repository.updateCampaign(campaign.id, { status: "failed" });
+    throw error;
+  }
+};
+
+const dispatchScheduledCampaign = async (id: string, now: Date) => {
+  const campaign = await repository.findCampaign(id);
+
+  if (campaign?.status !== "scheduled" || !campaign.scheduled_at || campaign.scheduled_at > now) {
+    return false;
+  }
+
+  if (ensureEmailProviderAvailable(parseStoredChannels(campaign.channels))) {
+    await repository.transitionCampaign(campaign.id, ["scheduled"], { status: "failed" });
+    console.error("[NOTIFICATION CAMPAIGNS] Campanha agendada sem provedor de e-mail.", {
+      campaign_id: campaign.id,
+    });
+    return false;
+  }
+
+  const claimed = await repository.claimCampaign(campaign.id, ["scheduled"]);
+  if (!claimed) return false;
+
+  try {
+    await dispatchClaimedCampaign(claimed);
+    return true;
+  } catch (error) {
+    console.error("[NOTIFICATION CAMPAIGNS] Campanha agendada falhou.", {
+      campaign_id: campaign.id,
+      name: error instanceof Error ? error.name : "UnknownCampaignDispatchError",
+    });
+    return false;
+  }
+};
+
+export const dispatchDueNotificationCampaigns = async (now: Date, limit: number) => {
+  if (!isNotificationCampaignSchedulerEnabled()) return { attempted: 0, sent: 0 };
+
+  const dueCampaigns = await repository.listDueScheduledCampaignIds(now, limit);
+  let sent = 0;
+
+  for (const campaign of dueCampaigns) {
+    if (await dispatchScheduledCampaign(campaign.id, now)) sent += 1;
+  }
+
+  return { attempted: dueCampaigns.length, sent };
 };
 
 export const createCampaign = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
@@ -696,6 +660,10 @@ export const updateCampaign = async (data: IAdminNotificationsDTO): Promise<Reso
 };
 
 export const scheduleCampaign = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
+  if (!isNotificationCampaignSchedulerEnabled()) {
+    return fail("admin_notification_scheduler_unavailable", 503);
+  }
+
   const campaign = await ensureCampaign(data.p?.id);
   if (!campaign) return fail("not_found", 404);
 
@@ -705,13 +673,13 @@ export const scheduleCampaign = async (data: IAdminNotificationsDTO): Promise<Re
   const scheduledAt = data.b?.scheduled_at;
   if (!scheduledAt || scheduledAt <= new Date()) return fail("admin_notification_invalid_schedule");
 
-  const updated = await repository.updateCampaign(campaign.id, {
+  const updated = await repository.transitionCampaign(campaign.id, ["draft", "scheduled"], {
     scheduled_at: scheduledAt,
     status: "scheduled",
   });
-  const full = await repository.findCampaign(updated.id);
+  if (!updated) return fail("admin_notification_campaign_not_schedulable", 409);
 
-  return ok(full ? serializeCampaign(full) : updated, "update");
+  return ok(serializeCampaign(updated), "update");
 };
 
 export const cancelCampaign = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
@@ -721,13 +689,13 @@ export const cancelCampaign = async (data: IAdminNotificationsDTO): Promise<Reso
   const cancelable = ensureCancelableCampaign(campaign);
   if (cancelable) return cancelable;
 
-  const updated = await repository.updateCampaign(campaign.id, {
+  const updated = await repository.transitionCampaign(campaign.id, ["draft", "scheduled"], {
     canceled_at: new Date(),
     status: "canceled",
   });
-  const full = await repository.findCampaign(updated.id);
+  if (!updated) return fail("admin_notification_campaign_not_cancelable", 409);
 
-  return ok(full ? serializeCampaign(full) : updated, "update");
+  return ok(serializeCampaign(updated), "update");
 };
 
 export const sendCampaign = async (data: IAdminNotificationsDTO): Promise<Resolve> => {
@@ -739,25 +707,16 @@ export const sendCampaign = async (data: IAdminNotificationsDTO): Promise<Resolv
   const emailProvider = ensureEmailProviderAvailable(parseStoredChannels(campaign.channels));
   if (emailProvider) return emailProvider;
 
-  await repository.updateCampaign(campaign.id, { status: "sending" });
+  const claimed = await repository.claimCampaign(campaign.id, ["draft", "scheduled"]);
+  if (!claimed) return fail("admin_notification_campaign_not_sendable", 409);
 
-  try {
-    const summary = await materializeCampaignDeliveries(campaign);
-    const updated = await repository.updateCampaign(campaign.id, {
-      sent_at: new Date(),
-      status: "sent",
-    });
-    const full = await repository.findCampaign(updated.id);
-    const groups = await repository.groupDeliveriesByCampaign([campaign.id]);
+  const dispatched = await dispatchClaimedCampaign(claimed);
+  const groups = await repository.groupDeliveriesByCampaign([campaign.id]);
 
-    return ok({
-      campaign: full ? serializeCampaign(full, groups) : updated,
-      summary,
-    });
-  } catch (err) {
-    await repository.updateCampaign(campaign.id, { status: "failed" });
-    throw err;
-  }
+  return ok({
+    campaign: serializeCampaign(dispatched.campaign, groups),
+    summary: dispatched.summary,
+  });
 };
 
 export const listCampaigns = async (data: IAdminNotificationsDTO): Promise<Resolve> => {

@@ -1,4 +1,4 @@
-﻿import { callEndpoint } from "@/api/generator";
+import { callEndpoint } from "@/api/generator";
 import type {
   CfpConfirmPayload,
   CfpConfirmResponse,
@@ -15,6 +15,7 @@ export const searchPsychologistCfp = async (body: CfpSearchPayload) => {
 
   return handleReq<CfpSearchResponse>({
     ...handle,
+    config: { timeout: 100_000 },
     hideError: true,
   });
 };

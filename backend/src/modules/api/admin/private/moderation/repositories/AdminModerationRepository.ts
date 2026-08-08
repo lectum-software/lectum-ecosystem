@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { parseDateOnly } from "@/utils/date-range";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import type { AdminModerationEventsQuery } from "../DTOs/IAdminModerationDTO";
 import {
@@ -29,19 +30,6 @@ const ACTIVE_POST_REPORT_STATUSES = [
   "in_review",
   "in review",
 ];
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  if (Number.isNaN(date.getTime())) return null;
-
-  if (boundary === "start") date.setHours(0, 0, 0, 0);
-  else date.setHours(23, 59, 59, 999);
-
-  return date;
-};
 
 const safeJsonObject = (value: unknown) => value as Prisma.InputJsonObject;
 

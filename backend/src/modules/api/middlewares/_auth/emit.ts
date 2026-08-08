@@ -5,9 +5,10 @@ import type { user } from "@/interfaces/objects";
 import { soc } from "@/main/socket";
 //Utils
 import { clients } from "@/main/socket/clients";
-
 //
 import { destroyAsync, emitError } from "@/main/socket/db/async";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 
 export const emit_hidrate = async (data: user, device_id?: string) => {
   //
@@ -18,17 +19,22 @@ export const emit_hidrate = async (data: user, device_id?: string) => {
     try {
       await emitError(out, "HIDRATE");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "erro desconhecido";
-      console.warn("[SOCKET] Registro ass\u00edncrono de hidrata\u00e7\u00e3o falhou", message);
+      console.warn(
+        "[SOCKET] Registro ass\u00edncrono de hidrata\u00e7\u00e3o falhou",
+        toSafeErrorLog(err, "SocketHydrationRegisterError"),
+      );
     }
   }
 
   if (!clientToEmit.length) return;
 
   destroyAsync(enter, "HIDRATE").catch((err: unknown) => {
-    const message = err instanceof Error ? err.message : "erro desconhecido";
-    console.warn("[SOCKET] Limpeza ass\u00edncrona de hidrata\u00e7\u00e3o falhou", message);
+    console.warn(
+      "[SOCKET] Limpeza ass\u00edncrona de hidrata\u00e7\u00e3o falhou",
+      toSafeErrorLog(err, "SocketHydrationCleanupError"),
+    );
   });
 
-  soc?.to(clientToEmit).emit("user_hidrate", data, device_id);
+  const safeData = sanitizeSensitiveData(data, { removeAuthTokens: true });
+  soc?.to(clientToEmit).emit("user_hidrate", safeData, device_id);
 };

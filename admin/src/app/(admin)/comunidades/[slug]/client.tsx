@@ -93,9 +93,12 @@ import type {
   AdminCommunityUrgentPendingReport,
   CommunitiesPostContentFormatDistribution,
 } from "@/api/req/communities";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -118,9 +121,6 @@ const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
   hour: "2-digit",
   minute: "2-digit",
 });
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const hexColor = /^#[0-9A-Fa-f]{6}$/;
 const colorSchema = z
   .string()
@@ -309,90 +309,6 @@ const disabledCommunityStatisticsComparisonQuery = {
 
 const parseCommunityTab = (value: string | null): CommunityTab =>
   communityTabs.some((tab) => tab.id === value) ? (value as CommunityTab) : "geral";
-
-const isPublicMediaPath = (pathname: string) =>
-  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
-
-const resolveAdminMediaUrl = (src?: string | null) => {
-  const value = src?.trim();
-  if (!value) return null;
-
-  const apiBase = apiUrl.replace(/\/$/, "");
-
-  try {
-    const parsed = new URL(value, apiBase);
-    if (isPublicMediaPath(parsed.pathname)) {
-      return `${apiBase}${parsed.pathname}${parsed.search}`;
-    }
-    if (value.startsWith("http")) return value;
-    return value.startsWith("/") ? value : `${apiBase}/${value}`;
-  } catch {
-    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
-      return `${apiBase}${value}`;
-    }
-    return value.startsWith("/") || value.startsWith("http") ? value : null;
-  }
-};
-
-const allowedRemoteImageHosts = () => {
-  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
-
-  for (const candidate of [
-    apiUrl,
-    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
-  ]) {
-    const normalized = candidate.trim();
-    if (!normalized) continue;
-
-    try {
-      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
-      if (url.hostname) hosts.add(url.hostname);
-    } catch {
-      // Entradas inválidas de env não devem quebrar a renderização administrativa.
-    }
-  }
-
-  return hosts;
-};
-
-const canRenderImage = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-  if (resolved.startsWith("/")) return true;
-
-  try {
-    const url = new URL(resolved);
-
-    return allowedRemoteImageHosts().has(url.hostname);
-  } catch {
-    return false;
-  }
-};
-
-const renderableImageSrc = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-
-  return resolved && canRenderImage(resolved) ? resolved : null;
-};
-
-const isAdminPublicMediaUrl = (src?: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-
-  try {
-    return isPublicMediaPath(new URL(resolved).pathname);
-  } catch {
-    return publicMediaPathPrefixes.some(
-      (prefix) => resolved.startsWith(prefix) || resolved.includes(prefix),
-    );
-  }
-};
-
-const toPublicHref = (path: string) => {
-  if (/^https?:\/\//.test(path)) return path;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
-};
 
 const cardClass = "rounded-card border border-border bg-surface shadow-admin-soft";
 
@@ -826,7 +742,7 @@ const LatestCommunityPostRow = ({
   slug: string;
 }) => {
   const title = latestPostTitle(item);
-  const postHref = toPublicHref(item.public_url);
+  const postHref = toPublicFrontendHref(item.public_url);
   const detailHref = adminContentDetailHref(slug, item);
 
   return (
@@ -1010,7 +926,7 @@ const PopularPostRow = ({
   communitySlug: string;
   post: AdminCommunityPopularPost;
 }) => {
-  const postHref = toPublicHref(`/comunidades/${communitySlug}/publicacao/${post.id}`);
+  const postHref = toPublicFrontendHref(`/comunidades/${communitySlug}/publicacao/${post.id}`);
   const title = post.title.trim() || "Post sem título";
 
   return (
@@ -1341,7 +1257,7 @@ const CommunityHeader = ({
       {community.active ? (
         <Link
           className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-primary/45 bg-surface px-5 text-sm font-black text-primary shadow-control transition hover:bg-primary-soft"
-          href={`/comunidades/${community.slug}`}
+          href={toPublicFrontendHref(`/comunidades/${community.slug}`)}
           rel="noreferrer"
           target="_blank"
         >
@@ -3013,7 +2929,7 @@ const ContentItemCard = ({ item, slug }: { item: AdminCommunityContentItem; slug
           <Link
             aria-label="Ver conteúdo no site"
             className="inline-flex h-10 w-10 items-center justify-center rounded-control border border-border text-foreground transition hover:border-primary hover:text-primary"
-            href={toPublicHref(item.public_url)}
+            href={toPublicFrontendHref(item.public_url)}
             rel="noreferrer"
             target="_blank"
             title="Ver no site"
@@ -3746,7 +3662,7 @@ const CommunityReportListItem = ({
             <Link
               aria-label="Ver conteúdo público"
               className="grid h-9 w-9 place-items-center rounded-full text-foreground/75 transition hover:text-foreground"
-              href={toPublicHref(report.content.public_url)}
+              href={toPublicFrontendHref(report.content.public_url)}
               rel="noreferrer"
               target="_blank"
               title="Ver conteúdo público"
@@ -5128,15 +5044,6 @@ const CommunityStatisticsSegment = ({
   );
 };
 
-const COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE = {
-  anonymousPosts: 31,
-  anonymousRespondedByVerified: 18,
-  averageFirstVerifiedResponseMinutes: 142,
-  identifiedPosts: 17,
-  identifiedRespondedByVerified: 11,
-  patientPosts: 48,
-} as const;
-
 const CommunityCareCoverageBlock = ({
   dateFilters,
   error,
@@ -5182,49 +5089,16 @@ const CommunityCareCoverageBlock = ({
       careCoverage?.patient_posts_awaiting_verified_psychologist_response,
     ),
   );
-  const realPostsWithAnyResponse = Math.min(
-    realPatientPosts,
-    safeCommunityStatisticCount(careCoverage?.patient_posts_with_any_response),
-  );
   const realAverageFirstVerifiedResponseMinutes =
     careCoverage?.average_first_verified_response_minutes ?? null;
-  const showLocalExample =
-    process.env.NODE_ENV !== "production" &&
-    Boolean(statistics) &&
-    realPatientPosts === 0 &&
-    realAnonymousPosts === 0 &&
-    realIdentifiedPosts === 0 &&
-    realRespondedByVerified === 0 &&
-    realAnonymousRespondedByVerified === 0 &&
-    realIdentifiedRespondedByVerified === 0 &&
-    realAwaitingVerifiedResponse === 0 &&
-    realPostsWithAnyResponse === 0 &&
-    realAverageFirstVerifiedResponseMinutes === null;
-  const patientPosts = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.patientPosts
-    : realPatientPosts;
-  const anonymousPosts = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.anonymousPosts
-    : realAnonymousPosts;
-  const identifiedPosts = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.identifiedPosts
-    : realIdentifiedPosts;
-  const respondedByVerified = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.anonymousRespondedByVerified +
-      COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.identifiedRespondedByVerified
-    : realRespondedByVerified;
-  const anonymousRespondedByVerified = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.anonymousRespondedByVerified
-    : realAnonymousRespondedByVerified;
-  const identifiedRespondedByVerified = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.identifiedRespondedByVerified
-    : realIdentifiedRespondedByVerified;
-  const awaitingVerifiedResponse = showLocalExample
-    ? Math.max(0, patientPosts - respondedByVerified)
-    : realAwaitingVerifiedResponse;
-  const averageFirstVerifiedResponseMinutes = showLocalExample
-    ? COMMUNITY_CARE_COVERAGE_LOCAL_EXAMPLE.averageFirstVerifiedResponseMinutes
-    : realAverageFirstVerifiedResponseMinutes;
+  const patientPosts = realPatientPosts;
+  const anonymousPosts = realAnonymousPosts;
+  const identifiedPosts = realIdentifiedPosts;
+  const respondedByVerified = realRespondedByVerified;
+  const anonymousRespondedByVerified = realAnonymousRespondedByVerified;
+  const identifiedRespondedByVerified = realIdentifiedRespondedByVerified;
+  const awaitingVerifiedResponse = realAwaitingVerifiedResponse;
+  const averageFirstVerifiedResponseMinutes = realAverageFirstVerifiedResponseMinutes;
   const coverageRate = communityStatisticPercentage(respondedByVerified, patientPosts);
   const awaitingRate = communityStatisticPercentage(awaitingVerifiedResponse, patientPosts);
   const anonymousRate = communityStatisticPercentage(anonymousPosts, patientPosts);
@@ -5292,11 +5166,6 @@ const CommunityCareCoverageBlock = ({
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-2.5 py-1 text-[11px] font-black text-primary">
                 <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
                 Atualizando
-              </span>
-            ) : null}
-            {showLocalExample ? (
-              <span className="inline-flex items-center rounded-full border border-warning/20 bg-warning/10 px-3 py-1.5 text-xs font-black text-warning">
-                Exemplo local
               </span>
             ) : null}
           </div>
@@ -6443,29 +6312,11 @@ const LoadingState = () => (
 );
 
 const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <section className={cn(cardClass, "p-6")}>
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="text-xl font-black text-foreground">
-            Não foi possível carregar a comunidade
-          </h1>
-          <p className="mt-1 text-sm text-muted">{message}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </section>
+  <AdminQueryErrorState
+    message={message}
+    onRetry={onRetry}
+    title="Não foi possível carregar a comunidade"
+  />
 );
 
 const DetailContent = ({

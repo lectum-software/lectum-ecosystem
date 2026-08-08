@@ -1,6 +1,5 @@
 //Libs
 
-import { differenceInHours } from "date-fns";
 import dotenv from "dotenv";
 //Types
 import type { Request } from "express";
@@ -10,24 +9,27 @@ import { Strategy as GoogleStrategy, type Profile } from "passport-google-oauth2
 import { ExtractJwt, Strategy as JWTStrategy, type VerifiedCallback } from "passport-jwt";
 import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
-//Interfaces
-import type { user } from "@/interfaces/objects";
 //Repositories
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import { getGoogleOAuthCallbackUrl } from "@/modules/api/public/google/utils/config";
-import { isAdminViewAsDeviceId } from "@/utils/admin-view-as";
+import {
+  GOOGLE_OAUTH_STATE_COOKIE,
+  verifyGoogleOAuthState,
+} from "@/modules/api/public/google/utils/state";
+import { isPrismaErrorCode } from "@/utils/prisma-transaction";
 import {
   buildProfessionalFullDisplayName,
   normalizeProfessionalNamePart,
   splitProfessionalNameFallback,
 } from "@/utils/professional-name";
+import { getUserJwtTtlSeconds } from "@/utils/runtime-config";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 //Emits
-import { emit_hidrate } from "./emit";
 import { getJwtSecret } from "./utils/jwt-secret";
 
 dotenv.config();
 
-const TOKEN_API_USER = Number(process.env.TOKEN_API_USER_HIDRATE_HOURS);
 const notAuthorized = { status: 401 };
 const authUnavailable = { message: "auth_unavailable", status: 503 };
 const allowedUserRoles = ["paciente", "psicologo"] as const;
@@ -68,20 +70,6 @@ const resolveGoogleProfessionalNameParts = (profile: Profile) => {
   };
 };
 
-passport.serializeUser<user>((user, done) => {
-  done(null, user);
-});
-
-passport.deserializeUser<user>(async (auth, done) => {
-  try {
-    const repo = new LoginRepository();
-    const user = await repo.findByEmail({ b: { email: auth.email! } });
-    done(null, user);
-  } catch (err) {
-    done(err as Error, null);
-  }
-});
-
 // Estratégia Google
 passport.use(
   new GoogleStrategy(
@@ -93,7 +81,11 @@ passport.use(
     },
     async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
       try {
-        let device_id = req.query.state as string;
+        const state = verifyGoogleOAuthState(
+          req.query.state,
+          req.cookies?.[GOOGLE_OAUTH_STATE_COOKIE],
+        );
+        const device_id = state?.device_id;
         let deleteToken: string | undefined;
         let intent: string | undefined;
         let linkToken: string | undefined;
@@ -103,39 +95,15 @@ passport.use(
         let analyticsVisitorId: string | undefined;
         let analyticsSessionId: string | undefined;
 
-        try {
-          const stateObj = JSON.parse(device_id);
-          if (stateObj && typeof stateObj === "object" && stateObj.device_id) {
-            device_id = stateObj.device_id;
-            role = parseUserRole(stateObj.query?.role);
-            termsAccepted =
-              stateObj.query?.terms_accepted === "true" || stateObj.query?.terms_accepted === true;
-            termsVersion =
-              typeof stateObj.query?.terms_version === "string"
-                ? stateObj.query.terms_version
-                : undefined;
-            analyticsVisitorId =
-              typeof stateObj.query?.analytics_visitor_id === "string"
-                ? stateObj.query.analytics_visitor_id
-                : undefined;
-            analyticsSessionId =
-              typeof stateObj.query?.analytics_session_id === "string"
-                ? stateObj.query.analytics_session_id
-                : undefined;
-            intent = typeof stateObj.query?.intent === "string" ? stateObj.query.intent : undefined;
-            linkToken =
-              typeof stateObj.query?.link_token === "string"
-                ? stateObj.query.link_token
-                : undefined;
-            deleteToken =
-              typeof stateObj.query?.delete_token === "string"
-                ? stateObj.query.delete_token
-                : undefined;
-          }
-        } catch (e) {
-          console.warn("[GOOGLE] Estado OAuth inválido ou ausente.", {
-            message: e instanceof Error ? e.message : "unknown",
-          });
+        if (state) {
+          role = parseUserRole(state.query.role);
+          termsAccepted = state.query.terms_accepted === "true";
+          termsVersion = state.query.terms_version;
+          analyticsVisitorId = state.query.analytics_visitor_id;
+          analyticsSessionId = state.query.analytics_session_id;
+          intent = state.query.intent;
+          linkToken = state.query.link_token;
+          deleteToken = state.query.delete_token;
         }
         //
 
@@ -146,8 +114,11 @@ passport.use(
             type: 3,
           });
 
-        const email = profile.emails?.[0]?.value;
-        if (!email)
+        const googleEmail = profile.emails?.[0];
+        const profileJson = (profile._json ?? {}) as { email_verified?: boolean };
+        const email = googleEmail?.value;
+        const emailVerified = googleEmail?.verified === true || profileJson.email_verified === true;
+        if (!email || !emailVerified)
           return done(null, {
             status: 404,
             ...error("google_email_not_authorized", {}),
@@ -396,23 +367,28 @@ passport.use(
             });
           }
 
-          user = await repo.store({
-            b: {
-              name: googleNameForRole(role),
-              professional_first_name:
-                role === "psicologo" ? googleProfessionalName.firstName : undefined,
-              professional_last_name:
-                role === "psicologo" ? googleProfessionalName.lastName : undefined,
-              email,
-              avatar: googleAvatar,
-              provider: "google",
-              role,
-              terms_accepted: termsAccepted,
-              terms_version: termsVersion,
-              analytics_visitor_id: analyticsVisitorId,
-              analytics_session_id: analyticsSessionId,
-            },
-          });
+          try {
+            user = await repo.store({
+              b: {
+                name: googleNameForRole(role),
+                professional_first_name:
+                  role === "psicologo" ? googleProfessionalName.firstName : undefined,
+                professional_last_name:
+                  role === "psicologo" ? googleProfessionalName.lastName : undefined,
+                email,
+                avatar: googleAvatar,
+                provider: "google",
+                role,
+                terms_accepted: termsAccepted,
+                terms_version: termsVersion,
+                analytics_visitor_id: analyticsVisitorId,
+                analytics_session_id: analyticsSessionId,
+              },
+            });
+          } catch (storeError) {
+            if (!isPrismaErrorCode(storeError, "P2002")) throw storeError;
+            user = await repo.findByEmail({ b: { email } });
+          }
         } else {
           user = await repo.reactivateExpiredSuspension(user);
 
@@ -490,11 +466,12 @@ passport.use(
         });
       } catch (err) {
         const e = err as Error;
+        console.error("[GOOGLE_AUTH] Falha inesperada na autenticação.", {
+          name: e.name || "UnknownGoogleAuthError",
+        });
         return done(null, {
           status: 404,
-          ...error("google_unexpected_error", {
-            message: e.message,
-          }),
+          ...error("google_unexpected_error", {}),
           type: 3,
         });
       }
@@ -504,7 +481,13 @@ passport.use(
 
 // Estratégia JWT
 const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  jsonWebTokenOptions: {
+    maxAge: getUserJwtTtlSeconds(),
+  },
+  jwtFromRequest: ExtractJwt.fromExtractors([
+    ExtractJwt.fromAuthHeaderAsBearerToken(),
+    getUserRequestToken,
+  ]),
   secretOrKey: getJwtSecret(),
 };
 
@@ -512,35 +495,25 @@ passport.use(
   "jwt-user-api",
   new JWTStrategy(jwtOptions, async (payload: JwtPayload, done: VerifiedCallback) => {
     try {
-      if (payload.type !== "user" || !payload.email || !payload.device_id) {
+      if (payload.type !== "user" || !payload.id || !payload.email || !payload.device_id) {
         return done(notAuthorized, false);
       }
 
       const repo = new LoginRepository(payload.device_id, [
         { model: "company", columns: ["ai_api_key"] },
       ]);
-      let user = await repo.findByEmail({ b: { email: payload.email } });
+      const user = await repo.findByEmail({ b: { email: payload.email } });
 
-      if (user?.active) {
-        const isAdminViewAs = isAdminViewAsDeviceId(payload.device_id);
-        const createdIn = new Date((payload.iat || 0) * 1000);
-        const diff = differenceInHours(new Date(), createdIn);
-
-        if (!isAdminViewAs && diff > TOKEN_API_USER) {
-          try {
-            user = await repo.hidrate(user, payload.device_id);
-            emit_hidrate(user, payload.device_id);
-          } catch (_e) {
-            return done(notAuthorized, false);
-          }
-        }
-
+      if (user?.active && user.id === payload.id) {
         return done(null, user);
       }
 
       return done(notAuthorized, false);
     } catch (error) {
-      console.error("[USER AUTH] Falha ao validar token de usuário.", error);
+      console.error(
+        "[USER AUTH] Falha ao validar token de usuário.",
+        toSafeErrorLog(error, "UnknownUserAuthError"),
+      );
       return done(authUnavailable, false);
     }
   }),

@@ -39,6 +39,7 @@ import { Controller, type FieldPath, useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { useAccount } from "@/api/callers/account";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   FreeProfileCatalogCategory,
   FreeProfileCatalogItem,
@@ -67,27 +68,11 @@ import {
   useFreeProfileForm,
 } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const PROFESSIONAL_PROFILE_MENU_HREF = "/app/perfil";
 const PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR = '[data-psychologist-tip-target="profile-video"]';
 
-const resolveApiError = (error: unknown) => {
-  const apiError = error as ApiError;
-  return (
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    apiError.message ||
-    "Não foi possível salvar o perfil agora."
-  );
-};
+const resolveApiError = (error: unknown) =>
+  getSafeApiErrorMessage(error, "Não foi possível salvar o perfil agora.");
 
 type CatalogTagGroup = {
   title: string;
@@ -1253,8 +1238,8 @@ export const ProfessionalProfileSetupLogic = () => {
       uploadAvatar.mutate(croppedFile, {
         onSuccess: clearAvatarDraft,
       });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível preparar a imagem.");
+    } catch {
+      toast.error("Não foi possível preparar a imagem. Escolha outro arquivo e tente novamente.");
     }
   };
 

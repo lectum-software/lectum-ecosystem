@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { resolveApiError } from "@/api/handle";
 import { InputController } from "@/components/controllers";
 import { Form } from "@/hooks/form";
+import { normalizeSafeAdminRedirect } from "@/lib/safe-redirect";
 import { useAdminAuth } from "@/providers/admin-auth";
 import { type AdminLoginForm, useAdminLoginForm } from "./use-form";
 
@@ -14,7 +15,7 @@ export const LoginPageClient = () => {
   const form = useAdminLoginForm();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = normalizeSafeAdminRedirect(searchParams.get("callbackUrl"));
   const { isAuthenticated, isHydrating, login } = useAdminAuth();
 
   useEffect(() => {
@@ -39,14 +40,7 @@ export const LoginPageClient = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(51,0,255,0.46),transparent_34%),radial-gradient(circle_at_82%_12%,rgba(48,140,232,0.32),transparent_28%)]" />
         <div className="relative z-10 flex h-full flex-col justify-between">
           <div>
-            <Image
-              alt="Lectum"
-              height={54}
-              priority
-              src="/logo-light.png"
-              style={{ height: "auto", width: 190 }}
-              width={190}
-            />
+            <Image alt="Lectum" height={39} priority src="/logo-light.png" width={190} />
             <div className="mt-16 max-w-xl">
               <p className="text-sm font-bold uppercase tracking-[0.32em] text-sidebar-muted">
                 Ambiente administrativo

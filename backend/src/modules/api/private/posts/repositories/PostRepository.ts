@@ -5,6 +5,7 @@ import { ensureCommunityMembership } from "@/utils/community-membership";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -58,7 +59,6 @@ const MAX_LIMIT = 50;
 const INLINE_REPLY_DESCENDANT_DEPTH = 4;
 const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 const SHARE_ANTI_SPAM_WINDOW_MS = 60 * 60 * 1000;
-
 const communitySelect = {
   id: true,
   name: true,
@@ -977,7 +977,7 @@ export class PostRepository implements IPostRepository {
 
     if (mediaItemsChangeRequested) {
       const mediaItems = data.b.mediaItems ?? [];
-      await prisma.$transaction(async (transaction) => {
+      await withSerializableTransaction(async (transaction) => {
         await transaction.community_post.update({
           where: {
             id: post.id,
@@ -1888,7 +1888,7 @@ export class PostRepository implements IPostRepository {
       if (!parent) return { kind: "invalid_parent" };
     }
 
-    const reply = await prisma.$transaction(async (transaction) => {
+    const reply = await withSerializableTransaction(async (transaction) => {
       await ensureCommunityMembership({
         client: transaction,
         communityId: post.community_id,
@@ -2254,7 +2254,7 @@ export class PostRepository implements IPostRepository {
       if (!reply) return { kind: "invalid_target" };
     }
 
-    const response = await prisma.$transaction(async (transaction) => {
+    const response = await withSerializableTransaction(async (transaction) => {
       const existing = replyId
         ? await transaction.post_vote.findUnique({
             where: {
@@ -2377,7 +2377,7 @@ export class PostRepository implements IPostRepository {
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
 
-    const response = await prisma.$transaction(async (transaction) => {
+    const response = await withSerializableTransaction(async (transaction) => {
       const existing = await transaction.post_save.findUnique({
         where: {
           user_id_post_id: {
@@ -2459,7 +2459,7 @@ export class PostRepository implements IPostRepository {
     const post = await findPublishedPost(data.p.id);
     if (!post) return { kind: "not_found" };
 
-    const response = await prisma.$transaction(async (transaction) => {
+    const response = await withSerializableTransaction(async (transaction) => {
       const existing = await transaction.post_save.findUnique({
         where: {
           user_id_post_id: {
@@ -2522,7 +2522,7 @@ export class PostRepository implements IPostRepository {
     if (!post) return { kind: "not_found" };
     if (post.author_id !== data.auth.id) return { kind: "forbidden" };
 
-    await prisma.$transaction(async (transaction) => {
+    await withSerializableTransaction(async (transaction) => {
       const existing = await transaction.post_notification_mute.findUnique({
         where: {
           user_id_post_id: {
@@ -2613,7 +2613,7 @@ export class PostRepository implements IPostRepository {
     if (post.author_id !== data.auth.id) return { kind: "forbidden" };
 
     const now = new Date();
-    const response = await prisma.$transaction(async (transaction) => {
+    const response = await withSerializableTransaction(async (transaction) => {
       const shouldBlockProfessionalReplies = post.author.role !== "psicologo";
       const professionalRepliesCount = shouldBlockProfessionalReplies
         ? await transaction.post_reply.count({
@@ -2672,7 +2672,7 @@ export class PostRepository implements IPostRepository {
     const reply = await findPublishedReply(data.p.id, data.p.replyId);
     if (!reply) return { kind: "not_found" };
 
-    const response = await prisma.$transaction(async (transaction) => {
+    const response = await withSerializableTransaction(async (transaction) => {
       const existing = await transaction.post_reply_save.findUnique({
         where: {
           user_id_reply_id: {
@@ -2733,7 +2733,7 @@ export class PostRepository implements IPostRepository {
     const reply = await findPublishedReply(data.p.id, data.p.replyId);
     if (!reply) return { kind: "not_found" };
 
-    const response = await prisma.$transaction(async (transaction) => {
+    const response = await withSerializableTransaction(async (transaction) => {
       const existing = await transaction.post_reply_save.findUnique({
         where: {
           user_id_reply_id: {
@@ -2859,7 +2859,7 @@ export class PostRepository implements IPostRepository {
     const now = new Date();
     const nextRepliesCount = Math.max(0, post.replies_count - ids.length);
 
-    const response = await prisma.$transaction(async (transaction) => {
+    const response = await withSerializableTransaction(async (transaction) => {
       await transaction.post_reply.updateMany({
         where: {
           id: {

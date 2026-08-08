@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { resolveRegisterErrorMessage } from "@/app/auth/register/error-message";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { DividerWithLabel } from "@/components/ui/divider-with-label";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -15,37 +16,18 @@ import { useUserSet } from "@/hooks/user-set";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { fingerprint } from "@/utils/fingerprint";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
 import { type RegisterPatientForm, TERMS_VERSION, useForm } from "./use-form";
-
-const resolveRegisterErrorMessage = (error: unknown) => {
-  const message = error instanceof Error ? error.message : "";
-  const normalized = message.toLowerCase();
-
-  if (normalized.includes("email") && normalized.includes("cadastrad")) {
-    return "Este e-mail já está cadastrado. Faça login ou use outro e-mail.";
-  }
-
-  if (normalized.includes("senha") || normalized.includes("password")) {
-    return "A senha precisa ter no mínimo 10 caracteres.";
-  }
-
-  if (normalized.includes("termos") || normalized.includes("terms")) {
-    return "Aceite os termos para continuar.";
-  }
-
-  if (normalized.includes("device") || normalized.includes("dispositivo")) {
-    return "Não foi possível identificar seu dispositivo. Atualize a página e tente novamente.";
-  }
-
-  return message || "Não foi possível criar sua conta agora. Tente novamente.";
-};
 
 const PATIENT_EMAIL_FORM_ID = "patient-email-register-form";
 
 export const RegisterPatientLogic = () => {
   const { setter } = useUserSet("/auth/verify-email");
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? searchParams.get("callbackUrl");
+  const redirectTo = normalizeSafeInternalRedirect(
+    searchParams.get("redirectTo") ?? searchParams.get("callbackUrl"),
+  );
   const { Form, formProps, hook } = useForm();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
@@ -60,7 +42,7 @@ export const RegisterPatientLogic = () => {
           setter(data);
         },
         onError: (error) => {
-          setApiError(resolveRegisterErrorMessage(error));
+          setApiError(resolveRegisterErrorMessage(error, "patient"));
         },
       },
     },
@@ -99,9 +81,6 @@ export const RegisterPatientLogic = () => {
       });
 
       const currentDeviceId = await fingerprint();
-      const loginUrl =
-        process.env.NEXT_PUBLIC_LOGIN_URL ||
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/public/google/login`;
       const query = new URLSearchParams({
         intent: "register",
         role: "paciente",
@@ -117,7 +96,7 @@ export const RegisterPatientLogic = () => {
         query.set("redirectTo", redirectTo);
       }
 
-      window.location.href = `${loginUrl}/${currentDeviceId}?${query.toString()}`;
+      window.location.href = buildTrustedGoogleLoginUrl(currentDeviceId, query);
     } catch {
       setGooglePending(false);
       setApiError("Não foi possível iniciar o cadastro com Google. Tente novamente.");

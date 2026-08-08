@@ -32,7 +32,6 @@ import {
   type RefObject,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -54,6 +53,7 @@ import {
   useUploadPostReplyMedia,
   useVotePost,
 } from "@/api/callers/posts";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
@@ -62,6 +62,7 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
@@ -85,6 +86,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import {
+  formatCommunityPostTime as formatPostTimeLabel,
+  formatCommunityRelativeTime as formatRelativeTime,
+  getCommunityAuthorDisplayName,
+  getCommunityInitials as getInitials,
+} from "@/utils/community-display";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import {
   createLectumShareLinkTarget,
@@ -97,7 +104,6 @@ import {
 } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
@@ -149,9 +155,6 @@ type ReplyMediaPermission = {
   showControl: boolean;
 };
 
-const DETAIL_INLINE_TEXT_MAX_LINES = 4;
-const DETAIL_INLINE_TEXT_MORE_LABEL = "... ver mais";
-const DETAIL_INLINE_TEXT_LESS_LABEL = "ver menos";
 const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
 const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
@@ -179,138 +182,6 @@ const useIsPostDetailMobile = () => {
   }, []);
 
   return isMobile;
-};
-
-const InlineExpandableText = ({
-  className,
-  expanded,
-  onToggle,
-  text,
-}: {
-  className?: string;
-  expanded: boolean;
-  onToggle: (event: MouseEvent<HTMLButtonElement>) => void;
-  text: string;
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLParagraphElement>(null);
-  const [preview, setPreview] = useState(text);
-  const [truncated, setTruncated] = useState(false);
-
-  useLayoutEffect(() => {
-    const containerNode = containerRef.current;
-    const measureNode = measureRef.current;
-
-    if (!containerNode || !measureNode) return;
-
-    let animationFrame = 0;
-    let cancelled = false;
-
-    const lineHeightPx = () => {
-      const styles = window.getComputedStyle(measureNode);
-      const parsedLineHeight = Number.parseFloat(styles.lineHeight);
-
-      if (Number.isFinite(parsedLineHeight)) return parsedLineHeight;
-
-      const parsedFontSize = Number.parseFloat(styles.fontSize);
-      return Number.isFinite(parsedFontSize) ? parsedFontSize * 1.5 : 24;
-    };
-
-    const fitsWithinMaxLines = (value: string) => {
-      measureNode.textContent = value;
-
-      return measureNode.scrollHeight <= lineHeightPx() * DETAIL_INLINE_TEXT_MAX_LINES + 1;
-    };
-
-    const measure = () => {
-      if (cancelled) return;
-
-      const availableWidth = containerNode.getBoundingClientRect().width;
-      const normalizedText = text.trimEnd();
-
-      if (availableWidth <= 0 || normalizedText.length === 0) {
-        setPreview(text);
-        setTruncated(false);
-        return;
-      }
-
-      measureNode.style.width = `${availableWidth}px`;
-
-      if (fitsWithinMaxLines(normalizedText)) {
-        setPreview(text);
-        setTruncated(false);
-        return;
-      }
-
-      let low = 0;
-      let high = normalizedText.length;
-      let bestPreview = "";
-
-      while (low <= high) {
-        const middle = Math.floor((low + high) / 2);
-        const candidatePreview = normalizedText.slice(0, middle).trimEnd();
-        const candidate = `${candidatePreview} ${DETAIL_INLINE_TEXT_MORE_LABEL}`;
-
-        if (fitsWithinMaxLines(candidate)) {
-          bestPreview = candidatePreview;
-          low = middle + 1;
-        } else {
-          high = middle - 1;
-        }
-      }
-
-      setPreview(bestPreview || normalizedText.slice(0, 1));
-      setTruncated(true);
-    };
-
-    const scheduleMeasure = () => {
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = window.requestAnimationFrame(measure);
-    };
-
-    scheduleMeasure();
-
-    const resizeObserver = new ResizeObserver(scheduleMeasure);
-    resizeObserver.observe(containerNode);
-
-    if ("fonts" in document) {
-      void document.fonts.ready.then(scheduleMeasure);
-    }
-
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(animationFrame);
-      resizeObserver.disconnect();
-    };
-  }, [text]);
-
-  return (
-    <div className="relative min-w-0 max-w-full" ref={containerRef}>
-      <p className={cn("whitespace-pre-line", className)}>
-        {expanded || !truncated ? text : preview}
-        {truncated ? (
-          <>
-            {" "}
-            <button
-              className="pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80"
-              onClick={onToggle}
-              type="button"
-            >
-              {expanded ? DETAIL_INLINE_TEXT_LESS_LABEL : DETAIL_INLINE_TEXT_MORE_LABEL}
-            </button>
-          </>
-        ) : null}
-      </p>
-      <p
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-line",
-          className,
-        )}
-        ref={measureRef}
-      />
-    </div>
-  );
 };
 
 const useReplyMediaPermission = (): ReplyMediaPermission => {
@@ -389,10 +260,7 @@ const useReplyFocusHighlight = (replyId?: string | null, pending = false) => {
 
 const resolvePostError = (error: unknown) => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (apiError?.data?.status === 404 || normalized.includes("não encontr")) {
@@ -412,10 +280,7 @@ const resolvePostError = (error: unknown) => {
 
 const resolveReplyError = (error: unknown) => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const code = apiError?.data?.code;
 
   if (code === "content_moderation_safety_hold") {
@@ -428,48 +293,6 @@ const resolveReplyError = (error: unknown) => {
 
   return rawMessage || "Não foi possível publicar sua resposta agora.";
 };
-
-const formatRelativeTime = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "agora";
-
-  const diffInSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-  const minutes = Math.floor(diffInSeconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (minutes < 1) return "agora";
-  if (minutes < 60) return `há ${minutes} min`;
-  if (hours < 24) return `há ${hours} h`;
-  if (days < 7) return `há ${days} d`;
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-  }).format(date);
-};
-
-const formatPostTimeLabel = (createdAt: string, editedAt?: string | null) => {
-  const relativeTime = formatRelativeTime(createdAt);
-
-  return editedAt ? `${relativeTime} · editado` : relativeTime;
-};
-
-const getInitials = (name: string) => {
-  const parts = name.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return "L";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
-
-const getCommunityAuthorDisplayName = (
-  author: Pick<PostDetail["author"] | PostReply["author"], "name" | "role">,
-) =>
-  author.role === "psicologo"
-    ? normalizeProfessionalDisplayName(author.name) || author.name
-    : author.name;
 
 const isVerifiedProfessionalReply = (reply: PostReply) =>
   reply.author.role === "psicologo" && reply.author.verified;
@@ -846,6 +669,7 @@ const PostBody = ({ post }: { post: PostDetail }) => {
       <InlineExpandableText
         className="text-sm leading-6 text-[#475569] dark:text-muted"
         expanded={contentExpanded}
+        maxLines={4}
         onToggle={() => setContentExpanded((current) => !current)}
         text={post.content}
       />
@@ -981,6 +805,7 @@ const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
         <InlineExpandableText
           className="text-sm leading-6 text-[#475569] dark:text-muted"
           expanded={contentExpanded}
+          maxLines={4}
           onToggle={() => setContentExpanded((current) => !current)}
           text={post.content}
         />
@@ -1479,6 +1304,7 @@ const ReplyCard = ({
             <InlineExpandableText
               className="mt-2 text-sm leading-6 text-[#475569] dark:text-muted"
               expanded={contentExpanded}
+              maxLines={4}
               onToggle={() => setContentExpanded((current) => !current)}
               text={reply.content}
             />

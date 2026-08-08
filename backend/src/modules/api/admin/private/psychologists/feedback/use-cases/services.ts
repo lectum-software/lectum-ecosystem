@@ -1,5 +1,13 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import {
+  addDays,
+  daysBetweenInclusive,
+  endOfDate,
+  parseDateOnly,
+  startOfDate,
+  toDateKey,
+} from "@/utils/date-range";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type {
   AdminPsychologistReportActionDTO,
@@ -29,53 +37,9 @@ const DEFAULT_REPORTS_LIMIT = 10;
 const MAX_LIMIT = 50;
 const DEFAULT_REPORT_PERIOD_DAYS = 90;
 const MAX_REPORT_PERIOD_DAYS = 180;
-const MS_PER_DAY = 86_400_000;
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
 const REVIEW_REPORT_CONFIRMATION = "REVISAR DECISAO";
-
-const pad = (value: number) => String(value).padStart(2, "0");
-const toDateKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const endOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return boundary === "start" ? startOfDate(date) : endOfDate(date);
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
-};
 
 type ReportsPeriodResult =
   | {

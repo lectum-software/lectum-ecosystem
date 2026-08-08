@@ -1,5 +1,4 @@
-//Socket
-import { clients as cls } from ".";
+import { connectedClients as cls } from "./registry";
 
 export const clients = (usr: string[]) => {
   const clientToEmit: string[] = [];

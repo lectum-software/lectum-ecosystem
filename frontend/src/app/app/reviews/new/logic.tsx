@@ -72,7 +72,9 @@ export const ReviewsNewLogic = () => {
   const { Form, formProps, hook } = form;
   const mutation = useCreatePatientReview({
     onSuccess: (data) =>
-      router.replace(`/app/avaliacoes/sucesso?psychologist_id=${data.psychologist_id}`),
+      router.replace(
+        `/app/avaliacoes/sucesso?psychologist_id=${encodeURIComponent(data.psychologist_id)}`,
+      ),
   });
   const professional = eligibility.data;
   const stars = useMemo(() => Array.from({ length: 5 }, (_, index) => index + 1), []);

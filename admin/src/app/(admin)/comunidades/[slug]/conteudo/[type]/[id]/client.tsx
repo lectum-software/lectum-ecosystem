@@ -35,6 +35,8 @@ import type {
   AdminCommunityContentAuthor,
 } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
+import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
@@ -46,9 +48,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 const cardClass =
   "min-w-0 max-w-full rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 const pageClass = "min-w-0 max-w-full space-y-7 overflow-x-clip";
@@ -137,89 +136,6 @@ const normalizeTargetType = (value: string): ContentDetailTargetType | null => {
   if (value === "post" || value === "comment" || value === "reply") return value;
 
   return null;
-};
-
-const isPublicMediaPath = (pathname: string) =>
-  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
-
-const resolveAdminMediaUrl = (src?: string | null) => {
-  const value = src?.trim();
-  if (!value) return null;
-  const apiBase = apiUrl.replace(/\/$/, "");
-
-  try {
-    const parsed = new URL(value, apiBase);
-    if (isPublicMediaPath(parsed.pathname)) {
-      return `${apiBase}${parsed.pathname}${parsed.search}`;
-    }
-    if (value.startsWith("http")) return value;
-
-    return value.startsWith("/") ? value : `${apiBase}/${value}`;
-  } catch {
-    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
-      return `${apiBase}${value}`;
-    }
-
-    return value.startsWith("/") || value.startsWith("http") ? value : null;
-  }
-};
-
-const allowedRemoteImageHosts = () => {
-  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
-
-  for (const candidate of [
-    apiUrl,
-    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
-  ]) {
-    const normalized = candidate.trim();
-    if (!normalized) continue;
-
-    try {
-      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
-      if (url.hostname) hosts.add(url.hostname);
-    } catch {
-      // Entrada inválida de env não deve quebrar a tela administrativa.
-    }
-  }
-
-  return hosts;
-};
-
-const canRenderImage = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-  if (resolved.startsWith("/")) return true;
-
-  try {
-    return allowedRemoteImageHosts().has(new URL(resolved).hostname);
-  } catch {
-    return false;
-  }
-};
-
-const renderableImageSrc = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-
-  return resolved && canRenderImage(resolved) ? resolved : null;
-};
-
-const isAdminPublicMediaUrl = (src?: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-
-  try {
-    return isPublicMediaPath(new URL(resolved).pathname);
-  } catch {
-    return publicMediaPathPrefixes.some(
-      (prefix) => resolved.startsWith(prefix) || resolved.includes(prefix),
-    );
-  }
-};
-
-const toPublicHref = (path: string) => {
-  if (/^https?:\/\//.test(path)) return path;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${path}`;
 };
 
 const initials = (value: string) =>
@@ -588,7 +504,9 @@ const ContentDetailMetricRow = ({ detail }: { detail: AdminCommunityContentAnaly
 );
 
 const PreviewSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => {
-  const publicHref = detail.content.public_url ? toPublicHref(detail.content.public_url) : null;
+  const publicHref = detail.content.public_url
+    ? toPublicFrontendHref(detail.content.public_url)
+    : null;
   const hasMedia = Boolean(detail.content.media);
   const isPost = detail.content.type === "post";
   const originPreview = isPost ? detail.content.origin_preview : null;

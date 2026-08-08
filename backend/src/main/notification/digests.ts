@@ -2,6 +2,7 @@ import webPush, { isWebPushConfigured } from "@/config/webPush";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { getNewPostAuthorScope, isChannelAllowed, isNotificationEnabled } from "./preferences";
 
 const BASE = process.env.BASE || "";
@@ -253,11 +254,10 @@ const sendDigestPush = async (
       sent++;
     } catch (error) {
       failed++;
-      console.error(
-        "[WEB NOTIFICATION] erro ao enviar digest push:",
-        (error as { statusCode?: number })?.statusCode,
-        (error as Error)?.message,
-      );
+      console.error("[WEB NOTIFICATION] erro ao enviar digest push:", {
+        ...toSafeErrorLog(error, "WebPushDigestSendError"),
+        status_code: (error as { statusCode?: number })?.statusCode,
+      });
     }
   }
 
@@ -884,6 +884,23 @@ export const runNotificationDigestScheduler = async (now = new Date()) => {
 };
 
 let digestTimer: ReturnType<typeof setInterval> | null = null;
+let digestInitialTimer: ReturnType<typeof setTimeout> | null = null;
+let digestRunInProgress = false;
+
+const runDigestSafely = async () => {
+  if (digestRunInProgress) return;
+
+  digestRunInProgress = true;
+  try {
+    await runNotificationDigestScheduler();
+  } catch (error) {
+    console.error("[WEB NOTIFICATION] erro no scheduler de digests:", {
+      name: error instanceof Error ? error.name : "UnknownDigestSchedulerError",
+    });
+  } finally {
+    digestRunInProgress = false;
+  }
+};
 
 export const startNotificationDigestScheduler = () => {
   if (process.env.NOTIFICATION_DIGESTS_ENABLED === "false") return;
@@ -892,12 +909,14 @@ export const startNotificationDigestScheduler = () => {
   const interval = Number(process.env.NOTIFICATION_DIGESTS_INTERVAL_MS);
   const intervalMs =
     Number.isFinite(interval) && interval > 0 ? interval : DEFAULT_DIGEST_INTERVAL_MS;
-  const run = () => {
-    void runNotificationDigestScheduler().catch((error) => {
-      console.error("[WEB NOTIFICATION] erro no scheduler de digests:", (error as Error).message);
-    });
-  };
+  digestInitialTimer = setTimeout(() => void runDigestSafely(), 30_000);
+  digestTimer = setInterval(() => void runDigestSafely(), intervalMs);
+};
 
-  setTimeout(run, 30_000);
-  digestTimer = setInterval(run, intervalMs);
+export const stopNotificationDigestScheduler = () => {
+  if (digestInitialTimer) clearTimeout(digestInitialTimer);
+  if (digestTimer) clearInterval(digestTimer);
+
+  digestInitialTimer = null;
+  digestTimer = null;
 };

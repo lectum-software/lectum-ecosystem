@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 
 const accountTokenSelect = {
@@ -190,7 +190,7 @@ export class AdminPsychologistAccountRepository {
         data: {
           need_reset: true,
           password: input.passwordHash,
-          password_confirm: input.passwordHash,
+          password_confirm: null,
           recovery_code: null,
           recovery_date: null,
         },

@@ -3,6 +3,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import dotenv from "dotenv";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 dotenv.config();
 
@@ -278,6 +279,9 @@ export const swaggerGenerate = async (
     const outputFile = path.resolve("./swagger", options.outputFile);
     await fs.writeFile(outputFile, JSON.stringify(sortedSwaggerDoc, null, 2));
   } catch (error) {
-    console.error("\x1b[31m[SWAGGER]: Erro ao salvar JSON\x1b[0m", error);
+    console.error(
+      "\x1b[31m[SWAGGER]: Erro ao salvar JSON\x1b[0m",
+      toSafeErrorLog(error, "SwaggerWriteError"),
+    );
   }
 };

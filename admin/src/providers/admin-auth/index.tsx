@@ -15,7 +15,6 @@ import type { AdminLoginInput } from "@/api/types";
 import {
   clearAdminSession,
   getAdminToken,
-  getStoredAdmin,
   type StoredAdmin,
   sanitizeAdmin,
   storeAdminSession,
@@ -37,14 +36,8 @@ export const AdminAuthProvider = ({ children }: PropsWithChildren) => {
   const applyAdminSession = useCallback((adminData: Awaited<ReturnType<typeof hydrateAdmin>>) => {
     const token = extractAdminToken(adminData);
 
-    if (!token) {
-      clearAdminSession();
-      setAdmin(null);
-      throw new Error("Sessão administrativa inválida. Faça login novamente.");
-    }
-
     const safeAdmin = sanitizeAdmin(adminData);
-    storeAdminSession(adminData, token);
+    storeAdminSession(token);
     setAdmin(safeAdmin);
     return safeAdmin;
   }, []);
@@ -53,17 +46,7 @@ export const AdminAuthProvider = ({ children }: PropsWithChildren) => {
     let active = true;
 
     const hydrate = async () => {
-      const stored = getStoredAdmin();
-      const token = getAdminToken();
-
-      if (stored && token) {
-        setAdmin(stored);
-      }
-
-      if (!token) {
-        if (active) setIsHydrating(false);
-        return;
-      }
+      getAdminToken();
 
       try {
         const adminData = await hydrateAdmin();
@@ -93,7 +76,7 @@ export const AdminAuthProvider = ({ children }: PropsWithChildren) => {
 
   const logout = useCallback(async () => {
     try {
-      if (getAdminToken()) await logoutAdmin();
+      await logoutAdmin();
     } finally {
       clearAdminSession();
       setAdmin(null);
@@ -104,7 +87,7 @@ export const AdminAuthProvider = ({ children }: PropsWithChildren) => {
   const value = useMemo(
     () => ({
       admin,
-      isAuthenticated: Boolean(admin && getAdminToken()),
+      isAuthenticated: Boolean(admin),
       isHydrating,
       login,
       logout,

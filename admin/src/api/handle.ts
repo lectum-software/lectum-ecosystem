@@ -1,30 +1,24 @@
 import { AxiosError } from "axios";
-import { adminApiUrl } from "@/api/client";
+import { getSafeAdminApiError } from "@/api/errors";
 import type { ApiResponse } from "@/api/types";
+import { sanitizeAdminNavigationData } from "@/lib/safe-redirect";
 
 export const resolveApiData = <T>(response: ApiResponse<T>) => {
-  if (!response.success || !response.data) {
-    throw new Error(response.error || response.message || "Não foi possível concluir a operação.");
+  if (!response.success) {
+    throw new Error(getSafeAdminApiError(response));
   }
 
-  return response.data;
+  return sanitizeAdminNavigationData(response.data as T);
 };
 
 export const resolveApiError = (error: unknown) => {
   if (error instanceof AxiosError) {
-    const response = error.response?.data as ApiResponse | undefined;
-
     if (!error.response) {
-      return [
-        `Não foi possível conectar ao backend em ${adminApiUrl}.`,
-        "Verifique se o backend está rodando e se NEXT_PUBLIC_API_URL aponta para a API correta.",
-      ].join(" ");
+      return "Não foi possível conectar ao serviço. Tente novamente.";
     }
 
-    return response?.error || response?.message || "Não foi possível conectar ao backend.";
+    return getSafeAdminApiError(error);
   }
 
-  if (error instanceof Error) return error.message;
-
-  return "Não foi possível concluir a operação.";
+  return getSafeAdminApiError(error);
 };

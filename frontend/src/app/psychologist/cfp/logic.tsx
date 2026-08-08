@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
 import { usePsychologistCfp } from "@/api/callers/psychologist-cfp";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CfpResult, CfpSearchResponse, user } from "@/api/generator/types";
 import { formatCpf } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -38,7 +39,6 @@ const supportLinkProps = {
 } as const;
 const cfpSystemErrorMessage =
   "N\u00e3o foi poss\u00edvel concluir a verifica\u00e7\u00e3o autom\u00e1tica agora.";
-const genericStatusErrorPattern = /^Request failed with status code \d+$/i;
 
 type ApiError = Error & {
   data?: unknown;
@@ -75,22 +75,11 @@ const resolveApiError = (error: unknown) => {
     getStatusValue(data.status) ||
     getStatusValue(responseData.status) ||
     getStatusValue(apiError?.response?.status);
-  const rawMessage =
-    getStringValue(data.error) ||
-    getStringValue(data.message) ||
-    getStringValue(responseData.error) ||
-    getStringValue(responseData.message) ||
-    (error instanceof Error ? error.message : undefined);
-  const shouldUseCfpSystemMessage =
-    typeof status === "number" &&
-    status >= 500 &&
-    (!rawMessage || genericStatusErrorPattern.test(rawMessage));
+  const rawMessage = getSafeApiErrorMessage(error, cfpSystemErrorMessage);
 
   return {
     code: getStringValue(data.code) || getStringValue(responseData.code),
-    message:
-      (shouldUseCfpSystemMessage ? cfpSystemErrorMessage : rawMessage) ||
-      "N\u00e3o foi poss\u00edvel concluir a verifica\u00e7\u00e3o autom\u00e1tica agora. Tente novamente.",
+    message: rawMessage,
     status,
   };
 };

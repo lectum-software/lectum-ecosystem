@@ -1,6 +1,10 @@
 import Cookies from "js-cookie";
 
-const expires = Number(process.env.NEXT_PUBLIC_COOKIE_EXPIRE_DAYS || 7);
+const configuredExpiration = Number(process.env.NEXT_PUBLIC_COOKIE_EXPIRE_DAYS);
+const expires =
+  Number.isInteger(configuredExpiration) && configuredExpiration > 0 && configuredExpiration <= 30
+    ? configuredExpiration
+    : 7;
 
 const options: Cookies.CookieAttributes = {
   expires,
@@ -19,10 +23,6 @@ const get = (key: string) => {
   return Cookies.get(key);
 };
 
-const getAll = () => {
-  return Cookies.get();
-};
-
 const remove = (key: string) => {
   Cookies.remove(key, options);
   Cookies.remove(key);
@@ -31,7 +31,6 @@ const remove = (key: string) => {
 const cookie = {
   set,
   get,
-  getAll,
   remove,
   options,
 };

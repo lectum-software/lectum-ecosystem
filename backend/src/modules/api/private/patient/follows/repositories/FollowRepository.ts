@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import {
   activeProfessionalEntitlementWhere,
@@ -263,74 +264,64 @@ export class FollowRepository implements IFollowRepository {
   }
 
   async follow(userId: string, psychologistId: string): Promise<FollowActionResponse> {
-    const existing = await this.repository.findUnique({
-      where: {
-        user_id_psychologist_id: {
-          user_id: userId,
-          psychologist_id: psychologistId,
-        },
-      },
-    });
-
-    if (existing) {
-      await this.repository.update({
+    return withSerializableTransaction(async (transaction) => {
+      await transaction.psychologist_follow.upsert({
         where: {
           user_id_psychologist_id: {
             user_id: userId,
             psychologist_id: psychologistId,
           },
         },
-        data: {
+        create: {
+          user_id: userId,
+          psychologist_id: psychologistId,
+        },
+        update: {
           deleted: false,
           deletedAt: null,
         },
       });
-    } else {
-      await this.repository.create({
-        data: {
-          user_id: userId,
-          psychologist_id: psychologistId,
-        },
-      });
-    }
 
-    return {
-      psychologist_id: psychologistId,
-      followed: true,
-    };
+      return {
+        psychologist_id: psychologistId,
+        followed: true,
+      };
+    });
   }
 
   async unfollow(userId: string, psychologistId: string): Promise<FollowActionResponse> {
-    const existing = await this.repository.findUnique({
-      where: {
-        user_id_psychologist_id: {
-          user_id: userId,
-          psychologist_id: psychologistId,
-        },
-      },
-      select: {
-        deleted: true,
-      },
-    });
-
-    if (existing && !existing.deleted) {
-      await this.repository.update({
+    return withSerializableTransaction(async (transaction) => {
+      const existing = await transaction.psychologist_follow.findUnique({
         where: {
           user_id_psychologist_id: {
             user_id: userId,
             psychologist_id: psychologistId,
           },
         },
-        data: {
+        select: {
           deleted: true,
-          deletedAt: new Date(),
         },
       });
-    }
 
-    return {
-      psychologist_id: psychologistId,
-      followed: false,
-    };
+      if (existing && !existing.deleted) {
+        await transaction.psychologist_follow.update({
+          where: {
+            user_id_psychologist_id: {
+              user_id: userId,
+              psychologist_id: psychologistId,
+            },
+          },
+          data: {
+            deleted: true,
+            deletedAt: new Date(),
+          },
+        });
+      }
+
+      return {
+        psychologist_id: psychologistId,
+        followed: false,
+      };
+    });
   }
 }

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useUploadCommunityPostMedia } from "@/api/callers/community";
 import { useUpdatePost } from "@/api/callers/posts";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostDetail } from "@/api/generator/types/posts";
 import { components } from "@/components/controllers";
 import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
+import { resolveMediaUploadError } from "@/utils/media-upload-error";
 import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
@@ -69,16 +71,6 @@ type EditablePost = Pick<
   | "replies_count"
   | "title"
 >;
-
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
 
 type SelectedPostMedia = {
   file: File;
@@ -184,39 +176,6 @@ const buildFields = ({
     },
   ] satisfies Field<PostEditForm>[];
 
-const errorMessageFromUnknown = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
-
-  return rawMessage || "Não foi possível salvar as alterações agora. Tente novamente.";
-};
-
-const resolveMediaUploadError = (error: unknown) => {
-  const rawMessage = errorMessageFromUnknown(error);
-  const normalized = rawMessage.toLowerCase();
-
-  if (
-    normalized.includes("tamanho") ||
-    normalized.includes("limite") ||
-    normalized.includes("50")
-  ) {
-    return "A mídia precisa ter até 50MB.";
-  }
-
-  if (normalized.includes("tipo") || normalized.includes("permit")) {
-    return "Envie uma imagem ou vídeo em formato permitido.";
-  }
-
-  if (normalized.includes("plano") || normalized.includes("verific")) {
-    return "Mídia disponível apenas para psicólogos verificados.";
-  }
-
-  return rawMessage || "Não foi possível anexar a mídia agora. Tente novamente.";
-};
-
 const normalizeMediaType = (value?: string | null): "image" | "video" | null => {
   if (value === "image" || value === "video") return value;
 
@@ -268,7 +227,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       onClose();
     },
     onError: (error) => {
-      toast.error(errorMessageFromUnknown(error));
+      toast.error(getSafeApiErrorMessage(error, "Não foi possível atualizar o post."));
     },
   });
   const canManageMedia = mediaPermission.canAttach && isPsychologistPost;

@@ -32,16 +32,36 @@ export class WebhookRepository implements IWebhookRepository {
       return { event: current, created: false };
     }
 
-    const event = await this.paymentEventRepository.create({
-      data: {
-        gateway: data.gateway,
-        external_id: data.external_id,
-        type: data.type,
-        payload: toJson(data.payload),
-      },
-    });
+    try {
+      const event = await this.paymentEventRepository.create({
+        data: {
+          gateway: data.gateway,
+          external_id: data.external_id,
+          type: data.type,
+          payload: toJson(data.payload),
+        },
+      });
 
-    return { event, created: true };
+      return { event, created: true };
+    } catch (error) {
+      const isUniqueConflict =
+        typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+
+      if (!isUniqueConflict) throw error;
+
+      const concurrentEvent = await this.paymentEventRepository.findUnique({
+        where: {
+          gateway_external_id: {
+            gateway: data.gateway,
+            external_id: data.external_id,
+          },
+        },
+      });
+
+      if (!concurrentEvent) throw error;
+
+      return { event: concurrentEvent, created: false };
+    }
   }
 
   async findSubscriptionByGatewayReference(data: {

@@ -85,6 +85,15 @@ import {
   summarizePlatformUsage,
   summarizePsychologistWhatsappTrafficOrigins,
 } from "@/utils/admin-psychologist-analytics";
+import {
+  buildDateLabels as buildLabels,
+  daysBetweenInclusive,
+  endOfDate,
+  parseDateOnly,
+  resolveCalendarPeriod,
+  startOfDate,
+  toDateKey,
+} from "@/utils/date-range";
 import { crpExperienceYears } from "@/utils/professional-experience";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import type {
@@ -456,147 +465,24 @@ type PeriodResult =
       success: false;
     };
 
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const startOfWeek = (date: Date) => {
-  const next = startOfDate(date);
-  const day = next.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  next.setDate(next.getDate() + diff);
-
-  return next;
-};
-
-const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
-
-const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1);
-
-const endOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const pad = (value: number) => String(value).padStart(2, "0");
-
-export const toDateKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return boundary === "start" ? startOfDate(date) : endOfDate(date);
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
-};
-
-const buildLabels = (from: Date, days: number) =>
-  Array.from({ length: days }, (_, index) => toDateKey(addDays(from, index)));
-
 const resolvePeriod = (
   query: AdminPsychologistsDashboardQuery,
   allPeriodStartDate?: Date,
 ): PeriodResult => {
-  const hasCustomFrom = Boolean(query.from);
-  const hasCustomTo = Boolean(query.to);
-  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
+  const resolved = resolveCalendarPeriod(query, {
+    allPeriodStartDate,
+    defaultDays: DEFAULT_PERIOD_DAYS,
+    maxDays: MAX_PERIOD_DAYS,
+  });
+  if (!resolved) return { code: "invalid_analytics_date_range", success: false };
 
-  let start: Date;
-  let end: Date;
-  let label = "Últimos 7 dias";
-
-  if (preset === "custom") {
-    if (!hasCustomFrom || !hasCustomTo) {
-      return { success: false, code: "invalid_analytics_date_range" };
-    }
-
-    const customStart = parseDateOnly(query.from, "start");
-    const customEnd = parseDateOnly(query.to, "end");
-
-    if (!customStart || !customEnd || customStart > customEnd) {
-      return { success: false, code: "invalid_analytics_date_range" };
-    }
-
-    start = customStart;
-    end = customEnd;
-    label = "Período personalizado";
-  } else if (preset === "today") {
-    const today = new Date();
-    start = startOfDate(today);
-    end = endOfDate(today);
-    label = "Hoje";
-  } else if (preset === "week") {
-    const today = new Date();
-    start = startOfWeek(today);
-    end = endOfDate(today);
-    label = "Esta semana";
-  } else if (preset === "month") {
-    const today = new Date();
-    start = startOfMonth(today);
-    end = endOfDate(today);
-    label = "Este mês";
-  } else if (preset === "year") {
-    const today = new Date();
-    start = startOfYear(today);
-    end = endOfDate(today);
-    label = "Este ano";
-  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
-    const today = new Date();
-    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
-    start = startOfDate(addDays(today, -(days - 1)));
-    end = endOfDate(today);
-    label = `Últimos ${days} dias`;
-  } else if (preset === "all") {
-    const today = new Date();
-    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
-    end = endOfDate(today);
-    label = "Todo o período";
-  } else if (preset) {
-    return { success: false, code: "invalid_analytics_date_range" };
-  } else {
-    const today = new Date();
-    end = endOfDate(today);
-    start = startOfDate(addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
-  }
-
-  const days = daysBetweenInclusive(start, end);
-  if (days < 1 || days > MAX_PERIOD_DAYS) {
-    return { success: false, code: "invalid_analytics_date_range" };
-  }
-
-  const previousEnd = endOfDate(addDays(start, -1));
-  const previousStart = startOfDate(addDays(start, -days));
-
+  const { days, end, label, previousEnd, previousStart, start } = resolved;
   return {
     success: true,
     period: {
-      current: { start, end },
+      current: { end, start },
       days,
       labels: buildLabels(start, days),
-      previous: { start: previousStart, end: previousEnd },
       period: {
         days,
         from: toDateKey(start),
@@ -607,9 +493,11 @@ const resolvePeriod = (
         timezone: "server-local",
         to: toDateKey(end),
       },
+      previous: { end: previousEnd, start: previousStart },
     },
   };
 };
+
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
 
 const percentageChange = (current: number, previous: number) => {
@@ -2953,7 +2841,7 @@ const buildProfileConversionEngagementFavoritesMatrixResults = (params: {
       };
     }),
     description:
-      "Matriz observacional entre ConversÃ£o e as 16 combinaÃ§Ãµes de Engajamento comunitÃ¡rio recebido x Favoritos. Perfis em adaptaÃ§Ã£o sÃ£o projetados nos mesmos 16 eixos para manter a leitura do funil fechada, sem alterar ranking ou punir profissionais.",
+      "Matriz observacional entre Conversão e as 16 combinações de Engajamento comunitário recebido x Favoritos. Perfis em adaptação são projetados nos mesmos 16 eixos para manter a leitura do funil fechada, sem alterar ranking ou punir profissionais.",
     quadrants: PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER.flatMap((rowId) =>
       PROFILE_CONVERSION_ENGAGEMENT_FAVORITES_MATRIX_COLUMN_ORDER.map((columnId) => {
         const quadrantId = buildProfileConversionEngagementFavoritesMatrixQuadrantId(
@@ -2971,7 +2859,7 @@ const buildProfileConversionEngagementFavoritesMatrixResults = (params: {
           column_id: columnId,
           column_label: columnConfig.label,
           count: values.count,
-          description: `PsicÃ³logos em ${rowConfig.label} com ${columnConfig.label}.`,
+          description: `Psicólogos em ${rowConfig.label} com ${columnConfig.label}.`,
           id: quadrantId,
           label: `${rowConfig.label} + ${columnConfig.label}`,
           percentage: safePercentage(values.count, totalPsychologists),
@@ -2986,7 +2874,7 @@ const buildProfileConversionEngagementFavoritesMatrixResults = (params: {
     totals: totalSignals,
     unavailable_reason:
       params.profiles.length === 0
-        ? "Sem psicÃ³logos ativos no fim do perÃ­odo selecionado para cruzar ConversÃ£o com Engajamentos e Favoritos."
+        ? "Sem psicólogos ativos no fim do período selecionado para cruzar Conversão com Engajamentos e Favoritos."
         : null,
   };
 };
@@ -3235,7 +3123,7 @@ const buildProfileConversionVisibilityMatrixResults = (params: {
       };
     }),
     description:
-      "Matriz observacional entre ConversÃ£o e as 16 combinaÃ§Ãµes de Visibilidade em comunidades x VÃ­deo de apresentaÃ§Ã£o. Perfis em adaptaÃ§Ã£o sÃ£o projetados nos mesmos 16 eixos para manter a leitura do funil fechada, sem alterar ranking ou punir profissionais.",
+      "Matriz observacional entre Conversão e as 16 combinações de Visibilidade em comunidades x Vídeo de apresentação. Perfis em adaptação são projetados nos mesmos 16 eixos para manter a leitura do funil fechada, sem alterar ranking ou punir profissionais.",
     quadrants: PROFILE_CONVERSION_MATRIX_CATEGORY_ORDER.flatMap((rowId) =>
       PROFILE_CONVERSION_VISIBILITY_MATRIX_COLUMN_ORDER.map((columnId) => {
         const quadrantId = buildProfileConversionVisibilityMatrixQuadrantId(rowId, columnId);
@@ -3250,7 +3138,7 @@ const buildProfileConversionVisibilityMatrixResults = (params: {
           column_id: columnId,
           column_label: columnConfig.label,
           count: values.count,
-          description: `PsicÃ³logos em ${rowConfig.label} com ${columnConfig.label}.`,
+          description: `Psicólogos em ${rowConfig.label} com ${columnConfig.label}.`,
           id: quadrantId,
           label: `${rowConfig.label} + ${columnConfig.label}`,
           percentage: safePercentage(values.count, totalPsychologists),
@@ -3265,7 +3153,7 @@ const buildProfileConversionVisibilityMatrixResults = (params: {
     totals: totalSignals,
     unavailable_reason:
       params.profiles.length === 0
-        ? "Sem psicÃ³logos ativos no fim do perÃ­odo selecionado para cruzar ConversÃ£o com Visibilidade."
+        ? "Sem psicólogos ativos no fim do período selecionado para cruzar Conversão com Visibilidade."
         : null,
   };
 };
@@ -8061,7 +7949,7 @@ export const buildPsychologistsDashboard = async (
         ? [
             {
               description:
-                "Engajamento e Favoritos depende de ao menos um perfil de psicÃ³logo ativo no perÃ­odo selecionado.",
+                "Engajamento e Favoritos depende de ao menos um perfil de psicólogo ativo no período selecionado.",
               id: "psychologist_profile_engagement_favorites",
               label: "Engajamento e Favoritos",
               source: profileEngagementFavorites.source,

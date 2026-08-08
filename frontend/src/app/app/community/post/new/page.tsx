@@ -1,6 +1,1 @@
-﻿import { redirect } from "next/navigation";
-import { COMMUNITY_CREATE_POST_HREF } from "@/utils/community";
-
-export default function CreateCommunityPostPage() {
-  redirect(COMMUNITY_CREATE_POST_HREF);
-}
+export { default } from "@/app/app/comunidades/publicacao/nova/page";

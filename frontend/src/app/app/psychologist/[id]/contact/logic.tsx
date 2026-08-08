@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologist, useDirectoryPsychologistContact } from "@/api/callers/directory";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import {
   openPsychologistWhatsApp,
   PsychologistWhatsAppRedirectModal,
@@ -28,6 +29,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
+import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { toContactPhoneE164, useForm, type WhatsAppContactForm } from "./use-form";
 
@@ -43,10 +45,7 @@ type ApiError = Error & {
 
 const resolveApiErrorMessage = (error: unknown, fallback: string) => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (apiError?.data?.status === 404 || normalized.includes("não encontr")) {
@@ -157,21 +156,28 @@ export const PsychologistContactLogic = () => {
   };
 
   const startWhatsappTransition = (url: string) => {
-    setWhatsappUrl(url);
-    setWhatsappRedirectUrl(url);
+    const trustedUrl = normalizeTrustedWhatsAppUrl(url);
+    if (!trustedUrl) {
+      setApiError("Não foi possível abrir o WhatsApp com segurança.");
+      return;
+    }
+
+    setWhatsappUrl(trustedUrl);
+    setWhatsappRedirectUrl(trustedUrl);
     setManualFallbackVisible(false);
     setIsWhatsAppTransitionOpen(true);
     setRedirectTimer(
       () => setManualFallbackVisible(true),
       WHATSAPP_REDIRECT_FALLBACK_VISIBLE_DELAY_MS,
     );
-    setRedirectTimer(() => openPsychologistWhatsApp(url), WHATSAPP_REDIRECT_MIN_DELAY_MS);
+    setRedirectTimer(() => openPsychologistWhatsApp(trustedUrl), WHATSAPP_REDIRECT_MIN_DELAY_MS);
   };
 
   const handleManualWhatsappOpen = () => {
-    if (!whatsappRedirectUrl) return;
+    const trustedUrl = normalizeTrustedWhatsAppUrl(whatsappRedirectUrl);
+    if (!trustedUrl) return;
 
-    window.open(whatsappRedirectUrl, "_blank", "noopener,noreferrer");
+    window.open(trustedUrl, "_blank", "noopener,noreferrer");
   };
 
   const contact = useDirectoryPsychologistContact(psychologistId, {

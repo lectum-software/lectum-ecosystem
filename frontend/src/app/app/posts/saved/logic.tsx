@@ -19,6 +19,7 @@ import {
   useUnsaveReplyFromList,
   useVotePost,
 } from "@/api/callers/posts";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityAuthor } from "@/api/generator/types/community";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
@@ -38,6 +39,10 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import {
+  formatCommunityRelativeTime as formatRelativeTime,
+  getCommunityInitials as getInitials,
+} from "@/utils/community-display";
+import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
   createLectumShareVideoTarget,
@@ -48,22 +53,8 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 const PAGE_LIMIT = 10;
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const resolvePostsError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("token") || normalized.includes("sess")) {
@@ -75,35 +66,6 @@ const resolvePostsError = (error: unknown) => {
   }
 
   return rawMessage || "Não foi possível carregar seus itens salvos agora.";
-};
-
-const formatRelativeTime = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "agora";
-
-  const diffInSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-  const minutes = Math.floor(diffInSeconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (minutes < 1) return "agora";
-  if (minutes < 60) return `há ${minutes} min`;
-  if (hours < 24) return `há ${hours} h`;
-  if (days < 7) return `há ${days} d`;
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-  }).format(date);
-};
-
-const getInitials = (name: string) => {
-  const parts = name.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return "L";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
 const formatAuthorMeta = (author: CommunityAuthor, createdAt: string) => {

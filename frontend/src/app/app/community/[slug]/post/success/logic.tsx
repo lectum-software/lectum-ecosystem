@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 const normalizeParam = (value: string | string[] | undefined) => {
   if (Array.isArray(value)) return value[0];
@@ -40,7 +41,10 @@ export const CommunityPostSuccessLogic = ({
     }
 
     if (storedPublicationHref) {
-      return storedPublicationHref;
+      return (
+        normalizeSafeInternalRedirect(storedPublicationHref, DEFAULT_COMMUNITY_FEED_HREF) ??
+        DEFAULT_COMMUNITY_FEED_HREF
+      );
     }
 
     return publicationSlug ? `/comunidades/${publicationSlug}` : DEFAULT_COMMUNITY_FEED_HREF;

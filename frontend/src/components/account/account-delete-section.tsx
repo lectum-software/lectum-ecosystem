@@ -5,12 +5,14 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAccount } from "@/api/callers/account";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useSignOut } from "@/hooks/cookies/signout";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { normalizeTrustedApiUrl } from "@/utils/trusted-navigation";
 import { useDeleteAccountForm } from "./use-delete-account-form";
 
 type ApiErrorData = {
@@ -31,10 +33,7 @@ type AccountDeleteSectionProps = {
 const resolveDeleteAccountError = (error: unknown) => {
   const apiError = error as ApiError;
   const code = apiError?.data?.code;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (code === "account_delete_google_reauth_required") {
@@ -84,7 +83,13 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
       createDeleteGoogleIntent: {
         onError: (error) => setDeleteAccountError(resolveDeleteAccountError(error)),
         onSuccess: (data) => {
-          window.location.href = data.url;
+          const url = normalizeTrustedApiUrl(data.url);
+          if (!url) {
+            setDeleteAccountError("Não foi possível iniciar a confirmação com o Google.");
+            return;
+          }
+
+          window.location.assign(url);
         },
       },
       deleteAccount: {

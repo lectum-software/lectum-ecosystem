@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import { ArrowRight, CheckCircle2, CreditCard } from "lucide-react";
@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { BillingPaymentMethod, ProfessionalSubscription } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -48,7 +49,7 @@ const formatPrice = (priceCents?: number | null) => {
 };
 
 const getErrorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Não foi possível carregar a gestão do cartão agora.";
+  getSafeApiErrorMessage(error, "Não foi possível carregar a gestão do cartão agora.");
 
 const canUpdateCard = (subscription?: ProfessionalSubscription | null) =>
   subscription?.plan?.slug === "profissional" && Boolean(subscription.gateway_subscription_id);
@@ -183,14 +184,13 @@ export const ProfessionalBillingCardLogic = () => {
           last4: additionalData?.lastFourDigits || null,
         });
       } catch {
-        // handleReq já exibe o erro real da API; impedir rejeição não tratada no Brick.
+        // handleReq já exibe o erro público sanitizado; impedir rejeição não tratada no Brick.
       }
     },
     [],
   );
 
-  const handleBrickError = useCallback((error: unknown) => {
-    console.error("[Billing CardPayment - card update]", error);
+  const handleBrickError = useCallback(() => {
     toast.error("Não foi possível carregar o formulário de cartão.");
   }, []);
 

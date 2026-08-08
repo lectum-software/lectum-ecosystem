@@ -16,9 +16,9 @@ export const useUserSet = (redirect: RedirectTarget = "/dashboard") => {
 
   const setter = useCallback(
     (data: user) => {
-      if (!data?.user_tokens?.[0]?.token) {
+      if (!data?.id) {
         router.replace(
-          `/auth/error?error=${encodeURIComponent("Token de autenticação não retornado.")}`,
+          `/auth/error?error=${encodeURIComponent("Sessão de autenticação não retornada.")}`,
         );
         return;
       }

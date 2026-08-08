@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { useAppDispatch } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
 import { resolveAuthRedirect } from "@/utils/auth-redirect";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import { type NeedResetPasswordForm, useNeedResetPasswordForm } from "./use-form";
 
 type ApiErrorData = {
@@ -27,10 +29,7 @@ const NEED_RESET_PATH = "/app/conta/redefinir-senha";
 
 const resolveNeedResetErrorMessage = (error: unknown) => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("não precisa") || normalized.includes("not_need_reset")) {
@@ -60,12 +59,13 @@ const passwordRequirements = (password: string) => [
 ];
 
 const normalizeSafeRedirect = (value: string | null) => {
-  if (!value?.startsWith("/") || value.startsWith("//")) return null;
+  const safeRedirect = normalizeSafeInternalRedirect(value);
+  if (!safeRedirect) return null;
 
-  const normalized = value.replace(/\/+$/, "") || "/";
+  const normalized = safeRedirect.replace(/\/+$/, "") || "/";
   if (normalized === NEED_RESET_PATH || normalized.startsWith(`${NEED_RESET_PATH}/`)) return null;
 
-  return value;
+  return safeRedirect;
 };
 
 export const NeedResetPasswordLogic = () => {

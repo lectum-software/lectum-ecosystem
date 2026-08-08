@@ -3,12 +3,12 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription, user } from "@/interfaces/objects";
 import { loginInclude } from "@/query/login";
 import { log } from "@/utils/logs";
+import { deleteAccountSession, deleteAllAccountSessions } from "./account-session-store";
 import type { IAccountRepository } from "./interfaces/IAccountRepository";
 
 const GOOGLE_DELETE_REAUTH_TTL_MS = 10 * 60 * 1000;
-const ACCOUNT_DELETE_TRANSACTION_TIMEOUT_MS = 30 * 1000;
 const ACCOUNT_DELETE_TRANSACTION_OPTIONS = {
-  timeout: ACCOUNT_DELETE_TRANSACTION_TIMEOUT_MS,
+  timeout: 30 * 1000,
 } as const;
 
 const getDeletedAuthorName = (role?: string | null) =>
@@ -143,12 +143,12 @@ export class AccountRepository implements IAccountRepository {
     });
   }
 
-  async deleteTokens(userId: string): Promise<void> {
-    await this.userTokenRepository.deleteMany({
-      where: {
-        user_id: userId,
-      },
-    });
+  deleteTokens(userId: string): Promise<void> {
+    return deleteAllAccountSessions(userId);
+  }
+
+  deleteToken(userId: string, deviceId: string, token: string): Promise<void> {
+    return deleteAccountSession(userId, deviceId, token);
   }
 
   async updateUserAndClearTokens(userId: string, data: Prisma.userUpdateInput): Promise<user> {

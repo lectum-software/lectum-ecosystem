@@ -1,7 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+type DeviceCarrier = {
+  headers?: Record<string, unknown>;
+};
 
-export const getDevice = (data: any): { err?: string; id: string } => {
-  const device_id = data?.headers?.["x-device"];
-  if (!device_id) return { err: "device_not_found", id: "" };
-  return { id: device_id };
+export const getDevice = (data: DeviceCarrier): { err?: string; id: string } => {
+  const rawDeviceId = data?.headers?.["x-device"];
+  const deviceId = typeof rawDeviceId === "string" ? rawDeviceId.trim() : "";
+
+  if (!/^[a-zA-Z0-9:_-]{8,256}$/.test(deviceId)) {
+    return { err: "device_not_found", id: "" };
+  }
+
+  return { id: deviceId };
 };

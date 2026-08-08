@@ -54,12 +54,6 @@ export const schema: IValidatorRequest = {
       coerse: "string",
     },
     {
-      key: "active",
-      method: "boolean",
-      coerse: "boolean",
-      optional: true,
-    },
-    {
       key: "password",
       method: "password",
       coerse: "string",

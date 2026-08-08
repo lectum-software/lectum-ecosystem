@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { getDMMF } from "@prisma/internals";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 import { prisma } from "../../external/prisma/client";
 import { recreate } from "./reset";
@@ -184,7 +185,10 @@ async function tryCreateOneRecord(modelDataMap, modelName) {
     );
     return true;
   } catch (err) {
-    console.warn(`  🛠️ Falha ao criar ${modelName}. Aguardar próxima passada...`, err.message);
+    console.warn(
+      `  🛠️ Falha ao criar ${modelName}. Aguardar próxima passada...`,
+      toSafeErrorLog(err, "SeedCreateError"),
+    );
     return false;
   }
 }
@@ -234,7 +238,7 @@ async function updateSelfRelationForAllRecords(modelDataMap, modelName) {
     } catch (err) {
       console.error(
         `  🛠️ Falha ao atualizar self-relation para ${modelName} (ID: ${record.id})`,
-        err.message,
+        toSafeErrorLog(err, "SeedRelationError"),
       );
     }
   }
@@ -304,7 +308,7 @@ async function generateSeedData(seedPath) {
 
     console.log("\n✅ Seed finalizado com sucesso!");
   } catch (error) {
-    console.error("❌ Erro durante a geração de seed:", error);
+    console.error("Erro durante a geração de seed.", toSafeErrorLog(error, "SeedGenerationError"));
     throw error;
   } finally {
     await prisma.$disconnect();

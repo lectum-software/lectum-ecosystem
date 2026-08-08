@@ -21,8 +21,7 @@ export const passToken = async (login: user, device_id: string, token: string) =
       login,
     };
 
-  //WARNING: I remove device_id from this call because it's cause multiple logout's
-  const auth = await _AUTH.tokenByDevice({ token, user_id: login.id });
+  const auth = await _AUTH.tokenByDevice({ device_id, token, user_id: login.id });
 
   if (!auth)
     err = {

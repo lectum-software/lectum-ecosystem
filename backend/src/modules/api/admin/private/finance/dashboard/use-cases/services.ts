@@ -1,5 +1,14 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { csvRow } from "@/utils/csv";
+import {
+  addDays,
+  endOfDate,
+  resolveCalendarPeriod,
+  startOfDate,
+  startOfMonth,
+  toDateKey,
+} from "@/utils/date-range";
 import type {
   AdminFinanceChargeItem,
   AdminFinanceDashboard,
@@ -38,60 +47,6 @@ const PAYMENT_HEALTH_FILTERS = new Set<AdminFinancePaymentHealth["status"]>([
   "risk",
 ]);
 
-const pad = (value: number) => String(value).padStart(2, "0");
-const toDateKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const startOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const endOfDate = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return boundary === "start" ? startOfDate(date) : endOfDate(date);
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDate(from).getTime();
-  const end = startOfDate(to).getTime();
-
-  return Math.floor((end - start) / 86_400_000) + 1;
-};
-
-const startOfWeek = (date: Date) => {
-  const next = startOfDate(date);
-  const day = next.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  next.setDate(next.getDate() + diff);
-  return next;
-};
-
-const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
-const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1, 0, 0, 0, 0);
-
 const resolveGroupBy = (value: AdminFinanceQuery["groupBy"], days: number): AdminFinanceGroupBy => {
   if (value === "month" || value === "week") return value;
   if (days > 180) return "month";
@@ -122,78 +77,16 @@ export const resolveAdminFinancePeriod = (
   query: AdminFinanceQuery,
   allPeriodStartDate?: Date | null,
 ): PeriodResult => {
-  const hasCustomFrom = Boolean(query.from);
-  const hasCustomTo = Boolean(query.to);
-  const preset = query.period || (hasCustomFrom || hasCustomTo ? "custom" : null);
+  const resolved = resolveCalendarPeriod(query, {
+    allPeriodStartDate,
+    clampFutureAllStart: true,
+    defaultDays: DEFAULT_PERIOD_DAYS,
+    maxDays: MAX_PERIOD_DAYS,
+  });
+  if (!resolved) return { code: "invalid_analytics_date_range", success: false };
 
-  let start: Date;
-  let end: Date;
-  let label = "Últimos 30 dias";
-
-  if (preset === "custom") {
-    if (!hasCustomFrom || !hasCustomTo) {
-      return { code: "invalid_analytics_date_range", success: false };
-    }
-
-    const customStart = parseDateOnly(query.from, "start");
-    const customEnd = parseDateOnly(query.to, "end");
-
-    if (!customStart || !customEnd || customStart > customEnd) {
-      return { code: "invalid_analytics_date_range", success: false };
-    }
-
-    start = customStart;
-    end = customEnd;
-    label = "Período personalizado";
-  } else if (preset === "today") {
-    const today = new Date();
-    start = startOfDate(today);
-    end = endOfDate(today);
-    label = "Hoje";
-  } else if (preset === "week") {
-    const today = new Date();
-    start = startOfWeek(today);
-    end = endOfDate(today);
-    label = "Esta semana";
-  } else if (preset === "month") {
-    const today = new Date();
-    start = startOfMonth(today);
-    end = endOfDate(today);
-    label = "Este mês";
-  } else if (preset === "year") {
-    const today = new Date();
-    start = startOfYear(today);
-    end = endOfDate(today);
-    label = "Este ano";
-  } else if (preset === "7d" || preset === "30d" || preset === "90d") {
-    const today = new Date();
-    const days = preset === "7d" ? 7 : preset === "30d" ? 30 : 90;
-    start = startOfDate(addDays(today, -(days - 1)));
-    end = endOfDate(today);
-    label = `Últimos ${days} dias`;
-  } else if (preset === "all") {
-    const today = new Date();
-    start = startOfDate(allPeriodStartDate ?? addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
-    end = endOfDate(today);
-    if (start > end) start = startOfDate(today);
-    label = "Todo o período";
-  } else if (preset) {
-    return { code: "invalid_analytics_date_range", success: false };
-  } else {
-    const today = new Date();
-    end = endOfDate(today);
-    start = startOfDate(addDays(today, -(DEFAULT_PERIOD_DAYS - 1)));
-  }
-
-  const days = daysBetweenInclusive(start, end);
-  if (days < 1 || days > MAX_PERIOD_DAYS) {
-    return { code: "invalid_analytics_date_range", success: false };
-  }
-
+  const { days, end, label, previousEnd, previousStart, start } = resolved;
   const groupBy = resolveGroupBy(query.groupBy, days);
-  const previousEnd = endOfDate(addDays(start, -1));
-  const previousStart = startOfDate(addDays(start, -days));
-
   return {
     period: {
       current: { end, start },
@@ -1522,13 +1415,6 @@ export const buildAdminFinanceDashboard = async (
     data: dashboard,
   };
 };
-
-const csvCell = (value: unknown) => {
-  const normalized = value === null || value === undefined ? "" : String(value);
-  return `"${normalized.replace(/"/g, '""')}"`;
-};
-
-const csvRow = (values: unknown[]) => values.map(csvCell).join(",");
 
 const isAdminFinanceDashboard = (data: unknown): data is AdminFinanceDashboard =>
   Boolean(data && typeof data === "object" && "period" in data && "cards" in data);

@@ -3,6 +3,7 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 
 //Objects
 import type { user } from "@/interfaces/objects";
+import { getUserTokenLimit } from "@/utils/runtime-config";
 
 //DTOs
 import type { IConfirmDTO } from "../DTOs/IConfirmDTO";
@@ -10,7 +11,7 @@ import type { IConfirmDTO } from "../DTOs/IConfirmDTO";
 //Types
 import type { IConfirmRepository } from "./interfaces/IConfirmRepository";
 
-const _MAX = Number(process.env.TOKEN_API_USER_MAX);
+const _MAX = getUserTokenLimit();
 
 export class ConfirmRepository implements IConfirmRepository {
   readonly repository: ORM["user"];

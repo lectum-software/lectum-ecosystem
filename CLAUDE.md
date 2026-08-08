@@ -4,10 +4,21 @@ Use este arquivo como memória de projeto para Claude Code.
 
 ## Contexto
 
-- Este repositório reúne `backend/` e `frontend/` apenas para desenvolvimento local.
-- Em produção, backend e frontend devem ser tratados como aplicações separadas.
+- Este repositório reúne `backend/`, `frontend/` e `admin/` apenas para desenvolvimento local.
+- Em produção, as três aplicações devem ser tratadas separadamente.
 - O produto Lectum é uma plataforma responsiva para psicólogos e pacientes.
 - O desenvolvimento deve seguir spec-driven development: uma task por vez, com validação, ADR, commit e push.
+
+## Homologação e produção ativas
+
+- Desde **2026-08-07**, os dois ambientes são publicados e podem conter dados reais.
+- `homolog` dispara deploy automático de homologação; `main` dispara deploy automático de produção.
+- Trabalhe sempre em `homolog`. Se estiver em `main`, pare e peça ao usuário para mudar de branch antes de alterar ou publicar código.
+- Não faça commit/push direto em `main`; produção só recebe merge revisado após smoke test em homologação.
+- Não resete, semeie destrutivamente ou limpe dados/buckets em ambientes publicados.
+- Banco deve evoluir por expandir → backfill retomável → contrair. Não crie coluna obrigatória sem compatibilidade com dados existentes e nunca edite migration aplicada.
+- Nova env obrigatória exige **ALERTA DE DEPLOY** com chave, app, ordem de provisionamento e impacto se ausente; nunca mostre o valor. Prefira env opcional com fallback seguro no primeiro deploy.
+- Preserve compatibilidade entre versões durante rollout e não exponha detalhes técnicos, PII ou segredos em UI, HTTP ou logs.
 
 ## Fontes de Verdade
 
@@ -45,6 +56,7 @@ Leia antes de executar qualquer task:
 - Toda task que alterar `backend/prisma/schema.prisma` ou `backend/prisma/migrations` deve executar `pnpm --dir backend db:migrate` durante a task. O usuário não deve precisar aplicar migrations manualmente.
 - Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, pare e pergunte se pode resetar o banco antes de rodar comandos destrutivos como `pnpm --dir backend exec prisma migrate reset`.
 - Toda task concluída deve gerar commit próprio e executar `git push` para publicar a branch/remoto correspondente. Se o push falhar por credenciais, rede ou permissão, reporte o bloqueio explicitamente.
+- O push deve ser feito em `homolog` e informado como início de deploy automático; valide o ambiente antes de recomendar merge para `main`.
 
 ## Validação
 
@@ -56,6 +68,8 @@ Use como baseline:
 - backend com alteração de banco: `pnpm --dir backend db:migrate`
 - frontend: `pnpm --dir frontend check`
 - frontend build quando mudar rota/UI: `pnpm --dir frontend build`
+- admin: `pnpm --dir admin check`
+- admin build quando mudar rota/UI: `pnpm --dir admin build`
 
 ## Execução
 

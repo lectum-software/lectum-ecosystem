@@ -11,13 +11,25 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 
 ## Estado atual do produto
 
-- Backend e frontend têm base inicial de autenticação.
+- Desde **2026-08-07**, frontend, backend e admin são aplicações publicadas; homologação e produção podem conter dados reais.
 - Backend usa Express 5, Prisma 7, Passport/JWT/Google OAuth e Biome.
 - Frontend usa Next.js 16, React 19, Tailwind CSS 4, TanStack Query 5, Redux Toolkit, Biome e ESLint.
+- Admin usa Next.js 16 e é publicado separadamente.
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
 - A fila operacional agora possui 152 tasks: `TASK-00` a `TASK-145`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+
+## Gate obrigatório de publicação
+
+1. Confirmar `git branch --show-current` antes de editar. O desenvolvimento acontece em `homolog`; se estiver em `main`, parar e orientar a troca de branch.
+2. Lembrar que push em `homolog` publica homologação e push/merge em `main` publica produção.
+3. Nunca commitar ou fazer push direto em `main`. Produção só recebe merge revisado depois de checks, builds e smoke test do deploy em homologação.
+4. Tratar dados, pagamentos, uploads, notificações e integrações dos ambientes publicados como persistentes. Reset, seed destrutivo, `db push`, exclusão em massa e limpeza de bucket são proibidos nesses ambientes.
+5. Toda mudança de banco deve descrever compatibilidade com dados existentes, ordem expandir → backfill retomável → contrair e rollback. Migration aplicada é imutável.
+6. Toda env nova obrigatória deve gerar um **ALERTA DE DEPLOY** com chave, aplicação, ordem de cadastro em homologação/produção e impacto se ausente, sem mostrar o valor. Preferir implantação em duas etapas com fallback seguro.
+7. Contratos de API devem continuar funcionando durante o período em que frontend, backend e admin estiverem em versões diferentes.
+8. Depois do deploy em homologação, validar os fluxos afetados e, para backend, `/health` e `/ready`. Só então recomendar promoção para `main`.
 
 ## Inventário visual ativo
 
@@ -62,10 +74,12 @@ ou cortesia manual.
 - Use o Quick Copy Builder para obter contexto visual quando a ferramenta estiver disponível.
 - Use as imagens exportadas de `_product/proto` como fallback e como referência auditável da task.
 - Ao concluir, marque critérios de aceite `[x]`, registre ADR, faça commit próprio e execute `git push` para publicar a branch/remoto correspondente. Se a branch ainda não tiver upstream, use `git push -u origin <branch>`.
+- Commit e push da task devem ocorrer em `homolog`; o executor deve informar que o push iniciou o deploy automático de homologação.
 - Não use referências externas ao workspace da task como atalho arquitetural.
 - Antes de criar código novo, consulte `ARCHITECTURE.md`.
 - Antes de criar/alterar modelo Prisma ou contrato de API, consulte `DATA-MODEL.md` e referencie a seção em vez de redefinir o schema.
 - Toda task que alterar o banco (`backend/prisma/schema.prisma` ou `backend/prisma/migrations`) deve executar `pnpm --dir backend db:migrate` na própria execução. O usuário não-dev não deve ficar responsável por aplicar migrations.
+- Uma migration local aprovada não autoriza alteração destrutiva em dados publicados. Colunas inicialmente obrigatórias devem entrar nullable ou com default compatível, receber backfill seguro e ser endurecidas somente em deploy posterior.
 - Se `prisma migrate dev` falhar por dados ou estado preexistente do banco de desenvolvimento, pare e pergunte ao usuário se pode resetar o banco antes de rodar qualquer comando destrutivo, como `pnpm --dir backend exec prisma migrate reset`.
 - Antes de instalar pacote, consulte `PACKAGES.md`.
 - Antes de qualquer tela com campo, edição, filtro avançado ou submit, execute/consulte `TASK-02` e use `frontend/src/hooks/form` + `frontend/src/components/controllers`.
@@ -226,7 +240,7 @@ ou cortesia manual.
 | 142 | [TASK-142 - Visualização do valor atual do plano em Configurações Admin](TASK-142-visualizacao-plano-assinatura-admin.md) | Completed | 31, 45, 46, 62, 141 |
 | 143 | [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) | Completed | 39, 40, 42, 141 |
 | 144 | [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md) | Completed | 141, 143 |
-| 145 | [TASK-145 - Rotas em PT-BR e SEO can�nico](TASK-145-rotas-publicas-pt-br-seo.md) | Completed | 40, 141, 143, 144 |
+| 145 | [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) | Completed | 40, 141, 143, 144 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -349,7 +363,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 112. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para gerar miniaturas Open Graph de videos no frame vertical 9:16 do compartilhamento Lectum, alinhado ao preview de WhatsApp enviado como referencia.
 113. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para separar **Comunidades** (`/community`) de **Comunidade** (`/community/[slug]`), publicar metadados dinamicos por slug e usar o nome real da comunidade/post como titulo compartilhado.
 114. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para usar imagens Open Graph quadradas de entidade: avatar da comunidade em `/community/[slug]` e foto/avatar do psicologo em `/psychologists/[id]`.
-115. [TASK-145 - Rotas em PT-BR e SEO can�nico](TASK-145-rotas-publicas-pt-br-seo.md) foi adicionada e concluida em 2026-08-03 para tornar canonicos os slugs publicos (`/psicologos`, `/comunidades`) e privados (`/app/notificacoes`, `/app/perfil`, `/app/profissional/*`) em PT-BR, mantendo redirects permanentes das URLs antigas em ingles.
+115. [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) foi adicionada e concluida em 2026-08-03 para tornar canonicos os slugs publicos (`/psicologos`, `/comunidades`) e privados (`/app/notificacoes`, `/app/perfil`, `/app/profissional/*`) em PT-BR, mantendo redirects permanentes das URLs antigas em ingles.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
@@ -546,10 +560,10 @@ Uma task só pode ser marcada como concluída quando:
 - Builder Quick Copy: `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`
 - Protótipos exportados: `_product/proto`
 
-## Atualiza��o de fluxo em 2026-06-07
+## Atualização de fluxo em 2026-06-07
 
-- A etapa de WhatsApp profissional deixa de ser verifica��o por SMS/OTP e passa a ser apenas cadastro do n�mero para gera��o interna do link `wa.me` ap�s inten��o de contato.
-- O fluxo visual ainda usa `/app/profissional/whatsapp/verificar` por compatibilidade de rota, mas a c�pia e a regra de dom�nio tratam a tela como inser��o/salvamento do WhatsApp.
+- A etapa de WhatsApp profissional deixa de ser verificação por SMS/OTP e passa a ser apenas cadastro do número para geração interna do link `wa.me` após intenção de contato.
+- O fluxo visual ainda usa `/app/profissional/whatsapp/verificar` por compatibilidade de rota, mas a cópia e a regra de domínio tratam a tela como inserção/salvamento do WhatsApp.
 
 ## Atualizacao de fluxo em 2026-06-07: gratuito sem CRP API
 

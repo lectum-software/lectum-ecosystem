@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowRight,
@@ -17,6 +17,7 @@ import {
   usePsychologistReviews,
   useRespondPsychologistReview,
 } from "@/api/callers/psychologist-reviews";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   PsychologistReview,
   PsychologistReviewSummary,
@@ -43,15 +44,11 @@ const formatDate = (value: string) => {
   return `${String(date.getDate()).padStart(2, "0")} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 };
 
-const resolveApiError = (error: unknown) => {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "object" && error && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") return message;
-  }
-
-  return "Não foi possível conectar à API agora. Tente novamente em instantes.";
-};
+const resolveApiError = (error: unknown) =>
+  getSafeApiErrorMessage(
+    error,
+    "Não foi possível conectar à API agora. Tente novamente em instantes.",
+  );
 
 const firstName = (name: string) => name.split(/\s+/).filter(Boolean)[0] || "paciente";
 

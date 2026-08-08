@@ -4,6 +4,7 @@ import { ChevronRight, Compass, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCommunities, useFollowCommunity } from "@/api/callers/community";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type { Community } from "@/api/generator/types/community";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { AppPageHeader } from "@/components/ui/app-page-header";
@@ -17,22 +18,8 @@ import { PrivateTemplate } from "@/templates/private";
 const FOLLOWING_LIMIT = 24;
 const RECOMMENDED_LIMIT = 12;
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const resolveCommunityError = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("token") || normalized.includes("sess")) {

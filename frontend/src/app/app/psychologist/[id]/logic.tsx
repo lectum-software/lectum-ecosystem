@@ -46,6 +46,7 @@ import {
 import { usePatient } from "@/api/callers/patient";
 import { useSharePost, useShareReply } from "@/api/callers/posts";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   DirectoryCatalogItem,
   DirectoryPsychologistParticipationSummary,
@@ -325,10 +326,7 @@ const formatAttendanceLabel = (profile: DirectoryPsychologistProfile) => {
 
 const resolveErrorMessage = (error: unknown, fallback: string) => {
   const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (apiError?.data?.status === 404 || normalized.includes("não encontrado")) {

@@ -155,6 +155,7 @@ const resolveVideoType = (value?: string | null) => {
 const getPublicSeoSettings = async () => {
   try {
     const response = await fetch(`${apiBaseUrl()}/api/public/seo/metadata`, {
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
@@ -272,6 +273,7 @@ const getPublicCommunityPostSeo = async ({
   try {
     const response = await fetch(`${apiBaseUrl()}${path}`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
@@ -294,6 +296,7 @@ const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
   try {
     const response = await fetch(`${apiBaseUrl()}/api/public/seo/community/${encodedSlug}`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",
@@ -316,6 +319,7 @@ const getPublicPsychologistSeo = async ({ id }: { id: string }) => {
   try {
     const response = await fetch(`${apiBaseUrl()}/api/public/seo/psychologist/${encodedId}`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
         Accept: "application/json",

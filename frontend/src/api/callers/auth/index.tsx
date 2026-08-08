@@ -113,6 +113,10 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     retry: false,
   });
 
+  const hydrateWithBearer = useMutation({
+    mutationFn: (bearerToken: string) => api.hidrate(bearerToken),
+  });
+
   const googleMe = useMutation({
     mutationFn: () => api.googleMe(),
     onSuccess: callbacks?.googleMe?.onSuccess,
@@ -129,6 +133,7 @@ export const useAuth = ({ callbacks, enableHidrate = false }: UseAuthProps = {})
     sendConfirmCode,
     verifyCode,
     hidrate,
+    hydrateWithBearer,
     googleMe,
   };
 };

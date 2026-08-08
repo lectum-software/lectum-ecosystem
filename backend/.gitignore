@@ -3,4 +3,3 @@ node_modules/
 dist/
 coverage/
 src/external/generated/
-src/**/*.spec.ts

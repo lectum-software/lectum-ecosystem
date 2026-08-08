@@ -1,4 +1,4 @@
-﻿import { MercadoPagoAdapter } from "./MercadoPagoAdapter";
+import { MercadoPagoAdapter } from "./MercadoPagoAdapter";
 import type { PaymentGateway } from "./PaymentGateway";
 
 let gateway: PaymentGateway | null = null;
@@ -27,6 +27,8 @@ export const isPaymentGatewayConfigurationError = (err: unknown) => {
 
   return PAYMENT_GATEWAY_CONFIGURATION_ERROR_CODES.some((code) => message.includes(code));
 };
+
+export { sanitizePaymentGatewayError } from "./error-log";
 
 export type {
   BillingSubscriptionStatus,

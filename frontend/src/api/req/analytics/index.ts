@@ -1,6 +1,6 @@
 ﻿import { callEndpoint } from "@/api/generator";
 import { handleReq } from "@/api/handle";
-import { getToken } from "@/hooks/cookies/token";
+import { getBearerToken } from "@/hooks/cookies/token";
 
 export type LocationCaptureRequest = {
   visitor_id: string;
@@ -293,7 +293,7 @@ export const sendContentVideoWatchBeacon = (body: ContentVideoWatchTrackingReque
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const url = `${apiUrl}/api/public/analytics/content-video-watch`;
-  const token = getToken();
+  const token = getBearerToken();
   const payload = JSON.stringify(body);
 
   try {
@@ -320,7 +320,7 @@ export const sendContentAttentionBeacon = (body: ContentAttentionTrackingRequest
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const url = `${apiUrl}/api/public/analytics/content-attention`;
-  const token = getToken();
+  const token = getBearerToken();
   const payload = JSON.stringify(body);
 
   try {

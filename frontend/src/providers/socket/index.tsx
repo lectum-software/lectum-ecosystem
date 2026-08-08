@@ -5,26 +5,27 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import io from "socket.io-client";
 import keys from "@/api/cache/keys";
-import { getToken } from "@/hooks/cookies/token";
+import { getBearerToken } from "@/hooks/cookies/token";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { update as updateSocket } from "@/store/modules/socket/actions";
 import { update as updateUser } from "@/store/modules/user/actions";
 import { fingerprint } from "@/utils/fingerprint";
 
 //Global
-const URL = process.env.NEXT_PUBLIC_API_URL;
+const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export const socket = io(URL, {
   autoConnect: false,
   reconnection: true,
   reconnectionDelay: 500,
+  withCredentials: true,
 });
 
 export const Provider = () => {
   const queryClient = useQueryClient();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.user);
-  const token = getToken();
+  const token = getBearerToken();
   const userId = user?.id;
 
   const clear = useCallback(() => {
@@ -44,6 +45,10 @@ export const Provider = () => {
     });
 
     socket.on("disconnect", () => {
+      dispatch(updateSocket({ connected: false, loading: false }));
+    });
+
+    socket.on("connect_error", () => {
       dispatch(updateSocket({ connected: false, loading: false }));
     });
 

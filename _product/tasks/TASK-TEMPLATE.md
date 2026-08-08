@@ -43,6 +43,19 @@ Se qualquer item obrigatório estiver ausente, a task deve parar e registrar blo
 
 - O que não deve ser implementado nesta task.
 
+## Impacto em produção e plano de rollout
+
+Ambientes publicados desde 2026-08-07: `homolog` → homologação e `main` → produção.
+
+- Compatibilidade com dados existentes: explicar como registros antigos continuam válidos.
+- Banco: declarar “sem alteração” ou descrever expandir → backfill retomável → contrair, volume, verificação e rollback. Migration aplicada nunca é editada.
+- Envs: listar somente nomes, app afetado, fallback e ordem de provisionamento. Se alguma for obrigatória, abrir **ALERTA DE DEPLOY** antes da implementação.
+- Contratos: explicar como frontend/backend/admin em versões diferentes continuam compatíveis durante o rollout.
+- Jobs/providers: efeitos externos, idempotência, limites e chave de ativação/desativação.
+- Ordem de deploy: backend/frontend/admin e eventuais ações manuais.
+- Rollback: como reverter código sem corromper ou perder dados.
+- Smoke de homologação: rotas e jornadas reais que devem ser validadas antes de promover para `main`.
+
 ## Contrato técnico detalhado
 
 Referências obrigatórias:
@@ -97,18 +110,23 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 - [ ] UI mobile-first; nenhum `<img>` cru (somente `next/image`).
 - [ ] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
 - [ ] Se houve alteração de banco/schema/migrations, `pnpm --dir backend db:migrate` foi executado sem erro.
+- [ ] Dados existentes continuam compatíveis; nenhuma migration aplicada foi alterada.
+- [ ] Envs, ordem de deploy, rollback e smoke de homologação foram registrados; env obrigatória nova possui ALERTA DE DEPLOY.
+- [ ] Contratos toleram aplicações em versões diferentes durante o rollout.
 - [ ] Formulários/campos usam React Hook Form, Zod e controllers da `TASK-02` quando aplicável.
 - [ ] Builder/Quick Copy foi usado quando disponível, ou as imagens locais de `_product/proto` foram citadas quando houver UI.
 - [ ] Checks/builds relevantes foram executados sem erros.
 - [ ] ADR criado ou atualizado em `adrs/`.
 - [ ] Commit criado com mensagem convencional.
+- [ ] Commit e push ocorreram em `homolog`; o deploy de homologação foi comunicado e não houve push direto em `main`.
 
 ## Validação mínima
 
 - `pnpm --dir backend check` quando backend mudar.
 - `pnpm --dir backend db:migrate` quando houver alteração em `backend/prisma/schema.prisma` ou `backend/prisma/migrations`.
 - `pnpm --dir frontend check` quando frontend mudar.
-- `pnpm check` quando ambos mudarem.
+- `pnpm --dir admin check` quando admin mudar.
+- `pnpm check` quando mais de uma aplicação mudar.
 - Builds relevantes.
 - Browser local quando houver interface.
 
@@ -116,4 +134,4 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 
 Registre observações úteis para o executor, sem depender de arquivos externos não garantidos.
 
-Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, registre o erro e pergunte ao usuário se pode resetar o banco antes de rodar comando destrutivo como `pnpm --dir backend exec prisma migrate reset`.
+Se `prisma migrate dev` falhar por dados ou estado preexistente no banco local, registre o erro e pergunte ao usuário se pode resetar apenas esse banco antes de rodar comando destrutivo como `pnpm --dir backend exec prisma migrate reset`. Reset, seed destrutivo, `db push`, limpeza de bucket e exclusão em massa são proibidos em homologação/produção.

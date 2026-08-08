@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { usePatient } from "@/api/callers/patient";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
@@ -27,22 +28,8 @@ const getRedirectPathForGoal = (goal: unknown) =>
     ? patientWelcomeRedirectPaths[goal]
     : patientWelcomeRedirectPaths.encontrar_psicologo;
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const resolvePatientErrorMessage = (error: unknown) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("perfil") || normalized.includes("autoriz")) {

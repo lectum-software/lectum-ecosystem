@@ -17,6 +17,54 @@ const remotePatterns: RemotePattern[] = [
   },
 ];
 const allowedDevOrigins = new Set<string>();
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+const getApiCspSources = () => {
+  try {
+    const url = new URL(apiUrl);
+    const socketProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+
+    return [url.origin, `${socketProtocol}//${url.host}`];
+  } catch {
+    return [];
+  }
+};
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://sdk.mercadopago.com`,
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  "img-src 'self' data: blob: https: http:",
+  "media-src 'self' blob: https: http:",
+  `connect-src 'self' ${getApiCspSources().join(" ")} https://api.mercadopago.com https://*.mercadopago.com https://*.mercadolibre.com`,
+  "frame-src https://*.mercadopago.com https://*.mercadolibre.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+].join("; ");
+const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: contentSecurityPolicy,
+  },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
+if (process.env.NODE_ENV === "production") {
+  securityHeaders.push({
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  });
+}
 
 const isLocalHostname = (hostname: string) =>
   hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0";
@@ -59,7 +107,7 @@ const addRemotePattern = (value?: string | null) => {
   }
 };
 
-addRemotePattern(process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001");
+addRemotePattern(apiUrl);
 addAllowedDevOrigin(process.env.NEXT_PUBLIC_API_URL);
 addAllowedDevOrigin(process.env.NEXT_PUBLIC_LOGIN_URL);
 process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",")
@@ -328,6 +376,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/:path*",
+        headers: securityHeaders,
+      },
+      {
         source: "/app/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
@@ -360,6 +412,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  poweredByHeader: false,
 };
 
 export default nextConfig;

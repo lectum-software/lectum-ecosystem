@@ -1,6 +1,5 @@
 import { Router } from "express";
 import multer from "@/config/multer";
-import adminAuth from "../../../middlewares/_auth";
 import {
   activities,
   authorizeAvatarUpload,
@@ -44,7 +43,6 @@ import {
 
 const routes = Router();
 
-routes.use(adminAuth);
 routes.post("/", createValidator, create);
 routes.get("/", listValidator, list);
 routes.get("/:id", showValidator, show);

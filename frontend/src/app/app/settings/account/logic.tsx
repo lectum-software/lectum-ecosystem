@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useAccount } from "@/api/callers/account";
+import { getSafeApiErrorMessage } from "@/api/errors";
 import { components } from "@/components/controllers";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -26,24 +27,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
+import { normalizeTrustedApiUrl } from "@/utils/trusted-navigation";
 import { type AccountForm, emailFields, passwordFields, useAccountForm } from "./use-form";
 
-type ApiErrorData = {
-  error?: string;
-  message?: string;
-  status?: number;
-};
-
-type ApiError = Error & {
-  data?: ApiErrorData;
-};
-
 const resolveAccountError = (error: unknown, fallback: string) => {
-  const apiError = error as ApiError;
-  const rawMessage =
-    apiError?.data?.error ||
-    apiError?.data?.message ||
-    (error instanceof Error ? error.message : "");
+  const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
 
   if (normalized.includes("senha atual") || normalized.includes("incorreta")) {
@@ -337,7 +325,13 @@ export const AccountSettingsLogic = () => {
     setSuccessMessage(null);
     account.createGoogleLinkIntent.mutate(undefined, {
       onSuccess: (data) => {
-        window.location.href = data.url;
+        const url = normalizeTrustedApiUrl(data.url);
+        if (!url) {
+          setApiError("Não foi possível iniciar o vínculo com Google.");
+          return;
+        }
+
+        window.location.assign(url);
       },
       onError: (error) => {
         setApiError(resolveAccountError(error, "Não foi possível iniciar o vínculo com Google."));

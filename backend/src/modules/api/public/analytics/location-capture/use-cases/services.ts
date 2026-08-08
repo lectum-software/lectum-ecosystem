@@ -1,10 +1,13 @@
-﻿import { isIP } from "node:net";
+import { isIP } from "node:net";
 import { subHours } from "date-fns";
 import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getUserJwtTtlSeconds, parsePositiveInteger } from "@/utils/runtime-config";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import type {
   DeviceType,
   ILocationCaptureDTO,
@@ -197,7 +200,7 @@ const resolveLocationFromProvider = async (ip: string): Promise<LocationResoluti
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
-    Number(process.env.IP_GEOLOCATION_TIMEOUT_MS || 2500),
+    parsePositiveInteger(process.env.IP_GEOLOCATION_TIMEOUT_MS, 2500, { max: 10_000 }),
   );
 
   try {
@@ -233,8 +236,10 @@ const resolveLocationFromProvider = async (ip: string): Promise<LocationResoluti
       provider: process.env.IP_GEOLOCATION_PROVIDER || "ipapi",
     };
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.warn(`[analytics] Falha silenciosa na geolocalização por IP: ${errorMessage}`);
+    console.warn(
+      "[analytics] Falha silenciosa na geolocalização por IP.",
+      toSafeErrorLog(err, "IpGeolocationError"),
+    );
     return null;
   } finally {
     clearTimeout(timeout);
@@ -242,17 +247,16 @@ const resolveLocationFromProvider = async (ip: string): Promise<LocationResoluti
 };
 
 const resolveAuthenticatedUserId = async (req: Request): Promise<string | null> => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  const token = authHeader.slice("Bearer ".length).trim();
-  if (!token) return null;
+  const token = getUserRequestToken(req);
+  const deviceId = getHeaderValue(req.headers, ["x-device"]);
+  if (!token || !deviceId) return null;
 
   try {
-    const payload = jwt.verify(token, getJwtSecret()) as AuthPayload;
+    const payload = jwt.verify(token, getJwtSecret(), {
+      maxAge: getUserJwtTtlSeconds(),
+    }) as AuthPayload;
 
-    if (!payload.email || !payload.id) return null;
+    if (!payload.email || !payload.id || payload.device_id !== deviceId) return null;
 
     const user = await prisma.user.findFirst({
       where: {
@@ -271,6 +275,7 @@ const resolveAuthenticatedUserId = async (req: Request): Promise<string | null> 
     const tokenRecord = await prisma.user_token.findFirst({
       where: {
         user_id: user.id,
+        device_id: deviceId,
         token,
         deleted: false,
       },

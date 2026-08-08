@@ -561,8 +561,8 @@ Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composic
 ### Decisao
 
 - Evoluir apenas o card de `/app/favorites` para uma estrutura de perfil salvo com capa no topo.
-- Usar `video_cover_url` como fonte de capa quando o endpoint de favoritos j· entregar esse dado; quando ausente, usar uma superficie visual neutra da Lectum, sem inventar dados.
-- Manter a imagem de perfil/iniciais como avatar principal sobreposto ‡ capa, usando `next/image` para midia real.
+- Usar `video_cover_url` como fonte de capa quando o endpoint de favoritos j√° entregar esse dado; quando ausente, usar uma superficie visual neutra da Lectum, sem inventar dados.
+- Manter a imagem de perfil/iniciais como avatar principal sobreposto √† capa, usando `next/image` para midia real.
 - Substituir o subtitulo fixo `Psicologo` por uma bio curta derivada de dados reais na seguinte prioridade: `headline`, `bio`, especialidades e, por ultimo, tipo profissional.
 - Manter o coracao preenchido como acao de remover favorito, pois comunica melhor o estado salvo que um `X`.
 - Manter o CTA `WhatsApp` como acao principal do card e preservar o fluxo/tracking existente.
@@ -570,7 +570,7 @@ Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composic
 ### Consequencias
 
 - Favoritos passa a comunicar melhor quem e o profissional salvo antes do contato.
-- A tela ganha mais densidade visual e diferenciaÁ„o entre profissionais sem depender de dados mockados.
+- A tela ganha mais densidade visual e diferencia√ß√£o entre profissionais sem depender de dados mockados.
 - O endpoint atual continua suficiente; nao ha mudanca de contrato, schema, migration ou pacote.
 - A composicao mobile segue duas colunas compactas, enquanto desktop preserva tres cards por linha.
 
@@ -578,7 +578,7 @@ Produto avaliou que o card de Favoritos ainda parecia vazio e pediu uma composic
 
 ### Contexto
 
-A pagina de Perfil usa um layout mais amplo e imersivo: o header branco ocupa mais largura e altura, comeÁa mais perto do topo util e tem margens laterais menores. Favoritos ainda estava visualmente mais estreito, com header compacto e cards comprimidos no centro.
+A pagina de Perfil usa um layout mais amplo e imersivo: o header branco ocupa mais largura e altura, come√ßa mais perto do topo util e tem margens laterais menores. Favoritos ainda estava visualmente mais estreito, com header compacto e cards comprimidos no centro.
 
 ### Decisao
 

@@ -123,6 +123,7 @@ export const unlink = async (data: IGoogleLinkDTO) => {
   const hydrated = await loginRepository.hidrate(updated, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("google_unlink_success", {}),
     data: hydrated,

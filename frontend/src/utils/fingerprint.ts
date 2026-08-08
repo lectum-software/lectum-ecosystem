@@ -12,8 +12,22 @@ const STABLE_COMPONENT_KEYS: (keyof GetResult["components"])[] = [
   "vendor",
   "vendorFlavors",
 ];
+const FALLBACK_DEVICE_KEY = "lectum.device";
 
-export const fingerprint = async (): Promise<string | null> => {
+const fallbackDeviceId = () => {
+  if (typeof window === "undefined") return null;
+
+  const stored = window.localStorage.getItem(FALLBACK_DEVICE_KEY);
+  if (stored) return stored;
+
+  const id = `device-${crypto.randomUUID()}`;
+  window.localStorage.setItem(FALLBACK_DEVICE_KEY, id);
+  return id;
+};
+
+let fingerprintPromise: Promise<string | null> | null = null;
+
+const resolveFingerprint = async (): Promise<string | null> => {
   try {
     const fp = await FingerprintJS.load();
     const result = await fp.get();
@@ -28,9 +42,13 @@ export const fingerprint = async (): Promise<string | null> => {
     }, {});
 
     return FingerprintJS.hashComponents(componentsToHash);
-  } catch (error) {
-    console.error("Fingerprint generation failed:", error);
-
-    return null;
+  } catch {
+    return fallbackDeviceId();
   }
+};
+
+export const fingerprint = () => {
+  fingerprintPromise ??= resolveFingerprint();
+
+  return fingerprintPromise;
 };

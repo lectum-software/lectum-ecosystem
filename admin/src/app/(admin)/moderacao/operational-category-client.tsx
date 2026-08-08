@@ -42,6 +42,9 @@ import type {
   AdminModerationSeverity,
 } from "@/api/req/moderation";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { isPublicMediaPath, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
+import { adminApiUrl } from "@/lib/api-url";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 const PAGE_LIMIT = 10;
@@ -53,9 +56,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const publicFrontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
-const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;
 
 const groupConfig: Record<
   Exclude<AdminModerationOperationalAlertsGroup, "all">,
@@ -411,82 +411,9 @@ const formatPendingDuration = (alert: AdminModerationOperationalAlert) => {
   return `${numberFormatter.format(years)} ${years === 1 ? "ano" : "anos"}`;
 };
 
-const toPublicHref = (url: string) => {
-  if (/^https?:\/\//.test(url)) return url;
-
-  return `${publicFrontendUrl.replace(/\/$/, "")}${url}`;
-};
-
-const isPublicMediaPath = (pathname: string) =>
-  publicMediaPathPrefixes.some((prefix) => pathname.startsWith(prefix));
-
-const resolveAdminMediaUrl = (src?: string | null) => {
-  const value = src?.trim();
-  if (!value) return null;
-
-  const apiBase = apiUrl.replace(/\/$/, "");
-
-  try {
-    const parsed = new URL(value, apiBase);
-    if (isPublicMediaPath(parsed.pathname)) {
-      return `${apiBase}${parsed.pathname}${parsed.search}`;
-    }
-    if (value.startsWith("http")) return value;
-
-    return value.startsWith("/") ? value : `${apiBase}/${value}`;
-  } catch {
-    if (publicMediaPathPrefixes.some((prefix) => value.startsWith(prefix))) {
-      return `${apiBase}${value}`;
-    }
-
-    return value.startsWith("/") || value.startsWith("http") ? value : null;
-  }
-};
-
-const allowedRemoteImageHosts = () => {
-  const hosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
-
-  for (const candidate of [
-    apiUrl,
-    ...(process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",") ?? []),
-  ]) {
-    const normalized = candidate.trim();
-    if (!normalized) continue;
-
-    try {
-      const url = new URL(normalized.includes("://") ? normalized : `https://${normalized}`);
-      if (url.hostname) hosts.add(url.hostname);
-    } catch {
-      // Entradas inválidas de env não devem impedir a lista de denúncias.
-    }
-  }
-
-  return hosts;
-};
-
-const canRenderImage = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-  if (!resolved) return false;
-  if (resolved.startsWith("/")) return true;
-
-  try {
-    const url = new URL(resolved);
-
-    return allowedRemoteImageHosts().has(url.hostname);
-  } catch {
-    return false;
-  }
-};
-
-const renderableImageSrc = (src: string | null) => {
-  const resolved = resolveAdminMediaUrl(src);
-
-  return resolved && canRenderImage(resolved) ? resolved : null;
-};
-
 const isPublicAdminMediaSrc = (src: string) => {
   try {
-    return isPublicMediaPath(new URL(src, apiUrl).pathname);
+    return isPublicMediaPath(new URL(src, adminApiUrl).pathname);
   } catch {
     return false;
   }
@@ -1053,7 +980,9 @@ const ModerationReportListItem = ({
   if (!report) return null;
 
   const title = moderationReportTitle(report);
-  const contentHref = report.content.public_url ? toPublicHref(report.content.public_url) : null;
+  const contentHref = report.content.public_url
+    ? toPublicFrontendHref(report.content.public_url)
+    : null;
 
   return (
     <article className="rounded-card border border-border/75 bg-surface/95 p-4 shadow-admin-soft md:p-5">

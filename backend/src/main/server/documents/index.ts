@@ -2,6 +2,7 @@ import { Router } from "express";
 
 // Swagger
 import { initializeSwagger } from "@/packages/swagger";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 const route = Router();
 
@@ -23,9 +24,7 @@ const loadSchema = async () => {
       },
     );
   } catch (error) {
-    console.warn(
-      `⚠️ O arquivo 'schema' não foi encontrado. O Swagger não será inicializado. ${error}`,
-    );
+    console.warn("O Swagger não será inicializado.", toSafeErrorLog(error, "SwaggerSchemaError"));
   }
 };
 

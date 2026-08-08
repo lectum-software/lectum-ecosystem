@@ -11,8 +11,6 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useLayoutEffect,
-  useRef,
   useState,
 } from "react";
 import { useSavePost, useVotePost } from "@/api/callers/posts";
@@ -25,14 +23,20 @@ import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
+import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
+import {
+  formatCommunityPostTime as formatPostTimeLabel,
+  formatCommunityRelativeTime as formatRelativeTime,
+  getCommunityAuthorDisplayName,
+  getCommunityInitials as getInitials,
+} from "@/utils/community-display";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
 type CommunityPostCardProps = {
   actionBarShowUpvoteText?: boolean;
@@ -73,201 +77,6 @@ type PostWithOptionalSortMetrics = PostListPost & {
   sort_metrics?: {
     shares_count?: number | null;
   };
-};
-
-const INLINE_TEXT_MAX_LINES = 2;
-const INLINE_TEXT_MORE_LABEL = "... ver mais";
-const INLINE_TEXT_LESS_LABEL = "ver menos";
-
-const formatRelativeTime = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "agora";
-
-  const diffInSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-  const minutes = Math.floor(diffInSeconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (minutes < 1) return "agora";
-  if (minutes < 60) return `há ${minutes} min`;
-  if (hours < 24) return `há ${hours} h`;
-  if (days < 7) return `há ${days} d`;
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-  }).format(date);
-};
-
-const formatPostTimeLabel = (createdAt: string, editedAt?: string | null) => {
-  const relativeTime = formatRelativeTime(createdAt);
-
-  return editedAt ? `${relativeTime} · editado` : relativeTime;
-};
-
-const getInitials = (name: string) => {
-  const parts = name.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return "L";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
-
-const getCommunityAuthorDisplayName = (author: Pick<PostListPost["author"], "name" | "role">) =>
-  author.role === "psicologo"
-    ? normalizeProfessionalDisplayName(author.name) || author.name
-    : author.name;
-
-const InlineExpandableText = ({
-  className,
-  expanded,
-  href,
-  onToggle,
-  text,
-}: {
-  className?: string;
-  expanded: boolean;
-  href?: string;
-  onToggle?: (event: ReactMouseEvent<HTMLButtonElement>) => void;
-  text: string;
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLParagraphElement>(null);
-  const [preview, setPreview] = useState(text);
-  const [truncated, setTruncated] = useState(false);
-
-  useLayoutEffect(() => {
-    const containerNode = containerRef.current;
-    const measureNode = measureRef.current;
-
-    if (!containerNode || !measureNode) return;
-
-    let animationFrame = 0;
-    let cancelled = false;
-
-    const lineHeightPx = () => {
-      const styles = window.getComputedStyle(measureNode);
-      const parsedLineHeight = Number.parseFloat(styles.lineHeight);
-
-      if (Number.isFinite(parsedLineHeight)) return parsedLineHeight;
-
-      const parsedFontSize = Number.parseFloat(styles.fontSize);
-      return Number.isFinite(parsedFontSize) ? parsedFontSize * 1.5 : 24;
-    };
-
-    const fitsWithinMaxLines = (value: string) => {
-      measureNode.textContent = value;
-
-      return measureNode.scrollHeight <= lineHeightPx() * INLINE_TEXT_MAX_LINES + 1;
-    };
-
-    const measure = () => {
-      if (cancelled) return;
-
-      const availableWidth = containerNode.getBoundingClientRect().width;
-      const normalizedText = text.trimEnd();
-
-      if (availableWidth <= 0 || normalizedText.length === 0) {
-        setPreview(text);
-        setTruncated(false);
-        return;
-      }
-
-      measureNode.style.width = `${availableWidth}px`;
-
-      if (fitsWithinMaxLines(normalizedText)) {
-        setPreview(text);
-        setTruncated(false);
-        return;
-      }
-
-      let low = 0;
-      let high = normalizedText.length;
-      let bestPreview = "";
-
-      while (low <= high) {
-        const middle = Math.floor((low + high) / 2);
-        const candidatePreview = normalizedText.slice(0, middle).trimEnd();
-        const candidate = `${candidatePreview} ${INLINE_TEXT_MORE_LABEL}`;
-
-        if (fitsWithinMaxLines(candidate)) {
-          bestPreview = candidatePreview;
-          low = middle + 1;
-        } else {
-          high = middle - 1;
-        }
-      }
-
-      setPreview(bestPreview || normalizedText.slice(0, 1));
-      setTruncated(true);
-    };
-
-    const scheduleMeasure = () => {
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = window.requestAnimationFrame(measure);
-    };
-
-    scheduleMeasure();
-
-    const resizeObserver = new ResizeObserver(scheduleMeasure);
-    resizeObserver.observe(containerNode);
-
-    if ("fonts" in document) {
-      void document.fonts.ready.then(scheduleMeasure);
-    }
-
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(animationFrame);
-      resizeObserver.disconnect();
-    };
-  }, [text]);
-
-  const visibleText = expanded || !truncated ? text : preview;
-  const moreLabel = expanded ? INLINE_TEXT_LESS_LABEL : INLINE_TEXT_MORE_LABEL;
-  const moreClassName =
-    "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80";
-  const textContent = (
-    <p className={cn("whitespace-pre-line", className)}>
-      {visibleText}
-      {truncated ? (
-        <>
-          {" "}
-          {href || !onToggle ? (
-            <span className={moreClassName}>{moreLabel}</span>
-          ) : (
-            <button className={moreClassName} onClick={onToggle} type="button">
-              {moreLabel}
-            </button>
-          )}
-        </>
-      ) : null}
-    </p>
-  );
-
-  return (
-    <div className="relative min-w-0 max-w-full" ref={containerRef}>
-      {href ? (
-        <Link
-          className="block rounded-md no-underline transition hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-          href={href}
-        >
-          {textContent}
-        </Link>
-      ) : (
-        textContent
-      )}
-      <p
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-line",
-          className,
-        )}
-        ref={measureRef}
-      />
-    </div>
-  );
 };
 
 const postDetailHref = (post: PostListPost, focusReplyId?: string) => {

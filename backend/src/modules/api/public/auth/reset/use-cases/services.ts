@@ -7,6 +7,7 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 //Utils
 import { encrypt } from "@/utils/crypt";
+import { getCodeValidityMinutes } from "@/utils/runtime-config";
 import { getDevice } from "../../../../middlewares/_auth/utils/device";
 import { LoginRepository } from "../../login/repositories/LoginRepository";
 
@@ -14,7 +15,7 @@ import { LoginRepository } from "../../login/repositories/LoginRepository";
 import type { IResetDTO } from "../DTOs/IResetDTO";
 import { ResetRepository } from "../repositories/ResetRepository";
 
-const _VALID = Number(process.env.CODE_API_USER_VALID_MINUTES);
+const _VALID = getCodeValidityMinutes();
 
 export default async (data: IResetDTO): Promise<Resolve> => {
   const device = getDevice(data);
@@ -52,11 +53,11 @@ export default async (data: IResetDTO): Promise<Resolve> => {
 
   const password = await encrypt(data.b.password);
 
-  await _LOGIN.update({
+  await _LOGIN.updateAndClearTokens({
     p: { id: find.id! },
     b: {
       password,
-      password_confirm: password,
+      password_confirm: null,
       confirmed: true,
       confirmed_date: new Date(),
       recovery_code: null,
@@ -69,6 +70,7 @@ export default async (data: IResetDTO): Promise<Resolve> => {
   const res = await _LOGIN.hidrate(find, device.id);
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("password_update_success", {
       //If you need a custom text

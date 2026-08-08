@@ -3,14 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock3,
   ExternalLink,
   Loader2,
-  RefreshCw,
   Trash2,
   X,
 } from "lucide-react";
@@ -47,7 +45,9 @@ import type {
   AdminModerationSeverity,
   AdminModerationStatus,
 } from "@/api/req/moderation";
+import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 import { ModerationOverviewCharts } from "./overview-charts";
 
@@ -706,7 +706,8 @@ const Detail = ({
           {event.public_url ? (
             <Link
               className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-primary hover:text-primary"
-              href={event.public_url}
+              href={toPublicFrontendHref(event.public_url)}
+              rel="noreferrer"
               target="_blank"
             >
               <ExternalLink aria-hidden className="h-4 w-4" />
@@ -979,27 +980,11 @@ const RemoveModal = ({
 };
 
 const ErrorState = ({ error, onRetry }: { error: unknown; onRetry: () => void }) => (
-  <Card className="p-5">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-danger">
-          <AlertTriangle aria-hidden className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-black">Não foi possível carregar a moderação</h2>
-          <p className="mt-1 text-sm text-muted">{resolveApiError(error)}</p>
-        </div>
-      </div>
-      <button
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:border-border-strong"
-        onClick={onRetry}
-        type="button"
-      >
-        <RefreshCw aria-hidden className="h-4 w-4" />
-        Tentar novamente
-      </button>
-    </div>
-  </Card>
+  <AdminQueryErrorState
+    error={error}
+    onRetry={onRetry}
+    title="Não foi possível carregar a moderação"
+  />
 );
 
 export const AdminModerationClient = ({ mode = "overview" }: { mode?: "overview" | "textual" }) => {

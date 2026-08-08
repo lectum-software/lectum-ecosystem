@@ -1,6 +1,17 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { deriveCommunityVisualColorFields, isCommunityHexColor } from "@/utils/community-visual";
+import {
+  addDays,
+  toDateKey as dateKey,
+  daysBetweenInclusive,
+  endOfDate as endOfDay,
+  parseDateOnly,
+  startOfDate as startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "@/utils/date-range";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import { isVerifiedProfessionalEntitlement } from "@/utils/subscription-entitlement";
 import type {
@@ -82,7 +93,6 @@ const DEFAULT_REPORT_PERIOD_DAYS = 90;
 const MAX_ACTIVITY_PERIOD_DAYS = 365;
 const MAX_REPORT_PERIOD_DAYS = 180;
 const MAX_STATISTICS_PERIOD_DAYS = 3660;
-const MS_PER_DAY = 86_400_000;
 const REMOVE_CONTENT_CONFIRMATION = "REMOVER CONTEUDO";
 const DISMISS_REPORT_CONFIRMATION = "DENUNCIA IMPROCEDENTE";
 const UPHOLD_REPORT_CONFIRMATION = "DENUNCIA PROCEDENTE";
@@ -102,60 +112,6 @@ const COMMUNITY_LIST_SORTS = new Set<AdminCommunitiesListSort>([
   "posts",
   "recent",
 ]);
-
-const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const startOfDay = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const endOfDay = (date: Date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const startOfWeek = (date: Date) => {
-  const next = startOfDay(date);
-  const day = next.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-
-  return addDays(next, diff);
-};
-
-const startOfMonth = (date: Date) => startOfDay(new Date(date.getFullYear(), date.getMonth(), 1));
-const startOfYear = (date: Date) => startOfDay(new Date(date.getFullYear(), 0, 1));
-
-const parseDateOnly = (value: string | undefined, boundary: "end" | "start") => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) return null;
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return null;
-  }
-
-  return boundary === "start" ? startOfDay(date) : endOfDay(date);
-};
-
-const daysBetweenInclusive = (from: Date, to: Date) => {
-  const start = startOfDay(from).getTime();
-  const end = startOfDay(to).getTime();
-
-  return Math.floor((end - start) / MS_PER_DAY) + 1;
-};
-
-const pad = (value: number) => String(value).padStart(2, "0");
-const dateKey = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 const roundPercent = (value: number) => Math.round(value * 10) / 10;
 const CONTENT_FORMAT_ORDER = ["text", "video", "image", "image_carousel"] as const;

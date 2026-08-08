@@ -1,5 +1,7 @@
 //@ts-nocheck
 
+import { toSafeErrorLog } from "@/utils/safe-error-log";
+
 export const handleError = (err) => {
   try {
     const objectError = {
@@ -51,6 +53,6 @@ export const handleError = (err) => {
 
     return objectError;
   } catch (err) {
-    console.error(`[VALIDATOR]: ${err}`);
+    console.error("[VALIDATOR] Falha ao organizar erros.", toSafeErrorLog(err, "ValidatorError"));
   }
 };

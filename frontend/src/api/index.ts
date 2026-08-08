@@ -1,6 +1,6 @@
 import axios, { AxiosHeaders } from "axios";
 
-import { getToken } from "@/hooks/cookies/token";
+import { getBearerToken } from "@/hooks/cookies/token";
 import { fingerprint } from "@/utils/fingerprint";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -22,13 +22,16 @@ const shouldSendNgrokBrowserWarningBypass = shouldSkipNgrokBrowserWarning(API_UR
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 240000,
+  headers: {
+    "X-Requested-With": "Lectum-User-Cookie-Auth",
+  },
+  timeout: 30_000,
   withCredentials: true,
 });
 
 api.interceptors.request.use(async (config) => {
   const headers = AxiosHeaders.from(config.headers);
-  const token = getToken();
+  const token = getBearerToken();
   const device = await fingerprint();
 
   if (device) headers.set("x-device", device);

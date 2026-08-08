@@ -3,6 +3,7 @@ import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { shouldBlockAdminViewAsWrite } from "@/utils/admin-view-as";
+import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import { passLogin } from "../_auth/helpers/login";
 import { passToken } from "../_auth/helpers/token";
 import passport from "../_auth/passport";
@@ -15,8 +16,9 @@ type NotAuthorized = {
 
 const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req?.headers?.authorization;
+  const requestToken = getUserRequestToken(req);
 
-  if (!authHeader?.startsWith("Bearer ")) {
+  if (!requestToken || (authHeader && !authHeader.startsWith("Bearer "))) {
     return next();
   }
 
@@ -32,7 +34,7 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
       if (!login) return next();
 
       const deviceId = req?.headers?.["x-device"] as string;
-      const token = await passToken(login, deviceId, authHeader.split(" ")[1]);
+      const token = await passToken(login, deviceId, requestToken);
       if (token.err) return next();
 
       const logged = await passLogin(login);

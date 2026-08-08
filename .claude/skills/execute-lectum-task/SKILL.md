@@ -9,23 +9,25 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 
 ## Workflow Obrigatório
 
-1. Ler `CLAUDE.md`, `AGENTS.md`, `_product/tasks/README.md`, `_product/tasks/ARCHITECTURE.md`, `_product/tasks/DATA-MODEL.md`, `_product/tasks/PACKAGES.md`, `_product/tasks/PROTO-INVENTORY.md`, `_product/tasks/ROADMAP-REVALIDADO.md` e o arquivo da task alvo.
-2. Confirmar dependências da task.
-3. Se houver UI, identificar imagens de `_product/proto` citadas na task.
-4. Usar Builder MCP/Quick Copy quando disponível no cliente Claude Code.
-5. Se Builder MCP não estiver disponível no cliente, usar as imagens locais citadas na task e registrar a limitação.
-6. Verificar requisitos externos: pagamento, storage, e-mail, WhatsApp/SMS, CFP, OAuth, push e LGPD.
-7. Se faltar requisito externo, parar e registrar bloqueio em task/ADR.
-8. Mapear arquivos existentes antes de criar estrutura nova:
+1. Executar `git branch --show-current`; se for `main`, parar e orientar o usuário a usar `homolog`.
+2. Ler `CLAUDE.md`, `AGENTS.md`, `_product/tasks/README.md`, `_product/tasks/ARCHITECTURE.md`, `_product/tasks/DATA-MODEL.md`, `_product/tasks/PACKAGES.md`, `_product/tasks/PROTO-INVENTORY.md`, `_product/tasks/ROADMAP-REVALIDADO.md` e o arquivo da task alvo.
+3. Confirmar dependências da task.
+4. Se houver UI, identificar imagens de `_product/proto` citadas na task.
+5. Usar Builder MCP/Quick Copy quando disponível no cliente Claude Code.
+6. Se Builder MCP não estiver disponível no cliente, usar as imagens locais citadas na task e registrar a limitação.
+7. Verificar requisitos externos: pagamento, storage, e-mail, WhatsApp/SMS, CFP, OAuth, push e LGPD.
+8. Se faltar requisito externo, parar e registrar bloqueio em task/ADR.
+9. Mapear arquivos existentes antes de criar estrutura nova:
    - frontend: `src/api/req`, `src/api/callers`, `src/api/cache/keys.ts`, `src/templates`, `src/registry/new-york-v4/ui`, `src/components/ui`, `src/components/controllers`, `src/hooks/form`;
    - backend: `src/modules/api`, `src/utils/validator.ts`, `src/helpers/return`, `src/helpers/translate`, `src/main/server/imports/write.ts`.
-9. Implementar sem mocks.
-10. Se alterar `backend/prisma/schema.prisma` ou `backend/prisma/migrations`, executar `pnpm --dir backend db:migrate`. Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, perguntar ao usuário se pode resetar o banco antes de rodar comando destrutivo.
-11. Rodar checks/builds relevantes.
-12. Criar ou atualizar ADR em `adrs/`.
-13. Marcar critérios de aceite concluídos no arquivo da task.
-14. Fazer commit com mensagem convencional.
-15. Executar `git push` para publicar a branch/remoto correspondente. Se a branch não tiver upstream, usar `git push -u origin <branch>`. Se o push falhar por credenciais, rede ou permissão, registrar o bloqueio explicitamente.
+10. Implementar sem mocks.
+11. Registrar risco de deploy, dados existentes, envs, ordem entre apps e rollback. Env obrigatória nova exige **ALERTA DE DEPLOY** sem mostrar valor.
+12. Se alterar `backend/prisma/schema.prisma` ou `backend/prisma/migrations`, usar expandir/backfill/contrair, não editar migration aplicada e executar `pnpm --dir backend db:migrate`. Se falhar por dados locais preexistentes, perguntar antes de resetar somente o ambiente local.
+13. Rodar checks/builds relevantes.
+14. Criar ou atualizar ADR em `adrs/`.
+15. Marcar critérios de aceite concluídos no arquivo da task.
+16. Fazer commit com mensagem convencional.
+17. Confirmar `homolog`, avisar que o push inicia deploy automático e executar `git push`. Validar smoke e `/health`/`/ready` antes de recomendar merge revisado para `main`.
 
 ## Proibições
 
@@ -37,6 +39,9 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 - Não concluir task com erro de TypeScript, warning Biome ou build quebrado.
 - Não avançar para outra task sem concluir validação, commit e push.
 - Não usar `sample/` como fonte ativa, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
+- Não fazer commit/push direto em `main` nem executar ações destrutivas em dados publicados.
+- Não introduzir coluna obrigatória incompatível, env não provisionada ou quebra de contrato entre versões.
+- Não expor detalhe técnico, PII, segredo, stack, SQL ou mensagem crua de provider.
 
 ## Saída Esperada
 
@@ -49,3 +54,4 @@ Ao final, responder com:
 - hash do commit;
 - status do push;
 - bloqueios reais, se houver.
+- alertas de deploy, rollback e smoke de homologação.

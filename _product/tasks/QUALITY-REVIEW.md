@@ -2,6 +2,12 @@
 
 O prompt exigiu três loops de interação sobre as tasks criadas. Este arquivo registra os passes de revisão e os ajustes aplicados.
 
+> **Revisão vigente:** desde 2026-08-07 o produto está publicado. A auditoria integral de produção
+> está resumida em [`../AUDITORIA-CORRECOES-2026-08-07.md`](../AUDITORIA-CORRECOES-2026-08-07.md)
+> e as decisões técnicas estão no
+> [`ADR-0418`](../../adrs/0418-auditoria-producao-seguranca-estabilidade.md). As seções abaixo são
+> histórico das revisões anteriores e não substituem as regras atuais de deploy.
+
 ## Loop 1 - Auto-suficiência
 
 Critério revisado: cada task precisa conter contexto suficiente para ser executada isoladamente.

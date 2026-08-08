@@ -47,12 +47,14 @@ export class StoreRepository implements IStoreRepository {
       const {
         professional_first_name,
         professional_last_name,
+        password_confirm: _passwordConfirm,
         terms_accepted,
         terms_version,
         analytics_session_id,
         analytics_visitor_id,
         ...userData
       } = props.b;
+      void _passwordConfirm;
       const role = userData.role || "paciente";
       const signupAnalyticsIdentity = resolveSignupAnalyticsIdentity({
         analytics_session_id,
