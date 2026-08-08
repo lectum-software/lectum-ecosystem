@@ -47,7 +47,7 @@ const ReviewPsychologistAvatar = ({ review }: { review: PatientReview }) => {
   const avatarSrc = resolvePublicMediaUrl(review.psychologist_avatar);
 
   return (
-    <span className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary-soft via-white to-primary-soft text-sm font-black text-primary ring-1 ring-border dark:via-surface">
+    <span className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary-soft via-surface to-primary-soft text-sm font-black text-primary ring-1 ring-border dark:via-surface">
       {avatarSrc ? (
         <Image
           alt={review.psychologist_name}
@@ -65,7 +65,7 @@ const ReviewPsychologistAvatar = ({ review }: { review: PatientReview }) => {
 };
 
 const ReviewCard = ({ review }: { review: PatientReview }) => (
-  <article className="grid gap-4 rounded-[24px] border border-border bg-surface p-4 shadow-[0_14px_34px_rgb(15_23_42_/_6%)] sm:p-5">
+  <article className="grid gap-4 rounded-[24px] border border-border bg-surface p-4 shadow-lectum-soft sm:p-5">
     <div className="flex items-start gap-3">
       <ReviewPsychologistAvatar review={review} />
 
@@ -157,7 +157,7 @@ export const ReviewsLogic = () => {
           ) : null}
           {reviews.isError ? (
             <InlineAlert title="Não foi possível carregar" variant="error">
-              Não foi possível conectar à API agora. Tente novamente em instantes.
+              Não foi possível conectar ao serviço agora. Tente novamente em instantes.
             </InlineAlert>
           ) : null}
 

@@ -230,17 +230,17 @@ Frontend esperado:
   - setup/edição profissional com especialidades agrupadas;
   - restaurar padrões em ambiente local com confirmação.
 
-## Execu??o
+## Execução
 
-- Refer?ncia visual usada: `_product/proto/admin/Configura??es.png`. Builder/Quick Copy n?o esteve dispon?vel como ferramenta neste ambiente; a implementa??o foi guiada pela imagem local, registrando esta limita??o.
-- Criada persist?ncia real para categorias de especialidades, ordena??o de especialidades/abordagens/servi?os e op??es administr?veis de idiomas e p?blico atendido.
-- Criados endpoints privados do Admin para listar, criar, editar, ativar/inativar, reordenar e restaurar padr?es dos cat?logos.
-- Atualizados os consumidores reais da busca p?blica, setup/edi??o profissional e Admin de psic?logos para usar cat?logos vindos do backend.
-- A restaura??o de padr?es exige confirma??o forte `RESTAURAR PADROES`, ? idempotente e n?o remove op??es customizadas.
-- N?o foi instalado pacote novo de drag-and-drop; a reordena??o usa bot?es acess?veis de mover para cima/baixo.
-- `pnpm --dir backend db:migrate` foi acionado conforme exigido por mudan?a Prisma, por?m o `prisma migrate dev` ficou preso no `schema-engine`/advisory lock do ambiente. N?o houve reset nem comando destrutivo. A aplica??o da migration foi validada sem pend?ncias por `pnpm --dir backend exec prisma migrate status` e `pnpm --dir backend exec prisma migrate deploy`.
+- Referência visual usada: `_product/proto/admin/Configurações.png`. Builder/Quick Copy não esteve disponível como ferramenta neste ambiente; a implementação foi guiada pela imagem local, registrando esta limitação.
+- Criada persistência real para categorias de especialidades, ordenação de especialidades/abordagens/serviços e opções administráveis de idiomas e público atendido.
+- Criados endpoints privados do Admin para listar, criar, editar, ativar/inativar, reordenar e restaurar padrões dos catálogos.
+- Atualizados os consumidores reais da busca pública, setup/edição profissional e Admin de psicólogos para usar catálogos vindos do backend.
+- A restauração de padrões exige confirmação forte `RESTAURAR PADROES`, é idempotente e não remove opções customizadas.
+- Não foi instalado pacote novo de drag-and-drop; a reordenação usa botões acessíveis de mover para cima/baixo.
+- `pnpm --dir backend db:migrate` foi acionado conforme exigido por mudança Prisma, porém o `prisma migrate dev` ficou preso no `schema-engine`/advisory lock do ambiente. Não houve reset nem comando destrutivo. A aplicação da migration foi validada sem pendências por `pnpm --dir backend exec prisma migrate status` e `pnpm --dir backend exec prisma migrate deploy`.
 
-## Valida??o executada
+## Validação executada
 
 - `pnpm --dir backend exec prisma generate`
 - `pnpm --dir backend exec prisma migrate status`
@@ -252,7 +252,7 @@ Frontend esperado:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local/HTTP: Admin `/configuracoes` e `/settings`; frontend `/psychologists` e `/app/professional/profile/setup` em servidor de produ??o local.
+- Browser local/HTTP: Admin `/configuracoes` e `/settings`; frontend `/psychologists` e `/app/professional/profile/setup` em servidor de produção local.
 
 ## Ajuste complementar 2026-07-21 - Layout piloto premium em Configurações
 

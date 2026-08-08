@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: o seed genérico opera sobre DMMF e delegates Prisma determinados em tempo de execução.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";

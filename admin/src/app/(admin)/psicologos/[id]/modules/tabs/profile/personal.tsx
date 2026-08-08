@@ -69,7 +69,7 @@ export const ProfileFormActions = ({
       Cancelar
     </button>
     <button
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
       disabled={disabled}
       type="submit"
     >
@@ -304,7 +304,7 @@ export const PersonalDataEditForm = ({
           />
         </div>
         {isApprovedCpfChanged ? (
-          <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm font-bold text-orange-700">
+          <div className="rounded-2xl border border-warning-border bg-warning-soft p-4 text-sm font-bold text-warning">
             Alterar CPF em psicólogo aprovado não revalida nem invalida automaticamente o CRP.
             Decisões de aprovação/rejeição continuam no card Registro profissional.
           </div>

@@ -36,7 +36,7 @@ Após cadastro e verificação, o paciente passa pelo onboarding (fluxograma 19.
 
 ## Integração com backend (modelo já definido em DATA-MODEL)
 
-Usa o `patient_profile` da TASK-07. Campos relevantes (ver `DATA-MODEL.md`): `goal` (`"encontrar_psicologo" | "conhecer_comunidade"`), `birthdate?`, `phone?`, `onboarding_completed_at?` (null = pendente).
+Usa o `patient_profile` da TASK-07. Campos relevantes (ver `DATA-MODEL.md`): `goal` (`"encontrar_psicologo" | "conhecer_comunidade"`), `birthdate?`, `phone?`, `onboarding_completed_até` (null = pendente).
 
 Endpoints a criar (privados, módulo `private/patient`, padrão controller/service/repository de `ARCHITECTURE.md`):
 

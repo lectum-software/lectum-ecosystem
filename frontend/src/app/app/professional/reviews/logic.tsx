@@ -47,7 +47,7 @@ const formatDate = (value: string) => {
 const resolveApiError = (error: unknown) =>
   getSafeApiErrorMessage(
     error,
-    "Não foi possível conectar à API agora. Tente novamente em instantes.",
+    "Não foi possível conectar ao serviço agora. Tente novamente em instantes.",
   );
 
 const firstName = (name: string) => name.split(/\s+/).filter(Boolean)[0] || "paciente";

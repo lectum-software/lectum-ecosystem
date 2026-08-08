@@ -68,7 +68,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
             <div className="relative h-12 w-[76px]">
               <span
                 aria-hidden="true"
-                className="-translate-x-1/2 absolute top-0 left-1/2 grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)]"
+                className="-translate-x-1/2 absolute top-0 left-1/2 grid h-12 w-12 place-items-center rounded-full bg-surface text-muted shadow-lectum-soft"
               >
                 <Search className="h-5 w-5" aria-hidden="true" />
               </span>
@@ -81,10 +81,10 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                 }}
                 onSubmit={handleSearchSubmit}
               >
-                <div className="relative flex h-12 w-full items-center rounded-full border border-[#e2e8f0] bg-white px-4 shadow-[0_12px_34px_rgba(15,23,42,0.14)] transition-all duration-200 ease-out">
+                <div className="relative flex h-12 w-full items-center rounded-full border border-border bg-surface px-4 shadow-lectum-soft transition-all duration-200 ease-out">
                   <input
                     aria-label="Buscar Psicólogos"
-                    className="h-full w-full bg-transparent text-[14px] text-[#0f172a] outline-none placeholder:text-[#64748b]"
+                    className="h-full w-full bg-transparent text-[14px] text-foreground outline-none placeholder:text-muted"
                     disabled={areDesktopFeedControlsHidden}
                     maxLength={120}
                     name="search"
@@ -107,15 +107,15 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                 {shouldRenderSearchSuggestions ? (
                   <div
                     aria-label="Sugestões de psicólogos"
-                    className="absolute top-[calc(100%+8px)] left-0 w-full overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
+                    className="absolute top-[calc(100%+8px)] left-0 w-full overflow-hidden rounded-2xl border border-border bg-surface text-foreground shadow-lectum-soft"
                     onMouseDown={(event) => event.preventDefault()}
                     role="listbox"
                   >
-                    <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
+                    <div className="border-border border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-muted uppercase">
                       Profissionais cadastrados
                     </div>
                     {searchSuggestionsDirectory.isFetching ? (
-                      <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
+                      <div className="px-3 py-3 text-sm font-medium text-muted">
                         Buscando profissionais...
                       </div>
                     ) : (
@@ -123,14 +123,14 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                         <button
                           aria-label={`Buscar por ${suggestion.name}`}
                           aria-selected={false}
-                          className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
+                          className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-surface-muted"
                           key={suggestion.id}
                           onClick={() => handleSearchSuggestionSelect(suggestion.name)}
                           role="option"
                           type="button"
                         >
                           <span className="min-w-0 truncate">{suggestion.name}</span>
-                          <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
+                          <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-extrabold text-primary">
                             {suggestion.verified ? "Verificado" : "Gratuito"}
                           </span>
                         </button>
@@ -143,7 +143,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
           ) : (
             <button
               aria-label="Pesquisar psicólogos"
-              className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+              className="grid h-12 w-12 place-items-center rounded-full bg-surface text-muted shadow-lectum-soft transition hover:scale-105 hover:bg-surface-muted active:scale-95"
               disabled={areDesktopFeedControlsHidden}
               onClick={(event) => {
                 event.stopPropagation();
@@ -163,7 +163,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
 
           <button
             aria-label="Abrir filtros"
-            className="grid h-12 w-12 place-items-center rounded-full bg-white text-[#334155] shadow-[0_10px_28px_rgba(15,23,42,0.14)] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+            className="grid h-12 w-12 place-items-center rounded-full bg-surface text-muted shadow-lectum-soft transition hover:scale-105 hover:bg-surface-muted active:scale-95"
             disabled={areDesktopFeedControlsHidden}
             onClick={(event) => {
               event.stopPropagation();
@@ -195,7 +195,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
             <button
               aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
-              className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#e2e8f0] bg-white p-0.5 text-[#0f172a] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+              className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-border bg-surface p-0.5 text-foreground transition hover:scale-105 hover:bg-surface-muted active:scale-95"
               disabled={isDesktopActionRailHidden}
               onClick={(event) =>
                 navigateToPublicPsychologistProfile(desktopActionPsychologist.id, event)
@@ -204,7 +204,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
               tabIndex={isDesktopActionRailHidden ? -1 : undefined}
               type="button"
             >
-              <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-[#e2e8f0] text-[11px] font-bold text-[#334155]">
+              <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-surface-muted text-[11px] font-bold text-muted">
                 {desktopActionPsychologist.avatar ? (
                   <Image
                     alt={desktopActionPsychologist.name}
@@ -219,7 +219,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                 )}
               </span>
             </button>
-            <span className="text-[10px] font-bold text-[#475569]">Perfil</span>
+            <span className="text-[10px] font-bold text-muted">Perfil</span>
           </div>
 
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
@@ -233,7 +233,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
               }
               aria-busy={desktopActionIsFavoritePending}
               aria-pressed={desktopActionIsFavorited}
-              className="grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100 disabled:hover:bg-white disabled:active:scale-100"
+              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted transition hover:scale-105 hover:bg-surface-muted active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100 disabled:hover:bg-surface disabled:active:scale-100"
               disabled={isDesktopActionRailHidden || desktopActionIsOwnProfile}
               onClick={(event) => {
                 event.stopPropagation();
@@ -249,18 +249,18 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                 className="h-5 w-5"
                 aria-hidden="true"
                 style={{
-                  color: desktopActionIsFavorited ? "#ef4444" : "#334155",
-                  fill: desktopActionIsFavorited ? "#ef4444" : "transparent",
+                  color: desktopActionIsFavorited ? "var(--lectum-danger)" : "var(--lectum-muted)",
+                  fill: desktopActionIsFavorited ? "var(--lectum-danger)" : "transparent",
                 }}
               />
             </button>
-            <span className="text-[10px] font-bold text-[#475569]">Favoritar</span>
+            <span className="text-[10px] font-bold text-muted">Favoritar</span>
           </div>
 
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
             <button
               aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
-              className="grid h-10 w-10 place-items-center rounded-full border border-[#e2e8f0] bg-white text-[#334155] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted transition hover:scale-105 hover:bg-surface-muted active:scale-95"
               disabled={isDesktopActionRailHidden}
               onClick={(event) => {
                 event.stopPropagation();
@@ -271,14 +271,14 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
             >
               <Share2 className="h-5 w-5" aria-hidden="true" />
             </button>
-            <span className="text-[10px] font-bold text-[#475569]">Compartilhar</span>
+            <span className="text-[10px] font-bold text-muted">Compartilhar</span>
           </div>
 
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
             {desktopActionPsychologist.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton
                 aria-label={`Fale com ${desktopActionPsychologist.whatsapp_name || desktopActionPsychologist.name} no WhatsApp`}
-                className="grid h-10 w-10 place-items-center rounded-full border border-[#d5f5df] bg-white text-[#22C55E] transition hover:scale-105 hover:bg-[#f8fafc] active:scale-95"
+                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-success transition hover:scale-105 hover:bg-surface-muted active:scale-95"
                 data-psychologists-tip-target={isDesktopActionRailHidden ? undefined : "whatsapp"}
                 importantActionType="psychologist_video_whatsapp_click"
                 onClick={handleWhatsappInteraction}
@@ -299,22 +299,22 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                   targetType: "psychologist",
                 }}
               >
-                <WhatsAppIcon aria-hidden="true" className="h-5 w-5" style={{ color: "#22C55E" }} />
+                <WhatsAppIcon aria-hidden="true" className="h-5 w-5 text-whatsapp" />
               </PsychologistWhatsAppRedirectButton>
             ) : (
               <button
                 aria-disabled="true"
                 aria-label={`WhatsApp indisponível para ${desktopActionPsychologist.name}`}
-                className="grid h-10 w-10 place-items-center rounded-full border border-[#d5f5df] bg-white text-[#22C55E] opacity-55"
+                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-success opacity-55"
                 disabled={isDesktopActionRailHidden}
                 onClick={stopInteractionPropagation}
                 tabIndex={isDesktopActionRailHidden ? -1 : undefined}
                 type="button"
               >
-                <WhatsAppIcon aria-hidden="true" className="h-5 w-5" style={{ color: "#22C55E" }} />
+                <WhatsAppIcon aria-hidden="true" className="h-5 w-5 text-whatsapp" />
               </button>
             )}
-            <span className="text-[10px] font-bold text-[#475569]">WhatsApp</span>
+            <span className="text-[10px] font-bold text-muted">WhatsApp</span>
           </div>
         </div>
       ) : null}

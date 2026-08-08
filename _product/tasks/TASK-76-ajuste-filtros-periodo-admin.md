@@ -120,7 +120,7 @@ Esta task é uma correção transversal de UX no Admin e não altera API, persis
 ### Validação deste ajuste
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/comunidades/client.tsx"` - OK.
-- `rg -n "Período:|PerÃ­odo:" admin/src` - OK, sem ocorrências.
+- `rg -n "Período:" admin/src` - OK, sem ocorrências.
 - `pnpm --dir admin check` - OK na reexecução isolada.
 - Smoke HTTP local no Admin: `GET http://localhost:3002/psicologos`, `GET http://localhost:3002/pacientes` e `GET http://localhost:3002/comunidades` retornaram 200.
 - `pnpm --dir admin build` foi tentado, mas o workspace atual está bloqueado por uma alteração não relacionada em `admin/src/api/req/patients/index.ts`/`admin/src/app/(admin)/pacientes/[id]/client.tsx`: o tipo passou a exigir `operating_systems` nos itens de device usage do detalhe de paciente.

@@ -23,7 +23,7 @@ esperada pelo produto e manter os tres graficos do funil lado a lado quando houv
 - Alterar dados, categorias, benchmarks, pesos de engajamento, contratos de API ou banco.
 - Criar nova visualizacao analitica, mock, seed artificial, endpoint simulado, schema Prisma,
   migration ou package novo.
-- Usar Figma como fonte ativa.
+- Tratar Figma como fonte visual ativa; a fonte vigente é Builder/proto.
 
 ## Criterios de aceite
 

@@ -7,6 +7,11 @@ const TECHNICAL_PATTERNS = [
   /econn(?:refused|reset|aborted)/i,
   /timeout of \d+ms exceeded/i,
   /\b(?:next_public|process\.env|database_url|jwt_secret|access_token)\b/i,
+  /\b(?:payload|webhook|endpoint|schema|stack|trace|policyagent|mercadopago|preapproval|gateway)\b/i,
+  /\b(?:cannot|failed|failure|unexpected|missing|required|not found|does not exist|unauthorized|forbidden)\b/i,
+  /\b(?:template|resource) with id\b/i,
+  /\b[0-9a-f]{24,}\b/i,
+  /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i,
   /\b(?:typeerror|referenceerror|syntaxerror)\b/i,
   /\b(?:prisma|postgres(?:ql)?|sqlstate|redis)\b/i,
   /\bP[12]\d{3}\b/,
@@ -56,6 +61,13 @@ export const getSafeAdminApiError = (
   const errorRecord = asRecord(error);
   const response = asRecord(errorRecord?.response);
   const payload = asRecord(response?.data) ?? asRecord(errorRecord?.data) ?? errorRecord;
+  const status = readStatus(error);
+
+  if (status === 401 || status === 403 || status === 404 || status === 429) {
+    return statusMessage(status, fallback);
+  }
+  if (status && status >= 500) return statusMessage(status, fallback);
+
   const candidates = [payload?.error, payload?.message, errorRecord?.message];
 
   for (const candidate of candidates) {
@@ -71,5 +83,5 @@ export const getSafeAdminApiError = (
     }
   }
 
-  return statusMessage(readStatus(error), fallback);
+  return statusMessage(status, fallback);
 };

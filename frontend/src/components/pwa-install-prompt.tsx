@@ -257,7 +257,7 @@ export function PwaInstallPrompt() {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/35 px-3 pt-6 text-foreground backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-slate-950/35",
+        "fixed inset-0 z-[70] flex items-end justify-center bg-media-background/35 px-3 pt-6 text-foreground backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-media-background/35",
         "pb-[calc(5rem+env(safe-area-inset-bottom))] sm:items-center sm:px-6 sm:pb-6",
       )}
     >

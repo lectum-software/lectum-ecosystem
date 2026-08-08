@@ -17,7 +17,7 @@ export const PsychologistFilterSearchSuggestions = ({
 }) => (
   <div
     aria-label="Sugestões de psicólogos"
-    className="mt-2 overflow-hidden rounded-2xl border border-border/80 bg-surface text-foreground shadow-[0_18px_45px_rgb(15_23_42_/_10%)]"
+    className="mt-2 overflow-hidden rounded-2xl border border-border/80 bg-surface text-foreground shadow-lectum-soft"
     onMouseDown={(event) => event.preventDefault()}
     role="listbox"
   >

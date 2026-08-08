@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: o reset genérico resolve modelos e relações pela DMMF em tempo de execução.
 
 import { readFileSync } from "node:fs";
 

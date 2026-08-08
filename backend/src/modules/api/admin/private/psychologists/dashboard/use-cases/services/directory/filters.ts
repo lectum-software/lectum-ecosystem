@@ -178,7 +178,7 @@ export const buildFilterSearches = (params: {
 }): AdminPsychologistsDashboardFilterSearches => ({
   available: true,
   description:
-    "Buscas reais por filtros aplicados no diretório público de psicólogos, capturadas por evento first-party sem texto livre.",
+    "Buscas por filtros aplicados no diretório público de psicólogos, sem armazenar o texto livre pesquisado.",
   dimensions: {
     approaches: buildFilterSearchDimension({
       actions: params.actions,

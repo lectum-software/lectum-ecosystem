@@ -1,23 +1,21 @@
 import http from "node:http";
 import type { Express } from "express";
-import jwt, { type JwtPayload } from "jsonwebtoken";
-import io from "socket.io";
+import jwt from "jsonwebtoken";
+import io, { type DefaultEventsMap } from "socket.io";
 import { resolve } from "@/helpers/translate/resolve";
 import prisma from "@/infra/database/prisma";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
-import { getUserJwtTtlSeconds, parsePositiveInteger } from "@/utils/runtime-config";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import {
+  getUserJwtTtlSeconds,
+  isTrustProxyEnabled,
+  parsePositiveInteger,
+} from "@/utils/runtime-config";
 import { readUserTokenFromCookieHeader } from "@/utils/user-auth-cookie";
 import { emitAsync } from "./db/async";
 import { connectedClients } from "./registry";
-import { setSoc } from "./state";
+import { type SocketPayload, type SocketSessionData, setSoc } from "./state";
 
 export { aiSoc, setAiSoc, setSoc, soc } from "./state";
-
-type SocketPayload = JwtPayload & {
-  device_id?: string;
-  id?: string;
-  type?: string;
-};
 
 const SOCKET_AUTH_RECHECK_INTERVAL_MS = parsePositiveInteger(
   process.env.SOCKET_AUTH_RECHECK_INTERVAL_MS,
@@ -27,6 +25,7 @@ const SOCKET_AUTH_RECHECK_INTERVAL_MS = parsePositiveInteger(
 
 const validateSocketSession = async (token: string) => {
   const payload = jwt.verify(token, getJwtSecret(), {
+    algorithms: [JWT_ALGORITHM],
     maxAge: getUserJwtTtlSeconds(),
   }) as SocketPayload;
 
@@ -60,16 +59,10 @@ const normalizeOrigin = (value?: string | string[] | null) => {
   }
 };
 
-const shouldTrustForwardedOrigin = () => {
-  const raw = process.env.TRUST_PROXY?.trim().toLowerCase();
-
-  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
-};
-
 const resolveHandshakeOrigin = (headers: Record<string, string | string[] | undefined>) => {
   const explicitOrigin = normalizeOrigin(headers.origin);
   if (explicitOrigin) return explicitOrigin;
-  if (!shouldTrustForwardedOrigin()) return null;
+  if (!isTrustProxyEnabled()) return null;
 
   const forwardedHost = Array.isArray(headers["x-forwarded-host"])
     ? headers["x-forwarded-host"][0]
@@ -92,7 +85,12 @@ export const socket = (server: Express) => {
 
   const httpServer = http.createServer(server);
 
-  const web = new io.Server(httpServer, {
+  const web = new io.Server<
+    DefaultEventsMap,
+    DefaultEventsMap,
+    DefaultEventsMap,
+    SocketSessionData
+  >(httpServer, {
     path: "/socket.io",
     cors: {
       origin: Array.from(allowedOrigins),
@@ -106,7 +104,7 @@ export const socket = (server: Express) => {
     const origin = resolveHandshakeOrigin(socket.handshake.headers);
 
     if (!origin || !allowedOrigins.has(origin)) {
-      console.warn("[SOCKET] Origem não permitida", origin);
+      console.warn("[SOCKET] Origem não permitida", { has_origin: Boolean(origin) });
       return next(new Error(resolve("error.origin_not_allowed")));
     }
     const providedToken =
@@ -125,8 +123,8 @@ export const socket = (server: Express) => {
       const payload = await validateSocketSession(token);
       if (!payload) return next(new Error(resolve("error.token_invalid")));
 
-      (socket as any).authToken = token;
-      (socket as any).payload = payload;
+      socket.data.authToken = token;
+      socket.data.payload = payload;
       return next();
     } catch (err: unknown) {
       console.warn("[SOCKET] Token inválido", {
@@ -146,7 +144,7 @@ export const socket = (server: Express) => {
 
       authCheckInProgress = true;
       try {
-        const token = (socket as any).authToken;
+        const token = socket.data.authToken;
         if (typeof token !== "string" || !(await validateSocketSession(token))) {
           socket.disconnect(true);
         }
@@ -160,7 +158,11 @@ export const socket = (server: Express) => {
     socket.on("client", () => {
       if (registered) return;
 
-      const payload = (socket as any).payload as SocketPayload;
+      const payload = socket.data.payload;
+      if (!payload) {
+        socket.disconnect(true);
+        return;
+      }
       if (!payload.id) {
         socket.disconnect(true);
         return;

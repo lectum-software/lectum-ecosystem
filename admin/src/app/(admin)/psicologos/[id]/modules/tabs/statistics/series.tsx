@@ -46,7 +46,7 @@ export const StatisticsSeriesChart = ({
   if (points.length === 0) {
     return (
       <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
-        Nenhum ponto real de evolução foi encontrado para o período.
+        Nenhum ponto de evolução foi encontrado para o período.
       </div>
     );
   }
@@ -241,7 +241,7 @@ export const VisibilityMetricToggleCard = ({
   metric: AdminPsychologistEngagementMetric;
   onToggle: () => void;
 }) => {
-  const displayValue = metric.available ? formatEngagementMetricValue(metric) : "â€”";
+  const displayValue = metric.available ? formatEngagementMetricValue(metric) : "—";
   const Icon = config.icon;
 
   return (
@@ -312,7 +312,7 @@ export const VisibilityStackedTimeChart = ({
   if (points.length === 0) {
     return (
       <div className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
-        Nenhum ponto real de visibilidade foi encontrado para o período.
+        Nenhum ponto de visibilidade foi encontrado para o período.
       </div>
     );
   }
@@ -489,7 +489,6 @@ export const VisibilityCountersGrid = ({
         <div
           className="min-w-0 rounded-2xl border border-border/70 bg-surface-muted/55 p-4"
           key={counter.id}
-          title={counter.source}
         >
           <div className="flex items-center gap-2">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface text-primary ring-1 ring-border/80">

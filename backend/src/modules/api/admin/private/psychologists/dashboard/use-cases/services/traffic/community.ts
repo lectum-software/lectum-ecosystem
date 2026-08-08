@@ -288,9 +288,7 @@ export const buildCommunityTrafficPlatformMetrics = (
                 id: "average_retention",
                 label: "Retenção",
                 unavailable_reason:
-                  averageRetention === null
-                    ? "Sem sessões reais de vídeo com duração no período."
-                    : null,
+                  averageRetention === null ? "Sem sessões de vídeo com duração no período." : null,
                 unit: "percentage",
                 value: averageRetention,
               }),

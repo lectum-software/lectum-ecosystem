@@ -4,7 +4,7 @@ import { error, msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { confirmEmailSend } from "@/modules/api/config/nodemailer/messages/confirm";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import {
   createGoogleOAuthLoginUrl,
@@ -399,7 +399,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
       user_id: current.id,
     },
     getJwtSecret(),
-    { expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
+    { algorithm: JWT_ALGORITHM, expiresIn: DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN },
   );
 
   const url = createGoogleOAuthLoginUrl(device.id);

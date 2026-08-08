@@ -27,7 +27,7 @@ const resolveCommunityError = (error: unknown) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em alguns instantes.";
   }
 
   return rawMessage || "Não foi possível carregar suas comunidades seguidas agora.";
@@ -71,7 +71,7 @@ const formatMembers = (value: number) => {
 };
 
 const SectionTitle = ({ children }: { children: string }) => (
-  <h2 className="text-sm font-black uppercase tracking-[0.06em] text-[#738198]">{children}</h2>
+  <h2 className="text-sm font-black uppercase tracking-[0.06em] text-muted">{children}</h2>
 );
 
 const ActivityCard = ({
@@ -83,16 +83,16 @@ const ActivityCard = ({
 }) => (
   <section className="grid gap-5">
     <SectionTitle>Minha atividade</SectionTitle>
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center rounded-[18px] border border-[#E0E7F0] bg-white px-4 py-5 shadow-[0_8px_18px_rgba(15,23,42,0.06)]">
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center rounded-[18px] border border-border bg-surface px-4 py-5 shadow-lectum-soft">
       <div className="grid justify-items-center gap-1 text-center">
-        <p className="text-sm font-semibold text-[#738198]">Seguindo</p>
-        <strong className="text-xl font-black leading-none text-[#131A2A]">
+        <p className="text-sm font-semibold text-muted">Seguindo</p>
+        <strong className="text-xl font-black leading-none text-foreground">
           {formatCommunityCount(followingCount)}
         </strong>
       </div>
-      <span className="h-16 w-px bg-[#D9E1EC]" aria-hidden="true" />
+      <span className="h-16 w-px bg-surface-muted" aria-hidden="true" />
       <div className="grid justify-items-center gap-1 text-center">
-        <p className="text-sm font-semibold text-[#738198]">Novos Posts</p>
+        <p className="text-sm font-semibold text-muted">Novos Posts</p>
         <strong className="text-xl font-black leading-none text-primary">
           {formatNewPosts(newPostsToday)}
         </strong>
@@ -109,10 +109,10 @@ const CommunityVisual = ({
   size?: "sm" | "md" | "lg";
 }) => {
   const variants = [
-    "from-[#BFE7FF] via-[#F6FBFF] to-[#84D7D7] text-[#1A7FCB]",
-    "from-[#F5F1FF] via-[#DCEBFF] to-[#A6B9FF] text-[#4263EB]",
-    "from-[#E8F8EF] via-[#F6FBFF] to-[#B7E4C7] text-[#168A4A]",
-    "from-[#FFF0D8] via-[#F6FBFF] to-[#FFD6A5] text-[#B7791F]",
+    "from-primary-soft via-surface-muted to-primary-soft text-primary",
+    "from-primary-soft via-primary-soft to-primary-soft text-primary",
+    "from-primary-soft via-surface-muted to-primary-soft text-success",
+    "from-primary-soft via-surface-muted to-primary-soft text-warning",
   ];
   const variant =
     variants[Math.abs(community.slug.length + community.name.length) % variants.length];
@@ -127,8 +127,8 @@ const CommunityVisual = ({
         size === "sm" && "h-14 w-14 text-sm",
       )}
     >
-      <span className="absolute -left-4 top-2 h-12 w-12 rounded-full bg-white/50 blur-xl" />
-      <span className="absolute -right-4 bottom-0 h-16 w-16 rounded-full bg-black/10 blur-2xl" />
+      <span className="absolute -left-4 top-2 h-12 w-12 rounded-full bg-surface/50 blur-xl" />
+      <span className="absolute -right-4 bottom-0 h-16 w-16 rounded-full bg-media-background/10 blur-2xl" />
       <span className="relative z-10">{getInitials(community.name)}</span>
     </span>
   );
@@ -138,11 +138,11 @@ const FeaturedCommunity = ({ community }: { community: Community }) => (
   <section className="grid gap-5">
     <SectionTitle>Em destaque</SectionTitle>
     <Link
-      className="group relative min-h-[168px] overflow-hidden rounded-[22px] bg-[#101A22] p-6 text-white shadow-[0_14px_30px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
+      className="group relative min-h-[168px] overflow-hidden rounded-[22px] bg-foreground p-6 text-primary-foreground shadow-lectum-soft transition hover:-translate-y-0.5 hover:shadow-lectum-soft"
       href={`/comunidades/${community.slug}`}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_28%,rgba(255,255,255,0.28),transparent_18%),linear-gradient(180deg,rgba(120,143,150,0.70)_0%,rgba(24,37,43,0.86)_52%,rgba(6,12,18,0.98)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-[radial-gradient(ellipse_at_center,rgba(44,67,76,0.95),rgba(5,11,16,0.92)_62%,rgba(0,0,0,0.96))]" />
+      <div className="following-feature-overlay absolute inset-0" />
+      <div className="following-feature-base absolute inset-x-0 bottom-0 h-24" />
       <div className="relative z-10 flex min-h-[120px] flex-col justify-end gap-3">
         <span className="w-fit rounded-full bg-primary px-3 py-1 text-xs font-black uppercase tracking-[0.04em]">
           {community.new_posts_count ? "Novidade" : "Seguindo"}
@@ -150,7 +150,7 @@ const FeaturedCommunity = ({ community }: { community: Community }) => (
         <h3 className="line-clamp-2 text-[1.7rem] font-black leading-tight tracking-[-0.04em]">
           {community.name}
         </h3>
-        <span className="inline-flex h-11 w-fit items-center rounded-full bg-white px-5 text-base font-black text-[#131A2A] transition group-hover:translate-x-1">
+        <span className="inline-flex h-11 w-fit items-center rounded-full bg-surface px-5 text-base font-black text-foreground transition group-hover:translate-x-1">
           Explorar
         </span>
       </div>
@@ -160,15 +160,15 @@ const FeaturedCommunity = ({ community }: { community: Community }) => (
 
 const MyCommunityCard = ({ community }: { community: Community }) => (
   <Link
-    className="grid min-h-[158px] justify-items-center gap-3 rounded-[18px] bg-white px-4 py-6 text-center shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]"
+    className="grid min-h-[158px] justify-items-center gap-3 rounded-[18px] bg-surface px-4 py-6 text-center shadow-lectum-soft transition hover:-translate-y-0.5 hover:shadow-lectum-soft"
     href={`/comunidades/${community.slug}`}
   >
     <CommunityVisual community={community} />
     <div className="grid gap-3">
-      <h3 className="line-clamp-2 text-lg font-black leading-tight text-[#131A2A]">
+      <h3 className="line-clamp-2 text-lg font-black leading-tight text-foreground">
         {community.name}
       </h3>
-      <span className="mx-auto rounded-full bg-[#EAF4FF] px-4 py-1.5 text-sm font-black text-primary">
+      <span className="mx-auto rounded-full bg-primary-soft px-4 py-1.5 text-sm font-black text-primary">
         {formatNewBadge(community.new_posts_count ?? 0)}
       </span>
     </div>
@@ -186,15 +186,13 @@ const RecommendedCard = ({
   isPending?: boolean;
   onFollow: (community: Community) => void;
 }) => (
-  <article className="grid w-[178px] shrink-0 justify-items-center gap-4 rounded-[18px] bg-white p-5 text-center shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
+  <article className="grid w-[178px] shrink-0 justify-items-center gap-4 rounded-[18px] bg-surface p-5 text-center shadow-lectum-soft">
     <CommunityVisual community={community} size="sm" />
     <div className="grid gap-1">
-      <h3 className="line-clamp-2 text-base font-black leading-tight text-[#131A2A]">
+      <h3 className="line-clamp-2 text-base font-black leading-tight text-foreground">
         {community.name}
       </h3>
-      <p className="text-sm font-semibold text-[#738198]">
-        {formatMembers(community.members_count)}
-      </p>
+      <p className="text-sm font-semibold text-muted">{formatMembers(community.members_count)}</p>
     </div>
     <CommunityFollowButton
       aria-label={`Seguir ${community.name}`}
@@ -251,7 +249,7 @@ export const FollowingCommunitiesLogic = () => {
 
   return (
     <PrivateTemplate
-      contentClassName="bg-[#F4F6F8] px-0 py-0"
+      contentClassName="bg-surface-muted px-0 py-0"
       navigationTheme="solidWhite"
       showHeader
     >
@@ -265,7 +263,7 @@ export const FollowingCommunitiesLogic = () => {
 
         <div className="grid gap-8">
           {isInitialLoading ? (
-            <div className="grid min-h-[45vh] place-items-center rounded-[22px] bg-white shadow-[var(--lectum-shadow-soft)]">
+            <div className="grid min-h-[45vh] place-items-center rounded-[22px] bg-surface shadow-[var(--lectum-shadow-soft)]">
               <LoadingState label="Carregando comunidades seguidas" />
             </div>
           ) : null}
@@ -300,7 +298,7 @@ export const FollowingCommunitiesLogic = () => {
                         </Link>
                       </Button>
                     }
-                    description="Quando você participar de comunidades reais, elas aparecerão aqui."
+                    description="Quando você participar de comunidades, elas aparecerão aqui."
                     icon={UsersRound}
                     title="Você ainda não segue comunidades"
                   />

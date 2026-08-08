@@ -103,7 +103,7 @@ export const buildProfileTrafficPlatformMetrics = (
       label: "Tempo de permanência",
       unavailable_reason:
         averageDuration === null
-          ? "Sem duração real registrada em pageviews de perfil no período."
+          ? "Sem duração registrada nas visualizações de perfil no período."
           : null,
       unit: "seconds",
       value: averageDuration,
@@ -120,7 +120,7 @@ export const buildProfileTrafficPlatformMetrics = (
       label: "Retenção",
       unavailable_reason:
         averageRetention === null
-          ? "Sem sessões reais do vídeo de apresentação com duração no período."
+          ? "Sem sessões do vídeo de apresentação com duração no período."
           : null,
       unit: "percentage",
       value: averageRetention,

@@ -45,7 +45,7 @@ const resolveNeedResetErrorMessage = (error: unknown) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em instantes.";
   }
 
   return rawMessage || "Não foi possível trocar sua senha agora. Tente novamente.";

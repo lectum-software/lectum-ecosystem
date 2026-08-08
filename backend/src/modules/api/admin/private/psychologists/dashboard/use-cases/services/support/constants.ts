@@ -74,7 +74,7 @@ export const PROFILE_ACTIVITY_THRESHOLDS = {
 export const PRE_SIGNUP_CONVERSION_SESSION_LABEL = "Sessão sem página capturada";
 
 export const PRE_SIGNUP_CONVERSION_COVERAGE_NOTE =
-  "Coorte de psicólogos cadastrados no período; leitura de trás para frente pela ponte visitor_id/session_id salva no cadastro do psicólogo e por eventos vinculados ao mesmo visitor_id. Pacientes e visitantes que não viraram psicólogo não entram neste bloco.";
+  "Grupo de psicólogos cadastrados no período, considerando também a navegação anônima anterior que pôde ser associada ao cadastro. Outros visitantes não entram neste bloco.";
 
 export const PLAN_SEGMENT_OPTIONS: Array<{
   id: AdminPsychologistsDashboardPlanSegment;

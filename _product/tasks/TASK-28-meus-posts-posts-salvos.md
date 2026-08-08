@@ -285,7 +285,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste complementar em 2026-06-17 - posts alinhados aos cards de comentarios
 
-- Na aba "Posts" de `/app/posts/mine`, os cards deixam de exibir avatar, nome e metadados do autor, mantendo apenas a linha de contexto `Postado em [comunidade] � [tempo]` no topo.
+- Na aba "Posts" de `/app/posts/mine`, os cards deixam de exibir avatar, nome e metadados do autor, mantendo apenas a linha de contexto `Postado em [comunidade] · [tempo]` no topo.
 - A linha `Postado em` passa a usar o mesmo tom discreto dos cards de comentarios, com comunidade em destaque leve e tempo na mesma linha.
 - O `CommunityPostCard` recebeu props opt-in para ocultar o header de autor, mostrar tempo na linha de comunidade e trocar a `CommunityActionBar` para a apresentacao inline usada em comentarios.
 - A aba "Posts" passa a usar a mesma barra padrao da aba "Comentarios": upvote/downvote inline, comentarios, salvamentos e compartilhar, sem alterar endpoints, schema Prisma ou ordenacao.

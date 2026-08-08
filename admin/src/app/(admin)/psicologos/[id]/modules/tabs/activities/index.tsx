@@ -194,7 +194,7 @@ export const ActivitiesTab = ({ id }: { id: string }) => {
 
         {activities.data.length === 0 ? (
           <p className="p-5 text-sm font-bold text-muted">
-            Nenhuma atividade real encontrada para os filtros atuais.
+            Nenhuma atividade encontrada para os filtros atuais.
           </p>
         ) : (
           <div className="overflow-x-auto">

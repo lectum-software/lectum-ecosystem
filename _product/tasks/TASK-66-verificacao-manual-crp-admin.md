@@ -276,7 +276,7 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 
 ### Ajuste de opcoes do registro profissional 2026-07-11
 
-- O card passou a separar dados publicos do conselho (Regional, N? CRP, data de inscricao e tempo de experiencia) em bloco com fundo azulado leve.
+- O card passou a separar dados publicos do conselho (Regional, Nº CRP, data de inscricao e tempo de experiencia) em bloco com fundo azulado leve.
 - A secao "Lectum" passou a exibir Plano, Aprovacao, Origem, Responsavel, Data aprovacao e Observacao.
 - A aprovacao/rejeicao manual ficou disponivel somente para plano Profissional com registro ainda pendente; Gratuito, Cortesia e Profissional ja ativo nao exibem acao de aprovacao manual.
 
@@ -295,7 +295,7 @@ Se o schema atual não suportar auditoria mínima sem `raw`, usar `raw` com shap
 - A aba Perfil e cadastro passou a organizar a primeira coluna com Dados pessoais, Dados profissionais, Selos e facilidades, Bio, Texto de apresentacao, Video de apresentacao e Formacao & Titulos.
 - A segunda coluna ficou exclusiva para o card Registro profissional.
 - Em desktop, Registro profissional usa `position: sticky` no topo da viewport para permanecer visivel durante a rolagem longa da primeira coluna.
-- Genero, Raca/cor e Religiao ficam em Dados pessoais; Dados profissionais nao duplica Regional CRP, N? de registro, Data registro CRP, Tempo de experiencia, Genero, Raca/cor ou Religiao.
+- Genero, Raca/cor e Religiao ficam em Dados pessoais; Dados profissionais nao duplica Regional CRP, Nº de registro, Data registro CRP, Tempo de experiencia, Genero, Raca/cor ou Religiao.
 - Opcoes de Dados profissionais seguem com primeira letra maiuscula apenas na apresentacao.
 
 ### Ajuste de copy Dados pessoais 2026-07-11

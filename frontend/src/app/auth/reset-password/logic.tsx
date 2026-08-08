@@ -50,7 +50,7 @@ const passwordRequirements = (password: string) => [
 ];
 
 export const ResetPasswordLogic = () => {
-  const { setter } = useUserSet("/dashboard");
+  const { setter } = useUserSet("/app");
   const { Form, formProps, hook } = useForm();
   const searchParams = useSearchParams();
   const code = searchParams.get("code")?.trim() || "";

@@ -581,7 +581,7 @@ export const buildProfileCrossMatrixResults = (params: {
         {
           column_axis_id: columnAxis.id,
           columns,
-          description: `Matriz observacional entre ${rowAxis.label} e ${columnAxis.label}, calculada por psicólogo a partir de eventos reais do período selecionado.`,
+          description: `Matriz observacional entre ${rowAxis.label} e ${columnAxis.label}, calculada por psicólogo a partir dos eventos do período selecionado.`,
           id: `${rowAxis.id}_x_${columnAxis.id}`,
           quadrants: rows.flatMap((row) =>
             columns.map((column) => {

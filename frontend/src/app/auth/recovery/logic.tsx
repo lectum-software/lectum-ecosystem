@@ -62,10 +62,10 @@ export const RecoveryLogic = () => {
 
         <section className="mx-auto flex min-h-[calc(100dvh-49px)] w-full max-w-[390px] flex-col px-4 py-6 sm:py-8">
           <div className="grid flex-1 content-center rounded-[var(--lectum-card-radius)] border border-border bg-surface px-6 py-8 text-center shadow-[var(--lectum-shadow-soft)]">
-            <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-primary-soft/80 text-primary shadow-[inset_0_0_0_20px_rgb(255_255_255/55%)]">
+            <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-primary-soft/80 text-primary shadow-lectum-soft">
               <span className="relative grid h-20 w-20 place-items-center rounded-full bg-surface shadow-[var(--lectum-shadow-soft)]">
                 <MailCheck className="h-10 w-10" aria-hidden="true" />
-                <span className="absolute -right-1.5 -top-1.5 grid h-7 w-7 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
+                <span className="absolute -right-1.5 -top-1.5 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-[var(--lectum-shadow-soft)]">
                   <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
               </span>

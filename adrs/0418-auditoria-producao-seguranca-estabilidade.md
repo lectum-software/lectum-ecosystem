@@ -62,8 +62,8 @@ dependências vulneráveis e repetição em arquivos legados grandes.
     foram centralizados onde havia repetição comprovada.
 17. Checks falham com warnings, verificam segredos, envs, dependências runtime e crescimento de
     arquivos. Dependências receberam patches até a auditoria de produção ficar limpa.
-18. O schema Prisma e migrations não foram alterados nesta auditoria. Migration histórica foi
-    preservada para não alterar checksums já aplicados.
+18. Migration histórica aplicada permanece imutável para preservar seu checksum. A etapa final da
+    auditoria adiciona apenas o reparo textual compatível documentado no ADR-0421.
 19. A inicialização local mantém backend, frontend e admin separados, aguardando a saúde do
     backend; globs do watcher ficam entre aspas para não virarem entradas acidentais do processo.
 
@@ -87,8 +87,8 @@ dependências vulneráveis e repetição em arquivos legados grandes.
 - O rate limit em memória vale por réplica. Escala horizontal futura exige store distribuído.
 - Schedulers devem operar em exatamente uma réplica até existir lock distribuído/idempotência.
 - A CSP ainda precisa de migração dedicada para nonce antes de remover `unsafe-inline`.
-- Arquivos legados grandes não foram reescritos em massa; o baseline impede crescimento e deve ser
-  reduzido a cada extração segura.
+- Arquivos legados grandes foram extraídos de forma incremental atrás das fachadas existentes; o
+  baseline chegou a zero e o check impede regressão.
 - Dez arquivos dos packages portados mantêm `@ts-nocheck` para evitar quebra de compatibilidade;
   sua tipagem deve evoluir em tasks isoladas.
 
@@ -117,5 +117,4 @@ dependências vulneráveis e repetição em arquivos legados grandes.
 - Remover o fallback bearer após encerrar a janela de compatibilidade.
 - Migrar CSP para nonce/hash e retirar `unsafe-inline` de scripts.
 - Adotar rate limit/lock distribuído antes de múltiplas réplicas.
-- Decompor gradualmente os arquivos do baseline de tamanho.
 - Executar smoke test publicado após o push desta revisão em `homolog`.

@@ -414,19 +414,19 @@ Regras anti-recriação:
 - Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, registrar o erro e perguntar ao usuário se pode resetar o banco antes de rodar qualquer comando destrutivo como `pnpm --dir backend exec prisma migrate reset`.
 
 
-## Execu??o 2026-07-15
+## Execução 2026-07-15
 
-- Implementado classificador textual determin?stico sem IA e sem pacote novo em `backend/src/utils/content-moderation.ts`, com valida??o automatizada cobrindo relatos sens?veis permitidos, URL externa, solicita??o sexual, termos terap?uticos e risco imediato de autoles?o/suic?dio.
+- Implementado classificador textual determinístico sem IA e sem pacote novo em `backend/src/utils/content-moderation.ts`, com validação automatizada cobrindo relatos sensíveis permitidos, URL externa, solicitação sexual, termos terapêuticos e risco imediato de autolesão/suicídio.
 - Criado modelo real `content_moderation_event` e migration `20260715020539_add_content_moderation_events` para eventos `allow_sensitive`, `block` e `safety_hold`.
-- Integrados `POST /api/private/community/:slug/posts` e cria??o real de respostas para pacientes; `block`/`safety_hold` n?o publicam conte?do e preservam snapshot para Admin.
-- Criados endpoints Admin privados `/api/admin/private/moderation/*`, central `/moderacao`, badge no menu e integra??o ao dashboard de comunidades.
-- O app do paciente trata os erros `content_moderation_blocked` e `content_moderation_safety_hold` mantendo o rascunho no formul?rio/composer.
-- Builder/Quick Copy n?o estava dispon?vel como ferramenta execut?vel; a UI foi baseada nos padr?es locais do Admin e nas imagens exportadas `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e `_product/proto/admin/Notifica??es.png`.
+- Integrados `POST /api/private/community/:slug/posts` e criação real de respostas para pacientes; `block`/`safety_hold` não publicam conteúdo e preservam snapshot para Admin.
+- Criados endpoints Admin privados `/api/admin/private/moderation/*`, central `/moderacao`, badge no menu e integração ao dashboard de comunidades.
+- O app do paciente trata os erros `content_moderation_blocked` e `content_moderation_safety_hold` mantendo o rascunho no formulário/composer.
+- Builder/Quick Copy não estava disponível como ferramenta executável; a UI foi baseada nos padrões locais do Admin e nas imagens exportadas `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` e `_product/proto/admin/Notificações.png`.
 - ADR criado: `adrs/0270-moderacao-textual-deterministica-alertas-admin.md`.
 - Complemento 2026-07-26: posts raiz bloqueados/segurados pela moderacao textual agora sao persistidos internamente como `community_post.status="bloqueado"`, sem publicacao/feed/notificacao, e o evento Admin aponta para a pagina protegida `/comunidades/[slug]/conteudo/post/[id]`. Respostas/comentarios bloqueados permanecem snapshot-only por nao haver status proprio em `post_reply`.
 - Comandos executados: `pnpm --dir backend db:migrate` (primeira tentativa expirou aguardando nome), `pnpm --dir backend db:migrate -- --name add_content_moderation_events`, `pnpm --dir backend exec tsx src/operations/moderation/check-content-moderation.ts`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`.
 
-- Smoke local HTTP executado contra dev servers existentes: `http://localhost:3002/moderacao`, `http://localhost:3002/comunidades` e `http://localhost:3000/app/community/post/new` retornaram 200. Sem ferramenta de browser autenticado/interativo neste ambiente para publicar posts reais pela UI; valida??o comportamental foi coberta por helper automatizado, builds e rotas reais.
+- Smoke local HTTP executado contra dev servers existentes: `http://localhost:3002/moderacao`, `http://localhost:3002/comunidades` e `http://localhost:3000/app/community/post/new` retornaram 200. Sem ferramenta de browser autenticado/interativo neste ambiente para publicar posts reais pela UI; validação comportamental foi coberta por helper automatizado, builds e rotas reais.
 
 ## Ajuste complementar 2026-07-26 - Detalhe Admin para post bloqueado
 

@@ -405,7 +405,7 @@ export const showAdminPatientReports = async (data: IAdminPatientReportsDTO): Pr
     access: {
       mode: "read_only",
       restrictions: [
-        "Denúncias de conteúdo de paciente usam post_report real e permanecem sem ações de moderação nesta aba V1.",
+        "Esta aba apresenta denúncias de conteúdo do paciente; as ações de moderação ficam disponíveis na área de moderação.",
       ],
     },
     active_filters_count: [

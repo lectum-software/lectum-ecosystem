@@ -69,7 +69,7 @@ campos de data e cards que exibem/ocultam curvas.
   `summary.conversions.items`.
 - Os rankings **Trafego por comunidade**, **Trafego por post** e **Trafego por psicologo** deixam de
   exibir tags tecnicas de fonte no cabecalho e deixam de mostrar slug/path abaixo do titulo do item.
-- O subtitulo passa a exibir `sessoes ? pageviews`, e cada linha recebe um atalho acessivel
+- O subtitulo passa a exibir `sessões · pageviews`, e cada linha recebe um atalho acessivel
   `Ir ate ... no Admin` para abrir a comunidade, post ou psicologo dentro do painel administrativo.
 - Os labels desses rankings ficam limpos e com menor peso visual: comunidades usam nome, posts usam
   somente titulo, psicologos usam somente nome, e a classe visual do label passa de `font-black` para
@@ -133,7 +133,7 @@ campos de data e cards que exibem/ocultam curvas.
   mobile 390x844, sem exibir paths específicos de post nesse bloco.
 - Browser local/headless complementar (2026-07-26) - OK: validou ausencia das tags
   `page_view_event.target_type=community`, `page_view_event.page_kind=community_post` e
-  `page_view_event.target_type=psychologist` nos rankings, metricas `sessoes ? pageviews` abaixo dos
+  `page_view_event.target_type=psychologist` nos rankings, metricas `sessões · pageviews` abaixo dos
   titulos, links `Ir ate ...` por item e viewport mobile 390x844 sem overflow horizontal.
 - Browser local/headless complementar (2026-07-27) - OK: validou 11 links `Ir ate ... no Admin`
   com hrefs internos em `/comunidades/...` ou `/psicologos/...`, sem `target="_blank"`, sem tags

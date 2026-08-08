@@ -1,4 +1,5 @@
 //Client
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 
 //Objects
@@ -16,7 +17,7 @@ const _MAX = getUserTokenLimit();
 export class ConfirmRepository implements IConfirmRepository {
   readonly repository: ORM["user"];
   readonly user_token: ORM["user_token"];
-  readonly tokens: any;
+  readonly tokens: Prisma.user$user_tokensArgs;
 
   constructor(device_id = "") {
     this.repository = prisma.user;

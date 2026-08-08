@@ -153,7 +153,7 @@ Regras:
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário, `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 
-- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Miniplayer e ordem da prévia de origem
 
@@ -164,7 +164,7 @@ Regras:
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Ações laterais e métricas abaixo de divisor
 
@@ -184,7 +184,7 @@ Regras:
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Validação executada para os ajustes de layout/miniplayer: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada para os ajustes de layout/miniplayer: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Autor sem papel entre parênteses
 
@@ -193,7 +193,7 @@ Regras:
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Selo azul visual no autor
 
@@ -203,32 +203,32 @@ Regras:
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de dados persistidos.
 - Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
-## Ajuste complementar 2026-07-15 - Identidade do autor acima da m�dia e papel por g�nero
+## Ajuste complementar 2026-07-15 - Identidade do autor acima da mídia e papel por gênero
 
-- Pedido do usu�rio: na aba **Conte�do**, posicionar a identifica��o do autor acima do v�deo e do texto, com foto de perfil, nome, selo azul quando houver e o papel abaixo do nome; em seguida, substituir `Psic�logo/Psic�loga` por `Psic�logo` ou `Psic�loga` conforme o g�nero cadastrado do psic�logo.
-- A UI Admin passou a renderizar um bloco de autoria antes do grid de m�dia/texto, usando `next/image` para avatar, fallback de iniciais, nome trunc�vel, selo visual azul de verificado e linha de papel abaixo.
-- O contrato de conte�do administrativo passou a expor `author.gender` para autores psic�logos, derivado de `psychologist_profile.gender`; pacientes e autores an�nimos continuam com `gender=null`.
-- O r�tulo do papel usa `Psic�loga` quando `gender="feminino"` e `Psic�logo` nos demais casos de psic�logo; pacientes continuam como `Paciente`.
-- N�o houve package novo, mock, schema Prisma/migration, endpoint paralelo ou altera��o de persist�ncia; apenas select/DTO do endpoint real e apresenta��o no Admin.
-- Builder/Quick Copy n�o est� exposto como ferramenta callable no ambiente; a refer�ncia visual usada foi a captura enviada pelo usu�rio e o padr�o local do Admin/site p�blico.
+- Pedido do usuário: na aba **Conteúdo**, posicionar a identificação do autor acima do vídeo e do texto, com foto de perfil, nome, selo azul quando houver e o papel abaixo do nome; em seguida, substituir `Psicólogo/Psicóloga` por `Psicólogo` ou `Psicóloga` conforme o gênero cadastrado do psicólogo.
+- A UI Admin passou a renderizar um bloco de autoria antes do grid de mídia/texto, usando `next/image` para avatar, fallback de iniciais, nome truncável, selo visual azul de verificado e linha de papel abaixo.
+- O contrato de conteúdo administrativo passou a expor `author.gender` para autores psicólogos, derivado de `psychologist_profile.gender`; pacientes e autores anônimos continuam com `gender=null`.
+- O rótulo do papel usa `Psicóloga` quando `gender="feminino"` e `Psicólogo` nos demais casos de psicólogo; pacientes continuam como `Paciente`.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de persistência; apenas select/DTO do endpoint real e apresentação no Admin.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Valida��o executada para este ajuste: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada para este ajuste: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
-- Valida��o executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
-## Ajuste complementar 2026-07-15 - Nome real em post an�nimo no Admin
+## Ajuste complementar 2026-07-15 - Nome real em post anônimo no Admin
 
-- Pedido do usu�rio: quando um item da aba **Conte�do** for um post an�nimo, o painel administrativo deve exibir o nome real do paciente e informar que o post foi feito anonimamente.
-- O contrato de conte�do administrativo passou a expor `author.anonymous` para diferenciar anonimato p�blico de identidade administrativa, sem substituir `author.role` por `anonymous`.
-- Posts an�nimos de pacientes agora retornam `author.name` com o nome real do paciente para o Admin; o card mostra o papel `Paciente` e o marcador `Post feito anonimamente` abaixo do nome.
-- Coment�rios/respostas e posts de psic�logos retornam `author.anonymous=false`; a regra de anonimato continua restrita ao post an�nimo de paciente.
-- A remo��o administrativa auditada agora preserva `author_anonymous` no snapshot seguro usado pela rotina de remo��o.
-- N�o houve package novo, mock, schema Prisma/migration, endpoint paralelo ou altera��o de persist�ncia; apenas contrato derivado do endpoint real e apresenta��o no Admin.
-- Builder/Quick Copy n�o est� exposto como ferramenta callable no ambiente; a refer�ncia visual usada foi a captura enviada pelo usu�rio e o padr�o local do Admin/site p�blico.
+- Pedido do usuário: quando um item da aba **Conteúdo** for um post anônimo, o painel administrativo deve exibir o nome real do paciente e informar que o post foi feito anonimamente.
+- O contrato de conteúdo administrativo passou a expor `author.anonymous` para diferenciar anonimato público de identidade administrativa, sem substituir `author.role` por `anonymous`.
+- Posts anônimos de pacientes agora retornam `author.name` com o nome real do paciente para o Admin; o card mostra o papel `Paciente` e o marcador `Post feito anonimamente` abaixo do nome.
+- Comentários/respostas e posts de psicólogos retornam `author.anonymous=false`; a regra de anonimato continua restrita ao post anônimo de paciente.
+- A remoção administrativa auditada agora preserva `author_anonymous` no snapshot seguro usado pela rotina de remoção.
+- Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração de persistência; apenas contrato derivado do endpoint real e apresentação no Admin.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência visual usada foi a captura enviada pelo usuário e o padrão local do Admin/site público.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Valida��o executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
 
 ## Ajuste complementar 2026-07-15 - Filtros da aba Conteúdo acima da listagem
@@ -241,7 +241,7 @@ Regras:
 - Posts anônimos passaram a ter classificação operacional própria (nonymous_post) derivada de community_post.anonymous, sem alterar schema Prisma ou persistência.
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração destrutiva de dados.
 - ADR atualizado: drs/0264-admin-comunidade-abas-conteudo-ranking.md.
-- Validação executada: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdah?tab=conteudo retornando 200.
+- Validação executada: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdahátab=conteudo retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Fullscreen 9:16 no miniplayer
 

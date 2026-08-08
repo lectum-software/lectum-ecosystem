@@ -17,7 +17,7 @@ export const ErrorSplash = ({ onRetry }: ErrorSplashProps) => {
           Tente novamente. Se o problema continuar, aguarde alguns instantes.
         </p>
         <button
-          className="mt-5 min-h-11 rounded-control bg-primary px-5 py-2.5 text-sm font-black text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="mt-5 min-h-11 rounded-control bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           onClick={onRetry}
           type="button"
         >

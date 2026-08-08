@@ -134,7 +134,7 @@ const send = async ({
 
       transporter.use("compile", hbs(handlebarOptions as unknown as Parameters<typeof hbs>[0]));
 
-      const headers: any = {};
+      const headers: Record<string, string> = {};
 
       if (type === "marketing") {
         headers["List-Unsubscribe"] = `<mailto:${process.env.EMAIL_API_UNSUBSCRIBE!}>`;

@@ -59,7 +59,7 @@ export const AdminViewAsBanner = () => {
   return (
     <div
       className={cn(
-        "fixed top-3 right-3 left-3 z-[90] mx-auto max-w-3xl rounded-2xl border border-primary/30 bg-white/95 px-3 py-3 text-foreground shadow-[0_16px_45px_rgba(15,23,42,0.16)] backdrop-blur",
+        "fixed top-3 right-3 left-3 z-[90] mx-auto max-w-3xl rounded-2xl border border-primary/30 bg-surface/95 px-3 py-3 text-foreground shadow-lectum-soft backdrop-blur",
         "sm:left-1/2 sm:right-auto sm:w-[min(720px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:px-4",
       )}
       role="status"

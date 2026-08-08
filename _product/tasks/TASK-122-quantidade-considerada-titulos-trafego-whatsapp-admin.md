@@ -11,7 +11,7 @@ Depois das TASK-114 a TASK-121, a tabela **Origem do trafego para psicologos** e
 Referencias visuais consultadas:
 
 - `_product/tasks/PROTO-INVENTORY.md`;
-- `_product/proto/admin/PsicÃ³logos/PsicÃ³logos - Dashboard.png` como referencia local auditavel;
+- `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` como referencia local auditavel;
 - screenshot enviado pelo usuario em 2026-07-31 mostrando o grupo **Comunidades** expandido em `http://localhost:3002/psicologos`.
 
 Builder/Quick Copy ativo: `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`. Nesta execucao, a ferramenta Builder/Quick Copy nao estava callable no ambiente; a implementacao usa imagem local e screenshot do usuario, registrando esta limitacao.

@@ -105,7 +105,7 @@ O dashboard geral `/comunidades` deixa de renderizar o bloco **Metricas indispon
 
 A decisao e remover esse aviso da superficie principal porque, apos a limpeza dos blocos legados e laterais, a pagina deve terminar nas listas operacionais reais (**Postagens mais recentes** e **Principais comunidades**) sem expor mensagens tecnicas de indisponibilidade que nao representam uma acao imediata para o Admin. O contrato `unavailable` permanece no endpoint para compatibilidade e para possivel uso futuro em experiencias mais contextuais.
 
-Consequencia: a tela fica mais enxuta e evita ru�do operacional, sem endpoint novo, alteracao de contrato backend obrigatoria, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.
+Consequencia: a tela fica mais enxuta e evita ruído operacional, sem endpoint novo, alteracao de contrato backend obrigatoria, schema Prisma/migration, dependencia, mock, seed ou mudanca nas regras de agregacao.
 
 ## Atualizacao 2026-07-18: periodo como unico texto abaixo dos titulos dos blocos
 

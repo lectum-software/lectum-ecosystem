@@ -57,7 +57,7 @@ export const PsychologistSlideDetails = ({
       aria-hidden={slideShouldHideChrome ? true : undefined}
       aria-live={isActiveSlide && shareFeedback ? "polite" : "off"}
       className={cn(
-        "pointer-events-none absolute inset-x-0 z-40 grid items-end text-[#ffffff] transition-opacity duration-200 ease-out",
+        "pointer-events-none absolute inset-x-0 z-40 grid items-end text-primary-foreground transition-opacity duration-200 ease-out",
         slideUiVisibilityClass,
       )}
       style={{
@@ -71,7 +71,7 @@ export const PsychologistSlideDetails = ({
       <div className="pointer-events-auto min-w-0">
         {psychologist.available_today ? (
           <div
-            className="mb-1.5 flex w-fit items-center gap-1.5 font-semibold text-[#22C55E]"
+            className="mb-1.5 flex w-fit items-center gap-1.5 font-semibold text-success"
             style={{
               fontSize: `${metrics.availableBadgeTextSize}px`,
               lineHeight: "12px",
@@ -79,7 +79,7 @@ export const PsychologistSlideDetails = ({
           >
             <span
               aria-hidden="true"
-              className="psychologists-availability-dot h-1.5 w-1.5 shrink-0 rounded-full bg-[#22C55E]"
+              className="psychologists-availability-dot h-1.5 w-1.5 shrink-0 rounded-full bg-success"
             />
             Disponível hoje
           </div>
@@ -88,7 +88,7 @@ export const PsychologistSlideDetails = ({
         <div className="grid gap-1.5">
           <button
             aria-label={`Ver perfil de ${psychologist.name}`}
-            className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-white"
+            className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-primary-foreground"
             disabled={slideShouldHideChrome}
             onClick={(event) => navigateToPublicPsychologistProfile(psychologist.id, event)}
             tabIndex={slideShouldHideChrome ? -1 : undefined}
@@ -119,7 +119,7 @@ export const PsychologistSlideDetails = ({
           </button>
 
           <div
-            className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 font-medium text-white/80"
+            className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 font-medium text-primary-foreground/80"
             style={{
               fontSize: `${metrics.subtitleSize}px`,
               fontWeight: 500,
@@ -133,10 +133,10 @@ export const PsychologistSlideDetails = ({
                 psychologist.show_experience_tag,
               )}
             </span>
-            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-white/10 px-1 py-0 text-[#FDE68A] shadow-none backdrop-blur-[1px]">
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-media-foreground/10 px-1 py-0 text-rating shadow-none backdrop-blur-[1px]">
               <Star
                 aria-hidden="true"
-                className="fill-[#FDE68A] opacity-85"
+                className="fill-rating opacity-85"
                 style={{
                   height: `${metrics.ratingIconSize}px`,
                   width: `${metrics.ratingIconSize}px`,
@@ -157,7 +157,7 @@ export const PsychologistSlideDetails = ({
 
         {slideBio ? (
           <p
-            className="pointer-events-auto mt-2 w-full whitespace-pre-line text-left text-white/90"
+            className="pointer-events-auto mt-2 w-full whitespace-pre-line text-left text-primary-foreground/90"
             onPointerDown={stopInteractionPropagation}
             ref={(node) => {
               if (isActiveSlide && slideBenefitChips.length === 0) {
@@ -189,7 +189,7 @@ export const PsychologistSlideDetails = ({
           >
             {slideBenefitChips.map((chip) => (
               <li
-                className="inline-flex min-w-0 shrink items-center rounded-full border border-white/70 bg-black/15 px-1.5 py-1 text-[9px] leading-none font-bold whitespace-nowrap text-white/95 shadow-[0_4px_14px_rgba(15,23,42,0.2)] backdrop-blur-[2px] min-[390px]:px-2 min-[390px]:text-[10px]"
+                className="inline-flex min-w-0 shrink items-center rounded-full border border-media-foreground/70 bg-media-background/15 px-1.5 py-1 text-[9px] leading-none font-bold whitespace-nowrap text-primary-foreground/95 shadow-lectum-soft backdrop-blur-[2px] min-[390px]:px-2 min-[390px]:text-[10px]"
                 key={chip.id}
               >
                 <span className="truncate">{chip.label}</span>
@@ -201,7 +201,7 @@ export const PsychologistSlideDetails = ({
         {isActiveSlide && shareFeedback ? (
           <p
             aria-live="polite"
-            className="mt-2 rounded-full bg-black/45 px-2 py-1 text-xs text-white"
+            className="mt-2 rounded-full bg-media-background/45 px-2 py-1 text-xs text-primary-foreground"
           >
             Link copiado
           </p>
@@ -237,11 +237,11 @@ export const PsychologistSlideDetails = ({
               }}
             >
               <div
-                className="relative overflow-hidden rounded-full bg-white p-0.5 text-[#0f172a]"
+                className="relative overflow-hidden rounded-full bg-surface p-0.5 text-foreground"
                 style={{
                   width: `${metrics.actionAvatarSize}px`,
                   height: `${metrics.actionAvatarSize}px`,
-                  border: "1.5px solid #fff",
+                  border: "1.5px solid var(--lectum-media-foreground)",
                 }}
               >
                 {psychologist.avatar ? (
@@ -254,7 +254,7 @@ export const PsychologistSlideDetails = ({
                     unoptimized={isPublicMediaUrl(psychologist.avatar)}
                   />
                 ) : (
-                  <span className="grid h-full w-full place-items-center rounded-full bg-[#e2e8f0] text-[10px] font-semibold text-[#334155]">
+                  <span className="grid h-full w-full place-items-center rounded-full bg-surface-muted text-[10px] font-semibold text-muted">
                     {getInitials(psychologist.name)}
                   </span>
                 )}
@@ -268,8 +268,8 @@ export const PsychologistSlideDetails = ({
               aria-busy={slideIsFavoritePending}
               aria-pressed={slideIsFavorited}
               className={cn(
-                "relative z-50 grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent disabled:active:scale-100",
-                slideIsFavorited ? "text-[#ef4444]" : "text-white",
+                "relative z-50 grid place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent disabled:active:scale-100",
+                slideIsFavorited ? "text-danger" : "text-primary-foreground",
               )}
               disabled={slideFavoriteDisabled}
               onClick={(event) => {
@@ -290,8 +290,10 @@ export const PsychologistSlideDetails = ({
                 style={{
                   height: `${metrics.actionStandaloneIconSize}px`,
                   width: `${metrics.actionStandaloneIconSize}px`,
-                  color: slideIsFavorited ? "#ef4444" : "white",
-                  fill: slideIsFavorited ? "#ef4444" : "transparent",
+                  color: slideIsFavorited
+                    ? "var(--lectum-danger)"
+                    : "var(--lectum-media-foreground)",
+                  fill: slideIsFavorited ? "var(--lectum-danger)" : "transparent",
                 }}
               />
             </button>
@@ -300,7 +302,7 @@ export const PsychologistSlideDetails = ({
           <div className="grid justify-items-center text-center">
             <button
               aria-label={`Compartilhar perfil de ${psychologist.name}`}
-              className="grid place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10"
+              className="grid place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10"
               disabled={slideShouldHideChrome}
               onClick={(event) => {
                 event.stopPropagation();
@@ -335,7 +337,7 @@ export const PsychologistSlideDetails = ({
             >
               <PsychologistWhatsAppRedirectButton
                 aria-label={`Fale com ${psychologist.whatsapp_name || psychologist.name} no WhatsApp`}
-                className="grid place-items-center rounded-full bg-transparent text-white transition active:scale-95"
+                className="grid place-items-center rounded-full bg-transparent text-primary-foreground transition active:scale-95"
                 data-psychologists-tip-target={isActiveSlide ? "whatsapp" : undefined}
                 importantActionType="psychologist_video_whatsapp_click"
                 onClick={handleWhatsappInteraction}
@@ -361,7 +363,7 @@ export const PsychologistSlideDetails = ({
                 }}
               >
                 <span
-                  className="grid place-items-center rounded-full bg-[#22C55E] transition hover:bg-[#16A34A]"
+                  className="grid place-items-center rounded-full bg-success transition hover:bg-success"
                   style={{
                     height: `${metrics.actionPrimaryButtonSize}px`,
                     width: `${metrics.actionPrimaryButtonSize}px`,
@@ -391,10 +393,9 @@ export const PsychologistSlideDetails = ({
               <button
                 aria-disabled="true"
                 aria-label={`WhatsApp indisponível para ${psychologist.name}`}
-                className="grid place-items-center rounded-full bg-transparent text-white transition"
-                disabled={slideShouldHideChrome}
-                onClick={stopInteractionPropagation}
-                tabIndex={slideShouldHideChrome ? -1 : undefined}
+                className="grid place-items-center rounded-full bg-transparent text-primary-foreground transition"
+                disabled
+                tabIndex={-1}
                 type="button"
                 style={{
                   width: `${metrics.actionHitSize}px`,
@@ -402,7 +403,7 @@ export const PsychologistSlideDetails = ({
                 }}
               >
                 <span
-                  className="grid place-items-center rounded-full bg-[#22C55E]"
+                  className="grid place-items-center rounded-full bg-success"
                   style={{
                     height: `${metrics.actionPrimaryButtonSize}px`,
                     width: `${metrics.actionPrimaryButtonSize}px`,

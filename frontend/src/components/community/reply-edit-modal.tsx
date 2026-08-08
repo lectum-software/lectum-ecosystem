@@ -281,13 +281,13 @@ export function ReplyEditModal({
     <div
       aria-labelledby="edit-reply-title-heading"
       aria-modal="true"
-      className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-slate-950/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-media-background/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
       role="dialog"
     >
-      <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-[0_28px_90px_rgba(15,23,42,0.28)] animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
+      <section className="pointer-events-auto flex max-h-[min(88dvh,44rem)] w-full max-w-[38rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-surface shadow-lectum-soft animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 dark:shadow-[var(--lectum-shadow)]">
         <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
           <button
             aria-label="Fechar edição de comentário"
@@ -355,7 +355,7 @@ export function ReplyEditModal({
                 Cancelar
               </Button>
               <Button
-                className="h-12 rounded-full bg-primary px-6 font-black text-white shadow-[0_14px_30px_rgba(48,140,232,0.26)] hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
+                className="h-12 rounded-full bg-primary px-6 font-black text-primary-foreground shadow-lectum-soft hover:bg-primary-hover focus-visible:outline-primary active:scale-[0.98] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
                 disabled={isSubmitting || !canSubmit}
                 type="submit"
               >

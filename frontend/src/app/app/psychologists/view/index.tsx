@@ -89,17 +89,17 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
     >
       <PsychologistsFeedStyles />
       <div
-        className="psychologists-shorts-layout relative isolate h-[100dvh] min-h-[100dvh] overflow-hidden bg-background text-white lg:bg-[#f8fafc] lg:touch-pan-y"
+        className="psychologists-shorts-layout relative isolate h-[100dvh] min-h-[100dvh] overflow-hidden bg-background text-primary-foreground lg:bg-surface-muted lg:touch-pan-y"
         onTouchCancel={handleDesktopPageTouchEnd}
         onTouchEnd={handleDesktopPageTouchEnd}
         onTouchMove={handleDesktopPageTouchMove}
         onTouchStart={handleDesktopPageTouchStart}
         onWheelCapture={handleDesktopPageWheelCapture}
       >
-        <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-hidden bg-black lg:max-w-none lg:items-start lg:gap-0 lg:bg-transparent lg:px-8">
-          <div className="relative z-20 h-full w-full overflow-hidden bg-black lg:h-[100dvh] lg:w-[var(--psychologists-desktop-card-width)] lg:shrink-0 lg:overflow-visible lg:bg-transparent">
+        <div className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] justify-center overflow-hidden bg-media-background lg:max-w-none lg:items-start lg:gap-0 lg:bg-transparent lg:px-8">
+          <div className="relative z-20 h-full w-full overflow-hidden bg-media-background lg:h-[100dvh] lg:w-[var(--psychologists-desktop-card-width)] lg:shrink-0 lg:overflow-visible lg:bg-transparent">
             {showInitialLoading ? (
-              <div className="grid h-full place-items-center bg-[#F8FAFC] px-4 text-foreground">
+              <div className="grid h-full place-items-center bg-surface-muted px-4 text-foreground">
                 <LoadingState label="Carregando Psicólogos" />
               </div>
             ) : null}
@@ -121,7 +121,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                     hasActiveFilters ? (
                       <button
                         aria-label="Limpar filtros"
-                        className="mt-3 rounded-full bg-[#22c55e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16a34a]"
+                        className="mt-3 rounded-full bg-success px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-success"
                         onClick={clearFilters}
                         type="button"
                       >
@@ -137,7 +137,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
               <div
                 aria-hidden={areFeedModeControlsHidden ? true : undefined}
                 className={cn(
-                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-black/75 via-black/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:hidden lg:top-[var(--psychologists-desktop-card-top)] lg:bg-none",
+                  "pointer-events-none absolute inset-x-0 top-0 z-[76] bg-gradient-to-b from-media-background/75 via-media-background/35 to-transparent px-4 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:hidden lg:top-[var(--psychologists-desktop-card-top)] lg:bg-none",
                   metrics.isDesktopLayout ? "lg:rounded-t-[22px] lg:px-5" : null,
                   feedModeControlsVisibilityClass,
                 )}
@@ -148,11 +148,11 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                   registerSwipeHintInteraction();
                 }}
               >
-                <div className="pointer-events-auto flex items-center justify-center gap-8 text-white">
+                <div className="pointer-events-auto flex items-center justify-center gap-8 text-primary-foreground">
                   <button
                     aria-current={!hasActiveFilters ? "page" : undefined}
                     className={cn(
-                      "relative inline-flex h-9 items-center justify-center px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+                      "relative inline-flex h-9 items-center justify-center px-1 text-[15px] font-semibold tracking-[-0.01em] text-primary-foreground transition-opacity duration-150 ease-out",
                       hasActiveFilters ? "opacity-70 hover:opacity-100" : "opacity-100",
                     )}
                     onClick={handleExploreModeClick}
@@ -163,7 +163,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                     {!hasActiveFilters ? (
                       <span
                         aria-hidden="true"
-                        className="absolute -bottom-0.5 left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-white"
+                        className="absolute -bottom-0.5 left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-surface"
                       />
                     ) : null}
                   </button>
@@ -171,7 +171,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                   <button
                     aria-current={hasActiveFilters ? "page" : undefined}
                     className={cn(
-                      "relative inline-flex h-9 items-center justify-center gap-1.5 px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+                      "relative inline-flex h-9 items-center justify-center gap-1.5 px-1 text-[15px] font-semibold tracking-[-0.01em] text-primary-foreground transition-opacity duration-150 ease-out",
                       hasActiveFilters ? "opacity-100" : "opacity-75 hover:opacity-100",
                     )}
                     data-psychologists-tip-target="my-search"
@@ -184,7 +184,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                     {hasActiveFilters ? (
                       <span
                         aria-hidden="true"
-                        className="absolute -bottom-0.5 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-white"
+                        className="absolute -bottom-0.5 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-surface"
                       />
                     ) : null}
                   </button>
@@ -196,7 +196,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                       {activeFilterChips.map((chip) => (
                         <button
                           aria-label={`Remover filtro ${chip.label}`}
-                          className="inline-flex h-8 max-w-[180px] items-center gap-1.5 rounded-full border border-white/20 bg-white/16 px-3 text-xs font-semibold text-white backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
+                          className="inline-flex h-8 max-w-[180px] items-center gap-1.5 rounded-full border border-media-foreground/20 bg-media-foreground/16 px-3 text-xs font-semibold text-primary-foreground backdrop-blur-md transition-colors duration-150 ease-out hover:bg-media-foreground/24"
                           key={`${chip.key}-${chip.label}`}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -211,7 +211,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                       ))}
 
                       <button
-                        className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/25 bg-white px-3 text-xs font-bold text-[#0f172a] transition-transform duration-150 ease-out hover:scale-[1.02]"
+                        className="inline-flex h-8 shrink-0 items-center rounded-full border border-media-foreground/25 bg-surface px-3 text-xs font-bold text-foreground transition-transform duration-150 ease-out hover:scale-[1.02]"
                         onClick={handleMySearchModeClick}
                         tabIndex={areFeedModeControlsHidden ? -1 : undefined}
                         type="button"
@@ -229,7 +229,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                 {isSearchFocused ? (
                   <button
                     aria-label="Fechar busca"
-                    className="absolute inset-0 z-[60] cursor-default bg-black/35 backdrop-blur-[2px] transition-opacity duration-200 ease-out"
+                    className="absolute inset-0 z-[60] cursor-default bg-media-background/35 backdrop-blur-[2px] transition-opacity duration-200 ease-out"
                     data-psychologists-scroll-lock="true"
                     onClick={(event) => {
                       event.preventDefault();
@@ -274,14 +274,14 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                     className={cn(
                       "relative flex h-full w-full items-center rounded-[999px] border p-3 backdrop-blur-md transition-all duration-200 ease-out",
                       isSearchFocused
-                        ? "border-white/80 bg-white/[0.92] shadow-[0_18px_46px_rgba(15,23,42,0.28)]"
-                        : "border-[rgba(255,255,255,0.35)] bg-white/35",
+                        ? "border-media-foreground/80 bg-surface/[0.92] shadow-lectum-soft"
+                        : "border-primary-foreground/35 bg-primary-foreground/35",
                     )}
                   >
                     <Search
                       className={cn(
                         "absolute left-3 h-4 w-4 transition-colors",
-                        isSearchFocused ? "text-[#64748b]" : "text-white/85",
+                        isSearchFocused ? "text-muted" : "text-primary-foreground/85",
                       )}
                       aria-hidden="true"
                     />
@@ -290,8 +290,8 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                       className={cn(
                         "h-full w-full bg-transparent pr-3 pl-7 text-[14px] outline-none transition-colors",
                         isSearchFocused
-                          ? "text-[#0f172a] placeholder:text-[#64748b]"
-                          : "text-white placeholder:text-white/72",
+                          ? "text-foreground placeholder:text-muted"
+                          : "text-primary-foreground placeholder:text-primary-foreground/72",
                       )}
                       maxLength={120}
                       disabled={areGlobalControlsHidden}
@@ -315,22 +315,22 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                   {shouldRenderSearchSuggestions ? (
                     <div
                       aria-label="Sugestões de psicólogos"
-                      className="absolute top-[calc(100%+8px)] right-0 left-0 overflow-hidden rounded-2xl border border-white/25 bg-white/95 text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-md"
+                      className="absolute top-[calc(100%+8px)] right-0 left-0 overflow-hidden rounded-2xl border border-media-foreground/25 bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur-md"
                       onMouseDown={(event) => event.preventDefault()}
                       role="listbox"
                     >
-                      <div className="border-[#e2e8f0] border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-[#64748b] uppercase">
+                      <div className="border-border border-b px-3 py-2 text-[11px] font-extrabold tracking-[0.08em] text-muted uppercase">
                         Profissionais cadastrados
                       </div>
                       {searchSuggestionsDirectory.isFetching ? (
-                        <div className="px-3 py-3 text-sm font-medium text-[#64748b]">
+                        <div className="px-3 py-3 text-sm font-medium text-muted">
                           Buscando profissionais...
                         </div>
                       ) : (
                         searchSuggestionItems.map((suggestion) => (
                           <button
                             aria-label={`Buscar por ${suggestion.name}`}
-                            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-[#f8fafc]"
+                            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-surface-muted"
                             key={suggestion.id}
                             aria-selected={false}
                             onClick={() => handleSearchSuggestionSelect(suggestion.name)}
@@ -338,7 +338,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                             type="button"
                           >
                             <span className="min-w-0 truncate">{suggestion.name}</span>
-                            <span className="shrink-0 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-extrabold text-[#308ce8]">
+                            <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-extrabold text-primary">
                               {suggestion.verified ? "Verificado" : "Gratuito"}
                             </span>
                           </button>
@@ -352,11 +352,11 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                   aria-label="Abrir filtros"
                   aria-hidden={areGlobalControlsHidden ? true : undefined}
                   className={cn(
-                    "absolute z-[70] grid items-center justify-center rounded-full border shadow-[0_5px_24px_rgba(15,23,42,0.2)] backdrop-blur-md transition hover:bg-white/45",
+                    "absolute z-[70] grid items-center justify-center rounded-full border shadow-lectum-soft backdrop-blur-md transition hover:bg-media-foreground/45",
                     globalControlsVisibilityClass,
                     isSearchFocused
-                      ? "border-white/80 bg-white/[0.92] text-[#0f172a] shadow-[0_18px_46px_rgba(15,23,42,0.24)]"
-                      : "border-[rgba(255,255,255,0.35)] bg-white/35 text-white",
+                      ? "border-media-foreground/80 bg-surface/[0.92] text-foreground shadow-lectum-soft"
+                      : "border-primary-foreground/35 bg-primary-foreground/35 text-primary-foreground",
                   )}
                   onClick={(event) => {
                     event.stopPropagation();
@@ -393,13 +393,13 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
             {shouldRenderSwipeHint ? (
               <div
                 aria-live="polite"
-                className="psychologists-swipe-hint pointer-events-none absolute left-1/2 z-50 inline-flex max-w-[calc(100%-2rem)] items-center justify-center rounded-full border border-white/70 bg-white/95 px-4 py-2.5 text-center text-[13px] font-extrabold text-[#0F172A] shadow-[0_24px_70px_rgba(15,23,42,0.22)] ring-1 ring-[#D9E8F8]/80 backdrop-blur-md"
+                className="psychologists-swipe-hint pointer-events-none absolute left-1/2 z-50 inline-flex max-w-[calc(100%-2rem)] items-center justify-center rounded-full border border-media-foreground/70 bg-surface/95 px-4 py-2.5 text-center text-[13px] font-extrabold text-foreground shadow-lectum-soft ring-1 ring-border/80 backdrop-blur-md"
                 style={{
                   bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 14px)`,
                 }}
               >
                 <span>
-                  <span className="text-[#308CE8]">↑</span> Descubra novos psicólogos
+                  <span className="text-primary">↑</span> Descubra novos psicólogos
                 </span>
               </div>
             ) : null}
@@ -426,7 +426,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                   >
                     <div
                       className={cn(
-                        "flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface text-foreground shadow-[0_24px_70px_rgb(15_23_42_/_26%)] transition-transform duration-300 ease-out motion-reduce:transition-none sm:h-auto sm:max-h-[min(880px,calc(100dvh-2rem))] sm:max-w-[560px] sm:rounded-[32px] sm:border",
+                        "flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-border bg-surface text-foreground shadow-lectum-soft transition-transform duration-300 ease-out motion-reduce:transition-none sm:h-auto sm:max-h-[min(880px,calc(100dvh-2rem))] sm:max-w-[560px] sm:rounded-[32px] sm:border",
                         isFilterSheetOpen ? "translate-y-0" : "translate-y-full",
                       )}
                       onMouseDown={(event) => event.stopPropagation()}
@@ -453,7 +453,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                           </h2>
 
                           <button
-                            className="self-center rounded-full px-2 py-1 text-[13px] font-medium text-[#2B7FC9] transition duration-200 ease-out hover:bg-[#EAF5FF] hover:text-[#1E6FB8] dark:text-[#8CCBFF] dark:hover:bg-primary/10"
+                            className="self-center rounded-full px-2 py-1 text-[13px] font-medium text-primary transition duration-200 ease-out hover:bg-primary-soft hover:text-primary-hover dark:text-primary dark:hover:bg-primary/10"
                             onClick={clearFilters}
                             type="button"
                           >
@@ -495,7 +495,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
 
                         <div className="sticky bottom-0 col-span-2 -mx-5 mt-5 bg-gradient-to-t from-surface via-surface/95 to-surface/0 px-5 pt-8 pb-2 sm:-mx-6 sm:px-6">
                           <button
-                            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-extrabold text-white shadow-[0_16px_34px_rgb(48_140_232_/_26%)] transition duration-200 ease-out hover:-translate-y-px hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                            className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-lectum-soft transition duration-200 ease-out hover:-translate-y-px hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                             type="submit"
                           >
                             Aplicar filtros

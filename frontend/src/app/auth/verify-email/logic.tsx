@@ -108,7 +108,7 @@ const formatCooldown = (seconds: number) => {
 };
 
 export const VerifyEmailLogic = () => {
-  const { setter } = useUserSet("/dashboard");
+  const { setter } = useUserSet("/app");
   const { Form, formProps, hook } = useForm();
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -163,7 +163,7 @@ export const VerifyEmailLogic = () => {
     () => hydratedUser || storedUser || null,
     [hydratedUser, storedUser],
   );
-  const continueHref = getUserHomePath(currentUser, "/dashboard");
+  const continueHref = getUserHomePath(currentUser, "/app");
   const currentEmail = maskEmail(currentUser?.email);
   const isConfirmed = Boolean(currentUser?.confirmed) || alreadyConfirmed;
   const isHydrating = hidrate.isLoading || hidrate.isPending;
@@ -256,7 +256,7 @@ export const VerifyEmailLogic = () => {
             <span className="grid h-16 w-16 place-items-center rounded-full bg-surface shadow-[var(--lectum-shadow-soft)]">
               <MailCheck className="h-8 w-8" aria-hidden="true" />
             </span>
-            <span className="absolute -right-1 top-3 grid h-8 w-8 place-items-center rounded-full bg-primary text-white shadow-[var(--lectum-shadow-soft)]">
+            <span className="absolute -right-1 top-3 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-[var(--lectum-shadow-soft)]">
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             </span>
           </div>

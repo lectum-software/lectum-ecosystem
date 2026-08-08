@@ -134,39 +134,7 @@ export const DetailHeader = ({
             const className = cn(
               "relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-3.5 text-sm font-black transition",
               active ? "text-primary" : "text-foreground hover:text-primary",
-              !item.ready && "cursor-not-allowed text-muted hover:text-muted",
             );
-
-            if (!item.ready) {
-              return (
-                <button
-                  aria-disabled
-                  className={className}
-                  key={item.id}
-                  title={`${item.label} será implementada em ${
-                    "task" in item ? item.task : "task futura"
-                  }`}
-                  type="button"
-                >
-                  <span>{item.label}</span>
-                  {showRegistryAlert ? (
-                    <AlertTriangle
-                      aria-label="Registro profissional pendente de verificação manual"
-                      className="h-4 w-4 text-danger"
-                    />
-                  ) : null}
-                  {showReportsAlert ? (
-                    <AlertTriangle
-                      aria-label="Há denúncias pendentes"
-                      className="h-4 w-4 text-danger"
-                    />
-                  ) : null}
-                  <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-muted">
-                    Em breve
-                  </span>
-                </button>
-              );
-            }
 
             return (
               <Link

@@ -205,8 +205,8 @@ export const AccountTab = ({ id }: { id: string }) => {
         <InfoCard icon={Mail} title="E-mail da conta">
           <div className="grid gap-5">
             <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
-              Alterar e-mail exige nova confirmação, envia e-mail transacional real quando
-              configurado e encerra sessões do psicólogo.
+              Alterar o e-mail exige nova confirmação, envia uma mensagem de confirmação quando o
+              serviço está disponível e encerra as sessões do psicólogo.
             </div>
             {!account.capabilities.can_change_email ? (
               <AccountUnavailableNotice>
@@ -262,7 +262,7 @@ export const AccountTab = ({ id }: { id: string }) => {
         <div className="grid gap-4">
           <div className="rounded-2xl border border-border bg-surface-muted p-4 text-sm font-bold leading-6 text-muted">
             Abre a experiência do psicólogo em modo somente leitura. A abertura é auditada e ações
-            de escrita são bloqueadas no backend.
+            de alteração permanecem bloqueadas durante essa visualização.
           </div>
           <AccountViewAsForm account={account} id={id} />
         </div>

@@ -82,7 +82,7 @@ export const AccountSituationCard = ({ id }: { id: string }) => {
       value: (
         <Badge
           className={
-            account.confirmed ? "bg-emerald-50 text-success" : "bg-orange-50 text-orange-700"
+            account.confirmed ? "bg-success-soft text-success" : "bg-warning-soft text-warning"
           }
         >
           {account.confirmed ? "Confirmado" : "Pendente"}
@@ -225,14 +225,12 @@ export const RecentActivity = ({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-foreground">Atividades recentes</h2>
-          <p className="mt-1 text-sm text-muted">
-            Registro simples dos principais eventos reais encontrados.
-          </p>
+          <p className="mt-1 text-sm text-muted">Registro dos principais eventos encontrados.</p>
         </div>
       </div>
       {events.length === 0 ? (
         <p className="mt-5 rounded-2xl bg-surface-muted p-4 text-sm text-muted">
-          Nenhuma atividade recente real encontrada para este psicólogo.
+          Nenhuma atividade recente encontrada para este psicólogo.
         </p>
       ) : (
         <div className="mt-4 overflow-x-auto">

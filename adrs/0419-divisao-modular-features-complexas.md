@@ -36,8 +36,8 @@ autoriza copiar versões, mocks, contratos ou regras antigas para o produto atua
    `main/socket/db/actions.ts`. Assim, autenticação e socket deixam de importar um ao outro em ciclo.
 7. `pnpm check:cycles` usa o parser TypeScript já instalado para falhar diante de novos ciclos de
    imports locais em backend, frontend e admin.
-8. Raízes de composição novas têm teto de 600 linhas; demais fontes, 700. Arquivos legados acima
-   do limite só podem manter ou reduzir o tamanho registrado no baseline.
+8. Raízes de composição novas têm teto de 600 linhas; demais fontes, 700. O baseline foi reduzido
+   a zero, portanto nenhuma fonte pode voltar a ultrapassar esses limites.
 
 ## Consequências
 
@@ -45,8 +45,7 @@ autoriza copiar versões, mocks, contratos ou regras antigas para o produto atua
   linhas.
 - A divisão adiciona arquivos e imports, mas cada módulo passa a ter responsabilidade nomeável e
   dependência em uma única direção.
-- O baseline ainda contém dívida legada. Esta decisão impede crescimento, mas não justifica uma
-  reescrita ampla e arriscada em um único deploy.
+- A extração incremental eliminou o baseline legado sem trocar fachadas, rotas ou contratos.
 - O check de ciclos considera imports de runtime; imports exclusivamente de tipos não criam falha.
 
 ## Compatibilidade, rollout e rollback

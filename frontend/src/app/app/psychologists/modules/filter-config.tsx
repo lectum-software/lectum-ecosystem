@@ -178,8 +178,8 @@ export const FilterFeatureCard = ({
       className={cn(
         "group flex w-full items-start gap-3 rounded-[22px] border p-3.5 text-left transition duration-200 ease-out sm:p-4",
         checked
-          ? "border-primary/45 bg-surface shadow-[0_12px_28px_rgb(48_140_232_/_10%)]"
-          : "border-border/70 bg-surface shadow-[0_8px_22px_rgb(15_23_42_/_4%)] hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-[0_14px_32px_rgb(15_23_42_/_7%)]",
+          ? "border-primary/45 bg-surface shadow-lectum-soft"
+          : "border-border/70 bg-surface shadow-lectum-soft hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lectum-soft",
       )}
       onClick={() => onToggle(option.name)}
       type="button"
@@ -210,7 +210,7 @@ export const FilterFeatureCard = ({
       >
         <span
           className={cn(
-            "grid h-5 w-5 place-items-center rounded-full bg-surface text-transparent shadow-[0_2px_8px_rgb(15_23_42_/_12%)] transition duration-200 ease-out",
+            "grid h-5 w-5 place-items-center rounded-full bg-surface text-transparent shadow-lectum-soft transition duration-200 ease-out",
             checked && "translate-x-5 text-primary",
           )}
         >

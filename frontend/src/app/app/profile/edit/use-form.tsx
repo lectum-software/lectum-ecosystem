@@ -64,7 +64,7 @@ const genderSelectStyles = {
   inputClassName: "pr-11",
   selectChevronClassName: "right-4",
   selectContentClassName:
-    "top-[calc(100%+6px)] max-h-64 rounded-[var(--lectum-control-radius)] border-border bg-white p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]",
+    "top-[calc(100%+6px)] max-h-64 rounded-[var(--lectum-control-radius)] border-border bg-surface p-1.5 text-sm text-foreground shadow-[var(--lectum-shadow-soft)]",
   selectOptionClassName:
     "rounded-xl px-3 py-2 text-sm leading-5 text-foreground hover:bg-surface-muted hover:text-foreground active:bg-primary-soft",
   selectOptionSelectedClassName: "bg-primary-soft text-primary",

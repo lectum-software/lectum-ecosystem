@@ -1,914 +1,156 @@
-import type { Prisma } from "@/external/generated/prisma/client";
-import prisma from "@/infra/database/prisma";
-import { parseDateOnly } from "@/utils/date-range";
-import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
-import type { AdminModerationEventsQuery } from "../DTOs/IAdminModerationDTO";
-import {
-  type AdminPatientCommunityEngagementTarget,
-  type AdminPostReportRecord,
-  adminModerationEventDetailSelect,
-  adminModerationEventSelect,
-  adminOperationalPsychologistSelect,
-  adminPatientCommunityPostEngagementSelect,
-  adminPatientCommunityPostSaveEngagementSelect,
-  adminPatientCommunityReplyEngagementSelect,
-  adminPatientCommunityReplySaveEngagementSelect,
-  adminPatientCommunityShareEngagementSelect,
-  adminPatientCommunityVoteEngagementSelect,
-  adminPostReportSelect,
-  adminRegistrationFailureUserSelect,
-  adminUncoveredPatientPostSelect,
-  type IAdminModerationRepository,
-} from "./interfaces/IAdminModerationRepository";
-
-const ACTIVE_REVIEW_STATUSES = ["pending", "reviewing"];
-const ACTIVE_POST_REPORT_STATUSES = [
-  "pendente",
-  "pending",
-  "em_analise",
-  "em analise",
-  "in_review",
-  "in review",
-];
-
-const safeJsonObject = (value: unknown) => value as Prisma.InputJsonObject;
-
-const buildWhere = (
-  query: AdminModerationEventsQuery,
-): Prisma.content_moderation_eventWhereInput => {
-  const where: Prisma.content_moderation_eventWhereInput = {
-    deleted: false,
-  };
-
-  if (query.status && query.status !== "all") where.status = query.status;
-  if (query.decision && query.decision !== "all") where.decision = query.decision;
-  if (query.severity && query.severity !== "all") where.severity = query.severity;
-  if (query.targetType && query.targetType !== "all") where.target_type = query.targetType;
-  if (query.community && query.community !== "all") {
-    where.OR = [
-      { community_id: query.community },
-      { community: { slug: query.community } },
-      { community: { name: { contains: query.community, mode: "insensitive" } } },
-    ];
-  }
-
-  const from = parseDateOnly(query.from, "start");
-  const to = parseDateOnly(query.to, "end");
-  if (from || to) {
-    where.createdAt = {
-      ...(from ? { gte: from } : {}),
-      ...(to ? { lte: to } : {}),
-    };
-  }
-
-  return where;
-};
-
-export type AdminModerationReportAudit = {
-  action:
-    | "moderation_report_content_removed"
-    | "moderation_report_dismissed"
-    | "moderation_report_upheld";
-  adminId: string;
-  changedFields: string[];
-  metadata?: Prisma.InputJsonObject;
-  reason: string;
-  safeAfter?: Prisma.InputJsonObject;
-  safeBefore?: Prisma.InputJsonObject;
-  targetId: string;
-};
-
-export type AdminModerationReportMutationResult = {
-  affectedReportsCount: number;
-  contentAlreadyUnavailable: boolean;
-  contentRemoved: boolean;
-  report: AdminPostReportRecord;
-};
-
-type TransactionClient = Prisma.TransactionClient;
-
-type ResolveReportUpheldInput = {
-  audit: AdminModerationReportAudit;
-  measure: "none" | "remove_content";
-  report: AdminPostReportRecord;
-};
-
-const activitySafeSnapshot = (event: {
-  categories: unknown;
-  decision: string;
-  id: string;
-  reason_code: string;
-  severity: string;
-  status: string;
-  target_id: string | null;
-  target_type: string;
-}) => ({
-  categories: event.categories,
-  decision: event.decision,
-  event_id: event.id,
-  reason_code: event.reason_code,
-  severity: event.severity,
-  status: event.status,
-  target_id: event.target_id,
-  target_type: event.target_type,
-});
-
-const reportTargetWhere = (report: AdminPostReportRecord) => ({
-  deleted: false,
-  target_id: report.target_id,
-  target_type: report.target_type,
-});
-
-const reportContentIsAvailable = (report: AdminPostReportRecord) => {
-  if (report.reply) {
-    return (
-      !report.reply.deleted &&
-      !report.reply.post.deleted &&
-      report.reply.post.status === "publicado" &&
-      !report.reply.post.community.deleted
-    );
-  }
-
-  return (
-    !report.post.deleted && report.post.status === "publicado" && !report.post.community.deleted
-  );
-};
+import type { IAdminModerationRepository } from "./interfaces/IAdminModerationRepository";
+import { AdminModerationEngagementRepository } from "./queries/AdminModerationEngagementRepository";
+import { AdminModerationMutationSupportRepository } from "./queries/AdminModerationMutationSupportRepository";
+import { AdminModerationOverviewRepository } from "./queries/AdminModerationOverviewRepository";
+import { AdminModerationResolutionRepository } from "./queries/AdminModerationResolutionRepository";
 
 export class AdminModerationRepository implements IAdminModerationRepository {
-  countPending() {
-    return prisma.content_moderation_event.count({
-      where: {
-        deleted: false,
-        status: {
-          in: ACTIVE_REVIEW_STATUSES,
-        },
-      },
-    });
+  private readonly mutationSupportRepository = new AdminModerationMutationSupportRepository();
+
+  private readonly overviewRepository = new AdminModerationOverviewRepository();
+
+  private readonly engagementRepository = new AdminModerationEngagementRepository();
+
+  private readonly resolutionRepository = new AdminModerationResolutionRepository(
+    this.mutationSupportRepository,
+  );
+
+  countPending(
+    ...args: Parameters<AdminModerationOverviewRepository["countPending"]>
+  ): ReturnType<AdminModerationOverviewRepository["countPending"]> {
+    return this.overviewRepository.countPending(...args);
   }
 
-  countPendingPostReports() {
-    return prisma.post_report.count({
-      where: {
-        deleted: false,
-        status: {
-          in: ACTIVE_POST_REPORT_STATUSES,
-        },
-      },
-    });
+  countPendingPostReports(
+    ...args: Parameters<AdminModerationOverviewRepository["countPendingPostReports"]>
+  ): ReturnType<AdminModerationOverviewRepository["countPendingPostReports"]> {
+    return this.overviewRepository.countPendingPostReports(...args);
   }
 
-  countRegistrationFailureUsers() {
-    return prisma.user.count({
-      where: {
-        account_status: "active",
-        active: true,
-        confirmed: false,
-        deleted: false,
-        role: {
-          in: ["paciente", "psicologo"],
-        },
-      },
-    });
+  countRegistrationFailureUsers(
+    ...args: Parameters<AdminModerationOverviewRepository["countRegistrationFailureUsers"]>
+  ): ReturnType<AdminModerationOverviewRepository["countRegistrationFailureUsers"]> {
+    return this.overviewRepository.countRegistrationFailureUsers(...args);
   }
 
-  countUrgentPending() {
-    return prisma.content_moderation_event.count({
-      where: {
-        deleted: false,
-        severity: "urgent",
-        status: {
-          in: ACTIVE_REVIEW_STATUSES,
-        },
-      },
-    });
+  countUrgentPending(
+    ...args: Parameters<AdminModerationOverviewRepository["countUrgentPending"]>
+  ): ReturnType<AdminModerationOverviewRepository["countUrgentPending"]> {
+    return this.overviewRepository.countUrgentPending(...args);
   }
 
-  countUncoveredPatientPosts(cutoff: Date) {
-    return prisma.community_post.count({
-      where: {
-        author: {
-          deleted: false,
-          role: "paciente",
-        },
-        createdAt: {
-          lte: cutoff,
-        },
-        deleted: false,
-        replies: {
-          none: {
-            author: {
-              active: true,
-              deleted: false,
-              role: "psicologo",
-            },
-            deleted: false,
-          },
-        },
-        status: "publicado",
-      },
-    });
+  countUncoveredPatientPosts(
+    ...args: Parameters<AdminModerationOverviewRepository["countUncoveredPatientPosts"]>
+  ): ReturnType<AdminModerationOverviewRepository["countUncoveredPatientPosts"]> {
+    return this.overviewRepository.countUncoveredPatientPosts(...args);
   }
 
-  listEvents(query: AdminModerationEventsQuery) {
-    return prisma.content_moderation_event.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: adminModerationEventSelect,
-      where: buildWhere(query),
-    });
+  listEvents(
+    ...args: Parameters<AdminModerationOverviewRepository["listEvents"]>
+  ): ReturnType<AdminModerationOverviewRepository["listEvents"]> {
+    return this.overviewRepository.listEvents(...args);
   }
 
-  listLatestPending(limit: number) {
-    return prisma.content_moderation_event.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: adminModerationEventSelect,
-      take: limit,
-      where: {
-        deleted: false,
-        status: {
-          in: ACTIVE_REVIEW_STATUSES,
-        },
-      },
-    });
+  listLatestPending(
+    ...args: Parameters<AdminModerationOverviewRepository["listLatestPending"]>
+  ): ReturnType<AdminModerationOverviewRepository["listLatestPending"]> {
+    return this.overviewRepository.listLatestPending(...args);
   }
 
-  listPendingPostReports(limit?: number) {
-    return prisma.post_report.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: adminPostReportSelect,
-      ...(limit ? { take: limit } : {}),
-      where: {
-        deleted: false,
-        status: {
-          in: ACTIVE_POST_REPORT_STATUSES,
-        },
-      },
-    });
+  listPendingPostReports(
+    ...args: Parameters<AdminModerationOverviewRepository["listPendingPostReports"]>
+  ): ReturnType<AdminModerationOverviewRepository["listPendingPostReports"]> {
+    return this.overviewRepository.listPendingPostReports(...args);
   }
 
-  listPostReports(limit?: number) {
-    return prisma.post_report.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: adminPostReportSelect,
-      ...(limit ? { take: limit } : {}),
-      where: {
-        deleted: false,
-      },
-    });
+  listPostReports(
+    ...args: Parameters<AdminModerationOverviewRepository["listPostReports"]>
+  ): ReturnType<AdminModerationOverviewRepository["listPostReports"]> {
+    return this.overviewRepository.listPostReports(...args);
   }
 
-  listRegistrationFailureUsers(limit?: number) {
-    return prisma.user.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: adminRegistrationFailureUserSelect,
-      ...(limit ? { take: limit } : {}),
-      where: {
-        account_status: "active",
-        active: true,
-        confirmed: false,
-        deleted: false,
-        role: {
-          in: ["paciente", "psicologo"],
-        },
-      },
-    });
+  listRegistrationFailureUsers(
+    ...args: Parameters<AdminModerationOverviewRepository["listRegistrationFailureUsers"]>
+  ): ReturnType<AdminModerationOverviewRepository["listRegistrationFailureUsers"]> {
+    return this.overviewRepository.listRegistrationFailureUsers(...args);
   }
 
-  listUncoveredPatientPosts(cutoff: Date, limit?: number) {
-    return prisma.community_post.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: adminUncoveredPatientPostSelect,
-      ...(limit ? { take: limit } : {}),
-      where: {
-        author: {
-          deleted: false,
-          role: "paciente",
-        },
-        createdAt: {
-          lte: cutoff,
-        },
-        deleted: false,
-        replies: {
-          none: {
-            author: {
-              active: true,
-              deleted: false,
-              role: "psicologo",
-            },
-            deleted: false,
-          },
-        },
-        status: "publicado",
-      },
-    });
+  listUncoveredPatientPosts(
+    ...args: Parameters<AdminModerationOverviewRepository["listUncoveredPatientPosts"]>
+  ): ReturnType<AdminModerationOverviewRepository["listUncoveredPatientPosts"]> {
+    return this.overviewRepository.listUncoveredPatientPosts(...args);
   }
 
-  listOperationalPsychologistProfiles() {
-    return prisma.psychologist_profile.findMany({
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      select: adminOperationalPsychologistSelect,
-      where: {
-        deleted: false,
-        subscriptions: {
-          some: {
-            ...activeSubscriptionPeriodWhere(),
-            plan: {
-              active: true,
-              deleted: false,
-            },
-          },
-        },
-        user: {
-          active: true,
-          deleted: false,
-          role: "psicologo",
-        },
-      },
-    });
+  listOperationalPsychologistProfiles(
+    ...args: Parameters<AdminModerationOverviewRepository["listOperationalPsychologistProfiles"]>
+  ): ReturnType<AdminModerationOverviewRepository["listOperationalPsychologistProfiles"]> {
+    return this.overviewRepository.listOperationalPsychologistProfiles(...args);
   }
 
-  countProfileViewsByPsychologist(psychologistIds: string[]) {
-    if (psychologistIds.length === 0) return Promise.resolve([]);
-
-    return prisma.profile_view_event.groupBy({
-      by: ["psychologist_id"],
-      where: {
-        deleted: false,
-        psychologist_id: {
-          in: psychologistIds,
-        },
-        source: "profile_page",
-      },
-      _count: {
-        _all: true,
-      },
-    });
+  countProfileViewsByPsychologist(
+    ...args: Parameters<AdminModerationOverviewRepository["countProfileViewsByPsychologist"]>
+  ): ReturnType<AdminModerationOverviewRepository["countProfileViewsByPsychologist"]> {
+    return this.overviewRepository.countProfileViewsByPsychologist(...args);
   }
 
-  countWhatsappClicksByPsychologist(psychologistIds: string[]) {
-    if (psychologistIds.length === 0) return Promise.resolve([]);
-
-    return prisma.contact_request.groupBy({
-      by: ["psychologist_id"],
-      where: {
-        channel: "whatsapp",
-        deleted: false,
-        psychologist_id: {
-          in: psychologistIds,
-        },
-      },
-      _count: {
-        _all: true,
-      },
-    });
+  countWhatsappClicksByPsychologist(
+    ...args: Parameters<AdminModerationOverviewRepository["countWhatsappClicksByPsychologist"]>
+  ): ReturnType<AdminModerationOverviewRepository["countWhatsappClicksByPsychologist"]> {
+    return this.overviewRepository.countWhatsappClicksByPsychologist(...args);
   }
 
-  async listPatientCommunityEngagementSignals(targets: AdminPatientCommunityEngagementTarget[]) {
-    const targetKeys = new Set(
-      targets
-        .map((target) => `${target.userId}:${target.communityId}`)
-        .filter((value) => value.length > 1),
-    );
-
-    if (targetKeys.size === 0) {
-      return {
-        postSaves: [],
-        posts: [],
-        replies: [],
-        replySaves: [],
-        shares: [],
-        votes: [],
-      };
-    }
-
-    const patientIds = [...new Set(targets.map((target) => target.userId))];
-    const communityIds = [...new Set(targets.map((target) => target.communityId))];
-    const matchesTarget = (userId: string | null, communityId?: string | null) =>
-      Boolean(userId && communityId && targetKeys.has(`${userId}:${communityId}`));
-
-    const [posts, replies, votes, postSaves, replySaves, shares] = await Promise.all([
-      prisma.community_post.findMany({
-        select: adminPatientCommunityPostEngagementSelect,
-        where: {
-          author: {
-            deleted: false,
-            role: "paciente",
-          },
-          author_id: {
-            in: patientIds,
-          },
-          community: {
-            deleted: false,
-          },
-          community_id: {
-            in: communityIds,
-          },
-          deleted: false,
-          status: "publicado",
-        },
-      }),
-      prisma.post_reply.findMany({
-        select: adminPatientCommunityReplyEngagementSelect,
-        where: {
-          author: {
-            deleted: false,
-            role: "paciente",
-          },
-          author_id: {
-            in: patientIds,
-          },
-          deleted: false,
-          post: {
-            community: {
-              deleted: false,
-            },
-            community_id: {
-              in: communityIds,
-            },
-            deleted: false,
-            status: "publicado",
-          },
-        },
-      }),
-      prisma.post_vote.findMany({
-        select: adminPatientCommunityVoteEngagementSelect,
-        where: {
-          deleted: false,
-          OR: [
-            {
-              post: {
-                community: {
-                  deleted: false,
-                },
-                community_id: {
-                  in: communityIds,
-                },
-                deleted: false,
-                status: "publicado",
-              },
-            },
-            {
-              reply: {
-                deleted: false,
-                post: {
-                  community: {
-                    deleted: false,
-                  },
-                  community_id: {
-                    in: communityIds,
-                  },
-                  deleted: false,
-                  status: "publicado",
-                },
-              },
-            },
-          ],
-          user: {
-            deleted: false,
-            role: "paciente",
-          },
-          user_id: {
-            in: patientIds,
-          },
-        },
-      }),
-      prisma.post_save.findMany({
-        select: adminPatientCommunityPostSaveEngagementSelect,
-        where: {
-          deleted: false,
-          post: {
-            community: {
-              deleted: false,
-            },
-            community_id: {
-              in: communityIds,
-            },
-            deleted: false,
-            status: "publicado",
-          },
-          user: {
-            deleted: false,
-            role: "paciente",
-          },
-          user_id: {
-            in: patientIds,
-          },
-        },
-      }),
-      prisma.post_reply_save.findMany({
-        select: adminPatientCommunityReplySaveEngagementSelect,
-        where: {
-          deleted: false,
-          reply: {
-            deleted: false,
-            post: {
-              community: {
-                deleted: false,
-              },
-              community_id: {
-                in: communityIds,
-              },
-              deleted: false,
-              status: "publicado",
-            },
-          },
-          user: {
-            deleted: false,
-            role: "paciente",
-          },
-          user_id: {
-            in: patientIds,
-          },
-        },
-      }),
-      prisma.post_share.findMany({
-        select: adminPatientCommunityShareEngagementSelect,
-        where: {
-          deleted: false,
-          post: {
-            community: {
-              deleted: false,
-            },
-            community_id: {
-              in: communityIds,
-            },
-            deleted: false,
-            status: "publicado",
-          },
-          user: {
-            deleted: false,
-            role: "paciente",
-          },
-          user_id: {
-            in: patientIds,
-          },
-        },
-      }),
-    ]);
-
-    return {
-      postSaves: postSaves.filter((save) => matchesTarget(save.user_id, save.post.community_id)),
-      posts: posts.filter((post) => matchesTarget(post.author_id, post.community_id)),
-      replies: replies.filter((reply) => matchesTarget(reply.author_id, reply.post.community_id)),
-      replySaves: replySaves.filter((save) =>
-        matchesTarget(save.user_id, save.reply.post.community_id),
-      ),
-      shares: shares.filter((share) => matchesTarget(share.user_id, share.post.community_id)),
-      votes: votes.filter((vote) =>
-        matchesTarget(
-          vote.user_id,
-          vote.post?.community_id ?? vote.reply?.post.community_id ?? null,
-        ),
-      ),
-    };
+  listPatientCommunityEngagementSignals(
+    ...args: Parameters<
+      AdminModerationEngagementRepository["listPatientCommunityEngagementSignals"]
+    >
+  ): ReturnType<AdminModerationEngagementRepository["listPatientCommunityEngagementSignals"]> {
+    return this.engagementRepository.listPatientCommunityEngagementSignals(...args);
   }
 
-  findEvent(id: string) {
-    return prisma.content_moderation_event.findFirst({
-      select: adminModerationEventDetailSelect,
-      where: {
-        deleted: false,
-        id,
-      },
-    });
+  findEvent(
+    ...args: Parameters<AdminModerationResolutionRepository["findEvent"]>
+  ): ReturnType<AdminModerationResolutionRepository["findEvent"]> {
+    return this.resolutionRepository.findEvent(...args);
   }
 
-  findPostReport(id: string) {
-    return prisma.post_report.findFirst({
-      select: adminPostReportSelect,
-      where: {
-        deleted: false,
-        id,
-      },
-    });
+  findPostReport(
+    ...args: Parameters<AdminModerationResolutionRepository["findPostReport"]>
+  ): ReturnType<AdminModerationResolutionRepository["findPostReport"]> {
+    return this.resolutionRepository.findPostReport(...args);
   }
 
-  listReplyTargets(replyIds: string[]) {
-    if (replyIds.length === 0) return Promise.resolve([]);
-
-    return prisma.post_reply.findMany({
-      select: {
-        id: true,
-        post_id: true,
-        post: {
-          select: {
-            community: {
-              select: {
-                slug: true,
-              },
-            },
-          },
-        },
-      },
-      where: {
-        id: {
-          in: replyIds,
-        },
-      },
-    });
+  listReplyTargets(
+    ...args: Parameters<AdminModerationResolutionRepository["listReplyTargets"]>
+  ): ReturnType<AdminModerationResolutionRepository["listReplyTargets"]> {
+    return this.resolutionRepository.listReplyTargets(...args);
   }
 
-  async resolveReportDismissed(input: {
-    audit: AdminModerationReportAudit;
-    report: AdminPostReportRecord;
-  }): Promise<AdminModerationReportMutationResult> {
-    return prisma.$transaction(async (transaction) => {
-      const report = await transaction.post_report.update({
-        data: {
-          status: "rejeitada",
-        },
-        select: adminPostReportSelect,
-        where: {
-          id: input.report.id,
-        },
-      });
-
-      await this.createReportAuditLog(transaction, input.audit);
-
-      return {
-        affectedReportsCount: 1,
-        contentAlreadyUnavailable: !reportContentIsAvailable(input.report),
-        contentRemoved: false,
-        report,
-      };
-    });
+  resolveReportDismissed(
+    ...args: Parameters<AdminModerationResolutionRepository["resolveReportDismissed"]>
+  ): ReturnType<AdminModerationResolutionRepository["resolveReportDismissed"]> {
+    return this.resolutionRepository.resolveReportDismissed(...args);
   }
 
-  async resolveReportUpheld(
-    input: ResolveReportUpheldInput,
-  ): Promise<AdminModerationReportMutationResult> {
-    return prisma.$transaction(async (transaction) => {
-      const wasAvailable = reportContentIsAvailable(input.report);
-      const contentRemoved =
-        input.measure === "remove_content" && wasAvailable
-          ? await this.softDeleteReportTargetContent(transaction, input.report)
-          : false;
-
-      const affectedReports =
-        input.measure === "remove_content"
-          ? await transaction.post_report.updateMany({
-              data: {
-                status: "resolvida",
-              },
-              where: {
-                ...reportTargetWhere(input.report),
-                status: {
-                  in: ACTIVE_POST_REPORT_STATUSES,
-                },
-              },
-            })
-          : await transaction.post_report.updateMany({
-              data: {
-                status: "resolvida",
-              },
-              where: {
-                deleted: false,
-                id: input.report.id,
-              },
-            });
-
-      const report = await transaction.post_report.findUniqueOrThrow({
-        select: adminPostReportSelect,
-        where: {
-          id: input.report.id,
-        },
-      });
-
-      await this.createReportAuditLog(transaction, {
-        ...input.audit,
-        metadata: {
-          ...(input.audit.metadata ?? {}),
-          affected_reports_count: affectedReports.count,
-          content_already_unavailable: !wasAvailable,
-          content_removed: contentRemoved,
-        },
-      });
-
-      return {
-        affectedReportsCount: affectedReports.count,
-        contentAlreadyUnavailable: !wasAvailable,
-        contentRemoved,
-        report,
-      };
-    });
+  resolveReportUpheld(
+    ...args: Parameters<AdminModerationResolutionRepository["resolveReportUpheld"]>
+  ): ReturnType<AdminModerationResolutionRepository["resolveReportUpheld"]> {
+    return this.resolutionRepository.resolveReportUpheld(...args);
   }
 
-  markReviewing(id: string, adminId: string) {
-    return prisma.$transaction(async (transaction) => {
-      const event = await transaction.content_moderation_event.findFirst({
-        select: adminModerationEventDetailSelect,
-        where: {
-          deleted: false,
-          id,
-        },
-      });
-      if (!event) return null;
-
-      const updated = await transaction.content_moderation_event.update({
-        data: {
-          reviewed_at: event.reviewed_at ?? new Date(),
-          reviewed_by_admin_id: event.reviewed_by_admin_id ?? adminId,
-          status: event.status === "resolved" ? "resolved" : "reviewing",
-        },
-        select: adminModerationEventDetailSelect,
-        where: { id },
-      });
-
-      await transaction.admin_activity_log.create({
-        data: {
-          action: "content_moderation_review_started",
-          admin_id: adminId,
-          area: "moderacao",
-          changed_fields: [
-            "content_moderation_event.status",
-            "content_moderation_event.reviewed_at",
-          ],
-          domain: "content_moderation",
-          metadata: safeJsonObject({ community_id: updated.community_id }),
-          safe_after: safeJsonObject(activitySafeSnapshot(updated)),
-          safe_before: safeJsonObject(activitySafeSnapshot(event)),
-          source: "admin_panel",
-          target_id: id,
-          target_type: "content_moderation_event",
-        },
-      });
-
-      return updated;
-    });
+  markReviewing(
+    ...args: Parameters<AdminModerationResolutionRepository["markReviewing"]>
+  ): ReturnType<AdminModerationResolutionRepository["markReviewing"]> {
+    return this.resolutionRepository.markReviewing(...args);
   }
 
-  resolveEvent(id: string, input: { adminId: string; note: string }) {
-    return prisma.$transaction(async (transaction) => {
-      const event = await transaction.content_moderation_event.findFirst({
-        select: adminModerationEventDetailSelect,
-        where: {
-          deleted: false,
-          id,
-        },
-      });
-      if (!event) return null;
-
-      const now = new Date();
-      const updated = await transaction.content_moderation_event.update({
-        data: {
-          admin_note: input.note,
-          resolved_at: now,
-          reviewed_at: event.reviewed_at ?? now,
-          reviewed_by_admin_id: event.reviewed_by_admin_id ?? input.adminId,
-          status: "resolved",
-        },
-        select: adminModerationEventDetailSelect,
-        where: { id },
-      });
-
-      await transaction.admin_activity_log.create({
-        data: {
-          action: "content_moderation_resolved",
-          admin_id: input.adminId,
-          area: "moderacao",
-          changed_fields: [
-            "content_moderation_event.status",
-            "content_moderation_event.resolved_at",
-            "content_moderation_event.admin_note",
-          ],
-          domain: "content_moderation",
-          metadata: safeJsonObject({ community_id: updated.community_id }),
-          reason: input.note,
-          safe_after: safeJsonObject(activitySafeSnapshot(updated)),
-          safe_before: safeJsonObject(activitySafeSnapshot(event)),
-          source: "admin_panel",
-          target_id: id,
-          target_type: "content_moderation_event",
-        },
-      });
-
-      return updated;
-    });
-  }
-
-  private async softDeleteReportTargetContent(
-    transaction: TransactionClient,
-    report: AdminPostReportRecord,
-  ) {
-    const now = new Date();
-
-    if (report.reply) {
-      const replyIds = await this.findReplyTreeIds(
-        transaction,
-        report.reply.post_id,
-        report.reply.id,
-      );
-      if (replyIds.length === 0) return false;
-
-      const deletedReplies = await transaction.post_reply.updateMany({
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
-        where: {
-          deleted: false,
-          id: {
-            in: replyIds,
-          },
-          post_id: report.reply.post_id,
-        },
-      });
-
-      if (deletedReplies.count > 0) {
-        await transaction.community_post.update({
-          data: {
-            replies_count: Math.max(0, report.reply.post.replies_count - deletedReplies.count),
-          },
-          where: {
-            id: report.reply.post_id,
-          },
-        });
-      }
-
-      return deletedReplies.count > 0;
-    }
-
-    const deletedReplies = await transaction.post_reply.updateMany({
-      data: {
-        deleted: true,
-        deletedAt: now,
-      },
-      where: {
-        deleted: false,
-        post_id: report.post.id,
-      },
-    });
-
-    await transaction.community_post.update({
-      data: {
-        deleted: true,
-        deletedAt: now,
-        replies_count: Math.max(0, report.post.replies_count - deletedReplies.count),
-        status: "removido",
-      },
-      where: {
-        id: report.post.id,
-      },
-    });
-
-    return true;
-  }
-
-  private async findReplyTreeIds(
-    transaction: TransactionClient,
-    postId: string,
-    rootReplyId: string,
-  ) {
-    const replies = await transaction.post_reply.findMany({
-      select: {
-        id: true,
-        parent_reply_id: true,
-      },
-      where: {
-        deleted: false,
-        post_id: postId,
-      },
-    });
-
-    const childrenByParent = new Map<string, string[]>();
-    for (const reply of replies) {
-      if (!reply.parent_reply_id) continue;
-      const children = childrenByParent.get(reply.parent_reply_id) ?? [];
-      children.push(reply.id);
-      childrenByParent.set(reply.parent_reply_id, children);
-    }
-
-    const ids = new Set<string>();
-    const stack = [rootReplyId];
-
-    while (stack.length > 0) {
-      const current = stack.pop();
-      if (!current || ids.has(current)) continue;
-      ids.add(current);
-      for (const childId of childrenByParent.get(current) ?? []) stack.push(childId);
-    }
-
-    return [...ids];
-  }
-
-  private async createReportAuditLog(
-    transaction: TransactionClient,
-    audit: AdminModerationReportAudit,
-  ) {
-    await transaction.admin_activity_log.create({
-      data: {
-        action: audit.action,
-        admin_id: audit.adminId,
-        area: "denuncias",
-        changed_fields: audit.changedFields,
-        domain: "moderation",
-        metadata: audit.metadata ?? {},
-        reason: audit.reason,
-        safe_after: audit.safeAfter ?? {},
-        safe_before: audit.safeBefore ?? {},
-        source: "admin_panel",
-        target_id: audit.targetId,
-        target_type: "post_report",
-      },
-    });
+  resolveEvent(
+    ...args: Parameters<AdminModerationResolutionRepository["resolveEvent"]>
+  ): ReturnType<AdminModerationResolutionRepository["resolveEvent"]> {
+    return this.resolutionRepository.resolveEvent(...args);
   }
 }
+
+export type {
+  AdminModerationReportAudit,
+  AdminModerationReportMutationResult,
+} from "./support/moderation-query";

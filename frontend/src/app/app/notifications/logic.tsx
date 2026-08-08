@@ -345,7 +345,7 @@ const NotificationsHeaderActions = ({
 
             {isConfirmOpen ? (
               <div
-                className="absolute right-0 top-[calc(100%+8px)] z-30 w-56 rounded-2xl border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
+                className="absolute right-0 top-[calc(100%+8px)] z-30 w-56 rounded-2xl border border-border bg-surface p-1.5 shadow-lectum-soft"
                 role="menu"
               >
                 <button

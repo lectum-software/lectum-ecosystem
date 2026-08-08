@@ -20,26 +20,26 @@ export const RestrictedAreaState = ({
   sessionUnavailable = false,
 }: RestrictedAreaStateProps) => (
   <section className="w-full max-w-[460px] px-1 text-center">
-    <div className="relative overflow-hidden rounded-[2rem] border border-[#DCEBFA] bg-white px-6 py-8 shadow-[0_24px_70px_rgba(31,95,159,0.12)] ring-1 ring-white/80 sm:px-8 sm:py-10">
+    <div className="relative overflow-hidden rounded-[2rem] border border-border bg-surface px-6 py-8 shadow-lectum-soft ring-1 ring-media-foreground/80 sm:px-8 sm:py-10">
       <div
         aria-hidden="true"
         className="-top-24 -right-20 absolute h-48 w-48 rounded-full bg-primary/10 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="-bottom-24 -left-20 absolute h-48 w-48 rounded-full bg-[#9DD7FF]/20 blur-3xl"
+        className="-bottom-24 -left-20 absolute h-48 w-48 rounded-full bg-surface-muted/20 blur-3xl"
       />
 
       <div className="relative z-10 grid justify-items-center">
-        <div className="relative mb-5 grid h-20 w-20 place-items-center rounded-[1.65rem] bg-gradient-to-br from-primary-soft via-white to-[#E9F5FF] text-primary shadow-[0_16px_34px_rgba(47,141,235,0.16)] ring-1 ring-[#CFE5FB]">
+        <div className="relative mb-5 grid h-20 w-20 place-items-center rounded-[1.65rem] bg-gradient-to-br from-primary-soft via-surface to-surface-muted text-primary shadow-lectum-soft ring-1 ring-border">
           <span
             aria-hidden="true"
-            className="absolute inset-2 rounded-[1.3rem] border border-white/80"
+            className="absolute inset-2 rounded-[1.3rem] border border-media-foreground/80"
           />
           <ShieldCheck className="h-9 w-9" aria-hidden="true" />
         </div>
 
-        <p className="mb-3 rounded-full border border-[#CFE5FB] bg-[#F7FBFF] px-3 py-1 text-[11px] font-extrabold tracking-[0.16em] text-primary uppercase">
+        <p className="mb-3 rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] font-extrabold tracking-[0.16em] text-primary uppercase">
           {sessionUnavailable ? "Sessão indisponível" : "Área restrita"}
         </p>
 
@@ -52,7 +52,7 @@ export const RestrictedAreaState = ({
 
         <div className="mt-7 grid w-full gap-3 sm:grid-cols-2">
           <Button
-            className="h-12 rounded-2xl text-sm font-extrabold shadow-[0_14px_30px_rgba(47,141,235,0.22)]"
+            className="h-12 rounded-2xl text-sm font-extrabold shadow-lectum-soft"
             onClick={sessionUnavailable ? onRetry : onSignup}
             type="button"
           >
@@ -64,7 +64,7 @@ export const RestrictedAreaState = ({
             <span>{sessionUnavailable ? "Tentar novamente" : "Criar conta"}</span>
           </Button>
           <Button
-            className="h-12 rounded-2xl border-[#CFE5FB] bg-white text-sm font-extrabold text-primary shadow-none hover:border-primary/40 hover:bg-primary-soft/50"
+            className="h-12 rounded-2xl border-border bg-surface text-sm font-extrabold text-primary shadow-none hover:border-primary/40 hover:bg-primary-soft/50"
             onClick={onLogin}
             type="button"
             variant="outline"

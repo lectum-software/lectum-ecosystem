@@ -130,7 +130,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
         </div>
 
         {billing.courtesy.blocked_reason ? (
-          <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-orange-800">
+          <div className="mt-5 rounded-2xl border border-warning-border bg-warning-soft p-4 text-sm font-bold text-warning">
             {billing.courtesy.blocked_reason}
           </div>
         ) : null}
@@ -243,7 +243,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
               </button>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold leading-6 text-orange-800">
+            <div className="mt-5 rounded-2xl border border-warning-border bg-warning-soft p-4 text-sm font-bold leading-6 text-warning">
               Confira os dados de CRP inseridos. A cortesia cria acesso profissional gratuito e fica
               registrada para auditoria.
             </div>
@@ -287,7 +287,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
                     Cancelar
                   </button>
                   <button
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
                     disabled={mutation.isPending}
                     type="submit"
                   >

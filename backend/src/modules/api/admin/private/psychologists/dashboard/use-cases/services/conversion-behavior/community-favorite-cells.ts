@@ -137,14 +137,14 @@ export const buildCommunitiesBehaviorCell = (
         value: communityAttentionPerContent,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Retenção média em sessões reais de vídeos publicados nas comunidades.",
+        description: "Retenção média das sessões de vídeos publicados nas comunidades.",
         id: "community_video_retention",
         label: "Retenção vídeo",
         source: "content_video_watch_session.watched_seconds/duration_seconds",
         unit: "percentage",
         unavailable_reason:
           communityRetention === null && !communityUnavailableReason
-            ? "Sem sessões reais de vídeo de comunidade com duração no período."
+            ? "Sem sessões de vídeo de comunidade com duração no período."
             : communityUnavailableReason,
         value: communityRetention,
       }),

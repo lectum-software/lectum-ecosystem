@@ -4,7 +4,7 @@ import { resolve } from "@/helpers/translate/resolve";
 import { UploadInfrastructureError, UploadValidationError } from "./errors";
 
 export function fileFilter(req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
-  const allowed: string[] = (req as any).allowed;
+  const allowed = req.allowed;
   if (!allowed?.length) {
     return cb(new UploadInfrastructureError("UPLOAD_ALLOWED_TYPES_NOT_CONFIGURED"));
   }

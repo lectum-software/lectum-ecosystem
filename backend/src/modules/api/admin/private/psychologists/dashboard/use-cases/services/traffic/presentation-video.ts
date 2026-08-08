@@ -136,7 +136,7 @@ const buildPresentationVideoTrafficPlatformMetrics = (
           unavailable_reason:
             averageRetention === null
               ? sourceUnavailableReason(
-                  "Sem sessões reais do vídeo de apresentação com duração no período.",
+                  "Sem sessões do vídeo de apresentação com duração no período.",
                 )
               : null,
           unit: "percentage",
@@ -147,7 +147,7 @@ const buildPresentationVideoTrafficPlatformMetrics = (
           label: "Tempo de permanência",
           unavailable_reason:
             averageStaySeconds === null
-              ? sourceUnavailableReason("Sem sessões reais do vídeo de apresentação no período.")
+              ? sourceUnavailableReason("Sem sessões do vídeo de apresentação no período.")
               : null,
           unit: "seconds",
           value: averageStaySeconds,
@@ -157,7 +157,7 @@ const buildPresentationVideoTrafficPlatformMetrics = (
           label: "Taxa de replay",
           unavailable_reason:
             replayRate === null
-              ? sourceUnavailableReason("Sem sessões reais do vídeo de apresentação no período.")
+              ? sourceUnavailableReason("Sem sessões do vídeo de apresentação no período.")
               : null,
           unit: "percentage",
           value: replayRate,

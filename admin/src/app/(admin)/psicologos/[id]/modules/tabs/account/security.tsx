@@ -87,7 +87,7 @@ export const AccountTemporaryPasswordForm = ({
   return (
     <FormProvider {...form}>
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-3 text-sm font-bold leading-6 text-orange-800">
+        <div className="rounded-2xl border border-warning-border bg-warning-soft p-3 text-sm font-bold leading-6 text-warning">
           A senha temporária não será exibida novamente, não será gravada em auditoria e exigirá
           troca obrigatória no próximo login do psicólogo.
         </div>
@@ -126,7 +126,7 @@ export const AccountTemporaryPasswordForm = ({
           required
         />
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-white transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-primary-foreground transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
           disabled={disabled}
           type="submit"
         >
@@ -177,9 +177,7 @@ export const AccountRevokeSessionsForm = ({
     <FormProvider {...form}>
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         {!account.capabilities.can_revoke_sessions ? (
-          <AccountUnavailableNotice>
-            Nenhuma sessão ativa real foi encontrada em user_token.
-          </AccountUnavailableNotice>
+          <AccountUnavailableNotice>Nenhuma sessão ativa foi encontrada.</AccountUnavailableNotice>
         ) : null}
         <TextareaController<AccountRevokeSessionsFormValues>
           disabled={disabled}
@@ -198,7 +196,7 @@ export const AccountRevokeSessionsForm = ({
           required
         />
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
           disabled={disabled}
           type="submit"
         >
@@ -319,7 +317,7 @@ export const ACCOUNT_STATUS_ACTION_CONFIG: Record<
   },
   delete: {
     blockedMessage: "Exclusão indisponível para esta conta no estado atual.",
-    buttonClassName: "bg-danger px-4 text-white hover:bg-danger/90",
+    buttonClassName: "bg-danger px-4 text-primary-foreground hover:bg-danger/90",
     buttonLabel: "Excluir conta",
     canRun: (account) => account.capabilities.can_delete_account,
     confirmation: "EXCLUIR CONTA",
@@ -332,7 +330,7 @@ export const ACCOUNT_STATUS_ACTION_CONFIG: Record<
   },
   suspend: {
     blockedMessage: "A conta já está suspensa ou não pode receber esta ação.",
-    buttonClassName: "bg-danger px-4 text-white hover:bg-danger/90",
+    buttonClassName: "bg-danger px-4 text-primary-foreground hover:bg-danger/90",
     buttonLabel: "Suspender conta",
     canRun: (account) => account.capabilities.can_suspend_account,
     confirmation: "SUSPENDER CONTA",

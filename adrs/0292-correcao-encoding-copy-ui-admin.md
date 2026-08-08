@@ -5,7 +5,7 @@ Status: Aceito
 
 ## Contexto
 
-O detalhe administrativo de paciente exibiu textos com mojibake em produção local, por exemplo `EstatÃ­sticas`, `PublicaÃ§Ãµes`, `perÃ­odo` e mensagens de erro similares.
+O detalhe administrativo de paciente exibiu textos com mojibake em produção local, por exemplo `Estatísticas`, `Publicações`, `período` e mensagens de erro similares.
 
 O problema estava em literais já corrompidos no código do Admin, em strings retornadas pelo backend para o detalhe do paciente e em alguns textos compartilhados do frontend. Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência visual usada foi a captura enviada pelo usuário e o inventário local `_product/tasks/PROTO-INVENTORY.md`.
 

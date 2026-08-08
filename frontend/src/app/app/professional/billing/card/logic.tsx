@@ -63,30 +63,32 @@ const PaymentMethodPreview = ({
   const brand = paymentMethod?.brand ? paymentMethod.brand.toUpperCase() : "Cartão seguro";
 
   return (
-    <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#0f5be8] via-primary to-[#6bb6ff] p-5 text-white shadow-[0_24px_70px_rgba(47,141,235,0.28)]">
+    <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-primary via-primary to-primary p-5 text-primary-foreground shadow-lectum-soft">
       <div
         aria-hidden
-        className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/15 blur-xl"
+        className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-media-foreground/15 blur-xl"
       />
       <div
         aria-hidden
-        className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+        className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-media-foreground/10 blur-2xl"
       />
       <div className="relative z-10 flex min-h-[154px] flex-col justify-between">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/75">
               Cartão atual
             </p>
             <p className="mt-2 text-lg font-extrabold">{brand}</p>
           </div>
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/15 backdrop-blur">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-media-foreground/15 backdrop-blur">
             <CreditCard className="h-6 w-6" aria-hidden="true" />
           </span>
         </div>
         <div>
           <p className="text-2xl font-extrabold tracking-[0.18em]">{last4}</p>
-          <p className="mt-2 text-xs font-semibold text-white/70">Tokenizado com segurança</p>
+          <p className="mt-2 text-xs font-semibold text-primary-foreground/70">
+            Tokenizado com segurança
+          </p>
         </div>
       </div>
     </div>
@@ -167,7 +169,7 @@ export const ProfessionalBillingCardLogic = () => {
       const paymentTypeId = additionalData?.paymentTypeId;
 
       if (!token) {
-        toast.error("Não foi possível tokenizar o cartão. Tente novamente.");
+        toast.error("Não foi possível validar os dados do cartão. Tente novamente.");
         return;
       }
 
@@ -221,7 +223,7 @@ export const ProfessionalBillingCardLogic = () => {
                 </Link>
               </Button>
             }
-            description="Nenhuma assinatura real foi encontrada para permitir a troca do cartão."
+            description="Nenhuma assinatura foi encontrada para permitir a troca do cartão."
             icon={CreditCard}
             title="Assinatura não encontrada"
           />

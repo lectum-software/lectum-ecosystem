@@ -409,7 +409,7 @@ export const AdminCommunitiesListClient = () => {
             </p>
           </div>
           <Link
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-bold text-white shadow-control transition hover:bg-primary-hover sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-bold text-primary-foreground shadow-control transition hover:bg-primary-hover sm:w-auto"
             href="/comunidades/nova"
           >
             <Plus aria-hidden className="h-4 w-4" />

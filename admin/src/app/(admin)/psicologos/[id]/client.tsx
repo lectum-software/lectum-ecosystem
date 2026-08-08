@@ -79,7 +79,7 @@ export const AdminPsychologistDetailClient = ({ id }: { id: string }) => {
       {query.isFetching && !query.isLoading ? (
         <div className="fixed bottom-4 right-4 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-xs font-black text-muted shadow-admin-soft">
           <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-          Atualizando dados reais
+          Atualizando dados
         </div>
       ) : null}
     </div>

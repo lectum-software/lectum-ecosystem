@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import Image from "next/image";
 import {
   type ChangeEvent,
@@ -11,19 +11,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { Controller } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import { useUploadCommunityPostMedia } from "@/api/callers/community";
 import { useUpdatePost } from "@/api/callers/posts";
 import { getSafeApiErrorMessage } from "@/api/errors";
-import type { PostDetail } from "@/api/generator/types/posts";
 import { components } from "@/components/controllers";
-import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
-import { type Field, useFormList } from "@/hooks/form";
+import { useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
-import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
 import { resolveMediaUploadError } from "@/utils/media-upload-error";
@@ -31,156 +26,22 @@ import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
 } from "@/utils/video-thumbnail";
-
-const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
-const COMMUNITY_POST_MEDIA_ACCEPT =
-  "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
-const MAX_POST_CAROUSEL_IMAGES = 10;
-const EDITOR_FIELD_IDS = new Set(["edit-post-title", "edit-post-content"]);
-const guidanceText =
-  "Lembre-se de ser respeitoso com os outros membros. Conteúdos ofensivos ou que violem as diretrizes serão removidos pela moderação.";
-
-const postEditSchema = z.object({
-  community_slug: z.string().min(1),
-  title: z
-    .string()
-    .trim()
-    .min(3, "Escreva um título com pelo menos 3 caracteres")
-    .max(100, "Use no máximo 100 caracteres no título"),
-  content: z
-    .string()
-    .trim()
-    .min(10, "Escreva uma descrição com pelo menos 10 caracteres")
-    .max(2000, "Use no máximo 2000 caracteres no texto"),
-  anonymous: z.boolean().optional(),
-});
-
-type PostEditForm = z.infer<typeof postEditSchema>;
-
-type EditablePost = Pick<
-  PostDetail,
-  | "anonymous"
-  | "author"
-  | "community"
-  | "content"
-  | "id"
-  | "media_items"
-  | "media_type"
-  | "media_url"
-  | "thumbnail_url"
-  | "replies_count"
-  | "title"
->;
-
-type SelectedPostMedia = {
-  file: File;
-  id: string;
-  orientation?: "landscape" | "portrait";
-  previewUrl: string;
-  type: "image" | "video";
-};
-
-type PostMediaPreviewItem = {
-  caption: string;
-  id: string;
-  orientation?: "landscape" | "portrait";
-  src: string;
-  thumbnailUrl?: string | null;
-  type: "image" | "video";
-};
-
-type EditablePostMediaPreviewItem = PostMediaPreviewItem & {
-  selectedIndex?: number;
-  source: "selected" | "stored";
-};
-
-const createSelectedMediaId = () =>
-  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-type PostEditModalProps = {
-  onClose: () => void;
-  onUpdated?: (post: PostDetail) => void;
-  open: boolean;
-  post: EditablePost;
-};
-
-const contentGuidancePlaceholder =
-  "Conte aos psicólogos o que aconteceu, como você está se sentindo e o que já tentou fazer até agora.";
-const psychologistTitlePlaceholder = "Dê um título ao seu conteúdo";
-const psychologistContentPlaceholder =
-  "Compartilhe com a comunidade uma orientação, reflexão ou conteúdo baseado na sua experiência profissional.";
-
-const buildFields = ({
-  communityName,
-  communitySlug,
-  isPsychologist,
-}: {
-  communityName: string;
-  communitySlug: string;
-  isPsychologist: boolean;
-}) =>
-  [
-    {
-      name: "community_slug",
-      field: "select",
-      className:
-        "relative w-fit max-w-full gap-0 pb-5 [&>span:last-child]:absolute [&>span:last-child]:top-11 [&>span:last-child]:left-0 [&>span:last-child]:w-max [&>span:last-child]:max-w-[calc(100vw-2.5rem)] [&>span:last-child]:pl-0",
-      placeholder: "Comunidade",
-      emptyLabel: "Comunidade",
-      hideEmptyOption: true,
-      options: [{ label: communityName, value: communitySlug }],
-      required: true,
-      disabled: true,
-      readOnly: true,
-      inputClassName:
-        "h-10 w-fit max-w-[calc(100vw-40px)] min-w-[188px] cursor-not-allowed overflow-visible rounded-full border-transparent bg-surface-muted px-4 py-0 text-sm font-bold leading-[1.35] text-muted opacity-75 shadow-none focus:border-transparent focus:ring-0 [&>span]:leading-[1.35]",
-    },
-    {
-      name: "title",
-      field: "textarea",
-      id: "edit-post-title",
-      label: "Título do post",
-      placeholder: isPsychologist
-        ? psychologistTitlePlaceholder
-        : "Título (Diga o assunto ou faça uma pergunta)",
-      required: true,
-      max: 100,
-      autoFocus: true,
-      rows: 1,
-      autoGrow: true,
-      className:
-        "gap-0 [&>span:first-child]:sr-only [&>span:last-child]:min-h-3 [&>span:last-child]:leading-3",
-      inputClassName:
-        "create-post-title-input min-h-9 resize-none overflow-hidden rounded-none border-0 border-transparent bg-transparent px-0 pt-1 pb-0 shadow-none focus:border-transparent focus:ring-0",
-    },
-    {
-      name: "content",
-      field: "textarea",
-      id: "edit-post-content",
-      label: "Conteúdo do post",
-      placeholder: isPsychologist ? psychologistContentPlaceholder : contentGuidancePlaceholder,
-      required: true,
-      rows: 5,
-      max: 2000,
-      autoGrow: false,
-      className:
-        "min-h-0 flex h-full flex-1 flex-col gap-0 [&>span:first-child]:sr-only [&>span:last-child]:shrink-0",
-      inputClassName:
-        "create-post-content-input h-full min-h-0 flex-1 resize-none overflow-y-auto rounded-none border-0 border-transparent bg-transparent px-0 pt-0 pb-2 shadow-none focus:border-transparent focus:ring-0",
-    },
-    {
-      name: "anonymous",
-      field: "switch",
-      label: "Publicar anonimamente",
-      className: "hidden",
-    },
-  ] satisfies Field<PostEditForm>[];
-
-const normalizeMediaType = (value?: string | null): "image" | "video" | null => {
-  if (value === "image" || value === "video") return value;
-
-  return null;
-};
+import { PostEditAnonymousControls, PostEditMediaButton } from "./post-edit-modal-controls";
+import {
+  buildFields,
+  COMMUNITY_SELECTOR_ICON_SRC,
+  createSelectedMediaId,
+  EDITOR_FIELD_IDS,
+  type EditablePostMediaPreviewItem,
+  MAX_POST_CAROUSEL_IMAGES,
+  normalizeMediaType,
+  type PostEditForm,
+  type PostEditModalProps,
+  type PostMediaPreviewItem,
+  postEditSchema,
+  type SelectedPostMedia,
+} from "./post-edit-modal-support";
+import { PostEditModalView } from "./post-edit-modal-view";
 
 export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalProps) {
   const storedUser = useAppSelector((state) => state.user);
@@ -293,7 +154,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     () => [...visibleStoredMediaItems, ...selectedMediaPreviewItems],
     [selectedMediaPreviewItems, visibleStoredMediaItems],
   );
-  const focusLastEditor = () => {
+  const focusLastEditor = useCallback(() => {
     window.setTimeout(() => {
       const target = document.getElementById(lastFocusedEditorIdRef.current) as
         | HTMLInputElement
@@ -301,7 +162,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         | null;
       target?.focus({ preventScroll: true });
     }, 0);
-  };
+  }, []);
 
   const preserveEditorFocusFromBlankTap = (event: ReactPointerEvent<HTMLElement>) => {
     if (event.target !== event.currentTarget) return;
@@ -671,45 +532,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     return <Component control={hook.control} key={`edit-post-${String(field.name)}`} {...field} />;
   };
 
-  const renderAnonymousControls = () => (
-    <Controller
-      control={hook.control}
-      name="anonymous"
-      render={({ field }) => {
-        const checked = Boolean(field.value);
-
-        return (
-          <div className="relative min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2.5 opacity-65">
-              <span className="min-w-0 text-[0.78rem] font-bold leading-4 text-muted sm:text-sm">
-                Publicar anonimamente
-              </span>
-              <button
-                aria-checked={checked}
-                aria-label="Publicar anonimamente"
-                className={cn(
-                  "relative h-7 w-12 shrink-0 cursor-not-allowed rounded-full bg-surface-muted ring-1 ring-border transition",
-                  checked && "bg-primary ring-primary/20",
-                )}
-                disabled
-                role="switch"
-                title="O anonimato não pode ser alterado após a publicação."
-                type="button"
-              >
-                <span
-                  className={cn(
-                    "absolute top-1 left-1 h-5 w-5 rounded-full bg-surface shadow-[var(--lectum-shadow-soft)] transition",
-                    checked && "translate-x-5",
-                  )}
-                />
-              </button>
-            </div>
-          </div>
-        );
-      }}
-    />
-  );
-
   const renderSelectedMediaPreview = () => {
     if (editableMediaItems.length === 0) return null;
 
@@ -808,154 +630,48 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       </ul>
     );
   };
-  const renderPsychologistMediaButton = () => (
-    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-      <input
-        accept={COMMUNITY_POST_MEDIA_ACCEPT}
-        className="hidden"
-        multiple
-        onChange={handleMediaChange}
-        ref={fileInputRef}
-        type="file"
-      />
-      <button
-        aria-label="Adicionar mídia ao post"
-        className={cn(
-          "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
-          canManageMedia
-            ? "border-border bg-surface-muted text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
-            : "cursor-not-allowed border-[#E5EAF0] bg-[#F8FAFC] text-[#94A3B8] hover:border-[#E5EAF0] hover:bg-[#F8FAFC] hover:text-[#94A3B8]",
-        )}
-        disabled={!canManageMedia || isSubmitting}
-        onClick={() => {
-          fileInputRef.current?.click();
-          focusLastEditor();
-        }}
-        onMouseDown={(event) => event.preventDefault()}
-        tabIndex={-1}
-        title={canManageMedia ? "Adicionar mídia" : mediaPermission.reason}
-        type="button"
-      >
-        {uploadMutation.isPending ? (
-          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-        ) : (
-          <AnimatedImagesIcon className="h-5 w-5" aria-hidden="true" />
-        )}
-        <span className="hidden sm:inline">Mídia</span>
-      </button>
-
-      {!canManageMedia && mediaPermission.reason ? (
-        <span className="min-w-0 flex-1 basis-52 whitespace-normal text-[#64748B] text-xs font-semibold leading-4">
-          {mediaPermission.reason}
-        </span>
-      ) : null}
-    </div>
-  );
-
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/35 opacity-100 backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-slate-950/35">
-      <section
-        aria-labelledby="edit-post-title-heading"
-        aria-modal="true"
-        className="flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] translate-y-0 flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]"
-        role="dialog"
-      >
-        <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
-          <button
-            aria-label="Fechar edição de post"
-            className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15"
-            disabled={isSubmitting}
-            onClick={onClose}
-            type="button"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <h2 className="text-[1.2rem] font-black tracking-[-0.03em]" id="edit-post-title-heading">
-            Editar Post
-          </h2>
-          <div className="absolute right-3">
-            <button
-              aria-expanded={isGuidanceOpen}
-              aria-label="Ver diretrizes do post"
-              className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
-              onClick={() => {
-                setIsGuidanceOpen((current) => !current);
-                focusLastEditor();
-              }}
-              onMouseDown={(event) => event.preventDefault()}
-              tabIndex={-1}
-              type="button"
-            >
-              <Info className="h-5 w-5" aria-hidden="true" />
-            </button>
-            {isGuidanceOpen ? (
-              <div className="absolute top-12 right-0 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-muted shadow-[var(--lectum-shadow-soft)]">
-                {guidanceText}
-              </div>
-            ) : null}
-          </div>
-        </header>
-
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          noValidate
-          onFocusCapture={(event) => {
-            const target = event.target as HTMLElement;
-            if (EDITOR_FIELD_IDS.has(target.id)) {
-              lastFocusedEditorIdRef.current = target.id;
-            }
-          }}
-          onSubmit={handleSubmit}
-        >
-          <div
-            className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-4 pb-4"
-            onPointerDown={preserveEditorFocusFromBlankTap}
-          >
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                {formProps.fields
-                  .filter((field) => field.name === "community_slug")
-                  .map(renderFormField)}
-              </div>
-
-              <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <div onPointerDown={preserveEditorFocusFromBlankTap}>
-                  {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
-                </div>
-
-                <div
-                  className="flex min-h-0 flex-1 flex-col"
-                  onPointerDown={preserveEditorFocusFromBlankTap}
-                >
-                  {formProps.fields
-                    .filter((field) => field.name === "content")
-                    .map(renderFormField)}
-                  {renderSelectedMediaPreview()}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
-            <div className="flex min-h-12 items-center justify-between gap-3">
-              {canShowMediaControls ? renderPsychologistMediaButton() : renderAnonymousControls()}
-
-              <Button
-                className="h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-lg font-black tracking-[-0.02em] shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none"
-                disabled={isSubmitting}
-                type="submit"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                ) : null}
-                Salvar
-              </Button>
-            </div>
-          </footer>
-        </form>
-      </section>
-    </div>
+    <PostEditModalView
+      communityFields={formProps.fields
+        .filter((field) => field.name === "community_slug")
+        .map(renderFormField)}
+      contentFields={formProps.fields
+        .filter((field) => field.name === "content")
+        .map(renderFormField)}
+      footerControls={
+        canShowMediaControls ? (
+          <PostEditMediaButton
+            canManageMedia={canManageMedia}
+            fileInputRef={fileInputRef}
+            isSubmitting={isSubmitting}
+            isUploading={uploadMutation.isPending}
+            mediaPermissionReason={mediaPermission.reason}
+            onFocusEditor={focusLastEditor}
+            onMediaChange={handleMediaChange}
+          />
+        ) : (
+          <PostEditAnonymousControls control={hook.control} />
+        )
+      }
+      isGuidanceOpen={isGuidanceOpen}
+      isSubmitting={isSubmitting}
+      mediaPreview={renderSelectedMediaPreview()}
+      onClose={onClose}
+      onFocusCapture={(event) => {
+        const target = event.target as HTMLElement;
+        if (EDITOR_FIELD_IDS.has(target.id)) {
+          lastFocusedEditorIdRef.current = target.id;
+        }
+      }}
+      onPointerDown={preserveEditorFocusFromBlankTap}
+      onSubmit={handleSubmit}
+      onToggleGuidance={() => {
+        setIsGuidanceOpen((current) => !current);
+        focusLastEditor();
+      }}
+      titleFields={formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
+    />
   );
 }

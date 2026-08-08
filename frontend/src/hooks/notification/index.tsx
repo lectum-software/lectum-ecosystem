@@ -370,7 +370,7 @@ const NotificationPermissionPrompt = ({
 }) => (
   <div
     className={cn(
-      "fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/35 px-3 pt-6 text-foreground backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-slate-950/35",
+      "fixed inset-0 z-[70] flex items-end justify-center bg-media-background/35 px-3 pt-6 text-foreground backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-media-background/35",
       "pb-[calc(5rem+env(safe-area-inset-bottom))] sm:items-center sm:px-6 sm:pb-6",
     )}
   >
@@ -436,13 +436,13 @@ const NotificationPermissionPrompt = ({
 );
 
 /**
- * Gerencia o push web (TASK-29A/TASK-38). O fluxo in-app (listar/marcar/limpar)
+ * Gerencia o push web. O fluxo in-app (listar/marcar/limpar)
  * vive em `@/api/callers/notification`. Aqui registramos o service worker,
  * revalidamos subscription quando a permissão já está concedida e exibimos o
  * consentimento contextual antes de qualquer chamada a `Notification.requestPermission()`.
  *
- * Sem VAPID configurado no backend (`_product/decisions.md`), a obtenção da key
- * retorna vazio e a inscrição é abortada — sem prometer push.
+ * Sem a chave pública configurada, a obtenção retorna vazio e a inscrição é
+ * abortada sem alterar a preferência do usuário.
  */
 export const NotificationManager = () => {
   const pathname = usePathname();

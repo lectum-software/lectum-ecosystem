@@ -21,7 +21,7 @@ import { accountChangeEmailSchema, accountReasonSchema } from "../../support/sch
 import { FieldRow, InfoCard } from "../general/index";
 
 const booleanBadge = (value: boolean, labels: { false: string; true: string }) => (
-  <Badge className={value ? "bg-emerald-50 text-success" : "bg-orange-50 text-orange-700"}>
+  <Badge className={value ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}>
     {value ? labels.true : labels.false}
   </Badge>
 );
@@ -158,7 +158,7 @@ export const AccountChangeEmailForm = ({
           required
         />
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
           disabled={disabled}
           type="submit"
         >

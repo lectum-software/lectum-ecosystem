@@ -476,7 +476,7 @@ export const buildProfileConversionBehaviorRowContext = ({
   const videoConsumptionText =
     typeof videoAverageWatchSeconds === "number"
       ? `O consumo médio é de ${formatProfileConversionBehaviorSeconds(videoAverageWatchSeconds, "0s")}`
-      : "Ainda não há base real de consumo médio";
+      : "Ainda não há base de consumo médio";
 
   const videoReplayText =
     typeof videoReplayRate === "number"
@@ -485,12 +485,12 @@ export const buildProfileConversionBehaviorRowContext = ({
 
   const videoHeadline =
     videoUnavailableReason ??
-    `${typeof videoRetention === "number" ? `Retenção média de ${formatProfileConversionBehaviorPercentage(videoRetention, "0%")}` : "Retenção média ainda sem base real"}, ${videoEngagementText} (${formatProfileConversionBehaviorCount(videoEngagementActions, "ação", "ações")} no vídeo) e ${describeProfileConversionBehaviorRankingRange(videoRankingRangeSignal, averageVideoRankingPosition)}. ${videoConsumptionText}, com ${formatProfileConversionBehaviorMetricNumber(videoViewsPerVideo, "sem base de views")} views por vídeo, ${videoReplayText} e ${formatProfileConversionBehaviorCount(videoWhatsappClicks, "clique de WhatsApp vindo do vídeo", "cliques de WhatsApp vindos do vídeo")}.`;
+    `${typeof videoRetention === "number" ? `Retenção média de ${formatProfileConversionBehaviorPercentage(videoRetention, "0%")}` : "Retenção média ainda sem base"}, ${videoEngagementText} (${formatProfileConversionBehaviorCount(videoEngagementActions, "ação", "ações")} no vídeo) e ${describeProfileConversionBehaviorRankingRange(videoRankingRangeSignal, averageVideoRankingPosition)}. ${videoConsumptionText}, com ${formatProfileConversionBehaviorMetricNumber(videoViewsPerVideo, "sem base de views")} views por vídeo, ${videoReplayText} e ${formatProfileConversionBehaviorCount(videoWhatsappClicks, "clique de WhatsApp vindo do vídeo", "cliques de WhatsApp vindos do vídeo")}.`;
 
   const profileStayText =
     typeof profileAverageStaySeconds === "number"
       ? `permanência média de ${formatProfileConversionBehaviorSeconds(profileAverageStaySeconds, "0s")}`
-      : "permanência média ainda sem base real";
+      : "permanência média ainda sem base";
 
   const profileWhatsappText =
     typeof profileWhatsappRate === "number"
@@ -499,7 +499,7 @@ export const buildProfileConversionBehaviorRowContext = ({
 
   const profileHeadline =
     profileUnavailableReason ??
-    `Perfil teve ${formatProfileConversionBehaviorCount(profileViews.length, "abertura real", "aberturas reais")} (${formatProfileConversionBehaviorMetricNumber(profileOpeningsPerPsychologist, "sem base")} por psicólogo), com ${profileStayText}. Na navegação interna, ${describeProfileConversionBehaviorDominantProfileTab({ publicationsTabOpens: profilePublicationTabOpens, reviewsTabOpens: profileReviewsTabOpens })}. Usuários também favoritaram esses perfis ${formatProfileConversionBehaviorCount(profileFavorites.length, "vez", "vezes")} (${formatProfileConversionBehaviorMetricNumber(profileFavoritesPerPsychologist, "sem base")} por psicólogo) e geraram ${profileWhatsappText}.`;
+    `Perfil teve ${formatProfileConversionBehaviorCount(profileViews.length, "abertura", "aberturas")} (${formatProfileConversionBehaviorMetricNumber(profileOpeningsPerPsychologist, "sem base")} por psicólogo), com ${profileStayText}. Na navegação interna, ${describeProfileConversionBehaviorDominantProfileTab({ publicationsTabOpens: profilePublicationTabOpens, reviewsTabOpens: profileReviewsTabOpens })}. Usuários também favoritaram esses perfis ${formatProfileConversionBehaviorCount(profileFavorites.length, "vez", "vezes")} (${formatProfileConversionBehaviorMetricNumber(profileFavoritesPerPsychologist, "sem base")} por psicólogo) e geraram ${profileWhatsappText}.`;
 
   const profileDominantTabSignal = describeProfileConversionBehaviorDominantTabSignal({
     publicationsTabOpens: profilePublicationTabOpens,

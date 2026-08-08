@@ -1,4 +1,5 @@
 //Client
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 
 //Objects
@@ -34,7 +35,7 @@ type SensitiveField = { model: string; columns: string[] };
 export class LoginRepository implements ILoginRepository {
   readonly repository: ORM["user"];
   readonly user_token: ORM["user_token"];
-  readonly tokens: any;
+  readonly tokens: Prisma.user$user_tokensArgs;
   readonly device_id: string;
 
   constructor(device_id = "", _allowedSensitive: SensitiveField[] = []) {

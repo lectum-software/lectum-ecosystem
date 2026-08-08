@@ -30,7 +30,7 @@ Em 2026-06-08, o menu privado de perfil passou a reutilizar a mesma normalizacao
 
 Na mesma revisao, a escolha de tema deixou de usar opcao `system` por padrao: `next-themes` fica com `defaultTheme="light"` e a tela de perfil exibe um switch binario para ativar/desativar o modo escuro. A acao "Verificar WhatsApp" foi removida do menu de perfil porque o recorte gratuito trata o WhatsApp como telefone profissional editavel, nao como verificacao OTP nessa tela.
 
-Para endereco profissional, a selecao de cidade passou a usar uma lista local gerada a partir da API oficial de Localidades do IBGE em 2026-06-08 (`/localidades/municipios?orderBy=nome`). A lista fica versionada no frontend em `brazil-cities.ts`, sem pacote novo e sem dependencia de API externa em runtime; apos selecionar UF, a UI mostra as cidades daquele estado em um campo pesquisavel.
+Para endereco profissional, a selecao de cidade passou a usar uma lista local gerada a partir da API oficial de Localidades do IBGE em 2026-06-08 (`/localidades/municipiosãorderBy=nome`). A lista fica versionada no frontend em `brazil-cities.ts`, sem pacote novo e sem dependencia de API externa em runtime; apos selecionar UF, a UI mostra as cidades daquele estado em um campo pesquisavel.
 
 O erro "Estrutura da requisicao invalida" ao salvar o perfil gratuito foi corrigido no controller do backend: como a rota nao usa o middleware `validator`, o service agora recebe explicitamente `auth: req.auth` e `b: req.body`, em vez de esperar `req.b`.
 

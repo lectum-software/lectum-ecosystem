@@ -41,7 +41,7 @@ const resolveRankingError = (error: unknown) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em alguns instantes.";
   }
 
   return rawMessage || "Não foi possível carregar o ranking de mentores agora.";
@@ -59,35 +59,35 @@ const getInitials = (name: string) => {
 const rankTone = (position: number) => {
   if (position === 1) {
     return {
-      listAccent: "text-[#9C7924]",
+      listAccent: "text-top-mentor-gold",
       metal: "top-mentor-metal--gold",
-      name: "text-[#9C7924]",
+      name: "text-top-mentor-gold",
       positionMedal: "top-mentor-position-medal top-mentor-metal--gold",
     };
   }
 
   if (position === 2) {
     return {
-      listAccent: "text-[#64748B]",
+      listAccent: "text-muted",
       metal: "top-mentor-metal--silver",
-      name: "text-[#64748B]",
+      name: "text-muted",
       positionMedal: "top-mentor-position-medal top-mentor-metal--silver",
     };
   }
 
   if (position === 3) {
     return {
-      listAccent: "text-[#A8703A]",
+      listAccent: "text-top-mentor-bronze",
       metal: "top-mentor-metal--bronze",
-      name: "text-[#A8703A]",
+      name: "text-top-mentor-bronze",
       positionMedal: "top-mentor-position-medal top-mentor-metal--bronze",
     };
   }
 
   return {
-    listAccent: "text-[#94A3B8]",
+    listAccent: "text-subtle",
     metal: "",
-    name: "text-[#182033] dark:text-foreground",
+    name: "text-foreground dark:text-foreground",
     positionMedal: "border border-border bg-background text-muted",
   };
 };
@@ -144,7 +144,7 @@ const Avatar = ({
         )}
         style={{ height: size, width: size }}
       >
-        <span className="relative z-10 grid h-full w-full place-items-center overflow-hidden rounded-full border-[3px] border-white bg-primary-soft text-sm font-black text-primary">
+        <span className="relative z-10 grid h-full w-full place-items-center overflow-hidden rounded-full border-[3px] border-media-foreground bg-primary-soft text-sm font-black text-primary">
           {avatarContent}
         </span>
       </span>
@@ -154,7 +154,7 @@ const Avatar = ({
   return (
     <span
       className={cn(
-        "relative grid shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary-soft text-sm font-black text-primary shadow-[var(--lectum-shadow-soft)]",
+        "relative grid shrink-0 place-items-center overflow-hidden rounded-full border-4 border-media-foreground bg-primary-soft text-sm font-black text-primary shadow-[var(--lectum-shadow-soft)]",
         className,
       )}
       style={{ height: size, width: size }}
@@ -193,7 +193,7 @@ const PodiumMentor = ({
         <Avatar mentor={mentor} ringed size={size} />
         <span
           className={cn(
-            "absolute grid place-items-center rounded-full border-2 border-white text-[0.68rem] font-black",
+            "absolute grid place-items-center rounded-full border-2 border-media-foreground text-[0.68rem] font-black",
             isWinner ? "-right-1 top-2 h-9 w-9" : "-right-2 -top-1 h-8 w-8",
             tone.positionMedal,
           )}
@@ -232,10 +232,10 @@ const RankingHero = ({
           aria-label={`Top 5 mentores em ${communityName}`}
           className="grid w-full min-w-0 max-w-[24rem] gap-2 sm:max-w-2xl"
         >
-          <span className="text-[0.72rem] font-black uppercase leading-none tracking-[0.22em] text-[#64748B] dark:text-muted">
+          <span className="text-[0.72rem] font-black uppercase leading-none tracking-[0.22em] text-muted dark:text-muted">
             Top 5 mentores em
           </span>
-          <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.02] tracking-[-0.045em] text-[#182033] [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
+          <span className="max-w-full break-words text-balance text-3xl font-black leading-[1.02] tracking-[-0.045em] text-foreground [overflow-wrap:anywhere] sm:text-5xl dark:text-foreground">
             {communityName}
           </span>
         </h1>
@@ -278,7 +278,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
 
   return (
     <Link
-      className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-[#E5EAF0] bg-white px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface"
+      className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-border bg-surface px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface"
       href={topMentorProfileUrl(mentor.professional.profile_url)}
     >
       <span
@@ -288,7 +288,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         )}
       >
         <Medal
-          className={cn("h-4 w-4", isTopThree ? tone.listAccent : "text-[#CBD5E1]")}
+          className={cn("h-4 w-4", isTopThree ? tone.listAccent : "text-muted")}
           aria-hidden="true"
         />
         <span>{String(mentor.position).padStart(2, "0")}</span>
@@ -296,19 +296,19 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
       <Avatar mentor={mentor} ringed={isTopThree} size={62} />
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-1.5">
-          <strong className="truncate text-base font-black tracking-[-0.02em] text-[#182033] dark:text-foreground">
+          <strong className="truncate text-base font-black tracking-[-0.02em] text-foreground dark:text-foreground">
             {mentor.professional.name}
           </strong>
           <BadgeCheck
-            className="h-4.5 w-4.5 shrink-0 fill-[#2da7ff] text-white"
+            className="h-4.5 w-4.5 shrink-0 fill-primary text-primary-foreground"
             aria-label="Profissional verificado"
           />
         </span>
-        <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-[0.08em] text-[#64748B] dark:text-muted">
+        <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-[0.08em] text-muted dark:text-muted">
           {professionLabel(mentor)}
         </span>
       </span>
-      <ChevronRight className="h-5 w-5 shrink-0 text-[#CBD5E1] transition group-hover:translate-x-1 group-hover:text-primary" />
+      <ChevronRight className="h-5 w-5 shrink-0 text-muted transition group-hover:translate-x-1 group-hover:text-primary" />
     </Link>
   );
 };
@@ -341,7 +341,7 @@ export const CommunityTopMentorsLogic = () => {
         </header>
 
         {ranking.isLoading || ranking.isPending ? (
-          <div className="grid min-h-52 place-items-center rounded-[var(--lectum-card-radius)] border border-border bg-white shadow-[var(--lectum-shadow-soft)] dark:bg-surface">
+          <div className="grid min-h-52 place-items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)] dark:bg-surface">
             <LoadingState label="Carregando mentores" />
           </div>
         ) : null}
@@ -370,10 +370,10 @@ export const CommunityTopMentorsLogic = () => {
         {mentors.length > 0 ? (
           <section className="mx-auto grid w-full min-w-0 max-w-[680px] gap-4">
             <div className="grid min-w-0 gap-1.5">
-              <h2 className="text-sm font-black uppercase tracking-[0.16em] text-[#182033] dark:text-foreground">
+              <h2 className="text-sm font-black uppercase tracking-[0.16em] text-foreground dark:text-foreground">
                 Classificação geral
               </h2>
-              <p className="max-w-2xl text-sm font-medium leading-relaxed text-[#64748B] dark:text-muted">
+              <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted dark:text-muted">
                 Profissionais que mais acolhem e contribuem com a comunidade.
               </p>
             </div>

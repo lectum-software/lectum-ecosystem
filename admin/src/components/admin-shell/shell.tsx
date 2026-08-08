@@ -169,7 +169,7 @@ const SidebarContent = ({
                       "relative flex min-h-12 w-full items-center gap-2 rounded-2xl px-3 text-left text-sm font-bold transition",
                       premiumPilot
                         ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
-                        : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                        : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-sidebar-foreground",
                       isActive &&
                         (premiumPilot
                           ? "bg-sidebar-active text-primary shadow-control ring-1 ring-primary/10"
@@ -203,8 +203,8 @@ const SidebarContent = ({
                         className={cn(
                           "ml-auto inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-2 text-[0.68rem] font-black shadow-admin-soft",
                           moderationUrgentTotal > 0
-                            ? "bg-danger text-white"
-                            : "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+                            ? "bg-danger text-primary-foreground"
+                            : "bg-warning-soft text-warning ring-1 ring-warning-border",
                           collapsed &&
                             "absolute -right-1 top-1 ml-0 h-5 min-w-5 gap-0 px-1 text-[0.62rem]",
                         )}
@@ -261,11 +261,11 @@ const SidebarContent = ({
                               "flex min-h-10 items-center gap-2 rounded-xl border-l px-3 pl-4 text-sm font-bold transition",
                               premiumPilot
                                 ? "border-border text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
-                                : "border-white/10 text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground focus-visible:outline-white",
+                                : "border-sidebar-foreground/10 text-sidebar-muted hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground focus-visible:outline-sidebar-foreground",
                               childIsActive &&
                                 (premiumPilot
                                   ? "border-primary/30 bg-sidebar-active text-primary"
-                                  : "bg-white/10 text-sidebar-foreground"),
+                                  : "bg-sidebar-foreground/10 text-sidebar-foreground"),
                             )}
                             href={child.href}
                             key={child.href}
@@ -311,7 +311,7 @@ const SidebarContent = ({
                   "relative flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-bold transition",
                   premiumPilot
                     ? "text-sidebar-muted hover:bg-sidebar-active hover:text-primary focus-visible:outline-primary"
-                    : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-white",
+                    : "text-sidebar-muted hover:bg-sidebar-active/45 hover:text-sidebar-foreground focus-visible:outline-sidebar-foreground",
                   isActive &&
                     (premiumPilot
                       ? "bg-sidebar-active text-primary shadow-control ring-1 ring-primary/10"
@@ -334,8 +334,8 @@ const SidebarContent = ({
                     className={cn(
                       "ml-auto inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-full px-2 text-[0.68rem] font-black shadow-admin-soft",
                       moderationUrgentTotal > 0
-                        ? "bg-danger text-white"
-                        : "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+                        ? "bg-danger text-primary-foreground"
+                        : "bg-warning-soft text-warning ring-1 ring-warning-border",
                       collapsed &&
                         "absolute -right-1 top-1 ml-0 h-5 min-w-5 gap-0 px-1 text-[0.62rem]",
                     )}
@@ -360,7 +360,10 @@ const SidebarContent = ({
       </nav>
 
       <div
-        className={cn("shrink-0 border-t p-3", premiumPilot ? "border-border" : "border-white/10")}
+        className={cn(
+          "shrink-0 border-t p-3",
+          premiumPilot ? "border-border" : "border-sidebar-foreground/10",
+        )}
       >
         <div
           className={cn(
@@ -368,7 +371,7 @@ const SidebarContent = ({
             collapsed && "justify-center",
           )}
         >
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-sm font-black text-white">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-sm font-black text-primary-foreground">
             {initials}
           </div>
           <div className={cn("min-w-0 flex-1", collapsed && "sr-only")}>
@@ -383,7 +386,7 @@ const SidebarContent = ({
             "mt-2 flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-sm font-bold text-sidebar-muted transition",
             premiumPilot
               ? "hover:bg-sidebar-active hover:text-primary"
-              : "hover:bg-white/10 hover:text-sidebar-foreground",
+              : "hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground",
             collapsed && "justify-center px-2",
           )}
           onClick={() => void logout()}
@@ -425,14 +428,14 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 hidden border-r transition-[width] duration-200 lg:block",
-          premiumPilot ? "border-border shadow-admin-soft" : "border-white/10",
+          premiumPilot ? "border-border shadow-admin-soft" : "border-sidebar-foreground/10",
           collapsed ? "w-20" : "w-64",
         )}
       >
         <button
           aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
           aria-pressed={!collapsed}
-          className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-[0_3px_10px_rgb(15_23_42_/_8%)] transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-[0_6px_14px_rgb(15_23_42_/_10%)] focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
+          className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-control transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-admin-soft focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
           onClick={toggleCollapsed}
           title={collapsed ? "Expandir menu" : "Recolher menu"}
           type="button"
@@ -468,7 +471,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
                 "absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full",
                 premiumPilot
                   ? "border border-border bg-surface text-foreground"
-                  : "bg-white/10 text-white",
+                  : "bg-sidebar-foreground/10 text-sidebar-foreground",
               )}
               onClick={() => setDrawerOpen(false)}
               type="button"

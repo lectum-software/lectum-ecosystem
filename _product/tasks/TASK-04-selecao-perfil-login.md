@@ -31,7 +31,7 @@ As referências visuais são norte de produto e layout. Elas não autorizam recr
 
 ## Contexto
 
-O usuário não-dev precisa conseguir abrir a aplicação, escolher se quer entrar como paciente ou psicólogo e autenticar sem cair em loops de login. O backend já possui base de autenticação e o frontend já possui sessão com cookies, Redux Persist, proxy e `useUserSet`; esta task deve consolidar esse fluxo com visual aderente aos protótipos.
+O usuário não-dev precisa conseguir abrir a aplicação, escolher se quer entrar como paciente ou psicólogo e autenticar sem cair em loops de login. O backend já possui base de autenticação e o frontend usa cookie de sessão `HttpOnly`, Redux somente em memória, proxy e `useUserSet`; esta task deve consolidar esse fluxo com visual aderente aos protótipos.
 
 ## Objetivo
 
@@ -55,7 +55,7 @@ Implementação esperada:
 
 - Criar ou ajustar `/auth/profile-selection` com cards/CTAs para Paciente e Psicólogo.
 - Revisar `/auth/login` usando o protótipo `Login.jpg` e componentes existentes.
-- Preservar `useUserSet`, cookies, Redux Persist, `proxy.ts` e redirects pós-login.
+- Preservar `useUserSet`, cookie `HttpOnly`, Redux em memória, `proxy.ts` e redirects pós-login.
 - Adicionar estados de loading, erro de credenciais, erro Google e sucesso sem textos técnicos.
 - Atualizar `frontend/src/api/req/auth`, `frontend/src/api/callers/auth` e `frontend/src/api/cache/keys.ts` se houver contrato novo.
 

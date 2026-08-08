@@ -51,7 +51,7 @@ const resolveAccountError = (error: unknown, fallback: string) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em instantes.";
   }
 
   return rawMessage || fallback;
@@ -392,7 +392,7 @@ export const AccountSettingsLogic = () => {
         {!account.security.isLoading && !securityError && !security ? (
           <div className="py-6">
             <EmptyState
-              description="Não encontramos dados reais de conta para editar neste momento."
+              description="Não encontramos os dados da conta para edição neste momento."
               icon={ShieldCheck}
               title="Nenhum dado de conta encontrado"
             />

@@ -27,7 +27,7 @@ const resolveSuggestError = (error: unknown) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em alguns instantes.";
   }
 
   return rawMessage || "Não foi possível enviar sua sugestão agora.";

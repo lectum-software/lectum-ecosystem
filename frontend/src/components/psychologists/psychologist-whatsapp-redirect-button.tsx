@@ -253,7 +253,7 @@ export const PsychologistWhatsAppRedirectModal = ({
         {manualFallbackVisible ? (
           <div className="mt-5 grid gap-3">
             <Button
-              className="h-11 rounded-2xl bg-success text-white hover:bg-success/90"
+              className="h-11 rounded-2xl bg-success text-primary-foreground hover:bg-success/90"
               disabled={!redirectUrl}
               onClick={onManualOpen}
             >

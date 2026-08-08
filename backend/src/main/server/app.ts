@@ -11,6 +11,7 @@ import { getLimiter } from "@/external/limiter";
 import prisma from "@/infra/database/prisma";
 import { errorHandler, errorRoute } from "@/main/server/error";
 import { socket } from "@/main/socket";
+import { getTrustProxySetting } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 import swagger from "./documents";
@@ -27,19 +28,7 @@ const getBodyLimit = () => {
   return configured && /^\d+(?:kb|mb)$/.test(configured) ? configured : "1mb";
 };
 
-const getTrustProxy = () => {
-  const rawTrustProxy = process.env.TRUST_PROXY?.trim();
-
-  if (!rawTrustProxy) return false;
-  if (rawTrustProxy === "true") return true;
-  if (rawTrustProxy === "false") return false;
-
-  const parsedTrustProxy = Number(rawTrustProxy);
-
-  return Number.isInteger(parsedTrustProxy) && parsedTrustProxy >= 0 ? parsedTrustProxy : false;
-};
-
-server.set("trust proxy", getTrustProxy());
+server.set("trust proxy", getTrustProxySetting());
 server.use(
   helmet({
     crossOriginResourcePolicy: {

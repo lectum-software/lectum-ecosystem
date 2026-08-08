@@ -83,7 +83,7 @@ Verificação de e-mail **reaproveita os campos já existentes** `user.confirmed
 Resumo dos campos relevantes do `user` atual (fonte: `schema.prisma`):
 
 - `name`, `email @unique`, `avatar?`, `provider @default("manual")`, `password?`, `password_confirm?` legado.
-- `active @default(true)`, `account_status @default("active")`, `account_status_changed_at?`, `account_status_expires_at?`, `need_reset @default(false)`.
+- `active @default(true)`, `account_status @default("active")`, `account_status_changed_até`, `account_status_expires_até`, `need_reset @default(false)`.
 - `confirmed @default(false)`, `confirmed_date?`, `confirm_code?`, `confirm_date?` → verificação de e-mail.
 - `has_seen_discover_psychologists_tip @default(false)`, `has_seen_psychologists_my_search_tip @default(false)`, `has_seen_psychologist_whatsapp_tip @default(false)`, `has_seen_psychologist_profile_video_tip @default(false)`, `has_seen_psychologist_reply_tip @default(false)`, `has_seen_psychologist_original_post_tip @default(false)`, `has_seen_community_post_tip @default(false)` → dicas/onboarding one-shot por usuário.
 - `recovery_code?`, `recovery_date?` → recuperação de senha.
@@ -897,7 +897,7 @@ Complemento 2026-07-10: quando uma cortesia administrativa ativa precisa ser rev
 | `user_id` | `String` | |
 | `gateway` | `String` | |
 | `gateway_token` | `String` | **token do provedor**; nunca PAN/CVV. Cartão é delegado ao gateway |
-| `brand?`, `last4?`, `exp_month?`, `exp_year?` | display only | |
+| `brand?`, `last4?`, `exp_monthá`, `exp_year?` | display only | |
 | `@@index([user_id])` | | |
 
 O fluxo de alteração de cartão da TASK-33 segue a mesma regra do checkout: re-tokenizar somente cartão de crédito (`credit_card`) no client, enviar `payment_type_id = credit_card` ao backend e rejeitar débito/pré-pago.

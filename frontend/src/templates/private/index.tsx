@@ -1,20 +1,12 @@
 "use client";
 
-import { Bell, ChevronLeft, Heart, Home, Plus, Search, UserRound } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ComponentType, CSSProperties, PropsWithChildren } from "react";
-import {
-  type MouseEvent as ReactMouseEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/api/callers/auth";
 import { useUnreadNotificationStatus } from "@/api/callers/notification";
-import type { user } from "@/api/generator/types";
 import { RestrictedAreaState } from "@/components/auth/restricted-area-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Logo, LogoIcon } from "@/components/ui/logo";
@@ -25,365 +17,33 @@ import { NotificationManager } from "@/hooks/notification";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import * as userActions from "@/store/modules/user/actions";
-import {
-  COMMUNITY_FEED_SLUG,
-  DEFAULT_COMMUNITY_FEED_HREF,
-  LEGACY_COMMUNITY_FEED_HREF,
-} from "@/utils/community";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
+import { getPsychologistPaidOnboardingRequirementPath } from "@/utils/psychologist-onboarding";
+
 import {
-  getPsychologistPaidOnboardingRequirementPath,
-  PSYCHOLOGIST_ONBOARDING_PATHS,
-} from "@/utils/psychologist-onboarding";
-
-type PrivateTemplateProps = PropsWithChildren<{
-  allowAnonymous?: boolean;
-  autoHideNavigation?: boolean;
-  bottomNavigationCenterAction?: {
-    ariaLabel: string;
-    href: string;
-    onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
-    scroll?: boolean;
-    title?: string;
-  };
-  contentClassName?: string;
-  desktopSidebarDefaultCollapsed?: boolean;
-  desktopNavigation?: "bottom" | "sidebar";
-  navigationDimmed?: boolean;
-  navigationHidden?: boolean;
-  navigationTheme?: "default" | "solidWhite";
-  showHeader?: boolean;
-  showMobileNavigation?: boolean;
-  showNavigation?: boolean;
-}>;
-
-type UserRole = NonNullable<user["role"]>;
-
-type NavigationIconProps = {
-  "aria-hidden"?: boolean | "false" | "true";
-  className?: string;
-};
-
-type NavigationIcon = ComponentType<NavigationIconProps>;
-
-type NavigationItem = {
-  href: string;
-  icon: NavigationIcon;
-  label: string;
-  mobileIcon?: NavigationIcon;
-  title: string;
-};
-
-const NOTIFICATIONS_HREF = "/app/notificacoes";
-const NEED_RESET_PATH = "/app/conta/redefinir-senha";
-const DEFAULT_RESTRICTED_AREA_COPY = {
-  description:
-    "Entre ou crie sua conta para acessar seu perfil, salvar preferências e continuar sua experiência na Lectum.",
-  title: "Acesse sua conta",
-};
-const COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY = {
-  ...DEFAULT_RESTRICTED_AREA_COPY,
-  description:
-    "Faça login para acessar o ranking dos principais mentores da comunidade e acompanhar quem mais contribui nas discussões.",
-};
-
-const RESTRICTED_AREA_COPY_BY_PATH = new Map<string, typeof DEFAULT_RESTRICTED_AREA_COPY>([
-  ["/app/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
-  ["/comunidades/top-mentores", COMMUNITY_TOP_MENTORS_RESTRICTED_AREA_COPY],
-  [
-    "/app/favoritos",
-    {
-      description:
-        "Crie uma conta gratuita para salvar psicólogos, posts e respostas que quiser consultar depois.",
-      title: "Salve seus favoritos",
-    },
-  ],
-  [
-    "/app/notificacoes",
-    {
-      description:
-        "Entre ou crie sua conta para acompanhar respostas, interações e atualizações das comunidades.",
-      title: "Acompanhe suas notificações",
-    },
-  ],
-  [
-    "/app/perfil",
-    {
-      description:
-        "Crie sua conta gratuita para salvar suas preferências e continuar sua experiência na Lectum.",
-      title: "Acesse sua conta",
-    },
-  ],
-]);
-
-const NotificationUnreadIndicator = () => (
-  <span
-    aria-hidden="true"
-    className="-right-1 -top-1 absolute h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-surface"
-  />
-);
-
-const fallbackNavigation: NavigationItem[] = [
-  {
-    href: DEFAULT_COMMUNITY_FEED_HREF,
-    icon: Home,
-    label: "Início",
-    title: "Início",
-  },
-  {
-    href: "/psicologos",
-    icon: Search,
-    label: "Psicólogos",
-    title: "Encontre seu psicólogo",
-  },
-  {
-    href: "/app/favoritos",
-    icon: Heart,
-    label: "Favoritos",
-    title: "Favoritos",
-  },
-  {
-    href: "/app/notificacoes",
-    icon: Bell,
-    label: "Notificações",
-    title: "Notificações",
-  },
-  {
-    href: "/app/perfil",
-    icon: UserRound,
-    label: "Perfil",
-    title: "Meu Perfil",
-  },
-];
-
-const navigationByRole: Record<Extract<UserRole, "paciente" | "psicologo">, NavigationItem[]> = {
-  paciente: [
-    {
-      href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: Home,
-      label: "Início",
-      title: "Início",
-    },
-    {
-      href: "/psicologos",
-      icon: Search,
-      label: "Psicólogos",
-      title: "Encontre seu psicólogo",
-    },
-    {
-      href: "/app/favoritos",
-      icon: Heart,
-      label: "Favoritos",
-      title: "Favoritos",
-    },
-    {
-      href: "/app/notificacoes",
-      icon: Bell,
-      label: "Notificações",
-      title: "Notificações",
-    },
-    {
-      href: "/app/perfil",
-      icon: UserRound,
-      label: "Perfil",
-      title: "Meu Perfil",
-    },
-  ],
-  psicologo: [
-    {
-      href: DEFAULT_COMMUNITY_FEED_HREF,
-      icon: Home,
-      label: "Início",
-      title: "Início",
-    },
-    {
-      href: "/psicologos",
-      icon: Search,
-      label: "Psicólogos",
-      title: "Psicólogos",
-    },
-    {
-      href: "/app/favoritos",
-      icon: Heart,
-      label: "Favoritos",
-      title: "Favoritos",
-    },
-    {
-      href: "/app/notificacoes",
-      icon: Bell,
-      label: "Notificações",
-      title: "Notificações",
-    },
-    {
-      href: "/app/perfil",
-      icon: UserRound,
-      label: "Perfil",
-      title: "Meu Perfil",
-    },
-  ],
-};
-
-const getNavigation = (role?: user["role"] | null) => {
-  if (role === "paciente" || role === "psicologo") {
-    return navigationByRole[role];
-  }
-
-  return fallbackNavigation;
-};
-
-const normalizePathname = (pathname: string) => {
-  if (pathname.length <= 1) return pathname;
-
-  return pathname.replace(/\/+$/, "");
-};
-
-const isPathOrDescendant = (pathname: string, target: string) =>
-  pathname === target || pathname.startsWith(`${target}/`);
-
-const canStayDuringPaidOnboarding = (pathname: string, requiredPath: string) => {
-  if (isPathOrDescendant(pathname, requiredPath)) return true;
-
-  if (requiredPath === PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress) {
-    return isPathOrDescendant(pathname, PSYCHOLOGIST_ONBOARDING_PATHS.checkout);
-  }
-
-  return PAID_ONBOARDING_MANAGEMENT_PATHS.has(pathname);
-};
-
-const getNavigationContextPathname = (pathname: string) => {
-  const normalizedPathname = normalizePathname(pathname);
-  const segments = normalizedPathname.split("/").filter(Boolean);
-
-  if (normalizedPathname === LEGACY_COMMUNITY_FEED_HREF) {
-    return DEFAULT_COMMUNITY_FEED_HREF;
-  }
-
-  if (
-    segments.length === 5 &&
-    segments[0] === "app" &&
-    (segments[1] === "community" || segments[1] === "comunidades") &&
-    (segments[3] === "post" || segments[3] === "publicacao") &&
-    (segments[4] === "new" || segments[4] === "nova")
-  ) {
-    if (segments[2] === COMMUNITY_FEED_SLUG) {
-      return DEFAULT_COMMUNITY_FEED_HREF;
-    }
-
-    return `/comunidades/${segments[2]}`;
-  }
-
-  return normalizedPathname;
-};
-
-const PRIMARY_DESKTOP_NAVIGATION_PATHS = new Set([
-  "/psicologos",
-  "/app/favoritos",
-  DEFAULT_COMMUNITY_FEED_HREF,
-  "/app/notificacoes",
-  "/app/perfil",
-]);
-
-const PAID_ONBOARDING_MANAGEMENT_PATHS = new Set([
-  "/app/profissional/assinatura",
-  "/app/profissional/assinatura/cartao",
-  "/app/profissional/assinatura/planos",
-  "/app/profissional/assinatura/gerenciar",
-  "/app/configuracoes/conta",
+  canStayDuringPaidOnboarding,
+  DEFAULT_RESTRICTED_AREA_COPY,
+  getMobileNavigationActiveHref,
+  getNavigation,
+  getNavigationContextPathname,
+  isDesktopActivePath,
+  isPathOrDescendant,
+  isPrimaryDesktopNavigationPath,
   NEED_RESET_PATH,
-]);
+  NOTIFICATIONS_HREF,
+  NotificationUnreadIndicator,
+  normalizePathname,
+  type PrivateTemplateProps,
+  RESTRICTED_AREA_COPY_BY_PATH,
+  shouldShowMobileNavigationForPath,
+} from "./navigation";
 
-const isPrimaryDesktopNavigationPath = (pathname: string) => {
-  return PRIMARY_DESKTOP_NAVIGATION_PATHS.has(pathname);
-};
-
-const isDesktopActivePath = (pathname: string, item: NavigationItem) => {
-  return isPrimaryDesktopNavigationPath(pathname) && pathname === item.href;
-};
-
-const MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH = new Map<string, string>([
-  ["/psicologos", "/psicologos"],
-  ["/app/favoritos", "/app/favoritos"],
-  [DEFAULT_COMMUNITY_FEED_HREF, DEFAULT_COMMUNITY_FEED_HREF],
-  ["/app/notificacoes", "/app/notificacoes"],
-  ["/app/perfil", "/app/perfil"],
-]);
-
-const COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS = new Set([
-  COMMUNITY_FEED_SLUG,
-  "publicacao",
-  "post",
-  "suggest",
-  "top-mentors",
-  "top-mentores",
-]);
-
-const isCommunityMainMobileNavigationPath = (pathname: string) => {
-  const segments = normalizePathname(pathname).split("/").filter(Boolean);
-
-  return (
-    segments.length === 2 &&
-    (segments[0] === "community" || segments[0] === "comunidades") &&
-    !COMMUNITY_MAIN_ROUTE_RESERVED_SEGMENTS.has(segments[1])
-  );
-};
-
-const isPsychologistProfileMobileNavigationPath = (pathname: string) => {
-  const segments = normalizePathname(pathname).split("/").filter(Boolean);
-
-  return segments.length === 2 && (segments[0] === "psychologists" || segments[0] === "psicologos");
-};
-
-const shouldShowMobileNavigationForPath = (pathname: string) => {
-  const normalizedPathname = normalizePathname(pathname);
-
-  return (
-    MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.has(normalizedPathname) ||
-    isCommunityMainMobileNavigationPath(normalizedPathname) ||
-    isPsychologistProfileMobileNavigationPath(normalizedPathname)
-  );
-};
-
-const getMobileNavigationActiveHref = (pathname: string) => {
-  const normalizedPathname = normalizePathname(pathname);
-
-  if (isPsychologistProfileMobileNavigationPath(normalizedPathname)) {
-    return "/psicologos";
-  }
-
-  return MOBILE_NAVIGATION_ACTIVE_HREF_BY_PATH.get(normalizedPathname) ?? null;
-};
-
-const DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX = "lectum.desktopSidebar";
-const DESKTOP_SIDEBAR_STORAGE_EVENT = "lectum:desktop-sidebar-change";
-
-const getDesktopSidebarStorageKey = (pathname: string) => {
-  return `${DESKTOP_SIDEBAR_STORAGE_KEY_PREFIX}:${pathname}`;
-};
-
-const readDesktopSidebarPreference = (pathname: string) => {
-  if (typeof window === "undefined") return null;
-
-  const storedPreference = window.localStorage.getItem(getDesktopSidebarStorageKey(pathname));
-
-  if (storedPreference === "collapsed") return true;
-  if (storedPreference === "expanded") return false;
-
-  return null;
-};
-
-const subscribeDesktopSidebarPreference = (onStoreChange: () => void) => {
-  if (typeof window === "undefined") return () => undefined;
-
-  const handleStoreChange = () => onStoreChange();
-
-  window.addEventListener("storage", handleStoreChange);
-  window.addEventListener(DESKTOP_SIDEBAR_STORAGE_EVENT, handleStoreChange);
-
-  return () => {
-    window.removeEventListener("storage", handleStoreChange);
-    window.removeEventListener(DESKTOP_SIDEBAR_STORAGE_EVENT, handleStoreChange);
-  };
-};
+import {
+  DESKTOP_SIDEBAR_STORAGE_EVENT,
+  getDesktopSidebarStorageKey,
+  readDesktopSidebarPreference,
+  subscribeDesktopSidebarPreference,
+} from "./sidebar-preference";
 
 export const PrivateTemplate = ({
   allowAnonymous = false,
@@ -576,8 +236,8 @@ export const PrivateTemplate = ({
         "fixed inset-x-0 bottom-0 z-40 transition-[transform,opacity,filter] duration-200 ease-out sm:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:rounded-[var(--lectum-card-radius)] lg:hidden",
         navigationDimmed ? "opacity-55 brightness-90 saturate-75" : "opacity-100",
         navigationTheme === "solidWhite"
-          ? "border-t border-[#e5e7eb] bg-white text-foreground shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] dark:border-border dark:bg-surface dark:shadow-[0_-14px_34px_rgb(0_0_0_/_28%)]"
-          : "border-t border-border bg-surface/95 text-foreground shadow-[0_-10px_30px_rgb(15_23_42_/_8%)] backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border dark:shadow-[0_-14px_34px_rgb(0_0_0_/_28%)]",
+          ? "border-t border-border bg-surface text-foreground shadow-lectum-soft dark:border-border dark:bg-surface dark:shadow-lectum-soft"
+          : "border-t border-border bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border dark:shadow-lectum-soft",
       )}
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
@@ -597,7 +257,7 @@ export const PrivateTemplate = ({
               <li className="relative flex min-h-16 items-center justify-center" key="create-post">
                 <Link
                   aria-label={bottomNavigationCenterAction.ariaLabel}
-                  className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-white bg-primary text-white shadow-[0_12px_28px_rgba(48,140,232,0.28)] transition hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-surface dark:shadow-[0_14px_30px_rgb(0_0_0_/_35%)]"
+                  className="absolute -top-3 grid h-14 w-14 place-items-center rounded-full border-[5px] border-media-foreground bg-primary text-primary-foreground shadow-lectum-soft transition hover:-translate-y-px hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-surface dark:shadow-lectum-soft"
                   href={bottomNavigationCenterAction.href}
                   onClick={bottomNavigationCenterAction.onClick}
                   scroll={bottomNavigationCenterAction.scroll}
@@ -655,7 +315,7 @@ export const PrivateTemplate = ({
       <button
         aria-label={isDesktopSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
         aria-pressed={!isDesktopSidebarCollapsed}
-        className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-[0_3px_10px_rgb(15_23_42_/_8%)] transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-[0_6px_14px_rgb(15_23_42_/_10%)] focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
+        className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-lectum-soft transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-lectum-soft focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
         onClick={toggleDesktopSidebar}
         title={isDesktopSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
         type="button"

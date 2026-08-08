@@ -29,22 +29,20 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
     });
   }
 
+  const device = getDevice(req);
+  if (device.err) return next();
+
   try {
     passport.authenticate("jwt-user-api", async (_: NotAuthorized, login: user) => {
       if (!login) return next();
 
-      const deviceId = req?.headers?.["x-device"] as string;
-      const token = await passToken(login, deviceId, requestToken);
+      const token = await passToken(login, device.id, requestToken);
       if (token.err) return next();
 
       const logged = await passLogin(login);
       if (logged.err) return next();
 
-      const device = getDevice(req);
-      if (!device.err) {
-        req.device = device.id;
-      }
-
+      req.device = device.id;
       req.auth = login;
 
       return next();

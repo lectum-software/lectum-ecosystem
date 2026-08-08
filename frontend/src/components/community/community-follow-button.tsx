@@ -28,10 +28,10 @@ export const CommunityFollowButton = ({
         ? "h-10 min-w-[108px] gap-2 px-5 text-[13px]"
         : "h-8 gap-1.5 px-3.5 text-[11px]",
       following
-        ? "border-[#E2E8F0] bg-[#F1F5F9] text-[#475569] hover:border-[#D8E0EA] hover:bg-[#E8EEF5] dark:border-border dark:bg-surface-muted dark:text-muted"
+        ? "border-border bg-surface-muted text-muted hover:border-border hover:bg-surface-muted dark:border-border dark:bg-surface-muted dark:text-muted"
         : followVariant === "primary"
-          ? "border-primary bg-primary text-white hover:border-primary-hover hover:bg-primary-hover"
-          : "border-primary/45 bg-white text-primary hover:border-primary/60 hover:bg-primary-soft/75 dark:bg-surface",
+          ? "border-primary bg-primary text-primary-foreground hover:border-primary-hover hover:bg-primary-hover"
+          : "border-primary/45 bg-surface text-primary hover:border-primary/60 hover:bg-primary-soft/75 dark:bg-surface",
       className,
     )}
     disabled={disabled || pending}

@@ -40,7 +40,7 @@ O Builder/Quick Copy não estava acessível neste ambiente. A referência visual
 - `pnpm --dir frontend build`
 - `pnpm --dir backend build`
 - `pnpm check`
-- HTTP local em `http://127.0.0.1:3100/app/favorites` respondeu `200` usando `next start` ap?s build.
+- HTTP local em `http://127.0.0.1:3100/app/favorites` respondeu `200` usando `next start` após build.
 
 ## Pendências
 
@@ -441,7 +441,7 @@ Produto apontou que a microtipografia dos chips de Favoritos e do CTA `WhatsApp`
 - Reduzir a fonte das chips de Favoritos para 9.5px, mantendo altura e superficie ja aprovadas.
 - Reduzir o CTA `WhatsApp` para 0.68rem no mobile e 0.72rem em telas maiores, com icone de 12px.
 - Trocar a composicao do nome de duas linhas por um container flex em linha unica.
-- Colocar o texto do nome em `truncate` e o selo verificado em `shrink-0`, garantindo que o selo permane?a visivel mesmo quando o nome precisar de reticencias.
+- Colocar o texto do nome em `truncate` e o selo verificado em `shrink-0`, garantindo que o selo permaneça visivel mesmo quando o nome precisar de reticencias.
 
 ### Consequencias
 

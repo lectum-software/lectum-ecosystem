@@ -23,7 +23,7 @@ Formato recomendado:
 - [ADR-0007 - Notificações: fundação de recebimento (TASK-29A)](0007-notificacoes-fundacao.md) — Accepted
 - [ADR-0008 - Fluxo publico de auth, selecao de perfil e login](0008-fluxo-publico-auth-selecao-perfil-login.md) — Accepted
 - [ADR-0009 - Migrations dev obrigatorias em tasks com alteracao de banco](0009-migrations-dev-obrigatorias-em-tasks-com-banco.md) — Accepted
-- [ADR-0010 - Fluxo frontend de recuperacao de senha](0010-recuperacao-senha-frontend.md) ? Accepted
+- [ADR-0010 - Fluxo frontend de recuperacao de senha](0010-recuperacao-senha-frontend.md) — Accepted
 - [ADR-0011 - Verificacao de e-mail por codigo](0011-verificacao-email-codigo.md) - Accepted
 - [ADR-0012 - Cadastro de paciente com role e patient_profile](0012-cadastro-paciente-role-profile.md) - Accepted
 - [ADR-0013 - Onboarding de boas-vindas do paciente](0013-onboarding-boas-vindas-paciente.md) - Accepted
@@ -84,7 +84,7 @@ Formato recomendado:
 - [ADR-0087 - Header interno preso ao card no feed desktop de Psicologos](0087-header-interno-card-psicologos-desktop.md) - Accepted
 - [ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional](0096-detalhe-post-composer-denuncia-midia.md) - Accepted
 - [ADR-0108 - Publicações do perfil como posts reais da comunidade](0108-publicacoes-perfil-como-posts-comunidade.md) - Accepted
-- [ADR-0109 - Dicas de onboarding persistidas por usu�rio](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted
+- [ADR-0109 - Dicas de onboarding persistidas por usuário](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted
 - [ADR-0110 - Publicacoes compactas no perfil e WhatsApp como acao mobile unica](0110-publicacoes-perfil-mobile-whatsapp-unico.md) - Accepted
 - [ADR-0119 - Header secundário premium compartilhado](0119-header-secundario-premium-compartilhado.md) - Accepted
 - [ADR-0120 - Video obrigatorio para perfil publico e Bio opcional](0120-video-obrigatorio-perfil-publico-bio-opcional.md) - Accepted
@@ -164,8 +164,8 @@ Formato recomendado:
 - [ADR-0341 - Vocabulário Conversão no Admin de psicólogos](0341-vocabulario-conversao-admin.md) - Accepted
 - [ADR-0342 - Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md) - Accepted
 - [ADR-0343 - Vocabulário Conversão no Admin de psicólogos](0343-vocabulario-conversao-admin.md) - Accepted
-- [ADR-0350 - P?ginas por tempo m?dio no uso da plataforma Admin](0350-paginas-por-tempo-medio-uso-admin.md) - Accepted
-- [ADR-0353 - Qualidade absoluta da convers�o no perfil Admin do psic�logo](0353-qualidade-absoluta-conversao-perfil-admin.md) - Accepted
+- [ADR-0350 - Páginas por tempo médio no uso da plataforma Admin](0350-paginas-por-tempo-medio-uso-admin.md) - Accepted
+- [ADR-0353 - Qualidade absoluta da conversão no perfil Admin do psicólogo](0353-qualidade-absoluta-conversao-perfil-admin.md) - Accepted
 - [ADR-0377 - Tag de resultado no titulo de Visibilidade do psicologo Admin](0377-tag-resultado-titulo-visibilidade-psicologo-admin.md) - Accepted
 - [ADR-0378 - Origem do trafego por WhatsApp no Admin de psicologos](0378-origem-trafego-whatsapp-psicologos-admin.md) - Accepted
 - [ADR-0379 - Grupo visual de Comunidades na tabela de trafego WhatsApp Admin](0379-grupo-comunidades-tabela-trafego-whatsapp-admin.md) - Accepted
@@ -213,3 +213,4 @@ Formato recomendado:
 - [ADR-0418 - Auditoria de produção, segurança e estabilidade](0418-auditoria-producao-seguranca-estabilidade.md) - Accepted
 - [ADR-0419 - Divisão modular de features complexas](0419-divisao-modular-features-complexas.md) - Accepted
 - [ADR-0420 - Swagger compatível com o runtime compilado](0420-swagger-compativel-runtime-compilado.md) - Accepted
+- [ADR-0421 - Guardrails finais da auditoria integral](0421-guardrails-finais-auditoria-integral.md) - Accepted

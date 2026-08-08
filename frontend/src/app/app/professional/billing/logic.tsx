@@ -365,7 +365,7 @@ export const ProfessionalBillingLogic = () => {
                 </Link>
               </Button>
             }
-            description="Nenhuma assinatura real foi encontrada para o seu perfil. Escolha um plano para continuar."
+            description="Nenhuma assinatura foi encontrada para o seu perfil. Escolha um plano para continuar."
             icon={CreditCard}
             title="Assinatura não encontrada"
           />

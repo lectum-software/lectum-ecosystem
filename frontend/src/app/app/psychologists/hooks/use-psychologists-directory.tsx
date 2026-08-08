@@ -239,7 +239,7 @@ export const usePsychologistsDirectory = () => {
           visitor_id: analyticsIdentity.visitorId,
         })
         .catch(() => {
-          // Analytics first-party não deve bloquear navegação ou interação do vídeo.
+          // O rastreamento não deve bloquear a navegação ou a interação do vídeo.
         });
     },
     [importantActionTracking],
@@ -271,7 +271,7 @@ export const usePsychologistsDirectory = () => {
             target_type: item.targetType,
           })
           .catch(() => {
-            // Analytics first-party não deve bloquear a aplicação dos filtros.
+            // O rastreamento não deve bloquear a aplicação dos filtros.
           });
       }
     },

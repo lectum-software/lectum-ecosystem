@@ -46,7 +46,9 @@ export const openPendingAdminViewAsTab = () => {
   tab.document.body.style.fontFamily =
     "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
   tab.document.body.style.padding = "24px";
-  tab.document.body.style.color = "#05183F";
+  tab.document.body.style.color = getComputedStyle(document.documentElement)
+    .getPropertyValue("--admin-foreground")
+    .trim();
   tab.document.body.textContent =
     "Preparando visualização administrativa em modo somente leitura...";
 

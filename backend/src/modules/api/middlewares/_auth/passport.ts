@@ -26,7 +26,7 @@ import { getUserJwtTtlSeconds } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
 //Emits
-import { getJwtSecret } from "./utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "./utils/jwt-secret";
 
 dotenv.config();
 
@@ -154,7 +154,9 @@ passport.use(
           let payload: GoogleLinkPayload;
 
           try {
-            payload = jwt.verify(linkToken, getJwtSecret()) as GoogleLinkPayload;
+            payload = jwt.verify(linkToken, getJwtSecret(), {
+              algorithms: [JWT_ALGORITHM],
+            }) as GoogleLinkPayload;
           } catch {
             return done(null, {
               status: 400,
@@ -274,7 +276,9 @@ passport.use(
           let payload: GoogleDeleteAccountPayload;
 
           try {
-            payload = jwt.verify(deleteToken, getJwtSecret()) as GoogleDeleteAccountPayload;
+            payload = jwt.verify(deleteToken, getJwtSecret(), {
+              algorithms: [JWT_ALGORITHM],
+            }) as GoogleDeleteAccountPayload;
           } catch {
             return done(null, {
               status: 400,
@@ -481,6 +485,7 @@ passport.use(
 
 // Estratégia JWT
 const jwtOptions = {
+  algorithms: [JWT_ALGORITHM],
   jsonWebTokenOptions: {
     maxAge: getUserJwtTtlSeconds(),
   },

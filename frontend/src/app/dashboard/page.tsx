@@ -1,5 +1,5 @@
-import { DashboardLogic } from "./logic";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <DashboardLogic />;
+  redirect("/app");
 }

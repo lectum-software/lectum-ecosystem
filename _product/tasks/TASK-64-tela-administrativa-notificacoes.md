@@ -298,22 +298,22 @@ UI:
 
 ## Ajuste complementar 2026-07-21 - CTA e topo simplificado
 
-- Pedido do usu?rio: remover filtros de **Per?odo**, **De** e **At?** do header, mover **Nova notifica??o** para **Campanhas manuais**, remover a faixa operacional, simplificar o subt?tulo de contagem, remover a linha acima dos filtros e ajustar o grid para n?o cortar o ?ltimo campo de data.
-- O header fica apenas com contexto, t?tulo e subt?tulo; m?tricas seguem consultando **Todo o per?odo** por padr?o e os filtros de per?odo/data ficam somente nos blocos das tabelas.
-- O CTA **Nova notifica??o** passa a morar no cabe?alho do card **Campanhas manuais**.
-- O aviso operacional ?Esta tela cria campanhas manuais...? foi removido; a contagem de campanhas fica como `0 campanha(s) encontrada(s).`.
-- O cabe?alho do card n?o renderiza mais borda divis?ria acima dos filtros; os filtros ganharam `min-w-0`, padding `md:p-5` e grid em `xl`/`2xl` para preservar margem padr?o e evitar corte no campo **Data: At?**.
-- N?o houve mudan?a de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais dispon?veis ou formul?rios RHF/Zod.
-- Builder/Quick Copy n?o esteve dispon?vel como ferramenta callable neste ambiente; a refer?ncia visual audit?vel permaneceu `_product/proto/admin/Notifica??es.png` e a captura enviada pelo usu?rio.
+- Pedido do usuário: remover filtros de **Período**, **De** e **Até** do header, mover **Nova notificação** para **Campanhas manuais**, remover a faixa operacional, simplificar o subtítulo de contagem, remover a linha acima dos filtros e ajustar o grid para não cortar o Último campo de data.
+- O header fica apenas com contexto, título e subtítulo; métricas seguem consultando **Todo o período** por padrão e os filtros de período/data ficam somente nos blocos das tabelas.
+- O CTA **Nova notificação** passa a morar no cabeçalho do card **Campanhas manuais**.
+- O aviso operacional “Esta tela cria campanhas manuais...” foi removido; a contagem de campanhas fica como `0 campanha(s) encontrada(s).`.
+- O cabeçalho do card não renderiza mais borda divisória acima dos filtros; os filtros ganharam `min-w-0`, padding `md:p-5` e grid em `xl`/`2xl` para preservar margem padrão e evitar corte no campo **Data: Até**.
+- Não houve mudança de backend, Prisma/migrations, packages, contratos HTTP, dados persistidos, canais disponíveis ou formulários RHF/Zod.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; a referência visual auditável permaneceu `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
 
-### Valida??o deste ajuste
+### Validação deste ajuste
 
 - `pnpm --dir admin exec biome check "src/app/(admin)/notificacoes/client.tsx"`
 - `pnpm --dir admin exec eslint "src/app/(admin)/notificacoes/client.tsx"`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/notificacoes` retornou `200`.
-- Browser autenticado completo n?o foi repetido nesta execu??o porque n?o h? sess?o Admin interativa acess?vel ao ambiente; a valida??o visual usou a captura enviada pelo usu?rio e o PNG local de refer?ncia.
+- Browser autenticado completo não foi repetido nesta execução porque não há sessão Admin interativa acessível ao ambiente; a validação visual usou a captura enviada pelo usuário e o PNG local de referência.
 
 ## Ajuste complementar 2026-07-21 - Copy de notificações e setas dos filtros
 

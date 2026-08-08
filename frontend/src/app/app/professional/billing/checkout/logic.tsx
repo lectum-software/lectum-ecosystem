@@ -276,7 +276,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
       const last4 = additionalData?.lastFourDigits || null;
 
       if (!token) {
-        toast.error("Não foi possível tokenizar o cartão. Tente novamente.");
+        toast.error("Não foi possível validar os dados do cartão. Tente novamente.");
         return;
       }
 
@@ -409,7 +409,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
 
         {!isLoading && !hasError && !professionalPlan ? (
           <EmptyState
-            description="O plano profissional não foi encontrado no backend. Cadastre o plano real antes de continuar."
+            description="Nenhum plano profissional ativo está disponível no momento. Tente novamente mais tarde."
             icon={CreditCard}
             title="Plano indisponível"
           />

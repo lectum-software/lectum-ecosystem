@@ -57,7 +57,7 @@ export const buildPresentationVideoBehaviorCell = (
         value: videoWhatsappClicksPerPsychologist,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Percentual medio assistido nas sessoes reais do video de apresentacao.",
+        description: "Percentual médio assistido nas sessões do vídeo de apresentação.",
         id: "presentation_video_retention",
         label: "Reten\u00e7\u00e3o",
         source: "profile_video_watch_session.watched_seconds/duration_seconds",
@@ -65,12 +65,12 @@ export const buildPresentationVideoBehaviorCell = (
         unit: "percentage",
         unavailable_reason:
           videoRetention === null && !videoUnavailableReason
-            ? "Sem sessoes reais do video com duracao no periodo."
+            ? "Sem sessões do vídeo com duração no período."
             : videoUnavailableReason,
         value: videoRetention,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Views reais do video por video publicado na categoria.",
+        description: "Visualizações do vídeo por vídeo publicado na categoria.",
         id: "presentation_video_views_per_video",
         label: "Views",
         source: "profile_video_watch_session",
@@ -79,7 +79,7 @@ export const buildPresentationVideoBehaviorCell = (
         value: videoViewsPerVideo,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Permanencia media por sessao real do video de apresentacao.",
+        description: "Permanência média por sessão do vídeo de apresentação.",
         id: "presentation_video_average_watch_seconds",
         label: "Perman\u00eancia",
         source: "profile_video_watch_session.watched_seconds",
@@ -90,7 +90,7 @@ export const buildPresentationVideoBehaviorCell = (
         unit: "seconds",
         unavailable_reason:
           videoAverageWatchSeconds === null && !videoUnavailableReason
-            ? "Sem sessoes reais do video no periodo."
+            ? "Sem sessões do vídeo no período."
             : videoUnavailableReason,
         value: videoAverageWatchSeconds,
       }),
@@ -179,7 +179,7 @@ export const buildPresentationVideoBehaviorCell = (
         unit: "percentage",
         unavailable_reason:
           videoReplayRate === null && !videoUnavailableReason
-            ? "Sem sessoes reais do video no periodo."
+            ? "Sem sessões do vídeo no período."
             : videoUnavailableReason,
         value: videoReplayRate,
       }),
@@ -250,7 +250,7 @@ export const buildProfileBehaviorCell = (
         value: profileDominantPlanSignal.value,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Total de aberturas reais do perfil público dos profissionais da faixa.",
+        description: "Total de aberturas do perfil público dos profissionais da faixa.",
         id: "profile_openings",
         label: "Aberturas",
         source: "profile_view_event.source=profile_page",
@@ -258,7 +258,7 @@ export const buildProfileBehaviorCell = (
         value: profileViews.length,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Media de aberturas reais do perfil por profissional da faixa.",
+        description: "Média de aberturas do perfil por profissional da faixa.",
         display_value: formatProfileConversionBehaviorOpeningsValue(profileOpeningsPerPsychologist),
         id: "profile_openings_per_psychologist",
         label: "Aberturas",
@@ -271,7 +271,7 @@ export const buildProfileBehaviorCell = (
         value: profileOpeningsPerPsychologist,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Permanencia media registrada em pageviews do perfil publico.",
+        description: "Permanência média registrada nas visualizações do perfil público.",
         display_value: formatProfileConversionBehaviorSeconds(profileAverageStaySeconds, "0s"),
         id: "profile_average_stay_seconds",
         label: "Perman\u00eancia",
@@ -283,7 +283,7 @@ export const buildProfileBehaviorCell = (
         unit: "seconds",
         unavailable_reason:
           profileAverageStaySeconds === null && !profileUnavailableReason
-            ? "Sem duracao real registrada em pageviews de perfil no periodo."
+            ? "Sem duração registrada nas visualizações de perfil no período."
             : profileUnavailableReason,
         value: profileAverageStaySeconds ?? 0,
       }),
@@ -332,7 +332,7 @@ export const buildProfileBehaviorCell = (
         unit: "percentage",
         unavailable_reason:
           videoRetention === null && !videoUnavailableReason
-            ? "Sem sessoes reais do video com duracao no periodo."
+            ? "Sem sessões do vídeo com duração no período."
             : videoUnavailableReason,
         value: profileVideoRetention,
       }),
@@ -393,7 +393,7 @@ export const buildProfileBehaviorCell = (
         value: profileWhatsappClicks,
       }),
       buildProfileConversionBehaviorMetric({
-        description: "Proporcao entre cliques de WhatsApp via perfil e aberturas reais do perfil.",
+        description: "Proporção entre cliques de WhatsApp e aberturas do perfil.",
         id: "profile_whatsapp_rate",
         label: "WhatsApp/abertura",
         source: "important_action_event.page_kind=psychologist_profile/profile_view_event",
@@ -401,7 +401,7 @@ export const buildProfileBehaviorCell = (
         unit: "percentage",
         unavailable_reason:
           profileWhatsappRate === null && !profileUnavailableReason
-            ? "Sem aberturas reais do perfil para calcular taxa de WhatsApp."
+            ? "Sem aberturas do perfil para calcular a taxa de WhatsApp."
             : profileUnavailableReason,
         value: profileWhatsappRate,
       }),

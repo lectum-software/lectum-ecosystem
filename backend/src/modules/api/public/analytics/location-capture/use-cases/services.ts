@@ -4,8 +4,12 @@ import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
-import { getUserJwtTtlSeconds, parsePositiveInteger } from "@/utils/runtime-config";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import {
+  getUserJwtTtlSeconds,
+  isTrustProxyEnabled,
+  parsePositiveInteger,
+} from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import type {
@@ -118,14 +122,16 @@ const isPrivateIp = (ip: string) => {
 };
 
 const extractClientIp = (req: Request): string | null => {
-  const forwardedFor = getHeaderValue(req.headers, ["x-forwarded-for"]);
-  const candidates = [
-    getHeaderValue(req.headers, ["cf-connecting-ip"]),
-    getHeaderValue(req.headers, ["x-real-ip"]),
-    ...(forwardedFor ? forwardedFor.split(",") : []),
-    req.ip,
-    req.socket.remoteAddress,
-  ];
+  const trustProxy = isTrustProxyEnabled();
+  const forwardedFor = trustProxy ? getHeaderValue(req.headers, ["x-forwarded-for"]) : null;
+  const forwardedCandidates = trustProxy
+    ? [
+        getHeaderValue(req.headers, ["cf-connecting-ip"]),
+        getHeaderValue(req.headers, ["x-real-ip"]),
+        ...(forwardedFor ? forwardedFor.split(",") : []),
+      ]
+    : [];
+  const candidates = [req.ip, ...forwardedCandidates, req.socket.remoteAddress];
 
   for (const candidate of candidates) {
     const ip = normalizeIp(candidate);
@@ -253,6 +259,7 @@ const resolveAuthenticatedUserId = async (req: Request): Promise<string | null> 
 
   try {
     const payload = jwt.verify(token, getJwtSecret(), {
+      algorithms: [JWT_ALGORITHM],
       maxAge: getUserJwtTtlSeconds(),
     }) as AuthPayload;
 

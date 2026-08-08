@@ -153,7 +153,7 @@ const ActiveCommunityAvatar = ({
 
   return (
     <span
-      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-black text-white"
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xs font-black text-primary-foreground"
       style={{ backgroundColor: community.color || "var(--admin-primary)" }}
     >
       {initials(community.name)}
@@ -169,7 +169,7 @@ export const ActiveCommunitiesTable = ({
   if (communities.length === 0) {
     return (
       <p className="mt-5 rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-sm font-bold text-muted">
-        Nenhuma comunidade com atividade real do psicólogo foi encontrada no período.
+        Nenhuma comunidade com atividade do psicólogo foi encontrada no período.
       </p>
     );
   }
@@ -289,10 +289,10 @@ type PsychologistContentFormatDistributionItem =
   PsychologistContentFormatDistributionGroup["items"][number];
 
 const contentFormatChartColors = {
-  image: "#308ce8",
-  image_carousel: "#f59e0b",
-  text: "#64748b",
-  video: "#8b5cf6",
+  image: "var(--admin-primary)",
+  image_carousel: "var(--admin-warning)",
+  text: "var(--admin-muted)",
+  video: "var(--admin-chart-accent)",
 } satisfies Record<PsychologistContentFormatDistributionItem["id"], string>;
 
 const formatContentFormatPercentage = (percentage: number) =>

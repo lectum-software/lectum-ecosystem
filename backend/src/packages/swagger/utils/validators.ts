@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: os validators são inspecionados dinamicamente a partir de schemas Zod heterogêneos.
 
 import fs from "node:fs";
 import path from "node:path";

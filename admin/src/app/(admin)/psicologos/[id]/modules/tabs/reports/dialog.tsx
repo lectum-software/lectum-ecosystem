@@ -205,7 +205,7 @@ const ReportDismissForm = ({
   return (
     <FormProvider {...form}>
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold leading-6 text-emerald-800">
+        <div className="rounded-2xl border border-success-border bg-success-soft p-3 text-sm font-bold leading-6 text-success">
           Esta ação encerra a denúncia como improcedente e não altera o conteúdo denunciado.
         </div>
         <TextareaController<ReportDismissFormValues>
@@ -234,7 +234,7 @@ const ReportDismissForm = ({
             Cancelar
           </button>
           <button
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-success bg-surface px-4 text-sm font-black text-success transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-success bg-surface px-4 text-sm font-black text-success transition hover:bg-success-soft disabled:cursor-not-allowed disabled:border-border disabled:text-muted"
             disabled={mutation.isPending}
             type="submit"
           >
@@ -303,7 +303,7 @@ const ReportUpholdForm = ({
   return (
     <FormProvider {...form}>
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-bold leading-6 text-red-800">
+        <div className="rounded-2xl border border-danger-border bg-danger-soft p-3 text-sm font-bold leading-6 text-danger">
           {report.content.available
             ? "Se a medida for remover, o conteúdo sairá das listagens públicas. Esta ação não notifica nem aplica sanções de conta automaticamente."
             : (report.content.unavailable_reason ??
@@ -342,7 +342,7 @@ const ReportUpholdForm = ({
             Cancelar
           </button>
           <button
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-white transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-primary-foreground transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
             disabled={mutation.isPending}
             type="submit"
           >
@@ -407,7 +407,7 @@ const ReportReviewForm = ({
   return (
     <FormProvider {...form}>
       <form className="grid gap-3" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-sm font-bold leading-6 text-blue-900">
+        <div className="rounded-2xl border border-info-border bg-info-soft p-3 text-sm font-bold leading-6 text-info">
           A revisão altera apenas o status da denúncia e registra uma nova auditoria. Conteúdo
           removido não será restaurado automaticamente.
         </div>
@@ -444,7 +444,7 @@ const ReportReviewForm = ({
             Cancelar
           </button>
           <button
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-black text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
             disabled={mutation.isPending}
             type="submit"
           >

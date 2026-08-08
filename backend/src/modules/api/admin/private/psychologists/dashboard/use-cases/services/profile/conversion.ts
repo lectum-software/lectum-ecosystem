@@ -242,7 +242,7 @@ export const buildProfileConversionGoalResults = (params: {
       };
     }),
     description:
-      "Meta operacional absoluta de Conversão por cliques reais no WhatsApp normalizados para 30 dias: Na Meta entre 5 e 9 conversões equivalentes e Acima da meta a partir de 10.",
+      "Meta operacional de conversão por cliques no WhatsApp normalizados para 30 dias: na meta entre 5 e 9 conversões equivalentes e acima da meta a partir de 10.",
     source: ADMIN_PROFILE_CONVERSION_SOURCE,
     thresholds: {
       ...ADMIN_PROFILE_CONVERSION_THRESHOLDS,

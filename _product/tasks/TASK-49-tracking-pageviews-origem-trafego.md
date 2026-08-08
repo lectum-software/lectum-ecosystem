@@ -51,7 +51,7 @@ Criar tracking real, first-party e privacidade-minimalista de pageviews e origem
   - `utm_content?`;
   - `utm_term?`;
   - `page_kind?` derivado no client somente quando seguro, ou derivado no backend;
-  - `occurred_at?` opcional.
+  - `occurred_até` opcional.
 - Capturar modo PWA/app instalado:
   - `display_mode`: `browser | standalone | fullscreen | minimal-ui | unknown`;
   - evento `pwa_install_prompt_accepted` ou `pwa_installed` apenas quando o browser expuser o evento real.

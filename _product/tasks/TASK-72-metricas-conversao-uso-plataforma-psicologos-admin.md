@@ -253,7 +253,7 @@ O backend deve retornar dados seguros equivalentes a:
   - `days`;
   - `label`;
   - `registered_at`;
-  - `first_paid_subscription_at?`;
+  - `first_paid_subscription_até`;
 - `platform_usage` no contrato individual de estatísticas:
   - `last_access_at`;
   - `access_days_count`;
@@ -605,7 +605,7 @@ Regras de cálculo:
 - Não houve package novo, endpoint novo, mock ou alteração de contrato de API.
 - ADR criado: `adrs/0272-detalhe-admin-comunidade-identidade-textos.md`.
 - `pnpm --dir backend db:migrate` foi executado; a chamada CLI excedeu o limite de 120s do executor, mas a migration foi aplicada e registrada em `_prisma_migrations`. `pnpm --dir backend exec prisma migrate status` confirmou o banco atualizado.
-- Validação executada: consulta real sem descrições `�`/`??` em `community`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornando 200.
+- Validação executada: consulta real sem descrições com `U+FFFD`/`??` em `community`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados`/`GET http://localhost:3002/comunidades/ansiedade-em-equilibrio` retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Cor unica da comunidade
 
@@ -648,7 +648,7 @@ Regras de cálculo:
 - Ao soltar, a ordem final e aplicada de forma otimista na UI e persistida pelos endpoints reais existentes de atualizacao de regra, normalizando `position` para a sequencia visual atual.
 - Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de contrato.
 - ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
-- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornando 200.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=dados` retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Arraste sequencial das regras
 
@@ -658,7 +658,7 @@ Regras de cálculo:
 - Em caso de erro na persistencia, a ordem otimista e revertida e o erro real da API continua sendo exibido em toast.
 - Nao houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteracao de contrato.
 - ADR atualizado: `adrs/0274-regras-comunidade-descritivas-arrastaveis.md`.
-- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornando 200.
+- Validacao executada: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=dados` retornando 200.
 
 
 ## Ajuste complementar 2026-07-15 - Atribuicao first-party de WhatsApp em conteudo de comunidade
@@ -1112,15 +1112,15 @@ Regras de cálculo:
 - Validacao executada: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm check`, `OPTIONS http://localhost:3001/api/admin/public/auth/login` com `Access-Control-Request-Headers=accept-language,content-type,x-device` retornando `204` e browser headless a partir de `localhost:3002` recebendo resposta real `403 auth_incorrect` em vez de erro de rede/CORS.
 
 
-## Ajuste complementar 2026-07-18 - Blocos do dashboard de comunidades em todo o per?odo
+## Ajuste complementar 2026-07-18 - Blocos do dashboard de comunidades em todo o período
 
-- Pedido do usu?rio: **Postagens mais recentes**, **Posts mais populares** e **Principais comunidades** no dashboard administrativo de comunidades n?o devem ser filtrados pelo per?odo selecionado; devem ser fixos de **todo o per?odo**.
-- O backend agora mant?m os contadores, s?ries, estat?sticas de pessoas/conte?do, alertas e modera??o usando o per?odo selecionado, mas busca posts recentes, posts populares, visualiza??es desses posts e ranking de comunidades sem recorte temporal.
-- A UI Admin passou a exibir `Per?odo: Todo o per?odo` nesses tr?s blocos e ajustou as c?pias de estado vazio/atividade para n?o mencionar o per?odo selecionado.
-- N?o houve package novo, mock, endpoint paralelo, schema Prisma/migration, seed, backfill ou altera??o de persist?ncia; a origem continua sendo `community`, `community_member`, `community_post`, `post_reply`, `post_vote`, `post_save` e `page_view_event` reais.
-- Builder/Quick Copy n?o est? exposto como ferramenta callable no ambiente; a refer?ncia usada foi a captura enviada pelo usu?rio e o padr?o local do dashboard Admin de comunidades.
+- Pedido do usuário: **Postagens mais recentes**, **Posts mais populares** e **Principais comunidades** no dashboard administrativo de comunidades não devem ser filtrados pelo período selecionado; devem ser fixos de **todo o período**.
+- O backend agora mantém os contadores, séries, estatísticas de pessoas/conteúdo, alertas e moderação usando o período selecionado, mas busca posts recentes, posts populares, visualizações desses posts e ranking de comunidades sem recorte temporal.
+- A UI Admin passou a exibir `Período: Todo o período` nesses três blocos e ajustou as cópias de estado vazio/atividade para não mencionar o período selecionado.
+- Não houve package novo, mock, endpoint paralelo, schema Prisma/migration, seed, backfill ou alteração de persistência; a origem continua sendo `community`, `community_member`, `community_post`, `post_reply`, `post_vote`, `post_save` e `page_view_event` reais.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência usada foi a captura enviada pelo usuário e o padrão local do dashboard Admin de comunidades.
 - ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
-- Valida??o executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke service real `buildCommunitiesDashboard({ from: "2026-07-13", to: "2026-07-18" })` retornando `status=200` com listas preenchidas e smoke HTTP local `GET http://localhost:3002/comunidades` retornando 200.
+- Validação executada: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check`, smoke service real `buildCommunitiesDashboard({ from: "2026-07-13", to: "2026-07-18" })` retornando `status=200` com listas preenchidas e smoke HTTP local `GET http://localhost:3002/comunidades` retornando 200.
 
 ## Ajuste complementar 2026-07-19 - Horarios de maior atividade no uso individual do psicologo
 

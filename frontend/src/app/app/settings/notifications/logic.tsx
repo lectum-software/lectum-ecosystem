@@ -296,8 +296,8 @@ const BrowserNotificationPermissionCard = () => {
               Push ainda não está disponível neste ambiente
             </h2>
             <p className="mt-1 leading-5 text-muted">
-              A entrega no navegador depende das chaves VAPID reais. Enquanto isso, a central in-app
-              continua funcionando normalmente.
+              As notificações no navegador ainda não estão disponíveis. Enquanto isso, a central de
+              notificações continua funcionando normalmente.
             </p>
           </div>
         </div>
@@ -478,14 +478,14 @@ export const NotificationSettingsLogic = () => {
                               control={form.hook.control}
                               field="select"
                               hideEmptyOption
-                              inputClassName="h-10 rounded-[1.15rem] border-[#cfe5fb] bg-white px-3.5 pr-9 text-[13px] font-bold text-[#1d5f9f] shadow-none hover:border-[#b8daf8] hover:bg-[#f8fbff] focus:border-primary focus:ring-0"
+                              inputClassName="h-10 rounded-[1.15rem] border-border bg-surface px-3.5 pr-9 text-[13px] font-bold text-primary shadow-none hover:border-border hover:bg-surface-muted focus:border-primary focus:ring-0"
                               label={`Preferência de ${category.label}`}
                               name="novo_post__post_author_scope"
                               options={newPostOptions}
                               selectChevronClassName="right-3.5 h-4 w-4 text-primary/75"
-                              selectContentClassName="top-[calc(100%+8px)] max-h-60 rounded-[1.15rem] border-[#cfe5fb] bg-white p-1.5 text-[13px] font-semibold text-foreground shadow-none"
-                              selectOptionClassName="rounded-[0.9rem] px-3 py-2.5 text-[13px] leading-5 text-foreground hover:bg-[#f3f8ff] hover:text-primary active:bg-[#eaf4ff]"
-                              selectOptionSelectedClassName="bg-[#eaf4ff] text-primary"
+                              selectContentClassName="top-[calc(100%+8px)] max-h-60 rounded-[1.15rem] border-border bg-surface p-1.5 text-[13px] font-semibold text-foreground shadow-none"
+                              selectOptionClassName="rounded-[0.9rem] px-3 py-2.5 text-[13px] leading-5 text-foreground hover:bg-surface-muted hover:text-primary active:bg-primary-soft"
+                              selectOptionSelectedClassName="bg-primary-soft text-primary"
                               useCustomSelect
                             />
                           ) : (

@@ -1,7 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
 
 export const ADMIN_VIEW_AS_DEVICE_PREFIX = "admin_view_as:";
@@ -34,7 +34,9 @@ export const getAdminViewAsPayloadFromRequest = (req: Request): AdminViewAsJwtPa
   if (!token) return null;
 
   try {
-    const payload = jwt.verify(token, getJwtSecret()) as AdminViewAsJwtPayload;
+    const payload = jwt.verify(token, getJwtSecret(), {
+      algorithms: [JWT_ALGORITHM],
+    }) as AdminViewAsJwtPayload;
     if (payload.type !== "user" || !isAdminViewAsDeviceId(payload.device_id)) return null;
 
     return payload;

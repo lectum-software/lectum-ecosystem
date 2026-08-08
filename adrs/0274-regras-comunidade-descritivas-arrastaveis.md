@@ -37,5 +37,5 @@ O bloco **Regras da comunidade** no Admin exibia titulo, tag de status, botoes d
 - `pnpm --dir backend build`
 - Smoke local: `GET http://localhost:3002/comunidades/ansiedade-em-equilibrio?tab=dados` retornou 200.
 - Smoke local: `GET http://localhost:3000/community/ansiedade-em-equilibrio` retornou 200.
-- Validacao complementar do drag por Pointer Events: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornou 200.
-- Validacao complementar do arraste sequencial: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=dados` retornou 200.
+- Validacao complementar do drag por Pointer Events: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=dados` retornou 200.
+- Validacao complementar do arraste sequencial: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=dados` retornou 200.

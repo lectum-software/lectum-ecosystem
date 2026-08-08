@@ -44,7 +44,7 @@ const ReviewProfessionalAvatar = ({ avatar, name }: { avatar?: string | null; na
   const avatarSrc = resolvePublicMediaUrl(avatar ?? null);
 
   return (
-    <div className="relative grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-primary-soft text-3xl font-bold text-primary ring-2 ring-white shadow-[0_10px_24px_rgb(48_140_232_/_12%)] dark:ring-surface">
+    <div className="relative grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-primary-soft text-3xl font-bold text-primary ring-2 ring-media-foreground shadow-lectum-soft dark:ring-surface">
       {avatarSrc ? (
         <Image
           alt={`Foto de perfil de ${name}`}
@@ -116,7 +116,7 @@ export const ReviewsNewLogic = () => {
         <EmptyState
           icon={UserRound}
           title="Escolha um psicólogo para avaliar"
-          description="A avaliação precisa estar vinculada a um profissional real da Lectum."
+          description="A avaliação precisa estar vinculada a um profissional cadastrado na Lectum."
           action={
             <Button asChild>
               <Link href="/psicologos">Buscar psicólogos</Link>
@@ -143,7 +143,7 @@ export const ReviewsNewLogic = () => {
         {eligibility.isLoading ? <LoadingState label="Carregando profissional" /> : null}
         {eligibility.isError ? (
           <InlineAlert title="Não foi possível verificar" variant="error">
-            Não foi possível conectar à API agora. Tente novamente em instantes.
+            Não foi possível conectar ao serviço agora. Tente novamente em instantes.
           </InlineAlert>
         ) : null}
 
@@ -190,7 +190,7 @@ export const ReviewsNewLogic = () => {
                 <legend className="sr-only">Selecionar nota de 1 a 5 estrelas</legend>
                 {stars.map((star) => (
                   <label
-                    className="rounded-full p-1 text-[#D97706] transition hover:scale-105 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F59E0B]/35"
+                    className="rounded-full p-1 text-warning transition hover:scale-105 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/35"
                     key={star}
                   >
                     <input

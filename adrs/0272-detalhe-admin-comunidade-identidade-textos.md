@@ -21,7 +21,7 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
 - Trocar o CTA do cabeçalho de `Editar comunidade` para `Ver comunidade`, apontando para a rota pública `/community/[slug]`.
 - Simplificar a edição do avatar na aba **Dados**: exibir apenas o avatar acima do campo de nome, com ícone de edição sobreposto e upload real existente no clique.
 - Remover o texto explicativo de escopo V1 e o bloco lateral **Informações da comunidade**, evitando duplicação de dados do formulário.
-- Criar migration condicional para reparar textos corrompidos em `communities` apenas quando os campos atuais contiverem sinais de encoding quebrado (`�`, `??`, `Ã` ou `Â`), preservando edições administrativas legítimas quando não houver corrupção.
+- Criar migration condicional para reparar textos corrompidos em `communities` apenas quando os campos atuais contiverem sinais de encoding quebrado (`U+FFFD`, interrogações duplicadas ou sequências inválidas de UTF-8), preservando edições administrativas legítimas quando não houver corrupção.
 
 ## Consequências
 
@@ -34,7 +34,7 @@ Builder/Quick Copy não está exposto como ferramenta callable neste ambiente. A
 
 - `pnpm --dir backend db:migrate` foi executado; a chamada CLI excedeu o limite de 120s do executor, mas a migration foi aplicada e registrada em `_prisma_migrations`.
 - `pnpm --dir backend exec prisma migrate status` confirmou o schema do banco como atualizado.
-- Consulta real em `community` confirmou ausência de descrições com `�` ou `??` após a migration.
+- Consulta real em `community` confirmou ausência de descrições com `U+FFFD` ou `??` após a migration.
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`

@@ -120,7 +120,6 @@ export const PsychologistTrafficSourceWhatsappClickActorBreakdown = ({
         align === "center" && "items-center text-center",
         align === "end" && "items-end text-right",
       )}
-      title={breakdown.source}
     >
       <span>{authorLabel}</span>
       <span>{otherUsersLabel}</span>
@@ -198,7 +197,7 @@ export const PsychologistTrafficSourcePlatformMetrics = ({
           consideredCount !== null
             ? `Base do psicólogo: ${numberFormatter.format(consideredCount)}`
             : null,
-          metric.unavailable_reason ?? metric.source,
+          metric.unavailable_reason,
         ].filter((item): item is string => Boolean(item));
 
         return (

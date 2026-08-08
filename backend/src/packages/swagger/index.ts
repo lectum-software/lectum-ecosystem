@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: o pacote portado interpreta rotas e metadados AST dinâmicos preservando o contrato legado.
 
 import { promises as fs } from "node:fs";
 //Libs

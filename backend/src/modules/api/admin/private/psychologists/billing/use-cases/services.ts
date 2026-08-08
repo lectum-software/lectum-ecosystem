@@ -128,7 +128,7 @@ const buildPaymentHistory = (
 
   const reason =
     subscription?.source === "mercadopago"
-      ? "Nenhum payment_event confirmado foi encontrado para esta assinatura."
+      ? "Nenhum pagamento confirmado foi encontrado para esta assinatura."
       : "Este plano não possui cobrança financeira.";
 
   return {
@@ -153,7 +153,7 @@ const buildCourtesy = (
   return {
     active_grant_id: hasActiveCourtesy ? (subscription?.id ?? null) : null,
     blocked_reason: externalBillingActive
-      ? "Existe assinatura vinculada ao gateway. A concessao admin deve ser feita somente apos reconciliar/cancelar a cobranca real."
+      ? "Existe uma assinatura vinculada ao provedor de pagamento. A concessão administrativa só pode ocorrer após a cobrança ser conciliada ou cancelada."
       : hasActiveCourtesy
         ? "Este psicologo ja possui cortesia ativa. Revogue a cortesia atual antes de conceder uma nova."
         : null,
@@ -201,7 +201,7 @@ const mapGrantError = (err: unknown): Resolve => {
     crp_registration_date_invalid: "A data de inscricao no CRP e invalida.",
     cpf_invalid: "Informe um CPF valido com 11 digitos.",
     external_billing_subscription_blocks_admin_grant:
-      "Existe assinatura vinculada ao gateway. Reconcile a cobranca real antes de conceder cortesia.",
+      "Existe uma assinatura vinculada ao provedor de pagamento. Concilie ou cancele a cobrança antes de conceder cortesia.",
     professional_plan_not_found: "Plano profissional ativo nao encontrado.",
     psychologist_profile_not_found_for_grant: "Psicologo nao encontrado para concessao.",
     psychologist_user_not_found_for_grant: "Psicologo nao encontrado para concessao.",

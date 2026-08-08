@@ -31,7 +31,7 @@ const RatingStars = ({ rating, size = "h-4 w-4" }: { rating: number; size?: stri
         aria-hidden
         className={cn(
           size,
-          star <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-border",
+          star <= Math.round(rating) ? "fill-warning text-warning" : "text-border",
         )}
         key={star}
       />
@@ -121,7 +121,7 @@ export const ReviewsTab = ({ id }: { id: string }) => {
               <RatingStars rating={reviews.summary.rating_avg} size="h-5 w-5" />
             </div>
             <p className="mt-3 text-sm font-medium leading-5 text-muted">
-              {numberFormatter.format(reviews.summary.rating_count)} avaliações reais
+              {numberFormatter.format(reviews.summary.rating_count)} avaliações
             </p>
           </div>
           <div className="w-full space-y-1.5">
@@ -177,7 +177,7 @@ export const ReviewsTab = ({ id }: { id: string }) => {
 
         {reviews.data.length === 0 ? (
           <p className="p-5 text-sm font-medium text-muted">
-            Nenhuma avaliação real encontrada para os filtros atuais.
+            Nenhuma avaliação encontrada para os filtros atuais.
           </p>
         ) : (
           <div className="divide-y divide-border">

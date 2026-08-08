@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import multer from "multer";
 import { resolve } from "@/helpers/translate/resolve";
 import { UploadInfrastructureError, UploadValidationError } from "./errors";
@@ -9,8 +9,8 @@ import type { Option } from "./types";
 export default (mode: Option) => (req: Request, res: Response, next: NextFunction) => {
   req.allowed = mode.allowed || [];
   req.public = mode.public || false;
-  (req as Request & { uploadFeature?: string }).uploadFeature = mode.feature;
-  let middleware: any;
+  req.uploadFeature = mode.feature;
+  let middleware: RequestHandler;
   const max = mode.size ? mode.size * 1024 * 1024 : undefined;
   const maxFiles =
     "fields" in mode && mode.fields
@@ -41,7 +41,7 @@ export default (mode: Option) => (req: Request, res: Response, next: NextFunctio
     } else {
       throw new Error(resolve("error.upload_config_error"));
     }
-    middleware(req, res, (err: any) => {
+    middleware(req, res, (err: unknown) => {
       if (err instanceof multer.MulterError) {
         let error = resolve("error.upload_error");
         if (err.code === "LIMIT_UNEXPECTED_FILE") error = resolve("error.unexpected_field");

@@ -1,20 +1,16 @@
 "use client";
 
-import { BadgeCheck, FileText, Reply, UserX } from "lucide-react";
-import Image from "next/image";
+import { BadgeCheck, FileText, Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  type MouseEventHandler,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
-  type ReactNode,
   useCallback,
   useEffect,
   useState,
 } from "react";
 import { useSavePost, useVotePost } from "@/api/callers/posts";
-import type { PostListPost, PostProfessionalReply } from "@/api/generator/types/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
@@ -34,380 +30,16 @@ import {
   formatCommunityPostTime as formatPostTimeLabel,
   formatCommunityRelativeTime as formatRelativeTime,
   getCommunityAuthorDisplayName,
-  getCommunityInitials as getInitials,
 } from "@/utils/community-display";
-import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-
-type CommunityPostCardProps = {
-  actionBarShowUpvoteText?: boolean;
-  actionBarVoteLabel?: string;
-  actionBarVotePresentation?: "cluster" | "inline";
-  communityContextTone?: "default" | "muted";
-  communityHeaderIncludesTime?: boolean;
-  hoverTone?: "primary" | "neutral";
-  desktopPlainLinks?: boolean;
-  footerExtra?: ReactNode;
-  headerExtra?: ReactNode;
-  interactiveActions?: boolean;
-  onShare: (post: PostListPost) => void;
-  openPostOnCardClick?: boolean;
-  post: PostListPost;
-  presentation?: "default" | "feed";
-  profilePublicationMode?: boolean;
-  saveActionOverride?: {
-    active?: boolean;
-    count?: number;
-    disabled?: boolean;
-    label?: string;
-    onClick?: MouseEventHandler<HTMLButtonElement>;
-  };
-  showAuthorHeader?: boolean;
-  showCommunityHeader?: boolean;
-  showHighlightedProfessionalReply?: boolean;
-  showProfessionalEngagementCounters?: boolean;
-  showWhatsappCta?: boolean;
-  statusBadge?: ReactNode;
-};
-
-type ProfileContributionPost = PostListPost & {
-  contribution_type?: "post" | "reply";
-};
-
-type PostWithOptionalSortMetrics = PostListPost & {
-  sort_metrics?: {
-    shares_count?: number | null;
-  };
-};
-
-const postDetailHref = (post: PostListPost, focusReplyId?: string) => {
-  const baseHref = `/comunidades/${post.community.slug}/publicacao/${post.id}`;
-
-  if (!focusReplyId) return baseHref;
-
-  return `${baseHref}?focusReplyId=${encodeURIComponent(focusReplyId)}#reply-${focusReplyId}`;
-};
-
-const isPostCardInteractiveTarget = (target: EventTarget | null) => {
-  const targetElement =
-    target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
-
-  if (!targetElement) return false;
-
-  return Boolean(
-    targetElement.closest(
-      [
-        "a",
-        "button",
-        "input",
-        "textarea",
-        "select",
-        "video",
-        "audio",
-        "[role='button']",
-        "[role='menu']",
-        "[role='menuitem']",
-        "[role='dialog']",
-        "[aria-modal='true']",
-        "[data-comment-collapse-ignore='true']",
-        "[data-community-action-bar]",
-        "[data-post-card-ignore-click]",
-        "[data-post-card-menu]",
-        "[data-reply-open-trigger]",
-      ].join(","),
-    ),
-  );
-};
-
-const AuthorAvatar = ({
-  anonymous,
-  avatar,
-  href,
-  name,
-  size = "md",
-}: {
-  anonymous?: boolean;
-  avatar: string | null;
-  href?: string;
-  name: string;
-  size?: "md" | "lg";
-}) => {
-  const sizeClass = size === "lg" ? "h-10 w-10" : "h-9 w-9";
-  const imageSize = size === "lg" ? "40px" : "36px";
-
-  if (anonymous) {
-    return (
-      <span
-        className={cn(
-          "grid shrink-0 place-items-center rounded-full bg-surface-muted text-muted ring-2 ring-border",
-          sizeClass,
-        )}
-      >
-        <UserX className="h-5 w-5" aria-hidden="true" />
-      </span>
-    );
-  }
-
-  const avatarSrc = resolvePublicMediaUrl(avatar);
-
-  const avatarNode = (
-    <span
-      className={cn(
-        "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft text-xs font-black text-primary ring-2 ring-background",
-        sizeClass,
-      )}
-    >
-      {avatarSrc ? (
-        <Image
-          alt={name}
-          className="object-cover"
-          fill
-          sizes={imageSize}
-          src={avatarSrc}
-          unoptimized={isPublicMediaUrl(avatar)}
-        />
-      ) : (
-        getInitials(name)
-      )}
-    </span>
-  );
-
-  if (!href) return avatarNode;
-
-  return (
-    <Link
-      aria-label={`Abrir perfil de ${name}`}
-      className="shrink-0 cursor-pointer rounded-full no-underline transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
-      href={href}
-    >
-      {avatarNode}
-    </Link>
-  );
-};
-
-const ProfessionalReplyPreview = ({
-  postHref,
-  presentation = "default",
-  profilePublicationMode,
-  reply,
-  showWhatsappCta = true,
-}: {
-  postHref?: string;
-  presentation?: "default" | "feed";
-  profilePublicationMode?: boolean;
-  reply: PostProfessionalReply | null;
-  showWhatsappCta?: boolean;
-}) => {
-  const [contentExpanded, setContentExpanded] = useState(false);
-  const replyAttentionTarget =
-    reply?.author.role === "psicologo"
-      ? ({
-          targetId: reply.id,
-          targetType: "reply",
-        } as const)
-      : null;
-  const setReplyAttentionElement = useContentAttentionTracking(replyAttentionTarget);
-
-  if (!reply) return null;
-
-  const isFeedPresentation = presentation === "feed";
-  const profileHref = `/psicologos/${reply.author.id}`;
-  const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
-  const whatsappCta =
-    showWhatsappCta && reply.author.whatsapp_url ? (
-      <CommunityWhatsAppCta
-        attached={Boolean(reply.media_url)}
-        className={cn(!reply.media_url && !isFeedPresentation && "mt-3")}
-        psychologist={toCommunityWhatsAppIdentity(reply.author)}
-        trackingContext={{
-          pageKind: "community_post",
-          path: postHref,
-          targetId: reply.id,
-          targetType: "post_reply",
-        }}
-      />
-    ) : null;
-
-  if (isFeedPresentation) {
-    return (
-      <div
-        className="relative grid min-w-0 cursor-pointer grid-cols-[18px_minmax(0,1fr)] gap-2 rounded-2xl border border-[#D8ECFF] bg-[#F4FAFF] p-3 dark:border-primary/20 dark:bg-primary/5"
-        ref={setReplyAttentionElement}
-      >
-        {postHref ? (
-          <Link
-            aria-label="Abrir post pela resposta profissional em destaque"
-            className="absolute inset-0 z-0 cursor-pointer rounded-2xl"
-            href={postHref}
-          />
-        ) : null}
-        <div className="pointer-events-none flex justify-center pt-1" aria-hidden="true">
-          <span className="h-full min-h-24 w-px rounded-full bg-[#BBDFFF] dark:bg-primary/25" />
-        </div>
-        <div className="relative z-10 min-w-0">
-          <div className="flex min-w-0 items-start gap-2.5">
-            <AuthorAvatar
-              avatar={reply.author.avatar}
-              href={profileHref}
-              name={authorDisplayName}
-              size="lg"
-            />
-            <div className="grid min-w-0 flex-1 gap-0.5">
-              <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
-                <span className="inline-flex min-w-0 items-center gap-[5px]">
-                  <Link
-                    className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
-                    href={profileHref}
-                  >
-                    {authorDisplayName}
-                  </Link>
-                  {reply.author.verified ? (
-                    <BadgeCheck
-                      className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                </span>
-                <MentorBadge badge={reply.author.featured_badge} href={profileHref} />
-              </div>
-              <Link
-                className="min-w-0 cursor-pointer truncate text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
-                href={profileHref}
-              >
-                {reply.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-                {formatPostTimeLabel(reply.created_at, reply.edited_at)}{" "}
-                <span aria-hidden="true">&bull;</span> {reply.upvotes_count.toLocaleString("pt-BR")}{" "}
-                upvotes
-              </Link>
-            </div>
-          </div>
-          <div className="mt-2">
-            <InlineExpandableText
-              className="text-sm leading-6 text-[#334155] dark:text-muted"
-              expanded={contentExpanded}
-              onToggle={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setContentExpanded((current) => !current);
-              }}
-              text={reply.content}
-            />
-          </div>
-          {reply.media_url ? (
-            <CommunityMediaBlock
-              alt="Mídia da resposta profissional"
-              analyticsTarget={
-                reply.media_type === "video"
-                  ? { targetId: reply.id, targetType: "reply" }
-                  : undefined
-              }
-              className="mt-3"
-              footer={whatsappCta}
-              mediaType={reply.media_type}
-              mediaUrl={reply.media_url}
-              roundedClassName="rounded-[18px]"
-              variant="reply"
-            />
-          ) : whatsappCta ? (
-            <div className="mt-3">{whatsappCta}</div>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="rounded-[18px] border border-[#D8ECFF] bg-[#F4FAFF] p-4 dark:border-primary/20 dark:bg-primary/5"
-      ref={setReplyAttentionElement}
-    >
-      {!profilePublicationMode ? (
-        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em] text-primary">
-          Resposta profissional em destaque
-        </p>
-      ) : null}
-      <div className="mb-2 flex items-center gap-2">
-        <AuthorAvatar
-          avatar={reply.author.avatar}
-          href={profileHref}
-          name={authorDisplayName}
-          size="lg"
-        />
-        <div className="grid min-w-0 gap-1">
-          <div
-            className={cn(
-              "flex min-w-0 items-center gap-x-2 gap-y-1",
-              profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
-            )}
-          >
-            <span className="inline-flex min-w-0 items-center gap-[5px]">
-              <Link
-                className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
-                href={profileHref}
-              >
-                {authorDisplayName}
-              </Link>
-              {reply.author.verified ? (
-                profilePublicationMode ? (
-                  <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
-                ) : (
-                  <BadgeCheck
-                    className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-                    aria-hidden="true"
-                  />
-                )
-              ) : null}
-            </span>
-            <MentorBadge
-              badge={reply.author.featured_badge}
-              className={profilePublicationMode ? "max-w-[124px]" : undefined}
-              href={profileHref}
-            />
-          </div>
-          <Link
-            className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
-            href={profileHref}
-          >
-            {reply.author.type_label} • {formatPostTimeLabel(reply.created_at, reply.edited_at)} •{" "}
-            {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
-          </Link>
-        </div>
-      </div>
-      {reply.title && !profilePublicationMode ? (
-        <h4 className="mb-1 text-sm font-black text-foreground">{reply.title}</h4>
-      ) : null}
-      {profilePublicationMode ? (
-        <InlineExpandableText
-          className="text-sm leading-6 text-muted"
-          expanded={contentExpanded}
-          onToggle={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setContentExpanded((current) => !current);
-          }}
-          text={reply.content}
-        />
-      ) : (
-        <p className="text-sm leading-6 text-muted">{reply.content}</p>
-      )}
-      {reply.media_url ? (
-        <CommunityMediaBlock
-          alt={reply.title ?? "Mídia da resposta profissional"}
-          analyticsTarget={
-            reply.media_type === "video" ? { targetId: reply.id, targetType: "reply" } : undefined
-          }
-          className="mt-3"
-          footer={whatsappCta}
-          mediaType={reply.media_type}
-          mediaUrl={reply.media_url}
-          roundedClassName="rounded-[18px]"
-          variant="reply"
-        />
-      ) : (
-        whatsappCta
-      )}
-    </div>
-  );
-};
+import { AuthorAvatar } from "./community-post-card-author";
+import { ProfessionalReplyPreview } from "./community-post-card-reply-preview";
+import {
+  type CommunityPostCardProps,
+  isPostCardInteractiveTarget,
+  type PostWithOptionalSortMetrics,
+  type ProfileContributionPost,
+  postDetailHref,
+} from "./community-post-card-support";
 
 export const CommunityPostCard = ({
   actionBarShowUpvoteText = true,
@@ -675,7 +307,7 @@ export const CommunityPostCard = ({
     <article
       className={cn(
         isFeedPresentation
-          ? "w-full cursor-pointer overflow-hidden rounded-[22px] border border-[#E6EAF0] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
+          ? "w-full cursor-pointer overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-lectum-soft transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
           : "w-full overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-[var(--lectum-shadow-soft)] transition",
         !isFeedPresentation &&
           (hoverTone === "primary"
@@ -715,12 +347,12 @@ export const CommunityPostCard = ({
                 !isFeedPresentation && !communityHeaderIncludesTime && "flex-1",
                 !isFeedPresentation &&
                   (profilePublicationMode || usesMutedCommunityContext
-                    ? "text-[#64748B] dark:text-muted"
+                    ? "text-muted dark:text-muted"
                     : "text-foreground"),
                 !isFeedPresentation &&
                   desktopPlainLinks &&
                   (profilePublicationMode || usesMutedCommunityContext
-                    ? "md:no-underline md:hover:text-[#64748B] md:hover:no-underline dark:md:hover:text-muted"
+                    ? "md:no-underline md:hover:text-muted md:hover:no-underline dark:md:hover:text-muted"
                     : "md:no-underline md:hover:text-foreground md:hover:no-underline"),
               )}
               href={`/comunidades/${post.community.slug}`}
@@ -755,7 +387,7 @@ export const CommunityPostCard = ({
       ) : null}
 
       {showCommunityHeader && showAuthorHeader ? (
-        <div className="mb-3 h-px w-full bg-[#E7EEF6] dark:bg-border/70" aria-hidden="true" />
+        <div className="mb-3 h-px w-full bg-surface-muted dark:bg-border/70" aria-hidden="true" />
       ) : null}
 
       {showAuthorHeader ? (
@@ -833,7 +465,7 @@ export const CommunityPostCard = ({
           <Link
             className={cn(
               "cursor-pointer text-[1.32rem] font-black leading-[1.18] tracking-[-0.02em] text-foreground no-underline transition hover:text-foreground hover:no-underline",
-              isFeedPresentation && "text-[#182033] dark:text-foreground",
+              isFeedPresentation && "text-foreground dark:text-foreground",
               profilePublicationMode && "line-clamp-2 text-[1.08rem] leading-[1.22]",
               desktopPlainLinks && "md:no-underline md:hover:text-foreground md:hover:no-underline",
             )}
@@ -857,7 +489,7 @@ export const CommunityPostCard = ({
           <InlineExpandableText
             className={cn(
               "text-sm leading-6",
-              isFeedPresentation ? "text-[#64748B] dark:text-muted" : "text-muted",
+              isFeedPresentation ? "text-muted dark:text-muted" : "text-muted",
             )}
             expanded={false}
             href={postHref}
@@ -898,7 +530,7 @@ export const CommunityPostCard = ({
       <CommunityActionBar
         className={cn(
           "mt-4 border-t pt-3",
-          isFeedPresentation ? "border-[#EDF1F5] dark:border-border" : "border-border",
+          isFeedPresentation ? "border-border dark:border-border" : "border-border",
         )}
         comments={{
           count: post.replies_count,

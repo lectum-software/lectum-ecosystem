@@ -37,7 +37,7 @@ export const LoginPageClient = () => {
   return (
     <main className="grid min-h-dvh bg-background p-4 sm:p-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(440px,0.62fr)] lg:p-0">
       <section className="relative hidden overflow-hidden bg-sidebar p-10 text-sidebar-foreground lg:block">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(51,0,255,0.46),transparent_34%),radial-gradient(circle_at_82%_12%,rgba(48,140,232,0.32),transparent_28%)]" />
+        <div className="admin-login-backdrop absolute inset-0" />
         <div className="relative z-10 flex h-full flex-col justify-between">
           <div>
             <Image alt="Lectum" height={39} priority src="/logo-light.png" width={190} />
@@ -49,12 +49,12 @@ export const LoginPageClient = () => {
                 Gestão separada do site principal.
               </h1>
               <p className="mt-5 max-w-lg text-lg leading-8 text-sidebar-muted">
-                Acesse com uma conta administrativa real criada no backend. Nenhum dado de usuário
-                do app principal é reutilizado aqui.
+                Acesse com uma conta administrativa do Lectum. Nenhum dado de usuário do site
+                principal é reutilizado aqui.
               </p>
             </div>
           </div>
-          <p className="text-sm text-sidebar-muted">Lectum Admin · porta local 3002</p>
+          <p className="text-sm text-sidebar-muted">Lectum Admin · acesso restrito</p>
         </div>
       </section>
 
@@ -80,7 +80,7 @@ export const LoginPageClient = () => {
               Entrar no painel
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted">
-              Use as credenciais administrativas cadastradas pela fundação backend da TASK-45.
+              Use as credenciais administrativas cadastradas para o painel.
             </p>
           </div>
 
@@ -94,7 +94,7 @@ export const LoginPageClient = () => {
             ))}
 
             <button
-              className="mt-2 h-12 w-full rounded-2xl bg-primary px-5 text-sm font-black text-white shadow-admin-soft transition hover:bg-primary-hover focus-visible:outline-primary disabled:opacity-60"
+              className="mt-2 h-12 w-full rounded-2xl bg-primary px-5 text-sm font-black text-primary-foreground shadow-admin-soft transition hover:bg-primary-hover focus-visible:outline-primary disabled:opacity-60"
               disabled={form.formState.isSubmitting || isHydrating}
               type="submit"
             >

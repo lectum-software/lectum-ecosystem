@@ -86,7 +86,7 @@ export const PsychologistSlide = ({
       data-psychologists-slide-index={index}
       key={psychologist.id}
     >
-      <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-black">
+      <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-media-background">
         <div className="relative h-full w-full overflow-hidden">
           {shouldRenderGlobalControls ? (
             <PsychologistSlideHeader model={model} slide={slide} />
@@ -102,7 +102,7 @@ export const PsychologistSlide = ({
               preload={isActiveSlide ? "auto" : "metadata"}
               src={slideVideoSrc ?? ""}
               title={`Vídeo de apresentação de ${psychologist.name}`}
-              videoClassName="h-full w-full bg-black object-cover"
+              videoClassName="h-full w-full bg-media-background object-cover"
               videoProps={{
                 "data-psychologist-id": psychologist.id,
                 "data-psychologists-background": "true",
@@ -172,20 +172,16 @@ export const PsychologistSlide = ({
               unoptimized={isPublicMediaUrl(psychologist.video_cover_url)}
             />
           ) : (
-            <div className="grid h-full w-full place-items-center bg-[#e2e8f0] text-3xl font-extrabold text-[#94a3b8]">
+            <div className="grid h-full w-full place-items-center bg-surface-muted text-3xl font-extrabold text-subtle">
               {getInitials(psychologist.name)}
             </div>
           )}
 
           <div
             className={cn(
-              "pointer-events-none absolute inset-0 transition-opacity duration-200 ease-out",
+              "media-bottom-overlay pointer-events-none absolute inset-0 transition-opacity duration-200 ease-out",
               slideOverlayVisibilityClass,
             )}
-            style={{
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.7) 17%, rgba(0,0,0,0.42) 31%, rgba(0,0,0,0.16) 43%, rgba(0,0,0,0) 58%)",
-            }}
           />
 
           <button
@@ -222,7 +218,7 @@ export const PsychologistSlide = ({
                   ? `Retomar vídeo de ${psychologist.name}`
                   : `Ativar som do vídeo de ${psychologist.name}`
               }
-              className="absolute top-1/2 left-1/2 z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-black/30 text-white shadow-[0_10px_30px_rgba(0,0,0,0.22)] backdrop-blur-sm transition hover:bg-black/40"
+              className="absolute top-1/2 left-1/2 z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-media-foreground/35 bg-media-background/30 text-primary-foreground shadow-lectum-soft backdrop-blur-sm transition hover:bg-media-background/40"
               onClick={handleVideoControlTap}
               type="button"
             >
@@ -310,7 +306,7 @@ export const PsychologistSlide = ({
           {isActiveSlide && slideShouldShowVideo && slideIsUiHidden ? (
             <button
               aria-label="Mostrar interface do video"
-              className="pointer-events-auto absolute left-4 z-[70] grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-black/55 text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-black/65 active:scale-95"
+              className="pointer-events-auto absolute left-4 z-[70] grid h-12 w-12 place-items-center rounded-full border border-media-foreground/10 bg-media-background/55 text-primary-foreground shadow-lectum-soft backdrop-blur-md transition hover:bg-media-background/65 active:scale-95"
               data-psychologists-scroll-lock="true"
               onClick={handleImmersiveExit}
               onPointerDown={stopInteractionPropagation}

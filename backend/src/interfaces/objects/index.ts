@@ -1,33 +1,26 @@
-export interface user_token {
+export interface PersistedObject {
   id?: string | null;
   deleted?: boolean | null;
   deletedAt?: Date | null;
   updatedAt?: Date | null;
   createdAt?: Date | null;
+}
+
+export interface user_token extends PersistedObject {
   user_id?: string | null;
   token?: string | null;
   device_id?: string | null;
   user?: user | null;
 }
 
-export interface admin_token {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface admin_token extends PersistedObject {
   admin_id?: string | null;
   token?: string | null;
   device_id?: string | null;
   admin?: admin | null;
 }
 
-export interface admin {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface admin extends PersistedObject {
   name?: string | null;
   email?: string | null;
   password?: string | null;
@@ -44,12 +37,7 @@ export interface admin {
   activity_logs?: admin_activity_log[] | null;
 }
 
-export interface admin_activity_log {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface admin_activity_log extends PersistedObject {
   admin_id?: string | null;
   target_type?: string | null;
   target_id?: string | null;
@@ -65,12 +53,7 @@ export interface admin_activity_log {
   admin?: admin | null;
 }
 
-export interface user_background {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface user_background extends PersistedObject {
   user_id?: string | null;
   type?: string | null;
   data?: unknown;
@@ -78,12 +61,7 @@ export interface user_background {
   user?: user | null;
 }
 
-export interface phone_verification {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface phone_verification extends PersistedObject {
   user_id?: string | null;
   phone?: string | null;
   purpose?: "psychologist_whatsapp" | string | null;
@@ -97,12 +75,7 @@ export interface phone_verification {
   user?: user | null;
 }
 
-export interface patient_profile {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface patient_profile extends PersistedObject {
   user_id?: string | null;
   goal?: string | null;
   gender?: string | null;
@@ -113,12 +86,7 @@ export interface patient_profile {
   user?: user | null;
 }
 
-export interface psychologist_profile {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface psychologist_profile extends PersistedObject {
   user_id?: string | null;
   professional_first_name?: string | null;
   professional_last_name?: string | null;
@@ -165,12 +133,7 @@ export interface psychologist_profile {
   registry_checks?: professional_registry_check[] | null;
 }
 
-export interface professional_registry_check {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface professional_registry_check extends PersistedObject {
   psychologist_id?: string | null;
   provider?: string | null;
   cpf?: string | null;
@@ -182,108 +145,63 @@ export interface professional_registry_check {
   psychologist?: psychologist_profile | null;
 }
 
-export interface specialty {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface specialty extends PersistedObject {
   name?: string | null;
   slug?: string | null;
   active?: boolean | null;
   psychologist_specialties?: psychologist_specialty[] | null;
 }
 
-export interface service {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface service extends PersistedObject {
   name?: string | null;
   slug?: string | null;
   active?: boolean | null;
   psychologist_services?: psychologist_service[] | null;
 }
 
-export interface approach {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface approach extends PersistedObject {
   name?: string | null;
   slug?: string | null;
   active?: boolean | null;
   psychologist_approaches?: psychologist_approach[] | null;
 }
 
-export interface psychologist_specialty {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface psychologist_specialty extends PersistedObject {
   psychologist_id?: string | null;
   specialty_id?: string | null;
   psychologist?: user | null;
   specialty?: specialty | null;
 }
 
-export interface psychologist_service {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface psychologist_service extends PersistedObject {
   psychologist_id?: string | null;
   service_id?: string | null;
   psychologist?: user | null;
   service?: service | null;
 }
 
-export interface psychologist_approach {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface psychologist_approach extends PersistedObject {
   psychologist_id?: string | null;
   approach_id?: string | null;
   psychologist?: user | null;
   approach?: approach | null;
 }
 
-export interface psychologist_favorite {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface psychologist_favorite extends PersistedObject {
   user_id?: string | null;
   psychologist_id?: string | null;
   user?: user | null;
   psychologist?: user | null;
 }
 
-export interface psychologist_follow {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface psychologist_follow extends PersistedObject {
   user_id?: string | null;
   psychologist_id?: string | null;
   user?: user | null;
   psychologist?: user | null;
 }
 
-export interface subscription_plan {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface subscription_plan extends PersistedObject {
   slug?: "gratuito" | "profissional" | string | null;
   name?: string | null;
   price_cents?: number | null;
@@ -294,7 +212,7 @@ export interface subscription_plan {
   subscriptions?: professional_subscription[] | null;
 }
 
-export interface professional_subscription {
+export interface professional_subscription extends PersistedObject {
   id?: string | null;
   internal_id?: number | null;
   deleted?: boolean | null;
@@ -316,12 +234,7 @@ export interface professional_subscription {
   plan?: subscription_plan | null;
 }
 
-export interface billing_address {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface billing_address extends PersistedObject {
   user_id?: string | null;
   zip?: string | null;
   street?: string | null;
@@ -333,7 +246,7 @@ export interface billing_address {
   user?: user | null;
 }
 
-export interface payment_event {
+export interface payment_event extends PersistedObject {
   id?: string | null;
   internal_id?: number | null;
   deleted?: boolean | null;
@@ -346,12 +259,7 @@ export interface payment_event {
   payload?: unknown;
 }
 
-export interface payment_method {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface payment_method extends PersistedObject {
   user_id?: string | null;
   gateway?: string | null;
   gateway_token?: string | null;
@@ -362,12 +270,7 @@ export interface payment_method {
   user?: user | null;
 }
 
-export interface contact_request {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface contact_request extends PersistedObject {
   user_id?: string | null;
   psychologist_id?: string | null;
   channel?: "whatsapp" | string | null;
@@ -375,12 +278,7 @@ export interface contact_request {
   psychologist?: user | null;
 }
 
-export interface professional_review {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface professional_review extends PersistedObject {
   psychologist_id?: string | null;
   author_id?: string | null;
   rating?: number | null;
@@ -392,12 +290,7 @@ export interface professional_review {
   author?: user | null;
 }
 
-export interface community {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface community extends PersistedObject {
   name?: string | null;
   slug?: string | null;
   active?: boolean | null;
@@ -415,12 +308,7 @@ export interface community {
   rules?: community_rule[] | null;
 }
 
-export interface community_rule {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface community_rule extends PersistedObject {
   community_id?: string | null;
   title?: string | null;
   description?: string | null;
@@ -429,24 +317,14 @@ export interface community_rule {
   community?: community | null;
 }
 
-export interface community_suggestion {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface community_suggestion extends PersistedObject {
   user_id?: string | null;
   theme?: string | null;
   status?: "pendente" | "aprovada" | "rejeitada" | string | null;
   user?: user | null;
 }
 
-export interface community_post {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface community_post extends PersistedObject {
   community_id?: string | null;
   author_id?: string | null;
   title?: string | null;
@@ -462,12 +340,7 @@ export interface community_post {
   reports?: post_report[] | null;
 }
 
-export interface post_reply {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface post_reply extends PersistedObject {
   post_id?: string | null;
   author_id?: string | null;
   parent_reply_id?: string | null;
@@ -485,48 +358,28 @@ export interface post_reply {
   reports?: post_report[] | null;
 }
 
-export interface post_save {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface post_save extends PersistedObject {
   user_id?: string | null;
   post_id?: string | null;
   user?: user | null;
   post?: community_post | null;
 }
 
-export interface post_reply_save {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface post_reply_save extends PersistedObject {
   user_id?: string | null;
   reply_id?: string | null;
   user?: user | null;
   reply?: post_reply | null;
 }
 
-export interface post_notification_mute {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface post_notification_mute extends PersistedObject {
   user_id?: string | null;
   post_id?: string | null;
   user?: user | null;
   post?: community_post | null;
 }
 
-export interface post_report {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface post_report extends PersistedObject {
   post_id?: string | null;
   reply_id?: string | null;
   target_type?: "post" | "reply" | string | null;
@@ -540,24 +393,14 @@ export interface post_report {
   reporter?: user | null;
 }
 
-export interface notification_subscription {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface notification_subscription extends PersistedObject {
   device_id?: string | null;
   user_id?: string | null;
   subscription?: unknown;
   user?: user | null;
 }
 
-export interface visitor_location {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface visitor_location extends PersistedObject {
   visitor_id?: string | null;
   session_id?: string | null;
   user_id?: string | null;
@@ -570,12 +413,7 @@ export interface visitor_location {
   user?: user | null;
 }
 
-export interface visitor_session {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface visitor_session extends PersistedObject {
   visitor_id?: string | null;
   session_id?: string | null;
   user_id?: string | null;
@@ -589,12 +427,7 @@ export interface visitor_session {
   user?: user | null;
 }
 
-export interface page_view_event {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface page_view_event extends PersistedObject {
   visitor_id?: string | null;
   session_id?: string | null;
   user_id?: string | null;
@@ -620,12 +453,7 @@ export interface page_view_event {
   user?: user | null;
 }
 
-export interface important_action_event {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface important_action_event extends PersistedObject {
   visitor_id?: string | null;
   session_id?: string | null;
   user_id?: string | null;
@@ -639,12 +467,7 @@ export interface important_action_event {
   user?: user | null;
 }
 
-export interface notification {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface notification extends PersistedObject {
   read?: boolean | null;
   redirect?: string | null;
   message_key?: string | null;
@@ -654,23 +477,13 @@ export interface notification {
   actor?: notification_actor | null;
 }
 
-export interface notification_preference {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface notification_preference extends PersistedObject {
   user_id?: string | null;
   prefs?: unknown;
   user?: user | null;
 }
 
-export interface user {
-  id?: string | null;
-  deleted?: boolean | null;
-  deletedAt?: Date | null;
-  updatedAt?: Date | null;
-  createdAt?: Date | null;
+export interface user extends PersistedObject {
   name?: string | null;
   avatar?: string | null;
   provider?: string | null;
@@ -730,7 +543,7 @@ export interface user {
   notification_preference?: notification_preference | null;
 }
 
-export interface notification_actor {
+export interface notification_actor extends PersistedObject {
   id?: string | null;
   name: string;
   avatar?: string | null;

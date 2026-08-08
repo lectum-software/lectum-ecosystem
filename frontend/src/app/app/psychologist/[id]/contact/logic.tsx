@@ -53,7 +53,7 @@ const resolveApiErrorMessage = (error: unknown, fallback: string) => {
   }
 
   if (normalized.includes("whatsapp") && normalized.includes("verific")) {
-    return "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após verificação real.";
+    return "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após a verificação.";
   }
 
   if (normalized.includes("whatsapp")) {
@@ -69,7 +69,7 @@ const resolveApiErrorMessage = (error: unknown, fallback: string) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em instantes.";
   }
 
   return rawMessage || fallback;
@@ -113,8 +113,8 @@ const PrivacyCard = () => {
       </div>
       <div className="grid gap-2 rounded-2xl border border-border bg-surface p-3 text-xs leading-5 text-muted">
         <p className="flex gap-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-          Não enviamos mensagens ativas por API do WhatsApp neste MVP.
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />O
+          contato é iniciado pelo WhatsApp; nenhuma mensagem é enviada automaticamente.
         </p>
         <p className="flex gap-2">
           <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
@@ -228,7 +228,7 @@ export const PsychologistContactLogic = () => {
 
     if (!professional?.whatsapp_available) {
       setApiError(
-        "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após verificação real.",
+        "Este perfil ainda não possui WhatsApp verificado. O contato será liberado após a verificação.",
       );
       return;
     }
@@ -319,8 +319,8 @@ export const PsychologistContactLogic = () => {
 
             {isUnavailable ? (
               <InlineAlert title="WhatsApp ainda indisponível" variant="warning">
-                Este perfil não possui WhatsApp verificado. O número só será liberado no fluxo de
-                contato quando houver verificação real por SMS/OTP.
+                Este perfil não possui WhatsApp verificado. O número só será liberado após a
+                confirmação por código.
               </InlineAlert>
             ) : (
               <InlineAlert title="Número protegido" variant="info">

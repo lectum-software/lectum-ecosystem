@@ -165,7 +165,7 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
     <div
       aria-labelledby="account-delete-title"
       aria-modal="true"
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/35 p-3 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-media-background/35 p-3 backdrop-blur-sm sm:items-center sm:p-6"
       role="dialog"
     >
       <button
@@ -174,7 +174,7 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
         onClick={closeModal}
         type="button"
       />
-      <section className="relative z-10 grid max-h-[90vh] w-full max-w-lg gap-5 overflow-y-auto rounded-[28px] border border-danger/20 bg-white p-5 shadow-[0_28px_90px_rgba(15,23,42,0.28)] sm:p-6">
+      <section className="relative z-10 grid max-h-[90vh] w-full max-w-lg gap-5 overflow-y-auto rounded-[28px] border border-danger/20 bg-surface p-5 shadow-lectum-soft sm:p-6">
         <div className="flex items-start gap-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-danger/10 text-danger">
             <ShieldAlert className="h-5 w-5" aria-hidden="true" />
@@ -269,7 +269,7 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
               Cancelar
             </Button>
             <Button
-              className="bg-danger text-white hover:bg-danger/90"
+              className="bg-danger text-primary-foreground hover:bg-danger/90"
               disabled={
                 account.deleteAccount.isPending ||
                 account.security.isLoading ||

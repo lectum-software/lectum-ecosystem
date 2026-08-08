@@ -30,7 +30,7 @@ graficos e restaura a matriz compacta.
 - Alterar regras de negocio, pesos, benchmarks, endpoints, contratos de API ou banco de dados.
 - Criar nova matriz analitica ou novas categorias.
 - Criar mock, seed artificial, endpoint simulado, migration, schema Prisma ou novo package.
-- Usar Figma como fonte ativa.
+- Tratar Figma como fonte visual ativa; a fonte vigente é Builder/proto.
 
 ## Criterios de aceite
 

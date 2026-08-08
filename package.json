@@ -6,9 +6,11 @@
   "scripts": {
     "prepare": "lefthook install",
     "run": "pnpm dev",
-    "check": "pnpm check:secrets && pnpm check:env && pnpm check:source-size && pnpm check:cycles && pnpm check:frontend && pnpm check:backend && pnpm check:admin",
+    "check": "pnpm check:secrets && pnpm check:encoding && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles && pnpm check:frontend && pnpm check:backend && pnpm check:admin",
     "check:deploy-branch": "node scripts/check-deploy-branch.mjs",
     "check:env": "node scripts/check-env-examples.mjs",
+    "check:encoding": "node scripts/check-text-encoding.mjs",
+    "check:source-safety": "node scripts/check-source-safety.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:source-size": "node scripts/check-source-size.mjs",
     "check:cycles": "node scripts/check-import-cycles.mjs",

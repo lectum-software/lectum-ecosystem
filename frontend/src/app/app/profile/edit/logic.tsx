@@ -215,7 +215,7 @@ export const ProfileEditLogic = () => {
                   aria-expanded={isAvatarMenuOpen}
                   aria-haspopup="menu"
                   aria-label="Abrir opções da foto de perfil"
-                  className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-white ring-4 ring-surface shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="absolute right-1 bottom-1 z-10 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground ring-4 ring-surface shadow-[var(--lectum-shadow-soft)] transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSavingAvatar || !isPatient}
                   onClick={() => setIsAvatarMenuOpen((current) => !current)}
                   type="button"
@@ -236,7 +236,7 @@ export const ProfileEditLogic = () => {
                       type="button"
                     />
                     <div
-                      className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 overflow-hidden rounded-[28px] border border-border bg-white p-2 text-left shadow-[0_24px_70px_rgba(15,23,42,0.22)] ring-1 ring-[#D9E8F8]/70 sm:absolute sm:top-[calc(100%+0.75rem)] sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-56 sm:-translate-x-1/2 sm:rounded-2xl"
+                      className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 overflow-hidden rounded-[28px] border border-border bg-surface p-2 text-left shadow-lectum-soft ring-1 ring-border/70 sm:absolute sm:top-[calc(100%+0.75rem)] sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-56 sm:-translate-x-1/2 sm:rounded-2xl"
                       role="menu"
                     >
                       <button

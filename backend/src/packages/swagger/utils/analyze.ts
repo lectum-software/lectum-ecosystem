@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: a travessia ESTree recebe nós heterogêneos produzidos pelo parser legado.
 
 import fs from "node:fs";
 import { parse } from "@babel/parser";

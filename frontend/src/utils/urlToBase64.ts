@@ -1,7 +1,7 @@
 /**
  * Converte uma VAPID public key (base64 URL-safe) em Uint8Array,
  * formato exigido por `pushManager.subscribe({ applicationServerKey })`.
- * Pronto para uso na TASK-29 (push web).
+ * Utilizado na inscrição do navegador para notificações push.
  */
 export function urlToBase64(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);

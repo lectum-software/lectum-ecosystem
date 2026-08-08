@@ -176,7 +176,7 @@ export const buildStatisticsOverviewMetric = ({
     id: config.id,
     label: config.label,
     source: config.source,
-    unavailable_reason: points.length > 0 ? null : "Sem pontos reais no período",
+    unavailable_reason: points.length > 0 ? null : "Sem pontos no período",
     unit: config.unit ?? "count",
     value,
   };

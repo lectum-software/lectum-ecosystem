@@ -23,6 +23,19 @@ export const parsePositiveInteger = (
 export const isProductionRuntime = () =>
   ["prod", "production"].includes(process.env.NODE_ENV?.trim().toLowerCase() || "");
 
+export const getTrustProxySetting = (): boolean | number => {
+  const raw = process.env.TRUST_PROXY?.trim().toLowerCase();
+
+  if (!raw || raw === "false") return false;
+  if (raw === "true") return true;
+
+  const parsed = Number(raw);
+
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : false;
+};
+
+export const isTrustProxyEnabled = () => Boolean(getTrustProxySetting());
+
 export const getUserTokenLimit = () =>
   parsePositiveInteger(process.env.TOKEN_API_USER_MAX, DEFAULT_USER_TOKEN_LIMIT, { max: 50 });
 

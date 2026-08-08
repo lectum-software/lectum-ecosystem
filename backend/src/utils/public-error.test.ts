@@ -15,6 +15,13 @@ test("preserva mensagens de domínio próprias para usuários", () => {
 
 test("remove detalhes de infraestrutura e rastros internos", () => {
   assert.equal(isSafePublicErrorMessage("Prisma P2002 unique constraint failed"), false);
+  assert.equal(isSafePublicErrorMessage("At least one policy returned UNAUTHORIZED."), false);
+  assert.equal(
+    isSafePublicErrorMessage(
+      "The template with id e2c13c5c96d34a499c377ddadeeb38f2 does not exist",
+    ),
+    false,
+  );
   assert.equal(
     sanitizePublicErrorMessage("TypeError at /app/dist/index.js:10"),
     "Não foi possível concluir a solicitação agora.",

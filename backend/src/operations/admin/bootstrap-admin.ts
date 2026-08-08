@@ -3,7 +3,7 @@
 import prisma from "@/infra/database/prisma";
 import { encrypt } from "@/utils/crypt";
 
-const help = `Cria ou atualiza o primeiro administrador real da Lectum.
+const help = `Cria ou atualiza o primeiro administrador da Lectum.
 
 Uso:
   pnpm --dir backend admin:bootstrap -- --email admin@example.com --name "Admin Lectum" --password "senha-forte"

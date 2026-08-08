@@ -83,13 +83,13 @@ const PROFILE_VIDEO_RETENTION_CATEGORY_CONFIG = {
   low_presentation_video_retention: {
     color: PROFILE_CROSS_MATRIX_COLORS.low,
     description:
-      "Retenção média do vídeo de apresentação abaixo da faixa padrão da plataforma, mas com sessão real no período.",
+      "Retenção média do vídeo de apresentação abaixo da faixa padrão da plataforma, com sessão registrada no período.",
     label: "Baixa Retenção",
   },
   no_presentation_video_retention: {
     color: PROFILE_CROSS_MATRIX_COLORS.none,
     description:
-      "Nenhuma sessão real do vídeo de apresentação com duração suficiente para calcular retenção no período.",
+      "Nenhuma sessão do vídeo de apresentação teve duração suficiente para calcular a retenção no período.",
     label: "Sem Retenção",
   },
   standard_presentation_video_retention: {
@@ -162,24 +162,24 @@ const PROFILE_OPENING_CATEGORY_CONFIG = {
   high_profile_opening: {
     color: PROFILE_CROSS_MATRIX_COLORS.high,
     description:
-      "Aberturas reais do perfil público acima da faixa padrão da plataforma no período selecionado.",
+      "Aberturas do perfil público acima da faixa padrão da plataforma no período selecionado.",
     label: "Alta abertura",
   },
   low_profile_opening: {
     color: PROFILE_CROSS_MATRIX_COLORS.low,
     description:
-      "Aberturas reais do perfil público abaixo da faixa padrão da plataforma, mas com sinal no período.",
+      "Aberturas do perfil público abaixo da faixa padrão da plataforma, com sinal no período.",
     label: "Baixa abertura",
   },
   no_profile_opening: {
     color: PROFILE_CROSS_MATRIX_COLORS.none,
-    description: "Nenhuma abertura real do perfil público no período selecionado.",
+    description: "Nenhuma abertura do perfil público no período selecionado.",
     label: "Sem abertura",
   },
   standard_profile_opening: {
     color: PROFILE_CROSS_MATRIX_COLORS.standard,
     description:
-      "Aberturas reais do perfil público dentro da faixa padrão da plataforma no período selecionado.",
+      "Aberturas do perfil público dentro da faixa padrão da plataforma no período selecionado.",
     label: "Abertura padrão",
   },
 } satisfies Record<ProfileOpeningCategoryId, { color: string; description: string; label: string }>;
@@ -285,7 +285,7 @@ export const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefini
               : PROFILE_CROSS_MATRIX_COLORS.danger,
       ),
     ),
-    description: "Faixas de cliques reais no WhatsApp recebidos por psicólogo.",
+    description: "Faixas de cliques no WhatsApp recebidos por psicólogo.",
     id: "conversion",
     label: "Conversão",
     source: ADMIN_PROFILE_CONVERSION_SOURCE,
@@ -363,7 +363,7 @@ export const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefini
               : PROFILE_CROSS_MATRIX_COLORS.none,
       ),
     ),
-    description: "Score de engajamento recebido em comunidades por comentários e interações reais.",
+    description: "Pontuação de engajamento recebido em comunidades por comentários e interações.",
     id: "engagement",
     label: "Engajamento comunidade",
     source: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE,
@@ -382,7 +382,7 @@ export const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefini
               : PROFILE_CROSS_MATRIX_COLORS.none,
       ),
     ),
-    description: "Favoritos reais recebidos pelos psicólogos no período selecionado.",
+    description: "Favoritos recebidos pelos psicólogos no período selecionado.",
     id: "favorites",
     label: "Favoritados",
     source: ADMIN_PROFILE_ENGAGEMENT_FAVORITES_SOURCE,
@@ -392,7 +392,7 @@ export const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefini
       id,
       ...PROFILE_OPENING_CATEGORY_CONFIG[id],
     })),
-    description: "Aberturas reais do perfil público do psicólogo no período selecionado.",
+    description: "Aberturas do perfil público do psicólogo no período selecionado.",
     id: "profile_opening",
     label: "Abertura de perfil",
     source: "profile_view_event.source=profile_page",
@@ -421,7 +421,7 @@ export const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefini
               : PROFILE_CROSS_MATRIX_COLORS.none,
       ),
     ),
-    description: "Atenção real recebida em conteúdo autoral nas comunidades.",
+    description: "Atenção recebida em conteúdo autoral nas comunidades.",
     id: "community_visibility",
     label: "Visibilidade comunidade",
     source: ADMIN_PROFILE_EXPOSURE_SOURCE,
@@ -440,7 +440,7 @@ export const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefini
               : PROFILE_CROSS_MATRIX_COLORS.none,
       ),
     ),
-    description: "Tempo real assistido no vídeo de apresentação do perfil.",
+    description: "Tempo assistido no vídeo de apresentação do perfil.",
     id: "presentation_video_visibility",
     label: "Visibilidade vídeo de apresentação",
     source: ADMIN_PROFILE_EXPOSURE_SOURCE,
@@ -450,7 +450,7 @@ export const PROFILE_CROSS_MATRIX_AXIS_DEFINITIONS: ProfileCrossMatrixAxisDefini
       id,
       ...PROFILE_VIDEO_RETENTION_CATEGORY_CONFIG[id],
     })),
-    description: "Retenção média real do vídeo de apresentação, por sessões com duração.",
+    description: "Retenção média do vídeo de apresentação, por sessões com duração.",
     id: "presentation_video_retention",
     label: "Retenção vídeo de apresentação",
     source: "profile_video_watch_session.watched_seconds/duration_seconds",

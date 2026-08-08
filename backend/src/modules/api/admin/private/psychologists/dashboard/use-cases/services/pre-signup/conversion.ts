@@ -313,7 +313,7 @@ export const summarizePreSignupConversion = (params: {
       registeredPsychologistsCount === 0
         ? "Sem psicólogos cadastrados no período selecionado."
         : psychologistsWithHistoryCount === 0
-          ? "Nenhum psicólogo cadastrado no período possui trilha anônima prévia capturada pelo mesmo visitor_id."
+          ? "Nenhum psicólogo cadastrado no período possui navegação anônima anterior associada ao cadastro."
           : null,
   };
 };

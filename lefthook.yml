@@ -72,7 +72,7 @@ pre-push:
       run: pnpm check:deploy-branch
 
     repository-guards:
-      run: pnpm check:secrets && pnpm check:env && pnpm check:source-size
+      run: pnpm check:secrets && pnpm check:encoding && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles
 
     frontend-check:
       glob:

@@ -6,7 +6,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 //Repositories
 import { LoginRepository } from "../../auth/login/repositories/LoginRepository";
 
@@ -33,6 +33,7 @@ routes.get("", async (req: Request, res: Response) => {
     }
 
     const payload = jwt.verify(token, getJwtSecret(), {
+      algorithms: [JWT_ALGORITHM],
       maxAge: GOOGLE_EXCHANGE_MAX_AGE_SECONDS,
     }) as JwtPayload;
     const userId = typeof payload.id === "string" ? payload.id : "";

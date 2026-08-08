@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { createId } from "@paralleldrive/cuid2";
-import type { Request } from "express";
+import type multer from "multer";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { parsePositiveInteger } from "@/utils/runtime-config";
 import { streamToBuffer } from "./buffer";
@@ -42,12 +42,11 @@ const releaseUploadSlot = () => {
   uploadQueue.shift()?.();
 };
 
-export const storage = {
-  _handleFile: async (
-    req: Request & { medias?: any; uploadFeature?: string; uploads?: any },
-    file: Express.Multer.File & { stream: NodeJS.ReadableStream },
-    cb: (error: any, info?: any) => void,
-  ) => {
+const normalizeStorageError = (error: unknown) =>
+  error instanceof Error ? error : new UploadInfrastructureError("R2_UPLOAD_FAILED");
+
+export const storage: multer.StorageEngine = {
+  _handleFile: async (req, file, cb) => {
     const feature = req.uploadFeature || req.baseUrl.split("/")[3];
     let hasUploadSlot = false;
 
@@ -116,16 +115,12 @@ export const storage = {
         size: contentLength,
       });
     } catch (error) {
-      cb(error);
+      cb(normalizeStorageError(error));
     } finally {
       if (hasUploadSlot) releaseUploadSlot();
     }
   },
-  _removeFile: async (
-    _req: Request,
-    file: Express.Multer.File & { bucket?: string; key?: string },
-    cb: (error: any) => void,
-  ) => {
+  _removeFile: async (_req, file, cb) => {
     if (!file.key || file.bucket !== PUBLIC_BUCKET || !isR2Configured()) {
       cb(null);
       return;
@@ -135,7 +130,7 @@ export const storage = {
       await S3.send(new DeleteObjectCommand({ Bucket: PUBLIC_BUCKET, Key: file.key }));
       cb(null);
     } catch (error) {
-      cb(error);
+      cb(normalizeStorageError(error));
     }
   },
 };

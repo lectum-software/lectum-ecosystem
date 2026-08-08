@@ -264,7 +264,7 @@ Achados críticos corrigidos:
 
 - Dependências: `pnpm audit --prod` apontava advisories em `ws`, `form-data`, `postcss`, `multer`, `nodemailer`, `hono` e `@hono/node-server`. Foram aplicados updates diretos e overrides transitivos por aplicação; audits de frontend e backend passaram sem vulnerabilidades conhecidas.
 - Autenticação: removidos fallbacks `development-secret`; JWT agora passa por `getJwtSecret` e `JWT_SECRET_KEY` mínimo de 32 caracteres é obrigatório no backend.
-- Dados sensíveis: respostas HTTP backend passam por sanitização central para remover senha/hash, códigos, tokens de gateway, secrets e API keys; logs de criação removem também tokens de auth; frontend sanitiza usuário antes do Redux Persist/localStorage.
+- Dados sensíveis: respostas HTTP backend passam por sanitização central para remover senha/hash, códigos, tokens de gateway, secrets e API keys; logs de criação removem também tokens de auth; o frontend mantém o usuário somente em memória e hidrata a sessão por cookie `HttpOnly` + API.
 - Segurança HTTP: `helmet` passou a ser aplicado no Express.
 - Rate limit: `getLimiter` deixou de ser stub e passou a limitar por IP/janela sem package novo, seguindo a semântica do sample (`window` em minutos, `max` por janela).
 - Privacidade/LGPD: `GET /api/public/user` não expõe mais e-mail, `active` nem `confirmed`; retorna apenas dados públicos mínimos.

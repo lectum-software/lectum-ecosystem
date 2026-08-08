@@ -6,7 +6,7 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { isProductionRuntime } from "@/utils/runtime-config";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "lectum_google_oauth_nonce";
@@ -206,6 +206,7 @@ const decryptGoogleOAuthState = (state: string, cookieNonce: string) => {
 
 const verifyLegacyGoogleOAuthState = (state: string, cookieNonce: string) => {
   const payload = jwt.verify(state, getJwtSecret(), {
+    algorithms: [JWT_ALGORITHM],
     audience: GOOGLE_OAUTH_STATE_AUDIENCE,
     issuer: GOOGLE_OAUTH_STATE_ISSUER,
   }) as LegacyGoogleOAuthStatePayload;

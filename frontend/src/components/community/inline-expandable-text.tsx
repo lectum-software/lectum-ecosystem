@@ -128,7 +128,7 @@ export const InlineExpandableText = ({
   const visibleText = expanded || !truncated ? text : preview;
   const toggleLabel = expanded ? lessLabel : moreLabel;
   const toggleClassName =
-    "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-[#64748B]/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80";
+    "pointer-events-auto inline cursor-pointer rounded-none border-0 bg-transparent p-0 align-baseline font-[inherit] text-muted/80 [font-size:inherit] [line-height:inherit] dark:text-muted/80";
   const textContent = (
     <p className={cn("whitespace-pre-line", className)}>
       {visibleText}

@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import type { AdminPsychologistStatistics } from "@/api/req/psychologists";
 import { cn } from "@/lib/utils";
+import { colorWithAlpha } from "@/lib/visual-tokens";
 import { CardShell } from "../../components/shared";
 import { numberFormatter } from "../../support/config";
 import { formatDateTime, formatPlatformDuration } from "../../support/formatters";
@@ -26,20 +27,13 @@ const formatDeviceSessionCount = (count: number) =>
 const formatDevicePercentage = (percentage: number) => `${percentage.toLocaleString("pt-BR")}%`;
 
 const psychologistPlatformDeviceChartColors = {
-  desktop: "#13a85b",
-  mobile: "#308ce8",
-  tablet: "#8b5cf6",
-  unknown: "#94a3b8",
+  desktop: "var(--admin-success)",
+  mobile: "var(--admin-primary)",
+  tablet: "var(--admin-chart-accent)",
+  unknown: "var(--admin-subtle)",
 } satisfies Record<PsychologistPlatformDeviceUsageItem["device_type"], string>;
 
-const hexToRgba = (hex: string, alpha: number) => {
-  const normalized = hex.replace("#", "");
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-};
+const hexToRgba = colorWithAlpha;
 
 export const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
   const angleInRadians = (Math.PI / 180) * angleInDegrees;
@@ -496,7 +490,7 @@ export const PsychologistPlatformActivityHoursCard = ({
             ) : null}
           </div>
           <p className="mt-1 text-xs font-bold leading-5 text-muted">
-            Distribui&ccedil;&atilde;o por hora das atividades reais do psic&oacute;logo no
+            Distribui&ccedil;&atilde;o por hora das atividades do psic&oacute;logo no
             per&iacute;odo.
           </p>
         </div>
@@ -546,7 +540,7 @@ export const PsychologistPlatformActivityHoursCard = ({
             <div className="min-w-[760px]">
               {chartTotalPlatformActivityHours === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-6 text-sm font-bold text-muted">
-                  Nenhuma atividade real foi registrada para {selectedWeekdayLabel.toLowerCase()}.
+                  Nenhuma atividade foi registrada para {selectedWeekdayLabel.toLowerCase()}.
                 </div>
               ) : (
                 <div

@@ -103,12 +103,12 @@ export const isValidReportRange = (range: ReportDateRange) => {
 export const ReportStatusBadge = ({ group, label }: { group: string; label: string }) => {
   const className =
     group === "upheld"
-      ? "bg-red-50 text-danger"
+      ? "bg-danger-soft text-danger"
       : group === "dismissed"
-        ? "bg-emerald-50 text-success"
+        ? "bg-success-soft text-success"
         : group === "pending"
-          ? "bg-yellow-50 text-yellow-700"
-          : "bg-orange-50 text-orange-700";
+          ? "bg-warning-soft text-warning"
+          : "bg-warning-soft text-warning";
 
   return <Badge className={className}>{label}</Badge>;
 };

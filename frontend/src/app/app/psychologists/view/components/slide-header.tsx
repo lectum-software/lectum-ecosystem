@@ -36,7 +36,7 @@ export const PsychologistSlideHeader = ({
     <div
       aria-hidden={!isActiveSlide || areFeedModeControlsHidden ? true : undefined}
       className={cn(
-        "pointer-events-none absolute inset-x-0 top-0 z-[76] hidden bg-gradient-to-b from-black/75 via-black/35 to-transparent px-5 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:block lg:rounded-t-[22px] lg:bg-none",
+        "pointer-events-none absolute inset-x-0 top-0 z-[76] hidden bg-gradient-to-b from-media-background/75 via-media-background/35 to-transparent px-5 pb-5 pt-[calc(env(safe-area-inset-top)+20px)] transition-all duration-200 ease-out lg:block lg:rounded-t-[22px] lg:bg-none",
         isActiveSlide
           ? feedModeControlsVisibilityClass
           : "psychologists-ui-inert pointer-events-none opacity-0",
@@ -48,11 +48,11 @@ export const PsychologistSlideHeader = ({
         registerSwipeHintInteraction();
       }}
     >
-      <div className="pointer-events-auto flex items-center justify-center gap-8 text-white">
+      <div className="pointer-events-auto flex items-center justify-center gap-8 text-primary-foreground">
         <button
           aria-current={!hasActiveFilters ? "page" : undefined}
           className={cn(
-            "relative inline-flex h-9 items-center justify-center px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+            "relative inline-flex h-9 items-center justify-center px-1 text-[15px] font-semibold tracking-[-0.01em] text-primary-foreground transition-opacity duration-150 ease-out",
             hasActiveFilters ? "opacity-70 hover:opacity-100" : "opacity-100",
           )}
           onClick={handleExploreModeClick}
@@ -63,7 +63,7 @@ export const PsychologistSlideHeader = ({
           {!hasActiveFilters ? (
             <span
               aria-hidden="true"
-              className="absolute -bottom-0.5 left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-white"
+              className="absolute -bottom-0.5 left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-surface"
             />
           ) : null}
         </button>
@@ -71,7 +71,7 @@ export const PsychologistSlideHeader = ({
         <button
           aria-current={hasActiveFilters ? "page" : undefined}
           className={cn(
-            "relative inline-flex h-9 items-center justify-center gap-1.5 px-1 text-[15px] font-semibold tracking-[-0.01em] text-white transition-opacity duration-150 ease-out",
+            "relative inline-flex h-9 items-center justify-center gap-1.5 px-1 text-[15px] font-semibold tracking-[-0.01em] text-primary-foreground transition-opacity duration-150 ease-out",
             hasActiveFilters ? "opacity-100" : "opacity-75 hover:opacity-100",
           )}
           data-psychologists-tip-target={isActiveSlide ? "my-search" : undefined}
@@ -84,7 +84,7 @@ export const PsychologistSlideHeader = ({
           {hasActiveFilters ? (
             <span
               aria-hidden="true"
-              className="absolute -bottom-0.5 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-white"
+              className="absolute -bottom-0.5 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-surface"
             />
           ) : null}
         </button>
@@ -96,21 +96,21 @@ export const PsychologistSlideHeader = ({
             <span
               aria-hidden="true"
               className={cn(
-                "pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-8 rounded-l-full bg-gradient-to-r from-black/35 to-transparent transition-opacity duration-150 lg:block",
+                "pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-8 rounded-l-full bg-gradient-to-r from-media-background/35 to-transparent transition-opacity duration-150 lg:block",
                 desktopFilterChipScroll.canScrollLeft ? "opacity-100" : "opacity-0",
               )}
             />
             <span
               aria-hidden="true"
               className={cn(
-                "pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-8 rounded-r-full bg-gradient-to-l from-black/35 to-transparent transition-opacity duration-150 lg:block",
+                "pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-8 rounded-r-full bg-gradient-to-l from-media-background/35 to-transparent transition-opacity duration-150 lg:block",
                 desktopFilterChipScroll.canScrollRight ? "opacity-100" : "opacity-0",
               )}
             />
             {desktopFilterChipScroll.canScrollLeft ? (
               <button
                 aria-label="Ver filtros anteriores"
-                className="absolute top-1/2 left-0 z-20 hidden h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md transition-colors duration-150 hover:bg-black/55 lg:inline-flex"
+                className="absolute top-1/2 left-0 z-20 hidden h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-media-foreground/30 bg-media-background/35 text-primary-foreground backdrop-blur-md transition-colors duration-150 hover:bg-media-background/55 lg:inline-flex"
                 onClick={(event) => scrollDesktopFilterChips(-1, event)}
                 onPointerDown={stopInteractionPropagation}
                 type="button"
@@ -121,7 +121,7 @@ export const PsychologistSlideHeader = ({
             {desktopFilterChipScroll.canScrollRight ? (
               <button
                 aria-label="Ver mais filtros selecionados"
-                className="absolute top-1/2 right-0 z-20 hidden h-6 w-6 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md transition-colors duration-150 hover:bg-black/55 lg:inline-flex"
+                className="absolute top-1/2 right-0 z-20 hidden h-6 w-6 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-media-foreground/30 bg-media-background/35 text-primary-foreground backdrop-blur-md transition-colors duration-150 hover:bg-media-background/55 lg:inline-flex"
                 onClick={(event) => scrollDesktopFilterChips(1, event)}
                 onPointerDown={stopInteractionPropagation}
                 type="button"
@@ -139,7 +139,7 @@ export const PsychologistSlideHeader = ({
                 {activeFilterChips.map((chip) => (
                   <button
                     aria-label={`Remover filtro ${chip.label}`}
-                    className="inline-flex h-7 max-w-[144px] items-center gap-1 rounded-full border border-white/20 bg-white/16 px-2.5 text-[11px] font-semibold text-white backdrop-blur-md transition-colors duration-150 ease-out hover:bg-white/24"
+                    className="inline-flex h-7 max-w-[144px] items-center gap-1 rounded-full border border-media-foreground/20 bg-media-foreground/16 px-2.5 text-[11px] font-semibold text-primary-foreground backdrop-blur-md transition-colors duration-150 ease-out hover:bg-media-foreground/24"
                     key={`${psychologist.id}-${chip.key}-${chip.label}`}
                     onClick={(event) => {
                       event.stopPropagation();
@@ -154,7 +154,7 @@ export const PsychologistSlideHeader = ({
                 ))}
 
                 <button
-                  className="inline-flex h-7 shrink-0 items-center rounded-full border border-white/25 bg-white px-2.5 text-[11px] font-bold text-[#0f172a] transition-transform duration-150 ease-out hover:scale-[1.02]"
+                  className="inline-flex h-7 shrink-0 items-center rounded-full border border-media-foreground/25 bg-surface px-2.5 text-[11px] font-bold text-foreground transition-transform duration-150 ease-out hover:scale-[1.02]"
                   onClick={handleMySearchModeClick}
                   tabIndex={!isActiveSlide || areFeedModeControlsHidden ? -1 : undefined}
                   type="button"

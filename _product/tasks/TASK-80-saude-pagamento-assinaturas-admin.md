@@ -344,8 +344,8 @@ Adicionar análise real de confiabilidade do pagamento por assinatura paga Merca
 - `pnpm --dir admin check`.
 - `pnpm --dir admin build`.
 - `pnpm check`.
-- `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" "admin/src/app/(admin)/financeiro"` sem ocorrências.
-- `rg -n "Próxima/Cancel|PrÃ³xima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" admin/.next/static admin/.next/server -g "!cache/**"` sem ocorrências após build.
+- `rg -n "Próxima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" "admin/src/app/(admin)/financeiro"` sem ocorrências.
+- `rg -n "Próxima/Cancel|subscriptionLifecycle|formatSubscriptionLifecycleDate" admin/.next/static admin/.next/server -g "!cache/**"` sem ocorrências após build.
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/assinaturas` retornou `200`.
 
 ## Ajuste pós-feedback 2026-07-23 - Bloco Cancelamento no grid de métricas

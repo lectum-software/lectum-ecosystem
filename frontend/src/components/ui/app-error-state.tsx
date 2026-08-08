@@ -17,7 +17,7 @@ export function AppErrorState({ onRetry }: AppErrorStateProps) {
           Tente novamente. Se o problema continuar, volte em alguns instantes.
         </p>
         <button
-          className="mt-5 min-h-11 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="mt-5 min-h-11 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           onClick={onRetry}
           type="button"
         >

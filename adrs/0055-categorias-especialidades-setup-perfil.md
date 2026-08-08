@@ -43,8 +43,8 @@ Tambem sera garantido, em migracao, que as especialidades citadas nessas categor
 
 ## Validacao
 
-- `pnpm --dir backend db:migrate` â€” executado em 2026-06-11 e novamente nesta task; em ambiente atual o comando ainda encontra bloqueio conhecido de drift/checksum preexistente na migration `20260611140000_add_specialty_catalog_options`, sem reset destrutivo.
-- `pnpm --dir backend exec prisma migrate deploy` â€” aplica as migrations pendentes, incluindo `20260611170000_reactivate_specialty_catalog_items_for_profile_filters`.
+- `pnpm --dir backend db:migrate` — executado em 2026-06-11 e novamente nesta task; em ambiente atual o comando ainda encontra bloqueio conhecido de drift/checksum preexistente na migration `20260611140000_add_specialty_catalog_options`, sem reset destrutivo.
+- `pnpm --dir backend exec prisma migrate deploy` — aplica as migrations pendentes, incluindo `20260611170000_reactivate_specialty_catalog_items_for_profile_filters`.
 - `pnpm --dir backend exec prisma migrate status`
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`

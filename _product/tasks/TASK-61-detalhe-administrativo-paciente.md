@@ -206,15 +206,15 @@ Frontend esperado:
 
 ## Ajuste complementar 2026-07-18 - Layout piloto premium no detalhe
 
-- Pedido do usu�rio: aplicar o layout piloto premium nas p�ginas de pacientes do Admin.
+- Pedido do usuário: aplicar o layout piloto premium nas páginas de pacientes do Admin.
 - A rota `/pacientes/[id]` passou a entrar no escopo visual `admin-premium-pilot`, preservando a tela somente leitura e todos os dados reais existentes.
-- O cabe�alho operacional e os filtros passaram a usar superf�cie/borda/sombra do piloto; os cards de m�tricas foram compactados com pesos tipogr�ficos mais leves.
-- O gr�fico de engajamento passou a usar curvas SVG suaves com `buildSmoothSvgPath`, strokes/markers mais finos e plot limpo com borda sutil.
-- A s�rie **Coment�rios** deixou de depender de `var(--admin-info)` inexistente e passou a usar cor real definida no componente.
-- N�o houve altera��o de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sens�veis ou a��es administrativas de paciente.
-- Builder/Quick Copy n�o est� exposto como ferramenta callable no ambiente; a refer�ncia audit�vel continua sendo `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
+- O cabeçalho operacional e os filtros passaram a usar superfície/borda/sombra do piloto; os cards de métricas foram compactados com pesos tipográficos mais leves.
+- O gráfico de engajamento passou a usar curvas SVG suaves com `buildSmoothSvgPath`, strokes/markers mais finos e plot limpo com borda sutil.
+- A série **Comentários** deixou de depender de `var(--admin-info)` inexistente e passou a usar cor real definida no componente.
+- Não houve alteração de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensíveis ou ações administrativas de paciente.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
 
-### Valida��o complementar executada
+### Validação complementar executada
 
 - `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir admin check`
@@ -256,7 +256,7 @@ Frontend esperado:
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- Servi�o local: `showAdminPatient({ id: "demo-patient-reviewer-01", period: "year" })` retornou `200 Este ano 3660`.
+- Serviço local: `showAdminPatient({ id: "demo-patient-reviewer-01", period: "year" })` retornou `200 Este ano 3660`.
 
 ## Ajuste pos-feedback 2026-07-19 - Remocao dos controles superiores do detalhe
 
@@ -288,29 +288,29 @@ Frontend esperado:
 - `pnpm --dir admin build`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/demo-patient-reviewer-01?tab=perfil` retornou `200`.
-- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em m�dulos backend n�o alterados nesta execu��o.
+- `pnpm check` foi tentado, mas falhou em `pnpm --dir backend check` por erros TypeScript preexistentes em módulos backend não alterados nesta execução.
 
 ## Ajuste pos-feedback 2026-07-19 - Copy e metadado do header do paciente
 
-- Pedido do usu�rio: remover o ID do header do detalhe do paciente, reduzir a copy de localiza��o ausente e trocar a linha de cadastro/onboarding pela data/hora de �ltimo acesso.
-- O header de `/pacientes/[id]` agora mostra apenas **Paciente** abaixo do nome, sem o identificador visual nessa �rea.
-- A localiza��o ausente passou de **Localiza��o agregada n�o capturada** para **Localiza��o n�o capturada**.
+- Pedido do usuário: remover o ID do header do detalhe do paciente, reduzir a copy de localização ausente e trocar a linha de cadastro/onboarding pela data/hora de último acesso.
+- O header de `/pacientes/[id]` agora mostra apenas **Paciente** abaixo do nome, sem o identificador visual nessa área.
+- A localização ausente passou de **Localização agregada não capturada** para **Localização não capturada**.
 - O endpoint `GET /api/admin/private/patients/:id` passou a retornar `header.last_access_at` calculado a partir de `user_token.createdAt/updatedAt` real, sem tracking novo, seed, mock ou backfill.
-- Quando n�o houver token real, a UI exibe estado honesto de informa��o n�o capturada pelo formatador existente.
-- N�o houve schema Prisma, migration, package novo, a��o administrativa ou amplia��o de dados sens�veis al�m do metadado operacional de �ltimo acesso aprovado no ADR-0241.
+- Quando não houver token real, a UI exibe estado honesto de informação não capturada pelo formatador existente.
+- Não houve schema Prisma, migration, package novo, ação administrativa ou ampliação de dados sensíveis além do metadado operacional de último acesso aprovado no ADR-0241.
 
 ## Ajuste pos-feedback 2026-07-19 - Status da conta no header
 
-- Pedido do usu�rio: no header do detalhe do paciente, substituir a forma de cadastro pelo status da conta e remover a tag verde **Ativo** ao lado do nome.
-- O header agora mant�m o status operacional apenas na linha de metadados como **Status da conta: Ativo/Inativo**, derivado de `user.active` real.
-- A forma de cadastro continua dispon�vel nas abas internas de cadastro/conta, mas n�o aparece mais no header.
-- N�o houve backend novo, schema Prisma, migration, package, seed, mock, tracking, dado sens�vel ou a��o administrativa.
+- Pedido do usuário: no header do detalhe do paciente, substituir a forma de cadastro pelo status da conta e remover a tag verde **Ativo** ao lado do nome.
+- O header agora mantém o status operacional apenas na linha de metadados como **Status da conta: Ativo/Inativo**, derivado de `user.active` real.
+- A forma de cadastro continua disponível nas abas internas de cadastro/conta, mas não aparece mais no header.
+- Não houve backend novo, schema Prisma, migration, package, seed, mock, tracking, dado sensível ou ação administrativa.
 
 ## Ajuste pos-feedback 2026-07-19 - Ordem dos metadados do header
 
-- Pedido do usu�rio: remover g�nero do header, trocar **Status da conta: Ativo** por **Conta ativa** e posicionar o status entre e-mail e localiza��o.
-- O header agora lista e-mail, status da conta e localiza��o, nesta ordem.
-- G�nero permanece somente na aba **Perfil e cadastro**, usando o dado real existente, e n�o aparece mais no header.
+- Pedido do usuário: remover gênero do header, trocar **Status da conta: Ativo** por **Conta ativa** e posicionar o status entre e-mail e localização.
+- O header agora lista e-mail, status da conta e localização, nesta ordem.
+- Gênero permanece somente na aba **Perfil e cadastro**, usando o dado real existente, e não aparece mais no header.
 
 ## Ajuste pos-feedback 2026-07-19 - Abas internas padronizadas com Psicologos
 
@@ -534,25 +534,25 @@ Frontend esperado:
 - `pnpm check`
 - Browser local/headless via Chrome/CDP em `http://localhost:3002/pacientes/cmrb6fbix0000y0uhdpu1bptl?tab=estatisticas`, com admin temporario real removido ao final, validou desktop `1365x900` e mobile `390x844`: quatro blocos da aba, filtros **Periodo/De/Ate** independentes, default **Todo o periodo**, tabela de **Comunidades ativas**, filtro **Todos** nos horarios de maior atividade, resumo de **Uso da plataforma**, sem badge `America/Sao_Paulo`, sem copy antiga do heatmap e `scrollWidth=390` no mobile.
 
-## Ajuste p�s-feedback 2026-07-21 - Acentua��o e ortografia da aba Conta
+## Ajuste pós-feedback 2026-07-21 - Acentuação e ortografia da aba Conta
 
-- Pedido do usu�rio: corrigir acentua��o e ortografia dos textos exibidos na aba **Conta** do detalhe administrativo de paciente.
-- Corrigidos labels, avisos, placeholders e toasts da UI de `/pacientes/[id]?tab=conta`, incluindo **M�todo de login**, **Troca obrigat�ria**, **Sem pend�ncia**, **Sess�es ativas**, **Motivo/observa��o interna** e **Confirma��o forte**.
-- As confirma��es fortes vis�veis passaram a usar copy correta (`ALTERAR E-MAIL` e `ENCERRAR SESS�ES`) com normaliza��o compat�vel no frontend e backend para aceitar a entrada legada sem acento/h�fen, sem quebrar operadores acostumados ao formato anterior.
+- Pedido do usuário: corrigir acentuação e ortografia dos textos exibidos na aba **Conta** do detalhe administrativo de paciente.
+- Corrigidos labels, avisos, placeholders e toasts da UI de `/pacientes/[id]?tab=conta`, incluindo **Método de login**, **Troca obrigatória**, **Sem pendência**, **Sessões ativas**, **Motivo/observação interna** e **Confirmação forte**.
+- As confirmações fortes visíveis passaram a usar copy correta (`ALTERAR E-MAIL` e `ENCERRAR SESSÕES`) com normalização compatível no frontend e backend para aceitar a entrada legada sem acento/hífen, sem quebrar operadores acostumados ao formato anterior.
 - Corrigidas mensagens backend de erro/sucesso da aba de conta do paciente em `backend/locales/pt/translation.json`.
-- A contagem `sessao(oes)` foi substitu�da por pluraliza��o leg�vel: `1 sess�o`/`n sess�es` e `1 dispositivo`/`n dispositivos`.
-- N�o houve altera��o de schema Prisma, migrations, package, endpoint, seed, mock, dado artificial ou regra de dom�nio.
-- Builder/Quick Copy n�o est� exposto como ferramenta callable neste ambiente; a refer�ncia audit�vel foi o screenshot enviado pelo usu�rio em 2026-07-21.
+- A contagem `sessao(oes)` foi substituída por pluralização legível: `1 sessão`/`n sessões` e `1 dispositivo`/`n dispositivos`.
+- Não houve alteração de schema Prisma, migrations, package, endpoint, seed, mock, dado artificial ou regra de domínio.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável foi o screenshot enviado pelo usuário em 2026-07-21.
 - ADR atualizado: `adrs/0292-correcao-encoding-copy-ui-admin.md`.
 
-### Crit�rios de aceite do ajuste
+### Critérios de aceite do ajuste
 
-- [x] Textos vis�veis da aba **Conta** citados no screenshot est�o acentuados corretamente.
-- [x] Mensagens backend usadas por a��es da conta do paciente est�o em PT-BR acentuado.
-- [x] Confirma��es fortes continuam oper�veis com o formato anterior sem acentos.
+- [x] Textos visíveis da aba **Conta** citados no screenshot estão acentuados corretamente.
+- [x] Mensagens backend usadas por ações da conta do paciente estão em PT-BR acentuado.
+- [x] Confirmações fortes continuam operáveis com o formato anterior sem acentos.
 - [x] Nenhum `<img>` cru, mock, seed, endpoint novo, migration ou package novo foi adicionado.
 
-### Valida��o complementar executada
+### Validação complementar executada
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/account/use-cases/services.ts" "locales/pt/translation.json"`
@@ -562,43 +562,43 @@ Frontend esperado:
 - `pnpm --dir backend build`
 - `pnpm check`
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/cmrqsrab5001f1guh2ve5oy90?tab=conta` retornou `200`.
-- Chrome headless local abriu a rota, mas sem sess�o administrativa no perfil headless caiu no login; a confer�ncia autenticada visual ficou limitada ao screenshot enviado pelo usu�rio e � revis�o dos literais corrigidos.
-## Ajuste p�s-feedback 2026-07-21 - Publica��es do paciente em tabela
+- Chrome headless local abriu a rota, mas sem sessão administrativa no perfil headless caiu no login; a conferência autenticada visual ficou limitada ao screenshot enviado pelo usuário e à revisão dos literais corrigidos.
+## Ajuste pós-feedback 2026-07-21 - Publicações do paciente em tabela
 
-- Pedido do usu�rio: exibir as publica��es do paciente como lista/tabela com colunas **Data**, **Tipo**, **Comunidade**, **Pr�via (t�tulo + descri��o)** e a��es de **Ver** e **Estat�sticas**, com linha de m�tricas abaixo e expansor na pr�pria tabela para ler o conte�do completo do post.
-- O endpoint `GET /api/admin/private/patients/:id` foi ampliado com `publications.items`, derivado de `community_post` real do paciente e m�tricas reais de `page_view_event`, `post_reply`, `post_vote`, `post_save`, `post_share` e `post_report`.
-- A aba `/pacientes/[id]?tab=publicacoes` deixou de depender do recorte limitado de atividades recentes e agora renderiza uma tabela mobile-first com rolagem horizontal controlada, a��es por linha, m�tricas no padr�o visual das publica��es do psic�logo e expansor de conte�do completo.
-- A a��o **Ver** abre a publica��o p�blica e a a��o **Estat�sticas** reutiliza a rota Admin existente de analytics de conte�do (`/comunidades/[slug]/conteudo/post/[id]`), sem endpoint paralelo.
-- N�o houve schema Prisma, migration, package novo, seed, mock, backfill, tracking novo, modera��o, edi��o ou remo��o de conte�do.
-- Builder/Quick Copy n�o est� exposto como ferramenta callable no ambiente; as refer�ncias audit�veis foram a captura enviada pelo usu�rio, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psic�logos/Detalhes do psic�logo/Publica��es.png`.
+- Pedido do usuário: exibir as publicações do paciente como lista/tabela com colunas **Data**, **Tipo**, **Comunidade**, **Prévia (título + descrição)** e ações de **Ver** e **Estatísticas**, com linha de métricas abaixo e expansor na própria tabela para ler o conteúdo completo do post.
+- O endpoint `GET /api/admin/private/patients/:id` foi ampliado com `publications.items`, derivado de `community_post` real do paciente e métricas reais de `page_view_event`, `post_reply`, `post_vote`, `post_save`, `post_share` e `post_report`.
+- A aba `/pacientes/[id]?tab=publicacoes` deixou de depender do recorte limitado de atividades recentes e agora renderiza uma tabela mobile-first com rolagem horizontal controlada, ações por linha, métricas no padrão visual das publicações do psicólogo e expansor de conteúdo completo.
+- A ação **Ver** abre a publicação pública e a ação **Estatísticas** reutiliza a rota Admin existente de analytics de conteúdo (`/comunidades/[slug]/conteudo/post/[id]`), sem endpoint paralelo.
+- Não houve schema Prisma, migration, package novo, seed, mock, backfill, tracking novo, moderação, edição ou remoção de conteúdo.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; as referências auditáveis foram a captura enviada pelo usuário, `_product/proto/admin/Pacientes/Pacientes - Detalhes.png` e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Publicações.png`.
 - ADR criado: `adrs/0299-admin-paciente-publicacoes-tabela-metricas.md`.
 
-### Crit�rios de aceite do ajuste
+### Critérios de aceite do ajuste
 
-- [x] A aba **Publica��es** usa posts reais do paciente, n�o atividades recentes truncadas.
-- [x] A tabela possui colunas **Data**, **Tipo**, **Comunidade**, **Pr�via** e **A��es**.
-- [x] Cada publica��o possui bot�es de **Ver** e **Estat�sticas**.
-- [x] Cada publica��o exibe linha de m�tricas abaixo da linha principal.
-- [x] O expansor da tabela mostra o conte�do completo do post.
+- [x] A aba **Publicações** usa posts reais do paciente, não atividades recentes truncadas.
+- [x] A tabela possui colunas **Data**, **Tipo**, **Comunidade**, **Prévia** e **Ações**.
+- [x] Cada publicação possui botões de **Ver** e **Estatísticas**.
+- [x] Cada publicação exibe linha de métricas abaixo da linha principal.
+- [x] O expansor da tabela mostra o conteúdo completo do post.
 - [x] Nenhum mock, seed, endpoint simulado, package novo ou migration foi adicionado.
 
-### Valida��o complementar executada
+### Validação complementar executada
 
 - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/detail/DTOs/IAdminPatientDetailDTO.ts" "src/modules/api/admin/private/patients/detail/repositories/AdminPatientDetailRepository.ts" "src/modules/api/admin/private/patients/detail/use-cases/services.ts"`
 - `pnpm --dir admin exec biome check --write "src/api/req/patients/index.ts" "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir backend typecheck`
 - `pnpm --dir admin typecheck`
 
-### Valida��o final complementar
+### Validação final complementar
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Service local: `showAdminPatient({ id: "cmrb6fbrv0002y0uhsqzg306b", period: "all" })` retornou `publications.items.length=2` e m�tricas reais no primeiro post.
-- Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbrv0002y0uhsqzg306b?tab=publicacoes`, com admin tempor�rio real removido ao final, validou desktop `1365x900` e mobile `390x844`: colunas solicitadas, a��es **Ver**/**Estat�sticas**, linha de m�tricas, expansor de conte�do completo e rolagem horizontal controlada sem overflow global no mobile.
-- Observa��o operacional: a primeira reexecu��o de `pnpm --dir admin build` encontrou lock stale em `admin/.next/lock` de build anterior; o arquivo gerado foi removido e o build foi reexecutado com sucesso.
+- Service local: `showAdminPatient({ id: "cmrb6fbrv0002y0uhsqzg306b", period: "all" })` retornou `publications.items.length=2` e métricas reais no primeiro post.
+- Browser local/headless via Chrome/CDP em `/pacientes/cmrb6fbrv0002y0uhsqzg306b?tab=publicacoes`, com admin temporário real removido ao final, validou desktop `1365x900` e mobile `390x844`: colunas solicitadas, ações **Ver**/**Estatísticas**, linha de métricas, expansor de conteúdo completo e rolagem horizontal controlada sem overflow global no mobile.
+- Observação operacional: a primeira reexecução de `pnpm --dir admin build` encontrou lock stale em `admin/.next/lock` de build anterior; o arquivo gerado foi removido e o build foi reexecutado com sucesso.
 
 ## Ajuste pos-feedback 2026-07-21 - Diagnostico de Engajamento nas Comunidades ativas
 

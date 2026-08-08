@@ -210,16 +210,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - O CTA do Plano Gratuito deixou de mandar direto para CFP e agora persiste a escolha real por `POST /api/private/psychologist/billing/select-free`.
 - A assinatura gratuita usa `professional_subscription` com plano `gratuito`, status `ativa` e sem gateway.
-- Depois da escolha gratuita, a UI segue para `/app/professional/whatsapp/verify` e, ap?s salvar o WhatsApp, para `/app/professional/profile/setup`, sem validar CRP pela API no plano gratuito.
+- Depois da escolha gratuita, a UI segue para `/app/professional/whatsapp/verify` e, após salvar o WhatsApp, para `/app/professional/profile/setup`, sem validar CRP pela API no plano gratuito.
 - O CTA do Plano Profissional segue para `/app/professional/billing/checkout`, que permanece bloqueado ate a TASK-32 ter Mercado Pago real.
 
-## Ajuste de jornada em 2026-06-07: sem navega��o privada e endere�o p�s-pagamento
+## Ajuste de jornada em 2026-06-07: sem navegação privada e endereço pós-pagamento
 
-- Pedido direto de produto: remover a navega��o inferior das telas a partir de planos no onboarding do psic�logo.
-- `PrivateTemplate` passou a tratar `showHeader={false}` como fluxo sem navega��o inferior, preservando o shell privado e sem criar template paralelo.
+- Pedido direto de produto: remover a navegação inferior das telas a partir de planos no onboarding do psicólogo.
+- `PrivateTemplate` passou a tratar `showHeader={false}` como fluxo sem navegação inferior, preservando o shell privado e sem criar template paralelo.
 - Telas cobertas pelo ajuste: `/app/professional/billing/plans`, `/app/professional/billing/checkout`, `/app/professional/billing/address`, `/app/professional/whatsapp/verify` e `/app/professional/profile/setup`.
-- A jornada paga foi reordenada para: plano -> pagamento real confirmado -> endere�o de faturamento -> telefone -> CRP -> perfil.
-- A jornada gratuita permanece: plano gratuito persistido -> WhatsApp -> perfil, sem cobran�a simulada.
+- A jornada paga foi reordenada para: plano -> pagamento real confirmado -> endereço de faturamento -> telefone -> CRP -> perfil.
+- A jornada gratuita permanece: plano gratuito persistido -> WhatsApp -> perfil, sem cobrança simulada.
 
 ## Atualizacao em 2026-06-07: gratuito com WhatsApp e sem CRP API
 

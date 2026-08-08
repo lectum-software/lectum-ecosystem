@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
-  Database,
   Info,
   Loader2,
   RefreshCw,
@@ -61,15 +60,15 @@ const SettingsHeader = () => (
           Assinatura
         </h1>
         <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-muted md:text-base">
-          Visualize o valor atual do Plano Profissional definido pelo backend. A edição do preço
-          fica reservada para uma próxima etapa com regras de cobrança e auditoria.
+          Consulte o valor atual do Plano Profissional. A edição do preço será disponibilizada
+          quando o fluxo de cobrança estiver habilitado.
         </p>
       </div>
       <div className="rounded-[1.35rem] border border-primary/15 bg-primary-soft p-4 text-sm text-primary lg:max-w-sm">
         <div className="flex gap-3">
           <Info className="mt-0.5 h-5 w-5 shrink-0" />
           <p className="font-semibold leading-6">
-            O frontend apenas formata o valor recebido da API; não há preço hardcoded nesta tela.
+            O valor exibido abaixo é o vigente para novas assinaturas.
           </p>
         </div>
       </div>
@@ -171,18 +170,13 @@ const CurrentPlanCard = ({ plan }: { plan: AdminSubscriptionPlanSetting }) => (
             </span>
           </div>
           <p className="mt-3 text-sm font-medium leading-6 text-muted">
-            Valor monetário armazenado em centavos no backend e exibido aqui somente para leitura.
+            Valor mensal cadastrado e disponível somente para leitura.
           </p>
         </div>
       </div>
 
       <aside className="border-t border-border bg-surface-muted/50 p-5 md:p-6 lg:border-l lg:border-t-0">
         <div className="grid gap-3">
-          <PlanDetail
-            icon={<Database aria-hidden className="h-5 w-5" />}
-            label="Fonte"
-            value={<span className="break-words font-mono text-xs">{plan.source}.price_cents</span>}
-          />
           <PlanDetail
             icon={<Clock3 aria-hidden className="h-5 w-5" />}
             label="Atualizado em"

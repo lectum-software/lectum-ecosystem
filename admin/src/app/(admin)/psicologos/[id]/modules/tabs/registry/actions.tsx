@@ -70,7 +70,7 @@ export const RegistryAttemptItem = ({
         </p>
       </div>
       <Badge
-        className={attempt.found ? "bg-emerald-50 text-success" : "bg-surface-muted text-muted"}
+        className={attempt.found ? "bg-success-soft text-success" : "bg-surface-muted text-muted"}
       >
         {attempt.found ? "Ativo" : "Inativo"}
       </Badge>
@@ -240,7 +240,7 @@ export const RegistryIdentityForm = ({
           </button>
           {canApprove ? (
             <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-primary-foreground transition hover:bg-primary-hover"
               onClick={form.handleSubmit(onApproveSubmit)}
               type="button"
             >
@@ -250,7 +250,7 @@ export const RegistryIdentityForm = ({
           ) : null}
           {canReject ? (
             <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-red-50"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control border border-danger bg-surface px-4 text-sm font-black text-danger transition hover:bg-danger-soft"
               onClick={onReject}
               type="button"
             >
@@ -355,7 +355,7 @@ export const RegistrySaveIdentityForm = ({
             required
           />
           <button
-            className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white shadow-control transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted sm:mt-7"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-primary-foreground shadow-control transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted sm:mt-7"
             disabled={mutation.isPending}
             type="submit"
           >
@@ -477,7 +477,7 @@ export const RegistryApproveForm = ({
           required
         />
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-control bg-primary px-4 text-sm font-black text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
           disabled={mutation.isPending}
           type="submit"
         >
@@ -533,7 +533,7 @@ export const RegistryRejectForm = ({ id, onClose }: { id: string; onClose: () =>
           required
         />
         <button
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
           disabled={mutation.isPending}
           type="submit"
         >

@@ -2,7 +2,6 @@
 
 import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import {
-  type CSSProperties,
   type MouseEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
@@ -10,98 +9,21 @@ import {
   useEffect,
   useRef,
   useState,
-  type VideoHTMLAttributes,
 } from "react";
 import { cn } from "@/lib/utils";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 
-type VideoFit = "contain" | "cover";
-type ControlsVariant = "native" | "minimal" | "persistent";
-type VideoDataAttributes = {
-  [key: `data-${string}`]: string | undefined;
-};
-type VerticalVideoElementProps = Omit<
-  VideoHTMLAttributes<HTMLVideoElement>,
-  "children" | "className" | "controls" | "poster" | "preload" | "ref" | "src"
-> &
-  VideoDataAttributes;
-
-type VerticalVideoPlayerProps = {
-  className?: string;
-  controls?: boolean;
-  controlsVariant?: ControlsVariant;
-  fit?: VideoFit;
-  fullscreenVariant?: "default" | "content";
-  onContentClick?: () => void;
-  onVideoElementReady?: (video: HTMLVideoElement | null) => void;
-  poster?: string | null;
-  preload?: "auto" | "metadata" | "none";
-  src: string;
-  style?: CSSProperties;
-  title: string;
-  videoClassName?: string;
-  videoProps?: VerticalVideoElementProps;
-};
-
-const fitClassName: Record<VideoFit, string> = {
-  contain: "object-contain",
-  cover: "object-cover",
-};
-
-const formatVideoTime = (seconds: number) => {
-  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
-
-  const totalSeconds = Math.floor(seconds);
-  const minutes = Math.floor(totalSeconds / 60);
-  const remainingSeconds = String(totalSeconds % 60).padStart(2, "0");
-
-  return `${minutes}:${remainingSeconds}`;
-};
-
-const getReadableVideoDuration = (video: HTMLVideoElement) =>
-  Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
-
-const clampNumber = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
-
-const waitForVideoEvent = (video: HTMLVideoElement, eventName: keyof HTMLMediaElementEventMap) =>
-  new Promise<void>((resolve) => {
-    const timeout = window.setTimeout(() => {
-      video.removeEventListener(eventName, handleEvent);
-      resolve();
-    }, 2500);
-
-    const handleEvent = () => {
-      window.clearTimeout(timeout);
-      resolve();
-    };
-
-    video.addEventListener(eventName, handleEvent, {
-      once: true,
-    });
-  });
-
-const MOBILE_FULLSCREEN_MEDIA_QUERY = "(max-width: 1023px)";
-
-const staticMobileContentFullscreenStyles = [
-  ["position", "fixed"],
-  ["inset", "0"],
-  ["display", "block"],
-  ["min-width", "0"],
-  ["min-height", "0"],
-  ["max-width", "100vw"],
-  ["margin", "auto"],
-  ["aspect-ratio", "9 / 16"],
-  ["background", "#000"],
-  ["object-fit", "contain"],
-  ["object-position", "center center"],
-] as const;
-
-type StoredVideoStyle = {
-  name: string;
-  priority: string;
-  value: string;
-};
+import {
+  clampNumber,
+  fitClassName,
+  formatVideoTime,
+  getReadableVideoDuration,
+  MOBILE_FULLSCREEN_MEDIA_QUERY,
+  type StoredVideoStyle,
+  staticMobileContentFullscreenStyles,
+  type VerticalVideoPlayerProps,
+  waitForVideoEvent,
+} from "./vertical-video-player-support";
 
 export const VerticalVideoPlayer = ({
   className,
@@ -587,7 +509,7 @@ export const VerticalVideoPlayer = ({
   return (
     <div
       className={cn(
-        "relative aspect-[9/16] overflow-hidden rounded-[22px] border border-border bg-black shadow-inner",
+        "relative aspect-[9/16] overflow-hidden rounded-[22px] border border-border bg-media-background shadow-inner",
         className,
       )}
       style={style}
@@ -595,7 +517,7 @@ export const VerticalVideoPlayer = ({
       <video
         {...passthroughVideoProps}
         aria-label={title}
-        className={cn("h-full w-full bg-black", fitClassName[fit], videoClassName)}
+        className={cn("h-full w-full bg-media-background", fitClassName[fit], videoClassName)}
         controls={hasNativeControls}
         controlsList={
           usesMinimalControls
@@ -626,7 +548,7 @@ export const VerticalVideoPlayer = ({
             ? `Mostrar interface do vídeo: ${title}`
             : `Alternar reprodução do vídeo: ${title}`
         }
-        className="absolute inset-x-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+        className="absolute inset-x-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/50"
         onClick={handleContentClick}
         style={{
           bottom: usesPersistentControls
@@ -640,7 +562,7 @@ export const VerticalVideoPlayer = ({
       {usesPersistentControls ? (
         <div
           data-lectum-video-player-controls="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] px-4 text-white"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] px-4 text-primary-foreground"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
           }}
@@ -654,7 +576,7 @@ export const VerticalVideoPlayer = ({
               aria-valuemax={Math.round(duration)}
               aria-valuemin={0}
               aria-valuenow={Math.round(currentTime)}
-              className="relative flex h-7 w-full cursor-pointer items-center outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              className="relative flex h-7 w-full cursor-pointer items-center outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70"
               onKeyDown={handlePersistentProgressKeyDown}
               onPointerCancel={handlePersistentProgressPointerEnd}
               onPointerDown={handlePersistentProgressPointerDown}
@@ -667,16 +589,16 @@ export const VerticalVideoPlayer = ({
             >
               <span
                 aria-hidden="true"
-                className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/35"
+                className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-media-background/35"
               />
               <span
                 aria-hidden="true"
-                className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white"
+                className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-surface"
                 style={{ width: `${persistentProgressRatio * 100}%` }}
               />
               <span
                 aria-hidden="true"
-                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_1px_5px_rgba(0,0,0,0.45)]"
+                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface shadow-lectum-soft"
                 style={{ left: `${persistentProgressRatio * 100}%` }}
               />
             </div>
@@ -684,7 +606,7 @@ export const VerticalVideoPlayer = ({
             <div className="flex items-center gap-2">
               <button
                 aria-label={isPaused ? `Reproduzir vídeo: ${title}` : `Pausar vídeo: ${title}`}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95"
                 onClick={handlePersistentPlayPause}
                 onPointerDown={(event) => event.stopPropagation()}
                 type="button"
@@ -696,13 +618,13 @@ export const VerticalVideoPlayer = ({
                 )}
               </button>
 
-              <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-white">
+              <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-primary-foreground">
                 {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
               </span>
 
               <button
                 aria-label={isMuted ? `Ativar som do vídeo: ${title}` : `Mutar vídeo: ${title}`}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-white transition hover:bg-white/10 active:scale-95"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95"
                 onClick={handlePersistentMuteToggle}
                 onPointerDown={(event) => event.stopPropagation()}
                 type="button"
@@ -718,11 +640,11 @@ export const VerticalVideoPlayer = ({
         </div>
       ) : null}
       {usesMinimalControls ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pb-4 pt-12">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-media-background/80 via-media-background/45 to-transparent px-4 pb-4 pt-12">
           <div className="pointer-events-auto flex items-center">
             <button
               aria-label={isPaused ? `Reproduzir video: ${title}` : `Pausar video: ${title}`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface/95 text-foreground shadow-[var(--lectum-shadow-soft)] transition hover:scale-[1.03] hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface/95 text-foreground shadow-[var(--lectum-shadow-soft)] transition hover:scale-[1.03] hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70"
               onClick={handleContentClick}
               type="button"
             >

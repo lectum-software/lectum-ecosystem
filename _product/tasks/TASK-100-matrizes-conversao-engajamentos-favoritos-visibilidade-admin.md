@@ -35,7 +35,7 @@ sem ranking publico, punicao ou mudanca de algoritmo.
   Conversao.
 - Criar filtro composto novo na lista Admin para drill-down dos 64 cruzamentos.
 - Alterar ranking publico, ordenacao de psicologos, schema Prisma, migration, seed, mock ou package.
-- Usar Figma como fonte ativa.
+- Tratar Figma como fonte visual ativa; a fonte vigente é Builder/proto.
 
 ## Criterios de aceite
 

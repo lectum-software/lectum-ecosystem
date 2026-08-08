@@ -54,7 +54,7 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
         {registryVerificationBadge(registry)}
       </div>
 
-      <div className="mt-5 grid gap-3 rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
+      <div className="mt-5 grid gap-3 rounded-3xl border border-info-border bg-info-soft/70 p-4">
         <RegistryIdentityForm
           canApprove={registry.actions.can_approve_manually}
           canReject={registry.actions.can_reject_manually}

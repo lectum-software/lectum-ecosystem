@@ -124,8 +124,6 @@ const readCompatibleGatewayPlanId = async ({
   console.warn("[BILLING] Mercado Pago plan amount mismatch", {
     expected_amount_cents: expectedAmountCents,
     gateway_amount_cents: gatewayPlan.amount_cents,
-    gateway_plan_id: gatewayPlanId,
-    plan_id: plan.id,
     plan_slug: plan.slug,
   });
 
@@ -154,8 +152,6 @@ const readPersistedGatewayPlanId = async ({
 
     console.warn("[BILLING] Mercado Pago persisted plan not found, resetting local reference", {
       ...sanitizePaymentGatewayError(err),
-      gateway_plan_id: gatewayPlanId,
-      plan_id: plan.id,
       plan_slug: plan.slug,
     });
 

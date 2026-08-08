@@ -196,7 +196,7 @@ export const WelcomePatientLogic = () => {
                 </InlineAlert>
               ) : null}
               <button
-                className="group flex h-[60px] w-full items-center justify-center gap-4 rounded-[16px] bg-primary px-6 !text-[1rem] !font-extrabold tracking-[-0.012em] text-surface shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:h-[60px] sm:rounded-[18px] dark:text-foreground"
+                className="group flex h-[60px] w-full items-center justify-center gap-4 rounded-[16px] bg-primary px-6 !text-[1rem] !font-extrabold tracking-[-0.012em] text-primary-foreground shadow-[var(--lectum-shadow)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary sm:h-[60px] sm:rounded-[18px]"
                 onClick={goNext}
                 type="button"
               >

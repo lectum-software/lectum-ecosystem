@@ -22,7 +22,6 @@
     "db:migrate-prod": "prisma migrate deploy",
     "reset": "node scripts/reset-database.mjs",
     "db:reset": "pnpm reset",
-    "db:push": "prisma db push",
     "gen:vapid": "npx web-push generate-vapid-keys",
     "admin:bootstrap": "tsx src/operations/admin/bootstrap-admin.ts",
     "subscription:grant": "tsx src/operations/subscriptions/grant-professional-subscription.ts",

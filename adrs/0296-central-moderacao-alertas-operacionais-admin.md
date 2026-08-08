@@ -178,7 +178,7 @@ A faixa **Fora do escopo agora...** foi removida da UI de Compliance para reduzi
 
 A página exclusiva `/moderacao/operacionais` passa a usar o mesmo padrão de tabela compacta adotado em Compliance, mas com semântica própria de operação: **Pendência**, **Pendente há**, **Usuário**, **Plano**, **Status do perfil** e ação por ícone. A coluna foi definida como **Usuário**, e não **Profissional**, porque a fila mistura pendências de conteúdo criado por pacientes e pendências de perfil de psicólogos.
 
-Para sustentar a leitura sem heurística no frontend, `GET /api/admin/private/moderation/operational-alerts` recebeu um campo aditivo `user` em cada alerta derivado. Em **Post sem cobertura**, o usuário vem do autor real de `community_post` e é rotulado como **Paciente**. Em **Perfis não publicados** e **Sem convers?o**, o usuário vem do `psychologist_profile`/`user_id`, com rótulo **Psicólogo** ou **Psicóloga** conforme o gênero profissional armazenado.
+Para sustentar a leitura sem heurística no frontend, `GET /api/admin/private/moderation/operational-alerts` recebeu um campo aditivo `user` em cada alerta derivado. Em **Post sem cobertura**, o usuário vem do autor real de `community_post` e é rotulado como **Paciente**. Em **Perfis não publicados** e **Sem conversão**, o usuário vem do `psychologist_profile`/`user_id`, com rótulo **Psicólogo** ou **Psicóloga** conforme o gênero profissional armazenado.
 
 O status **Ativo/Inativo** continua derivado do fato real **Publicado**. Por isso, os alertas operacionais de psicólogo passaram a incluir esse fato no payload, enquanto alertas de post exibem `—` nas colunas **Plano** e **Status do perfil** por não haver plano/status de perfil aplicável ao paciente/conteúdo. A ação da linha preserva o destino correto: detalhe do conteúdo para posts e detalhe administrativo do psicólogo para pendências de perfil.
 
@@ -194,7 +194,7 @@ O selo de verificado na linha só é exibido quando coexistem assinatura profiss
 
 ## Complemento 2026-07-25: filtros de listas entram na query key
 
-As listas exclusivas que usam `GET /api/admin/private/moderation/operational-alerts` dependem de cache client-side por TanStack Query. A chave anterior considerava grupo, paginação, datas, busca e filtros de denúncia, mas não incluía `alertType` nem os filtros específicos adicionados depois (`contentType`, `plan`, `profileStatus`). Com isso, a UI podia exibir um select segmentado, como **Sem convers?o**, enquanto a tabela permanecia com o resultado em cache de **Todos** ou de outro tipo.
+As listas exclusivas que usam `GET /api/admin/private/moderation/operational-alerts` dependem de cache client-side por TanStack Query. A chave anterior considerava grupo, paginação, datas, busca e filtros de denúncia, mas não incluía `alertType` nem os filtros específicos adicionados depois (`contentType`, `plan`, `profileStatus`). Com isso, a UI podia exibir um select segmentado, como **Sem conversão**, enquanto a tabela permanecia com o resultado em cache de **Todos** ou de outro tipo.
 
 A decisão é tratar todos os parâmetros funcionais de segmentação como parte obrigatória da query key: `alertType`, `contentType`, `plan` e `profileStatus` foram adicionados à normalização de `adminModerationKeys.operationalAlerts`. O backend e o contrato HTTP permanecem inalterados; a correção garante apenas que o cache/refetch do cliente acompanhe a segmentação real já suportada pelo endpoint.
 
@@ -216,7 +216,7 @@ Com a nova segmentação, `plan=profissional` deixa de capturar alertas de orige
 
 ## Complemento 2026-07-25: Detalhes operacionais por tipo de pendencia
 
-A tabela de `/moderacao/operacionais` passa a remover **Plano** e **Status do perfil** da grade principal e a concentrar a leitura acionavel em **Detalhes**. Como as pendencias operacionais sao heterogeneas, cada tipo define seus proprios fatos: cobertura de post mostra comunidade e nivel de engajamento do paciente; perfil nao publicado mostra plano e motivo de inatividade; sem convers?o mostra tempo na plataforma e criterios de adaptacao ja cumpridos.
+A tabela de `/moderacao/operacionais` passa a remover **Plano** e **Status do perfil** da grade principal e a concentrar a leitura acionavel em **Detalhes**. Como as pendencias operacionais sao heterogeneas, cada tipo define seus proprios fatos: cobertura de post mostra comunidade e nivel de engajamento do paciente; perfil nao publicado mostra plano e motivo de inatividade; sem conversão mostra tempo na plataforma e criterios de adaptacao ja cumpridos.
 
 O backend continua sendo a fonte de verdade dos fatos. Para **Post sem cobertura**, a decisao vigente e classificar o engajamento do paciente somente dentro da comunidade onde o post foi publicado, nao pela temperatura/intencao geral na plataforma. A classificacao usa atividades first-party de comunidade (`community_post`, `post_reply`, `post_vote`, `post_save`, `post_reply_save` e `post_share`) e retorna rotulos operacionais como **Pouco ativo**, **Ativo** ou **Muito ativo**.
 
@@ -230,7 +230,7 @@ A decisao reduz ruido na fila e evita que a coluna **Detalhes** vire uma lista d
 
 ## Complemento 2026-07-25: detalhe de cobertura substitui engajamento
 
-A fila `/moderacao/operacionais` passa a usar uma copy de escopo mais curta no header: **Pendencias por falta de cobertura, perfis profissionais nao publicados e falta de convers?o de profissionais.**. A decisao evita repetir regras internas como 48h/configuracoes obrigatorias/WhatsApp no resumo da pagina, mantendo esses criterios no contrato e na documentacao da task.
+A fila `/moderacao/operacionais` passa a usar uma copy de escopo mais curta no header: **Pendencias por falta de cobertura, perfis profissionais nao publicados e falta de conversão de profissionais.**. A decisao evita repetir regras internas como 48h/configuracoes obrigatorias/WhatsApp no resumo da pagina, mantendo esses criterios no contrato e na documentacao da task.
 
 Para **Post sem cobertura**, a coluna **Detalhes** deixa de exibir o nivel de engajamento do paciente e passa a exibir **Sem cobertura**, com a duracao real da pendencia. A UI usa primeiro o fato derivado **Idade** do alerta e mantém fallback para `age_hours`/`created_at` pelo helper de duracao ja usado nas tabelas, sem nova query, sem persistencia e sem endpoint paralelo.
 

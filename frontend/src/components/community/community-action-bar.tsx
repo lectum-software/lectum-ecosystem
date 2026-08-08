@@ -77,14 +77,14 @@ const voteClusterClassName = (size: CommunityActionSize, presentation: VotePrese
   }
 
   return cn(
-    "inline-flex shrink-0 items-center overflow-visible rounded-full bg-[#F4F6F8] p-0.5 ring-1 ring-[#E7ECF2] dark:bg-surface-muted dark:ring-border",
+    "inline-flex shrink-0 items-center overflow-visible rounded-full bg-surface-muted p-0.5 ring-1 ring-border dark:bg-surface-muted dark:ring-border",
     size === "xs" ? "min-h-8" : size === "md" ? "min-h-11" : "min-h-10",
   );
 };
 
 const separatorClassName = (size: CommunityActionSize, presentation: VotePresentation) =>
   cn(
-    "w-px bg-[#DDE4EC] dark:bg-border",
+    "w-px bg-surface-muted dark:bg-border",
     presentation === "inline" && "hidden",
     size === "xs" ? "h-4" : "h-5",
   );

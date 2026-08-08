@@ -159,7 +159,7 @@ export const buildProfileActivityResults = (params: {
       };
     }),
     description:
-      "Classificação interna e agregada dos psicólogos por ações autorais reais nas comunidades no período selecionado: posts publicados e respostas criadas.",
+      "Classificação agregada dos psicólogos por ações autorais nas comunidades no período selecionado: posts publicados e respostas criadas.",
     source: PROFILE_ACTIVITY_SOURCE,
     thresholds: PROFILE_ACTIVITY_THRESHOLDS,
     totals: totalSignals,

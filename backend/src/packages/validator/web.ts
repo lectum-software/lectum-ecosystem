@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: a variante web mantém a assinatura dinâmica compartilhada com o pacote legado.
 
 //Libs
 import { z } from "zod";

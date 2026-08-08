@@ -160,9 +160,9 @@ const formatSubscriptionLtv = (
 };
 
 const SUBSCRIPTION_STATUS_BADGE_CLASS: Record<string, string> = {
-  ativa: "bg-emerald-50 text-success",
-  cancelada: "bg-red-50 text-danger",
-  inadimplente: "bg-orange-50 text-orange-700",
+  ativa: "bg-success-soft text-success",
+  cancelada: "bg-danger-soft text-danger",
+  inadimplente: "bg-warning-soft text-warning",
   inativa: "bg-surface-muted text-muted",
 };
 

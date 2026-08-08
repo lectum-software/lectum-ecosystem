@@ -1,4 +1,4 @@
-# TASK-13: PsicÃ³logos: listagem e filtros
+# TASK-13: Psicólogos: listagem e filtros
 
 ## Metadata
 
@@ -6,13 +6,13 @@
 |---|---|
 | ID | TASK-13 |
 | Prioridade | P0 |
-| EsforÃ§o | L |
+| Esforço | L |
 | Fase | Descoberta |
 | Status | Completed |
-| DependÃªncias | TASK-02, TASK-12 |
-| ADR alvo | ADR de descoberta de psicÃ³logos |
+| Dependências | TASK-02, TASK-12 |
+| ADR alvo | ADR de descoberta de psicólogos |
 
-## ReferÃªncias obrigatÃ³rias
+## Referências obrigatórias
 
 - `_product/tasks/ARCHITECTURE.md`
 - `_product/tasks/PACKAGES.md`
@@ -20,28 +20,28 @@
 - `_product/tasks/PROTO-INVENTORY.md`
 - `_product/tasks/ROADMAP-REVALIDADO.md`
 
-## ReferÃªncias visuais
+## Referências visuais
 
 | Imagem local | Artefato Builder |
 |---|---|
-| `_product/proto/PsicÃ³logos.jpg` | `figma-design-frame-15-Psic-logos.html` |
-| `_product/proto/Filtros de PsicÃ³logos - ServiÃ§os Expandidos.jpg` | `figma-design-frame-12-Filtros-de-Psic-logos---Servi-os-Expandidos.html` |
+| `_product/proto/Psicólogos.jpg` | `figma-design-frame-15-Psic-logos.html` |
+| `_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg` | `figma-design-frame-12-Filtros-de-Psic-logos---Servi-os-Expandidos.html` |
 
-As referÃªncias visuais sÃ£o norte de produto e layout. Elas nÃ£o autorizam recriar arquitetura, aceitar cÃ³digo gerado sem revisÃ£o, usar mock ou ignorar os padrÃµes atuais do projeto.
+As referências visuais são norte de produto e layout. Elas não autorizam recriar arquitetura, aceitar código gerado sem revisão, usar mock ou ignorar os padrões atuais do projeto.
 
 ## Contexto
 
-A listagem Ã© uma tela central para pacientes. Ela deve consultar backend real, filtrar por dados persistidos e nÃ£o exibir profissionais fake.
+A listagem é uma tela central para pacientes. Ela deve consultar backend real, filtrar por dados persistidos e não exibir profissionais fake.
 
 ## Objetivo
 
-Implementar listagem real de psicÃ³logos aprovados com busca, filtros e paginaÃ§Ã£o.
+Implementar listagem real de psicólogos aprovados com busca, filtros e paginação.
 
-## PrÃ©-requisitos e bloqueios
+## Pré-requisitos e bloqueios
 
-- Sem psicÃ³logos aprovados reais, a tela deve mostrar estado vazio, nÃ£o seed fake.
+- Sem psicólogos aprovados reais, a tela deve mostrar estado vazio, não seed fake.
 
-Se qualquer bloqueio obrigatÃ³rio estiver ativo, pare a implementaÃ§Ã£o, registre ADR/pendÃªncia e nÃ£o marque a task como concluÃ­da.
+Se qualquer bloqueio obrigatório estiver ativo, pare a implementação, registre ADR/pendência e não marque a task como concluída.
 
 ## Escopo frontend
 
@@ -50,63 +50,63 @@ Rotas esperadas:
 - `/app/psychologists` (lista de descoberta, dentro do shell privado da TASK-12)
 - Cada card aponta para o detalhe do perfil em `/app/psychologist/[id]` (TASK-15).
 
-ImplementaÃ§Ã£o esperada:
+Implementação esperada:
 
 - Criar tela `/app/psychologists` dentro do shell privado.
-- Implementar busca, filtros expandidos, chips ativos, limpar filtros e paginaÃ§Ã£o conforme o "Contrato padrÃ£o de API" do `DATA-MODEL.md` (`page`/`limit`).
-- Filtros por taxonomia: `specialty`, `service` e `approach` (ver `DATA-MODEL.md`), alÃ©m do filtro "verificados" (`psychologist_profile.cfp_verified_at` preenchido).
+- Implementar busca, filtros expandidos, chips ativos, limpar filtros e paginação conforme o "Contrato padrão de API" do `DATA-MODEL.md` (`page`/`limit`).
+- Filtros por taxonomia: `specialty`, `service` e `approach` (ver `DATA-MODEL.md`), além do filtro "verificados" (`psychologist_profile.cfp_verified_at` preenchido).
 - Usar callers React Query e query keys dedicadas.
-- Exibir vazio honesto quando nÃ£o houver profissionais publicados.
-- NÃ£o hardcodar cards de psicÃ³logos.
+- Exibir vazio honesto quando não houver profissionais publicados.
+- Não hardcodar cards de psicólogos.
 
 ## Escopo backend
 
-ImplementaÃ§Ã£o esperada:
+Implementação esperada:
 
-- Criar endpoint de listagem com paginaÃ§Ã£o (`page`/`limit`, default 20, mÃ¡x 50 â€” ver "Contrato padrÃ£o de API" do `DATA-MODEL.md`), busca e filtros.
-- Retornar somente psicÃ³logos publicados (`psychologist_profile.published = true`) e de `user` ativo (PRD Â§7: sÃ³ ativos/verificados aparecem).
-- Expor ordenaÃ§Ã£o/exibiÃ§Ã£o de `rating_avg`/`rating_count` (ver `DATA-MODEL.md`; `rating_avg` Ã© nota Ã—100).
-- Filtro "verificados" = `cfp_verified_at` nÃ£o nulo.
-- Usar catÃ¡logos `specialty`/`service`/`approach` e os joins `psychologist_specialty`/`psychologist_service`/`psychologist_approach` (ver `DATA-MODEL.md`).
-- Adicionar Ã­ndices para filtros frequentes conforme jÃ¡ previstos no `DATA-MODEL.md`.
-- NÃ£o retornar dados sensÃ­veis do profissional (`cpf`, `whatsapp`, campos de conta).
+- Criar endpoint de listagem com paginação (`page`/`limit`, default 20, máx 50 — ver "Contrato padrão de API" do `DATA-MODEL.md`), busca e filtros.
+- Retornar somente psicólogos publicados (`psychologist_profile.published = true`) e de `user` ativo (PRD §7: só ativos/verificados aparecem).
+- Expor ordenação/exibição de `rating_avg`/`rating_count` (ver `DATA-MODEL.md`; `rating_avg` é nota Ã—100).
+- Filtro "verificados" = `cfp_verified_at` não nulo.
+- Usar catálogos `specialty`/`service`/`approach` e os joins `psychologist_specialty`/`psychologist_service`/`psychologist_approach` (ver `DATA-MODEL.md`).
+- Adicionar índices para filtros frequentes conforme já previstos no `DATA-MODEL.md`.
+- Não retornar dados sensíveis do profissional (`cpf`, `whatsapp`, campos de conta).
 
 Modelos/tabelas envolvidos (ver `DATA-MODEL.md`):
 
 - `psychologist_profile` (`published`, `rating_avg`, `rating_count`, `cfp_verified_at`)
-- `specialty` / `service` / `approach` (catÃ¡logos)
+- `specialty` / `service` / `approach` (catálogos)
 - `psychologist_specialty` / `psychologist_service` / `psychologist_approach` (joins)
 
-Guarda de papel (ver `DATA-MODEL.md`, "Camadas de autenticaÃ§Ã£o e autorizaÃ§Ã£o" e ADR-0002):
+Guarda de papel (ver `DATA-MODEL.md`, "Camadas de autenticação e autorização" e ADR-0002):
 
-- Estas sÃ£o rotas de leitura caller-neutras, montadas sob `/api/private/directory/*`, guardadas apenas por `_auth` (qualquer autenticado) â€” **nunca** por `requireRole`. Pacientes precisam navegar/descobrir psicÃ³logos, entÃ£o a descoberta nÃ£o pode ser psicÃ³logo-only.
-- NÃ£o usar `/api/private/psychologists` (confundÃ­vel com a autogestÃ£o do psicÃ³logo em `/api/private/psychologist/*`).
+- Estas são rotas de leitura caller-neutras, montadas sob `/api/private/directory/*`, guardadas apenas por `_auth` (qualquer autenticado) — **nunca** por `requireRole`. Pacientes precisam navegar/descobrir psicólogos, então a descoberta não pode ser psicólogo-only.
+- Não usar `/api/private/psychologists` (confundível com a autogestão do psicólogo em `/api/private/psychologist/*`).
 - Expor apenas campos PUBLIC-safe do `psychologist_profile`; nunca `cpf`, `whatsapp` ou campos de conta.
 
-Endpoints esperados (ver "ConvenÃ§Ã£o de rotas" do `DATA-MODEL.md`):
+Endpoints esperados (ver "Convenção de rotas" do `DATA-MODEL.md`):
 
-- GET `/api/private/directory/psychologists` (listagem paginada de descoberta, neutra, sÃ³ `_auth`)
+- GET `/api/private/directory/psychologists` (listagem paginada de descoberta, neutra, só `_auth`)
 
-## Contrato tÃ©cnico detalhado
+## Contrato técnico detalhado
 
-Arquitetura frontend obrigatÃ³ria:
+Arquitetura frontend obrigatória:
 
-- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulÃ¡rio.
+- Telas em `frontend/src/app/{rota}/page.tsx`, `logic.tsx` e `use-form.tsx` quando houver formulário.
 - Chamadas HTTP em `frontend/src/api/req/{dominio}/index.ts` usando `callEndpoint` e `handleReq`.
 - Hooks React Query em `frontend/src/api/callers/{dominio}/index.tsx`.
 - Query keys em `frontend/src/api/cache/keys.ts`.
 - Shells/templates em `frontend/src/templates`.
 - Componentes existentes em `frontend/src/registry/new-york-v4/ui` e `frontend/src/components/ui` devem ser reutilizados antes de criar novos.
-- Quando houver formulÃ¡rio ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
+- Quando houver formulário ou campo, usar `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form e Zod conforme `TASK-02`.
 
-Arquitetura backend obrigatÃ³ria:
+Arquitetura backend obrigatória:
 
 - Novas APIs em `backend/src/modules/api/{public|private}/{dominio}/{caso}`.
 - Rotas registradas em `backend/src/main/server/imports/write.ts`.
-- Validadores em `validator/index.ts` usando os helpers/pacote local de validaÃ§Ã£o.
-- Services e repositories separados quando houver regra de domÃ­nio ou persistÃªncia.
-- Respostas usando `send`, `error500`, `error` e traduÃ§Ãµes em `backend/locales/pt/translation.json`.
-- Prisma com nomes e padrÃµes jÃ¡ definidos em `ARCHITECTURE.md`.
+- Validadores em `validator/index.ts` usando os helpers/pacote local de validação.
+- Services e repositories separados quando houver regra de domínio ou persistência.
+- Respostas usando `send`, `error500`, `error` e traduções em `backend/locales/pt/translation.json`.
+- Prisma com nomes e padrões já definidos em `ARCHITECTURE.md`.
 
 Packages permitidos nesta task:
 
@@ -115,62 +115,62 @@ Packages permitidos nesta task:
 - @radix-ui/react-checkbox candidato
 - Prisma
 
-Regras anti-recriaÃ§Ã£o especÃ­ficas:
+Regras anti-recriação específicas:
 
 - Procurar componente, helper, model, endpoint e query key equivalente antes de criar estrutura nova.
-- NÃ£o criar client HTTP paralelo, store paralela, autenticaÃ§Ã£o paralela, validator paralelo ou design system paralelo.
-- NÃ£o usar `sample/` como referÃªncia direta de implementaÃ§Ã£o futura.
-- NÃ£o instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
+- Não criar client HTTP paralelo, store paralela, autenticação paralela, validator paralelo ou design system paralelo.
+- Não usar `sample/` como referência direta de implementação futura.
+- Não instalar package novo sem consultar `PACKAGES.md` e registrar ADR.
 
-## Estados obrigatÃ³rios
+## Estados obrigatórios
 
 - Loading inicial.
 - Erro de rede/API em PT-BR.
-- Estado vazio quando nÃ£o houver dado real.
+- Estado vazio quando não houver dado real.
 - Sucesso com feedback visual discreto.
 - Responsividade mobile-first baseada nas imagens exportadas.
 
 ## Fora do escopo
 
 - Criar dados fake, seed artificial ou mock para preencher tela.
-- Concluir integraÃ§Ã£o externa ausente.
-- Refatorar mÃ³dulos nÃ£o relacionados Ã  task.
+- Concluir integração externa ausente.
+- Refatorar módulos não relacionados à task.
 - Trocar package manager ou stack base.
 
-## CritÃ©rios de aceite
+## Critérios de aceite
 
-- [x] As referÃªncias visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
-- [x] Rotas de descoberta sob `/api/private/directory/*` usam sÃ³ `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
+- [x] As referências visuais desta task foram consultadas via Builder Quick Copy ou imagens locais citadas acima.
+- [x] Rotas de descoberta sob `/api/private/directory/*` usam só `_auth` (neutras), nunca `requireRole`, conforme ADR-0002.
 - [x] Frontend implementado nas rotas esperadas, seguindo a arquitetura de `ARCHITECTURE.md`.
-- [x] Backend implementado nos endpoints/modelos esperados quando aplicÃ¡vel.
+- [x] Backend implementado nos endpoints/modelos esperados quando aplicável.
 - [x] Modelos e endpoints seguem `DATA-MODEL.md` (sem inventar schema).
-- [x] Todos os estados obrigatÃ³rios existem e usam textos em PT-BR.
-- [x] FormulÃ¡rios e campos usam a fundaÃ§Ã£o da `TASK-02` quando aplicÃ¡vel.
+- [x] Todos os estados obrigatórios existem e usam textos em PT-BR.
+- [x] Formulários e campos usam a fundação da `TASK-02` quando aplicável.
 - [x] Nenhum mock, dado fake permanente, seed artificial ou endpoint simulado foi usado.
-- [x] Nenhum cÃ³digo gerado por Builder foi aceito sem revisÃ£o e adequaÃ§Ã£o Ã  arquitetura.
+- [x] Nenhum código gerado por Builder foi aceito sem revisão e adequação à arquitetura.
 - [x] Packages usados conferem com `PACKAGES.md`; qualquer novo package tem ADR.
 - [x] ADR criado ou atualizado em `adrs/`.
 - [x] Checks/builds relevantes foram executados sem erros.
 - [x] Commit criado com mensagem convencional.
 
-## ExecuÃ§Ã£o
+## Execução
 
-- Builder/Quick Copy nÃ£o estÃ¡ exposto como ferramenta direta nesta sessÃ£o; a validaÃ§Ã£o visual
-  usou as imagens locais obrigatÃ³rias `_product/proto/PsicÃ³logos.jpg` e
-  `_product/proto/Filtros de PsicÃ³logos - ServiÃ§os Expandidos.jpg`.
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a validação visual
+  usou as imagens locais obrigatórias `_product/proto/Psicólogos.jpg` e
+  `_product/proto/Filtros de Psicólogos - Serviços Expandidos.jpg`.
 - Backend criou `GET /api/private/directory/psychologists`, montado sob namespace neutro com apenas
   `_auth`, sem `requireRole`.
-- Prisma criou os catÃ¡logos `specialty`, `service`, `approach` e os joins
+- Prisma criou os catálogos `specialty`, `service`, `approach` e os joins
   `psychologist_specialty`, `psychologist_service`, `psychologist_approach`, sem seed artificial.
-- A listagem retorna somente `psychologist_profile.published = true`, usuÃ¡rio ativo e campos
-  public-safe; `cpf`, `whatsapp`, e-mail e dados de conta nÃ£o sÃ£o expostos.
+- A listagem retorna somente `psychologist_profile.published = true`, usuário ativo e campos
+  public-safe; `cpf`, `whatsapp`, e-mail e dados de conta não são expostos.
 - Frontend implementou `/app/psychologists` mobile-first dentro do shell privado, com busca,
-  filtros expandidos, chips ativos, limpar filtros, paginaÃ§Ã£o, loading, erro, sucesso e vazio
+  filtros expandidos, chips ativos, limpar filtros, paginação, loading, erro, sucesso e vazio
   honesto.
-- Busca e filtros usam a fundaÃ§Ã£o da TASK-02 (`useFormList` e controllers), React Query, req/caller
+- Busca e filtros usam a fundação da TASK-02 (`useFormList` e controllers), React Query, req/caller
   dedicados e query key `directory.psychologists`.
 - ADR criado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
-- ValidaÃ§Ãµes executadas:
+- Validações executadas:
   - `pnpm --dir backend db:migrate --name add_directory_taxonomies`
   - `pnpm --dir backend db:generate`
   - `pnpm --dir backend check`
@@ -178,81 +178,81 @@ Regras anti-recriaÃ§Ã£o especÃ­ficas:
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
-  - smoke de API real com paciente temporÃ¡rio removido ao final;
-  - browser local headless em viewport mobile `390x844` com cookie real, sessÃ£o hidratada,
+  - smoke de API real com paciente temporário removido ao final;
+  - browser local headless em viewport mobile `390x844` com cookie real, sessão hidratada,
     estado vazio/lista real e bottom nav.
 
-## ExecuÃ§Ã£o complementar: desktop e filtros em modal (2026-06-06)
+## Execução complementar: desktop e filtros em modal (2026-06-06)
 
-- Pedido do usuÃ¡rio: adaptar `/app/psychologists` para desktop e fazer os filtros abrirem em modal.
+- Pedido do usuário: adaptar `/app/psychologists` para desktop e fazer os filtros abrirem em modal.
 - Builder/Quick Copy foi revalidado via
 px "@builder.io/dev-tools@latest" auth status`, mas o CLI retornou
-  nÃ£o autenticado nesta sessÃ£o; a execuÃ§Ã£o manteve o fallback auditÃ¡vel das imagens locais obrigatÃ³rias da task.
-- A tela permanece mobile-first com base nos protÃ³tipos `390px`, mas agora expande em desktop para `lg:max-w-6xl`,
+  não autenticado nesta sessão; a execução manteve o fallback auditável das imagens locais obrigatórias da task.
+- A tela permanece mobile-first com base nos protótipos `390px`, mas agora expande em desktop para `lg:max-w-6xl`,
   card de busca/filtros responsivo e grid de resultados em duas colunas.
-- Os filtros avanÃ§ados deixaram de abrir inline e passaram a abrir em modal com `role="dialog"`, `aria-modal`,
-  fechamento por `Escape`/backdrop e foco inicial no botÃ£o de fechar, sem instalar pacote novo.
-- A busca, filtros e switch continuam usando dados reais da URL/API e a fundaÃ§Ã£o da TASK-02 (`useFormList` +
-  controllers) para campos avanÃ§ados.
+- Os filtros avançados deixaram de abrir inline e passaram a abrir em modal com `role="dialog"`, `aria-modal`,
+  fechamento por `Escape`/backdrop e foco inicial no botão de fechar, sem instalar pacote novo.
+- A busca, filtros e switch continuam usando dados reais da URL/API e a fundação da TASK-02 (`useFormList` +
+  controllers) para campos avançados.
 - ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
-- ValidaÃ§Ãµes executadas:
+- Validações executadas:
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
-  - browser local headless em viewport desktop `1440x1000`, com cookie real, sessÃ£o hidratada, `sectionWidth=1112`
-    e modal de filtros aberta com largura `520px`; usuÃ¡rio temporÃ¡rio de validaÃ§Ã£o removido ao final.
+  - browser local headless em viewport desktop `1440x1000`, com cookie real, sessão hidratada, `sectionWidth=1112`
+    e modal de filtros aberta com largura `520px`; usuário temporário de validação removido ao final.
 
-## ExecuÃ§Ã£o complementar: ajustes de card e favoritos no card (2026-06-06)
+## Execução complementar: ajustes de card e favoritos no card (2026-06-06)
 
-- Pedido do usuÃ¡rio: ajustar o card com inspiraÃ§Ã£o de densidade/tipografia do Reddit, trocar o selo para
-  `DisponÃ­vel hoje`, trocar CTA para `Chamar no WhatsApp`, usar tags fixas abaixo da busca e mover
+- Pedido do usuário: ajustar o card com inspiração de densidade/tipografia do Reddit, trocar o selo para
+  `Disponível hoje`, trocar CTA para `Chamar no WhatsApp`, usar tags fixas abaixo da busca e mover
   `Somente verificados` para uma faixa abaixo das tags.
-- Tags rÃ¡pidas abaixo da busca: `Ansiedade`, `DepressÃ£o`, `Luto`, `CompulsÃµes`, `Traumas`; elas aplicam busca real
-  no endpoint existente, sem catÃ¡logo fake persistido.
-- O coraÃ§Ã£o do card deixou de ser apenas decorativo e passou a executar favorito real com endpoints de paciente
+- Tags rápidas abaixo da busca: `Ansiedade`, `Depressão`, `Luto`, `Compulsões`, `Traumas`; elas aplicam busca real
+  no endpoint existente, sem catálogo fake persistido.
+- O coração do card deixou de ser apenas decorativo e passou a executar favorito real com endpoints de paciente
   (`POST`/`DELETE /api/private/patient/favorites/:id`) e campo contextual `favorited` na listagem.
-- Como favorito pertence Ã  TASK-14, a execuÃ§Ã£o criou os modelos previstos no `DATA-MODEL.md`, mas **nÃ£o** concluiu
-  a TASK-14 completa; a lista dedicada de favoritos segue como fluxo separado, e seguir psicÃ³logos foi depreciado na
+- Como favorito pertence à TASK-14, a execução criou os modelos previstos no `DATA-MODEL.md`, mas **não** concluiu
+  a TASK-14 completa; a lista dedicada de favoritos segue como fluxo separado, e seguir psicólogos foi depreciado na
   UI em 2026-06-08.
 - ADR criado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
-- ValidaÃ§Ãµes executadas:
+- Validações executadas:
   - `pnpm --dir backend db:migrate --name add_psychologist_favorites`
   - `pnpm --dir backend check`
   - `pnpm --dir backend build`
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
-  - smoke real de API com paciente temporÃ¡rio: favoritar, refletir `favorited=true` na listagem, desfavoritar e
-    remover o usuÃ¡rio temporÃ¡rio;
-  - browser local headless em viewport desktop `1440x1000`, validando tags, selo, CTA e clique no coraÃ§Ã£o com
+  - smoke real de API com paciente temporário: favoritar, refletir `favorited=true` na listagem, desfavoritar e
+    remover o usuário temporário;
+  - browser local headless em viewport desktop `1440x1000`, validando tags, selo, CTA e clique no coração com
     `aria-pressed=true`.
 
-## ExecuÃ§Ã£o complementar: card conforme referÃªncia de psicÃ³logos (2026-06-08)
+## Execução complementar: card conforme referência de psicólogos (2026-06-08)
 
-- Pedido do usuÃ¡rio: adaptar o card de psicÃ³logo conforme a referÃªncia anexada `PsicÃ³logos (1).jpg`, remover a opÃ§Ã£o
-  de seguir psicÃ³logos e manter favoritos/WhatsApp como aÃ§Ãµes principais.
-- Builder/Quick Copy nÃ£o estÃ¡ exposto como ferramenta direta nesta sessÃ£o; a validaÃ§Ã£o visual usou a imagem anexada
-  pelo usuÃ¡rio e o fallback local `_product/proto/PsicÃ³logos.jpg`.
-- O card pÃºblico agora usa layout mobile-first de atÃ© `390px`, sem botÃ£o de seguir, com coraÃ§Ã£o de favorito, selo
-  `DisponÃ­vel hoje` pulsando suavemente quando `available_today=true`, CTA verde `Chamar no WhatsApp` e link direto
+- Pedido do usuário: adaptar o card de psicólogo conforme a referência anexada `Psicólogos (1).jpg`, remover a opção
+  de seguir psicólogos e manter favoritos/WhatsApp como ações principais.
+- Builder/Quick Copy não está exposto como ferramenta direta nesta sessão; a validação visual usou a imagem anexada
+  pelo usuário e o fallback local `_product/proto/Psicólogos.jpg`.
+- O card público agora usa layout mobile-first de até `390px`, sem botão de seguir, com coração de favorito, selo
+  `Disponível hoje` pulsando suavemente quando `available_today=true`, CTA verde `Chamar no WhatsApp` e link direto
   para `wa.me`.
-- Tags abaixo da bio ficaram restritas a benefÃ­cios reais: tempo de formaÃ§Ã£o apenas para assinantes, desconto de
-  1Âª sessÃ£o, valor social e aceita convÃªnios. Especialidades, serviÃ§os, abordagens e modalidade nÃ£o aparecem como
-  tags de benefÃ­cio no card.
-- O selo verificado e o prefixo `Dr.`/`Dra.` aparecem somente para assinantes; perfis gratuitos publicados nÃ£o exibem
+- Tags abaixo da bio ficaram restritas a benefícios reais: tempo de formação apenas para assinantes, desconto de
+  1ª sessão, valor social e aceita convênios. Especialidades, serviços, abordagens e modalidade não aparecem como
+  tags de benefício no card.
+- O selo verificado e o prefixo `Dr.`/`Dra.` aparecem somente para assinantes; perfis gratuitos publicados não exibem
   o selo nem o prefixo.
-- Quando o assinante possui `video_url`, o card mostra uma miniatura de vÃ­deo com botÃ£o de play no prÃ³prio card.
-  VÃ­deos enviados por profissionais ainda nÃ£o possuem trilha de legenda nesta etapa; a exceÃ§Ã£o de lint foi registrada
+- Quando o assinante possui `video_url`, o card mostra uma miniatura de vídeo com botão de play no próprio card.
+  Vídeos enviados por profissionais ainda não possuem trilha de legenda nesta etapa; a exceção de lint foi registrada
   localmente no componente.
-- A rota `/app/following` passou a redirecionar para `/app/community`, a navegaÃ§Ã£o nÃ£o destaca mais `/app/following`
-  como favoritos e o menu de perfil passou a usar `Comunidades seguidas`, alinhado Ã  decisÃ£o de que usuÃ¡rios seguem
-  comunidades, nÃ£o outros usuÃ¡rios.
-- O backend da descoberta e da lista de favoritos passou a expor campos publicÃ¡veis necessÃ¡rios ao card
-  (`gender`, `video_url`, `available_today`, benefÃ­cios, `formation_years` e `whatsapp_url`). O campo bruto
-  `whatsapp` continua fora do contrato; `whatsapp_url` Ã© uma URL de CTA gerada para o pedido explÃ­cito de abrir
+- A rota `/app/following` passou a redirecionar para `/app/community`, a navegação não destaca mais `/app/following`
+  como favoritos e o menu de perfil passou a usar `Comunidades seguidas`, alinhado à decisão de que usuários seguem
+  comunidades, não outros usuários.
+- O backend da descoberta e da lista de favoritos passou a expor campos publicáveis necessários ao card
+  (`gender`, `video_url`, `available_today`, benefícios, `formation_years` e `whatsapp_url`). O campo bruto
+  `whatsapp` continua fora do contrato; `whatsapp_url` é uma URL de CTA gerada para o pedido explícito de abrir
   `wa.me`.
 - ADR atualizado: `adrs/0019-descoberta-psicologos-taxonomias.md`.
-- ValidaÃ§Ãµes executadas:
+- Validações executadas:
   - `pnpm --dir backend biome:fix`
   - `pnpm --dir frontend biome:fix`
   - `pnpm --dir backend check`
@@ -260,45 +260,45 @@ px "@builder.io/dev-tools@latest" auth status`, mas o CLI retornou
   - `pnpm --dir backend build`
   - `pnpm --dir frontend build`
   - `pnpm check`
-  - smoke real de API com paciente temporÃ¡rio removido ao final: `GET /api/private/directory/psychologists?page=1&limit=3`
+  - smoke real de API com paciente temporário removido ao final: `GET /api/private/directory/psychologists?page=1&limit=3`
     retornou `success=true`, `count=1`, `page=1` e campos novos do card (`whatsapp_url`, `video_url`,
-    `available_today`, benefÃ­cios e `formation_years`);
+    `available_today`, benefícios e `formation_years`);
   - smoke local HTTP: `GET /health` no backend retornou `200`; `/app/psychologists` e `/app/following` responderam
-    pelo proxy privado local com `307` quando acessados sem sessÃ£o de browser reutilizÃ¡vel nesta execuÃ§Ã£o.
+    pelo proxy privado local com `307` quando acessados sem sessão de browser reutilizável nesta execução.
 
-## ExecuÃ§Ã£o complementar: WhatsApp SVG e ajuste fino do card (2026-06-08)
+## Execução complementar: WhatsApp SVG e ajuste fino do card (2026-06-08)
 
-- Pedido do usuÃ¡rio: substituir o Ã­cone do CTA de WhatsApp pelo SVG anexado `SVG.svg`, usar verde `#22C55E`,
-  aproximar o espaÃ§amento de `PSICÃ“LOGO` e a cor da estrela de avaliaÃ§Ã£o da referÃªncia anterior, e corrigir o erro
+- Pedido do usuário: substituir o ícone do CTA de WhatsApp pelo SVG anexado `SVG.svg`, usar verde `#22C55E`,
+  aproximar o espaçamento de `PSICÃ“LOGO` e a cor da estrela de avaliação da referência anterior, e corrigir o erro
   `Acesso permitido apenas para o perfil autorizado`.
-- Builder/Quick Copy segue sem ferramenta direta nesta sessÃ£o; a referÃªncia ativa foi a imagem de card enviada
-  anteriormente pelo usuÃ¡rio e o SVG anexado nesta solicitaÃ§Ã£o.
-- Foi criado um componente vetorial reutilizÃ¡vel `WhatsAppIcon` com o path do SVG anexado, sem usar `<img>`.
-- Os CTAs de WhatsApp do card e do perfil pÃºblico usam background `#22C55E` e o novo Ã­cone em branco.
-- O texto `PSICÃ“LOGO` no card teve tracking reduzido para ficar mais prÃ³ximo da referÃªncia, e a estrela de avaliaÃ§Ã£o
+- Builder/Quick Copy segue sem ferramenta direta nesta sessão; a referência ativa foi a imagem de card enviada
+  anteriormente pelo usuário e o SVG anexado nesta solicitação.
+- Foi criado um componente vetorial reutilizável `WhatsAppIcon` com o path do SVG anexado, sem usar `<img>`.
+- Os CTAs de WhatsApp do card e do perfil público usam background `#22C55E` e o novo ícone em branco.
+- O texto `PSICÃ“LOGO` no card teve tracking reduzido para ficar mais próximo da referência, e a estrela de avaliação
   passou para `#FACC15`.
-- O erro de autorizaÃ§Ã£o foi tratado na UI: aÃ§Ãµes de favorito em cards/perfis ficam desabilitadas para usuÃ¡rios que nÃ£o
-  sejam pacientes, evitando chamadas aos endpoints de paciente por contas de psicÃ³logo.
-- ValidaÃ§Ãµes executadas:
+- O erro de autorização foi tratado na UI: ações de favorito em cards/perfis ficam desabilitadas para usuários que não
+  sejam pacientes, evitando chamadas aos endpoints de paciente por contas de psicólogo.
+- Validações executadas:
   - `pnpm --dir frontend biome:fix`
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
 
-## ExecuÃ§Ã£o complementar: selos do card com largura por conteÃºdo e animaÃ§Ã£o (2026-06-10)
+## Execução complementar: selos do card com largura por conteúdo e animação (2026-06-10)
 
-- Pedido do usuÃ¡rio: ajustar os selos de benefÃ­cios do card para largura ajustada ao texto, garantir que o espaÃ§amento vertical entre o Ãºltimo selo e o `overlay` seja igual ao espaÃ§amento entre `overlay` e botÃ£o de compartilhar, e adicionar animaÃ§Ã£o suave de flutuaÃ§Ã£o nos selos.
+- Pedido do usuário: ajustar os selos de benefícios do card para largura ajustada ao texto, garantir que o espaçamento vertical entre o último selo e o `overlay` seja igual ao espaçamento entre `overlay` e botão de compartilhar, e adicionar animação suave de flutuação nos selos.
 - O card foi ajustado para:
   - `width: fit-content` com `max-width` responsivo e `truncate` para evitar overflow;
-  - posicionamento vertical calculado por mediÃ§Ã£o do DOM para manter distÃ¢ncia equivalente entre selo e overlay / overlay e botÃ£o de compartilhamento;
-  - animaÃ§Ã£o de flutuaÃ§Ã£o contÃ­nua com atraso escalonado por selo e respeito ao `prefers-reduced-motion`.
-- ValidaÃ§Ãµes executadas:
+  - posicionamento vertical calculado por medição do DOM para manter distância equivalente entre selo e overlay / overlay e botão de compartilhamento;
+  - animação de flutuação contínua com atraso escalonado por selo e respeito ao `prefers-reduced-motion`.
+- Validações executadas:
   - `pnpm --dir frontend check`
   - `pnpm --dir frontend build`
   - `pnpm check`
-  - `adrs/0047-selos-card-fitted-animation-e-espacamento-dinamico.md` criado e atualizado com esta decisÃ£o.
+  - `adrs/0047-selos-card-fitted-animation-e-espacamento-dinamico.md` criado e atualizado com esta decisão.
 
-## ValidaÃ§Ã£o mÃ­nima
+## Validação mínima
 
 - `pnpm --dir frontend check` quando frontend mudar.
 - `pnpm --dir frontend build` quando mudar rota ou UI.
@@ -309,7 +309,7 @@ px "@builder.io/dev-tools@latest" auth status`, mas o CLI retornou
 
 ## Notas para executor
 
-Esta task deve ser concluÃ­da em um commit prÃ³prio. Se houver bloqueio externo, registre claramente o bloqueio e nÃ£o avance para a prÃ³xima task.
+Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo, registre claramente o bloqueio e não avance para a próxima task.
 
 ## Execucao complementar: layout imersivo alinhado ao PDF e navbar compartilhada (2026-06-11)
 
@@ -319,7 +319,7 @@ ext/image`.
 - A navbar customizada local da tela foi removida; a rota passou a reutilizar exclusivamente a navegacao do `PrivateTemplate`, mantendo item ativo, altura, espacamento, icones e comportamento globais.
 - O `PrivateTemplate` recebeu a prop opcional `contentClassName` para permitir tela imersiva sem padding do `PageShell` nesta rota, sem alterar o default das demais telas.
 - O layout foi ajustado para foto em tela cheia, busca flutuante, botao de filtros, overlay inferior mais forte, coluna lateral de acoes e informacoes do psicologo sobre a imagem, sem criar mocks nem dados fake.
-- Referencia visual: PDF anexado pelo usuario (`C:\Users\tulio\Downloads\Nova tela psicÃ³logos.pdf`), renderizado localmente apenas para inspecao visual; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
+- Referencia visual: PDF anexado pelo usuario (`C:\Users\tulio\Downloads\Nova tela psicólogos.pdf`), renderizado localmente apenas para inspecao visual; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao.
 - ADR atualizado: `adrs/0055-refatoracao-listagem-psicologos-imersiva.md`.
 - Validacoes executadas: ver registro do commit desta execucao.
 
@@ -377,11 +377,11 @@ ext/image`.
   - aproximar a base da bio do topo da navbar e deslocar a coluna lateral de acoes para baixo.
 - Ajustes implementados:
   - `logic.tsx` agora trata falha de carregamento do `video` via estado local `isVideoPlaybackFailed`;
-  - ao ocorrer erro/rejeiÃ§Ã£o de play antes da reproduÃ§Ã£o, a tela passa a exibir `video_cover_url` (ou avatar como fallback) em vez do avatar quando o video nao carrega;
+  - ao ocorrer erro/rejeição de play antes da reprodução, a tela passa a exibir `video_cover_url` (ou avatar como fallback) em vez do avatar quando o video nao carrega;
   - o texto da bio passou a renderizar sem `line-clamp`, garantindo exibicao integral;
   - o gradiente do overlay foi encurtado para escurecer apenas ate a faixa inferior da imagem;
   - o bloco de overlay inferior recebeu `bioBottomOffset` para aproximar a base do texto da base da navbar;
-  - a posiÃ§Ã£o vertical da coluna lateral (`actionTop`) foi rebaixada para alinhar o label `Perfil` com a linha de base do texto de bio.
+  - a posição vertical da coluna lateral (`actionTop`) foi rebaixada para alinhar o label `Perfil` com a linha de base do texto de bio.
 - Nenhum novo pacote foi instalado.
 - Validacoes executadas:
   - `pnpm --dir frontend check`
@@ -415,7 +415,7 @@ ext/image`.
 
 - Pedido do usuario: substituir a ideia anterior por um layout igual a referencia local `image (6).png`: pills pequenas empilhadas sobre o video, com icone de premio/prize em cada selo.
 - Os selos continuam usando somente os campos reais `discount_first_session`, `social_value` e `accepts_insurance`.
-- A animacao foi refinada para entrada em cascata e flutuacao suave, com visual transl?cido e discreto, sem efeito de curtidas/TikTok.
+- A animacao foi refinada para entrada em cascata e flutuacao suave, com visual translúcido e discreto, sem efeito de curtidas/TikTok.
 - Nao houve alteracao de backend, Prisma, migrations, packages, mocks ou dados do psicologo.
 - ADR atualizado: `adrs/0057-animacao-selos-video-psicologos.md`.
 - Validacoes executadas:

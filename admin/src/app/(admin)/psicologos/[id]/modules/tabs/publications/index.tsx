@@ -53,7 +53,7 @@ export const PublicationsPagination = ({
           className={cn(
             "h-10 min-w-10 rounded-control border px-3 text-sm font-black",
             itemPage === page
-              ? "border-primary bg-primary text-white"
+              ? "border-primary bg-primary text-primary-foreground"
               : "border-border bg-surface text-foreground",
           )}
           key={itemPage}
@@ -316,7 +316,7 @@ export const PublicationsTab = ({ createdAt, id }: { createdAt: string; id: stri
 
         {publications.data.length === 0 ? (
           <p className="p-5 text-sm font-bold text-muted">
-            Nenhuma publicação real encontrada para os filtros atuais.
+            Nenhuma publicação encontrada para os filtros atuais.
           </p>
         ) : (
           <div className="divide-y divide-border">

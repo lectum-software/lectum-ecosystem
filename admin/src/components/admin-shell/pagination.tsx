@@ -47,7 +47,7 @@ export const AdminPagination = ({
               aria-current={number === page ? "page" : undefined}
               className={cn(
                 "grid h-10 min-w-10 place-items-center rounded-2xl border border-border bg-surface px-3 text-sm font-semibold text-foreground",
-                number === page && "border-primary bg-primary text-white",
+                number === page && "border-primary bg-primary text-primary-foreground",
               )}
               onClick={() => onChangePage(number)}
               type="button"

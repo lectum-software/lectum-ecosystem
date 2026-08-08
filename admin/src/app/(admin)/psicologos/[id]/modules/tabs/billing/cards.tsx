@@ -27,11 +27,11 @@ const PaymentHistoryBadge = ({
 }) => {
   const className =
     status === "pago"
-      ? "bg-emerald-50 text-success"
+      ? "bg-success-soft text-success"
       : status === "recusado" || status === "cancelado"
-        ? "bg-red-50 text-danger"
+        ? "bg-danger-soft text-danger"
         : status === "pendente"
-          ? "bg-orange-50 text-orange-700"
+          ? "bg-warning-soft text-warning"
           : "bg-surface-muted text-muted";
 
   return <Badge className={className}>{label}</Badge>;
@@ -225,17 +225,17 @@ export const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilli
               Gateway: {billing.payment_method.gateway}
             </p>
           </div>
-          <Badge className="bg-emerald-50 text-success">Mascarado</Badge>
+          <Badge className="bg-success-soft text-success">Mascarado</Badge>
         </div>
       ) : (
         <p className="text-sm font-bold text-muted">
-          Nenhuma forma de pagamento real vinculada foi encontrada para exibicao segura.
+          Nenhuma forma de pagamento vinculada foi encontrada para exibição segura.
         </p>
       )}
     </div>
 
     <p className="mt-4 text-xs font-bold text-subtle">
-      O endpoint nao retorna credenciais do gateway nem dados sensiveis do cartao.
+      Credenciais de pagamento e dados sensíveis do cartão não são exibidos.
     </p>
   </CardShell>
 );

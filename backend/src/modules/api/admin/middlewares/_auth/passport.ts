@@ -8,6 +8,7 @@ import {
   ADMIN_JWT_ISSUER,
   getAdminJwtSecret,
 } from "@/modules/api/admin/shared/auth/jwt";
+import { JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { getAdminJwtTtlSeconds } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
@@ -25,6 +26,7 @@ passport.use(
   "jwt-admin-api",
   new JWTStrategy(
     {
+      algorithms: [JWT_ALGORITHM],
       audience: ADMIN_JWT_AUDIENCE,
       issuer: ADMIN_JWT_ISSUER,
       jsonWebTokenOptions: {

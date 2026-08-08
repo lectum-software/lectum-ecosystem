@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: executa refinements declarativos dinâmicos preservados do pacote portado.
 
 export const preFire = (data, req) => {
   const formattedQuery = data.query;

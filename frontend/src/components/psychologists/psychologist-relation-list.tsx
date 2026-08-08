@@ -122,10 +122,10 @@ const formatFavoriteChipCount = (count?: number) => {
 const favoriteFilterChipClassName = (active: boolean) =>
   cn(
     "group inline-flex h-8 min-h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold leading-none tracking-[-0.01em] shadow-none transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.99]",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#308CE8]/20",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
     active
-      ? "border-primary bg-primary text-white hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-white"
-      : "border-[#DDE8F4] bg-white text-[#5F718A] hover:border-[#BFD8F4] hover:bg-[#F8FBFF] hover:text-[#123B6D] dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
+      ? "border-primary bg-primary text-primary-foreground hover:bg-primary/95 dark:border-primary dark:bg-primary dark:text-primary-foreground"
+      : "border-border bg-surface text-muted hover:border-border hover:bg-surface-muted hover:text-foreground dark:border-border dark:bg-surface/70 dark:text-muted dark:hover:bg-surface-muted/70 dark:hover:text-foreground",
   );
 
 const favoriteFilterCountClassName =
@@ -156,7 +156,7 @@ const resolveRelationErrorMessage = (error: unknown) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em alguns instantes.";
   }
 
   return rawMessage || "Não foi possível carregar seus psicólogos favoritos.";
@@ -193,8 +193,8 @@ const getFavoriteBio = (psychologist: PatientRelationPsychologist) => {
 
 const FavoritePageHeader = () => (
   <header className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-    <div className="grid justify-items-center bg-white px-6 py-8 text-center dark:bg-surface">
-      <span className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)] dark:border-surface dark:bg-primary/15">
+    <div className="grid justify-items-center bg-surface px-6 py-8 text-center dark:bg-surface">
+      <span className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-media-foreground bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)] dark:border-surface dark:bg-primary/15">
         <Heart className="h-11 w-11" aria-hidden="true" strokeWidth={1.85} />
       </span>
 
@@ -258,7 +258,7 @@ const FavoriteCoverMedia = ({ psychologist }: { psychologist: PatientRelationPsy
     return (
       <div
         aria-hidden="true"
-        className="h-full w-full bg-gradient-to-br from-primary-soft via-white to-[#EAF7F0]"
+        className="h-full w-full bg-gradient-to-br from-primary-soft via-surface to-primary-soft"
       />
     );
   }
@@ -284,10 +284,10 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
 
   if (!mediaSrc) {
     return (
-      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary-soft via-white to-surface-muted">
+      <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-primary-soft via-surface to-surface-muted">
         <span className="-top-7 -right-7 absolute h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
         <span className="-bottom-8 -left-7 absolute h-24 w-24 rounded-full bg-success/10 blur-2xl" />
-        <span className="relative grid h-full w-full place-items-center rounded-full border border-[#DDE7F2] bg-white/76 text-2xl font-black tracking-[-0.05em] text-primary backdrop-blur-xl sm:text-3xl">
+        <span className="relative grid h-full w-full place-items-center rounded-full border border-border bg-surface/76 text-2xl font-black tracking-[-0.05em] text-primary backdrop-blur-xl sm:text-3xl">
           {getInitials(displayName)}
         </span>
       </div>
@@ -332,18 +332,18 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${displayName}`}
-      className="group relative isolate mx-auto flex min-h-[238px] w-full max-w-none flex-col overflow-hidden rounded-[22px] border border-[#E2EAF3] bg-white text-center shadow-[0_10px_24px_rgb(15_23_42_/_5%)] transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgb(15_23_42_/_10%)] dark:border-border dark:bg-surface sm:min-h-[308px] sm:rounded-[24px] sm:shadow-[0_12px_28px_rgb(15_23_42_/_6%)]"
+      className="group relative isolate mx-auto flex min-h-[238px] w-full max-w-none flex-col overflow-hidden rounded-[22px] border border-border bg-surface text-center shadow-lectum-soft transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lectum-soft dark:border-border dark:bg-surface sm:min-h-[308px] sm:rounded-[24px] sm:shadow-lectum-soft"
     >
       <div className="relative h-[58px] w-full overflow-hidden bg-primary-soft sm:h-[86px]">
         <FavoriteCoverMedia psychologist={psychologist} />
         <span
-          className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/10"
+          className="absolute inset-0 bg-gradient-to-b from-media-background/5 to-media-background/10"
           aria-hidden="true"
         />
         <button
           aria-label={`Remover ${displayName} dos favoritos`}
           aria-pressed="true"
-          className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/90 text-rose-500 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur transition hover:scale-105 hover:bg-white hover:text-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/20 disabled:pointer-events-none disabled:opacity-60 sm:h-9 sm:w-9"
+          className="absolute top-2 right-2 z-20 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface/90 text-danger shadow-lectum-soft backdrop-blur transition hover:scale-105 hover:bg-surface hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-border/20 disabled:pointer-events-none disabled:opacity-60 sm:h-9 sm:w-9"
           disabled={favoritePending}
           onClick={handleFavoriteClick}
           type="button"
@@ -363,7 +363,7 @@ const FavoritePsychologistCard = ({
           href={route}
         >
           <div className="relative -mt-8 h-[76px] w-[76px] rounded-full sm:-mt-12 sm:h-[108px] sm:w-[108px]">
-            <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white bg-surface-muted ring-1 ring-[#DDE7F2] dark:border-surface dark:ring-border">
+            <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-media-foreground bg-surface-muted ring-1 ring-border dark:border-surface dark:ring-border">
               <FavoriteMedia psychologist={psychologist} />
             </div>
 
@@ -373,7 +373,7 @@ const FavoritePsychologistCard = ({
                 title="Disponível hoje"
               >
                 <span className="absolute h-3 w-3 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-3.5 sm:w-3.5" />
-                <span className="relative h-2.5 w-2.5 rounded-full bg-success ring-2 ring-white dark:ring-surface sm:h-3 sm:w-3" />
+                <span className="relative h-2.5 w-2.5 rounded-full bg-success ring-2 ring-media-foreground dark:ring-surface sm:h-3 sm:w-3" />
                 <span className="sr-only">Disponível hoje</span>
               </span>
             ) : null}
@@ -395,7 +395,7 @@ const FavoritePsychologistCard = ({
         <div className="mt-auto pt-4 sm:pt-5">
           <PsychologistWhatsAppRedirectButton
             aria-label={`Fale com ${whatsappName} no WhatsApp`}
-            className="inline-flex min-h-[30px] w-full min-w-0 items-center justify-center gap-1 rounded-[11px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-white transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[34px] sm:gap-1.5 sm:rounded-[13px] sm:px-2.5 sm:py-1.5 sm:text-[11px]"
+            className="inline-flex min-h-[30px] w-full min-w-0 items-center justify-center gap-1 rounded-[11px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-primary-foreground transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[34px] sm:gap-1.5 sm:rounded-[13px] sm:px-2.5 sm:py-1.5 sm:text-[11px]"
             psychologist={{
               avatar: psychologist.avatar,
               crp: psychologist.crp,

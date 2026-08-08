@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: normaliza formatos de erro heterogêneos das versões suportadas do Zod.
 
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 

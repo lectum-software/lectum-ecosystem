@@ -182,16 +182,16 @@ Frontend esperado:
 
 - ADR-0240: Dashboard Admin de pacientes com dados agregados e sem retenção V1.
 
-## Ajuste complementar 2026-07-14 - Tempo m�dio do paciente
+## Ajuste complementar 2026-07-14 - Tempo médio do paciente
 
-- Pedido do usu�rio: al�m do tempo m�dio dos psic�logos, medir tamb�m o tempo m�dio de uso dos pacientes.
-- O dashboard Admin de Pacientes passou a retornar e exibir `platform_usage.average_duration_seconds`, calculado somente a partir de `page_view_event` autenticado de usu�rios `role="paciente"` no per�odo selecionado.
-- A m�trica usa a mesma regra de confiabilidade aplicada ao uso de psic�logos: s� exibe m�dia quando pelo menos 50% dos pageviews de pacientes possuem `duration_seconds` positivo; caso contr�rio, mostra indisponibilidade honesta.
-- A coleta de dura��o foi ajustada no tracker global da TASK-49 para pausar quando o navegador fica oculto/minimizado e retomar ao voltar, sem contar tempo em background quando o browser informa visibilidade.
-- N�o foram criados mocks, backfill artificial, endpoints paralelos, schema Prisma, migrations ou packages novos.
-- Refer�ncia visual: `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`; n�o h� prot�tipo espec�fico para este novo card e Builder/Quick Copy n�o est� exposto como ferramenta direta neste ambiente.
+- Pedido do usuário: além do tempo médio dos psicólogos, medir também o tempo médio de uso dos pacientes.
+- O dashboard Admin de Pacientes passou a retornar e exibir `platform_usage.average_duration_seconds`, calculado somente a partir de `page_view_event` autenticado de usuários `role="paciente"` no período selecionado.
+- A métrica usa a mesma regra de confiabilidade aplicada ao uso de psicólogos: só exibe mídia quando pelo menos 50% dos pageviews de pacientes possuem `duration_seconds` positivo; caso contrário, mostra indisponibilidade honesta.
+- A coleta de duração foi ajustada no tracker global da TASK-49 para pausar quando o navegador fica oculto/minimizado e retomar ao voltar, sem contar tempo em background quando o browser informa visibilidade.
+- Não foram criados mocks, backfill artificial, endpoints paralelos, schema Prisma, migrations ou packages novos.
+- Referência visual: `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`; não há protótipo específico para este novo card e Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
 
-### Valida��o complementar executada
+### Validação complementar executada
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
@@ -200,20 +200,20 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Servi�o local `buildPatientsDashboard({})` retornou `platform_usage` real com `average_duration_seconds=null`, `duration_unavailable_reason="Sem pageviews autenticados de pacientes no per�odo."`, `pageviews_count=0` e `sessions_count=0` na base local, sem criar dados artificiais.
-- `GET /api/admin/private/patients/dashboard` sem sess�o Admin retornou `401`.
+- Serviço local `buildPatientsDashboard({})` retornou `platform_usage` real com `average_duration_seconds=null`, `duration_unavailable_reason="Sem pageviews autenticados de pacientes no período."`, `pageviews_count=0` e `sessions_count=0` na base local, sem criar dados artificiais.
+- `GET /api/admin/private/patients/dashboard` sem sessão Admin retornou `401`.
 - `GET http://localhost:3002/pacientes` retornou `200` no servidor Admin local.
 
 ## Ajuste complementar 2026-07-18 - Layout piloto premium em Pacientes
 
-- Pedido do usu�rio: aplicar o layout piloto premium nas p�ginas de pacientes do Admin.
-- O dashboard `/pacientes` passou a entrar no escopo visual `admin-premium-pilot`, compartilhando a sidebar clara, tokens azuis Lectum, cards com borda sutil e tipografia mais leve do piloto j� usado em Psic�logos/Comunidades.
-- A �rea principal foi reorganizada em um card **Vis�o Geral**, reunindo contadores e gr�fico temporal com curvas SVG suaves, strokes/markers mais finos e plot com superf�cie limpa.
-- A tabela desktop da lista resumida deixou de depender de largura m�nima fixa e mant�m cards mobile, evitando scrollbar horizontal na leitura de desktop.
-- N�o houve altera��o de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sens�veis ou regras de exporta��o/reten��o.
-- Builder/Quick Copy n�o est� exposto como ferramenta callable no ambiente; a refer�ncia audit�vel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
+- Pedido do usuário: aplicar o layout piloto premium nas páginas de pacientes do Admin.
+- O dashboard `/pacientes` passou a entrar no escopo visual `admin-premium-pilot`, compartilhando a sidebar clara, tokens azuis Lectum, cards com borda sutil e tipografia mais leve do piloto já usado em Psicólogos/Comunidades.
+- A área principal foi reorganizada em um card **Visão Geral**, reunindo contadores e gráfico temporal com curvas SVG suaves, strokes/markers mais finos e plot com superfície limpa.
+- A tabela desktop da lista resumida deixou de depender de largura mínima fixa e mantém cards mobile, evitando scrollbar horizontal na leitura de desktop.
+- Não houve alteração de backend, endpoint, contrato, query, schema Prisma, migration, package, seed, mock, dados sensíveis ou regras de exportação/retenção.
+- Builder/Quick Copy não está exposto como ferramenta callable no ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e o ADR do piloto visual foi atualizado em `adrs/0263-admin-psicologos-piloto-premium.md`.
 
-### Valida��o complementar executada
+### Validação complementar executada
 
 - `pnpm --dir admin exec biome check --write "src/components/admin-shell/shell.tsx" "src/app/(admin)/pacientes/client.tsx" "src/app/(admin)/pacientes/[id]/client.tsx"`
 - `pnpm --dir admin check`
@@ -255,8 +255,8 @@ Frontend esperado:
 - `pnpm --dir backend build`
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
-- Servi�o local: `buildPatientsDashboard({ period: "year" })` retornou `200 Este ano 3660`.
-- Servi�o local: `buildPatientsDashboard({ period: "all" })` retornou `200 Todo o per�odo`.
+- Serviço local: `buildPatientsDashboard({ period: "year" })` retornou `200 Este ano 3660`.
+- Serviço local: `buildPatientsDashboard({ period: "all" })` retornou `200 Todo o período`.
 
 ## Ajuste pos-feedback 2026-07-18 - Contadores e grafico alinhados a Psicologos
 
@@ -359,17 +359,17 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/pacientes/lista` retornou `200`.
 - Smoke HTTP local: `GET http://localhost:3001/api/admin/private/patients?limit=1` sem token Admin retornou `401`.
 
-## Ajuste pos-feedback 2026-07-19 - Mapa e ranking de localiza��o de pacientes
+## Ajuste pos-feedback 2026-07-19 - Mapa e ranking de localização de pacientes
 
-- Pedido do usu�rio: evoluir o card **Localiza��o** com um mapa e listagens de cidades e estados mais acessados.
-- O endpoint `GET /api/admin/private/patients/dashboard` passou a calcular `locations` com capturas reais de `visitor_location` vinculadas a pacientes dentro do per�odo selecionado, em vez de usar apenas a �ltima localiza��o por paciente sem recorte temporal.
-- A UI `/pacientes` agora renderiza um mapa SVG simplificado de UFs brasileiras, sem package novo e sem usar imagem do prot�tipo como gr�fico final.
-- O card tamb�m exibe rankings **Top estados** e **Top cidades**, usando apenas agregados reais. Cidades com frequ�ncia menor que 2 capturas s�o agrupadas em **Outras cidades** para reduzir exposi��o em dado sens�vel de sa�de.
-- Locais fora do Brasil continuam aparecendo nas listagens; o mapa informa quando n�o h� UF brasileira identificada.
-- N�o houve schema Prisma, migration, package novo, seed, mock, backfill artificial ou endpoint paralelo.
-- Builder/Quick Copy n�o est� exposto como ferramenta callable neste ambiente; a refer�ncia audit�vel continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usu�rio em 2026-07-18/2026-07-19.
+- Pedido do usuário: evoluir o card **Localização** com um mapa e listagens de cidades e estados mais acessados.
+- O endpoint `GET /api/admin/private/patients/dashboard` passou a calcular `locations` com capturas reais de `visitor_location` vinculadas a pacientes dentro do período selecionado, em vez de usar apenas a última localização por paciente sem recorte temporal.
+- A UI `/pacientes` agora renderiza um mapa SVG simplificado de UFs brasileiras, sem package novo e sem usar imagem do protótipo como gráfico final.
+- O card também exibe rankings **Top estados** e **Top cidades**, usando apenas agregados reais. Cidades com frequência menor que 2 capturas são agrupadas em **Outras cidades** para reduzir exposição em dado sensível de saúde.
+- Locais fora do Brasil continuam aparecendo nas listagens; o mapa informa quando não há UF brasileira identificada.
+- Não houve schema Prisma, migration, package novo, seed, mock, backfill artificial ou endpoint paralelo.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a referência auditável continua sendo `_product/proto/admin/Pacientes/Pacientes - Dashboard.png`, complementada pelos screenshots enviados pelo usuário em 2026-07-18/2026-07-19.
 
-### Valida��o complementar executada
+### Validação complementar executada
 
 - `pnpm --dir backend exec biome check --write "src/modules/api/admin/private/patients/dashboard/repositories/AdminPatientsDashboardRepository.ts" "src/modules/api/admin/private/patients/dashboard/use-cases/services.ts"`
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/pacientes/client.tsx"`
@@ -378,9 +378,9 @@ Frontend esperado:
 - `pnpm --dir admin check`
 - `pnpm --dir admin build`
 - `pnpm check`
-- Servi�o local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `locations.total=0`, `states=[]` e `cities=[]` na base local atual, sem criar dados artificiais.
+- Serviço local `buildPatientsDashboard({ period: "all" })` retornou `status=200`, `locations.total=0`, `states=[]` e `cities=[]` na base local atual, sem criar dados artificiais.
 - Smoke HTTP local `GET http://localhost:3002/pacientes` retornou `200`.
-- Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido e exibiu redirecionamento para login por aus�ncia de sess�o Admin compartilhada; a valida��o visual autenticada ficou limitada ao build/c�digo porque n�o usei nem criei credencial Admin artificial.
+- Browser local headless em `http://localhost:3002/pacientes` carregou o fluxo protegido e exibiu redirecionamento para login por ausência de sessão Admin compartilhada; a validação visual autenticada ficou limitada ao build/código porque não usei nem criei credencial Admin artificial.
 
 ## Ajuste pos-feedback 2026-07-19 - Preview local de localizacao com dados de exemplo
 

@@ -42,9 +42,11 @@ export const VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT = 64;
 
 export const VIDEO_PROGRESS_NAVBAR_OVERLAP_PX = 1;
 
-export const VIDEO_PROGRESS_TRACK_COLOR = "rgba(255,255,255,0.22)";
+export const VIDEO_PROGRESS_TRACK_COLOR =
+  "color-mix(in srgb, var(--lectum-media-foreground) 22%, transparent)";
 
-export const VIDEO_PROGRESS_FILL_COLOR = "rgba(255,255,255,0.75)";
+export const VIDEO_PROGRESS_FILL_COLOR =
+  "color-mix(in srgb, var(--lectum-media-foreground) 75%, transparent)";
 
 export const DEFAULT_VIDEO_PLAYBACK_RATE = 1;
 
@@ -208,13 +210,13 @@ export const PsychologistsCoachMark = ({
     <div className="pointer-events-none fixed inset-0 z-[135]" data-psychologists-coach-mark>
       <span
         aria-hidden="true"
-        className="fixed border-2 border-primary/70 shadow-[0_0_0_9999px_rgb(15_23_42_/_42%)] ring-4 ring-primary/25 ring-offset-2 ring-offset-background/80 motion-safe:animate-pulse"
+        className="fixed border-2 border-primary/70 shadow-lectum-soft ring-4 ring-primary/25 ring-offset-2 ring-offset-background/80 motion-safe:animate-pulse"
         style={position.ringStyle}
       />
 
       <section
         aria-live="polite"
-        className="pointer-events-auto fixed rounded-[24px] border border-border bg-surface p-4 pr-11 text-left text-foreground shadow-[0_24px_70px_rgb(15_23_42_/_24%)] ring-1 ring-primary/10"
+        className="pointer-events-auto fixed rounded-[24px] border border-border bg-surface p-4 pr-11 text-left text-foreground shadow-lectum-soft ring-1 ring-primary/10"
         style={position.bubbleStyle}
       >
         <span

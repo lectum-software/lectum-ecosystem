@@ -37,7 +37,7 @@ const resolveCommunityError = (error: unknown) => {
   }
 
   if (normalized.includes("network") || normalized.includes("conex")) {
-    return "Não foi possível conectar à API agora. Tente novamente em alguns instantes.";
+    return "Não foi possível conectar ao serviço agora. Tente novamente em alguns instantes.";
   }
 
   return rawMessage || "Não foi possível carregar as comunidades agora.";
@@ -52,7 +52,7 @@ const formatFollowers = (value: number) => {
 const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative block min-h-[190px] overflow-hidden rounded-[24px] border border-white/70 bg-[#101827] p-4 text-white transition duration-300 sm:min-h-[224px] sm:p-5"
+      className="group relative block min-h-[190px] overflow-hidden rounded-[24px] border border-media-foreground/70 bg-foreground p-4 text-primary-foreground transition duration-300 sm:min-h-[224px] sm:p-5"
       href={`/comunidades/${community.slug}`}
     >
       <Image
@@ -63,13 +63,10 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
         sizes="(min-width: 1024px) 896px, (min-width: 640px) 672px, 100vw"
         src={community.imageUrl}
       />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.3)_0%,rgba(2,6,23,0.42)_35%,rgba(2,6,23,0.7)_68%,rgba(2,6,23,0.95)_100%)]"
-      />
+      <div aria-hidden="true" className="community-feature-overlay absolute inset-0" />
       <div className="relative z-10 flex h-full min-h-[154px] flex-col justify-end gap-3 sm:min-h-[184px]">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="w-fit rounded-full border border-white/20 bg-white/18 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-white backdrop-blur">
+          <span className="w-fit rounded-full border border-media-foreground/20 bg-media-foreground/18 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em] text-primary-foreground backdrop-blur">
             {community.growthLabel ?? "Destaque"}
           </span>
         </div>
@@ -77,11 +74,11 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
           <h2 className="max-w-xl text-[1.65rem] font-black leading-[0.98] tracking-[-0.05em] sm:text-[2.35rem]">
             {community.name}
           </h2>
-          <p className="line-clamp-2 max-w-2xl text-[13px] font-semibold leading-5 text-white/88 sm:text-sm sm:leading-6">
+          <p className="line-clamp-2 max-w-2xl text-[13px] font-semibold leading-5 text-primary-foreground/88 sm:text-sm sm:leading-6">
             {community.description}
           </p>
         </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-4 py-2 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface px-4 py-2 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">
           Explorar
           <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
@@ -93,7 +90,7 @@ const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) =
 const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
   return (
     <Link
-      className="group relative flex h-[286px] w-[min(calc(100vw-2.5rem),212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-white/70 bg-[#101827] p-3.5 text-white transition duration-300 sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-full lg:min-w-0 lg:shrink"
+      className="group relative flex h-[286px] w-[min(calc(100vw-2.5rem),212px)] shrink-0 snap-start overflow-hidden rounded-[22px] border border-media-foreground/70 bg-foreground p-3.5 text-primary-foreground transition duration-300 sm:h-[318px] sm:w-[232px] lg:h-[306px] lg:w-full lg:min-w-0 lg:shrink"
       href={`/comunidades/${community.slug}`}
     >
       <Image
@@ -103,23 +100,20 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
         sizes="(min-width: 640px) 270px, 76vw"
         src={community.imageUrl}
       />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.32)_0%,rgba(2,6,23,0.54)_48%,rgba(2,6,23,0.94)_100%)]"
-      />
-      <span className="absolute left-4 top-4 z-10 w-fit rounded-full border border-white/20 bg-white/18 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-white backdrop-blur">
+      <div aria-hidden="true" className="community-card-overlay absolute inset-0" />
+      <span className="absolute left-4 top-4 z-10 w-fit rounded-full border border-media-foreground/20 bg-media-foreground/18 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-primary-foreground backdrop-blur">
         {community.category ?? "Comunidade"}
       </span>
-      <div className="relative z-10 flex h-full flex-col justify-end gap-3 text-white">
+      <div className="relative z-10 flex h-full flex-col justify-end gap-3 text-primary-foreground">
         <div className="grid gap-2">
           <h3 className="text-xl font-black leading-[1.12] tracking-[-0.04em] [text-wrap:balance] sm:text-[1.35rem]">
             {community.name}
           </h3>
-          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-primary-foreground/65">
             {formatFollowers(community.membersCount)}
           </p>
         </div>
-        <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-white px-4 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">
+        <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-surface px-4 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">
           Explorar
         </span>
       </div>
@@ -180,7 +174,7 @@ const PopularCommunitiesCarousel = ({ communities }: { communities: CommunityExp
         <div className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-24 items-center justify-end pr-1 lg:flex">
           <button
             aria-label="Ver mais comunidades populares"
-            className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full border border-[#DCE7F2] bg-white/92 text-primary backdrop-blur transition hover:border-primary/35 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full border border-border bg-surface/92 text-primary backdrop-blur transition hover:border-primary/35 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -328,7 +322,7 @@ export const CommunityLogic = () => {
 
         {communities.isLoading || communities.isPending ? (
           <div className="grid min-h-52 place-items-center rounded-[var(--lectum-card-radius)] border border-border bg-surface">
-            <LoadingState label="Carregando comunidades reais" />
+            <LoadingState label="Carregando comunidades" />
           </div>
         ) : null}
 
@@ -348,7 +342,7 @@ export const CommunityLogic = () => {
                 </Link>
               </Button>
             }
-            description="Ainda não há comunidades reais cadastradas para estes filtros. Você pode sugerir um tema para análise da equipe."
+            description="Ainda não há comunidades cadastradas para estes filtros. Você pode sugerir um tema para análise da equipe."
             icon={Compass}
             title="Nenhuma comunidade disponível"
           />

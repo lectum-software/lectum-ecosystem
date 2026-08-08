@@ -170,7 +170,7 @@ const PlanCard = ({
       )}
     >
       {tone.popular ? (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wide text-white">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wide text-primary-foreground">
           Mais popular
         </span>
       ) : null}
@@ -294,7 +294,7 @@ export const PsychologistBillingPlansLogic = () => {
 
         {!isLoading && !hasError && planList.length === 0 ? (
           <EmptyState
-            description="Nenhum plano ativo foi encontrado no backend. Cadastre os planos reais antes de seguir para checkout."
+            description="Nenhum plano profissional ativo está disponível no momento. Tente novamente mais tarde."
             icon={Banknote}
             title="Planos indisponíveis"
           />

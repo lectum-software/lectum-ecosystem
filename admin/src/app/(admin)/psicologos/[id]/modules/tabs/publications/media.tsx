@@ -179,7 +179,7 @@ export const PublicationVideoMiniplayer = ({ label, src }: { label: string; src:
   }, [closeExpandedVideo, isExpanded, syncInlineVideoTime]);
 
   return (
-    <div className="relative h-full w-full bg-black">
+    <div className="relative h-full w-full bg-media-background">
       <video
         aria-label={label}
         className="admin-community-video-player h-full w-full object-cover"
@@ -221,13 +221,13 @@ export const PublicationVideoMiniplayer = ({ label, src }: { label: string; src:
         <div
           aria-label="Vídeo ampliado em 9:16"
           aria-modal="true"
-          className="fixed inset-0 z-[9999] grid place-items-center bg-black p-4"
+          className="fixed inset-0 z-[9999] grid place-items-center bg-media-background p-4"
           ref={fullscreenContainerRef}
           role="dialog"
         >
           <button
             aria-label="Fechar vídeo ampliado"
-            className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white shadow-sm transition hover:bg-white/25"
+            className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-media-foreground/15 text-primary-foreground shadow-sm transition hover:bg-media-foreground/25"
             onClick={closeExpandedVideo}
             title="Fechar"
             type="button"
@@ -286,13 +286,13 @@ const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) 
         <>
           <video
             aria-label={mediaLabel}
-            className="h-full w-full bg-black object-cover"
+            className="h-full w-full bg-media-background object-cover"
             muted
             playsInline
             preload="metadata"
             src={videoSrc}
           />
-          <span className="absolute inset-0 grid place-items-center bg-black/20 text-white">
+          <span className="absolute inset-0 grid place-items-center bg-media-background/20 text-primary-foreground">
             <Play aria-hidden className="h-5 w-5 fill-current" />
           </span>
         </>
@@ -313,7 +313,7 @@ const PublicationMetric = ({ metric }: { metric: AdminPsychologistPublicationMet
   return (
     <span
       className="inline-flex items-center gap-1.5"
-      title={metric.available ? metric.source : (metric.unavailable_reason ?? metric.source)}
+      title={metric.available ? undefined : metric.unavailable_reason || undefined}
     >
       {metric.id === "whatsapp_clicks" ? (
         <PublicationWhatsAppIcon aria-hidden />

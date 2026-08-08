@@ -61,25 +61,19 @@ const shareSheetActions = [
     label: "Copiar link",
   },
   {
-    iconClassName: "bg-transparent text-white",
-    iconStyle: { backgroundColor: "#25D366" },
+    iconClassName: "bg-whatsapp text-primary-foreground",
     iconSrc: "/svg/brand-whatsapp.svg",
     id: "whatsapp",
     label: "WhatsApp",
   },
   {
-    iconClassName: "bg-transparent text-white",
-    iconStyle: {
-      background:
-        "radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%)",
-    },
+    iconClassName: "share-instagram-gradient bg-transparent text-primary-foreground",
     iconSrc: "/svg/brand-instagram.svg",
     id: "instagram",
     label: "Instagram",
   },
   {
-    iconClassName: "bg-transparent text-white",
-    iconStyle: { backgroundColor: "#000000" },
+    iconClassName: "bg-media-background text-media-foreground",
     iconSrc: "/svg/brand-tiktok.svg",
     id: "tiktok",
     label: "TikTok",
@@ -127,7 +121,7 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
   return (
     <div
       className={cn(
-        "relative mx-auto aspect-[9/16] overflow-hidden rounded-[28px] bg-foreground text-white",
+        "relative mx-auto aspect-[9/16] overflow-hidden rounded-[28px] bg-foreground text-primary-foreground",
         sharePreviewClassName,
       )}
     >
@@ -168,16 +162,16 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
 
       <div
         className={cn(
-          "absolute border border-white/80 bg-surface/95 text-foreground shadow-[0_12px_30px_rgb(2_8_23_/_18%)] ring-1 ring-foreground/10 backdrop-blur-xl",
+          "absolute border border-media-foreground/80 bg-surface/95 text-foreground shadow-lectum-soft ring-1 ring-foreground/10 backdrop-blur-xl",
           sharePreviewCardClassName,
         )}
       >
-        <p className="border-white/20 border-b bg-[linear-gradient(135deg,#3aa0f3_0%,#1677d2_100%)] px-3.5 py-[7px] text-center text-[10px] font-bold leading-none tracking-[-0.01em] text-white shadow-[inset_0_-1px_0_rgb(255_255_255_/_22%)] sm:px-3 sm:py-[6px] sm:text-[8px] sm:leading-none">
+        <p className="share-preview-header border-primary-foreground/20 border-b px-3.5 py-[7px] text-center text-[10px] font-bold leading-none tracking-[-0.01em] text-primary-foreground shadow-lectum-soft sm:px-3 sm:py-[6px] sm:text-[8px] sm:leading-none">
           {target.cardLabel}
         </p>
         <p
           className={cn(
-            "overflow-hidden bg-[linear-gradient(180deg,rgb(255_255_255_/_0.98)_0%,rgb(248_250_252_/_0.94)_100%)] px-3.5 py-2 text-center font-semibold tracking-[-0.02em] text-foreground sm:px-3 sm:py-1.5",
+            "share-preview-body overflow-hidden px-3.5 py-2 text-center font-semibold tracking-[-0.02em] text-foreground sm:px-3 sm:py-1.5",
             "text-[clamp(0.7rem,2.35vw,0.84rem)] leading-[1.08] sm:text-[10px] sm:leading-[1.08]",
           )}
           style={twoLineClampStyle}
@@ -186,10 +180,10 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
         </p>
       </div>
 
-      <div className="absolute bottom-[23.5%] left-1/2 z-10 flex max-w-[72%] -translate-x-1/2 items-center px-1 py-0 text-white [text-shadow:0_1px_4px_rgb(0_0_0_/_70%)]">
+      <div className="absolute bottom-[23.5%] left-1/2 z-10 flex max-w-[72%] -translate-x-1/2 items-center px-1 py-0 text-primary-foreground [text-shadow:0_1px_4px_rgb(0_0_0_/_70%)]">
         <span className="flex min-w-0 flex-col items-start justify-center">
           <span className="flex min-w-0 items-center gap-1 leading-[1.05]">
-            <span className="min-w-0 whitespace-nowrap text-left text-[11px] font-bold leading-[1.05] tracking-[-0.02em] text-white sm:text-[9.5px]">
+            <span className="min-w-0 whitespace-nowrap text-left text-[11px] font-bold leading-[1.05] tracking-[-0.02em] text-primary-foreground sm:text-[9.5px]">
               {professionalTagName}
             </span>
             {target.professional.verified ? (
@@ -199,7 +193,7 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
               />
             ) : null}
           </span>
-          <span className="mt-0.5 whitespace-nowrap text-left text-[8.5px] font-medium leading-[1.25] tracking-[-0.01em] text-white/75 sm:text-[7.5px] sm:leading-[1.25]">
+          <span className="mt-0.5 whitespace-nowrap text-left text-[8.5px] font-medium leading-[1.25] tracking-[-0.01em] text-primary-foreground/75 sm:text-[7.5px] sm:leading-[1.25]">
             {target.professional.roleLabel}
           </span>
         </span>
@@ -245,7 +239,6 @@ type ShareSheetOptionProps = {
   icon?: LucideIcon;
   iconClassName: string;
   iconSrc?: string;
-  iconStyle?: CSSProperties;
   label: string;
   onClick: () => void;
   pending: boolean;
@@ -257,7 +250,6 @@ const ShareSheetOption = ({
   icon: Icon,
   iconClassName,
   iconSrc,
-  iconStyle,
   label,
   onClick,
   pending,
@@ -275,7 +267,6 @@ const ShareSheetOption = ({
         "grid h-14 w-14 place-items-center rounded-[20px] transition group-hover:scale-[1.03] sm:h-12 sm:w-12 sm:rounded-[18px]",
         iconClassName,
       )}
-      style={iconStyle}
     >
       {pending ? (
         <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
@@ -621,7 +612,6 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
                     icon={"icon" in action ? action.icon : undefined}
                     iconClassName={action.iconClassName}
                     iconSrc={"iconSrc" in action ? action.iconSrc : undefined}
-                    iconStyle={"iconStyle" in action ? action.iconStyle : undefined}
                     key={action.id}
                     label={action.label}
                     onClick={() => {

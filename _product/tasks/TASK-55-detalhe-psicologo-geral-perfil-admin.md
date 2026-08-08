@@ -295,16 +295,16 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - Smoke HTTP local: `GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf` retornou `200`.
 - `pnpm check` foi executado: frontend e biome backend passaram, mas backend ficou bloqueado em `prisma generate` por `ENOTEMPTY` ao remover `backend/src/external/generated/prisma/models`, fora do escopo deste ajuste Admin/frontend.
 
-## Ajuste complementar 2026-07-19 - refinamento dos cards de situa��o e assinatura
+## Ajuste complementar 2026-07-19 - refinamento dos cards de situação e assinatura
 
-- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psic�logo.
-- No bloco `Situa��o do registro`, foram removidas as linhas `Origem`, `Respons�vel` e `�ltima atualiza��o`, mantendo apenas `Regional CRP`, `N� CRP` e `Data de inscri��o`.
+- Pedido direto de produto aplicado na aba Admin `Geral` do detalhe do psicólogo.
+- No bloco `Situação do registro`, foram removidas as linhas `Origem`, `Responsável` e `última atualização`, mantendo apenas `Regional CRP`, `Nº CRP` e `Data de inscrição`.
 - No bloco `Dados da assinatura`, o LTV permanece destacado por peso/tamanho/cor do texto, mas sem fundo azul na linha.
-- O bot�o `Abrir assinatura` foi mantido no card para navega��o direta � aba de assinatura.
-- Os cards `Situa��o da conta`, `Situa��o do registro` e `Dados da assinatura` passaram a usar altura alinhada na grid desktop, preservando empilhamento mobile-first.
-- N�o houve altera��o de backend, endpoint, schema Prisma, migrations, packages ou dados persistidos.
+- O botão `Abrir assinatura` foi mantido no card para navegação direta à aba de assinatura.
+- Os cards `Situação da conta`, `Situação do registro` e `Dados da assinatura` passaram a usar altura alinhada na grid desktop, preservando empilhamento mobile-first.
+- Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou dados persistidos.
 
-### Valida��o complementar do refinamento dos cards
+### Validação complementar do refinamento dos cards
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
@@ -314,10 +314,10 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 ## Ajuste complementar 2026-07-19 - plano de cortesia no resumo de assinatura
 
 - Pedido direto de produto aplicado no card `Dados da assinatura` da aba Admin `Geral`.
-- A linha `Plano atual` passou a usar a mesma regra visual do header: assinatura `source="admin_grant"` ativa com plano profissional � exibida como `Plano de cortesia`, em vez de `Plano Profissional`.
-- A mudan�a � somente de apresenta��o no Admin; n�o altera plano, assinatura, endpoint, schema Prisma, migrations ou dados persistidos.
+- A linha `Plano atual` passou a usar a mesma regra visual do header: assinatura `source="admin_grant"` ativa com plano profissional é exibida como `Plano de cortesia`, em vez de `Plano Profissional`.
+- A mudança é somente de apresentação no Admin; não altera plano, assinatura, endpoint, schema Prisma, migrations ou dados persistidos.
 
-### Valida��o complementar do plano de cortesia no resumo
+### Validação complementar do plano de cortesia no resumo
 
 - `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`

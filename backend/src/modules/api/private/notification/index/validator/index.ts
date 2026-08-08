@@ -33,7 +33,8 @@ export const schema: IValidatorRequest = {
     {
       key: "orderKey",
       coerse: "string",
-      method: "string",
+      method: "enumeric",
+      values: ["createdAt"],
       optional: true,
     },
     {

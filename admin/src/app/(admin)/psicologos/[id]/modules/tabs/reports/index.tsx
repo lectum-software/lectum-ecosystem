@@ -238,7 +238,7 @@ export const ReportsTab = ({ id }: { id: string }) => {
         {reports.data.length === 0 ? (
           <CardShell className="p-5">
             <p className="text-sm font-bold text-muted">
-              Nenhuma denúncia real encontrada para os filtros atuais.
+              Nenhuma denúncia encontrada para os filtros atuais.
             </p>
           </CardShell>
         ) : (

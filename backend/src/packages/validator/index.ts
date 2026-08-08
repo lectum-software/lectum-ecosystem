@@ -1,4 +1,5 @@
-//@ts-nocheck
+// @ts-nocheck
+// Compatibilidade: a API legada compõe validators e refinements dinâmicos lidos pelo gerador Swagger.
 
 //Libs
 import { z } from "zod";

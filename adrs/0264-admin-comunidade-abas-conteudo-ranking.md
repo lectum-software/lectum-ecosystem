@@ -129,28 +129,28 @@ foi reproduzido localmente no card administrativo, mantendo equivalência visual
 Consequência: o Admin fica visualmente alinhado à experiência pública da Lectum e evita duplicar texto de status na
 linha de autor; a regra continua derivada de `author.verified`.
 
-## Atualiza��o 2026-07-15: identidade de autor antes da m�dia e papel por g�nero
+## Atualização 2026-07-15: identidade de autor antes da mídia e papel por gênero
 
-O card administrativo da aba **Conte�do** passa a apresentar a identidade do autor como bloco pr�prio antes do conte�do publicado. O bloco re�ne avatar, nome, selo azul de verificado quando aplic�vel e o papel do autor em uma segunda linha, antes do grid que cont�m m�dia e texto.
+O card administrativo da aba **Conteúdo** passa a apresentar a identidade do autor como bloco próprio antes do conteúdo publicado. O bloco reúne avatar, nome, selo azul de verificado quando aplicável e o papel do autor em uma segunda linha, antes do grid que contém mídia e texto.
 
-Para psic�logos, o backend agora inclui `author.gender` no contrato de conte�do administrativo, derivado de `psychologist_profile.gender` no mesmo select real usado para nome profissional e verifica��o. O Admin usa esse campo para exibir `Psic�loga` quando o g�nero cadastrado � `feminino` e `Psic�logo` nos demais casos de autor psic�logo. Pacientes e autores an�nimos continuam sem g�nero exposto nesse contrato e exibem `Paciente`.
+Para psicólogos, o backend agora inclui `author.gender` no contrato de conteúdo administrativo, derivado de `psychologist_profile.gender` no mesmo select real usado para nome profissional e verificação. O Admin usa esse campo para exibir `Psicóloga` quando o gênero cadastrado é `feminino` e `Psicólogo` nos demais casos de autor psicólogo. Pacientes e autores anônimos continuam sem gênero exposto nesse contrato e exibem `Paciente`.
 
-Consequ�ncia: a autoria fica visualmente mais pr�xima do padr�o do feed p�blico, evita repetir o papel em par�nteses e remove o r�tulo amb�guo `Psic�logo/Psic�loga`, sem inferir g�nero por nome, sem alterar schema Prisma e sem criar endpoint paralelo.
+Consequência: a autoria fica visualmente mais próxima do padrão do feed público, evita repetir o papel em parênteses e remove o rótulo ambíguo `Psicólogo/Psicóloga`, sem inferir gênero por nome, sem alterar schema Prisma e sem criar endpoint paralelo.
 
-Valida��o desta atualiza��o: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir admin check`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
 
-Valida��o desta atualiza��o: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm --dir frontend check`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
-## Atualiza��o 2026-07-15: identidade administrativa em post an�nimo
+## Atualização 2026-07-15: identidade administrativa em post anônimo
 
-A aba **Conte�do** do Admin passa a tratar anonimato como uma propriedade expl�cita do autor no contrato administrativo (`author.anonymous`), sem mascarar o nome nem trocar o papel real do autor. Para posts an�nimos de pacientes, o backend privado retorna o nome real do paciente ao Admin e mant�m `author.role` como `paciente`; a UI sinaliza o contexto p�blico com o marcador `Post feito anonimamente` abaixo do nome.
+A aba **Conteúdo** do Admin passa a tratar anonimato como uma propriedade explícita do autor no contrato administrativo (`author.anonymous`), sem mascarar o nome nem trocar o papel real do autor. Para posts anônimos de pacientes, o backend privado retorna o nome real do paciente ao Admin e mantém `author.role` como `paciente`; a UI sinaliza o contexto público com o marcador `Post feito anonimamente` abaixo do nome.
 
-A decis�o separa privacidade p�blica de necessidade operacional administrativa: pacientes continuam an�nimos no site p�blico, enquanto administradores conseguem identificar o autor real para modera��o e auditoria. O snapshot usado na remo��o administrativa tamb�m registra `author_anonymous` para preservar o estado de anonimato do conte�do removido.
+A decisão separa privacidade pública de necessidade operacional administrativa: pacientes continuam anônimos no site público, enquanto administradores conseguem identificar o autor real para moderação e auditoria. O snapshot usado na remoção administrativa também registra `author_anonymous` para preservar o estado de anonimato do conteúdo removido.
 
-Consequ�ncia: n�o h� novo endpoint, mock, schema Prisma ou altera��o de persist�ncia; a mudan�a fica restrita ao DTO derivado de dados reais e � apresenta��o no Admin.
+Consequência: não há novo endpoint, mock, schema Prisma ou alteração de persistência; a mudança fica restrita ao DTO derivado de dados reais e à apresentação no Admin.
 
-Valida��o desta atualiza��o: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdah?tab=conteudo` retornando 200.
+Validação desta atualização: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke local `GET http://localhost:3002/comunidades/tdahátab=conteudo` retornando 200.
 
 
 ## Atualização 2026-07-15: filtros operacionais acima da listagem de conteúdo
@@ -163,7 +163,7 @@ O filtro **Tipo** passa a usar classificações derivadas de dados reais do item
 
 Para sustentar Posts anônimos, o backend classifica community_post.anonymous=true como nonymous_post, sem coluna nova e sem alterar a regra de autoria persistida. O filtro de **Período** usa presets simples sobre created_at (ll, 7d, 30d, 90d).
 
-Validação desta atualização: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdah?tab=conteudo retornando 200.
+Validação desta atualização: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdahátab=conteudo retornando 200.
 
 ## Atualizacao 2026-07-15: fullscreen vertical no miniplayer administrativo
 

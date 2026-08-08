@@ -53,12 +53,14 @@ export const PsychologistsFeedStyles = () => {
                 @keyframes psychologists-availability-dot-pulse {
                   0%,
                   100% {
-                    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+                    box-shadow: 0 0 0 0
+                      color-mix(in srgb, var(--lectum-success) 0%, transparent);
                     opacity: 1;
                     transform: scale(1);
                   }
                   50% {
-                    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.22);
+                    box-shadow: 0 0 0 4px
+                      color-mix(in srgb, var(--lectum-success) 22%, transparent);
                     opacity: 0.92;
                     transform: scale(1.18);
                   }

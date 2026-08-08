@@ -128,7 +128,7 @@ const ProfessionalUpgradeCard = () => (
     />
     <span
       aria-hidden="true"
-      className="-bottom-12 -left-10 absolute h-28 w-28 rounded-full bg-white/70 blur-2xl dark:bg-white/5"
+      className="-bottom-12 -left-10 absolute h-28 w-28 rounded-full bg-surface/70 blur-2xl dark:bg-media-foreground/5"
     />
     <span className="relative flex min-w-0 items-center gap-3">
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface/95 text-primary shadow-sm ring-1 ring-primary/10">
@@ -143,7 +143,7 @@ const ProfessionalUpgradeCard = () => (
           para fortalecer sua presença na Lectum.
         </span>
       </span>
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface/90 text-primary shadow-sm transition group-hover:translate-x-0.5 group-hover:bg-white dark:bg-surface">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface/90 text-primary shadow-sm transition group-hover:translate-x-0.5 group-hover:bg-surface dark:bg-surface">
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </span>
     </span>
@@ -242,8 +242,8 @@ export const ProfileLogic = () => {
     <PrivateTemplate>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
         <div className="overflow-hidden rounded-[var(--lectum-card-radius)] border border-border bg-surface shadow-[var(--lectum-shadow-soft)]">
-          <div className="grid justify-items-center bg-white px-6 py-8 text-center dark:bg-surface">
-            <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-white bg-primary text-3xl font-bold text-white shadow-[var(--lectum-shadow-soft)]">
+          <div className="grid justify-items-center bg-surface px-6 py-8 text-center dark:bg-surface">
+            <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-4 border-media-foreground bg-primary text-3xl font-bold text-primary-foreground shadow-[var(--lectum-shadow-soft)]">
               {avatarSrc ? (
                 <Image
                   alt={displayName}

@@ -215,7 +215,7 @@ export const StatisticsTab = ({ detail, id }: { detail: AdminPsychologistDetail;
             unavailable_reason:
               businessStatistics.business.visibility.series.length > 0
                 ? null
-                : "Sem pontos reais no período",
+                : "Sem pontos no período",
             unit: "seconds" as const,
             value: fallbackValue,
           },

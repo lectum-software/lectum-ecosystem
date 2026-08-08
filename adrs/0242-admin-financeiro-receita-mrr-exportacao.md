@@ -213,21 +213,21 @@ Consequências:
 - Não há instalação de package, schema Prisma, migration, mock, seed ou endpoint simulado.
 
 
-## Ajuste 2026-07-23: confiabilidade de pagamento na pr?via de assinaturas
+## Ajuste 2026-07-23: confiabilidade de pagamento na prévia de assinaturas
 
-Feedback de produto pediu que a tabela **Assinaturas** do dashboard `/financeiro` usasse a mesma leitura operacional da rela??o completa, priorizando a pr?xima cobran?a e a confiabilidade do pagamento.
+Feedback de produto pediu que a tabela **Assinaturas** do dashboard `/financeiro` usasse a mesma leitura operacional da relação completa, priorizando a próxima cobrança e a confiabilidade do pagamento.
 
-Decis?es:
+Decisões:
 
-- A pr?via de assinaturas no dashboard passa a exibir **Psic?logo**, **In?cio**, **Pr?xima**, **Valor**, **Status** e **Confiabilidade Pgto**.
-- A coluna **?ltima** ? removida apenas da pr?via visual do dashboard; a informa??o de cobran?as confirmadas continua dispon?vel na tabela de cobran?as e no hist?rico da rela??o completa de assinaturas.
-- **Confiabilidade Pgto** reutiliza o `payment_health` j? calculado pelo servi?o financeiro a partir de `payment_event` e `professional_subscription`, sem endpoint novo, c?lculo visual paralelo ou dado simulado.
+- A prévia de assinaturas no dashboard passa a exibir **Psicólogo**, **Início**, **Próxima**, **Valor**, **Status** e **Confiabilidade Pgto**.
+- A coluna **Última** é removida apenas da prévia visual do dashboard; a informação de cobranças confirmadas continua disponível na tabela de cobranças e no histórico da relação completa de assinaturas.
+- **Confiabilidade Pgto** reutiliza o `payment_health` já calculado pelo serviço financeiro a partir de `payment_event` e `professional_subscription`, sem endpoint novo, cálculo visual paralelo ou dado simulado.
 - Os cards mobile seguem a mesma hierarquia, exibindo a confiabilidade de pagamento junto aos dados principais da assinatura.
 
-Consequ?ncias:
+Consequências:
 
-- A pr?via do Financeiro fica consistente com `/financeiro/assinaturas` e reduz redund?ncia com a tabela de cobran?as realizadas.
-- A mudan?a ? somente de apresenta??o: n?o altera contrato HTTP, c?lculo financeiro, CSV, Prisma/migrations, packages, seeds, mocks ou dados persistidos.
+- A prévia do Financeiro fica consistente com `/financeiro/assinaturas` e reduz redundância com a tabela de cobranças realizadas.
+- A mudança é somente de apresentação: não altera contrato HTTP, cálculo financeiro, CSV, Prisma/migrations, packages, seeds, mocks ou dados persistidos.
 
 ## Ajuste 2026-08-04: IDs operacionais em assinaturas e cobranças
 

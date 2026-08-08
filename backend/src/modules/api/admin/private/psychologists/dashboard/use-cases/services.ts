@@ -515,7 +515,7 @@ export const buildPsychologistsDashboard = async (
         ? [
             {
               description:
-                "Uso da plataforma por psicólogos depende de page_view_event autenticado no período selecionado.",
+                "O uso da plataforma depende de visualizações autenticadas de psicólogos no período selecionado.",
               id: "platform_usage",
               label: "Uso da plataforma",
               source: "page_view_event",
@@ -526,7 +526,7 @@ export const buildPsychologistsDashboard = async (
         ? [
             {
               description:
-                "Distribuição de devices dos psicólogos depende de visitor_session autenticada com user.role=psicologo no período selecionado.",
+                "A distribuição de dispositivos depende de sessões autenticadas de psicólogos no período selecionado.",
               id: "psychologist_device_usage",
               label: "Devices dos psicólogos",
               source: "visitor_session",
@@ -537,7 +537,7 @@ export const buildPsychologistsDashboard = async (
         ? [
             {
               description:
-                "Distribuição de sistemas operacionais dos psicólogos depende de visitor_session autenticada com os normalizado no período selecionado.",
+                "A distribuição de sistemas operacionais depende de sessões autenticadas de psicólogos no período selecionado.",
               id: "psychologist_operating_system_usage",
               label: "Sistema operacional dos psicólogos",
               source: "visitor_session",

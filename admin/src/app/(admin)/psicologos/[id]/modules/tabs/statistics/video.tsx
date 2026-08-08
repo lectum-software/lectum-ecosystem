@@ -524,13 +524,13 @@ export const StatisticsVideoCard = ({
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_minmax(220px,280px)] xl:items-stretch">
         <div className="order-1 min-w-0">
-          <div className="mx-auto aspect-[9/16] w-full max-w-[176px] overflow-hidden rounded-[1.35rem] border border-border bg-black shadow-sm xl:mx-0 xl:max-w-[190px]">
+          <div className="mx-auto aspect-[9/16] w-full max-w-[176px] overflow-hidden rounded-[1.35rem] border border-border bg-media-background shadow-sm xl:mx-0 xl:max-w-[190px]">
             {videoSrc ? (
               <>
                 {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
                 <video
                   aria-label={`Miniplayer do vídeo de apresentação de ${detail.header.name}`}
-                  className="h-full w-full bg-black object-cover"
+                  className="h-full w-full bg-media-background object-cover"
                   controls
                   onDurationChange={(event) => updateVideoDuration(event.currentTarget.duration)}
                   onLoadedMetadata={(event) => {

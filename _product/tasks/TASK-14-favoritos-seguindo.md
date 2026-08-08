@@ -206,30 +206,30 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR não atualizado por se tratar de refinamento visual local sem nova decisão arquitetural ou regra de domínio.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e HTTP local 200 em `/app/favorites`.
 
-## Execu??o completa (2026-06-06)
+## Execução completa (2026-06-06)
 
-- Refer?ncias visuais consultadas: `_product/proto/Favoritos.jpg` e `_product/proto/Seguindo.jpg`. Builder/Quick Copy n?o est? exposto como ferramenta MCP nesta sess?o; foi usado o fallback audit?vel de imagens locais conforme `PROTO-INVENTORY.md`.
-- Backend conclu?do sob guarda `requireRole("paciente")`:
+- Referências visuais consultadas: `_product/proto/Favoritos.jpg` e `_product/proto/Seguindo.jpg`. Builder/Quick Copy não está exposto como ferramenta MCP nesta sessão; foi usado o fallback auditável de imagens locais conforme `PROTO-INVENTORY.md`.
+- Backend concluído sob guarda `requireRole("paciente")`:
   - `GET /api/private/patient/favorites`;
   - `POST /api/private/patient/favorites/:id`;
   - `DELETE /api/private/patient/favorites/:id`;
   - `GET /api/private/patient/follows`;
   - `POST /api/private/patient/follows/:id`;
   - `DELETE /api/private/patient/follows/:id`.
-- Listagens paginadas usam dados reais, escopo por `req.auth.id`, filtros `deleted=false`, alvo psic?logo ativo e `psychologist_profile.published=true`.
-- Frontend conclu?do nas rotas `/app/favorites` e `/app/following`, com estados de loading, erro e vazio em PT-BR, tabs entre listas, contadores reais e cards reutilizados da descoberta.
-- O card de psic?logo da descoberta foi extra?do para componente reutiliz?vel e agora diferencia `favorited` e `followed` com atualiza??es otimistas e rollback por snapshot em erro.
-- N?o foram criados formul?rios nesta task; a funda??o da TASK-02 n?o era aplic?vel.
-- A rota de perfil profissional `/app/psychologist/[id]` ainda pertence ? TASK-15 e n?o existe no produto atual; a integra??o dos mesmos bot?es no perfil deve ser feita quando a TASK-15 materializar essa tela.
+- Listagens paginadas usam dados reais, escopo por `req.auth.id`, filtros `deleted=false`, alvo psicólogo ativo e `psychologist_profile.published=true`.
+- Frontend concluído nas rotas `/app/favorites` e `/app/following`, com estados de loading, erro e vazio em PT-BR, tabs entre listas, contadores reais e cards reutilizados da descoberta.
+- O card de psicólogo da descoberta foi extraído para componente reutilizável e agora diferencia `favorited` e `followed` com atualizações otimistas e rollback por snapshot em erro.
+- Não foram criados formulários nesta task; a fundação da TASK-02 não era aplicável.
+- A rota de perfil profissional `/app/psychologist/[id]` ainda pertence à TASK-15 e não existe no produto atual; a integração dos mesmos botões no perfil deve ser feita quando a TASK-15 materializar essa tela.
 - ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
-- Valida??es executadas:
-  - `pnpm --dir backend db:migrate` (sem migration pendente; schema j? sincronizado pela execu??o parcial anterior);
+- Validações executadas:
+  - `pnpm --dir backend db:migrate` (sem migration pendente; schema já sincronizado pela execução parcial anterior);
   - `pnpm --dir backend check`;
   - `pnpm --dir backend build`;
   - `pnpm --dir frontend check`;
   - `pnpm --dir frontend build`;
-  - smoke real de API com paciente e psic?logo tempor?rios: guarda 403 para psic?logo em rota paciente, criar/listar/remover favorito, criar/listar/remover seguindo e refletir `favorited/followed` no diret?rio;
-  - browser local headless desktop `1440x1000`: `/app/favorites` com remo??o pelo cora??o e estado vazio; `/app/following` com remo??o pelo bot?o `Seguindo` e estado vazio.
+  - smoke real de API com paciente e psicólogo temporários: guarda 403 para psicólogo em rota paciente, criar/listar/remover favorito, criar/listar/remover seguindo e refletir `favorited/followed` no diretório;
+  - browser local headless desktop `1440x1000`: `/app/favorites` com remoção pelo coração e estado vazio; `/app/following` com remoção pelo botão `Seguindo` e estado vazio.
 
 ## Complemento 2026-06-15 - refinamento visual do header e cards de favoritos
 
@@ -348,7 +348,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Responsividade: conteúdo centralizado em coluna responsiva com padding mobile seguro, `w-full/max-w-full` e grid sem larguras fixas que poderiam ultrapassar a viewport.
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoints, dados de favoritos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
-- Valida??es executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
+- Validações executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`.
 
 ## Complemento 2026-06-25 - chips de filtro com contagens em Favoritos
 

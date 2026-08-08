@@ -15,6 +15,7 @@ applyTo: "frontend/**"
 - Keep auth/session behavior real; do not bypass guards with fake users.
 - Validate with `pnpm --dir frontend check` and `pnpm --dir frontend build` for visual or route changes.
 - Do not call Axios directly in UI components; use `api/req`, `api/callers`, `handleReq` and React Query.
-- Do not create a parallel auth/session system; use cookies, Redux Persist, `useUserSet` and `proxy.ts`.
+- Do not create a parallel auth/session system; use the HttpOnly session cookie, in-memory Redux,
+  API hydration through `useUserSet`, the non-sensitive navigation marker and `proxy.ts`.
 - Any page with fields, edit state, validation, advanced filters or submit must use the `TASK-02` form foundation: `frontend/src/hooks/form`, `frontend/src/components/controllers`, React Hook Form, Zod and inline PT-BR errors.
 - Do not render ad hoc inputs in product forms when a controller applies.
