@@ -2,7 +2,6 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 import { toSafeErrorLog } from "../../../utils/safe-error-log";
 
 const zodToSwagger = (zodSchema, location = "body") => {
@@ -71,7 +70,8 @@ export async function loadValidations(route) {
     let fileValidator = path.resolve(route.validator);
 
     const isProd = process.env.NODE_ENV?.includes("prod");
-    if (fileValidator.endsWith(".ts") && isProd) {
+    const pointsToCompiledValidator = fileValidator.includes(`${path.sep}dist${path.sep}`);
+    if (fileValidator.endsWith(".ts") && (isProd || pointsToCompiledValidator)) {
       fileValidator = fileValidator
         .replace(path.join(process.cwd(), "src"), path.join(process.cwd(), "dist"))
         .replace(/\.ts$/, ".js");
@@ -81,12 +81,16 @@ export async function loadValidations(route) {
       return [];
     }
 
-    const mod = await import(pathToFileURL(fileValidator).href);
+    // O build CommonJS transforma este import dinâmico em require(). Uma URL file://
+    // não é aceita nesse caminho e removeria silenciosamente os parâmetros do OpenAPI.
+    const mod = await import(fileValidator);
     const validator =
       typeof mod.default === "function"
         ? mod.default
         : route.middlewares
-            ?.map((middleware) => mod[middleware])
+            // No dist, o TypeScript escreve validator_1.nomeDoValidator.
+            ?.flatMap((middleware) => [middleware, middleware.split(".").at(-1)])
+            .map((middleware) => (middleware ? mod[middleware] : undefined))
             .find((item) => typeof item === "function");
 
     if (typeof validator !== "function") {

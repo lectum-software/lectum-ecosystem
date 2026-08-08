@@ -1,12 +1,15 @@
 //Dotenv
+import path from "node:path";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const isProductionRuntime = process.env.NODE_ENV?.includes("prod");
+const runtimeRoot = path.resolve(__dirname, "../../..");
+const isCompiledRuntime = path.basename(runtimeRoot) === "dist";
 
 export const schema = {
-  base: isProductionRuntime ? "dist/modules" : "src/modules",
+  base: isProductionRuntime || isCompiledRuntime ? "dist/modules" : "src/modules",
   modules: [
     {
       options: {

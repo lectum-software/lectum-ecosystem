@@ -81,6 +81,19 @@ Concluída em 08/08/2026.
 67. A inicialização conjunta deixou de travar ao interpretar arquivos gerados do Prisma.
 68. O admin ganhou ícone próprio e dimensões corretas da marca, sem aviso visual ou arquivo 404.
 
+## Segunda rodada — organização do código
+
+69. O `sample` foi usado apenas como referência de divisão; regras antigas, mocks e versões não foram copiados.
+70. A tela de detalhe do psicólogo no admin caiu de 12 mil linhas para um arquivo principal de 87 linhas e módulos separados por aba.
+71. O dashboard de psicólogos no backend caiu de 8 mil linhas para um orquestrador de 559 linhas e módulos separados por cálculo.
+72. A busca de psicólogos no frontend caiu de 5,5 mil linhas para um controlador de 58 linhas, hooks por responsabilidade e componentes de visualização.
+73. O estado compartilhado da busca ganhou um contexto tipado, sem duplicar estado; as dependências dos hooks continuam explícitas e conferidas.
+74. O ciclo de imports do Socket.IO foi removido ao separar estado do servidor e ações persistidas.
+75. Um check automático agora impede novos ciclos de imports nos três aplicativos.
+76. O limite automático ficou mais rígido para arquivos de composição: 600 linhas; os demais continuam limitados a 700.
+77. A arquitetura passou a explicar onde ficam composição, hooks, componentes, regras de domínio e persistência.
+78. A documentação da API voltou a carregar todos os validators no build usado pelo container, sem perder campos silenciosamente.
+
 ## Atenção no deploy
 
 - Branch atual: `homolog`; o push publica homologação automaticamente.
@@ -94,16 +107,28 @@ Concluída em 08/08/2026.
 ## Validação final
 
 - Checks de frontend, backend e admin: aprovados sem warning.
-- 41 testes automatizados do backend: aprovados.
+- 42 testes automatizados do backend: aprovados.
 - Builds das três aplicações e da imagem Docker do backend: aprovados.
 - Auditoria de dependências nos quatro escopos: nenhuma vulnerabilidade conhecida.
 - Smoke local mobile/desktop, `/health` e `/ready`: aprovados.
+
+## Validação da segunda rodada
+
+- `pnpm check`, incluindo tamanho e ciclos: aprovado sem warning.
+- Builds separados de backend, frontend e admin: aprovados.
+- Imagem Docker do backend: aprovada.
+- Os 42 testes do backend passaram novamente.
+- O Swagger gerado a partir do build manteve o mesmo conteúdo de rotas e campos da versão de desenvolvimento.
+- `/health` e `/ready` locais responderam corretamente.
+- A API real do diretório devolveu três psicólogos no smoke, sem mock.
+- A tela mobile do diretório renderizou em 390 × 844 e a rota protegida do admin mostrou o login.
+- Não houve mudança de banco, migration, env ou package.
 
 ## Riscos conhecidos para próximas tarefas
 
 1. Remover `unsafe-inline` da CSP exige rollout próprio com nonce.
 2. O rate limit atual é separado por instância da API.
 3. Schedulers devem rodar em uma única réplica até existir lock distribuído.
-4. Arquivos legados grandes ainda precisam ser divididos aos poucos.
+4. A dívida de arquivos legados grandes foi reduzida, mas ainda há 81 entradas no baseline; elas não podem crescer e devem ser divididas aos poucos.
 5. Dez arquivos dos packages portados ainda usam `@ts-nocheck` por compatibilidade.
 6. O fallback bearer deve ser removido só após confirmar o fim dos clientes antigos.

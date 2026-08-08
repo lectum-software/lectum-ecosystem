@@ -205,7 +205,11 @@ Formato recomendado:
 - [ADR-0411 - WhatsApp em formatos de posts/respostas no Admin](0411-whatsapp-cliques-formatos-posts-respostas-admin.md) - Accepted
 - [ADR-0412 - Rotas públicas e privadas canônicas em PT-BR](0412-rotas-publicas-pt-br-seo.md) - Accepted
 - [ADR-0413 - SEO administrável para respostas de comentários públicas](0413-seo-respostas-comentarios-publicas.md) - Accepted
+- [ADR-0414 - Prévia Open Graph no Admin](0414-admin-seo-previa-open-graph.md) - Accepted
 
 - [ADR-0415 - Dockerfile de produção para o backend](0415-dockerfile-backend-producao.md) - Accepted
 - [ADR-0416 - Homologação Mercado Pago com credenciais de teste do Card Payment Brick](0416-homologacao-mercado-pago-card-payment-brick.md) - Superseded by ADR-0417
 - [ADR-0417 - Restaurar sandbox Mercado Pago com conta vendedora de teste](0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md) - Accepted
+- [ADR-0418 - Auditoria de produção, segurança e estabilidade](0418-auditoria-producao-seguranca-estabilidade.md) - Accepted
+- [ADR-0419 - Divisão modular de features complexas](0419-divisao-modular-features-complexas.md) - Accepted
+- [ADR-0420 - Swagger compatível com o runtime compilado](0420-swagger-compativel-runtime-compilado.md) - Accepted

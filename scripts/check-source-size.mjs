@@ -9,6 +9,14 @@ const sourceRoots = ["backend/src", "frontend/src", "admin/src"];
 const sourceExtensions = new Set([".cjs", ".js", ".mjs", ".ts", ".tsx"]);
 const ignoredSegments = new Set(["generated"]);
 const defaultMaximumLines = 700;
+const compositionRootMaximumLines = 600;
+
+const isCompositionRoot = (relativePath) =>
+  /^(?:frontend|admin)\/src\/app\/(?:.*\/)?(?:client|logic|page)\.tsx$/.test(relativePath) ||
+  /^backend\/src\/modules\/api\/.+\/use-cases\/(?:controller|services)\.ts$/.test(relativePath);
+
+const maximumLinesFor = (relativePath) =>
+  isCompositionRoot(relativePath) ? compositionRootMaximumLines : defaultMaximumLines;
 
 const walk = async (directory) => {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -45,8 +53,9 @@ const failures = [];
 
 for (const [relativePath, lines] of current) {
   const acceptedLegacySize = baseline[relativePath];
+  const maximumLines = maximumLinesFor(relativePath);
 
-  if (lines <= defaultMaximumLines) {
+  if (lines <= maximumLines) {
     if (acceptedLegacySize !== undefined) {
       failures.push(
         `${relativePath}: caiu para ${lines} linhas; remova-o do baseline para consolidar a melhoria.`,
@@ -57,7 +66,7 @@ for (const [relativePath, lines] of current) {
 
   if (acceptedLegacySize === undefined) {
     failures.push(
-      `${relativePath}: possui ${lines} linhas; arquivos novos devem ter no máximo ${defaultMaximumLines}.`,
+      `${relativePath}: possui ${lines} linhas; o limite desta categoria é ${maximumLines}.`,
     );
     continue;
   }
@@ -79,6 +88,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `[source-size] OK: arquivos novos limitados a ${defaultMaximumLines} linhas e dívida legada sem crescimento.`,
+    `[source-size] OK: raízes de composição limitadas a ${compositionRootMaximumLines} linhas, demais fontes a ${defaultMaximumLines} e dívida legada sem crescimento.`,
   );
 }

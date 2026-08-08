@@ -93,6 +93,20 @@ backend/src/modules/api/{public|private}/{dominio}/{caso}/
 
 Para rotas simples de listagem, é aceitável começar com menos arquivos, mas a task deve justificar. Fluxos com regra de domínio, persistência ou autenticação devem usar controller/service/repository.
 
+### Divisão de responsabilidades no backend
+
+O `sample/backend` pode ser consultado **somente quando a task ou o usuário o citar como referência técnica**, principalmente para entender divisão de responsabilidades. Ele não é fonte de versões, contratos, regras de negócio, mocks ou código a ser copiado. No código atual:
+
+- `index.ts` registra middleware, validator e rota; não contém regra de negócio;
+- `controller.ts` traduz HTTP para o caso de uso e devolve a resposta padronizada;
+- `services.ts` é uma fachada/orquestrador: coordena autorização, repositórios e módulos de domínio, sem concentrar milhares de linhas de cálculo;
+- `repositories/` concentra persistência e não importa controller ou composição HTTP;
+- cálculos, agregações, builders e regras extensas vivem abaixo do próprio caso de uso, por domínio, por exemplo `use-cases/services/{perfil,trafego,assinaturas}` ou `application/{calculators,services}`;
+- interfaces e DTOs ficam próximos do limite que representam, sem um arquivo genérico crescente;
+- imports seguem uma direção única: rota/controller → service/orquestrador → domínio → repository/infra. Um módulo interno não importa de volta sua fachada.
+
+Arquivos `index.ts`, `controller.ts` e `services.ts` são limites públicos/composição, não depósitos de implementação. Preserve seus exports durante extrações para evitar breaking changes em rotas, Swagger, validator e packages portados.
+
 ### Registro de rotas
 
 - Registrar novas rotas em `backend/src/main/server/imports/write.ts`.
@@ -152,6 +166,10 @@ Para rotas simples de listagem, é aceitável começar com menos arquivos, mas a
 ### Documentação de API
 
 - Manter estrutura compatível com `src/packages/swagger`, que lê rotas, validators e arquivos.
+- O backend é compilado como CommonJS: a geração deve continuar válida tanto sobre `src` no
+  desenvolvimento quanto sobre `dist` no container. Preserve a resolução dos nomes compilados dos
+  validators e não troque o import dinâmico de caminho absoluto por URL `file://` sem mudar e testar
+  todo o runtime.
 - Se um endpoint novo não aparecer em docs, corrigir a estrutura em vez de criar documentação paralela manual.
 
 ## Frontend
@@ -188,7 +206,31 @@ frontend/src/app/{rota}/logic.tsx
 frontend/src/app/{rota}/use-form.tsx           # quando houver formulário
 ```
 
+Em telas complexas, essa estrutura mínima deve crescer **dentro da própria rota**, seguindo a forma de composição observada no `sample/frontend` quando ele for referência técnica explícita:
+
+```text
+frontend/src/app/{rota}/
+  page.tsx                  # entrada da rota e dados de servidor, quando houver
+  logic.tsx                 # composição dos hooks e do view model
+  use-form.tsx              # schema/fields/submit da fundação de formulários
+  components/               # partes visuais exclusivas da rota
+  hooks/                    # estado, efeitos e ações por responsabilidade
+  modules/                  # funções puras, formatadores e regras locais
+  context/ ou *-context.tsx # estado compartilhado somente quando necessário
+  types.ts                  # contrato local compartilhado
+```
+
+No admin, `client.tsx` tem o mesmo papel de composição de `logic.tsx`. `page.tsx`, `logic.tsx` e `client.tsx` não devem concentrar ao mesmo tempo fetching, estado, regras, eventos e milhares de linhas de JSX. Componentes filhos recebem contratos explícitos; hooks não importam a view; módulos puros não dependem de React.
+
 Templates/shells devem viver em `frontend/src/templates`.
+
+### Limites arquiteturais automatizados
+
+- `pnpm check:source-size` limita novas raízes de composição (`page.tsx`, `logic.tsx`, `client.tsx`, `controller.ts` e `services.ts`) a **600 linhas** e demais fontes a **700 linhas**. O objetivo recomendado é manter raízes perto de 300 linhas; 600 é teto, não meta.
+- Arquivo legado acima do teto só pode permanecer no baseline no tamanho atual ou menor. Ao cair abaixo do teto, sua entrada deve ser removida; nunca aumente o baseline para acomodar código novo.
+- `pnpm check:cycles` impede ciclos de imports locais em backend, frontend e admin.
+- Extrair apenas por contagem não basta: cada arquivo novo deve ter responsabilidade nomeável, direção de dependência clara e contrato tipado.
+- `index.ts` pode expor a API pública de uma pasta, mas não deve ocultar dependências circulares nem virar implementação central.
 
 ### Regras de UI
 

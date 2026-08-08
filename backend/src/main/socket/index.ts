@@ -1,7 +1,6 @@
 import http from "node:http";
 import type { Express } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import type { DefaultEventsMap } from "socket.io";
 import io from "socket.io";
 import { resolve } from "@/helpers/translate/resolve";
 import prisma from "@/infra/database/prisma";
@@ -10,16 +9,15 @@ import { getUserJwtTtlSeconds, parsePositiveInteger } from "@/utils/runtime-conf
 import { readUserTokenFromCookieHeader } from "@/utils/user-auth-cookie";
 import { emitAsync } from "./db/async";
 import { connectedClients } from "./registry";
+import { setSoc } from "./state";
 
-type Soc = io.Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>;
+export { aiSoc, setAiSoc, setSoc, soc } from "./state";
+
 type SocketPayload = JwtPayload & {
   device_id?: string;
   id?: string;
   type?: string;
 };
-
-export let soc: Soc | null = null;
-export let aiSoc: Soc | null = null;
 
 const SOCKET_AUTH_RECHECK_INTERVAL_MS = parsePositiveInteger(
   process.env.SOCKET_AUTH_RECHECK_INTERVAL_MS,
@@ -83,14 +81,6 @@ const resolveHandshakeOrigin = (headers: Record<string, string | string[] | unde
   if (!forwardedHost || !forwardedProto) return null;
 
   return normalizeOrigin(`${forwardedProto}://${forwardedHost}`);
-};
-
-export const setSoc = (server: Soc) => {
-  soc = server;
-};
-
-export const setAiSoc = (server: Soc) => {
-  aiSoc = server;
 };
 
 export const socket = (server: Express) => {

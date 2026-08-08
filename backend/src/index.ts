@@ -11,7 +11,7 @@ import {
 } from "@/main/notification/digests";
 import app from "@/main/server/app";
 import { env } from "@/main/server/environment";
-import { soc } from "@/main/socket";
+import { soc } from "@/main/socket/state";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 const server = app.listen(env.PORT, () => {

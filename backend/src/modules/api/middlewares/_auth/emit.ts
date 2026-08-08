@@ -2,11 +2,10 @@
 
 //Types
 import type { user } from "@/interfaces/objects";
-import { soc } from "@/main/socket";
 //Utils
 import { clients } from "@/main/socket/clients";
-//
-import { destroyAsync, emitError } from "@/main/socket/db/async";
+import { destroyAsync, emitError } from "@/main/socket/db/actions";
+import { soc } from "@/main/socket/state";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 
