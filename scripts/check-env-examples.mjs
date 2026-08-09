@@ -14,11 +14,23 @@ const applicationDefinitions = [
     roots: ["backend", "scripts/dev.mjs"],
   },
   {
+    buildConstants: {
+      LECTUM_APP_VERSION: {
+        declaration: "LECTUM_APP_VERSION: packageMetadata.version",
+        source: "frontend/next.config.ts",
+      },
+    },
     example: "frontend/.env.example",
     name: "frontend",
     roots: ["frontend"],
   },
   {
+    buildConstants: {
+      LECTUM_APP_VERSION: {
+        declaration: "LECTUM_APP_VERSION: packageMetadata.version",
+        source: "admin/next.config.ts",
+      },
+    },
     example: "admin/.env.example",
     name: "admin",
     roots: ["admin"],
@@ -78,7 +90,18 @@ const failures = [];
 
 for (const definition of applicationDefinitions) {
   const documentedKeys = await readExampleKeys(definition.example);
+  const verifiedBuildConstants = new Set();
   const references = new Map();
+
+  for (const [key, contract] of Object.entries(definition.buildConstants ?? {})) {
+    const configuration = await readFile(path.join(repositoryRoot, contract.source), "utf8");
+    if (configuration.includes(contract.declaration)) verifiedBuildConstants.add(key);
+    else {
+      failures.push(
+        `${definition.name}: ${key} foi declarada como constante de build, mas não é injetada por ${contract.source}.`,
+      );
+    }
+  }
 
   for (const root of definition.roots) {
     for (const absolutePath of await walk(root)) {
@@ -103,7 +126,13 @@ for (const definition of applicationDefinitions) {
   }
 
   for (const [key, files] of references) {
-    if (platformVariables.has(key) || documentedKeys.has(key)) continue;
+    if (
+      platformVariables.has(key) ||
+      verifiedBuildConstants.has(key) ||
+      documentedKeys.has(key)
+    ) {
+      continue;
+    }
 
     failures.push(
       `${definition.name}: ${key} é usada por ${Array.from(files).join(", ")}, mas não está em ${definition.example}.`,

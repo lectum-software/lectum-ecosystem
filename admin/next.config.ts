@@ -1,6 +1,10 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
+import packageMetadata from "./package.json";
 import { isLoopbackHostname, parseConfiguredHttpOrigin } from "./src/lib/http-origin-policy";
 
+const adminRoot = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_API_URL = "http://localhost:3001";
 const apiUrl =
   parseConfiguredHttpOrigin(process.env.NEXT_PUBLIC_API_URL) ??
@@ -109,13 +113,16 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const nextConfig: NextConfig = {
+  env: {
+    LECTUM_APP_VERSION: packageMetadata.version,
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
   images: {
     remotePatterns: Array.from(imageRemotePatterns.values()),
   },
-  outputFileTracingRoot: process.cwd(),
+  outputFileTracingRoot: adminRoot,
   poweredByHeader: false,
 };
 

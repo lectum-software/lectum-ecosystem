@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import packageMetadata from "./package.json";
 import {
   getPublicApiSource,
   getPublicAssetSources,
@@ -106,6 +107,9 @@ process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",")
   });
 
 const nextConfig: NextConfig = {
+  env: {
+    LECTUM_APP_VERSION: packageMetadata.version,
+  },
   async redirects() {
     return [
       {
