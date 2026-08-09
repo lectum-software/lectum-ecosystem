@@ -118,7 +118,8 @@ Este é o resumo simples. As decisões técnicas estão no
 - Qualquer falha nesses testes **bloqueia** o merge para `main`.
 - Antes do merge revisado para produção, conferir a mesma configuração em produção, sem mostrar
   valores, e repetir os testes depois da publicação.
-- O smoke publicado em homologação ainda não ocorreu nesta etapa; ele só poderá ser feito após o push.
+- O smoke público foi executado depois do push. A parte autenticada continua pendente porque exige
+  contas e acesso próprios de homologação.
 
 ## Validação local
 
@@ -136,10 +137,21 @@ Este é o resumo simples. As decisões técnicas estão no
 - Nenhuma estrutura ou atualização do banco foi alterada; por isso não houve comando de alteração.
 - Nenhuma validação publicada foi declarada como concluída antes do deploy de homologação.
 
+## Validação publicada em homologação
+
+- Página inicial e login do frontend responderam `200`; a área protegida encaminhou para o login.
+- `/health` e `/ready` responderam `200` e proibiram cache.
+- A documentação interna da API respondeu `404`, como previsto para ambiente publicado.
+- A API liberou somente as origens exatas do frontend e do Admin; uma origem externa não recebeu
+  permissão.
+- O endereço do Admin está ativo, mas encaminha visitantes para uma proteção externa. Sem esse
+  acesso e sem credencial administrativa, a tela e o fluxo autenticado não foram simulados.
+
 ## Pendências conhecidas
 
 - A TASK-41 aguarda textos, versões e dados aprovados pelo jurídico; placeholders não serão publicados.
 - Login, recuperação de sessão, API protegida e logout ainda exigem QA autenticado em homologação.
+- O smoke visual do Admin exige acesso à proteção externa da própria homologação.
 - Hosts usados por mídias históricas precisam ser confirmados antes da promoção.
 - O tema escuro/automático do Admin precisa de task própria, aprovação da dependência e ADR.
 - O uso dos vídeos demonstrativos precisa de autorização do responsável antes de produção.

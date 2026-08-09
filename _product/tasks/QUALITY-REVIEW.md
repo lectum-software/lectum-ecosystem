@@ -315,7 +315,9 @@ Validação local consolidada:
 - [x] `pnpm check`, checks individuais e builds das três aplicações aprovados sem warning.
 - [x] Browser local mobile/desktop e imagem final do backend registrados no fechamento.
 - [x] `pnpm audit --prod --audit-level high` aprovado nas três aplicações.
-- [ ] Smoke publicado de frontend, Admin, `/health` e `/ready` realizado após o push em `homolog`.
+- [x] Smoke publicado do frontend, de `/health`, `/ready`, documentação desativada e CORS realizado
+      após o push em `homolog`.
+- [ ] Smoke visual do Admin realizado depois de passar pela proteção externa de homologação.
 - [ ] Login, hidratação, API privada e logout validados com credenciais reais em homologação.
 
 O push em `homolog` inicia deploy automático. A promoção para `main` permanece bloqueada até os itens
