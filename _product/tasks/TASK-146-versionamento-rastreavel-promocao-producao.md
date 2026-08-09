@@ -122,7 +122,8 @@ devem ser hardcoded nas rotas.
 - [x] O backend `GET /ping` mantém `pong` e retorna a versão real do `backend/package.json`.
 - [x] Frontend `GET /version` é público, noindex, sem cache e retorna a versão real do manifest.
 - [x] Admin `GET /version` é público, noindex, sem cache e não abre outras rotas administrativas.
-- [x] Os Route Handlers não exigem o manifest em runtime e o tracing root do Admin independe do CWD.
+- [x] Os Route Handlers não exigem o manifest em runtime e o Admin não sobrescreve
+  `outputFileTracingRoot`.
 - [x] Nenhuma rota de versão aparece em navegação ou sitemap.
 - [x] Skills e instruções de Codex, Claude, Copilot e Cursor registram bump obrigatório e promoção por
   PR + merge quando o usuário pedir produção.
@@ -193,6 +194,18 @@ nenhuma env de deploy foi criada. O verificador de envs reconhece essa exceção
 declaração de build correspondente existir, evitando documentá-la incorretamente em `.env.example`.
 
 Validação corretiva local: builds de backend, frontend e admin concluídos; o Admin compilou sem
-warning de raiz inferida e registrou `outputFileTracingRoot` em `admin/`; os bundles Next contêm
+warning de raiz inferida e registrou `outputFileTracingRoot` em `admin/`; os bundles Next continham
 `0.1.2` como literal; `/health`, `/ready`, `/ping` e as duas rotas `/version` responderam 200, enquanto
-`/dashboard` do Admin permaneceu protegido com redirecionamento 307.
+`/dashboard` do Admin permaneceu protegido com redirecionamento 307. Essa evidência local não foi
+suficiente: o deploy remoto de `0.1.2` repetiu exatamente o mesmo `ENOENT` no Admin, embora backend e
+frontend tenham publicado a versão.
+
+### Correção pós-deploy da versão `0.1.2`
+
+O segundo deploy demonstrou que trocar o valor de `outputFileTracingRoot` não eliminava a causa: a
+presença da sobrescrita continuava incompatível com a coleta da Vercel. A versão `0.1.3` remove a
+propriedade por completo e usa somente `turbopack.root`, o mesmo padrão já publicado com sucesso pelo
+frontend. O build do Admin com `VERCEL=1` foi repetido sem warning, gerou `.next/package.json` e
+manteve o trace padrão do Next apontando para a própria aplicação. Checks e builds dos três projetos
+passaram em `0.1.3`; o smoke local confirmou `/health`, `/ready`, `/ping`, frontend/admin `/version` e
+o redirecionamento 307 da rota privada do Admin.

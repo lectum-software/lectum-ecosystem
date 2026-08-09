@@ -1,10 +1,7 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 import packageMetadata from "./package.json";
 import { isLoopbackHostname, parseConfiguredHttpOrigin } from "./src/lib/http-origin-policy";
 
-const adminRoot = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_API_URL = "http://localhost:3001";
 const apiUrl =
   parseConfiguredHttpOrigin(process.env.NEXT_PUBLIC_API_URL) ??
@@ -122,7 +119,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: Array.from(imageRemotePatterns.values()),
   },
-  outputFileTracingRoot: adminRoot,
+  turbopack: {
+    root: process.cwd(),
+  },
   poweredByHeader: false,
 };
 

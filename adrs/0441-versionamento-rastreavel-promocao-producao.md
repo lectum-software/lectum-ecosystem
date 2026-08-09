@@ -26,8 +26,9 @@ automático e exigem uma fronteira explícita contra publicação direta em prod
 - Frontend e admin lerão seus manifests no `next.config.ts`, injetarão a versão como constante de
   build e publicarão `GET /version` em JSON, sem autenticação, sem cache, com `noindex` e sem links ou
   sitemap. Os Route Handlers não importarão `package.json` diretamente.
-- O Admin fixará `outputFileTracingRoot` no diretório de `admin/next.config.ts`, resolvido por
-  `import.meta.url`, e nunca em `process.cwd()`, que varia conforme o executor do build.
+- O Admin não sobrescreverá `outputFileTracingRoot`; a coleta de runtime ficará sob o padrão do Next.
+  Apenas `turbopack.root` será informado, repetindo a configuração já publicada pelo frontend e
+  limitando a resolução de módulos à aplicação.
 - Uma solicitação explícita de produção será atendida por PR `homolog` -> `main` e merge via `gh`
   após checks/smoke. Não haverá commit/push direto em `main`, nem exclusão da branch `homolog`.
 
@@ -81,8 +82,15 @@ o isolamento da aplicação e removendo a dependência do diretório de execuç�
 recebeu o mesmo endurecimento preventivo.
 
 A validação local de `0.1.2` confirmou build do Admin sem warning de raiz inferida, trace ancorado em
-`admin/`, versão literal nos dois bundles Next e os três contratos HTTP respondendo `0.1.2`. O smoke
-publicado permanece obrigatório depois do push em `homolog`.
+`admin/`, versão literal nos dois bundles Next e os três contratos HTTP respondendo `0.1.2`. Contudo,
+o deploy remoto repetiu o mesmo `ENOENT`, provando que estabilizar o valor não bastava enquanto a
+sobrescrita permanecesse presente.
+
+Na correção `0.1.3`, `outputFileTracingRoot` foi removido por completo. O Admin passou a declarar
+somente `turbopack.root`, como o frontend que publicou `0.1.2` com sucesso. O build foi repetido com
+`VERCEL=1`: sem warning, com `.next/package.json` presente e sem configuração explícita da propriedade
+problemática no código-fonte. Checks/builds dos três projetos e o smoke HTTP local responderam
+`0.1.3`; o smoke publicado permanece obrigatório depois do push em `homolog`.
 
 ## Pendências
 
