@@ -121,7 +121,7 @@ export const LatestCharges = ({ dashboard }: { dashboard: AdminFinanceDashboard 
                 <ChargeStatusBadge item={item} />
               </div>
               <p className="truncate text-xs font-bold text-muted">
-                {item.subscription?.psychologist.email ?? item.external_id}
+                {item.subscription?.psychologist.email ?? "Sem vínculo local"}
               </p>
               <p className="mt-2 text-sm font-bold text-foreground">
                 {formatMaybeMoney(item.amount_cents)} · {formatDateTime(item.occurred_at)}

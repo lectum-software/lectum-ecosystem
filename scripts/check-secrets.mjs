@@ -37,6 +37,10 @@ const secretPatterns = [
   { label: "Slack token", pattern: /\bxox[baprs]-[A-Za-z0-9-]{20,}\b/g },
   { label: "Mercado Pago token", pattern: /\b(?:APP_USR|TEST)-[A-Za-z0-9_-]{24,}\b/g },
   { label: "SendGrid key", pattern: /\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{20,}\b/g },
+  {
+    label: "e-mail pessoal em provedor público",
+    pattern: /\b[A-Za-z0-9._%+-]+@(?:gmail|hotmail|outlook|yahoo)\.[A-Za-z]{2,}\b/gi,
+  },
 ];
 const sensitiveAssignmentPattern =
   /^[ \t]*(?:export[ \t]+)?([A-Z][A-Z0-9_]*(?:API_KEY|AUTH_TOKEN|PASSWORD|PRIVATE_KEY|SECRET|TOKEN)[A-Z0-9_]*)[ \t]*=[ \t]*["']?([^\s"'#]{12,})/gm;

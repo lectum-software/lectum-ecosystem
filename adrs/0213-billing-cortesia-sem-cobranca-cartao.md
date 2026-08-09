@@ -10,7 +10,7 @@ TASK-33
 
 ## Contexto
 
-A conta `contato.tuliorezende@gmail.com` possui assinatura profissional ativa com
+A conta `<CONTA_DE_TESTE_AUTORIZADA>` possui assinatura profissional ativa com
 `professional_subscription.source="admin_grant"` e, portanto, está em cortesia operacional. A
 tela `/app/professional/billing` selecionava corretamente a assinatura ativa de cortesia, mas ainda
 reaproveitava o `subscription_plan` profissional padrão para exibir `R$ 9,90 / mês` e retornava o
@@ -51,7 +51,7 @@ banco indicar cortesia sem gateway, sem `gateway_subscription_id` e sem cobranç
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local via Chrome headless/CDP em `http://localhost:3002/app/professional/billing`, usando
-  sessão real da conta, confirmou os textos de cortesia e a ausência de `Amex final 6885`,
+  sessão real da conta, confirmou os textos de cortesia e a ausência de `Amex final <4 dígitos>`,
   `Pagamento não vinculado` e `R$ 9,90 / mês`.
 
 ## Pendências

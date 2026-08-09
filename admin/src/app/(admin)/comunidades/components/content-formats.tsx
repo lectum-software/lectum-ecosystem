@@ -1,5 +1,9 @@
 "use client";
 
+import { buildPieSlicePath, getPiePoint } from "@/lib/chart-geometry";
+
+export { buildPieSlicePath, getPiePoint };
+
 import type {
   CommunitiesDashboardGlobalStatistics,
   CommunitiesPostContentFormatDistribution,
@@ -22,33 +26,6 @@ export const communityPostContentFormatChartColors = {
 } satisfies Record<CommunityPostContentFormatDistributionItem["id"], string>;
 
 export const hexToRgba = colorWithAlpha;
-
-export const getPiePoint = (center: number, radius: number, angleInDegrees: number) => {
-  const angleInRadians = (Math.PI / 180) * angleInDegrees;
-
-  return {
-    x: center + radius * Math.cos(angleInRadians),
-    y: center + radius * Math.sin(angleInRadians),
-  };
-};
-
-export const buildPieSlicePath = (
-  center: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number,
-) => {
-  const start = getPiePoint(center, radius, startAngle);
-  const end = getPiePoint(center, radius, endAngle);
-  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-
-  return [
-    `M ${center} ${center}`,
-    `L ${start.x} ${start.y}`,
-    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
-    "Z",
-  ].join(" ");
-};
 
 export const PiePercentageLabel = ({
   color,

@@ -1,6 +1,6 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
-import { csvRow } from "@/utils/csv";
+import { csvPublicProvenance, csvRow } from "@/utils/csv";
 import type {
   AdminDashboardDailyPoint,
   AdminDashboardFinancialPoint,
@@ -20,7 +20,7 @@ const appendMetricRows = (summary: AdminDashboardSummary, rows: string[]) => {
         card.label,
         "",
         card.value,
-        card.source,
+        csvPublicProvenance(card.source),
         `unit=${card.unit};previous=${card.previous_value};change_percent=${card.change_percent ?? "n/a"}`,
       ]),
     );
@@ -42,14 +42,16 @@ const appendDailyRows = (
           "MRR estimado",
           point.date,
           point.value_cents,
-          source,
+          csvPublicProvenance(source),
           `active_subscriptions=${point.active_subscriptions}`,
         ]),
       );
       continue;
     }
 
-    rows.push(csvRow([section, "count", section, point.date, point.count, source, ""]));
+    rows.push(
+      csvRow([section, "count", section, point.date, point.count, csvPublicProvenance(source), ""]),
+    );
   }
 };
 
@@ -63,7 +65,7 @@ const appendWhatsAppDistributionRows = (summary: AdminDashboardSummary, rows: st
       "Cliques de WhatsApp",
       "",
       distribution.total_clicks,
-      distribution.source,
+      csvPublicProvenance(distribution.source),
       `total_psychologists=${distribution.total_psychologists};with_clicks=${distribution.psychologists_with_clicks};without_clicks=${distribution.psychologists_without_clicks};gini=${distribution.gini ?? "n/a"}`,
     ]),
   );
@@ -75,7 +77,7 @@ const appendWhatsAppDistributionRows = (summary: AdminDashboardSummary, rows: st
       "Top 10%",
       "",
       distribution.top_10_percent.click_percentage,
-      distribution.source,
+      csvPublicProvenance(distribution.source),
       `clicks=${distribution.top_10_percent.clicks};psychologists=${distribution.top_10_percent.psychologist_count}`,
     ]),
   );
@@ -87,7 +89,7 @@ const appendWhatsAppDistributionRows = (summary: AdminDashboardSummary, rows: st
       "Top 20%",
       "",
       distribution.top_20_percent.click_percentage,
-      distribution.source,
+      csvPublicProvenance(distribution.source),
       `clicks=${distribution.top_20_percent.clicks};psychologists=${distribution.top_20_percent.psychologist_count}`,
     ]),
   );
@@ -114,7 +116,7 @@ const buildCsv = (summary: AdminDashboardSummary) => {
         device.label,
         "",
         device.count,
-        summary.devices.source,
+        csvPublicProvenance(summary.devices.source),
         `percentage=${device.percentage}`,
       ]),
     );
@@ -128,7 +130,7 @@ const buildCsv = (summary: AdminDashboardSummary) => {
         location.country,
         "",
         location.count,
-        summary.locations.source,
+        csvPublicProvenance(summary.locations.source),
         `percentage=${location.percentage}`,
       ]),
     );
@@ -138,20 +140,30 @@ const buildCsv = (summary: AdminDashboardSummary) => {
   for (const report of summary.pending_reports.items) {
     rows.push(
       csvRow([
-        "pending_report",
-        report.id,
+        "Denúncia pendente",
+        "",
         report.target_title,
         report.created_at,
-        report.severity,
-        summary.pending_reports.source,
-        `reason=${report.reason};community=${report.community_name ?? ""};target=${report.target_type}:${report.target_id}`,
+        "",
+        csvPublicProvenance(summary.pending_reports.source),
+        report.community_name ? `Comunidade: ${report.community_name}` : "",
       ]),
     );
   }
 
   rows.push("");
   for (const item of summary.unavailable) {
-    rows.push(csvRow(["unavailable", item.id, item.label, "", "", item.source, item.description]));
+    rows.push(
+      csvRow([
+        "unavailable",
+        item.id,
+        item.label,
+        "",
+        "",
+        csvPublicProvenance(item.source),
+        item.description,
+      ]),
+    );
   }
 
   return rows.join("\r\n");

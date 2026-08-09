@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 export type PatientsDashboardTrend = "down" | "flat" | "unavailable" | "up";
 
 export type PatientsDashboardMetric = {
@@ -92,7 +93,7 @@ export type PatientsDashboardPlatformUsage = {
     sessions: number;
   }[];
   sessions_count: number;
-  source: "page_view_event+important_action_event";
+  source: AdminPublicSource<"page_view_event+important_action_event">;
   top_pages: {
     count: number;
     label: string;
@@ -121,7 +122,7 @@ export type PatientsDashboardDeviceUsageItem = {
 
 export type PatientsDashboardDeviceUsage = {
   items: PatientsDashboardDeviceUsageItem[];
-  source: "visitor_session.device_type+visitor_session.os+user.role=paciente";
+  source: AdminPublicSource<"visitor_session.device_type+visitor_session.os+user.role=paciente">;
   total_active_patients: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -147,7 +148,7 @@ export type PatientsDashboardOperatingSystemUsageItem = {
 
 export type PatientsDashboardOperatingSystemUsage = {
   items: PatientsDashboardOperatingSystemUsageItem[];
-  source: "visitor_session.os+visitor_session.device_type+user.role=paciente";
+  source: AdminPublicSource<"visitor_session.os+visitor_session.device_type+user.role=paciente">;
   total_active_patients: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -174,7 +175,7 @@ export type PatientsDashboardIntentAnalysis = {
     repeated_profile_views: number;
     whatsapp_clicks: number;
   };
-  source: "profile_view_event+psychologist_favorite+contact_request";
+  source: AdminPublicSource<"profile_view_event+psychologist_favorite+contact_request">;
   total_patients: number;
   total_signals: number;
 };
@@ -197,7 +198,7 @@ export type PatientsDashboardEngagementAnalysis = {
   items: PatientsDashboardEngagementSegment[];
   patients_with_engagement: number;
   privacy_note: string;
-  source: "community_post+post_reply+post_vote+post_save+post_reply_save";
+  source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+post_reply_save">;
   thresholds: {
     engaged_score_30d: number;
     minimum_signal_score_30d: number;
@@ -243,7 +244,7 @@ export type PatientsDashboardIntentEngagement = {
     rate_difference_points: number | null;
   };
   description: string;
-  source: "profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save";
+  source: AdminPublicSource<"profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save">;
   totals: {
     high_engagement_patients: number;
     high_intent_patients: number;
@@ -265,12 +266,12 @@ export type PatientsDashboardIntentFilteredMetrics = {
   demographics: {
     gender: {
       items: PatientsDashboardBreakdownItem[];
-      source: "patient_profile.gender";
+      source: AdminPublicSource<"patient_profile.gender">;
       total: number;
     };
     signup_sources: {
       items: PatientsDashboardBreakdownItem[];
-      source: "user.provider";
+      source: AdminPublicSource<"user.provider">;
       total: number;
     };
   };
@@ -278,7 +279,7 @@ export type PatientsDashboardIntentFilteredMetrics = {
   locations: {
     cities: PatientsDashboardBreakdownItem[];
     countries: PatientsDashboardBreakdownItem[];
-    source: "visitor_location";
+    source: AdminPublicSource<"visitor_location">;
     states: PatientsDashboardBreakdownItem[];
     total: number;
   };
@@ -289,7 +290,7 @@ export type PatientsDashboardIntentFilters = {
   breakdowns: Record<PatientsDashboardIntentFilterId, PatientsDashboardIntentFilteredMetrics>;
   default_filter: "all";
   options: PatientsDashboardIntentFilterOption[];
-  source: "profile_view_event+psychologist_favorite+contact_request";
+  source: AdminPublicSource<"profile_view_event+psychologist_favorite+contact_request">;
 };
 
 export type PatientsDashboardAnonymousConversionBucketId =
@@ -332,7 +333,7 @@ export type PatientsDashboardAnonymousConversion = {
   patients_with_anonymous_history_count: number;
   patients_without_anonymous_history_count: number;
   registered_patients_count: number;
-  source: "user.createdAt+user_background+page_view_event+visitor_session";
+  source: AdminPublicSource<"user.createdAt+user_background+page_view_event+visitor_session">;
   unavailable_reason: string | null;
 };
 
@@ -348,12 +349,12 @@ export type AdminPatientsDashboard = {
   demographics: {
     gender: {
       items: PatientsDashboardBreakdownItem[];
-      source: "patient_profile.gender";
+      source: AdminPublicSource<"patient_profile.gender">;
       total: number;
     };
     signup_sources: {
       items: PatientsDashboardBreakdownItem[];
-      source: "user.provider";
+      source: AdminPublicSource<"user.provider">;
       total: number;
     };
   };
@@ -369,7 +370,7 @@ export type AdminPatientsDashboard = {
   locations: {
     cities: PatientsDashboardBreakdownItem[];
     countries: PatientsDashboardBreakdownItem[];
-    source: "visitor_location";
+    source: AdminPublicSource<"visitor_location">;
     states: PatientsDashboardBreakdownItem[];
     total: number;
   };
@@ -378,12 +379,12 @@ export type AdminPatientsDashboard = {
   platform_usage: PatientsDashboardPlatformUsage;
   recent_patients: {
     items: PatientsDashboardRecentPatient[];
-    source: "user+patient_profile+visitor_location+community_activity";
+    source: AdminPublicSource<"user+patient_profile+visitor_location+community_activity">;
     total: number;
   };
   series: {
     points: PatientsDashboardDailyPoint[];
-    source: "user.createdAt+user.active";
+    source: AdminPublicSource<"user.createdAt+user.active">;
   };
   unavailable: PatientsDashboardUnavailableMetric[];
 };

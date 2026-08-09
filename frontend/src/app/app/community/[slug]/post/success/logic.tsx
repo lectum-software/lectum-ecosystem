@@ -17,6 +17,16 @@ const normalizeParam = (value: string | string[] | undefined) => {
 
 const LAST_CREATED_POST_HREF_KEY = "lectum:last-created-post-href";
 
+const readLastCreatedPostHref = () => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.sessionStorage.getItem(LAST_CREATED_POST_HREF_KEY);
+  } catch {
+    return null;
+  }
+};
+
 type CommunityPostSuccessLogicProps = {
   asModalSlot?: boolean;
 };
@@ -30,14 +40,16 @@ export const CommunityPostSuccessLogic = ({
   const postId = searchParams.get("postId")?.trim() || null;
   const communitySlug = searchParams.get("communitySlug")?.trim() || null;
   const [publicationHref] = useState(() => {
-    const storedPublicationHref =
-      typeof window === "undefined"
-        ? null
-        : window.sessionStorage.getItem(LAST_CREATED_POST_HREF_KEY);
+    const storedPublicationHref = readLastCreatedPostHref();
     const publicationSlug = communitySlug || (slug && slug !== COMMUNITY_FEED_SLUG ? slug : null);
 
     if (publicationSlug && postId) {
-      return `/comunidades/${publicationSlug}/publicacao/${postId}`;
+      return (
+        normalizeSafeInternalRedirect(
+          `/comunidades/${encodeURIComponent(publicationSlug)}/publicacao/${encodeURIComponent(postId)}`,
+          DEFAULT_COMMUNITY_FEED_HREF,
+        ) ?? DEFAULT_COMMUNITY_FEED_HREF
+      );
     }
 
     if (storedPublicationHref) {
@@ -47,7 +59,12 @@ export const CommunityPostSuccessLogic = ({
       );
     }
 
-    return publicationSlug ? `/comunidades/${publicationSlug}` : DEFAULT_COMMUNITY_FEED_HREF;
+    return publicationSlug
+      ? (normalizeSafeInternalRedirect(
+          `/comunidades/${encodeURIComponent(publicationSlug)}`,
+          DEFAULT_COMMUNITY_FEED_HREF,
+        ) ?? DEFAULT_COMMUNITY_FEED_HREF)
+      : DEFAULT_COMMUNITY_FEED_HREF;
   });
 
   const handleViewPublication = () => {

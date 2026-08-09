@@ -1,4 +1,4 @@
-﻿import prisma from "@/infra/database/prisma";
+import prisma from "@/infra/database/prisma";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
 
 const SOURCE_ADMIN_GRANT = "admin_grant";

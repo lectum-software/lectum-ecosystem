@@ -84,7 +84,7 @@ export const handleReq = async <T = unknown>({
       const status = (err?.response?.status as number | undefined) ?? res?.status;
 
       if (status === 401 && signOutOnUnauthorized && typeof window !== "undefined") {
-        signOut(true);
+        void signOut(true).catch(() => undefined);
       }
 
       const message = getSafeApiErrorMessage(err, "Não foi possível conectar ao serviço.");

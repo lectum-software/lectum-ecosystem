@@ -10,8 +10,16 @@ import { DeleteObjectsCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/c
 import { config as loadEnv } from "dotenv";
 import { MercadoPagoConfig, PreApproval } from "mercadopago";
 import pg from "pg";
+import { classifyR2ResetTarget, classifyResetRuntimeEnvironment } from "./reset-safety.mjs";
 
 const { Client: PgClient } = pg;
+
+process.on("uncaughtException", () => {
+  fail("Reset interrompido por uma falha operacional segura.");
+});
+process.on("unhandledRejection", () => {
+  fail("Reset interrompido por uma falha operacional segura.");
+});
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const backendRoot = resolve(dirname(currentFilePath), "..");
@@ -47,7 +55,6 @@ if (!databaseUrl) {
 }
 
 const parsedDatabaseUrl = parseDatabaseUrl(databaseUrl);
-const databaseTarget = formatDatabaseTarget(parsedDatabaseUrl);
 
 assertSafeDatabaseTarget(parsedDatabaseUrl);
 
@@ -62,10 +69,10 @@ const mercadoPagoSubscriptions = await collectMercadoPagoSubscriptions({
 const r2ObjectCount = await countR2Objects(r2Config);
 
 console.log("⚠️  Reset total do ambiente de desenvolvimento Lectum.");
-console.log(`Banco alvo: ${databaseTarget}`);
-console.log(`R2 alvo: ${formatR2Target(r2Config)}`);
+console.log("Banco local validado.");
+console.log("Armazenamento descartável validado.");
 console.log(
-  `Mercado Pago alvo: sandbox (${mercadoPagoSubscriptions.size} assinatura(s) encontrada(s) para cancelar)`,
+  `Provedor de pagamento sandbox: ${mercadoPagoSubscriptions.size} assinatura(s) encontrada(s) para cancelar.`,
 );
 console.log(
   "A operação irá cancelar assinaturas sandbox, limpar arquivos públicos do R2 e resetar o banco.",
@@ -74,17 +81,15 @@ console.log("As migrations Prisma serão reaplicadas pelo prisma migrate reset."
 
 if (isDryRun) {
   printDryRunSummary({
-    databaseTarget,
     localMercadoPagoReferences,
     mercadoPagoSubscriptions,
-    r2Config,
     r2ObjectCount,
   });
   process.exit(0);
 }
 
 if (!shouldSkipPrompt) {
-  await confirmReset(databaseTarget, r2Config.bucketName, mercadoPagoSubscriptions.size);
+  await confirmReset(mercadoPagoSubscriptions.size);
 }
 
 await cancelMercadoPagoSandboxSubscriptions(
@@ -180,7 +185,7 @@ function buildR2Config() {
   const bucketName = requireEnv("CLOUDFLARE_R2_PUBLIC_BUCKET_NAME");
   const prefix = process.env.LECTUM_RESET_R2_PREFIX?.trim() || "";
 
-  assertSafeR2Target({ bucketName, endpoint });
+  assertSafeR2Target({ bucketName, endpoint, prefix });
 
   return {
     bucketName,
@@ -241,10 +246,8 @@ async function assertMercadoPagoSandboxAccessToken(accessToken) {
       signal: AbortSignal.timeout(10_000),
     });
     user = await response.json();
-  } catch (err) {
-    fail(
-      `Reset bloqueado: não foi possível validar a conta Mercado Pago de teste (${formatError(err)}).`,
-    );
+  } catch {
+    fail("Reset bloqueado: não foi possível validar a conta de pagamento de teste.");
   }
 
   const tags = Array.isArray(user?.tags) ? user.tags : [];
@@ -331,11 +334,14 @@ async function searchMercadoPagoSubscriptions(preApproval, { onSubscription, opt
 
 async function cancelMercadoPagoSandboxSubscriptions(preApproval, subscriptionIds) {
   if (subscriptionIds.size === 0) {
-    console.log("[Mercado Pago] Nenhuma assinatura sandbox encontrada para cancelamento.");
+    console.log("[PAGAMENTO] Nenhuma assinatura sandbox encontrada para cancelamento.");
     return;
   }
 
-  console.log(`[Mercado Pago] Cancelando ${subscriptionIds.size} assinatura(s) sandbox...`);
+  console.log(`[PAGAMENTO] Cancelando ${subscriptionIds.size} assinatura(s) sandbox...`);
+
+  let cancelled = 0;
+  let alreadyAbsent = 0;
 
   for (const subscriptionId of subscriptionIds) {
     try {
@@ -346,20 +352,22 @@ async function cancelMercadoPagoSandboxSubscriptions(preApproval, subscriptionId
           idempotencyKey: `lectum-reset-cancel-${subscriptionId}`,
         },
       });
-      console.log(`[Mercado Pago] Assinatura cancelada: ${subscriptionId}`);
+      cancelled++;
     } catch (err) {
       const status = getErrorStatus(err);
 
       if (status === 404) {
-        console.warn(`[Mercado Pago] Assinatura já ausente no sandbox: ${subscriptionId}`);
+        alreadyAbsent++;
         continue;
       }
 
-      throw new Error(
-        `Falha ao cancelar assinatura Mercado Pago ${subscriptionId}: ${formatError(err)}`,
-      );
+      throw new Error("Falha ao cancelar assinatura sandbox no provedor de pagamento.");
     }
   }
+
+  console.log(
+    `[PAGAMENTO] Cancelamento concluído: ${cancelled} cancelada(s), ${alreadyAbsent} já ausente(s).`,
+  );
 }
 
 async function countR2Objects({ bucketName, client, prefix }) {
@@ -386,7 +394,7 @@ async function cleanR2Objects({ bucketName, client, prefix }) {
   let deleted = 0;
   let continuationToken;
 
-  console.log(`[R2] Limpando objetos de ${formatR2Target({ bucketName, prefix })}...`);
+  console.log("[ARMAZENAMENTO] Limpando objetos do alvo descartável validado...");
 
   do {
     const response = await client.send(
@@ -415,9 +423,8 @@ async function cleanR2Objects({ bucketName, client, prefix }) {
       );
 
       if (deleteResponse.Errors?.length) {
-        const firstError = deleteResponse.Errors[0];
         throw new Error(
-          `Falha ao limpar R2 em ${firstError.Key}: ${firstError.Code || firstError.Message}`,
+          `Falha operacional controlada ao limpar ${deleteResponse.Errors.length} objeto(s) do armazenamento descartável.`,
         );
       }
 
@@ -427,7 +434,7 @@ async function cleanR2Objects({ bucketName, client, prefix }) {
     continuationToken = response.NextContinuationToken;
   } while (continuationToken);
 
-  console.log(`[R2] ${deleted} objeto(s) removido(s).`);
+  console.log(`[ARMAZENAMENTO] ${deleted} objeto(s) removido(s).`);
 }
 
 function runPrismaReset(extraPrismaArgs) {
@@ -437,13 +444,17 @@ function runPrismaReset(extraPrismaArgs) {
     ["exec", "prisma", "migrate", "reset", "--force", ...extraPrismaArgs],
     {
       cwd: backendRoot,
-      env: process.env,
+      env: {
+        ...process.env,
+        // O alvo já foi validado como local e a confirmação ocorreu neste processo.
+        LECTUM_CONFIRM_DB_RESET: "1",
+      },
       stdio: "inherit",
     },
   );
 
   if (resetResult.error) {
-    fail(`Falha ao executar pnpm exec prisma migrate reset: ${resetResult.error.message}`);
+    fail("Falha ao iniciar o reset local do Prisma.");
   }
 
   process.exit(resetResult.status ?? 1);
@@ -458,10 +469,13 @@ function parseDatabaseUrl(value) {
 }
 
 function assertSafeDatabaseTarget(url) {
-  const nodeEnv = process.env.NODE_ENV?.toLowerCase();
+  const environmentClassification = classifyResetRuntimeEnvironment(process.env.NODE_ENV);
 
-  if (nodeEnv === "production" || nodeEnv === "prod") {
-    fail("Reset bloqueado: NODE_ENV=production/prod.");
+  if (environmentClassification === "published") {
+    fail("Reset bloqueado: ambiente publicado identificado.");
+  }
+  if (environmentClassification !== "safe") {
+    fail("Reset bloqueado: NODE_ENV precisa identificar explicitamente um ambiente descartável.");
   }
 
   if (!isPostgresUrl(url)) {
@@ -469,35 +483,41 @@ function assertSafeDatabaseTarget(url) {
   }
 
   const targetLabel = `${url.hostname} ${url.pathname}`.toLowerCase();
-  const isProbablyProduction = /(^|[^a-z])(prod|production|prd)([^a-z]|$)/i.test(targetLabel);
+  const isProbablyPublished =
+    /(^|[^a-z])(homolog(?:ation)?|homol|hml|prod|production|prd|stag(?:e|ing)?|stg)([^a-z]|$)/i.test(
+      targetLabel,
+    );
 
-  if (isProbablyProduction) {
-    fail("Reset bloqueado: o host ou nome do banco parece ser de produção.");
+  if (isProbablyPublished) {
+    fail("Reset bloqueado: o host ou nome do banco parece ser de um ambiente publicado.");
   }
 
-  const allowNonLocal = process.env.LECTUM_ALLOW_NON_LOCAL_DB_RESET === "1";
-
-  if (!allowNonLocal && !isLocalOrPrivateHost(url.hostname)) {
+  if (!isLocalResetHost(url.hostname)) {
     fail(
-      [
-        "Reset bloqueado: o banco não parece local/privado.",
-        "Use apenas bancos de desenvolvimento.",
-        "Se for um ambiente dev descartável remoto, exporte LECTUM_ALLOW_NON_LOCAL_DB_RESET=1.",
-      ].join("\n"),
+      ["Reset bloqueado: o banco não parece local.", "Use apenas bancos de desenvolvimento."].join(
+        "\n",
+      ),
     );
   }
 }
 
-function assertSafeR2Target({ bucketName, endpoint }) {
-  const allowProductionLikeR2 = process.env.LECTUM_ALLOW_PRODUCTION_LIKE_R2_RESET === "1";
-  const targetLabel = `${bucketName} ${endpoint}`.toLowerCase();
-  const isProbablyProduction = /(^|[^a-z])(prod|production|prd)([^a-z]|$)/i.test(targetLabel);
+function assertSafeR2Target({ bucketName, endpoint, prefix }) {
+  const classification = classifyR2ResetTarget({ bucketName, endpoint, prefix });
 
-  if (isProbablyProduction && !allowProductionLikeR2) {
+  if (classification === "published_marker") {
     fail(
       [
-        "Reset bloqueado: bucket/endpoint R2 parece ser de produção.",
-        "Use um bucket de desenvolvimento ou configure LECTUM_ALLOW_PRODUCTION_LIKE_R2_RESET=1 somente para um alvo descartável.",
+        "Reset bloqueado: bucket/endpoint R2 parece ser de um ambiente publicado.",
+        "Use somente um bucket ou prefixo inequivocamente descartável.",
+      ].join("\n"),
+    );
+  }
+
+  if (classification !== "safe") {
+    fail(
+      [
+        "Reset bloqueado: o alvo R2 não está identificado como descartável.",
+        "Use um bucket com marcador dev/local/test/sandbox/ci ou um prefixo dedicado com esse marcador.",
       ].join("\n"),
     );
   }
@@ -507,7 +527,7 @@ function isPostgresUrl(url) {
   return url.protocol === "postgresql:" || url.protocol === "postgres:";
 }
 
-function isLocalOrPrivateHost(hostname) {
+function isLocalResetHost(hostname) {
   const normalizedHost = hostname.toLowerCase();
   const localHosts = new Set([
     "localhost",
@@ -526,54 +546,26 @@ function isLocalOrPrivateHost(hostname) {
     return true;
   }
 
-  if (net.isIP(normalizedHost) === 4) {
-    return isPrivateIPv4(normalizedHost) || normalizedHost.startsWith("127.");
-  }
-
-  return false;
-}
-
-function isPrivateIPv4(hostname) {
-  const [first = 0, second = 0] = hostname.split(".").map(Number);
-
-  if (first === 10 || first === 192) {
-    return first === 10 || second === 168;
-  }
-
-  return first === 172 && second >= 16 && second <= 31;
-}
-
-function formatDatabaseTarget(url) {
-  const databaseName = decodeURIComponent(url.pathname.replace(/^\//, ""));
-
-  return `${url.protocol}//${url.hostname}:${url.port || "5432"}/${databaseName}`;
-}
-
-function formatR2Target({ bucketName, prefix }) {
-  return prefix ? `${bucketName}/${prefix}` : `${bucketName}/*`;
+  return net.isIP(normalizedHost) === 4 && normalizedHost.startsWith("127.");
 }
 
 function printDryRunSummary({
-  databaseTarget,
   localMercadoPagoReferences,
   mercadoPagoSubscriptions,
-  r2Config,
   r2ObjectCount,
 }) {
   console.log("\n[dry-run] Nenhuma alteração executada.");
-  console.log(`[dry-run] Banco que seria resetado: ${databaseTarget}`);
+  console.log("[dry-run] O banco local validado seria resetado.");
+  console.log(`[dry-run] ${r2ObjectCount} objeto(s) seriam removidos do armazenamento.`);
   console.log(
-    `[dry-run] R2: ${r2ObjectCount} objeto(s) seriam removidos de ${formatR2Target(r2Config)}.`,
-  );
-  console.log(
-    `[dry-run] Mercado Pago: ${mercadoPagoSubscriptions.size} assinatura(s) sandbox seriam canceladas.`,
+    `[dry-run] ${mercadoPagoSubscriptions.size} assinatura(s) sandbox seriam canceladas no provedor de pagamento.`,
   );
   console.log(
     `[dry-run] Referências locais: ${localMercadoPagoReferences.subscriptionIds.size} assinatura(s), ${localMercadoPagoReferences.planIds.size} plano(s).`,
   );
 }
 
-async function confirmReset(databaseTarget, bucketName, mercadoPagoSubscriptionCount) {
+async function confirmReset(mercadoPagoSubscriptionCount) {
   if (!input.isTTY || !output.isTTY) {
     fail(
       [
@@ -587,9 +579,9 @@ async function confirmReset(databaseTarget, bucketName, mercadoPagoSubscriptionC
   const answer = await rl.question(
     [
       "Digite RESET para confirmar:",
-      `- reset do banco ${databaseTarget}`,
-      `- limpeza do bucket R2 ${bucketName}`,
-      `- cancelamento de ${mercadoPagoSubscriptionCount} assinatura(s) sandbox no Mercado Pago`,
+      "- reset do banco local validado",
+      "- limpeza do armazenamento descartável validado",
+      `- cancelamento de ${mercadoPagoSubscriptionCount} assinatura(s) sandbox no provedor de pagamento`,
       "> ",
     ].join("\n"),
   );
@@ -639,13 +631,6 @@ function getErrorStatus(err) {
   const cause = typeof record.cause === "object" && record.cause ? record.cause : null;
 
   return record.status || record.statusCode || cause?.status || cause?.statusCode;
-}
-
-function formatError(err) {
-  if (err instanceof Error) return err.message;
-  if (typeof err === "string") return err;
-
-  return "erro desconhecido";
 }
 
 function fail(message) {

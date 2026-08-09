@@ -1,4 +1,4 @@
-﻿import type { FieldOption } from "@/hooks/form";
+import type { FieldOption } from "@/hooks/form";
 
 export const CRP_REGION_OPTIONS = [
   { label: "1ª Região - DF", value: "1ª Região - DF" },

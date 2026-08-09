@@ -6,6 +6,7 @@ import { isChannelAllowed } from "@/main/notification/preferences";
 import { sendWebPushToSubscriptions } from "@/main/notification/push";
 import { notification as emitNotification } from "@/main/socket/events/notification";
 import { send as sendEmail } from "@/modules/api/config/nodemailer/send";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import type { AdminNotificationAudience } from "../../DTOs/IAdminNotificationsDTO";
 import type { AdminNotificationsRepository } from "../../repositories/AdminNotificationsRepository";
 
@@ -123,8 +124,6 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
       } else {
         const result = await sendWebPushToSubscriptions({
           body: campaign.body,
-          campaignId: campaign.id,
-          messageProps: manualMessageProps(campaign),
           redirect: campaign.redirect,
           subscriptions: user.notification_subscriptions,
           title: campaign.title,
@@ -194,11 +193,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
             await createNotificationDelivery({
               campaignId: campaign.id,
               channel: "email",
-              metadata: {
-                campaign_id: campaign.id,
-                sender_address: process.env.EMAIL_API_SENDER,
-                sender_name: process.env.EMAIL_API_NAME,
-              },
+              metadata: { campaign_id: campaign.id },
               sentAt: now,
               source: "manual",
               status: "sent",
@@ -219,9 +214,10 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
             });
           }
         } catch (error) {
-          console.error("[NOTIFICATION CAMPAIGNS] Falha no envio de e-mail.", {
-            name: error instanceof Error ? error.name : "UnknownEmailDeliveryError",
-          });
+          console.error(
+            "[NOTIFICATION CAMPAIGNS] Falha no envio de e-mail.",
+            toSafeErrorLog(error, "CampaignEmailDeliveryError"),
+          );
           summary.failed++;
           summary.total_deliveries++;
           await createNotificationDelivery({
@@ -273,9 +269,7 @@ export const dispatchScheduledCampaign = async (id: string, now: Date) => {
 
   if (ensureEmailProviderAvailable(parseStoredChannels(campaign.channels))) {
     await repository.transitionCampaign(campaign.id, ["scheduled"], { status: "failed" });
-    console.error("[NOTIFICATION CAMPAIGNS] Campanha agendada sem provedor de e-mail.", {
-      campaign_id: campaign.id,
-    });
+    console.error("[NOTIFICATION CAMPAIGNS] Campanha agendada sem provedor de e-mail.");
     return false;
   }
 
@@ -286,10 +280,10 @@ export const dispatchScheduledCampaign = async (id: string, now: Date) => {
     await dispatchClaimedCampaign(claimed);
     return true;
   } catch (error) {
-    console.error("[NOTIFICATION CAMPAIGNS] Campanha agendada falhou.", {
-      campaign_id: campaign.id,
-      name: error instanceof Error ? error.name : "UnknownCampaignDispatchError",
-    });
+    console.error(
+      "[NOTIFICATION CAMPAIGNS] Campanha agendada falhou.",
+      toSafeErrorLog(error, "CampaignDispatchError"),
+    );
     return false;
   }
 };

@@ -1,10 +1,13 @@
 import axios, { AxiosHeaders } from "axios";
-import { adminApiUrl } from "@/lib/api-url";
+import { adminApiRequestUrl } from "@/lib/api-url";
 import { getAdminDeviceId } from "@/lib/fingerprint";
-import { clearAdminSession, getAdminToken } from "@/lib/storage";
+import { isConfirmedAdminSessionRejection } from "@/lib/session-rejection";
+import { clearAdminSession } from "@/lib/storage";
 
 export const adminApi = axios.create({
-  baseURL: adminApiUrl,
+  // Nunca enviar credenciais administrativas ao origin do Next.js quando a
+  // API publicada estiver ausente. O origin reservado falha de forma segura.
+  baseURL: adminApiRequestUrl,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -17,13 +20,8 @@ export const adminApi = axios.create({
 adminApi.interceptors.request.use(async (config) => {
   const headers = AxiosHeaders.from(config.headers);
   const device = await getAdminDeviceId();
-  const token = getAdminToken();
 
   headers.set("x-device", device);
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
 
   config.headers = headers;
   return config;
@@ -32,7 +30,7 @@ adminApi.interceptors.request.use(async (config) => {
 adminApi.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (typeof window !== "undefined" && error?.response?.status === 401) {
+    if (typeof window !== "undefined" && isConfirmedAdminSessionRejection(error)) {
       clearAdminSession();
       if (!window.location.pathname.startsWith("/login")) {
         const callbackUrl = `${window.location.pathname}${window.location.search}`;

@@ -1,4 +1,4 @@
-﻿# ADR-0123: Analytics real de retenção do vídeo de apresentação
+# ADR-0123: Analytics real de retenção do vídeo de apresentação
 
 ## Status
 

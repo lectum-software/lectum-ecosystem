@@ -1,4 +1,4 @@
-﻿import { AdminCommunityManageActivityRepository } from "./queries/AdminCommunityManageActivityRepository";
+import { AdminCommunityManageActivityRepository } from "./queries/AdminCommunityManageActivityRepository";
 import { AdminCommunityManageContentMutationRepository } from "./queries/AdminCommunityManageContentMutationRepository";
 import { AdminCommunityManageContentRepository } from "./queries/AdminCommunityManageContentRepository";
 import { AdminCommunityManageCoreRepository } from "./queries/AdminCommunityManageCoreRepository";

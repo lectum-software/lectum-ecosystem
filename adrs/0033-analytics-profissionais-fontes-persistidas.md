@@ -1,4 +1,4 @@
-﻿# ADR-0033: Analytics profissionais com fontes persistidas e gate de plano
+# ADR-0033: Analytics profissionais com fontes persistidas e gate de plano
 
 ## Status
 

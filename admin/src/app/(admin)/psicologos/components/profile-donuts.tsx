@@ -2,6 +2,7 @@
 
 import { CircleHelp } from "lucide-react";
 import type { AdminPsychologistsDashboard } from "@/api/req/psychologists";
+import { buildDonutCircleSegments } from "@/lib/chart-geometry";
 
 import {
   calculatePercentage,
@@ -35,34 +36,7 @@ export const PsychologistsDonutChart = ({
   total: number;
 }) => {
   const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  const visibleItems = items.filter((item) => item.count > 0);
-  const segments = visibleItems.reduce<{
-    cumulative: number;
-    items: Array<{
-      dash: number;
-      item: PsychologistsDonutChartItem;
-      strokeDashoffset: number;
-    }>;
-  }>(
-    (accumulator, item) => {
-      const share = total > 0 ? item.count / total : 0;
-      const dash = share * circumference;
-
-      return {
-        cumulative: accumulator.cumulative + dash,
-        items: [
-          ...accumulator.items,
-          {
-            dash,
-            item,
-            strokeDashoffset: -accumulator.cumulative,
-          },
-        ],
-      };
-    },
-    { cumulative: 0, items: [] },
-  ).items;
+  const { circumference, segments, visibleItems } = buildDonutCircleSegments(items, total, radius);
 
   if (items.length === 0 || visibleItems.length === 0 || total === 0) {
     return (

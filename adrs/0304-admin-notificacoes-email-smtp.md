@@ -1,4 +1,4 @@
-﻿# ADR 0304: Canal e-mail real nas notificações administrativas
+# ADR 0304: Canal e-mail real nas notificações administrativas
 
 ## Status
 

@@ -1,7 +1,16 @@
 import { z } from "zod";
+import {
+  DISPOSABLE_RUNTIME_ENVIRONMENTS,
+  PUBLISHED_RUNTIME_ENVIRONMENTS,
+} from "@/utils/runtime-config";
+
+const RUNTIME_ENVIRONMENTS = [
+  ...DISPOSABLE_RUNTIME_ENVIRONMENTS,
+  ...PUBLISHED_RUNTIME_ENVIRONMENTS,
+] as const;
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "dev", "test", "production", "prod"]).default("development"),
+  NODE_ENV: z.enum(RUNTIME_ENVIRONMENTS).default("development"),
   PORT: z.coerce.number().int().positive().default(3001),
   BASE: z.url().optional(),
   WEB_URL: z.string().default("http://localhost:3000"),

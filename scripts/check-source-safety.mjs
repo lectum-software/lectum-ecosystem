@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -80,6 +80,14 @@ const typecheckCompatibilityExceptions = new Set([
   "backend/src/packages/validator/schema/_internal/handlers/error.ts",
   "backend/src/packages/validator/web.ts",
 ]);
+const executableFileExceptions = new Set(["backend/scripts/docker-entrypoint.sh"]);
+const pinnedToolConfigurationFiles = new Set([
+  ".builderrules",
+  ".codex/config.toml",
+  ".cursor/mcp.json",
+  ".mcp.json",
+  ".vscode/mcp.json",
+]);
 
 const isUiSource = (relativePath) =>
   relativePath.startsWith("frontend/src/") || relativePath.startsWith("admin/src/");
@@ -92,13 +100,16 @@ const allowsRawUiColor = (relativePath, line) =>
   rawUiColorWholeFileExceptions.has(relativePath) ||
   (rawUiColorLineExceptions.get(relativePath) ?? []).some((pattern) => pattern.test(line));
 
-const files = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "-z"], {
+const isTestSource = (relativePath) => /(?:^|\/)__tests__\/|\.test\.[cm]?[jt]sx?$/u.test(relativePath);
+
+const repositoryFiles = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "-z"], {
   cwd: repositoryRoot,
   encoding: "utf8",
 })
   .split("\0")
   .filter(Boolean)
-  .filter((file) => existsSync(path.join(repositoryRoot, file)))
+  .filter((file) => existsSync(path.join(repositoryRoot, file)));
+const files = repositoryFiles
   .filter(
     (file) =>
       applicationRoots.some((root) => file.startsWith(root)) && sourceExtensionPattern.test(file),
@@ -106,6 +117,24 @@ const files = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "-z"
   .filter((file) => !file.startsWith("backend/src/external/generated/"));
 
 const failures = [];
+
+if (process.platform !== "win32") {
+  for (const relativePath of repositoryFiles) {
+    const isExecutable = (statSync(path.join(repositoryRoot, relativePath)).mode & 0o111) !== 0;
+    if (isExecutable && !executableFileExceptions.has(relativePath)) {
+      failures.push(`${relativePath}: permissão de execução desnecessária`);
+    }
+  }
+}
+
+for (const relativePath of pinnedToolConfigurationFiles) {
+  if (!repositoryFiles.includes(relativePath)) continue;
+
+  const content = await readFile(path.join(repositoryRoot, relativePath), "utf8");
+  if (content.includes("@latest")) {
+    failures.push(`${relativePath}: ferramenta ativa deve usar versão fixa auditada`);
+  }
+}
 
 for (const relativePath of files) {
   if (
@@ -124,6 +153,10 @@ for (const relativePath of files) {
 
   for (const [index, line] of lines.entries()) {
     for (const check of forbiddenPatterns) {
+      // Testes de normalização precisam conter os próprios vetores maliciosos como texto.
+      // O check continua ativo em todo código que é empacotado para runtime.
+      if (check.label === "JavaScript em URL" && isTestSource(relativePath)) continue;
+
       if (check.pattern.test(line)) {
         failures.push(`${relativePath}:${index + 1}: ${check.label}`);
       }

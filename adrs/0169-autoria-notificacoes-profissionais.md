@@ -41,7 +41,7 @@ Ao mesmo tempo, a identificacao de quem visualizou o perfil pode gerar exposicao
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Smoke local via `IndexRepository` na conta `tuliosrezende@gmail.com`, confirmando atores para eventos reais com `source_id` e `actor=null` quando o evento nao possui relacao autenticada.
+- Smoke local via `IndexRepository` na conta `<CONTA_DE_TESTE_AUTORIZADA>`, confirmando atores para eventos reais com `source_id` e `actor=null` quando o evento nao possui relacao autenticada.
 - Smoke HTTP local em `/app/notifications` retornando 200.
 
 ## Pendencias

@@ -8,9 +8,9 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Descoberta pública e governança |
-| Status | Pending |
+| Status | Blocked |
 | Dependências | TASK-39, TASK-40 |
-| ADR alvo | ADR-0181 |
+| ADR alvo | ADR-0440 |
 
 ## Contexto
 
@@ -171,7 +171,7 @@ Regras de UI obrigatórias:
 - [ ] `pnpm --dir frontend check` foi executado sem erros.
 - [ ] `pnpm --dir frontend build` foi executado sem erros.
 - [ ] Browser local validou `/termos-de-servico`, `/politica-de-privacidade`, `/sitemap.xml`, login e cadastros.
-- [ ] ADR criado ou atualizado em `adrs/0181-paginas-legais-publicas.md`.
+- [ ] ADR-0440 atualizado após a aprovação jurídica.
 - [ ] Critérios de aceite marcados `[x]` ao concluir.
 - [ ] Commit próprio criado e `git push` executado; se falhar por credenciais/rede/permissão, registrar bloqueio explicitamente.
 

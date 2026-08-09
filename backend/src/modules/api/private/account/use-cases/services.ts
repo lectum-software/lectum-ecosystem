@@ -26,6 +26,10 @@ import type {
   IAccountPasswordDTO,
 } from "../DTOs/IAccountDTO";
 import { AccountRepository } from "../repositories/AccountRepository";
+import {
+  resolveAuthenticatedLogoutDeviceId,
+  runBestEffortLogoutSubscriptionCleanup,
+} from "../repositories/support/logout-subscription";
 
 const DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN = "10m";
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -83,10 +87,10 @@ const hydrateUpdatedUser = async (user: user, deviceId: string) => {
 };
 
 export const logout = async (data: IAccountDTO) => {
-  const device = getDevice(data);
+  const deviceId = resolveAuthenticatedLogoutDeviceId(data);
   const token = getUserRequestToken(data as unknown as Request);
 
-  if (device.err || !data.auth.id || !token) {
+  if (!deviceId || !data.auth.id || !token) {
     return {
       status: 401,
       ...error("token_not_authorized", {}),
@@ -94,7 +98,13 @@ export const logout = async (data: IAccountDTO) => {
   }
 
   const repository = new AccountRepository();
-  await repository.deleteToken(data.auth.id, device.id, token);
+  await runBestEffortLogoutSubscriptionCleanup(
+    () => repository.deactivateNotificationSubscriptions(data.auth.id!, deviceId),
+    () => {
+      console.warn("[AUTH] Notificações do dispositivo não puderam ser desativadas no logout.");
+    },
+  );
+  await repository.deleteToken(data.auth.id, deviceId, token);
 
   return {
     status: 200,

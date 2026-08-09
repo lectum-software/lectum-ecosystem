@@ -1,8 +1,11 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { ArrowDown, ArrowUp, Loader2 } from "lucide-react";
 import type { AdminCommunityStatisticsDailyPoint } from "@/api/req/communities";
+import {
+  AdminMetricCarousel,
+  adminSixColumnMetricItemClassName,
+} from "@/components/admin-metric-carousel";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 import {
@@ -150,56 +153,21 @@ export const CommunityStatisticsMetricCarousel = ({
   title: string;
   visibleMetricIds: string[];
 }) => {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const scrollMetrics = useCallback((direction: -1 | 1) => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    scroller.scrollBy({
-      behavior: "smooth",
-      left: direction * Math.max(260, scroller.clientWidth * 0.82),
-    });
-  }, []);
-
   return (
-    <fieldset className="mt-5 min-w-0">
-      <legend className="sr-only">Contadores exibidos no gráfico de {title}</legend>
-      <div className="relative min-w-0 px-11 sm:px-12">
-        <button
-          aria-label={`Rolar contadores de ${title} para a esquerda`}
-          className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-surface text-muted shadow-sm transition hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-          onClick={() => scrollMetrics(-1)}
-          type="button"
-        >
-          <ChevronLeft aria-hidden className="h-4 w-4" />
-        </button>
-        <div
-          className="flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          ref={scrollerRef}
-        >
-          {metrics.map((metric) => (
-            <div
-              className="flex w-full shrink-0 snap-start sm:w-[calc((100%_-_0.5rem)/2)] lg:w-[calc((100%_-_1rem)/3)] 2xl:w-[calc((100%_-_2.5rem)/6)]"
-              key={metric.id}
-            >
-              <CommunityStatisticsMetricToggleCard
-                active={visibleMetricIds.includes(metric.id)}
-                metric={metric}
-                onToggle={() => onToggleMetric(metric.id)}
-              />
-            </div>
-          ))}
-        </div>
-        <button
-          aria-label={`Rolar contadores de ${title} para a direita`}
-          className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-primary/25 bg-primary-soft text-primary shadow-sm transition hover:border-primary/45 hover:bg-primary-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-          onClick={() => scrollMetrics(1)}
-          type="button"
-        >
-          <ChevronRight aria-hidden className="h-4 w-4" />
-        </button>
-      </div>
-    </fieldset>
+    <AdminMetricCarousel
+      itemClassName={adminSixColumnMetricItemClassName}
+      items={metrics.map((metric) => ({
+        content: (
+          <CommunityStatisticsMetricToggleCard
+            active={visibleMetricIds.includes(metric.id)}
+            metric={metric}
+            onToggle={() => onToggleMetric(metric.id)}
+          />
+        ),
+        id: metric.id,
+      }))}
+      title={title}
+    />
   );
 };
 

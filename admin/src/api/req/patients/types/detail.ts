@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type { PatientsDashboardOperatingSystem, PatientsDashboardTrend } from "./dashboard";
 
 export type PatientsDetailMetric = {
@@ -62,14 +63,15 @@ export type PatientsDetailActivity = {
   detail_url: string | null;
   id: string;
   occurred_at: string;
-  source:
+  source: AdminPublicSource<
     | "community_member"
     | "community_post"
     | "post_reply"
     | "post_reply_save"
     | "post_save"
     | "post_vote"
-    | "professional_review";
+    | "professional_review"
+  >;
   title: string;
   type:
     | "community_joined"
@@ -138,7 +140,7 @@ export type PatientsDetailPublication = {
     views: PatientsDetailPublicationMetric;
   };
   public_url: string;
-  source: "community_post";
+  source: AdminPublicSource<"community_post">;
   title: string;
   type: "post";
   type_label: "Post";
@@ -176,12 +178,12 @@ export type AdminPatientDetail = {
   activities: {
     coverage_note: string;
     items: PatientsDetailActivity[];
-    source: "community_activity+professional_review";
+    source: AdminPublicSource<"community_activity+professional_review">;
   };
   communities: {
     engagement_diagnosis: PatientCommunityEngagementDiagnosis;
     items: PatientsDetailCommunity[];
-    source: "community_member+community_post+post_reply+post_vote+post_save+post_reply_save";
+    source: AdminPublicSource<"community_member+community_post+post_reply+post_vote+post_save+post_reply_save">;
   };
   coverage_notes: string[];
   header: {
@@ -210,7 +212,7 @@ export type AdminPatientDetail = {
     available: boolean;
     cells: PatientsDetailHeatmapCell[];
     max_count: number;
-    source: "community_post+post_reply+post_vote+post_save+post_reply_save";
+    source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+post_reply_save">;
     timezone: "America/Sao_Paulo";
     total_events: number;
     unavailable_reason: string | null;
@@ -227,7 +229,7 @@ export type AdminPatientDetail = {
     metrics: PatientsDetailIntentMetric[];
     privacy_note: string;
     score: number;
-    source: "profile_view_event+psychologist_favorite+contact_request";
+    source: AdminPublicSource<"profile_view_event+psychologist_favorite+contact_request">;
     summary: string;
     total_signals: number;
     unique_psychologists_contacted: number;
@@ -254,7 +256,7 @@ export type AdminPatientDetail = {
         }[];
         percentage: number;
       }[];
-      source: "visitor_session.device_type+visitor_session.os+user_id";
+      source: AdminPublicSource<"visitor_session.device_type+visitor_session.os+user_id">;
       total_sessions: number;
       unavailable_reason: string | null;
     };
@@ -277,7 +279,7 @@ export type AdminPatientDetail = {
     pwa_installation_recorded: boolean;
     pwa_installed_at: string | null;
     sessions_count: number;
-    source: "page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review";
+    source: AdminPublicSource<"page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+community_member+professional_review">;
     top_pages: {
       count: number;
       label: string;
@@ -288,7 +290,7 @@ export type AdminPatientDetail = {
   publications: {
     coverage_note: string;
     items: PatientsDetailPublication[];
-    source: "community_post+post_reply+post_vote+post_save+post_share+page_view_event+post_report";
+    source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+post_share+page_view_event+post_report">;
   };
   privacy: {
     omitted_fields: string[];
@@ -296,8 +298,8 @@ export type AdminPatientDetail = {
   };
   series: {
     points: PatientsDetailSeriesPoint[];
-    source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report+verified_responses";
+    source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report+verified_responses">;
   };
-  source: "user+patient_profile+visitor_location+community_activity+professional_review";
+  source: AdminPublicSource<"user+patient_profile+visitor_location+community_activity+professional_review">;
   unavailable: PatientsDetailUnavailable[];
 };

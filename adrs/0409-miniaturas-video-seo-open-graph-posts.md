@@ -1,4 +1,4 @@
-﻿# ADR-0409: Miniaturas persistidas para Open Graph de videos de posts
+# ADR-0409: Miniaturas persistidas para Open Graph de videos de posts
 
 Status: Accepted  
 Data: 2026-08-03

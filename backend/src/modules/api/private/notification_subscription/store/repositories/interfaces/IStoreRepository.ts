@@ -1,9 +1,3 @@
-//Objects
-import type {
-  //*
-  notification_subscription,
-} from "@/interfaces/objects";
-
 //DTOs
 import type {
   //*
@@ -11,8 +5,8 @@ import type {
 } from "../../DTOs/IStoreDTO";
 
 export interface IStoreRepository {
-  store: (data: IStoreDTO) => Promise<notification_subscription>;
+  store: (data: IStoreDTO) => Promise<{ id: string }>;
   //#ignore
-  findSubscription: (data: IStoreDTO) => Promise<notification_subscription | null>;
+  findSubscription: (data: IStoreDTO) => Promise<{ id: string } | null>;
   //@ignore
 }

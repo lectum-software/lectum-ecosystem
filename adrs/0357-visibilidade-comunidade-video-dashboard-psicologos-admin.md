@@ -1,4 +1,4 @@
-﻿# ADR-0357 - Visibilidade Comunidade x Video no dashboard Admin de psicologos
+# ADR-0357 - Visibilidade Comunidade x Video no dashboard Admin de psicologos
 
 ## Status
 

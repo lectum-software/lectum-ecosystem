@@ -1,4 +1,4 @@
-﻿# TASK-107 - Eixo direito de visibilidade e comparativos dos scores no psicologo Admin
+# TASK-107 - Eixo direito de visibilidade e comparativos dos scores no psicologo Admin
 
 ## Metadata
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ChevronDown } from "lucide-react";
 import type { FieldPath, FieldValues } from "react-hook-form";

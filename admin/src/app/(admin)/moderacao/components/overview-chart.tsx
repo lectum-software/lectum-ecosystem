@@ -4,11 +4,11 @@ import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 import { aggregateCalendarChartPoints, buildSmoothSvgPath } from "@/lib/chart-time-series";
+import { moderationCategoryLabel } from "@/lib/moderation-copy";
 import { cn } from "@/lib/utils";
 
 import {
   Card,
-  categoryLabels,
   chartMetricValue,
   filterChartPointsByRange,
   formatOverviewPeriod,
@@ -284,4 +284,4 @@ export const chartPoints = <T extends { date: string }>(points: T[]): Moderation
   points as ModerationChartPoint[];
 
 export const sensitiveCategoryOptionLabel = (category: string) =>
-  category === "all" ? "Todas" : (categoryLabels[category] ?? category);
+  category === "all" ? "Todas" : moderationCategoryLabel(category);

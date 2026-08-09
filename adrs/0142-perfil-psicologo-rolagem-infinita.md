@@ -1,4 +1,4 @@
-﻿# ADR 0142 - Rolagem infinita no perfil público do psicólogo
+# ADR 0142 - Rolagem infinita no perfil público do psicólogo
 
 Status: Accepted
 

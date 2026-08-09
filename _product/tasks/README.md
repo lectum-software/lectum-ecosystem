@@ -17,7 +17,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - Admin usa Next.js 16 e é publicado separadamente.
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
-- Existem 62 JPEGs exportados em `_product/proto`: 61 telas de produto e 1 ícone isolado.
+- Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
 - A fila operacional agora possui 152 tasks: `TASK-00` a `TASK-145`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
@@ -135,7 +135,7 @@ ou cortesia manual.
 | 38 | [TASK-38 - Permissão contextual de notificações no navegador](TASK-38-permissao-contextual-notificacoes-navegador.md) | Completed | 12, 29A |
 | 39 | [TASK-39 - SEO e descoberta por mecanismos de busca/IA](TASK-39-seo-ia-descoberta.md) | Completed | 01, 12 |
 | 40 | [TASK-40 - Rotas publicas de psicologos e comunidades fora de /app](TASK-40-rotas-publicas-psicologos-comunidades.md) | Completed | 12, 13, 22, 23, 25, 26, 39 |
-| 41 | [TASK-41 - Páginas legais públicas: Termos de Serviço e Política de Privacidade](TASK-41-paginas-legais-termos-privacidade.md) | Pending | 39, 40 |
+| 41 | [TASK-41 - Páginas legais públicas: Termos de Serviço e Política de Privacidade](TASK-41-paginas-legais-termos-privacidade.md) | Blocked | 39, 40 |
 | 42 | [TASK-42 - Layout de compartilhamento social para vídeo-resposta](TASK-42-layout-compartilhamento-video-resposta.md) | Completed | 23, 26, 28, 29B |
 | 43 | [TASK-43 - Scrollbar mobile app-like em telas principais](TASK-43-scrollbar-mobile-telas-principais.md) | Completed | 12, 23, 25, 40 |
 | 44 | [TASK-44 - Verificação de registro retomável no fluxo pago](TASK-44-verificacao-registro-assinatura-retomavel.md) | Completed | 10, 16, 18A, 31, 32 |
@@ -144,7 +144,7 @@ ou cortesia manual.
 | 47 | [TASK-47 - Captura de sessão e tipo de dispositivo para analytics admin](TASK-47-captura-sessao-tipo-dispositivo.md) | Completed | 39 |
 | 48 | [TASK-48 - Dashboard administrativo](TASK-48-dashboard-administrativo.md) | Completed | 45, 46, 47 |
 | 49 | [TASK-49 - Tracking de pageviews e origem de tráfego](TASK-49-tracking-pageviews-origem-trafego.md) | Completed | 39, 40, 47 |
-| 50 | [TASK-50 - Tela Tráfego administrativo](TASK-50-tela-trafego-administrativo.md) | Pending | 45, 46, 47, 49 |
+| 50 | [TASK-50 - Tela Tráfego administrativo](TASK-50-tela-trafego-administrativo.md) | Completed | 45, 46, 47, 49 |
 | 51 | [TASK-51 - Dashboard administrativo de comunidades](TASK-51-dashboard-administrativo-comunidades.md) | Completed | 45, 46 |
 | 52 | [TASK-52 - Detalhe e edição de comunidade no Admin](TASK-52-detalhe-edicao-comunidade-admin.md) | Completed | 45, 46, 51 |
 | 53 | [TASK-53 - Dashboard administrativo de psicólogos](TASK-53-dashboard-administrativo-psicologos.md) | Completed | 45, 46 |
@@ -517,10 +517,12 @@ Toda task deve rodar os comandos relevantes:
 
 - `pnpm --dir backend check`
 - `pnpm --dir frontend check`
+- `pnpm --dir admin check`
 - `pnpm check`
 - `pnpm --dir backend db:migrate` quando a task alterar banco/schema/migrations
 - `pnpm --dir backend build` quando backend estrutural mudar
 - `pnpm --dir frontend build` quando frontend visual/rota mudar
+- `pnpm --dir admin build` quando admin visual/rota mudar
 
 ## Definition of Done obrigatória
 

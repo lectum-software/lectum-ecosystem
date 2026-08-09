@@ -1,4 +1,4 @@
-﻿# ADR 0138 - Permissão de mídia na modal de novo post
+# ADR 0138 - Permissão de mídia na modal de novo post
 
 Status: Accepted
 
@@ -88,7 +88,7 @@ Validacao adicional:
 - `pnpm --dir backend check`
 - `pnpm --dir frontend build`
 - `pnpm --dir backend build`
-- Script local confirmou `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com `source="admin_grant"` e `cfp_verified_at=null`.
+- Script local confirmou `canAttachReplyMedia=true` para `<CONTA_DE_TESTE_AUTORIZADA>` com `source="admin_grant"` e `cfp_verified_at=null`.
 - Service real `authorizeReplyMediaUpload` retornou `status=200` para o mesmo usuario.
 - Chrome/CDP local em 390x844 em `http://localhost:3000/app/community/feed/post/new` confirmou botao `Adicionar midia ao post` presente, habilitado e sem copy bloqueada.
 

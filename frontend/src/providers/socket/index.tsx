@@ -10,16 +10,19 @@ import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { update as updateSocket } from "@/store/modules/socket/actions";
 import { update as updateUser } from "@/store/modules/user/actions";
 import { fingerprint } from "@/utils/fingerprint";
+import { getPublicApiSource } from "@/utils/public-asset-sources";
 
 //Global
-const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const socketUrl = getPublicApiSource()?.origin ?? null;
 
-export const socket = io(URL, {
-  autoConnect: false,
-  reconnection: true,
-  reconnectionDelay: 500,
-  withCredentials: true,
-});
+export const socket = socketUrl
+  ? io(socketUrl, {
+      autoConnect: false,
+      reconnection: true,
+      reconnectionDelay: 500,
+      withCredentials: true,
+    })
+  : null;
 
 export const Provider = () => {
   const queryClient = useQueryClient();
@@ -29,12 +32,15 @@ export const Provider = () => {
   const userId = user?.id;
 
   const clear = useCallback(() => {
-    socket.removeAllListeners();
-    socket.disconnect();
+    socket?.removeAllListeners();
+    socket?.disconnect();
   }, []);
 
   const actions = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !socket) {
+      dispatch(updateSocket({ connected: false, loading: false }));
+      return;
+    }
     socket.auth = { ...socket.auth, token };
     socket.connect();
 

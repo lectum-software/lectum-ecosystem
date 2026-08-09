@@ -30,20 +30,17 @@ Configuração criada:
 Validação local em 2026-06-03:
 
 - `node --version`: `v24.15.0`
-- `npx "@builder.io/dev-tools@latest" --help`: OK, CLI `1.63.1`
-- `npx "@builder.io/dev-tools@latest" code --help`: OK
-- `npx "@builder.io/dev-tools@latest" auth status`: autenticado no espaço `Lectum`
-- Space ID: `01ea07af363545a1936f2baa569cd24c`
-- User ID: `g8Kq1m9Zn5bCQZwa99dd7c8FGu93`
+- `npx "@builder.io/dev-tools@1.79.0" --help`: versão local auditada e fixada em 08/08/2026.
+- `npx "@builder.io/dev-tools@1.79.0" code --help`: OK
+- `npx "@builder.io/dev-tools@1.79.0" auth status`: autenticado no espaço `Lectum`
 
 Validação do Quick Copy:
 
 - Comando executado em diretório temporário fora do projeto:
 
 ```bash
-npx "@builder.io/dev-tools@latest" code \
+npx "@builder.io/dev-tools@1.79.0" code \
   --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a \
-  --spaceId 01ea07af363545a1936f2baa569cd24c \
   --cwd /tmp/lectum-builder-check-14HnQJ \
   --mode exact \
   --prompt "Access validation only..."
@@ -62,13 +59,13 @@ Resultado:
 
 Observação:
 
-- O servidor `npx "@builder.io/dev-tools@latest" mcp` sobe em stdio, mas não respondeu ao handshake manual `initialize/tools/list` feito por script local. Na prática, o acesso ao Quick Copy e ao código virtual foi confirmado pelo fluxo oficial `builder.io code`.
+- O servidor `npx "@builder.io/dev-tools@1.79.0" mcp` sobe em stdio, mas não respondeu ao handshake manual `initialize/tools/list` feito por script local. Na prática, o acesso ao Quick Copy e ao código virtual foi confirmado pelo fluxo oficial `builder.io code`.
 
 Uso controlado do CLI:
 
 ```bash
 cd frontend
-npx "@builder.io/dev-tools@latest" code --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a --cwd .
+npx "@builder.io/dev-tools@1.79.0" code --url vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a --cwd .
 ```
 
 O comando acima não deve ser usado como geração final automática. Quando usado, deve ser com prompt pequeno, depois de ler `ARCHITECTURE.md`, `PACKAGES.md`, `.builderignore` e `frontend/.builder/rules/lectum-frontend.mdc`.
@@ -150,7 +147,7 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Assinatura | Minhas Assinatura - Psicólogo | `_product/proto/Minhas Assinatura - Psicólogo.jpg` | 430x924 | TASK-33 |
 | Assinatura | Alterar cartão de crédito | `_product/proto/Alterar cartão de crédito.jpg` | 466x1218 | TASK-33 |
 | Assinatura | Cartão Alterado com Sucesso | `_product/proto/Cartão Alterado com Sucesso.jpg` | 414x827 | TASK-33 |
-| Admin | Dashboard administrativo | `_product/proto/admin/Dashboard.png` | 1920x1200 | TASK-48 |
+| Admin | Dashboard administrativo | `_product/proto/admin/Dashboard.png` | 1536x1024 | TASK-48 |
 | Admin | Tráfego administrativo | `_product/proto/admin/Tráfego.png` | 1024x1535 | TASK-50 |
 | Admin | Comunidades - Dashboard | `_product/proto/admin/Comunidades/Comunidades - Dashboard.png` | 1122x1402 | TASK-51 |
 | Admin | Comunidades - Detalhes | `_product/proto/admin/Comunidades/Comunidades - Detalhes.png` | 1536x1024 | TASK-52 |

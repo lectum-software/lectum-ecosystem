@@ -2413,11 +2413,12 @@
                   },
                   "subscription": {
                     "description": "Parâmetro subscription do body.",
-                    "nullable": true,
-                    "required": false,
+                    "nullable": false,
+                    "required": true,
                     "type": "string"
                   }
                 },
+                "required": ["subscription"],
                 "type": "object"
               }
             }
@@ -5197,7 +5198,7 @@
   },
   "servers": [
     {
-      "url": "https://verbose-trapeze-clapping.ngrok-free.dev"
+      "url": "/"
     }
   ]
 }

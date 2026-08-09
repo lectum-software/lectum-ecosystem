@@ -265,7 +265,7 @@ const PatientIntentValue = ({ item }: { item: PatientsListItem }) => (
 
 const PatientEngagementValue = ({ item }: { item: PatientsListItem }) => (
   <StatusText tone={resolveEngagementTone(item)}>
-    {PATIENT_ACTIVITY_LABELS[item.engagement.id]}
+    {PATIENT_ACTIVITY_LABELS[item.engagement.id] ?? "Atividade não classificada"}
   </StatusText>
 );
 

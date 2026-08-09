@@ -1,4 +1,4 @@
-﻿import prisma from "@/infra/database/prisma";
+import prisma from "@/infra/database/prisma";
 import type { phone_verification, psychologist_profile } from "@/interfaces/objects";
 import type {
   ConfirmWhatsappVerificationInput,

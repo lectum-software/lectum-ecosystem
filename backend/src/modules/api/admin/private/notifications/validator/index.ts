@@ -1,4 +1,4 @@
-﻿import { type IValidatorRequest, validator } from "@/utils/validator";
+import { type IValidatorRequest, validator } from "@/utils/validator";
 import {
   ADMIN_NOTIFICATION_AUDIENCES,
   ADMIN_NOTIFICATION_CAMPAIGN_STATUSES,

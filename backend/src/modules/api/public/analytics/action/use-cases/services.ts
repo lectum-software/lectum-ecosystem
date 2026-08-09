@@ -1,4 +1,4 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
 import { msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { sanitizeAnalyticsPathWithTrafficQuery } from "@/utils/analytics-traffic-path";
@@ -33,16 +33,28 @@ export const store = async (req: Request) => {
   const targetType = explicitTargetType ?? derivedTarget.targetType;
   const targetId = explicitTargetId ?? derivedTarget.targetId;
 
-  if (userId) {
+  const session = await repository.upsertSession(visitorId, sessionId, userId);
+
+  if (userId && session) {
     await Promise.all([
       repository.linkActionsToUser(visitorId, userId),
       repository.linkSessionsToUser(visitorId, userId),
     ]);
   }
 
-  await repository.upsertSession(visitorId, sessionId, userId);
+  if (!session) {
+    const result: ImportantActionResult = {
+      tracked: false,
+    };
 
-  const event = await repository.create({
+    return {
+      status: 200,
+      ...msg("important_action_tracked", {}),
+      data: result,
+    };
+  }
+
+  await repository.create({
     visitorId,
     sessionId,
     userId,
@@ -57,16 +69,6 @@ export const store = async (req: Request) => {
 
   const result: ImportantActionResult = {
     tracked: true,
-    id: event.id ?? null,
-    visitor_id: visitorId,
-    session_id: sessionId,
-    user_id: userId,
-    action_type: data.b.action_type,
-    path: event.path ?? null,
-    page_kind: event.page_kind ?? pageKind,
-    target_type: event.target_type ?? null,
-    target_id: event.target_id ?? null,
-    display_mode: normalizeDisplayMode(event.display_mode),
   };
 
   return {

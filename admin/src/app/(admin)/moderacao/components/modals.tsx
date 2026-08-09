@@ -12,6 +12,7 @@ import { removeAdminCommunityContent } from "@/api/req/communities";
 import type { AdminModerationEventDetail } from "@/api/req/moderation";
 import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { InputController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import {
   REMOVE_CONFIRMATION,
   type RemoveValues,
@@ -22,7 +23,15 @@ import {
 
 import { Card } from "./header-filters";
 
-export const ModalTitle = ({ onClose, title }: { onClose: () => void; title: string }) => (
+export const ModalTitle = ({
+  closeDisabled = false,
+  onClose,
+  title,
+}: {
+  closeDisabled?: boolean;
+  onClose: () => void;
+  title: string;
+}) => (
   <div className="flex items-start justify-between gap-3">
     <div>
       <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Ação Admin</p>
@@ -34,6 +43,7 @@ export const ModalTitle = ({ onClose, title }: { onClose: () => void; title: str
     <button
       aria-label="Fechar modal"
       className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted transition hover:text-foreground"
+      disabled={closeDisabled}
       onClick={onClose}
       type="button"
     >
@@ -84,6 +94,9 @@ export const ResolveModal = ({
     mode: "onSubmit",
     resolver: zodResolver(resolveSchema),
   });
+  const dialogRef = useAdminDialogLifecycle(onClose, {
+    closeEnabled: !mutation.isPending,
+  });
   const submit = async (values: ResolveValues) => {
     try {
       await mutation.mutateAsync({ id: event.id, input: { note: values.note.trim() } });
@@ -95,9 +108,16 @@ export const ResolveModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center">
+    <div
+      aria-label="Resolver evento de moderação"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center"
+      ref={dialogRef}
+      role="dialog"
+      tabIndex={-1}
+    >
       <Card className="max-h-[92dvh] w-full max-w-xl overflow-y-auto p-5 sm:p-6">
-        <ModalTitle onClose={onClose} title="Resolver evento" />
+        <ModalTitle closeDisabled={mutation.isPending} onClose={onClose} title="Resolver evento" />
         <FormProvider {...form}>
           <form className="mt-5 grid gap-4" noValidate onSubmit={form.handleSubmit(submit)}>
             <TextareaController<ResolveValues>
@@ -148,6 +168,7 @@ export const RemoveModal = ({
     resolver: zodResolver(removeSchema),
   });
   const pending = removeMutation.isPending || resolveMutation.isPending;
+  const dialogRef = useAdminDialogLifecycle(onClose, { closeEnabled: !pending });
   const submit = async (values: RemoveValues) => {
     try {
       await removeMutation.mutateAsync(values);
@@ -165,11 +186,18 @@ export const RemoveModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center">
+    <div
+      aria-label="Remover conteúdo publicado"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center"
+      ref={dialogRef}
+      role="alertdialog"
+      tabIndex={-1}
+    >
       <Card className="max-h-[92dvh] w-full max-w-xl overflow-y-auto p-5 sm:p-6">
-        <ModalTitle onClose={onClose} title="Remover conteúdo publicado" />
+        <ModalTitle closeDisabled={pending} onClose={onClose} title="Remover conteúdo publicado" />
         <p className="mt-4 rounded-2xl border border-danger-border bg-danger-soft p-4 text-sm leading-6 text-danger">
-          Esta ação remove a comunidade de forma auditada. Depois, o evento será resolvido com uma
+          Esta ação remove o conteúdo de forma auditada. Depois, o evento será resolvido com uma
           nota administrativa.
         </p>
         <FormProvider {...form}>

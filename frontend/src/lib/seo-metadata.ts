@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, getSiteUrl } from "@/lib/seo";
+import { getPublicApiSource, isTrustedPublicAssetUrl } from "@/utils/public-asset-sources";
 
-const DEFAULT_API_URL = "http://localhost:3001";
 const COMMUNITY_ICON_MEDIA_PATH_PREFIX = "/community/icons/";
 const COMMUNITY_ICON_FRONTEND_PATH_PREFIX = "/images/community/explore/";
+const MAX_METADATA_URL_LENGTH = 8192;
 
 export type SeoMetadataPageKey =
   | "default"
@@ -113,7 +114,15 @@ type PublicPsychologistSeo = {
   title: string;
 };
 
-const apiBaseUrl = () => (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
+const apiBaseUrl = () => {
+  return getPublicApiSource()?.origin ?? null;
+};
+
+const hasControlCharacters = (value: string) =>
+  Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  });
 
 const resolveCommunityIconAssetPath = (pathname: string, search = "") => {
   if (!pathname.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) return null;
@@ -124,21 +133,77 @@ const resolveCommunityIconAssetPath = (pathname: string, search = "") => {
   return `${COMMUNITY_ICON_FRONTEND_PATH_PREFIX}${filename}${search}`;
 };
 
-const resolveAbsoluteUrl = (value?: string | null) => {
-  if (!value) return undefined;
+const normalizeMetadataUrl = (value?: string | null) => {
+  const raw = value?.trim();
+  if (
+    !raw ||
+    raw.length > MAX_METADATA_URL_LENGTH ||
+    raw.startsWith("//") ||
+    raw.includes("\\") ||
+    hasControlCharacters(value ?? "")
+  ) {
+    return null;
+  }
 
-  if (value.startsWith("/public/files/")) return `${apiBaseUrl()}${value}`;
-  if (value.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) {
-    return absoluteUrl(resolveCommunityIconAssetPath(value) ?? value);
+  return raw;
+};
+
+const resolveCanonicalUrl = (value?: string | null) => {
+  const raw = normalizeMetadataUrl(value);
+  if (!raw) return undefined;
+
+  try {
+    const siteUrl = getSiteUrl();
+    const url = new URL(raw, siteUrl);
+    if (
+      (url.protocol !== "http:" && url.protocol !== "https:") ||
+      url.origin !== siteUrl.origin ||
+      url.username ||
+      url.password
+    ) {
+      return undefined;
+    }
+
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+};
+
+const resolveMediaUrl = (value?: string | null) => {
+  const raw = normalizeMetadataUrl(value);
+  if (!raw) return undefined;
+
+  if (raw.startsWith("/public/files/")) {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return undefined;
+
+    try {
+      const mediaUrl = new URL(raw, apiBase);
+      return mediaUrl.pathname.startsWith("/public/files/") ? mediaUrl.toString() : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  if (raw.startsWith(COMMUNITY_ICON_MEDIA_PATH_PREFIX)) {
+    return absoluteUrl(resolveCommunityIconAssetPath(raw) ?? raw);
   }
 
   try {
-    const url = new URL(value);
-    const communityIconPath = resolveCommunityIconAssetPath(url.pathname, url.search);
+    const siteUrl = getSiteUrl();
+    const url = new URL(raw, siteUrl);
+    if ((url.protocol !== "http:" && url.protocol !== "https:") || url.username || url.password) {
+      return undefined;
+    }
 
-    return communityIconPath ? absoluteUrl(communityIconPath) : url.toString();
+    const communityIconPath = resolveCommunityIconAssetPath(url.pathname, url.search);
+    if (communityIconPath && url.origin === siteUrl.origin) return absoluteUrl(communityIconPath);
+
+    return url.origin === siteUrl.origin || isTrustedPublicAssetUrl(url)
+      ? url.toString()
+      : undefined;
   } catch {
-    return absoluteUrl(value);
+    return undefined;
   }
 };
 
@@ -154,7 +219,10 @@ const resolveVideoType = (value?: string | null) => {
 
 const getPublicSeoSettings = async () => {
   try {
-    const response = await fetch(`${apiBaseUrl()}/api/public/seo/metadata`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}/api/public/seo/metadata`, {
       signal: AbortSignal.timeout(5_000),
       headers: {
         "Accept-Language": "pt",
@@ -190,23 +258,23 @@ export const resolveSeoMetadata = async (
     overrides.ogDescription || setting?.og_description || fallback.ogDescription || description;
   const robotsIndex = setting?.robots_index ?? fallback.robotsIndex ?? true;
   const robotsFollow = setting?.robots_follow ?? fallback.robotsFollow ?? true;
-  const resolvedImage = resolveAbsoluteUrl(image);
-  const resolvedVideo = resolveAbsoluteUrl(video);
+  const resolvedImage = resolveMediaUrl(image);
+  const resolvedVideo = resolveMediaUrl(video);
   const imageWidth = overrides.imageWidth ?? fallback.imageWidth ?? undefined;
   const imageHeight = overrides.imageHeight ?? fallback.imageHeight ?? undefined;
   const videoWidth = overrides.videoWidth ?? fallback.videoWidth ?? undefined;
   const videoHeight = overrides.videoHeight ?? fallback.videoHeight ?? undefined;
   const videoType = overrides.videoType ?? fallback.videoType ?? resolveVideoType(resolvedVideo);
   const routePath = setting?.route_path?.includes("[") ? undefined : setting?.route_path;
-  const resolvedCanonical = resolveAbsoluteUrl(canonical || routePath);
+  const resolvedCanonical = resolveCanonicalUrl(canonical || routePath);
 
   return {
     title: { absolute: title },
     description,
     keywords: setting?.keywords?.length ? setting.keywords : undefined,
-    alternates: canonical
+    alternates: resolvedCanonical
       ? {
-          canonical,
+          canonical: resolvedCanonical,
         }
       : undefined,
     openGraph: {
@@ -271,7 +339,10 @@ const getPublicCommunityPostSeo = async ({
     : `/api/public/seo/community-post/${encodedSlug}/${encodedId}`;
 
   try {
-    const response = await fetch(`${apiBaseUrl()}${path}`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}${path}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(5_000),
       headers: {
@@ -294,7 +365,10 @@ const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
   const encodedSlug = encodeURIComponent(slug);
 
   try {
-    const response = await fetch(`${apiBaseUrl()}/api/public/seo/community/${encodedSlug}`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}/api/public/seo/community/${encodedSlug}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(5_000),
       headers: {
@@ -317,7 +391,10 @@ const getPublicPsychologistSeo = async ({ id }: { id: string }) => {
   const encodedId = encodeURIComponent(id);
 
   try {
-    const response = await fetch(`${apiBaseUrl()}/api/public/seo/psychologist/${encodedId}`, {
+    const apiBase = apiBaseUrl();
+    if (!apiBase) return null;
+
+    const response = await fetch(`${apiBase}/api/public/seo/psychologist/${encodedId}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(5_000),
       headers: {

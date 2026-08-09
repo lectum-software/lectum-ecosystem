@@ -1,7 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
-import prisma, { type ORM } from "@/infra/database/prisma";
-import type { visitor_session } from "@/interfaces/objects";
+import prisma from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { upsertOwnedVisitorSession } from "../../helpers/visitor-session";
 import type {
   ContentVideoWatchTarget,
   ContentVideoWatchTargetType,
@@ -24,16 +24,13 @@ const videoWatchSelect = {
   milestone_100: true,
   replay_count: true,
   retention_buckets: true,
+  session_id: true,
+  viewer_id: true,
+  visitor_id: true,
   watched_seconds: true,
 } satisfies Prisma.content_video_watch_sessionSelect;
 
 export class ContentVideoWatchRepository {
-  readonly sessionRepository: ORM["visitor_session"];
-
-  constructor() {
-    this.sessionRepository = prisma.visitor_session;
-  }
-
   async findPostTarget(postId: string): Promise<ContentVideoWatchTarget | null> {
     const post = await prisma.community_post.findFirst({
       select: {
@@ -141,6 +138,13 @@ export class ContentVideoWatchRepository {
       });
 
       if (existing) {
+        const belongsToAnotherSession =
+          existing.visitor_id !== input.visitorId || existing.session_id !== input.sessionId;
+        const belongsToAnotherUser =
+          Boolean(existing.viewer_id) && existing.viewer_id !== input.viewerId;
+
+        if (belongsToAnotherSession || belongsToAnotherUser) return null;
+
         const currentBuckets = Array.isArray(existing.retention_buckets)
           ? existing.retention_buckets.filter(
               (bucket): bucket is number => typeof bucket === "number" && Number.isFinite(bucket),
@@ -199,40 +203,11 @@ export class ContentVideoWatchRepository {
     });
   }
 
-  async upsertVisitorSession(
-    visitorId: string,
-    sessionId: string,
-    userId?: string | null,
-  ): Promise<visitor_session> {
-    const now = new Date();
-    const updateData: Prisma.visitor_sessionUpdateInput = {
-      last_seen_at: now,
-    };
-
-    if (userId) {
-      updateData.user = {
-        connect: {
-          id: userId,
-        },
-      };
-    }
-
-    return this.sessionRepository.upsert({
-      create: {
-        device_type: "unknown",
-        first_seen_at: now,
-        last_seen_at: now,
-        session_id: sessionId,
-        user_id: userId ?? null,
-        visitor_id: visitorId,
-      },
-      update: updateData,
-      where: {
-        visitor_id_session_id: {
-          session_id: sessionId,
-          visitor_id: visitorId,
-        },
-      },
+  async upsertVisitorSession(visitorId: string, sessionId: string, userId?: string | null) {
+    return upsertOwnedVisitorSession({
+      sessionId,
+      userId,
+      visitorId,
     });
   }
 }

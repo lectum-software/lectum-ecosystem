@@ -1,4 +1,4 @@
-﻿# ADR-0360 - Matrizes de Conversao x Engajamentos/Favoritos e Visibilidade no Admin
+# ADR-0360 - Matrizes de Conversao x Engajamentos/Favoritos e Visibilidade no Admin
 
 ## Status
 

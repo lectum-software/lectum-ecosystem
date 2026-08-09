@@ -9,6 +9,7 @@ const TECHNICAL_MESSAGE_PATTERNS = [
   /timeout of \d+ms exceeded/i,
   /\b(?:next_public|process\.env|database_url|jwt_secret|access_token)\b/i,
   /\b(?:payload|webhook|endpoint|schema|stack|trace|policyagent|mercadopago|preapproval|gateway)\b/i,
+  /\b(?:axios|cloudflare|amazon\s*s3|aws|smtp|sendgrid|twilio|firebase|supabase|openai|stripe|socket\.io|nodemailer|bcrypt|zod)\b/i,
   /\b(?:cannot|failed|failure|unexpected|missing|required|not found|does not exist|unauthorized|forbidden)\b/i,
   /\b(?:template|resource) with id\b/i,
   /\b[0-9a-f]{24,}\b/i,
@@ -23,6 +24,18 @@ const TECHNICAL_MESSAGE_PATTERNS = [
   /\.(?:c|m)?tsx?:\d+(?::\d+)?/i,
   /<!doctype|<(?:html|body|pre|script)\b/i,
   /[A-Z][A-Z0-9]+(?:_[A-Z0-9]+){2,}/,
+  /\b[a-z][a-z0-9]+(?:_[a-z0-9]+)+\b/i,
+  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
+  /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/,
+  /(?:^|\D)(?:\+?55[\s.-]?)?(?:\(?\d{2}\)?[\s.-]?)?(?:9\d{4}|\d{4})[\s.-]?\d{4}(?=\D|$)/,
+  /\b(?:\d{1,3}\.){3}\d{1,3}\b/,
+  /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/,
+  /\bbearer\s+[A-Za-z0-9._~+/=-]{12,}\b/i,
+  /\b(?:sk|pk)_(?:live|test)_[A-Za-z0-9_-]{12,}\b/i,
+  /\bAKIA[0-9A-Z]{16}\b/,
+  /\bgh[pousr]_[A-Za-z0-9]{20,}\b/,
+  /(?:\d[ -]*?){13,19}/,
+  /\b(?:api[-_ ]?key|authorization|password|secret|senha|token)\s*[:=]\s*\S+/i,
 ];
 
 const asRecord = (value: unknown): UnknownRecord | null =>
@@ -36,7 +49,7 @@ const readPayload = (error: unknown) => {
   const responseData = asRecord(response?.data);
   const directData = asRecord(record?.data);
 
-  return responseData ?? directData ?? record;
+  return responseData ?? directData ?? (error instanceof Error ? null : record);
 };
 
 const readStatus = (error: unknown, payload: UnknownRecord | null) => {
@@ -78,7 +91,6 @@ const statusFallback = (status: number | undefined, fallback: string) => {
 
 export const getSafeApiErrorMessage = (error: unknown, fallback = DEFAULT_MESSAGE) => {
   const payload = readPayload(error);
-  const record = asRecord(error);
   const status = readStatus(error, payload);
 
   if (status === 401 || status === 403 || status === 404 || status === 408 || status === 429) {
@@ -86,7 +98,7 @@ export const getSafeApiErrorMessage = (error: unknown, fallback = DEFAULT_MESSAG
   }
   if (status && status >= 500) return statusFallback(status, fallback);
 
-  const candidates = [payload?.error, payload?.message, record?.message];
+  const candidates = [payload?.error, payload?.message];
 
   for (const candidate of candidates) {
     const normalized = normalizeCandidate(candidate);
@@ -99,7 +111,11 @@ export const getSafeApiErrorMessage = (error: unknown, fallback = DEFAULT_MESSAG
 export const getSafePublicErrorMessage = (
   value: string | null | undefined,
   fallback = DEFAULT_MESSAGE,
-) => getSafeApiErrorMessage(value ? new Error(value) : null, fallback);
+) => {
+  const normalized = normalizeCandidate(value);
+
+  return isSafePublicMessage(normalized) ? normalized : fallback;
+};
 
 export const getSafePublicMessage = (
   value: string | null | undefined,

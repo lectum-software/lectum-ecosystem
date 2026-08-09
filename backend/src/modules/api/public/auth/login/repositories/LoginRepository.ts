@@ -19,7 +19,6 @@ import { loginInclude } from "@/query/login";
 import { isSuspensionExpired } from "@/utils/account-status";
 import { log } from "@/utils/logs";
 import { getUserTokenLimit } from "@/utils/runtime-config";
-import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 import type { IFindByEmailDTO } from "../DTOs/IFindByEmailDTO";
 import type { IFindToEmitDTO } from "../DTOs/IFindToEmitDTO";
 //DTOs
@@ -238,7 +237,13 @@ export class LoginRepository implements ILoginRepository {
         data: {
           action: log.store,
           ref_id: user.id,
-          new: JSON.stringify(sanitizeSensitiveData(user, { removeAuthTokens: true })),
+          new: JSON.stringify({
+            active: user.active,
+            confirmed: user.confirmed,
+            need_reset: user.need_reset,
+            provider: user.provider,
+            role: user.role,
+          }),
         },
       });
 

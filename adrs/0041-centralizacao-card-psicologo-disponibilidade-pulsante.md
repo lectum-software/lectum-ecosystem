@@ -1,4 +1,4 @@
-﻿# ADR-0041: Centralização do card de psicólogo e dot de disponibilidade pulsante
+# ADR-0041: Centralização do card de psicólogo e dot de disponibilidade pulsante
 
 ## Status
 

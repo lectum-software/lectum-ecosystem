@@ -3,7 +3,8 @@ import { Router } from "express";
 
 //Middlewares
 import passport from "@/modules/api/middlewares/_auth/passport";
-import { isProductionRuntime } from "@/utils/runtime-config";
+import { isPublishedRuntime } from "@/utils/runtime-config";
+import { parseGoogleHttpUrl, sanitizeGoogleCallbackTarget } from "../utils/config";
 import {
   GOOGLE_OAUTH_STATE_COOKIE,
   googleOAuthStateClearCookieOptions,
@@ -36,13 +37,7 @@ const GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS = new Set([
 ]);
 
 const getFrontendOrigin = () => {
-  const callbackUrl = process.env.CALLBACK_URL_API_USER || "/";
-
-  try {
-    return new URL(callbackUrl).origin;
-  } catch {
-    return "";
-  }
+  return parseGoogleHttpUrl(process.env.CALLBACK_URL_API_USER)?.origin ?? "";
 };
 
 const sanitizeAppCallbackUrl = (value: unknown, fallback: string) => {
@@ -74,8 +69,9 @@ const resolveDeleteAccountCallbackUrl = (query: GoogleCallbackQuery, user: Googl
 };
 
 const resolveFailureCallbackUrl = (fallbackPath: string, message: string) => {
-  const isAbsolute = /^https?:\/\//i.test(fallbackPath);
-  const url = new URL(fallbackPath, "https://lectum.local");
+  const target = sanitizeGoogleCallbackTarget(fallbackPath);
+  const isAbsolute = Boolean(parseGoogleHttpUrl(target));
+  const url = new URL(target, "https://lectum.local");
 
   url.searchParams.set("error", message);
   url.searchParams.set("clearSession", "1");
@@ -103,11 +99,25 @@ const parseGoogleStateQuery = (state: unknown, cookieNonce: unknown) => {
   };
 };
 
+const appendCallbackQuery = (targetValue: string | undefined, queryString: string) => {
+  const target = sanitizeGoogleCallbackTarget(targetValue);
+  if (!queryString) return target;
+
+  const isAbsolute = Boolean(parseGoogleHttpUrl(target));
+  const url = new URL(target, "https://lectum.local");
+  const query = new URLSearchParams(queryString);
+  query.forEach((value, key) => {
+    url.searchParams.set(key, value);
+  });
+
+  return isAbsolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
+};
+
 //Routes
 routes.get(
   "",
   passport.authenticate("google", {
-    failureRedirect: process.env.CALLBACK_FAIL_URL_API_USER || "/",
+    failureRedirect: sanitizeGoogleCallbackTarget(process.env.CALLBACK_FAIL_URL_API_USER),
     session: false,
   }),
   (_req, res) => {
@@ -148,17 +158,13 @@ routes.get(
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: isProductionRuntime(),
+      secure: isPublishedRuntime(),
       sameSite: "lax",
       maxAge: GOOGLE_EXCHANGE_COOKIE_TTL_MS,
       path: "/api/public/google/me",
     });
 
-    const baseUrl = process.env.CALLBACK_URL_API_USER || "/";
-    const separator = baseUrl.includes("?") ? "&" : "?";
-    const finalUrl = originalQueryStr ? `${baseUrl}${separator}${originalQueryStr}` : baseUrl;
-
-    res.redirect(finalUrl);
+    res.redirect(appendCallbackQuery(process.env.CALLBACK_URL_API_USER, originalQueryStr));
   },
 );
 

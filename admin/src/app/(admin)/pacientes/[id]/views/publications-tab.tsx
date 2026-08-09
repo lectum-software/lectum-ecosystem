@@ -23,7 +23,7 @@ export const PatientPublicationMetricChip = ({
 }: {
   metric: PatientsDetailPublicationMetric;
 }) => {
-  const Icon = patientPublicationMetricIcon[metric.id];
+  const Icon = patientPublicationMetricIcon[metric.id] ?? BarChart3;
   const label = patientPublicationMetricLabel[metric.id] ?? metric.label.toLowerCase();
   const value = metric.available ? numberFormatter.format(metric.value) : "indisponível";
 

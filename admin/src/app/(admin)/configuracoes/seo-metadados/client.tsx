@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Loader2, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";

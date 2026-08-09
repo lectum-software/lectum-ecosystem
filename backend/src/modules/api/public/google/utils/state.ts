@@ -7,7 +7,7 @@ import {
 } from "node:crypto";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
-import { isProductionRuntime } from "@/utils/runtime-config";
+import { isPublishedRuntime } from "@/utils/runtime-config";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "lectum_google_oauth_nonce";
 const GOOGLE_OAUTH_STATE_AUDIENCE = "lectum-google-oauth";
@@ -94,7 +94,7 @@ export const googleOAuthStateCookieOptions = () => ({
   maxAge: GOOGLE_OAUTH_STATE_TTL_MS,
   path: "/api/public/google/callback",
   sameSite: "lax" as const,
-  secure: isProductionRuntime(),
+  secure: isPublishedRuntime(),
 });
 
 export const googleOAuthStateClearCookieOptions = () => {

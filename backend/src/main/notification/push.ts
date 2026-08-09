@@ -1,10 +1,30 @@
 import webPush, { isWebPushConfigured } from "@/config/webPush";
-import type { Prisma } from "@/external/generated/prisma/client";
+import { Prisma } from "@/external/generated/prisma/client";
+import prisma from "@/infra/database/prisma";
+import { isWebPushSubscriptionPayload } from "@/utils/push-subscription";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
-const BASE = process.env.BASE || "";
+const normalizePushRedirect = (value: string | null | undefined) => {
+  const redirect = value?.trim();
+  if (!redirect || redirect.length > 2_048 || !redirect.startsWith("/")) return "/";
+  const hasControlCharacter = Array.from(redirect).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  });
+  if (redirect.startsWith("//") || redirect.includes("\\") || hasControlCharacter) {
+    return "/";
+  }
+
+  try {
+    const url = new URL(redirect, "https://lectum.local");
+    return url.origin === "https://lectum.local" ? `${url.pathname}${url.search}${url.hash}` : "/";
+  } catch {
+    return "/";
+  }
+};
 
 export type PushSubscriptionRecord = {
+  id: string;
   subscription: Prisma.JsonValue | null;
 };
 
@@ -16,10 +36,44 @@ export type WebPushSendResult = {
   targetedCount: number;
 };
 
+const deactivateSubscriptions = async (ids: string[]) => {
+  const uniqueIds = [...new Set(ids)].filter(Boolean);
+  if (uniqueIds.length === 0) return;
+
+  try {
+    await prisma.notification_subscription.updateMany({
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
+        subscription: Prisma.DbNull,
+      },
+      where: {
+        deleted: false,
+        id: {
+          in: uniqueIds,
+        },
+      },
+    });
+  } catch (error) {
+    console.error(
+      "[WEB NOTIFICATION] Falha ao desativar inscrições inválidas.",
+      toSafeErrorLog(error, "PushSubscriptionCleanupError"),
+    );
+  }
+};
+
+const getPushStatusCode = (error: unknown) => {
+  const statusCode = (error as { statusCode?: unknown })?.statusCode;
+  return typeof statusCode === "number" &&
+    Number.isInteger(statusCode) &&
+    statusCode >= 100 &&
+    statusCode <= 599
+    ? statusCode
+    : undefined;
+};
+
 export const sendWebPushToSubscriptions = async (params: {
   body: string;
-  campaignId?: string | null;
-  messageProps?: Record<string, unknown>;
   redirect?: string | null;
   subscriptions: PushSubscriptionRecord[];
   title: string;
@@ -34,8 +88,8 @@ export const sendWebPushToSubscriptions = async (params: {
     };
   }
 
-  const activeSubscriptions = params.subscriptions.filter((sub) => Boolean(sub.subscription));
-  if (activeSubscriptions.length === 0) {
+  const storedSubscriptions = params.subscriptions.filter((sub) => Boolean(sub.subscription));
+  if (storedSubscriptions.length === 0) {
     return {
       failedCount: 0,
       failureReason: "push_subscription_missing",
@@ -45,17 +99,34 @@ export const sendWebPushToSubscriptions = async (params: {
     };
   }
 
+  const invalidSubscriptions = storedSubscriptions.filter(
+    (sub) => !isWebPushSubscriptionPayload(sub.subscription),
+  );
+  const activeSubscriptions = storedSubscriptions.filter((sub) =>
+    isWebPushSubscriptionPayload(sub.subscription),
+  );
+
+  await deactivateSubscriptions(invalidSubscriptions.map((sub) => sub.id));
+
+  if (activeSubscriptions.length === 0) {
+    return {
+      failedCount: invalidSubscriptions.length,
+      failureReason: "push_subscription_invalid",
+      sentCount: 0,
+      status: "failed",
+      targetedCount: storedSubscriptions.length,
+    };
+  }
+
   let sentCount = 0;
-  let failedCount = 0;
+  let failedCount = invalidSubscriptions.length;
+  const expiredSubscriptionIds: string[] = [];
   const payload = JSON.stringify({
     data: {
-      campaign_id: params.campaignId ?? undefined,
-      message_props: params.messageProps,
-      redirect: params.redirect ?? undefined,
+      redirect: normalizePushRedirect(params.redirect),
     },
     notification: {
       body: params.body,
-      icon: BASE ? `${BASE}/logo.png` : "/logo.png",
       title: params.title,
     },
   });
@@ -69,12 +140,17 @@ export const sendWebPushToSubscriptions = async (params: {
       sentCount++;
     } catch (error) {
       failedCount++;
+      const statusCode = getPushStatusCode(error);
+      if (statusCode === 404 || statusCode === 410) expiredSubscriptionIds.push(sub.id);
+
       console.error("[WEB NOTIFICATION] erro ao enviar push:", {
-        ...toSafeErrorLog(error, "WebPushSendError"),
-        status_code: (error as { statusCode?: number })?.statusCode,
+        name: "WebPushSendError",
+        status_code: statusCode,
       });
     }
   }
+
+  await deactivateSubscriptions(expiredSubscriptionIds);
 
   if (sentCount > 0) {
     return {
@@ -82,7 +158,7 @@ export const sendWebPushToSubscriptions = async (params: {
       failureReason: failedCount > 0 ? "push_partial_failure" : null,
       sentCount,
       status: "sent",
-      targetedCount: activeSubscriptions.length,
+      targetedCount: storedSubscriptions.length,
     };
   }
 
@@ -91,6 +167,6 @@ export const sendWebPushToSubscriptions = async (params: {
     failureReason: "push_send_failed",
     sentCount,
     status: "failed",
-    targetedCount: activeSubscriptions.length,
+    targetedCount: storedSubscriptions.length,
   };
 };

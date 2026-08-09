@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type { PsychologistsListProfileConversionCategoryId } from "./list";
 
 export type PsychologistsDashboardQuery = {
@@ -177,72 +178,72 @@ export type PsychologistsDashboardStatistics = {
   accepts_insurance: PsychologistsDashboardBooleanBreakdown;
   approaches: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_approach";
+    source: AdminPublicSource<"psychologist_approach">;
     total: number;
   };
   discount_first_session: PsychologistsDashboardBooleanBreakdown;
   experience_over_10_years: PsychologistsDashboardBooleanBreakdown;
   gender: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.gender";
+    source: AdminPublicSource<"psychologist_profile.gender">;
     total: number;
   };
   cities: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.professional_address_city+professional_address_state";
+    source: AdminPublicSource<"psychologist_profile.professional_address_city+professional_address_state">;
     total: number;
   };
   features: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile+professional_subscription";
+    source: AdminPublicSource<"psychologist_profile+professional_subscription">;
     total: number;
   };
   languages: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.languages";
+    source: AdminPublicSource<"psychologist_profile.languages">;
     total: number;
   };
   modalities: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.modality";
+    source: AdminPublicSource<"psychologist_profile.modality">;
     total: number;
   };
   services: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_service";
+    source: AdminPublicSource<"psychologist_service">;
     total: number;
   };
   specialties: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_specialty";
+    source: AdminPublicSource<"psychologist_specialty">;
     total: number;
   };
   race_colors: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.race_color";
+    source: AdminPublicSource<"psychologist_profile.race_color">;
     total: number;
   };
   religions: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.religion";
+    source: AdminPublicSource<"psychologist_profile.religion">;
     total: number;
   };
   social_value: PsychologistsDashboardBooleanBreakdown;
   states: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.professional_address_state";
+    source: AdminPublicSource<"psychologist_profile.professional_address_state">;
     total: number;
   };
   target_audience: {
     items: PsychologistsDashboardBreakdownItem[];
-    source: "psychologist_profile.target_audience";
+    source: AdminPublicSource<"psychologist_profile.target_audience">;
     total: number;
   };
 };
 
 export type PsychologistsDashboardFilterSearchDimension = {
   items: PsychologistsDashboardBreakdownItem[];
-  source: "important_action_event.action_type=psychologist_directory_filter_search";
+  source: AdminPublicSource<"important_action_event.action_type=psychologist_directory_filter_search">;
   total: number;
 };
 
@@ -264,7 +265,7 @@ export type PsychologistsDashboardFilterSearches = {
     target_audiences: PsychologistsDashboardFilterSearchDimension;
   };
   minimum_city_searches: number;
-  source: "important_action_event.action_type=psychologist_directory_filter_search";
+  source: AdminPublicSource<"important_action_event.action_type=psychologist_directory_filter_search">;
 };
 
 export type PsychologistsDashboardUnavailableMetric = {
@@ -292,7 +293,7 @@ export type PsychologistsDashboardConversion = {
   p75_days: number | null;
   p90_days: number | null;
   registered_count: number;
-  source: "user.createdAt+professional_subscription+subscription_plan";
+  source: AdminPublicSource<"user.createdAt+professional_subscription+subscription_plan">;
   unavailable_reason: string | null;
 };
 
@@ -328,7 +329,7 @@ export type PsychologistsDashboardPreSignupConversion = {
   psychologists_with_anonymous_history_count: number;
   psychologists_without_anonymous_history_count: number;
   registered_psychologists_count: number;
-  source: "user.createdAt+user_background+page_view_event+visitor_session";
+  source: AdminPublicSource<"user.createdAt+user_background+page_view_event+visitor_session">;
   unavailable_reason: string | null;
 };
 
@@ -341,7 +342,7 @@ export type PsychologistsDashboardSignupMethodItem = {
 
 export type PsychologistsDashboardSignupMethod = {
   items: PsychologistsDashboardSignupMethodItem[];
-  source: "user.provider";
+  source: AdminPublicSource<"user.provider">;
   total: number;
   unknown_count: number;
 };
@@ -368,7 +369,7 @@ export type PsychologistsDashboardPlatformUsage = {
   eligible_psychologists_count: number;
   pwa_installed_psychologists_count: number;
   pwa_installed_psychologists_rate: number | null;
-  source: "page_view_event+important_action_event";
+  source: AdminPublicSource<"page_view_event+important_action_event">;
   series: {
     active_psychologists: number;
     date: string;
@@ -403,7 +404,7 @@ export type PsychologistsDashboardDeviceUsageItem = {
 
 export type PsychologistsDashboardDeviceUsage = {
   items: PsychologistsDashboardDeviceUsageItem[];
-  source: "visitor_session.device_type+visitor_session.os+user.role=psicologo";
+  source: AdminPublicSource<"visitor_session.device_type+visitor_session.os+user.role=psicologo">;
   total_active_psychologists: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -429,7 +430,7 @@ export type PsychologistsDashboardOperatingSystemUsageItem = {
 
 export type PsychologistsDashboardOperatingSystemUsage = {
   items: PsychologistsDashboardOperatingSystemUsageItem[];
-  source: "visitor_session.os+visitor_session.device_type+user.role=psicologo";
+  source: AdminPublicSource<"visitor_session.os+visitor_session.device_type+user.role=psicologo">;
   total_active_psychologists: number;
   total_sessions: number;
   unavailable_reason: string | null;
@@ -485,7 +486,7 @@ export type PsychologistsDashboardTrafficSourceItem = {
     author_percentage: number;
     other_users_clicks: number;
     other_users_percentage: number;
-    source: "important_action_event.user_id+community_post.author_id+post_reply.author_id";
+    source: AdminPublicSource<"important_action_event.user_id+community_post.author_id+post_reply.author_id">;
   } | null;
   whatsapp_clicks: number;
 };
@@ -493,7 +494,7 @@ export type PsychologistsDashboardTrafficSourceItem = {
 export type PsychologistsDashboardTrafficSources = {
   attribution_unavailable_reason: string | null;
   description: string;
-  source: "important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click";
+  source: AdminPublicSource<"important_action_event.action_type=whatsapp_click+psychologist_video_whatsapp_click">;
   sources: PsychologistsDashboardTrafficSourceItem[];
   total_profile_views: number;
   total_sessions: number;

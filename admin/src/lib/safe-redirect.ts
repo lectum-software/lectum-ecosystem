@@ -15,10 +15,7 @@ const hasControlCharacters = (value: string) =>
     return code <= 31 || code === 127;
   });
 
-export const normalizeSafeAdminRedirect = (
-  value: string | null | undefined,
-  fallback = "/dashboard",
-) => {
+const resolveSafeInternalNavigationPath = (value: string | null | undefined) => {
   const raw = value?.trim();
 
   if (
@@ -29,21 +26,35 @@ export const normalizeSafeAdminRedirect = (
     raw.includes("\\") ||
     hasControlCharacters(raw)
   ) {
-    return fallback;
+    return null;
   }
 
   try {
     const url = new URL(raw, INTERNAL_ORIGIN);
-    if (url.origin !== INTERNAL_ORIGIN) return fallback;
+    if (url.origin !== INTERNAL_ORIGIN || url.username || url.password) return null;
 
     const decodedPath = decodeURIComponent(url.pathname);
-    if (decodedPath.startsWith("//") || decodedPath.includes("\\")) return fallback;
+    if (
+      decodedPath.startsWith("//") ||
+      decodedPath.includes("\\") ||
+      hasControlCharacters(decodedPath)
+    ) {
+      return null;
+    }
 
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
-    return fallback;
+    return null;
   }
 };
+
+export const isSafeInternalNavigationPath = (value: string | null | undefined) =>
+  resolveSafeInternalNavigationPath(value) !== null;
+
+export const normalizeSafeAdminRedirect = (
+  value: string | null | undefined,
+  fallback = "/dashboard",
+) => resolveSafeInternalNavigationPath(value) ?? fallback;
 
 export const sanitizeAdminNavigationData = <T>(value: T): T => {
   if (Array.isArray(value)) {

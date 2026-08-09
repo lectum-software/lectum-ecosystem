@@ -1,4 +1,4 @@
-﻿# TASK-123 - Donut de Atividade no dashboard Admin de psicologos
+# TASK-123 - Donut de Atividade no dashboard Admin de psicologos
 
 ## Status
 

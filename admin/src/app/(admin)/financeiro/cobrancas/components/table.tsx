@@ -93,7 +93,7 @@ export const EmptyState = () => (
       Nenhuma cobrança confirmada encontrada
     </h2>
     <p className="mt-1 text-sm text-muted">
-      A lista considera somente cobranças confirmadas pelo Mercado Pago.
+      A lista considera somente cobranças com confirmação de pagamento.
     </p>
   </div>
 );

@@ -1,4 +1,4 @@
-﻿# ADR-0243: Campanhas manuais e logs de notificacoes do Admin
+# ADR-0243: Campanhas manuais e logs de notificacoes do Admin
 
 ## Status
 

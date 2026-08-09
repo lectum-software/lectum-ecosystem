@@ -1,4 +1,4 @@
-﻿# TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos
+# TASK-139 - Meta de conversão no dashboard e matriz Admin de psicólogos
 
 ## Status
 

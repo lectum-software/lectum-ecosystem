@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { CommunityTopMentorsLogic } from "@/app/app/community/top-mentors/logic";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveSeoMetadata } from "@/lib/seo-metadata";

@@ -1,4 +1,4 @@
-﻿import { type IValidatorRequest, validator } from "@/utils/validator";
+import { type IValidatorRequest, validator } from "@/utils/validator";
 
 export const requestSchema: IValidatorRequest = {
   body: [

@@ -20,14 +20,16 @@ import type {
   AdminNotificationMetrics,
   NotificationDeliveryStatus,
 } from "@/api/req/notifications";
+import { VerifiedBadgeIcon } from "@/components/admin-icons";
 import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { cn } from "@/lib/utils";
 
 import {
   AUDIENCE_OPTIONS,
+  campaignStatusCopy,
   cardClass,
   channelLabel,
-  DELIVERY_STATUS_COPY,
+  deliveryStatusCopy,
   formatDateTime,
   formatPercent,
   NOTIFICATION_PERIOD_OPTIONS,
@@ -41,8 +43,6 @@ import {
   recipientHasVerifiedBadge,
   recipientName,
   roleLabel,
-  STATUS_COPY,
-  VerifiedBadgeIcon,
 } from "../modules/notification-support";
 
 export const CardShell = ({
@@ -53,27 +53,25 @@ export const CardShell = ({
   className?: string;
 }) => <section className={cn(cardClass, className)}>{children}</section>;
 
-export const StatusBadge = ({ status }: { status: AdminNotificationCampaignStatus }) => (
-  <span
-    className={cn(
-      "inline-flex rounded-full px-2.5 py-1 text-xs font-black",
-      STATUS_COPY[status].className,
-    )}
-  >
-    {STATUS_COPY[status].label}
-  </span>
-);
+export const StatusBadge = ({ status }: { status: AdminNotificationCampaignStatus }) => {
+  const copy = campaignStatusCopy(status);
 
-export const DeliveryStatusBadge = ({ status }: { status: NotificationDeliveryStatus }) => (
-  <span
-    className={cn(
-      "inline-flex rounded-full px-2.5 py-1 text-xs font-black",
-      DELIVERY_STATUS_COPY[status].className,
-    )}
-  >
-    {DELIVERY_STATUS_COPY[status].label}
-  </span>
-);
+  return (
+    <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-black", copy.className)}>
+      {copy.label}
+    </span>
+  );
+};
+
+export const DeliveryStatusBadge = ({ status }: { status: NotificationDeliveryStatus }) => {
+  const copy = deliveryStatusCopy(status);
+
+  return (
+    <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-black", copy.className)}>
+      {copy.label}
+    </span>
+  );
+};
 
 export const EngagementCell = ({ log }: { log: AdminNotificationAutomaticLog }) => {
   const clicked = Boolean(log.clicked_at || log.status === "clicked");

@@ -12,205 +12,462 @@ Formato recomendado:
 - task relacionada;
 - validações.
 
+## Integridade
+
+- Cada número pertence a um único documento.
+- Todo documento numérico aparece exatamente uma vez neste índice.
+- `pnpm check:adrs` bloqueia número duplicado, título divergente, arquivo ausente ou índice incompleto.
+
 ## Índice
 
-- [ADR-0001 - Execução spec-driven por tasks auto-suficientes](0001-spec-driven-task-execution.md) — Accepted
-- [ADR-0002 - Arquitetura de autenticação e papéis (paciente, psicólogo, admin)](0002-arquitetura-auth-roles.md) — Accepted
-- [ADR-0003 - Gateway de pagamento: Mercado Pago (checkout transparente + assinaturas)](0003-gateway-pagamento-mercado-pago.md) — Accepted
-- [ADR-0004 - Design System Lectum Foundation](0004-design-system-lectum-foundation.md) — Accepted
-- [ADR-0005 - Form Composition Foundation](0005-form-composition-foundation.md) — Accepted
-- [ADR-0006 - Integrações externas e decisões pendentes](0006-integracoes-externas-e-decisoes-pendentes.md) — Accepted
-- [ADR-0007 - Notificações: fundação de recebimento (TASK-29A)](0007-notificacoes-fundacao.md) — Accepted
-- [ADR-0008 - Fluxo publico de auth, selecao de perfil e login](0008-fluxo-publico-auth-selecao-perfil-login.md) — Accepted
-- [ADR-0009 - Migrations dev obrigatorias em tasks com alteracao de banco](0009-migrations-dev-obrigatorias-em-tasks-com-banco.md) — Accepted
-- [ADR-0010 - Fluxo frontend de recuperacao de senha](0010-recuperacao-senha-frontend.md) — Accepted
-- [ADR-0011 - Verificacao de e-mail por codigo](0011-verificacao-email-codigo.md) - Accepted
-- [ADR-0012 - Cadastro de paciente com role e patient_profile](0012-cadastro-paciente-role-profile.md) - Accepted
-- [ADR-0013 - Onboarding de boas-vindas do paciente](0013-onboarding-boas-vindas-paciente.md) - Accepted
-- [ADR-0014 - Cadastro inicial de psicologo com psychologist_profile](0014-cadastro-inicial-psicologo-profile.md) - Accepted
-- [ADR-0015 - Bloqueio da consulta CFP automatica](0015-bloqueio-consulta-cfp-automatica.md) - Accepted
-- [ADR-0016 - Planos apos cadastro de psicologo](0016-planos-apos-cadastro-psicologo.md) - Accepted
-- [ADR-0017 - Bloqueio de storage privado para documentos CRP](0017-bloqueio-storage-privado-crp.md) - Accepted
-- [ADR-0018 - Shell privado mobile-first e navegacao por papel](0018-shell-privado-mobile.md) - Accepted
-- [ADR-0019 - Descoberta real de psicólogos com filtros por taxonomia](0019-descoberta-psicologos-taxonomias.md) - Accepted
-- [ADR-0020 - Favoritos e seguindo de psicólogos](0020-favoritar-psicologo-na-listagem.md) - Accepted
-- [ADR-0021 - Perfil profissional publico com dados public-safe](0021-perfil-profissional-publico.md) - Accepted
-- [ADR-0022 - Contato WhatsApp por wa.me com intenção persistida](0022-contato-whatsapp-wa-me.md) - Accepted
-- [ADR-0023 - Avaliações de profissionais](0023-avaliacoes-paciente-elegibilidade-contato.md) - Accepted
-- [ADR-0024 - Bloqueio da TASK-18 por dependência de validação CRP](0024-bloqueio-task18-dependencia-crp.md) - Accepted
-- [ADR-0025 - Bloqueio da TASK-19 por dependencia do perfil privado do psicologo](0025-bloqueio-task19-dependencia-task18.md) - Accepted
-- [ADR-0026 - InfoSimples para validacao CFP/CRP](0026-infosimples-validacao-cfp-crp.md) - Accepted
-- [ADR-0027 - Perfil gratuito sem documentos CRP](0027-perfil-gratuito-sem-crp.md) - Accepted
-- [ADR-0028 - Concessao administrativa de assinatura profissional](0028-concessao-administrativa-assinatura.md) - Accepted
-- [ADR-0029 - Cortesia profissional como experiencia de assinante](0029-cortesia-profissional-ui-perfil.md) - Accepted
-- [ADR-0030 - Data de inscricao CRP como fonte do tempo de experiencia](0030-data-inscricao-crp-experiencia.md) - Accepted
-- [ADR-0031 - Perfil privado do paciente](0031-perfil-privado-paciente.md) - Accepted
-- [ADR-0032 - Refinamento mobile-first do perfil profissional público](0032-refinamento-perfil-profissional-publico.md) - Accepted
-- [ADR-0033 - Analytics profissionais com fontes persistidas e gate de plano](0033-analytics-profissionais-fontes-persistidas.md) - Accepted
-- [ADR-0034 - Paridade visual mobile de analytics e avaliações do psicólogo](0034-paridade-visual-analytics-avaliacoes-psicologo.md) - Accepted
-- [ADR-0035 - Correções mobile de regressão em autenticação, perfil e descoberta](0035-ajustes-mobile-regressao-login-perfil.md) - Accepted
-- [ADR-0036 - Refinos mobile de perfil público, analytics e edição profissional](0036-refinos-mobile-perfil-analytics-edicao.md) - Accepted
-- [ADR-0056 - Bio truncada e expansao inline na tela de Psicologos](0056-truncagem-interacao-bio-psicologos.md) - Accepted
-- [ADR-0057 - Animacao lateral de selos comerciais no video de Psicologos](0057-animacao-selos-video-psicologos.md) - Accepted
-- [ADR-0058 - Nome semibold e visibilidade real do tempo de experiencia nos cards](0058-visibilidade-experiencia-card-psicologo.md) - Accepted
-- [ADR-0059 - Filtros avancados na busca de psicologos](0059-filtros-avancados-busca-psicologos.md) - Accepted
-- [ADR-0060 - Imagem de capa independente do perfil do psicologo](0060-capa-independente-perfil-psicologo.md) - Accepted
-- [ADR-0061 - Favoritos com cards premium e filtros reais](0061-favoritos-cards-premium-filtros-reais.md) - Accepted
-- [ADR-0062 - Comunidades reais e feed paginado](0062-comunidades-feed-paginado.md) - Accepted
-- [ADR-0063 - Vídeo obrigatório para elegibilidade na listagem de psicólogos](0063-video-obrigatorio-listagem-psicologos.md) - Accepted
-- [ADR-0064 - Feed de comunidade vertical com chips canônicos](0064-feed-comunidade-chips-e-posts-reais.md) - Accepted
-- [ADR-0065 - Criacao real de posts da comunidade](0065-criacao-posts-comunidade.md) - Accepted
-- [ADR-0066 - Pagina de detalhe de comunidade com participacao persistida](0066-pagina-detalhe-comunidade-participacao.md) - Accepted
-- [ADR-0067 - Midia em resposta profissional destacada](0067-midia-resposta-profissional-destacada.md) - Accepted
-- [ADR-0068 - Respostas, votos e salvos no detalhe do post](0068-respostas-votos-salvos-post.md) - Accepted
-- [ADR-0069 - Topo TikTok com Minha Busca na tela de Psicologos](0069-topo-tiktok-minha-busca-psicologos.md) - Accepted
-- [ADR-0070 - Ranking derivado de Top Mentores da comunidade](0070-ranking-top-mentores.md) - Accepted
-- [ADR-0071 - Responsividade mobile da tela Top Mentores](0071-top-mentores-mobile-overflow.md) - Accepted
-- [ADR-0072 - Meus posts e posts salvos reais](0072-meus-posts-e-posts-salvos.md) - Accepted
-- [ADR-0073 - Tela de comunidades seguidas](0073-comunidades-seguidas.md) - Accepted
-- [ADR-0074 - Configurações de conta e segurança](0074-configuracoes-conta-seguranca.md) - Accepted
-- [ADR-0075 - Exclusão de conta do psicólogo com proteção de cobrança](0075-exclusao-conta-psicologo-assinatura.md) - Accepted
-- [ADR-0076 - Estado de interacoes no feed da comunidade](0076-estado-voto-feed-comunidade.md) - Accepted
-- [ADR-0077 - Salvamento de respostas e navegacao contextual no feed da comunidade](0077-salvamento-respostas-feed-comunidade.md) - Accepted
-- [ADR-0078 - Transicao segura para WhatsApp do psicologo](0078-transicao-whatsapp-psicologo.md) - Accepted
-- [ADR-0079 - Controle moderno de expandir/recolher sidebar desktop](0079-controle-sidebar-desktop-moderno.md) - Accepted
-- [ADR-0080 - Ajuste desktop limpo do feed Shorts de psicologos](0080-ajuste-desktop-feed-shorts-psicologos.md) - Accepted
-- [ADR-0081 - Refinos discretos no feed de comunidade](0081-refinos-feed-comunidade.md) - Accepted
-- [ADR-0082 - Ver mais inline no feed de comunidade](0082-ver-mais-inline-feed-comunidade.md) - Accepted
-- [ADR-0083 - Confinamento de overlays no feed desktop de Psicologos](0083-overlays-feed-psicologos-desktop.md) - Accepted
-- [ADR-0084 - Sidebar desktop orientada por rotas principais](0084-sidebar-desktop-rotas-principais.md) - Accepted
-- [ADR-0085 - Truncamento medido e identidade compacta no feed de comunidade](0085-truncamento-medido-feed-comunidade.md) - Accepted
-- [ADR-0086 - Fullscreen vertical dos videos do feed de comunidade](0086-fullscreen-video-feed-comunidade.md) - Accepted
-- [ADR-0087 - Header interno preso ao card no feed desktop de Psicologos](0087-header-interno-card-psicologos-desktop.md) - Accepted
-- [ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional](0096-detalhe-post-composer-denuncia-midia.md) - Accepted
-- [ADR-0108 - Publicações do perfil como posts reais da comunidade](0108-publicacoes-perfil-como-posts-comunidade.md) - Accepted
-- [ADR-0109 - Dicas de onboarding persistidas por usuário](0109-dicas-onboarding-persistidas-por-usuario.md) - Accepted
-- [ADR-0110 - Publicacoes compactas no perfil e WhatsApp como acao mobile unica](0110-publicacoes-perfil-mobile-whatsapp-unico.md) - Accepted
-- [ADR-0119 - Header secundário premium compartilhado](0119-header-secundario-premium-compartilhado.md) - Accepted
-- [ADR-0120 - Video obrigatorio para perfil publico e Bio opcional](0120-video-obrigatorio-perfil-publico-bio-opcional.md) - Accepted
-- [ADR-0121 - Experiencia premium para perfil profissional incompleto](0121-perfil-incompleto-ativacao-premium.md) - Accepted
-- [ADR-0122 - Card de upgrade no menu principal de perfil](0122-card-upgrade-menu-perfil.md) - Accepted
-- [ADR-0145 - Edição de post publicado](0145-edicao-post-publicado.md) - Accepted
-- [ADR-0146 - Ações de respostas do usuário](0146-acoes-respostas-usuario.md) - Accepted
-- [ADR-0147 - Cortesia verificada e WhatsApp na comunidade](0147-cortesia-verificada-whatsapp-comunidade.md) - Accepted
-- [ADR-0148 - Proporcao 16:9 para imagens horizontais em posts e respostas](0148-imagens-horizontais-16-9-comunidade.md) - Accepted
-- [ADR-0168 - Icones azuis na central de notificacoes](0168-icones-azuis-notificacoes-whatsapp.md) - Accepted
-- [ADR-0169 - Autoria em notificacoes profissionais individuais](0169-autoria-notificacoes-profissionais.md) - Accepted
-- [ADR-0170 - Simbolo Lectum em SVG escalavel](0170-simbolo-lectum-svg-escalavel.md) - Accepted
-- [ADR-0171 - Layout premium em duas telas de boas-vindas do paciente](0171-boas-vindas-paciente-layout-premium.md) - Accepted
-- [ADR-0175 - Hardening de code review pré-produção](0175-hardening-code-review-pre-producao.md) - Accepted
-- [ADR-0184 - Reconciliação de assinatura Mercado Pago por webhook e entitlement local](0184-reconciliacao-assinatura-mercado-pago-webhook-e-entitlement.md) - Accepted
-- [ADR-0176 - Politica de senha com menor friccao](0176-politica-senha-menor-friccao.md) - Accepted
-- [ADR-0180 - Rotas publicas de psicologos e comunidades fora de /app](0180-rotas-publicas-psicologos-comunidades.md) - Accepted
-- [ADR-0184 - Bloqueio da revisão final de qualidade, segurança, LGPD e operação](0184-bloqueio-task34-qualidade-lgpd-operacao.md) - Accepted
-- [ADR-0187 - Escopo V1 focado em psicologia e expansao multiprofissional futura](0187-escopo-v1-psicologia-expansao-multiprofissional.md) - Accepted
-- [ADR-0190 - Range requests para midia publica](0190-range-requests-midia-publica.md) - Accepted
-- [ADR-0191 - Layout social de compartilhamento de video-resposta](0191-layout-compartilhamento-social-video-resposta.md) - Accepted
-- [ADR-0192 - Menu de opcoes dos comentarios acima do composer fixo](0192-menu-opcoes-comentarios-sobreposicao.md) - Accepted
-- [ADR-0193 - Controles nativos de video da comunidade sem menu extra](0193-controles-nativos-video-comunidade-sem-menu-extra.md) - Accepted
-- [ADR-0194 - Autoações do psicólogo fora de Analytics e notificações](0194-autoacoes-profissional-fora-de-analytics-notificacoes.md) - Accepted
-- [ADR-0195 - Autoacoes de pacientes em posts proprios sem notificacoes](0195-autoacoes-paciente-posts-sem-notificacoes.md) - Accepted
-- [ADR-0196 - Controles do card pertencem ao post mesmo com resposta destacada](0196-controles-post-feed-resposta-destacada.md) - Accepted
-- [ADR-0201 - Verificação CFP retomável no fluxo pago antes do perfil](0201-verificacao-cfp-retomavel-fluxo-pago.md) - Accepted
-- [ADR-0204 - Upgrade direto para checkout profissional](0204-upgrade-direto-checkout-profissional.md) - Accepted
-- [ADR-0205 - Benefícios da assinatura com mídia nas comunidades e sem suporte prioritário](0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md) - Accepted
-- [ADR-0212 - Copy generica de pagamento para usuarios](0212-copy-generica-gateway-usuario.md) - Accepted
-- [ADR-0216 - Login preserva query string no retorno para rotas privadas](0216-login-preserva-query-callback-privado.md) - Accepted
-- [ADR-0225 - Admin com audiência JWT separada](0225-admin-audiencia-separada.md) - Accepted
-- [ADR-0226 - App Admin separado com shell lateral próprio](0226-admin-app-separado-shell.md) - Accepted
-- [ADR-0227 - Sessões de visitantes com tipo de dispositivo normalizado](0227-sessoes-visitantes-tipo-dispositivo.md) - Accepted
-- [ADR-0232 - Regras editáveis e identidade visual de comunidades no Admin](0232-regras-editaveis-comunidade-admin.md) - Accepted
-- [ADR-0233 - Dashboard Admin de psicólogos reutiliza ranking público e métricas honestas](0233-admin-psicologos-dashboard-ranking.md) - Accepted
-- [ADR-0234 - Lista Admin de psicólogos usa ranking público e exposição operacional mínima](0234-admin-lista-psicologos-ranking-filtros.md) - Accepted
-- [ADR-0235 - Exposição administrativa de dados sensíveis no detalhe do psicólogo](0235-admin-detalhe-psicologo-dados-sensiveis.md) - Accepted
-- [ADR-0236 - Plano, pagamentos e cortesia do psicólogo no Admin](0236-admin-plano-pagamentos-cortesia-psicologo.md) - Accepted
-- [ADR-0237 - Estatísticas e publicações reais do psicólogo no Admin](0237-admin-psicologo-estatisticas-publicacoes.md) - Accepted
-- [ADR-0238 - Avaliações e denúncias do psicólogo no Admin são somente leitura](0238-admin-psicologo-avaliacoes-denuncias-readonly.md) - Accepted
-- [ADR-0239 - Atividades do psicólogo no Admin como feed derivado](0239-admin-atividades-psicologo-feed-derivado.md) - Accepted
-- [ADR-0240 - Dashboard Admin de pacientes com dados agregados e sem retenção V1](0240-admin-pacientes-dashboard-dados-agregados.md) - Accepted
-- [ADR-0241 - Detalhe Admin de paciente somente leitura e dados pessoais mínimos](0241-admin-detalhe-paciente-dados-minimos-readonly.md) - Accepted
-- [ADR-0252 - Edição administrativa auditada de dados do psicólogo](0252-edicao-admin-auditada-dados-psicologo.md) - Accepted
-- [ADR-0254 - Suporte administrativo de conta do psicólogo](0254-suporte-admin-conta-psicologo.md) - Accepted
-- [ADR-0256 - Cortesia ativa pula fluxo de assinatura e endereço](0256-cortesia-pula-fluxo-assinatura-endereco.md) - Accepted
-- [ADR-0257 - Nome profissional separado do psicólogo para WhatsApp](0257-nome-profissional-psicologo-whatsapp.md) - Accepted
-- [ADR-0262 - Resolução administrativa auditada de denúncias recebidas](0262-resolucao-admin-denuncias-recebidas.md) - Accepted
-- [ADR-0265 - Hidratação assíncrona de socket como best-effort](0265-socket-hidratacao-assincrona-best-effort.md) - Accepted
-- [ADR-0275 - Opção Hoje nos filtros de período do Admin](0275-periodo-hoje-filtros-admin.md) - Accepted
-- [ADR-0284 - Horários de maior atividade nas estatísticas da comunidade](0284-horarios-maior-atividade-comunidade-admin.md) - Accepted
-- [ADR-0296 - Denuncias do paciente no Admin usando post_report real](0296-admin-paciente-denuncias-post-report-readonly.md) - Accepted
-- [ADR-0312 - Analise de intencao do paciente no Admin](0312-admin-patient-intent-analysis.md) - Accepted
-- [ADR-0314 - Distribuicao agregada de intencao dos pacientes no dashboard Admin](0314-admin-patient-dashboard-intent-distribution.md) - Accepted
-- [ADR-0315 - Labels de período dos blocos analíticos do Admin sem prefixo](0315-admin-labels-periodo-sem-prefixo.md) - Accepted
-- [ADR-0316 - Filtros por plano nos blocos do dashboard Admin de psicologos](0316-filtros-plano-blocos-dashboard-psicologos-admin.md) - Accepted
-- [ADR-0317 - Filtro Cortesia no dashboard Admin de psicologos](0317-filtro-cortesia-dashboard-psicologos-admin.md) - Accepted
-- [ADR-0320 - Presets relativos de período nos filtros Admin](0320-admin-presets-relativos-periodo.md) - Accepted
-- [ADR-0321 - Ordem canônica dos presets de período do Admin](0321-ordem-presets-periodo-admin.md) - Accepted
-- [ADR-0322 - Conversão agregada no dashboard Admin de psicologos](0322-conversao-dashboard-psicologos-admin.md) - Accepted
-- [ADR-0323 - Visao geral de Trafego com timeline filtravel](0323-trafego-visao-geral-timeline.md) - Accepted
-- [ADR-0324 - Canais canonicos de origem do trafego no Admin](0324-canais-origem-trafego-admin.md) - Accepted
-- [ADR-0326 - Graficos radiais do Admin como donut](0326-admin-graficos-donut.md) - Accepted
-- [ADR-0327 - Dashboard Admin enxuto sem blocos analiticos secundarios](0327-dashboard-admin-enxuto.md) - Accepted
-- [ADR-0330 - Comparativo Conversão x Engajamento no dashboard Admin de psicologos](0330-conversao-engajamento-dashboard-psicologos-admin.md) - Accepted
-- [ADR-0331 - Colunas de Conversão e Engajamento na lista Admin de psicologos](0331-colunas-conversao-engajamento-lista-psicologos-admin.md) - Accepted
-- [ADR-0332 - Catalogo canonico de especialidades na lista Admin de psicologos](0332-catalogo-especialidades-lista-admin-psicologos.md) - Accepted
-- [ADR-0333 - Quadrantes de Conversão x Engajamento navegam para lista filtrada](0333-quadrantes-conversao-engajamento-lista-filtrada.md) - Accepted
-- [ADR-0334 - Filtros administrativos antes de Especialidade na lista Admin de psicologos](0334-filtros-administrativos-modal-lista-psicologos.md) - Accepted
-- [ADR-0335 - Conversão e engajamento em duas colunas no dashboard Admin de psicologos](0335-conversao-engajamento-duas-colunas-dashboard-psicologos.md) - Accepted
-- [ADR-0336 - Query key canonica para filtros da lista Admin de psicologos](0336-query-key-filtros-lista-psicologos-admin.md) - Accepted
-- [ADR-0337 - Detalhamento de Engajamento no dashboard Admin de psicologos](0337-detalhamento-engajamento-conversao-dashboard-psicologos.md) - Accepted
-- [ADR-0338 - Engajamento comunitario de pacientes e sem dados insuficientes em psicologos](0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md) - Accepted
-- [ADR-0339 - Categorias de conversão nao convertida na matriz Conversão x Engajamento](0339-conversao-engajamento-categorias-nao-convertidas.md) - Accepted
-- [ADR-0340 - Score ponderado de engajamento comunitario no Admin](0340-engajamento-ponderado-admin.md) - Accepted
-- [ADR-0341 - Vocabulário Conversão no Admin de psicólogos](0341-vocabulario-conversao-admin.md) - Accepted
-- [ADR-0342 - Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md) - Accepted
-- [ADR-0343 - Vocabulário Conversão no Admin de psicólogos](0343-vocabulario-conversao-admin.md) - Accepted
-- [ADR-0350 - Páginas por tempo médio no uso da plataforma Admin](0350-paginas-por-tempo-medio-uso-admin.md) - Accepted
-- [ADR-0353 - Qualidade absoluta da conversão no perfil Admin do psicólogo](0353-qualidade-absoluta-conversao-perfil-admin.md) - Accepted
-- [ADR-0377 - Tag de resultado no titulo de Visibilidade do psicologo Admin](0377-tag-resultado-titulo-visibilidade-psicologo-admin.md) - Accepted
-- [ADR-0378 - Origem do trafego por WhatsApp no Admin de psicologos](0378-origem-trafego-whatsapp-psicologos-admin.md) - Accepted
-- [ADR-0379 - Grupo visual de Comunidades na tabela de trafego WhatsApp Admin](0379-grupo-comunidades-tabela-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0380 - Grupos expansiveis na tabela de trafego WhatsApp Admin](0380-grupos-expansiveis-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0381 - Medias reais de analises das comunidades no trafego WhatsApp Admin](0381-medias-reais-comunidades-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0382 - Copy de medias de engajamento nas sublinhas de Comunidades do trafego WhatsApp Admin](0382-copy-medias-engajamento-comunidades-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0383 - Label Tempo de permanencia nas metricas de Comunidades do trafego WhatsApp Admin](0383-label-tempo-permanencia-comunidades-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0384 - Expansivo de Perfil com medias de engajamento no trafego WhatsApp Admin](0384-expansivo-perfil-medias-engajamento-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0385 - Medias de engajamento no Video de apresentacao do trafego WhatsApp Admin](0385-medias-engajamento-video-apresentacao-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0386 - Quantidade considerada e carrossel dos donuts no Admin de psicologos](0386-quantidade-considerada-titulos-trafego-whatsapp-admin.md) - Accepted
-- [ADR-0387 - Donut de Atividade no dashboard Admin de psicologos](0387-donut-atividade-dashboard-psicologos-admin.md) - Accepted
-- [ADR-0388 - Reposicionamento da matriz no dashboard Admin de psicologos](0388-reposicionamento-matriz-dashboard-psicologos-admin.md) - Accepted
-- [ADR-0389 - Tabela comportamental por conversao no Admin de psicologos](0389-tabela-comportamental-conversao-admin-psicologos.md) - Accepted
-- [ADR-0390 - Tags na tabela comportamental por conversao no Admin de psicologos](0390-tags-tabela-comportamental-conversao-admin-psicologos.md) - Accepted
-- [ADR-0391 - Matriz expansivel dentro do funil comportamental por conversao Admin](0391-matriz-expansivel-funil-comportamental-conversao-admin.md) - Accepted
-- [ADR-0392 - Tabela comportamental sem rolagem horizontal e copy enxuta](0392-ajustes-largura-copy-tabela-comportamental-conversao-admin.md) - Accepted
-- [ADR-0393 - Eixos independentes na matriz de cruzamento de dados Admin](0393-eixos-independentes-matriz-cruzamento-dados-admin.md) - Accepted
-- [ADR-0394 - Eixos adicionais na matriz de cruzamento de dados Admin](0394-eixos-adicionais-matriz-cruzamento-dados-admin.md) - Accepted
-- [ADR-0395 - Media secundaria de WhatsApp por linha no trafego Admin](0395-media-whatsapp-trafego-admin-psicologos.md) - Accepted
+### ADR-0000 a ADR-0099
 
-- [ADR-0396 - Tags medias e cores na tabela comportamental Admin](0396-tags-medias-cores-tabela-comportamental-admin.md) - Accepted
-- [ADR-0397 - Tags de Perfil na tabela comportamental Admin](0397-tags-perfil-tabela-comportamental-admin.md) - Accepted
+- [ADR-0001 — Execução spec-driven por tasks auto-suficientes](0001-spec-driven-task-execution.md)
+- [ADR-0002 — Arquitetura de autenticação e papéis (paciente, psicólogo, admin)](0002-arquitetura-auth-roles.md)
+- [ADR-0003 — Gateway de pagamento — Mercado Pago (checkout transparente + assinaturas)](0003-gateway-pagamento-mercado-pago.md)
+- [ADR-0004 — Design System Lectum Foundation](0004-design-system-lectum-foundation.md)
+- [ADR-0005 — Form Composition Foundation](0005-form-composition-foundation.md)
+- [ADR-0006 — Integrações externas e decisões pendentes](0006-integracoes-externas-e-decisoes-pendentes.md)
+- [ADR-0007 — Notificações — fundação de recebimento (TASK-29A)](0007-notificacoes-fundacao.md)
+- [ADR-0008 — Fluxo publico de auth, selecao de perfil e login](0008-fluxo-publico-auth-selecao-perfil-login.md)
+- [ADR-0009 — Migrations dev obrigatorias em tasks com alteracao de banco](0009-migrations-dev-obrigatorias-em-tasks-com-banco.md)
+- [ADR-0010 — Fluxo frontend de recuperacao de senha](0010-recuperacao-senha-frontend.md)
+- [ADR-0011 — Verificacao de e-mail por codigo](0011-verificacao-email-codigo.md)
+- [ADR-0012 — Cadastro de paciente com role e patient_profile](0012-cadastro-paciente-role-profile.md)
+- [ADR-0013 — Onboarding de boas-vindas do paciente](0013-onboarding-boas-vindas-paciente.md)
+- [ADR-0014 — Cadastro inicial de psicologo com psychologist_profile](0014-cadastro-inicial-psicologo-profile.md)
+- [ADR-0015 — Bloqueio da consulta CFP automatica](0015-bloqueio-consulta-cfp-automatica.md)
+- [ADR-0016 — Planos apos cadastro de psicologo](0016-planos-apos-cadastro-psicologo.md)
+- [ADR-0017 — Bloqueio de storage privado para documentos CRP](0017-bloqueio-storage-privado-crp.md)
+- [ADR-0018 — Shell privado mobile-first e navegação por papel](0018-shell-privado-mobile.md)
+- [ADR-0019 — Descoberta real de psicólogos com filtros por taxonomia](0019-descoberta-psicologos-taxonomias.md)
+- [ADR-0020 — Favoritos e seguindo de psicólogos](0020-favoritar-psicologo-na-listagem.md)
+- [ADR-0021 — Perfil profissional público com dados public-safe](0021-perfil-profissional-publico.md)
+- [ADR-0022 — Contato WhatsApp por wa.me com intenção persistida](0022-contato-whatsapp-wa-me.md)
+- [ADR-0023 — Avaliações de profissionais](0023-avaliacoes-paciente-elegibilidade-contato.md)
+- [ADR-0024 — Bloqueio da TASK-18 por dependência de validação CRP](0024-bloqueio-task18-dependencia-crp.md)
+- [ADR-0025 — TASK-19: avaliacoes do psicologo e entitlement profissional](0025-bloqueio-task19-dependencia-task18.md)
+- [ADR-0026 — InfoSimples para validacao CFP/CRP](0026-infosimples-validacao-cfp-crp.md)
+- [ADR-0027 — Perfil gratuito sem documentos CRP](0027-perfil-gratuito-sem-crp.md)
+- [ADR-0028 — Concessão administrativa de assinatura profissional](0028-concessao-administrativa-assinatura.md)
+- [ADR-0029 — Cortesia profissional como experiência de assinante](0029-cortesia-profissional-ui-perfil.md)
+- [ADR-0030 — Data de inscrição CRP como fonte do tempo de experiência](0030-data-inscricao-crp-experiencia.md)
+- [ADR-0031 — Perfil privado do paciente e edição de dados pessoais](0031-perfil-privado-paciente.md)
+- [ADR-0032 — Refinamento mobile-first do perfil profissional público](0032-refinamento-perfil-profissional-publico.md)
+- [ADR-0033 — Analytics profissionais com fontes persistidas e gate de plano](0033-analytics-profissionais-fontes-persistidas.md)
+- [ADR-0034 — Paridade visual mobile de analytics e avaliações do psicólogo](0034-paridade-visual-analytics-avaliacoes-psicologo.md)
+- [ADR-0035 — Correções mobile de regressão em autenticação, perfil e descoberta](0035-ajustes-mobile-regressao-login-perfil.md)
+- [ADR-0036 — Refinos mobile de perfil público, analytics e edição profissional](0036-refinos-mobile-perfil-analytics-edicao.md)
+- [ADR-0037 — Ajustes de densidade e legibilidade no cabeçalho de psicólogo](0037-ajustes-visual-nome-badge-bordas.md)
+- [ADR-0038 — Redesenho do card de psicólogo para proporção 9:16 com glassmorphism responsivo](0038-redesign-card-psicologo-9-16-glassmorphism.md)
+- [ADR-0039 — Posicionamento relativo dos botões de ação do card de psicólogo](0039-posicionamento-botoes-card-psicologo-relativo-overlay.md)
+- [ADR-0040 — Ajuste responsivo do overlay do card de psicólogo](0040-overlay-card-psicologo-responsividade.md)
+- [ADR-0041 — Centralização do card de psicólogo e dot de disponibilidade pulsante](0041-centralizacao-card-psicologo-disponibilidade-pulsante.md)
+- [ADR-0042 — Posicionamento lateral dos selos no card de psicólogo](0042-posicionamento-lateral-selos-psicologo.md)
+- [ADR-0043 — Posicionar selos acima do overlay no card de psicólogo](0043-posicionar-selos-acima-overlay.md)
+- [ADR-0044 — Acesso a filtros por modal na listagem de psicólogos](0044-filtros-header-psicologos-modal.md)
+- [ADR-0045 — Alinhar selos em coluna fora do overlay no lado esquerdo do card](0045-posicionamento-selos-lado-esquerdo-fora-overlay.md)
+- [ADR-0046 — Header fixo e barra de navegação com comportamento por rolagem no fluxo de psicólogos](0046-header-fixo-e-nav-oculta-scroll-psicologos.md)
+- [ADR-0047 — Ajustar largura dos selos e espaçamento dinâmico no card de psicólogo](0047-selos-card-fitted-animation-e-espacamento-dinamico.md)
+- [ADR-0048 — Padronizar o layout de Psicólogos/Favoritos ao padrão de telas organizadas](0048-organizacao-visual-listagem-psicologos-e-favoritos.md)
+- [ADR-0049 — Simplificar controles de mídia do card de psicólogo](0049-simplificacao-controles-video-card-psicologo.md)
+- [ADR-0050 — Autoplay inicial do vídeo em mudo e unmute global por toque em card de psicólogo](0050-autoplay-inicial-video-psicologo-mudo-global.md)
+- [ADR-0051 — Posicionamento dinâmico de botões do card relativo ao overlay real](0051-posicionamento-botoes-componente-psicologo-overlay.md)
+- [ADR-0052 — Recalcular posição dos botões conforme mudanças dinâmicas do overlay](0052-recalculo-posicao-overlay-dinamica.md)
+- [ADR-0053 — Posicionar selos de forma ascendente em relação ao overlay do card](0053-posicionamento-selos-card-psicologo.md)
+- [ADR-0054 — Corrigir container de telefone para evitar overflow em viewport móvel no setup do perfil](0054-responsividade-campo-telefone-perfil-setup.md)
+- [ADR-0055 — Refatorar tela de psicólogos para layout imersivo mobile 9:16 com destaque no card principal](0055-refatoracao-listagem-psicologos-imersiva.md)
+- [ADR-0056 — Bio truncada e expansão inline na tela de Psicólogos](0056-truncagem-interacao-bio-psicologos.md)
+- [ADR-0057 — Animacao lateral de selos comerciais no video de psicologos](0057-animacao-selos-video-psicologos.md)
+- [ADR-0058 — Nome semibold e visibilidade real do tempo de experiencia nos cards](0058-visibilidade-experiencia-card-psicologo.md)
+- [ADR-0059 — Filtros avançados na busca de psicólogos](0059-filtros-avancados-busca-psicologos.md)
+- [ADR-0060 — Imagem de capa independente do perfil do psicólogo](0060-capa-independente-perfil-psicologo.md)
+- [ADR-0061 — Favoritos com cards premium e filtros reais](0061-favoritos-cards-premium-filtros-reais.md)
+- [ADR-0062 — Comunidades reais e feed paginado](0062-comunidades-feed-paginado.md)
+- [ADR-0063 — Vídeo obrigatório para elegibilidade na listagem de psicólogos](0063-video-obrigatorio-listagem-psicologos.md)
+- [ADR-0064 — Feed da Comunidade agregado com prévia profissional real](0064-feed-comunidade-chips-e-posts-reais.md)
+- [ADR-0065 — Criação real de posts da comunidade](0065-criacao-posts-comunidade.md)
+- [ADR-0066 — Página de detalhe de comunidade com participação persistida](0066-pagina-detalhe-comunidade-participacao.md)
+- [ADR-0067 — Mídia em resposta profissional destacada](0067-midia-resposta-profissional-destacada.md)
+- [ADR-0068 — Respostas, votos e salvos no detalhe do post](0068-respostas-votos-salvos-post.md)
+- [ADR-0069 — Topo TikTok com Minha Busca na tela de Psicologos](0069-topo-tiktok-minha-busca-psicologos.md)
+- [ADR-0070 — Ranking derivado de Top Mentores da comunidade](0070-ranking-top-mentores.md)
+- [ADR-0071 — Responsividade mobile da tela Top Mentores](0071-top-mentores-mobile-overflow.md)
+- [ADR-0072 — Meus posts e posts salvos reais](0072-meus-posts-e-posts-salvos.md)
+- [ADR-0073 — Tela de comunidades seguidas](0073-comunidades-seguidas.md)
+- [ADR-0074 — Configurações de conta e segurança](0074-configuracoes-conta-seguranca.md)
+- [ADR-0075 — Exclusão de conta do psicólogo com proteção de cobrança](0075-exclusao-conta-psicologo-assinatura.md)
+- [ADR-0076 — Estado de interacoes no feed da comunidade](0076-estado-voto-feed-comunidade.md)
+- [ADR-0077 — Salvamento de respostas e navegação contextual no feed da comunidade](0077-salvamento-respostas-feed-comunidade.md)
+- [ADR-0078 — Transição segura para WhatsApp do psicólogo](0078-transicao-whatsapp-psicologo.md)
+- [ADR-0079 — Controle moderno de expandir/recolher sidebar desktop](0079-controle-sidebar-desktop-moderno.md)
+- [ADR-0080 — Ajuste desktop limpo do feed Shorts de psicologos](0080-ajuste-desktop-feed-shorts-psicologos.md)
+- [ADR-0081 — Refinos discretos no feed de comunidade](0081-refinos-feed-comunidade.md)
+- [ADR-0082 — Ver mais inline no feed de comunidade](0082-ver-mais-inline-feed-comunidade.md)
+- [ADR-0083 — Confinamento de overlays no feed desktop de Psicologos](0083-overlays-feed-psicologos-desktop.md)
+- [ADR-0084 — Sidebar desktop orientada por rotas principais](0084-sidebar-desktop-rotas-principais.md)
+- [ADR-0085 — Truncamento medido e identidade compacta no feed de comunidade](0085-truncamento-medido-feed-comunidade.md)
+- [ADR-0086 — Fullscreen vertical dos videos do feed de comunidade](0086-fullscreen-video-feed-comunidade.md)
+- [ADR-0087 — Header interno preso ao card no feed desktop de Psicologos](0087-header-interno-card-psicologos-desktop.md)
+- [ADR-0088 — Ranking diversificado do feed geral de comunidades](0088-feed-geral-ranking-diversificado.md)
+- [ADR-0089 — Onboarding local para publicar na comunidade](0089-onboarding-publicar-comunidade.md)
+- [ADR-0090 — Navegação mobile restrita às telas principais](0090-navbar-mobile-rotas-principais.md)
+- [ADR-0091 — FAB de publicar sincronizado com a Nav Bar mobile](0091-fab-publicar-nav-mobile.md)
+- [ADR-0092 — Perfil público do psicólogo alinhado à tela de comunidade](0092-perfil-psicologo-referencia-comunidade.md)
+- [ADR-0093 — Seletor simples de comunidade na criação de post](0093-seletor-comunidade-criar-post.md)
+- [ADR-0094 — Estado vazio do filtro de comunidades seguidas no feed geral](0094-estado-vazio-filtro-comunidades-seguidas.md)
+- [ADR-0095 — Identidade visual de comunidade derivada do avatar](0095-identidade-visual-comunidade-avatar.md)
+- [ADR-0096 — Detalhe de post com composer compacto, denúncia e mídia profissional](0096-detalhe-post-composer-denuncia-midia.md)
+- [ADR-0097 — Badge TOP Mentor premium em respostas e comentarios](0097-top-mentor-badge-premium.md)
+- [ADR-0098 — Eventos reais de notificacao de dominio](0098-notificacoes-eventos-dominio.md)
+- [ADR-0099 — Upload real de avatar do paciente](0099-upload-avatar-paciente.md)
 
-- [ADR-0398 - Cobertura no dashboard e matriz Admin de psicologos](0398-cobertura-dashboard-matriz-admin-psicologos.md) - Accepted
+### ADR-0100 a ADR-0199
 
-- [ADR-0399 - Media no contexto da base e breakdown de autoria no trafego WhatsApp Admin](0399-refino-medias-autoria-whatsapp-trafego-admin.md) - Accepted
-- [ADR-0400 - Ajustes finais da tabela comportamental Admin](0400-copy-tags-video-perfil-tabela-comportamental-admin.md) - Accepted
-- [ADR-0401 - Layout padronizado dos donuts de indicadores Admin](0401-layout-donuts-indicadores-admin-psicologos.md) - Accepted
-- [ADR-0402 - Range predominante na tag Posicao do video na tabela comportamental Admin](0402-range-posicao-video-tabela-comportamental-admin.md) - Accepted
-- [ADR-0403 - Meta de conversao no dashboard e matriz Admin](0403-meta-conversao-dashboard-matriz-admin.md) - Accepted
-- [ADR-0404 - Comunidades no Analytics privado do psicologo](0404-comunidades-analytics-psicologo.md) - Accepted
-- [ADR-0406 - Preço do Plano Profissional em R$ 29,90](0406-preco-plano-profissional-2990.md) - Accepted
-- [ADR-0407 - SEO e Metadados administráveis](0407-seo-metadados-admin.md) - Accepted
-- [ADR-0408 - Visualização readonly do plano em Configurações Admin](0408-visualizacao-readonly-plano-assinatura-admin.md) - Accepted
-- [ADR-0409 - Miniaturas persistidas para Open Graph de vídeos de posts](0409-miniaturas-video-seo-open-graph-posts.md) - Accepted
-- [ADR-0410 - Upload gerenciado para Imagem Open Graph no Admin](0410-upload-imagem-open-graph-admin.md) - Accepted
-- [ADR-0411 - WhatsApp em formatos de posts/respostas no Admin](0411-whatsapp-cliques-formatos-posts-respostas-admin.md) - Accepted
-- [ADR-0412 - Rotas públicas e privadas canônicas em PT-BR](0412-rotas-publicas-pt-br-seo.md) - Accepted
-- [ADR-0413 - SEO administrável para respostas de comentários públicas](0413-seo-respostas-comentarios-publicas.md) - Accepted
-- [ADR-0414 - Prévia Open Graph no Admin](0414-admin-seo-previa-open-graph.md) - Accepted
+- [ADR-0100 — Prioridade fixa para respostas profissionais em posts da comunidade](0100-prioridade-respostas-profissionais-comunidade.md)
+- [ADR-0101 — Captura aproximada de localização por IP para analytics](0101-captura-localizacao-ip-analytics.md)
+- [ADR-0102 — Árvore de comentários em posts da comunidade](0102-arvore-comentarios-posts-comunidade.md)
+- [ADR-0103 — Player ampliado vertical 9:16 unificado](0103-player-video-vertical-unificado.md)
+- [ADR-0104 — Barra de ações unificada para posts e comentários](0104-barra-acoes-comunidade-unificada.md)
+- [ADR-0105 — Tratamento visual premium para Top Mentores](0105-top-mentores-identidade-metalica.md)
+- [ADR-0106 — Ilustração e refinamento visual da solicitação de comunidade](0106-ilustracao-solicitacao-comunidade.md)
+- [ADR-0107 — Conteúdo visual centralizado para Explorar Comunidades](0107-explorar-comunidades-conteudo-centralizado.md)
+- [ADR-0108 — Publicações do perfil como posts reais da comunidade](0108-publicacoes-perfil-como-posts-comunidade.md)
+- [ADR-0109 — Dicas de onboarding persistidas por usuário](0109-dicas-onboarding-persistidas-por-usuario.md)
+- [ADR-0110 — Publicações compactas no perfil e WhatsApp como ação mobile única](0110-publicacoes-perfil-mobile-whatsapp-unico.md)
+- [ADR-0111 — Header secundario oficial baseado em Notificacoes](0111-header-secundario-oficial-notificacoes.md)
+- [ADR-0112 — Conversao progressiva para usuarios anonimos](0112-conversao-progressiva-usuarios-anonimos.md)
+- [ADR-0113 — Exclusão de conta para pacientes e psicólogos](0113-exclusao-conta-usuarios-anonimizacao-google.md)
+- [ADR-0114 — Resumo de atuação nas publicações do perfil](0114-resumo-atuacao-publicacoes-perfil.md)
+- [ADR-0115 — Iconografia de Explorar comunidades no menu de perfil](0115-iconografia-explorar-comunidades-perfil.md)
+- [ADR-0116 — Destaques dinamicos na aba Geral do perfil do psicologo](0116-destaques-dinamicos-perfil-psicologo.md)
+- [ADR-0117 — Minha assinatura gratuita orientada a benefícios](0117-minha-assinatura-gratuita-beneficios.md)
+- [ADR-0118 — Demonstração premium em Analytics e Avaliações](0118-demo-premium-analytics-avaliacoes.md)
+- [ADR-0119 — Header secundário premium compartilhado](0119-header-secundario-premium-compartilhado.md)
+- [ADR-0120 — Video obrigatorio para perfil publico e Bio opcional](0120-video-obrigatorio-perfil-publico-bio-opcional.md)
+- [ADR-0121 — Experiência premium para perfil profissional incompleto](0121-perfil-incompleto-ativacao-premium.md)
+- [ADR-0122 — Card de upgrade no menu principal de perfil](0122-card-upgrade-menu-perfil.md)
+- [ADR-0123 — Analytics real de retenção do vídeo de apresentação](0123-analytics-retencao-video-apresentacao.md)
+- [ADR-0124 — Retenção de vídeo com buckets de 5% e player sincronizado](0124-retencao-video-buckets-sincronizados.md)
+- [ADR-0125 — Ranqueamento de psicólogos com aprendizado de vídeo](0125-ranking-psicologos-video-learning.md)
+- [ADR-0126 — Origem do trafego em Analytics do psicologo](0126-analytics-origem-trafego-zerada.md)
+- [ADR-0127 — Dica de video contextual em Analytics](0127-analytics-dica-video-contextual.md)
+- [ADR-0128 — Controles essenciais no player de video dos Analytics](0128-analytics-video-player-controles-essenciais.md)
+- [ADR-0129 — Digests push para pacientes por favoritos e comunidades](0129-push-digest-paciente-favoritos-comunidades.md)
+- [ADR-0130 — Política de push para psicólogos: prioridade e digest diário](0130-psicologos-push-prioridade-digest.md)
+- [ADR-0131 — Filtro de período personalizado em popover no Analytics](0131-analytics-periodo-personalizado-popover.md)
+- [ADR-0132 — Player analitico sem barra de progresso sobreposta](0132-analytics-video-player-sem-progresso-overlay.md)
+- [ADR-0133 — Navegação contextual de respostas salvas](0133-salvos-respostas-foco-post.md)
+- [ADR-0134 — Labels compactos de público atendido](0134-publico-atendido-labels-compactos.md)
+- [ADR-0135 — Chips sem container externo no editor profissional](0135-editor-profissional-chips-sem-container.md)
+- [ADR-0136 — Barra de ações de posts e respostas](0136-action-bar-posts-respostas.md)
+- [ADR-0137 — Variação hero do botão seguir comunidade](0137-community-follow-button-hero.md)
+- [ADR-0138 — Permissão de mídia na modal de novo post](0138-create-post-media-permission-modal.md)
+- [ADR-0139 — Composer único de respostas no desktop](0139-composer-unico-respostas-desktop.md)
+- [ADR-0140 — Confirmação de postagem em modal](0140-post-success-modal.md)
+- [ADR-0141 — Ações do autor para silenciar e excluir posts](0141-post-owner-actions-mute-delete.md)
+- [ADR-0142 — Rolagem infinita no perfil público do psicólogo](0142-perfil-psicologo-rolagem-infinita.md)
+- [ADR-0143 — Clique unificado em cards de posts e respostas](0143-post-cards-clique-unificado.md)
+- [ADR-0144 — Abas centralizadas fora do header em Meus posts e respostas](0144-meus-posts-abas-integradas.md)
+- [ADR-0145 — Edição de post publicado](0145-edicao-post-publicado.md)
+- [ADR-0146 — Ações de respostas do usuário](0146-acoes-respostas-usuario.md)
+- [ADR-0147 — Cortesia verificada e WhatsApp na comunidade](0147-cortesia-verificada-whatsapp-comunidade.md)
+- [ADR-0148 — Proporcao 16:9 para imagens horizontais em posts e respostas](0148-imagens-horizontais-16-9-comunidade.md)
+- [ADR-0149 — Carrossel de imagens em posts de comunidade](0149-carrossel-imagens-posts-comunidade.md)
+- [ADR-0150 — Penalidade leve de downvotes no ranking da comunidade](0150-penalidade-leve-downvotes-ranking-comunidade.md)
+- [ADR-0151 — Frames padronizados de mídia na comunidade](0151-padronizacao-frames-midia-comunidade.md)
+- [ADR-0152 — Divisor entre contexto e autor nos cards de conteúdo](0152-divisor-contexto-autor-cards-comunidade.md)
+- [ADR-0153 — Fundo branco para posts e respostas de psicologos dentro do post](0153-fundo-branco-posts-psicologos-dentro-post.md)
+- [ADR-0154 — Scroll infinito em Meus posts e respostas](0154-scroll-infinito-meus-posts-respostas.md)
+- [ADR-0155 — Midia nas respostas em Meus posts e respostas](0155-midia-respostas-meus-posts.md)
+- [ADR-0156 — Botão de mídia na edição de comentário](0156-botao-midia-edicao-comentario.md)
+- [ADR-0157 — Reversão do fundo branco no feed da comunidade](0157-reversao-fundo-cinza-feed-comunidade.md)
+- [ADR-0158 — Remoção de sombra em chips do perfil público do psicólogo](0158-remocao-sombra-chips-perfil-psicologo.md)
+- [ADR-0159 — Remocao de sombra nas acoes desktop da descoberta de psicologos](0159-remocao-sombra-acoes-desktop-psicologos.md)
+- [ADR-0160 — Background uniforme em Comunidades / Feed e visualizacao de post](0160-background-uniforme-comunidades-feed.md)
+- [ADR-0161 — Contadores privados em Meus posts e respostas](0161-contadores-privados-meus-posts-respostas.md)
+- [ADR-0162 — Prévia profissional apenas em posts de pacientes](0162-previa-profissional-apenas-posts-pacientes.md)
+- [ADR-0163 — Confirmacao antes de excluir video do perfil profissional](0163-confirmacao-exclusao-video-perfil.md)
+- [ADR-0164 — CTA de WhatsApp conectado às mídias da comunidade](0164-cta-whatsapp-conectado-midias-comunidade.md)
+- [ADR-0165 — Catálogo curado de comunidades com Depressão e TDAH](0165-catalogo-comunidades-depressao-tdah.md)
+- [ADR-0166 — Header premium compacto no feed de comunidades](0166-header-feed-comunidades-premium.md)
+- [ADR-0167 — Alias anônimo estável por usuário](0167-alias-anonimo-estavel-por-usuario.md)
+- [ADR-0168 — Icones azuis na central de notificacoes](0168-icones-azuis-notificacoes-whatsapp.md)
+- [ADR-0169 — Autoria em notificacoes profissionais individuais](0169-autoria-notificacoes-profissionais.md)
+- [ADR-0170 — Simbolo Lectum em SVG escalavel](0170-simbolo-lectum-svg-escalavel.md)
+- [ADR-0171 — Layout premium em duas telas de boas-vindas do paciente](0171-boas-vindas-paciente-layout-premium.md)
+- [ADR-0172 — Bloqueio da TASK-32 por credenciais Mercado Pago ausentes](0172-bloqueio-checkout-mercado-pago-credenciais.md)
+- [ADR-0173 — Checkout de assinatura com Mercado Pago Preapproval](0173-checkout-assinatura-mercado-pago-preapproval.md)
+- [ADR-0174 — Gestao de assinatura e cartao com Mercado Pago](0174-gestao-assinatura-cartao-mercado-pago.md)
+- [ADR-0175 — Analytics de video com leitura orientada para psicologos](0175-analytics-video-retencao-orientada.md)
+- [ADR-0176 — Politica de senha com menor friccao](0176-politica-senha-menor-friccao.md)
+- [ADR-0177 — Instalação da Lectum como app/atalho mobile via PWA](0177-pwa-atalho-mobile-lectum.md)
+- [ADR-0178 — Política SEO e crawlers de IA para superfícies públicas](0178-politica-seo-ia-crawlers.md)
+- [ADR-0179 — Permissão contextual para notificações no navegador](0179-permissao-contextual-notificacoes-navegador.md)
+- [ADR-0180 — Rotas publicas de psicologos e comunidades fora de /app](0180-rotas-publicas-psicologos-comunidades.md)
+- [ADR-0181 — Controles imersivos do video de descoberta de psicologos](0181-controles-imersivos-video-psicologos.md)
+- [ADR-0182 — Denuncias de posts prontas para triagem administrativa futura](0182-denuncias-posts-admin-ready.md)
+- [ADR-0183 — Prioridade do plano gratuito ativo na tela Minha Assinatura](0183-prioridade-plano-gratuito-billing.md)
+- [ADR-0184 — Bloqueio da revisão final de qualidade, segurança, LGPD e operação](0184-bloqueio-task34-qualidade-lgpd-operacao.md)
+- [ADR-0185 — Hardening operacional da TASK-34](0185-hardening-operacional-task34.md)
+- [ADR-0186 — Bloqueio de CPF/CRP após validação profissional ou cortesia administrativa ativa](0186-bloqueio-cpf-crp-validacao-profissional.md)
+- [ADR-0187 — Escopo V1 focado em psicologia e expansão multiprofissional futura](0187-escopo-v1-psicologia-expansao-multiprofissional.md)
+- [ADR-0188 — Navegação global com Início e sidebar desktop sem sombra](0188-navegacao-global-inicio-sidebar-flat.md)
+- [ADR-0189 — Feed da comunidade como home pública](0189-feed-comunidade-home-publica.md)
+- [ADR-0190 — Range requests para midia publica](0190-range-requests-midia-publica.md)
+- [ADR-0191 — Layout social de compartilhamento de video-resposta](0191-layout-compartilhamento-social-video-resposta.md)
+- [ADR-0192 — Menu de opcoes dos comentarios acima do composer fixo](0192-menu-opcoes-comentarios-sobreposicao.md)
+- [ADR-0193 — Controles nativos de video da comunidade sem menu extra](0193-controles-nativos-video-comunidade-sem-menu-extra.md)
+- [ADR-0194 — Autoações do psicólogo fora de Analytics e notificações](0194-autoacoes-profissional-fora-de-analytics-notificacoes.md)
+- [ADR-0195 — Autoações de pacientes em posts próprios sem notificações](0195-autoacoes-paciente-posts-sem-notificacoes.md)
+- [ADR-0196 — Controles do card pertencem ao post mesmo com resposta destacada](0196-controles-post-feed-resposta-destacada.md)
+- [ADR-0197 — Scrollbar mobile opt-in nas telas principais](0197-scrollbar-mobile-opt-in-telas-principais.md)
+- [ADR-0198 — Endereço de cobrança sincroniza o perfil do psicólogo](0198-endereco-billing-sincroniza-perfil-psicologo.md)
+- [ADR-0199 — Fluxo pago valida CFP antes do WhatsApp profissional](0199-fluxo-pago-cfp-antes-whatsapp.md)
 
-- [ADR-0415 - Dockerfile de produção para o backend](0415-dockerfile-backend-producao.md) - Accepted
-- [ADR-0416 - Homologação Mercado Pago com credenciais de teste do Card Payment Brick](0416-homologacao-mercado-pago-card-payment-brick.md) - Superseded by ADR-0417
-- [ADR-0417 - Restaurar sandbox Mercado Pago com conta vendedora de teste](0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md) - Accepted
-- [ADR-0418 - Auditoria de produção, segurança e estabilidade](0418-auditoria-producao-seguranca-estabilidade.md) - Accepted
-- [ADR-0419 - Divisão modular de features complexas](0419-divisao-modular-features-complexas.md) - Accepted
-- [ADR-0420 - Swagger compatível com o runtime compilado](0420-swagger-compativel-runtime-compilado.md) - Accepted
-- [ADR-0421 - Guardrails finais da auditoria integral](0421-guardrails-finais-auditoria-integral.md) - Accepted
+### ADR-0200 a ADR-0299
+
+- [ADR-0200 — Checkout ativo redireciona direto para endereço](0200-checkout-ativo-redireciona-endereco.md)
+- [ADR-0201 — Verificação CFP retomável no fluxo pago antes do perfil](0201-verificacao-cfp-retomavel-fluxo-pago.md)
+- [ADR-0202 — Bypass do aviso do ngrok nas chamadas da API pública](0202-ngrok-skip-browser-warning-api-publica.md)
+- [ADR-0203 — Falha no OAuth Google limpa sessão antiga antes de voltar ao login](0203-google-oauth-falha-limpa-sessao-antiga.md)
+- [ADR-0204 — Upgrade direto para checkout profissional](0204-upgrade-direto-checkout-profissional.md)
+- [ADR-0205 — Benefícios da assinatura com mídia nas comunidades e sem suporte prioritário](0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md)
+- [ADR-0206 — Preservar regional e registro CFP no CRP do perfil](0206-crp-cfp-preserva-regional-registro.md)
+- [ADR-0207 — Proxy de arquivos públicos no túnel de desenvolvimento](0207-dev-tunnel-public-files-proxy.md)
+- [ADR-0208 — Alterar cartão com ação enxuta](0208-alterar-cartao-acao-enxuta.md)
+- [ADR-0209 — Historico de pagamentos real na tela de assinatura](0209-historico-pagamentos-billing-real.md)
+- [ADR-0210 — Cancelamento discreto de assinatura profissional](0210-cancelamento-assinatura-profissional.md)
+- [ADR-0211 — Ícone verificado na assinatura profissional](0211-icone-verificado-assinatura.md)
+- [ADR-0212 — Copy genérica de pagamento para usuários](0212-copy-generica-gateway-usuario.md)
+- [ADR-0213 — Billing de cortesia não exibe cobrança nem cartão legado](0213-billing-cortesia-sem-cobranca-cartao.md)
+- [ADR-0214 — Cortesia sem historico lateral e com CTA de cartao futuro](0214-billing-cortesia-cta-cartao-futuro.md)
+- [ADR-0215 — Cartão futuro antes do endereço na cortesia profissional](0215-cartao-futuro-cortesia-antes-endereco.md)
+- [ADR-0216 — Login preserva query string no retorno para rotas privadas](0216-login-preserva-query-callback-privado.md)
+- [ADR-0217 — Data de nascimento obrigatoria no perfil privado do psicologo](0217-data-nascimento-perfil-psicologo.md)
+- [ADR-0218 — Perfis demonstrativos de psicólogos com vídeos anexados](0218-perfis-demonstrativos-psicologos-videos.md)
+- [ADR-0219 — Nomes profissionais sem honoríficos Dr/Dra](0219-nomes-profissionais-sem-honorificos.md)
+- [ADR-0220 — Botões de autenticação sem quebra de linha](0220-botoes-de-autenticacao-sem-quebra-de-linha.md)
+- [ADR-0221 — Vídeo-resposta como desempate da resposta profissional em destaque](0221-video-resposta-como-desempate-destaque.md)
+- [ADR-0222 — Descoberta pública não redireciona por dicas de onboarding](0222-descoberta-publica-nao-redireciona-por-dicas.md)
+- [ADR-0223 — Destaque profissional apenas para resposta direta ao post](0223-destaque-profissional-apenas-resposta-direta.md)
+- [ADR-0224 — Exemplos locais com vídeo-respostas diretas em posts de pacientes](0224-exemplos-video-respostas-diretas.md)
+- [ADR-0225 — Admin como audiência separada](0225-admin-audiencia-separada.md)
+- [ADR-0226 — App Admin separado com shell lateral próprio](0226-admin-app-separado-shell.md)
+- [ADR-0227 — Sessões de visitantes com tipo de dispositivo normalizado](0227-sessoes-visitantes-tipo-dispositivo.md)
+- [ADR-0228 — Dashboard Admin com agregações reais e gráficos sem pacote externo](0228-dashboard-admin-agregacoes-reais.md)
+- [ADR-0229 — Analytics first-party de pageviews e origem de trafego](0229-analytics-first-party-pageviews-trafego.md)
+- [ADR-0230 — Agregacoes administrativas de trafego sem BI externo](0230-admin-trafego-agregacoes.md)
+- [ADR-0231 — Agregacoes administrativas de comunidades sem moderacao V1](0231-admin-comunidades-dashboard-agregacoes.md)
+- [ADR-0232 — Regras editaveis e identidade visual de comunidades no Admin](0232-regras-editaveis-comunidade-admin.md)
+- [ADR-0233 — Dashboard Admin de psicólogos reutiliza ranking público e métricas honestas](0233-admin-psicologos-dashboard-ranking.md)
+- [ADR-0234 — Lista Admin de psicólogos usa ranking público e exposição operacional mínima](0234-admin-lista-psicologos-ranking-filtros.md)
+- [ADR-0235 — Exposição administrativa de dados sensíveis no detalhe do psicólogo](0235-admin-detalhe-psicologo-dados-sensiveis.md)
+- [ADR-0236 — Plano, pagamentos e cortesia do psicólogo no Admin](0236-admin-plano-pagamentos-cortesia-psicologo.md)
+- [ADR-0237 — Estatísticas e publicações reais do psicólogo no Admin](0237-admin-psicologo-estatisticas-publicacoes.md)
+- [ADR-0238 — Avaliações e denúncias do psicólogo no Admin são somente leitura](0238-admin-psicologo-avaliacoes-denuncias-readonly.md)
+- [ADR-0239 — Atividades do psicólogo no Admin como feed derivado](0239-admin-atividades-psicologo-feed-derivado.md)
+- [ADR-0240 — Dashboard Admin de pacientes com dados agregados e sem retenção V1](0240-admin-pacientes-dashboard-dados-agregados.md)
+- [ADR-0241 — Detalhe Admin de paciente somente leitura e dados pessoais mínimos](0241-admin-detalhe-paciente-dados-minimos-readonly.md)
+- [ADR-0242 — Financeiro administrativo com receita confirmada, MRR real e CSV sem dados sensíveis](0242-admin-financeiro-receita-mrr-exportacao.md)
+- [ADR-0243 — Campanhas manuais e logs de notificacoes do Admin](0243-admin-campanhas-logs-notificacoes.md)
+- [ADR-0244 — UI administrativa de notificacoes e disponibilidade real de push](0244-admin-notificacoes-ui-push-disponibilidade.md)
+- [ADR-0245 — Catalogos administrativos para filtros e perfil profissional](0245-admin-catalogos-filtros.md)
+- [ADR-0246 — Host de avatares Google no Admin](0246-admin-googleusercontent-avatar-host.md)
+- [ADR-0247 — Remocao do header global do Admin](0247-admin-shell-sem-header-global.md)
+- [ADR-0248 — Submenu de Psicólogos no Admin](0248-admin-psicologos-submenu.md)
+- [ADR-0249 — Header administrativo canonico do detalhe do psicólogo](0249-admin-detalhe-psicologo-header-canonico.md)
+- [ADR-0250 — Sidebar compacta no Admin](0250-admin-sidebar-compacta.md)
+- [ADR-0251 — Aprovação canônica de registro profissional por `crp_status`](0251-verificacao-profissional-manual-crp.md)
+- [ADR-0252 — Edição administrativa auditada de dados do psicólogo](0252-edicao-admin-auditada-dados-psicologo.md)
+- [ADR-0253 — Visibilidade pública do perfil no detalhe Admin do psicólogo](0253-admin-visibilidade-publica-perfil-psicologo.md)
+- [ADR-0254 — Suporte administrativo de conta do psicólogo](0254-suporte-admin-conta-psicologo.md)
+- [ADR-0255 — Ocultar concessão de cortesia quando o plano atual já é profissional](0255-admin-ocultar-cortesia-plano-profissional.md)
+- [ADR-0256 — Cortesia ativa pula fluxo de assinatura e endereço](0256-cortesia-pula-fluxo-assinatura-endereco.md)
+- [ADR-0257 — Nome profissional separado do psicologo para WhatsApp](0257-nome-profissional-psicologo-whatsapp.md)
+- [ADR-0258 — Padrão de contadores clicáveis em gráficos do Admin](0258-padrao-contadores-graficos-admin.md)
+- [ADR-0259 — Card de análises do vídeo sem esticamento vazio](0259-card-analises-video-admin.md)
+- [ADR-0260 — Contadores e curvas de comunidade no detalhe do psicólogo Admin](0260-estatisticas-comunidade-contadores-curvas-admin.md)
+- [ADR-0261 — Padronização de granularidade temporal dos gráficos Admin](0261-padronizacao-granularidade-temporal-graficos-admin.md)
+- [ADR-0262 — Resolução administrativa auditada de denúncias recebidas](0262-resolucao-admin-denuncias-recebidas.md)
+- [ADR-0263 — Piloto visual premium do Admin em Psicólogos](0263-admin-psicologos-piloto-premium.md)
+- [ADR-0264 — Abas contextuais no detalhe administrativo de comunidade e ranking completo](0264-admin-comunidade-abas-conteudo-ranking.md)
+- [ADR-0265 — Hidratação assíncrona de socket como best-effort](0265-socket-hidratacao-assincrona-best-effort.md)
+- [ADR-0266 — Métricas administrativas de conversão e uso da plataforma por psicólogos](0266-metricas-conversao-uso-psicologos-admin.md)
+- [ADR-0267 — Origem do tráfego no detalhe administrativo do psicólogo](0267-origem-trafego-psicologo-admin.md)
+- [ADR-0268 — Orquestração local do Admin no `pnpm dev`](0268-orquestracao-local-admin-pnpm-dev.md)
+- [ADR-0269 — Ações administrativas de status da conta do psicólogo](0269-acoes-conta-psicologo-admin.md)
+- [ADR-0270 — Moderação textual determinística V1 e alertas Admin para pacientes](0270-moderacao-textual-deterministica-alertas-admin.md)
+- [ADR-0271 — Lista administrativa real de comunidades](0271-lista-admin-comunidades-rota-real.md)
+- [ADR-0272 — Refinos no detalhe administrativo de comunidades](0272-detalhe-admin-comunidade-identidade-textos.md)
+- [ADR-0273 — Cor unica para identidade visual de comunidades](0273-cor-unica-identidade-visual-comunidades.md)
+- [ADR-0274 — Regras de comunidade descritivas e arrastaveis](0274-regras-comunidade-descritivas-arrastaveis.md)
+- [ADR-0275 — Opção Hoje nos filtros de período do Admin](0275-periodo-hoje-filtros-admin.md)
+- [ADR-0276 — Miniplayer 9:16 compacto na edição do perfil profissional](0276-miniplayer-video-perfil-psicologo.md)
+- [ADR-0278 — Detalhe analítico de conteúdo e retenção first-party de vídeo no Admin](0278-detalhe-analytics-conteudo-admin.md)
+- [ADR-0279 — Demanda real por filtros no dashboard Admin de psicólogos](0279-demanda-real-filtros-psicologos-admin.md)
+- [ADR-0280 — Hierarquia e ações da lista de publicações do psicólogo no Admin](0280-admin-publicacoes-psicologo-hierarquia-acoes.md)
+- [ADR-0281 — Submenu Admin de pacientes com âncora para lista existente](0281-submenu-admin-pacientes.md)
+- [ADR-0282 — Contador de acessos nas estatísticas de pessoas da comunidade](0282-contador-acessos-estatisticas-pessoas-comunidade.md)
+- [ADR-0283 — Devices dos psicólogos no dashboard Admin](0283-devices-psicologos-admin.md)
+- [ADR-0284 — Horários de maior atividade nas estatísticas da comunidade](0284-horarios-maior-atividade-comunidade-admin.md)
+- [ADR-0285 — Metadados iconográficos no header Admin do psicólogo](0285-admin-psicologo-header-metadados.md)
+- [ADR-0286 — Três resumos na aba Geral do psicólogo Admin](0286-admin-psicologo-geral-tres-situacoes.md)
+- [ADR-0287 — Abas do detalhe Admin de paciente alinhadas ao padrão do psicólogo](0287-admin-paciente-abas-padronizadas.md)
+- [ADR-0288 — Conectividade do login Admin em desenvolvimento local](0288-admin-login-backend-dev-conectividade.md)
+- [ADR-0289 — Cobertura de acolhimento nas estatísticas da comunidade](0289-cobertura-acolhimento-estatisticas-comunidade-admin.md)
+- [ADR-0290 — Edição administrativa limitada de dados pessoais de pacientes](0290-admin-paciente-edicao-dados-pessoais-limitada.md)
+- [ADR-0291 — Paridade da aba Conta do paciente com psicologo no Admin](0291-admin-paciente-conta-acesso-paridade-psicologo.md)
+- [ADR-0292 — Correção de encoding em copies da UI Admin](0292-correcao-encoding-copy-ui-admin.md)
+- [ADR-0293 — Aba Atividades do paciente com paridade operacional do psicologo](0293-admin-paciente-atividades-paridade-psicologo.md)
+- [ADR-0294 — Estatisticas de comunidade do paciente no Admin](0294-admin-paciente-estatisticas-comunidade-paridade.md)
+- [ADR-0295 — Filtros de período do Admin sem Personalizado selecionável](0295-admin-filtros-periodo-sem-personalizado-visivel.md)
+- [ADR-0296 — Denuncias do paciente no Admin usando post_report real](0296-admin-paciente-denuncias-post-report-readonly.md)
+- [ADR-0297 — Indicador visual de urgência no menu de Moderação Admin](0297-indicador-urgencia-menu-moderacao-admin.md)
+- [ADR-0298 — Hardening de falhas assíncronas na autenticação](0298-hardening-auth-timeout-admin.md)
+- [ADR-0299 — Publicações do paciente em tabela com métricas e expansão](0299-admin-paciente-publicacoes-tabela-metricas.md)
+
+### ADR-0300 a ADR-0399
+
+- [ADR-0300 — Diagnostico de Engajamento em comunidades ativas no Admin](0300-diagnostico-engajamento-comunidades-admin.md)
+- [ADR-0301 — Ordem publica das categorias de especialidades segue Configuracoes](0301-ordem-publica-categorias-especialidades-configuracoes.md)
+- [ADR-0302 — Notificações Admin com período padrão Lectum](0302-admin-notificacoes-periodo-padrao-lectum.md)
+- [ADR-0303 — Filtros vinculados às tabelas de Notificações Admin](0303-admin-notificacoes-filtros-por-tabela.md)
+- [ADR-0304 — Canal e-mail real nas notificações administrativas](0304-admin-notificacoes-email-smtp.md)
+- [ADR-0305 — Logs automáticos exibem status e engajamento por entrega](0305-admin-notificacoes-logs-status-engajamento.md)
+- [ADR-0306 — Sessões por device no uso individual Admin](0306-sessoes-por-device-uso-individual-admin.md)
+- [ADR-0307 — Integrar filtros ao bloco Visão geral do dashboard de psicólogos](0307-admin-psicologos-visao-geral-filtros-integrados.md)
+- [ADR-0308 — Submenu de Financeiro no Admin](0308-admin-financeiro-submenu.md)
+- [ADR-0309 — Confiabilidade do pagamento por assinatura no Admin Financeiro](0309-admin-assinaturas-saude-pagamento.md)
+- [ADR-0310 — Distribuição de formato de conteúdo no detalhe Admin do psicólogo](0310-distribuicao-formato-conteudo-psicologo-admin.md)
+- [ADR-0311 — Distribuição de posts e respostas por tipo de conteúdo em comunidades Admin](0311-distribuicao-posts-respostas-conteudo-comunidades-admin.md)
+- [ADR-0312 — Analise de intencao do paciente no Admin](0312-admin-patient-intent-analysis.md)
+- [ADR-0313 — Nomes de exibicao em Dados pessoais no Admin](0313-admin-dados-pessoais-nomes-exibicao.md)
+- [ADR-0314 — Distribuicao agregada de intencao dos pacientes no dashboard Admin](0314-admin-patient-dashboard-intent-distribution.md)
+- [ADR-0315 — Labels de período dos blocos analíticos do Admin sem prefixo](0315-admin-labels-periodo-sem-prefixo.md)
+- [ADR-0316 — Filtros por plano nos blocos do dashboard Admin de psicologos](0316-filtros-plano-blocos-dashboard-psicologos-admin.md)
+- [ADR-0317 — Filtro Cortesia no dashboard Admin de psicologos](0317-filtro-cortesia-dashboard-psicologos-admin.md)
+- [ADR-0318 — Alertas operacionais derivados de cadastro nao confirmado](0318-alertas-operacionais-cadastro-nao-confirmado.md)
+- [ADR-0320 — Presets relativos nos filtros de período do Admin](0320-admin-presets-relativos-periodo.md)
+- [ADR-0321 — Ordem canônica dos presets de período do Admin](0321-ordem-presets-periodo-admin.md)
+- [ADR-0322 — Conversão agregada no dashboard Admin de psicologos](0322-conversao-dashboard-psicologos-admin.md)
+- [ADR-0323 — Visão geral de Tráfego com timeline filtrável](0323-trafego-visao-geral-timeline.md)
+- [ADR-0324 — Canais canônicos de origem do tráfego no Admin](0324-canais-origem-trafego-admin.md)
+- [ADR-0325 — Trilha anônima pré-cadastro de pacientes no Admin](0325-admin-patient-anonymous-conversion.md)
+- [ADR-0326 — Gráficos radiais do Admin como donut](0326-admin-graficos-donut.md)
+- [ADR-0327 — Dashboard Admin enxuto sem blocos analíticos secundários](0327-dashboard-admin-enxuto.md)
+- [ADR-0328 — Dashboard Admin com períodos padrão e atividade de comunidade por autoria](0328-dashboard-admin-periodos-atividade-comunidades.md)
+- [ADR-0329 — Contadores de conversão e engajamento no detalhe Admin do psicologo](0329-admin-psicologo-contadores-conversao-engajamento.md)
+- [ADR-0330 — Comparativo Conversão x Engajamento no dashboard Admin de psicologos](0330-conversao-engajamento-dashboard-psicologos-admin.md)
+- [ADR-0331 — Colunas de Conversão e Engajamento na lista Admin de psicologos](0331-colunas-conversao-engajamento-lista-psicologos-admin.md)
+- [ADR-0332 — Catalogo canonico de especialidades na lista Admin de psicologos](0332-catalogo-especialidades-lista-admin-psicologos.md)
+- [ADR-0333 — Quadrantes de Conversão x Engajamento navegam para lista filtrada](0333-quadrantes-conversao-engajamento-lista-filtrada.md)
+- [ADR-0334 — Filtros administrativos antes de Especialidade na lista Admin de psicologos](0334-filtros-administrativos-modal-lista-psicologos.md)
+- [ADR-0335 — Conversão e engajamento em duas colunas no dashboard Admin de psicologos](0335-conversao-engajamento-duas-colunas-dashboard-psicologos.md)
+- [ADR-0336 — Query key canonica para filtros da lista Admin de psicologos](0336-query-key-filtros-lista-psicologos-admin.md)
+- [ADR-0337 — Detalhamento de Engajamento no dashboard Admin de psicólogos](0337-detalhamento-engajamento-conversao-dashboard-psicologos.md)
+- [ADR-0338 — Engajamento comunitario de pacientes e sem dados insuficientes em psicologos](0338-engajamento-comunitario-pacientes-e-sem-dados-insuficientes-psicologos.md)
+- [ADR-0339 — Categorias de conversão não convertida na matriz Conversão x Engajamento](0339-conversao-engajamento-categorias-nao-convertidas.md)
+- [ADR-0340 — Score ponderado de engajamento comunitário no Admin](0340-engajamento-ponderado-admin.md)
+- [ADR-0341 — Vocabulário Conversão no Admin de psicólogos](0341-vocabulario-conversao-admin.md)
+- [ADR-0342 — Quadrantes de Intencao x Engajamento navegam para lista filtrada](0342-quadrantes-intencao-engajamento-lista-filtrada.md)
+- [ADR-0343 — Vocabulário Conversão no Admin de psicólogos](0343-vocabulario-conversao-admin.md)
+- [ADR-0344 — Fluxos de intenção, conversão e qualidade do tráfego no Admin](0344-fluxos-intencao-conversao-admin.md)
+- [ADR-0345 — Simplificação do fluxo de intenção e conversão no Dashboard Admin](0345-simplificacao-fluxo-intencao-conversao-admin.md)
+- [ADR-0346 — Refinamento visual local do fluxo de intencao e conversao no Dashboard Admin](0346-refino-alinhamento-exemplo-fluxo-intencao-conversao-admin.md)
+- [ADR-0347 — Conversao por exposicao no Admin de psicologos](0347-conversao-por-exposicao-admin-psicologos.md)
+- [ADR-0348 — Remocao do bloco Fluxo de intencao e conversao no Dashboard Admin](0348-remocao-bloco-fluxo-intencao-dashboard-admin.md)
+- [ADR-0349 — Conversao bruta por percentis no Admin de psicologos](0349-conversao-bruta-percentis-admin-psicologos.md)
+- [ADR-0350 — Páginas por tempo médio no uso da plataforma Admin](0350-paginas-por-tempo-medio-uso-admin.md)
+- [ADR-0351 — Exposição ponderada no dashboard Admin de psicólogos](0351-exposicao-ponderada-dashboard-psicologos-admin.md)
+- [ADR-0352 — Visibilidade e engajamento recebido no dashboard Admin de psicólogos](0352-visibilidade-engajamento-recebido-dashboard-psicologos-admin.md)
+- [ADR-0353 — Qualidade absoluta da conversão no perfil Admin do psicólogo](0353-qualidade-absoluta-conversao-perfil-admin.md)
+- [ADR-0354 — Visibilidade por tempo real de atenção no dashboard Admin de psicólogos](0354-visibilidade-tempo-real-atencao-dashboard-psicologos-admin.md)
+- [ADR-0355 — Engajamento e Favoritos no dashboard Admin de psicólogos](0355-engajamento-favoritos-dashboard-psicologos-admin.md)
+- [ADR-0356 — Tooltips de Visibilidade e Conversao no dashboard Admin de psicologos](0356-tooltips-visibilidade-conversao-dashboard-psicologos-admin.md)
+- [ADR-0357 — Visibilidade Comunidade x Video no dashboard Admin de psicologos](0357-visibilidade-comunidade-video-dashboard-psicologos-admin.md)
+- [ADR-0358 — Ajuste de tamanho dos graficos e matriz no dashboard Admin de psicologos](0358-ajuste-tamanho-graficos-matriz-dashboard-psicologos-admin.md)
+- [ADR-0359 — Tres graficos lado a lado no funil Admin de psicologos](0359-tres-graficos-lado-a-lado-funil-psicologos-admin.md)
+- [ADR-0360 — Matrizes de Conversao x Engajamentos/Favoritos e Visibilidade no Admin](0360-matrizes-conversao-engajamentos-favoritos-visibilidade-admin.md)
+- [ADR-0361 — Remocao dos cards auxiliares de Engajamento e Favoritos no Admin](0361-remocao-cards-engajamento-favoritos-admin.md)
+- [ADR-0362 — Centralizacao dos blocos da matriz de conversao no Admin](0362-centralizacao-celulas-matriz-conversao-admin.md)
+- [ADR-0363 — Distribuicao de cliques WhatsApp no Dashboard Admin](0363-distribuicao-cliques-whatsapp-dashboard-admin.md)
+- [ADR-0364 — Funil comportamental por conversao no Admin de psicologos](0364-funil-comportamental-conversao-admin-psicologos.md)
+- [ADR-0365 — Tooltips de titulo no funil executivo de psicologos Admin](0365-tooltips-funil-executivo-psicologos-admin.md)
+- [ADR-0366 — Sincronizacao de manifests do route group do Admin no build](0366-admin-next-route-group-manifest-sync.md)
+- [ADR-0367 — Reorganizacao incremental da aba Estatisticas do psicologo no Admin](0367-reorganizacao-estatisticas-psicologo-admin.md)
+- [ADR-0368 — Seletor global de periodo nas estatisticas do psicologo Admin](0368-seletor-global-periodo-estatisticas-psicologo-admin.md)
+- [ADR-0369 — Separacao de eixos no funil Admin de psicologos](0369-separacao-eixos-funil-psicologos-admin.md)
+- [ADR-0370 — Visibilidade temporal no contador principal do psicologo Admin](0370-visibilidade-temporal-contador-psicologo-admin.md)
+- [ADR-0371 — Eixo direito de visibilidade e comparativos dos scores no psicologo Admin](0371-eixo-direito-visibilidade-comparativos-scores-psicologo-admin.md)
+- [ADR-0372 — Bloco Visibilidade nas estatisticas do psicologo Admin](0372-bloco-visibilidade-estatisticas-psicologo-admin.md)
+- [ADR-0373 — Formula de atividade por cobertura e video no psicologo Admin](0373-formula-atividade-cobertura-video-psicologo-admin.md)
+- [ADR-0374 — Cobertura e visibilidade temporal no bloco Atividade e engajamento](0374-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md)
+- [ADR-0376 — Posição média real do vídeo no Explorar no Admin](0376-posicao-media-video-explorar-psicologo-admin.md)
+- [ADR-0377 — Tag de resultado no titulo de Visibilidade do psicologo Admin](0377-tag-resultado-titulo-visibilidade-psicologo-admin.md)
+- [ADR-0378 — Origem do trafego por WhatsApp no Admin de psicologos](0378-origem-trafego-whatsapp-psicologos-admin.md)
+- [ADR-0379 — Grupo visual de Comunidades na tabela de trafego WhatsApp Admin](0379-grupo-comunidades-tabela-trafego-whatsapp-admin.md)
+- [ADR-0380 — Grupos expansiveis na tabela de trafego WhatsApp Admin](0380-grupos-expansiveis-trafego-whatsapp-admin.md)
+- [ADR-0381 — Medias reais de analises das comunidades no trafego WhatsApp Admin](0381-medias-reais-comunidades-trafego-whatsapp-admin.md)
+- [ADR-0382 — Copy de medias de engajamento nas sublinhas de Comunidades do trafego WhatsApp Admin](0382-copy-medias-engajamento-comunidades-trafego-whatsapp-admin.md)
+- [ADR-0383 — Label Tempo de permanencia nas metricas de Comunidades do trafego WhatsApp Admin](0383-label-tempo-permanencia-comunidades-trafego-whatsapp-admin.md)
+- [ADR-0384 — Expansivo de Perfil com medias de engajamento no trafego WhatsApp Admin](0384-expansivo-perfil-medias-engajamento-trafego-whatsapp-admin.md)
+- [ADR-0385 — Medias de engajamento no Video de apresentacao do trafego WhatsApp Admin](0385-medias-engajamento-video-apresentacao-trafego-whatsapp-admin.md)
+- [ADR-0386 — Quantidade considerada e carrossel dos donuts no Admin de psicologos](0386-quantidade-considerada-titulos-trafego-whatsapp-admin.md)
+- [ADR-0387 — Donut de Atividade no dashboard Admin de psicologos](0387-donut-atividade-dashboard-psicologos-admin.md)
+- [ADR-0388 — Reposicionamento da matriz no dashboard Admin de psicologos](0388-reposicionamento-matriz-dashboard-psicologos-admin.md)
+- [ADR-0389 — Tabela comportamental por conversao no Admin de psicologos](0389-tabela-comportamental-conversao-admin-psicologos.md)
+- [ADR-0390 — Tags na tabela comportamental por conversao no Admin de psicologos](0390-tags-tabela-comportamental-conversao-admin-psicologos.md)
+- [ADR-0391 — Matriz expansivel dentro do funil comportamental por conversao Admin](0391-matriz-expansivel-funil-comportamental-conversao-admin.md)
+- [ADR-0392 — Tabela comportamental sem rolagem horizontal e copy enxuta](0392-ajustes-largura-copy-tabela-comportamental-conversao-admin.md)
+- [ADR-0393 — Eixos independentes na matriz de cruzamento de dados Admin](0393-eixos-independentes-matriz-cruzamento-dados-admin.md)
+- [ADR-0394 — Eixos adicionais na matriz de cruzamento de dados Admin](0394-eixos-adicionais-matriz-cruzamento-dados-admin.md)
+- [ADR-0395 — Media secundaria de WhatsApp por linha no trafego Admin](0395-media-whatsapp-trafego-admin-psicologos.md)
+- [ADR-0396 — Tags medias e cores na tabela comportamental Admin](0396-tags-medias-cores-tabela-comportamental-admin.md)
+- [ADR-0397 — Tags de Perfil na tabela comportamental Admin](0397-tags-perfil-tabela-comportamental-admin.md)
+- [ADR-0398 — Cobertura por posts unicos de pacientes no Admin de psicologos](0398-cobertura-dashboard-matriz-admin-psicologos.md)
+- [ADR-0399 — Media no contexto da base e breakdown de autoria no trafego WhatsApp Admin](0399-refino-medias-autoria-whatsapp-trafego-admin.md)
+
+### ADR-0400 a ADR-0499
+
+- [ADR-0400 — Ajustes finais da tabela comportamental Admin](0400-copy-tags-video-perfil-tabela-comportamental-admin.md)
+- [ADR-0401 — Layout padronizado dos donuts de indicadores Admin](0401-layout-donuts-indicadores-admin-psicologos.md)
+- [ADR-0402 — Range predominante na tag Posição do vídeo na tabela comportamental Admin](0402-range-posicao-video-tabela-comportamental-admin.md)
+- [ADR-0403 — Meta de conversão no dashboard e matriz Admin](0403-meta-conversao-dashboard-matriz-admin.md)
+- [ADR-0404 — Comunidades no Analytics privado do psicologo](0404-comunidades-analytics-psicologo.md)
+- [ADR-0405 — Visualização administrativa como usuário em modo somente leitura](0405-visualizacao-admin-como-usuario-readonly.md)
+- [ADR-0406 — Preço do Plano Profissional em R$ 29,90](0406-preco-plano-profissional-2990.md)
+- [ADR-0407 — Histórico interno das abas do perfil público do psicólogo](0407-historico-abas-perfil-publico-psicologo.md)
+- [ADR-0408 — Visualização read-only do Plano Profissional no Admin](0408-visualizacao-readonly-plano-assinatura-admin.md)
+- [ADR-0409 — Miniaturas persistidas para Open Graph de videos de posts](0409-miniaturas-video-seo-open-graph-posts.md)
+- [ADR-0410 — Upload gerenciado para Imagem Open Graph no Admin](0410-upload-imagem-open-graph-admin.md)
+- [ADR-0411 — Cliques WhatsApp por formato em Posts e Respostas no Admin](0411-whatsapp-cliques-formatos-posts-respostas-admin.md)
+- [ADR-0412 — Rotas publicas e privadas canonicas em PT-BR](0412-rotas-publicas-pt-br-seo.md)
+- [ADR-0413 — SEO administrável para respostas de comentários públicas](0413-seo-respostas-comentarios-publicas.md)
+- [ADR-0414 — Prévia Open Graph no Admin SEO](0414-admin-seo-previa-open-graph.md)
+- [ADR-0415 — Dockerfile de produção para o backend](0415-dockerfile-backend-producao.md)
+- [ADR-0416 — Homologação Mercado Pago com credenciais de teste do Card Payment Brick](0416-homologacao-mercado-pago-card-payment-brick.md)
+- [ADR-0417 — Restaurar sandbox Mercado Pago com conta vendedora de teste](0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md)
+- [ADR-0418 — Auditoria de produção, segurança e estabilidade](0418-auditoria-producao-seguranca-estabilidade.md)
+- [ADR-0419 — Divisão modular de features complexas](0419-divisao-modular-features-complexas.md)
+- [ADR-0420 — Swagger compatível com o runtime compilado](0420-swagger-compativel-runtime-compilado.md)
+- [ADR-0421 — Guardrails finais da auditoria integral](0421-guardrails-finais-auditoria-integral.md)
+- [ADR-0422 — Agrupar especialidades por categorias clinicas no setup de perfil](0422-categorias-especialidades-setup-perfil.md)
+- [ADR-0423 — Hardening de code review pré-produção](0423-hardening-code-review-pre-producao.md)
+- [ADR-0424 — Reset total seguro do ambiente de desenvolvimento](0424-reset-total-banco-desenvolvimento.md)
+- [ADR-0425 — Sincronização local de assinatura Mercado Pago sandbox](0425-sincronizacao-local-assinatura-mercado-pago.md)
+- [ADR-0426 — Ajuste de sandbox para Preapproval com plano associado](0426-ajuste-sandbox-preapproval-plano-associado.md)
+- [ADR-0427 — Fallback sandbox para Preapproval pendente sem card token](0427-fallback-sandbox-pending-preapproval.md)
+- [ADR-0428 — Retry do payer email no fallback sandbox Mercado Pago](0428-retry-payer-email-sandbox-mercado-pago.md)
+- [ADR-0429 — Consulta de assinatura Mercado Pago sem X-scope stage](0429-consulta-assinatura-mercado-pago-sem-scope-stage.md)
+- [ADR-0430 — Checkout Mercado Pago sandbox com tunnel e sem fallback local](0430-checkout-mercado-pago-sandbox-com-tunnel-sem-fallback.md)
+- [ADR-0431 — Insistência controlada para atalho e notificações de psicólogos](0431-insistencia-controlada-atalho-notificacoes-psicologos.md)
+- [ADR-0432 — Suporte a ngrok no tunnel de desenvolvimento](0432-suporte-ngrok-dev-tunnel.md)
+- [ADR-0433 — Reconciliação de assinatura Mercado Pago por webhook e entitlement local](0433-reconciliacao-assinatura-mercado-pago-webhook-e-entitlement.md)
+- [ADR-0434 — Base local separada para Google OAuth em desenvolvimento](0434-google-oauth-base-local-separada-de-tunnel.md)
+- [ADR-0435 — Comunidades ativas no detalhe Admin do psicólogo](0435-admin-psicologo-comunidade-resumo-cobertura.md)
+- [ADR-0436 — Central Admin de moderação textual, denúncias e alertas operacionais derivados](0436-central-moderacao-alertas-operacionais-admin.md)
+- [ADR-0437 — Sistema operacional em analytics Admin](0437-admin-operating-system-analytics.md)
+- [ADR-0438 — Metadados SEO administráveis com fallback público server-side](0438-seo-metadados-admin.md)
+- [ADR-0439 — Hardening residual da auditoria em ambientes publicados](0439-hardening-residual-auditoria-publicada.md)
+- [ADR-0440 — Bloqueio da publicação das páginas legais](0440-bloqueio-publicacao-paginas-legais.md)

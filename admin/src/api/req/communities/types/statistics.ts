@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type { CommunitiesPostContentFormatDistribution } from "./dashboard";
 import type {
   AdminCommunityIdentity,
@@ -56,7 +57,7 @@ export type AdminCommunityActivities = {
     timezone: "server-local";
     to: string | null;
   };
-  source: "admin_activity_log";
+  source: AdminPublicSource<"admin_activity_log">;
 };
 
 export type AdminCommunityStatisticsSplit = {
@@ -125,17 +126,17 @@ export type AdminCommunityStatistics = {
   community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
   counters: {
     accesses: {
-      source: "page_view_event";
+      source: AdminPublicSource<"page_view_event">;
       total: number;
     };
     active_users: {
       patients: number;
       psychologists: number;
-      source: "community_member+community_post+post_reply+page_view_event";
+      source: AdminPublicSource<"community_member+community_post+post_reply+page_view_event">;
       total: number;
     };
     anonymous_posts: {
-      source: "community_post.anonymous";
+      source: AdminPublicSource<"community_post.anonymous">;
       total: number;
     };
     care_coverage: {
@@ -157,46 +158,46 @@ export type AdminCommunityStatistics = {
         };
       };
       patient_posts_with_any_response: number;
-      source: "community_post+post_reply";
+      source: AdminPublicSource<"community_post+post_reply">;
     };
     content_engagement: {
       downvotes: number;
       profile_accesses: number;
       saves: number;
-      source: "post_vote+post_save+post_reply_save+important_action_event+page_view_event";
+      source: AdminPublicSource<"post_vote+post_save+post_reply_save+important_action_event+page_view_event">;
       upvotes: number;
       whatsapp_clicks: number;
     };
     followers: {
       patients: number;
       psychologists: number;
-      source: "community_member";
+      source: AdminPublicSource<"community_member">;
       total: number;
     };
     new_active_users: {
       patients: number;
       psychologists: number;
-      source: "first_activity:community_member+community_post+post_reply+page_view_event";
+      source: AdminPublicSource<"first_activity:community_member+community_post+post_reply+page_view_event">;
       total: number;
     };
     posts: {
       patients: number;
       patient_posts_answered_by_verified_psychologists: number;
       psychologists: number;
-      source: "community_post+post_reply";
+      source: AdminPublicSource<"community_post+post_reply">;
       total: number;
       unverified_psychologists: number;
       verified_psychologists: number;
     };
     replies: {
       patient_comments: number;
-      source: "post_reply";
+      source: AdminPublicSource<"post_reply">;
       total: number;
       unverified_psychologists: number;
       verified_psychologists: number;
     };
     reports: {
-      source: "post_report";
+      source: AdminPublicSource<"post_report">;
       total: number;
     };
   };
@@ -208,7 +209,7 @@ export type AdminCommunityStatistics = {
     timezone: "server-local";
     to: string;
   };
-  source: "community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event";
+  source: AdminPublicSource<"community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event">;
 };
 
 export type AdminCommunityUpdateInput = {

@@ -123,7 +123,7 @@ Refinamento 2026-06-29:
   - a opção `Não mostrar novamente` não apareceu;
   - `Agora não` continuou fechando a modal com cooldown local.
 
-Refinamento 2026-06-29 validado no ADR-0183 para backoff por perfil e manutenção de `Agora não`
+Refinamento 2026-06-29 validado no ADR-0431 para backoff por perfil e manutenção de `Agora não`
 como única ação secundária.
 
 Refinamento 2026-07-04:

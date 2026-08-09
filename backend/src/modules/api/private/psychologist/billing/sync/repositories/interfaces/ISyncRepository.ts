@@ -1,4 +1,4 @@
-﻿import type { professional_subscription, psychologist_profile } from "@/interfaces/objects";
+import type { professional_subscription, psychologist_profile } from "@/interfaces/objects";
 
 export interface ISyncRepository {
   findProfileByUserId(userId: string): Promise<Pick<psychologist_profile, "id" | "deleted"> | null>;

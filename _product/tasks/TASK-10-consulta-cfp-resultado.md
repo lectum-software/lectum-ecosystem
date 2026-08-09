@@ -272,4 +272,4 @@ Validacoes executadas:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou que o CRP confirmado e exposto como `06ª Região - SP/161904`, preservando `nome_regional` e `registro` da auditoria CFP.
+- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou que o CRP confirmado e exposto como `<REGIÃO>/<REGISTRO>`, preservando `nome_regional` e `registro` da auditoria CFP.

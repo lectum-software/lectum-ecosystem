@@ -154,7 +154,7 @@ export const AdminFinanceChargesClient = () => {
               Cobranças
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-muted">
-              Relação completa de cobranças confirmadas pelo Mercado Pago.
+              Relação completa de cobranças processadas e confirmadas.
             </p>
           </div>
         </div>

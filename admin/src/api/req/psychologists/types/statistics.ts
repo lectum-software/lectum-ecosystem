@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type {
   AdminPsychologistStatisticsPoint,
   AdminPsychologistVisibilityCounter,
@@ -76,7 +77,7 @@ export type AdminPsychologistContentFormatDistribution = {
 };
 
 export type AdminPsychologistCommunityVideoRate = {
-  source: "community_post.media_type+community_post_media+post_reply.media_type";
+  source: AdminPublicSource<"community_post.media_type+community_post_media+post_reply.media_type">;
   with_video: {
     count: number;
     rate_percent: number;
@@ -99,7 +100,7 @@ export type AdminPsychologistVisibilityDiagnosis = {
     profile_seconds: number;
     visibility_seconds: number;
   };
-  source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds";
+  source: AdminPublicSource<"page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds">;
   thresholds: PsychologistsProfileExposureThresholds;
 };
 
@@ -143,7 +144,7 @@ export type AdminPsychologistStatistics = {
       counters: AdminPsychologistVisibilityCounter[];
       diagnosis: AdminPsychologistVisibilityDiagnosis;
       series: AdminPsychologistVisibilityPoint[];
-      source: "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type";
+      source: AdminPublicSource<"page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds+profile_view_event+page_view_event.target_type">;
       total_seconds: number;
     };
   };
@@ -156,7 +157,7 @@ export type AdminPsychologistStatistics = {
         covered_patient_posts: number;
         patient_posts: number;
         rate_percent: number | null;
-        source: "community_post.author.role=paciente+post_reply.author_id";
+        source: AdminPublicSource<"community_post.author.role=paciente+post_reply.author_id">;
       };
       downvotes: number;
       engagement_diagnosis?: AdminCommunityEngagementDiagnosis;
@@ -179,7 +180,7 @@ export type AdminPsychologistStatistics = {
     content_distribution: {
       posts: AdminPsychologistContentFormatDistribution;
       replies: AdminPsychologistContentFormatDistribution;
-      source: "community_post.media_type+community_post_media+post_reply.media_type+important_action_event.action_type=whatsapp_click";
+      source: AdminPublicSource<"community_post.media_type+community_post_media+post_reply.media_type+important_action_event.action_type=whatsapp_click">;
     };
     engagement_diagnosis: AdminCommunityEngagementDiagnosis;
     series: AdminPsychologistStatisticsPoint[];
@@ -212,7 +213,7 @@ export type AdminPsychologistStatistics = {
         }[];
         percentage: number;
       }[];
-      source: "visitor_session.device_type+visitor_session.os+user_id";
+      source: AdminPublicSource<"visitor_session.device_type+visitor_session.os+user_id">;
       total_sessions: number;
       unavailable_reason: string | null;
     };
@@ -257,7 +258,7 @@ export type AdminPsychologistStatistics = {
     pwa_installation_recorded: boolean;
     pwa_installed_at: string | null;
     sessions_count: number;
-    source: "page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report";
+    source: AdminPublicSource<"page_view_event+visitor_session+important_action_event+community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report">;
     top_pages: {
       count: number;
       label: string;
@@ -265,7 +266,7 @@ export type AdminPsychologistStatistics = {
     }[];
     unavailable_reason: string | null;
   };
-  source: "profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event+content_attention_session";
+  source: AdminPublicSource<"profile_events+community_activity+video_sessions+search_impressions+professional_review+page_view_event+important_action_event+content_attention_session">;
   traffic_quality: {
     absorption_rate: number | null;
     attributed_whatsapp_clicks: number;
@@ -309,7 +310,7 @@ export type AdminPsychologistStatistics = {
       label: string;
       percentage: number;
     }[];
-    source: "page_view_event+psychologist_favorite+contact_request+important_action_event";
+    source: AdminPublicSource<"page_view_event+psychologist_favorite+contact_request+important_action_event">;
     total_actors: number;
     total_profile_views: number;
     total_whatsapp_clicks: number;
@@ -351,7 +352,7 @@ export type AdminPsychologistStatistics = {
       whatsapp_clicks_from_video: number;
     };
     retention: { label: string; percentage: number; position_percent: number }[];
-    source: "profile_video_watch_session+important_action_event+profile_view_event.search_result_position";
+    source: AdminPublicSource<"profile_video_watch_session+important_action_event+profile_view_event.search_result_position">;
     unavailable_reason: string | null;
     video_url: string | null;
   };

@@ -186,20 +186,7 @@ export const buildMentors = (
     .map((mentor, index) => ({ ...mentor, position: index + 1 }));
 };
 
-export const publicFileUrl = (key: string) => {
-  const rawBase = String(process.env.BASE || "").trim();
-  let base = rawBase.replace(/\/$/, "");
-
-  try {
-    base = rawBase ? new URL(rawBase).origin : "";
-  } catch (_err) {
-    base = rawBase.replace(/\/$/, "");
-  }
-
-  const publicPath = `/public/files/${key}`;
-
-  return base ? `${base}${publicPath}` : publicPath;
-};
+export { publicFileUrl } from "@/utils/public-origin";
 
 export const findCommunityOrNotFound = async (
   repository: AdminCommunityManageRepository,

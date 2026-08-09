@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type {
   AdminCommunityContentAuthor,
   AdminCommunityIdentity,
@@ -80,7 +81,7 @@ export type AdminCommunityContent = {
   page: number;
   pages: number;
   per_page: number;
-  source: "community_post+post_reply+post_share+page_view_event+important_action_event";
+  source: AdminPublicSource<"community_post+post_reply+post_share+page_view_event+important_action_event">;
 };
 
 export type AdminCommunityContentAnalyticsDetail = {
@@ -114,7 +115,7 @@ export type AdminCommunityContentAnalyticsDetail = {
   metrics: AdminCommunityContentItem["metrics"] & {
     comment_breakdown: {
       patient_comments_count: number;
-      source: "post_reply";
+      source: AdminPublicSource<"post_reply">;
       total_count: number;
       unverified_psychologist_replies_count: number;
       verified_psychologist_replies_count: number;
@@ -154,7 +155,7 @@ export type AdminCommunityContentAnalyticsDetail = {
     views: number;
     whatsapp_clicks: number;
   }[];
-  source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report+content_moderation_event+content_video_watch_session";
+  source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report+content_moderation_event+content_video_watch_session">;
   video: null | {
     available: boolean;
     metrics: {
@@ -178,7 +179,7 @@ export type AdminCommunityContentAnalyticsDetail = {
       rate_drop: number;
       to_label: string;
     } | null;
-    source: "content_video_watch_session";
+    source: AdminPublicSource<"content_video_watch_session">;
     unavailable_reason: string | null;
   };
 };

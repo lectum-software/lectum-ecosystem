@@ -1,4 +1,4 @@
-﻿# ADR-0305: Logs automáticos exibem status e engajamento por entrega
+# ADR-0305: Logs automáticos exibem status e engajamento por entrega
 
 ## Status
 

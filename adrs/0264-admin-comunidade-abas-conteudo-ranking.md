@@ -161,7 +161,9 @@ O filtro de status foi removido da interface porque a operação precisa princip
 
 O filtro **Tipo** passa a usar classificações derivadas de dados reais do item: posts de psicólogo verificado, posts de psicólogo não verificado, respostas de psicólogo verificado, respostas de psicólogo não verificado, comentários de pacientes e posts anônimos.
 
-Para sustentar Posts anônimos, o backend classifica community_post.anonymous=true como nonymous_post, sem coluna nova e sem alterar a regra de autoria persistida. O filtro de **Período** usa presets simples sobre created_at (ll, 7d, 30d, 90d).
+Para sustentar Posts anônimos, o backend classifica `community_post.anonymous=true` como
+`anonymous_post`, sem coluna nova e sem alterar a regra de autoria persistida. O filtro de
+**Período** usa presets simples sobre `created_at` (`all`, `7d`, `30d`, `90d`).
 
 Validação desta atualização: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdahátab=conteudo retornando 200.
 

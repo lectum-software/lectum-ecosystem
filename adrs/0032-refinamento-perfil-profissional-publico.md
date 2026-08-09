@@ -1,4 +1,4 @@
-﻿# ADR-0032: Refinamento mobile-first do perfil profissional público
+# ADR-0032: Refinamento mobile-first do perfil profissional público
 
 ## Status
 
@@ -96,7 +96,7 @@ Ajuste complementar de tipografia e faixa:
 - `pnpm check`
 - Browser local via Chrome headless/CDP em 390px na rota `/app/psychologist/cmq5m0vse000ftkuhybmagcn6`:
   - faixa azul superior ausente (`promoStripExists=false`);
-  - texto `PSICÓLOGO • CRP 04/123456` com `font-size=10.56px`, `font-weight=800`, `text-transform=uppercase` e cor `rgb(148, 163, 184)`;
+  - texto `PSICÓLOGO • CRP <REGIÃO>/<REGISTRO>` com `font-size=10.56px`, `font-weight=800`, `text-transform=uppercase` e cor `rgb(148, 163, 184)`;
   - gap entre linha CRP e disponibilidade reduzido para `4px`.
 
 ## Pendências

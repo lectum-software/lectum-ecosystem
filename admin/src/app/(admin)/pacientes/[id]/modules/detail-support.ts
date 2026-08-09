@@ -1,8 +1,12 @@
 "use client";
+
+import { startOfCurrentWeek } from "@/lib/date-period";
+
+export { startOfCurrentWeek };
+
 import { type FocusEvent, useCallback, useMemo, useState } from "react";
 import type { PatientsDetailQuery } from "@/api/req/patients";
-import { isPublicMediaPath } from "@/lib/admin-media";
-import { adminApiUrl } from "@/lib/api-url";
+import { isAdminApiMediaUrl, isAdminPublicMediaUrl, renderableImageSrc } from "@/lib/admin-media";
 
 import {
   PATIENT_DETAIL_TABS,
@@ -61,15 +65,6 @@ export const toDateInputValue = (date: Date) => {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
-};
-
-export const startOfCurrentWeek = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-
-  return date;
 };
 
 export const startOfCurrentMonth = () => {
@@ -220,30 +215,11 @@ export const formatChange = (value: number | null) => {
   })}%`;
 };
 
-export const safeAvatarSrc = (src: string | null) => {
-  if (!src) return null;
-  if (src.startsWith("/public/files/") || src.startsWith("/community/icons/")) {
-    return `${adminApiUrl}${src}`;
-  }
-  if (src.startsWith("/")) return src;
-  try {
-    const url = new URL(src);
-    if (["localhost", "127.0.0.1"].includes(url.hostname)) return src;
-  } catch {
-    return null;
-  }
-  return null;
-};
+export const safeAvatarSrc = (src: string | null) => renderableImageSrc(src);
 
-export const isApiMediaSrc = (src: string | null) => Boolean(src?.startsWith(adminApiUrl));
+export const isApiMediaSrc = (src: string | null) => isAdminApiMediaUrl(src);
 
-export const isPublicAdminMediaSrc = (src: string) => {
-  try {
-    return isPublicMediaPath(new URL(src, adminApiUrl).pathname);
-  } catch {
-    return false;
-  }
-};
+export const isPublicAdminMediaSrc = (src: string) => isAdminPublicMediaUrl(src);
 
 export const initialsFromName = (name: string) =>
   name

@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { getAdminRequestToken } from "@/modules/api/admin/shared/auth/cookie";
 import { getDevice } from "@/modules/api/middlewares/_auth/utils/device";

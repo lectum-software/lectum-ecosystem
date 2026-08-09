@@ -1,19 +1,77 @@
 import type { NextConfig } from "next";
+import { isLoopbackHostname, parseConfiguredHttpOrigin } from "./src/lib/http-origin-policy";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const remoteHosts = new Set(["localhost", "127.0.0.1", "lh3.googleusercontent.com"]);
+const DEFAULT_API_URL = "http://localhost:3001";
+const apiUrl =
+  parseConfiguredHttpOrigin(process.env.NEXT_PUBLIC_API_URL) ??
+  (process.env.NODE_ENV === "development" ? new URL(DEFAULT_API_URL) : null);
+type ImageRemotePattern = {
+  hostname: string;
+  port?: string;
+  protocol: "http" | "https";
+};
+const imageRemotePatterns = new Map<string, ImageRemotePattern>();
+const addImageRemotePattern = (pattern: ImageRemotePattern) => {
+  const key = `${pattern.protocol}://${pattern.hostname}:${pattern.port ?? "*"}`;
+  imageRemotePatterns.set(key, pattern);
+};
 
-const getApiCspSources = () => {
-  try {
-    const url = new URL(apiUrl);
-    const socketProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+addImageRemotePattern({ hostname: "lh3.googleusercontent.com", port: "", protocol: "https" });
+if (process.env.NODE_ENV === "development") {
+  for (const hostname of ["localhost", "127.0.0.1", "[::1]"]) {
+    addImageRemotePattern({ hostname, protocol: "http" });
+    addImageRemotePattern({ hostname, protocol: "https" });
+  }
+}
 
-    return [url.origin, `${socketProtocol}//${url.host}`];
-  } catch {
-    return [];
+const assetCspSources = new Set([
+  "https://lh3.googleusercontent.com",
+  ...(apiUrl ? [apiUrl.origin] : []),
+  ...(process.env.NODE_ENV === "development"
+    ? [
+        "http://localhost:*",
+        "https://localhost:*",
+        "http://127.0.0.1:*",
+        "https://127.0.0.1:*",
+        "http://[::1]:*",
+        "https://[::1]:*",
+      ]
+    : []),
+]);
+
+const addRemoteHost = (value?: string | null) => {
+  const normalized = value?.trim();
+  if (!normalized) return;
+
+  const explicitUrl = normalized.includes("://");
+  const url = parseConfiguredHttpOrigin(normalized, { allowHostname: true });
+  if (!url) return;
+
+  addImageRemotePattern({
+    hostname: url.hostname,
+    port: url.port,
+    protocol: url.protocol === "https:" ? "https" : "http",
+  });
+  assetCspSources.add(url.origin);
+
+  if (!explicitUrl && process.env.NODE_ENV === "development" && isLoopbackHostname(url.hostname)) {
+    addImageRemotePattern({ hostname: url.hostname, port: url.port, protocol: "http" });
+    assetCspSources.add(`http://${url.host}`);
   }
 };
 
+if (apiUrl) addRemoteHost(apiUrl.toString());
+process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",").forEach(addRemoteHost);
+
+const getApiCspSources = () => {
+  if (!apiUrl) return [];
+
+  const socketProtocol = apiUrl.protocol === "https:" ? "wss:" : "ws:";
+
+  return [apiUrl.origin, `${socketProtocol}//${apiUrl.host}`];
+};
+
+const configuredAssetSources = Array.from(assetCspSources).join(" ");
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -23,7 +81,8 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  "img-src 'self' data: blob: https: http:",
+  `img-src 'self' data: blob: ${configuredAssetSources}`,
+  `media-src 'self' blob: ${configuredAssetSources}`,
   `connect-src 'self' ${getApiCspSources().join(" ")}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
@@ -49,37 +108,12 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-const addRemoteHost = (value?: string | null) => {
-  const normalized = value?.trim();
-  if (!normalized) return;
-
-  try {
-    remoteHosts.add(
-      new URL(normalized.includes("://") ? normalized : `https://${normalized}`).hostname,
-    );
-  } catch {
-    // Mantém hosts locais explícitos quando a env não for uma URL absoluta.
-  }
-};
-
-addRemoteHost(apiUrl);
-process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",").forEach(addRemoteHost);
-
 const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
   images: {
-    remotePatterns: Array.from(remoteHosts).flatMap((hostname) => [
-      {
-        hostname,
-        protocol: "http",
-      },
-      {
-        hostname,
-        protocol: "https",
-      },
-    ]),
+    remotePatterns: Array.from(imageRemotePatterns.values()),
   },
   outputFileTracingRoot: process.cwd(),
   poweredByHeader: false,

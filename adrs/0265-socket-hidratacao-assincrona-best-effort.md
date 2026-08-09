@@ -1,4 +1,4 @@
-﻿# ADR-0265: Hidratação assíncrona de socket como best-effort
+# ADR-0265: Hidratação assíncrona de socket como best-effort
 
 ## Status
 

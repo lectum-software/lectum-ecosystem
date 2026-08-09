@@ -1,4 +1,4 @@
-﻿# ADR-0197: Scrollbar mobile opt-in nas telas principais
+# ADR-0197: Scrollbar mobile opt-in nas telas principais
 
 ## Status
 

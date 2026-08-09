@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 export type PsychologistsDashboardProfileConversionCategoryId =
   | "insufficient_data"
   | "low_conversion"
@@ -121,7 +122,7 @@ export type PsychologistsDashboardProfileActivityThresholds = {
 export type PsychologistsDashboardProfileActivityResults = {
   categories: PsychologistsDashboardProfileActivityCategory[];
   description: string;
-  source: "community_post.author_id+post_reply.author_id";
+  source: AdminPublicSource<"community_post.author_id+post_reply.author_id">;
   thresholds: PsychologistsDashboardProfileActivityThresholds;
   totals: PsychologistsDashboardProfileActivityTotals & {
     psychologists: number;
@@ -150,7 +151,7 @@ export type PsychologistsDashboardProfileCoverageCategory = {
 export type PsychologistsDashboardProfileCoverageResults = {
   categories: PsychologistsDashboardProfileCoverageCategory[];
   description: string;
-  source: "post_reply.author_id+post_reply.post.author.role=paciente+distinct(post_id)";
+  source: AdminPublicSource<"post_reply.author_id+post_reply.post.author.role=paciente+distinct(post_id)">;
   totals: {
     average_patient_posts_answered: number;
     patient_posts_answered: number;

@@ -12,6 +12,7 @@ import type {
   AdminPsychologistDetail,
   AdminPsychologistReportsQuery,
 } from "@/api/req/psychologists";
+import { VerifiedBadgeIcon, WhatsAppIcon } from "@/components/admin-icons";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 import type { ActiveTab } from "../support/config";
@@ -26,7 +27,7 @@ import {
   getPsychologistTitle,
   needsManualRegistryReview,
 } from "../support/formatters";
-import { Avatar, CardShell, VerifiedBadgeIcon, WhatsAppIcon } from "./shared";
+import { Avatar, CardShell } from "./shared";
 
 export const DetailHeader = ({
   detail,

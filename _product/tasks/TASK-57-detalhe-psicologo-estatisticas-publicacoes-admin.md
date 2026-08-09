@@ -225,7 +225,7 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - O contrato Admin real `GET /api/admin/private/psychologists/:id/statistics` foi enriquecido em `community.communities[]` com `following` e `coverage`, mantendo ranking no item da comunidade e sem criar endpoint paralelo.
 - Não houve alteração em Prisma schema ou migrations; `pnpm --dir backend db:migrate` não foi necessário.
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; foram usados o recorte enviado pelo usuário e `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`.
-- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- ADR atualizado: `adrs/0435-admin-psicologo-comunidade-resumo-cobertura.md`.
 - Validações executadas: Biome direcionado nos arquivos alterados de Admin/Backend, ESLint direcionado no arquivo Admin alterado, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin build`, chamada direta do service `showAdminPsychologistStatistics` e smoke HTTP local em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`.
 - Observação: `pnpm --dir admin check` e `pnpm check` foram tentados, mas ficaram bloqueados por alterações paralelas não relacionadas em pacientes; elas não fazem parte deste ajuste.
 
@@ -250,7 +250,7 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - A implementação permanece mobile-first: em telas estreitas a tabela fica em rolagem horizontal controlada dentro do card; em desktop usa a largura disponível de forma sóbria.
 - Não houve alteração de backend, API, Prisma schema, migrations, packages, mocks, seeds ou dados artificiais; `pnpm --dir backend db:migrate` não foi necessário.
 - Builder/Quick Copy não estava disponível como ferramenta callable no ambiente; a validação visual usou o recorte enviado pelo usuário e o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png`.
-- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- ADR atualizado: `adrs/0435-admin-psicologo-comunidade-resumo-cobertura.md`.
 - Validações executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
 - Validação de browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas`: desktop 1365px confirmou tabela com 7 colunas e filtro próprio `active-communities-statistics-*`; mobile 390px confirmou rolagem horizontal controlada da tabela. Admin temporário real criado para validação foi removido ao final.
 
@@ -261,7 +261,7 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - A tabela permanece mobile-first com rolagem horizontal controlada em telas estreitas; em desktop, posts, respostas, status, ranking e cobertura ficam centralizados.
 - Nao houve alteracao de backend, API, Prisma schema, migrations, packages ou endpoints; `pnpm --dir backend db:migrate` nao foi necessario.
 - Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; a validacao visual usou o recorte enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
-- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- ADR atualizado: `adrs/0435-admin-psicologo-comunidade-resumo-cobertura.md`.
 - Validacoes executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.
 - Validacao de browser local/headless via Chrome/CDP em desktop 1365px e mobile 390px confirmou cabecalhos `Comunidade`, `Posts`, `Respostas`, `Status`, `Ranking` e `Cobertura`, ausencia da coluna **Interacoes**, sublinha `1 acao no periodo` abaixo do nome e alinhamento central dos dados das colunas.
 
@@ -281,7 +281,7 @@ Exibir estatísticas de negócio/comunidade e publicações do psicólogo com da
 - A alteracao e apenas de copy/rotulo visual sobre o booleano real `community.following`; nao houve alteracao de contrato, backend, schema, migration, endpoint, mock ou seed.
 - A tabela permanece mobile-first e preserva os dados reais e a centralizacao das colunas ajustadas anteriormente.
 - Builder/Quick Copy nao estava disponivel como ferramenta callable no ambiente; a validacao visual usou o recorte enviado pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Estatisticas.png`.
-- ADR atualizado: `adrs/0290-admin-psicologo-comunidade-resumo-cobertura.md`.
+- ADR atualizado: `adrs/0435-admin-psicologo-comunidade-resumo-cobertura.md`.
 - Validacoes executadas para este ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin exec eslint "src/app/(admin)/psicologos/[id]/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` (reexecutado com sucesso apos timeout inicial) e browser local/headless via Chrome/CDP em `/psicologos/cmrgztri7000tn0uh1q4n8vxf?tab=estatisticas` com admin temporario real removido ao final. O browser confirmou em desktop 1365px e mobile 390px: coluna **Status** exibindo **Seguindo** ou **Nao seguindo**, ausencia da copy antiga **Segue**/**Nao segue**, ausencia da coluna **Interacoes** e alinhamento central da coluna **Status**.
 
 ## Ajuste pos-feedback 2026-07-21 - Diagnostico de Engajamento nas Comunidades ativas

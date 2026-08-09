@@ -1,4 +1,4 @@
-﻿# ADR-0346: Refinamento visual local do fluxo de intencao e conversao no Dashboard Admin
+# ADR-0346: Refinamento visual local do fluxo de intencao e conversao no Dashboard Admin
 
 ## Status
 

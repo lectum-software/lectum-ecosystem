@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 export type AdminCommunityIdentity = {
   active: boolean;
   avatar_url: string | null;
@@ -40,7 +41,7 @@ export type AdminCommunityHighlightCounters = {
   psychologist_posts_count: number;
   psychologist_replies_count: number;
   reports_count: number;
-  source: "community_post+post_reply+post_report+page_view_event";
+  source: AdminPublicSource<"community_post+post_reply+post_report+page_view_event">;
 };
 
 export type AdminCommunityTodaySummary = {
@@ -58,7 +59,7 @@ export type AdminCommunityTodaySummary = {
     to: string;
   };
   psychologist_posts_count: number;
-  source: "community_member+community_post+post_reply+page_view_event";
+  source: AdminPublicSource<"community_member+community_post+post_reply+page_view_event">;
   unverified_psychologist_replies_count: number;
   verified_psychologist_replies_count: number;
 };
@@ -92,7 +93,7 @@ export type AdminCommunityUrgentSummary = {
   pending_reports_count: number;
   pending_reports_last_reported_at: string | null;
   pending_reports: AdminCommunityUrgentPendingReport[];
-  source: "post_report";
+  source: AdminPublicSource<"post_report">;
 };
 
 export type AdminCommunityPerformanceMetric = {
@@ -217,5 +218,5 @@ export type AdminCommunitiesList = {
   pages: number;
   per_page: number;
   sort: AdminCommunitiesListSort;
-  source: "community+community_member+community_post+post_reply+post_report";
+  source: AdminPublicSource<"community+community_member+community_post+post_reply+post_report">;
 };

@@ -1,6 +1,6 @@
 //Libs
 
-import dotenv from "dotenv";
+import "@/config/dotenv";
 //Types
 import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
@@ -27,8 +27,6 @@ import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
 //Emits
 import { getJwtSecret, JWT_ALGORITHM } from "./utils/jwt-secret";
-
-dotenv.config();
 
 const notAuthorized = { status: 401 };
 const authUnavailable = { message: "auth_unavailable", status: 503 };
@@ -469,10 +467,10 @@ passport.use(
           data: user,
         });
       } catch (err) {
-        const e = err as Error;
-        console.error("[GOOGLE_AUTH] Falha inesperada na autenticação.", {
-          name: e.name || "UnknownGoogleAuthError",
-        });
+        console.error(
+          "[GOOGLE_AUTH] Falha inesperada na autenticação.",
+          toSafeErrorLog(err, "GoogleAuthError"),
+        );
         return done(null, {
           status: 404,
           ...error("google_unexpected_error", {}),

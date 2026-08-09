@@ -13,10 +13,8 @@ export const hydrateAdmin = async () => {
 };
 
 export const logoutAdmin = async () => {
-  const response = await adminApi.post<ApiResponse>("/api/admin/private/auth/logout");
+  const response = await adminApi.post<ApiResponse>("/api/admin/private/auth/logout", undefined, {
+    timeout: 5_000,
+  });
   return response.data;
-};
-
-export const extractAdminToken = (admin: Admin) => {
-  return admin.admin_tokens?.find((item) => item.token)?.token || null;
 };

@@ -7,12 +7,17 @@ import { useCallback, useEffect, useState } from "react";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { getBrowserStorage, readStorageItem, writeStorageItem } from "@/utils/browser-storage";
 import {
   clearPromptDismissalState,
   hasCompletedRegistrationForPrompts,
   markPromptDismissedWithBackoff,
   type PromptUserRole,
 } from "@/utils/prompt-cooldown";
+import {
+  releaseActivePrompt as releaseCoordinatedPrompt,
+  reserveActivePrompt as reserveCoordinatedPrompt,
+} from "@/utils/prompt-coordinator";
 
 type BeforeInstallPromptChoice = {
   outcome: "accepted" | "dismissed";
@@ -30,29 +35,10 @@ const DISMISSED_UNTIL_KEY = "lectum.pwaInstall.dismissedUntil";
 const DISMISS_COUNT_KEY = "lectum.pwaInstall.dismissCount";
 const LEGACY_NEVER_SHOW_KEY = "lectum.pwaInstall.neverShowAgain";
 const INSTALLED_KEY = "lectum.pwaInstall.installed";
-const ACTIVE_PROMPT_KEY = "lectum.activePrompt";
 const ACTIVE_PROMPT_VALUE = "pwa-install";
 const SHOW_DELAY_MS = 1400;
 
-const safeLocalStorage = () => {
-  if (typeof window === "undefined") return null;
-
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-};
-
-const safeSessionStorage = () => {
-  if (typeof window === "undefined") return null;
-
-  try {
-    return window.sessionStorage;
-  } catch {
-    return null;
-  }
-};
+const isPrivateAppPath = (pathname: string) => pathname === "/app" || pathname.startsWith("/app/");
 
 const isStandaloneMode = () => {
   if (typeof window === "undefined") return true;
@@ -83,39 +69,26 @@ const isIosDevice = () => {
 };
 
 const isDismissedByPreference = () => {
-  const storage = safeLocalStorage();
+  const storage = getBrowserStorage("localStorage");
   if (!storage) return true;
 
-  if (storage.getItem(INSTALLED_KEY) === "true") return true;
+  if (readStorageItem(storage, INSTALLED_KEY) === "true") return true;
 
-  const dismissedUntil = Number(storage.getItem(DISMISSED_UNTIL_KEY) ?? 0);
+  const dismissedUntil = Number(readStorageItem(storage, DISMISSED_UNTIL_KEY) ?? 0);
 
   return Number.isFinite(dismissedUntil) && dismissedUntil > Date.now();
 };
 
 const reserveActivePrompt = () => {
-  const storage = safeSessionStorage();
-  if (!storage) return true;
-
-  const activePrompt = storage.getItem(ACTIVE_PROMPT_KEY);
-  if (activePrompt && activePrompt !== ACTIVE_PROMPT_VALUE) return false;
-
-  storage.setItem(ACTIVE_PROMPT_KEY, ACTIVE_PROMPT_VALUE);
-
-  return true;
+  return reserveCoordinatedPrompt(ACTIVE_PROMPT_VALUE);
 };
 
 const releaseActivePrompt = () => {
-  const storage = safeSessionStorage();
-  if (!storage) return;
-
-  if (storage.getItem(ACTIVE_PROMPT_KEY) === ACTIVE_PROMPT_VALUE) {
-    storage.removeItem(ACTIVE_PROMPT_KEY);
-  }
+  releaseCoordinatedPrompt(ACTIVE_PROMPT_VALUE);
 };
 
 const markDismissedForCooldown = (role: PromptUserRole) => {
-  const storage = safeLocalStorage();
+  const storage = getBrowserStorage("localStorage");
   if (!storage) return;
 
   markPromptDismissedWithBackoff({
@@ -127,10 +100,10 @@ const markDismissedForCooldown = (role: PromptUserRole) => {
 };
 
 const markInstalled = () => {
-  const storage = safeLocalStorage();
+  const storage = getBrowserStorage("localStorage");
   if (!storage) return;
 
-  storage.setItem(INSTALLED_KEY, "true");
+  writeStorageItem(storage, INSTALLED_KEY, "true");
   clearPromptDismissalState({
     dismissedUntilKey: DISMISSED_UNTIL_KEY,
     dismissCountKey: DISMISS_COUNT_KEY,
@@ -146,6 +119,7 @@ export function PwaInstallPrompt() {
   const [promptKind, setPromptKind] = useState<PromptKind>("native");
   const [showIosSteps, setShowIosSteps] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalling, setIsInstalling] = useState(false);
   const hasCompletedRegistration = hasCompletedRegistrationForPrompts(user);
 
   useEffect(() => {
@@ -173,7 +147,7 @@ export function PwaInstallPrompt() {
   useEffect(() => {
     if (isVisible) return;
 
-    const isPrivateAppRoute = pathname.startsWith("/app");
+    const isPrivateAppRoute = isPrivateAppPath(pathname);
     const iosDevice = isIosDevice();
     const canInstallNatively = Boolean(deferredPrompt);
     const canOfferInstall = iosDevice || canInstallNatively;
@@ -200,10 +174,17 @@ export function PwaInstallPrompt() {
   }, [deferredPrompt, hasCompletedRegistration, isVisible, pathname]);
 
   useEffect(() => {
-    if (!isVisible || hasCompletedRegistration) return;
+    if (!isVisible) return;
+    if (hasCompletedRegistration && isPrivateAppPath(pathname)) return;
 
     releaseActivePrompt();
-  }, [hasCompletedRegistration, isVisible]);
+    const timer = window.setTimeout(() => {
+      setIsVisible(false);
+      setShowIosSteps(false);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [hasCompletedRegistration, isVisible, pathname]);
 
   const closePrompt = useCallback(
     (persist: "cooldown" | "installed") => {
@@ -222,6 +203,8 @@ export function PwaInstallPrompt() {
   );
 
   const handleInstall = async () => {
+    if (isInstalling) return;
+
     if (promptKind === "ios") {
       if (showIosSteps) {
         closePrompt("cooldown");
@@ -237,6 +220,8 @@ export function PwaInstallPrompt() {
       return;
     }
 
+    setIsInstalling(true);
+
     try {
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
@@ -249,6 +234,8 @@ export function PwaInstallPrompt() {
       closePrompt(choice.outcome === "accepted" ? "installed" : "cooldown");
     } catch {
       closePrompt("cooldown");
+    } finally {
+      setIsInstalling(false);
     }
   };
 
@@ -315,6 +302,7 @@ export function PwaInstallPrompt() {
         <div className="mt-4 grid gap-2">
           <Button
             className="h-11 rounded-2xl text-sm font-extrabold"
+            disabled={isInstalling}
             onClick={handleInstall}
             type="button"
           >
@@ -324,7 +312,11 @@ export function PwaInstallPrompt() {
               <Download className="h-4 w-4" aria-hidden="true" />
             )}
             <span>
-              {promptKind === "ios" && showIosSteps ? "Entendi" : "Adicionar à tela inicial"}
+              {isInstalling
+                ? "Abrindo instalação..."
+                : promptKind === "ios" && showIosSteps
+                  ? "Entendi"
+                  : "Adicionar à tela inicial"}
             </span>
           </Button>
 

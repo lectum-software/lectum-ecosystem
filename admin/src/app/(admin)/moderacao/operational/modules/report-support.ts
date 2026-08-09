@@ -6,8 +6,7 @@ import type {
   AdminModerationOperationalAlertType,
   AdminModerationSeverity,
 } from "@/api/req/moderation";
-import { isPublicMediaPath } from "@/lib/admin-media";
-import { adminApiUrl } from "@/lib/api-url";
+import { isAdminPublicMediaUrl } from "@/lib/admin-media";
 
 export const PAGE_LIMIT = 10;
 
@@ -333,6 +332,9 @@ export const operationalTypeLabels: Record<AdminModerationOperationalAlert["type
   unpublished_required_settings: "Perfil não publicado",
 };
 
+export const operationalTypeLabel = (value: AdminModerationOperationalAlert["type"]) =>
+  operationalTypeLabels[value] ?? "Pendência operacional";
+
 export const operationalGroupCopy: Record<
   AdminModerationOperationalAlert["group"],
   { className: string; label: string }
@@ -379,10 +381,4 @@ export const formatPendingDuration = (alert: AdminModerationOperationalAlert) =>
   return `${numberFormatter.format(years)} ${years === 1 ? "ano" : "anos"}`;
 };
 
-export const isPublicAdminMediaSrc = (src: string) => {
-  try {
-    return isPublicMediaPath(new URL(src, adminApiUrl).pathname);
-  } catch {
-    return false;
-  }
-};
+export const isPublicAdminMediaSrc = (src: string) => isAdminPublicMediaUrl(src);

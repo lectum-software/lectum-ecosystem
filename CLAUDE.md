@@ -36,7 +36,7 @@ Leia antes de executar qualquer task:
 
 - O MCP de projeto está em `.mcp.json`.
 - O Quick Copy ativo é `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a`.
-- O espaço Builder validado é `Lectum`, Space ID `01ea07af363545a1936f2baa569cd24c`.
+- O espaço Builder validado é `Lectum`; identificadores operacionais não são versionados.
 - Use o Builder/Quick Copy como referência visual, não como arquitetura final.
 - As imagens locais em `_product/proto` são fallback e referência auditável.
 - Nunca aceite código gerado por Builder CLI sem adequar aos padrões de `ARCHITECTURE.md`.

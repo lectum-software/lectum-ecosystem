@@ -3,19 +3,19 @@
 import { ExternalLink, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import type { AdminModerationOperationalAlert } from "@/api/req/moderation";
+import { VerifiedBadgeIcon } from "@/components/admin-icons";
 import { cn } from "@/lib/utils";
 import {
   formatDateTime,
   formatPendingDuration,
   numberFormatter,
-  operationalTypeLabels,
+  operationalTypeLabel,
 } from "../modules/report-support";
 import {
   alertFactValue,
   OperationalGroup,
   resolveComplianceProfileStatus,
   Severity,
-  VerifiedBadgeIcon,
 } from "./report-common";
 
 export const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperationalAlert }) => {
@@ -29,7 +29,7 @@ export const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperatio
             <OperationalGroup value={alert.group} />
             <Severity value={alert.priority} />
             <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-black text-muted">
-              {operationalTypeLabels[alert.type]}
+              {operationalTypeLabel(alert.type)}
             </span>
           </div>
           <h3 className="mt-3 text-base font-black text-foreground">{alert.title}</h3>
@@ -75,7 +75,7 @@ export const OperationalAlertCard = ({ alert }: { alert: AdminModerationOperatio
 
 export const CompliancePendingBadge = ({ alert }: { alert: AdminModerationOperationalAlert }) => (
   <span className="inline-flex max-w-full items-center rounded-full bg-danger/10 px-2.5 py-1 text-xs font-medium text-danger">
-    <span className="truncate">{operationalTypeLabels[alert.type]}</span>
+    <span className="truncate">{operationalTypeLabel(alert.type)}</span>
   </span>
 );
 

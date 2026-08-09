@@ -1,4 +1,4 @@
-﻿# ADR-0034: Paridade visual mobile de analytics e avaliações do psicólogo
+# ADR-0034: Paridade visual mobile de analytics e avaliações do psicólogo
 
 ## Status
 

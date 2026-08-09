@@ -1,4 +1,4 @@
-﻿# ADR-0013: Onboarding de boas-vindas do paciente
+# ADR-0013: Onboarding de boas-vindas do paciente
 
 ## Status
 

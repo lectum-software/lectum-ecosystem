@@ -2,7 +2,11 @@ import type { NextFunction, Request, Response } from "express";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
-import { shouldBlockAdminViewAsWrite } from "@/utils/admin-view-as";
+import {
+  getAdminViewAsPayloadFromRequest,
+  resolveUserRequestDeviceId,
+  shouldBlockAdminViewAsWrite,
+} from "@/utils/admin-view-as";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import { passLogin } from "../_auth/helpers/login";
 import { passToken } from "../_auth/helpers/token";
@@ -22,7 +26,8 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
     return next();
   }
 
-  if (shouldBlockAdminViewAsWrite(req)) {
+  const adminViewAsPayload = getAdminViewAsPayloadFromRequest(req);
+  if (shouldBlockAdminViewAsWrite(req, adminViewAsPayload)) {
     return send(res, {
       status: 403,
       ...error("admin_view_as_read_only", {}),
@@ -31,18 +36,19 @@ const optionalAuth = async (req: Request, res: Response, next: NextFunction) => 
 
   const device = getDevice(req);
   if (device.err) return next();
+  const authenticationDeviceId = resolveUserRequestDeviceId(req, device.id, adminViewAsPayload);
 
   try {
     passport.authenticate("jwt-user-api", async (_: NotAuthorized, login: user) => {
       if (!login) return next();
 
-      const token = await passToken(login, device.id, requestToken);
+      const token = await passToken(login, authenticationDeviceId, requestToken);
       if (token.err) return next();
 
       const logged = await passLogin(login);
       if (logged.err) return next();
 
-      req.device = device.id;
+      req.device = authenticationDeviceId;
       req.auth = login;
 
       return next();

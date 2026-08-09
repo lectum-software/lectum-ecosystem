@@ -23,8 +23,25 @@ if should_run_migrations; then
     exit 1
   fi
 
-  echo "Applying Prisma migrations with prisma migrate deploy..."
-  ./node_modules/.bin/prisma migrate deploy
+  echo "Aplicando atualizações seguras do banco..."
+  umask 077
+  migration_output="$(mktemp)"
+  cleanup_migration_output() {
+    rm -f "$migration_output"
+  }
+  trap cleanup_migration_output EXIT
+
+  if ./node_modules/.bin/prisma migrate deploy >"$migration_output" 2>&1; then
+    cleanup_migration_output
+    trap - EXIT
+    echo "Atualizações do banco concluídas."
+  else
+    migration_status=$?
+    cleanup_migration_output
+    trap - EXIT
+    echo "Não foi possível concluir as atualizações do banco com segurança." >&2
+    exit "$migration_status"
+  fi
 else
   echo "Skipping Prisma migrations because RUN_DB_MIGRATIONS=${RUN_DB_MIGRATIONS:-false}."
 fi

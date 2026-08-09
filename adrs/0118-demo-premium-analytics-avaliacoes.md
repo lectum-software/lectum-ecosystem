@@ -1,4 +1,4 @@
-﻿# ADR-0118: Demonstração premium em Analytics e Avaliações
+# ADR-0118: Demonstração premium em Analytics e Avaliações
 
 ## Status
 

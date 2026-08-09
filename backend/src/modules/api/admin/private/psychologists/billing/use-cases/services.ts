@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type { admin } from "@/interfaces/objects";
 import {
@@ -186,16 +186,6 @@ const adminActor = (adminUser: admin | undefined) => {
 
 const mapGrantError = (err: unknown): Resolve => {
   const message = err instanceof Error ? err.message : "unknown";
-
-  const status =
-    message === "external_billing_subscription_blocks_admin_grant"
-      ? 409
-      : message === "crp_registration_date_invalid" || message === "crp_registration_date_future"
-        ? 400
-        : message.includes("not_found")
-          ? 404
-          : 400;
-
   const copy: Record<string, string> = {
     crp_registration_date_future: "A data de inscricao no CRP nao pode estar no futuro.",
     crp_registration_date_invalid: "A data de inscricao no CRP e invalida.",
@@ -206,12 +196,21 @@ const mapGrantError = (err: unknown): Resolve => {
     psychologist_profile_not_found_for_grant: "Psicologo nao encontrado para concessao.",
     psychologist_user_not_found_for_grant: "Psicologo nao encontrado para concessao.",
   };
+  const knownCode = Object.hasOwn(copy, message) ? message : "admin_courtesy_grant_failed";
+  const status =
+    knownCode === "external_billing_subscription_blocks_admin_grant"
+      ? 409
+      : knownCode === "professional_plan_not_found" ||
+          knownCode === "psychologist_profile_not_found_for_grant" ||
+          knownCode === "psychologist_user_not_found_for_grant"
+        ? 404
+        : 400;
 
   return {
     status,
     success: false,
-    code: message,
-    error: copy[message] ?? "Nao foi possivel conceder a cortesia.",
+    code: knownCode,
+    error: copy[knownCode] ?? "Nao foi possivel conceder a cortesia.",
   };
 };
 

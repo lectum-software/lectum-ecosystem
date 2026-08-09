@@ -1,4 +1,4 @@
-﻿# ADR-0023 - Avaliações de profissionais
+# ADR-0023 - Avaliações de profissionais
 
 ## Status
 

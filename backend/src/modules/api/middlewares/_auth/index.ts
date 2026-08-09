@@ -5,7 +5,11 @@ import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 //Types
 import type { user } from "@/interfaces/objects";
-import { shouldBlockAdminViewAsWrite } from "@/utils/admin-view-as";
+import {
+  getAdminViewAsPayloadFromRequest,
+  resolveUserRequestDeviceId,
+  shouldBlockAdminViewAsWrite,
+} from "@/utils/admin-view-as";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import { passLogin } from "./helpers/login";
@@ -42,7 +46,8 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
       }),
     });
 
-  if (shouldBlockAdminViewAsWrite(req)) {
+  const adminViewAsPayload = getAdminViewAsPayloadFromRequest(req);
+  if (shouldBlockAdminViewAsWrite(req, adminViewAsPayload)) {
     return send(res, {
       status: 403,
       ...error("admin_view_as_read_only", {}),
@@ -56,6 +61,7 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
       ...error(device.err, {}),
     });
   }
+  const authenticationDeviceId = resolveUserRequestDeviceId(req, device.id, adminViewAsPayload);
 
   try {
     passport.authenticate("jwt-user-api", async (authError: Not_Authorized, login: user) => {
@@ -69,14 +75,14 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
 
         if (login) {
           //Token
-          const token = await passToken(login, device.id, requestToken);
+          const token = await passToken(login, authenticationDeviceId, requestToken);
           if (token.err) return send(res, token.err);
 
           //Login
           const logged = await passLogin(login);
           if (logged.err) return send(res, logged.err);
 
-          req.device = device.id;
+          req.device = authenticationDeviceId;
 
           req.auth = login;
           return next();

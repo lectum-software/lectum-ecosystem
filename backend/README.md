@@ -85,4 +85,6 @@ docker run --rm -p 3001:3001 \
   lectum-backend
 ```
 
-Por padrão a imagem define `SWAGGER=false`. Para expor a documentação em produção, habilite `SWAGGER=true` conscientemente e garanta que `BASE` aponte para a URL pública correta.
+Por segurança, a documentação da API nunca é exposta em homologação, staging ou produção,
+mesmo com `SWAGGER=true`. Gere e inspecione o artefato apenas em ambiente local descartável;
+ele usa servidor relativo e não incorpora URLs configuradas no deploy.

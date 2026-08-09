@@ -13,6 +13,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { getCurrentAnalyticsPath, normalizeAnalyticsPath } from "@/utils/analytics-path";
 import { formatCrpLabel } from "@/utils/crp";
 import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
@@ -89,12 +90,6 @@ const getDisplayMode = (): DisplayMode => {
   if (window.matchMedia("(display-mode: browser)").matches) return "browser";
 
   return "unknown";
-};
-
-const currentAnalyticsPath = () => {
-  if (typeof window === "undefined") return "/";
-
-  return `${window.location.pathname || "/"}${window.location.search || ""}`;
 };
 
 const preserveFallbackWhatsAppText = (fallbackUrl: string, trackedUrl?: string | null) => {
@@ -346,7 +341,7 @@ export const PsychologistWhatsAppRedirectButton = ({
           display_mode: getDisplayMode(),
           occurred_at: new Date().toISOString(),
           page_kind: trackingContext?.pageKind,
-          path: trackingContext?.path ?? currentAnalyticsPath(),
+          path: normalizeAnalyticsPath(trackingContext?.path ?? getCurrentAnalyticsPath()),
           session_id: analyticsIdentity.sessionId,
           target_id: trackingContext?.targetId ?? undefined,
           target_type: trackingContext?.targetType ?? undefined,

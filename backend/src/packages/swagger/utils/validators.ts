@@ -3,6 +3,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { isPublishedRuntime } from "../../../utils/runtime-config";
 import { toSafeErrorLog } from "../../../utils/safe-error-log";
 
 const zodToSwagger = (zodSchema, location = "body") => {
@@ -70,9 +71,8 @@ export async function loadValidations(route) {
 
     let fileValidator = path.resolve(route.validator);
 
-    const isProd = process.env.NODE_ENV?.includes("prod");
     const pointsToCompiledValidator = fileValidator.includes(`${path.sep}dist${path.sep}`);
-    if (fileValidator.endsWith(".ts") && (isProd || pointsToCompiledValidator)) {
+    if (fileValidator.endsWith(".ts") && (isPublishedRuntime() || pointsToCompiledValidator)) {
       fileValidator = fileValidator
         .replace(path.join(process.cwd(), "src"), path.join(process.cwd(), "dist"))
         .replace(/\.ts$/, ".js");

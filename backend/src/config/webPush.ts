@@ -1,16 +1,23 @@
 import webPush from "web-push";
+import { normalizeVapidSubject } from "@/utils/vapid-subject";
 
 export const vapidKeys = {
-  email: process.env.VAPID_EMAIL || "",
-  publicKey: process.env.VAPID_PUBLIC_KEY || "",
-  privateKey: process.env.VAPID_PRIVATE_KEY || "",
+  email: normalizeVapidSubject(process.env.VAPID_EMAIL),
+  publicKey: process.env.VAPID_PUBLIC_KEY?.trim() || "",
+  privateKey: process.env.VAPID_PRIVATE_KEY?.trim() || "",
 };
 
-export const isWebPushConfigured = () =>
-  Boolean(vapidKeys.email && vapidKeys.publicKey && vapidKeys.privateKey);
+let webPushConfigured = false;
 
-if (isWebPushConfigured()) {
-  webPush.setVapidDetails(`mailto:${vapidKeys.email}`, vapidKeys.publicKey, vapidKeys.privateKey);
+if (vapidKeys.email && vapidKeys.publicKey && vapidKeys.privateKey) {
+  try {
+    webPush.setVapidDetails(vapidKeys.email, vapidKeys.publicKey, vapidKeys.privateKey);
+    webPushConfigured = true;
+  } catch {
+    console.warn("[WEB NOTIFICATION] Configuração inválida; canal push desabilitado.");
+  }
 }
+
+export const isWebPushConfigured = () => webPushConfigured;
 
 export default webPush;

@@ -221,9 +221,7 @@ export const PaymentMethodCard = ({ billing }: { billing: AdminPsychologistBilli
             <p className="text-lg font-black text-foreground">
               {formatPaymentMethod(billing.payment_method)}
             </p>
-            <p className="mt-1 text-sm font-bold text-muted">
-              Gateway: {billing.payment_method.gateway}
-            </p>
+            <p className="mt-1 text-sm font-bold text-muted">Dados exibidos de forma mascarada.</p>
           </div>
           <Badge className="bg-success-soft text-success">Mascarado</Badge>
         </div>
@@ -251,13 +249,12 @@ export const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBill
       </div>
     ) : (
       <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
+        <table className="w-full min-w-[680px] text-left text-sm">
           <thead className="border-b border-border text-xs text-muted">
             <tr>
               <th className="py-3 pr-3 font-black">Data</th>
               <th className="px-3 py-3 font-black">Descricao</th>
               <th className="px-3 py-3 font-black">Valor</th>
-              <th className="px-3 py-3 font-black">Metodo</th>
               <th className="px-3 py-3 font-black">Status</th>
             </tr>
           </thead>
@@ -272,7 +269,6 @@ export const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBill
                 <td className="px-3 py-3 font-black text-foreground">
                   {formatMoney(item.amount_cents)}
                 </td>
-                <td className="px-3 py-3 font-bold text-muted">{item.gateway}</td>
                 <td className="px-3 py-3">
                   <PaymentHistoryBadge label={item.status_label} status={item.status} />
                 </td>

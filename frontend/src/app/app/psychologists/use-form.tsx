@@ -1,4 +1,4 @@
-﻿import { type ReactNode, useEffect, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
 import { z } from "zod";
 import type { DirectoryPsychologistFilters } from "@/api/generator/types/directory";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";

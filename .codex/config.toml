@@ -2,4 +2,4 @@ model_instructions_file = "instructions.md"
 
 [mcp_servers.builder-mcp]
 command = "npx"
-args = ["@builder.io/dev-tools@latest", "mcp"]
+args = ["@builder.io/dev-tools@1.79.0", "mcp"]

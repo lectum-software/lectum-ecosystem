@@ -1,4 +1,4 @@
-﻿import { error, msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import type {
   IPsychologistAnalyticsIndexDTO,
   PsychologistAnalyticsPeriod,

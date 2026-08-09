@@ -20,6 +20,8 @@ import { usePsychologistsSetupContext } from "./setup-context";
 import type { PsychologistsDirectory } from "./use-psychologists-directory";
 import type { PsychologistsOnboarding } from "./use-psychologists-onboarding";
 
+const MAX_TRACKED_SECONDS = 24 * 60 * 60;
+
 export const usePsychologistsVideoAnalytics = ({
   directory,
   onboarding,
@@ -191,9 +193,9 @@ export const usePsychologistsVideoAnalytics = ({
 
       const state = ensureFeedVideoAnalyticsState(featuredPsychologistId, activeVideoSource);
       const durationSeconds = Number.isFinite(video.duration)
-        ? Math.max(0, Math.round(video.duration))
+        ? Math.min(MAX_TRACKED_SECONDS, Math.max(0, Math.round(video.duration)))
         : 0;
-      const currentTime = Math.max(0, video.currentTime || 0);
+      const currentTime = Math.min(MAX_TRACKED_SECONDS, Math.max(0, video.currentTime || 0));
 
       if (!documentHasUserAttention()) {
         state.lastPosition = currentTime;
@@ -208,7 +210,7 @@ export const usePsychologistsVideoAnalytics = ({
       state.maxPosition = Math.max(state.maxPosition, currentTime);
 
       if (durationSeconds > 0) {
-        const watchedSecond = Math.min(durationSeconds, Math.max(0, Math.floor(currentTime)));
+        const watchedSecond = Math.min(durationSeconds - 1, Math.max(0, Math.floor(currentTime)));
         state.watchedSeconds.add(watchedSecond);
 
         const reachedPercent = Math.min(
@@ -254,7 +256,7 @@ export const usePsychologistsVideoAnalytics = ({
       }
 
       const durationSeconds = Number.isFinite(video.duration)
-        ? Math.max(0, Math.round(video.duration))
+        ? Math.min(MAX_TRACKED_SECONDS, Math.max(0, Math.round(video.duration)))
         : 0;
       const payload: DirectoryPsychologistVideoWatchPayload = {
         session_key: state.sessionKey,

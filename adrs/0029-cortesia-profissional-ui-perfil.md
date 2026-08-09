@@ -83,4 +83,4 @@ Decisao de produto para o futuro painel administrativo: a concessao de cortesia 
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Validacao de servico backend com psicologo temporario real removido ao final confirmou que tentativa de alterar CPF/CRP em cortesia com CPF/CRP completos preserva resposta e banco mesmo com `crp_status="pendente"`.
-- Chrome/CDP headless local em 390x844 com `tuliosrezende@gmail.com` confirmou campos disabled, valores visiveis, aviso de bloqueio e ausencia de overflow horizontal.
+- Chrome/CDP headless local em 390x844 com `<CONTA_DE_TESTE_AUTORIZADA>` confirmou campos disabled, valores visiveis, aviso de bloqueio e ausencia de overflow horizontal.

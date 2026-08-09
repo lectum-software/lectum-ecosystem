@@ -1,4 +1,4 @@
-﻿# ADR-0097: Badge TOP Mentor premium em respostas e comentarios
+# ADR-0097: Badge TOP Mentor premium em respostas e comentarios
 
 ## Status
 

@@ -1,4 +1,4 @@
-﻿# ADR 0274 - Regras de comunidade descritivas e arrastaveis
+# ADR 0274 - Regras de comunidade descritivas e arrastaveis
 
 Data: 2026-07-15
 

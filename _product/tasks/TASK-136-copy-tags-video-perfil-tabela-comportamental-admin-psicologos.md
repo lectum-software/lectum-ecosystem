@@ -1,4 +1,4 @@
-﻿# TASK-136 - Ajustes finais da tabela comportamental Admin
+# TASK-136 - Ajustes finais da tabela comportamental Admin
 
 ## Status
 

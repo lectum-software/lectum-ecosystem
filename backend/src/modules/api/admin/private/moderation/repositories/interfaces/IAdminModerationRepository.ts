@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import { activeProfessionalCourtesyEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { AdminModerationEventsQuery } from "../../DTOs/IAdminModerationDTO";
 

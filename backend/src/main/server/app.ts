@@ -1,7 +1,7 @@
+import "@/config/dotenv";
 import path from "node:path";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from "dotenv";
 import express, { type Application, type Express } from "express";
 import helmet from "helmet";
 import * as i18nextMiddleware from "i18next-http-middleware";
@@ -11,14 +11,13 @@ import { getLimiter } from "@/external/limiter";
 import prisma from "@/infra/database/prisma";
 import { errorHandler, errorRoute } from "@/main/server/error";
 import { socket } from "@/main/socket";
+import { getPublicWebOrigins } from "@/utils/public-origin";
 import { getTrustProxySetting } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 import swagger from "./documents";
 import i18next from "./i18n";
 import routes from "./routes";
-
-dotenv.config();
 
 const server: Application = express();
 
@@ -87,7 +86,7 @@ server.use(
 
 server.use(
   cors({
-    origin: process.env.WEB_URL?.split(",").map((url) => url.trim()) || [],
+    origin: getPublicWebOrigins(),
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [

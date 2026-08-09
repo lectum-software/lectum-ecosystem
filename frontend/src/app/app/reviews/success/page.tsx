@@ -1,4 +1,4 @@
-﻿import { ReviewsSuccessLogic } from "./logic";
+import { ReviewsSuccessLogic } from "./logic";
 export default function ReviewsSuccessPage() {
   return <ReviewsSuccessLogic />;
 }

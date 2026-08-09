@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react";
 import Image from "next/image";

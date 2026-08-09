@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { getLimiter } from "@/external/limiter";
 import { login } from "./use-cases/controller";
 import validator from "./validator";

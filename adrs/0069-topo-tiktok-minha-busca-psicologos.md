@@ -1,4 +1,4 @@
-﻿# ADR-0069 - Topo TikTok com Minha Busca na tela de Psicologos
+# ADR-0069 - Topo TikTok com Minha Busca na tela de Psicologos
 
 Status: Accepted
 

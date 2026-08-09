@@ -1,4 +1,4 @@
-﻿import type { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { error500 } from "@/helpers/return";
 import { sendCsv } from "@/helpers/return/csv";
 import service from "./services";

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { useAdminPsychologistReports } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
@@ -142,7 +142,7 @@ export const ReportsTab = ({ id }: { id: string }) => {
     <div className="space-y-5" data-psychologist-detail-tab="denuncias">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {reports.cards.map((card) => {
-          const Icon = reportCardIcon[card.id === "total" ? "total" : card.id];
+          const Icon = reportCardIcon[card.id === "total" ? "total" : card.id] ?? AlertTriangle;
 
           return (
             <CardShell className="p-5" key={card.id}>

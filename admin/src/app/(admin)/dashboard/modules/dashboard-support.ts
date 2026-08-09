@@ -1,3 +1,7 @@
+import { startOfCurrentWeek } from "@/lib/date-period";
+
+export { startOfCurrentWeek };
+
 import type {
   AdminDashboardSummary,
   DashboardMetric,
@@ -39,15 +43,6 @@ export const pad = (value: number) => String(value).padStart(2, "0");
 
 export const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-export const startOfCurrentWeek = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-
-  return date;
-};
 
 export const startOfCurrentMonth = () => {
   const date = new Date();

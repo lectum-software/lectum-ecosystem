@@ -6,7 +6,7 @@ Accepted — 2026-06-21
 
 ## Contexto
 
-Psicologos com cortesia administrativa ativa devem receber a mesma confianca publica de um psicologo assinante verificado dentro da comunidade. O caso real de `tuliosrezende@gmail.com` possuia `professional_subscription.source="admin_grant"` ativo, mas seus posts apareciam sem selo de verificado porque os DTOs de comunidade ainda dependiam apenas de `psychologist_profile.cfp_verified_at`.
+Psicologos com cortesia administrativa ativa devem receber a mesma confianca publica de um psicologo assinante verificado dentro da comunidade. O caso real de `<CONTA_DE_TESTE_AUTORIZADA>` possuia `professional_subscription.source="admin_grant"` ativo, mas seus posts apareciam sem selo de verificado porque os DTOs de comunidade ainda dependiam apenas de `psychologist_profile.cfp_verified_at`.
 
 Ao mesmo tempo, produto definiu que o CTA de WhatsApp em posts e respostas da comunidade deve aparecer para qualquer psicologo com numero publico cadastrado, inclusive no plano gratuito. O WhatsApp deixa de ser um beneficio exclusivo de selo/assinatura nesses cards, embora os cliques continuem usando o fluxo seguro de redirecionamento ja existente.
 
@@ -36,7 +36,7 @@ Posts editados ja persistem `community_post.edited_at`, mas o card do feed/comun
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20`, confirmando `author.verified=true`, `author.whatsapp_url` preenchido e `edited_at` para post de `tuliosrezende@gmail.com`.
+- Smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20`, confirmando `author.verified=true`, `author.whatsapp_url` preenchido e `edited_at` para post de `<CONTA_DE_TESTE_AUTORIZADA>`.
 - Chrome/CDP autenticado em `/app/community/feed`, confirmando no card `teste novo`: selo verificado, `Psicologo • ha 1 d · editado` e botao `Chamar no WhatsApp`; e em resposta profissional destacada: botao `Chamar no WhatsApp`.
 
 ## Atualizacao 2026-06-22 - CTA WhatsApp sem quebra

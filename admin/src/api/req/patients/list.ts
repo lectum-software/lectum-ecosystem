@@ -1,5 +1,6 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { ApiResponse } from "@/api/types";
 
 export type PatientsListSort = "name" | "recent";
@@ -72,7 +73,7 @@ export type AdminPatientsList = {
   pages: number;
   per_page: number;
   sort: PatientsListSort;
-  source: "user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save";
+  source: AdminPublicSource<"user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save">;
 };
 
 const cleanParams = (input: PatientsListQuery) => ({

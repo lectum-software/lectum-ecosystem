@@ -1,5 +1,6 @@
 import type { Response } from "express";
 import { sanitizePublicErrorData, sanitizePublicErrorMessage } from "@/utils/public-error";
+import { sanitizePublicResponseData } from "@/utils/public-response";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 import { applyUserAuthCookie } from "@/utils/user-auth-cookie";
@@ -27,7 +28,9 @@ export const send = (res: Response, resolve: Resolve) => {
   } = cookieAwareResolve;
   const sanitizedResolve = {
     ...publicResolve,
-    data: sanitizeSensitiveData(cookieAwareResolve.data, { removeAuthTokens: !allowAuthTokens }),
+    data: sanitizePublicResponseData(
+      sanitizeSensitiveData(cookieAwareResolve.data, { removeAuthTokens: !allowAuthTokens }),
+    ),
   };
 
   if (sanitizedResolve.success) {
@@ -49,12 +52,12 @@ export const send = (res: Response, resolve: Resolve) => {
     objectError.errors = sanitizePublicErrorData(
       sanitizeSensitiveData(sanitizedResolve.errors, {
         removeAuthTokens: true,
+        removePii: true,
       }),
     );
   if (sanitizedResolve.code) objectError.code = sanitizedResolve.code;
-  if (sanitizedResolve.data !== undefined) {
-    objectError.data = sanitizePublicErrorData(sanitizedResolve.data);
-  }
+  // `error()` usa `data` internamente para interpolar traduções. Esses parâmetros
+  // (por exemplo nomes de modelos) não fazem parte do contrato público de falha.
 
   return res.status(sanitizedResolve.status || 400).send(objectError);
 };

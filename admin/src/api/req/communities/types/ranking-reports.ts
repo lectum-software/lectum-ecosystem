@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type { AdminCommunityIdentity, AdminCommunityPaginationQuery } from "./detail-list";
 
 export type AdminCommunityRankingItem = {
@@ -64,7 +65,7 @@ export type AdminCommunityRanking = {
     previous_from: string;
     previous_to: string;
   };
-  source: "community_member+community_post+post_reply+post_vote+post_save+post_share";
+  source: AdminPublicSource<"community_member+community_post+post_reply+post_vote+post_save+post_share">;
 };
 
 export type AdminCommunityReportsQuery = AdminCommunityPaginationQuery & {
@@ -160,7 +161,7 @@ export type AdminCommunityReports = {
   cards: {
     id: "dismissed" | "pending" | "total" | "upheld";
     label: string;
-    source: "post_report";
+    source: AdminPublicSource<"post_report">;
     value: number;
   }[];
   community: Pick<AdminCommunityIdentity, "id" | "name" | "slug">;
@@ -189,7 +190,7 @@ export type AdminCommunityReports = {
     timezone: "server-local";
     to: string;
   };
-  source: "post_report+community_post+post_reply";
+  source: AdminPublicSource<"post_report+community_post+post_reply">;
 };
 
 export type AdminCommunityResolveReportsResult = {

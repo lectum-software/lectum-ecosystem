@@ -1,4 +1,4 @@
-﻿import { ProfessionalBillingLogic } from "./logic";
+import { ProfessionalBillingLogic } from "./logic";
 
 export default function Page() {
   return <ProfessionalBillingLogic />;

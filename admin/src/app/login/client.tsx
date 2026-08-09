@@ -35,12 +35,19 @@ export const LoginPageClient = () => {
   };
 
   return (
-    <main className="grid min-h-dvh bg-background p-4 sm:p-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(440px,0.62fr)] lg:p-0">
+    <main className="grid min-h-dvh grid-cols-[minmax(0,1fr)] overflow-x-hidden bg-background p-4 sm:p-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(440px,0.62fr)] lg:p-0">
       <section className="relative hidden overflow-hidden bg-sidebar p-10 text-sidebar-foreground lg:block">
         <div className="admin-login-backdrop absolute inset-0" />
         <div className="relative z-10 flex h-full flex-col justify-between">
           <div>
-            <Image alt="Lectum" height={39} priority src="/logo-light.png" width={190} />
+            <Image
+              alt="Lectum"
+              className="brightness-0 invert"
+              height={39}
+              priority
+              src="/logo-light.png"
+              width={190}
+            />
             <div className="mt-16 max-w-xl">
               <p className="text-sm font-bold uppercase tracking-[0.32em] text-sidebar-muted">
                 Ambiente administrativo
@@ -58,7 +65,7 @@ export const LoginPageClient = () => {
         </div>
       </section>
 
-      <section className="mx-auto flex w-full max-w-md flex-col justify-center lg:px-12">
+      <section className="mx-auto flex min-w-0 w-full max-w-md flex-col justify-center lg:px-12">
         <div className="mb-8 flex items-center gap-3 lg:hidden">
           <Image
             alt="Lectum"
@@ -73,7 +80,7 @@ export const LoginPageClient = () => {
           </span>
         </div>
 
-        <div className="rounded-[28px] border border-border bg-surface p-6 shadow-admin sm:p-8">
+        <div className="min-w-0 max-w-full rounded-[28px] border border-border bg-surface p-6 shadow-admin sm:p-8">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.22em] text-primary">Admin</p>
             <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-foreground">

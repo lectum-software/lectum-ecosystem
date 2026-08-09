@@ -2,12 +2,14 @@
 
 import { Eye, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { revokeSession } from "@/hooks/cookies/signout";
 import { cn } from "@/lib/utils";
 import {
   ADMIN_VIEW_AS_STORAGE_EVENT,
   type AdminViewAsSession,
   clearAdminViewAsSession,
+  getAdminViewAsExpirationDelay,
   normalizeAdminReturnUrl,
   readAdminViewAsSession,
 } from "@/utils/admin-view-as";
@@ -31,6 +33,7 @@ const formatExpiresAt = (session: AdminViewAsSession) => {
 
 export const AdminViewAsBanner = () => {
   const [session, setSession] = useState<AdminViewAsSession | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     const syncSession = () => setSession(readAdminViewAsSession());
@@ -45,15 +48,47 @@ export const AdminViewAsBanner = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!session) return;
+
+    const expirationDelay = getAdminViewAsExpirationDelay(session.expiresAt);
+    if (expirationDelay === null) return;
+
+    const expireSession = () => {
+      const returnUrl = normalizeAdminReturnUrl(session.adminReturnUrl) || "/auth/login";
+      clearAdminViewAsSession();
+      setSession(null);
+      window.location.href = returnUrl;
+    };
+
+    if (expirationDelay === 0) {
+      expireSession();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(expireSession, expirationDelay);
+    return () => window.clearTimeout(timeoutId);
+  }, [session]);
+
   if (!session) return null;
 
   const expiresAt = formatExpiresAt(session);
 
   const exitViewAs = async () => {
+    if (isExiting) return;
+
+    setIsExiting(true);
     const returnUrl = normalizeAdminReturnUrl(session.adminReturnUrl) || "/auth/login";
-    await revokeSession();
-    clearAdminViewAsSession();
-    window.location.href = returnUrl;
+    try {
+      await revokeSession();
+      clearAdminViewAsSession();
+      window.location.href = returnUrl;
+    } catch {
+      setIsExiting(false);
+      toast.error(
+        "Não foi possível encerrar a visualização. Verifique sua conexão e tente novamente.",
+      );
+    }
   };
 
   return (
@@ -81,11 +116,12 @@ export const AdminViewAsBanner = () => {
         </div>
         <button
           className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary-soft px-3 text-sm font-extrabold text-primary transition hover:border-primary/40 hover:bg-primary-soft/80 sm:w-auto"
+          disabled={isExiting}
           onClick={exitViewAs}
           type="button"
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
-          Sair da visualização
+          {isExiting ? "Saindo..." : "Sair da visualização"}
         </button>
       </div>
     </div>

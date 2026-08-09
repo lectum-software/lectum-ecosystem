@@ -2,6 +2,7 @@
 
 import { CalendarDays, Flag, type LucideIcon } from "lucide-react";
 import type { DashboardPendingReport } from "@/api/req/dashboard";
+import { reportReasonLabel } from "@/lib/moderation-copy";
 import { cn } from "@/lib/utils";
 import { formatDateTime, numberFormatter } from "../modules/dashboard-support";
 import { CardShell } from "./common";
@@ -45,6 +46,11 @@ export const PendingReportsCard = ({
     baixa: "bg-surface-muted text-muted",
     media: "bg-warning/10 text-warning",
   };
+  const severityLabels: Record<DashboardPendingReport["severity"], string> = {
+    alta: "Alta",
+    baixa: "Baixa",
+    media: "Média",
+  };
 
   return (
     <CardShell className="p-5">
@@ -72,14 +78,16 @@ export const PendingReportsCard = ({
               key={report.id}
             >
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-bold text-foreground">{report.reason}</h3>
+                <h3 className="text-sm font-bold text-foreground">
+                  {reportReasonLabel(report.reason)}
+                </h3>
                 <span
                   className={cn(
                     "rounded-full px-2 py-1 text-[0.65rem] font-bold",
                     severityClasses[report.severity],
                   )}
                 >
-                  {report.severity}
+                  {severityLabels[report.severity]}
                 </span>
               </div>
               <p className="mt-2 text-xs font-semibold text-muted">{report.target_title}</p>
@@ -88,9 +96,6 @@ export const PendingReportsCard = ({
               ) : null}
               <p className="mt-3 text-xs font-bold text-foreground">
                 {formatDateTime(report.created_at)}
-              </p>
-              <p className="mt-2 text-[0.7rem] text-muted">
-                Caminho futuro: abrir este ID na moderação de comunidades ({report.id}).
               </p>
             </article>
           ))

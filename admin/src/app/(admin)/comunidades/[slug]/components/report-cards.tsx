@@ -27,6 +27,7 @@ import type {
   AdminCommunityResolveReportsInput,
 } from "@/api/req/communities";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
@@ -49,10 +50,10 @@ export type CommunityReportCard = AdminCommunityReports["cards"][number];
 export type CommunityReportFilterType = NonNullable<AdminCommunityReportsQuery["type"]>;
 
 export const emptyCommunityReportCards: CommunityReportCard[] = [
-  { id: "total", label: "Total de denúncias", source: "post_report", value: 0 },
-  { id: "pending", label: "Pendentes", source: "post_report", value: 0 },
-  { id: "upheld", label: "Procedentes", source: "post_report", value: 0 },
-  { id: "dismissed", label: "Improcedentes", source: "post_report", value: 0 },
+  { id: "total", label: "Total de denúncias", source: "conteudo", value: 0 },
+  { id: "pending", label: "Pendentes", source: "conteudo", value: 0 },
+  { id: "upheld", label: "Procedentes", source: "conteudo", value: 0 },
+  { id: "dismissed", label: "Improcedentes", source: "conteudo", value: 0 },
 ];
 
 export const communityReportTypeFallback: AdminCommunityReports["filters"]["types"] = [
@@ -459,6 +460,9 @@ export const CommunityReportResolveDialog = ({
     (option) => option.value !== state.report.status_group,
   );
   const mutation = useAdminCommunityResolveReports(slug);
+  const dialogRef = useAdminDialogLifecycle(onClose, {
+    closeEnabled: !mutation.isPending,
+  });
   const form = useForm<CommunityReportResolveFormValues>({
     defaultValues: {
       confirmation: "",
@@ -499,6 +503,7 @@ export const CommunityReportResolveDialog = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-foreground/40 p-0 sm:items-center sm:p-4"
+      ref={dialogRef}
       role="presentation"
     >
       <FormProvider {...form}>
@@ -531,6 +536,7 @@ export const CommunityReportResolveDialog = ({
               <button
                 aria-label="Fechar"
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted"
+                disabled={mutation.isPending}
                 onClick={onClose}
                 type="button"
               >
@@ -577,6 +583,7 @@ export const CommunityReportResolveDialog = ({
           <div className="flex shrink-0 flex-col gap-2 border-t border-border/70 bg-surface p-4 sm:flex-row sm:justify-end">
             <button
               className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
+              disabled={mutation.isPending}
               onClick={onClose}
               type="button"
             >

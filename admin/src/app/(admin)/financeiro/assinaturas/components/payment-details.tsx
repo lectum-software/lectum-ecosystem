@@ -183,8 +183,7 @@ export const PaymentHistoryRow = ({ item }: { item: FinancePaymentHistoryItem })
           <PaymentHistoryStatusBadge item={item} />
         </div>
         <p className="mt-1 text-xs font-semibold text-muted">
-          <time dateTime={item.occurred_at}>{formatDateTime(item.occurred_at)}</time> ·{" "}
-          {item.gateway}
+          <time dateTime={item.occurred_at}>{formatDateTime(item.occurred_at)}</time>
         </p>
         <IdentifierLine
           className="mt-1"

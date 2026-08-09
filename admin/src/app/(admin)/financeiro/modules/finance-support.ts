@@ -1,3 +1,7 @@
+import { startOfCurrentWeek } from "@/lib/date-period";
+
+export { startOfCurrentWeek };
+
 import { BadgeDollarSign, type LucideIcon, UserPlus, UsersRound, XCircle } from "lucide-react";
 import type {
   AdminFinanceDashboard,
@@ -96,14 +100,6 @@ export const parseFinanceDate = (value?: string | null) => {
     return null;
   }
 
-  return date;
-};
-
-export const startOfCurrentWeek = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
   return date;
 };
 
@@ -214,13 +210,4 @@ export const isValidRange = (range: FinanceDashboardQuery) => {
   if (!from || !to) return false;
 
   return from <= to;
-};
-
-export const downloadBlob = (blob: Blob, filename: string) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
 };

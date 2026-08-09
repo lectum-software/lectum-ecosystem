@@ -1,4 +1,4 @@
-﻿import type { Community, CommunityAuthor, CommunityPostMediaItem } from "./community";
+import type { Community, CommunityAuthor, CommunityPostMediaItem } from "./community";
 
 export type PostDetail = {
   id: string;

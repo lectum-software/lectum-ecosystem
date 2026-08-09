@@ -3,6 +3,31 @@ const DEFAULT_CODE_VALIDITY_MINUTES = 15;
 const DEFAULT_USER_JWT_TTL_HOURS = 168;
 const DEFAULT_ADMIN_JWT_TTL_HOURS = 12;
 
+export const DISPOSABLE_RUNTIME_ENVIRONMENTS = [
+  "ci",
+  "dev",
+  "development",
+  "local",
+  "test",
+  "testing",
+] as const;
+
+export const PUBLISHED_RUNTIME_ENVIRONMENTS = [
+  "hml",
+  "homol",
+  "homolog",
+  "homologation",
+  "prd",
+  "prod",
+  "production",
+  "stage",
+  "staging",
+  "stg",
+] as const;
+
+const DISPOSABLE_RUNTIME_ENVIRONMENT_SET = new Set<string>(DISPOSABLE_RUNTIME_ENVIRONMENTS);
+const PUBLISHED_RUNTIME_ENVIRONMENT_SET = new Set<string>(PUBLISHED_RUNTIME_ENVIRONMENTS);
+
 type PositiveIntegerOptions = {
   max?: number;
   min?: number;
@@ -20,8 +45,15 @@ export const parsePositiveInteger = (
   return parsed;
 };
 
-export const isProductionRuntime = () =>
-  ["prod", "production"].includes(process.env.NODE_ENV?.trim().toLowerCase() || "");
+export const isPublishedRuntime = (value: unknown = process.env.NODE_ENV) =>
+  typeof value === "string" && PUBLISHED_RUNTIME_ENVIRONMENT_SET.has(value.trim().toLowerCase());
+
+export const isDisposableRuntime = (value: unknown = process.env.NODE_ENV) =>
+  typeof value === "string" && DISPOSABLE_RUNTIME_ENVIRONMENT_SET.has(value.trim().toLowerCase());
+
+// Mantido como alias para não quebrar consumidores existentes. Cookies e
+// origens precisam da mesma proteção em todos os ambientes publicados.
+export const isProductionRuntime = () => isPublishedRuntime();
 
 export const getTrustProxySetting = (): boolean | number => {
   const raw = process.env.TRUST_PROXY?.trim().toLowerCase();

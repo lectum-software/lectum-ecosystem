@@ -17,6 +17,7 @@ import {
   UserRound,
   Video,
 } from "lucide-react";
+import type { AdminPublicProvenanceSource } from "@/api/public-response";
 import type {
   AdminPsychologistEngagementMetric,
   AdminPsychologistPublicationsQuery,
@@ -330,7 +331,7 @@ export type StatisticsChartMetric = {
   iconToneClassName: string;
   id: string;
   label: string;
-  source: string;
+  source: AdminPublicProvenanceSource;
   shortLabel: string;
   strokeClassName: string;
   swatchClassName: string;
@@ -396,7 +397,7 @@ export const BUSINESS_CHART_METRICS = [
     iconToneClassName: "bg-success-soft",
     getValue: (point) => point.whatsapp_clicks,
     label: "Cliques no WhatsApp",
-    source: "contact_request.channel=whatsapp",
+    source: "engajamento",
     shortLabel: "Conversão",
     strokeClassName: "stroke-success",
     swatchClassName: "bg-success",
@@ -409,8 +410,7 @@ export const BUSINESS_CHART_METRICS = [
     iconToneClassName: "bg-info-soft",
     getValue: (point) => point.visibility_seconds,
     label: "Visibilidade (tempo)",
-    source:
-      "page_view_event.duration_seconds+content_attention_session.attention_seconds+profile_video_watch_session.watched_seconds",
+    source: "plataforma",
     shortLabel: "Visibilidade",
     strokeClassName: "stroke-info",
     swatchClassName: "bg-info",
@@ -432,7 +432,7 @@ export const BUSINESS_CHART_METRICS = [
           point.downvotes * 3,
       ),
     label: "Engajamento (score)",
-    source: "post_vote+post_reply+post_save+post_reply_save+post_share",
+    source: "conteudo",
     shortLabel: "Engajamento",
     strokeClassName: "stroke-chart-secondary",
     swatchClassName: "bg-chart-secondary",
@@ -445,7 +445,7 @@ export const BUSINESS_CHART_METRICS = [
     iconToneClassName: "bg-warning-soft",
     getValue: (point) => point.posts + point.replies,
     label: "Atividade (ações)",
-    source: "community_post.author_id+post_reply.author_id",
+    source: "conteudo",
     shortLabel: "Atividade",
     strokeClassName: "stroke-warning",
     swatchClassName: "bg-warning",
@@ -458,7 +458,7 @@ export const BUSINESS_CHART_METRICS = [
     iconToneClassName: "bg-warning/10",
     getValue: (point) => point.reviews,
     label: "Avaliações",
-    source: "professional_review",
+    source: "conteudo",
     shortLabel: "Avaliações",
     strokeClassName: "stroke-warning",
     swatchClassName: "bg-warning",
@@ -510,7 +510,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "community_visibility",
     getValue: (point) => point.visibility_seconds,
     label: "Visibilidade",
-    source: "content_attention_session.attention_seconds",
+    source: "conteudo",
     shortLabel: "Visibilidade",
     strokeClassName: "stroke-primary",
     swatchClassName: "bg-primary",
@@ -524,7 +524,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "posts",
     getValue: (point) => point.posts,
     label: "Posts",
-    source: "community_post.author_id",
+    source: "conteudo",
     shortLabel: "Posts",
     strokeClassName: "stroke-primary",
     swatchClassName: "bg-primary",
@@ -537,7 +537,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "replies",
     getValue: (point) => point.replies,
     label: "Respostas",
-    source: "post_reply.author_id",
+    source: "conteudo",
     shortLabel: "Respostas",
     strokeClassName: "stroke-info",
     swatchClassName: "bg-info",
@@ -550,7 +550,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "upvotes",
     getValue: (point) => point.upvotes,
     label: "Upvotes recebidos",
-    source: "post_vote.value=1 em conteúdos do psicólogo",
+    source: "conteudo",
     shortLabel: "Upvotes",
     strokeClassName: "stroke-success",
     swatchClassName: "bg-success",
@@ -563,7 +563,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "downvotes",
     getValue: (point) => point.downvotes,
     label: "Downvotes recebidos",
-    source: "post_vote.value=-1 em conteúdos do psicólogo",
+    source: "conteudo",
     shortLabel: "Downvotes",
     strokeClassName: "stroke-danger",
     swatchClassName: "bg-danger",
@@ -576,7 +576,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "comments_received",
     getValue: (point) => point.comments_received,
     label: "Comentários recebidos",
-    source: "post_reply em posts do psicólogo",
+    source: "conteudo",
     shortLabel: "Comentários",
     strokeClassName: "stroke-chart-secondary",
     swatchClassName: "bg-chart-secondary",
@@ -589,7 +589,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "saves",
     getValue: (point) => point.saves,
     label: "Salvamentos recebidos",
-    source: "post_save+post_reply_save",
+    source: "conteudo",
     shortLabel: "Salvos",
     strokeClassName: "stroke-warning",
     swatchClassName: "bg-warning",
@@ -602,7 +602,7 @@ export const COMMUNITY_CHART_METRICS = [
     id: "shares",
     getValue: (point) => point.shares,
     label: "Compartilhamentos recebidos",
-    source: "post_share em conteúdos do psicólogo",
+    source: "conteudo",
     shortLabel: "Shares",
     strokeClassName: "stroke-chart-accent",
     swatchClassName: "bg-chart-accent",

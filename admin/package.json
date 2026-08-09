@@ -7,10 +7,11 @@
     "build": "next build --webpack && node scripts/sync-route-group-manifests.mjs",
     "start": "next start -p 3002",
     "lint": "eslint --max-warnings=0",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/http-origin-policy.test.mjs src/lib/shared-helpers.test.mjs",
     "typecheck": "tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
-    "check": "pnpm biome:check && pnpm lint && pnpm typecheck"
+    "check": "pnpm biome:check && pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",

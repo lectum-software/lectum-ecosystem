@@ -1,4 +1,4 @@
-import { publicFrontendUrl } from "@/lib/public-frontend-url";
+import { publicFrontendUrl, toPublicFrontendHref } from "@/lib/public-frontend-url";
 
 type AdminViewAsResponse = {
   mode: string;
@@ -17,7 +17,11 @@ export const adminViewAsPopupBlockedMessage =
   "O navegador bloqueou a nova aba. Permita pop-ups para o Lectum Admin e tente novamente.";
 
 export const buildAdminViewAsUrl = (session: AdminViewAsResponse) => {
-  const url = new URL("/auth/admin-view-as", publicFrontendUrl);
+  if (!publicFrontendUrl) {
+    throw new Error("Não foi possível iniciar a visualização.");
+  }
+
+  const url = new URL(toPublicFrontendHref("/auth/admin-view-as"));
   const adminReturnUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
   const hash = new URLSearchParams({
     adminReturnUrl,

@@ -25,7 +25,7 @@
     "gen:vapid": "npx web-push generate-vapid-keys",
     "admin:bootstrap": "tsx src/operations/admin/bootstrap-admin.ts",
     "subscription:grant": "tsx src/operations/subscriptions/grant-professional-subscription.ts",
-    "test": "node --import tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.mjs\""
   },
   "engines": {
     "node": ">=22.0.0"

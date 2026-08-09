@@ -322,7 +322,7 @@ export const ACCOUNT_STATUS_ACTION_CONFIG: Record<
     canRun: (account) => account.capabilities.can_delete_account,
     confirmation: "EXCLUIR CONTA",
     description:
-      "Ação permanente: aplica soft delete, anonimiza dados da conta, remove o perfil público e encerra sessões. Não cancela cobrança ativa em gateway.",
+      "Ação permanente: anonimiza dados da conta, remove o perfil público e encerra sessões. Não cancela cobranças ativas automaticamente.",
     icon: AlertTriangle,
     schema: accountDeleteSchema,
     successMessage: "Conta excluída. Retornando para a lista de psicólogos.",

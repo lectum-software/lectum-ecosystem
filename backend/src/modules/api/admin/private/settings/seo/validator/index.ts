@@ -1,4 +1,4 @@
-﻿import { SEO_METADATA_PAGE_KEYS } from "@/modules/seo/metadata-settings";
+import { SEO_METADATA_PAGE_KEYS } from "@/modules/seo/metadata-settings";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const pageKeyParam = [

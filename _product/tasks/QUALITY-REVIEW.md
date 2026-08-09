@@ -2,11 +2,13 @@
 
 O prompt exigiu três loops de interação sobre as tasks criadas. Este arquivo registra os passes de revisão e os ajustes aplicados.
 
-> **Revisão vigente:** desde 2026-08-07 o produto está publicado. A auditoria integral de produção
-> está resumida em [`../AUDITORIA-CORRECOES-2026-08-07.md`](../AUDITORIA-CORRECOES-2026-08-07.md)
-> e as decisões técnicas estão no
-> [`ADR-0418`](../../adrs/0418-auditoria-producao-seguranca-estabilidade.md). As seções abaixo são
-> histórico das revisões anteriores e não substituem as regras atuais de deploy.
+> **Revisão vigente:** desde 2026-08-07 o produto está publicado. O resumo atual está em
+> [`../AUDITORIA-CORRECOES-2026-08-07.md`](../AUDITORIA-CORRECOES-2026-08-07.md). A baseline técnica
+> está no [`ADR-0418`](../../adrs/0418-auditoria-producao-seguranca-estabilidade.md), o hardening
+> residual e o rollout estão no
+> [`ADR-0439`](../../adrs/0439-hardening-residual-auditoria-publicada.md), e o bloqueio jurídico está
+> no [`ADR-0440`](../../adrs/0440-bloqueio-publicacao-paginas-legais.md). As seções abaixo são
+> histórico e não substituem as regras atuais de deploy.
 
 ## Loop 1 - Auto-suficiência
 
@@ -289,4 +291,37 @@ Validações registradas nesta revisão:
 - `pnpm --dir backend exec prisma migrate status`
 - Smoke local: `pnpm dev`, `GET /health` no backend e `HEAD /auth/login` no frontend.
 
-Decisão registrada em `adrs/0175-hardening-code-review-pre-producao.md`.
+Decisão registrada em `adrs/0423-hardening-code-review-pre-producao.md`.
+
+## Reavaliação 2026-08-08 — auditoria integral em ambientes publicados
+
+Critério revisado: reutilização, exposição de detalhes internos, qualidade, segurança e estabilidade
+de todo o monorepo após a publicação de homologação e produção.
+
+Concluído nesta etapa:
+
+- [x] Todos os arquivos versionados e todos os novos arquivos da correção foram lidos.
+- [x] Backend, frontend, admin, scripts, configurações, documentação e assets foram conferidos.
+- [x] Achados de mensagens, logs, URLs externas, Web Push, OAuth, mídia e storage foram corrigidos.
+- [x] Reset, seed e limpeza de bucket receberam proteção contra ambiente publicado ou alvo remoto.
+- [x] Loading, cancelamento, timeout e ações duplicadas foram corrigidos nos fluxos encontrados.
+- [x] Repetições relevantes de UI, downloads, diálogos, mensagens e navegação foram consolidadas.
+- [x] Nenhum schema, migration, package ou env obrigatória foi criado nesta revisão.
+- [x] Decisões e pendências foram registradas nos ADR-0439 e ADR-0440.
+
+Validação local consolidada:
+
+- [x] Testes automatizados: backend 113, frontend 19 e Admin 11.
+- [x] `pnpm check`, checks individuais e builds das três aplicações aprovados sem warning.
+- [x] Browser local mobile/desktop e imagem final do backend registrados no fechamento.
+- [x] `pnpm audit --prod --audit-level high` aprovado nas três aplicações.
+- [ ] Smoke publicado de frontend, Admin, `/health` e `/ready` realizado após o push em `homolog`.
+- [ ] Login, hidratação, API privada e logout validados com credenciais reais em homologação.
+
+O push em `homolog` inicia deploy automático. A promoção para `main` permanece bloqueada até os itens
+publicados acima passarem. Antes do push, é obrigatório confirmar HTTPS, topologia same-site entre
+frontend/Admin/API, origens exatas em `WEB_URL`, CORS com credenciais e hosts de mídia histórica.
+
+Pendências externas não foram mascaradas com mock: a TASK-41 aguarda conteúdo jurídico aprovado; o
+tema do Admin exige task própria; mídias e vídeos demonstrativos aguardam confirmação/autorização; e
+o canal público de WhatsApp do suporte CFP ainda precisa de fonte operacional aprovada.

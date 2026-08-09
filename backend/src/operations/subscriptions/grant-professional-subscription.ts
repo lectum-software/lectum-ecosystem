@@ -1,4 +1,4 @@
-﻿import "dotenv/config";
+import "@/config/dotenv";
 
 import prisma from "@/infra/database/prisma";
 import {
@@ -189,13 +189,22 @@ const main = async () => {
   if (!args) return;
 
   const result = await grantProfessionalSubscription(args);
-  console.log(JSON.stringify(result, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        crp_registration_date_updated: Boolean(result.crp_registration_date),
+        identity_updated: Boolean(result.identity_override),
+        subscription_granted: true,
+      },
+      null,
+      2,
+    ),
+  );
 };
 
 main()
-  .catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : "Erro desconhecido.";
-    console.error(message);
+  .catch((_error: unknown) => {
+    console.error("Não foi possível conceder a assinatura profissional.");
     process.exitCode = 1;
   })
   .finally(async () => {

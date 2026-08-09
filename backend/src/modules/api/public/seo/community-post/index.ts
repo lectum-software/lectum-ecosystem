@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { showPost, showReply } from "./use-cases/controller";
 import { showPostValidator, showReplyValidator } from "./validator";
 

@@ -8,7 +8,18 @@ describe("sanitizeSensitiveData", () => {
       accessToken: "secret",
       card_token: "secret",
       clientSecret: "secret",
-      nested: { password_confirm: "secret", safe: "ok" },
+      connection_string: "postgresql://user:password@database/internal",
+      nested: {
+        auth: "secret",
+        oauth_client_secret: "secret",
+        password_confirm: "secret",
+        safe: "ok",
+        temporary_password_hash: "secret",
+      },
+      push_p256dh: "secret",
+      raw: { provider_payload: "secret" },
+      provider_error: { code: "raw-provider-code" },
+      providerMessage: "raw provider message",
     });
 
     assert.deepEqual(sanitized, { nested: { safe: "ok" } });
@@ -16,9 +27,53 @@ describe("sanitizeSensitiveData", () => {
 
   it("remove token genérico quando a resposta não o autoriza", () => {
     assert.deepEqual(
-      sanitizeSensitiveData({ token: "secret", value: true }, { removeAuthTokens: true }),
+      sanitizeSensitiveData(
+        { access_session_token: "secret", user_tokens: ["secret"], value: true },
+        { removeAuthTokens: true },
+      ),
       { value: true },
     );
     assert.deepEqual(sanitizeSensitiveData({ token: "allowed" }), { token: "allowed" });
+  });
+
+  it("remove PII de registros de auditoria quando solicitado", () => {
+    assert.deepEqual(
+      sanitizeSensitiveData(
+        {
+          contact_email: "patient@example.com",
+          nested: {
+            description: "contato alternativo patient@example.com",
+            profile_cpf: "12345678901",
+            safe: "ok",
+            whatsapp: "+5511999999999",
+          },
+        },
+        { removePii: true },
+      ),
+      { nested: { description: "[REDACTED]", safe: "ok" } },
+    );
+  });
+
+  it("redige credenciais mesmo quando a chave não denuncia o conteúdo", () => {
+    assert.deepEqual(
+      sanitizeSensitiveData(
+        {
+          diagnostic: "Bearer eyJhbGciOiJIUzI1NiJ9.payload.signature",
+          safe: "ok",
+        },
+        { removeAuthTokens: true },
+      ),
+      { diagnostic: "[REDACTED]", safe: "ok" },
+    );
+  });
+
+  it("não recursa indefinidamente em estruturas circulares", () => {
+    const circular: Record<string, unknown> = { safe: true };
+    circular.self = circular;
+
+    assert.deepEqual(sanitizeSensitiveData(circular), {
+      safe: true,
+      self: "[REDACTED]",
+    });
   });
 });

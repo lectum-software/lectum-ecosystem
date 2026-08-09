@@ -8,6 +8,7 @@ import type {
 } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
 import type { DisplayMode } from "@/api/req/analytics";
+import { getCurrentAnalyticsPath } from "@/utils/analytics-path";
 import { formatCrpNumber } from "@/utils/crp";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 
@@ -53,11 +54,7 @@ export const getDisplayMode = (): DisplayMode => {
   return "unknown";
 };
 
-export const currentAnalyticsPath = () => {
-  if (typeof window === "undefined") return "/";
-
-  return `${window.location.pathname || "/"}${window.location.search || ""}`;
-};
+export const currentAnalyticsPath = getCurrentAnalyticsPath;
 
 export const tabs: Array<{ label: string; value: ProfileTab }> = [
   { label: "Geral", value: "geral" },

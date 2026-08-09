@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type {
   PsychologistsListEngagementId,
   PsychologistsListSort,
@@ -79,7 +80,7 @@ export type PsychologistsListEngagement = {
     profile_follows: number;
     uncapped_normalized_weighted_score_30d: number;
   };
-  source: "psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share";
+  source: AdminPublicSource<"psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share">;
   thresholds: {
     active_interactions_30d: number;
     active_score_30d: number;
@@ -164,5 +165,5 @@ export type AdminPsychologistsList = {
   pages: number;
   per_page: number;
   sort: PsychologistsListSort;
-  source: "user+psychologist_profile+professional_subscription+public_ranking+contact_request+psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share";
+  source: AdminPublicSource<"user+psychologist_profile+professional_subscription+public_ranking+contact_request+psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share">;
 };

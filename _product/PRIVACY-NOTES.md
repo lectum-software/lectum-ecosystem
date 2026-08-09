@@ -1,4 +1,4 @@
-﻿# Notas de privacidade — localização aproximada por IP
+# Notas de privacidade — localização aproximada por IP
 
 ## Texto sugerido para política de privacidade
 

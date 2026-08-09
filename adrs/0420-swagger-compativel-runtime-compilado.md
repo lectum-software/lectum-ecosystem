@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Accepted para geração local; exposição em runtime publicado substituída pelo
+[ADR-0439](0439-hardening-residual-auditoria-publicada.md)
 
 ## Data
 
@@ -33,7 +34,8 @@ OpenAPI sem impedir a inicialização da API.
 
 ## Consequências
 
-- Swagger/Scalar preserva parâmetros e corpos no container de homologação e produção.
+- O gerador preserva parâmetros e corpos quando executado sobre o build compilado em ambiente local
+  ou CI. A imagem publicada não embarca o catálogo nem expõe Swagger/Scalar.
 - O gerador continua acoplado ao build CommonJS atual. Uma migração para ESM exige revisão e teste
   explícitos deste carregamento.
 - Um teste automatizado cobre a resolução de validator nomeado no formato emitido pelo TypeScript.
@@ -41,7 +43,8 @@ OpenAPI sem impedir a inicialização da API.
 ## Compatibilidade, rollout e rollback
 
 - Não há mudança em rota, payload, banco, migration, variável de ambiente ou dependência.
-- Publicar primeiro em `homolog` e conferir o documento OpenAPI antes de promover para `main`.
+- Gerar e conferir o documento OpenAPI localmente; em `homolog`, confirmar que as rotas de
+  documentação respondem `404` antes de promover para `main`.
 - Em regressão, reverter o commit; nenhum dado precisa de rollback.
 
 ## Validação

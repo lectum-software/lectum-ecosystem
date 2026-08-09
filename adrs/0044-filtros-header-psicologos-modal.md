@@ -1,4 +1,4 @@
-﻿# ADR-0044: Acesso a filtros por modal na listagem de psicólogos
+# ADR-0044: Acesso a filtros por modal na listagem de psicólogos
 
 ## Status
 

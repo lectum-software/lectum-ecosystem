@@ -27,6 +27,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
+import {
+  GOOGLE_ACCOUNT_MANAGEMENT_URL,
+  normalizeTrustedGoogleAccountUrl,
+} from "@/utils/external-url";
 import { normalizeTrustedApiUrl } from "@/utils/trusted-navigation";
 import { type AccountForm, emailFields, passwordFields, useAccountForm } from "./use-form";
 
@@ -248,6 +252,8 @@ export const AccountSettingsLogic = () => {
   const form = useAccountForm(currentEmail);
   const isSaving = account.updateEmail.isPending || account.updatePassword.isPending;
   const isGoogleOnly = Boolean(security?.google.connected && !security.has_password);
+  const googleManageUrl =
+    normalizeTrustedGoogleAccountUrl(security?.google.manage_url) ?? GOOGLE_ACCOUNT_MANAGEMENT_URL;
 
   useEffect(() => {
     if (googleConnectedFromRedirect) {
@@ -400,7 +406,7 @@ export const AccountSettingsLogic = () => {
         ) : null}
 
         {security && isGoogleOnly ? (
-          <GoogleOnlyView email={security.email} manageUrl={security.google.manage_url} />
+          <GoogleOnlyView email={security.email} manageUrl={googleManageUrl} />
         ) : null}
 
         {security && !isGoogleOnly ? (
@@ -452,7 +458,7 @@ export const AccountSettingsLogic = () => {
               hasPassword={security.has_password}
               isLinking={account.createGoogleLinkIntent.isPending}
               isUnlinking={account.unlinkGoogle.isPending}
-              manageUrl={security.google.manage_url}
+              manageUrl={googleManageUrl}
               onLink={handleGoogleLink}
               onUnlink={handleGoogleUnlink}
             />

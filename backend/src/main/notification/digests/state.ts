@@ -1,8 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 
-export const BASE = process.env.BASE || "";
-
 export const DIGEST_STATE_TYPE = "notification_digest_state";
 
 export const DIGEST_TIME_ZONE = "America/Sao_Paulo";

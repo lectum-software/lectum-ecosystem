@@ -4,8 +4,10 @@ import Image from "next/image";
 import { useState } from "react";
 import { useAdminCommunityRanking } from "@/api/callers/communities";
 import type { AdminCommunityRankingItem, AdminCommunityRankingQuery } from "@/api/req/communities";
+import { VerifiedBadgeIcon } from "@/components/admin-icons";
+import { renderableImageSrc } from "@/lib/admin-media";
 import { cn } from "@/lib/utils";
-import { formatRankingCrp, VerifiedBadgeIcon } from "../components/content-card";
+import { formatRankingCrp } from "../components/content-card";
 import { PaginationControls, QueryStatus } from "../components/content-controls";
 import { StatusBadge } from "../components/content-shared";
 import { cardClass, initials, numberFormatter } from "../modules/detail-support";
@@ -76,6 +78,7 @@ export const RankingTab = ({ slug }: { slug: string }) => {
         ) : null}
         {result.data?.data.map((item) => {
           const formattedCrp = formatRankingCrp(item.mentor.crp);
+          const avatarSrc = renderableImageSrc(item.mentor.avatar);
 
           return (
             <article
@@ -87,13 +90,13 @@ export const RankingTab = ({ slug }: { slug: string }) => {
                   #{item.position}
                 </span>
                 <div className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xs font-black text-primary">
-                  {item.mentor.avatar ? (
+                  {avatarSrc ? (
                     <Image
                       alt={`Avatar de ${item.mentor.name}`}
                       className="object-cover"
                       fill
                       sizes="48px"
-                      src={item.mentor.avatar}
+                      src={avatarSrc}
                       unoptimized
                     />
                   ) : (

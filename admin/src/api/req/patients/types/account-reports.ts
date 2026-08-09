@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 export type PatientsDashboardQuery = {
   from?: string;
   period?: "7d" | "30d" | "90d" | "all" | "custom" | "month" | "today" | "week" | "year";
@@ -49,9 +50,9 @@ export type AdminPatientAccount = {
     active_count: number;
     devices_count: number;
     last_access_at: string | null;
-    source: "user_token";
+    source: AdminPublicSource<"user_token">;
   };
-  source: "user+user_token";
+  source: AdminPublicSource<"user+user_token">;
 };
 
 export type AdminPatientAccountReasonInput = {
@@ -81,7 +82,7 @@ export type AdminPatientAccountStatusActionInput = AdminPatientAccountReasonInpu
 export type AdminPatientAccountDeleteResponse = {
   deleted: true;
   id: string;
-  source: "user+patient_profile+admin_activity_log";
+  source: AdminPublicSource<"user+patient_profile+admin_activity_log">;
 };
 
 export type AdminPatientAccountViewAsResponse = {
@@ -95,7 +96,7 @@ export type AdminPatientAccountViewAsResponse = {
     role: "paciente";
   };
   start_path: string;
-  source: "user_token+admin_activity_log";
+  source: AdminPublicSource<"user_token+admin_activity_log">;
 };
 
 export type AdminPatientActivitiesQuery = {
@@ -181,7 +182,7 @@ export type AdminPatientReports = {
   cards: {
     id: "dismissed" | "pending" | "total" | "upheld";
     label: string;
-    source: "post_report";
+    source: AdminPublicSource<"post_report">;
     value: number;
   }[];
   count: number;
@@ -205,7 +206,7 @@ export type AdminPatientReports = {
     timezone: "server-local";
     to: string | null;
   };
-  source: "user+post_report+community_post+post_reply";
+  source: AdminPublicSource<"user+post_report+community_post+post_reply">;
   unavailable: { description: string; id: string; label: string; source: string }[];
 };
 
@@ -261,7 +262,7 @@ export type AdminPatientActivities = {
     timezone: "server-local";
     to: string | null;
   };
-  source: "user+patient_profile+community_member+community_post+post_reply+post_vote+post_save+post_reply_save+professional_review+admin_activity_log";
+  source: AdminPublicSource<"user+patient_profile+community_member+community_post+post_reply+post_vote+post_save+post_reply_save+professional_review+admin_activity_log">;
   unavailable: {
     description: string;
     id: string;

@@ -10,15 +10,15 @@ import {
   isTrustProxyEnabled,
   parsePositiveInteger,
 } from "@/utils/runtime-config";
-import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { parseSafeExternalHttpsUrl } from "@/utils/safe-external-url";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
 import type {
-  DeviceType,
   ILocationCaptureDTO,
   LocationCaptureResult,
   LocationResolution,
 } from "../DTOs/ILocationCaptureDTO";
 import { LocationCaptureRepository } from "../repositories/LocationCaptureRepository";
+import { buildLocationCaptureResult } from "./response";
 
 type RequestHeaders = Request["headers"];
 
@@ -46,7 +46,6 @@ type AuthPayload = JwtPayload & {
 const LOCATION_CAPTURE_WINDOW_HOURS = 24;
 const DEFAULT_PROVIDER_ENDPOINT = "https://ipapi.co/{ip}/json/";
 const PRIVATE_IPV6_PREFIXES = ["fc", "fd", "fe80"];
-const ACCEPTED_DEVICE_TYPES: DeviceType[] = ["mobile", "tablet", "desktop", "unknown"];
 
 const getHeaderValue = (headers: RequestHeaders, names: string[]): string | null => {
   for (const name of names) {
@@ -187,9 +186,11 @@ const buildProviderUrl = (ip: string) => {
   const endpoint = process.env.IP_GEOLOCATION_ENDPOINT || DEFAULT_PROVIDER_ENDPOINT;
   const token = process.env.IP_GEOLOCATION_TOKEN || "";
 
-  return endpoint
+  const resolvedEndpoint = endpoint
     .replace("{ip}", encodeURIComponent(ip))
     .replace("{token}", encodeURIComponent(token));
+
+  return parseSafeExternalHttpsUrl(resolvedEndpoint)?.toString() ?? null;
 };
 
 const resolveConfidence = (payload: IpGeolocationProviderResponse) => {
@@ -210,11 +211,15 @@ const resolveLocationFromProvider = async (ip: string): Promise<LocationResoluti
   );
 
   try {
-    const response = await fetch(buildProviderUrl(ip), {
+    const providerUrl = buildProviderUrl(ip);
+    if (!providerUrl) return null;
+
+    const response = await fetch(providerUrl, {
       headers: {
         Accept: "application/json",
         "User-Agent": "LectumAnalytics/1.0",
       },
+      redirect: "error",
       signal: controller.signal,
     });
 
@@ -241,11 +246,10 @@ const resolveLocationFromProvider = async (ip: string): Promise<LocationResoluti
       confidence: resolveConfidence(payload),
       provider: process.env.IP_GEOLOCATION_PROVIDER || "ipapi",
     };
-  } catch (err) {
-    console.warn(
-      "[analytics] Falha silenciosa na geolocalização por IP.",
-      toSafeErrorLog(err, "IpGeolocationError"),
-    );
+  } catch {
+    console.warn("[analytics] Falha silenciosa na geolocalização por IP.", {
+      name: "IpGeolocationError",
+    });
     return null;
   } finally {
     clearTimeout(timeout);
@@ -298,7 +302,9 @@ const resolveAuthenticatedUserId = async (req: Request): Promise<string | null> 
 };
 
 const resolveLocation = async (req: Request): Promise<LocationResolution | null> => {
-  const headerLocation = resolveLocationFromProxyHeaders(req.headers);
+  const headerLocation = isTrustProxyEnabled()
+    ? resolveLocationFromProxyHeaders(req.headers)
+    : null;
   if (headerLocation) return headerLocation;
 
   const ip = extractClientIp(req);
@@ -307,58 +313,12 @@ const resolveLocation = async (req: Request): Promise<LocationResolution | null>
   return resolveLocationFromProvider(ip);
 };
 
-const normalizeDeviceType = (value: string | null | undefined): DeviceType => {
-  if (ACCEPTED_DEVICE_TYPES.includes(value as DeviceType)) return value as DeviceType;
-
-  return "unknown";
-};
-
-const buildSessionResult = (
-  session: Awaited<ReturnType<LocationCaptureRepository["upsertSession"]>> | null,
-): LocationCaptureResult["session"] => {
-  if (!session) {
-    return {
-      captured: false,
-      device_type: "unknown",
-      reason: "missing_session_id",
-    };
-  }
-
-  return {
-    captured: true,
-    device_type: normalizeDeviceType(session.device_type),
-    data: {
-      id: session.id,
-      visitor_id: session.visitor_id,
-      session_id: session.session_id,
-      user_id: session.user_id,
-      device_type: session.device_type,
-      os: session.os,
-      browser: session.browser,
-      viewport_width: session.viewport_width,
-      viewport_height: session.viewport_height,
-      first_seen_at: session.first_seen_at,
-      last_seen_at: session.last_seen_at,
-    },
-  };
-};
-
 export default async (req: Request) => {
   const data = req as Request & ILocationCaptureDTO;
   const repository = new LocationCaptureRepository();
   const visitorId = data.b.visitor_id;
   const sessionId = data.b.session_id || null;
   const userId = await resolveAuthenticatedUserId(req);
-  let linked = false;
-
-  if (userId) {
-    const [linkedLocations, linkedSessions] = await Promise.all([
-      repository.linkVisitorToUser(visitorId, userId),
-      repository.linkSessionsToUser(visitorId, userId),
-    ]);
-
-    linked = linkedLocations > 0 || linkedSessions > 0;
-  }
 
   const storedSession = sessionId
     ? await repository.upsertSession({
@@ -372,27 +332,42 @@ export default async (req: Request) => {
         viewportHeight: data.b.viewport_height,
       })
     : null;
-  const session = buildSessionResult(storedSession);
+  let linked = false;
+
+  if (sessionId && !storedSession) {
+    const result: LocationCaptureResult = buildLocationCaptureResult({
+      authenticated: Boolean(userId),
+      captured: false,
+      linked: false,
+      reason: "unavailable",
+    });
+
+    return {
+      status: 200,
+      ...msg("location_capture_skipped", {}),
+      data: result,
+    };
+  }
+
+  if (userId && storedSession) {
+    const [linkedLocations, linkedSessions] = await Promise.all([
+      repository.linkVisitorToUser(visitorId, userId),
+      repository.linkSessionsToUser(visitorId, userId),
+    ]);
+
+    linked = linkedLocations > 0 || linkedSessions > 0;
+  }
 
   const since = subHours(new Date(), LOCATION_CAPTURE_WINDOW_HOURS);
   const recentLocation = await repository.findRecent({ visitorId, userId, since });
 
   if (recentLocation) {
-    const result: LocationCaptureResult = {
+    const result: LocationCaptureResult = buildLocationCaptureResult({
       captured: false,
       linked,
       authenticated: Boolean(userId),
       reason: "frequency",
-      source: "ip",
-      session,
-      location: {
-        city: recentLocation.city,
-        state: recentLocation.state,
-        country: recentLocation.country,
-        source: recentLocation.source,
-        confidence: recentLocation.confidence,
-      },
-    };
+    });
 
     return {
       status: 200,
@@ -404,14 +379,12 @@ export default async (req: Request) => {
   const location = await resolveLocation(req);
 
   if (!location) {
-    const result: LocationCaptureResult = {
+    const result: LocationCaptureResult = buildLocationCaptureResult({
       captured: false,
       linked,
       authenticated: Boolean(userId),
       reason: "unavailable",
-      source: "ip",
-      session,
-    };
+    });
 
     return {
       status: 200,
@@ -420,7 +393,7 @@ export default async (req: Request) => {
     };
   }
 
-  const storedLocation = await repository.store({
+  await repository.store({
     visitorId,
     sessionId,
     userId,
@@ -432,20 +405,11 @@ export default async (req: Request) => {
     provider: location.provider,
   });
 
-  const result: LocationCaptureResult = {
+  const result: LocationCaptureResult = buildLocationCaptureResult({
     captured: true,
     linked,
     authenticated: Boolean(userId),
-    source: "ip",
-    session,
-    location: {
-      city: storedLocation.city,
-      state: storedLocation.state,
-      country: storedLocation.country,
-      source: storedLocation.source,
-      confidence: storedLocation.confidence,
-    },
-  };
+  });
 
   return {
     status: 200,

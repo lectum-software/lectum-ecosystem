@@ -1,4 +1,4 @@
-﻿import { type IValidatorRequest, validator } from "@/utils/validator";
+import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const postParams = [
   {

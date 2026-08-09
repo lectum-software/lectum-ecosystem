@@ -10,6 +10,7 @@ import { useAdminCommunityStatusUpdate } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type { AdminCommunityIdentity, AdminCommunityStatusInput } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { cn } from "@/lib/utils";
 
 import {
@@ -53,6 +54,9 @@ export const CommunityStatusDialog = ({
     mode: "onSubmit",
     resolver: zodResolver(communityStatusFormSchema(state.expectedConfirmation)),
   });
+  const dialogRef = useAdminDialogLifecycle(onClose, {
+    closeEnabled: !mutation.isPending,
+  });
 
   const onSubmit = async (values: CommunityStatusFormValues) => {
     const input: AdminCommunityStatusInput = {
@@ -74,6 +78,7 @@ export const CommunityStatusDialog = ({
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4"
+      ref={dialogRef}
       role="presentation"
     >
       <FormProvider {...form}>
@@ -95,6 +100,7 @@ export const CommunityStatusDialog = ({
             <button
               aria-label="Fechar"
               className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted"
+              disabled={mutation.isPending}
               onClick={onClose}
               type="button"
             >
@@ -133,6 +139,7 @@ export const CommunityStatusDialog = ({
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
             <button
               className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
+              disabled={mutation.isPending}
               onClick={onClose}
               type="button"
             >

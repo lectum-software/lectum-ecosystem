@@ -66,6 +66,9 @@ const LEGACY_PRIVATE_REDIRECTS = new Map<string, string>([
   ["/app/community", "/app/comunidades"],
 ]);
 
+const isPathOrDescendant = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
+
 const resolveLegacyPrivateRedirect = (pathname: string) => {
   const exact = LEGACY_PRIVATE_REDIRECTS.get(pathname);
   if (exact) return exact;
@@ -117,13 +120,6 @@ const isPublicCommunityRoute = (pathname: string) => {
   return true;
 };
 
-const clearRootCookie = (response: NextResponse, name: string) => {
-  response.cookies.set(name, "", {
-    maxAge: 0,
-    path: "/",
-  });
-};
-
 const hasPendingEmailConfirmation = (req: NextRequest) => {
   const rawUserCookie = req.cookies.get(USER_COOKIE_NAME)?.value;
   if (!rawUserCookie) return false;
@@ -161,7 +157,7 @@ export function proxy(req: NextRequest) {
   const token = req.cookies.get(TOKEN_COOKIE_NAME);
   const pendingEmailConfirmation = Boolean(token) && hasPendingEmailConfirmation(req);
 
-  const isAuthRoute = pathname.startsWith(AUTH_PREFIX);
+  const isAuthRoute = isPathOrDescendant(pathname, AUTH_PREFIX);
   const isPublicAppRoute =
     PUBLIC_APP_EXACT_ROUTES.includes(pathname) ||
     isPublicCommunityRoute(pathname) ||
@@ -169,18 +165,11 @@ export function proxy(req: NextRequest) {
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname) || isPublicAppRoute;
   const isAuthRequiredRoute = AUTH_REQUIRED_ROUTES.includes(pathname);
   const isAuthResultRoute = AUTH_RESULT_ROUTES.includes(pathname);
-  const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isPrivateRoute = PRIVATE_PREFIXES.some((prefix) => isPathOrDescendant(pathname, prefix));
   const isInlineAuthPromptRoute = INLINE_AUTH_PROMPT_ROUTES.includes(pathname);
 
   if (isAuthResultRoute) {
-    const response = NextResponse.next();
-
-    if (pathname === "/auth/error" && req.nextUrl.searchParams.get("clearSession") === "1") {
-      clearRootCookie(response, TOKEN_COOKIE_NAME);
-      clearRootCookie(response, USER_COOKIE_NAME);
-    }
-
-    return response;
+    return NextResponse.next();
   }
 
   if (pendingEmailConfirmation && !isAuthRequiredRoute && (isAuthRoute || isPrivateRoute)) {

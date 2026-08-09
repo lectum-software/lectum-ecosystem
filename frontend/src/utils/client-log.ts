@@ -1,7 +1,7 @@
-export const reportClientFailure = (scope: string, error: unknown) => {
+export const reportClientFailure = (_scope: string, _error: unknown) => {
   if (process.env.NODE_ENV === "production") return;
 
-  console.error(`[CLIENT] ${scope}`, {
-    name: error instanceof Error ? error.name : "UnknownClientError",
-  });
+  void _scope;
+  void _error;
+  console.error("[CLIENT] Operação não concluída.", { failed: true });
 };

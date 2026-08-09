@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2, Trash2, X } from "lucide-react";
 import { FormProvider, useForm } from "react-hook-form";
 import type { AdminSettingsSpecialtyCategory } from "@/api/req/settings";
 import { InputController, SelectController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 
 import {
   type CatalogDeleteModalState,
@@ -49,16 +50,24 @@ export const CatalogModal = ({
   const isSpecialty = state.kind === "item" && state.type === "specialty";
   const label =
     state.kind === "category" ? singularLabel.specialty_category : singularLabel[state.type];
+  const dialogRef = useAdminDialogLifecycle(onClose, { closeEnabled: !submitting });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center">
+    <div
+      aria-labelledby="catalog-modal-title"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center"
+      ref={dialogRef}
+      role="dialog"
+      tabIndex={-1}
+    >
       <div className="w-full max-w-lg rounded-[28px] border border-border bg-surface p-5 shadow-2xl">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
               Catálogo
             </p>
-            <h2 className="mt-2 text-2xl font-black text-foreground">
+            <h2 className="mt-2 text-2xl font-black text-foreground" id="catalog-modal-title">
               {state.mode === "create" ? "Adicionar" : "Editar"} {label}
             </h2>
             <p className="mt-1 text-sm text-muted">
@@ -68,6 +77,7 @@ export const CatalogModal = ({
           <button
             aria-label="Fechar modal"
             className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border text-muted hover:text-foreground"
+            disabled={submitting}
             onClick={onClose}
             type="button"
           >
@@ -105,6 +115,7 @@ export const CatalogModal = ({
             <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
               <button
                 className="inline-flex h-12 items-center justify-center rounded-2xl border border-border px-5 text-sm font-bold text-muted hover:text-foreground"
+                disabled={submitting}
                 onClick={onClose}
                 type="button"
               >
@@ -149,20 +160,32 @@ export const DeleteCatalogModal = ({
   const name = isCategory ? state.category.name : state.item.name;
   const label = isCategory ? singularLabel.specialty_category : singularLabel[state.type];
   const specialtiesCount = isCategory ? state.category.specialties.length : 0;
+  const dialogRef = useAdminDialogLifecycle(onClose, { closeEnabled: !submitting });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center">
+    <div
+      aria-labelledby="catalog-delete-modal-title"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end bg-overlay p-3 md:items-center md:justify-center"
+      ref={dialogRef}
+      role="alertdialog"
+      tabIndex={-1}
+    >
       <div className="w-full max-w-lg rounded-[28px] border border-danger/20 bg-surface p-5 shadow-2xl">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-danger">
               Exclusão de catálogo
             </p>
-            <h2 className="mt-2 text-2xl font-black text-foreground">Excluir {label}</h2>
+            <h2
+              className="mt-2 text-2xl font-black text-foreground"
+              id="catalog-delete-modal-title"
+            >
+              Excluir {label}
+            </h2>
             <p className="mt-1 text-sm leading-6 text-muted">
-              Esta ação aplica soft delete em <strong>{name}</strong>, removendo a opção dos
-              filtros, formulários e da tela de configurações. Vínculos históricos permanecem
-              preservados.
+              Esta ação remove <strong>{name}</strong> dos filtros, formulários e da tela de
+              configurações. Vínculos históricos permanecem preservados.
             </p>
             {isCategory ? (
               <p className="mt-2 rounded-2xl border border-warning-border bg-warning-soft px-3 py-2 text-xs font-semibold text-warning">
@@ -174,6 +197,7 @@ export const DeleteCatalogModal = ({
           <button
             aria-label="Fechar modal"
             className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border text-muted hover:text-foreground"
+            disabled={submitting}
             onClick={onClose}
             type="button"
           >
@@ -197,6 +221,7 @@ export const DeleteCatalogModal = ({
             <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
               <button
                 className="inline-flex h-12 items-center justify-center rounded-2xl border border-border px-5 text-sm font-bold text-muted hover:text-foreground"
+                disabled={submitting}
                 onClick={onClose}
                 type="button"
               >

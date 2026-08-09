@@ -1,5 +1,6 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { error, msg } from "@/helpers/translate";
+import { publicFileUrl } from "@/utils/public-origin";
 import type { IProfileDTO, IUpdateProfileDTO, IUploadAvatarDTO } from "../DTOs/IProfileDTO";
 import { ProfileRepository } from "../repositories/ProfileRepository";
 
@@ -18,21 +19,6 @@ const normalizePhone = (value?: string | null) => {
   if (!parsed?.isValid()) return null;
 
   return parsed.number;
-};
-
-const publicFileUrl = (key: string) => {
-  const rawBase = String(process.env.BASE || "").trim();
-  let base = rawBase.replace(/\/$/, "");
-
-  try {
-    base = rawBase ? new URL(rawBase).origin : "";
-  } catch (_err) {
-    base = rawBase.replace(/\/$/, "");
-  }
-
-  const publicPath = `/public/files/${key}`;
-
-  return base ? `${base}${publicPath}` : publicPath;
 };
 
 export const show = async (data: IProfileDTO) => {

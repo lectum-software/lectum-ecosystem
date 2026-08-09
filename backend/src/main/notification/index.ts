@@ -229,7 +229,6 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
         : { body: "Voce tem uma nova notificacao", title: "Lectum" };
       const result = await sendWebPushToSubscriptions({
         body: content.body,
-        messageProps: meta.message_props,
         redirect: meta.redirect,
         subscriptions: user.notification_subscriptions,
         title: content.title,

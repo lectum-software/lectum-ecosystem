@@ -1,4 +1,5 @@
 import type { DisplayMode } from "@/api/req/analytics";
+import { getCurrentAnalyticsPath } from "@/utils/analytics-path";
 import type { PsychologistsFilterForm } from "../use-form";
 import type { NavigatorWithStandalone } from "./onboarding";
 import { normalizeFormValues } from "./profile-format";
@@ -20,11 +21,7 @@ export const getDisplayMode = (): DisplayMode => {
   return "unknown";
 };
 
-export const currentAnalyticsPath = () => {
-  if (typeof window === "undefined") return "/";
-
-  return `${window.location.pathname || "/"}${window.location.search || ""}`;
-};
+export const currentAnalyticsPath = getCurrentAnalyticsPath;
 
 export const resetVideoElementToStart = (video: HTMLVideoElement) => {
   video.pause();

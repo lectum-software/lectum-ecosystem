@@ -2,8 +2,8 @@
 
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { AdminPsychologistEngagementMetric } from "@/api/req/psychologists";
+import { WhatsAppIcon } from "@/components/admin-icons";
 import { cn } from "@/lib/utils";
-import { WhatsAppIcon } from "../../components/shared";
 import type { StatisticsChartMetric } from "../../support/config";
 import { CARD } from "../../support/config";
 import {

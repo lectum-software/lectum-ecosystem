@@ -1,4 +1,4 @@
-﻿import type { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import { grantCourtesy, revokeCourtesy, showAdminPsychologistBilling } from "./services";
 

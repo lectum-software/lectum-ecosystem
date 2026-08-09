@@ -1,4 +1,4 @@
-﻿import type { CfpResult, CfpSearchBody } from "../DTOs/ICfpDTO";
+import type { CfpResult, CfpSearchBody } from "../DTOs/ICfpDTO";
 
 const INFOSIMPLES_CFP_ENDPOINT = "https://api.infosimples.com/api/v2/consultas/cfp/cadastro";
 const DEFAULT_REQUEST_TIMEOUT_MS = 90_000;
@@ -80,15 +80,6 @@ const summarizeRequest = (params: InfoSimplesSearchParams) => {
     hasRegistro: Boolean(params.registro),
     hasUf: Boolean(params.uf),
     cpfDigits: params.cpf?.length ?? 0,
-  };
-};
-
-const summarizePayload = (raw: InfoSimplesPayload) => {
-  return {
-    dataCount: Array.isArray(raw.data) ? raw.data.length : null,
-    errorsCount: Array.isArray(raw.errors) ? raw.errors.length : null,
-    hasErrors: Array.isArray(raw.errors) ? raw.errors.length > 0 : Boolean(raw.errors),
-    resultadosCount: Array.isArray(raw.resultados) ? raw.resultados.length : null,
   };
 };
 
@@ -222,8 +213,6 @@ export class InfoSimplesCfpProvider {
         raw = JSON.parse(responseText) as InfoSimplesPayload;
       } catch {
         logCfpProvider("CFP_PROVIDER_INVALID_JSON", {
-          contentLength: responseText.length,
-          contentType,
           elapsedMs: Date.now() - startedAt,
           httpStatus: response.status,
           traceId,
@@ -244,12 +233,8 @@ export class InfoSimplesCfpProvider {
       const elapsedMs = Date.now() - startedAt;
 
       logCfpProvider("CFP_PROVIDER_RESPONSE", {
-        contentType,
         elapsedMs,
         httpStatus: response.status,
-        payload: summarizePayload(raw),
-        providerCode: typeof raw.code === "number" ? raw.code : null,
-        providerMessage: typeof raw.code_message === "string" ? raw.code_message : null,
         resultsCount: results.length,
         traceId,
       });
@@ -281,7 +266,6 @@ export class InfoSimplesCfpProvider {
 
       logCfpProvider("CFP_PROVIDER_NETWORK_ERROR", {
         elapsedMs: Date.now() - startedAt,
-        errorName: err instanceof Error ? err.name : typeof err,
         traceId,
       });
 

@@ -3,13 +3,7 @@
 import { Bookmark } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import {
-  useSavedPosts,
-  useSharePost,
-  useShareReply,
-  useUnsavePostFromList,
-  useUnsaveReplyFromList,
-} from "@/api/callers/posts";
+import { useSavedPosts, useUnsavePostFromList, useUnsaveReplyFromList } from "@/api/callers/posts";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
@@ -17,6 +11,7 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -39,8 +34,7 @@ export const SavedPostsLogic = () => {
   const [removedFeedback, setRemovedFeedback] = useState<string | null>(null);
   const query = useMemo(() => ({ page, limit: PAGE_LIMIT }), [page]);
   const postsQuery = useSavedPosts(query);
-  const sharePostMutation = useSharePost();
-  const shareReplyMutation = useShareReply();
+  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
   const unsavePostMutation = useUnsavePostFromList({
     onSuccess: () => {
       setRemovedFeedback("Post removido dos salvos.");
@@ -88,15 +82,7 @@ export const SavedPostsLogic = () => {
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    if (shareVideoTarget.replyId) {
-      shareReplyMutation.mutate({
-        postId: shareVideoTarget.postId,
-        replyId: shareVideoTarget.replyId,
-        body: { channel },
-      });
-    } else {
-      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
-    }
+    trackLectumShare(channel);
     setShareFeedback(shareVideoTarget.postId);
     window.setTimeout(() => setShareFeedback(null), 2400);
   };

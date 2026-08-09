@@ -62,6 +62,8 @@ export const storage: multer.StorageEngine = {
 
       const type = file.mimetype.split("/")[1];
 
+      // Este storage implementa somente o contrato público declarado em
+      // `PublicUploadOption`; não reutilizá-lo para conteúdo privado.
       const bucketName = PUBLIC_BUCKET;
 
       const folder = file.fieldname;

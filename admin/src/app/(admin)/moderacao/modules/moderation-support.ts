@@ -4,6 +4,11 @@ import type {
   AdminModerationSeverity,
   AdminModerationStatus,
 } from "@/api/req/moderation";
+import {
+  moderationDecisionLabels,
+  moderationSeverityLabels,
+  moderationStatusLabels,
+} from "@/lib/moderation-copy";
 
 export const EVENT_LIMIT = 10;
 
@@ -41,51 +46,31 @@ export const getQuickRange = (days: number) => {
 export const initialRange = getQuickRange(30);
 
 export const decisionCopy: Record<AdminModerationDecision, { label: string; className: string }> = {
-  allow_sensitive: { className: "bg-warning-soft text-warning", label: "Sensível publicado" },
-  block: { className: "bg-danger-soft text-danger", label: "Bloqueado" },
-  safety_hold: { className: "bg-danger text-primary-foreground", label: "Segurança urgente" },
+  allow_sensitive: {
+    className: "bg-warning-soft text-warning",
+    label: moderationDecisionLabels.allow_sensitive,
+  },
+  block: { className: "bg-danger-soft text-danger", label: moderationDecisionLabels.block },
+  safety_hold: {
+    className: "bg-danger text-primary-foreground",
+    label: moderationDecisionLabels.safety_hold,
+  },
 };
 
 export const statusCopy: Record<AdminModerationStatus, { label: string; className: string }> = {
-  pending: { className: "bg-warning-soft text-warning", label: "Pendente" },
-  resolved: { className: "bg-success-soft text-success", label: "Resolvido" },
-  reviewing: { className: "bg-info-soft text-info", label: "Em revisão" },
+  pending: { className: "bg-warning-soft text-warning", label: moderationStatusLabels.pending },
+  resolved: { className: "bg-success-soft text-success", label: moderationStatusLabels.resolved },
+  reviewing: { className: "bg-info-soft text-info", label: moderationStatusLabels.reviewing },
 };
 
 export const severityCopy: Record<AdminModerationSeverity, { label: string; className: string }> = {
-  high: { className: "bg-danger-soft text-danger", label: "Alta" },
-  low: { className: "bg-surface-muted text-muted", label: "Baixa" },
-  medium: { className: "bg-warning-soft text-warning", label: "Média" },
-  urgent: { className: "bg-danger text-primary-foreground", label: "Urgente" },
-};
-
-export const categoryLabels: Record<string, string> = {
-  abuse_violence: "Abuso/violência",
-  explicit_sexual: "Sexual explícito",
-  external_link: "Link externo",
-  minor_sexual_risk: "Menor/risco sexual",
-  other: "Outro",
-  self_harm_suicide: "Autolesão/suicídio",
-  sexual_health: "Saúde sexual",
-  spam_scam: "Spam/golpe",
-};
-
-export const reasonLabels: Record<string, string> = {
-  external_contact_invitation_blocked: "Convite para contato externo",
-  minor_sexual_risk_blocked: "Contexto sexual com menor",
-  patient_external_link_blocked: "URL ou domínio externo",
-  self_harm_immediate_safety_hold: "Risco imediato/autolesão",
-  sensitive_term_requires_admin_awareness: "Termo sensível em relato",
-  sensitive_therapeutic_context: "Relato terapêutico sensível",
-  sexual_solicitation_blocked: "Solicitação/divulgação sexual",
-  spam_or_scam_blocked: "Spam ou golpe",
-};
-
-export const targetLabels: Record<string, string> = {
-  community_post: "Post",
-  post_reply: "Resposta",
-  submitted_post: "Post bloqueado antes da publicação",
-  submitted_reply: "Resposta bloqueada antes da publicação",
+  high: { className: "bg-danger-soft text-danger", label: moderationSeverityLabels.high },
+  low: { className: "bg-surface-muted text-muted", label: moderationSeverityLabels.low },
+  medium: { className: "bg-warning-soft text-warning", label: moderationSeverityLabels.medium },
+  urgent: {
+    className: "bg-danger text-primary-foreground",
+    label: moderationSeverityLabels.urgent,
+  },
 };
 
 export type TextualStatusFilter = "all" | Extract<AdminModerationStatus, "pending" | "resolved">;

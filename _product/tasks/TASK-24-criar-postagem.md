@@ -280,7 +280,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Complemento 2026-06-21 - cortesia ativa no controle de midia
 
-- Pedido do usuario: psicologos com cortesia devem ter 100% dos recursos de psicologos assinantes verificados; o usuario `tuliosrezende@gmail.com` estava sem acesso ao controle de midia na modal `Criar Post`.
+- Pedido do usuario: psicologos com cortesia devem ter 100% dos recursos de psicologos assinantes verificados; o usuario `<CONTA_DE_TESTE_AUTORIZADA>` estava sem acesso ao controle de midia na modal `Criar Post`.
 - Frontend: `frontend/src/utils/community-media-permission.ts` passou a liberar o controle para psicologos com plano profissional ativo e `source="admin_grant"`, mesmo com `cfp_verified_at` nulo.
 - Backend: a autorizacao real de midia em respostas tambem passou a aceitar cortesia administrativa ativa, preservando o bloqueio para plano gratuito.
 - O upload de midia em post raiz permanece sem persistencia propria por ausencia de campos de midia em `community_post`; nao foi criado mock, schema paralelo ou endpoint simulado.

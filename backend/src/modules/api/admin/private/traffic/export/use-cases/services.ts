@@ -1,6 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
-import { csvRow } from "@/utils/csv";
+import { csvPublicProvenance, csvRow } from "@/utils/csv";
 import type {
   AdminTrafficBreakdownItem,
   AdminTrafficConversion,
@@ -326,7 +326,17 @@ const buildCsv = (summary: AdminTrafficSummary) => {
   );
 
   for (const item of summary.unavailable) {
-    rows.push(csvRow(["unavailable", item.id, item.label, "", "", item.source, item.description]));
+    rows.push(
+      csvRow([
+        "unavailable",
+        item.id,
+        item.label,
+        "",
+        "",
+        csvPublicProvenance(item.source),
+        item.description,
+      ]),
+    );
   }
 
   return rows.join("\r\n");

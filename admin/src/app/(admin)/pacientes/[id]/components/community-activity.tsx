@@ -62,7 +62,7 @@ export const getPatientCommunityEngagementDiagnosis = (
   community.engagement_diagnosis ?? {
     id: "sem_base",
     label: "Sem base",
-    source: "community_post+post_reply+post_vote+post_save+post_reply_save",
+    source: "conteudo",
   };
 
 export const getPatientCommunityUpvotes = (community: PatientsDetailCommunity) =>

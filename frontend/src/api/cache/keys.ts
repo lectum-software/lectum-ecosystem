@@ -1,4 +1,4 @@
-﻿const keys = {
+const keys = {
   auth: {
     root: () => ["auth_hydrate"],
     hydrate: (cache?: unknown) => ["auth_hydrate", cache],

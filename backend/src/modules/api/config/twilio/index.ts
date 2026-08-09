@@ -59,7 +59,7 @@ export const sendSMS = async ({ to, subject, message }: SMS) => {
       twilioMessage.status === "failed" ||
       twilioMessage.status === "undelivered"
     ) {
-      console.error("SMS send failed", twilioMessage.errorCode || "unknown");
+      console.error("[SMS] O provedor recusou o envio.");
       return {
         success: false,
         errorCode: twilioMessage.errorCode ? String(twilioMessage.errorCode) : undefined,
@@ -76,7 +76,7 @@ export const sendSMS = async ({ to, subject, message }: SMS) => {
   } catch (error) {
     const twilioError = error as { code?: number | string };
 
-    console.error("SMS send failed", twilioError?.code || "unknown");
+    console.error("[SMS] O envio falhou no provedor.");
     return {
       success: false,
       errorCode: twilioError?.code ? String(twilioError.code) : undefined,

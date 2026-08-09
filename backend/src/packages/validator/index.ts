@@ -3,6 +3,8 @@
 
 //Libs
 import { z } from "zod";
+import { sanitizePublicErrorData } from "@/utils/public-error";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { setI18n } from "./i18n";
 import mocks from "./mocks";
 import schema from "./schema";
@@ -200,12 +202,10 @@ const validator = (data: IValidatorRequest, i18next?: any) => async (req, res, n
   } catch (error) {
     const objectError = error?.issues ? schema.handleError(error) : {};
     if (!error.issues) {
-      console.error("[VALIDATOR] Falha interna durante a validação.", {
-        name:
-          typeof error?.name === "string" && error.name.trim().length > 0
-            ? error.name.slice(0, 100)
-            : "ValidatorError",
-      });
+      console.error(
+        "[VALIDATOR] Falha interna durante a validação.",
+        toSafeErrorLog(error, "ValidatorError"),
+      );
     }
 
     let textError = i18next.getFixedT(req.language, "translation")("error.invalid_structure");
@@ -216,7 +216,7 @@ const validator = (data: IValidatorRequest, i18next?: any) => async (req, res, n
       status: 400,
       success: false,
       error: textError,
-      errors: objectError,
+      errors: sanitizePublicErrorData(objectError),
     });
   }
 };

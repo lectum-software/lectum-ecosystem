@@ -1,4 +1,4 @@
-﻿# TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin
+# TASK-129 - Eixos independentes na matriz de cruzamento de dados Admin
 
 ## Status
 

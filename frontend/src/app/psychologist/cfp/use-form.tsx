@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { type Field, useFormList } from "@/hooks/form";
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");

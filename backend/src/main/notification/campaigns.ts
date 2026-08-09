@@ -3,6 +3,7 @@ import {
   isNotificationCampaignSchedulerEnabled,
 } from "@/modules/api/admin/private/notifications/use-cases/services";
 import { parsePositiveInteger } from "@/utils/runtime-config";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 
 const DEFAULT_INTERVAL_MS = 60_000;
 const DEFAULT_BATCH_SIZE = 10;
@@ -22,9 +23,10 @@ const runCampaignsSafely = async () => {
     );
     await dispatchDueNotificationCampaigns(new Date(), batchSize);
   } catch (error) {
-    console.error("[NOTIFICATION CAMPAIGNS] Falha no scheduler.", {
-      name: error instanceof Error ? error.name : "UnknownCampaignSchedulerError",
-    });
+    console.error(
+      "[NOTIFICATION CAMPAIGNS] Falha no scheduler.",
+      toSafeErrorLog(error, "CampaignSchedulerError"),
+    );
   } finally {
     campaignRunInProgress = false;
   }

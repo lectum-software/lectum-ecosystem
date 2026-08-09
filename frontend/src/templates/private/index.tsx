@@ -39,10 +39,9 @@ import {
 } from "./navigation";
 
 import {
-  DESKTOP_SIDEBAR_STORAGE_EVENT,
-  getDesktopSidebarStorageKey,
   readDesktopSidebarPreference,
   subscribeDesktopSidebarPreference,
+  writeDesktopSidebarPreference,
 } from "./sidebar-preference";
 
 export const PrivateTemplate = ({
@@ -106,6 +105,7 @@ export const PrivateTemplate = ({
   const isMobileNavigationRenderedVisible = isNavigationVisible && !navigationHidden;
   const mobileNavigationActiveHref = getMobileNavigationActiveHref(navigationContextPathname);
   const lastScrollY = useRef(0);
+  const scrollAnimationFrameRef = useRef<number | null>(null);
   const ticking = useRef(false);
   const navigationAwarePageShellClassName = cn(
     shouldRenderMobileNavigation ? "pb-28 sm:pb-32" : undefined,
@@ -126,7 +126,8 @@ export const PrivateTemplate = ({
     "--lectum-mobile-nav-aware-fab-bottom": mobileNavigationAwareFabBottom,
     "--lectum-mobile-nav-aware-fab-bottom-sm": mobileNavigationAwareFabBottomSm,
   } as CSSProperties;
-  const isSessionLoading = hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending);
+  const isSessionLoading =
+    hasToken && !sessionUser && (hidrate.isLoading || hidrate.isPending || hidrate.isFetching);
   const shouldShowSessionError = Boolean(hasToken && hidrate.isError);
   const restrictedAreaCopy =
     RESTRICTED_AREA_COPY_BY_PATH.get(normalizedPathname) ?? DEFAULT_RESTRICTED_AREA_COPY;
@@ -144,7 +145,7 @@ export const PrivateTemplate = ({
 
   const navigateToAuth = (href: string) => {
     if (hasToken || shouldShowSessionError) {
-      out(href);
+      void out(href);
       return;
     }
 
@@ -185,13 +186,14 @@ export const PrivateTemplate = ({
 
       ticking.current = true;
 
-      requestAnimationFrame(() => {
+      scrollAnimationFrameRef.current = requestAnimationFrame(() => {
         const currentY = window.scrollY;
 
         if (currentY <= 12) {
           setIsNavigationVisible(true);
           lastScrollY.current = currentY;
           ticking.current = false;
+          scrollAnimationFrameRef.current = null;
 
           return;
         }
@@ -206,6 +208,7 @@ export const PrivateTemplate = ({
 
         lastScrollY.current = currentY;
         ticking.current = false;
+        scrollAnimationFrameRef.current = null;
       });
     };
 
@@ -214,19 +217,18 @@ export const PrivateTemplate = ({
 
     return () => {
       window.removeEventListener("scroll", onScroll);
+      if (scrollAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(scrollAnimationFrameRef.current);
+        scrollAnimationFrameRef.current = null;
+      }
+      ticking.current = false;
     };
   }, [shouldAutoHideNavigation]);
 
   const toggleDesktopSidebar = () => {
     const nextValue = !isDesktopSidebarCollapsed;
 
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        getDesktopSidebarStorageKey(navigationContextPathname),
-        nextValue ? "collapsed" : "expanded",
-      );
-      window.dispatchEvent(new Event(DESKTOP_SIDEBAR_STORAGE_EVENT));
-    }
+    writeDesktopSidebarPreference(navigationContextPathname, nextValue);
   };
 
   const bottomNavigationMarkup = shouldRenderMobileNavigation ? (

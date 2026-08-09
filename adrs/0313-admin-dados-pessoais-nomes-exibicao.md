@@ -1,4 +1,4 @@
-﻿# ADR-0313: Nomes de exibicao em Dados pessoais no Admin
+# ADR-0313: Nomes de exibicao em Dados pessoais no Admin
 
 ## Status
 

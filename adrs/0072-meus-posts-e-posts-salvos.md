@@ -428,7 +428,7 @@ Em `Meus posts e respostas`, o conteudo listado pertence ao proprio usuario aute
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Smoke API real em `GET /api/private/posts/mine?type=replies`: criou uma resposta propria e uma resposta filha propria do psicologo `tuliosrezende@gmail.com`, confirmou `replies_received_count=1` e `has_verified_professional_reply=false`, e removeu os registros temporarios ao final.
+- Smoke API real em `GET /api/private/posts/mine?type=replies`: criou uma resposta propria e uma resposta filha propria do psicologo `<CONTA_DE_TESTE_AUTORIZADA>`, confirmou `replies_received_count=1` e `has_verified_professional_reply=false`, e removeu os registros temporarios ao final.
 - Chrome/CDP mobile `390x844` em `/app/posts/mine`: confirmou ausencia de `Chamar no WhatsApp` em conteudo proprio e ausencia de `Respondido por psicologo verificado` no card da resposta propria com filho criado pelo mesmo psicologo.
 
 ## Complemento 2026-07-01: resposta profissional destacada em posts salvos

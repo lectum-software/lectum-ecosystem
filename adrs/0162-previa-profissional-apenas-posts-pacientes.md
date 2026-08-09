@@ -1,4 +1,4 @@
-﻿# ADR-0162: Prévia profissional apenas em posts de pacientes
+# ADR-0162: Prévia profissional apenas em posts de pacientes
 
 ## Status
 Accepted

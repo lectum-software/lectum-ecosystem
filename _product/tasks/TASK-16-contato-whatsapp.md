@@ -1,4 +1,4 @@
-﻿# TASK-16: Contato por WhatsApp
+# TASK-16: Contato por WhatsApp
 
 ## Metadata
 

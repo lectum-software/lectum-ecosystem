@@ -1,4 +1,4 @@
-﻿import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
 import type {
   BillingSubscriptionStatus,
@@ -43,12 +43,7 @@ const MERCADO_PAGO_CURRENT_USER_URL = "https://api.mercadopago.com/users/me";
 const MERCADO_PAGO_REQUEST_TIMEOUT_MS = 10_000;
 
 type MercadoPagoSafeErrorDetails = {
-  operation: string;
-  name?: string;
-  cause_message?: string;
   status?: number;
-  code?: string;
-  blocked_by?: string;
 };
 
 const firstHeaderValue = (value?: string | string[]) => {
@@ -100,8 +95,6 @@ const toStringOrNull = (value: unknown) => {
 
 const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
 
-const toSafeNumber = (value: unknown) => (typeof value === "number" ? value : undefined);
-
 const toFiniteNumberOrNull = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value !== "string") return null;
@@ -131,30 +124,13 @@ const toIsoDateString = (value?: Date | string | null) => {
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 };
 
-const sanitizeMercadoPagoError = (operation: string, err: unknown): MercadoPagoSafeErrorDetails => {
-  if (err instanceof Error) {
-    return {
-      operation,
-      name: err.name,
-      cause_message: err.message,
-    };
-  }
+const sanitizeMercadoPagoError = (err: unknown): MercadoPagoSafeErrorDetails => {
+  if (!isObject(err)) return {};
 
-  if (!isObject(err)) {
-    return {
-      operation,
-      cause_message: "Unknown Mercado Pago error",
-    };
-  }
-
-  return {
-    operation,
-    name: toSafeString(err.name),
-    cause_message: toSafeString(err.message) || toSafeString(err.error),
-    status: toSafeNumber(err.status),
-    code: toSafeString(err.code),
-    blocked_by: toSafeString(err.blocked_by),
-  };
+  const status = err.status;
+  return typeof status === "number" && Number.isInteger(status) && status >= 100 && status <= 599
+    ? { status }
+    : {};
 };
 
 export class MercadoPagoAdapterError extends Error {
@@ -163,7 +139,7 @@ export class MercadoPagoAdapterError extends Error {
   constructor(operation: string, cause: unknown) {
     super(`MERCADO_PAGO_${operation.toUpperCase()}_FAILED`);
     this.name = "MercadoPagoAdapterError";
-    this.details = sanitizeMercadoPagoError(operation, cause);
+    this.details = sanitizeMercadoPagoError(cause);
   }
 }
 

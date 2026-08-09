@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type {
   PsychologistsDashboardDeviceUsage,
   PsychologistsDashboardPlatformUsage,
@@ -76,7 +77,7 @@ export type PsychologistsDashboardProfileConversionEngagementResults = {
   };
   description: string;
   quadrants: PsychologistsDashboardProfileConversionEngagementQuadrant[];
-  source: "contact_request.channel=whatsapp+user.createdAt+platform_percentiles+psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share";
+  source: AdminPublicSource<"contact_request.channel=whatsapp+user.createdAt+platform_percentiles+psychologist_favorite+psychologist_follow+post_reply.received+post_vote.value=1.received+post_save+post_reply_save+post_share">;
   thresholds: {
     engaged_score_30d: number;
     engaged_interactions_30d: number;

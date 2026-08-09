@@ -1,5 +1,6 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { ApiResponse } from "@/api/types";
 
 export const ADMIN_SETTINGS_CATALOG_TYPES = [
@@ -126,7 +127,7 @@ export type AdminSubscriptionPlanSetting = {
   name: string;
   price_cents: number;
   slug: string;
-  source: "subscription_plan";
+  source: AdminPublicSource<"subscription_plan">;
   updated_at: string;
 };
 

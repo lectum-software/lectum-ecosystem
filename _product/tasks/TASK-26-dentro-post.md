@@ -1,4 +1,4 @@
-﻿# TASK-26: Dentro do post
+# TASK-26: Dentro do post
 
 ## Metadata
 
@@ -425,7 +425,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A regra preserva a exigencia de plano profissional ativo e continua bloqueando plano gratuito; o helper `activeProfessionalCourtesyEntitlementWhere()` centraliza a consulta da cortesia administrativa.
 - Nao houve alteracao de Prisma schema, migrations, storage, endpoints, payload de respostas, limites de arquivo, ordenacao, votos ou regras de denuncia.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
-- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, script local confirmando `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com `cfp_verified_at=null` e `admin_grant` ativo, e service real `authorizeReplyMediaUpload` retornando `status=200` para post publicado existente.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, script local confirmando `canAttachReplyMedia=true` para `<CONTA_DE_TESTE_AUTORIZADA>` com `cfp_verified_at=null` e `admin_grant` ativo, e service real `authorizeReplyMediaUpload` retornando `status=200` para post publicado existente.
 
 ## Execucao complementar: icone de video no anexo de comentarios (2026-06-21)
 
@@ -471,7 +471,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Nao houve alteracao de Prisma schema, migrations, packages, storage, payload de criacao/edicao, votos, salvamentos, ordenacao ou denuncia.
 - Fonte visual auditavel: screenshots enviados pelo usuario e browser local; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR criado: `adrs/0147-cortesia-verificada-whatsapp-comunidade.md`.
-- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20` confirmando `verified=true`, `whatsapp_url` e `edited_at` para `tuliosrezende@gmail.com`, e Chrome/CDP autenticado em `/app/community/feed` confirmando selo verificado, texto `editado`, botao `Chamar no WhatsApp` no card `teste novo` e botao de WhatsApp em resposta profissional destacada.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, smoke real de API em `/api/private/community/feed/posts?search=teste%20novo&limit=20` confirmando `verified=true`, `whatsapp_url` e `edited_at` para `<CONTA_DE_TESTE_AUTORIZADA>`, e Chrome/CDP autenticado em `/app/community/feed` confirmando selo verificado, texto `editado`, botao `Chamar no WhatsApp` no card `teste novo` e botao de WhatsApp em resposta profissional destacada.
 
 ## Execucao complementar: textarea compacto e botao Midia na edicao de comentario (2026-06-21)
 

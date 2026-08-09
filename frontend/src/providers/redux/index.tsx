@@ -10,7 +10,11 @@ const LEGACY_PERSISTED_USER_KEY = "persist:lectum";
 
 export const Provider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
-    window.localStorage.removeItem(LEGACY_PERSISTED_USER_KEY);
+    try {
+      window.localStorage.removeItem(LEGACY_PERSISTED_USER_KEY);
+    } catch {
+      // Storage bloqueado não deve impedir a inicialização da aplicação.
+    }
   }, []);
 
   return <ReduxProvider store={store}>{children}</ReduxProvider>;

@@ -1,6 +1,9 @@
 "use client";
 
-import { type SVGProps, useEffect } from "react";
+import { startOfCurrentWeek } from "@/lib/date-period";
+
+export { startOfCurrentWeek };
+
 import { z } from "zod";
 import {
   ADMIN_NOTIFICATION_AUDIENCES,
@@ -11,7 +14,7 @@ import {
   type AdminNotificationsRangeQuery,
   type NotificationDeliveryStatus,
 } from "@/api/req/notifications";
-import { cn } from "@/lib/utils";
+import { isSafeInternalNavigationPath } from "@/lib/safe-redirect";
 
 export type NotificationPeriodValue = NonNullable<AdminNotificationsRangeQuery["period"]>;
 
@@ -52,30 +55,6 @@ export const tableRangeErrorMessage =
 
 export const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
-
-export const useDocumentScrollLock = (locked: boolean) => {
-  useEffect(() => {
-    if (!locked || typeof document === "undefined") return;
-
-    const { body, documentElement } = document;
-    const previousBodyOverflow = body.style.overflow;
-    const previousDocumentOverflow = documentElement.style.overflow;
-    const previousBodyOverscrollBehavior = body.style.overscrollBehavior;
-    const previousDocumentOverscrollBehavior = documentElement.style.overscrollBehavior;
-
-    body.style.overflow = "hidden";
-    documentElement.style.overflow = "hidden";
-    body.style.overscrollBehavior = "none";
-    documentElement.style.overscrollBehavior = "none";
-
-    return () => {
-      body.style.overflow = previousBodyOverflow;
-      documentElement.style.overflow = previousDocumentOverflow;
-      body.style.overscrollBehavior = previousBodyOverscrollBehavior;
-      documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior;
-    };
-  }, [locked]);
-};
 
 export const AUDIENCE_OPTIONS: Array<{ label: string; value: AdminNotificationAudience }> = [
   { label: "Todos os usuários", value: "all_users" },
@@ -137,6 +116,17 @@ export const DELIVERY_STATUS_COPY: Record<
   skipped: { className: "bg-warning/10 text-warning", label: "Omitida" },
 };
 
+const UNKNOWN_STATUS_COPY = {
+  className: "bg-surface-muted text-muted",
+  label: "Status não classificado",
+};
+
+export const campaignStatusCopy = (value?: string | null) =>
+  STATUS_COPY[value as AdminNotificationCampaignStatus] ?? UNKNOWN_STATUS_COPY;
+
+export const deliveryStatusCopy = (value?: string | null) =>
+  DELIVERY_STATUS_COPY[value as NotificationDeliveryStatus] ?? UNKNOWN_STATUS_COPY;
+
 export const numberFormatter = new Intl.NumberFormat("pt-BR");
 
 export const percentFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
@@ -150,16 +140,6 @@ export const pad = (value: number) => String(value).padStart(2, "0");
 
 export const toInputDate = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-export const startOfCurrentWeek = () => {
-  const today = new Date();
-  const day = today.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const start = new Date(today);
-  start.setDate(today.getDate() + mondayOffset);
-
-  return start;
-};
 
 export const startOfCurrentMonth = () => {
   const today = new Date();
@@ -247,22 +227,6 @@ export const roleLabel = (value?: null | string) => {
   return "Usuário";
 };
 
-export const VerifiedBadgeIcon = ({ className, ...props }: SVGProps<SVGSVGElement>) => (
-  <svg
-    className={cn("h-4 w-4 shrink-0 text-primary", className)}
-    fill="none"
-    viewBox="0 0 30 28"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
-    <title>Perfil verificado</title>
-    <path
-      d="M10.3636 28L7.77273 23.7333L2.86364 22.6667L3.34091 17.7333L0 14L3.34091 10.2667L2.86364 5.33333L7.77273 4.26667L10.3636 0L15 1.93333L19.6364 0L22.2273 4.26667L27.1364 5.33333L26.6591 10.2667L30 14L26.6591 17.7333L27.1364 22.6667L22.2273 23.7333L19.6364 28L15 26.0667L10.3636 28ZM13.5682 18.7333L21.2727 11.2L19.3636 9.26667L13.5682 14.9333L10.6364 12.1333L8.72727 14L13.5682 18.7333Z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
 export type NotificationRecipient = AdminNotificationAutomaticLog["user"];
 
 export const recipientName = (user: NotificationRecipient) =>
@@ -279,7 +243,8 @@ export const CHANNEL_LABELS: Record<AdminNotificationChannel, string> = {
   push: "Push",
 };
 
-export const channelLabel = (value: AdminNotificationChannel) => CHANNEL_LABELS[value] ?? value;
+export const channelLabel = (value: AdminNotificationChannel) =>
+  CHANNEL_LABELS[value] ?? "Canal não classificado";
 
 export const channelText = (channels: AdminNotificationChannel[]) =>
   channels.map(channelLabel).join(" + ");
@@ -290,7 +255,7 @@ export const internalRedirect = z
   .max(512, "Use até 512 caracteres.")
   .optional()
   .refine(
-    (value) => !value || (value.startsWith("/") && !value.startsWith("//")),
+    (value) => !value || isSafeInternalNavigationPath(value),
     "Use uma rota interna iniciada por /.",
   );
 

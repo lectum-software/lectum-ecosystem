@@ -1,4 +1,4 @@
-﻿# ADR-0252: Edição administrativa auditada de dados do psicólogo
+# ADR-0252: Edição administrativa auditada de dados do psicólogo
 
 ## Status
 

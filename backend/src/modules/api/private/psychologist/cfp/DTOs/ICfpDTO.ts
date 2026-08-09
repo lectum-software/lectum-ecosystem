@@ -1,4 +1,4 @@
-﻿import type { user } from "@/interfaces/objects";
+import type { user } from "@/interfaces/objects";
 
 export type CfpSearchBody = {
   cpf?: string;
@@ -61,9 +61,10 @@ export type StoredRegistryCheckRaw = {
     | "provider_error";
   attempt_finished_at?: string;
   provider_error?: {
-    name?: string;
-    reason?: string;
-    context?: Record<string, unknown>;
+    classification: "provider_unavailable";
+    reason?: "invalid_json" | "network" | "timeout";
+    elapsed_ms?: number;
+    http_status?: number;
   };
   confirmed_result_key?: string;
   confirmed_at?: string;

@@ -3,7 +3,7 @@
 import { FileText } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
-import { useInfiniteMyPosts, useMyPosts, useSharePost, useShareReply } from "@/api/callers/posts";
+import { useInfiniteMyPosts, useMyPosts } from "@/api/callers/posts";
 import type { PostListPost, UserPostsType } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -47,8 +48,7 @@ export const MyPostsLogic = () => {
     [],
   );
   const postsQuery = useInfiniteMyPosts(query);
-  const sharePostMutation = useSharePost();
-  const shareReplyMutation = useShareReply();
+  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
   const { fetchNextPage } = postsQuery;
   const postsCountQuery = useMyPosts(postsCountQueryParams, type !== "posts");
   const repliesCountQuery = useMyPosts(repliesCountQueryParams, type !== "replies");
@@ -106,15 +106,7 @@ export const MyPostsLogic = () => {
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    if (shareVideoTarget.replyId) {
-      shareReplyMutation.mutate({
-        postId: shareVideoTarget.postId,
-        replyId: shareVideoTarget.replyId,
-        body: { channel },
-      });
-    } else {
-      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
-    }
+    trackLectumShare(channel);
     setShareFeedback(shareVideoTarget.replyId ? "interaction" : "post");
     window.setTimeout(() => setShareFeedback(null), 2400);
   };

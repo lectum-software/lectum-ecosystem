@@ -1,4 +1,4 @@
-﻿# TASK-122 - Quantidade considerada e carrossel dos donuts no Admin de psicologos
+# TASK-122 - Quantidade considerada e carrossel dos donuts no Admin de psicologos
 
 ## Status
 

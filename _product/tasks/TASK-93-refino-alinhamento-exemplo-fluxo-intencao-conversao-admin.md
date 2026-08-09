@@ -1,4 +1,4 @@
-﻿# TASK-93: Refinamento do alinhamento visual do fluxo de intencao e conversao no Dashboard Admin
+# TASK-93: Refinamento do alinhamento visual do fluxo de intencao e conversao no Dashboard Admin
 
 ## Metadata
 

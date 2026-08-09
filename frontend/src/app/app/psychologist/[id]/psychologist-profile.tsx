@@ -13,7 +13,6 @@ import {
   useInfiniteDirectoryPsychologistReviews,
 } from "@/api/callers/directory";
 import { usePatient } from "@/api/callers/patient";
-import { useSharePost, useShareReply } from "@/api/callers/posts";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
 import type { DirectoryReviewSummary } from "@/api/generator/types/directory";
 import type { PostListPost } from "@/api/generator/types/posts";
@@ -24,6 +23,7 @@ import { LectumShareVideoModal } from "@/components/share/lectum-share-video-mod
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
@@ -82,8 +82,7 @@ export const PsychologistProfileLogic = () => {
   const profileQuery = useDirectoryPsychologist(id);
   const { mutate: trackProfileView } = useDirectoryPsychologistProfileView(id);
   const importantActionTracking = useImportantActionTracking();
-  const sharePostMutation = useSharePost();
-  const shareReplyMutation = useShareReply();
+  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
   const profile = profileQuery.data;
   const loadedProfileId = profile?.id;
   const postsPreview = useDirectoryPsychologistPosts(
@@ -365,15 +364,7 @@ export const PsychologistProfileLogic = () => {
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    if (shareVideoTarget.replyId) {
-      shareReplyMutation.mutate({
-        postId: shareVideoTarget.postId,
-        replyId: shareVideoTarget.replyId,
-        body: { channel },
-      });
-    } else {
-      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
-    }
+    trackLectumShare(channel);
     setShareFeedback(true);
     window.setTimeout(() => setShareFeedback(false), 2500);
   };

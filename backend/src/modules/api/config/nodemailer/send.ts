@@ -1,10 +1,8 @@
+import "@/config/dotenv";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import hbs from "nodemailer-express-handlebars";
-
-dotenv.config();
 
 import type { MessageProps } from "./types";
 
@@ -17,9 +15,6 @@ type Send = {
 };
 
 type TemplateContext = Record<string, unknown>;
-
-const getErrorName = (error: unknown) =>
-  error instanceof Error ? error.name : "UnknownEmailError";
 
 export const isTransactionalEmailConfigured = () => {
   const port = Number(process.env.EMAIL_API_PORT);
@@ -171,8 +166,7 @@ const send = async ({
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.error("[EMAIL] Falha ao enviar mensagem", {
-            code: (error as { code?: string }).code,
-            name: getErrorName(error),
+            name: "EmailProviderError",
           });
           return reject(new Error("EMAIL_SEND_FAILED"));
         } else {
@@ -183,9 +177,9 @@ const send = async ({
         }
       });
     });
-  } catch (e) {
+  } catch {
     console.error("[EMAIL] Erro inesperado no envio", {
-      name: getErrorName(e),
+      name: "EmailSendError",
     });
     return false;
   }

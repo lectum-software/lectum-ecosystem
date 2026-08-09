@@ -1,4 +1,4 @@
-﻿# ADR-0154: Scroll infinito em Meus posts e respostas
+# ADR-0154: Scroll infinito em Meus posts e respostas
 
 ## Status
 

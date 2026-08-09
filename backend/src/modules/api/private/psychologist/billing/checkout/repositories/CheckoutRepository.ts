@@ -1,4 +1,4 @@
-﻿import prisma, { type ORM } from "@/infra/database/prisma";
+import prisma, { type ORM } from "@/infra/database/prisma";
 import type {
   billing_address,
   payment_method,

@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { resolveCalendarPeriod, toDateKey } from "@/utils/date-range";
+import { getPrimaryPublicWebOrigin, resolvePublicWebUrl } from "@/utils/public-origin";
 import {
   ADMIN_NOTIFICATION_AUDIENCES,
   ADMIN_NOTIFICATION_CHANNELS,
@@ -26,8 +27,6 @@ export const MAX_PERIOD_DAYS = 3660;
 export const OPEN_STATUSES = ["read", "clicked"];
 
 export const REACHED_STATUSES = ["sent", "delivered", "read", "clicked"];
-
-export const EMAIL_STATUS_REASON_NOT_CONFIGURED = "email_smtp_not_configured";
 
 export const REQUIRED_EMAIL_ENV_KEYS = [
   "EMAIL_API_EMAIL",
@@ -61,9 +60,10 @@ export const emailProviderStatusData = () => {
   return {
     available: configured,
     configured,
-    reason: configured ? null : EMAIL_STATUS_REASON_NOT_CONFIGURED,
-    sender_address: process.env.EMAIL_API_SENDER || null,
-    sender_name: process.env.EMAIL_API_NAME || null,
+    // Mantém o contrato legado sem publicar endereço ou detalhes do provedor.
+    reason: null,
+    sender_address: null,
+    sender_name: null,
   };
 };
 
@@ -98,14 +98,12 @@ export const renderEmailParagraphs = (body: string) =>
     )
     .join("");
 
-export const firstPublicWebUrl = () =>
-  process.env.WEB_URL?.split(",")[0]?.trim().replace(/\/$/, "") || "";
+export const firstPublicWebUrl = () => getPrimaryPublicWebOrigin() ?? "";
 
 export const redirectUrlForEmail = (redirect: null | string) => {
   if (!redirect) return undefined;
 
-  const baseUrl = firstPublicWebUrl();
-  return baseUrl ? `${baseUrl}${redirect}` : undefined;
+  return resolvePublicWebUrl(redirect) ?? undefined;
 };
 
 export const adminNotificationEmailHtml = (campaign: CampaignRecord) => {

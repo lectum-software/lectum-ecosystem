@@ -1,4 +1,4 @@
-﻿import type { Resolve } from "@/helpers/return";
+import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 import type { PublicCommunityPostSeoDTO } from "../DTOs/IPublicCommunityPostSeoDTO";

@@ -1,5 +1,6 @@
 import type { CookieOptions, Request, Response } from "express";
-import { getUserJwtTtlSeconds, isProductionRuntime } from "./runtime-config";
+import { getJwtCookieMaxAge } from "./jwt-cookie-ttl";
+import { getUserJwtTtlSeconds, isPublishedRuntime } from "./runtime-config";
 
 export const USER_AUTH_COOKIE_NAME = "lectum_user_session";
 export const USER_COOKIE_AUTH_HEADER = "x-requested-with";
@@ -14,13 +15,18 @@ type AuthResolve = {
   [key: string]: unknown;
 };
 
-const userCookieOptions = (): CookieOptions => ({
+const userCookieOptions = (maxAge = getUserJwtTtlSeconds() * 1_000): CookieOptions => ({
   httpOnly: true,
-  maxAge: getUserJwtTtlSeconds() * 1_000,
+  maxAge,
   path: "/",
   sameSite: "lax",
-  secure: isProductionRuntime(),
+  secure: isPublishedRuntime(),
 });
+
+export const getUserTokenCookieMaxAge = (token: string, now = Date.now()) => {
+  const defaultMaxAge = getUserJwtTtlSeconds() * 1_000;
+  return getJwtCookieMaxAge({ defaultMaxAge, now, token });
+};
 
 const normalizeToken = (value: unknown) => {
   if (typeof value !== "string") return null;
@@ -59,10 +65,19 @@ export const readUserTokenFromCookieHeader = (cookieHeader: unknown) => {
   return null;
 };
 
-export const getUserRequestToken = (request: Request) =>
-  getUserBearerToken(request) ??
-  normalizeToken(request.cookies?.[USER_AUTH_COOKIE_NAME]) ??
-  readUserTokenFromCookieHeader(request.headers.cookie);
+const isUserCookieAuthCapable = (request: Request) =>
+  request.get(USER_COOKIE_AUTH_HEADER) === USER_COOKIE_AUTH_CAPABILITY;
+
+export const getUserRequestToken = (request: Request) => {
+  const bearer = getUserBearerToken(request);
+  if (bearer) return bearer;
+  if (!isUserCookieAuthCapable(request)) return null;
+
+  return (
+    normalizeToken(request.cookies?.[USER_AUTH_COOKIE_NAME]) ??
+    readUserTokenFromCookieHeader(request.headers.cookie)
+  );
+};
 
 export const clearUserAuthCookie = (response: Response) => {
   const { maxAge: _maxAge, ...options } = userCookieOptions();
@@ -72,8 +87,10 @@ export const clearUserAuthCookie = (response: Response) => {
 const setUserAuthCookie = (response: Response, token: string) => {
   const normalized = normalizeToken(token);
   if (!normalized) return;
+  const maxAge = getUserTokenCookieMaxAge(normalized);
+  if (maxAge <= 0) return;
 
-  response.cookie(USER_AUTH_COOKIE_NAME, normalized, userCookieOptions());
+  response.cookie(USER_AUTH_COOKIE_NAME, normalized, userCookieOptions(maxAge));
 };
 
 const readTokenFromResolve = (resolve: AuthResolve) => {
@@ -108,7 +125,7 @@ export const applyUserAuthCookie = <T extends AuthResolve>(
   response: Response,
   resolve: T,
 ): T => {
-  const cookieCapable = request.get(USER_COOKIE_AUTH_HEADER) === USER_COOKIE_AUTH_CAPABILITY;
+  const cookieCapable = isUserCookieAuthCapable(request);
   if (!cookieCapable) return resolve;
 
   const token = readTokenFromResolve(resolve);

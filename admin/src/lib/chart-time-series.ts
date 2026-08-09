@@ -40,9 +40,21 @@ export const parseCalendarChartDate = (value: string) => {
   if (!match) return null;
 
   const [, year, month, day] = match;
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  const numericYear = Number(year);
+  const numericMonth = Number(month);
+  const numericDay = Number(day);
+  const date = new Date(Date.UTC(numericYear, numericMonth - 1, numericDay));
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getUTCFullYear() !== numericYear ||
+    date.getUTCMonth() !== numericMonth - 1 ||
+    date.getUTCDate() !== numericDay
+  ) {
+    return null;
+  }
+
+  return date;
 };
 
 export const formatCalendarShortDate = (date: Date) =>
@@ -92,7 +104,8 @@ const applyMetricValue = <T extends { date: string }, K extends Extract<keyof T,
   key: K,
   aggregation: CalendarMetricAggregation,
 ) => {
-  const value = Number(source[key] ?? 0);
+  const parsedValue = Number(source[key] ?? 0);
+  const value = Number.isFinite(parsedValue) ? parsedValue : 0;
   const metricTarget = target as Record<K, number>;
 
   metricTarget[key] = aggregation === "last" ? value : Number(metricTarget[key] ?? 0) + value;

@@ -1,4 +1,4 @@
-﻿import type { phone_verification, psychologist_profile } from "@/interfaces/objects";
+import type { phone_verification, psychologist_profile } from "@/interfaces/objects";
 
 export type CreateWhatsappVerificationInput = {
   userId: string;

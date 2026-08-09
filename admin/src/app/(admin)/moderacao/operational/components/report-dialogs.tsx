@@ -17,6 +17,7 @@ import { useAdminModerationResolveReport } from "@/api/callers/moderation";
 import { resolveApiError } from "@/api/handle";
 import type { AdminModerationOperationalAlert } from "@/api/req/moderation";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import {
   formatDateTime,
@@ -39,6 +40,8 @@ import {
   ReportStatusBadge,
 } from "./report-common";
 
+type ModerationReportMutation = ReturnType<typeof useAdminModerationResolveReport>;
+
 export const ReportModerationDialog = ({
   onClose,
   state,
@@ -46,14 +49,21 @@ export const ReportModerationDialog = ({
   onClose: () => void;
   state: NonNullable<ReportModerationState>;
 }) => {
+  const mutation = useAdminModerationResolveReport();
   const title =
     state.action === "dismiss" ? "Resolver como improcedente" : "Resolver como procedente";
+  const dialogRef = useAdminDialogLifecycle(onClose, {
+    closeEnabled: !mutation.isPending,
+  });
 
   return (
     <div
+      aria-label={title}
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+      ref={dialogRef}
       role="dialog"
+      tabIndex={-1}
     >
       <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
         <div className="flex items-start justify-between gap-4">
@@ -70,6 +80,7 @@ export const ReportModerationDialog = ({
           <button
             aria-label="Fechar"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
             onClick={onClose}
             type="button"
           >
@@ -78,9 +89,9 @@ export const ReportModerationDialog = ({
         </div>
         <div className="mt-5">
           {state.action === "dismiss" ? (
-            <ReportDismissForm onClose={onClose} report={state.report} />
+            <ReportDismissForm mutation={mutation} onClose={onClose} report={state.report} />
           ) : (
-            <ReportUpholdForm onClose={onClose} report={state.report} />
+            <ReportUpholdForm mutation={mutation} onClose={onClose} report={state.report} />
           )}
         </div>
       </div>
@@ -89,13 +100,14 @@ export const ReportModerationDialog = ({
 };
 
 export const ReportDismissForm = ({
+  mutation,
   onClose,
   report,
 }: {
+  mutation: ModerationReportMutation;
   onClose: () => void;
   report: ModerationReport;
 }) => {
-  const mutation = useAdminModerationResolveReport();
   const form = useForm<ReportDismissFormValues>({
     defaultValues: { confirmation: "", reason: "" },
     mode: "onSubmit",
@@ -170,13 +182,14 @@ export const ReportDismissForm = ({
 };
 
 export const ReportUpholdForm = ({
+  mutation,
   onClose,
   report,
 }: {
+  mutation: ModerationReportMutation;
   onClose: () => void;
   report: ModerationReport;
 }) => {
-  const mutation = useAdminModerationResolveReport();
   const measureOptions = report.capabilities.can_remove_content
     ? [
         { label: "Remover conteúdo denunciado", value: "remove_content" },

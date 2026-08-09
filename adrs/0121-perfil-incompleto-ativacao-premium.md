@@ -1,4 +1,4 @@
-﻿# ADR 0121: Experiência premium para perfil profissional incompleto
+# ADR 0121: Experiência premium para perfil profissional incompleto
 
 Data: 2026-06-18
 

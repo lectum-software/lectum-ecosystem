@@ -3,15 +3,16 @@ import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { AdminModerationEvent } from "@/api/req/moderation";
+import { VerifiedBadgeIcon } from "@/components/admin-icons";
+import { moderationRoleLabel, moderationTargetLabel } from "@/lib/moderation-copy";
 import { cn } from "@/lib/utils";
 import {
   formatDateOnly,
   formatDateTime,
   TEXTUAL_TABLE_SKELETON_KEYS,
-  targetLabels,
 } from "../modules/moderation-support";
 
-import { Decision, Status, VerifiedBadgeIcon } from "./header-filters";
+import { Decision, Status } from "./header-filters";
 
 export const ContentSensitiveEventRow = ({
   event,
@@ -22,12 +23,11 @@ export const ContentSensitiveEventRow = ({
   onSelect: (event: AdminModerationEvent) => void;
   selected: boolean;
 }) => {
-  const titlePreview =
-    event.title_snapshot?.trim() || targetLabels[event.target_type] || "Conteúdo";
+  const titlePreview = event.title_snapshot?.trim() || moderationTargetLabel(event.target_type);
   const descriptionPreview = event.content_excerpt.trim() || "Sem descrição persistida.";
   const communityName = event.community?.name ?? "Sem comunidade";
   const authorName = event.author.name || event.author.admin_label || event.author.public_label;
-  const authorRoleLabel = event.author.role_label || event.author.role;
+  const authorRoleLabel = event.author.role_label || moderationRoleLabel(event.author.role);
 
   return (
     <tr

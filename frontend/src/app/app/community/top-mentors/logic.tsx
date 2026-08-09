@@ -16,6 +16,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 type ApiErrorData = {
   error?: string;
@@ -103,9 +104,11 @@ const professionLabel = (mentor: CommunityTopMentor) => {
 };
 
 const topMentorProfileUrl = (profileUrl: string) => {
-  const separator = profileUrl.includes("?") ? "&" : "?";
+  const safeProfileUrl = normalizeSafeInternalRedirect(profileUrl, "/psicologos") || "/psicologos";
+  const url = new URL(safeProfileUrl, "https://lectum.local");
+  url.searchParams.set("traffic_origin", "community_top_mentors");
 
-  return `${profileUrl}${separator}traffic_origin=community_top_mentors`;
+  return `${url.pathname}${url.search}${url.hash}`;
 };
 
 const Avatar = ({

@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_registry_check, psychologist_profile } from "@/interfaces/objects";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";

@@ -1,13 +1,41 @@
-const LOCAL_API_URL = "http://localhost:3001";
+import { getPublicApiSource } from "@/utils/public-asset-sources";
 
 export const normalizeTrustedApiUrl = (value: string) => {
-  const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || LOCAL_API_URL;
+  const configuredApiUrl = getPublicApiSource()?.origin;
+  const raw = value.trim();
+  const hasControlCharacter = Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  });
+  if (
+    !configuredApiUrl ||
+    !raw ||
+    raw.length > 8192 ||
+    raw.startsWith("//") ||
+    raw.includes("*") ||
+    raw.includes("\\") ||
+    hasControlCharacter
+  ) {
+    return null;
+  }
 
   try {
-    const apiOrigin = new URL(configuredApiUrl).origin;
-    const url = new URL(value, apiOrigin);
-    if (url.origin !== apiOrigin) return null;
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    const apiUrl = new URL(configuredApiUrl);
+    const url = new URL(raw, apiUrl);
+    const usesHttp =
+      (apiUrl.protocol === "http:" || apiUrl.protocol === "https:") &&
+      (url.protocol === "http:" || url.protocol === "https:");
+
+    if (
+      !usesHttp ||
+      url.origin !== apiUrl.origin ||
+      apiUrl.username ||
+      apiUrl.password ||
+      url.username ||
+      url.password
+    ) {
+      return null;
+    }
 
     return url.toString();
   } catch {
@@ -21,7 +49,9 @@ export const buildTrustedGoogleLoginUrl = (
 ) => {
   if (!deviceId) throw new Error("Device identifier is unavailable");
 
-  const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || LOCAL_API_URL;
+  const configuredApiUrl = getPublicApiSource()?.origin;
+  if (!configuredApiUrl) throw new Error("Serviço de login indisponível");
+
   const defaultLoginUrl = new URL("/api/public/google/login", configuredApiUrl).toString();
   const configuredLoginUrl = process.env.NEXT_PUBLIC_LOGIN_URL?.trim() || defaultLoginUrl;
   const trustedLoginUrl = normalizeTrustedApiUrl(configuredLoginUrl);

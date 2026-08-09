@@ -10,7 +10,7 @@
 | Fase | Admin analytics |
 | Status | Completed |
 | Dependências | TASK-47, TASK-53, TASK-57, TASK-60, TASK-61, TASK-79 |
-| ADR alvo | ADR-0315 |
+| ADR alvo | ADR-0437 |
 
 ## Contexto
 

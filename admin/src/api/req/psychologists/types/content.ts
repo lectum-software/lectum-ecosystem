@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type {
   PsychologistsDashboardConversion,
   PsychologistsDashboardConversionBySignupMethodItem,
@@ -123,7 +124,7 @@ export type AdminPsychologistPublicationItem = {
     whatsapp_clicks: AdminPsychologistPublicationMetric;
   };
   public_url: string;
-  source: "community_post" | "post_reply";
+  source: AdminPublicSource<"community_post" | "post_reply">;
   title: string;
   type: "post" | "reply";
 };
@@ -152,7 +153,7 @@ export type AdminPsychologistPublications = {
   pages: number;
   per_page: number;
   period: AdminPsychologistStatistics["period"];
-  source: "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report";
+  source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+post_reply_save+post_share+page_view_event+important_action_event+post_report">;
   totals: {
     cards: AdminPsychologistEngagementMetric[];
   };
@@ -198,7 +199,7 @@ export type AdminPsychologistReviews = {
   page: number;
   pages: number;
   per_page: number;
-  source: "professional_review";
+  source: AdminPublicSource<"professional_review">;
   summary: {
     distribution: { count: number; percentage: number; rating: 1 | 2 | 3 | 4 | 5 }[];
     rating_avg: number;
@@ -280,7 +281,7 @@ export type AdminPsychologistReports = {
   cards: {
     id: "dismissed" | "pending" | "total" | "upheld";
     label: string;
-    source: "post_report";
+    source: AdminPublicSource<"post_report">;
     value: number;
   }[];
   count: number;
@@ -297,7 +298,7 @@ export type AdminPsychologistReports = {
   pages: number;
   per_page: number;
   period: AdminPsychologistStatistics["period"];
-  source: "post_report+community_post+post_reply";
+  source: AdminPublicSource<"post_report+community_post+post_reply">;
   unavailable: { description: string; id: string; label: string; source: string }[];
 };
 
@@ -313,7 +314,7 @@ export type AdminPsychologistReportActionResponse = {
   content_already_unavailable: boolean;
   content_removed: boolean;
   report: AdminPsychologistReportItem;
-  source: "post_report+admin_activity_log";
+  source: AdminPublicSource<"post_report+admin_activity_log">;
 };
 
 export type AdminPsychologistActivitiesQuery = {
@@ -370,7 +371,7 @@ export type AdminPsychologistActivities = {
     timezone: "server-local";
     to: string | null;
   };
-  source: "user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report+admin_activity_log";
+  source: AdminPublicSource<"user+psychologist_profile+professional_subscription+community_post+post_reply+post_save+post_reply_save+contact_request+professional_review+post_report+admin_activity_log">;
   unavailable: { description: string; id: string; label: string; source: string }[];
 };
 
@@ -398,20 +399,20 @@ export type AdminPsychologistsDashboard = {
   platform_usage: PsychologistsDashboardPlatformUsage;
   psychologists: {
     items: PsychologistsDashboardPsychologist[];
-    source: "user+psychologist_profile+professional_subscription";
+    source: AdminPublicSource<"user+psychologist_profile+professional_subscription">;
     total: number;
   };
   ranking: {
     formula: "public_directory_psychologist_ranking";
     items: PsychologistsDashboardRankingItem[];
-    source: "shared_psychologist_public_ranking_helper";
+    source: AdminPublicSource<"shared_psychologist_public_ranking_helper">;
     total: number;
   };
   signup_method: PsychologistsDashboardSignupMethod;
   statistics: PsychologistsDashboardStatistics;
   timeline: {
     points: PsychologistsDashboardDailyPoint[];
-    source: "user+professional_subscription";
+    source: AdminPublicSource<"user+professional_subscription">;
   };
   profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_coverage: PsychologistsDashboardProfileCoverageResults;

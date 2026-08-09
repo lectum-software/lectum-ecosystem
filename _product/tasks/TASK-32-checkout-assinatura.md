@@ -1,4 +1,4 @@
-﻿# TASK-32: Checkout de assinatura
+# TASK-32: Checkout de assinatura
 
 ## Metadata
 

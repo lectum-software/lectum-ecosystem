@@ -1,4 +1,4 @@
-﻿import { randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { error, msg } from "@/helpers/translate";
 import type { professional_registry_check } from "@/interfaces/objects";
 import type {
@@ -83,8 +83,6 @@ const summarizeProviderResponse = (
   return {
     elapsedMs: response.elapsed_ms,
     httpStatus: response.http_status,
-    providerCode: response.code,
-    providerMessage: response.code_message,
     resultsCount: response.results.length,
   };
 };
@@ -92,7 +90,8 @@ const summarizeProviderResponse = (
 const logProviderUnavailable = (err: unknown, traceId: string) => {
   if (err instanceof InfoSimplesCfpProviderError) {
     logCfpSearchError("CFP_PROVIDER_UNAVAILABLE", {
-      context: err.context,
+      elapsedMs: err.context.elapsedMs,
+      httpStatus: err.context.httpStatus,
       reason: err.reason,
       traceId,
     });
@@ -100,7 +99,7 @@ const logProviderUnavailable = (err: unknown, traceId: string) => {
   }
 
   logCfpSearchError("CFP_PROVIDER_UNAVAILABLE", {
-    name: err instanceof Error ? err.name : typeof err,
+    reason: "unknown",
     traceId,
   });
 };
@@ -138,7 +137,9 @@ const createStoredRaw = (props: {
 }): StoredRegistryCheckRaw => ({
   provider: "infosimples",
   request: props.request,
-  response: props.response?.raw ?? null,
+  // Os resultados normalizados são suficientes para confirmação. O payload cru do
+  // provedor pode conter detalhes técnicos e não deve ser persistido em novas consultas.
+  response: null,
   normalized_results: props.response?.results ?? [],
   attempt_finished_at: new Date().toISOString(),
   attempt_status: props.status,
@@ -149,8 +150,9 @@ const createProviderErrorRaw = (err: unknown): Pick<StoredRegistryCheckRaw, "pro
   if (err instanceof InfoSimplesCfpProviderError) {
     return {
       provider_error: {
-        context: { ...err.context },
-        name: err.name,
+        classification: "provider_unavailable",
+        elapsed_ms: err.context.elapsedMs,
+        http_status: err.context.httpStatus,
         reason: err.reason,
       },
     };
@@ -158,7 +160,7 @@ const createProviderErrorRaw = (err: unknown): Pick<StoredRegistryCheckRaw, "pro
 
   return {
     provider_error: {
-      name: err instanceof Error ? err.name : typeof err,
+      classification: "provider_unavailable",
     },
   };
 };
@@ -432,7 +434,6 @@ export const search = async (data: ICfpSearchDTO) => {
   });
 
   logCfpSearch("CFP_SEARCH_PERSISTED", {
-    checkId: check.id,
     found: response.results.length > 0,
     response: summarizeProviderResponse(response),
     traceId,

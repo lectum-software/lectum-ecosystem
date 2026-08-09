@@ -212,7 +212,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste de UI em 2026-07-04: metodo de pagamento e historico
 
-- Pedido direto de produto: na rota `/app/professional/billing`, o bloco do cartao passa a exibir o titulo **Metodo de pagamento** e a descricao segura **Visa final 5682** conforme dados reais de bandeira/ultimos quatro digitos, sem a copy tecnica "Cartao de credito tokenizado...".
+- Pedido direto de produto: na rota `/app/professional/billing`, o bloco do cartao passa a exibir o titulo **Metodo de pagamento** e a descricao segura **Visa final <4 dígitos>** conforme dados reais de bandeira/ultimos quatro digitos, sem a copy tecnica "Cartao de credito tokenizado...".
 - Foram removidos da pagina o card informativo **Cobranca protegida**, o CTA azul **Alterar cartao** e o botao **Atualizar status**; a acao contextual **Alterar** permanece dentro do bloco do metodo quando houver assinatura Mercado Pago gerenciavel.
 - A pagina agora exibe **Historico de pagamentos** usando somente eventos reais persistidos em `payment_event` e relacionados por `professional_subscription.id` ou `gateway_subscription_id`; quando nao houver evento real, a UI mostra estado vazio honesto, sem criar entradas ficticias.
 - Referencia visual local consultada: `_product/proto/Minhas Assinatura - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
@@ -301,7 +301,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 ## Ajuste em 2026-07-04: cortesia sem cobrança nem cartão legado
 
-- Pedido direto de produto: a conta `contato.tuliorezende@gmail.com` está com cortesia operacional, não com assinatura profissional padrão paga.
+- Pedido direto de produto: a conta `<CONTA_DE_TESTE_AUTORIZADA>` está com cortesia operacional, não com assinatura profissional padrão paga.
 - A rota `/app/professional/billing` agora diferencia `professional_subscription.source="admin_grant"` ativa, exibindo **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia** e método de pagamento como cortesia sem cartão vinculado.
 - O endpoint `GET /api/private/psychologist/billing/subscription` deixou de retornar `payment_method` quando a assinatura atual não é gerenciável por gateway real ativo, evitando exibir cartão tokenizado de assinatura paga cancelada.
 - Os alertas de `Pagamento não vinculado` não aparecem para cortesia administrativa, porque ausência de gateway é o estado esperado.
@@ -325,7 +325,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local via Chrome headless/CDP em `http://localhost:3002/app/professional/billing`, com sessão real da conta, confirmou **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia**, **Cortesia ativa, sem cartão vinculado** e ausência de `Amex final 6885`, `Pagamento não vinculado` e `R$ 9,90 / mês`.
+- Browser local via Chrome headless/CDP em `http://localhost:3002/app/professional/billing`, com sessão real da conta, confirmou **Plano Profissional de Cortesia**, **Sem cobrança**, **Expiração da cortesia**, **Cortesia ativa, sem cartão vinculado** e ausência de `Amex final <4 dígitos>`, `Pagamento não vinculado` e `R$ 9,90 / mês`.
 
 ## Ajuste de UI em 2026-07-04: cortesia sem historico lateral e com cartao futuro
 
@@ -413,7 +413,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O backend persiste `brand`/`last4` somente como dados de exibição em `payment_method`, sempre vinculados ao `gateway_subscription_id` da assinatura futura; PAN/CVV continuam fora do banco.
 - O endpoint `GET /api/private/psychologist/billing/subscription` continua retornando a cortesia ativa como assinatura principal, mas agora também procura uma assinatura futura real `mercadopago` (`inativa`/`inadimplente`) para expor o `payment_method` correspondente ao cartão pós-cortesia.
 - A rota `/app/professional/billing` mostra **Cartão de cobrança cadastrado** e CTA **Alterar** quando esse método futuro existir; se o cartão foi cadastrado antes de haver `brand`/`last4`, mostra **Cartão cadastrado para cobrança futura** sem inventar final/bandeira.
-- Consulta real do banco para `contato.tuliorezende@gmail.com` durante a validação confirmou que, neste ambiente, ainda não há assinatura futura gateway nem `payment_method` vinculado; por isso não foi criado backfill, seed ou dado artificial para forçar o estado **Alterar**.
+- Consulta real do banco para `<CONTA_DE_TESTE_AUTORIZADA>` durante a validação confirmou que, neste ambiente, ainda não há assinatura futura gateway nem `payment_method` vinculado; por isso não foi criado backfill, seed ou dado artificial para forçar o estado **Alterar**.
 - Referência visual local consultada: `_product/proto/Minhas Assinatura - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta direta neste ambiente.
 - ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
 - Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
@@ -440,10 +440,10 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ## Ajuste em 2026-07-05: cartão de teste sem `gateway_token` exposto
 
 - Pedido direto de produto: após cadastrar cartão de teste Mercado Pago, a tela **Minha Assinatura** ainda mostrava **Adicionar cartão de cobrança**.
-- Investigação real confirmou que o banco já possuía assinatura futura `mercadopago` `inativa` e `payment_method` com `brand="amex"` e `last4="6885"` para a conta `contato.tuliorezende@gmail.com`.
+- Investigação real confirmou que o banco já possuía assinatura futura `mercadopago` `inativa` e `payment_method` com `brand="amex"` e `last4="<FINAL_AUTORIZADO>"` para a conta `<CONTA_DE_TESTE_AUTORIZADA>`.
 - O endpoint `GET /api/private/psychologist/billing/subscription` já retornava `payment_method` com bandeira/final, mas não expunha `gateway_token` no payload consumido pelo frontend; a UI dependia indevidamente de `paymentMethod.gateway_token` para considerar o cartão cadastrado.
 - A rota `/app/professional/billing` agora usa a presença do objeto `payment_method` como evidência de cartão futuro cadastrado, porque o backend já filtrou esse método pela assinatura gateway futura antes de responder.
-- Resultado esperado no teste: exibir **Cartão de cobrança cadastrado**, **Amex final 6885** e CTA **Alterar**.
+- Resultado esperado no teste: exibir **Cartão de cobrança cadastrado**, **Amex final <4 dígitos>** e CTA **Alterar**.
 - ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
 - Nenhum mock, seed, endpoint simulado, package novo ou alteração de schema foi criado.
 
@@ -456,9 +456,9 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 ### Validação do ajuste de cartão de teste
 
 - Consulta real de banco confirmou assinatura futura `mercadopago` `inativa` e `payment_method` com `brand`/`last4`.
-- Chamada real ao endpoint via ngrok confirmou `payment_method_present=true`, `brand="amex"` e `last4="6885"`.
+- Chamada real ao endpoint via ngrok confirmou `payment_method_present=true`, `brand="amex"` e `last4="<FINAL_AUTORIZADO>"`.
 - `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/logic.tsx`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Plano Profissional de Cortesia**, **Amex final 6885**, CTA **Alterar**, ausência de CTA **Adicionar**, ausência de **Histórico de pagamentos** e ausência da faixa azul de cortesia.
+- Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Plano Profissional de Cortesia**, **Amex final <4 dígitos>**, CTA **Alterar**, ausência de CTA **Adicionar**, ausência de **Histórico de pagamentos** e ausência da faixa azul de cortesia.

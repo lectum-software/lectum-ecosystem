@@ -12,6 +12,7 @@ import {
 import { resolveApiError } from "@/api/handle";
 import type { AdminPsychologistBilling, AdminPsychologistDetail } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { CardShell, ErrorState, IconCircle } from "../../components/shared";
 import {
   COURTESY_GRANT_CONFIRMATION,
@@ -113,6 +114,10 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
     confirmationForm.reset({ confirmation: "" });
     setPendingCourtesyValues(null);
   };
+  const dialogRef = useAdminDialogLifecycle(closeConfirmationModal, {
+    closeEnabled: !mutation.isPending,
+    enabled: Boolean(pendingCourtesyValues),
+  });
   const pendingPeriodLabel = pendingCourtesyValues
     ? (billing.courtesy.period_options.find(
         (option) => String(option.days) === pendingCourtesyValues.period_days,
@@ -217,7 +222,9 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
           aria-labelledby="courtesy-confirmation-title"
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+          ref={dialogRef}
           role="dialog"
+          tabIndex={-1}
         >
           <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
             <div className="flex items-start justify-between gap-4">

@@ -1,4 +1,4 @@
-﻿import type { user } from "@/interfaces/objects";
+import type { user } from "@/interfaces/objects";
 import type { PaginationResponse } from "@/interfaces/pagination";
 
 export type ReviewEligibilityReason = "eligible" | "not_found" | "already_reviewed" | "own_profile";

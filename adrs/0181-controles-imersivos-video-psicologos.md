@@ -1,4 +1,4 @@
-﻿# ADR-0181: Controles imersivos do video de descoberta de psicologos
+# ADR-0181: Controles imersivos do video de descoberta de psicologos
 
 ## Status
 

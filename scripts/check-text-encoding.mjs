@@ -9,18 +9,32 @@ const textExtensions = new Set([
   ".cjs",
   ".css",
   ".example",
+  ".hbs",
   ".js",
   ".json",
   ".jsonc",
   ".md",
+  ".mdc",
   ".mjs",
   ".prisma",
+  ".sh",
   ".sql",
+  ".svg",
+  ".toml",
   ".ts",
   ".tsx",
   ".txt",
   ".yaml",
   ".yml",
+]);
+const textBasenames = new Set([
+  ".builderignore",
+  ".builderrules",
+  ".css",
+  ".dockerignore",
+  ".gitattributes",
+  ".gitignore",
+  "Dockerfile",
 ]);
 const mojibakePattern = new RegExp(
   [
@@ -35,6 +49,7 @@ const mojibakePattern = new RegExp(
 );
 const questionMarkCorruptionPattern =
   /[A-Za-zÀ-ÿ]\?+[A-Za-zÀ-ÿ]|\?{2,}|(?:^|\s)\?[A-Za-zÀ-ÿ]{2,}|\s\?\s/u;
+const forbiddenControlCharacterPattern = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
 
 // Esta migration histórica foi gravada em Latin-1 antes da política de UTF-8.
 // Reescrevê-la quebraria o checksum do Prisma em bancos onde já foi aplicada.
@@ -49,7 +64,10 @@ const files = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "-z"
   .split("\0")
   .filter(Boolean)
   .filter((file) => existsSync(path.join(repositoryRoot, file)))
-  .filter((file) => textExtensions.has(path.extname(file).toLowerCase()));
+  .filter(
+    (file) =>
+      textExtensions.has(path.extname(file).toLowerCase()) || textBasenames.has(path.basename(file)),
+  );
 
 const failures = [];
 
@@ -57,21 +75,30 @@ for (const relativePath of files) {
   if (immutableLegacyEncodingExceptions.has(relativePath)) continue;
 
   const content = await readFile(path.join(repositoryRoot, relativePath), "utf8");
+  if (content.charCodeAt(0) === 0xfeff) {
+    failures.push(`${relativePath}:1 (BOM UTF-8 desnecessário)`);
+  }
   const lines = content.split(/\r?\n/u);
-  const isMarkdown = path.extname(relativePath).toLowerCase() === ".md";
+  const extension = path.extname(relativePath).toLowerCase();
+  const isMarkdown = extension === ".md";
+  const checksQuestionMarkCorruption = isMarkdown || extension === ".svg";
   let insideCodeFence = false;
 
   for (const [index, line] of lines.entries()) {
+    if (forbiddenControlCharacterPattern.test(line)) {
+      failures.push(`${relativePath}:${index + 1} (caractere de controle inesperado)`);
+    }
+
     if (mojibakePattern.test(line)) {
       failures.push(`${relativePath}:${index + 1}`);
     }
 
-    if (!isMarkdown) continue;
-    if (line.trimStart().startsWith("```")) {
+    if (!checksQuestionMarkCorruption) continue;
+    if (isMarkdown && line.trimStart().startsWith("```")) {
       insideCodeFence = !insideCodeFence;
       continue;
     }
-    if (insideCodeFence) continue;
+    if (isMarkdown && insideCodeFence) continue;
 
     const prose = line.replace(/`[^`]*`/gu, "").replace(/https?:\/\/\S+/gu, "");
     if (questionMarkCorruptionPattern.test(prose)) {
@@ -85,5 +112,7 @@ if (failures.length > 0) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log(`[encoding] OK: ${files.length} arquivos textuais sem mojibake ou U+FFFD.`);
+  console.log(
+    `[encoding] OK: ${files.length} arquivos textuais com UTF-8 íntegro e sem controles inesperados.`,
+  );
 }

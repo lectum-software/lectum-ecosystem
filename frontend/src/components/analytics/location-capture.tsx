@@ -1,20 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocationCapture } from "@/api/callers/analytics";
 import type { LocationCaptureRequest } from "@/api/req/analytics";
 import { useAppSelector } from "@/hooks/redux";
 import { isAdminViewAsActive } from "@/utils/admin-view-as";
 import {
-  getOrCreateStorageId,
-  SESSION_ID_KEY,
-  safeGetItem,
-  safeSetItem,
-  VISITOR_ID_KEY,
-} from "./storage";
-
-const SESSION_CAPTURED_KEY = "lectum:analytics:location-captured-session";
-const AUTH_LINKED_KEY = "lectum:analytics:authenticated-user-linked";
+  ANALYTICS_AUTH_LINKED_KEY,
+  ANALYTICS_LOCATION_CAPTURED_KEY,
+  ANALYTICS_LOCATION_RETRY_AT_KEY,
+  ANALYTICS_LOCATION_RETRY_COUNT_KEY,
+  ANALYTICS_LOCATION_RETRY_SCOPE_KEY,
+} from "@/utils/analytics-session";
+import { getBrowserStorage, removeStorageItem } from "@/utils/browser-storage";
+import {
+  getLocationCaptureRetryDelay,
+  LOCATION_CAPTURE_RETRY_DELAYS_MS,
+  shouldRememberAuthenticatedLink,
+  shouldRememberLocationCapture,
+} from "./location-capture-policy";
+import { getOrCreateAnalyticsIdentity, safeGetItem, safeSetItem } from "./storage";
 
 type NavigatorWithUserAgentData = Navigator & {
   userAgentData?: {
@@ -25,6 +30,22 @@ type NavigatorWithUserAgentData = Navigator & {
 };
 
 type DeviceMetadata = Omit<LocationCaptureRequest, "session_id" | "visitor_id">;
+type LocationRetryState = {
+  count: number;
+  nextAt: number;
+  scope: string | null;
+};
+
+const readNonNegativeInteger = (value: string | null) => {
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
+};
+
+const clearLocationRetryStorage = (storage: Storage) => {
+  removeStorageItem(storage, ANALYTICS_LOCATION_RETRY_SCOPE_KEY);
+  removeStorageItem(storage, ANALYTICS_LOCATION_RETRY_COUNT_KEY);
+  removeStorageItem(storage, ANALYTICS_LOCATION_RETRY_AT_KEY);
+};
 
 const normalizeViewportDimension = (value: number | undefined) => {
   if (!value || !Number.isFinite(value) || value <= 0) return undefined;
@@ -113,27 +134,105 @@ export const LocationCapture = () => {
   const userId = useAppSelector((state) => state.user?.id ?? null);
   const { mutateAsync } = useLocationCapture();
   const inFlightKeyRef = useRef<string | null>(null);
+  const retryStateRef = useRef<LocationRetryState>({ count: 0, nextAt: 0, scope: null });
+  const [retryVersion, setRetryVersion] = useState(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isAdminViewAsActive()) return;
 
-    const visitorId = getOrCreateStorageId(window.localStorage, VISITOR_ID_KEY);
-    const sessionId = getOrCreateStorageId(window.sessionStorage, SESSION_ID_KEY);
+    const identity = getOrCreateAnalyticsIdentity();
+    const sessionStorage = getBrowserStorage("sessionStorage");
+    if (!identity || !sessionStorage) return;
+
+    const { sessionId, visitorId } = identity;
     const hasLinkedAuthenticatedUser =
-      safeGetItem(window.sessionStorage, AUTH_LINKED_KEY) === "true";
+      safeGetItem(sessionStorage, ANALYTICS_AUTH_LINKED_KEY) === "true";
     const alreadyCapturedInSession =
-      safeGetItem(window.sessionStorage, SESSION_CAPTURED_KEY) === "true";
+      safeGetItem(sessionStorage, ANALYTICS_LOCATION_CAPTURED_KEY) === "true";
     const shouldLinkAuthenticatedUser = Boolean(userId && !hasLinkedAuthenticatedUser);
 
-    if (alreadyCapturedInSession && !shouldLinkAuthenticatedUser) return;
+    if (alreadyCapturedInSession && !shouldLinkAuthenticatedUser) {
+      clearLocationRetryStorage(sessionStorage);
+      retryStateRef.current = { count: 0, nextAt: 0, scope: null };
+      return;
+    }
+
+    const retryScope = `${sessionId}:${userId || "anonymous"}`;
+    const persistedScope = safeGetItem(sessionStorage, ANALYTICS_LOCATION_RETRY_SCOPE_KEY);
+    if (persistedScope !== retryScope && retryStateRef.current.scope !== retryScope) {
+      retryStateRef.current = { count: 0, nextAt: 0, scope: retryScope };
+      safeSetItem(sessionStorage, ANALYTICS_LOCATION_RETRY_SCOPE_KEY, retryScope);
+      safeSetItem(sessionStorage, ANALYTICS_LOCATION_RETRY_COUNT_KEY, "0");
+      safeSetItem(sessionStorage, ANALYTICS_LOCATION_RETRY_AT_KEY, "0");
+    } else {
+      if (retryStateRef.current.scope !== retryScope) {
+        retryStateRef.current = { count: 0, nextAt: 0, scope: retryScope };
+      }
+      if (persistedScope === retryScope) {
+        retryStateRef.current.count = Math.max(
+          retryStateRef.current.count,
+          readNonNegativeInteger(safeGetItem(sessionStorage, ANALYTICS_LOCATION_RETRY_COUNT_KEY)),
+        );
+        retryStateRef.current.nextAt = Math.max(
+          retryStateRef.current.nextAt,
+          readNonNegativeInteger(safeGetItem(sessionStorage, ANALYTICS_LOCATION_RETRY_AT_KEY)),
+        );
+      }
+    }
+
+    if (retryStateRef.current.count > LOCATION_CAPTURE_RETRY_DELAYS_MS.length) return;
+
+    if (retryStateRef.current.nextAt > Date.now()) {
+      const timer = window.setTimeout(
+        () => setRetryVersion((current) => current + 1),
+        retryStateRef.current.nextAt - Date.now(),
+      );
+
+      return () => window.clearTimeout(timer);
+    }
 
     const inFlightKey = `${visitorId}:${sessionId}:${userId || "anonymous"}:${
       shouldLinkAuthenticatedUser ? "link" : "session"
-    }`;
+    }:${retryVersion}`;
 
     if (inFlightKeyRef.current === inFlightKey) return;
     inFlightKeyRef.current = inFlightKey;
+    let cancelled = false;
+    let retryTimer: number | null = null;
+    const exhaustRetries = () => {
+      retryStateRef.current.count = LOCATION_CAPTURE_RETRY_DELAYS_MS.length + 1;
+      retryStateRef.current.nextAt = 0;
+      safeSetItem(
+        sessionStorage,
+        ANALYTICS_LOCATION_RETRY_COUNT_KEY,
+        String(retryStateRef.current.count),
+      );
+      safeSetItem(sessionStorage, ANALYTICS_LOCATION_RETRY_AT_KEY, "0");
+    };
+    const scheduleRetry = () => {
+      const delay = getLocationCaptureRetryDelay(retryStateRef.current.count);
+      if (delay === null) {
+        exhaustRetries();
+        return;
+      }
+
+      retryStateRef.current.count += 1;
+      retryStateRef.current.nextAt = Date.now() + delay;
+      safeSetItem(
+        sessionStorage,
+        ANALYTICS_LOCATION_RETRY_COUNT_KEY,
+        String(retryStateRef.current.count),
+      );
+      safeSetItem(
+        sessionStorage,
+        ANALYTICS_LOCATION_RETRY_AT_KEY,
+        String(retryStateRef.current.nextAt),
+      );
+      retryTimer = window.setTimeout(() => {
+        if (!cancelled) setRetryVersion((current) => current + 1);
+      }, delay);
+    };
 
     void mutateAsync({
       visitor_id: visitorId,
@@ -141,21 +240,43 @@ export const LocationCapture = () => {
       ...detectDeviceMetadata(),
     })
       .then((response) => {
-        safeSetItem(window.sessionStorage, SESSION_CAPTURED_KEY, "true");
+        if (cancelled || inFlightKeyRef.current !== inFlightKey) return;
 
-        if (userId && response.authenticated) {
-          safeSetItem(window.sessionStorage, AUTH_LINKED_KEY, "true");
+        if (shouldRememberLocationCapture(response)) {
+          safeSetItem(sessionStorage, ANALYTICS_LOCATION_CAPTURED_KEY, "true");
+        }
+
+        if (userId && shouldRememberAuthenticatedLink(response)) {
+          safeSetItem(sessionStorage, ANALYTICS_AUTH_LINKED_KEY, "true");
+        }
+
+        if (response.reason === "unavailable") {
+          scheduleRetry();
+        } else if (shouldRememberLocationCapture(response)) {
+          clearLocationRetryStorage(sessionStorage);
+          retryStateRef.current = { count: 0, nextAt: 0, scope: null };
+        } else {
+          exhaustRetries();
         }
       })
       .catch(() => {
         // Falhas de analytics são silenciosas por requisito de privacidade/UX.
+        if (!cancelled && inFlightKeyRef.current === inFlightKey) scheduleRetry();
       })
       .finally(() => {
         if (inFlightKeyRef.current === inFlightKey) {
           inFlightKeyRef.current = null;
         }
       });
-  }, [mutateAsync, userId]);
+
+    return () => {
+      cancelled = true;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+      if (inFlightKeyRef.current === inFlightKey) {
+        inFlightKeyRef.current = null;
+      }
+    };
+  }, [mutateAsync, retryVersion, userId]);
 
   return null;
 };

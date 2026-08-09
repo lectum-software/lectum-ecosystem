@@ -1,4 +1,4 @@
-﻿# ADR-0056: Bio truncada e expansão inline na tela de Psicólogos
+# ADR-0056: Bio truncada e expansão inline na tela de Psicólogos
 
 ## Status
 

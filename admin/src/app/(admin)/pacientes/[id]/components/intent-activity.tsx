@@ -32,7 +32,7 @@ export const PatientIntentMetricCard = ({
   metric: PatientsDetailIntentMetric;
   period: AdminPatientDetail["period"];
 }) => {
-  const Icon = patientIntentMetricIcons[metric.id];
+  const Icon = patientIntentMetricIcons[metric.id] ?? BarChart3;
 
   return (
     <div className="rounded-2xl border border-border/75 bg-surface p-4">

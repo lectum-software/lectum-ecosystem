@@ -1,4 +1,4 @@
-﻿# ADR-0214: Cortesia sem historico lateral e com CTA de cartao futuro
+# ADR-0214: Cortesia sem historico lateral e com CTA de cartao futuro
 
 ## Status
 

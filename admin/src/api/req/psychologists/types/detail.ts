@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type {
   AdminPsychologistRegistryVerificationSummary,
   AdminRegistryVerificationActor,
@@ -150,7 +151,7 @@ export type AdminPsychologistDetail = {
       target_audience: string[];
     };
   };
-  source: "user+psychologist_profile+catalogs+subscriptions+metrics+events";
+  source: AdminPublicSource<"user+psychologist_profile+catalogs+subscriptions+metrics+events">;
 };
 
 export type AdminPsychologistUpdatePersonalDataInput = {
@@ -214,9 +215,9 @@ export type AdminPsychologistAccount = {
     active_count: number;
     devices_count: number;
     last_access_at: string | null;
-    source: "user_token";
+    source: AdminPublicSource<"user_token">;
   };
-  source: "user+user_token";
+  source: AdminPublicSource<"user+user_token">;
 };
 
 export type AdminPsychologistAccountReasonInput = {
@@ -246,7 +247,7 @@ export type AdminPsychologistAccountStatusActionInput = AdminPsychologistAccount
 export type AdminPsychologistAccountDeleteResponse = {
   deleted: true;
   id: string;
-  source: "user+psychologist_profile+admin_activity_log";
+  source: AdminPublicSource<"user+psychologist_profile+admin_activity_log">;
 };
 
 export type AdminPsychologistAccountViewAsResponse = {
@@ -260,7 +261,7 @@ export type AdminPsychologistAccountViewAsResponse = {
     role: "psicologo";
   };
   start_path: string;
-  source: "user_token+admin_activity_log";
+  source: AdminPublicSource<"user_token+admin_activity_log">;
 };
 
 export type AdminPsychologistBillingPaymentHistoryItem = {
@@ -293,7 +294,7 @@ export type AdminPsychologistBilling = {
     available: boolean;
     items: AdminPsychologistBillingPaymentHistoryItem[];
     reason: string | null;
-    source: "payment_event";
+    source: AdminPublicSource<"payment_event">;
   };
   payment_method: {
     brand: string | null;
@@ -329,7 +330,7 @@ export type AdminPsychologistBilling = {
     started_at: string | null;
     status: string | null;
   };
-  source: "professional_subscription+payment_method+payment_event+admin_grant_service";
+  source: AdminPublicSource<"professional_subscription+payment_method+payment_event+admin_grant_service">;
 };
 
 export type AdminPsychologistGrantCourtesyInput = {
@@ -390,7 +391,7 @@ export type AdminPsychologistRegistryVerificationAttempt = {
   regional_crp: string | null;
   registration_number: string | null;
   result_label: string;
-  source: Exclude<AdminRegistryVerificationSource, "admin_grant" | "pendente">;
+  source: AdminPublicSource<Exclude<AdminRegistryVerificationSource, "admin_grant" | "pendente">>;
   source_label: string;
   responsible_admin: AdminRegistryVerificationActor | null;
 };
@@ -413,7 +414,7 @@ export type AdminPsychologistRegistryVerification = {
     registration_number: string | null;
   };
   latest_attempts: AdminPsychologistRegistryVerificationAttempt[];
-  source: "psychologist_profile+professional_registry_check";
+  source: AdminPublicSource<"psychologist_profile+professional_registry_check">;
   summary: AdminPsychologistRegistryVerificationSummary & {
     approval_label: "Ativo" | "Pendente";
     cfp_verified_at: string | null;

@@ -1,4 +1,4 @@
-﻿# TASK-74: Moderação textual simples e alertas Admin para conteúdo sensível de pacientes
+# TASK-74: Moderação textual simples e alertas Admin para conteúdo sensível de pacientes
 
 ## Metadata
 

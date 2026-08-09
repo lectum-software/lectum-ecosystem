@@ -1,4 +1,4 @@
-﻿# ADR-0282: Contador de acessos nas estatísticas de pessoas da comunidade
+# ADR-0282: Contador de acessos nas estatísticas de pessoas da comunidade
 
 ## Status
 

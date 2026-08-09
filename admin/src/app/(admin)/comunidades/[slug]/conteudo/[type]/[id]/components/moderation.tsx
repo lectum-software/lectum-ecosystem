@@ -9,6 +9,11 @@ import { useAdminCommunityRemoveContent } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
 import type { AdminCommunityContentAnalyticsDetail } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
+import {
+  moderationReasonLabel,
+  moderationSeverityLabel,
+  moderationStatusLabel,
+} from "@/lib/moderation-copy";
 import { cn } from "@/lib/utils";
 
 import {
@@ -18,6 +23,8 @@ import {
   type RemovalFormValues,
   removalFormSchema,
 } from "../modules/content-support";
+
+type ContentRemovalMutation = ReturnType<typeof useAdminCommunityRemoveContent>;
 
 export const ModerationSection = ({ detail }: { detail: AdminCommunityContentAnalyticsDetail }) => (
   <section className={cn(cardClass, "p-5")} aria-labelledby="content-detail-moderation-title">
@@ -83,12 +90,14 @@ export const ModerationSection = ({ detail }: { detail: AdminCommunityContentAna
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-black text-muted">
-                    {event.status}
+                    {moderationStatusLabel(event.status)}
                   </span>
-                  <span className="text-xs font-bold text-muted">{event.severity}</span>
+                  <span className="text-xs font-bold text-muted">
+                    {moderationSeverityLabel(event.severity)}
+                  </span>
                 </div>
                 <p className="mt-2 text-sm font-black text-foreground [overflow-wrap:anywhere]">
-                  {event.reason_code}
+                  {moderationReasonLabel(event.reason_code)}
                 </p>
                 <p className="mt-1 line-clamp-3 text-xs leading-5 text-muted [overflow-wrap:anywhere]">
                   {event.content_excerpt}
@@ -107,16 +116,15 @@ export const ModerationSection = ({ detail }: { detail: AdminCommunityContentAna
 
 export const ContentRemovalForm = ({
   detail,
+  mutation,
   onCancel,
   onRemoved,
-  slug,
 }: {
   detail: AdminCommunityContentAnalyticsDetail;
+  mutation: ContentRemovalMutation;
   onCancel: () => void;
   onRemoved: () => void;
-  slug: string;
 }) => {
-  const mutation = useAdminCommunityRemoveContent(slug);
   const form = useForm<RemovalFormValues>({
     defaultValues: { confirmation: "", reason: "" },
     mode: "onSubmit",
@@ -156,12 +164,14 @@ export const ContentRemovalForm = ({
           </p>
         </div>
         <TextareaController<RemovalFormValues>
+          disabled={mutation.isPending}
           label="Motivo interno obrigatório"
           name="reason"
           required
           rows={3}
         />
         <InputController<RemovalFormValues>
+          disabled={mutation.isPending}
           label="Confirmação forte"
           name="confirmation"
           placeholder="REMOVER CONTEUDO"
@@ -170,6 +180,7 @@ export const ContentRemovalForm = ({
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <button
             className="h-10 rounded-control border border-border bg-surface px-4 text-xs font-black text-foreground"
+            disabled={mutation.isPending}
             onClick={onCancel}
             type="button"
           >
@@ -199,6 +210,7 @@ export const RemovalSection = ({
   slug: string;
 }) => {
   const [open, setOpen] = useState(false);
+  const mutation = useAdminCommunityRemoveContent(slug);
   const unavailableActionLabel =
     detail.content.status === "blocked"
       ? "Conteúdo bloqueado automaticamente"
@@ -220,6 +232,7 @@ export const RemovalSection = ({
         {detail.content.status === "published" ? (
           <button
             className="inline-flex h-10 items-center justify-center gap-2 rounded-control border border-danger/20 px-4 text-xs font-black text-danger transition hover:bg-danger/10"
+            disabled={mutation.isPending}
             onClick={() => setOpen((current) => !current)}
             type="button"
           >
@@ -236,9 +249,9 @@ export const RemovalSection = ({
         <div className="mt-4">
           <ContentRemovalForm
             detail={detail}
+            mutation={mutation}
             onCancel={() => setOpen(false)}
             onRemoved={onRemoved}
-            slug={slug}
           />
         </div>
       ) : null}

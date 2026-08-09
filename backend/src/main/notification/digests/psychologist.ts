@@ -1,11 +1,9 @@
-import webPush from "@/config/webPush";
 import prisma from "@/infra/database/prisma";
+import { sendWebPushToSubscriptions } from "@/main/notification/push";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
-import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { getNewPostAuthorScope, isNotificationEnabled } from "../preferences";
 
 import {
-  BASE,
   type DigestKind,
   type DigestState,
   type DigestTargetUser,
@@ -24,42 +22,18 @@ export const sendDigestPush = async (
     type: DigestKind;
   },
 ) => {
-  let sent = 0;
-  let failed = 0;
-
-  for (const subscription of user.notification_subscriptions) {
-    if (!subscription.subscription) continue;
-
-    try {
-      await webPush.sendNotification(
-        subscription.subscription as unknown as Parameters<typeof webPush.sendNotification>[0],
-        JSON.stringify({
-          data: {
-            redirect: params.redirect,
-            type: params.type,
-          },
-          notification: {
-            body: params.body,
-            icon: BASE ? `${BASE}/logo.png` : "/logo.png",
-            title: params.title,
-          },
-        }),
-      );
-      sent++;
-    } catch (error) {
-      failed++;
-      console.error("[WEB NOTIFICATION] erro ao enviar digest push:", {
-        ...toSafeErrorLog(error, "WebPushDigestSendError"),
-        status_code: (error as { statusCode?: number })?.statusCode,
-      });
-    }
-  }
+  const result = await sendWebPushToSubscriptions({
+    body: params.body,
+    redirect: params.redirect,
+    subscriptions: user.notification_subscriptions,
+    title: params.title,
+  });
 
   console.log(
-    `[WEB NOTIFICATION] digest "${params.type}": ${sent} enviado(s), ${failed} falha(s).`,
+    `[WEB NOTIFICATION] digest "${params.type}": ${result.sentCount} enviado(s), ${result.failedCount} falha(s).`,
   );
 
-  return sent > 0;
+  return result.sentCount > 0;
 };
 
 export const getPatientFavoritePsychologistIds = async (userId: string) => {

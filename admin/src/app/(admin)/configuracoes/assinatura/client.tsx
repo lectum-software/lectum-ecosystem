@@ -184,9 +184,11 @@ const CurrentPlanCard = ({ plan }: { plan: AdminSubscriptionPlanSetting }) => (
           />
           <PlanDetail
             icon={<CreditCard aria-hidden className="h-5 w-5" />}
-            label="Gateway"
+            label="Integração de cobrança"
             value={
-              plan.gateway_plan_configured ? "Plano externo vinculado" : "Sem plano externo fixo"
+              plan.gateway_plan_configured
+                ? "Plano de cobrança vinculado"
+                : "Sem vínculo externo fixo"
             }
           />
         </div>

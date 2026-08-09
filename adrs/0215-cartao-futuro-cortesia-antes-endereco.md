@@ -1,4 +1,4 @@
-﻿# ADR 0215 - Cartão futuro antes do endereço na cortesia profissional
+# ADR 0215 - Cartão futuro antes do endereço na cortesia profissional
 
 Data: 2026-07-04
 Status: Aceita

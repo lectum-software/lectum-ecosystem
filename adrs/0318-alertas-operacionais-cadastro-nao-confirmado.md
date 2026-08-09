@@ -1,4 +1,4 @@
-﻿# ADR-0318: Alertas operacionais derivados de cadastro nao confirmado
+# ADR-0318: Alertas operacionais derivados de cadastro nao confirmado
 
 ## Status
 

@@ -1,9 +1,11 @@
 import axios, { AxiosHeaders } from "axios";
 
+import { applyStoredBearerFallback, USER_COOKIE_AUTH_HEADERS } from "@/api/auth-cookie";
 import { getBearerToken } from "@/hooks/cookies/token";
 import { fingerprint } from "@/utils/fingerprint";
+import { getPublicApiSource } from "@/utils/public-asset-sources";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = getPublicApiSource()?.origin ?? "https://api.invalid";
 const NGROK_BROWSER_WARNING_HOSTS = ["ngrok-free.app", "ngrok-free.dev", "ngrok.app", "ngrok.io"];
 
 const shouldSkipNgrokBrowserWarning = (apiUrl: string) => {
@@ -22,9 +24,7 @@ const shouldSendNgrokBrowserWarningBypass = shouldSkipNgrokBrowserWarning(API_UR
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    "X-Requested-With": "Lectum-User-Cookie-Auth",
-  },
+  headers: USER_COOKIE_AUTH_HEADERS,
   timeout: 30_000,
   withCredentials: true,
 });
@@ -35,7 +35,7 @@ api.interceptors.request.use(async (config) => {
   const device = await fingerprint();
 
   if (device) headers.set("x-device", device);
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  applyStoredBearerFallback(headers, token);
   if (shouldSendNgrokBrowserWarningBypass) {
     headers.set("ngrok-skip-browser-warning", "true");
   }

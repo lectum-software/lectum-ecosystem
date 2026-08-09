@@ -1,6 +1,8 @@
-﻿import { callEndpoint } from "@/api/generator";
+import { USER_COOKIE_AUTH_HEADERS } from "@/api/auth-cookie";
+import { callEndpoint } from "@/api/generator";
 import { handleReq } from "@/api/handle";
 import { getBearerToken } from "@/hooks/cookies/token";
+import { getPublicApiSource } from "@/utils/public-asset-sources";
 
 export type LocationCaptureRequest = {
   visitor_id: string;
@@ -17,32 +19,6 @@ export type LocationCaptureResponse = {
   linked: boolean;
   authenticated: boolean;
   reason?: "frequency" | "unavailable" | "invalid_ip";
-  source?: "ip";
-  location?: {
-    city?: string | null;
-    state?: string | null;
-    country?: string | null;
-    source?: string | null;
-    confidence?: number | null;
-  };
-  session?: {
-    captured: boolean;
-    device_type: LocationCaptureRequest["device_type"];
-    reason?: "missing_session_id";
-    data?: {
-      id?: string | null;
-      visitor_id?: string | null;
-      session_id?: string | null;
-      user_id?: string | null;
-      device_type?: LocationCaptureRequest["device_type"] | null;
-      os?: LocationCaptureRequest["os"] | null;
-      browser?: LocationCaptureRequest["browser"] | null;
-      viewport_width?: number | null;
-      viewport_height?: number | null;
-      first_seen_at?: string | null;
-      last_seen_at?: string | null;
-    };
-  };
 };
 
 export const captureVisitorLocation = async (body: LocationCaptureRequest) => {
@@ -79,20 +55,6 @@ export type PageViewTrackingRequest = {
 export type PageViewTrackingResponse = {
   tracked: boolean;
   id: string | null;
-  visitor_id: string;
-  session_id: string;
-  user_id: string | null;
-  path: string;
-  normalized_path: string;
-  page_kind: string;
-  target_type: string | null;
-  target_id: string | null;
-  traffic_source: string;
-  traffic_medium: string | null;
-  referrer_host: string | null;
-  display_mode: DisplayMode;
-  is_entry: boolean;
-  entry_path: string | null;
 };
 
 export type PageViewDurationRequest = {
@@ -104,8 +66,6 @@ export type PageViewDurationRequest = {
 
 export type PageViewDurationResponse = {
   updated: boolean;
-  id: string | null;
-  duration_seconds: number | null;
 };
 
 export type ImportantActionTrackingRequest = {
@@ -132,16 +92,6 @@ export type ImportantActionTrackingRequest = {
 
 export type ImportantActionTrackingResponse = {
   tracked: boolean;
-  id: string | null;
-  visitor_id: string;
-  session_id: string;
-  user_id: string | null;
-  action_type: ImportantActionTrackingRequest["action_type"];
-  path: string | null;
-  page_kind: string;
-  target_type: string | null;
-  target_id: string | null;
-  display_mode: DisplayMode;
 };
 
 export type ContentVideoWatchTargetType = "post" | "reply";
@@ -162,14 +112,7 @@ export type ContentVideoWatchTrackingRequest = {
 
 export type ContentVideoWatchTrackingResponse = {
   tracked: boolean;
-  id: string | null;
-  visitor_id: string;
-  session_id: string;
-  user_id: string | null;
-  target_type: ContentVideoWatchTargetType;
-  target_id: string;
-  completed: boolean;
-  skipped_reason?: "self_view" | null;
+  skipped_reason?: "self_view" | "session_unavailable" | null;
 };
 
 export type ContentAttentionTargetType = "post" | "reply";
@@ -185,14 +128,7 @@ export type ContentAttentionTrackingRequest = {
 
 export type ContentAttentionTrackingResponse = {
   tracked: boolean;
-  id: string | null;
-  visitor_id: string;
-  session_id: string;
-  user_id: string | null;
-  target_type: ContentAttentionTargetType;
-  target_id: string;
-  attention_seconds: number;
-  skipped_reason?: "self_view" | null;
+  skipped_reason?: "self_view" | "session_unavailable" | null;
 };
 
 export const trackPageView = async (body: PageViewTrackingRequest) => {
@@ -266,78 +202,52 @@ export const trackContentAttention = async (body: ContentAttentionTrackingReques
   });
 };
 
-export const sendPageViewDurationBeacon = (id: string, body: PageViewDurationRequest) => {
+const sendAnalyticsKeepalive = (
+  path: string,
+  body:
+    | PageViewDurationRequest
+    | ContentVideoWatchTrackingRequest
+    | ContentAttentionTrackingRequest,
+  authenticated = false,
+) => {
   if (typeof window === "undefined") return false;
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-  const url = `${apiUrl}/api/public/analytics/page-view/${encodeURIComponent(id)}/duration`;
-  const payload = JSON.stringify(body);
+  const apiUrl = getPublicApiSource()?.origin;
+  if (!apiUrl) return false;
 
   try {
-    void fetch(url, {
-      body: payload,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      keepalive: true,
-      method: "POST",
-    });
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-export const sendContentVideoWatchBeacon = (body: ContentVideoWatchTrackingRequest) => {
-  if (typeof window === "undefined") return false;
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-  const url = `${apiUrl}/api/public/analytics/content-video-watch`;
-  const token = getBearerToken();
-  const payload = JSON.stringify(body);
-
-  try {
-    void fetch(url, {
-      body: payload,
-      credentials: "include",
+    const token = authenticated ? getBearerToken() : undefined;
+    const request = fetch(`${apiUrl}${path}`, {
+      body: JSON.stringify(body),
+      credentials: authenticated ? "include" : undefined,
       headers: {
         "Accept-Language": "pt",
         "Content-Type": "application/json",
+        ...(authenticated ? USER_COOKIE_AUTH_HEADERS : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       keepalive: true,
       method: "POST",
     });
 
+    void request.catch(() => undefined);
     return true;
   } catch {
     return false;
   }
+};
+
+export const sendPageViewDurationBeacon = (id: string, body: PageViewDurationRequest) => {
+  return sendAnalyticsKeepalive(
+    `/api/public/analytics/page-view/${encodeURIComponent(id)}/duration`,
+    body,
+  );
+};
+
+export const sendContentVideoWatchBeacon = (body: ContentVideoWatchTrackingRequest) => {
+  return sendAnalyticsKeepalive("/api/public/analytics/content-video-watch", body, true);
 };
 
 export const sendContentAttentionBeacon = (body: ContentAttentionTrackingRequest) => {
-  if (typeof window === "undefined") return false;
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-  const url = `${apiUrl}/api/public/analytics/content-attention`;
-  const token = getBearerToken();
-  const payload = JSON.stringify(body);
-
-  try {
-    void fetch(url, {
-      body: payload,
-      credentials: "include",
-      headers: {
-        "Accept-Language": "pt",
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      keepalive: true,
-      method: "POST",
-    });
-
-    return true;
-  } catch {
-    return false;
-  }
+  return sendAnalyticsKeepalive("/api/public/analytics/content-attention", body, true);
 };

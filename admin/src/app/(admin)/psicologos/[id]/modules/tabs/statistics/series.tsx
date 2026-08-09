@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, type LucideIcon, Search, UserRound, Video } from "lucide-react";
+import { BarChart3, Eye, type LucideIcon, Search, UserRound, Video } from "lucide-react";
 import type {
   AdminPsychologistEngagementMetric,
   AdminPsychologistStatistics,
@@ -483,7 +483,7 @@ export const VisibilityCountersGrid = ({
 }) => (
   <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
     {counters.map((counter) => {
-      const Icon = visibilityCounterIcon[counter.id];
+      const Icon = visibilityCounterIcon[counter.id] ?? BarChart3;
 
       return (
         <div

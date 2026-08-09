@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   FreeProfessionalProfileResponse,
   FreeProfessionalProfileUpdateBody,
 } from "../../DTOs/IFreeProfileDTO";

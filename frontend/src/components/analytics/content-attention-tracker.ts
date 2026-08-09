@@ -9,6 +9,7 @@ import {
 } from "@/api/req/analytics";
 import { documentHasUserAttention } from "@/components/analytics/attention";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
+import { getCurrentAnalyticsPath } from "@/utils/analytics-path";
 
 export const CONTENT_ATTENTION_MIN_VISIBLE_RATIO = 0.35;
 export const CONTENT_ATTENTION_MIN_VISIBLE_PIXELS = 160;
@@ -87,12 +88,6 @@ const createInitialState = (target?: ContentAttentionTrackingTarget | null): Att
   };
 };
 
-const currentPath = () => {
-  if (typeof window === "undefined") return null;
-
-  return `${window.location.pathname || "/"}${window.location.search || ""}`;
-};
-
 const entryHasEnoughVisibleArea = (entry: IntersectionObserverEntry) => {
   const visibleHeight = entry.intersectionRect.height;
 
@@ -162,7 +157,7 @@ export const useContentAttentionTracking = (
 
       const payload: ContentAttentionTrackingRequest = {
         attention_seconds: attentionSeconds,
-        path: currentPath(),
+        path: getCurrentAnalyticsPath(),
         session_id: identity.sessionId,
         target_id: currentTarget.targetId,
         target_type: currentTarget.targetType,

@@ -27,7 +27,7 @@ const refreshActiveProfessionalSubscription = async ({
     });
   } catch (err) {
     console.error(
-      "[BILLING] Mercado Pago address subscription confirmation failed",
+      "[BILLING] Falha na confirmação da assinatura externa.",
       sanitizePaymentGatewayError(err),
     );
     throw err;

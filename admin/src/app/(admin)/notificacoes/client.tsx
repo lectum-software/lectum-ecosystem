@@ -40,7 +40,6 @@ import {
   type NotificationRange,
   type NotificationTableFilters,
   tableRangeErrorMessage,
-  useDocumentScrollLock,
 } from "./modules/notification-support";
 
 export const AdminNotificationsClient = () => {
@@ -63,7 +62,6 @@ export const AdminNotificationsClient = () => {
   const [logsPeriod, setLogsPeriod] = useState<NotificationPeriodValue>(
     NOTIFICATION_DEFAULT_PERIOD,
   );
-  useDocumentScrollLock(modalOpen || Boolean(details));
   const selectedCampaignStatus =
     CAMPAIGN_STATUS_OPTIONS.find((item) => item.value === campaignStatus) ??
     CAMPAIGN_STATUS_OPTIONS[0];
@@ -167,6 +165,7 @@ export const AdminNotificationsClient = () => {
   };
 
   const handleCancel = async (campaign: AdminNotificationCampaign) => {
+    if (cancelCampaign.isPending) return;
     if (!window.confirm(`Cancelar a campanha "${campaign.title}"?`)) return;
     try {
       await cancelCampaign.mutateAsync(campaign.id);
@@ -198,6 +197,7 @@ export const AdminNotificationsClient = () => {
       ) : null}
       <CampaignsList
         campaigns={campaigns.data?.data ?? []}
+        cancelingCampaignId={cancelCampaign.isPending ? cancelCampaign.variables : null}
         count={campaigns.data?.count ?? 0}
         filtersSlot={
           <NotificationTableFiltersBlock

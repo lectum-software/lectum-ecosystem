@@ -79,7 +79,7 @@ export const OpenGraphImageField = ({
             ) : null}
             {src && !canRender ? (
               <p className="mt-2 text-xs font-semibold text-warning">
-                Adicione o host em NEXT_PUBLIC_IMAGE_REMOTE_HOSTS para exibir a miniatura no Admin.
+                A miniatura não está disponível. Solicite a revisão da configuração de imagens.
               </p>
             ) : null}
           </div>

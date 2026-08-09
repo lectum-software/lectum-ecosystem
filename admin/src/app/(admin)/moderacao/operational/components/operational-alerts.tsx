@@ -3,6 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import type { AdminModerationOperationalAlert } from "@/api/req/moderation";
+import { VerifiedBadgeIcon } from "@/components/admin-icons";
 
 import {
   alertUserName,
@@ -13,7 +14,7 @@ import {
   OperationalPendingBadge,
 } from "../modules/alert-support";
 import { formatDateTime, formatPendingDuration } from "../modules/report-support";
-import { alertFactValue, VerifiedBadgeIcon } from "./report-common";
+import { alertFactValue } from "./report-common";
 
 export const operationalAlertDetailItems = (
   alert: AdminModerationOperationalAlert,

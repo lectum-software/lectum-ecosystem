@@ -10,9 +10,11 @@ import type {
   AdminCommunityRankingItem,
   AdminCommunityRankingQuery,
 } from "@/api/req/communities";
+import { VerifiedBadgeIcon } from "@/components/admin-icons";
+import { renderableImageSrc } from "@/lib/admin-media";
 import { cn } from "@/lib/utils";
 import { cardClass, initials, SummaryBlockTitle } from "../modules/detail-support";
-import { formatRankingCrp, VerifiedBadgeIcon } from "./content-card";
+import { formatRankingCrp } from "./content-card";
 
 import { QueryStatus } from "./content-controls";
 
@@ -20,6 +22,7 @@ import { communityTabHref, PopularPostRow } from "./highlights";
 
 export const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
   const formattedCrp = formatRankingCrp(item.mentor.crp);
+  const avatarSrc = renderableImageSrc(item.mentor.avatar);
 
   return (
     <article className="w-full max-w-full overflow-hidden rounded-2xl border border-border p-3">
@@ -28,13 +31,13 @@ export const TopMentorRow = ({ item }: { item: AdminCommunityRankingItem }) => {
           #{item.position}
         </span>
         <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-muted text-xs font-black text-primary">
-          {item.mentor.avatar ? (
+          {avatarSrc ? (
             <Image
               alt={`Avatar de ${item.mentor.name}`}
               className="object-cover"
               fill
               sizes="40px"
-              src={item.mentor.avatar}
+              src={avatarSrc}
               unoptimized
             />
           ) : (

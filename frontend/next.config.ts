@@ -1,33 +1,29 @@
 import type { NextConfig } from "next";
+import {
+  getPublicApiSource,
+  getPublicAssetSources,
+  isIpLiteralHostname,
+  isLocalAssetHostname,
+  parsePublicAssetSource,
+} from "./src/utils/public-asset-sources";
 
 type RemotePattern = NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]>[number];
 
-const remotePatterns: RemotePattern[] = [
-  {
-    protocol: "https",
-    hostname: "lh3.googleusercontent.com",
-  },
-  {
-    protocol: "http",
-    hostname: "localhost",
-  },
-  {
-    protocol: "http",
-    hostname: "127.0.0.1",
-  },
-];
+const publicAssetSources = getPublicAssetSources();
+const remotePatterns: RemotePattern[] = publicAssetSources.map((source) => ({
+  hostname: source.hostname,
+  port: source.port,
+  protocol: source.protocol,
+}));
+const assetCspSources = publicAssetSources.map((source) => source.origin);
 const allowedDevOrigins = new Set<string>();
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 const getApiCspSources = () => {
-  try {
-    const url = new URL(apiUrl);
-    const socketProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+  const source = getPublicApiSource();
+  if (!source) return [];
 
-    return [url.origin, `${socketProtocol}//${url.host}`];
-  } catch {
-    return [];
-  }
+  const socketProtocol = source.protocol === "https" ? "wss:" : "ws:";
+  return [source.origin, `${socketProtocol}//${source.host}`];
 };
 
 const contentSecurityPolicy = [
@@ -39,8 +35,8 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://sdk.mercadopago.com`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  "img-src 'self' data: blob: https: http:",
-  "media-src 'self' blob: https: http:",
+  `img-src 'self' data: blob: ${assetCspSources.join(" ")}`,
+  `media-src 'self' blob: ${assetCspSources.join(" ")}`,
   `connect-src 'self' ${getApiCspSources().join(" ")} https://api.mercadopago.com https://*.mercadopago.com https://*.mercadolibre.com`,
   "frame-src https://*.mercadopago.com https://*.mercadolibre.com",
   "worker-src 'self' blob:",
@@ -66,55 +62,46 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-const isLocalHostname = (hostname: string) =>
-  hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0";
-
 const addAllowedDevOrigin = (value?: string | null) => {
-  if (!value) return;
-
-  try {
-    const url = new URL(value.includes("://") ? value : `https://${value}`);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return;
-    if (isLocalHostname(url.hostname)) return;
-
-    allowedDevOrigins.add(url.host);
-  } catch {
-    // Ignora entradas inválidas: Next deve receber apenas hosts explícitos.
+  const raw = value?.trim();
+  const hasControlCharacter = value
+    ? Array.from(value).some((character) => {
+        const code = character.charCodeAt(0);
+        return code <= 31 || code === 127;
+      })
+    : false;
+  if (!raw || raw.length > 2048 || raw.includes("*") || raw.includes("\\") || hasControlCharacter) {
+    return;
   }
+
+  let source: ReturnType<typeof parsePublicAssetSource>;
+  try {
+    const url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (url.username || url.password) return;
+
+    source = parsePublicAssetSource(url.origin);
+  } catch {
+    return;
+  }
+
+  if (
+    !source ||
+    isIpLiteralHostname(source.hostname) ||
+    isLocalAssetHostname(source.hostname) ||
+    source.protocol === "http"
+  ) {
+    return;
+  }
+
+  allowedDevOrigins.add(source.host);
 };
 
-const addRemotePattern = (value?: string | null) => {
-  if (!value) return;
-
-  try {
-    const url = new URL(value.includes("://") ? value : `https://${value}`);
-    const protocol = url.protocol.replace(":", "");
-
-    if (protocol !== "http" && protocol !== "https") return;
-
-    const exists = remotePatterns.some(
-      (pattern) => pattern.protocol === protocol && pattern.hostname === url.hostname,
-    );
-
-    if (!exists) {
-      remotePatterns.push({
-        protocol,
-        hostname: url.hostname,
-      });
-    }
-  } catch {
-    // Ignora entradas inválidas: Next deve receber apenas hosts/protocolos explícitos.
-  }
-};
-
-addRemotePattern(apiUrl);
 addAllowedDevOrigin(process.env.NEXT_PUBLIC_API_URL);
 addAllowedDevOrigin(process.env.NEXT_PUBLIC_LOGIN_URL);
 process.env.NEXT_PUBLIC_IMAGE_REMOTE_HOSTS?.split(",")
   .map((entry) => entry.trim())
   .filter(Boolean)
   .forEach((entry) => {
-    addRemotePattern(entry);
     addAllowedDevOrigin(entry);
   });
 

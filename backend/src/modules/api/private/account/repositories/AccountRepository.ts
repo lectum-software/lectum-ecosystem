@@ -5,7 +5,6 @@ import { loginInclude } from "@/query/login";
 import { log } from "@/utils/logs";
 import { deleteAccountSession, deleteAllAccountSessions } from "./account-session-store";
 import type { IAccountRepository } from "./interfaces/IAccountRepository";
-
 import {
   ACCOUNT_DELETE_TRANSACTION_OPTIONS,
   type AccountDeletionAdminAudit,
@@ -14,6 +13,7 @@ import {
   markDeleted,
   recalculatePsychologistRating,
 } from "./support/account-query";
+import { buildLogoutSubscriptionFilter } from "./support/logout-subscription";
 
 export class AccountRepository implements IAccountRepository {
   readonly repository: ORM["user"];
@@ -97,6 +97,17 @@ export class AccountRepository implements IAccountRepository {
 
   deleteToken(userId: string, deviceId: string, token: string): Promise<void> {
     return deleteAccountSession(userId, deviceId, token);
+  }
+
+  async deactivateNotificationSubscriptions(userId: string, deviceId: string): Promise<void> {
+    await prisma.notification_subscription.updateMany({
+      where: buildLogoutSubscriptionFilter(userId, deviceId),
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
+        subscription: Prisma.DbNull,
+      },
+    });
   }
 
   async updateUserAndClearTokens(userId: string, data: Prisma.userUpdateInput): Promise<user> {
@@ -305,7 +316,10 @@ export class AccountRepository implements IAccountRepository {
           user_id: userId,
           deleted: false,
         },
-        data: markDeleted(now),
+        data: {
+          ...markDeleted(now),
+          subscription: Prisma.DbNull,
+        },
       });
 
       await tx.user_background.updateMany({

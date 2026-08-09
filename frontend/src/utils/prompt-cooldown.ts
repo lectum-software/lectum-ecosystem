@@ -1,4 +1,5 @@
 import type { user } from "@/api/generator/types";
+import { readStorageItem, removeStorageItem, writeStorageItem } from "@/utils/browser-storage";
 
 const TWO_DAYS_MS = 1000 * 60 * 60 * 24 * 2;
 const SEVEN_DAYS_MS = 1000 * 60 * 60 * 24 * 7;
@@ -59,12 +60,12 @@ export const markPromptDismissedWithBackoff = ({
   role: PromptUserRole;
   storage: Storage;
 }) => {
-  const currentCount = Number(storage.getItem(dismissCountKey) ?? 0);
+  const currentCount = Number(readStorageItem(storage, dismissCountKey) ?? 0);
   const nextDismissCount = Number.isFinite(currentCount) ? currentCount + 1 : 1;
   const cooldownMs = resolvePromptCooldownMs(role, nextDismissCount);
 
-  storage.setItem(dismissCountKey, String(nextDismissCount));
-  storage.setItem(dismissedUntilKey, String(Date.now() + cooldownMs));
+  writeStorageItem(storage, dismissCountKey, String(nextDismissCount));
+  writeStorageItem(storage, dismissedUntilKey, String(Date.now() + cooldownMs));
 };
 
 export const clearPromptDismissalState = ({
@@ -78,10 +79,10 @@ export const clearPromptDismissalState = ({
   legacyPermanentDismissKeys?: string[];
   storage: Storage;
 }) => {
-  storage.removeItem(dismissedUntilKey);
-  storage.removeItem(dismissCountKey);
+  removeStorageItem(storage, dismissedUntilKey);
+  removeStorageItem(storage, dismissCountKey);
 
   for (const key of legacyPermanentDismissKeys) {
-    storage.removeItem(key);
+    removeStorageItem(storage, key);
   }
 };

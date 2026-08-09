@@ -1,5 +1,6 @@
 //Libs
 import * as argon2 from "argon2";
+import { isPublishedRuntime } from "../runtime-config";
 
 export interface Argon2Options {
   type?: 0 | 1 | 2; // 0=argon2d, 1=argon2i, 2=argon2id
@@ -40,7 +41,7 @@ const ENVIRONMENT_OPTIONS = {
 const getEnvironmentOptions = (): Partial<Argon2Options> => {
   const env = process.env.NODE_ENV?.trim().toLowerCase() || "development";
 
-  if (env === "production" || env === "prod") return ENVIRONMENT_OPTIONS.production;
+  if (isPublishedRuntime(env)) return ENVIRONMENT_OPTIONS.production;
   if (env === "high-security") return ENVIRONMENT_OPTIONS.highSecurity;
 
   return ENVIRONMENT_OPTIONS.development;

@@ -1,4 +1,4 @@
-﻿# ADR-0077: Salvamento de respostas e navegação contextual no feed da comunidade
+# ADR-0077: Salvamento de respostas e navegação contextual no feed da comunidade
 
 ## Status
 

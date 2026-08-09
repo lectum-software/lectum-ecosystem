@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 
 export type AdminPsychologistListSubscriptionRecord = {
   createdAt: Date;

@@ -1,4 +1,4 @@
-﻿import {
+import {
   createLectumShareFrameImageFile,
   type LectumShareFrameTarget,
 } from "@/utils/lectum-share-media";

@@ -1,4 +1,4 @@
-﻿# ADR-0050: Autoplay inicial do vídeo em mudo e unmute global por toque em card de psicólogo
+# ADR-0050: Autoplay inicial do vídeo em mudo e unmute global por toque em card de psicólogo
 
 ## Status
 

@@ -4,13 +4,13 @@ import { Loader2 } from "lucide-react";
 import { type FocusEvent, useMemo, useState } from "react";
 import { useAdminFinanceDashboard, useAdminFinanceExport } from "@/api/callers/finance";
 import { resolveApiError } from "@/api/handle";
+import { downloadBlob } from "@/lib/download";
 import { FinanceHeader } from "./components/header-chart";
 import { ErrorState } from "./components/metrics";
 import {
   buildFinanceDashboardQuery,
   CARD_ORDER,
   DEFAULT_FINANCE_PERIOD,
-  downloadBlob,
   type FinanceDashboardRange,
   type FinanceMetricKey,
   type FinancePeriodPreset,

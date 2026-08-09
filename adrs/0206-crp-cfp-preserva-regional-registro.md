@@ -9,7 +9,7 @@ Aceita em 2026-07-04.
 O fluxo de confirmação CFP persistia em `psychologist_profile.crp` apenas o campo `registro`
 retornado pela InfoSimples/CFP. Na edição do perfil profissional, o contrato legado separava
 `crp_region` e `crp_number` a partir de `crp` usando `/`; quando o valor salvo era apenas
-`161904`, a UI tratava esse número como regional e deixava o número de registro vazio.
+`<REGISTRO>`, a UI tratava esse número como regional e deixava o número de registro vazio.
 
 Além disso, a tela exibia uma faixa informativa azul "CPF e CRP validados" logo abaixo dos campos
 travados, mas o produto pediu a remoção dessa faixa.
@@ -42,5 +42,5 @@ travados, mas o produto pediu a remoção dessa faixa.
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp="06ª Região - SP/161904"`, `crp_region="06ª Região - SP"`, `crp_number="161904"` e campos travados.
+- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp="<REGIÃO>/<REGISTRO>"`, `crp_region="<REGIÃO>"`, `crp_number="<REGISTRO>"` e campos travados.
 - Chrome/CDP headless em `/app/professional/profile/setup`, viewport mobile 390x844 via URL ngrok, confirmou os valores desabilitados de CRP e a ausencia da faixa `CPF e CRP validados`.

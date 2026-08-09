@@ -1,4 +1,4 @@
-﻿export type PatientReviewsQuery = { page?: number; limit?: number };
+export type PatientReviewsQuery = { page?: number; limit?: number };
 export type PatientReview = {
   id: string;
   psychologist_id: string;

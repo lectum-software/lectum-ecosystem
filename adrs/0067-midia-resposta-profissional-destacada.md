@@ -1,4 +1,4 @@
-﻿# ADR-0067: Mídia em resposta profissional destacada
+# ADR-0067: Mídia em resposta profissional destacada
 
 ## Status
 

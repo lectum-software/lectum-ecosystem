@@ -1,5 +1,6 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { ApiResponse } from "@/api/types";
 
 export type AdminModerationDecision = "allow_sensitive" | "block" | "safety_hold";
@@ -176,7 +177,7 @@ export type AdminModerationReportAction = {
   content_already_unavailable: boolean;
   content_removed: boolean;
   report: AdminModerationReportItem;
-  source: "post_report+admin_activity_log";
+  source: AdminPublicSource<"post_report+admin_activity_log">;
 };
 
 export type AdminModerationReportChartType =
@@ -258,7 +259,7 @@ export type AdminModerationOperationalAlerts = {
     title: string;
   }[];
   items: AdminModerationOperationalAlert[];
-  source: "post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+contact_request+post_vote+post_save+post_reply_save+post_share";
+  source: AdminPublicSource<"post_report+community_post+post_reply+user+psychologist_profile+professional_subscription+profile_view_event+contact_request+post_vote+post_save+post_reply_save+post_share">;
   thresholds: {
     patient_post_without_coverage_hours: number;
     psychologist_adaptation_days: number;
@@ -297,7 +298,7 @@ export type AdminModerationOperationalAlertsPage = {
   page: number;
   pages: number;
   per_page: number;
-  source: AdminModerationOperationalAlerts["source"];
+  source: AdminPublicSource<AdminModerationOperationalAlerts["source"]>;
   thresholds: AdminModerationOperationalAlerts["thresholds"];
 };
 
@@ -310,7 +311,7 @@ export type AdminModerationSummary = {
   operational_alerts: AdminModerationOperationalAlerts;
   overview_charts: AdminModerationOverviewCharts;
   pending_total: number;
-  source: "content_moderation_event";
+  source: AdminPublicSource<"content_moderation_event">;
   urgent_pending_total: number;
 };
 
@@ -334,7 +335,7 @@ export type AdminModerationEvents = {
   page: number;
   pages: number;
   per_page: number;
-  source: "content_moderation_event";
+  source: AdminPublicSource<"content_moderation_event">;
 };
 
 export type AdminModerationResolveInput = {

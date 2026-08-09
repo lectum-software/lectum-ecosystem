@@ -1,5 +1,6 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
+import type { AdminPublicSource } from "@/api/public-response";
 import type { Admin, ApiResponse } from "@/api/types";
 
 export const ADMIN_NOTIFICATION_AUDIENCES = [
@@ -146,7 +147,7 @@ export type AdminNotificationMetrics = {
     by_channel_status_source: Array<{
       channel: AdminNotificationChannel;
       count: number;
-      source: "automatic" | "manual";
+      source: AdminPublicSource<"automatic" | "manual">;
       status: NotificationDeliveryStatus;
     }>;
     clicked: number;
@@ -182,7 +183,7 @@ export type AdminNotificationAutomaticLog = {
   } | null;
   read_at: string | null;
   sent_at: string | null;
-  source: "automatic" | "manual";
+  source: AdminPublicSource<"automatic" | "manual">;
   status: NotificationDeliveryStatus;
   trigger_key: string | null;
   user: Pick<Admin, "email" | "id" | "name"> & {

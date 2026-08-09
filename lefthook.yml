@@ -9,6 +9,10 @@ pre-commit:
       run: pnpm check:secrets
     env-examples:
       run: pnpm check:env
+    adrs:
+      run: pnpm check:adrs
+    tasks:
+      run: pnpm check:tasks
     frontend-biome:
       root: frontend/
       glob:
@@ -70,9 +74,10 @@ pre-push:
   commands:
     deploy-branch:
       run: pnpm check:deploy-branch
+      use_stdin: true
 
     repository-guards:
-      run: pnpm check:secrets && pnpm check:encoding && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles
+      run: pnpm check:secrets && pnpm check:encoding && pnpm check:adrs && pnpm check:tasks && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles
 
     frontend-check:
       glob:

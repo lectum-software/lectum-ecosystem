@@ -1,4 +1,4 @@
-﻿export type CfpResult = {
+export type CfpResult = {
   key: string;
   nome: string | null;
   nome_regional: string | null;

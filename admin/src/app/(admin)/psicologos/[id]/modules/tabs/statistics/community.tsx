@@ -45,7 +45,7 @@ const getCommunityEngagementDiagnosis = (
   community.engagement_diagnosis ?? {
     id: "sem_base",
     label: "Sem engajamento",
-    source: "community_post+post_reply+post_vote.user_id",
+    source: "conteudo",
   };
 
 const PSYCHOLOGIST_COMMUNITY_ENGAGEMENT_LABEL_BY_ID: Record<

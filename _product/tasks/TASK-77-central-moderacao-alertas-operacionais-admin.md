@@ -10,7 +10,7 @@
 | Fase | Admin / Operação / Segurança |
 | Status | Completed |
 | Dependências | TASK-45, TASK-46, TASK-57, TASK-70, TASK-74 |
-| ADR alvo | ADR-0296 sobre central única de moderação textual, denúncias e alertas operacionais derivados |
+| ADR alvo | ADR-0436 sobre central única de moderação textual, denúncias e alertas operacionais derivados |
 
 ## Contexto
 

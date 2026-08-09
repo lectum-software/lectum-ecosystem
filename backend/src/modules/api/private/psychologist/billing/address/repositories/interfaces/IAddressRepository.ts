@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   billing_address,
   professional_subscription,
   psychologist_profile,

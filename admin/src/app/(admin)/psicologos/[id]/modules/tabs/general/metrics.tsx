@@ -233,7 +233,7 @@ const getSubscriptionSituation = (
       badgeClassName: SUBSCRIPTION_STATUS_BADGE_CLASS.inadimplente,
       badgeLabel: formatSubscriptionStatusLabel(status),
       helperText:
-        "Assinatura com pendência financeira. Revise gateway e histórico em Plano e pagamentos.",
+        "Assinatura com pendência financeira. Revise cobranças e histórico em Plano e pagamentos.",
       label: "Assinatura inadimplente",
     };
   }

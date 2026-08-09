@@ -48,7 +48,7 @@ Em 2026-06-27, as credenciais sandbox do Mercado Pago foram disponibilizadas loc
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Execução local do service de sync para `lectum02@gmail.com`, retornando
+- Execução local do service de sync para `<CONTA_DE_TESTE_AUTORIZADA>`, retornando
   `gateway_status="authorized"` e `current.status="ativa"` com dados reais do Mercado Pago.
 - Smoke local HTTP nas rotas `/app/professional/billing/checkout` e `/app/professional/billing/address`, ambas respondendo `307` sem sessão autenticada, confirmando proteção/redirecionamento.
 

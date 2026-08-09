@@ -1,14 +1,15 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import multer from "multer";
 import { resolve } from "@/helpers/translate/resolve";
+import { sanitizePublicErrorMessage } from "@/utils/public-error";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { UploadInfrastructureError, UploadValidationError } from "./errors";
 import { fileFilter } from "./fileFilter";
 import { storage } from "./storage";
-import type { Option } from "./types";
+import type { PublicUploadOption } from "./types";
 
-export default (mode: Option) => (req: Request, res: Response, next: NextFunction) => {
+export default (mode: PublicUploadOption) => (req: Request, res: Response, next: NextFunction) => {
   req.allowed = mode.allowed || [];
-  req.public = mode.public || false;
   req.uploadFeature = mode.feature;
   let middleware: RequestHandler;
   const max = mode.size ? mode.size * 1024 * 1024 : undefined;
@@ -19,6 +20,17 @@ export default (mode: Option) => (req: Request, res: Response, next: NextFunctio
         ? 1
         : 10;
   const maxTextFields = 20;
+  const configuredFieldNames = new Set(
+    "fields" in mode && mode.fields
+      ? mode.fields.map((field) => field.name)
+      : "array" in mode && mode.array
+        ? [mode.array]
+        : "single" in mode && mode.single
+          ? [mode.single]
+          : [],
+  );
+  const safeFieldName = (field: string | undefined) =>
+    field && configuredFieldNames.has(field) ? field : "archive";
   const config = multer({
     storage,
     fileFilter,
@@ -47,7 +59,7 @@ export default (mode: Option) => (req: Request, res: Response, next: NextFunctio
         if (err.code === "LIMIT_UNEXPECTED_FILE") error = resolve("error.unexpected_field");
         if (err.code === "LIMIT_FILE_SIZE")
           error = resolve("error.exceeded_file_limit", { limit: mode.size });
-        const name = err.field || "archive";
+        const name = safeFieldName(err.field);
         return res.status(400).json({
           code: 400,
           status: 400,
@@ -56,18 +68,20 @@ export default (mode: Option) => (req: Request, res: Response, next: NextFunctio
           errors: { body: { [name]: error } },
         });
       } else if (err instanceof UploadValidationError) {
-        const name = err.field || "archive";
+        const name = safeFieldName(err.field);
+        const error = sanitizePublicErrorMessage(err.message, resolve("error.upload_error"));
         return res.status(400).json({
           code: 400,
           status: 400,
           success: false,
-          error: err.message,
-          errors: { body: { [name]: err.message } },
+          error,
+          errors: { body: { [name]: error } },
         });
       } else if (err) {
-        console.error("[UPLOAD] Falha ao armazenar arquivo.", {
-          name: err instanceof Error ? err.name : "UnknownUploadError",
-        });
+        console.error(
+          "[UPLOAD] Falha ao armazenar arquivo.",
+          toSafeErrorLog(err, "UploadStorageError"),
+        );
         const status = err instanceof UploadInfrastructureError ? 503 : 500;
 
         return res.status(status).json({

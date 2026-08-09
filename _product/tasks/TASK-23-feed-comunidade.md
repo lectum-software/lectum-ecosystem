@@ -1,4 +1,4 @@
-﻿# TASK-23: Feed de comunidade
+# TASK-23: Feed de comunidade
 
 ## Metadata
 

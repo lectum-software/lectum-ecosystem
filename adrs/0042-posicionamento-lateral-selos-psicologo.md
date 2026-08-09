@@ -1,4 +1,4 @@
-﻿# ADR-0042: Posicionamento lateral dos selos no card de psicólogo
+# ADR-0042: Posicionamento lateral dos selos no card de psicólogo
 
 ## Status
 

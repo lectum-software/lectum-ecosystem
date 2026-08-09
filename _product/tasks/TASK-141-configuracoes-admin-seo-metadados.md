@@ -10,7 +10,7 @@
 | Fase | Admin / Configurações / SEO |
 | Status | Completed |
 | Dependências | TASK-39, TASK-40, TASK-45, TASK-46, TASK-65 |
-| ADR alvo | ADR-0407 |
+| ADR alvo | ADR-0438 |
 
 ## Contexto
 
@@ -118,7 +118,7 @@ Concluída em 2026-08-03.
 - Criado modelo Prisma `site_seo_setting`, migration e repositório com defaults reais por chave de página.
 - Criados endpoints reais `GET/PUT /api/admin/private/settings/seo` e `GET /api/public/seo/metadata`.
 - Aplicados metadados configuráveis server-side nas páginas públicas principais do Next, preservando fallback quando a API estiver indisponível.
-- Criado o ADR-0407 para registrar a decisão arquitetural.
+- Criado o ADR-0438 para registrar a decisão arquitetural.
 
 ### Validações executadas
 

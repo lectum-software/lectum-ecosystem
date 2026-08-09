@@ -1,12 +1,25 @@
 import type { Resolve } from "@/helpers/return";
 import { msg } from "@/helpers/translate";
-import { csvRow } from "@/utils/csv";
+import { csvPublicProvenance, csvRow } from "@/utils/csv";
 import type {
   AdminFinanceDashboard,
   AdminFinanceQuery,
+  AdminFinanceSubscriptionItem,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 
-import { buildAdminFinanceDashboard, isAdminFinanceDashboard } from "./dashboard-builder";
+const financeSourceLabel = (source: unknown) => {
+  if (typeof source === "string") {
+    const normalized = source.trim().toLowerCase();
+    if (normalized === "admin_grant") return "Cortesia administrativa";
+    if (normalized === "free_signup") return "Cadastro gratuito";
+    if (normalized === "mercadopago") return "Cobrança externa";
+  }
+
+  return csvPublicProvenance(source);
+};
+
+const subscriptionOriginLabel = (item: AdminFinanceSubscriptionItem) =>
+  item.gateway ? "Cobrança externa" : financeSourceLabel(item.source) || "Plataforma";
 
 export const buildCsv = (dashboard: AdminFinanceDashboard) => {
   const rows: string[] = [];
@@ -26,7 +39,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
         card.label,
         "",
         card.available ? card.value : "indisponivel",
-        card.source,
+        financeSourceLabel(card.source),
         `unit=${card.unit};previous=${card.previous_value};change_percent=${card.change_percent ?? "n/a"};rate_percent=${card.rate_percent ?? "n/a"};reason=${card.unavailable_reason ?? ""}`,
       ]),
     );
@@ -39,7 +52,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
       "Receita recorrente mensal (MRR)",
       "",
       dashboard.mrr.value_cents,
-      dashboard.mrr.source,
+      financeSourceLabel(dashboard.mrr.source),
       dashboard.mrr.description,
     ]),
   );
@@ -50,7 +63,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
       "LTV medio dos psicologos",
       "",
       dashboard.average_ltv.available ? dashboard.average_ltv.value_cents : "indisponivel",
-      dashboard.average_ltv.source,
+      financeSourceLabel(dashboard.average_ltv.source),
       `paid_psychologist_count=${dashboard.average_ltv.paid_psychologist_count};linked_confirmed_payments=${dashboard.average_ltv.linked_confirmed_payments};reason=${dashboard.average_ltv.unavailable_reason ?? ""};${dashboard.average_ltv.description}`,
     ]),
   );
@@ -63,7 +76,7 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
       dashboard.average_subscription_lifetime.available
         ? dashboard.average_subscription_lifetime.value_months
         : "indisponivel",
-      dashboard.average_subscription_lifetime.source,
+      financeSourceLabel(dashboard.average_subscription_lifetime.source),
       `value_days=${dashboard.average_subscription_lifetime.value_days};cancelled_subscription_count=${dashboard.average_subscription_lifetime.cancelled_subscription_count};reason=${dashboard.average_subscription_lifetime.unavailable_reason ?? ""};${dashboard.average_subscription_lifetime.description}`,
     ]),
   );
@@ -102,18 +115,12 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
   rows.push(
     csvRow([
       "section",
-      "payment_event_id",
       "occurred_at",
-      "external_id",
-      "event_type",
       "amount_cents",
       "status",
-      "subscription_id",
-      "gateway_subscription_id",
       "psychologist",
       "email",
       "plan",
-      "reference",
       "reason",
     ]),
   );
@@ -121,18 +128,12 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
     rows.push(
       csvRow([
         "ultimas_cobrancas_realizadas",
-        item.event_id,
         item.occurred_at,
-        item.external_id,
-        item.event_type,
         item.amount_available ? item.amount_cents : "indisponivel",
         item.status_label,
-        item.subscription?.id ?? "",
-        item.subscription?.gateway_subscription_id ?? "",
         item.subscription?.psychologist.name ?? "",
         item.subscription?.psychologist.email ?? "",
         item.subscription?.plan.name ?? "",
-        item.reference ?? "",
         item.unavailable_reason ?? "",
       ]),
     );
@@ -142,7 +143,6 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
   rows.push(
     csvRow([
       "section",
-      "subscription_id",
       "cancelled_at",
       "created_at",
       "updated_at",
@@ -150,22 +150,17 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
       "current_period_end",
       "psychologist",
       "email",
-      "crp",
       "plan",
-      "plan_slug",
       "interval",
       "price_cents",
       "status",
-      "source",
-      "gateway",
-      "gateway_subscription_id",
+      "origem",
     ]),
   );
   for (const item of dashboard.subscription_relation.items) {
     rows.push(
       csvRow([
         "relacao_de_assinaturas",
-        item.id,
         item.cancelled_at ?? "",
         item.created_at,
         item.updated_at,
@@ -173,15 +168,11 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
         item.current_period_end ?? "",
         item.psychologist.name,
         item.psychologist.email,
-        item.psychologist.crp ?? "",
         item.plan.name,
-        item.plan.slug,
         item.plan.interval,
         item.plan.price_cents,
         item.status_label,
-        item.source,
-        item.gateway ?? "",
-        item.gateway_subscription_id ?? "",
+        subscriptionOriginLabel(item),
       ]),
     );
   }
@@ -189,7 +180,15 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
   rows.push("");
   rows.push(csvRow(["section", "id", "label", "source", "description"]));
   for (const item of dashboard.unavailable) {
-    rows.push(csvRow(["indisponivel", item.id, item.label, item.source, item.description]));
+    rows.push(
+      csvRow([
+        "indisponivel",
+        item.id,
+        item.label,
+        financeSourceLabel(item.source),
+        item.description,
+      ]),
+    );
   }
 
   rows.push("");
@@ -202,6 +201,9 @@ export const buildCsv = (dashboard: AdminFinanceDashboard) => {
 export const exportAdminFinanceDashboardCsv = async (
   query: AdminFinanceQuery,
 ): Promise<Resolve> => {
+  const { buildAdminFinanceDashboard, isAdminFinanceDashboard } = await import(
+    "./dashboard-builder"
+  );
   const resolve = await buildAdminFinanceDashboard(query, {
     subscriptionTake: 5000,
     tableTake: 5000,

@@ -79,9 +79,13 @@ export const useCreateCommunityPostController = () => {
 
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
-      const publicationHref = `/comunidades/${post.community.slug}/publicacao/${post.id}`;
+      const publicationHref = `/comunidades/${encodeURIComponent(post.community.slug)}/publicacao/${encodeURIComponent(post.id)}`;
 
-      window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);
+      try {
+        window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);
+      } catch {
+        // A rota de sucesso também recebe o destino por URL e não depende do storage.
+      }
       setIsSheetOpen(false);
       toast.success("Post publicado!");
       router.replace(publicationHref);

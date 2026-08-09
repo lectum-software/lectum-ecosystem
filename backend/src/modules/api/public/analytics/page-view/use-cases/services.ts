@@ -1,4 +1,4 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
 import { msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import {
@@ -64,18 +64,31 @@ export const create = async (req: Request) => {
   const utmTerm = normalizeAnalyticsSlug(getUtm(data.b, "utm_term"));
   const traffic = normalizeTraffic(req, data.b.referrer, utmSource, utmMedium);
   const target = derivePageTarget(path);
-  const sessionEntry = await repository.findSessionEntry(visitorId, sessionId);
-  const isEntry = !sessionEntry;
-  const entryPath = sessionEntry?.entry_path || sessionEntry?.path || path;
+  const session = await repository.upsertSession(visitorId, sessionId, userId);
 
-  if (userId) {
+  if (userId && session) {
     await Promise.all([
       repository.linkPageViewsToUser(visitorId, userId),
       repository.linkSessionsToUser(visitorId, userId),
     ]);
   }
 
-  await repository.upsertSession(visitorId, sessionId, userId);
+  if (!session) {
+    const result: PageViewTrackingResult = {
+      tracked: false,
+      id: null,
+    };
+
+    return {
+      status: 200,
+      ...msg("page_view_tracked", {}),
+      data: result,
+    };
+  }
+
+  const sessionEntry = await repository.findSessionEntry(visitorId, sessionId);
+  const isEntry = !sessionEntry;
+  const entryPath = sessionEntry?.entry_path || sessionEntry?.path || path;
 
   const event = await repository.create({
     visitorId,
@@ -104,20 +117,6 @@ export const create = async (req: Request) => {
   const result: PageViewTrackingResult = {
     tracked: true,
     id: event.id ?? null,
-    visitor_id: visitorId,
-    session_id: sessionId,
-    user_id: userId,
-    path: event.path ?? path,
-    normalized_path: event.normalized_path ?? normalizePathForAggregation(path),
-    page_kind: event.page_kind ?? target.pageKind,
-    target_type: event.target_type ?? null,
-    target_id: event.target_id ?? null,
-    traffic_source: event.traffic_source ?? traffic.trafficSource,
-    traffic_medium: event.traffic_medium ?? null,
-    referrer_host: event.referrer_host ?? null,
-    display_mode: normalizeDisplayMode(event.display_mode),
-    is_entry: Boolean(event.is_entry),
-    entry_path: event.entry_path ?? null,
   };
 
   return {
@@ -141,8 +140,6 @@ export const updateDuration = async (req: Request) => {
 
   const result: PageViewDurationResult = {
     updated: Boolean(event),
-    id: event?.id ?? null,
-    duration_seconds: event?.duration_seconds ?? null,
   };
 
   return {

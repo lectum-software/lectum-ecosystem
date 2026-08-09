@@ -1,1 +1,1 @@
-﻿export { default, schema } from "../../summary/validator";
+export { default, schema } from "../../summary/validator";

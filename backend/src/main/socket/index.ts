@@ -5,11 +5,13 @@ import io, { type DefaultEventsMap } from "socket.io";
 import { resolve } from "@/helpers/translate/resolve";
 import prisma from "@/infra/database/prisma";
 import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
+import { getPublicWebOrigins, parsePublicHttpOrigin } from "@/utils/public-origin";
 import {
   getUserJwtTtlSeconds,
   isTrustProxyEnabled,
   parsePositiveInteger,
 } from "@/utils/runtime-config";
+import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { readUserTokenFromCookieHeader } from "@/utils/user-auth-cookie";
 import { emitAsync } from "./db/async";
 import { connectedClients } from "./registry";
@@ -50,13 +52,7 @@ const validateSocketSession = async (token: string) => {
 
 const normalizeOrigin = (value?: string | string[] | null) => {
   const raw = Array.isArray(value) ? value[0] : value;
-  if (!raw) return null;
-
-  try {
-    return new URL(raw).origin;
-  } catch {
-    return null;
-  }
+  return parsePublicHttpOrigin(raw);
 };
 
 const resolveHandshakeOrigin = (headers: Record<string, string | string[] | undefined>) => {
@@ -77,11 +73,7 @@ const resolveHandshakeOrigin = (headers: Record<string, string | string[] | unde
 };
 
 export const socket = (server: Express) => {
-  const allowedOrigins = new Set(
-    (process.env.WEB_URL?.split(",") || [])
-      .map((origin) => normalizeOrigin(origin.trim()))
-      .filter((origin): origin is string => Boolean(origin)),
-  );
+  const allowedOrigins = new Set(getPublicWebOrigins());
 
   const httpServer = http.createServer(server);
 
@@ -127,9 +119,7 @@ export const socket = (server: Express) => {
       socket.data.payload = payload;
       return next();
     } catch (err: unknown) {
-      console.warn("[SOCKET] Token inválido", {
-        name: err instanceof Error ? err.name : "UnknownSocketAuthError",
-      });
+      console.warn("[SOCKET] Token inválido", toSafeErrorLog(err, "SocketAuthError"));
       return next(new Error(resolve("error.token_invalid")));
     }
   });

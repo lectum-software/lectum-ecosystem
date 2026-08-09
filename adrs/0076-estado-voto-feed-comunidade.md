@@ -1,4 +1,4 @@
-﻿# ADR-0076: Estado de interacoes no feed da comunidade
+# ADR-0076: Estado de interacoes no feed da comunidade
 
 ## Status
 

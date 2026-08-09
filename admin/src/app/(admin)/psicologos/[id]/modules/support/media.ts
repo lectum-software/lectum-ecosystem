@@ -1,19 +1,12 @@
 import type { AdminPsychologistPublicationItem } from "@/api/req/psychologists";
-import { isPublicMediaPath } from "@/lib/admin-media";
-import { adminApiUrl } from "@/lib/api-url";
+import { isAdminPublicMediaUrl } from "@/lib/admin-media";
 
 export const publicationAdminDetailHref = (item: AdminPsychologistPublicationItem) =>
   `/comunidades/${encodeURIComponent(item.community.slug)}/conteudo/${encodeURIComponent(
     item.type,
   )}/${encodeURIComponent(item.id)}`;
 
-export const isPublicAdminMediaSrc = (src: string) => {
-  try {
-    return isPublicMediaPath(new URL(src, adminApiUrl).pathname);
-  } catch {
-    return false;
-  }
-};
+export const isPublicAdminMediaSrc = (src: string) => isAdminPublicMediaUrl(src);
 
 export const initials = (name: string) =>
   name

@@ -1,6 +1,10 @@
-﻿import type { Prisma } from "@/external/generated/prisma/client";
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { page_view_event, visitor_session } from "@/interfaces/objects";
+import {
+  linkVisitorSessionsToUser,
+  upsertOwnedVisitorSession,
+} from "../../helpers/visitor-session";
 import type {
   CreatePageViewInput,
   PageViewDurationInput,
@@ -10,11 +14,9 @@ import type { IPageViewTrackingRepository } from "./interfaces/IPageViewTracking
 
 export class PageViewTrackingRepository implements IPageViewTrackingRepository {
   readonly repository: ORM["page_view_event"];
-  readonly sessionRepository: ORM["visitor_session"];
 
   constructor() {
     this.repository = prisma.page_view_event;
-    this.sessionRepository = prisma.visitor_session;
   }
 
   async findSessionEntry(visitorId: string, sessionId: string): Promise<PageViewEntry> {
@@ -51,54 +53,18 @@ export class PageViewTrackingRepository implements IPageViewTrackingRepository {
   }
 
   async linkSessionsToUser(visitorId: string, userId: string): Promise<number> {
-    const result = await this.sessionRepository.updateMany({
-      where: {
-        deleted: false,
-        visitor_id: visitorId,
-        user_id: null,
-      },
-      data: {
-        user_id: userId,
-      },
-    });
-
-    return result.count;
+    return linkVisitorSessionsToUser(visitorId, userId);
   }
 
   async upsertSession(
     visitorId: string,
     sessionId: string,
     userId?: string | null,
-  ): Promise<visitor_session> {
-    const now = new Date();
-    const updateData: Prisma.visitor_sessionUpdateInput = {
-      last_seen_at: now,
-    };
-
-    if (userId) {
-      updateData.user = {
-        connect: {
-          id: userId,
-        },
-      };
-    }
-
-    return this.sessionRepository.upsert({
-      where: {
-        visitor_id_session_id: {
-          visitor_id: visitorId,
-          session_id: sessionId,
-        },
-      },
-      create: {
-        visitor_id: visitorId,
-        session_id: sessionId,
-        user_id: userId ?? null,
-        device_type: "unknown",
-        first_seen_at: now,
-        last_seen_at: now,
-      },
-      update: updateData,
+  ): Promise<visitor_session | null> {
+    return upsertOwnedVisitorSession({
+      sessionId,
+      userId,
+      visitorId,
     });
   }
 

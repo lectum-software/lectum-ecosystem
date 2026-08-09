@@ -1,4 +1,4 @@
-﻿# TASK-64: Tela administrativa de notificações
+# TASK-64: Tela administrativa de notificações
 
 ## Metadata
 

@@ -1,4 +1,4 @@
-﻿# ADR-0388 - Reposicionamento da matriz no dashboard Admin de psicologos
+# ADR-0388 - Reposicionamento da matriz no dashboard Admin de psicologos
 
 ## Status
 

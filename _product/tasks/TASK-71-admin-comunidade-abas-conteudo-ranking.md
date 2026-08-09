@@ -1,4 +1,4 @@
-﻿# TASK-71: Abas administrativas da comunidade, conteúdo e ranking completo
+# TASK-71: Abas administrativas da comunidade, conteúdo e ranking completo
 
 ## Metadata
 
@@ -238,9 +238,9 @@ Regras:
 - O filtro **Tipo** agora expõe Posts de psicólogo verificado, Posts de psicólogo não verificado, Respostas de psicólogo verificado, Respostas de psicólogo não verificado, Comentários de pacientes e Posts anônimos, além de Todos os tipos.
 - O filtro de status deixou de ser exibido na interface; itens removidos continuam marcados a partir do status real retornado pela API.
 - O backend passou a aceitar filtro por content_kind real e período (Todo o período, Últimos 7 dias, Últimos 30 dias, Últimos 90 dias) aplicado sobre created_at.
-- Posts anônimos passaram a ter classificação operacional própria (nonymous_post) derivada de community_post.anonymous, sem alterar schema Prisma ou persistência.
+- Posts anônimos passaram a ter classificação operacional própria (`anonymous_post`) derivada de `community_post.anonymous`, sem alterar schema Prisma ou persistência.
 - Não houve package novo, mock, schema Prisma/migration, endpoint paralelo ou alteração destrutiva de dados.
-- ADR atualizado: drs/0264-admin-comunidade-abas-conteudo-ranking.md.
+- ADR atualizado: `adrs/0264-admin-comunidade-abas-conteudo-ranking.md`.
 - Validação executada: pnpm --dir backend check, pnpm --dir backend build, pnpm --dir admin check, pnpm --dir admin build, pnpm check e smoke local GET http://localhost:3002/comunidades/tdahátab=conteudo retornando 200.
 
 ## Ajuste complementar 2026-07-15 - Fullscreen 9:16 no miniplayer

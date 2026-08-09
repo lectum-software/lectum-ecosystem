@@ -1,4 +1,4 @@
-﻿# ADR-0037: Ajustes de densidade e legibilidade no cabeçalho de psicólogo
+# ADR-0037: Ajustes de densidade e legibilidade no cabeçalho de psicólogo
 
 ## Status
 

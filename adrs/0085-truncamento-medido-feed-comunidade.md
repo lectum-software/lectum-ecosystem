@@ -1,4 +1,4 @@
-﻿# ADR-0085 - Truncamento medido e identidade compacta no feed de comunidade
+# ADR-0085 - Truncamento medido e identidade compacta no feed de comunidade
 
 ## Status
 

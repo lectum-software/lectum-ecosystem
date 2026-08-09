@@ -1,7 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
-import prisma, { type ORM } from "@/infra/database/prisma";
-import type { visitor_session } from "@/interfaces/objects";
+import prisma from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { upsertOwnedVisitorSession } from "../../helpers/visitor-session";
 import type {
   ContentAttentionTarget,
   ContentAttentionTargetType,
@@ -11,15 +11,12 @@ import type {
 const attentionSelect = {
   attention_seconds: true,
   id: true,
+  session_id: true,
+  viewer_id: true,
+  visitor_id: true,
 } satisfies Prisma.content_attention_sessionSelect;
 
 export class ContentAttentionRepository {
-  readonly sessionRepository: ORM["visitor_session"];
-
-  constructor() {
-    this.sessionRepository = prisma.visitor_session;
-  }
-
   async findPostTarget(postId: string): Promise<ContentAttentionTarget | null> {
     const post = await prisma.community_post.findFirst({
       select: {
@@ -114,6 +111,13 @@ export class ContentAttentionRepository {
       });
 
       if (existing) {
+        const belongsToAnotherSession =
+          existing.visitor_id !== input.visitorId || existing.session_id !== input.sessionId;
+        const belongsToAnotherUser =
+          Boolean(existing.viewer_id) && existing.viewer_id !== input.viewerId;
+
+        if (belongsToAnotherSession || belongsToAnotherUser) return null;
+
         return transaction.content_attention_session.update({
           data: {
             attention_seconds: Math.max(existing.attention_seconds, input.attentionSeconds),
@@ -148,40 +152,11 @@ export class ContentAttentionRepository {
     });
   }
 
-  async upsertVisitorSession(
-    visitorId: string,
-    sessionId: string,
-    userId?: string | null,
-  ): Promise<visitor_session> {
-    const now = new Date();
-    const updateData: Prisma.visitor_sessionUpdateInput = {
-      last_seen_at: now,
-    };
-
-    if (userId) {
-      updateData.user = {
-        connect: {
-          id: userId,
-        },
-      };
-    }
-
-    return this.sessionRepository.upsert({
-      create: {
-        device_type: "unknown",
-        first_seen_at: now,
-        last_seen_at: now,
-        session_id: sessionId,
-        user_id: userId ?? null,
-        visitor_id: visitorId,
-      },
-      update: updateData,
-      where: {
-        visitor_id_session_id: {
-          session_id: sessionId,
-          visitor_id: visitorId,
-        },
-      },
+  async upsertVisitorSession(visitorId: string, sessionId: string, userId?: string | null) {
+    return upsertOwnedVisitorSession({
+      sessionId,
+      userId,
+      visitorId,
     });
   }
 }

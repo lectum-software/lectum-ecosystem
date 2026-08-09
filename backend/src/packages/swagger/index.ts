@@ -164,7 +164,7 @@ export const swaggerRoutes = async (
         documents.use(route.options.url, apiReference(scalarConfig));
 
         console.log(
-          `\x1b[32m[SWAGGER]: Documentação Scalar de "${route.options.title}" gerada! Acesse: ${process.env.BASE}${route.options.url}\x1b[0m`,
+          `\x1b[32m[SWAGGER]: Documentação Scalar de "${route.options.title}" gerada.\x1b[0m`,
         );
       } catch (error) {
         console.warn(
@@ -199,9 +199,7 @@ const setupSwaggerUI = (documents: Router, route: any, swaggerFile: any) => {
     res.sendFile(`${__dirname}/custom.js`);
   });
 
-  console.log(
-    `\x1b[32m[SWAGGER]: Documentação de "${route.options.title}" gerada! Acesse: ${process.env.BASE}${route.options.url}\x1b[0m`,
-  );
+  console.log(`\x1b[32m[SWAGGER]: Documentação de "${route.options.title}" gerada.\x1b[0m`);
 };
 
 const initializeSwagger = async (

@@ -6,6 +6,7 @@ import {
   findModerationCommunityBySlug,
   recordContentModerationEvent,
 } from "@/utils/content-moderation-events";
+import { publicFileUrl } from "@/utils/public-origin";
 import type {
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
@@ -106,21 +107,6 @@ const ensureCommunityMemberAuth = (data: ICommunityMembershipDTO) => {
     status: 403,
     ...error("role_not_authorized", {}),
   };
-};
-
-const publicFileUrl = (key: string) => {
-  const rawBase = String(process.env.BASE || "").trim();
-  let base = rawBase.replace(/\/$/, "");
-
-  try {
-    base = rawBase ? new URL(rawBase).origin : "";
-  } catch (_err) {
-    base = rawBase.replace(/\/$/, "");
-  }
-
-  const publicPath = `/public/files/${key}`;
-
-  return base ? `${base}${publicPath}` : publicPath;
 };
 
 const mediaTypeFromMime = (mimetype?: string | null): "image" | "video" | null => {

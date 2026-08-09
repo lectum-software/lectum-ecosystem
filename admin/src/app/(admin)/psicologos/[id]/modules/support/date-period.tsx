@@ -1,5 +1,9 @@
 "use client";
 
+import { startOfCurrentWeek } from "@/lib/date-period";
+
+export { startOfCurrentWeek };
+
 import { CalendarDays, ChevronDown } from "lucide-react";
 import { type FocusEvent, type ReactNode, useCallback, useMemo, useState } from "react";
 import type { AdminPsychologistStatisticsQuery } from "@/api/req/psychologists";
@@ -72,15 +76,6 @@ export const toDateInputValue = (date: Date) => {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
-};
-
-export const startOfCurrentWeek = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-
-  return date;
 };
 
 export const startOfCurrentMonth = () => {

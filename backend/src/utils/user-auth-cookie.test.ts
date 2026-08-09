@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import {
   applyUserAuthCookie,
+  clearUserAuthCookie,
   getUserRequestToken,
   readUserTokenFromCookieHeader,
   USER_AUTH_COOKIE_NAME,
@@ -27,12 +29,19 @@ const requestStub = ({
     headers: bearer ? { authorization: `Bearer ${bearer}` } : {},
   }) as unknown as Request;
 
-test("lê sessão pelo bearer ou pelo cookie HttpOnly", () => {
-  assert.equal(getUserRequestToken(requestStub({ cookie: "cookie-token" })), "cookie-token");
+test("aceita cookie somente com capacidade CSRF e mantém bearer legado prioritário", () => {
+  assert.equal(getUserRequestToken(requestStub({ cookie: "cookie-token" })), null);
+  assert.equal(
+    getUserRequestToken(requestStub({ cookie: "cookie-token", cookieClient: true })),
+    "cookie-token",
+  );
   assert.equal(
     getUserRequestToken(requestStub({ bearer: "legacy-token", cookie: "cookie-token" })),
     "legacy-token",
   );
+});
+
+test("mantém leitura direta do header de cookie restrita ao transporte Socket validado", () => {
   assert.equal(
     readUserTokenFromCookieHeader(`theme=light; ${USER_AUTH_COOKIE_NAME}=socket-token`),
     "socket-token",
@@ -40,6 +49,8 @@ test("lê sessão pelo bearer ou pelo cookie HttpOnly", () => {
 });
 
 test("entrega token somente no cookie para o frontend compatível", () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "homolog";
   const writtenCookies: unknown[][] = [];
   const response = {
     cookie: (...args: unknown[]) => {
@@ -47,19 +58,32 @@ test("entrega token somente no cookie para o frontend compatível", () => {
       return response;
     },
   } as unknown as Response;
-  const result = applyUserAuthCookie(requestStub({ cookieClient: true }), response, {
-    allowAuthTokens: true,
-    data: {
-      id: "user-id",
-      user_tokens: [{ token: "new-token" }],
-    },
-    success: true,
+  const shortLivedToken = jwt.sign({ id: "view-as-user" }, "x".repeat(32), {
+    algorithm: "HS256",
+    expiresIn: 30 * 60,
   });
+  try {
+    const result = applyUserAuthCookie(requestStub({ cookieClient: true }), response, {
+      allowAuthTokens: true,
+      data: {
+        id: "user-id",
+        user_tokens: [{ token: shortLivedToken }],
+      },
+      success: true,
+    });
 
-  assert.equal(writtenCookies[0]?.[0], USER_AUTH_COOKIE_NAME);
-  assert.equal(writtenCookies[0]?.[1], "new-token");
-  assert.deepEqual(result.data, { id: "user-id" });
-  assert.equal(result.allowAuthTokens, false);
+    assert.equal(writtenCookies[0]?.[0], USER_AUTH_COOKIE_NAME);
+    assert.equal(writtenCookies[0]?.[1], shortLivedToken);
+    assert.equal(Reflect.get(writtenCookies[0]?.[2] ?? {}, "secure"), true);
+    const maxAge = Reflect.get(writtenCookies[0]?.[2] ?? {}, "maxAge");
+    assert.equal(typeof maxAge, "number");
+    assert.ok(maxAge > 29 * 60 * 1_000 && maxAge <= 30 * 60 * 1_000);
+    assert.deepEqual(result.data, { id: "user-id" });
+    assert.equal(result.allowAuthTokens, false);
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+  }
 });
 
 test("mantém resposta legada intacta quando o cliente não declara suporte", () => {
@@ -72,4 +96,31 @@ test("mantém resposta legada intacta quando o cliente não declara suporte", ()
   };
 
   assert.equal(applyUserAuthCookie(requestStub({}), response, resolve), resolve);
+});
+
+test("limpa o cookie HttpOnly com a mesma política segura da autenticação", () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "homolog";
+  const clearedCookies: unknown[][] = [];
+  const response = {
+    clearCookie: (...args: unknown[]) => {
+      clearedCookies.push(args);
+      return response;
+    },
+  } as unknown as Response;
+
+  try {
+    clearUserAuthCookie(response);
+
+    assert.equal(clearedCookies[0]?.[0], USER_AUTH_COOKIE_NAME);
+    assert.deepEqual(clearedCookies[0]?.[1], {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: true,
+    });
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+  }
 });

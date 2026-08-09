@@ -20,6 +20,7 @@ import type {
   AdminNotificationPushStatus,
 } from "@/api/req/notifications";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 
 import {
   AUDIENCE_OPTIONS,
@@ -82,6 +83,7 @@ export const NewNotificationModal = ({
     updateCampaign.isPending ||
     sendCampaign.isPending ||
     scheduleCampaign.isPending;
+  const dialogRef = useAdminDialogLifecycle(onClose, { closeEnabled: !pending });
   const unavailableEmail = emailUnavailableCopy(email);
   const unavailablePush = pushUnavailableCopy(push);
   const previewChannels = [
@@ -139,7 +141,14 @@ export const NewNotificationModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center">
+    <div
+      aria-label={campaign ? "Editar rascunho de notificação" : "Criar notificação"}
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center"
+      ref={dialogRef}
+      role="dialog"
+      tabIndex={-1}
+    >
       <CardShell className="max-h-[94dvh] w-full max-w-3xl overflow-y-auto p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div>

@@ -29,7 +29,6 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   console.error("[SERVER] erro não tratado", {
     ...toSafeErrorLog(error),
     method: req.method,
-    path: req.path,
     status,
   });
 

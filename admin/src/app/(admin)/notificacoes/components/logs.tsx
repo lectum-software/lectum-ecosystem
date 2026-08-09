@@ -51,7 +51,12 @@ export const AutomaticLogs = ({
       ) : null}
     </div>
     {filtersSlot}
-    {data.length === 0 ? (
+    {isFetching && data.length === 0 ? (
+      <div className="flex items-center gap-2 p-6 text-sm font-bold text-muted">
+        <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+        Carregando notificações automáticas...
+      </div>
+    ) : data.length === 0 ? (
       <div className="p-6 text-sm font-bold text-muted">
         Nenhum registro automático encontrado para os filtros atuais.
       </div>
@@ -70,11 +75,9 @@ export const AutomaticLogs = ({
           </thead>
           <tbody>
             {data.map((log) => {
-              const title =
-                log.notification?.message_key || log.trigger_key || "notificação automática";
               return (
                 <tr className="border-t border-border align-top" key={log.id}>
-                  <td className="px-4 py-4 font-black text-foreground">{title}</td>
+                  <td className="px-4 py-4 font-black text-foreground">Notificação automática</td>
                   <td className="px-4 py-4 text-sm">
                     <RecipientCell user={log.user} />
                   </td>
@@ -86,9 +89,11 @@ export const AutomaticLogs = ({
                   </td>
                   <td className="px-4 py-4">
                     <DeliveryStatusBadge status={log.status} />
-                    {log.failure_reason ? (
+                    {log.status === "failed" || log.status === "skipped" ? (
                       <p className="mt-1 max-w-56 text-xs font-bold leading-5 text-muted">
-                        {log.failure_reason}
+                        {log.status === "skipped"
+                          ? "Envio não realizado."
+                          : "Entrega não concluída."}
                       </p>
                     ) : null}
                   </td>
@@ -102,7 +107,7 @@ export const AutomaticLogs = ({
         </table>
       </div>
     )}
-    <Pager onNext={onNext} onPrev={onPrev} page={page} pages={pages} />
+    <Pager disabled={isFetching} onNext={onNext} onPrev={onPrev} page={page} pages={pages} />
   </CardShell>
 );
 

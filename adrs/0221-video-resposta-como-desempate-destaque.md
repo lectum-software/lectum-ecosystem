@@ -28,7 +28,7 @@ A decisão foi aplicada nas seleções de destaque do feed/comunidade, listas de
 
 - `pnpm --dir backend check`
 - `GET http://localhost:3001/api/private/community/feed/posts?community=tdah&limit=5` retornou a resposta destacada `cmrb6g7cc003vy0uhs3yl40ed` com `media_type="video"` e `media_url` preenchida.
-- `HEAD https://verbose-trapeze-clapping.ngrok-free.dev/public/files/posts/media/lectum-demo-2026-07-07-tdah.mp4` retornou `200` com `video/mp4`.
+- `HEAD https://tunnel-autorizado.example/public/files/posts/media/lectum-demo-2026-07-07-tdah.mp4` retornou `200` com `video/mp4`.
 - Chrome headless mobile-first `390x844` em `http://localhost:3000/?community=tdah` confirmou o player de vídeo dentro da resposta profissional destacada.
 
 ## Pendências

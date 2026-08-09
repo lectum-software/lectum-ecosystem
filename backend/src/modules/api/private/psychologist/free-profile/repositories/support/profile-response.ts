@@ -7,6 +7,7 @@ import {
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
 import { parseStoredCrp, resolveCrpFromRegistryChecks } from "@/utils/professional-registry";
+import { publicFileKeyFromUrl } from "@/utils/public-origin";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
@@ -181,24 +182,12 @@ export const buildActivationPendingFields = ({
 };
 
 export const publicProfileMediaKeyFromUrl = (value?: string | null) => {
-  if (!value) return null;
-
-  try {
-    const url = new URL(value, process.env.BASE || "http://localhost");
-    const prefix = "/public/files/";
-
-    if (!url.pathname.startsWith(prefix)) return null;
-
-    const key = decodeURIComponent(url.pathname.slice(prefix.length));
-    return key.startsWith("psychologist/avatar/") ||
-      key.startsWith("psychologist/cover-image/") ||
-      key.startsWith("psychologist/video/") ||
-      key.startsWith("psychologist/video-cover/")
-      ? key
-      : null;
-  } catch (_err) {
-    return null;
-  }
+  return publicFileKeyFromUrl(value, [
+    "psychologist/avatar/",
+    "psychologist/cover-image/",
+    "psychologist/video/",
+    "psychologist/video-cover/",
+  ]);
 };
 
 export const deletePublicProfileMedia = async (value?: string | null) => {

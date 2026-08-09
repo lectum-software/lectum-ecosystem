@@ -13,7 +13,6 @@ import {
 
 //Utils
 import { log } from "@/utils/logs";
-import { sanitizeSensitiveData } from "@/utils/sanitize-sensitive";
 //DTOs
 import type { IHasDTO, IStoreDTO } from "../DTOs/IStoreDTO";
 import type { IStoreRepository } from "./interfaces/IStoreRepository";
@@ -133,15 +132,17 @@ export class StoreRepository implements IStoreRepository {
         });
       }
 
-      const newItem = {
-        ...item,
-      };
-
       await tx.log__user.create({
         data: {
           action: log.store,
           ref_id: item.id,
-          new: JSON.stringify(sanitizeSensitiveData(newItem, { removeAuthTokens: true })),
+          new: JSON.stringify({
+            active: item.active,
+            confirmed: item.confirmed,
+            need_reset: item.need_reset,
+            provider: item.provider,
+            role: item.role,
+          }),
         },
       });
 

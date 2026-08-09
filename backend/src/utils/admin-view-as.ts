@@ -48,8 +48,30 @@ export const getAdminViewAsPayloadFromRequest = (req: Request): AdminViewAsJwtPa
 export const isSafeAdminViewAsMethod = (method: string) =>
   ["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase());
 
-export const shouldBlockAdminViewAsWrite = (req: Request) => {
-  if (isSafeAdminViewAsMethod(req.method)) return false;
+export const isAdminViewAsLogoutRequest = (req: Request) => {
+  if (req.method.toUpperCase() !== "POST") return false;
 
-  return Boolean(getAdminViewAsPayloadFromRequest(req));
+  const rawUrl = req.originalUrl || req.url;
+  const queryIndex = rawUrl.indexOf("?");
+  const pathname = queryIndex === -1 ? rawUrl : rawUrl.slice(0, queryIndex);
+
+  return pathname === "/api/private/account/logout";
 };
+
+export const isSafeAdminViewAsRequest = (req: Request) =>
+  isSafeAdminViewAsMethod(req.method) || isAdminViewAsLogoutRequest(req);
+
+export const shouldBlockAdminViewAsWrite = (
+  req: Request,
+  payload = getAdminViewAsPayloadFromRequest(req),
+) => {
+  if (isSafeAdminViewAsRequest(req)) return false;
+
+  return Boolean(payload);
+};
+
+export const resolveUserRequestDeviceId = (
+  req: Request,
+  browserDeviceId: string,
+  payload = getAdminViewAsPayloadFromRequest(req),
+) => payload?.device_id || browserDeviceId;

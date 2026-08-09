@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { PostReplyThreadLogic } from "@/app/app/community/[slug]/post/[id]/logic";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";

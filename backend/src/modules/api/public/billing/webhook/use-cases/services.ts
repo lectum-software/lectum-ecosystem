@@ -77,10 +77,7 @@ export default async ({ body, headers, query }: IWebhookDTO) => {
   });
 
   if (!signatureValid) {
-    console.warn("[BILLING] Mercado Pago webhook signature rejected", {
-      has_data_id: Boolean(dataId),
-      type: getQueryType(query) || toStringValue(asRecord(body)?.type),
-    });
+    console.warn("[BILLING] Assinatura de webhook rejeitada.");
 
     return {
       status: 401,

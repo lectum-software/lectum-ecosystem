@@ -1,5 +1,8 @@
 sample/
 
+.env*
+!.env.example
+
 node_modules/
 .pnpm-store/
 .next/

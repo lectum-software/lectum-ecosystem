@@ -3,13 +3,13 @@
 import { FileText, type LucideIcon, MousePointerClick } from "lucide-react";
 import type {
   AdminTrafficSummary,
-  TrafficBreakdownItem,
   TrafficConversionAction,
   TrafficConversionChart,
   TrafficDeviceItem,
   TrafficEntryPage,
   TrafficMetric,
 } from "@/api/req/traffic";
+import { buildDonutCircleSegments } from "@/lib/chart-geometry";
 import { cn } from "@/lib/utils";
 
 import {
@@ -33,34 +33,7 @@ export const DonutChart = ({
   total: number;
 }) => {
   const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  const visibleItems = items.filter((item) => item.count > 0);
-  const segments = visibleItems.reduce<{
-    cumulative: number;
-    items: Array<{
-      dash: number;
-      item: TrafficBreakdownItem;
-      strokeDashoffset: number;
-    }>;
-  }>(
-    (accumulator, item) => {
-      const share = total > 0 ? item.count / total : 0;
-      const dash = share * circumference;
-
-      return {
-        cumulative: accumulator.cumulative + dash,
-        items: [
-          ...accumulator.items,
-          {
-            dash,
-            item,
-            strokeDashoffset: -accumulator.cumulative,
-          },
-        ],
-      };
-    },
-    { cumulative: 0, items: [] },
-  ).items;
+  const { circumference, segments } = buildDonutCircleSegments(items, total, radius);
 
   return (
     <figure className="mt-5">

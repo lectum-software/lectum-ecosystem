@@ -2,10 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import dotenv from "dotenv";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
-
-dotenv.config();
 
 /**
  * Ordena recursivamente as chaves de um objeto.
@@ -104,7 +101,9 @@ export const swaggerGenerate = async (
     },
     servers: [
       {
-        url: process.env.BASE || "http://localhost:3001",
+        // O documento versionado nunca incorpora host de ambiente. A URL
+        // relativa funciona no servidor que estiver exibindo a documentação.
+        url: "/",
       },
     ],
     paths: {},

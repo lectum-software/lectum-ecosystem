@@ -1,4 +1,4 @@
-﻿import type { page_view_event, visitor_session } from "@/interfaces/objects";
+import type { page_view_event, visitor_session } from "@/interfaces/objects";
 import type {
   CreatePageViewInput,
   PageViewDurationInput,
@@ -15,5 +15,5 @@ export interface IPageViewTrackingRepository {
     visitorId: string,
     sessionId: string,
     userId?: string | null,
-  ): Promise<visitor_session>;
+  ): Promise<visitor_session | null>;
 }

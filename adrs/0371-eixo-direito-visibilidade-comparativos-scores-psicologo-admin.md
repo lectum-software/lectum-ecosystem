@@ -1,4 +1,4 @@
-﻿# ADR-0371: Eixo direito de visibilidade e comparativos dos scores no psicologo Admin
+# ADR-0371: Eixo direito de visibilidade e comparativos dos scores no psicologo Admin
 
 ## Status
 

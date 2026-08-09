@@ -1,4 +1,3 @@
-import { isIP } from "node:net";
 import { error, msg } from "@/helpers/translate";
 import {
   getPaymentGateway,
@@ -6,6 +5,7 @@ import {
   sanitizePaymentGatewayError,
 } from "@/modules/billing/payment-gateway";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
+import { parseSafeExternalHttpsUrl } from "@/utils/safe-external-url";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
 import { CheckoutRepository } from "../repositories/CheckoutRepository";
 
@@ -40,56 +40,8 @@ const resolvePayerEmail = (authenticatedEmail?: string | null) => {
   return authenticatedEmail?.trim() || null;
 };
 
-const isPrivateIpv4 = (hostname: string) => {
-  const [first = 0, second = 0] = hostname.split(".").map(Number);
-
-  if (first === 10 || first === 127) return true;
-  if (first === 169) return second === 254;
-  if (first === 192) return second === 168;
-
-  return first === 172 && second >= 16 && second <= 31;
-};
-
-const isLocalOrPrivateHostname = (hostname: string) => {
-  const normalizedHostname = hostname.toLowerCase().replace(/^\[|\]$/g, "");
-
-  if (
-    normalizedHostname === "localhost" ||
-    normalizedHostname === "0.0.0.0" ||
-    normalizedHostname === "::1" ||
-    normalizedHostname.endsWith(".local")
-  ) {
-    return true;
-  }
-
-  const ipVersion = isIP(normalizedHostname);
-
-  if (ipVersion === 4) {
-    return isPrivateIpv4(normalizedHostname);
-  }
-
-  if (ipVersion === 6) {
-    return (
-      normalizedHostname.startsWith("fc") ||
-      normalizedHostname.startsWith("fd") ||
-      normalizedHostname.startsWith("fe80")
-    );
-  }
-
-  return false;
-};
-
 const isPublicHttpsUrl = (value?: string | null) => {
-  if (!value) return false;
-
-  try {
-    const url = new URL(value);
-    const hostname = url.hostname.toLowerCase();
-
-    return url.protocol === "https:" && !isLocalOrPrivateHostname(hostname);
-  } catch {
-    return false;
-  }
+  return Boolean(parseSafeExternalHttpsUrl(value));
 };
 
 const resolveGatewayBackUrl = () => {
@@ -121,11 +73,7 @@ const readCompatibleGatewayPlanId = async ({
     return gatewayPlan.gateway_plan_id || gatewayPlanId;
   }
 
-  console.warn("[BILLING] Mercado Pago plan amount mismatch", {
-    expected_amount_cents: expectedAmountCents,
-    gateway_amount_cents: gatewayPlan.amount_cents,
-    plan_slug: plan.slug,
-  });
+  console.warn("[BILLING] Plano externo incompatível com a configuração local.");
 
   return null;
 };
@@ -150,10 +98,10 @@ const readPersistedGatewayPlanId = async ({
       throw err;
     }
 
-    console.warn("[BILLING] Mercado Pago persisted plan not found, resetting local reference", {
-      ...sanitizePaymentGatewayError(err),
-      plan_slug: plan.slug,
-    });
+    console.warn(
+      "[BILLING] Plano externo não encontrado; a referência local será renovada.",
+      sanitizePaymentGatewayError(err),
+    );
 
     return null;
   }
@@ -379,7 +327,10 @@ export default async (data: ICheckoutDTO) => {
   try {
     payerEmail = resolvePayerEmail(data.auth.email);
   } catch (err) {
-    console.error("[BILLING] Mercado Pago payer setup failed", sanitizePaymentGatewayError(err));
+    console.error(
+      "[BILLING] Falha na preparação da cobrança externa.",
+      sanitizePaymentGatewayError(err),
+    );
 
     return {
       status: 503,
@@ -408,7 +359,10 @@ export default async (data: ICheckoutDTO) => {
       returnUrl: gatewayReturnUrl,
     });
   } catch (err) {
-    console.error("[BILLING] Mercado Pago plan setup failed", sanitizePaymentGatewayError(err));
+    console.error(
+      "[BILLING] Falha na preparação do plano externo.",
+      sanitizePaymentGatewayError(err),
+    );
 
     return {
       status: isPaymentGatewayConfigurationError(err) ? 503 : 502,
@@ -525,7 +479,10 @@ export default async (data: ICheckoutDTO) => {
       await repository.cancelSubscription(pendingSubscription.id);
     }
 
-    console.error("[BILLING] Mercado Pago checkout failed", sanitizePaymentGatewayError(err));
+    console.error(
+      "[BILLING] Falha ao iniciar a cobrança externa.",
+      sanitizePaymentGatewayError(err),
+    );
 
     const configError = isPaymentGatewayConfigurationError(err);
 

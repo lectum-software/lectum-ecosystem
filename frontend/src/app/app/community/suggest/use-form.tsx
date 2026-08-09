@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import type { SuggestCommunityPayload } from "@/api/generator/types/community";
 import { type Field, useFormList } from "@/hooks/form";
 

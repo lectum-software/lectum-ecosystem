@@ -1,33 +1,30 @@
 import { Router } from "express";
 
-// Swagger
-import { initializeSwagger } from "@/packages/swagger";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
+import { isSwaggerDocumentationEnabled } from "./runtime-policy";
 
 const route = Router();
 
 const loadSchema = async () => {
+  if (!isSwaggerDocumentationEnabled()) return;
+
   try {
-    const { schema } = await import("./schema");
-    initializeSwagger(
-      route,
-      schema,
-      process.env.DOCS_MODE === "true" ? false : process.env.SWAGGER !== "true",
-      false,
-      "scalar",
-      {
-        withDefaultHeaders: {
-          api: {
-            "x-device": "web",
-          },
+    const [{ initializeSwagger }, { schema }] = await Promise.all([
+      import("@/packages/swagger"),
+      import("./schema"),
+    ]);
+    await initializeSwagger(route, schema, false, false, "scalar", {
+      withDefaultHeaders: {
+        api: {
+          "x-device": "web",
         },
       },
-    );
+    });
   } catch (error) {
     console.warn("O Swagger não será inicializado.", toSafeErrorLog(error, "SwaggerSchemaError"));
   }
 };
 
-loadSchema();
+export const swaggerInitialization = loadSchema();
 
 export default route;

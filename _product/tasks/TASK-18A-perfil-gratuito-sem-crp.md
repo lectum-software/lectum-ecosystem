@@ -379,7 +379,7 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Validacao de servico backend com psicologo temporario real removido ao final: tentativa de alterar `cpf`, `crp_region` e `crp_number` em perfil `admin_grant` com CPF/CRP completos e `crp_status="pendente"` retornou `200`, preservou os valores originais na resposta e manteve `psychologist_profile.cpf/crp` inalterados no banco.
-- Chrome/CDP headless local em `/app/professional/profile/setup`, viewport 390x844, com `tuliosrezende@gmail.com`: `cpf`, `crp_region` e `crp_number` ficaram `disabled`, os valores persistidos foram exibidos, a mensagem de bloqueio apareceu e `scrollWidth=390`; token temporario removido ao final.
+- Chrome/CDP headless local em `/app/professional/profile/setup`, viewport 390x844, com `<CONTA_DE_TESTE_AUTORIZADA>`: `cpf`, `crp_region` e `crp_number` ficaram `disabled`, os valores persistidos foram exibidos, a mensagem de bloqueio apareceu e `scrollWidth=390`; token temporario removido ao final.
 - Verificacao estatica confirmou a regra de bloqueio no frontend/backend e o `undefined` seletivo no repository para impedir overwrite de CPF/CRP bloqueados.
 
 ## Ajuste complementar em 2026-06-24 - confirmacao antes de excluir video de apresentacao
@@ -471,8 +471,8 @@ Validacoes executadas:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp_region="06ª Região - SP"`, `crp_number="161904"` e `identity_fields_locked=true`.
-- Chrome/CDP headless na rota `/app/professional/profile/setup`, viewport mobile 390x844 via URL ngrok, confirmou select `crp_region` desabilitado com valor `06ª Região - SP`, input `crp_number` desabilitado com `161904` e ausencia da faixa `CPF e CRP validados`. Token temporario de validacao removido ao final.
+- Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou `crp_region="<REGIÃO>"`, `crp_number="<REGISTRO>"` e `identity_fields_locked=true`.
+- Chrome/CDP headless na rota `/app/professional/profile/setup`, viewport mobile 390x844 via URL ngrok, confirmou select `crp_region` desabilitado com valor `<REGIÃO>`, input `crp_number` desabilitado com `<REGISTRO>` e ausencia da faixa `CPF e CRP validados`. Token temporario de validacao removido ao final.
 
 ## Ajuste complementar em 2026-07-07 - Data de Nascimento obrigatoria
 
@@ -526,7 +526,7 @@ Criterio complementar:
 Validacoes executadas:
 
 - API local real: `GET /api/private/psychologist/free-profile` com psicologo real em cortesia ativa retornou `status=200`, `plan.source="admin_grant"`, `profile.cfp_verified_at=null` e `profile.identity_fields_locked=true`.
-- Chrome/CDP headless em `http://localhost:3000/app/professional/profile/setup`, viewport mobile 390x844, com psicologo real em cortesia ativa: confirmou `cpf`, `crp_region` e `crp_number` desabilitados, valores `123.456.789-09`, `4ª Região - MG`, `123457`, ausencia de erro de acesso e `scrollWidth=390`.
+- Chrome/CDP headless em `http://localhost:3000/app/professional/profile/setup`, viewport mobile 390x844, com psicologo real em cortesia ativa: confirmou `cpf`, `crp_region` e `crp_number` desabilitados, valores `<CPF_DE_TESTE>`, `<REGIÃO>`, `<REGISTRO>`, ausencia de erro de acesso e `scrollWidth=390`.
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm --dir frontend check`

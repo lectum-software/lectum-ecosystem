@@ -1,4 +1,4 @@
-﻿# ADR-0022: Contato WhatsApp por wa.me com intenção persistida
+# ADR-0022: Contato WhatsApp por wa.me com intenção persistida
 
 ## Status
 

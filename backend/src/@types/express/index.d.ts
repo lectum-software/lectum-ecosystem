@@ -12,7 +12,6 @@ declare global {
       include: any;
       allowed: string[];
       uploadFeature?: string;
-      public: boolean;
       feature: string;
       cookies: Record<string, string | undefined>;
       device: string;

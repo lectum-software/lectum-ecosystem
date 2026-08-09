@@ -1,4 +1,4 @@
-﻿# ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional
+# ADR-0096 - Detalhe de post com composer compacto, denúncia e mídia profissional
 
 ## Status
 
@@ -55,7 +55,7 @@ Validacao adicional:
 - `pnpm --dir backend exec biome check --write src/utils/subscription-entitlement.ts src/modules/api/private/posts/repositories/PostRepository.ts`
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
-- Script local confirmou `canAttachReplyMedia=true` para `tuliosrezende@gmail.com` com assinatura `admin_grant` ativa e `cfp_verified_at=null`.
+- Script local confirmou `canAttachReplyMedia=true` para `<CONTA_DE_TESTE_AUTORIZADA>` com assinatura `admin_grant` ativa e `cfp_verified_at=null`.
 - Service real `authorizeReplyMediaUpload` retornou `status=200` para um post publicado existente, sem criar midia fake.
 
 ## Atualizacao 2026-06-21 - icone de video no composer de respostas

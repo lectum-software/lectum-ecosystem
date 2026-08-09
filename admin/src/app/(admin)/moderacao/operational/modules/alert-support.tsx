@@ -1,7 +1,7 @@
 import type { AdminModerationOperationalAlert } from "@/api/req/moderation";
 import { cn } from "@/lib/utils";
 
-import { operationalTypeLabels } from "./report-support";
+import { operationalTypeLabel } from "./report-support";
 
 export const operationalTablePendingLabels: Partial<
   Record<AdminModerationOperationalAlert["type"], string>
@@ -22,7 +22,7 @@ export const operationalTablePendingClass: Partial<
 };
 
 export const operationalTablePendingLabel = (alert: AdminModerationOperationalAlert) =>
-  operationalTablePendingLabels[alert.type] ?? operationalTypeLabels[alert.type];
+  operationalTablePendingLabels[alert.type] ?? operationalTypeLabel(alert.type);
 
 export const alertUserName = (alert: AdminModerationOperationalAlert) =>
   alert.user?.name ?? alert.professional?.name ?? alert.entity.label;

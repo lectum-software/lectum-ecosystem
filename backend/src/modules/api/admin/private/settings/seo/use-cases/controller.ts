@@ -1,4 +1,4 @@
-﻿import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import type {
   IAdminSettingsSeoDTO,

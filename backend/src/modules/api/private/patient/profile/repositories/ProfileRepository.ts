@@ -4,6 +4,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { patient_profile } from "@/interfaces/objects";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { publicFileKeyFromUrl } from "@/utils/public-origin";
 import type { IUpdateProfileDTO, PatientPrivateProfileResponse } from "../DTOs/IProfileDTO";
 import type { IProfileRepository } from "./interfaces/IProfileRepository";
 
@@ -18,19 +19,7 @@ const userSelect = {
 } satisfies Prisma.userSelect;
 
 const publicPatientAvatarKeyFromUrl = (value?: string | null) => {
-  if (!value) return null;
-
-  try {
-    const url = new URL(value, process.env.BASE || "http://localhost");
-    const prefix = "/public/files/";
-
-    if (!url.pathname.startsWith(prefix)) return null;
-
-    const key = decodeURIComponent(url.pathname.slice(prefix.length));
-    return key.startsWith("patient/avatar/") ? key : null;
-  } catch (_err) {
-    return null;
-  }
+  return publicFileKeyFromUrl(value, ["patient/avatar/"]);
 };
 
 const deletePublicPatientAvatar = async (value?: string | null) => {

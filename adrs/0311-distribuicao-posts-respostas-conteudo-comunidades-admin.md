@@ -1,4 +1,4 @@
-﻿# ADR-0311: Distribuição de posts e respostas por tipo de conteúdo em comunidades Admin
+# ADR-0311: Distribuição de posts e respostas por tipo de conteúdo em comunidades Admin
 
 ## Status
 

@@ -54,13 +54,6 @@ export type ContentVideoWatchUpsertInput = {
 };
 
 export type ContentVideoWatchResult = {
-  completed: boolean;
-  id: string | null;
-  session_id: string;
-  skipped_reason: "self_view" | null;
-  target_id: string;
-  target_type: ContentVideoWatchTargetType;
+  skipped_reason: "self_view" | "session_unavailable" | null;
   tracked: boolean;
-  user_id: string | null;
-  visitor_id: string;
 };

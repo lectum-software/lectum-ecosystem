@@ -12,14 +12,13 @@ import {
   useReportPost,
   useReportReply,
   useSavePost,
-  useSharePost,
-  useShareReply,
   useUploadPostReplyMedia,
   useVotePost,
 } from "@/api/callers/posts";
 import type { PostReply } from "@/api/generator/types/posts";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
   createLectumShareLinkTarget,
@@ -100,8 +99,7 @@ export const usePostDetailController = () => {
   );
   const voteMutation = useVotePost(postId);
   const saveMutation = useSavePost(postId);
-  const sharePostMutation = useSharePost();
-  const shareReplyMutation = useShareReply();
+  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyError(error)),
@@ -302,15 +300,7 @@ export const usePostDetailController = () => {
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    if (shareVideoTarget.replyId) {
-      shareReplyMutation.mutate({
-        postId: shareVideoTarget.postId,
-        replyId: shareVideoTarget.replyId,
-        body: { channel },
-      });
-    } else {
-      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
-    }
+    trackLectumShare(channel);
     setShareFeedback(shareVideoTarget.replyId ?? "post");
     window.setTimeout(() => setShareFeedback(null), 2400);
   };

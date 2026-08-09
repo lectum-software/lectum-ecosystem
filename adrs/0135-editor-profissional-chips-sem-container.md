@@ -1,4 +1,4 @@
-﻿# ADR-0135: Chips sem container externo no editor profissional
+# ADR-0135: Chips sem container externo no editor profissional
 
 ## Status
 

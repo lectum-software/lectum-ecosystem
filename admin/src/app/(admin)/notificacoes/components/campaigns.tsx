@@ -2,12 +2,13 @@
 import { ChevronLeft, ChevronRight, Edit3, Eye, Loader2, Plus, Trash2, X } from "lucide-react";
 import type { ReactNode } from "react";
 import type { AdminNotificationCampaign } from "@/api/req/notifications";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import {
   audienceLabel,
+  campaignStatusCopy,
   channelText,
   formatDateTime,
   numberFormatter,
-  STATUS_COPY,
 } from "../modules/notification-support";
 import { CardShell, ChannelPill, StatusBadge } from "./table";
 
@@ -17,47 +18,59 @@ export const CampaignDetailsModal = ({
 }: {
   campaign: AdminNotificationCampaign;
   onClose: () => void;
-}) => (
-  <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center">
-    <CardShell className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto p-5 sm:p-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Detalhes</p>
-          <h2 className="mt-2 text-2xl font-black text-foreground">{campaign.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-muted">{campaign.body}</p>
-        </div>
-        <button
-          aria-label="Fechar detalhes"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted transition hover:text-foreground"
-          onClick={onClose}
-          type="button"
-        >
-          <X aria-hidden className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {[
-          ["Status", STATUS_COPY[campaign.status].label],
-          ["Público", audienceLabel(campaign.audience)],
-          ["Canais", channelText(campaign.channels)],
-          ["Redirect", campaign.redirect || "—"],
-          ["Criada em", formatDateTime(campaign.created_at)],
-          ["Agendada para", formatDateTime(campaign.scheduled_at)],
-          ["Enviada em", formatDateTime(campaign.sent_at)],
-          ["Entregas totais", numberFormatter.format(campaign.delivery_counts.total)],
-        ].map(([label, value]) => (
-          <div className="rounded-2xl border border-border bg-surface-muted p-3" key={label}>
-            <p className="text-xs font-black text-muted">{label}</p>
-            <p className="mt-1 break-words text-sm font-black text-foreground">{value}</p>
+}) => {
+  const dialogRef = useAdminDialogLifecycle(onClose);
+
+  return (
+    <div
+      aria-label="Detalhes da notificação"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-3 sm:items-center"
+      ref={dialogRef}
+      role="dialog"
+      tabIndex={-1}
+    >
+      <CardShell className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Detalhes</p>
+            <h2 className="mt-2 text-2xl font-black text-foreground">{campaign.title}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">{campaign.body}</p>
           </div>
-        ))}
-      </div>
-    </CardShell>
-  </div>
-);
+          <button
+            aria-label="Fechar detalhes"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface text-muted transition hover:text-foreground"
+            onClick={onClose}
+            type="button"
+          >
+            <X aria-hidden className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {[
+            ["Status", campaignStatusCopy(campaign.status).label],
+            ["Público", audienceLabel(campaign.audience)],
+            ["Canais", channelText(campaign.channels)],
+            ["Destino interno", campaign.redirect || "—"],
+            ["Criada em", formatDateTime(campaign.created_at)],
+            ["Agendada para", formatDateTime(campaign.scheduled_at)],
+            ["Enviada em", formatDateTime(campaign.sent_at)],
+            ["Entregas totais", numberFormatter.format(campaign.delivery_counts.total)],
+          ].map(([label, value]) => (
+            <div className="rounded-2xl border border-border bg-surface-muted p-3" key={label}>
+              <p className="text-xs font-black text-muted">{label}</p>
+              <p className="mt-1 break-words text-sm font-black text-foreground">{value}</p>
+            </div>
+          ))}
+        </div>
+      </CardShell>
+    </div>
+  );
+};
 
 export const CampaignsList = ({
   campaigns,
+  cancelingCampaignId,
   count,
   filtersSlot,
   isFetching,
@@ -71,6 +84,7 @@ export const CampaignsList = ({
   pages,
 }: {
   campaigns: AdminNotificationCampaign[];
+  cancelingCampaignId?: string | null;
   count: number;
   filtersSlot: ReactNode;
   isFetching: boolean;
@@ -109,7 +123,12 @@ export const CampaignsList = ({
       </div>
     </div>
     {filtersSlot}
-    {campaigns.length === 0 ? (
+    {isFetching && campaigns.length === 0 ? (
+      <div className="flex items-center gap-2 p-6 text-sm font-bold text-muted">
+        <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+        Carregando notificações manuais...
+      </div>
+    ) : campaigns.length === 0 ? (
       <div className="p-6 text-sm font-bold text-muted">
         Nenhuma notificação manual encontrada para os filtros atuais.
       </div>
@@ -175,12 +194,17 @@ export const CampaignsList = ({
                     ) : null}
                     {campaign.status === "draft" || campaign.status === "scheduled" ? (
                       <button
-                        className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-surface text-danger transition hover:border-danger"
+                        className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-surface text-danger transition hover:border-danger disabled:cursor-wait disabled:opacity-60"
+                        disabled={Boolean(cancelingCampaignId)}
                         onClick={() => onCancel(campaign)}
                         title="Cancelar"
                         type="button"
                       >
-                        <Trash2 aria-hidden className="h-4 w-4" />
+                        {cancelingCampaignId === campaign.id ? (
+                          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 aria-hidden className="h-4 w-4" />
+                        )}
                       </button>
                     ) : null}
                   </div>
@@ -191,16 +215,18 @@ export const CampaignsList = ({
         </table>
       </div>
     )}
-    <Pager onNext={onNext} onPrev={onPrev} page={page} pages={pages} />
+    <Pager disabled={isFetching} onNext={onNext} onPrev={onPrev} page={page} pages={pages} />
   </CardShell>
 );
 
 export const Pager = ({
+  disabled = false,
   onNext,
   onPrev,
   page,
   pages,
 }: {
+  disabled?: boolean;
   onNext: () => void;
   onPrev: () => void;
   page: number;
@@ -213,7 +239,7 @@ export const Pager = ({
     <div className="flex gap-2">
       <button
         className="inline-flex h-10 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-black text-muted disabled:opacity-50"
-        disabled={page <= 1}
+        disabled={disabled || page <= 1}
         onClick={onPrev}
         type="button"
       >
@@ -222,7 +248,7 @@ export const Pager = ({
       </button>
       <button
         className="inline-flex h-10 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm font-black text-muted disabled:opacity-50"
-        disabled={page >= pages}
+        disabled={disabled || page >= pages}
         onClick={onNext}
         type="button"
       >

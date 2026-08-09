@@ -2,7 +2,12 @@
 
 import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { useAdminPsychologistRegistryVerification } from "@/api/callers/psychologists";
+import {
+  useAdminPsychologistApproveRegistryVerification,
+  useAdminPsychologistRegistryVerification,
+  useAdminPsychologistRejectRegistryVerification,
+  useAdminPsychologistUpdateRegistryIdentity,
+} from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import { CardShell, ErrorState, IconCircle } from "../../components/shared";
 import type { RegistryIdentityFormValues } from "../../support/schemas";
@@ -20,6 +25,9 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
   const [action, setAction] = useState<"approve" | "reject" | "save" | null>(null);
   const [identityDraft, setIdentityDraft] = useState<RegistryIdentityFormValues | null>(null);
   const query = useAdminPsychologistRegistryVerification(id);
+  const saveMutation = useAdminPsychologistUpdateRegistryIdentity(id);
+  const approveMutation = useAdminPsychologistApproveRegistryVerification(id);
+  const rejectMutation = useAdminPsychologistRejectRegistryVerification(id);
   const errorMessage = query.error ? resolveApiError(query.error) : null;
 
   if (query.isLoading) {
@@ -87,10 +95,14 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
       </div>
 
       {action === "save" && identityDraft ? (
-        <RegistryVerificationDialog onClose={() => setAction(null)} title="Salvar registro">
+        <RegistryVerificationDialog
+          onClose={() => setAction(null)}
+          pending={saveMutation.isPending}
+          title="Salvar registro"
+        >
           <RegistrySaveIdentityForm
-            id={id}
             identityDraft={identityDraft}
+            mutation={saveMutation}
             onClose={() => setAction(null)}
             registry={registry}
           />
@@ -98,10 +110,14 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
       ) : null}
 
       {action === "approve" && registry.actions.can_approve_manually ? (
-        <RegistryVerificationDialog onClose={() => setAction(null)} title="Aprovar CRP manualmente">
+        <RegistryVerificationDialog
+          onClose={() => setAction(null)}
+          pending={approveMutation.isPending}
+          title="Aprovar CRP manualmente"
+        >
           <RegistryApproveForm
-            id={id}
             identityDraft={identityDraft}
+            mutation={approveMutation}
             onClose={() => setAction(null)}
             registry={registry}
           />
@@ -109,8 +125,12 @@ export const RegistryVerificationCard = ({ id }: { id: string }) => {
       ) : null}
 
       {action === "reject" && registry.actions.can_reject_manually ? (
-        <RegistryVerificationDialog onClose={() => setAction(null)} title="Rejeitar verificação">
-          <RegistryRejectForm id={id} onClose={() => setAction(null)} />
+        <RegistryVerificationDialog
+          onClose={() => setAction(null)}
+          pending={rejectMutation.isPending}
+          title="Rejeitar verificação"
+        >
+          <RegistryRejectForm mutation={rejectMutation} onClose={() => setAction(null)} />
         </RegistryVerificationDialog>
       ) : null}
     </CardShell>

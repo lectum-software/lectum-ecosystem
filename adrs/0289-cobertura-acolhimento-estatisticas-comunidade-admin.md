@@ -1,4 +1,4 @@
-﻿# ADR-0289: Cobertura de acolhimento nas estatísticas da comunidade
+# ADR-0289: Cobertura de acolhimento nas estatísticas da comunidade
 
 ## Status
 

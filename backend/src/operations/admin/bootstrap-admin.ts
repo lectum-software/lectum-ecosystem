@@ -1,7 +1,8 @@
-﻿import "dotenv/config";
+import "@/config/dotenv";
 
 import prisma from "@/infra/database/prisma";
 import { encrypt } from "@/utils/crypt";
+import { assertDisposableLocalDatabaseTarget } from "@/utils/local-database-safety";
 
 const help = `Cria ou atualiza o primeiro administrador da Lectum.
 
@@ -127,6 +128,7 @@ const parseArgs = (argv: string[]): BootstrapArgs | null => {
 };
 
 const bootstrapAdmin = async (args: BootstrapArgs) => {
+  assertDisposableLocalDatabaseTarget(process.env, "Bootstrap administrativo");
   const passwordHash = await encrypt(args.password);
   const existing = await prisma.admin.findUnique({
     where: {
@@ -204,13 +206,21 @@ const main = async () => {
   if (!args) return;
 
   const result = await bootstrapAdmin(args);
-  console.log(JSON.stringify(result, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        action: result.action,
+        success: true,
+      },
+      null,
+      2,
+    ),
+  );
 };
 
 main()
-  .catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : "Erro desconhecido.";
-    console.error(message);
+  .catch((_error: unknown) => {
+    console.error("Não foi possível concluir a operação de administrador.");
     process.exitCode = 1;
   })
   .finally(async () => {

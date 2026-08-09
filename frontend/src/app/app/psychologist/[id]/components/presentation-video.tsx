@@ -16,6 +16,8 @@ import {
   PRESENTATION_VIDEO_RETENTION_BUCKETS,
 } from "../modules/support";
 
+const MAX_TRACKED_SECONDS = 24 * 60 * 60;
+
 export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const currentUser = useAppSelector((state) => state.user);
   const { mutate: trackVideoWatch } = useDirectoryPsychologistVideoWatch(profile.id);
@@ -48,9 +50,12 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
       if (!force && now - lastSentAtRef.current < 5000) return;
 
       const durationSeconds = Number.isFinite(video.duration)
-        ? Math.max(0, Math.round(video.duration))
+        ? Math.min(MAX_TRACKED_SECONDS, Math.max(0, Math.round(video.duration)))
         : 0;
-      const maxPositionSeconds = Math.max(0, Math.round(maxPositionRef.current));
+      const maxPositionSeconds = Math.min(
+        MAX_TRACKED_SECONDS,
+        Math.max(0, Math.round(maxPositionRef.current)),
+      );
       const watchedSeconds = Math.max(0, watchedSecondsRef.current.size);
 
       if (watchedSeconds === 0 && maxPositionSeconds === 0 && !completed) return;
@@ -127,9 +132,9 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
         if (!documentHasUserAttention()) return;
 
         const start = Math.max(0, Math.floor(Math.min(from, to)));
-        const end = Math.max(0, Math.ceil(Math.max(from, to)));
+        const end = Math.min(MAX_TRACKED_SECONDS, Math.max(0, Math.ceil(Math.max(from, to))));
 
-        for (let second = start; second <= end; second += 1) {
+        for (let second = start; second < end; second += 1) {
           watchedSecondsRef.current.add(second);
         }
       };
@@ -162,7 +167,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
 
         if (!video.paused && currentTime >= previousTime) {
           addWatchedRange(previousTime, currentTime);
-        } else {
+        } else if (!video.paused) {
           watchedSecondsRef.current.add(Math.max(0, Math.floor(currentTime)));
         }
 
@@ -230,6 +235,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
       window.addEventListener("pagehide", handlePageHide);
 
       cleanupTrackingRef.current = () => {
+        flushVideoAnalytics(video, false, true);
         video.removeEventListener("play", handlePlay);
         video.removeEventListener("timeupdate", handleTimeUpdate);
         video.removeEventListener("ended", handleEnded);

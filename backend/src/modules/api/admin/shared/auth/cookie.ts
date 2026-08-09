@@ -1,6 +1,7 @@
 import type { CookieOptions, Request, Response } from "express";
 import type { Resolve } from "@/helpers/return";
-import { getAdminJwtTtlSeconds, isProductionRuntime } from "@/utils/runtime-config";
+import { getJwtCookieMaxAge } from "@/utils/jwt-cookie-ttl";
+import { getAdminJwtTtlSeconds, isPublishedRuntime } from "@/utils/runtime-config";
 
 export const ADMIN_AUTH_COOKIE_NAME = "lectum_admin_session";
 export const ADMIN_COOKIE_AUTH_HEADER = "x-requested-with";
@@ -8,12 +9,12 @@ export const ADMIN_COOKIE_AUTH_CAPABILITY = "Lectum-Admin-Cookie-Auth";
 
 const MAX_ADMIN_TOKEN_LENGTH = 4_096;
 
-const adminCookieOptions = (): CookieOptions => ({
+const adminCookieOptions = (maxAge = getAdminJwtTtlSeconds() * 1_000): CookieOptions => ({
   httpOnly: true,
-  maxAge: getAdminJwtTtlSeconds() * 1_000,
+  maxAge,
   path: "/api/admin",
   sameSite: "strict",
-  secure: isProductionRuntime(),
+  secure: isPublishedRuntime(),
 });
 
 const normalizeToken = (value: unknown) => {
@@ -32,14 +33,27 @@ export const getAdminBearerToken = (request: Request) => {
   return normalizeToken(authorization.slice("Bearer ".length));
 };
 
-export const getAdminRequestToken = (request: Request) =>
-  getAdminBearerToken(request) ?? normalizeToken(request.cookies?.[ADMIN_AUTH_COOKIE_NAME]);
+const isAdminCookieAuthCapable = (request: Request) =>
+  request.get(ADMIN_COOKIE_AUTH_HEADER) === ADMIN_COOKIE_AUTH_CAPABILITY;
+
+export const getAdminRequestToken = (request: Request) => {
+  const bearer = getAdminBearerToken(request);
+  if (bearer) return bearer;
+  if (!isAdminCookieAuthCapable(request)) return null;
+
+  return normalizeToken(request.cookies?.[ADMIN_AUTH_COOKIE_NAME]);
+};
 
 export const setAdminAuthCookie = (response: Response, token: string) => {
   const normalized = normalizeToken(token);
   if (!normalized) return;
+  const maxAge = getJwtCookieMaxAge({
+    defaultMaxAge: getAdminJwtTtlSeconds() * 1_000,
+    token: normalized,
+  });
+  if (maxAge <= 0) return;
 
-  response.cookie(ADMIN_AUTH_COOKIE_NAME, normalized, adminCookieOptions());
+  response.cookie(ADMIN_AUTH_COOKIE_NAME, normalized, adminCookieOptions(maxAge));
 };
 
 export const clearAdminAuthCookie = (response: Response) => {
@@ -78,7 +92,7 @@ export const applyAdminAuthCookie = (request: Request, response: Response, resol
   const token = readTokenFromResolve(resolve);
   if (token) setAdminAuthCookie(response, token);
 
-  if (request.get(ADMIN_COOKIE_AUTH_HEADER) !== ADMIN_COOKIE_AUTH_CAPABILITY) return resolve;
+  if (!isAdminCookieAuthCapable(request)) return resolve;
 
   return {
     ...resolve,

@@ -1,22 +1,23 @@
 "use client";
 
-import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import {
   type MouseEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
-
+import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
 import {
   clampNumber,
+  fetchBoundedVideoBlob,
   fitClassName,
-  formatVideoTime,
   getReadableVideoDuration,
   MOBILE_FULLSCREEN_MEDIA_QUERY,
   type StoredVideoStyle,
@@ -24,6 +25,14 @@ import {
   type VerticalVideoPlayerProps,
   waitForVideoEvent,
 } from "./vertical-video-player-support";
+
+type BlobBackedVideoRequest = {
+  controller: AbortController;
+  promise: Promise<boolean>;
+  source: string;
+};
+
+const SEEK_FALLBACK_TIMEOUT_MS = 15_000;
 
 export const VerticalVideoPlayer = ({
   className,
@@ -43,13 +52,15 @@ export const VerticalVideoPlayer = ({
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const storedFullscreenStylesRef = useRef<StoredVideoStyle[] | null>(null);
+  const latestSourceRef = useRef(src);
   const isSeekingRef = useRef(false);
   const blobBackedVideoRef = useRef<{ source: string; url: string } | null>(null);
-  const blobBackedVideoPromiseRef = useRef<Promise<boolean> | null>(null);
+  const blobBackedVideoRequestRef = useRef<BlobBackedVideoRequest | null>(null);
   const persistentSeekVerificationTimerRef = useRef<number | null>(null);
   const persistentProgressPointerIdRef = useRef<number | null>(null);
   const persistentProgressTrackRef = useRef<HTMLDivElement | null>(null);
   const wasPlayingBeforePersistentSeekRef = useRef(false);
+  const persistentReadySeekCleanupRef = useRef<(() => void) | null>(null);
   const [isPaused, setIsPaused] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -67,6 +78,10 @@ export const VerticalVideoPlayer = ({
   } = videoProps ?? {};
   const defaultNativeControlsList = "nodownload noplaybackrate noremoteplayback";
 
+  useLayoutEffect(() => {
+    latestSourceRef.current = src;
+  }, [src]);
+
   useEffect(() => {
     onVideoElementReady?.(videoRef.current);
 
@@ -80,6 +95,15 @@ export const VerticalVideoPlayer = ({
       if (persistentSeekVerificationTimerRef.current) {
         window.clearTimeout(persistentSeekVerificationTimerRef.current);
         persistentSeekVerificationTimerRef.current = null;
+      }
+
+      persistentReadySeekCleanupRef.current?.();
+      persistentReadySeekCleanupRef.current = null;
+
+      const activeRequest = blobBackedVideoRequestRef.current;
+      if (activeRequest?.source === effectSource) {
+        activeRequest.controller.abort();
+        blobBackedVideoRequestRef.current = null;
       }
 
       const currentBlobBackedVideo = blobBackedVideoRef.current;
@@ -247,37 +271,62 @@ export const VerticalVideoPlayer = ({
         return Promise.resolve(true);
       }
 
-      if (blobBackedVideoPromiseRef.current) {
-        return blobBackedVideoPromiseRef.current;
+      const pendingRequest = blobBackedVideoRequestRef.current;
+      if (pendingRequest?.source === src) {
+        return pendingRequest.promise;
       }
+
+      pendingRequest?.controller.abort();
+
+      const source = src;
+      const controller = new AbortController();
+      let request: BlobBackedVideoRequest | null = null;
 
       const promise = (async () => {
         const previousTime = video.currentTime || targetTime;
         const wasPaused = video.paused || video.ended;
+        const timeout = window.setTimeout(() => controller.abort(), SEEK_FALLBACK_TIMEOUT_MS);
+
+        const isCurrentRequest = () =>
+          !controller.signal.aborted &&
+          request !== null &&
+          blobBackedVideoRequestRef.current === request &&
+          videoRef.current === video &&
+          latestSourceRef.current === source;
 
         try {
-          const response = await fetch(src, {
-            cache: "force-cache",
-          });
+          const blob = await fetchBoundedVideoBlob(source, controller.signal);
+          if (!blob || !isCurrentRequest()) return false;
 
-          if (!response.ok) return false;
-
-          const blob = await response.blob();
           const objectUrl = URL.createObjectURL(blob);
+
+          if (!isCurrentRequest()) {
+            URL.revokeObjectURL(objectUrl);
+            return false;
+          }
 
           if (blobBackedVideoRef.current) {
             URL.revokeObjectURL(blobBackedVideoRef.current.url);
           }
 
           blobBackedVideoRef.current = {
-            source: src,
+            source,
             url: objectUrl,
           };
 
           video.src = objectUrl;
           video.load();
 
-          await waitForVideoEvent(video, "loadedmetadata");
+          await waitForVideoEvent(video, "loadedmetadata", controller.signal);
+
+          if (!isCurrentRequest()) {
+            const currentBlobBackedVideo = blobBackedVideoRef.current;
+            if (currentBlobBackedVideo?.url === objectUrl) {
+              blobBackedVideoRef.current = null;
+            }
+            URL.revokeObjectURL(objectUrl);
+            return false;
+          }
 
           const duration = getReadableVideoDuration(video);
           const restoredTime = clampNumber(targetTime || previousTime, 0, duration || targetTime);
@@ -296,13 +345,22 @@ export const VerticalVideoPlayer = ({
           return true;
         } catch {
           return false;
+        } finally {
+          window.clearTimeout(timeout);
         }
       })();
 
-      blobBackedVideoPromiseRef.current = promise;
+      request = {
+        controller,
+        promise,
+        source,
+      };
+      blobBackedVideoRequestRef.current = request;
 
       promise.finally(() => {
-        blobBackedVideoPromiseRef.current = null;
+        if (blobBackedVideoRequestRef.current === request) {
+          blobBackedVideoRequestRef.current = null;
+        }
       });
 
       return promise;
@@ -319,6 +377,8 @@ export const VerticalVideoPlayer = ({
 
       const clampedTime = clampNumber(nextTime, 0, resolvedDuration);
       const commitSeek = () => {
+        if (videoRef.current !== video) return;
+
         try {
           if ("fastSeek" in video && typeof video.fastSeek === "function") {
             video.fastSeek(clampedTime);
@@ -334,15 +394,26 @@ export const VerticalVideoPlayer = ({
 
       commitSeek();
 
-      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-        const commitWhenReady = () => commitSeek();
+      persistentReadySeekCleanupRef.current?.();
+      persistentReadySeekCleanupRef.current = null;
 
-        video.addEventListener("canplay", commitWhenReady, {
-          once: true,
-        });
-        video.addEventListener("loadeddata", commitWhenReady, {
-          once: true,
-        });
+      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+        const removeReadyListeners = () => {
+          video.removeEventListener("canplay", commitWhenReady);
+          video.removeEventListener("loadeddata", commitWhenReady);
+          if (persistentReadySeekCleanupRef.current === removeReadyListeners) {
+            persistentReadySeekCleanupRef.current = null;
+          }
+        };
+        const commitWhenReady = () => {
+          removeReadyListeners();
+          commitSeek();
+        };
+
+        persistentReadySeekCleanupRef.current = removeReadyListeners;
+
+        video.addEventListener("canplay", commitWhenReady);
+        video.addEventListener("loadeddata", commitWhenReady);
       }
 
       if (persistentSeekVerificationTimerRef.current) {
@@ -560,84 +631,21 @@ export const VerticalVideoPlayer = ({
         type="button"
       />
       {usesPersistentControls ? (
-        <div
-          data-lectum-video-player-controls="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] px-4 text-primary-foreground"
-          style={{
-            paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
-          }}
-        >
-          <div
-            className="pointer-events-auto [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.78))]"
-            style={{ touchAction: "none" }}
-          >
-            <div
-              aria-label={`Progresso do vídeo: ${title}`}
-              aria-valuemax={Math.round(duration)}
-              aria-valuemin={0}
-              aria-valuenow={Math.round(currentTime)}
-              className="relative flex h-7 w-full cursor-pointer items-center outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70"
-              onKeyDown={handlePersistentProgressKeyDown}
-              onPointerCancel={handlePersistentProgressPointerEnd}
-              onPointerDown={handlePersistentProgressPointerDown}
-              onPointerMove={handlePersistentProgressPointerMove}
-              onPointerUp={handlePersistentProgressPointerEnd}
-              ref={persistentProgressTrackRef}
-              role="slider"
-              tabIndex={0}
-              style={{ touchAction: "none" }}
-            >
-              <span
-                aria-hidden="true"
-                className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-media-background/35"
-              />
-              <span
-                aria-hidden="true"
-                className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-surface"
-                style={{ width: `${persistentProgressRatio * 100}%` }}
-              />
-              <span
-                aria-hidden="true"
-                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface shadow-lectum-soft"
-                style={{ left: `${persistentProgressRatio * 100}%` }}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                aria-label={isPaused ? `Reproduzir vídeo: ${title}` : `Pausar vídeo: ${title}`}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95"
-                onClick={handlePersistentPlayPause}
-                onPointerDown={(event) => event.stopPropagation()}
-                type="button"
-              >
-                {isPaused ? (
-                  <Play className="ml-0.5 h-[18px] w-[18px] fill-current" />
-                ) : (
-                  <Pause className="h-[18px] w-[18px] fill-current" />
-                )}
-              </button>
-
-              <span className="min-w-0 flex-1 text-[12px] font-semibold tabular-nums text-primary-foreground">
-                {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
-              </span>
-
-              <button
-                aria-label={isMuted ? `Ativar som do vídeo: ${title}` : `Mutar vídeo: ${title}`}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95"
-                onClick={handlePersistentMuteToggle}
-                onPointerDown={(event) => event.stopPropagation()}
-                type="button"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-[18px] w-[18px]" />
-                ) : (
-                  <Volume2 className="h-[18px] w-[18px]" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        <VerticalVideoPlayerPersistentControls
+          currentTime={currentTime}
+          duration={duration}
+          isMuted={isMuted}
+          isPaused={isPaused}
+          onMuteToggle={handlePersistentMuteToggle}
+          onPlayPause={handlePersistentPlayPause}
+          onProgressKeyDown={handlePersistentProgressKeyDown}
+          onProgressPointerDown={handlePersistentProgressPointerDown}
+          onProgressPointerEnd={handlePersistentProgressPointerEnd}
+          onProgressPointerMove={handlePersistentProgressPointerMove}
+          progressRatio={persistentProgressRatio}
+          progressTrackRef={persistentProgressTrackRef}
+          title={title}
+        />
       ) : null}
       {usesMinimalControls ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-media-background/80 via-media-background/45 to-transparent px-4 pb-4 pt-12">

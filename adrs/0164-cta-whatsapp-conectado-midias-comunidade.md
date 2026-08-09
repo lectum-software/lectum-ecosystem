@@ -1,4 +1,4 @@
-﻿# ADR-0164 — CTA de WhatsApp conectado às mídias da comunidade
+# ADR-0164 — CTA de WhatsApp conectado às mídias da comunidade
 
 Data: 2026-06-24
 Status: Aceita

@@ -7,6 +7,7 @@ import { useAdminPsychologistsList } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type { PsychologistsListQuery, PsychologistsListSort } from "@/api/req/psychologists";
 import { AdminPagination } from "@/components/admin-shell/pagination";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { cn } from "@/lib/utils";
 import {
   ActiveFiltersSummary,
@@ -91,6 +92,7 @@ export const AdminPsychologistsListClient = () => {
       filterCloseTimerRef.current = null;
     }, FILTER_MODAL_CLOSE_DELAY_MS);
   }, []);
+  const filtersDialogRef = useAdminDialogLifecycle(closeFilters, { enabled: filtersOpen });
 
   const openFilters = useCallback(() => {
     if (filterCloseTimerRef.current) {
@@ -152,24 +154,6 @@ export const AdminPsychologistsListClient = () => {
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
     closeFilters();
   };
-
-  useEffect(() => {
-    if (!filtersOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeFilters();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [closeFilters, filtersOpen]);
 
   useEffect(
     () => () => {
@@ -289,12 +273,15 @@ export const AdminPsychologistsListClient = () => {
             "fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 text-foreground backdrop-blur-sm transition-opacity duration-200 sm:items-center sm:p-6",
             filtersSheetOpen ? "opacity-100" : "opacity-0",
           )}
+          ref={filtersDialogRef}
           role="dialog"
+          tabIndex={-1}
         >
           <button
             aria-label="Fechar filtros"
             className="absolute inset-0"
             onClick={closeFilters}
+            tabIndex={-1}
             type="button"
           />
           <div

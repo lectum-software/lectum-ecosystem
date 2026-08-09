@@ -271,7 +271,7 @@ Validacao complementar:
 - `pnpm --dir backend build`
 - `pnpm --dir frontend build`
 - `pnpm check`
-- Smoke real do endpoint `POST /api/private/community/ansiedade-em-equilibrio/posts/media` com token temporario para `tuliosrezende@gmail.com`, upload em R2 no prefixo `posts/media/` e remocao do objeto ao final.
+- Smoke real do endpoint `POST /api/private/community/ansiedade-em-equilibrio/posts/media` com token temporario para `<CONTA_DE_TESTE_AUTORIZADA>`, upload em R2 no prefixo `posts/media/` e remocao do objeto ao final.
 - Chrome/CDP autenticado em `/app/community/ansiedade-em-equilibrio/post/new` validou botao `Midia` habilitado, input aceitando `video/mp4` e ausencia da copy antiga de R2 pendente.
 
 ## Atualização 2026-06-21 - miniatura local de mídia no editor

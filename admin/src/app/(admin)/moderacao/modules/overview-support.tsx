@@ -26,17 +26,6 @@ export const overviewDateFormatter = new Intl.DateTimeFormat("pt-BR", {
   month: "short",
 });
 
-export const categoryLabels: Record<string, string> = {
-  abuse_violence: "Abuso/violência",
-  explicit_sexual: "Sexual explícito",
-  external_link: "Link externo",
-  minor_sexual_risk: "Menor/risco sexual",
-  other: "Outro",
-  self_harm_suicide: "Autolesão/suicídio",
-  sexual_health: "Saúde sexual",
-  spam_scam: "Spam/golpe",
-};
-
 export type ModerationChartPoint = {
   date: string;
   [key: string]: unknown;

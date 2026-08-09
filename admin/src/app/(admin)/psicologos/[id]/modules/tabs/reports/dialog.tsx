@@ -18,6 +18,7 @@ import { useAdminPsychologistResolveReport } from "@/api/callers/psychologists";
 import { resolveApiError } from "@/api/handle";
 import type { AdminPsychologistReportItem } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { formatDateTime } from "../../support/formatters";
 import type {
@@ -44,6 +45,8 @@ import {
   reportReviewResolutionLabel,
   reportReviewResolutionOptions,
 } from "./support";
+
+type PsychologistReportMutation = ReturnType<typeof useAdminPsychologistResolveReport>;
 
 export const PsychologistReportListItem = ({
   onResolve,
@@ -120,18 +123,25 @@ export const ReportModerationDialog = ({
   onClose: () => void;
   state: NonNullable<ReportModerationState>;
 }) => {
+  const mutation = useAdminPsychologistResolveReport(id);
   const title =
     state.action === "dismiss"
       ? "Resolver como improcedente"
       : state.action === "uphold"
         ? "Resolver como procedente"
         : "Revisar decisão encerrada";
+  const dialogRef = useAdminDialogLifecycle(onClose, {
+    closeEnabled: !mutation.isPending,
+  });
 
   return (
     <div
+      aria-label={title}
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
+      ref={dialogRef}
       role="dialog"
+      tabIndex={-1}
     >
       <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
         <div className="flex items-start justify-between gap-4">
@@ -148,6 +158,7 @@ export const ReportModerationDialog = ({
           <button
             aria-label="Fechar"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted"
+            disabled={mutation.isPending}
             onClick={onClose}
             type="button"
           >
@@ -156,11 +167,11 @@ export const ReportModerationDialog = ({
         </div>
         <div className="mt-5">
           {state.action === "dismiss" ? (
-            <ReportDismissForm id={id} onClose={onClose} report={state.report} />
+            <ReportDismissForm mutation={mutation} onClose={onClose} report={state.report} />
           ) : state.action === "uphold" ? (
-            <ReportUpholdForm id={id} onClose={onClose} report={state.report} />
+            <ReportUpholdForm mutation={mutation} onClose={onClose} report={state.report} />
           ) : (
-            <ReportReviewForm id={id} onClose={onClose} report={state.report} />
+            <ReportReviewForm mutation={mutation} onClose={onClose} report={state.report} />
           )}
         </div>
       </div>
@@ -169,15 +180,14 @@ export const ReportModerationDialog = ({
 };
 
 const ReportDismissForm = ({
-  id,
+  mutation,
   onClose,
   report,
 }: {
-  id: string;
+  mutation: PsychologistReportMutation;
   onClose: () => void;
   report: AdminPsychologistReportItem;
 }) => {
-  const mutation = useAdminPsychologistResolveReport(id);
   const form = useForm<ReportDismissFormValues>({
     defaultValues: { confirmation: "", reason: "" },
     mode: "onSubmit",
@@ -252,15 +262,14 @@ const ReportDismissForm = ({
 };
 
 const ReportUpholdForm = ({
-  id,
+  mutation,
   onClose,
   report,
 }: {
-  id: string;
+  mutation: PsychologistReportMutation;
   onClose: () => void;
   report: AdminPsychologistReportItem;
 }) => {
-  const mutation = useAdminPsychologistResolveReport(id);
   const measureOptions = report.capabilities.can_remove_content
     ? [
         { label: "Remover conteúdo denunciado", value: "remove_content" },
@@ -360,15 +369,14 @@ const ReportUpholdForm = ({
 };
 
 const ReportReviewForm = ({
-  id,
+  mutation,
   onClose,
   report,
 }: {
-  id: string;
+  mutation: PsychologistReportMutation;
   onClose: () => void;
   report: AdminPsychologistReportItem;
 }) => {
-  const mutation = useAdminPsychologistResolveReport(id);
   const resolutionOptions = reportReviewResolutionOptions.filter(
     (option) => option.value !== report.status_group,
   );

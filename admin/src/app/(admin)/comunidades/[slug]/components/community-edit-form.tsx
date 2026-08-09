@@ -10,6 +10,7 @@ import { useAdminCommunityAvatarUpload, useAdminCommunityUpdate } from "@/api/ca
 import { resolveApiError } from "@/api/handle";
 import type { AdminCommunityIdentity } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
+import { renderableImageSrc } from "@/lib/admin-media";
 import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,9 @@ import {
   initials,
   toCommunityPayload,
 } from "../modules/detail-support";
+
+const COMMUNITY_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const COMMUNITY_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export const CommunityEditForm = ({
   community,
@@ -52,6 +56,7 @@ export const CommunityEditForm = ({
     () => deriveCommunityVisualPalette(selectedPrimaryColor || community.visual_primary_color),
     [community.visual_primary_color, selectedPrimaryColor],
   );
+  const avatarSrc = renderableImageSrc(community.avatar_url);
   const onSubmit = async (values: CommunityFormValues) => {
     try {
       await updateMutation.mutateAsync(toCommunityPayload(values));
@@ -64,6 +69,18 @@ export const CommunityEditForm = ({
   const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (!COMMUNITY_AVATAR_TYPES.has(file.type)) {
+      toast.error("Envie uma imagem JPEG, PNG ou WebP.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > COMMUNITY_AVATAR_MAX_BYTES) {
+      toast.error("A imagem deve ter no máximo 5 MB.");
+      event.target.value = "";
+      return;
+    }
 
     try {
       await avatarMutation.mutateAsync(file);
@@ -102,13 +119,13 @@ export const CommunityEditForm = ({
                   background: selectedPalette.primaryColor,
                 }}
               >
-                {community.avatar_url ? (
+                {avatarSrc ? (
                   <Image
                     alt={`Avatar da comunidade ${community.name}`}
                     className="object-cover"
                     fill
                     sizes="128px"
-                    src={community.avatar_url}
+                    src={avatarSrc}
                     unoptimized
                   />
                 ) : (

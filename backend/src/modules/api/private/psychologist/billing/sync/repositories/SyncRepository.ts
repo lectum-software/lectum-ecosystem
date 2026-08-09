@@ -1,4 +1,4 @@
-﻿import prisma, { type ORM } from "@/infra/database/prisma";
+import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription, psychologist_profile } from "@/interfaces/objects";
 import type { ISyncRepository } from "./interfaces/ISyncRepository";
 

@@ -1,3 +1,4 @@
+import type { AdminPublicSource } from "@/api/public-response";
 import type { AdminCommunityContentAuthor } from "./detail-list";
 
 export type CommunitiesDashboardMetric = {
@@ -135,7 +136,9 @@ export type CommunitiesPostContentFormatDistribution = {
     label: "Apenas texto" | "Carrossel de imagens" | "Imagem" | "Vídeo";
     percentage: number;
   }>;
-  source: "community_post.media_type+community_post_media" | "post_reply.media_type";
+  source: AdminPublicSource<
+    "community_post.media_type+community_post_media" | "post_reply.media_type"
+  >;
   total: number;
 };
 
@@ -191,11 +194,11 @@ export type CommunitiesDashboardGlobalStatistics = {
     active_users: {
       patients: number;
       psychologists: number;
-      source: "community_member+community_post+post_reply+page_view_event";
+      source: AdminPublicSource<"community_member+community_post+post_reply+page_view_event">;
       total: number;
     };
     anonymous_posts: {
-      source: "community_post.anonymous";
+      source: AdminPublicSource<"community_post.anonymous">;
       total: number;
     };
     care_coverage: {
@@ -216,46 +219,46 @@ export type CommunitiesDashboardGlobalStatistics = {
           total: number;
         };
       };
-      source: "community_post+post_reply";
+      source: AdminPublicSource<"community_post+post_reply">;
     };
     content_engagement: {
       downvotes: number;
       profile_accesses: number;
       saves: number;
-      source: "post_vote+post_save+post_reply_save+important_action_event+page_view_event";
+      source: AdminPublicSource<"post_vote+post_save+post_reply_save+important_action_event+page_view_event">;
       upvotes: number;
       whatsapp_clicks: number;
     };
     followers: {
       patients: number;
       psychologists: number;
-      source: "community_member";
+      source: AdminPublicSource<"community_member">;
       total: number;
     };
     new_active_users: {
       patients: number;
       psychologists: number;
-      source: "first_activity:community_member+community_post+post_reply+page_view_event";
+      source: AdminPublicSource<"first_activity:community_member+community_post+post_reply+page_view_event">;
       total: number;
     };
     posts: {
       patients: number;
       patient_posts_answered_by_verified_psychologists: number;
       psychologists: number;
-      source: "community_post+post_reply";
+      source: AdminPublicSource<"community_post+post_reply">;
       total: number;
       unverified_psychologists: number;
       verified_psychologists: number;
     };
     replies: {
       patient_comments: number;
-      source: "post_reply";
+      source: AdminPublicSource<"post_reply">;
       total: number;
       unverified_psychologists: number;
       verified_psychologists: number;
     };
     reports: {
-      source: "post_report";
+      source: AdminPublicSource<"post_report">;
       total: number;
     };
   };
@@ -267,7 +270,7 @@ export type CommunitiesDashboardGlobalStatistics = {
     timezone: "server-local";
     to: string;
   };
-  source: "community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event";
+  source: AdminPublicSource<"community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event">;
 };
 
 export type AdminCommunitiesDashboard = {
@@ -286,34 +289,34 @@ export type AdminCommunitiesDashboard = {
   patient_posts_breakdown: {
     anonymous: { count: number; percentage: number };
     identified: { count: number; percentage: number };
-    source: "community_post.anonymous";
+    source: AdminPublicSource<"community_post.anonymous">;
     total: number;
   };
   period: CommunitiesDashboardPeriod;
   priority_alerts: {
     items: CommunitiesDashboardPriorityAlert[];
-    source: "post_report.status=pendente";
+    source: AdminPublicSource<"post_report.status=pendente">;
     total: number;
   };
   moderation_alerts: {
     items: CommunitiesDashboardModerationAlert[];
-    source: "content_moderation_event.status=pending|reviewing";
+    source: AdminPublicSource<"content_moderation_event.status=pending|reviewing">;
     total: number;
     urgent_total: number;
   };
   recent_posts: {
     items: CommunitiesDashboardRecentPost[];
-    source: "community_post+page_view_event";
+    source: AdminPublicSource<"community_post+page_view_event">;
     total: number;
   };
   popular_posts: {
     items: CommunitiesDashboardPopularPost[];
-    source: "community_post+post_reply+post_vote+post_save+page_view_event";
+    source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+page_view_event">;
     total: number;
   };
   top_communities: {
     items: CommunitiesDashboardTopCommunity[];
-    source: "community+community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event";
+    source: AdminPublicSource<"community+community_member+community_post+post_reply+post_report+post_vote+post_save+post_reply_save+page_view_event+important_action_event">;
     total: number;
   };
   unavailable: CommunitiesDashboardUnavailableMetric[];

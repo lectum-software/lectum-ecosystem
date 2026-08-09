@@ -43,7 +43,7 @@ ARG PORT=3001
 
 ENV NODE_ENV=production
 ENV PORT=${PORT}
-# API docs can be enabled at runtime with SWAGGER=true after envs are configured.
+# API docs remain disabled in every published runtime. Generate/inspect them locally.
 ENV SWAGGER=false
 
 RUN apt-get update \
@@ -60,7 +60,6 @@ COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 COPY locales ./locales
 COPY prisma ./prisma
 COPY public ./public
-COPY swagger ./swagger
 COPY templates ./templates
 
 RUN chmod +x ./scripts/docker-entrypoint.sh \

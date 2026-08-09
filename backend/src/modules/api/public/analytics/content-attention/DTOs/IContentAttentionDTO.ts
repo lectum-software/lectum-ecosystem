@@ -1,4 +1,4 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
 import type { user } from "@/interfaces/objects";
 
 export type ContentAttentionTargetType = "post" | "reply";
@@ -42,13 +42,6 @@ export type ContentAttentionUpsertInput = {
 };
 
 export type ContentAttentionResult = {
-  attention_seconds: number;
-  id: string | null;
-  session_id: string;
-  skipped_reason: "self_view" | null;
-  target_id: string;
-  target_type: ContentAttentionTargetType;
+  skipped_reason: "self_view" | "session_unavailable" | null;
   tracked: boolean;
-  user_id: string | null;
-  visitor_id: string;
 };

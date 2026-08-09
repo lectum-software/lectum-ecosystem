@@ -1,4 +1,4 @@
-﻿# ADR-0132: Player analitico sem barra de progresso sobreposta
+# ADR-0132: Player analitico sem barra de progresso sobreposta
 
 ## Status
 

@@ -6,7 +6,7 @@ import { type ReactNode, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import {
+import type {
   useAdminPsychologistApproveRegistryVerification,
   useAdminPsychologistRejectRegistryVerification,
   useAdminPsychologistUpdateRegistryIdentity,
@@ -17,6 +17,7 @@ import type {
   AdminPsychologistRegistryVerificationAttempt,
 } from "@/api/req/psychologists";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { cn } from "@/lib/utils";
 import { Badge } from "../../components/shared";
 import {
@@ -41,6 +42,11 @@ import type {
   RegistryRejectFormValues,
   RegistrySaveFormValues,
 } from "../../support/schemas";
+
+type RegistrySaveMutation = ReturnType<typeof useAdminPsychologistUpdateRegistryIdentity>;
+type RegistryApproveMutation = ReturnType<typeof useAdminPsychologistApproveRegistryVerification>;
+type RegistryRejectMutation = ReturnType<typeof useAdminPsychologistRejectRegistryVerification>;
+
 import {
   registryApproveSchema,
   registryIdentitySchema,
@@ -56,62 +62,92 @@ export const registryVerificationBadge = (registry: AdminPsychologistRegistryVer
   </Badge>
 );
 
+const registryAttemptResultLabel = (attempt: AdminPsychologistRegistryVerificationAttempt) => {
+  if (attempt.source === "manual_admin") {
+    return attempt.found ? "Aprovado manualmente" : "Rejeitado manualmente";
+  }
+  if (attempt.found) return "Registro encontrado";
+
+  const automaticResultLabels: Record<string, string> = {
+    "API automática indisponível": "Verificação temporariamente indisponível",
+    "Dados recusados pela verificação automática": "Dados recusados pela verificação",
+    "Limite de tentativas da API automática": "Verificação temporariamente indisponível",
+    "Nenhum registro encontrado": "Nenhum registro encontrado",
+    "Tentativa sem aprovação": "Tentativa sem aprovação",
+  };
+
+  return automaticResultLabels[attempt.result_label] ?? "Tentativa sem aprovação";
+};
+
 export const RegistryAttemptItem = ({
   attempt,
 }: {
   attempt: AdminPsychologistRegistryVerificationAttempt;
-}) => (
-  <li className="rounded-2xl border border-border bg-surface-muted/50 p-3">
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <div>
-        <p className="text-sm font-black text-foreground">{attempt.result_label}</p>
-        <p className="text-xs font-bold text-muted">
-          {attempt.source_label} · {formatDateTime(attempt.checked_at)}
-        </p>
+}) => {
+  const manualNote = attempt.source === "manual_admin" ? attempt.notes || attempt.reason : null;
+
+  return (
+    <li className="rounded-2xl border border-border bg-surface-muted/50 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-black text-foreground">
+            {registryAttemptResultLabel(attempt)}
+          </p>
+          <p className="text-xs font-bold text-muted">
+            {attempt.source === "manual_admin" ? "Aprovação manual" : "Verificação automática"} ·{" "}
+            {formatDateTime(attempt.checked_at)}
+          </p>
+        </div>
+        <Badge
+          className={attempt.found ? "bg-success-soft text-success" : "bg-surface-muted text-muted"}
+        >
+          {attempt.found ? "Ativo" : "Inativo"}
+        </Badge>
       </div>
-      <Badge
-        className={attempt.found ? "bg-success-soft text-success" : "bg-surface-muted text-muted"}
-      >
-        {attempt.found ? "Ativo" : "Inativo"}
-      </Badge>
-    </div>
-    <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
-      <span>
-        CRP:{" "}
-        {[attempt.regional_crp, attempt.registration_number].filter(Boolean).join(" / ") ||
-          "Não informado"}
-      </span>
-    </div>
-    {attempt.responsible_admin ? (
-      <p className="mt-2 text-xs font-bold text-muted">
-        Responsável:{" "}
-        {[attempt.responsible_admin.name, attempt.responsible_admin.email]
-          .filter(Boolean)
-          .join(" · ") || "Admin Lectum"}
-      </p>
-    ) : null}
-    {attempt.notes || attempt.reason ? (
-      <p className="mt-2 rounded-xl bg-surface px-3 py-2 text-xs font-bold leading-5 text-muted">
-        {attempt.notes || attempt.reason}
-      </p>
-    ) : null}
-  </li>
-);
+      <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
+        <span>
+          CRP:{" "}
+          {[attempt.regional_crp, attempt.registration_number].filter(Boolean).join(" / ") ||
+            "Não informado"}
+        </span>
+      </div>
+      {attempt.responsible_admin ? (
+        <p className="mt-2 text-xs font-bold text-muted">
+          Responsável:{" "}
+          {[attempt.responsible_admin.name, attempt.responsible_admin.email]
+            .filter(Boolean)
+            .join(" · ") || "Admin Lectum"}
+        </p>
+      ) : null}
+      {manualNote ? (
+        <p className="mt-2 rounded-xl bg-surface px-3 py-2 text-xs font-bold leading-5 text-muted">
+          {manualNote}
+        </p>
+      ) : null}
+    </li>
+  );
+};
 
 export const RegistryVerificationDialog = ({
   children,
   onClose,
+  pending,
   title,
 }: {
   children: ReactNode;
   onClose: () => void;
+  pending: boolean;
   title: string;
 }) => {
+  const dialogRef = useAdminDialogLifecycle(onClose, { closeEnabled: !pending });
   const dialog = (
     <div
+      aria-label={title}
       aria-modal="true"
       className="admin-premium-pilot fixed inset-0 z-50 flex items-end justify-center bg-overlay p-0 backdrop-blur-[2px] sm:items-center sm:p-5"
+      ref={dialogRef}
       role="dialog"
+      tabIndex={-1}
     >
       <div className="w-full rounded-t-[32px] border border-border bg-surface p-5 shadow-admin sm:max-w-[54rem] sm:rounded-[32px] sm:p-7">
         <div className="flex items-start justify-between gap-4">
@@ -124,6 +160,7 @@ export const RegistryVerificationDialog = ({
           <button
             aria-label="Fechar"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-control transition hover:bg-surface-muted"
+            disabled={pending}
             onClick={onClose}
             type="button"
           >
@@ -265,17 +302,16 @@ export const RegistryIdentityForm = ({
 };
 
 export const RegistrySaveIdentityForm = ({
-  id,
   identityDraft,
+  mutation,
   onClose,
   registry,
 }: {
-  id: string;
   identityDraft: RegistryIdentityFormValues;
+  mutation: RegistrySaveMutation;
   onClose: () => void;
   registry: AdminPsychologistRegistryVerification;
 }) => {
-  const mutation = useAdminPsychologistUpdateRegistryIdentity(id);
   const confirmationText = registry.actions.strong_save_confirmation;
   const form = useForm<RegistrySaveFormValues>({
     defaultValues: { confirmation: "" },
@@ -369,17 +405,16 @@ export const RegistrySaveIdentityForm = ({
 };
 
 export const RegistryApproveForm = ({
-  id,
   identityDraft,
+  mutation,
   onClose,
   registry,
 }: {
-  id: string;
   identityDraft?: RegistryIdentityFormValues | null;
+  mutation: RegistryApproveMutation;
   onClose: () => void;
   registry: AdminPsychologistRegistryVerification;
 }) => {
-  const mutation = useAdminPsychologistApproveRegistryVerification(id);
   const identityDefaults = useMemo(
     () => ({
       crp: identityDraft?.crp ?? registry.identity.registration_number ?? "",
@@ -489,8 +524,13 @@ export const RegistryApproveForm = ({
   );
 };
 
-export const RegistryRejectForm = ({ id, onClose }: { id: string; onClose: () => void }) => {
-  const mutation = useAdminPsychologistRejectRegistryVerification(id);
+export const RegistryRejectForm = ({
+  mutation,
+  onClose,
+}: {
+  mutation: RegistryRejectMutation;
+  onClose: () => void;
+}) => {
   const form = useForm<RegistryRejectFormValues>({
     defaultValues: {
       confirmation: "",

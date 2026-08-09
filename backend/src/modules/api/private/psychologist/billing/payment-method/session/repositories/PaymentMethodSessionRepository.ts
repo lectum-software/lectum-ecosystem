@@ -1,4 +1,4 @@
-﻿import prisma, { type ORM } from "@/infra/database/prisma";
+import prisma, { type ORM } from "@/infra/database/prisma";
 import type { payment_method, professional_subscription } from "@/interfaces/objects";
 import type { IPaymentMethodSessionRepository } from "./interfaces/IPaymentMethodSessionRepository";
 

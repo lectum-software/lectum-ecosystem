@@ -1,3 +1,7 @@
+import { startOfCurrentWeek } from "@/lib/date-period";
+
+export { startOfCurrentWeek };
+
 import type { LucideIcon } from "lucide-react";
 import { z } from "zod";
 import type {
@@ -268,15 +272,6 @@ export const toDateInputValue = (date: Date) => {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
-};
-
-export const startOfCurrentWeek = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-
-  return date;
 };
 
 export const startOfCurrentMonth = () => {

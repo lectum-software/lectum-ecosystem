@@ -51,7 +51,7 @@ export default async (data: ISyncDTO) => {
     };
   } catch (err) {
     console.error(
-      "[BILLING] Mercado Pago subscription sync failed",
+      "[BILLING] Falha na sincronização da assinatura externa.",
       sanitizePaymentGatewayError(err),
     );
 

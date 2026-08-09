@@ -106,16 +106,27 @@ export const contentStatusCopy: Record<
   },
 };
 
-export const ContentStatusBadge = ({ status }: { status: ContentPublicationStatus }) => (
-  <span
-    className={cn(
-      "inline-flex min-h-8 items-center rounded-full border px-3 py-1 text-xs font-black",
-      contentStatusCopy[status].className,
-    )}
-  >
-    {contentStatusCopy[status].label}
-  </span>
-);
+export const getContentStatusCopy = (status?: string | null) =>
+  contentStatusCopy[status as ContentPublicationStatus] ?? {
+    className: "border-border bg-surface-muted text-muted",
+    createdAtLabel: "Criado em",
+    label: "Status não classificado",
+  };
+
+export const ContentStatusBadge = ({ status }: { status: ContentPublicationStatus }) => {
+  const copy = getContentStatusCopy(status);
+
+  return (
+    <span
+      className={cn(
+        "inline-flex min-h-8 items-center rounded-full border px-3 py-1 text-xs font-black",
+        copy.className,
+      )}
+    >
+      {copy.label}
+    </span>
+  );
+};
 
 export const normalizeTargetType = (value: string): ContentDetailTargetType | null => {
   if (value === "post" || value === "comment" || value === "reply") return value;

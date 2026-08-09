@@ -1,4 +1,4 @@
-﻿import { error, msg } from "@/helpers/translate";
+import { error, msg } from "@/helpers/translate";
 import type { IOnboardingDTO } from "../DTOs/IOnboardingDTO";
 import { OnboardingRepository } from "../repositories/OnboardingRepository";
 

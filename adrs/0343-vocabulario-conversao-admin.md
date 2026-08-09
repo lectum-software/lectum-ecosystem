@@ -1,4 +1,4 @@
-﻿# ADR-0343: Vocabulário Conversão no Admin de psicólogos
+# ADR-0343: Vocabulário Conversão no Admin de psicólogos
 
 ## Status
 

@@ -1,4 +1,4 @@
-﻿# ADR 0095 — Identidade visual de comunidade derivada do avatar
+# ADR 0095 — Identidade visual de comunidade derivada do avatar
 
 ## Status
 
@@ -105,4 +105,4 @@ proxy/ngrok e sem duplicar pipeline de asset.
 - `pnpm check`
 - HTTP local `200 text/html` em `http://127.0.0.1:3010/community/depressao` via `next start` temporario
 - HTTP local `200 image/png` em `http://127.0.0.1:3010/images/community/explore/depressao.png`
-- Chrome/CDP mobile 390x844 em `https://verbose-trapeze-clapping.ngrok-free.dev/community/depressao`, com header `ngrok-skip-browser-warning`, confirmando `Image` do avatar com `src=/_next/image?url=%2Fimages%2Fcommunity%2Fexplore%2Fdepressao.png`, `naturalWidth=76` e `naturalHeight=76`
+- Chrome/CDP mobile 390x844 em `https://tunnel-autorizado.example/community/depressao`, com header `ngrok-skip-browser-warning`, confirmando `Image` do avatar com `src=/_next/image?url=%2Fimages%2Fcommunity%2Fexplore%2Fdepressao.png`, `naturalWidth=76` e `naturalHeight=76`

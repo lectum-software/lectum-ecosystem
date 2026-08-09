@@ -13,6 +13,7 @@ import {
 import { resolveApiError } from "@/api/handle";
 import type { AdminCommunityRule, AdminCommunityRuleInput } from "@/api/req/communities";
 import { TextareaController } from "@/components/controllers";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { cn } from "@/lib/utils";
 
 import {
@@ -48,7 +49,6 @@ export const RuleEditForm = ({
     },
     resolver: zodResolver(ruleFormSchema),
   });
-
   return (
     <FormProvider {...form}>
       <form
@@ -102,6 +102,10 @@ export const RuleCreateModal = ({
     },
     resolver: zodResolver(ruleFormSchema),
   });
+  const dialogRef = useAdminDialogLifecycle(onClose, {
+    closeEnabled: !disabled,
+    enabled: open,
+  });
 
   useEffect(() => {
     if (!open) {
@@ -113,9 +117,12 @@ export const RuleCreateModal = ({
 
   return (
     <div
+      aria-label="Criar nova regra"
       aria-modal="true"
       className="fixed inset-0 z-50 grid place-items-center bg-media-background/40 p-4 backdrop-blur-sm"
+      ref={dialogRef}
       role="dialog"
+      tabIndex={-1}
     >
       <FormProvider {...form}>
         <form

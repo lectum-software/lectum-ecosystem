@@ -13,13 +13,13 @@ import {
   useState,
 } from "react";
 import { useInfiniteCommunityFeedPosts } from "@/api/callers/community";
-import { useSharePost, useShareReply } from "@/api/callers/posts";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -77,9 +77,8 @@ export const CommunityFeedLogic = ({
     [deferredSearch, scope, selectedCommunitySlug],
   );
   const feed = useInfiniteCommunityFeedPosts(query);
-  const sharePostMutation = useSharePost();
-  const shareReplyMutation = useShareReply();
   const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
+  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
   const posts = useMemo(() => flattenCommunityPostPages(feed.data?.pages), [feed.data?.pages]);
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
   const firstFeedPage = feed.data?.pages[0];
@@ -164,15 +163,7 @@ export const CommunityFeedLogic = ({
   const handleShareVideoShared = (channel: LectumShareChannel) => {
     if (!shareVideoTarget) return;
 
-    if (shareVideoTarget.replyId) {
-      shareReplyMutation.mutate({
-        postId: shareVideoTarget.postId,
-        replyId: shareVideoTarget.replyId,
-        body: { channel },
-      });
-    } else {
-      sharePostMutation.mutate({ id: shareVideoTarget.postId, body: { channel } });
-    }
+    trackLectumShare(channel);
     setShareFeedback(shareVideoTarget.replyId ?? shareVideoTarget.postId);
     window.setTimeout(() => setShareFeedback(null), 2400);
   };

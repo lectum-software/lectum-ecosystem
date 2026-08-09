@@ -1,4 +1,4 @@
-﻿import type { Request } from "express";
+import type { Request } from "express";
 import { error, msg } from "@/helpers/translate";
 import type { user } from "@/interfaces/objects";
 import { sanitizePath } from "../../helpers/tracking";
@@ -35,15 +35,8 @@ export const store = async (req: Request) => {
 
   if (userId && userId === target.authorId) {
     const result: ContentAttentionResult = {
-      attention_seconds: 0,
-      id: null,
-      session_id: data.b.session_id,
       skipped_reason: "self_view",
-      target_id: target.targetId,
-      target_type: target.targetType,
       tracked: false,
-      user_id: userId,
-      visitor_id: data.b.visitor_id,
     };
 
     return {
@@ -53,7 +46,24 @@ export const store = async (req: Request) => {
     };
   }
 
-  await repository.upsertVisitorSession(data.b.visitor_id, data.b.session_id, userId);
+  const visitorSession = await repository.upsertVisitorSession(
+    data.b.visitor_id,
+    data.b.session_id,
+    userId,
+  );
+
+  if (!visitorSession) {
+    const result: ContentAttentionResult = {
+      skipped_reason: "session_unavailable",
+      tracked: false,
+    };
+
+    return {
+      status: 200,
+      ...msg("content_attention_skipped", {}),
+      data: result,
+    };
+  }
 
   const attentionSeconds = normalizeAttentionSeconds(data.b.attention_seconds);
   const stored = await repository.upsertSession({
@@ -71,16 +81,22 @@ export const store = async (req: Request) => {
     visitorId: data.b.visitor_id,
   });
 
+  if (!stored) {
+    const result: ContentAttentionResult = {
+      skipped_reason: "session_unavailable",
+      tracked: false,
+    };
+
+    return {
+      status: 200,
+      ...msg("content_attention_skipped", {}),
+      data: result,
+    };
+  }
+
   const result: ContentAttentionResult = {
-    attention_seconds: stored.attention_seconds,
-    id: stored.id,
-    session_id: data.b.session_id,
     skipped_reason: null,
-    target_id: target.targetId,
-    target_type: target.targetType,
     tracked: true,
-    user_id: userId,
-    visitor_id: data.b.visitor_id,
   };
 
   return {

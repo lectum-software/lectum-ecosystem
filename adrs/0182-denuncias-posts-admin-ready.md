@@ -1,4 +1,4 @@
-﻿# ADR-0182: Denuncias de posts prontas para triagem administrativa futura
+# ADR-0182: Denuncias de posts prontas para triagem administrativa futura
 
 ## Status
 

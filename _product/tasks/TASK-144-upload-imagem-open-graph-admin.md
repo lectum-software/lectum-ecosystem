@@ -1,4 +1,4 @@
-﻿# TASK-144: Upload de imagem Open Graph no Admin
+# TASK-144: Upload de imagem Open Graph no Admin
 
 Status: Completed  
 Data: 2026-08-03  

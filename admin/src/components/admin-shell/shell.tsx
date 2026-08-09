@@ -1,12 +1,13 @@
 "use client";
 
-import { AlertTriangle, ChevronDown, ChevronLeft, LogOut, Menu, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronLeft, Loader2, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useAdminModerationSummary } from "@/api/callers/moderation";
-import { setSidebarCollapsed } from "@/lib/storage";
+import { getSidebarCollapsed, setSidebarCollapsed } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/providers/admin-auth";
 import { adminNavItems } from "./nav";
@@ -68,7 +69,7 @@ const SidebarContent = ({
   premiumPilot = false,
 }: SidebarContentProps) => {
   const pathname = usePathname();
-  const { admin, logout } = useAdminAuth();
+  const { admin, isLoggingOut, logout } = useAdminAuth();
   const activeGroupHref = useMemo(
     () =>
       adminNavItems.find((item) => "children" in item && isNavPathActive(pathname, item.href))
@@ -116,6 +117,13 @@ const SidebarContent = ({
     const names = adminName.split(" ").filter(Boolean);
     return `${names[0]?.[0] || "A"}${names[1]?.[0] || "D"}`.toUpperCase();
   }, [adminName]);
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      toast.error("Não foi possível encerrar a sessão. Verifique sua conexão e tente novamente.");
+    }
+  };
 
   return (
     <div
@@ -382,6 +390,7 @@ const SidebarContent = ({
 
         <button
           aria-label="Sair do painel administrativo"
+          aria-busy={isLoggingOut}
           className={cn(
             "mt-2 flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-sm font-bold text-sidebar-muted transition",
             premiumPilot
@@ -389,11 +398,16 @@ const SidebarContent = ({
               : "hover:bg-sidebar-foreground/10 hover:text-sidebar-foreground",
             collapsed && "justify-center px-2",
           )}
-          onClick={() => void logout()}
+          disabled={isLoggingOut}
+          onClick={() => void handleLogout()}
           type="button"
         >
-          <LogOut aria-hidden className="h-5 w-5" />
-          <span className={cn(collapsed && "sr-only")}>Sair</span>
+          {isLoggingOut ? (
+            <Loader2 aria-hidden className="h-5 w-5 animate-spin" />
+          ) : (
+            <LogOut aria-hidden className="h-5 w-5" />
+          )}
+          <span className={cn(collapsed && "sr-only")}>{isLoggingOut ? "Saindo..." : "Sair"}</span>
         </button>
       </div>
     </div>
@@ -403,8 +417,37 @@ const SidebarContent = ({
 export const AdminShell = ({ children }: PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerCloseRef = useRef<HTMLButtonElement | null>(null);
+  const drawerTriggerRef = useRef<HTMLButtonElement | null>(null);
   const pathname = usePathname();
   const premiumPilot = isPremiumPilotPath(pathname);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setCollapsed(getSidebarCollapsed()));
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const drawerTrigger = drawerTriggerRef.current;
+    const focusFrame = window.requestAnimationFrame(() => drawerCloseRef.current?.focus());
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      drawerTrigger?.focus();
+    };
+  }, [drawerOpen]);
 
   const toggleCollapsed = () => {
     setCollapsed((current) => {
@@ -464,7 +507,13 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
             onClick={() => setDrawerOpen(false)}
             type="button"
           />
-          <aside className="relative h-full w-[min(80vw,300px)] shadow-admin">
+          <aside
+            aria-label="Menu administrativo"
+            aria-modal="true"
+            className="relative h-full w-[min(80vw,300px)] shadow-admin"
+            id="admin-mobile-navigation"
+            role="dialog"
+          >
             <button
               aria-label="Fechar menu administrativo"
               className={cn(
@@ -474,6 +523,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
                   : "bg-sidebar-foreground/10 text-sidebar-foreground",
               )}
               onClick={() => setDrawerOpen(false)}
+              ref={drawerCloseRef}
               type="button"
             >
               <X aria-hidden className="h-5 w-5" />
@@ -496,9 +546,12 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
         <main className="mx-auto w-full min-w-0 max-w-full overflow-x-clip px-4 py-5 sm:px-6 lg:px-8 lg:py-8 xl:max-w-[1440px]">
           <div className="mb-4 flex lg:hidden">
             <button
+              aria-controls="admin-mobile-navigation"
+              aria-expanded={drawerOpen}
               aria-label="Abrir menu administrativo"
               className="grid h-11 w-11 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-border-strong"
               onClick={() => setDrawerOpen(true)}
+              ref={drawerTriggerRef}
               type="button"
             >
               <Menu aria-hidden className="h-5 w-5" />

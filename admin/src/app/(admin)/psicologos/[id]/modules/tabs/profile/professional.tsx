@@ -20,7 +20,7 @@ import {
   PROFILE_STATUS_COPY,
 } from "../../support/config";
 import { formatDate } from "../../support/date-period";
-import { emptyToNull, formatNullable, listText } from "../../support/formatters";
+import { emptyToNull, listText } from "../../support/formatters";
 import type { ProfileProfessionalDataFormValues } from "../../support/schemas";
 import { profileProfessionalDataSchema } from "../../support/schemas";
 import { FieldRow } from "../general/index";
@@ -44,6 +44,12 @@ type AdminProfessionalOptionGroup = {
 
 const toggleSelectedValue = (values: string[], value: string) =>
   values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
+
+const signupMethodLabel = (provider?: string | null) => {
+  if (provider === "google") return "Google";
+  if (provider === "email_password") return "E-mail e senha";
+  return "Não informado";
+};
 
 const AdminProfessionalTagField = ({
   disabled = false,
@@ -469,7 +475,7 @@ export const ProfileReadOnlyProfessionalData = ({
           </span>
         }
       />
-      <FieldRow label="Cadastro via" value={formatNullable(personal.provider)} />
+      <FieldRow label="Cadastro via" value={signupMethodLabel(personal.provider)} />
       <FieldRow label="Data cadastro Lectum" value={formatDate(detail.header.created_at)} />
     </>
   );

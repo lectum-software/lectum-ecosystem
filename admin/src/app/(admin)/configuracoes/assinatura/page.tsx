@@ -1,4 +1,4 @@
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 import { AdminSubscriptionSettingsClient } from "./client";
 
 export default function Page() {

@@ -1,4 +1,4 @@
-﻿# TASK-66: Verificação manual de CRP e origem genérica de verificação profissional
+# TASK-66: Verificação manual de CRP e origem genérica de verificação profissional
 
 ## Metadata
 

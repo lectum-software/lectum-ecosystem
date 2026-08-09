@@ -1,4 +1,4 @@
-﻿# TASK-124 - Reposicionar matriz de conversao no dashboard Admin de psicologos
+# TASK-124 - Reposicionar matriz de conversao no dashboard Admin de psicologos
 
 ## Status
 

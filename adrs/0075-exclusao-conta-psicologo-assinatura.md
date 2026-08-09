@@ -1,4 +1,4 @@
-﻿# ADR-0075 — Exclusão de conta do psicólogo com proteção de cobrança
+# ADR-0075 — Exclusão de conta do psicólogo com proteção de cobrança
 
 ## Status
 

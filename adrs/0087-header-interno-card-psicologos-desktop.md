@@ -1,4 +1,4 @@
-﻿# ADR-0087 - Header interno preso ao card no feed desktop de Psicologos
+# ADR-0087 - Header interno preso ao card no feed desktop de Psicologos
 
 ## Status
 

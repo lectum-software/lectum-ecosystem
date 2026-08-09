@@ -1,4 +1,4 @@
-﻿# ADR 0101 — Captura aproximada de localização por IP para analytics
+# ADR 0101 — Captura aproximada de localização por IP para analytics
 
 Status: Aceito
 

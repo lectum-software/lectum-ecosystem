@@ -1,4 +1,4 @@
-﻿# ADR 0108 — Publicações do perfil como posts reais da comunidade
+# ADR 0108 — Publicações do perfil como posts reais da comunidade
 
 ## Status
 

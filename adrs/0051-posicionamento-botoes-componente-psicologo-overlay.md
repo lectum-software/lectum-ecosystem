@@ -1,4 +1,4 @@
-﻿# ADR-0051: Posicionamento dinâmico de botões do card relativo ao overlay real
+# ADR-0051: Posicionamento dinâmico de botões do card relativo ao overlay real
 
 ## Status
 

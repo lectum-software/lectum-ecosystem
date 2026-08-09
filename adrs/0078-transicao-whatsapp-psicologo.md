@@ -1,4 +1,4 @@
-﻿# ADR-0078 - Transição segura para WhatsApp do psicólogo
+# ADR-0078 - Transição segura para WhatsApp do psicólogo
 
 Status: Accepted
 

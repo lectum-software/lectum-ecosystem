@@ -1,4 +1,4 @@
-﻿# Minuta v0.1 — Política de Privacidade da Lectum
+# Minuta v0.1 — Política de Privacidade da Lectum
 
 > **Status:** minuta inicial para aprovação/correção do fundador e revisão jurídica antes da publicação.
 > **Não publicar com placeholders.** Substituir todos os campos entre colchetes antes de usar em produção.
