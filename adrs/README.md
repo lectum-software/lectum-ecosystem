@@ -471,3 +471,4 @@ Formato recomendado:
 - [ADR-0438 — Metadados SEO administráveis com fallback público server-side](0438-seo-metadados-admin.md)
 - [ADR-0439 — Hardening residual da auditoria em ambientes publicados](0439-hardening-residual-auditoria-publicada.md)
 - [ADR-0440 — Bloqueio da publicação das páginas legais](0440-bloqueio-publicacao-paginas-legais.md)
+- [ADR-0441 — Versionamento rastreável e promoção de produção por PR](0441-versionamento-rastreavel-promocao-producao.md)

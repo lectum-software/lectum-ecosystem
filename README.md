@@ -10,11 +10,34 @@ ambientes publicados, trate as três aplicações e seus deploys separadamente.
 - Merge/push em `main` publica produção automaticamente.
 - Desenvolvimento e commits devem ocorrer em `homolog`; push direto em `main` é bloqueado.
 - Só promova para `main` depois de checks, builds e smoke test em homologação.
+- Ao pedir para um agente **colocar em produção**, ele deve abrir/reutilizar PR `homolog` → `main`,
+  aguardar checks, fazer o merge e validar produção; o usuário não precisa trocar para `main`.
 - Nunca execute reset, seed destrutivo, `db push` ou limpeza de storage em ambiente publicado.
 
 As regras completas de banco, env e rollout estão em
 [`_product/tasks/ARCHITECTURE.md`](_product/tasks/ARCHITECTURE.md). O resumo da auditoria atual está
 em [`_product/AUDITORIA-CORRECOES-2026-08-07.md`](_product/AUDITORIA-CORRECOES-2026-08-07.md).
+
+## Versão publicada
+
+Cada commit criado por agente incrementa e sincroniza a versão dos quatro `package.json`. O hook de
+commit impede publicação sem bump. Para preparar manualmente um novo commit:
+
+```bash
+pnpm version:bump
+pnpm check:version
+```
+
+Não execute o bump novamente ao apenas corrigir e repetir uma tentativa falha do mesmo commit.
+
+Depois do deploy, consulte:
+
+- backend: `GET /ping`;
+- frontend: `GET /version`;
+- admin: `GET /version`.
+
+As rotas `/version` são públicas somente para verificação interna, sem cache, noindex e sem links na
+interface ou sitemap.
 
 ## Desenvolvimento local
 

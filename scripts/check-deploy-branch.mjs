@@ -34,7 +34,7 @@ if (decision.reason === "branch_unknown") {
 
   console.error(`[deploy-branch] Push a partir de ${currentBranch} bloqueado: ${deploymentRisk}.`);
   console.error(
-    "[deploy-branch] Mude para homolog, valide o deploy e promova por merge revisado para main.",
+    "[deploy-branch] Mude para homolog; produção é promovida por PR homolog -> main via gh.",
   );
   process.exitCode = 1;
 } else if (decision.reason === "invalid_input") {
@@ -47,7 +47,7 @@ if (decision.reason === "branch_unknown") {
     "[deploy-branch] Push bloqueado: a branch homolog só pode atualizar homolog no remoto.",
   );
   console.error(
-    "[deploy-branch] Produção recebe somente merge revisado depois do smoke de homologação.",
+    "[deploy-branch] Produção recebe somente merge do PR homolog -> main depois do smoke.",
   );
   process.exitCode = 1;
 } else if (decision.allowed) {

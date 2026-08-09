@@ -5,6 +5,8 @@
 pre-commit:
   parallel: true
   commands:
+    release-version:
+      run: pnpm version:check-commit
     secrets:
       run: pnpm check:secrets
     env-examples:

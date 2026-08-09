@@ -26,8 +26,16 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 13. Rodar checks/builds relevantes.
 14. Criar ou atualizar ADR em `adrs/`.
 15. Marcar critérios de aceite concluídos no arquivo da task.
-16. Fazer commit com mensagem convencional.
-17. Confirmar `homolog`, avisar que o push inicia deploy automático e executar `git push`. Validar smoke e `/health`/`/ready` antes de recomendar merge revisado para `main`.
+16. Antes do novo commit, executar uma única vez `pnpm version:bump`, incluir os quatro `package.json` sincronizados e validar `pnpm check:version`; não repetir o bump ao apenas tentar novamente o mesmo commit.
+17. Fazer commit com mensagem convencional.
+18. Confirmar `homolog`, avisar que o push inicia deploy automático e executar `git push`. Validar smoke, versões publicadas e `/health`/`/ready` quando aplicável.
+
+## Promoção explícita para produção
+
+Quando o usuário pedir para colocar em produção, confirmar homologação, usar `gh` para criar ou
+reutilizar PR `homolog` → `main`, aguardar checks, fazer merge sem excluir `homolog` e validar
+`/health`, `/ready`, `/ping`, frontend/admin `/version` e os fluxos afetados em produção. Se acesso ou
+checks bloquearem, reportar; nunca fazer push direto em `main`.
 
 ## Proibições
 
@@ -40,6 +48,7 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 - Não avançar para outra task sem concluir validação, commit e push.
 - Não usar `sample/` como fonte ativa, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Não fazer commit/push direto em `main` nem executar ações destrutivas em dados publicados.
+- Não criar um segundo bump ao apenas repetir uma tentativa falha do mesmo commit.
 - Não introduzir coluna obrigatória incompatível, env não provisionada ou quebra de contrato entre versões.
 - Não expor detalhe técnico, PII, segredo, stack, SQL ou mensagem crua de provider.
 
@@ -55,3 +64,4 @@ Ao final, responder com:
 - status do push;
 - bloqueios reais, se houver.
 - alertas de deploy, rollback e smoke de homologação.
+- versões publicadas e, quando solicitado, PR/merge e smoke de produção.

@@ -16,6 +16,7 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 - Toda implementação deve começar em `homolog`. Se a branch atual for `main`, pare antes de editar, commitar ou fazer push e oriente o usuário a mudar para `homolog`.
 - Nunca faça commit ou push direto em `main`. A promoção para produção ocorre somente depois de validar o deploy de homologação e por merge revisado de `homolog` para `main`.
 - Antes de qualquer push, avise que o push em `homolog` inicia um deploy. Depois dele, registre smoke test e resultado de `/health` e `/ready` quando o backend for afetado.
+- Quando o usuário pedir explicitamente para **colocar em produção**, não implemente novamente nem peça que ele promova manualmente: confirme o smoke de homologação, use `gh` para criar ou reutilizar um PR `homolog` → `main`, aguarde os checks obrigatórios, faça o merge sem excluir a branch permanente `homolog` e execute smoke de produção. Falha de autenticação, permissão ou checks bloqueia a promoção e nunca autoriza push direto em `main`.
 - Nunca execute reset, seed destrutivo, `db push`, exclusão em massa ou limpeza de bucket em homologação/produção.
 - Alterações de banco devem ser compatíveis com versões anterior e nova durante o deploy: usar expansão segura, backfill retomável e só depois contração. Não tornar coluna obrigatória sem tratar todos os registros existentes; não editar migration já aplicada; não remover/renomear campo no mesmo deploy que deixa de usá-lo.
 - Variável nova deve ter fallback seguro ou ser opcional no primeiro deploy. Se ela precisar ser obrigatória, emitir **ALERTA DE DEPLOY** antes do commit/push com nome da variável (nunca o valor), aplicações afetadas, ordem de configuração em homologação/produção e sintoma esperado se faltar.
@@ -46,6 +47,8 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 - Cada task concluída deve criar ou atualizar pelo menos um ADR quando houver decisão arquitetural, integração, regra de domínio, fluxo crítico ou trade-off relevante.
 - Cada task concluída deve gerar commit próprio e executar `git push` para publicar a branch/remoto correspondente; não deixe commits apenas locais. Se o push falhar por credenciais, rede ou permissão, reporte o bloqueio explicitamente.
 - O commit e o push da task devem ocorrer em `homolog`; lembre que o push dispara deploy automático de homologação.
+- Antes de cada novo commit criado por agente, execute uma única vez `pnpm version:bump`, prepare `package.json`, `backend/package.json`, `frontend/package.json` e `admin/package.json` no mesmo commit e confirme `pnpm check:version`. Se uma tentativa de commit falhar, corrija e tente novamente sem outro bump. O hook bloqueia versão não incrementada ou dessincronizada.
+- A versão dos artefatos é consultável em `GET /ping` no backend e `GET /version` no frontend/admin. Essas rotas são públicas, sem cache e não indexáveis; não as vincule na navegação ou sitemap.
 - Não usar a pasta `sample/` como fonte ativa de implementação futura, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Antes de criar estrutura nova, verificar `_product/tasks/ARCHITECTURE.md`.
 - Antes de instalar pacote novo, verificar `_product/tasks/PACKAGES.md` e registrar ADR.

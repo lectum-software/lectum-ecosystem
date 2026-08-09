@@ -1,0 +1,19 @@
+---
+description: Fluxo obrigatório de branch, versão e promoção do Lectum
+alwaysApply: true
+---
+
+# Release workflow Lectum
+
+- Use `AGENTS.md` e `_product/tasks/README.md` como fontes canônicas.
+- O desenvolvimento do usuário não técnico acontece sempre em `homolog`; confirme a branch antes de editar.
+- Cada push em `homolog` inicia deploy automático de homologação. Avise antes e faça smoke depois.
+- Antes de cada novo commit criado pelo agente, rode exatamente uma vez `pnpm version:bump`, inclua
+  `package.json`, `backend/package.json`, `frontend/package.json` e `admin/package.json`, e valide
+  `pnpm check:version`. Não repita o bump se estiver apenas tentando novamente o mesmo commit.
+- Consulte versões publicadas em backend `/ping` e frontend/admin `/version`.
+- Nunca faça commit ou push direto em `main`.
+- Quando o usuário pedir explicitamente para colocar em produção, valide homologação e use `gh` para
+  criar/reutilizar PR `homolog` → `main`, aguardar checks e fazer merge sem excluir `homolog`.
+- Após o merge, faça smoke de produção. Falha de acesso ou check deve ser reportada; não contorne a
+  proteção de branch.

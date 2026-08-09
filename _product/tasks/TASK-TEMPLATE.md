@@ -117,6 +117,7 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 - [ ] Builder/Quick Copy foi usado quando disponível, ou as imagens locais de `_product/proto` foram citadas quando houver UI.
 - [ ] Checks/builds relevantes foram executados sem erros.
 - [ ] ADR criado ou atualizado em `adrs/`.
+- [ ] Versão dos quatro manifests foi incrementada uma vez e permanece sincronizada.
 - [ ] Commit criado com mensagem convencional.
 - [ ] Commit e push ocorreram em `homolog`; o deploy de homologação foi comunicado e não houve push direto em `main`.
 

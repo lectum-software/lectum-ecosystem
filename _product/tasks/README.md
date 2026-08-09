@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 152 tasks: `TASK-00` a `TASK-145`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 153 tasks: `TASK-00` a `TASK-146`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -30,6 +30,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 6. Toda env nova obrigatória deve gerar um **ALERTA DE DEPLOY** com chave, aplicação, ordem de cadastro em homologação/produção e impacto se ausente, sem mostrar o valor. Preferir implantação em duas etapas com fallback seguro.
 7. Contratos de API devem continuar funcionando durante o período em que frontend, backend e admin estiverem em versões diferentes.
 8. Depois do deploy em homologação, validar os fluxos afetados e, para backend, `/health` e `/ready`. Só então recomendar promoção para `main`.
+9. Quando o usuário pedir explicitamente produção, o agente cria/reutiliza PR `homolog` → `main` com `gh`, aguarda checks, faz merge sem excluir `homolog` e valida produção. Nunca delegar push direto ou commit em `main`.
 
 ## Inventário visual ativo
 
@@ -75,6 +76,7 @@ ou cortesia manual.
 - Use as imagens exportadas de `_product/proto` como fallback e como referência auditável da task.
 - Ao concluir, marque critérios de aceite `[x]`, registre ADR, faça commit próprio e execute `git push` para publicar a branch/remoto correspondente. Se a branch ainda não tiver upstream, use `git push -u origin <branch>`.
 - Commit e push da task devem ocorrer em `homolog`; o executor deve informar que o push iniciou o deploy automático de homologação.
+- Antes de cada novo commit do agente, executar uma única vez `pnpm version:bump`, incluir os quatro `package.json` sincronizados e validar `pnpm check:version`. Não repetir o bump ao apenas tentar novamente um commit que falhou.
 - Não use referências externas ao workspace da task como atalho arquitetural.
 - Antes de criar código novo, consulte `ARCHITECTURE.md`.
 - Antes de criar/alterar modelo Prisma ou contrato de API, consulte `DATA-MODEL.md` e referencie a seção em vez de redefinir o schema.
@@ -241,6 +243,7 @@ ou cortesia manual.
 | 143 | [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) | Completed | 39, 40, 42, 141 |
 | 144 | [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md) | Completed | 141, 143 |
 | 145 | [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) | Completed | 40, 141, 143, 144 |
+| 146 | [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) | Completed | 34, 45, 145 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -364,6 +367,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 113. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para separar **Comunidades** (`/community`) de **Comunidade** (`/community/[slug]`), publicar metadados dinamicos por slug e usar o nome real da comunidade/post como titulo compartilhado.
 114. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para usar imagens Open Graph quadradas de entidade: avatar da comunidade em `/community/[slug]` e foto/avatar do psicologo em `/psychologists/[id]`.
 115. [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) foi adicionada e concluida em 2026-08-03 para tornar canonicos os slugs publicos (`/psicologos`, `/comunidades`) e privados (`/app/notificacoes`, `/app/perfil`, `/app/profissional/*`) em PT-BR, mantendo redirects permanentes das URLs antigas em ingles.
+116. [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) foi adicionada e concluída em 2026-08-08 para sincronizar SemVer entre os quatro manifests, expor a versão dos três artefatos publicados e tornar a solicitação explícita de produção um PR `homolog` -> `main` seguido de merge e smoke.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
@@ -538,6 +542,7 @@ Uma task só pode ser marcada como concluída quando:
 - UI tiver sido validada com Builder/Quick Copy quando disponível ou com imagem local registrada em `PROTO-INVENTORY.md`;
 - UI tiver sido validada no browser local quando houver tela;
 - houver commit próprio da task;
+- o commit tiver incremento sincronizado em `package.json`, `backend/package.json`, `frontend/package.json` e `admin/package.json`;
 - o commit tiver sido publicado com `git push`, ou o bloqueio de push tiver sido registrado explicitamente quando houver falha de credenciais, rede ou permissão.
 
 ## Templates

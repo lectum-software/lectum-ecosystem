@@ -15,6 +15,7 @@
 - Antes de editar, confirme a branch. Se for `main`, pare e oriente o usuário a usar `homolog`.
 - Nunca faça commit/push direto em `main`. Promova somente por merge revisado após validar homologação.
 - Push em `homolog` inicia deploy: avise o usuário e execute smoke test antes de recomendar promoção.
+- Se o usuário pedir explicitamente para colocar em produção, crie/reutilize via `gh` um PR `homolog` → `main`, aguarde checks, faça o merge sem excluir `homolog` e valide produção; não peça que o usuário faça o merge salvo bloqueio real de acesso.
 - Nunca resete ou destrua dados, seeds ou buckets em ambiente publicado.
 - Banco: expandir, fazer backfill retomável e só depois contrair; não tornar coluna obrigatória sem compatibilidade com dados existentes; não editar migration aplicada.
 - Env obrigatória nova exige **ALERTA DE DEPLOY** com nome, app, ordem e impacto. Nunca exponha valores; prefira fallback seguro/adoção em duas etapas.
@@ -44,3 +45,5 @@
 - Se `prisma migrate dev` falhar por conflito com dados/estado do banco de desenvolvimento, pergunte ao usuário antes de resetar o banco ou rodar comando destrutivo.
 - Para o admin, execute `pnpm --dir admin check` e `pnpm --dir admin build` quando houver alteração de UI/rota.
 - Commit e push de tasks ocorrem em `homolog`; nunca deixe uma automação publicar `main` sem validação prévia do ambiente de homologação.
+- Antes de cada novo commit do agente, execute uma vez `pnpm version:bump`, inclua os quatro manifests sincronizados e rode `pnpm check:version`. Não repita o bump ao apenas tentar novamente um commit que falhou.
+- A versão publicada é verificada em backend `/ping` e frontend/admin `/version`; mantenha `/version` público, sem cache, noindex e fora da navegação/sitemap.

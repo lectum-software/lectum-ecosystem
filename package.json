@@ -1,12 +1,12 @@
 {
   "name": "lectum-ecosystem",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "prepare": "lefthook install",
     "run": "pnpm dev",
-    "check": "pnpm check:secrets && pnpm check:encoding && pnpm check:adrs && pnpm check:tasks && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles && pnpm check:frontend && pnpm check:backend && pnpm check:admin",
+    "check": "pnpm check:version && pnpm check:secrets && pnpm check:encoding && pnpm check:adrs && pnpm check:tasks && pnpm check:source-safety && pnpm check:env && pnpm check:source-size && pnpm check:cycles && pnpm check:frontend && pnpm check:backend && pnpm check:admin",
     "check:adrs": "node scripts/check-adrs.mjs",
     "check:deploy-branch": "node scripts/check-deploy-branch.mjs",
     "check:env": "node scripts/check-env-examples.mjs",
@@ -16,6 +16,7 @@
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:source-size": "node scripts/check-source-size.mjs",
     "check:cycles": "node scripts/check-import-cycles.mjs",
+    "check:version": "node --test scripts/release-version-policy.test.mjs && node scripts/release-version.mjs check",
     "check:frontend": "pnpm --dir frontend check",
     "check:backend": "pnpm --dir backend check",
     "check:admin": "pnpm --dir admin check",
@@ -23,7 +24,9 @@
     "dev": "node scripts/dev.mjs",
     "dev:frontend": "pnpm --dir frontend exec next dev --webpack --port 3000",
     "dev:backend": "pnpm --dir backend dev",
-    "dev:admin": "pnpm --dir admin dev"
+    "dev:admin": "pnpm --dir admin dev",
+    "version:bump": "node scripts/release-version.mjs bump",
+    "version:check-commit": "node scripts/release-version.mjs check-staged"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
