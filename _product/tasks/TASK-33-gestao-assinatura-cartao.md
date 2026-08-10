@@ -478,3 +478,27 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir backend build`
   - `pnpm check:version`
   - `pnpm check`
+
+## Ajuste de UI em 2026-08-10: voltar no checkout de cartao futuro
+
+- Pedido direto de produto: na tela mobile de **Adicionar cartao de cobranca** (`/app/profissional/assinatura/pagamento?intent=courtesy-renewal`), incluir uma seta de voltar no topo esquerdo.
+- A rota de checkout agora exibe um botao circular com `ArrowLeft`, alinhado ao topo esquerdo do container mobile-first, antes do bloco central de titulo.
+- A acao aponta para `/app/profissional/assinatura`, retornando para **Minha Assinatura** sem depender do historico do navegador.
+- Referencias visuais consultadas: screenshot enviada pelo usuario em 2026-08-10 e `_product/proto/Finalizar Assinatura - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou alteracao de contrato foi criado.
+- ADR atualizado: `adrs/0215-cartao-futuro-cortesia-antes-endereco.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A tela de checkout de cartao futuro exibe seta de voltar no topo esquerdo.
+- [x] A seta retorna para **Minha Assinatura** por rota interna segura.
+- [x] A composicao mobile-first da tela e o CardPayment Brick real foram preservados.
+- [x] Nenhum mock, seed, endpoint simulado, package novo ou alteracao de schema foi criado.
+
+### Validacao do ajuste de voltar
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- `pnpm check`

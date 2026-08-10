@@ -1,7 +1,8 @@
 "use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
-import { CreditCard, RefreshCw } from "lucide-react";
+import { ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -378,6 +379,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-5xl">
+        <Button
+          asChild
+          className="h-11 w-11 justify-self-start rounded-full bg-primary-soft p-0 text-primary shadow-[var(--lectum-shadow-soft)] hover:bg-primary-soft/80"
+          variant="ghost"
+        >
+          <Link aria-label="Voltar para Minha Assinatura" href="/app/profissional/assinatura">
+            <ArrowLeft className="h-5 w-5" aria-hidden />
+          </Link>
+        </Button>
+
         <div className="grid justify-items-center gap-3 text-center">
           <span className="grid h-16 w-16 place-items-center rounded-[var(--lectum-card-radius)] bg-primary-soft text-primary shadow-[var(--lectum-shadow-soft)]">
             <CreditCard className="h-8 w-8" aria-hidden />

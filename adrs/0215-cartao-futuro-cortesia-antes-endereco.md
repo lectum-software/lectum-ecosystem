@@ -27,6 +27,7 @@ Referências consultadas:
 - O checkout de cortesia também envia os dados de exibição permitidos pelo Brick (`payment_method_id` como bandeira e `lastFourDigits` como últimos quatro dígitos) para persistir apenas `brand`/`last4` junto ao `payment_method`.
 - A tela **Minha Assinatura** continua mostrando a assinatura de cortesia como `admin_grant`, mas passa a consultar a assinatura futura `mercadopago` (`inativa`/`inadimplente`) para localizar o cartão cadastrado para cobrança pós-cortesia; quando encontrado, o bloco muda de **Adicionar cartão de cobrança** para **Cartão de cobrança cadastrado** e o CTA muda de **Adicionar** para **Alterar**.
 - A UI considera a presença de `payment_method` no contrato de assinatura como evidência suficiente de cartão futuro cadastrado. Ela não depende de `gateway_token`, porque esse identificador é interno/operacional e pode não ser exposto ao frontend mesmo quando `brand`/`last4` estão disponíveis para exibição.
+- Em 2026-08-10, o checkout de cartão futuro passou a exibir uma seta de voltar no topo esquerdo, apontando para `/app/profissional/assinatura`, para permitir retorno previsível à tela **Minha Assinatura** sem depender do histórico do navegador.
 - Nenhum mock, endpoint simulado, package novo ou alteração de schema foi criado.
 
 ## Consequências
@@ -37,3 +38,4 @@ Referências consultadas:
 - A referência salva em `payment_method` usa o identificador da assinatura gateway e, quando o Brick fornecer, apenas dados seguros de exibição (`brand`/`last4`), nunca PAN/CVV.
 - Cartões cadastrados antes desta decisão podem aparecer como **Cartão cadastrado para cobrança futura** sem bandeira/final, porque não houve backfill artificial de dados de cartão.
 - Se o endpoint retornar `payment_method` sem `gateway_token`, a tela ainda deve mostrar o cartão cadastrado e permitir **Alterar**, pois o backend já filtrou o método pela assinatura gateway futura antes de expor o objeto.
+- A navegação de retorno do checkout de cortesia fica determinística e usa apenas rota interna segura; rollback remove apenas a seta e não altera gateway, assinatura, cartão ou endereço.
