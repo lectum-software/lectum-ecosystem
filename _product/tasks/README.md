@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 153 tasks: `TASK-00` a `TASK-146`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 154 tasks: `TASK-00` a `TASK-147`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -244,6 +244,7 @@ ou cortesia manual.
 | 144 | [TASK-144 - Upload de imagem Open Graph no Admin](TASK-144-upload-imagem-open-graph-admin.md) | Completed | 141, 143 |
 | 145 | [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) | Completed | 40, 141, 143, 144 |
 | 146 | [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) | Completed | 34, 45, 145 |
+| 147 | [TASK-147 - Confirmação antes de excluir post ou comentário](TASK-147-confirmacao-exclusao-post-comentario.md) | Completed | 26, 28, 145 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -368,6 +369,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 114. [TASK-143 - Previa Open Graph Admin e SEO dinamico de posts](TASK-143-preview-og-admin-seo-dinamico-posts.md) recebeu ajuste pos-feedback em 2026-08-03 para usar imagens Open Graph quadradas de entidade: avatar da comunidade em `/community/[slug]` e foto/avatar do psicologo em `/psychologists/[id]`.
 115. [TASK-145 - Rotas em PT-BR e SEO canônico](TASK-145-rotas-publicas-pt-br-seo.md) foi adicionada e concluida em 2026-08-03 para tornar canonicos os slugs publicos (`/psicologos`, `/comunidades`) e privados (`/app/notificacoes`, `/app/perfil`, `/app/profissional/*`) em PT-BR, mantendo redirects permanentes das URLs antigas em ingles.
 116. [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) foi adicionada e concluída em 2026-08-08 para sincronizar SemVer entre os quatro manifests, expor a versão dos três artefatos publicados e tornar a solicitação explícita de produção um PR `homolog` -> `main` seguido de merge e smoke.
+117. [TASK-147 - Confirmação antes de excluir post ou comentário](TASK-147-confirmacao-exclusao-post-comentario.md) foi adicionada e concluída em 2026-08-10 para exigir confirmação visual antes de excluir comentários/respostas e manter as regras existentes de exclusão de posts e conteúdo protegido.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.

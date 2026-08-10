@@ -473,3 +473,4 @@ Formato recomendado:
 - [ADR-0440 — Bloqueio da publicação das páginas legais](0440-bloqueio-publicacao-paginas-legais.md)
 - [ADR-0441 — Versionamento rastreável e promoção de produção por PR](0441-versionamento-rastreavel-promocao-producao.md)
 - [ADR-0442 — Bloqueio de zoom no frontend mobile](0442-bloqueio-zoom-mobile-frontend.md)
+- [ADR-0443 — Confirmação de exclusão de conteúdo da comunidade](0443-confirmacao-exclusao-conteudo-comunidade.md)

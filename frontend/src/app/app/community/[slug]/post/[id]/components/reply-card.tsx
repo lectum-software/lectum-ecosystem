@@ -16,6 +16,7 @@ import { type MouseEventHandler, type RefObject, useEffect, useMemo, useState } 
 import { useSaveReply } from "@/api/callers/posts";
 import type { PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
+import { CommunityDeleteConfirmationModal } from "@/components/community/community-delete-confirmation-modal";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
@@ -66,6 +67,12 @@ export const ReplyOverflowMenu = ({
   savePending,
 }: ReplyOverflowMenuProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const replyKind = reply.parent_reply_id ? "resposta" : "comentário";
+  const deleteDescription =
+    reply.replies_count > 0
+      ? `Este ${replyKind} possui respostas abaixo dele.\n\nAo excluir, as respostas encadeadas também serão removidas.\n\nEsta ação não poderá ser desfeita.`
+      : "Esta ação não poderá ser desfeita.";
 
   return (
     <div className="relative shrink-0" data-comment-collapse-ignore="true">
@@ -143,7 +150,7 @@ export const ReplyOverflowMenu = ({
               onClick={(event) => {
                 event.stopPropagation();
                 setMenuOpen(false);
-                onDelete();
+                setDeleteConfirmOpen(true);
               }}
               role="menuitem"
               type="button"
@@ -168,6 +175,17 @@ export const ReplyOverflowMenu = ({
           )}
         </div>
       ) : null}
+      <CommunityDeleteConfirmationModal
+        description={deleteDescription}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setDeleteConfirmOpen(false);
+          onDelete();
+        }}
+        open={deleteConfirmOpen}
+        pending={deletePending}
+        title={`Excluir ${replyKind}?`}
+      />
     </div>
   );
 };
