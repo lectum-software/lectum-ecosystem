@@ -286,10 +286,6 @@ export const ProfileEditLogic = () => {
                 <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
                 <h2 className="text-lg font-extrabold text-foreground">Informações Básicas</h2>
               </div>
-              <InlineAlert title="Localização opcional" variant="info">
-                Informe sua cidade e estado se quiser que a Lectum priorize psicólogos mais próximos
-                de você. Se preferir não informar agora, tudo bem: mostraremos como “Não informado”.
-              </InlineAlert>
               <div className="grid min-w-0 gap-0.5">
                 {formProps.fields.map((field) => {
                   const Component = components[field.field];

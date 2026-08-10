@@ -18,10 +18,13 @@ A Lectum passa a tratar a localizacao do paciente exibida em perfil/lista/dashbo
 
 A captura `visitor_location` continua existindo para analytics agregados fora deste escopo, mas nao alimenta mais a localizacao do paciente nas telas administrativas de pacientes. A futura ordenacao por proximidade de psicologos deve partir destes campos declarados ou de uma permissao contextual especifica, em outra task.
 
+Atualizacao TASK-151: a explicacao de localizacao nao deve aparecer como faixa/banner azul no topo de "Informacoes Basicas" da edicao de perfil do paciente. Para reduzir peso visual no mobile, a justificativa fica em texto curto no campo Estado, mantendo o preenchimento opcional.
+
 ## Consequencias
 
 - A localizacao exibida no Admin deixa de depender de heuristica de IP, reduzindo erros grandes de cidade.
 - O paciente entende o beneficio do preenchimento antes de fornecer o dado.
+- A tela mobile de edicao de perfil fica menos longa no topo e reduz uma chamada visual concorrente com campos obrigatorios.
 - Pacientes existentes permanecem validos sem backfill e aparecem como **Nao informado** ate preencherem o perfil.
 - A localizacao ainda nao e coordenada precisa; proximidade real por distancia exige versao futura com geocoding/permissao contextual.
 
@@ -46,6 +49,7 @@ A captura `visitor_location` continua existindo para analytics agregados fora de
 - `pnpm --dir frontend build` sem erros.
 - `pnpm --dir admin build` sem erros.
 - `pnpm check` sem erros.
+- TASK-151: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm check:encoding`, `pnpm check:version` e `pnpm check` sem erros apos remover o banner.
 - Browser local/HTTP ficou limitado: tentativas de subir servidores temporarios foram bloqueadas pela politica do executor; a validacao local usou builds Next e rotas compiladas.
 
 ## Pendencias
