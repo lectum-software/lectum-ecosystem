@@ -3,6 +3,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { isPublishedRuntime } from "../../../utils/runtime-config";
 import { toSafeErrorLog } from "../../../utils/safe-error-log";
 
@@ -82,9 +83,14 @@ export async function loadValidations(route) {
       return [];
     }
 
-    // O build CommonJS transforma este import dinâmico em require(). Uma URL file://
-    // não é aceita nesse caminho e removeria silenciosamente os parâmetros do OpenAPI.
-    const mod = await import(fileValidator);
+    // O build CommonJS transforma este import dinâmico em require(). Por isso, validators
+    // compilados continuam usando caminho absoluto. No Windows, o loader ESM usado por tsx
+    // em desenvolvimento exige file:// para importar arquivos TypeScript em src.
+    const importTarget =
+      process.platform === "win32" && fileValidator.endsWith(".ts")
+        ? pathToFileURL(fileValidator).href
+        : fileValidator;
+    const mod = await import(importTarget);
     const validator =
       typeof mod.default === "function"
         ? mod.default

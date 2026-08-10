@@ -53,3 +53,30 @@ OpenAPI sem impedir a inicialização da API.
 - Geração com `node dist/doc.js` e `NODE_ENV=dev`, provando que a escolha não depende apenas do env.
 - Comparação semântica com o OpenAPI gerado por `src`.
 - Checks e testes do backend.
+
+## Complemento 2026-08-10 — import de validators TypeScript no Windows
+
+### Contexto
+
+O teste de compatibilidade dos validators nomeados passou a falhar no ambiente Windows local porque
+o `node --import tsx` executa o código TypeScript em modo ESM e o loader do Node não aceita caminho
+absoluto no formato `C:\...` como specifier de `import()`. O resultado era a queda silenciosa no
+fallback seguro do gerador e a remoção de parâmetros do OpenAPI local.
+
+### Decisão
+
+Manter a decisão central da ADR: validators compilados em CommonJS continuam sendo carregados por
+caminho absoluto, sem URL `file://`. Adicionar apenas um desvio para desenvolvimento/testes no
+Windows quando o alvo ainda é `.ts`: converter o caminho absoluto para `pathToFileURL(...).href`
+antes do `import()`.
+
+### Consequências
+
+- A geração local por `src` volta a carregar validators TypeScript no Windows/tsx.
+- O runtime compilado em `dist` preserva o caminho absoluto esperado pelo CommonJS.
+- Não há mudança de rota, payload, banco, env, package ou exposição pública de Swagger.
+
+### Validação
+
+- `pnpm --dir backend exec node --import tsx --test src/packages/swagger/utils/validators.test.ts`.
+- `pnpm --dir backend check`.
