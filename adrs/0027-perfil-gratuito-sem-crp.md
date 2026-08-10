@@ -225,3 +225,32 @@ Validacoes:
 - `pnpm check:version`
 - Verificacao estatica confirmou que tags e placeholder usam `catalogTagTextClassName = "text-[10px] leading-[1.15]"`.
 - Dev server local em `http://127.0.0.1:3116`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.22"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao.
+
+
+## Ajuste complementar em 2026-08-10 - Servicos e Publico como CatalogTagField
+
+A edicao profissional (`/app/profissional/perfil/configurar`, legado `/app/professional/profile/setup`) passou a tratar `Servicos` e `Publico` como campos de lista suspensa com tags removiveis, alinhados ao padrao visual de `Especialidades` e `Abordagens`.
+
+Decisao:
+
+- ampliar `CatalogTagField` para aceitar tambem `service_ids` e `target_audience` sem criar componente paralelo;
+- manter `service_ids` com valores por `id`, preservando o contrato real do backend;
+- permitir `target_audience` com `valueKey="slug"`, porque esse campo ja e persistido como lista de slugs no perfil;
+- ordenar o bloco como `Especialidades`, `Abordagens`, `Servicos`, `Publico`, `Idiomas`, conforme pedido de produto;
+- preservar limites de plano, Zod/React Hook Form, mensagens de erro, catalogos reais e payload existente, sem backend ou package novo.
+
+Impacto de deploy:
+
+- Alteracao restrita ao frontend; backend publicado continua compativel porque o payload mantem `service_ids` e `target_audience` no formato existente.
+- Sem env nova, migration, backfill, job, provider ou manipulacao de dados persistidos.
+- Rollback: reverter o commit do frontend restaura os chips sempre expostos para `Servicos` e `Publico`.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump`
+- `pnpm check:version`
+- Dev server local: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.24"}`; a rota canonica privada redirecionou para login sem sessao. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+- `pnpm check` falhou em `check:encoding` por BOM UTF-8 em arquivos de moderacao/admin fora deste ajuste, mantidos como pendencia externa a esta decisao.

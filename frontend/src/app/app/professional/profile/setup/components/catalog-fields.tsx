@@ -17,6 +17,16 @@ import type { FreeProfileForm } from "../use-form";
 
 const catalogTagTextClassName = "text-[10px] leading-[1.15]";
 
+type CatalogPickerFieldName = keyof Pick<
+  FreeProfileForm,
+  "specialty_ids" | "service_ids" | "approach_ids"
+>;
+
+type CatalogTagFieldName = keyof Pick<
+  FreeProfileForm,
+  "specialty_ids" | "service_ids" | "approach_ids" | "target_audience"
+>;
+
 export const CatalogPicker = ({
   description,
   error,
@@ -33,15 +43,12 @@ export const CatalogPicker = ({
   error?: string;
   items: FreeProfileCatalogItem[];
   limit?: number;
-  name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">;
+  name: CatalogPickerFieldName;
   required?: boolean;
   selected: string[];
   showLimitCounter?: boolean;
   title: string;
-  onChange: (
-    name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">,
-    value: string[],
-  ) => void;
+  onChange: (name: CatalogPickerFieldName, value: string[]) => void;
 }) => {
   const isEmpty = items.length === 0;
 
@@ -101,6 +108,7 @@ export const CatalogPicker = ({
 
 export const CatalogTagField = ({
   description,
+  error,
   placeholderClassName = catalogTagTextClassName,
   items,
   groupedItems,
@@ -110,26 +118,27 @@ export const CatalogTagField = ({
   required,
   selected,
   title,
+  valueKey = "id",
   onChange,
 }: {
   description?: string;
+  error?: string;
   items: FreeProfileCatalogItem[];
   groupedItems?: CatalogTagGroup[];
   limit?: number;
   placeholderClassName?: string;
-  name: keyof Pick<FreeProfileForm, "specialty_ids" | "approach_ids">;
+  name: CatalogTagFieldName;
   placeholder: string;
   required?: boolean;
   selected: string[];
   title: string;
-  onChange: (
-    name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">,
-    value: string[],
-  ) => void;
+  valueKey?: "id" | "slug";
+  onChange: (name: CatalogTagFieldName, value: string[]) => void;
 }) => {
   const [open, setOpen] = useState(false);
   const isEmpty = items.length === 0;
-  const selectedItems = items.filter((item) => selected.includes(item.id));
+  const getItemValue = (item: FreeProfileCatalogItem) => item[valueKey];
+  const selectedItems = items.filter((item) => selected.includes(getItemValue(item)));
   const selectedMap = new Set(selected);
   const limitReached = Boolean(limit && selected.length >= limit);
   const groupedCatalogItems =
@@ -157,7 +166,7 @@ export const CatalogTagField = ({
   };
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-2">
       <div>
         <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
           <span>{title}</span>
@@ -177,7 +186,9 @@ export const CatalogTagField = ({
           className={cn(
             "flex min-h-12 items-center gap-2 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-3 py-2 shadow-sm transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
             open && "border-primary ring-4 ring-primary/10",
+            error && "border-danger focus-within:border-danger focus-within:ring-danger/10",
           )}
+          aria-invalid={Boolean(error)}
         >
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selectedItems.map((item) => (
@@ -192,7 +203,7 @@ export const CatalogTagField = ({
                 <button
                   aria-label={`Remover ${item.name}`}
                   className="grid h-3.5 w-3.5 place-items-center rounded-full text-primary transition hover:bg-primary/10"
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeItem(getItemValue(item))}
                   type="button"
                 >
                   <X className="h-3 w-3" aria-hidden="true" />
@@ -236,7 +247,8 @@ export const CatalogTagField = ({
                     </p>
                     <div className="grid gap-1">
                       {group.items.map((item) => {
-                        const checked = selectedMap.has(item.id);
+                        const itemValue = getItemValue(item);
+                        const checked = selectedMap.has(itemValue);
                         const disabled = Boolean(limitReached && !checked);
 
                         return (
@@ -249,7 +261,7 @@ export const CatalogTagField = ({
                             )}
                             disabled={disabled}
                             key={`${item.id}-${group.title}`}
-                            onClick={() => toggleItem(item.id)}
+                            onClick={() => toggleItem(itemValue)}
                             type="button"
                           >
                             <span>{item.name}</span>
@@ -269,6 +281,13 @@ export const CatalogTagField = ({
           </div>
         ) : null}
       </div>
+      <span
+        className="block min-h-4 text-xs font-medium leading-4 text-danger"
+        id={`${String(name)}-error`}
+        role="alert"
+      >
+        {error}
+      </span>
     </div>
   );
 };

@@ -584,3 +584,32 @@ Validacoes executadas:
 - `pnpm check:version`
 - Verificacao estatica confirmou que tags e placeholder usam `catalogTagTextClassName = "text-[10px] leading-[1.15]"`.
 - Dev server local em `http://127.0.0.1:3116`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.22"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando protecao da rota privada.
+
+
+## Ajuste complementar em 2026-08-10 - Servicos e Publico em lista suspensa
+
+- Pedido do usuario: na edicao de perfil do psicologo, `Servicos` e `Publico` devem deixar de ser chips sempre expostos e passar a usar lista suspensa como `Especialidades` e `Abordagens`.
+- A ordem do bloco `Filtros` passou a ser: `Especialidades`, `Abordagens`, `Servicos`, `Publico`, `Idiomas`.
+- `CatalogTagField` foi ampliado para suportar `service_ids` e `target_audience`, mantendo tags removiveis, dropdown mobile-first, limites reais de plano e validacao do formulario real.
+- `Publico` usa o catalogo real `profile.data.catalogs.target_audiences` com valor persistido por `slug`; `Servicos` continua usando IDs reais de `profile.data.catalogs.services`.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, contratos publicos, dados persistidos, envs ou packages novos.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-10 e `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `Servicos` usa lista suspensa com tags removiveis, como `Especialidades` e `Abordagens`.
+- [x] `Publico` usa lista suspensa com tags removiveis, como `Especialidades` e `Abordagens`.
+- [x] A ordem dos campos em `Filtros` ficou `Especialidades`, `Abordagens`, `Servicos`, `Publico`, `Idiomas`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump`
+- `pnpm check:version`
+- Verificacao estatica confirmou a ordem `specialty_ids`, `approach_ids`, `service_ids`, `target_audience`, `language` no bloco `Filtros`.
+- Dev server local em `http://127.0.0.1:3124`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.24"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+- `pnpm check` foi executado e falhou em `check:encoding` por BOM UTF-8 em arquivos de moderacao/admin fora deste ajuste: `admin/src/app/(admin)/moderacao/sugestoes-comunidades/modules/community-suggestions-support.ts`, `backend/src/modules/api/admin/private/moderation/repositories/queries/AdminModerationCommunitySuggestionsRepository.ts`, `backend/src/modules/api/admin/private/moderation/use-cases/services/community-suggestions.ts` e `admin/src/components/admin-shell/nav.ts`.

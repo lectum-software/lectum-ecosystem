@@ -29,12 +29,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { CityField } from "../components/avatar-city-fields";
 import { AvatarEditor } from "../components/avatar-editor";
-import {
-  BooleanBenefit,
-  CatalogPicker,
-  CatalogTagField,
-  ChipPicker,
-} from "../components/catalog-fields";
+import { BooleanBenefit, CatalogTagField, ChipPicker } from "../components/catalog-fields";
 import { ProfileImagesPreview } from "../components/profile-images-preview";
 import {
   ProfileInactiveBanner,
@@ -75,6 +70,7 @@ export const ProfessionalProfileSetupLogic = () => {
     orderedApproachOptions,
     orderedServiceOptions,
     orderedSpecialtyGroups,
+    orderedTargetAudienceOptions,
     profile,
     publicProfileHref,
     published,
@@ -94,7 +90,6 @@ export const ProfessionalProfileSetupLogic = () => {
     showProfileVideoTip,
     submit,
     targetAudienceError,
-    targetAudienceOptions,
     update,
     uploadVideo,
     uploadVideoCover,
@@ -396,8 +391,7 @@ export const ProfessionalProfileSetupLogic = () => {
                   selected={selectedApproaches}
                   title="Abordagens"
                 />
-                {renderField("language")}
-                <CatalogPicker
+                <CatalogTagField
                   description={
                     profile.data.plan.is_free
                       ? "Selecione 1 opção. Faça o upgrade para adicionar todos os serviços."
@@ -408,20 +402,23 @@ export const ProfessionalProfileSetupLogic = () => {
                   limit={profile.data.plan.service_limit}
                   name="service_ids"
                   onChange={setCatalogValue}
+                  placeholder="Adicione um serviço..."
                   required
                   selected={selectedServices}
-                  showLimitCounter={false}
                   title="Serviços"
                 />
-                <ChipPicker
+                <CatalogTagField
                   error={targetAudienceError}
-                  items={targetAudienceOptions}
-                  label="Público"
+                  items={orderedTargetAudienceOptions}
                   name="target_audience"
-                  onChange={(value) => setArrayValue("target_audience", value)}
+                  onChange={setCatalogValue}
+                  placeholder="Adicione um público..."
                   required
                   selected={selectedTargets}
+                  title="Público"
+                  valueKey="slug"
                 />
+                {renderField("language")}
                 <div className="grid gap-3">
                   <h3 className="text-sm font-bold text-foreground">Selos e Facilidades</h3>
                   <BooleanBenefit

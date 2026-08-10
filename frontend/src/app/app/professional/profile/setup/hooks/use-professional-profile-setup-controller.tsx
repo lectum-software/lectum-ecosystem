@@ -273,12 +273,8 @@ export const useProfessionalProfileSetupController = () => {
     () => [...(profile.data?.catalogs.services || [])].sort(compareCatalogItems),
     [profile.data?.catalogs.services],
   );
-  const targetAudienceOptions = useMemo(
-    () =>
-      (profile.data?.catalogs.target_audiences || []).map((item) => ({
-        label: item.name,
-        value: item.slug,
-      })),
+  const orderedTargetAudienceOptions = useMemo(
+    () => [...(profile.data?.catalogs.target_audiences || [])].sort(compareCatalogItems),
     [profile.data?.catalogs.target_audiences],
   );
   const whatsappUrl = toWhatsappPhoneE164(whatsappPhone, countryCode)?.replace(
@@ -314,7 +310,10 @@ export const useProfessionalProfileSetupController = () => {
   };
 
   const setCatalogValue = (
-    name: keyof Pick<FreeProfileForm, "specialty_ids" | "service_ids" | "approach_ids">,
+    name: keyof Pick<
+      FreeProfileForm,
+      "specialty_ids" | "service_ids" | "approach_ids" | "target_audience"
+    >,
     value: string[],
   ) => {
     form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
@@ -649,6 +648,7 @@ export const useProfessionalProfileSetupController = () => {
     orderedApproachOptions,
     orderedServiceOptions,
     orderedSpecialtyGroups,
+    orderedTargetAudienceOptions,
     profile,
     publicProfileHref,
     published,
@@ -672,7 +672,6 @@ export const useProfessionalProfileSetupController = () => {
     showProfileVideoTip,
     submit,
     targetAudienceError,
-    targetAudienceOptions,
     update,
     uploadAvatar,
     uploadCoverImage,
