@@ -25,6 +25,7 @@ Centralizar tokens globais de safe area inferior no frontend:
 - `--lectum-safe-area-bottom`;
 - `--lectum-bottom-fixed-padding`;
 - `--lectum-bottom-fixed-padding-compact`;
+- `--lectum-bottom-nav-padding`;
 - `--lectum-mobile-bottom-nav-height`;
 - `--lectum-mobile-bottom-nav-aware-padding`.
 
@@ -33,14 +34,21 @@ compartilhamento, CTA fixo de assinatura, controles inferiores de vídeo e foote
 passam a consumir esses tokens. O viewport do app passa a declarar `viewportFit: "cover"` para
 habilitar o tratamento correto em iOS/PWA.
 
+Após feedback visual de 2026-08-10, a bottom nav passa a usar o token compacto
+`--lectum-bottom-nav-padding`, enquanto compositores, CTAs e footers fixos continuam com
+`--lectum-bottom-fixed-padding`. A separação evita uma faixa branca excessiva sob o menu e mantém a
+proteção maior nos campos realmente colados à borda inferior.
+
 ## Consequências
 
 - A navegação inferior fica mais próxima do padrão de apps sociais: ícones e labels sobem e a área do
   home indicator/safe area fica incorporada ao fundo da barra.
 - Elementos inferiores mantêm respiro mínimo mesmo quando o inset nativo é `0px`.
 - O conteúdo com bottom nav reserva espaço pela nova altura, reduzindo risco de sobreposição.
-- O trade-off é aumentar um pouco a área ocupada no rodapé em mobile; foi aceito por ser uma
-  correção de usabilidade e toque em iPhone/PWA.
+- O trade-off original de aumentar a área ocupada no rodapé foi recalibrado: o menu inferior usa
+  padding compacto para se aproximar do LinkedIn, e apenas controles de entrada/CTA mantêm respiro maior.
+- A separação de tokens reduz risco de regressão cruzada: corrigir o menu não diminui a proteção de
+  compositores e corrigir compositores não volta a inflar a bottom nav.
 
 ## Produção e rollout
 
@@ -63,6 +71,9 @@ habilitar o tratamento correto em iOS/PWA.
 - `git diff --check`
 - Smoke local com `next start` e Chrome headless em viewport `390x844`, confirmando `/version`
   público em `0.1.21` e renderização mobile da rota de comunidades sem regressão estrutural.
+- Pós-feedback 2026-08-10: `pnpm check:version`, `git diff --check`,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin build`, `pnpm check`
+  e smoke local em `next start -p 3014`, confirmando `/version` público em `0.1.25`.
 
 ## Pendências
 

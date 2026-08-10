@@ -29,7 +29,9 @@ Referências visuais:
 - Capturas enviadas pelo usuário:
   - `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 08.51.49.jpeg` (LinkedIn);
   - `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 08.51.34.jpeg` (TikTok);
-  - `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 08.50.26.jpeg` (Lectum).
+  - `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 08.50.26.jpeg` (Lectum);
+  - `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 13.19.49.jpeg` (LinkedIn pós-ajuste);
+  - `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 13.19.41.jpeg` (Lectum pós-ajuste inicial, com excesso de espaço).
 - `_product/proto/Feed Comunidade.jpg` e `_product/proto/Dentro do Post.jpg` para preservar a
   hierarquia mobile-first da comunidade em base ~390px.
 - Builder/Quick Copy ativo documentado em `PROTO-INVENTORY.md`; nesta sessão não há ferramenta
@@ -93,6 +95,8 @@ Frontend esperado:
 - `frontend/src/app/layout.tsx` define `viewportFit: "cover"`.
 - `frontend/src/app/globals.css` centraliza variáveis de safe area inferior.
 - Elementos fixos/sticky inferiores usam `var(--lectum-bottom-fixed-padding)` ou equivalente.
+- A bottom nav mobile usa `var(--lectum-bottom-nav-padding)`, token compacto próprio, para manter
+  respiro semelhante ao LinkedIn sem criar uma faixa branca excessiva abaixo dos itens.
 - A bottom nav compartilhada expõe altura/padding coerentes com os tokens globais.
 
 ## Critérios de aceite
@@ -101,6 +105,7 @@ Frontend esperado:
 - [x] O frontend usa `viewport-fit=cover` para iOS/PWA.
 - [x] Existe token global de safe area inferior com respiro mínimo quando o inset nativo é `0px`.
 - [x] A bottom nav mobile do `PrivateTemplate` ficou mais alta e com labels acima da borda inferior.
+- [x] Pós-feedback: a bottom nav usa token compacto próprio e não cria faixa branca excessiva sob o menu.
 - [x] A barra mobile de escrever comentário/resposta respeita safe area e não fica colada ao rodapé.
 - [x] CTAs/footers inferiores fixos ou sticky mapeados usam o mesmo padrão de respiro.
 - [x] O conteúdo com bottom nav reserva espaço suficiente para a nova altura da navegação.
@@ -130,9 +135,16 @@ Concluída em 2026-08-10.
 - Aplicados os tokens à bottom nav mobile principal, ao `BottomNavigation` compartilhado, ao composer
   mobile de comentários/respostas, ao CTA fixo de assinatura, a footers de modais/bottom sheets,
   controles inferiores de vídeo e footer sticky de filtros.
+- Ajuste pós-feedback de 2026-08-10: a bottom nav passou a usar `--lectum-bottom-nav-padding`,
+  separado do padding protetivo de compositores/CTAs. Com isso, o menu fica compacto como no LinkedIn,
+  sem o grande espaço vazio branco observado na captura das 13:19, enquanto campos encostados à borda
+  inferior continuam preservando a safe area completa.
 - Ajustado o padding inferior do shell privado para reservar a nova altura da bottom nav.
 - Validado visualmente em Chrome headless na viewport `390x844` com `next start`; `/version` retornou
   `0.1.21` e a rota mobile de comunidades renderizou sem corte inferior. Como a API local não estava
   disponível para dados autenticados, a conclusão da bottom nav foi validada por código, build e
   comparação com as capturas/protótipos.
+- Validação pós-feedback de 2026-08-10: `pnpm check:version`, `git diff --check`,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir admin build`, `pnpm check`
+  e smoke local em `next start -p 3014` com `/version` retornando `0.1.25`.
 - Nenhum package, env, migration, mock ou dado fake foi adicionado.

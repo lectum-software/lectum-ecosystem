@@ -245,7 +245,7 @@ export const PrivateTemplate = ({
       )}
       style={{
         minHeight: "var(--lectum-mobile-bottom-nav-height)",
-        paddingBottom: "var(--lectum-bottom-fixed-padding)",
+        paddingBottom: "var(--lectum-bottom-nav-padding)",
         transform: isMobileNavigationRenderedVisible ? "translateY(0)" : "translateY(140%)",
         pointerEvents: isMobileNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}

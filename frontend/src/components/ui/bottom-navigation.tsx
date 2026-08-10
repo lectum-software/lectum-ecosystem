@@ -19,7 +19,7 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
     <nav
       aria-label="Navegacao principal"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-20 min-h-[var(--lectum-mobile-bottom-nav-height)] border-t border-border bg-surface/95 px-3 pt-2 pb-[var(--lectum-bottom-fixed-padding)] text-foreground shadow-lectum-soft backdrop-blur md:hidden dark:shadow-lectum-soft",
+        "fixed inset-x-0 bottom-0 z-20 min-h-[var(--lectum-mobile-bottom-nav-height)] border-t border-border bg-surface/95 px-3 pt-2 pb-[var(--lectum-bottom-nav-padding)] text-foreground shadow-lectum-soft backdrop-blur md:hidden dark:shadow-lectum-soft",
         className,
       )}
     >
