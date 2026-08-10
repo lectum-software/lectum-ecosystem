@@ -6,6 +6,7 @@ import {
 const DEFAULT_THUMBNAIL_TIMEOUT_MS = 8000;
 const DEFAULT_THUMBNAIL_QUALITY = 0.86;
 const DEFAULT_THUMBNAIL_WIDTH = 1200;
+const DEFAULT_POSTER_OBJECT_URL_QUALITY = 0.82;
 const THUMBNAIL_FRAME_SAMPLE_SIZE = 32;
 const THUMBNAIL_FRAME_SEEK_TIMEOUT_MS = 1800;
 const THUMBNAIL_FRAME_USABLE_BRIGHT_RATIO = 0.035;
@@ -205,6 +206,36 @@ const scoreCurrentVideoFrame = (video: HTMLVideoElement): ThumbnailFrameScore | 
   }
 };
 
+const selectUsableVideoFrame = async (video: HTMLVideoElement, shouldStop: () => boolean) => {
+  const candidateTimes = buildThumbnailCandidateTimes(video.duration);
+  let bestFrame: { score: ThumbnailFrameScore; time: number } | null = null;
+
+  for (const candidateTime of candidateTimes) {
+    if (shouldStop()) return;
+
+    await seekVideoTo(video, candidateTime);
+
+    if (shouldStop()) return;
+
+    const frameScore = scoreCurrentVideoFrame(video);
+
+    if (frameScore && (!bestFrame || frameScore.score > bestFrame.score.score)) {
+      bestFrame = {
+        score: frameScore,
+        time: candidateTime,
+      };
+    }
+
+    if (frameScore?.usable) {
+      return;
+    }
+  }
+
+  if (!shouldStop() && bestFrame && Math.abs(video.currentTime - bestFrame.time) > 0.05) {
+    await seekVideoTo(video, bestFrame.time);
+  }
+};
+
 export const createVideoThumbnailFile = async (
   file: File,
   options: CreateVideoThumbnailOptions = {},
@@ -288,36 +319,11 @@ export const createVideoThumbnailFile = async (
 
       captureStarted = true;
 
-      const candidateTimes = buildThumbnailCandidateTimes(video.duration);
-      let bestFrame: { score: ThumbnailFrameScore; time: number } | null = null;
+      await selectUsableVideoFrame(video, () => settled);
 
-      for (const candidateTime of candidateTimes) {
-        if (settled) return;
-
-        await seekVideoTo(video, candidateTime);
-
-        if (settled) return;
-
-        const frameScore = scoreCurrentVideoFrame(video);
-
-        if (frameScore && (!bestFrame || frameScore.score > bestFrame.score.score)) {
-          bestFrame = {
-            score: frameScore,
-            time: candidateTime,
-          };
-        }
-
-        if (frameScore?.usable) {
-          captureFrame();
-          return;
-        }
+      if (!settled) {
+        captureFrame();
       }
-
-      if (bestFrame && Math.abs(video.currentTime - bestFrame.time) > 0.05) {
-        await seekVideoTo(video, bestFrame.time);
-      }
-
-      captureFrame();
     };
 
     timeoutId = window.setTimeout(() => finish(null), DEFAULT_THUMBNAIL_TIMEOUT_MS);
@@ -333,6 +339,86 @@ export const createVideoThumbnailFile = async (
     video.playsInline = true;
     video.preload = "metadata";
     video.src = objectUrl;
+    video.load();
+  });
+};
+
+export const createVideoPosterObjectUrl = async (src: string): Promise<string | null> => {
+  if (typeof document === "undefined") return null;
+  if (!src.trim()) return null;
+
+  return new Promise<string | null>((resolve) => {
+    const video = document.createElement("video");
+    let captureStarted = false;
+    let settled = false;
+    let timeoutId: number | null = null;
+
+    const cleanup = () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    const finish = (posterUrl: string | null) => {
+      if (settled) return;
+
+      settled = true;
+      cleanup();
+      resolve(posterUrl);
+    };
+
+    const capturePoster = () => {
+      try {
+        const { height, width } = calculateThumbnailSize(video.videoWidth, video.videoHeight);
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          finish(null);
+          return;
+        }
+
+        context.drawImage(video, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            finish(blob ? URL.createObjectURL(blob) : null);
+          },
+          "image/jpeg",
+          DEFAULT_POSTER_OBJECT_URL_QUALITY,
+        );
+      } catch {
+        finish(null);
+      }
+    };
+
+    const selectFrameAndCapture = async () => {
+      if (captureStarted || settled) return;
+
+      captureStarted = true;
+
+      await selectUsableVideoFrame(video, () => settled);
+
+      if (!settled) {
+        capturePoster();
+      }
+    };
+
+    timeoutId = window.setTimeout(() => finish(null), DEFAULT_THUMBNAIL_TIMEOUT_MS);
+    video.addEventListener("loadedmetadata", () => void selectFrameAndCapture(), { once: true });
+    video.addEventListener("loadeddata", () => {
+      if (!video.videoWidth || !video.videoHeight) return;
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        void selectFrameAndCapture();
+      }
+    });
+    video.addEventListener("error", () => finish(null), { once: true });
+    video.crossOrigin = "anonymous";
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.src = src;
     video.load();
   });
 };

@@ -109,6 +109,7 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 ## Ajuste pos-feedback 2026-08-10 - capa automatica nos videos de comunidades
 
 - [x] Os players de videos de posts e respostas de comunidade passam a usar `thumbnail_url` persistido como `poster`, incluindo feed, detalhe, thread, perfil profissional, meus posts e salvos.
+- [x] Videos legados ou registros sem `thumbnail_url` tentam uma capa transitoria no navegador a partir do proprio arquivo de video, sem persistir backfill nem alterar dados publicados.
 - [x] A geracao automatica de miniatura no navegador deixa de depender de um unico frame em `0.5s` e tenta pontos diferentes do video, priorizando o primeiro frame com luminosidade/contraste suficientes para reduzir capas pretas.
 - [x] Nao foi adicionada opcao manual de capa para psicologos em videos de comunidade; a capa segue sendo derivada automaticamente de uma parte real do video enviado.
 - [x] Nao houve alteracao de banco, env nova, pacote novo, mock ou backfill destrutivo de videos antigos.

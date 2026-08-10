@@ -9,6 +9,7 @@ import {
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 
 export type CommunityMediaFrameVariant = "post" | "detail" | "reply";
 export type CommunityMediaOrientation = "landscape" | "portrait" | "square";
@@ -257,6 +258,12 @@ export const CommunityMediaBlock = ({
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
   const resolvedThumbnailUrl =
     normalizedMediaType === "video" && thumbnailUrl ? resolvePublicMediaUrl(thumbnailUrl) : null;
+  const fallbackPosterKey =
+    normalizedMediaType === "video" && !resolvedThumbnailUrl ? resolvedUrl : null;
+  const [fallbackPoster, setFallbackPoster] = useState<{ key: string; url: string } | null>(null);
+  const fallbackPosterUrl =
+    fallbackPoster && fallbackPoster.key === fallbackPosterKey ? fallbackPoster.url : null;
+  const resolvedPosterUrl = resolvedThumbnailUrl ?? fallbackPosterUrl;
   const handleVideoElementReady = useContentVideoWatchTracking(
     normalizedMediaType === "video" && analyticsTarget
       ? {
@@ -272,6 +279,37 @@ export const CommunityMediaBlock = ({
     type: CommunityMediaType;
     width?: number | null;
   } | null>(null);
+
+  useEffect(() => {
+    if (!fallbackPosterKey) {
+      return;
+    }
+
+    let active = true;
+    let objectUrl: string | null = null;
+
+    createVideoPosterObjectUrl(fallbackPosterKey).then((posterUrl) => {
+      if (!active) {
+        if (posterUrl) URL.revokeObjectURL(posterUrl);
+        return;
+      }
+
+      if (!posterUrl) {
+        setFallbackPoster(null);
+        return;
+      }
+
+      objectUrl = posterUrl;
+      setFallbackPoster({ key: fallbackPosterKey, url: posterUrl });
+    });
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [fallbackPosterKey]);
 
   useEffect(() => {
     if (!resolvedUrl || !normalizedMediaType) {
@@ -342,7 +380,7 @@ export const CommunityMediaBlock = ({
           fit="contain"
           fullscreenVariant="content"
           onVideoElementReady={handleVideoElementReady}
-          poster={resolvedThumbnailUrl}
+          poster={resolvedPosterUrl}
           src={resolvedUrl}
           style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
           title={alt}
