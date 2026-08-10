@@ -203,3 +203,25 @@ Validacoes:
 - `pnpm check:version`
 - `pnpm check` (falhou em `check:cycles` por ciclos preexistentes/concorrentes em arquivos de comunidade fora deste ajuste: `app/app/community/[slug]/post/new/logic.tsx` -> views -> `app/app/community/[slug]/logic.tsx` -> views -> post/new)
 - Dev server local: `/version` respondeu `200`; a rota legada redirecionou para a rota canonica em PT-BR e a rota canonica privada redirecionou para login sem sessao.
+
+
+## Ajuste complementar em 2026-08-10 - classe tipografica compartilhada nas tags
+
+O ajuste anterior colocou os placeholders de `Especialidades` e `Abordagens` em linha propria, mas o retorno visual indicou que a fonte ainda parecia maior que a das tags.
+
+Decisao:
+
+- criar uma classe tipografica compartilhada dentro de `CatalogTagField` para tags e placeholder;
+- usar `text-[10px]` com `leading-[1.15]` nos dois elementos para igualar o tamanho visual em mobile;
+- manter `basis-full`, `w-full` e `whitespace-nowrap` no placeholder para preservar linha propria e evitar quebra textual;
+- nao alterar catalogos reais, limites de plano, dropdown, backend, Prisma, packages ou contratos.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+- Verificacao estatica confirmou que tags e placeholder usam `catalogTagTextClassName = "text-[10px] leading-[1.15]"`.
+- Dev server local em `http://127.0.0.1:3116`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.22"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao.

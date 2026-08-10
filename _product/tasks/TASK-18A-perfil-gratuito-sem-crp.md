@@ -558,3 +558,29 @@ Validacoes executadas:
 - `pnpm check:version`
 - `pnpm check` (falhou em `check:cycles` por ciclos preexistentes/concorrentes em arquivos de comunidade fora deste ajuste: `app/app/community/[slug]/post/new/logic.tsx` -> views -> `app/app/community/[slug]/logic.tsx` -> views -> post/new)
 - Dev server local em `http://127.0.0.1:3114`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.17"}`; rota legada `/app/professional/profile/setup` respondeu `308` para `/app/profissional/perfil/configurar`; rota canonica privada `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando protecao. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+
+## Ajuste complementar em 2026-08-10 - fonte do placeholder igual a tag
+
+- Pedido do usuario: apos o ajuste de linha, os textos `Adicione uma especialidade...` e `Adicione uma abordagem...` ainda pareciam maiores que as tags selecionadas.
+- O componente `CatalogTagField` passou a usar uma classe tipografica compartilhada para tags e placeholder, com `text-[10px]` e `leading-[1.15]`, garantindo o mesmo tamanho visual no mobile.
+- A regra de linha propria foi preservada com `w-full basis-full whitespace-nowrap`.
+- Nao houve alteracao de backend, Prisma, endpoints, contratos, dados persistidos, packages ou envs.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel foi o retorno visual do usuario em 2026-08-10 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Tags selecionadas e placeholder usam a mesma classe de tamanho textual.
+- [x] O placeholder permanece na linha abaixo das tags e sem quebra textual.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+- Verificacao estatica confirmou que tags e placeholder usam `catalogTagTextClassName = "text-[10px] leading-[1.15]"`.
+- Dev server local em `http://127.0.0.1:3116`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.22"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando protecao da rota privada.

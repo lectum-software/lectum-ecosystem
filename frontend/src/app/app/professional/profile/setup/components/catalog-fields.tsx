@@ -15,6 +15,8 @@ import {
 } from "../modules/profile-setup-support";
 import type { FreeProfileForm } from "../use-form";
 
+const catalogTagTextClassName = "text-[10px] leading-[1.15]";
+
 export const CatalogPicker = ({
   description,
   error,
@@ -99,7 +101,7 @@ export const CatalogPicker = ({
 
 export const CatalogTagField = ({
   description,
-  placeholderClassName = "text-[0.68rem]",
+  placeholderClassName = catalogTagTextClassName,
   items,
   groupedItems,
   limit,
@@ -180,7 +182,10 @@ export const CatalogTagField = ({
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selectedItems.map((item) => (
               <span
-                className="inline-flex max-w-full items-center gap-1 rounded-md bg-primary-soft px-2 py-1 text-[0.68rem] font-bold text-primary"
+                className={cn(
+                  "inline-flex max-w-full items-center gap-1 rounded-md bg-primary-soft px-2 py-1 font-bold text-primary",
+                  catalogTagTextClassName,
+                )}
                 key={item.id}
               >
                 <span className="max-w-[11rem] truncate">{item.name}</span>
