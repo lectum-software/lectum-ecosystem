@@ -53,14 +53,6 @@ export const replySummarySelect = {
   },
 } satisfies Prisma.post_replySelect;
 
-export const latestLocationSelect = {
-  city: true,
-  country: true,
-  createdAt: true,
-  source: true,
-  state: true,
-} satisfies Prisma.visitor_locationSelect;
-
 export const patientSelect = {
   active: true,
   avatar: true,
@@ -71,20 +63,13 @@ export const patientSelect = {
   provider: true,
   patient_profile: {
     select: {
+      city: true,
       createdAt: true,
       gender: true,
       id: true,
       onboarding_completed_at: true,
-    },
-  },
-  visitor_locations: {
-    orderBy: {
-      createdAt: "desc" as const,
-    },
-    select: latestLocationSelect,
-    take: 1,
-    where: {
-      deleted: false,
+      state: true,
+      updatedAt: true,
     },
   },
   user_tokens: {

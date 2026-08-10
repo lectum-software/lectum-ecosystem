@@ -83,6 +83,8 @@ export class ProfileRepository implements IProfileRepository {
       birthdate: data.b.birthdate ?? null,
       phone: data.b.phone ?? null,
       bio: data.b.bio ?? null,
+      city: data.b.city ?? null,
+      state: data.b.state ?? null,
     };
 
     const [user, updatedProfile] = await prisma.$transaction([

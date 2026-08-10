@@ -11,6 +11,9 @@ const normalizeNullableText = (value?: string | null) => {
   return normalized.length > 0 ? normalized : null;
 };
 
+const normalizeState = (value?: IUpdateProfileDTO["b"]["state"]) =>
+  (normalizeNullableText(value)?.toUpperCase() ?? null) as IUpdateProfileDTO["b"]["state"];
+
 const normalizePhone = (value?: string | null) => {
   const normalized = normalizeNullableText(value);
   if (!normalized) return null;
@@ -55,6 +58,15 @@ export const update = async (data: IUpdateProfileDTO) => {
     };
   }
 
+  const city = normalizeNullableText(data.b.city);
+  const state = normalizeState(data.b.state);
+  if (Boolean(city) !== Boolean(state)) {
+    return {
+      status: 400,
+      ...error("patient_profile_location_pair_required", {}),
+    };
+  }
+
   const repository = new ProfileRepository();
   const res = await repository.update({
     ...data,
@@ -63,9 +75,11 @@ export const update = async (data: IUpdateProfileDTO) => {
       name: data.b.name.trim(),
       phone,
       bio: normalizeNullableText(data.b.bio),
+      city,
       goal: data.b.goal ?? null,
       gender: data.b.gender ?? null,
       birthdate: data.b.birthdate ?? null,
+      state,
     },
   });
 

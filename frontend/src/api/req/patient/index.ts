@@ -31,6 +31,8 @@ export type UpdatePatientProfilePayload = {
   birthdate?: string | null;
   phone?: string | null;
   bio?: string | null;
+  city?: string | null;
+  state?: string | null;
 };
 
 export type FavoritePsychologistResponse = {

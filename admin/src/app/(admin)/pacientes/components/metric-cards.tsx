@@ -179,7 +179,7 @@ export const resolveBrazilStateCode = (item: PatientsDashboardBreakdownItem) => 
 };
 
 export const formatLocationCaptureCount = (count: number) =>
-  `${numberFormatter.format(count)} ${count === 1 ? "captura" : "capturas"}`;
+  `${numberFormatter.format(count)} ${count === 1 ? "paciente" : "pacientes"}`;
 
 export const TrendBadge = ({ metric }: { metric: PatientsDashboardMetric }) => {
   if (metric.unavailable) {

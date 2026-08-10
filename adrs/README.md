@@ -478,3 +478,4 @@ Formato recomendado:
 - [ADR-0445 — Blocos internos de demanda para sugestoes de comunidades](0445-blocos-demanda-sugestoes-comunidades-admin.md)
 - [ADR-0446 — Sanitizacao preserva aliases em respostas de billing](0446-sanitizacao-aliases-resposta-billing.md)
 - [ADR-0447 — Captura de localizacao prioriza cidade quando proxy traz so pais](0447-captura-localizacao-cidade-prioritaria.md)
+- [ADR-0448 — Localizacao declarada do paciente](0448-localizacao-declarada-paciente.md)

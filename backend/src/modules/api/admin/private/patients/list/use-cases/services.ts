@@ -91,7 +91,7 @@ const STATUS_LABELS: Record<AdminPatientsListStatus, AdminPatientsListItem["stat
   inactive: "Inativo",
 };
 const PATIENT_LIST_SOURCE =
-  "user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save" as const;
+  "user+patient_profile+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save" as const;
 const PATIENT_LIST_COMMUNITY_ENGAGEMENT_SOURCE =
   "community_post+post_reply+post_vote+post_save+post_reply_save" as const;
 const PATIENT_INTENT_SCORE_WEIGHTS = {
@@ -146,6 +146,9 @@ const normalizeGender = (value?: string | null) => {
     label: GENDER_LABELS[key] ?? value?.trim() ?? "Não informado",
   };
 };
+
+const hasDeclaredLocation = (profile: AdminPatientListRecord["patient_profile"]) =>
+  Boolean(profile?.city?.trim() && profile?.state?.trim());
 
 const providerFromRaw = (provider?: string | null): AdminPatientsListProvider =>
   (provider ?? "").trim().toLowerCase() === "google" ? "google" : "email_password";
@@ -387,15 +390,15 @@ const matchesFilters = (patient: AdminPatientListRecord, query: AdminPatientsLis
 };
 
 const mapPatient = (patient: AdminPatientListRecord): AdminPatientsListItem => {
-  const latestLocation = patient.visitor_locations[0] ?? null;
   const provider = providerFromRaw(patient.provider);
   const status = statusFromPatient(patient);
   const gender = normalizeGender(patient.patient_profile?.gender);
+  const hasLocation = hasDeclaredLocation(patient.patient_profile);
 
   return {
     avatar: patient.avatar,
-    city: latestLocation?.city ?? null,
-    country: latestLocation?.country ?? null,
+    city: hasLocation ? (patient.patient_profile?.city ?? null) : null,
+    country: hasLocation ? "BR" : null,
     created_at: patient.createdAt,
     detail_url: `/pacientes/${patient.id}`,
     email: patient.email,
@@ -410,12 +413,12 @@ const mapPatient = (patient: AdminPatientListRecord): AdminPatientsListItem => {
       id: "cold",
       label: PATIENT_INTENT_LABELS.cold,
     },
-    last_location_at: latestLocation?.createdAt ?? null,
+    last_location_at: hasLocation ? (patient.patient_profile?.updatedAt ?? null) : null,
     name: normalizeName(patient.name),
     onboarding_completed_at: patient.patient_profile?.onboarding_completed_at ?? null,
     provider: patient.provider,
     provider_label: PROVIDER_LABELS[provider],
-    state: latestLocation?.state ?? null,
+    state: hasLocation ? (patient.patient_profile?.state ?? null) : null,
     status,
     status_label: STATUS_LABELS[status],
   };

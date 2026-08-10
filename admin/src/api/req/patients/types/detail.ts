@@ -300,6 +300,6 @@ export type AdminPatientDetail = {
     points: PatientsDetailSeriesPoint[];
     source: AdminPublicSource<"community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report+verified_responses">;
   };
-  source: AdminPublicSource<"user+patient_profile+visitor_location+community_activity+professional_review">;
+  source: AdminPublicSource<"user+patient_profile+community_activity+professional_review">;
   unavailable: PatientsDetailUnavailable[];
 };

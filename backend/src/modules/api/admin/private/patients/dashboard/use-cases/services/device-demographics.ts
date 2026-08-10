@@ -281,7 +281,9 @@ export const buildPrivacyAwareCityBreakdown = (
     (item) =>
       item.count >= cityPrivacyThreshold ||
       item.id.includes("nao_identificado") ||
-      item.label === "Não identificado",
+      item.id.includes("nao_informado") ||
+      item.label === "Não identificado" ||
+      item.label === "Não informado",
   );
   const groupedCount = aggregated
     .filter((item) => !visible.some((visibleItem) => visibleItem.id === item.id))
@@ -350,13 +352,13 @@ export const buildDemographics = (patients: AdminPatientSnapshotRecord[]) => ({
 
 export const normalizeCountry = (country: string | null) => {
   const normalized = country?.trim();
-  if (!normalized) return "Não identificado";
+  if (!normalized) return "Não informado";
 
   const code = normalized.toUpperCase();
   return COUNTRY_LABELS[code] ?? normalized;
 };
 
-export const normalizeLocality = (value: string | null) => value?.trim() || "Não identificado";
+export const normalizeLocality = (value: string | null) => value?.trim() || "Não informado";
 
 export const buildLocationBreakdown = (
   locations: AdminPatientLocationRecord[],
@@ -374,7 +376,7 @@ export const buildLocations = (locations: AdminPatientLocationRecord[]) => {
         const state = normalizeLocality(location.state);
         const country = normalizeCountry(location.country);
         const label =
-          [city, state, country].filter((item) => item !== "Não identificado").join(", ") || city;
+          [city, state, country].filter((item) => item !== "Não informado").join(", ") || city;
 
         return {
           id: `${city}:${state}:${country}`,
@@ -389,12 +391,12 @@ export const buildLocations = (locations: AdminPatientLocationRecord[]) => {
 
       return { id: country, label: country };
     }),
-    source: "visitor_location" as const,
+    source: "patient_profile.city/state" as const,
     states: buildLocationBreakdown(locations, total, (location) => {
       const state = normalizeLocality(location.state);
       const country = normalizeCountry(location.country);
       const label =
-        country === "Brasil" || country === "Não identificado" ? state : `${state}, ${country}`;
+        country === "Brasil" || country === "Não informado" ? state : `${state}, ${country}`;
 
       return { id: `${state}:${country}`, label };
     }),

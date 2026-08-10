@@ -391,9 +391,12 @@ model patient_profile {
   birthdate               DateTime?
   phone                   String?
   bio                     String?
+  city                    String?
+  state                   String?
   onboarding_completed_at DateTime?
   user                    user      @relation("patient_profile_user", fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@index([state, city])
   @@index([user_id])
   @@map("patient_profiles")
 }

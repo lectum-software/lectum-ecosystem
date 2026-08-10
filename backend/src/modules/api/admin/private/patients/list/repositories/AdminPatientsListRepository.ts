@@ -1,15 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 
-const latestLocationSelect = {
-  city: true,
-  country: true,
-  createdAt: true,
-  id: true,
-  state: true,
-  user_id: true,
-} satisfies Prisma.visitor_locationSelect;
-
 const patientIntentProfileViewSelect = {
   createdAt: true,
   id: true,
@@ -41,19 +32,12 @@ const patientListSelect = {
   provider: true,
   patient_profile: {
     select: {
+      city: true,
       gender: true,
       onboarding_completed_at: true,
+      state: true,
+      updatedAt: true,
     },
-  },
-  visitor_locations: {
-    orderBy: {
-      createdAt: "desc" as const,
-    },
-    take: 1,
-    where: {
-      deleted: false,
-    },
-    select: latestLocationSelect,
   },
 } satisfies Prisma.userSelect;
 

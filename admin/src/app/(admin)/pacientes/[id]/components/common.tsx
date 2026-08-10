@@ -347,7 +347,7 @@ export const Header = ({
     ? [detail.header.location.city, detail.header.location.state, detail.header.location.country]
         .filter(Boolean)
         .join(", ")
-    : "Localiza\u00e7\u00e3o n\u00e3o capturada";
+    : "Não informado";
   return (
     <CardShell className="overflow-hidden">
       <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-7">

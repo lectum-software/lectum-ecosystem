@@ -210,23 +210,25 @@ export const pickRecentActivity = (
 export const mapRecentPatient = (
   patient: AdminPatientRecentRecord,
 ): AdminPatientsDashboardRecentPatient => {
-  const latestLocation = patient.visitor_locations[0] ?? null;
+  const hasLocation = Boolean(
+    patient.patient_profile?.city?.trim() && patient.patient_profile?.state?.trim(),
+  );
 
   return {
     avatar: patient.avatar,
-    city: latestLocation?.city ?? null,
-    country: latestLocation?.country ?? null,
+    city: hasLocation ? (patient.patient_profile?.city ?? null) : null,
+    country: hasLocation ? "BR" : null,
     created_at: patient.createdAt,
     detail_url: `/pacientes/${patient.id}`,
     email: patient.email,
     gender: patient.patient_profile?.gender ?? null,
     id: patient.id,
-    last_location_at: latestLocation?.createdAt ?? null,
+    last_location_at: hasLocation ? (patient.patient_profile?.updatedAt ?? null) : null,
     name: normalizeName(patient.name),
     provider: patient.provider,
     provider_label: providerLabel(patient.provider),
     recent_activity: pickRecentActivity(patient),
-    state: latestLocation?.state ?? null,
+    state: hasLocation ? (patient.patient_profile?.state ?? null) : null,
     status: patient.active ? "active" : "inactive",
     status_label: patient.active ? "Ativo" : "Inativo",
   };

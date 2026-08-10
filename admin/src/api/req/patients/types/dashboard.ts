@@ -279,7 +279,7 @@ export type PatientsDashboardIntentFilteredMetrics = {
   locations: {
     cities: PatientsDashboardBreakdownItem[];
     countries: PatientsDashboardBreakdownItem[];
-    source: AdminPublicSource<"visitor_location">;
+    source: AdminPublicSource<"patient_profile.city/state">;
     states: PatientsDashboardBreakdownItem[];
     total: number;
   };
@@ -370,7 +370,7 @@ export type AdminPatientsDashboard = {
   locations: {
     cities: PatientsDashboardBreakdownItem[];
     countries: PatientsDashboardBreakdownItem[];
-    source: AdminPublicSource<"visitor_location">;
+    source: AdminPublicSource<"patient_profile.city/state">;
     states: PatientsDashboardBreakdownItem[];
     total: number;
   };
@@ -379,7 +379,7 @@ export type AdminPatientsDashboard = {
   platform_usage: PatientsDashboardPlatformUsage;
   recent_patients: {
     items: PatientsDashboardRecentPatient[];
-    source: AdminPublicSource<"user+patient_profile+visitor_location+community_activity">;
+    source: AdminPublicSource<"user+patient_profile+community_activity">;
     total: number;
   };
   series: {

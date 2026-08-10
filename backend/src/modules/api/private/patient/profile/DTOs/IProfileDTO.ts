@@ -6,6 +6,34 @@ export interface IProfileDTO {
 
 export type PatientProfileGoal = "encontrar_psicologo" | "conhecer_comunidade";
 export type PatientProfileGender = "feminino" | "masculino" | "nao_binario" | "prefiro_nao_dizer";
+export type PatientProfileState =
+  | "AC"
+  | "AL"
+  | "AP"
+  | "AM"
+  | "BA"
+  | "CE"
+  | "DF"
+  | "ES"
+  | "GO"
+  | "MA"
+  | "MT"
+  | "MS"
+  | "MG"
+  | "PA"
+  | "PB"
+  | "PR"
+  | "PE"
+  | "PI"
+  | "RJ"
+  | "RN"
+  | "RS"
+  | "RO"
+  | "RR"
+  | "SC"
+  | "SP"
+  | "SE"
+  | "TO";
 
 export interface IUpdateProfileDTO extends IProfileDTO {
   b: {
@@ -15,6 +43,8 @@ export interface IUpdateProfileDTO extends IProfileDTO {
     birthdate?: Date | null;
     phone?: string | null;
     bio?: string | null;
+    city?: string | null;
+    state?: PatientProfileState | null;
   };
 }
 

@@ -14,7 +14,6 @@ import {
   type AdminPatientRecentRecord,
   type AdminPatientSignupAnalyticsIdentityRecord,
   type AdminPatientSnapshotRecord,
-  latestLocationSelect,
   patientAnonymousConversionPageViewSelect,
   patientAnonymousConversionSessionSelect,
   patientIntentFavoriteSelect,
@@ -60,22 +59,38 @@ export class AdminPatientsDashboardRepository {
   async listLocations(
     range: AdminPatientsDashboardDateRange,
   ): Promise<AdminPatientLocationRecord[]> {
-    return prisma.visitor_location.findMany({
+    const profiles = await prisma.patient_profile.findMany({
       orderBy: {
-        createdAt: "desc",
+        updatedAt: "desc",
       },
-      select: latestLocationSelect,
+      select: {
+        city: true,
+        state: true,
+        updatedAt: true,
+        user_id: true,
+      },
       where: {
-        createdAt: rangeWhere(range),
         deleted: false,
-        user_id: {
-          not: null,
-        },
         user: {
+          createdAt: {
+            lte: range.end,
+          },
           deleted: false,
           role: "paciente",
         },
       },
+    });
+
+    return profiles.map((profile) => {
+      const hasLocation = Boolean(profile.city?.trim() && profile.state?.trim());
+
+      return {
+        city: hasLocation ? profile.city : null,
+        country: hasLocation ? "BR" : null,
+        state: hasLocation ? profile.state : null,
+        updatedAt: hasLocation ? profile.updatedAt : null,
+        user_id: profile.user_id,
+      };
     });
   }
 

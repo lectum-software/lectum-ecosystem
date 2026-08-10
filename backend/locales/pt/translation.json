@@ -203,7 +203,8 @@
     "admin_community_suggestion_block_not_found": "Bloco de demanda n?o encontrado.",
     "admin_community_suggestion_block_archived": "Este bloco est? arquivado e n?o pode receber novas sugest?es.",
     "admin_community_suggestion_block_status_invalid": "Status do bloco de demanda inv?lido.",
-    "admin_community_suggestion_block_title_required": "Informe um t?tulo para o bloco de demanda."
+    "admin_community_suggestion_block_title_required": "Informe um t?tulo para o bloco de demanda.",
+    "patient_profile_location_pair_required": "Informe estado e cidade ou deixe ambos em branco."
   },
   "message": {
     "store": "dado criado",

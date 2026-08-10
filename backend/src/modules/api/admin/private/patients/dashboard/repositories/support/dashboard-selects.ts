@@ -7,10 +7,13 @@ export const rangeWhere = (range: AdminPatientsDashboardDateRange) => ({
 });
 
 export const patientProfileSelect = {
+  city: true,
   createdAt: true,
   gender: true,
   id: true,
   onboarding_completed_at: true,
+  state: true,
+  updatedAt: true,
 } satisfies Prisma.patient_profileSelect;
 
 export const patientSnapshotSelect = {
@@ -53,15 +56,6 @@ export const replySummarySelect = {
     },
   },
 } satisfies Prisma.post_replySelect;
-
-export const latestLocationSelect = {
-  city: true,
-  country: true,
-  createdAt: true,
-  id: true,
-  state: true,
-  user_id: true,
-} satisfies Prisma.visitor_locationSelect;
 
 export const patientPageViewSelect = {
   duration_seconds: true,
@@ -156,16 +150,6 @@ export const recentPatientSelect = {
   provider: true,
   patient_profile: {
     select: patientProfileSelect,
-  },
-  visitor_locations: {
-    orderBy: {
-      createdAt: "desc" as const,
-    },
-    take: 1,
-    where: {
-      deleted: false,
-    },
-    select: latestLocationSelect,
   },
   community_members: {
     orderBy: {
@@ -296,9 +280,13 @@ export type AdminPatientRecentRecord = Prisma.userGetPayload<{
   select: typeof recentPatientSelect;
 }>;
 
-export type AdminPatientLocationRecord = Prisma.visitor_locationGetPayload<{
-  select: typeof latestLocationSelect;
-}>;
+export type AdminPatientLocationRecord = {
+  city: string | null;
+  country: "BR" | null;
+  state: string | null;
+  updatedAt: Date | null;
+  user_id: string;
+};
 
 export type AdminPatientPageViewRecord = Prisma.page_view_eventGetPayload<{
   select: typeof patientPageViewSelect;

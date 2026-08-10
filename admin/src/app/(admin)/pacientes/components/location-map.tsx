@@ -200,7 +200,7 @@ export const BrazilStateChoroplethMap = ({
               <title>
                 {item
                   ? `${statePath.name}: ${formatLocationCaptureCount(item.count)}`
-                  : `${statePath.name}: sem captura`}
+                  : `${statePath.name}: sem pacientes`}
               </title>
             </path>
           );
@@ -281,7 +281,7 @@ export const WorldCountryMap = ({ countries }: { countries: PatientsDashboardBre
               <title>
                 {item
                   ? `${country.name}: ${formatLocationCaptureCount(item.count)}`
-                  : `${country.name}: sem captura`}
+                  : `${country.name}: sem pacientes`}
               </title>
             </path>
           );
@@ -351,7 +351,7 @@ export const LocationMapPanel = ({
   states: PatientsDashboardBreakdownItem[];
 }) => {
   const activeItems = scope === "states" ? states : countries;
-  const title = scope === "states" ? "Capturas por Estado" : "Capturas por País";
+  const title = scope === "states" ? "Pacientes por Estado" : "Pacientes por País";
   const rankingTitle = scope === "states" ? "Estados" : "Países";
   const emptyMessage =
     scope === "states" ? "Nenhum estado identificado." : "Nenhum país identificado.";
@@ -404,7 +404,7 @@ export const LocationOverview = ({
     <div className="mt-5 space-y-4">
       {locations.total === 0 ? (
         <p className="rounded-2xl bg-surface-muted p-4 text-sm font-bold text-muted">
-          Nenhuma localização agregada foi identificada para pacientes no período selecionado.
+          Nenhuma localização declarada foi identificada para pacientes no período selecionado.
         </p>
       ) : (
         <>
@@ -427,9 +427,9 @@ export const LocationOverview = ({
             />
           </div>
           <p className="text-xs font-bold leading-5 text-muted">
-            Total considerado: {formatLocationCaptureCount(locations.total)} com localização
-            aproximada. Cidades com frequência muito baixa podem aparecer agrupadas para reduzir
-            exposição.
+            Total considerado: {formatLocationCaptureCount(locations.total)} no painel com
+            localização declarada. Cidades com frequência muito baixa podem aparecer agrupadas para
+            reduzir exposição.
           </p>
         </>
       )}

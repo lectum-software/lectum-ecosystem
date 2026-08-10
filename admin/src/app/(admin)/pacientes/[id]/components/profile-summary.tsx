@@ -82,10 +82,10 @@ export const InfoCard = ({
 
 export const formatPatientLocation = (detail: AdminPatientDetail) => {
   const location = detail.header.location;
-  if (!location) return "Não capturada";
+  if (!location) return "Não informado";
 
   return (
-    [location.city, location.state, location.country].filter(Boolean).join(", ") || "Não capturada"
+    [location.city, location.state, location.country].filter(Boolean).join(", ") || "Não informado"
   );
 };
 
@@ -377,7 +377,7 @@ export const PatientPersonalDataEditForm = ({
         <p className="rounded-2xl bg-surface-muted p-3 text-xs font-bold leading-5 text-muted">
           Nome de exibição e gênero podem ser atualizados, e a alteração fica registrada no
           histórico administrativo. E-mail e localização permanecem somente leitura: o e-mail
-          pertence ao fluxo de conta e a localização é aproximada, conforme o último acesso.
+          pertence ao fluxo de conta e a localização é informada pelo próprio paciente no perfil.
         </p>
         <ProfileFormActions disabled={disabled} onCancel={onCancel} />
       </form>

@@ -73,7 +73,7 @@ export type AdminPatientsList = {
   pages: number;
   per_page: number;
   sort: PatientsListSort;
-  source: AdminPublicSource<"user+patient_profile+visitor_location+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save">;
+  source: AdminPublicSource<"user+patient_profile+profile_view_event+psychologist_favorite+contact_request+community_post+post_reply+post_vote+post_save+post_reply_save">;
 };
 
 const cleanParams = (input: PatientsListQuery) => ({

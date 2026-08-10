@@ -198,7 +198,7 @@ export const buildPatientsDashboard = async (
       "A jornada pré-cadastro considera pacientes cadastrados no período e a navegação anônima anterior que pôde ser associada ao cadastro; outros visitantes ficam fora deste bloco.",
       "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
       "O tempo médio considera visualizações autenticadas e ignora períodos em que o aplicativo fica oculto ou minimizado.",
-      "A localização usa dados aproximados e agregados no período selecionado; cidades com baixa frequência são agrupadas, e coordenadas, IP e endereço não são exibidos.",
+      "A localização usa cidade e estado declarados pelo paciente no perfil; quem não informou aparece como Não informado, e coordenadas, IP e endereço não são exibidos.",
       "Análise de intenção usa apenas agregados de abertura de perfil, favoritos ativos e cliques no WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
       "O engajamento classifica pacientes únicos pelas ações em comunidades, como posts, comentários, votos e salvamentos.",
       "Intenção x Engajamento cruza intenção de busca com engajamento comunitário por paciente único para leitura observacional; não indica causalidade, atendimento, diagnóstico ou conversa.",
@@ -220,7 +220,7 @@ export const buildPatientsDashboard = async (
     platform_usage: platformUsage,
     recent_patients: {
       items: recentPatients.map(mapRecentPatient),
-      source: "user+patient_profile+visitor_location+community_activity",
+      source: "user+patient_profile+community_activity",
       total: patients.length,
     },
     series: {
@@ -306,10 +306,10 @@ export const buildPatientsDashboard = async (
         ? [
             {
               description:
-                "Nenhuma localização aproximada de pacientes foi encontrada no período selecionado; nenhum endereço é inferido.",
+                "Nenhum perfil de paciente foi encontrado para compor a distribuição de localização declarada.",
               id: "locations",
-              label: "Localização agregada",
-              source: "visitor_location",
+              label: "Localização declarada",
+              source: "patient_profile.city/state",
             },
           ]
         : []),

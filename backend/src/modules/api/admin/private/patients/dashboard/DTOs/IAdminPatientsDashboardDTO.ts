@@ -297,7 +297,7 @@ export type AdminPatientsDashboardIntentFilteredMetrics = {
   locations: {
     cities: AdminPatientsDashboardLocationItem[];
     countries: AdminPatientsDashboardLocationItem[];
-    source: "visitor_location";
+    source: "patient_profile.city/state";
     states: AdminPatientsDashboardLocationItem[];
     total: number;
   };
@@ -391,7 +391,7 @@ export type AdminPatientsDashboardSummary = {
   locations: {
     cities: AdminPatientsDashboardLocationItem[];
     countries: AdminPatientsDashboardLocationItem[];
-    source: "visitor_location";
+    source: "patient_profile.city/state";
     states: AdminPatientsDashboardLocationItem[];
     total: number;
   };
@@ -400,7 +400,7 @@ export type AdminPatientsDashboardSummary = {
   platform_usage: AdminPatientsDashboardPlatformUsage;
   recent_patients: {
     items: AdminPatientsDashboardRecentPatient[];
-    source: "user+patient_profile+visitor_location+community_activity";
+    source: "user+patient_profile+community_activity";
     total: number;
   };
   series: {

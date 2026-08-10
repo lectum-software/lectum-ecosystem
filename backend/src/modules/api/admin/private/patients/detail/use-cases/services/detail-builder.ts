@@ -27,13 +27,22 @@ import { buildPlatformUsage } from "./platform";
 import { buildHeatmap, buildPublications } from "./publications";
 
 export const buildHeader = (patient: AdminPatientDetailRecord): AdminPatientDetailDTO["header"] => {
-  const latestLocation = patient.visitor_locations[0] ?? null;
   const latestToken = patient.user_tokens[0] ?? null;
   const lastAccessAt = latestToken
     ? latestToken.updatedAt > latestToken.createdAt
       ? latestToken.updatedAt
       : latestToken.createdAt
     : null;
+  const declaredLocation =
+    patient.patient_profile?.city?.trim() && patient.patient_profile?.state?.trim()
+      ? {
+          captured_at: patient.patient_profile.updatedAt,
+          city: patient.patient_profile.city,
+          country: "BR",
+          source: "patient_profile",
+          state: patient.patient_profile.state,
+        }
+      : null;
 
   return {
     active: patient.active,
@@ -43,15 +52,7 @@ export const buildHeader = (patient: AdminPatientDetailRecord): AdminPatientDeta
     gender: patient.patient_profile?.gender ?? null,
     id: patient.id,
     last_access_at: lastAccessAt,
-    location: latestLocation
-      ? {
-          captured_at: latestLocation.createdAt,
-          city: latestLocation.city,
-          country: latestLocation.country,
-          source: latestLocation.source,
-          state: latestLocation.state,
-        }
-      : null,
+    location: declaredLocation,
     name: normalizeName(patient.name),
     onboarding_completed_at: patient.patient_profile?.onboarding_completed_at ?? null,
     provider: patient.provider,
@@ -91,14 +92,14 @@ export const buildDetail = (
     source: "communities.items.engagement_diagnosis:max",
   });
   const unavailable = [
-    ...(!patient.visitor_locations[0]
+    ...(!patient.patient_profile?.city?.trim() || !patient.patient_profile?.state?.trim()
       ? [
           {
             description:
-              "Nenhuma localização aproximada foi encontrada para o paciente; nenhum endereço é inferido.",
+              "O paciente ainda não informou cidade e estado no perfil; nenhum endereço é inferido.",
             id: "location",
-            label: "Localização agregada",
-            source: "visitor_location",
+            label: "Localização do paciente",
+            source: "patient_profile.city/state",
           },
         ]
       : []),
@@ -152,7 +153,7 @@ export const buildDetail = (
       "Status Ativo/Inativo representa user.active, não retenção nem engajamento recente.",
       "O e-mail é exibido apenas para administradores autenticados; telefone, nascimento, biografia, IP, coordenadas e endereço completo não são exibidos.",
       "O último acesso usa as informações de sessão disponíveis para o usuário.",
-      "A localização, quando disponível, é aproximada.",
+      "A localização exibida é declarada pelo paciente no perfil para apoiar proximidade com profissionais.",
       "Análise de intenção usa contagens derivadas de aberturas de perfil, favoritos e cliques WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
     ],
     header: buildHeader(patient),
@@ -188,7 +189,7 @@ export const buildDetail = (
         "user.provider",
         "user.createdAt",
         "patient_profile.gender",
-        "visitor_location.city/state/country",
+        "patient_profile.city/state",
         "contagens derivadas de profile_view_event/psychologist_favorite/contact_request",
       ],
     },
@@ -197,7 +198,7 @@ export const buildDetail = (
       source:
         "community_post+post_reply+post_vote+post_save+post_reply_save+post_share+post_report+verified_responses",
     },
-    source: "user+patient_profile+visitor_location+community_activity+professional_review",
+    source: "user+patient_profile+community_activity+professional_review",
     unavailable,
   };
 };

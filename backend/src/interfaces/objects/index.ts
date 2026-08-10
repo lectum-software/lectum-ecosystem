@@ -83,6 +83,8 @@ export interface patient_profile extends PersistedObject {
   birthdate?: Date | null;
   phone?: string | null;
   bio?: string | null;
+  city?: string | null;
+  state?: string | null;
   onboarding_completed_at?: Date | null;
   user?: user | null;
 }
