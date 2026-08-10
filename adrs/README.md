@@ -477,3 +477,4 @@ Formato recomendado:
 - [ADR-0444 — Safe area iOS/PWA para elementos inferiores](0444-safe-area-ios-pwa-elementos-inferiores.md)
 - [ADR-0445 — Blocos internos de demanda para sugestoes de comunidades](0445-blocos-demanda-sugestoes-comunidades-admin.md)
 - [ADR-0446 — Sanitizacao preserva aliases em respostas de billing](0446-sanitizacao-aliases-resposta-billing.md)
+- [ADR-0447 — Captura de localizacao prioriza cidade quando proxy traz so pais](0447-captura-localizacao-cidade-prioritaria.md)

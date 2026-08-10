@@ -18,6 +18,11 @@ import type {
   LocationResolution,
 } from "../DTOs/ILocationCaptureDTO";
 import { LocationCaptureRepository } from "../repositories/LocationCaptureRepository";
+import {
+  hasLocationCity,
+  isMoreSpecificLocation,
+  preferMostSpecificLocation,
+} from "./location-resolution";
 import { buildLocationCaptureResult } from "./response";
 
 type RequestHeaders = Request["headers"];
@@ -305,12 +310,14 @@ const resolveLocation = async (req: Request): Promise<LocationResolution | null>
   const headerLocation = isTrustProxyEnabled()
     ? resolveLocationFromProxyHeaders(req.headers)
     : null;
-  if (headerLocation) return headerLocation;
+  if (hasLocationCity(headerLocation)) return headerLocation;
 
   const ip = extractClientIp(req);
-  if (!ip) return null;
+  if (!ip) return headerLocation;
 
-  return resolveLocationFromProvider(ip);
+  const providerLocation = await resolveLocationFromProvider(ip);
+
+  return preferMostSpecificLocation(headerLocation, providerLocation);
 };
 
 export default async (req: Request) => {
@@ -361,7 +368,7 @@ export default async (req: Request) => {
   const since = subHours(new Date(), LOCATION_CAPTURE_WINDOW_HOURS);
   const recentLocation = await repository.findRecent({ visitorId, userId, since });
 
-  if (recentLocation) {
+  if (hasLocationCity(recentLocation)) {
     const result: LocationCaptureResult = buildLocationCaptureResult({
       captured: false,
       linked,
@@ -384,6 +391,21 @@ export default async (req: Request) => {
       linked,
       authenticated: Boolean(userId),
       reason: "unavailable",
+    });
+
+    return {
+      status: 200,
+      ...msg("location_capture_skipped", {}),
+      data: result,
+    };
+  }
+
+  if (!isMoreSpecificLocation(location, recentLocation)) {
+    const result: LocationCaptureResult = buildLocationCaptureResult({
+      captured: false,
+      linked,
+      authenticated: Boolean(userId),
+      reason: "frequency",
     });
 
     return {
