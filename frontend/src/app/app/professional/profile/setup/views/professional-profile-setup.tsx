@@ -377,7 +377,6 @@ export const ProfessionalProfileSetupLogic = () => {
                   name="specialty_ids"
                   onChange={setCatalogValue}
                   placeholder="Adicione uma especialidade..."
-                  placeholderClassName="text-[12px]"
                   required
                   selected={selectedSpecialties}
                   title="Especialidades"
@@ -393,7 +392,6 @@ export const ProfessionalProfileSetupLogic = () => {
                   name="approach_ids"
                   onChange={setCatalogValue}
                   placeholder="Adicione uma abordagem..."
-                  placeholderClassName="text-[12px]"
                   required
                   selected={selectedApproaches}
                   title="Abordagens"

@@ -99,7 +99,7 @@ export const CatalogPicker = ({
 
 export const CatalogTagField = ({
   description,
-  placeholderClassName = "text-xs",
+  placeholderClassName = "text-[0.68rem]",
   items,
   groupedItems,
   limit,
@@ -197,7 +197,7 @@ export const CatalogTagField = ({
             <button
               aria-expanded={open}
               className={cn(
-                "min-w-[9rem] flex-1 py-1 text-left text-subtle outline-none",
+                "w-full basis-full whitespace-nowrap py-1 text-left text-subtle outline-none",
                 placeholderClassName,
                 limitReached && "text-muted",
               )}

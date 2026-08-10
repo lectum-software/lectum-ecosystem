@@ -182,3 +182,24 @@ Validações:
 - `pnpm --dir frontend build`
 - HTTP local em `/app/professional/profile/setup` respondeu `307` sem sessão de CLI.
 - Verificação estática confirmou a nova copy no bundle de desenvolvimento da rota.
+
+
+## Ajuste complementar em 2026-08-10 - placeholders dos catalogos de tags
+
+A tela `/app/profissional/perfil/configurar` refinou os campos de tags de `Especialidades` e `Abordagens` para que o placeholder interno fique sempre em linha propria abaixo das tags selecionadas.
+
+Decisao:
+
+- manter o componente `CatalogTagField` existente, sem criar controle paralelo;
+- usar o mesmo tamanho tipografico das tags selecionadas (`text-[0.68rem]`) para `Adicione uma especialidade...` e `Adicione uma abordagem...`;
+- aplicar `basis-full`, `w-full` e `whitespace-nowrap` no botao de placeholder para evitar que ele dispute linha com as tags ou quebre a frase no mobile;
+- preservar catalogos reais, limites de plano, dropdown e remocao de tags sem alteracao de backend, Prisma, packages ou contratos.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` (reexecutado com sucesso apos limpar apenas o artefato local gerado `frontend/.next`; a primeira tentativa falhou por lock/trace inconsistente de build anterior)
+- `pnpm check:version`
+- `pnpm check` (falhou em `check:cycles` por ciclos preexistentes/concorrentes em arquivos de comunidade fora deste ajuste: `app/app/community/[slug]/post/new/logic.tsx` -> views -> `app/app/community/[slug]/logic.tsx` -> views -> post/new)
+- Dev server local: `/version` respondeu `200`; a rota legada redirecionou para a rota canonica em PT-BR e a rota canonica privada redirecionou para login sem sessao.

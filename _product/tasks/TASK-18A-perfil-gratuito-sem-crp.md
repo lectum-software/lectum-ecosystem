@@ -533,3 +533,28 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+
+
+## Ajuste complementar em 2026-08-10 - placeholder dos campos de tags
+
+- Pedido do usuario: os textos `Adicione uma especialidade...` e `Adicione uma abordagem...` devem ter o mesmo tamanho da fonte textual das tags selecionadas e aparecer sempre na linha abaixo das tags, evitando quebra textual no mobile.
+- A alteracao ficou restrita ao componente de catalogo da tela `/app/profissional/perfil/configurar` (`/app/professional/profile/setup` legado), sem alterar backend, Prisma, contratos, dados persistidos, packages ou limites reais de plano.
+- O campo mobile-first agora reserva uma linha propria para o placeholder dos dois catalogos, usando o mesmo tamanho de texto das tags (`text-[0.68rem]`) e `whitespace-nowrap`.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-10 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `Adicione uma especialidade...` usa o mesmo tamanho de fonte das tags de especialidade.
+- [x] `Adicione uma abordagem...` usa o mesmo tamanho de fonte das tags de abordagem.
+- [x] Os placeholders aparecem em linha propria abaixo das tags selecionadas e nao quebram o texto no mobile.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` (reexecutado com sucesso apos limpar apenas o artefato local gerado `frontend/.next`; a primeira tentativa falhou por lock/trace inconsistente de build anterior)
+- `pnpm check:version`
+- `pnpm check` (falhou em `check:cycles` por ciclos preexistentes/concorrentes em arquivos de comunidade fora deste ajuste: `app/app/community/[slug]/post/new/logic.tsx` -> views -> `app/app/community/[slug]/logic.tsx` -> views -> post/new)
+- Dev server local em `http://127.0.0.1:3114`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.17"}`; rota legada `/app/professional/profile/setup` respondeu `308` para `/app/profissional/perfil/configurar`; rota canonica privada `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando protecao. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
