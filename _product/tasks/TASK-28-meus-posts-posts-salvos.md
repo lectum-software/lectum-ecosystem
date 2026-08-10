@@ -466,3 +466,26 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Validacoes executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e browser local mobile `390x844` em `/app/posts/mine`.
 - ADR atualizado: `adrs/0072-meus-posts-e-posts-salvos.md`.
 - Browser headless sem sessao persistida redirecionou para `/auth/login?callbackUrl=/app/posts/mine`; a regra autenticada foi validada por codigo, referencias locais e reuso do papel real da sessao.
+
+## Ajuste complementar em 2026-08-10 - contexto de comentário pai em respostas
+
+- Pedido direto de produto: quando uma resposta/comentário listado em `/app/posts/mine` for sobre outro comentário, o card não deve exibir o bloco **Post de origem**; deve exibir o comentário de origem.
+- Frontend: `ReplyItemCard` passou a decidir o preview pelo `reply.parent_reply_id` real. Respostas aninhadas usam o `reply.parent_content` retornado pelo contrato existente e mostram o rótulo **COMENTÁRIO DE ORIGEM**; comentários diretos no post preservam **POST DE ORIGEM** com título e trecho do post.
+- A mudança é mobile-first e apenas de apresentação: não altera endpoint, DTO, schema Prisma, ordenação, votos, salvamentos, compartilhamento, edição, exclusão, notificações, packages ou dados persistidos.
+- Referências visuais consultadas: screenshot enviado pelo usuário em 2026-08-10 e `_product/proto/Meus Posts - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+
+### Critérios de aceite do ajuste
+
+- [x] Respostas aninhadas em `/app/posts/mine` exibem **COMENTÁRIO DE ORIGEM**.
+- [x] O texto exibido para respostas aninhadas vem do `parent_content` real do comentário pai.
+- [x] Comentários diretos ao post continuam exibindo **POST DE ORIGEM** com título e trecho do post.
+- [x] Nenhum mock, endpoint novo, migration ou package novo foi usado.
+
+### Validacao do ajuste 2026-08-10
+
+- `pnpm --dir frontend exec biome check --write src/app/app/posts/mine/components/reply-item-card.tsx`
+- `pnpm --dir frontend check`
+- `pnpm check:version`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com Next dev em `/app/publicacoes/minhas`: `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, confirmando rota privada acessivel e guard preservado sem sessao.

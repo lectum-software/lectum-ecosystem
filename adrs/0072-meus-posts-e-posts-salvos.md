@@ -547,3 +547,25 @@ equivocada.
 - `git diff --check`
 - Browser local mobile `390x844` em `/app/posts/mine`.
 - Browser headless sem sessao persistida redirecionou para `/auth/login?callbackUrl=/app/posts/mine`; a regra autenticada foi validada por codigo, referencias locais e reuso do papel real da sessao.
+
+## Complemento 2026-08-10: contexto de comentário pai em respostas pessoais
+
+### Contexto
+
+No mobile de `/app/posts/mine`, respostas do usuário a outros comentários ainda exibiam o bloco
+`POST DE ORIGEM`, mesmo quando a origem contextual correta da resposta era o comentário pai. Isso
+fazia respostas aninhadas parecerem vinculadas diretamente ao post raiz.
+
+### Decisão
+
+- Usar `reply.parent_reply_id` como discriminador visual do card de resposta/comentário.
+- Quando houver `parent_reply_id`, renderizar o bloco como `COMENTÁRIO DE ORIGEM` usando
+  `reply.parent_content`, dado real já retornado por `GET /api/private/posts/mine?type=replies`.
+- Quando não houver `parent_reply_id`, manter `POST DE ORIGEM` com título e trecho do post.
+
+### Consequências
+
+- A hierarquia visual acompanha a árvore real de `post_reply` sem criar contrato novo.
+- O ajuste é compatível com rollout independente, pois consome campos já existentes e mantém fallback
+  de texto para conteúdo vazio.
+- Não há migration, endpoint novo, package novo, mock ou alteração de dados persistidos.

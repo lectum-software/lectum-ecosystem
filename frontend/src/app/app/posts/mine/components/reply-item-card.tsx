@@ -156,7 +156,20 @@ export const ReplyItemCard = ({
     event.preventDefault();
     openReply();
   };
+  const isReplyToComment = Boolean(reply.parent_reply_id);
   const originPostExcerpt = item.post.content.trim() || "Sem texto.";
+  const originCommentExcerpt = reply.parent_content?.trim() || "Comentário sem texto.";
+  const originPreview = isReplyToComment
+    ? {
+        excerpt: originCommentExcerpt,
+        label: "COMENTÁRIO DE ORIGEM",
+        title: null,
+      }
+    : {
+        excerpt: originPostExcerpt,
+        label: "POST DE ORIGEM",
+        title: item.post.title,
+      };
 
   return (
     <article
@@ -191,10 +204,16 @@ export const ReplyItemCard = ({
       </div>
 
       <blockquote className="relative z-10 overflow-hidden rounded-2xl border border-primary/10 bg-primary-soft/40 px-4 py-3">
-        <p className="text-[11px] font-black tracking-[0.08em] text-primary">POST DE ORIGEM</p>
-        <p className="mt-1 line-clamp-1 text-xs font-black text-foreground">{item.post.title}</p>
+        <p className="text-[11px] font-black tracking-[0.08em] text-primary">
+          {originPreview.label}
+        </p>
+        {originPreview.title ? (
+          <p className="mt-1 line-clamp-1 text-xs font-black text-foreground">
+            {originPreview.title}
+          </p>
+        ) : null}
         <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-muted">
-          {originPostExcerpt}
+          {originPreview.excerpt}
         </p>
       </blockquote>
 
