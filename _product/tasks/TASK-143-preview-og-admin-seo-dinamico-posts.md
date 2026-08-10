@@ -105,3 +105,10 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 
 - [x] A lista **Páginas públicas** do Admin SEO/Metadados passa a exibir a rota `/community` como **Explorar comunidades**, diferenciando a listagem pública do template de comunidade específica (`/community/[slug]`).
 - [x] O DTO de SEO resolve labels sistêmicos a partir dos defaults atuais, preservando metadados editáveis já salvos e refletindo o novo nome mesmo em bases de desenvolvimento com a linha antiga persistida.
+
+## Ajuste pos-feedback 2026-08-10 - capa automatica nos videos de comunidades
+
+- [x] Os players de videos de posts e respostas de comunidade passam a usar `thumbnail_url` persistido como `poster`, incluindo feed, detalhe, thread, perfil profissional, meus posts e salvos.
+- [x] A geracao automatica de miniatura no navegador deixa de depender de um unico frame em `0.5s` e tenta pontos diferentes do video, priorizando o primeiro frame com luminosidade/contraste suficientes para reduzir capas pretas.
+- [x] Nao foi adicionada opcao manual de capa para psicologos em videos de comunidade; a capa segue sendo derivada automaticamente de uma parte real do video enviado.
+- [x] Nao houve alteracao de banco, env nova, pacote novo, mock ou backfill destrutivo de videos antigos.

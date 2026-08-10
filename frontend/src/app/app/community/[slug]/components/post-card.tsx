@@ -60,6 +60,7 @@ export const PostMedia = ({ footer, post }: { footer?: ReactNode; post: Communit
   const singleMediaItem = imageMediaItems.length === 1 ? imageMediaItems[0] : null;
   const displayMediaUrl = singleMediaItem?.media_url ?? post.media_url;
   const displayMediaType = singleMediaItem?.media_type ?? post.media_type;
+  const displayThumbnailUrl = singleMediaItem?.thumbnail_url ?? post.thumbnail_url;
 
   return (
     <CommunityMediaBlock
@@ -70,6 +71,7 @@ export const PostMedia = ({ footer, post }: { footer?: ReactNode; post: Communit
       footer={footer}
       mediaType={displayMediaType}
       mediaUrl={displayMediaUrl}
+      thumbnailUrl={displayThumbnailUrl}
       variant="post"
     />
   );
@@ -94,6 +96,7 @@ export const ProfessionalReplyMedia = ({
       mediaType={reply.media_type}
       mediaUrl={reply.media_url}
       roundedClassName="rounded-[18px]"
+      thumbnailUrl={reply.thumbnail_url}
       variant="reply"
     />
   );

@@ -232,6 +232,7 @@ type CommunityMediaBlockProps = {
   mediaUrl: string | null;
   roundedClassName?: string;
   sizes?: string;
+  thumbnailUrl?: string | null;
   variant?: CommunityMediaFrameVariant;
   videoClassName?: string;
   viewportClassName?: string;
@@ -247,12 +248,15 @@ export const CommunityMediaBlock = ({
   mediaUrl,
   roundedClassName = "rounded-[22px]",
   sizes,
+  thumbnailUrl,
   variant = "post",
   videoClassName,
   viewportClassName,
 }: CommunityMediaBlockProps) => {
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
+  const resolvedThumbnailUrl =
+    normalizedMediaType === "video" && thumbnailUrl ? resolvePublicMediaUrl(thumbnailUrl) : null;
   const handleVideoElementReady = useContentVideoWatchTracking(
     normalizedMediaType === "video" && analyticsTarget
       ? {
@@ -338,6 +342,7 @@ export const CommunityMediaBlock = ({
           fit="contain"
           fullscreenVariant="content"
           onVideoElementReady={handleVideoElementReady}
+          poster={resolvedThumbnailUrl}
           src={resolvedUrl}
           style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
           title={alt}

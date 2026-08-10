@@ -120,12 +120,14 @@ export const SavedReplyMedia = ({
   mediaType,
   mediaUrl,
   replyId,
+  thumbnailUrl,
   title,
 }: {
   footer?: ReactNode;
   mediaType: string | null;
   mediaUrl: string | null;
   replyId: string;
+  thumbnailUrl?: string | null;
   title: string;
 }) => {
   if (!mediaUrl) return null;
@@ -139,6 +141,7 @@ export const SavedReplyMedia = ({
       footer={footer}
       mediaType={mediaType}
       mediaUrl={mediaUrl}
+      thumbnailUrl={thumbnailUrl}
       variant="reply"
     />
   );
@@ -277,6 +280,7 @@ export const SavedReplyCard = ({
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
           replyId={reply.id}
+          thumbnailUrl={reply.thumbnail_url}
           title={reply.title ?? "Mídia da resposta salva"}
         />
 

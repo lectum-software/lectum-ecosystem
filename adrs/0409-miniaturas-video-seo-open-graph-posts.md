@@ -60,3 +60,9 @@ Essa decisao aproxima o preview de links no WhatsApp do comportamento de Instagr
 - `pnpm check`
 - Smoke HTTP dos endpoints publicos e da tela Admin.
 - Browser local/headless mobile-first da rota Admin SEO/Metadados.
+
+## Complemento 2026-08-10 - poster automatico no player de comunidades
+
+Decisao complementar: o `thumbnail_url` persistido para videos de posts e respostas de comunidade tambem passa a ser a fonte do `poster` do player inline. A regra evita uma segunda origem de capa, nao cria upload manual para o psicologo e garante que feed, detalhe, thread, perfil profissional, posts do usuario e salvos reaproveitem a miniatura gerada no envio/edicao.
+
+A extracao no navegador tambem deixa de capturar apenas `0.5s`: o utilitario tenta tempos diferentes do proprio arquivo e usa uma heuristica simples de luminosidade/contraste para pular frames provavelmente pretos. Se todos os candidatos forem escuros, preserva o melhor frame encontrado em vez de bloquear a publicacao. Videos antigos sem `thumbnail_url` continuam sem backfill automatico nesta mudanca; eles podem ganhar capa ao serem editados ou em uma task futura de backfill real.

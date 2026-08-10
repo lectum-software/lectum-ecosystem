@@ -216,6 +216,7 @@ export const ReplyItemCard = ({
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
               roundedClassName="rounded-[18px]"
+              thumbnailUrl={reply.thumbnail_url}
               variant="reply"
             />
           </div>

@@ -250,6 +250,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
   const singlePostMediaItem = postImageMediaItems.length === 1 ? postImageMediaItems[0] : null;
   const displayMediaType = singlePostMediaItem?.media_type ?? post.media_type;
   const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
+  const displayThumbnailUrl = singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const shouldShowPostCarousel = postImageMediaItems.length > 1;
   const authorWhatsappCta = showAuthorWhatsapp ? (
     <CommunityWhatsAppCta
@@ -294,6 +295,7 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
           footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
+          thumbnailUrl={displayThumbnailUrl}
           variant="detail"
         />
       )}
@@ -316,6 +318,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const singlePostMediaItem = postImageMediaItems.length === 1 ? postImageMediaItems[0] : null;
   const displayMediaType = singlePostMediaItem?.media_type ?? post.media_type;
   const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
+  const displayThumbnailUrl = singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const shouldShowPostCarousel = postImageMediaItems.length > 1;
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (
@@ -430,6 +433,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
             roundedClassName="rounded-[18px]"
+            thumbnailUrl={displayThumbnailUrl}
             variant="reply"
           />
         )}

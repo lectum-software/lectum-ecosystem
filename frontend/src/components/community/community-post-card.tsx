@@ -88,6 +88,8 @@ export const CommunityPostCard = ({
     primaryReply?.media_type ?? singlePostMediaItem?.media_type ?? post.media_type;
   const displayMediaUrl =
     primaryReply?.media_url ?? singlePostMediaItem?.media_url ?? post.media_url;
+  const displayThumbnailUrl =
+    primaryReply?.thumbnail_url ?? singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const shouldShowPostCarousel = !primaryReply && postImageMediaItems.length > 1;
   const displayFeaturedBadge =
     primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
@@ -514,6 +516,7 @@ export const CommunityPostCard = ({
             footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
+            thumbnailUrl={displayThumbnailUrl}
             variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
           />
         )}
