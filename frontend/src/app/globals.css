@@ -215,6 +215,7 @@
 html {
   min-height: 100%;
   font-size: 15px;
+  touch-action: pan-x pan-y;
 }
 
 @media (min-width: 768px) {
@@ -229,6 +230,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
+  touch-action: pan-x pan-y;
 }
 
 button,

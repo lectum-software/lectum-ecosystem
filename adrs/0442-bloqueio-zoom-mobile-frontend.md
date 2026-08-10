@@ -37,3 +37,30 @@ Hotfix de UX mobile solicitado pelo usuário em 2026-08-10.
 - `pnpm --dir frontend check`.
 - `pnpm --dir frontend build`.
 - `pnpm check:version`.
+
+## Complemento 2026-08-10 — guard client-side para iOS/Safari
+
+### Contexto
+
+Após o deploy da primeira camada, a validação em celular continuou permitindo zoom. O Safari/iOS pode ignorar `maximum-scale=1` e `user-scalable=no` por decisão de acessibilidade, então o `viewport` sozinho não é suficiente para uma experiência web-app com modais.
+
+### Decisão
+
+Adicionar uma segunda camada no frontend:
+
+- CSS global `touch-action: pan-x pan-y` em `html` e `body`;
+- componente client-side `MobileZoomGuard`, montado no layout raiz;
+- listeners não passivos para `gesturestart`, `gesturechange`, `gestureend`, `touchmove` com mais de um toque e segundo `touchend` rápido fora de controles interativos.
+
+O objetivo é bloquear pinch/double-tap zoom depois que a página carrega, preservando rolagem normal e evitando interceptar cliques em links, botões, campos e players.
+
+### Consequências
+
+- A proteção passa a cobrir browsers que ignoram a meta viewport.
+- Uma página já ampliada antes do carregamento do novo bundle precisa ser recarregada/aberta novamente para voltar à escala 1.
+- O trade-off de acessibilidade permanece e deve ser compensado por legibilidade própria da UI mobile.
+
+### Validação
+
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
