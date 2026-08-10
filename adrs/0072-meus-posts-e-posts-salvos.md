@@ -569,3 +569,21 @@ fazia respostas aninhadas parecerem vinculadas diretamente ao post raiz.
 - O ajuste é compatível com rollout independente, pois consome campos já existentes e mantém fallback
   de texto para conteúdo vazio.
 - Não há migration, endpoint novo, package novo, mock ou alteração de dados persistidos.
+
+## Complemento 2026-08-10: navegacao focada a partir de Minhas respostas
+
+### Contexto
+
+A aba de respostas/comentarios em `/app/posts/mine` precisa funcionar como uma lista de atalhos para a conversa original: ao tocar em um comentario, o usuario deve chegar ao post com o comentario clicado em destaque, sem perder a separacao entre leitura publica e area privada.
+
+### Decisao
+
+- Manter o permalink canonico de leitura fora de `/app`: `/comunidades/:slug/publicacao/:id?focusReplyId=:replyId#reply-:replyId`.
+- Em `ReplyItemCard`, transformar a area de contexto/texto em `Link` real para esse destino e preservar o `router.push` no card para cliques em areas nao interativas.
+- Manter a lista de alvos interativos bloqueando navegacao acidental em comunidade, menu, votos, comentarios, salvar, compartilhar e video.
+
+### Consequencias
+
+- O foco continua centralizado no detalhe do post, que ja faz lookup por `focusReplyId` e aplica destaque no elemento `reply-:replyId`.
+- Compartilhamento e leitura publica permanecem no mesmo formato de URL; nao ha contrato novo, migration, endpoint novo, package ou mock.
+- A navegacao fica mais explicita e acessivel no conteudo do comentario sem alterar dados persistidos.

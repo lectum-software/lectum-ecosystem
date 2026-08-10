@@ -489,3 +489,28 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `git diff --check`
 - Smoke local com Next dev em `/app/publicacoes/minhas`: `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, confirmando rota privada acessivel e guard preservado sem sessao.
+
+## Ajuste complementar em 2026-08-10 - clique em comentario abre foco no post
+
+- Pedido direto de produto: na pagina de `Minhas respostas/comentarios`, clicar em um comentario deve redirecionar para o post com foco no comentario clicado.
+- Frontend: `ReplyItemCard` passou a expor a area de contexto/texto do comentario como `Link` real para `/comunidades/:slug/publicacao/:id?focusReplyId=:replyId#reply-:replyId`, mantendo o handler do card para toques no restante da superficie.
+- Os controles interativos do card continuam isolados: comunidade, menu, votos, contador de comentarios, salvar, compartilhar e video nao disparam navegacao indevida.
+- O detalhe do post ja consumia `focusReplyId` para buscar a pagina correta de respostas e aplicar foco visual no elemento `reply-:replyId`; por isso nao houve alteracao de backend, endpoint, schema Prisma, migration, package, mock ou dados persistidos.
+- Mobile-first: a superficie inteira do card agora mantem affordance de clique tambem no mobile, preservando a referencia de lista em `_product/proto/Meus Posts - Paciente.jpg`/`_product/proto/Meus Posts - Psicologo.jpg`.
+
+### Criterios de aceite do ajuste
+
+- [x] Clicar no texto/contexto de um comentario em `/app/publicacoes/minhas` abre o post de origem com `focusReplyId` do comentario clicado.
+- [x] Clicar no restante nao interativo do card usa o mesmo destino focado.
+- [x] Acoes do card nao navegam acidentalmente para o post.
+- [x] Nenhum mock, endpoint novo, migration ou package novo foi usado.
+
+### Validacao do ajuste 2026-08-10
+
+- `pnpm --dir frontend exec biome check --write src/app/app/posts/mine/components/reply-item-card.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- `pnpm check` executado antes do amend final; uma nova tentativa posterior foi bloqueada por alteracoes concorrentes nao relacionadas antes de serem isoladas.
+- `git diff --check`
+- Smoke local com Next dev em `/app/publicacoes/minhas`: `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, preservando o guard privado sem sessao.
