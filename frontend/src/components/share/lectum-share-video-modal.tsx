@@ -547,7 +547,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       >
         <div
           className={cn(
-            "pointer-events-auto relative max-h-[94dvh] w-full touch-none select-none overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[max(1rem,env(safe-area-inset-bottom))] text-foreground shadow-[var(--lectum-shadow)] will-change-transform sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-8 sm:pt-12 sm:pb-6",
+            "pointer-events-auto relative max-h-[94dvh] w-full touch-none select-none overscroll-contain overflow-y-auto rounded-t-[34px] border border-border bg-surface px-4 pt-14 pb-[var(--lectum-bottom-fixed-padding)] text-foreground shadow-[var(--lectum-shadow)] will-change-transform sm:max-h-[calc(100dvh-2rem)] sm:overflow-visible sm:rounded-[34px] sm:px-8 sm:pt-12 sm:pb-6",
             dragOffset > 0
               ? "transition-none"
               : "transition-transform duration-200 ease-out motion-reduce:transition-none",

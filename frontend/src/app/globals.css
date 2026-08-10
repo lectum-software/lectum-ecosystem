@@ -39,6 +39,14 @@
   --lectum-control-radius: 16px;
   --lectum-auth-radius: 24px;
   --lectum-container: 448px;
+  --lectum-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --lectum-bottom-fixed-padding: max(1rem, calc(var(--lectum-safe-area-bottom) + 0.75rem));
+  --lectum-bottom-fixed-padding-compact: max(
+    0.875rem,
+    calc(var(--lectum-safe-area-bottom) + 0.625rem)
+  );
+  --lectum-mobile-bottom-nav-height: calc(4rem + var(--lectum-bottom-fixed-padding));
+  --lectum-mobile-bottom-nav-aware-padding: calc(var(--lectum-mobile-bottom-nav-height) + 1rem);
   --lectum-shadow: 0 16px 40px rgb(15 23 42 / 8%);
   --lectum-shadow-soft: 0 8px 20px rgb(15 23 42 / 6%);
 }

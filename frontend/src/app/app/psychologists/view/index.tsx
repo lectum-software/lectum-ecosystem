@@ -493,7 +493,7 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                           </div>
                         </section>
 
-                        <div className="sticky bottom-0 col-span-2 -mx-5 mt-5 bg-gradient-to-t from-surface via-surface/95 to-surface/0 px-5 pt-8 pb-2 sm:-mx-6 sm:px-6">
+                        <div className="sticky bottom-0 col-span-2 -mx-5 mt-5 bg-gradient-to-t from-surface via-surface/95 to-surface/0 px-5 pt-8 pb-[var(--lectum-bottom-fixed-padding-compact)] sm:-mx-6 sm:px-6">
                           <button
                             className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-extrabold text-primary-foreground shadow-lectum-soft transition duration-200 ease-out hover:-translate-y-px hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                             type="submit"

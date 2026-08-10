@@ -343,7 +343,7 @@ export function ReplyEditModal({
             </div>
           </div>
 
-          <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:px-5">
+          <footer className="shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[var(--lectum-bottom-fixed-padding-compact)] backdrop-blur supports-[backdrop-filter]:bg-surface/90 sm:px-5">
             <div className="grid gap-2 sm:flex sm:justify-end">
               <Button
                 className="h-12 rounded-full border-border bg-surface px-6 font-bold text-muted shadow-none hover:border-primary/25 hover:bg-primary-soft hover:text-foreground focus-visible:outline-primary active:scale-[0.98] disabled:opacity-60"

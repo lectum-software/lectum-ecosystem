@@ -37,7 +37,7 @@ export const VerticalVideoPlayerPersistentControls = ({
     className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] px-4 text-primary-foreground"
     data-lectum-video-player-controls="true"
     style={{
-      paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)",
+      paddingBottom: "var(--lectum-bottom-fixed-padding)",
     }}
   >
     <div

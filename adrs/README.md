@@ -474,3 +474,4 @@ Formato recomendado:
 - [ADR-0441 — Versionamento rastreável e promoção de produção por PR](0441-versionamento-rastreavel-promocao-producao.md)
 - [ADR-0442 — Bloqueio de zoom no frontend mobile](0442-bloqueio-zoom-mobile-frontend.md)
 - [ADR-0443 — Confirmação de exclusão de conteúdo da comunidade](0443-confirmacao-exclusao-conteudo-comunidade.md)
+- [ADR-0444 — Safe area iOS/PWA para elementos inferiores](0444-safe-area-ios-pwa-elementos-inferiores.md)

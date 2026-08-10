@@ -275,7 +275,7 @@ export const ProfessionalBillingSubscriptionView = ({
       </section>
 
       {shouldShowUpgradeCta ? (
-        <div className="fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-6">
+        <div className="fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[var(--lectum-bottom-fixed-padding)] md:px-6">
           <div className="mx-auto w-full max-w-[430px] rounded-[var(--lectum-card-radius)] border border-border/80 bg-surface/95 p-2 shadow-[var(--lectum-shadow)] backdrop-blur supports-[backdrop-filter]:bg-surface/90 md:max-w-3xl">
             <Button asChild className="h-12 w-full rounded-full text-base">
               <Link href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}>

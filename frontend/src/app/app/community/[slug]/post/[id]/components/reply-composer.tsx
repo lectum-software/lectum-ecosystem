@@ -312,7 +312,7 @@ export const ReplyComposer = ({
         draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
         isInline
           ? "mt-3 rounded-[20px] border shadow-none"
-          : "fixed inset-x-0 bottom-0 z-40 border-t pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-lectum-soft backdrop-blur-md sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft sm:backdrop-blur-0 dark:sm:bg-surface",
+          : "fixed inset-x-0 bottom-0 z-40 border-t pb-[var(--lectum-bottom-fixed-padding)] shadow-lectum-soft backdrop-blur-md sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft sm:backdrop-blur-0 dark:sm:bg-surface",
       )}
       noValidate
       onBlur={(event) => {

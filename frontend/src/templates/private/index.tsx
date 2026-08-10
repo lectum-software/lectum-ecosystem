@@ -108,7 +108,9 @@ export const PrivateTemplate = ({
   const scrollAnimationFrameRef = useRef<number | null>(null);
   const ticking = useRef(false);
   const navigationAwarePageShellClassName = cn(
-    shouldRenderMobileNavigation ? "pb-28 sm:pb-32" : undefined,
+    shouldRenderMobileNavigation
+      ? "pb-[var(--lectum-mobile-bottom-nav-aware-padding)] sm:pb-[calc(var(--lectum-mobile-bottom-nav-height)_+_1.25rem)]"
+      : undefined,
     shouldRenderDesktopSidebar
       ? cn(isDesktopSidebarCollapsed ? "lg:pl-[88px]" : "lg:pl-[240px]", "lg:pb-8")
       : undefined,
@@ -116,12 +118,12 @@ export const PrivateTemplate = ({
   const pageShellClassName = cn(navigationAwarePageShellClassName, contentClassName);
   const mobileNavigationAwareFabBottom =
     shouldRenderMobileNavigation && isMobileNavigationRenderedVisible
-      ? "calc(4rem + env(safe-area-inset-bottom) + 0.625rem)"
-      : "calc(env(safe-area-inset-bottom) + 1rem)";
+      ? "calc(var(--lectum-mobile-bottom-nav-height) + 0.625rem)"
+      : "var(--lectum-bottom-fixed-padding)";
   const mobileNavigationAwareFabBottomSm =
     shouldRenderMobileNavigation && isMobileNavigationRenderedVisible
-      ? "calc(5rem + env(safe-area-inset-bottom) + 0.625rem)"
-      : "calc(env(safe-area-inset-bottom) + 1rem)";
+      ? "calc(var(--lectum-mobile-bottom-nav-height) + 1.625rem)"
+      : "var(--lectum-bottom-fixed-padding)";
   const pageShellStyle = {
     "--lectum-mobile-nav-aware-fab-bottom": mobileNavigationAwareFabBottom,
     "--lectum-mobile-nav-aware-fab-bottom-sm": mobileNavigationAwareFabBottomSm,
@@ -242,7 +244,8 @@ export const PrivateTemplate = ({
           : "border-t border-border bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur supports-[backdrop-filter]:bg-surface/85 sm:border dark:shadow-lectum-soft",
       )}
       style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
+        minHeight: "var(--lectum-mobile-bottom-nav-height)",
+        paddingBottom: "var(--lectum-bottom-fixed-padding)",
         transform: isMobileNavigationRenderedVisible ? "translateY(0)" : "translateY(140%)",
         pointerEvents: isMobileNavigationRenderedVisible && !navigationDimmed ? "auto" : "none",
       }}

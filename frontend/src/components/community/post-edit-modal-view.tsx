@@ -97,7 +97,7 @@ export const PostEditModalView = ({
           </div>
         </div>
 
-        <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+        <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[var(--lectum-bottom-fixed-padding-compact)] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
           <div className="flex min-h-12 items-center justify-between gap-3">
             {footerControls}
             <Button

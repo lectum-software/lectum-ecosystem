@@ -623,7 +623,7 @@ export const VerticalVideoPlayer = ({
         onClick={handleContentClick}
         style={{
           bottom: usesPersistentControls
-            ? "max(104px, calc(env(safe-area-inset-bottom) + 96px))"
+            ? "calc(var(--lectum-bottom-fixed-padding) + 5.25rem)"
             : controls
               ? "max(64px, 20%)"
               : 0,
@@ -648,7 +648,7 @@ export const VerticalVideoPlayer = ({
         />
       ) : null}
       {usesMinimalControls ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-media-background/80 via-media-background/45 to-transparent px-4 pb-4 pt-12">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-media-background/80 via-media-background/45 to-transparent px-4 pt-12 pb-[var(--lectum-bottom-fixed-padding)]">
           <div className="pointer-events-auto flex items-center">
             <button
               aria-label={isPaused ? `Reproduzir video: ${title}` : `Pausar video: ${title}`}
