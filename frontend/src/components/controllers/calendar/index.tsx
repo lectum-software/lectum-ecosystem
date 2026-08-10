@@ -2,7 +2,13 @@
 
 import { Controller, type FieldValues } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
-import { describedBy, fieldId, toInputDate } from "@/components/controllers/utils";
+import {
+  describedBy,
+  fieldId,
+  formatDatePtBr,
+  toDatePtBrInput,
+  toInputDate,
+} from "@/components/controllers/utils";
 import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -20,6 +26,9 @@ export function CalendarController<FormType extends FieldValues>({
   disabled,
   readOnly,
   autoFocus,
+  autoComplete,
+  dateDisplayFormat = "native",
+  placeholder,
   tabIndex,
   min,
   max,
@@ -55,21 +64,34 @@ export function CalendarController<FormType extends FieldValues>({
               )}
               disabled={disabled}
               id={inputId}
+              inputMode={dateDisplayFormat === "pt-BR" ? "numeric" : undefined}
+              maxLength={dateDisplayFormat === "pt-BR" ? 10 : undefined}
               max={typeof max === "number" ? undefined : max}
               min={typeof min === "number" ? undefined : min}
               name={field.name}
+              autoComplete={autoComplete}
               onBlur={field.onBlur}
               onChange={(event) => {
-                const nextValue = event.target.value || null;
+                const nextValue =
+                  dateDisplayFormat === "pt-BR"
+                    ? formatDatePtBr(event.target.value)
+                    : event.target.value || null;
                 field.onChange(nextValue);
                 onChangeCallback?.(nextValue);
               }}
+              placeholder={
+                dateDisplayFormat === "pt-BR" ? (placeholder ?? "00/00/0000") : placeholder
+              }
               readOnly={readOnly}
               ref={field.ref}
               required={false}
               tabIndex={tabIndex}
-              type="date"
-              value={toInputDate(field.value)}
+              type={dateDisplayFormat === "pt-BR" ? "text" : "date"}
+              value={
+                dateDisplayFormat === "pt-BR"
+                  ? toDatePtBrInput(field.value)
+                  : toInputDate(field.value)
+              }
             />
           </Container>
         );

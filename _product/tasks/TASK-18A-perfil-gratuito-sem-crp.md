@@ -613,3 +613,32 @@ Validacoes executadas:
 - Verificacao estatica confirmou a ordem `specialty_ids`, `approach_ids`, `service_ids`, `target_audience`, `language` no bloco `Filtros`.
 - Dev server local em `http://127.0.0.1:3124`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.24"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
 - `pnpm check` foi executado e falhou em `check:encoding` por BOM UTF-8 em arquivos de moderacao/admin fora deste ajuste: `admin/src/app/(admin)/moderacao/sugestoes-comunidades/modules/community-suggestions-support.ts`, `backend/src/modules/api/admin/private/moderation/repositories/queries/AdminModerationCommunitySuggestionsRepository.ts`, `backend/src/modules/api/admin/private/moderation/use-cases/services/community-suggestions.ts` e `admin/src/components/admin-shell/nav.ts`.
+
+
+## Ajuste complementar em 2026-08-10 - Data de Nascimento digitavel
+
+- Pedido do usuario: na edicao de perfil do psicologo, `Data de Nascimento` deve ser digitavel no formato visual `00/00/0000`, em vez de selecionavel no calendario nativo do celular.
+- O ajuste ficou restrito ao frontend da rota `/app/profissional/perfil/configurar` (`/app/professional/profile/setup` legado), sem alterar backend, Prisma, migrations, endpoints, contratos publicos, dados persistidos, envs ou packages.
+- O controller `calendar` da fundacao TASK-02 ganhou a opcao `dateDisplayFormat="pt-BR"` para renderizar `type="text"`, `inputMode="numeric"`, `maxLength=10`, placeholder `00/00/0000` e mascara progressiva `DD/MM/AAAA`.
+- O campo de perfil do psicologo usa essa opcao, mantendo valor visual `DD/MM/AAAA` no formulario e convertendo para `YYYY-MM-DD` apenas ao montar o payload real do `PUT /api/private/psychologist/free-profile`.
+- O comportamento nativo `type="date"` permanece como padrao do controller para outros usos existentes.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece `_product/proto/Editar Perfil - Psicologo.jpg` e o retorno do usuario em 2026-08-10.
+- ADR atualizado: `adrs/0217-data-nascimento-perfil-psicologo.md`.
+
+Criterios complementares:
+
+- [x] Campo `Data de Nascimento` deixa de usar `input type="date"` quando configurado para o perfil do psicologo.
+- [x] Campo aceita digitacao mobile-first no formato visual `00/00/0000`, com teclado numerico e mascara progressiva.
+- [x] Payload do perfil continua enviando `birthdate` como `YYYY-MM-DD` para o backend real.
+- [x] Outros usos do controller `calendar` preservam o calendario nativo por padrao.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/hooks/form/types.ts src/components/controllers/utils.ts src/components/controllers/calendar/index.tsx src/app/app/professional/profile/setup/use-form.tsx src/app/app/professional/profile/setup/modules/profile-setup-support.ts`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump`
+- `pnpm check:version`
+- Verificacao estatica confirmou `dateDisplayFormat: "pt-BR"` no campo `birthdate`, sem `type="date"` para este uso.
+- Dev server local em `http://127.0.0.1:3136`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.27"}`; rota canonica privada `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao; rota legada `/app/professional/profile/setup` respondeu `308` para a canonica. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.

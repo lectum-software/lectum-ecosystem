@@ -85,11 +85,11 @@ export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY
   return nationalDigits ? `+${countryCode}${nationalDigits}` : null;
 };
 
-const isValidBirthdate = (value: string) => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return false;
+export const toBirthdateIso = (value?: string | null) => {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value?.trim() ?? "");
+  if (!match) return null;
 
-  const [, yearValue, monthValue, dayValue] = match;
+  const [, dayValue, monthValue, yearValue] = match;
   const year = Number(yearValue);
   const month = Number(monthValue);
   const day = Number(dayValue);
@@ -101,13 +101,27 @@ const isValidBirthdate = (value: string) => {
     parsed.getUTCMonth() !== month - 1 ||
     parsed.getUTCDate() !== day
   ) {
-    return false;
+    return null;
   }
 
   const today = new Date();
   const todayTime = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
 
-  return time <= todayTime && time >= Date.UTC(1900, 0, 1);
+  if (time > todayTime || time < Date.UTC(1900, 0, 1)) {
+    return null;
+  }
+
+  return `${yearValue}-${monthValue}-${dayValue}`;
+};
+
+const isValidBirthdate = (value: string) => Boolean(toBirthdateIso(value));
+
+const toBirthdateInput = (value?: string | null) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? "");
+  if (!match) return "";
+
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
 };
 
 export const freeProfileSchema = z
@@ -254,8 +268,10 @@ export const createFields = ({
       name: "birthdate",
       field: "calendar",
       label: "Data de Nascimento",
+      placeholder: "00/00/0000",
       required: true,
       autoComplete: "bday",
+      dateDisplayFormat: "pt-BR",
     },
     {
       name: "crp_region",
@@ -463,7 +479,7 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
     race_color: data?.profile.race_color || "",
     religion: data?.profile.religion || "",
     cpf: data?.profile.cpf || "",
-    birthdate: data?.profile.birthdate?.slice(0, 10) || "",
+    birthdate: toBirthdateInput(data?.profile.birthdate),
     crp_region: data?.profile.crp_region || "",
     crp_number: data?.profile.crp_number || "",
     countryCode,

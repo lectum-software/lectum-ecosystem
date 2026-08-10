@@ -7,7 +7,7 @@ import type {
   FreeProfileCatalogItem,
 } from "@/api/generator/types/free-profile";
 import type { FreeProfileForm } from "../use-form";
-import { getLanguages, toWhatsappPhoneE164 } from "../use-form";
+import { getLanguages, toBirthdateIso, toWhatsappPhoneE164 } from "../use-form";
 
 export const PROFESSIONAL_PROFILE_MENU_HREF = "/app/perfil";
 
@@ -112,7 +112,7 @@ export const toFreeProfessionalProfilePayload = (
     professional_first_name: professionalFirstName,
     professional_last_name: professionalLastName,
     cpf: lockedIdentityProfile ? lockedIdentityProfile.cpf : values.cpf || null,
-    birthdate: values.birthdate || null,
+    birthdate: toBirthdateIso(values.birthdate),
     gender: values.gender || null,
     race_color: values.race_color || null,
     religion: values.religion || null,

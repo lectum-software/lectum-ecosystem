@@ -79,6 +79,11 @@ export function formatPhone(value?: string | number | null): string {
   return `${prefix}(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
 }
 
+export function formatDatePtBr(value?: string | number | null): string {
+  const digits = onlyDigits(value).slice(0, 8);
+  return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3");
+}
+
 export function parseDecimal(value?: string | number | null): number | null {
   if (value === null || value === undefined || value === "") {
     return null;
@@ -127,4 +132,20 @@ export function toInputDate(value: unknown): string {
   }
 
   return "";
+}
+
+export function toDatePtBrInput(value: unknown): string {
+  if (!value) {
+    return "";
+  }
+
+  const inputDate = toInputDate(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(inputDate);
+
+  if (match) {
+    const [, year, month, day] = match;
+    return `${day}/${month}/${year}`;
+  }
+
+  return formatDatePtBr(String(value));
 }

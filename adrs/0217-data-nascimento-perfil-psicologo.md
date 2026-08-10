@@ -40,3 +40,27 @@ A referencia visual ativa continua sendo `_product/proto/Editar Perfil - Psicolo
 ## Pendencias
 
 - Nenhuma pendencia externa.
+
+## Ajuste complementar em 2026-08-10 - entrada digitavel PT-BR
+
+O usuario reportou que, no celular, o campo ainda abria o seletor/calendario nativo. Para atender ao uso mobile-first, a UI do perfil do psicologo deixou de renderizar este campo como `input type="date"` no caso especifico da Data de Nascimento.
+
+Decisao complementar:
+
+- Manter o controller `calendar` da fundacao TASK-02 como ponto unico de campo de data, sem criar componente paralelo.
+- Adicionar uma opcao `dateDisplayFormat="pt-BR"` no contrato do campo para renderizar `type="text"`, `inputMode="numeric"`, `maxLength=10` e placeholder `00/00/0000`.
+- Preservar o comportamento nativo atual como padrao do controller para outros usos de calendario.
+- Converter a entrada visual `DD/MM/AAAA` para payload `YYYY-MM-DD` antes de chamar a API real, mantendo a validacao contra datas invalidas, futuras ou anteriores a 1900.
+
+Consequencias:
+
+- O celular passa a abrir teclado numerico para Data de Nascimento, sem calendario nativo.
+- O backend, o Prisma, as migrations, os contratos publicos, os dados persistidos, os packages e as envs nao foram alterados neste ajuste.
+- O rollback e simples: remover `dateDisplayFormat="pt-BR"` do campo e voltar a enviar o valor nativo `YYYY-MM-DD`.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- Smoke local do frontend 0.1.27: `/version` respondeu `200`; `/app/profissional/perfil/configurar` respondeu `307` sem sessao, preservando a protecao da rota privada.
