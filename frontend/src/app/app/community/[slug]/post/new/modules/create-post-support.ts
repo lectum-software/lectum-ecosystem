@@ -123,4 +123,5 @@ export const createSelectedMediaId = () =>
 
 export type CreateCommunityPostLogicProps = {
   asModalSlot?: boolean;
+  onCloseComplete?: () => void;
 };

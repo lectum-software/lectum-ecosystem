@@ -58,6 +58,7 @@ import {
   resolveFeedError,
   sortCommunityPosts,
 } from "../modules/feed-support";
+import { CreateCommunityPostLogic } from "../post/new/logic";
 
 export type CommunityRouteLogicProps = {
   suppressPublishOnboarding?: boolean;
@@ -78,6 +79,7 @@ export const CommunityDetailLogic = ({
   const communitySearchReturnStateRef = useRef<{ scrollY: number } | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
+  const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
   const detail = useCommunityDetail(slug);
   const postsQueryParams = useMemo(
     () => ({
@@ -245,9 +247,13 @@ export const CommunityDetailLogic = ({
   }, [community, conversion, following, membershipPending, toggleFollow]);
 
   const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
-    if (conversion.isAuthenticated) return;
-
     event.preventDefault();
+
+    if (conversion.isAuthenticated) {
+      setCreatePostModalOpen(true);
+      return;
+    }
+
     conversion.requestConversion("trigger_comentar", {
       intent: {
         returnTo: href,
@@ -434,6 +440,13 @@ export const CommunityDetailLogic = ({
         onShared={handleShareVideoShared}
         target={shareVideoTarget}
       />
+
+      {createPostModalOpen ? (
+        <CreateCommunityPostLogic
+          asModalSlot
+          onCloseComplete={() => setCreatePostModalOpen(false)}
+        />
+      ) : null}
     </PrivateTemplate>
   );
 };

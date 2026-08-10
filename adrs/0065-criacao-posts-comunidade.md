@@ -470,3 +470,49 @@ Validação complementar 2026-08-10:
 - Chrome/CDP mobile em `http://localhost:3011/app/comunidades/feed/publicacao/nova`, com cookie de
   sessão local apenas para atravessar o proxy privado: sucesso ao confirmar `dialog` `Criar Post`,
   overlay com `opacity=1` e sheet sem `translate-y-full` inicial (`transform: none`).
+
+## Atualização 2026-08-10 - abertura local no PWA sem loading global
+
+A validação em PWA mostrou que, mesmo com a rota interceptada PT-BR disponível, o clique de criação de
+post ainda podia exibir o `loading.tsx` global (`Carregando página`) enquanto o App Router carregava a
+rota. Em standalone/PWA, essa tela ocupa toda a experiência e quebra a percepção de modal contextual.
+
+Decisões complementares:
+
+- Para cliques autenticados no feed e no detalhe de comunidade, impedir a navegação do `Link` e montar
+  `CreateCommunityPostLogic` localmente no mesmo React tree da tela de origem. A rota canônica
+  `/app/comunidades/[slug]/publicacao/nova` permanece como fallback para acesso direto, reload e
+  deep link, mas deixa de ser necessária no clique primário do PWA.
+- Estender a lógica da modal com `onCloseComplete`: no modo local, o fechamento anima a sheet para
+  baixo e depois apenas desmonta o componente; no modo de rota direta/interceptada, continua usando o
+  fallback de navegação já existente.
+- Restaurar a animação de subida (`up`) iniciando `isSheetOpen=false` e abrindo por
+  `requestAnimationFrame` duplo. Isso força uma pintura inicial com `translate-y-full` antes de
+  transicionar para `translate-y-0`, evitando que a correção de loading transforme a abertura em um
+  aparecimento seco.
+- Mover a composição de fallback visual das rotas diretas para os `page.tsx` canônicos, mantendo
+  `CreateCommunityPostLogic` sem import estático para as views de comunidade e preservando o grafo sem
+  ciclos.
+- Não alterar API, payload, schema, autorização, storage, anonimato, mídia, envs ou packages.
+
+Consequências:
+
+- O PWA não deve mais mostrar `Carregando página` ao tocar no botão `+` para criar post a partir do
+  feed/comunidade já carregados.
+- A URL visível permanece na tela de origem durante a composição local; esse é o trade-off aceito para
+  priorizar a experiência app-like. Deep links e reloads da rota de criação continuam suportados pelo
+  fallback existente.
+- A modalidade visual, bloqueio de scroll, `Esc`, foco do editor e publicação real permanecem
+  centralizados na mesma lógica compartilhada.
+
+Validação complementar 2026-08-10:
+
+- `pnpm check:version`: sucesso em `0.1.20`.
+- `pnpm check:cycles`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `git diff --check` nos arquivos do ajuste: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3138/app/comunidades/feed`: sucesso ao confirmar frontend
+  `0.1.20`, clique autenticado mantendo a URL em `/app/comunidades/feed`, sem `Carregando página`, 1
+  `dialog` com título `Criar Post`, `transitionDuration=0.3s` e alternância da sheet de
+  `translate-y-full` para `translate-y-0`.

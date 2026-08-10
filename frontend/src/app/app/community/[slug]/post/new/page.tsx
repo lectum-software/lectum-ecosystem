@@ -1,5 +1,13 @@
+import { CommunityRouteLogic } from "../../logic";
 import { CreateCommunityPostLogic } from "./logic";
 
 export default function CreateCommunityPostPage() {
-  return <CreateCommunityPostLogic />;
+  return (
+    <>
+      <div aria-hidden="true" className="min-h-screen">
+        <CommunityRouteLogic suppressPublishOnboarding />
+      </div>
+      <CreateCommunityPostLogic />
+    </>
+  );
 }

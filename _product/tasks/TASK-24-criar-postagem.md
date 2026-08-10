@@ -411,3 +411,15 @@ Validacoes finais deste complemento:
 - Fonte visual auditável: `_product/proto/Criar Nova Postagem - Pacientes.jpg` e `_product/proto/Criar Nova Postagem - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `git diff --check` nos arquivos do ajuste e Chrome/CDP mobile em `http://localhost:3011/app/comunidades/feed/publicacao/nova` com cookie de sessão local, confirmando `dialog` `Criar Post`, overlay com `opacity=1` e sheet sem `translate-y-full` inicial (`transform: none`).
+
+## Complemento 2026-08-10 - modal local no PWA e animação de subida
+
+- Pedido do usuário: no PWA ainda aparecia a tela global `Carregando página` antes da criação de post, e a modal precisava manter animação de subida.
+- Frontend: os CTAs autenticados de criação no feed e no detalhe da comunidade agora impedem a navegação de rota e montam `CreateCommunityPostLogic` localmente sobre a tela atual. A URL canônica/interceptada continua existindo como fallback para acesso direto, reload e deep link, mas o clique normal no PWA não dispara mais o `loading.tsx` global.
+- Frontend: a sheet voltou a iniciar fechada e abrir por `requestAnimationFrame` duplo, garantindo pintura inicial com classe `translate-y-full` e transição `up` para `translate-y-0`.
+- Frontend: o fallback visual das rotas diretas foi movido para os `page.tsx` canônicos, evitando ciclo estático entre `post/new/logic` e as views de comunidade.
+- Fechamento: no modo local, o `X` executa a animação de saída e desmonta a modal no final; nas rotas diretas/interceptadas, o fallback de navegação anterior permanece.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoints, payload, regra de anonimato, mídia, storage, envs ou packages.
+- Fonte visual auditável: screenshot do PWA enviado pelo usuário em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 10.05.22.jpeg` e protótipos `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`_product/proto/Criar Nova Postagem - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm check:version`, `pnpm check:cycles`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `git diff --check` nos arquivos do ajuste e Chrome/CDP mobile em `http://127.0.0.1:3138/app/comunidades/feed`, confirmando frontend `0.1.20`, clique autenticado mantendo a URL em `/app/comunidades/feed`, sem `Carregando página`, 1 `dialog` com título `Criar Post`, `transitionDuration=0.3s` e sheet alternando de `translate-y-full` para `translate-y-0`.

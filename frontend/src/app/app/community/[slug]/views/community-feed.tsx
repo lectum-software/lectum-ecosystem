@@ -42,6 +42,7 @@ import {
   CommunityPublishOnboarding,
 } from "../components/publish-onboarding";
 import { flattenCommunityPostPages, PAGE_LIMIT, resolveFeedError } from "../modules/feed-support";
+import { CreateCommunityPostLogic } from "../post/new/logic";
 import type { CommunityRouteLogicProps } from "./community-detail";
 
 export const CommunityFeedLogic = ({
@@ -60,6 +61,7 @@ export const CommunityFeedLogic = ({
   const [searchOpen, setSearchOpen] = useState(false);
   const [communityMenuOpen, setCommunityMenuOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
+  const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
   const lastScrollY = useRef(0);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
@@ -98,9 +100,13 @@ export const CommunityFeedLogic = ({
   }, [fetchNextFeedPage, hasNextFeedPage, isFetchingFeed, isFetchingNextFeedPage]);
 
   const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
-    if (conversion.isAuthenticated) return;
-
     event.preventDefault();
+
+    if (conversion.isAuthenticated) {
+      setCreatePostModalOpen(true);
+      return;
+    }
+
     conversion.requestConversion("trigger_comentar", {
       intent: {
         returnTo: href,
@@ -305,6 +311,13 @@ export const CommunityFeedLogic = ({
         onShared={handleShareVideoShared}
         target={shareVideoTarget}
       />
+
+      {createPostModalOpen ? (
+        <CreateCommunityPostLogic
+          asModalSlot
+          onCloseComplete={() => setCreatePostModalOpen(false)}
+        />
+      ) : null}
 
       <style>{`
         @keyframes lectum-desktop-create-float {

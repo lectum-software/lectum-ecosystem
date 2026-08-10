@@ -37,7 +37,13 @@ import {
 } from "../modules/create-post-support";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "../use-form";
 
-export const useCreateCommunityPostController = () => {
+export type UseCreateCommunityPostControllerOptions = {
+  onCloseComplete?: () => void;
+};
+
+export const useCreateCommunityPostController = ({
+  onCloseComplete,
+}: UseCreateCommunityPostControllerOptions = {}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams<{ slug?: string | string[] }>();
@@ -48,7 +54,7 @@ export const useCreateCommunityPostController = () => {
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(true);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
   const closeTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -225,6 +231,11 @@ export const useCreateCommunityPostController = () => {
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
     closeTimerRef.current = window.setTimeout(() => {
+      if (onCloseComplete) {
+        onCloseComplete();
+        return;
+      }
+
       const fallbackHref =
         routeSlug && routeSlug !== COMMUNITY_FEED_SLUG
           ? `/comunidades/${routeSlug}`
@@ -234,9 +245,13 @@ export const useCreateCommunityPostController = () => {
 
       navigateBackWithFallback(router, fallbackHref);
     }, SHEET_CLOSE_DELAY_MS);
-  }, [communitySlugFromQuery, routeSlug, router]);
+  }, [communitySlugFromQuery, onCloseComplete, routeSlug, router]);
 
   useEffect(() => {
+    let openFrame: number | null = null;
+    const frame = window.requestAnimationFrame(() => {
+      openFrame = window.requestAnimationFrame(() => setIsSheetOpen(true));
+    });
     const focusTimer = window.setTimeout(() => {
       document.getElementById("create-post-title")?.focus({ preventScroll: true });
     }, 280);
@@ -254,6 +269,8 @@ export const useCreateCommunityPostController = () => {
     window.addEventListener("keydown", handleEscape);
 
     return () => {
+      window.cancelAnimationFrame(frame);
+      if (openFrame !== null) window.cancelAnimationFrame(openFrame);
       window.clearTimeout(focusTimer);
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
       document.body.style.overflow = previousBodyOverflow;

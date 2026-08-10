@@ -8,7 +8,6 @@ import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { CommunityRouteLogic } from "../../../logic";
 import { useCreateCommunityPostController } from "../hooks/use-create-community-post-controller";
 import {
   anonymousTipText,
@@ -19,10 +18,8 @@ import {
   guidanceText,
 } from "../modules/create-post-support";
 
-export const CreateCommunityPostLogic = ({
-  asModalSlot = false,
-}: CreateCommunityPostLogicProps) => {
-  const controller = useCreateCommunityPostController();
+export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPostLogicProps) => {
+  const controller = useCreateCommunityPostController({ onCloseComplete });
   const {
     clearCorrectedFormErrorsSoon,
     communitiesQuery,
@@ -467,16 +464,5 @@ export const CreateCommunityPostLogic = ({
     </div>
   );
 
-  if (asModalSlot) {
-    return sheet;
-  }
-
-  return (
-    <>
-      <div aria-hidden="true" className="min-h-screen">
-        <CommunityRouteLogic suppressPublishOnboarding />
-      </div>
-      {sheet}
-    </>
-  );
+  return sheet;
 };
