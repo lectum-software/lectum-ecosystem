@@ -432,3 +432,41 @@ Validação complementar 2026-07-01:
 - `pnpm --dir backend build`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
+
+## Atualização 2026-08-10 - modal imediata na rota canônica PT-BR
+
+A rota canônica privada de criação de post passou a ser PT-BR
+(`/app/comunidades/[slug]/publicacao/nova`), mas a experiência modal imediata dependia de o
+segmento `[slug]` renderizar o slot paralelo `@modal`. A pasta PT-BR já possuía a rota interceptada,
+porém não possuía `layout.tsx` local com a prop `modal`; na prática, a navegação podia cair primeiro
+na página direta/fallback e exibir um carregamento de contexto antes da sheet.
+
+Decisões complementares:
+
+- Adicionar `frontend/src/app/app/comunidades/[slug]/layout.tsx` espelhando o layout do segmento
+  legado em inglês, apenas renderizando `{children}` e `{modal}`. Assim, a URL PT-BR ativa a
+  interceptação do App Router sem desmontar o feed/comunidade de origem.
+- Manter a rota direta/fallback para deep link, reload e compatibilidade, mas iniciar a sheet de
+  `Criar Post` já aberta para evitar o primeiro frame invisível/fora da tela quando o fallback for
+  necessário.
+- Não alterar contratos, API, payload, schema, regras de anonimato, permissões de mídia, storage,
+  envs ou packages.
+
+Consequências:
+
+- Cliques originados do feed ou do detalhe de comunidade passam a abrir a modal imediatamente sobre o
+  contexto existente na URL PT-BR canônica.
+- O fallback contextual continua existindo para acesso direto, mas deixa de causar uma percepção de
+  "tela antes da modal".
+- A animação de fechamento, o bloqueio de scroll, o fechamento por `X`/`Esc` e o foco no editor
+  permanecem preservados.
+
+Validação complementar 2026-08-10:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso; o mapa de rotas confirmou
+  `/app/comunidades/[slug]/(.)publicacao/nova`.
+- `git diff --check` nos arquivos do ajuste: sucesso.
+- Chrome/CDP mobile em `http://localhost:3011/app/comunidades/feed/publicacao/nova`, com cookie de
+  sessão local apenas para atravessar o proxy privado: sucesso ao confirmar `dialog` `Criar Post`,
+  overlay com `opacity=1` e sheet sem `translate-y-full` inicial (`transform: none`).

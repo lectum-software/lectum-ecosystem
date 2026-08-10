@@ -48,7 +48,7 @@ export const useCreateCommunityPostController = () => {
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(true);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
   const closeTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -237,7 +237,6 @@ export const useCreateCommunityPostController = () => {
   }, [communitySlugFromQuery, routeSlug, router]);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setIsSheetOpen(true));
     const focusTimer = window.setTimeout(() => {
       document.getElementById("create-post-title")?.focus({ preventScroll: true });
     }, 280);
@@ -255,7 +254,6 @@ export const useCreateCommunityPostController = () => {
     window.addEventListener("keydown", handleEscape);
 
     return () => {
-      window.cancelAnimationFrame(frame);
       window.clearTimeout(focusTimer);
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
       document.body.style.overflow = previousBodyOverflow;

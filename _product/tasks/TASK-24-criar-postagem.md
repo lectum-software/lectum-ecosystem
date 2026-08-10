@@ -401,3 +401,13 @@ Validacoes finais deste complemento:
 - Fonte visual auditável: a decisão nasceu de validação visual sobre o card/feed existente; não houve nova tela nem necessidade de Builder/Quick Copy. O inventário ativo segue `_product/proto/Feed Comunidade.jpg` e `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`Criar Nova Postagem - Psicólogo.jpg` para contexto.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `git diff --check`, `pnpm --dir backend check`, `pnpm --dir frontend check`, `pnpm --dir backend build`, `pnpm --dir frontend build` e `pnpm check`.
+
+## Complemento 2026-08-10 - abertura imediata da modal na rota PT-BR
+
+- Pedido do usuário: a criação de post estava carregando uma tela intermediária antes de abrir a modal; a modal deve abrir imediatamente.
+- Frontend: a rota canônica PT-BR `/app/comunidades/[slug]/publicacao/nova` passou a ter `layout.tsx` próprio no segmento `[slug]`, renderizando o slot paralelo `@modal` e permitindo que a rota interceptada `@modal/(.)publicacao/nova` apareça sobre o feed/comunidade sem cair primeiro no fallback de tela direta.
+- Frontend: o estado inicial da sheet de `Criar Post` passou a aberto, removendo o primeiro frame invisível/fora da tela também quando o acesso direto ou reload precisar usar o fallback contextual.
+- Escopo: sem mudanças de backend, Prisma, migrations, endpoints, payload, regra de anonimato, mídia, storage, envs ou packages.
+- Fonte visual auditável: `_product/proto/Criar Nova Postagem - Pacientes.jpg` e `_product/proto/Criar Nova Postagem - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+- Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `git diff --check` nos arquivos do ajuste e Chrome/CDP mobile em `http://localhost:3011/app/comunidades/feed/publicacao/nova` com cookie de sessão local, confirmando `dialog` `Criar Post`, overlay com `opacity=1` e sheet sem `translate-y-full` inicial (`transform: none`).
