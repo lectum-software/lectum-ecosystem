@@ -61,4 +61,20 @@ describe("sanitizePublicResponseData", () => {
       { source: "engajamento", traffic_source: "organic" },
     );
   });
+  it("preserva aliases reaproveitados quando eles nao sao ciclos", () => {
+    const subscription = {
+      id: "subscription-id",
+      plan: {
+        name: "Plano Profissional",
+        slug: "profissional",
+      },
+      source: "admin_grant",
+      status: "ativa",
+    };
+
+    assert.deepEqual(sanitizePublicResponseData({ current: subscription, subscription }), {
+      current: subscription,
+      subscription,
+    });
+  });
 });

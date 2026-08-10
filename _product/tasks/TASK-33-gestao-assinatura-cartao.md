@@ -462,3 +462,19 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local mobile-first via Chrome headless/CDP em `http://localhost:3115/app/professional/billing`, com frontend apontando para backend local `http://localhost:3121` e sessão real da conta em cortesia, confirmou **Plano Profissional de Cortesia**, **Amex final <4 dígitos>**, CTA **Alterar**, ausência de CTA **Adicionar**, ausência de **Histórico de pagamentos** e ausência da faixa azul de cortesia.
+
+
+## Correcao em 2026-08-10: alias sanitizado em Minha Assinatura
+
+- Incidente observado em homologacao: psicologo com cortesia administrativa ativa no Admin (`Plano = Cortesia`) via a tela `/app/profissional/assinatura` como `Plano nao encontrado`, status `Pendente` e `R$ 0,00 / mes`.
+- Causa tecnica: o endpoint `GET /api/private/psychologist/billing/subscription` mantem, por compatibilidade, os campos `current` e `subscription` com a mesma assinatura. A camada `send` passava o payload por sanitizadores com `WeakSet` global; o segundo alias era tratado como ciclo e redigido, entao o frontend priorizava `subscription` invalido em vez de `current` completo.
+- Ajuste: `sanitizeSensitiveData` e `sanitizePublicResponseData` agora rastreiam apenas a pilha de recursao atual, preservando aliases legitimos e mantendo ciclos reais como `[REDACTED]`.
+- Nenhum package novo, migration, seed, mock, env nova ou alteracao de contrato foi criado.
+- ADR registrado: `adrs/0446-sanitizacao-aliases-resposta-billing.md`.
+- Validacoes executadas sem erros:
+  - `pnpm --dir backend exec node --import tsx --test src/utils/sanitize-sensitive.test.ts src/utils/public-response.test.ts`
+  - Simulacao local do pipeline confirmando `current` e `subscription` completos para assinatura `admin_grant/ativa/profissional`
+  - `pnpm --dir backend check`
+  - `pnpm --dir backend build`
+  - `pnpm check:version`
+  - `pnpm check`

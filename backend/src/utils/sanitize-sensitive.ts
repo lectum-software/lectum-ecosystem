@@ -138,7 +138,7 @@ const shouldRemoveKey = (key: string, options: SanitizeOptions) => {
 };
 
 export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOptions = {}): T => {
-  const seen = new WeakSet<object>();
+  const stack = new WeakSet<object>();
 
   const visit = (entry: unknown): unknown => {
     if (entry === null || entry === undefined) return entry;
@@ -153,18 +153,22 @@ export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOp
     }
 
     if (typeof entry !== "object") return entry;
-    if (seen.has(entry)) return "[REDACTED]";
-    seen.add(entry);
+    if (stack.has(entry)) return "[REDACTED]";
+    stack.add(entry);
 
-    if (Array.isArray(entry)) return entry.map(visit);
+    try {
+      if (Array.isArray(entry)) return entry.map(visit);
 
-    const sanitized: Record<string, unknown> = {};
-    for (const [key, entryValue] of Object.entries(entry)) {
-      if (shouldRemoveKey(key, options)) continue;
-      sanitized[key] = visit(entryValue);
+      const sanitized: Record<string, unknown> = {};
+      for (const [key, entryValue] of Object.entries(entry)) {
+        if (shouldRemoveKey(key, options)) continue;
+        sanitized[key] = visit(entryValue);
+      }
+
+      return sanitized;
+    } finally {
+      stack.delete(entry);
     }
-
-    return sanitized;
   };
 
   return visit(value) as T;

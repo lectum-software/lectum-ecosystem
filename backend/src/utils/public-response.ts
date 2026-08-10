@@ -108,25 +108,29 @@ export const sanitizePublicProvenanceSource = (value: unknown): unknown => {
 };
 
 export const sanitizePublicResponseData = <T = unknown>(value: T): T => {
-  const seen = new WeakSet<object>();
+  const stack = new WeakSet<object>();
 
   const visit = (entry: unknown): unknown => {
     if (entry === null || entry === undefined || typeof entry !== "object") return entry;
     if (entry instanceof Date || entry instanceof Buffer) return entry;
-    if (seen.has(entry)) return "[REDACTED]";
-    seen.add(entry);
+    if (stack.has(entry)) return "[REDACTED]";
+    stack.add(entry);
 
-    if (Array.isArray(entry)) return entry.map(visit);
+    try {
+      if (Array.isArray(entry)) return entry.map(visit);
 
-    const sanitized: Record<string, unknown> = {};
-    for (const [key, entryValue] of Object.entries(entry)) {
-      sanitized[key] =
-        key.toLowerCase() === "source"
-          ? sanitizePublicProvenanceSource(entryValue)
-          : visit(entryValue);
+      const sanitized: Record<string, unknown> = {};
+      for (const [key, entryValue] of Object.entries(entry)) {
+        sanitized[key] =
+          key.toLowerCase() === "source"
+            ? sanitizePublicProvenanceSource(entryValue)
+            : visit(entryValue);
+      }
+
+      return sanitized;
+    } finally {
+      stack.delete(entry);
     }
-
-    return sanitized;
   };
 
   return visit(value) as T;

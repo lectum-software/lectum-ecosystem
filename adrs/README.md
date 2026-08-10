@@ -476,3 +476,4 @@ Formato recomendado:
 - [ADR-0443 — Confirmação de exclusão de conteúdo da comunidade](0443-confirmacao-exclusao-conteudo-comunidade.md)
 - [ADR-0444 — Safe area iOS/PWA para elementos inferiores](0444-safe-area-ios-pwa-elementos-inferiores.md)
 - [ADR-0445 — Blocos internos de demanda para sugestoes de comunidades](0445-blocos-demanda-sugestoes-comunidades-admin.md)
+- [ADR-0446 — Sanitizacao preserva aliases em respostas de billing](0446-sanitizacao-aliases-resposta-billing.md)

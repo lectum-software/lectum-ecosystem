@@ -76,4 +76,20 @@ describe("sanitizeSensitiveData", () => {
       self: "[REDACTED]",
     });
   });
+  it("preserva aliases reaproveitados quando eles nao sao ciclos", () => {
+    const subscription = {
+      id: "subscription-id",
+      plan: {
+        name: "Plano Profissional",
+        slug: "profissional",
+      },
+      source: "admin_grant",
+      status: "ativa",
+    };
+
+    assert.deepEqual(sanitizeSensitiveData({ current: subscription, subscription }), {
+      current: subscription,
+      subscription,
+    });
+  });
 });
