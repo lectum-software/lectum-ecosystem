@@ -114,3 +114,27 @@ A regra global de fullscreen desktop permanece intocada e continua responsavel p
   - `/app/community/ansiedade-em-equilibrio`;
   - `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`.
 - Nas tres rotas, a simulacao do evento nativo de fullscreen mobile expandiu o video para 390x693px, proporcao 9:16, `object-fit: contain`, posicao centralizada, e restaurou o tamanho embutido ao sair.
+
+## Complemento 2026-08-10 - proporção fixa em vídeos de respostas
+
+### Contexto
+
+No feed público da comunidade, vídeos exibidos dentro da resposta profissional em destaque podiam herdar a proporção real detectada no arquivo e aparecer em formato intermediário, como 3:4, em vez do frame vertical esperado para respostas. A referência visual ativa de comunidade mantém a resposta profissional com vídeo em frame vertical 9:16 e metadados discretos, sem contador textual de upvotes no cabeçalho do destaque.
+
+### Decisão
+
+Forçar `CommunityMediaBlock` a tratar vídeos com `variant="reply"` como mídia vertical canônica:
+
+- orientação visual inicial e final `portrait`;
+- frame e player sempre em `aspect-ratio: 9 / 16`;
+- `object-fit: contain` para preservar vídeos horizontais ou arquivos com metadados divergentes sem corte agressivo;
+- remoção do `aspectRatio` inline derivado do arquivo apenas para vídeos de resposta.
+
+Os vídeos de posts continuam podendo usar a proporção real detectada, preservando o comportamento já aprovado para publicações originais. A metadata da resposta profissional destacada mantém apenas função e horário, deixando votos para a barra de ações da entidade correta.
+
+### Consequências
+
+- Respostas profissionais com vídeo permanecem no formato 9:16 em feed, comunidade, detalhe, salvos, minhas publicações e perfil público quando reutilizam `CommunityMediaBlock` com `variant="reply"`.
+- Vídeos não verticais dentro de respostas aparecem com letterbox/fundo do player, sem distorção ou crop agressivo.
+- A remoção do texto de upvotes reduz ruído visual e evita misturar métrica da resposta no cabeçalho do destaque.
+- Não há alteração de backend, Prisma, endpoints, dados, envs ou dependências.

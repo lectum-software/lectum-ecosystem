@@ -450,3 +450,29 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Frontend: a transição compartilhada para WhatsApp preserva o texto contextual vindo do card/post, mesmo quando o endpoint de tracking retorna uma URL de contato atualizada.
 - Escopo: sem mudança de schema Prisma, migrations, endpoints, permissões, ranking, votos, salvos, mídia ou packages.
 - ADR atualizado: `adrs/0022-contato-whatsapp-wa-me.md`.
+
+
+## Complemento 2026-08-10 - video 9:16 e metadata discreta em resposta destacada
+
+- Pedido do usuario: no feed publico, o video exibido dentro da resposta profissional em destaque deve permanecer em formato vertical 9:16, e a metadata da resposta destacada nao deve exibir `1 upvotes`.
+- Fonte visual/auditavel: screenshot do usuario nesta conversa e referencia local `_product/proto/Feed Comunidade.jpg`. Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a imagem local foi consultada como fallback.
+- Frontend: `CommunityMediaBlock` passou a forcar videos com `variant="reply"` para orientacao `portrait`, frame `9 / 16` e `object-fit: contain`, ignorando apenas para respostas o `aspectRatio` inline derivado dos metadados do arquivo.
+- Frontend: a metadata de `ProfessionalReplyPreview` no card duplicado legado e no componente compartilhado deixou de renderizar a contagem textual de upvotes; votos continuam na barra de acoes da entidade correta.
+- Escopo: sem alteracao de backend, Prisma schema, migrations, endpoints, dados persistidos, dependencia nova ou envs.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Video em resposta profissional destacada usa frame 9:16 em vez de herdar proporcoes intermediarias do arquivo.
+- [x] A resposta destacada nao exibe `1 upvotes`/contador textual de upvotes na linha de metadata.
+- [x] Votos persistidos e barra de acoes nao foram alterados.
+- [x] Sem mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration.
+
+### Validacoes do complemento
+
+- [x] `pnpm --dir frontend exec biome check --write -- "src/components/community/community-media-frame.tsx" "src/components/community/community-post-card-reply-preview.tsx" "src/app/app/community/[slug]/components/post-card.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` com `.next` limpo apos lock/artefato stale local de build.
+- [x] `pnpm check:version`
+- [x] `git diff --check`
+- [x] Browser local mobile 390x844 abriu `http://localhost:3000/` com HTTP 200; a API local/externa do feed retornou estado `Feed indisponivel`, entao a sessao nao usou mock/seed para forcar card real.

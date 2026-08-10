@@ -111,9 +111,7 @@ export const ProfessionalReplyPreview = ({
                 href={profileHref}
               >
                 {reply.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
-                {formatPostTimeLabel(reply.created_at, reply.edited_at)}{" "}
-                <span aria-hidden="true">&bull;</span> {reply.upvotes_count.toLocaleString("pt-BR")}{" "}
-                upvotes
+                {formatPostTimeLabel(reply.created_at, reply.edited_at)}
               </Link>
             </div>
           </div>
@@ -204,8 +202,7 @@ export const ProfessionalReplyPreview = ({
             className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
             href={profileHref}
           >
-            {reply.author.type_label} • {formatPostTimeLabel(reply.created_at, reply.edited_at)} •{" "}
-            {reply.upvotes_count.toLocaleString("pt-BR")} upvotes
+            {reply.author.type_label} • {formatPostTimeLabel(reply.created_at, reply.edited_at)}
           </Link>
         </div>
       </div>

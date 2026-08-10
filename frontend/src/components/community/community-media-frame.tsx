@@ -295,8 +295,10 @@ export const CommunityMediaBlock = ({
 
   if (!mediaUrl || !resolvedUrl || !normalizedMediaType) return null;
 
-  const orientation =
-    detectedMedia?.src === resolvedUrl && detectedMedia.type === normalizedMediaType
+  const shouldForceReplyVideoAspectRatio = normalizedMediaType === "video" && variant === "reply";
+  const orientation = shouldForceReplyVideoAspectRatio
+    ? "portrait"
+    : detectedMedia?.src === resolvedUrl && detectedMedia.type === normalizedMediaType
       ? detectedMedia.orientation
       : "landscape";
   const hasFooter = Boolean(footer);
@@ -313,6 +315,7 @@ export const CommunityMediaBlock = ({
   );
   const resolvedSizes = sizes ?? getCommunityMediaSizes(variant, orientation);
   const videoAspectRatio =
+    !shouldForceReplyVideoAspectRatio &&
     normalizedMediaType === "video" &&
     detectedMedia?.src === resolvedUrl &&
     detectedMedia.type === normalizedMediaType &&

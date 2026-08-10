@@ -156,9 +156,7 @@ export const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
               {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
               <time dateTime={reply.created_at}>
                 {formatPostTimeLabel(reply.created_at, reply.edited_at)}
-              </time>{" "}
-              <span aria-hidden="true">•</span> {reply.upvotes_count.toLocaleString("pt-BR")}{" "}
-              upvotes
+              </time>
             </Link>
           </div>
         </div>
