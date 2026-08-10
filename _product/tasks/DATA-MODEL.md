@@ -555,14 +555,28 @@ Complemento TASK-52 (2026-07-09): regras exibidas dentro da comunidade deixam de
 
 Backfill canônico TASK-52 para comunidades existentes: `Respeito e empatia`, `Sem dados pessoais`, `Proibido conteúdo nocivo`, `Psicólogos não fazem atendimento` e `Para atendimento, use o WhatsApp`. O detalhe público/privado de comunidade (`GET /api/private/community/:slug`) deve retornar apenas regras `active=true` e `deleted=false`, ordenadas por `position`, para substituir a copy hardcoded na interface.
 
-`community_suggestion` (TASK-22, "Sugerir Comunidade"):
+`community_suggestion` (TASK-22, "Sugerir Comunidade"; complemento TASK-149 Admin):
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `user_id` | `String` | autor |
+| `block_id` | `String?` | bloco administrativo de demanda; nullable para compatibilidade com todas as sugestões já recebidas |
 | `theme` | `String` | tema sugerido |
-| `status` | `String @default("pendente")` | `"pendente" \| "aprovada" \| "rejeitada"` |
-| `@@index([status])` | | |
+| `status` | `String @default("pendente")` | `"pendente" \| "agrupada" \| "arquivada"` no fluxo Admin atual; valores legados `"aprovada"`/`"rejeitada"` não devem quebrar leituras |
+| `@@index([status])`, `@@index([block_id])`, `@@index([status, block_id])` | | leitura administrativa por status/bloco |
+
+`community_suggestion_block` (TASK-149, blocos de demanda internos do Admin):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `title` | `String` | nome interno do agrupador de demanda |
+| `description` | `String?` | notas internas do Admin |
+| `status` | `String @default("monitorando")` | `"monitorando" \| "candidata" \| "convertida" \| "arquivada"` |
+| `created_by_admin_id` | `String?` | admin criador; `SetNull` se admin for removido fisicamente |
+| `community_id` | `String?` | comunidade real aberta futuramente; não é preenchido automaticamente nesta task |
+| `@@index([status, deleted])`, `@@index([created_by_admin_id])`, `@@index([community_id])` | | gestão administrativa |
+
+Complemento TASK-149 (2026-08-10): o usuário final continua apenas enviando `community_suggestion`; blocos são entidade interna do Admin para análise de demanda e não publicam comunidade automaticamente. Mover/arquivar sugestões e criar/atualizar blocos deve registrar auditoria em `admin_activity_log` com snapshots seguros.
 
 `community_member` (seguir/participar, TASK-25; PRD "Comunidades seguidas"):
 

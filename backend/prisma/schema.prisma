@@ -117,6 +117,7 @@ model admin {
   activity_logs          admin_activity_log[]          @relation("admin_activity_log_admin")
   notification_campaigns admin_notification_campaign[] @relation("admin_notification_campaign_admin")
   moderation_reviews     content_moderation_event[]    @relation("content_moderation_event_admin")
+  suggestion_blocks      community_suggestion_block[]  @relation("community_suggestion_block_admin")
 
   @@index([email, deleted])
   @@index([active, deleted])
@@ -870,6 +871,7 @@ model community {
   moderation_events            content_moderation_event[]    @relation("content_moderation_event_community")
   content_video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_community")
   content_attention_sessions   content_attention_session[]   @relation("content_attention_session_community")
+  suggestion_blocks            community_suggestion_block[]  @relation("community_suggestion_block_community")
 
   @@index([slug])
   @@index([slug, active, deleted])
@@ -914,18 +916,43 @@ model community_member {
 }
 
 model community_suggestion {
-  id        String    @id @default(cuid())
-  deleted   Boolean   @default(false)
-  deletedAt DateTime? @map("deleted_at")
-  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+  id        String                      @id @default(cuid())
+  deleted   Boolean                     @default(false)
+  deletedAt DateTime?                   @map("deleted_at")
+  updatedAt DateTime                    @default(now()) @updatedAt @map("updated_at")
+  createdAt DateTime                    @default(now()) @map("created_at")
   user_id   String
+  block_id  String?                     @map("block_id")
   theme     String
-  status    String    @default("pendente")
-  user      user      @relation("community_suggestion_user", fields: [user_id], references: [id], onDelete: Cascade)
+  status    String                      @default("pendente")
+  user      user                        @relation("community_suggestion_user", fields: [user_id], references: [id], onDelete: Cascade)
+  block     community_suggestion_block? @relation("community_suggestion_block_suggestions", fields: [block_id], references: [id], onDelete: SetNull)
 
   @@index([status])
+  @@index([block_id])
+  @@index([status, block_id])
   @@map("community_suggestions")
+}
+
+model community_suggestion_block {
+  id                  String                 @id @default(cuid())
+  deleted             Boolean                @default(false)
+  deletedAt           DateTime?              @map("deleted_at")
+  updatedAt           DateTime               @default(now()) @updatedAt @map("updated_at")
+  createdAt           DateTime               @default(now()) @map("created_at")
+  title               String
+  description         String?
+  status              String                 @default("monitorando")
+  created_by_admin_id String?                @map("created_by_admin_id")
+  community_id        String?                @map("community_id")
+  created_by_admin    admin?                 @relation("community_suggestion_block_admin", fields: [created_by_admin_id], references: [id], onDelete: SetNull)
+  community           community?             @relation("community_suggestion_block_community", fields: [community_id], references: [id], onDelete: SetNull)
+  suggestions         community_suggestion[] @relation("community_suggestion_block_suggestions")
+
+  @@index([status, deleted])
+  @@index([created_by_admin_id])
+  @@index([community_id])
+  @@map("community_suggestion_blocks")
 }
 
 model community_post {

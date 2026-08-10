@@ -57,6 +57,43 @@ export type AdminModerationOperationalAlertsQuery = {
   userRole?: "all" | "paciente" | "psicologo";
 };
 
+export type AdminCommunitySuggestionStatus = "all" | "agrupada" | "arquivada" | "pendente";
+
+export type AdminCommunitySuggestionBlockStatus =
+  | "arquivada"
+  | "candidata"
+  | "convertida"
+  | "monitorando";
+
+export type AdminCommunitySuggestionsQuery = {
+  blockId?: "all" | "unassigned" | string;
+  from?: string;
+  limit?: number;
+  page?: number;
+  q?: string;
+  status?: AdminCommunitySuggestionStatus;
+  to?: string;
+  userRole?: "all" | "paciente" | "psicologo";
+};
+
+export type AdminCommunitySuggestionBlockParams = {
+  blockId: string;
+};
+
+export type AdminCommunitySuggestionParams = {
+  suggestionId: string;
+};
+
+export type AdminCommunitySuggestionBlockBody = {
+  description?: string | null;
+  status?: AdminCommunitySuggestionBlockStatus;
+  title?: string;
+};
+
+export type AdminCommunitySuggestionMoveBody = {
+  blockId?: string | null;
+};
+
 export type AdminModerationEventParams = {
   id: string;
 };
@@ -106,6 +143,38 @@ export type IAdminModerationResolveDTO = IAdminModerationEventDTO & {
 export type IAdminModerationReportResolveDTO = {
   p: AdminModerationReportParams;
   b: AdminModerationReportResolveBody;
+  auth?: admin;
+  admin?: admin;
+};
+
+export type IAdminCommunitySuggestionsDTO = {
+  q: AdminCommunitySuggestionsQuery;
+  auth?: admin;
+  admin?: admin;
+};
+
+export type IAdminCommunitySuggestionBlockCreateDTO = {
+  b: AdminCommunitySuggestionBlockBody;
+  auth?: admin;
+  admin?: admin;
+};
+
+export type IAdminCommunitySuggestionBlockUpdateDTO = {
+  p: AdminCommunitySuggestionBlockParams;
+  b: AdminCommunitySuggestionBlockBody;
+  auth?: admin;
+  admin?: admin;
+};
+
+export type IAdminCommunitySuggestionMoveDTO = {
+  p: AdminCommunitySuggestionParams;
+  b: AdminCommunitySuggestionMoveBody;
+  auth?: admin;
+  admin?: admin;
+};
+
+export type IAdminCommunitySuggestionArchiveDTO = {
+  p: AdminCommunitySuggestionParams;
   auth?: admin;
   admin?: admin;
 };
@@ -336,6 +405,56 @@ export type AdminModerationOperationalAlertDTO = {
   title: string;
   type: AdminModerationOperationalAlertType;
   user?: AdminModerationOperationalAlertUserDTO | null;
+};
+
+export type AdminCommunitySuggestionUserDTO = {
+  id: string;
+  name: string;
+  role: string;
+  role_label: string;
+  show_verified_badge: boolean;
+};
+
+export type AdminCommunitySuggestionBlockSummaryDTO = {
+  id: string;
+  created_at: Date;
+  updated_at: Date;
+  title: string;
+  description: string | null;
+  status: AdminCommunitySuggestionBlockStatus;
+  suggestions_count: number;
+  latest_suggestion_at: Date | null;
+  community: AdminModerationCommunityDTO;
+};
+
+export type AdminCommunitySuggestionItemDTO = {
+  id: string;
+  block: AdminCommunitySuggestionBlockSummaryDTO | null;
+  created_at: Date;
+  status: AdminCommunitySuggestionStatus;
+  theme: string;
+  updated_at: Date;
+  user: AdminCommunitySuggestionUserDTO;
+};
+
+export type AdminCommunitySuggestionsDTO = {
+  blocks: AdminCommunitySuggestionBlockSummaryDTO[];
+  count: number;
+  page: number;
+  pages: number;
+  per_page: number;
+  source: "community_suggestion+community_suggestion_block";
+  suggestions: AdminCommunitySuggestionItemDTO[];
+  summary: {
+    archived_total: number;
+    candidate_blocks: number;
+    grouped_total: number;
+    latest_suggestion_at: Date | null;
+    monitoring_blocks: number;
+    total_blocks: number;
+    total_suggestions: number;
+    ungrouped_total: number;
+  };
 };
 
 export type AdminModerationOperationalAlertCountsDTO = {

@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 155 tasks: `TASK-00` a `TASK-148`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 156 tasks: `TASK-00` a `TASK-149`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -246,6 +246,7 @@ ou cortesia manual.
 | 146 | [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) | Completed | 34, 45, 145 |
 | 147 | [TASK-147 - Confirmação antes de excluir post ou comentário](TASK-147-confirmacao-exclusao-post-comentario.md) | Completed | 26, 28, 145 |
 | 148 | [TASK-148 - Safe area iOS/PWA para elementos inferiores](TASK-148-safe-area-ios-pwa-elementos-inferiores.md) | Completed | 12, 37, 43 |
+| 149 | [TASK-149 - Sugestões de comunidades no Admin com blocos de demanda](TASK-149-admin-sugestoes-comunidades-blocos-demanda.md) | Completed | 22, 45, 46, 51, 77 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -372,6 +373,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 116. [TASK-146 - Versionamento rastreável e promoção de produção por PR](TASK-146-versionamento-rastreavel-promocao-producao.md) foi adicionada e concluída em 2026-08-08 para sincronizar SemVer entre os quatro manifests, expor a versão dos três artefatos publicados e tornar a solicitação explícita de produção um PR `homolog` -> `main` seguido de merge e smoke.
 117. [TASK-147 - Confirmação antes de excluir post ou comentário](TASK-147-confirmacao-exclusao-post-comentario.md) foi adicionada e concluída em 2026-08-10 para exigir confirmação visual antes de excluir comentários/respostas e manter as regras existentes de exclusão de posts e conteúdo protegido.
 118. [TASK-148 - Safe area iOS/PWA para elementos inferiores](TASK-148-safe-area-ios-pwa-elementos-inferiores.md) foi adicionada e concluída em 2026-08-10 para aplicar `viewport-fit=cover`, centralizar tokens de safe area inferior e elevar bottom nav, composer de comentários e CTAs/footers inferiores no iPhone/PWA.
+119. [TASK-149 - Sugestões de comunidades no Admin com blocos de demanda](TASK-149-admin-sugestoes-comunidades-blocos-demanda.md) foi adicionada e concluída em 2026-08-10 para receber sugestões já enviadas pelo app, agrupá-las em blocos internos de demanda e apoiar a decisão futura de abrir novas comunidades sem automação.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.

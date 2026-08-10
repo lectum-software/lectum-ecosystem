@@ -198,7 +198,12 @@
     "admin_patient_account_temporary_password_confirmation_invalid": "Confirmação forte inválida para definir senha temporária do paciente.",
     "admin_view_as_read_only": "Visualização administrativa em modo somente leitura: ações de escrita estão bloqueadas.",
     "admin_psychologist_account_view_as_unavailable": "Visualização como psicólogo disponível apenas para conta ativa e não excluída.",
-    "admin_patient_account_view_as_unavailable": "Visualização como paciente disponível apenas para conta ativa e não excluída."
+    "admin_patient_account_view_as_unavailable": "Visualização como paciente disponível apenas para conta ativa e não excluída.",
+    "admin_community_suggestion_not_found": "Sugest?o de comunidade n?o encontrada.",
+    "admin_community_suggestion_block_not_found": "Bloco de demanda n?o encontrado.",
+    "admin_community_suggestion_block_archived": "Este bloco est? arquivado e n?o pode receber novas sugest?es.",
+    "admin_community_suggestion_block_status_invalid": "Status do bloco de demanda inv?lido.",
+    "admin_community_suggestion_block_title_required": "Informe um t?tulo para o bloco de demanda."
   },
   "message": {
     "store": "dado criado",
@@ -326,7 +331,11 @@
     "admin_settings_seo_updated": "Metadados de SEO atualizados com auditoria administrativa.",
     "admin_psychologist_account_view_as_started": "Visualização como psicólogo iniciada em modo somente leitura.",
     "admin_patient_account_view_as_started": "Visualização como paciente iniciada em modo somente leitura.",
-    "admin_settings_seo_og_image_uploaded": "Imagem Open Graph enviada com sucesso."
+    "admin_settings_seo_og_image_uploaded": "Imagem Open Graph enviada com sucesso.",
+    "admin_community_suggestion_block_created": "Bloco de demanda criado com auditoria administrativa.",
+    "admin_community_suggestion_block_updated": "Bloco de demanda atualizado com auditoria administrativa.",
+    "admin_community_suggestion_moved": "Sugest?o movida com auditoria administrativa.",
+    "admin_community_suggestion_archived": "Sugest?o arquivada com auditoria administrativa."
   },
   "gender": {
     "o": "o"
@@ -370,7 +379,8 @@
     "notification_delivery": "entrega de notificação",
     "content_moderation_event": "evento de moderação de conteúdo",
     "seo_metadata": "metadados de SEO",
-    "seo_metadata_page": "página de SEO"
+    "seo_metadata_page": "página de SEO",
+    "community_suggestion_block": "bloco de demanda de comunidade"
   },
   "property": {
     "email": "email",

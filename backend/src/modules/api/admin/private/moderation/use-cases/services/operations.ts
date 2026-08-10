@@ -51,6 +51,14 @@ import {
   upholdConfirmationIsValid,
 } from "./reports";
 
+export {
+  archiveCommunitySuggestion,
+  createCommunitySuggestionBlock,
+  listCommunitySuggestions,
+  moveCommunitySuggestion,
+  updateCommunitySuggestionBlock,
+} from "./community-suggestions";
+
 export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Resolve> => {
   const repository = new AdminModerationRepository();
   const [allEvents, latestPending, pendingTotal, urgentPendingTotal, operationalAlerts, reports] =

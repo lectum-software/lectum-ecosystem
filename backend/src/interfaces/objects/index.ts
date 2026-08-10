@@ -35,6 +35,7 @@ export interface admin extends PersistedObject {
   need_reset?: boolean | null;
   admin_tokens?: admin_token[] | null;
   activity_logs?: admin_activity_log[] | null;
+  suggestion_blocks?: community_suggestion_block[] | null;
 }
 
 export interface admin_activity_log extends PersistedObject {
@@ -306,6 +307,7 @@ export interface community extends PersistedObject {
   visual_gradient_color?: string | null;
   posts?: community_post[] | null;
   rules?: community_rule[] | null;
+  suggestion_blocks?: community_suggestion_block[] | null;
 }
 
 export interface community_rule extends PersistedObject {
@@ -319,9 +321,22 @@ export interface community_rule extends PersistedObject {
 
 export interface community_suggestion extends PersistedObject {
   user_id?: string | null;
+  block_id?: string | null;
   theme?: string | null;
-  status?: "pendente" | "aprovada" | "rejeitada" | string | null;
+  status?: "pendente" | "agrupada" | "arquivada" | "aprovada" | "rejeitada" | string | null;
   user?: user | null;
+  block?: community_suggestion_block | null;
+}
+
+export interface community_suggestion_block extends PersistedObject {
+  title?: string | null;
+  description?: string | null;
+  status?: "monitorando" | "candidata" | "convertida" | "arquivada" | string | null;
+  created_by_admin_id?: string | null;
+  community_id?: string | null;
+  created_by_admin?: admin | null;
+  community?: community | null;
+  suggestions?: community_suggestion[] | null;
 }
 
 export interface community_post extends PersistedObject {

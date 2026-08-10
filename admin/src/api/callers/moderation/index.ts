@@ -1,17 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminModerationKeys } from "@/api/cache/keys";
 import {
+  type AdminCommunitySuggestionBlockInput,
+  type AdminCommunitySuggestionMoveInput,
+  type AdminCommunitySuggestionsQuery,
   type AdminModerationEventsQuery,
   type AdminModerationOperationalAlertsQuery,
   type AdminModerationReportResolveInput,
   type AdminModerationResolveInput,
+  archiveAdminCommunitySuggestion,
+  createAdminCommunitySuggestionBlock,
+  getAdminCommunitySuggestions,
   getAdminModerationEvent,
   getAdminModerationEvents,
   getAdminModerationOperationalAlerts,
   getAdminModerationSummary,
+  moveAdminCommunitySuggestion,
   resolveAdminModerationEvent,
   resolveAdminModerationReport,
   reviewAdminModerationEvent,
+  updateAdminCommunitySuggestionBlock,
 } from "@/api/req/moderation";
 
 export const useAdminModerationSummary = () =>
@@ -31,6 +39,12 @@ export const useAdminModerationOperationalAlerts = (input: AdminModerationOperat
   useQuery({
     queryFn: () => getAdminModerationOperationalAlerts(input),
     queryKey: adminModerationKeys.operationalAlerts(input),
+  });
+
+export const useAdminCommunitySuggestions = (input: AdminCommunitySuggestionsQuery) =>
+  useQuery({
+    queryFn: () => getAdminCommunitySuggestions(input),
+    queryKey: adminModerationKeys.communitySuggestions(input),
   });
 
 export const useAdminModerationEvent = (id: string | null) =>
@@ -80,6 +94,63 @@ export const useAdminModerationResolveReport = () => {
       input: AdminModerationReportResolveInput;
       reportId: string;
     }) => resolveAdminModerationReport(reportId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminModerationKeys.all });
+    },
+  });
+};
+
+export const useAdminCommunitySuggestionBlockCreate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AdminCommunitySuggestionBlockInput) =>
+      createAdminCommunitySuggestionBlock(input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminModerationKeys.all });
+    },
+  });
+};
+
+export const useAdminCommunitySuggestionBlockUpdate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      blockId,
+      input,
+    }: {
+      blockId: string;
+      input: AdminCommunitySuggestionBlockInput;
+    }) => updateAdminCommunitySuggestionBlock(blockId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminModerationKeys.all });
+    },
+  });
+};
+
+export const useAdminCommunitySuggestionMove = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      input,
+      suggestionId,
+    }: {
+      input: AdminCommunitySuggestionMoveInput;
+      suggestionId: string;
+    }) => moveAdminCommunitySuggestion(suggestionId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminModerationKeys.all });
+    },
+  });
+};
+
+export const useAdminCommunitySuggestionArchive = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (suggestionId: string) => archiveAdminCommunitySuggestion(suggestionId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: adminModerationKeys.all });
     },

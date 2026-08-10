@@ -11,6 +11,7 @@ import type {
 import type { DashboardSummaryQuery } from "@/api/req/dashboard";
 import type { FinanceDashboardQuery, FinanceListQuery } from "@/api/req/finance";
 import type {
+  AdminCommunitySuggestionsQuery,
   AdminModerationEventsQuery,
   AdminModerationOperationalAlertsQuery,
 } from "@/api/req/moderation";
@@ -231,6 +232,17 @@ const normalizeModerationOperationalAlerts = (input: AdminModerationOperationalA
   userRole: input.userRole || "all",
 });
 
+const normalizeCommunitySuggestions = (input: AdminCommunitySuggestionsQuery) => ({
+  blockId: input.blockId || "all",
+  from: input.from || "default",
+  limit: input.limit || 10,
+  page: input.page || 1,
+  q: input.q || "",
+  status: input.status || "all",
+  to: input.to || "default",
+  userRole: input.userRole || "all",
+});
+
 const normalizeCommunityContent = (input: AdminCommunityContentQuery) => ({
   from: input.from || "default",
   limit: input.limit || 10,
@@ -413,6 +425,12 @@ export const adminNotificationsKeys = {
 
 export const adminModerationKeys = {
   all: ["admin", "moderation"] as const,
+  communitySuggestions: (input: AdminCommunitySuggestionsQuery) =>
+    [
+      ...adminModerationKeys.all,
+      "community-suggestions",
+      normalizeCommunitySuggestions(input),
+    ] as const,
   detail: (id: string) => [...adminModerationKeys.all, "detail", id] as const,
   events: (input: AdminModerationEventsQuery) =>
     [...adminModerationKeys.all, "events", normalizeModerationEvents(input)] as const,
