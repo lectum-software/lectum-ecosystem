@@ -52,6 +52,12 @@ const { getOrCreateAnalyticsIdentity, safeGetItem, safeSetItem, VISITOR_ID_KEY }
   "../components/analytics/storage.ts"
 );
 const { releaseActivePrompt, reserveActivePrompt } = await import("./prompt-coordinator.ts");
+const {
+  consumeDeferredPwaInstallPrompt,
+  PWA_INSTALLED_KEY,
+  setDeferredPwaInstallPrompt,
+  shouldShowPwaInstallProfileEntry,
+} = await import("./pwa-install.ts");
 const { isConfirmedUserSessionRejection } = await import("./session-rejection.ts");
 const { applyStoredBearerFallback } = await import("../api/auth-cookie.ts");
 
@@ -116,6 +122,51 @@ const withBrowserStorage = async (callback) => {
   try {
     await callback({ localStorage, sessionStorage });
   } finally {
+    if (previousWindow === undefined) {
+      delete globalThis.window;
+    } else {
+      globalThis.window = previousWindow;
+    }
+  }
+};
+
+const createPwaInstallPromptEvent = () => ({
+  prompt: async () => {},
+  userChoice: Promise.resolve({ outcome: "dismissed", platform: "web" }),
+});
+
+const withPwaInstallWindow = async ({ maxTouchPoints = 0, matchesMobile = false }, callback) => {
+  const previousWindow = globalThis.window;
+  const localStorage = new MemoryStorage();
+  const sessionStorage = new MemoryStorage();
+
+  consumeDeferredPwaInstallPrompt();
+  globalThis.window = {
+    dispatchEvent() {},
+    localStorage,
+    matchMedia(query) {
+      return {
+        addEventListener() {},
+        matches: matchesMobile && String(query).includes("(max-width: 767px), (pointer: coarse)"),
+        media: String(query),
+        removeEventListener() {},
+      };
+    },
+    navigator: {
+      maxTouchPoints,
+      platform: maxTouchPoints > 0 ? "Linux armv8l" : "Win32",
+      userAgent:
+        maxTouchPoints > 0
+          ? "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36"
+          : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
+    },
+    sessionStorage,
+  };
+
+  try {
+    await callback({ localStorage, sessionStorage });
+  } finally {
+    consumeDeferredPwaInstallPrompt();
     if (previousWindow === undefined) {
       delete globalThis.window;
     } else {
@@ -302,6 +353,28 @@ test("remove dono de prompt deixado por documento anterior", async () => {
     assert.equal(sessionStorage.getItem("lectum.activePrompt"), "notification-permission");
     releaseActivePrompt("notification-permission");
     assert.equal(sessionStorage.getItem("lectum.activePrompt"), null);
+  });
+});
+
+test("nao exibe instalar aplicativo no perfil desktop mesmo com prompt nativo disponivel", async () => {
+  await withPwaInstallWindow({ matchesMobile: false }, () => {
+    setDeferredPwaInstallPrompt(createPwaInstallPromptEvent());
+
+    assert.equal(shouldShowPwaInstallProfileEntry(), false);
+  });
+});
+
+test("mantem instalar aplicativo no perfil mobile quando nao esta instalado", async () => {
+  await withPwaInstallWindow({ maxTouchPoints: 5, matchesMobile: true }, () => {
+    assert.equal(shouldShowPwaInstallProfileEntry(), true);
+  });
+});
+
+test("oculta instalar aplicativo no perfil mobile quando ja esta marcado como instalado", async () => {
+  await withPwaInstallWindow({ maxTouchPoints: 5, matchesMobile: true }, ({ localStorage }) => {
+    localStorage.setItem(PWA_INSTALLED_KEY, "true");
+
+    assert.equal(shouldShowPwaInstallProfileEntry(), false);
   });
 });
 

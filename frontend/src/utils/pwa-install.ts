@@ -114,7 +114,7 @@ export const shouldShowPwaInstallProfileEntry = () => {
   if (typeof window === "undefined") return false;
   if (isStandaloneMode() || isPwaMarkedInstalled()) return false;
 
-  return isMobileExperience() || Boolean(getDeferredPwaInstallPrompt());
+  return isMobileExperience();
 };
 
 export const dispatchPwaInstallPromptAccepted = () => {

@@ -51,3 +51,14 @@ A solicitação da TASK-152 é manter uma descoberta manual no perfil privado, d
 ## Task relacionada
 
 - TASK-152 — Instalar aplicativo no perfil
+
+## Atualizacao TASK-155
+
+Em 2026-08-11, a homologacao mostrou que a linha manual **Instalar aplicativo** tambem aparecia no desktop quando o navegador disponibilizava `beforeinstallprompt`. A decisao complementar e manter essa descoberta apenas na experiencia mobile/tablet.
+
+- Desktop nao exibe a linha manual do perfil, mesmo com prompt nativo PWA disponivel.
+- Mobile continua exibindo a linha quando a Lectum nao esta instalada/standalone.
+- A regra permanece centralizada em `frontend/src/utils/pwa-install.ts`, sem criar condicao paralela no componente de perfil.
+- Nao ha backend, migration, env, endpoint, provider ou package novo.
+- Rollback: reverter a TASK-155 restaura a regra anterior da TASK-152.
+- Validacao adicionada: teste automatizado para desktop com `beforeinstallprompt`, mobile nao instalado e ocultacao por marcador local de instalado.
