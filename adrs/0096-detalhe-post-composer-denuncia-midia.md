@@ -204,3 +204,22 @@ Consequencias:
 - O campo de comentario volta a ocupar a linha principal sem ser deslocado pela miniatura vertical.
 - A midia anexada fica visualmente associada ao comentario, mas abaixo do campo, reduzindo o desalinhamento visto no iPhone.
 - O rollback e reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+
+## Atualizacao 2026-08-11 - padding compacto com teclado ativo no iOS
+
+O iOS/Safari exibe uma toolbar nativa de formulario com setas de navegacao e botao de concluir quando um `textarea` web recebe foco. Essa barra nao pertence a Lectum e nao pode ser removida de forma confiavel por CSS sem trocar o campo por uma implementacao fragil. O problema visual observado era agravado porque o composer mantinha o padding de safe-area do estado de repouso enquanto o teclado estava aberto.
+
+Decisao complementar:
+
+- Manter o `textarea` da fundacao de formularios com React Hook Form/Zod.
+- No composer fixo mobile, usar `pb-2` quando `composerActive=true` para remover o safe-area extra enquanto o teclado esta aberto.
+- Manter `var(--lectum-bottom-fixed-padding)` no estado de repouso, preservando o home indicator e a barra inferior em iPhones sem teclado.
+- Nao criar hack com `contenteditable`, input oculto ou manipulacao nao confiavel da toolbar nativa do iOS.
+- Nao alterar endpoint, payload, upload real, validacao backend, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- A Lectum deixa de criar um vao proprio acima da toolbar nativa; o campo fica visualmente mais baixo e mais proximo do teclado.
+- A toolbar nativa do iOS pode continuar aparecendo por decisao do sistema operacional/browser, diferente do Reddit nativo.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.

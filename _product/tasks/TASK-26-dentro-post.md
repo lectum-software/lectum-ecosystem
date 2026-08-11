@@ -1333,3 +1333,29 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao autenticada final ficou para smoke de homologacao apos push.
+
+
+## Complemento 2026-08-11 - composer colado ao limite do teclado no iOS
+
+- Pedido do usuario: no iPhone, a barra nativa com setas/check aparece entre o composer da Lectum e o teclado; no Reddit o campo fica visualmente colado ao teclado.
+- Diagnostico: a barra com setas/check e a toolbar nativa do iOS/Safari para campos de formulario web (`textarea`), nao um componente da Lectum. Alem dela, o composer ainda aplicava `safe-area` de repouso quando estava focado, criando um vao extra acima dessa toolbar.
+- Frontend: quando o composer fixo esta ativo/focado no mobile, o padding inferior deixa de usar `var(--lectum-bottom-fixed-padding)` e passa a usar padding compacto (`pb-2`), mantendo o `safe-area` apenas no estado de repouso.
+- Decisao de UX/tecnica: nao substituir o controller React Hook Form/Zod por `contenteditable` apenas para tentar esconder uma toolbar nativa do iOS; o ajuste remove o espaco extra controlado pela Lectum e preserva acessibilidade/validacao real.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Composer focado no mobile usa padding inferior compacto, sem manter o `safe-area` de repouso acima da toolbar nativa.
+- [x] Composer em repouso continua respeitando safe-area/home indicator.
+- [x] React Hook Form/Zod, textarea, envio real e anexo de midia permanecem inalterados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao visual autenticada em iOS real fica coberta pelo smoke de homologacao e pelo reteste no aparelho do usuario.
