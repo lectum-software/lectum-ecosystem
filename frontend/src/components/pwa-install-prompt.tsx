@@ -7,9 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { getBrowserStorage, readStorageItem, writeStorageItem } from "@/utils/browser-storage";
+import { getBrowserStorage, readStorageItem } from "@/utils/browser-storage";
 import {
-  clearPromptDismissalState,
   hasCompletedRegistrationForPrompts,
   markPromptDismissedWithBackoff,
   type PromptUserRole,
@@ -18,63 +17,36 @@ import {
   releaseActivePrompt as releaseCoordinatedPrompt,
   reserveActivePrompt as reserveCoordinatedPrompt,
 } from "@/utils/prompt-coordinator";
-
-type BeforeInstallPromptChoice = {
-  outcome: "accepted" | "dismissed";
-  platform: string;
-};
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<BeforeInstallPromptChoice>;
-};
+import {
+  type BeforeInstallPromptEvent,
+  consumeDeferredPwaInstallPrompt,
+  dispatchPwaInstallPromptAccepted,
+  getDeferredPwaInstallPrompt,
+  isIosDevice,
+  isMobileExperience,
+  isPwaMarkedInstalled,
+  isStandaloneMode,
+  markPwaInstalled,
+  PWA_DISMISS_COUNT_KEY,
+  PWA_DISMISSED_UNTIL_KEY,
+  setDeferredPwaInstallPrompt,
+  subscribeToDeferredPwaInstallPrompt,
+} from "@/utils/pwa-install";
 
 type PromptKind = "native" | "ios";
 
-const DISMISSED_UNTIL_KEY = "lectum.pwaInstall.dismissedUntil";
-const DISMISS_COUNT_KEY = "lectum.pwaInstall.dismissCount";
-const LEGACY_NEVER_SHOW_KEY = "lectum.pwaInstall.neverShowAgain";
-const INSTALLED_KEY = "lectum.pwaInstall.installed";
 const ACTIVE_PROMPT_VALUE = "pwa-install";
 const SHOW_DELAY_MS = 1400;
 
 const isPrivateAppPath = (pathname: string) => pathname === "/app" || pathname.startsWith("/app/");
 
-const isStandaloneMode = () => {
-  if (typeof window === "undefined") return true;
-
-  const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
-
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.matchMedia("(display-mode: fullscreen)").matches ||
-    navigatorWithStandalone.standalone === true
-  );
-};
-
-const isMobileExperience = () => {
-  if (typeof window === "undefined") return false;
-
-  return window.matchMedia("(max-width: 767px), (pointer: coarse)").matches;
-};
-
-const isIosDevice = () => {
-  if (typeof window === "undefined") return false;
-
-  const userAgent = window.navigator.userAgent.toLowerCase();
-  const platform = window.navigator.platform?.toLowerCase() ?? "";
-  const isTouchMac = platform === "macintel" && window.navigator.maxTouchPoints > 1;
-
-  return /iphone|ipad|ipod/.test(userAgent) || isTouchMac;
-};
-
 const isDismissedByPreference = () => {
   const storage = getBrowserStorage("localStorage");
   if (!storage) return true;
 
-  if (readStorageItem(storage, INSTALLED_KEY) === "true") return true;
+  if (isPwaMarkedInstalled()) return true;
 
-  const dismissedUntil = Number(readStorageItem(storage, DISMISSED_UNTIL_KEY) ?? 0);
+  const dismissedUntil = Number(readStorageItem(storage, PWA_DISMISSED_UNTIL_KEY) ?? 0);
 
   return Number.isFinite(dismissedUntil) && dismissedUntil > Date.now();
 };
@@ -92,22 +64,9 @@ const markDismissedForCooldown = (role: PromptUserRole) => {
   if (!storage) return;
 
   markPromptDismissedWithBackoff({
-    dismissedUntilKey: DISMISSED_UNTIL_KEY,
-    dismissCountKey: DISMISS_COUNT_KEY,
+    dismissedUntilKey: PWA_DISMISSED_UNTIL_KEY,
+    dismissCountKey: PWA_DISMISS_COUNT_KEY,
     role,
-    storage,
-  });
-};
-
-const markInstalled = () => {
-  const storage = getBrowserStorage("localStorage");
-  if (!storage) return;
-
-  writeStorageItem(storage, INSTALLED_KEY, "true");
-  clearPromptDismissalState({
-    dismissedUntilKey: DISMISSED_UNTIL_KEY,
-    dismissCountKey: DISMISS_COUNT_KEY,
-    legacyPermanentDismissKeys: [LEGACY_NEVER_SHOW_KEY],
     storage,
   });
 };
@@ -118,18 +77,20 @@ export function PwaInstallPrompt() {
   const [isVisible, setIsVisible] = useState(false);
   const [promptKind, setPromptKind] = useState<PromptKind>("native");
   const [showIosSteps, setShowIosSteps] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
+    getDeferredPwaInstallPrompt(),
+  );
   const [isInstalling, setIsInstalling] = useState(false);
   const hasCompletedRegistration = hasCompletedRegistrationForPrompts(user);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
+      setDeferredPwaInstallPrompt(event as BeforeInstallPromptEvent);
     };
 
     const handleAppInstalled = () => {
-      markInstalled();
+      markPwaInstalled();
       setIsVisible(false);
       releaseActivePrompt();
     };
@@ -141,6 +102,20 @@ export function PwaInstallPrompt() {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
       releaseActivePrompt();
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncDeferredPrompt = () => {
+      setDeferredPrompt(getDeferredPwaInstallPrompt());
+    };
+
+    const syncTimer = window.setTimeout(syncDeferredPrompt, 0);
+    const unsubscribe = subscribeToDeferredPwaInstallPrompt(syncDeferredPrompt);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+      unsubscribe();
     };
   }, []);
 
@@ -193,7 +168,7 @@ export function PwaInstallPrompt() {
       }
 
       if (persist === "installed") {
-        markInstalled();
+        markPwaInstalled();
       }
 
       setIsVisible(false);
@@ -215,7 +190,9 @@ export function PwaInstallPrompt() {
       return;
     }
 
-    if (!deferredPrompt) {
+    const installPrompt = consumeDeferredPwaInstallPrompt();
+
+    if (!installPrompt) {
       closePrompt("cooldown");
       return;
     }
@@ -223,12 +200,11 @@ export function PwaInstallPrompt() {
     setIsInstalling(true);
 
     try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
 
       if (choice.outcome === "accepted") {
-        window.dispatchEvent(new CustomEvent("lectum:pwa-install-prompt-accepted"));
+        dispatchPwaInstallPromptAccepted();
       }
 
       closePrompt(choice.outcome === "accepted" ? "installed" : "cooldown");

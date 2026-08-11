@@ -12,6 +12,7 @@ import {
   LogOut,
   MessagesSquare,
   Moon,
+  Smartphone,
   Star,
   TriangleAlert,
   UsersRound,
@@ -24,6 +25,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useSignOut } from "@/hooks/cookies/signout";
+import { usePwaInstallAccountAction } from "@/hooks/pwa-install";
 import { useAppSelector } from "@/hooks/redux";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -35,10 +37,13 @@ import {
 } from "@/utils/psychologist-onboarding";
 
 type ProfileRow = {
+  ariaLabel?: string;
+  disabled?: boolean;
   href?: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
   label: string;
   hideChevron?: boolean;
+  onClick?: () => void;
   trailing?: ReactNode;
 };
 
@@ -72,7 +77,19 @@ const getInitials = (name?: string | null, email?: string | null) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-const Row = ({ href, hideChevron = false, icon: Icon, label, trailing }: ProfileRow) => {
+const rowClassName = "flex min-h-14 items-center gap-3 border-b border-border px-4 last:border-b-0";
+const interactiveRowClassName = `${rowClassName} transition hover:bg-primary-soft/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25`;
+
+const Row = ({
+  ariaLabel,
+  disabled = false,
+  href,
+  hideChevron = false,
+  icon: Icon,
+  label,
+  onClick,
+  trailing,
+}: ProfileRow) => {
   const content = (
     <>
       <span className="grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
@@ -86,20 +103,27 @@ const Row = ({ href, hideChevron = false, icon: Icon, label, trailing }: Profile
 
   if (href) {
     return (
-      <Link
-        className="flex min-h-14 items-center gap-3 border-b border-border px-4 transition last:border-b-0 hover:bg-primary-soft/60"
-        href={href}
-      >
+      <Link className={interactiveRowClassName} href={href}>
         {content}
       </Link>
     );
   }
 
-  return (
-    <div className="flex min-h-14 items-center gap-3 border-b border-border px-4 last:border-b-0">
-      {content}
-    </div>
-  );
+  if (onClick) {
+    return (
+      <button
+        aria-label={ariaLabel ?? label}
+        className={`${interactiveRowClassName} w-full text-left disabled:cursor-wait disabled:opacity-70`}
+        disabled={disabled}
+        onClick={onClick}
+        type="button"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={rowClassName}>{content}</div>;
 };
 
 const Section = ({ rows, title }: { rows: ProfileRow[]; title: string }) => {
@@ -153,6 +177,7 @@ const ProfessionalUpgradeCard = () => (
 export const ProfileLogic = () => {
   const user = useAppSelector((state) => state.user);
   const { out } = useSignOut();
+  const pwaInstall = usePwaInstallAccountAction();
   const isPsychologist = user?.role === "psicologo";
   const psychologistProfile = usePsychologistFreeProfile({ enabled: Boolean(isPsychologist) });
   const showProfileActivationAlert = Boolean(
@@ -193,6 +218,23 @@ export const ProfileLogic = () => {
   const avatarIsPublicMedia = isPublicMediaUrl(user.avatar);
 
   const accountRows: ProfileRow[] = [
+    ...(pwaInstall.isVisible
+      ? [
+          {
+            ariaLabel: "Instalar aplicativo Lectum",
+            disabled: pwaInstall.isInstalling,
+            hideChevron: true,
+            icon: Smartphone,
+            label: "Instalar aplicativo",
+            onClick: pwaInstall.onInstall,
+            trailing: (
+              <span className="shrink-0 text-sm font-extrabold text-primary">
+                {pwaInstall.isInstalling ? "Abrindo..." : "Instalar"}
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       href: isPsychologist ? "/app/profissional/perfil/configurar" : "/app/perfil/editar",
       icon: Edit3,
@@ -291,6 +333,8 @@ export const ProfileLogic = () => {
           <LogOut className="h-4 w-4" aria-hidden="true" />
           Sair da conta
         </Button>
+
+        {pwaInstall.dialog}
       </section>
     </PrivateTemplate>
   );
