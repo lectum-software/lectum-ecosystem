@@ -339,6 +339,7 @@ export const ReplyComposer = ({
         {shouldShowMediaControlInRow ? (
           <ReplyMediaAttachmentControl
             className="pb-0"
+            composerMode="trigger"
             disabled={disabled}
             fileInputRef={fileInputRef}
             isUploading={disabled && Boolean(selectedMedia)}
@@ -366,6 +367,22 @@ export const ReplyComposer = ({
           )}
         </Button>
       </div>
+
+      {selectedMedia ? (
+        <ReplyMediaAttachmentControl
+          className="pl-[3.25rem] pr-[3.25rem]"
+          composerMode="preview"
+          disabled={disabled}
+          fileInputRef={fileInputRef}
+          isUploading={disabled && Boolean(selectedMedia)}
+          mediaPermission={mediaPermission}
+          onAfterAction={() => setComposerActive(true)}
+          onMediaChange={handleMediaChange}
+          onOpenDialog={beginMediaPickerInteraction}
+          onRemoveSelected={clearSelectedMedia}
+          selectedMedia={selectedMedia}
+        />
+      ) : null}
 
       {visibleError ? (
         <InlineAlert title="Não foi possível responder" variant="error">

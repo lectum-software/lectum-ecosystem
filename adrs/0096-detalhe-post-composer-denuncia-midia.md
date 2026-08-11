@@ -185,3 +185,22 @@ Consequencias:
 - O composer fica com menos ruido visual e com mais espaco horizontal para o campo de comentario no mobile.
 - O usuario ainda consegue enviar texto/midia e remover midia anexada; apenas perde o atalho visual redundante de cancelar no row.
 - O rollback e reverter este commit, pois a mudanca e puramente frontend e nao altera dados persistidos.
+
+
+## Atualizacao 2026-08-11 - previa de midia abaixo do campo
+
+A iteracao visual do composer separa a acao de anexar midia da previa da midia selecionada. A referencia de produto pediu que apenas o icone de adicionar permanecesse a esquerda do campo, enquanto a midia subida ficasse abaixo do textarea.
+
+Decisao complementar:
+
+- Dividir o modo composer de `ReplyMediaAttachmentControl` em apresentacoes `trigger`, `preview` e `combined`, preservando o comportamento historico como padrao.
+- Usar `trigger` no row principal para manter somente o botao circular icon-only de midia ao lado do campo de comentario.
+- Renderizar `preview` em linha separada abaixo do campo quando ha `selectedMedia`, com miniatura, orientacao real e remocao explicita.
+- Permitir que o icone de adicionar substitua o arquivo selecionado por outro, mantendo a miniatura apenas como previa/remocao e sem torna-la clicavel.
+- Nao alterar endpoints, payloads, upload real, validacao backend, permissao profissional, React Hook Form/Zod, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O campo de comentario volta a ocupar a linha principal sem ser deslocado pela miniatura vertical.
+- A midia anexada fica visualmente associada ao comentario, mas abaixo do campo, reduzindo o desalinhamento visto no iPhone.
+- O rollback e reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.

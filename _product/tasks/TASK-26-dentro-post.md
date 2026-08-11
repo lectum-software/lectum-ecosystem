@@ -1307,3 +1307,29 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao autenticada final ficou para smoke de homologacao apos push.
+
+
+## Complemento 2026-08-11 - previa de midia abaixo do campo no composer
+
+- Pedido do usuario: a midia subida no comentario deve permanecer abaixo do campo de escrever o comentario; somente o icone de adicionar midia deve permanecer a esquerda do campo.
+- Frontend: o composer passou a separar o controle de midia em dois modos no fluxo de comentarios: `trigger`, para manter apenas o botao circular icon-only no row do textarea, e `preview`, para renderizar a miniatura/remocao em uma segunda linha abaixo do campo.
+- A previa da midia selecionada continua usando `next/image` para imagens, `video` para videos, orientacao real detectada, botao de remocao e envio real sem mock.
+- O icone de adicionar permanece acessivel a esquerda do campo e pode substituir a midia selecionada por um novo arquivo, sem transformar a miniatura em botao clicavel.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Ao selecionar midia, a miniatura aparece abaixo do campo de comentario, nao no lugar do icone a esquerda.
+- [x] O row principal permanece com icone de adicionar midia, campo de comentario e botao de envio.
+- [x] A miniatura mantem o X de remocao, preview real de imagem/video e envio real.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx" src/components/community/reply-media-attachment-control.tsx`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao autenticada final ficou para smoke de homologacao apos push.
