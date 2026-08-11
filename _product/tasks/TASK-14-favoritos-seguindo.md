@@ -580,3 +580,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Segurança: a politica de rotas privadas foi extraida para helper testavel, cobrindo namespaces user-level `_auth-only` e mantendo `/api/private/patient/*` e `/api/private/psychologist/*` fail-closed por role.
 - Escopo: sem mudanca de UI, Prisma schema, migrations, packages, contratos de resposta, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
+
+## Complemento 2026-08-11 - estado vazio de Favoritos mais compacto
+
+- Pedido do usuario: reduzir o espacamento vertical entre o icone de coracao, o titulo `Voce ainda nao possui favoritos`, a descricao `Explore psicologos...` e o botao `Explorar psicologos`.
+- Referencias visuais/auditaveis: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.37.39.jpeg` e referencia local `_product/proto/Favoritos.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o estado vazio de `/app/favoritos` passou a centralizar o conteudo pelo proprio grid (`content-center`), reduziu o gap interno, o padding vertical e a altura minima do bloco, mantendo o card, borda tracejada, copy e CTA existentes.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, endpoint, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/favoritos` e Chrome headless local em viewport 390x844.

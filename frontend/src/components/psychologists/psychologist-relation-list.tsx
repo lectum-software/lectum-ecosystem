@@ -563,7 +563,7 @@ export function PsychologistRelationList({ mode }: PsychologistRelationListProps
                 </Link>
               </Button>
             }
-            className="min-h-[48vh] w-full max-w-full rounded-[32px] border-border bg-surface px-4 sm:px-6"
+            className="min-h-[40vh] w-full max-w-full content-center gap-2.5 rounded-[32px] border-border bg-surface px-4 py-8 sm:px-6"
             description={copy.emptyDescription as string}
             icon={Icon}
             title={copy.emptyTitle as string}

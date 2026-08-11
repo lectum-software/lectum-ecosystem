@@ -768,3 +768,20 @@ Apos a replica das configuracoes de layout da Comunidade, o produto pediu uma bo
 - Os contadores reais ficam mais legiveis com uma superficie azul suave, sem alterar o tamanho, a fonte ou o comportamento das chips.
 - A diferenca de Favoritos em relacao a Comunidade continua restrita a necessidade de exibir contadores reais.
 - Nenhum contrato de API, schema, endpoint, pacote ou regra de dominio foi alterado.
+
+## Complemento 2026-08-11 - compactacao do estado vazio
+
+### Contexto
+
+O estado vazio autenticado de `/app/favoritos` estava com distribuicao vertical excessiva entre icone, titulo, descricao e CTA no mobile, porque o container mantinha altura minima alta sem compactar o conteudo no eixo vertical.
+
+### Decisao
+
+- Manter o `EmptyState` compartilhado sem alterar outros estados vazios do produto.
+- Aplicar a compactacao somente no uso de Favoritos, adicionando `content-center`, reduzindo `gap`, `py` e `min-height` via `className` local.
+- Preservar os textos, CTA `Explorar psicologos`, borda tracejada, filtros reais e comportamento autenticado existente.
+
+### Consequencias
+
+- O estado vazio fica mais denso e legivel na largura mobile de referencia, sem criar componente paralelo nem afetar outras telas.
+- Nao ha mudanca de contrato de API, schema, endpoint, pacote, favoritos persistidos ou tracking.
