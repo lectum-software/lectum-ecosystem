@@ -237,12 +237,18 @@ const validatePartForSession = (part: MultipartPartPayload, session: MultipartSe
   part.uploadId === session.uploadId &&
   part.key === session.key;
 
-const verifyCompleteParts = (session: MultipartSessionPayload, parts: { partId: string }[]) => {
+const resolvePartId = (part: { partId?: string; partToken?: string }) =>
+  (part.partId || part.partToken || "").trim();
+
+const verifyCompleteParts = (
+  session: MultipartSessionPayload,
+  parts: { partId?: string; partToken?: string }[],
+) => {
   const expectedParts = Math.ceil(session.size / session.chunkSize);
   if (parts.length !== expectedParts) return null;
 
   const completedParts = parts
-    .map((part) => verifyPartId(part.partId))
+    .map((part) => verifyPartId(resolvePartId(part)))
     .filter((part): part is MultipartPartPayload => Boolean(part));
 
   if (completedParts.length !== expectedParts) return null;
@@ -366,11 +372,13 @@ export const uploadReplyMediaMultipartPart = async (
     });
 
     return {
+      allowAuthTokens: true,
       status: 200,
       ...msg("post_reply_media_uploaded", {}),
       data: {
-        part_number: partNumber,
         part_id: partId,
+        part_number: partNumber,
+        part_token: partId,
       },
     };
   } catch {

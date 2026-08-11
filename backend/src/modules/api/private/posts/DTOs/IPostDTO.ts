@@ -256,7 +256,8 @@ export type PostReplyMediaMultipartPartBody = {
 export type PostReplyMediaMultipartCompleteBody = {
   parts: Array<{
     partNumber: number;
-    partId: string;
+    partId?: string;
+    partToken?: string;
   }>;
   uploadSessionId: string;
 };
@@ -272,8 +273,9 @@ export type PostReplyMediaMultipartInitiateResponse = {
 };
 
 export type PostReplyMediaMultipartPartResponse = {
-  part_number: number;
   part_id: string;
+  part_number: number;
+  part_token?: string;
 };
 
 export type PostReportResponse = {

@@ -23,6 +23,7 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - Cada parte enviada ao backend tem tamanho pequeno, com upload direto do chunk para o bucket público por multipart server-side.
 - A sessão e as partes do upload usam tokens opacos criptografados com a chave de JWT já obrigatória do backend; dados internos do provedor não são expostos ao cliente.
 - O identificador opaco de cada parte é exposto como `part_id`, não como `part_token`, para não ser removido pelo sanitizador público que protege campos de autenticação.
+- Durante o rollout, o backend também aceita `partToken` na finalização e devolve `part_token` como alias legado restrito ao endpoint de parte, porque PWAs/browsers podem manter o JavaScript anterior em cache por alguns minutos.
 - A validação de permissão de mídia em respostas permanece a mesma: psicólogo com CFP verificado e Plano Profissional ativo, ou cortesia administrativa ativa.
 
 ## Consequências
@@ -33,6 +34,7 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - O frontend novo tenta multipart e faz fallback para o upload simples se encontrar backend antigo sem os endpoints, preservando rollout parcial.
 - Uploads interrompidos podem deixar sessões multipart pendentes até expiração/lifecycle do storage; o frontend chama abort best-effort em falhas conhecidas.
 - Campos públicos do fluxo multipart não usam sufixo `token`, evitando conflito com a política global de sanitização de respostas.
+- A compatibilidade com `part_token` é uma exceção transitória e não representa token de autenticação; o valor continua opaco, criptografado, expira e só é aceito junto da sessão do mesmo usuário.
 
 ## Produção e rollout
 

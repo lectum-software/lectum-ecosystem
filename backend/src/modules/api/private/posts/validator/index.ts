@@ -166,10 +166,15 @@ export const replyMediaMultipartCompleteSchema: IValidatorRequest = {
         .array(
           z
             .object({
+              partId: z.string().min(1).max(4096).optional(),
               partNumber: z.number().int().min(1).max(10_000),
-              partId: z.string().min(1).max(4096),
+              partToken: z.string().min(1).max(4096).optional(),
             })
-            .strict(),
+            .strict()
+            .refine((part) => Boolean(part.partId || part.partToken), {
+              message: "Informe a parte enviada.",
+              path: ["partId"],
+            }),
         )
         .min(1)
         .max(10_000),

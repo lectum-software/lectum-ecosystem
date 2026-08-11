@@ -1566,3 +1566,39 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-11 - compatibilidade com PWA cacheado no multipart
+
+- Pedido do usuario: mesmo apos o deploy 0.1.49, o video grande ainda falhava com a mesma mensagem generica.
+- Diagnostico: alem do campo novo `part_id`, clientes PWA/browser ainda podiam estar executando o JavaScript anterior que esperava `part_token` e finalizava o upload com `partToken`. Como o deploy de frontend/backend nao e atomicamente percebido por clientes ja abertos, o backend precisava tolerar os dois contratos durante o rollout.
+- Backend: o endpoint de parte passa a devolver `part_id` e tambem o alias legado `part_token` somente nesse contrato, com `allowAuthTokens` restrito a essa resposta para nao ser removido pelo sanitizador global; o valor e opaco, criptografado, expira e nao autentica usuario.
+- Backend: a finalizacao multipart passa a aceitar `partId` ou `partToken` por parte, mantendo validacao de usuario, sessao, post, ordem e quantidade de partes.
+- Frontend: o cliente novo aceita tanto `part_id` quanto `part_token` na resposta de parte, evitando falha se houver deploy parcial/cache intermediario.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Backend aceita finalizacao multipart com `partId` novo ou `partToken` legado.
+- [x] Endpoint de parte preserva alias legado para clientes cacheados sem abrir permissao de autenticacao.
+- [x] Frontend novo tolera ambos os nomes retornados pelo backend.
+- [x] Sanitizacao global continua removendo tokens reais fora da excecao controlada do endpoint de parte.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend biome:check`
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm --dir backend typecheck`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir backend exec tsx -e "import { sanitizeSensitiveData } from './src/utils/sanitize-sensitive'; ..."` confirmou que `part_token` so permanece quando a resposta opta por `allowAuthTokens`.
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

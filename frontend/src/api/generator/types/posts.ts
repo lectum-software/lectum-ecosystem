@@ -187,8 +187,9 @@ export type PostReplyMediaMultipartInitiateResponse = {
 };
 
 export type PostReplyMediaMultipartPartResponse = {
+  part_id?: string;
   part_number: number;
-  part_id: string;
+  part_token?: string;
 };
 
 export type PostReplyMediaMultipartCompletePayload = {

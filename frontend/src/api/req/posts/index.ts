@@ -257,10 +257,15 @@ const uploadPostReplyMediaMultipart = async (id: string, file: File) => {
         chunk,
         file.name || "media",
       );
+      const uploadedPartId = uploadedPart.part_id || uploadedPart.part_token;
+
+      if (!uploadedPartId) {
+        throw new Error("reply_media_part_missing");
+      }
 
       parts.push({
         partNumber: uploadedPart.part_number,
-        partId: uploadedPart.part_id,
+        partId: uploadedPartId,
       });
       partNumber += 1;
     }
