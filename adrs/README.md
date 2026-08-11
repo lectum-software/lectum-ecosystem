@@ -480,3 +480,4 @@ Formato recomendado:
 - [ADR-0447 — Captura de localizacao prioriza cidade quando proxy traz so pais](0447-captura-localizacao-cidade-prioritaria.md)
 - [ADR-0448 — Localizacao declarada do paciente](0448-localizacao-declarada-paciente.md)
 - [ADR-0449 — Instalar aplicativo no perfil](0449-instalar-aplicativo-perfil.md)
+- [ADR-0450 — Permissão nativa direta de notificações](0450-permissao-nativa-direta-notificacoes.md)

@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 159 tasks: `TASK-00` a `TASK-152`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 160 tasks: `TASK-00` a `TASK-153`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -250,6 +250,7 @@ ou cortesia manual.
 | 150 | [TASK-150 - Localizacao declarada do paciente para proximidade](TASK-150-localizacao-declarada-paciente.md) | Completed | 02, 21, 60, 61 |
 | 151 | [TASK-151 - Remover banner de localizacao opcional no perfil do paciente](TASK-151-remover-banner-localizacao-paciente.md) | Completed | 02, 21, 150 |
 | 152 | [TASK-152 - Instalar aplicativo no perfil](TASK-152-instalar-aplicativo-no-perfil.md) | Completed | 12, 21, 37 |
+| 153 | [TASK-153 - Permissao nativa direta de notificacoes](TASK-153-permissao-nativa-direta-notificacoes.md) | Completed | 12, 29A, 38 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -380,6 +381,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 120. [TASK-150 - Localizacao declarada do paciente para proximidade](TASK-150-localizacao-declarada-paciente.md) foi adicionada e concluida em 2026-08-10 para trocar, nas telas de paciente do Admin, a localizacao por IP pela localidade declarada pelo paciente no perfil, mantendo **Nao informado** para quem nao preencher.
 121. [TASK-151 - Remover banner de localizacao opcional no perfil do paciente](TASK-151-remover-banner-localizacao-paciente.md) foi adicionada e concluida em 2026-08-10 para retirar a faixa azul informativa da edicao de perfil do paciente, mantendo Estado/Cidade opcionais e a explicacao curta no campo Estado.
 122. [TASK-152 - Instalar aplicativo no perfil](TASK-152-instalar-aplicativo-no-perfil.md) foi adicionada em 2026-08-10 e concluida em 2026-08-11 para oferecer, na seção Conta do perfil de pacientes e psicologos, uma entrada manual de instalação do PWA após o usuário dispensar o prompt automático.
+123. [TASK-153 - Permissao nativa direta de notificacoes](TASK-153-permissao-nativa-direta-notificacoes.md) foi adicionada e concluida em 2026-08-11 para remover a modal propria da Lectum no fluxo automatico de notificacoes e chamar diretamente a permissao nativa do navegador no mesmo timing anterior, preservando gates, cooldown, `lectum.activePrompt` e a acao manual em configuracoes.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
