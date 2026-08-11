@@ -167,3 +167,21 @@ Consequencias:
 - O botao de midia continua descobrivel para psicologos elegiveis, mas sem ocupar texto/linha extra.
 - Usuarios que nao podem anexar midia continuam bloqueados visualmente e pelo backend; a razao fica preservada em `title`/texto acessivel.
 - Nenhum contrato de API, schema, migration, env, pacote ou dado persistido foi alterado.
+
+
+## Atualizacao 2026-08-11 - remocao do X de saida no composer
+
+A barra de comentario no mobile estava acumulando controles: midia, campo, X de cancelamento e envio. A decisao complementar e remover o X de saida/cancelamento visivel do row principal para deixar o composer mais proximo de uma barra de resposta simples, como a referencia do Reddit.
+
+Decisao complementar:
+
+- Remover apenas o botao circular de cancelar exibido ao lado do textarea no composer de comentarios/respostas.
+- Manter o comportamento interno de cancelamento/limpeza que ja atende gestos e saida de contexto sem depender de um botao visivel no row.
+- Preservar os outros usos de X que tem funcao clara: fechar a modal de denuncia e remover uma midia anexada selecionada.
+- Nao alterar React Hook Form/Zod, controller do textarea, endpoint, payload, upload real, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O composer fica com menos ruido visual e com mais espaco horizontal para o campo de comentario no mobile.
+- O usuario ainda consegue enviar texto/midia e remover midia anexada; apenas perde o atalho visual redundante de cancelar no row.
+- O rollback e reverter este commit, pois a mudanca e puramente frontend e nao altera dados persistidos.

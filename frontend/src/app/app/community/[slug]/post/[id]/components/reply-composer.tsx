@@ -98,8 +98,6 @@ export const ReplyComposer = ({
   const shouldShowGuidance =
     composerActive || hasDraft || Boolean(selectedMedia) || mediaPickerActive;
   const autoFocusTargetId = replyTarget?.id ?? "main";
-  const shouldShowCancelAction = composerActive;
-  const cancelLabel = replyTarget || replyToName ? "Cancelar resposta" : "Cancelar comentário";
 
   const revokeSelectedMediaPreview = useCallback(() => {
     if (!selectedMediaPreviewUrlRef.current) return;
@@ -355,18 +353,6 @@ export const ReplyComposer = ({
         <div className="min-w-0 flex-1">
           <FieldComponent control={hook.control} {...formProps.fields[0]} />
         </div>
-        {shouldShowCancelAction ? (
-          <Button
-            aria-label={cancelLabel}
-            className="h-9 w-9 shrink-0 rounded-full border border-border bg-surface p-0 text-muted shadow-none transition hover:border-border hover:bg-surface-muted hover:text-foreground dark:border-border dark:bg-surface dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-            disabled={disabled}
-            onClick={cancelComposer}
-            type="button"
-            variant="ghost"
-          >
-            <X className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
-        ) : null}
         <Button
           aria-label="Enviar resposta"
           className="h-11 w-11 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-lectum-soft hover:bg-primary-hover disabled:bg-surface-muted disabled:text-subtle disabled:opacity-100 disabled:shadow-none"

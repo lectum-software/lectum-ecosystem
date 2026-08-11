@@ -1282,3 +1282,28 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
 - ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx" src/components/community/reply-media-attachment-control.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` e Chrome headless local em viewport 390x844. A API local respondeu `Post indisponivel`, entao a validacao visual autenticada final ficou para o smoke em homologacao apos o push.
+
+
+## Complemento 2026-08-11 - remocao do X do composer de comentarios
+
+- Pedido do usuario: remover o X de saida exibido na barra de adicionar comentario, mantendo a barra mais simples e alinhada ao padrao comparado com o Reddit.
+- Frontend: o composer de comentarios/respostas deixou de renderizar o botao circular de cancelar ao lado do campo e do envio; o row agora permanece com midia icon-only quando disponivel, textarea e botao de enviar.
+- O cancelamento interno foi preservado para gestos e limpeza de contexto ja existentes, e os X de outros fluxos continuam inalterados: fechar modal de denuncia e remover midia anexada.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A barra de adicionar comentario nao exibe mais o X de saida/cancelamento ao focar no campo.
+- [x] O botao de envio e o botao de midia icon-only permanecem funcionais no mesmo row.
+- [x] O X de remover midia anexada e o X de fechar denuncia nao foram removidos.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao autenticada final ficou para smoke de homologacao apos push.
