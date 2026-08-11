@@ -76,6 +76,7 @@ export const ReplyComposer = ({
   const composerFormNodeRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const composerActivatedAtRef = useRef(0);
+  const composerInternalPointerAtRef = useRef(0);
   const lastUserScrollIntentAtRef = useRef(0);
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const mediaPickerActiveRef = useRef(false);
@@ -153,6 +154,10 @@ export const ReplyComposer = ({
 
   const assignComposerFormRef = useCallback((node: HTMLFormElement | null) => {
     composerFormNodeRef.current = node;
+  }, []);
+
+  const markComposerInternalPointer = useCallback(() => {
+    composerInternalPointerAtRef.current = Date.now();
   }, []);
 
   useImperativeHandle<HTMLFormElement | null, HTMLFormElement | null>(
@@ -450,6 +455,7 @@ export const ReplyComposer = ({
         const nextTarget = event.relatedTarget;
         if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
         if (mediaPickerActiveRef.current) return;
+        if (Date.now() - composerInternalPointerAtRef.current < 600) return;
         setComposerActive(false);
         resetCancelDrag();
       }}
@@ -457,11 +463,14 @@ export const ReplyComposer = ({
         composerActivatedAtRef.current = Date.now();
         setComposerActive(true);
       }}
+      onMouseDownCapture={markComposerInternalPointer}
       onPointerCancel={handleCancelPointerEnd}
+      onPointerDownCapture={markComposerInternalPointer}
       onPointerDown={handleCancelPointerDown}
       onPointerMove={handleCancelPointerMove}
       onPointerUp={handleCancelPointerEnd}
       onSubmit={handleComposerSubmit}
+      onTouchStartCapture={markComposerInternalPointer}
       ref={assignComposerFormRef}
       style={composerStyle}
     >

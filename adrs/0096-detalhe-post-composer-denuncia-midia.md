@@ -281,3 +281,28 @@ Validacao adicional:
 - `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
 - `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local retornou estado `Post indisponivel`, entao a validacao autenticada final de teclado/header fica para smoke em homologacao e reteste no aparelho real.
+
+## Atualizacao 2026-08-11 - envio de midia no primeiro toque
+
+O teste em homologacao mostrou que a primeira tentativa de envio com midia anexada podia apenas alterar a altura do composer e exigir novo toque. A causa provavel era a ordem de eventos em navegadores mobile: tocar no botao de submit desfoca o `textarea` antes do `click/submit`, e `relatedTarget` pode nao apontar para o botao interno.
+
+Decisao complementar:
+
+- Marcar interacoes internas do composer em `pointerdown`, `touchstart` e `mousedown` durante a fase de captura.
+- Ignorar por uma janela curta o `blur` do `textarea` quando ele foi causado por toque dentro do proprio formulario, evitando que o composer troque estado/padding antes do submit.
+- Preservar o fechamento por toque fora e por rolagem intencional do usuario, sem descartar rascunho/midia.
+- Nao alterar contrato de resposta, upload, permissao, backend, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- O botao de envio deixa de depender de um segundo toque quando ha midia selecionada e o textarea esta focado.
+- O layout do composer fica mais estavel entre pointerdown, blur e submit em Android/Chrome, iOS/Safari e PWA.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local pode depender de autenticacao/dados de homologacao para validacao visual final.

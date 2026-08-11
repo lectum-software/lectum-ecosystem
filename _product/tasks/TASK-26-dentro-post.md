@@ -1420,3 +1420,28 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
 - [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local retornou estado `Post indisponivel`, entao a validacao autenticada final de teclado/header fica para smoke em homologacao e reteste no aparelho real.
+
+## Complemento 2026-08-11 - envio de midia no primeiro toque
+
+- Pedido do usuario: ao anexar midia e tocar no botao de envio, o primeiro toque nao enviava; o composer alterava levemente a altura e exigia um segundo toque.
+- Referencias visuais/auditaveis: screenshots do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.40.12.jpeg` e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.40.05.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: em mobile, tocar no botao de envio enquanto o textarea estava focado disparava `blur` antes do `click/submit`; como `relatedTarget` pode vir vazio no navegador mobile, o composer entendia como saida externa, trocava o estado ativo/padding e consumia a primeira interacao.
+- Frontend: o composer agora marca interacoes internas por `pointer/touch/mouse` em fase de captura e ignora o `blur` transitorio causado por toques dentro do proprio formulario, mantendo o estado visual estavel ate o submit concluir.
+- O envio real de resposta com texto, midia ou somente midia permanece pelo mesmo fluxo existente; o ajuste nao altera validacao, payload, upload, permissao, endpoint ou persistencia.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Tocar no botao de envio com midia anexada nao colapsa/altera o composer antes do submit.
+- [x] Resposta com midia anexada pode ser enviada no primeiro toque, sem exigir segunda tentativa.
+- [x] O comportamento de desfocar ao tocar fora/rolar intencionalmente continua preservado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local pode depender de autenticacao/dados de homologacao para validacao visual final.
