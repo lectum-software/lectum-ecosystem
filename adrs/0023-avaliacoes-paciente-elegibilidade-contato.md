@@ -170,3 +170,18 @@ A regra vigente permite que qualquer usuario autenticado avalie psicologos publi
 - O psicologo nao ve uma chamada para avaliar a si mesmo no proprio perfil publico.
 - Outros usuarios autenticados ou anonimos continuam vendo o CTA quando as regras visuais do perfil permitirem, seguindo o fluxo existente de login/criacao de avaliacao.
 - Nao houve mudanca de schema, endpoint, contrato de elegibilidade, packages ou dados persistidos.
+
+## Atualizacao 2026-08-11 - rota canonica de avaliacoes sem guarda de papel
+
+A revisao da correcao de favoritos identificou a mesma divergencia na montagem de `/api/private/user/reviews*`: o namespace canonico user-level estava protegido por `requireRole("paciente")`, apesar da decisao de 2026-06-26 e do `DATA-MODEL.md` exigirem apenas `_auth`.
+
+Decisao:
+
+- Montar `/api/private/user/reviews` somente com `_auth`, sem `requireRole`, preservando autores de qualquer role autenticada.
+- Manter `/api/private/patient/reviews*` sob `requireRole("paciente")` como compatibilidade legada fail-closed.
+- Cobrir a politica em teste unitario junto de `/api/private/user/favorites`, evitando regressao na montagem das rotas canonicas user-level.
+
+Consequencias:
+
+- Psicologos autenticados continuam podendo avaliar outros psicologos publicos quando as regras de dominio permitirem.
+- Nao ha alteracao de schema Prisma, migrations, contratos de resposta, envs, packages ou dados publicados.

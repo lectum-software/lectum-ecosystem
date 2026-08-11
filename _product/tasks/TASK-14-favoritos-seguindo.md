@@ -571,3 +571,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem alteração de Prisma schema/migrations, sem packages novos, sem mocks e sem endpoints simulados.
 - ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.
 - Validações executadas: `npx "@builder.io/dev-tools@latest" auth status`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, smoke HTTP local `POST /api/private/user/favorites/:id` retornando `403 favorite_own_profile` para auto-favorito e Chrome headless/CDP mobile 390x844 em `/psychologists/cmr6pzpbn000h5guht478a9l4` e `/psychologists?search=Rezende`, confirmando coração desabilitado (`disabled=true`, `aria-pressed=false`) no próprio perfil/vídeo.
+
+## Complemento 2026-08-11 - liberacao da rota canonica de Favoritos para psicologos
+
+- Pedido do usuario: corrigir a aba `/app/favorites`, que retornava `403` para usuario autenticado com role `psicologo`.
+- Causa: a rota canonica `/api/private/user/favorites` estava montada com `requireRole("paciente")`, apesar da decisao vigente de 2026-06-08 permitir favoritos por qualquer usuario autenticado.
+- Backend: `/api/private/user/favorites` passou a ser montada apenas com `_auth`; `/api/private/patient/favorites` permanece como rota legada com `requireRole("paciente")`.
+- Segurança: a politica de rotas privadas foi extraida para helper testavel, cobrindo namespaces user-level `_auth-only` e mantendo `/api/private/patient/*` e `/api/private/psychologist/*` fail-closed por role.
+- Escopo: sem mudanca de UI, Prisma schema, migrations, packages, contratos de resposta, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
+- ADR atualizado: `adrs/0020-favoritar-psicologo-na-listagem.md`.

@@ -274,3 +274,11 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Fonte visual/auditavel: screenshot do usuario e referencia local `_product/proto/Avaliar do Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.
 - Validacoes executadas: `pnpm.cmd --dir frontend exec biome check --write "src/app/app/reviews/new/logic.tsx"`, `pnpm.cmd --dir frontend check`, `pnpm.cmd --dir frontend build`, `pnpm.cmd check`, `git diff --check`, HTTP local `200` em `/app/reviews/new?psychologist_id=cmqmg35850000asuheq2ucwd0` e Chrome headless mobile 390x844 na mesma rota.
+
+## Complemento 2026-08-11 - montagem canonica de avaliacoes user-level
+
+- Durante a correcao da politica de rotas user-level, `/api/private/user/reviews` tambem foi alinhada a decisao vigente desta task: rota canonica protegida apenas por `_auth`, sem `requireRole("paciente")`.
+- `/api/private/patient/reviews` permanece como rota legada sob `requireRole("paciente")`.
+- A politica ganhou teste unitario junto da rota de favoritos para evitar regressao de montagem.
+- Escopo: sem mudanca de UI, Prisma schema, migrations, packages, elegibilidade, contratos de resposta ou dados persistidos.
+- ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.

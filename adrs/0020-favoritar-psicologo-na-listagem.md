@@ -86,3 +86,30 @@ Psicólogos autenticados podiam visualizar o próprio perfil público e o própr
 - A UI deixa de oferecer uma ação impossível ao psicólogo no próprio perfil/vídeo.
 - A regra fica garantida no backend, sem depender apenas de esconder ou desabilitar o botão.
 - Não houve alteração de schema Prisma, migrations, packages ou contrato público além de normalizar `favorited=false` para o próprio perfil.
+
+## Atualização 2026-08-11 - rota canônica de favoritos sem guarda de papel
+
+### Contexto
+
+Após o deploy publicado, a tela `/app/favorites` carregava o endpoint canônico
+`GET /api/private/user/favorites` com usuário psicólogo autenticado e recebia `403`, exibindo
+"Você não tem permissão para realizar esta ação". A causa era a montagem da rota neutra
+`/api/private/user/favorites` com `requireRole("paciente")`, contrariando a decisão de
+2026-06-08 e o `DATA-MODEL.md`.
+
+### Decisão
+
+- Montar `/api/private/user/favorites` somente com `_auth`, sem `requireRole`, para permitir que
+  qualquer usuário autenticado liste, crie e remova favoritos de psicólogos.
+- Manter `/api/private/patient/favorites` como rota legada sob `requireRole("paciente")`.
+- Extrair a política de montagem de rotas privadas para um helper testável, garantindo que rotas
+  canônicas user-level sejam `_auth-only` e que namespaces `/patient/*` e `/psychologist/*`
+  continuem fail-closed por papel.
+
+### Consequências
+
+- Psicólogos voltam a acessar a aba Favoritos e a favoritar outros psicólogos.
+- A correção não altera schema Prisma, migrations, contratos de resposta, envs, packages ou dados
+  publicados.
+- Rollback é direto: restaurar a montagem anterior, sabendo que isso reintroduz o `403` para
+  psicólogos na rota canônica.

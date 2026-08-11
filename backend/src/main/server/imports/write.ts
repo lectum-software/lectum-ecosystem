@@ -89,18 +89,17 @@ import apiPublicSeoCommunityPost from "@/modules/api/public/seo/community-post";
 import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
 import apiPublicSeoPsychologist from "@/modules/api/public/seo/psychologist";
 import apiPublicUser from "@/modules/api/public/user";
+import {
+  listPrivateRoutePolicyViolations,
+  type MountedRoutePolicyRecord,
+  type PrivateRoleGuard,
+} from "./route-policy";
 
 const endpoint = Router();
 type ExpressRouter = ReturnType<typeof Router>;
 type MountHandler = ExpressRouter | RequestHandler;
-type RoleGuard = "paciente" | "psicologo";
-type MountedRoute = {
-  adminProtected?: boolean;
-  path: string;
-  role?: RoleGuard;
-};
 
-const mountedRoutes: MountedRoute[] = [];
+const mountedRoutes: MountedRoutePolicyRecord[] = [];
 const endpointUse = endpoint.use.bind(endpoint) as (
   path: string,
   ...handlers: MountHandler[]
@@ -112,39 +111,35 @@ const mountRoute = (path: string, ...handlers: MountHandler[]) => {
   endpointUse(path, ...(adminProtected ? [adminAuth, ...handlers] : handlers));
 };
 
-const mountRoleGuardedRoute = (path: string, role: RoleGuard, router: ExpressRouter) => {
+const mountAuthOnlyRoute = (path: string, router: ExpressRouter) => {
+  mountedRoutes.push({ authOnly: true, path });
+  endpointUse(path, privateAuth, router);
+};
+
+const mountRoleGuardedRoute = (path: string, role: PrivateRoleGuard, router: ExpressRouter) => {
   mountedRoutes.push({ path, role });
   endpointUse(path, privateAuth, requireRole(role), router);
 };
 
-const getExpectedRole = (path: string): RoleGuard | null => {
-  if (["/api/private/user/favorites", "/api/private/user/reviews"].includes(path)) {
-    return "paciente";
-  }
-  if (path.startsWith("/api/private/patient/")) return "paciente";
-  if (path.startsWith("/api/private/psychologist/")) return "psicologo";
-
-  return null;
-};
-
 const assertPrivateRoleGuards = () => {
-  const violations = mountedRoutes.filter((route) => {
-    const expectedRole = getExpectedRole(route.path);
+  const { roleGuardViolations, unprotectedAdminRoutes, userAuthOnlyViolations } =
+    listPrivateRoutePolicyViolations(mountedRoutes);
 
-    return Boolean(expectedRole && route.role !== expectedRole);
-  });
-
-  if (violations.length > 0) {
+  if (roleGuardViolations.length > 0) {
     throw new Error(
-      `[security] Rotas privadas sem requireRole correto: ${violations
+      `[security] Rotas privadas sem requireRole correto: ${roleGuardViolations
         .map((route) => `${route.path}=>${route.role || "sem-role"}`)
         .join(", ")}`,
     );
   }
 
-  const unprotectedAdminRoutes = mountedRoutes.filter(
-    (route) => route.path.startsWith("/api/admin/private/") && !route.adminProtected,
-  );
+  if (userAuthOnlyViolations.length > 0) {
+    throw new Error(
+      `[security] Rotas privadas user-level sem _auth-only: ${userAuthOnlyViolations
+        .map((route) => `${route.path}=>${route.role || "sem-auth-only"}`)
+        .join(", ")}`,
+    );
+  }
 
   if (unprotectedAdminRoutes.length > 0) {
     throw new Error(
@@ -217,8 +212,8 @@ mountRoute(
 );
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
-mountRoleGuardedRoute("/api/private/user/favorites", "paciente", apiPrivatePatientFavorites);
-mountRoleGuardedRoute("/api/private/user/reviews", "paciente", apiPrivatePatientReviews);
+mountAuthOnlyRoute("/api/private/user/favorites", apiPrivatePatientFavorites);
+mountAuthOnlyRoute("/api/private/user/reviews", apiPrivatePatientReviews);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);
