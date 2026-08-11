@@ -3,6 +3,7 @@
 import { Loader2, Send, X } from "lucide-react";
 import {
   type ChangeEvent,
+  type CSSProperties,
   type FormEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
@@ -69,11 +70,13 @@ export const ReplyComposer = ({
   const [composerActive, setComposerActive] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [draggingToCancel, setDraggingToCancel] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
   const composerFormNodeRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const composerActivatedAtRef = useRef(0);
+  const lastUserScrollIntentAtRef = useRef(0);
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const mediaPickerActiveRef = useRef(false);
   const cancelDragRef = useRef<{
@@ -101,9 +104,9 @@ export const ReplyComposer = ({
     composerActive || hasDraft || Boolean(selectedMedia) || mediaPickerActive;
   const autoFocusTargetId = replyTarget?.id ?? "main";
   const replyContextLabel = replyTarget?.name
-    ? `Respondendo a ${replyTarget.name}`
+    ? `Respondendo ${replyTarget.name}`
     : replyToName
-      ? `Respondendo a ${replyToName}`
+      ? `Respondendo ${replyToName}`
       : "Respondendo ao post";
   const composerContentField = useMemo(
     () => ({
@@ -115,6 +118,19 @@ export const ReplyComposer = ({
     }),
     [formProps.fields],
   );
+  const composerStyle = useMemo(() => {
+    const style: CSSProperties = {};
+
+    if (!isInline && keyboardOffset > 0) {
+      style.bottom = `${keyboardOffset}px`;
+    }
+
+    if (dragOffset > 0) {
+      style.transform = `translate3d(0, ${dragOffset}px, 0)`;
+    }
+
+    return Object.keys(style).length > 0 ? style : undefined;
+  }, [dragOffset, isInline, keyboardOffset]);
 
   const revokeSelectedMediaPreview = useCallback(() => {
     if (!selectedMediaPreviewUrlRef.current) return;
@@ -233,11 +249,47 @@ export const ReplyComposer = ({
   }, [endMediaPickerInteraction, focusComposerInput, mediaPickerActive]);
 
   useEffect(() => {
+    if (isInline || typeof window === "undefined") return;
+
+    const viewport = window.visualViewport;
+    const updateKeyboardOffset = () => {
+      if (!composerActive || !window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches || !viewport) {
+        setKeyboardOffset(0);
+        return;
+      }
+
+      const nextKeyboardOffset = Math.max(
+        0,
+        Math.round(window.innerHeight - viewport.height - viewport.offsetTop),
+      );
+      setKeyboardOffset(nextKeyboardOffset > 24 ? nextKeyboardOffset : 0);
+    };
+
+    updateKeyboardOffset();
+    viewport?.addEventListener("resize", updateKeyboardOffset);
+    viewport?.addEventListener("scroll", updateKeyboardOffset);
+    window.addEventListener("orientationchange", updateKeyboardOffset);
+    window.addEventListener("resize", updateKeyboardOffset);
+
+    return () => {
+      viewport?.removeEventListener("resize", updateKeyboardOffset);
+      viewport?.removeEventListener("scroll", updateKeyboardOffset);
+      window.removeEventListener("orientationchange", updateKeyboardOffset);
+      window.removeEventListener("resize", updateKeyboardOffset);
+    };
+  }, [composerActive, isInline]);
+
+  useEffect(() => {
     if (!composerActive || isInline || typeof window === "undefined") return;
     if (!window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches) return;
 
+    const markUserScrollIntent = () => {
+      lastUserScrollIntentAtRef.current = Date.now();
+    };
+
     const handlePageScroll = () => {
       if (Date.now() - composerActivatedAtRef.current < 350) return;
+      if (Date.now() - lastUserScrollIntentAtRef.current > 800) return;
 
       const activeElement = document.activeElement;
       if (
@@ -249,13 +301,19 @@ export const ReplyComposer = ({
 
       dismissComposerKeyboard();
     };
+    const handleWheel = () => {
+      markUserScrollIntent();
+      handlePageScroll();
+    };
 
     window.addEventListener("scroll", handlePageScroll, { passive: true });
-    window.addEventListener("wheel", handlePageScroll, { passive: true });
+    window.addEventListener("touchmove", markUserScrollIntent, { passive: true });
+    window.addEventListener("wheel", handleWheel, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handlePageScroll);
-      window.removeEventListener("wheel", handlePageScroll);
+      window.removeEventListener("touchmove", markUserScrollIntent);
+      window.removeEventListener("wheel", handleWheel);
     };
   }, [composerActive, dismissComposerKeyboard, isInline]);
 
@@ -379,7 +437,6 @@ export const ReplyComposer = ({
     <form
       className={cn(
         "grid gap-2 border-border bg-surface p-3 dark:border-border dark:bg-surface",
-        composerActive && "max-sm:touch-none",
         draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
         isInline
           ? "mt-3 rounded-[20px] border shadow-none"
@@ -406,7 +463,7 @@ export const ReplyComposer = ({
       onPointerUp={handleCancelPointerEnd}
       onSubmit={handleComposerSubmit}
       ref={assignComposerFormRef}
-      style={dragOffset > 0 ? { transform: `translate3d(0, ${dragOffset}px, 0)` } : undefined}
+      style={composerStyle}
     >
       {shouldShowGuidance ? (
         <p className="rounded-[14px] bg-surface-muted px-3 py-2 text-xs font-semibold leading-5 text-muted dark:bg-surface-muted dark:text-muted">

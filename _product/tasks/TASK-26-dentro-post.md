@@ -1391,3 +1391,32 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento da rota; sem API/autenticacao local disponivel, a validacao visual autenticada final fica para smoke de homologacao apos push.
+
+## Complemento 2026-08-11 - teclado Android e header flutuante completo
+
+- Pedido do usuario: no Android/Chrome, ao tocar em `Responder`, o composer podia ficar escondido atras do teclado; a copy direta `Respondendo ao post` deveria virar `Respondendo [nome do usuario]`; o header ao rolar para cima deveria ser completo, com seta de voltar e menu de denuncia; e a selecao do campo precisava ficar mais fluida, sem desfocar sozinha nem travar o toque.
+- Referencias visuais/auditaveis: screenshots do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.00.27.jpeg` e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 15.01.52.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o composer fixo mobile agora observa `window.visualViewport` quando focado e aplica offset inferior dinamico para ficar acima do teclado virtual em browsers que sobrepoem o teclado ao viewport, preservando fallback seguro quando a API nao existir.
+- Frontend: o desfoco por scroll foi restringido a rolagem com intencao real do usuario (`touchmove`/`wheel`), evitando que resize/auto-scroll do navegador ao abrir teclado feche o campo sozinho.
+- Frontend: a trava `touch-none` do composer focado foi removida para deixar toque, cursor e rolagem mais fluidos; o gesto de arrastar para cancelar permanece restrito ao movimento validado.
+- Frontend: comentarios diretos ao post recebem `replyToName` com o nome publico do autor do post e a copy passa a `Respondendo [nome]`; respostas da arvore tambem usam `Respondendo [nome]`, sem a preposicao anterior.
+- Frontend: o header flutuante mobile ao rolar para cima passou a espelhar o topo do post: seta de voltar, titulo `Post` e acao lateral com menu de denuncia para posts de outros usuarios ou menu de dono quando for post proprio.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Campo de comentario focado no mobile usa offset de viewport para permanecer acima do teclado virtual quando o navegador sobrepoe o teclado.
+- [x] O composer nao desfoca sozinho por resize/auto-scroll de abertura do teclado e nao usa mais trava global de toque no estado focado.
+- [x] Comentario direto exibe `Respondendo [nome publico do autor do post]`, nao `Respondendo ao post`.
+- [x] Resposta em comentario da arvore continua exibindo `Respondendo [nome]` do alvo.
+- [x] Header flutuante ao rolar para cima exibe seta de voltar, titulo `Post` e menu com `Denunciar post` para posts de terceiros.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local retornou estado `Post indisponivel`, entao a validacao autenticada final de teclado/header fica para smoke em homologacao e reteste no aparelho real.

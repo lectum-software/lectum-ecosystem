@@ -253,3 +253,31 @@ Validacao adicional:
 - `pnpm check`
 - `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento da rota; sem API/autenticacao local disponivel, a validacao visual autenticada final fica para smoke de homologacao apos push.
+
+## Atualizacao 2026-08-11 - teclado Android, foco fluido e header completo
+
+O teste em Android/Chrome de homologacao mostrou que `position: fixed; bottom: 0` podia ficar atras do teclado quando o navegador sobrepunha o teclado ao viewport visual. O mesmo fluxo tambem evidenciou que o auto-scroll/resize disparado pela abertura do teclado nao deve ser tratado como rolagem intencional do usuario, pois isso pode desfocar o textarea sozinho.
+
+Decisao complementar:
+
+- No composer fixo mobile, observar `window.visualViewport` quando o textarea esta ativo e aplicar `bottom` dinamico igual ao espaco ocupado pelo teclado virtual, com fallback sem efeito quando a API nao estiver disponivel.
+- Manter o fechamento do teclado por rolagem apenas apos intencao real de usuario (`touchmove`/`wheel`), ignorando scrolls automaticos causados por foco, resize e abertura do teclado.
+- Remover a classe mobile `touch-none` do composer focado para evitar sensacao de trava; o gesto de arrastar para cancelar continua validando direcao/distancia antes de impedir o padrao.
+- Para respostas diretas ao post, passar o nome publico do autor do post ao composer e renderizar `Respondendo [nome]`; respostas aninhadas usam a mesma copy sem preposicao.
+- Tornar o header flutuante mobile equivalente ao topo do post em acoes essenciais: voltar, titulo `Post` e menu lateral com denuncia ou menu de dono do post.
+- Nao alterar endpoint, payload, upload real, validacao backend, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O composer passa a acompanhar melhor teclados virtuais de Android/Chrome e PWA, sem depender de hacks de `contenteditable` ou troca da fundacao de formularios.
+- A selecao do campo e a abertura do teclado ficam mais fluidas porque resize/auto-scroll deixam de fechar o foco.
+- O header de retorno fornece a mesma acao de denuncia do header original durante leitura profunda.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local retornou estado `Post indisponivel`, entao a validacao autenticada final de teclado/header fica para smoke em homologacao e reteste no aparelho real.

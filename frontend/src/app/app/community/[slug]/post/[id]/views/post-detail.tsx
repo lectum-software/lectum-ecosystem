@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowLeft, Loader2, MessageCircle } from "lucide-react";
+import { ArrowLeft, Flag, Loader2, MessageCircle, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import type { PostDetail } from "@/api/generator/types/posts";
+import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
 import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -12,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { PostBody, PostHeader, PostVoteBar } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
@@ -24,36 +27,85 @@ const FLOATING_HEADER_MIN_SCROLL_Y = 96;
 const FLOATING_HEADER_SCROLL_DELTA = 6;
 
 const PostDetailFloatingHeader = ({
+  currentUserId,
   onBack,
+  onDeleted,
+  onReport,
+  post,
   visible,
 }: {
+  currentUserId?: string | null;
   onBack: () => void;
+  onDeleted: () => void;
+  onReport: () => void;
+  post: PostDetail;
   visible: boolean;
-}) => (
-  <header
-    aria-hidden={!visible}
-    className={cn(
-      "fixed inset-x-0 top-0 z-[90] border-border border-b bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur-md transition-all duration-200 sm:hidden",
-      visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0",
-    )}
-    style={{ paddingTop: "env(safe-area-inset-top)" }}
-  >
-    <div className="mx-auto flex h-14 max-w-[430px] items-center justify-between px-4">
-      <Button
-        aria-label="Voltar"
-        className="h-10 w-10 rounded-full text-muted hover:bg-surface-muted hover:text-foreground"
-        onClick={onBack}
-        tabIndex={visible ? 0 : -1}
-        type="button"
-        variant="ghost"
-      >
-        <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-      </Button>
-      <p className="text-center text-base font-extrabold">Post</p>
-      <span className="h-10 w-10" aria-hidden="true" />
-    </div>
-  </header>
-);
+}) => {
+  const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
+
+  return (
+    <header
+      aria-hidden={!visible}
+      className={cn(
+        "fixed inset-x-0 top-0 z-[90] border-border border-b bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur-md transition-all duration-200 sm:hidden",
+        visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0",
+      )}
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
+      <div className="mx-auto flex h-14 max-w-[430px] items-center justify-between px-5">
+        <Button
+          aria-label="Voltar"
+          className="h-10 w-10 rounded-full p-0 text-muted hover:bg-surface-muted hover:text-foreground"
+          onClick={onBack}
+          tabIndex={visible ? 0 : -1}
+          type="button"
+          variant="ghost"
+        >
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          <span className="sr-only">Voltar</span>
+        </Button>
+        <p className="text-center text-base font-black">Post</p>
+        {isOwnPost ? (
+          <PostOwnerActionMenu
+            className="grid h-10 w-10 place-items-center"
+            onDeleted={onDeleted}
+            post={post}
+          />
+        ) : (
+          <details className="group relative" key={visible ? "visible" : "hidden"}>
+            <summary
+              aria-label="Mais opções"
+              className="grid h-10 w-10 list-none place-items-center rounded-full text-muted transition hover:bg-surface-muted [&::-webkit-details-marker]:hidden"
+              tabIndex={visible ? 0 : -1}
+            >
+              <MoreVertical className="h-5 w-5" aria-hidden="true" />
+            </summary>
+
+            {visible ? (
+              <div
+                className="absolute top-11 right-0 z-20 hidden w-52 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-lectum-soft group-open:block dark:border-border dark:bg-surface"
+                role="menu"
+              >
+                <button
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
+                  onClick={(event) => {
+                    event.currentTarget.closest("details")?.removeAttribute("open");
+                    onReport();
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  <Flag className="h-4 w-4" aria-hidden="true" />
+                  Denunciar post
+                </button>
+              </div>
+            ) : null}
+          </details>
+        )}
+      </div>
+    </header>
+  );
+};
 
 export const PostDetailLogic = () => {
   const [floatingHeaderVisible, setFloatingHeaderVisible] = useState(false);
@@ -196,7 +248,17 @@ export const PostDetailLogic = () => {
 
         {post ? (
           <>
-            <PostDetailFloatingHeader onBack={handlePostBack} visible={floatingHeaderVisible} />
+            <PostDetailFloatingHeader
+              currentUserId={currentUserId}
+              onBack={handlePostBack}
+              onDeleted={() => router.replace(`/comunidades/${post.community.slug}`)}
+              onReport={() => {
+                setReportError(null);
+                setReportTarget({ type: "post" });
+              }}
+              post={post}
+              visible={floatingHeaderVisible}
+            />
             <article className="overflow-hidden bg-surface shadow-lectum-soft dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
               <PostHeader
                 onBack={handlePostBack}
@@ -254,6 +316,7 @@ export const PostDetailLogic = () => {
                 onSubmit={(values, mediaFile) =>
                   submitReply(values, activeMobileReplyTarget?.id ?? null, mediaFile)
                 }
+                replyToName={getCommunityAuthorDisplayName(post.author)}
                 replyTarget={activeMobileReplyTarget}
               />
 
