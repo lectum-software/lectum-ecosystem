@@ -1539,6 +1539,40 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
 
+## Complemento 2026-08-11 - multipart resiliente para videos reais no celular
+
+- Pedido do usuario: simular o comentario com o video real `c:/Users/tulio/Downloads/IMG_3087.MP4`, pois o arquivo correto do celular tem aproximadamente `120MB` e o erro de anexar midia continuava.
+- Diagnostico do arquivo correto: `IMG_3087.MP4` tem `125.880.310` bytes (`120,05MB`), assinatura valida de `video/mp4` e, com chunk de `8MB`, e dividido em `16` partes; cada parte fica abaixo do limite backend de `10MB`.
+- Diagnostico do storage: upload multipart direto para o R2 com o mesmo arquivo, mesmo chunk de `8MB`, `16` partes, complete e limpeza da chave diagnostica concluiu sem erro; portanto o formato, o tamanho, o chunk e o R2 nao explicam a falha.
+- Diagnostico complementar: o arquivo comprimido enviado antes tinha `13,89MB` e ficava abaixo do limiar anterior de `40MB`, entao ainda cairia no upload simples; para evitar essa zona cinzenta, o limiar do cliente foi alinhado ao chunk seguro de `8MB`.
+- Frontend: respostas/comentarios passam a usar multipart acima de `8MB`, mantendo upload simples apenas para arquivos realmente pequenos.
+- Frontend: o MIME enviado ao backend passa a ter fallback seguro pela extensao (`.MP4`, `.MOV`, `.WEBM`, `.JPG`, `.PNG`, `.WEBP`) quando o navegador mobile informa `File.type` vazio, com parametro extra ou inconsistente.
+- Frontend: upload de cada parte multipart passa a ter ate `3` tentativas em erros transitorios/rede, evitando abortar todo o envio por uma oscilacao isolada comum em videos de 120MB no celular.
+- Backend: sem mudancas; o backend multipart ja aceita chunks de ate `10MB`, retorna `part_id`/`part_token` e conclui com o contrato final `{ media_url, media_type }`.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O video real `IMG_3087.MP4` e classificado como multipart em `16` chunks de `8MB`.
+- [x] Arquivos pequenos continuam usando upload simples.
+- [x] O limite de cada parte permanece abaixo do limite backend de chunk.
+- [x] Partes multipart têm retry seguro para falhas transitorias de rede.
+- [x] MIME de midia tem fallback por extensao para arquivos mobile com `File.type` incompleto.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Simulacao local com `IMG_3087.MP4` confirmou tamanho `120,05MB`, assinatura `video/mp4` valida e divisao em `16` chunks de `8MB`.
+- [x] Diagnostico direto de storage R2 com `IMG_3087.MP4` enviou `16` partes, completou multipart e removeu a chave temporaria.
+- [x] `pnpm --dir frontend check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
 ## Complemento 2026-08-11 - identificador de parte preservado no upload multipart
 
 - Pedido do usuario: apos publicar o upload multipart em homologacao, o mesmo video grande ainda falhava com `Nao foi possivel anexar a midia agora`.

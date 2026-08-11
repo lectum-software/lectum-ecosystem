@@ -18,9 +18,11 @@ Em ambientes publicados, esse fluxo fica suscetível a limite intermediário de 
 
 Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas de post:
 
-- O frontend usa o upload simples para arquivos pequenos e troca automaticamente para multipart quando a mídia passa de 40 MB.
+- O frontend usa o upload simples para arquivos pequenos e troca automaticamente para multipart quando a mídia passa de 8 MB, alinhado ao tamanho seguro de chunk do backend.
 - O backend expõe endpoints de iniciar, enviar parte, completar e abortar upload multipart, mantendo o contrato final `{ media_url, media_type }` e o prefixo público `/public/files/posts/media/`.
 - Cada parte enviada ao backend tem tamanho pequeno, com upload direto do chunk para o bucket público por multipart server-side.
+- O cliente faz até 3 tentativas por parte em falhas transitórias/rede antes de abortar a sessão multipart.
+- O cliente normaliza o MIME por declaração do navegador e, quando necessário, por extensão conhecida para tolerar arquivos mobile com `File.type` vazio ou parametrizado.
 - A sessão e as partes do upload usam tokens opacos criptografados com a chave de JWT já obrigatória do backend; dados internos do provedor não são expostos ao cliente.
 - O identificador opaco de cada parte é exposto como `part_id`, não como `part_token`, para não ser removido pelo sanitizador público que protege campos de autenticação.
 - Durante o rollout, o backend também aceita `partToken` na finalização e devolve `part_token` como alias legado restrito ao endpoint de parte, porque PWAs/browsers podem manter o JavaScript anterior em cache por alguns minutos.
@@ -35,6 +37,8 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - Uploads interrompidos podem deixar sessões multipart pendentes até expiração/lifecycle do storage; o frontend chama abort best-effort em falhas conhecidas.
 - Campos públicos do fluxo multipart não usam sufixo `token`, evitando conflito com a política global de sanitização de respostas.
 - A compatibilidade com `part_token` é uma exceção transitória e não representa token de autenticação; o valor continua opaco, criptografado, expira e só é aceito junto da sessão do mesmo usuário.
+- Vídeos médios, como o arquivo real de 13,89 MB usado no diagnóstico de 2026-08-11, também deixam de depender do upload simples e passam a ser enviados em partes.
+- O arquivo real `IMG_3087.MP4` de 120,05 MB foi validado localmente em 16 chunks de 8 MB, e o multipart direto no R2 completou com sucesso; a mitigação restante fica no cliente/rede/PWA, não no storage.
 
 ## Produção e rollout
 
@@ -51,4 +55,4 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 
 ## Pendências
 
-- Após deploy de homologação, validar manualmente com um vídeo real acima de 50 MB e abaixo de 200 MB em resposta de post.
+- Após deploy de homologação, validar manualmente com o vídeo real `IMG_3087.MP4` em resposta de post autenticada no celular/PWA.
