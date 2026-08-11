@@ -260,7 +260,7 @@ const uploadPostReplyMediaMultipart = async (id: string, file: File) => {
 
       parts.push({
         partNumber: uploadedPart.part_number,
-        partToken: uploadedPart.part_token,
+        partId: uploadedPart.part_id,
       });
       partNumber += 1;
     }

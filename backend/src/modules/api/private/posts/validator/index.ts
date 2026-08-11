@@ -167,7 +167,7 @@ export const replyMediaMultipartCompleteSchema: IValidatorRequest = {
           z
             .object({
               partNumber: z.number().int().min(1).max(10_000),
-              partToken: z.string().min(1).max(4096),
+              partId: z.string().min(1).max(4096),
             })
             .strict(),
         )

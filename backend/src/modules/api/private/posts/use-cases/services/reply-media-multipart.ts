@@ -125,7 +125,7 @@ const isPartPayload = (payload: unknown): payload is MultipartPartPayload =>
   typeof payload.partNumber === "number" &&
   typeof payload.etag === "string";
 
-const getMultipartTokenKey = () => createHash("sha256").update(getJwtSecret()).digest();
+const getMultipartIdKey = () => createHash("sha256").update(getJwtSecret()).digest();
 const encodeTokenPart = (buffer: Buffer) => buffer.toString("base64url");
 
 const decodeTokenPart = (value: string) => {
@@ -136,9 +136,9 @@ const decodeTokenPart = (value: string) => {
   }
 };
 
-const encryptMultipartToken = (payload: MultipartSessionPayload | MultipartPartPayload) => {
+const encryptMultipartId = (payload: MultipartSessionPayload | MultipartPartPayload) => {
   const iv = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", getMultipartTokenKey(), iv);
+  const cipher = createCipheriv("aes-256-gcm", getMultipartIdKey(), iv);
   const encrypted = Buffer.concat([cipher.update(JSON.stringify(payload), "utf8"), cipher.final()]);
 
   return [
@@ -148,7 +148,7 @@ const encryptMultipartToken = (payload: MultipartSessionPayload | MultipartPartP
   ].join(".");
 };
 
-const decryptMultipartToken = (token: string) => {
+const decryptMultipartId = (token: string) => {
   const [ivValue, tagValue, encryptedValue] = token.split(".");
   if (!ivValue || !tagValue || !encryptedValue) return null;
 
@@ -158,7 +158,7 @@ const decryptMultipartToken = (token: string) => {
   if (!iv || !tag || !encrypted) return null;
 
   try {
-    const decipher = createDecipheriv("aes-256-gcm", getMultipartTokenKey(), iv);
+    const decipher = createDecipheriv("aes-256-gcm", getMultipartIdKey(), iv);
     decipher.setAuthTag(tag);
     const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString(
       "utf8",
@@ -176,19 +176,19 @@ const tokenExpiration = () =>
 const isFreshToken = (payload: { exp: number }) => payload.exp >= Math.floor(Date.now() / 1000);
 
 const signSessionToken = (payload: Omit<MultipartSessionPayload, "exp">) =>
-  encryptMultipartToken({ ...payload, exp: tokenExpiration() });
+  encryptMultipartId({ ...payload, exp: tokenExpiration() });
 
-const signPartToken = (payload: Omit<MultipartPartPayload, "exp">) =>
-  encryptMultipartToken({ ...payload, exp: tokenExpiration() });
+const signPartId = (payload: Omit<MultipartPartPayload, "exp">) =>
+  encryptMultipartId({ ...payload, exp: tokenExpiration() });
 
 const verifySessionToken = (token: string) => {
-  const payload = decryptMultipartToken(token);
+  const payload = decryptMultipartId(token);
 
   return isSessionPayload(payload) && isFreshToken(payload) ? payload : null;
 };
 
-const verifyPartToken = (token: string) => {
-  const payload = decryptMultipartToken(token);
+const verifyPartId = (token: string) => {
+  const payload = decryptMultipartId(token);
 
   return isPartPayload(payload) && isFreshToken(payload) ? payload : null;
 };
@@ -237,12 +237,12 @@ const validatePartForSession = (part: MultipartPartPayload, session: MultipartSe
   part.uploadId === session.uploadId &&
   part.key === session.key;
 
-const verifyCompleteParts = (session: MultipartSessionPayload, parts: { partToken: string }[]) => {
+const verifyCompleteParts = (session: MultipartSessionPayload, parts: { partId: string }[]) => {
   const expectedParts = Math.ceil(session.size / session.chunkSize);
   if (parts.length !== expectedParts) return null;
 
   const completedParts = parts
-    .map((part) => verifyPartToken(part.partToken))
+    .map((part) => verifyPartId(part.partId))
     .filter((part): part is MultipartPartPayload => Boolean(part));
 
   if (completedParts.length !== expectedParts) return null;
@@ -355,7 +355,7 @@ export const uploadReplyMediaMultipartPart = async (
 
     if (!uploadedPart.ETag) return uploadUnavailable();
 
-    const partToken = signPartToken({
+    const partId = signPartId({
       etag: uploadedPart.ETag,
       key: session.key,
       kind: "post_reply_media_upload_part",
@@ -370,7 +370,7 @@ export const uploadReplyMediaMultipartPart = async (
       ...msg("post_reply_media_uploaded", {}),
       data: {
         part_number: partNumber,
-        part_token: partToken,
+        part_id: partId,
       },
     };
   } catch {

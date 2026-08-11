@@ -1538,3 +1538,31 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-11 - identificador de parte preservado no upload multipart
+
+- Pedido do usuario: apos publicar o upload multipart em homologacao, o mesmo video grande ainda falhava com `Nao foi possivel anexar a midia agora`.
+- Diagnostico: o endpoint de parte retornava o identificador opaco como `part_token`; a camada global de sanitizacao remove campos com sufixo `token` em respostas publicas, entao o frontend completava o upload sem os IDs das partes e o backend rejeitava a finalizacao.
+- Backend/frontend: o contrato publico da parte foi renomeado para `part_id`, mantendo o valor opaco criptografado e evitando colisao com sanitizacao de tokens de autenticacao.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Respostas publicas do upload multipart preservam o identificador opaco da parte sem usar campo com sufixo `token`.
+- [x] Frontend envia `partId` na finalizacao do upload multipart.
+- [x] O sanitizador global continua protegendo tokens reais de autenticacao.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend exec tsx -e "import { sanitizeSensitiveData } from './src/utils/sanitize-sensitive'; ..."` confirmou que `part_id` e `upload_session_id` permanecem e `part_token` seria removido.
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
