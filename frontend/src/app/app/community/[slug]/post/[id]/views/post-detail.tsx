@@ -1,12 +1,14 @@
 "use client";
 
-import { Loader2, MessageCircle } from "lucide-react";
+import { ArrowLeft, Loader2, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
 import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -18,7 +20,45 @@ import { PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR } from "../modules/reply-supp
 import { toPostReportPayload } from "../use-form";
 import { usePostDetailController } from "./post-detail-controller";
 
+const FLOATING_HEADER_MIN_SCROLL_Y = 96;
+const FLOATING_HEADER_SCROLL_DELTA = 6;
+
+const PostDetailFloatingHeader = ({
+  onBack,
+  visible,
+}: {
+  onBack: () => void;
+  visible: boolean;
+}) => (
+  <header
+    aria-hidden={!visible}
+    className={cn(
+      "fixed inset-x-0 top-0 z-[90] border-border border-b bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur-md transition-all duration-200 sm:hidden",
+      visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0",
+    )}
+    style={{ paddingTop: "env(safe-area-inset-top)" }}
+  >
+    <div className="mx-auto flex h-14 max-w-[430px] items-center justify-between px-4">
+      <Button
+        aria-label="Voltar"
+        className="h-10 w-10 rounded-full text-muted hover:bg-surface-muted hover:text-foreground"
+        onClick={onBack}
+        tabIndex={visible ? 0 : -1}
+        type="button"
+        variant="ghost"
+      >
+        <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+      </Button>
+      <p className="text-center text-base font-extrabold">Post</p>
+      <span className="h-10 w-10" aria-hidden="true" />
+    </div>
+  </header>
+);
+
 export const PostDetailLogic = () => {
+  const [floatingHeaderVisible, setFloatingHeaderVisible] = useState(false);
+  const lastScrollYRef = useRef(0);
+  const scrollFrameRef = useRef<number | null>(null);
   const {
     activeFocusReplyId,
     activeMobileReplyTarget,
@@ -73,6 +113,44 @@ export const PostDetailLogic = () => {
     voteMutation,
   } = usePostDetailController();
 
+  useEffect(() => {
+    const updateFloatingHeader = () => {
+      if (scrollFrameRef.current !== null) return;
+
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        const nextScrollY = window.scrollY;
+        const delta = nextScrollY - lastScrollYRef.current;
+
+        if (nextScrollY <= FLOATING_HEADER_MIN_SCROLL_Y) {
+          setFloatingHeaderVisible(false);
+        } else if (delta < -FLOATING_HEADER_SCROLL_DELTA) {
+          setFloatingHeaderVisible(true);
+        } else if (delta > FLOATING_HEADER_SCROLL_DELTA) {
+          setFloatingHeaderVisible(false);
+        }
+
+        lastScrollYRef.current = nextScrollY;
+        scrollFrameRef.current = null;
+      });
+    };
+
+    lastScrollYRef.current = window.scrollY;
+    window.addEventListener("scroll", updateFloatingHeader, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", updateFloatingHeader);
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
+  }, []);
+
+  const handlePostBack = () => {
+    if (!post) return;
+
+    navigateBackWithFallback(router, `/comunidades/${post.community.slug}`);
+  };
+
   return (
     <PrivateTemplate
       allowAnonymous
@@ -118,11 +196,10 @@ export const PostDetailLogic = () => {
 
         {post ? (
           <>
+            <PostDetailFloatingHeader onBack={handlePostBack} visible={floatingHeaderVisible} />
             <article className="overflow-hidden bg-surface shadow-lectum-soft dark:bg-surface sm:mt-4 sm:rounded-[26px] sm:border sm:border-border">
               <PostHeader
-                onBack={() =>
-                  navigateBackWithFallback(router, `/comunidades/${post.community.slug}`)
-                }
+                onBack={handlePostBack}
                 onDeleted={() => router.replace(`/comunidades/${post.community.slug}`)}
                 onReport={() => {
                   setReportError(null);

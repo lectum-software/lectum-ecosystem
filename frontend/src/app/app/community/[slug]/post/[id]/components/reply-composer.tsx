@@ -8,11 +8,13 @@ import {
   type RefObject,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from "react";
 import {
+  createReplyVideoThumbnail,
   detectReplyMediaOrientation,
   mediaTypeFromFile,
   ReplyMediaAttachmentControl,
@@ -69,8 +71,9 @@ export const ReplyComposer = ({
   const [draggingToCancel, setDraggingToCancel] = useState(false);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
-  const localFormRef = useRef<HTMLFormElement | null>(null);
+  const composerFormNodeRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const composerActivatedAtRef = useRef(0);
   const selectedMediaPreviewUrlRef = useRef<string | null>(null);
   const mediaPickerActiveRef = useRef(false);
   const cancelDragRef = useRef<{
@@ -79,7 +82,6 @@ export const ReplyComposer = ({
     startX: number;
     startY: number;
   } | null>(null);
-  const resolvedFormRef = formRef ?? localFormRef;
   const visibleError = useMemo(() => {
     if (apiError) return apiError;
     if (!hook.formState.isSubmitted) return null;
@@ -98,6 +100,21 @@ export const ReplyComposer = ({
   const shouldShowGuidance =
     composerActive || hasDraft || Boolean(selectedMedia) || mediaPickerActive;
   const autoFocusTargetId = replyTarget?.id ?? "main";
+  const replyContextLabel = replyTarget?.name
+    ? `Respondendo a ${replyTarget.name}`
+    : replyToName
+      ? `Respondendo a ${replyToName}`
+      : "Respondendo ao post";
+  const composerContentField = useMemo(
+    () => ({
+      ...formProps.fields[0],
+      inputClassName: cn(
+        formProps.fields[0].inputClassName,
+        "border-0 bg-transparent px-3.5 shadow-none focus:border-transparent focus:ring-0 dark:bg-transparent",
+      ),
+    }),
+    [formProps.fields],
+  );
 
   const revokeSelectedMediaPreview = useCallback(() => {
     if (!selectedMediaPreviewUrlRef.current) return;
@@ -114,8 +131,19 @@ export const ReplyComposer = ({
   const beginMediaPickerInteraction = useCallback(() => {
     mediaPickerActiveRef.current = true;
     setMediaPickerActive(true);
+    composerActivatedAtRef.current = Date.now();
     setComposerActive(true);
   }, []);
+
+  const assignComposerFormRef = useCallback((node: HTMLFormElement | null) => {
+    composerFormNodeRef.current = node;
+  }, []);
+
+  useImperativeHandle<HTMLFormElement | null, HTMLFormElement | null>(
+    formRef,
+    () => composerFormNodeRef.current,
+    [],
+  );
 
   const endMediaPickerInteraction = useCallback(() => {
     mediaPickerActiveRef.current = false;
@@ -124,33 +152,42 @@ export const ReplyComposer = ({
 
   const focusComposerInput = useCallback(() => {
     window.setTimeout(() => {
-      const inputNode = resolvedFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+      const inputNode = composerFormNodeRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+      composerActivatedAtRef.current = Date.now();
       inputNode?.focus({ preventScroll: true });
     }, 0);
-  }, [resolvedFormRef]);
+  }, []);
 
-  const resetCancelDrag = () => {
+  const resetCancelDrag = useCallback(() => {
     cancelDragRef.current = null;
     setDragOffset(0);
     setDraggingToCancel(false);
-  };
+  }, []);
+
+  const dismissComposerKeyboard = useCallback(() => {
+    const activeElement = document.activeElement;
+    const inputNode = composerFormNodeRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+
+    inputNode?.blur();
+    if (
+      activeElement instanceof HTMLElement &&
+      composerFormNodeRef.current?.contains(activeElement)
+    ) {
+      activeElement.blur();
+    }
+
+    setComposerActive(false);
+    resetCancelDrag();
+  }, [resetCancelDrag]);
 
   const cancelComposer = () => {
     if (hasDiscardableDraft && !confirmDiscardReplyDraft()) return;
 
-    const activeElement = document.activeElement;
-    const inputNode = resolvedFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
-
-    inputNode?.blur();
-    if (activeElement instanceof HTMLElement && resolvedFormRef.current?.contains(activeElement)) {
-      activeElement.blur();
-    }
+    dismissComposerKeyboard();
 
     hook.reset({ content: "" });
     clearSelectedMedia();
     endMediaPickerInteraction();
-    setComposerActive(false);
-    resetCancelDrag();
     onDraftStateChange?.(false);
     onCancelContext?.();
   };
@@ -165,12 +202,12 @@ export const ReplyComposer = ({
     if (!autoFocus || !autoFocusTargetId) return;
 
     const timer = window.setTimeout(() => {
-      const inputNode = resolvedFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+      const inputNode = composerFormNodeRef.current?.querySelector<HTMLTextAreaElement>("textarea");
       inputNode?.focus({ preventScroll: true });
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [autoFocus, autoFocusTargetId, resolvedFormRef]);
+  }, [autoFocus, autoFocusTargetId]);
 
   useEffect(() => {
     onDraftStateChange?.(hasDiscardableDraft);
@@ -194,6 +231,33 @@ export const ReplyComposer = ({
 
     return () => window.removeEventListener("focus", handleWindowFocus);
   }, [endMediaPickerInteraction, focusComposerInput, mediaPickerActive]);
+
+  useEffect(() => {
+    if (!composerActive || isInline || typeof window === "undefined") return;
+    if (!window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches) return;
+
+    const handlePageScroll = () => {
+      if (Date.now() - composerActivatedAtRef.current < 350) return;
+
+      const activeElement = document.activeElement;
+      if (
+        !(activeElement instanceof HTMLTextAreaElement) ||
+        !composerFormNodeRef.current?.contains(activeElement)
+      ) {
+        return;
+      }
+
+      dismissComposerKeyboard();
+    };
+
+    window.addEventListener("scroll", handlePageScroll, { passive: true });
+    window.addEventListener("wheel", handlePageScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handlePageScroll);
+      window.removeEventListener("wheel", handlePageScroll);
+    };
+  }, [composerActive, dismissComposerKeyboard, isInline]);
 
   const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -219,6 +283,15 @@ export const ReplyComposer = ({
         current?.previewUrl === previewUrl ? { ...current, orientation } : current,
       );
     });
+    if (type === "video") {
+      void createReplyVideoThumbnail(previewUrl).then((thumbnailUrl) => {
+        if (!thumbnailUrl) return;
+
+        setSelectedMedia((current) =>
+          current?.previewUrl === previewUrl ? { ...current, thumbnailUrl } : current,
+        );
+      });
+    }
     hook.clearErrors("content");
     endMediaPickerInteraction();
     setComposerActive(true);
@@ -323,18 +396,21 @@ export const ReplyComposer = ({
         setComposerActive(false);
         resetCancelDrag();
       }}
-      onFocusCapture={() => setComposerActive(true)}
+      onFocusCapture={() => {
+        composerActivatedAtRef.current = Date.now();
+        setComposerActive(true);
+      }}
       onPointerCancel={handleCancelPointerEnd}
       onPointerDown={handleCancelPointerDown}
       onPointerMove={handleCancelPointerMove}
       onPointerUp={handleCancelPointerEnd}
       onSubmit={handleComposerSubmit}
-      ref={resolvedFormRef}
+      ref={assignComposerFormRef}
       style={dragOffset > 0 ? { transform: `translate3d(0, ${dragOffset}px, 0)` } : undefined}
     >
       {shouldShowGuidance ? (
         <p className="rounded-[14px] bg-surface-muted px-3 py-2 text-xs font-semibold leading-5 text-muted dark:bg-surface-muted dark:text-muted">
-          {COMMENT_GUIDANCE_MESSAGE}
+          {replyContextLabel}
         </p>
       ) : null}
 
@@ -354,8 +430,23 @@ export const ReplyComposer = ({
             selectedMedia={selectedMedia}
           />
         ) : null}
-        <div className="min-w-0 flex-1">
-          <FieldComponent control={hook.control} {...formProps.fields[0]} />
+        <div className="grid min-w-0 flex-1 rounded-[18px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
+          <FieldComponent control={hook.control} {...composerContentField} />
+          {selectedMedia ? (
+            <ReplyMediaAttachmentControl
+              className="px-3.5 pb-3 pt-0"
+              composerMode="preview"
+              disabled={disabled}
+              fileInputRef={fileInputRef}
+              isUploading={disabled && Boolean(selectedMedia)}
+              mediaPermission={mediaPermission}
+              onAfterAction={() => setComposerActive(true)}
+              onMediaChange={handleMediaChange}
+              onOpenDialog={beginMediaPickerInteraction}
+              onRemoveSelected={clearSelectedMedia}
+              selectedMedia={selectedMedia}
+            />
+          ) : null}
         </div>
         <Button
           aria-label="Enviar resposta"
@@ -371,21 +462,14 @@ export const ReplyComposer = ({
         </Button>
       </div>
 
-      {selectedMedia ? (
-        <ReplyMediaAttachmentControl
-          className="pl-[3.25rem] pr-[3.25rem]"
-          composerMode="preview"
-          disabled={disabled}
-          fileInputRef={fileInputRef}
-          isUploading={disabled && Boolean(selectedMedia)}
-          mediaPermission={mediaPermission}
-          onAfterAction={() => setComposerActive(true)}
-          onMediaChange={handleMediaChange}
-          onOpenDialog={beginMediaPickerInteraction}
-          onRemoveSelected={clearSelectedMedia}
-          selectedMedia={selectedMedia}
-        />
-      ) : null}
+      <p
+        className={cn(
+          "text-[11px] font-medium leading-4 text-subtle",
+          shouldShowMediaControlInRow ? "px-[3.25rem]" : "pr-[3.25rem]",
+        )}
+      >
+        {COMMENT_GUIDANCE_MESSAGE}
+      </p>
 
       {visibleError ? (
         <InlineAlert title="Não foi possível responder" variant="error">

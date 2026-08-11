@@ -223,3 +223,33 @@ Consequencias:
 - A Lectum deixa de criar um vao proprio acima da toolbar nativa; o campo fica visualmente mais baixo e mais proximo do teclado.
 - A toolbar nativa do iOS pode continuar aparecendo por decisao do sistema operacional/browser, diferente do Reddit nativo.
 - Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+## Atualizacao 2026-08-11 - composer contextual com midia integrada e foco no teclado
+
+O feedback de produto consolidou o composer mobile como uma caixa de resposta mais proxima de apps nativos: a midia precisa parecer parte do texto que sera enviado, o contexto de resposta precisa ser explicito, o teclado deve fechar quando o usuario volta a rolar a thread e o toque em `Responder` precisa acionar foco imediato.
+
+Decisao complementar:
+
+- Manter o `textarea` React Hook Form/Zod como campo padrao, mas envolver textarea e preview de midia no mesmo contorno visual para comunicar uma unica resposta composta.
+- Deixar o botao circular de midia ativo somente enquanto nao existe anexo selecionado; depois da selecao, o fluxo exige remover a midia antes de escolher outra, evitando substituicao acidental.
+- Para videos selecionados localmente, gerar uma miniatura client-side em canvas para preview do composer, sem alterar o upload real nem depender de thumbnail remota antes do envio.
+- Reintroduzir o contexto textual acima do composer como `Respondendo a [Nome]`/`Respondendo ao post` e mover a frase de conduta para baixo da caixa com menor hierarquia visual.
+- Desfocar o textarea ao detectar scroll da pagina no mobile, preservando rascunho/midia e usando o fechamento nativo do teclado em vez de tentar manipular a toolbar do iOS.
+- Exibir um header fixo compacto apenas no mobile quando a direcao de scroll for para cima e a pagina ja estiver afastada do topo.
+- Ao responder comentario da arvore no mobile, focar o textarea de forma sincronica no gesto do usuario e repetir o foco apos a troca de alvo, aumentando a chance de o iOS/PWA abrir o teclado.
+- Nao alterar endpoint, payload, upload real, validacao backend, permissao profissional, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- O composer comunica melhor que texto e midia formam uma unica resposta, com menos ambiguidade de toque no controle de midia.
+- O teclado deve abrir com mais confiabilidade ao tocar em `Responder` na arvore, respeitando a exigencia de foco dentro do gesto do usuario em browsers mobile.
+- O header de retorno melhora navegacao em leitura profunda sem impactar desktop.
+- Rollback: reverter este commit; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento da rota; sem API/autenticacao local disponivel, a validacao visual autenticada final fica para smoke de homologacao apos push.

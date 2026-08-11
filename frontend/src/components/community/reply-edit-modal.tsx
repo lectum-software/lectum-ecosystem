@@ -9,6 +9,7 @@ import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
 import {
+  createReplyVideoThumbnail,
   detectReplyMediaOrientation,
   mediaTypeFromFile,
   ReplyMediaAttachmentControl,
@@ -187,6 +188,15 @@ export function ReplyEditModal({
         current?.previewUrl === previewUrl ? { ...current, orientation } : current,
       );
     });
+    if (type === "video") {
+      void createReplyVideoThumbnail(previewUrl).then((thumbnailUrl) => {
+        if (!thumbnailUrl) return;
+
+        setSelectedMedia((current) =>
+          current?.previewUrl === previewUrl ? { ...current, thumbnailUrl } : current,
+        );
+      });
+    }
     setRemoveMedia(false);
     setActionError(null);
     hook.clearErrors("content");
@@ -313,7 +323,11 @@ export function ReplyEditModal({
 
               {canManageMedia ? (
                 <ReplyMediaAttachmentControl
-                  currentMedia={{ mediaType: reply.media_type, mediaUrl: reply.media_url }}
+                  currentMedia={{
+                    mediaType: reply.media_type,
+                    mediaUrl: reply.media_url,
+                    thumbnailUrl: reply.thumbnail_url,
+                  }}
                   disabled={isSubmitting}
                   fileInputRef={fileInputRef}
                   isUploading={uploadMutation.isPending}

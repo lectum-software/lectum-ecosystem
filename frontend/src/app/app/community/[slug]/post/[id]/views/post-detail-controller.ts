@@ -323,6 +323,22 @@ export const usePostDetailController = () => {
     return true;
   }, [closeDesktopReplyTarget, desktopReplyTargets, isMobile]);
 
+  const focusComposerTextarea = useCallback(
+    ({ scrollDesktop = false }: { scrollDesktop?: boolean } = {}) => {
+      const composerNode = composerRef.current;
+      const inputNode = composerNode?.querySelector<HTMLTextAreaElement>("textarea");
+
+      if (!isMobile && scrollDesktop) {
+        composerNode?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      inputNode?.focus({ preventScroll: true });
+
+      return Boolean(inputNode);
+    },
+    [isMobile],
+  );
+
   const focusMainComposer = useCallback(() => {
     setReplyError(null);
     if (isPsychologistUser && isPatientAuthoredPost) {
@@ -343,20 +359,14 @@ export const usePostDetailController = () => {
     }
 
     setMobileReplyTarget(null);
+    focusComposerTextarea({ scrollDesktop: true });
 
     window.setTimeout(() => {
-      const composerNode = composerRef.current;
-      const inputNode = composerNode?.querySelector<HTMLTextAreaElement>("textarea");
-
-      if (!isMobile) {
-        composerNode?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-
-      inputNode?.focus({ preventScroll: true });
+      focusComposerTextarea({ scrollDesktop: true });
     }, 0);
   }, [
     conversion,
-    isMobile,
+    focusComposerTextarea,
     isPatientAuthoredPost,
     isPsychologistUser,
     persistPsychologistReplyTipSeen,
@@ -383,10 +393,10 @@ export const usePostDetailController = () => {
 
       if (isMobile) {
         setMobileReplyTarget(target);
+        focusComposerTextarea();
 
         window.setTimeout(() => {
-          const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
-          inputNode?.focus({ preventScroll: true });
+          focusComposerTextarea();
         }, 0);
 
         return;
@@ -406,7 +416,14 @@ export const usePostDetailController = () => {
       inlineReplyHasDraftRef.current = false;
       setDesktopReplyTargets({ [reply.id]: target });
     },
-    [conversion, desktopReplyTargets, isMobile, postId, requestCloseDesktopReplyTarget],
+    [
+      conversion,
+      desktopReplyTargets,
+      focusComposerTextarea,
+      isMobile,
+      postId,
+      requestCloseDesktopReplyTarget,
+    ],
   );
 
   const submitReply = async (

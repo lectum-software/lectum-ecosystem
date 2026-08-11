@@ -1359,3 +1359,35 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; a validacao visual autenticada em iOS real fica coberta pelo smoke de homologacao e pelo reteste no aparelho do usuario.
+
+## Complemento 2026-08-11 - composer contextual com midia integrada e foco imediato
+
+- Pedido do usuario: ajustar a barra de adicionar comentario para tratar anexo como parte da resposta, deixar o botao de midia claramente clicavel apenas quando nao ha anexo, exibir miniatura de video, trocar a copy superior por `Respondendo a [Nome]`, mover a orientacao de conduta para baixo da caixa, fechar teclado ao rolar, mostrar header compacto ao rolar para cima e focar automaticamente a caixa ao tocar em `Responder` na arvore.
+- Referencias visuais/auditaveis: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 14.00.27.jpeg`, comparativo anterior com Reddit `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.43.20.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o botao de midia no composer fica visualmente acionavel quando pode anexar e desabilita enquanto existe `selectedMedia`, reativando somente apos remover a midia anexada.
+- Frontend: a previa de midia selecionada foi movida para dentro do contorno visual do campo de resposta, abaixo do textarea, mantendo o icone de adicionar separado a esquerda do campo e preservando o X apenas para remover a midia.
+- Frontend: videos selecionados localmente passam a gerar uma miniatura em canvas para preview; videos ja persistidos usam `thumbnail_url` quando disponivel na edicao.
+- Frontend: a mensagem superior do composer passa a indicar o contexto `Respondendo a [Nome]` ou `Respondendo ao post`, enquanto `Comente com respeito e empatia, mesmo quando discordar.` fica abaixo da caixa com menor peso visual.
+- Frontend: ao rolar a pagina com o textarea focado no mobile, o composer desfoca o campo para fechar o teclado sem descartar texto/midia; ao rolar para cima no detalhe do post, um header fixo compacto com seta de voltar e titulo `Post` aparece.
+- Frontend: ao tocar em `Responder` em um comentario da arvore no mobile, o controller foca o textarea de forma sincronica no gesto do usuario e repete o foco apos a atualizacao do alvo para aumentar a confiabilidade de abertura do teclado no iOS/PWA.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Sem midia anexada, o botao de midia aparece como acao clicavel para usuarios com permissao; com midia anexada, ele fica desabilitado ate a midia ser removida.
+- [x] Videos selecionados para comentario exibem miniatura local no preview do composer.
+- [x] A midia selecionada aparece dentro da caixa visual do comentario, abaixo do textarea, mostrando que faz parte da resposta a enviar.
+- [x] O texto superior do composer mostra `Respondendo a [Nome]` ou `Respondendo ao post`, e a orientacao de conduta aparece abaixo com menor peso visual.
+- [x] Rolar a pagina com o textarea focado no mobile desfoca o campo para fechar o teclado sem apagar o rascunho.
+- [x] Rolar para cima dentro da pagina do post exibe header compacto com seta de voltar e titulo `Post`.
+- [x] Tocar em `Responder` em comentario da arvore no mobile foca automaticamente a caixa de comentario para abrir o teclado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento da rota; sem API/autenticacao local disponivel, a validacao visual autenticada final fica para smoke de homologacao apos push.

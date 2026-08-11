@@ -17,6 +17,7 @@ export type SelectedReplyMedia = {
   file: File;
   orientation?: ReplyMediaOrientation;
   previewUrl: string;
+  thumbnailUrl?: string | null;
   type: ReplyMediaType;
 };
 
@@ -27,6 +28,7 @@ type ReplyMediaPermissionLike = {
 
 type CurrentReplyMedia = {
   mediaType?: string | null;
+  thumbnailUrl?: string | null;
   mediaUrl?: string | null;
 };
 
@@ -96,6 +98,84 @@ export const detectReplyMediaOrientation = (
       video.load();
     };
     video.onerror = () => resolve("landscape");
+    video.src = previewUrl;
+    video.load();
+  });
+};
+
+export const createReplyVideoThumbnail = (previewUrl: string): Promise<string | null> => {
+  if (typeof document === "undefined" || typeof window === "undefined") {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    let isSettled = false;
+    let seekRequested = false;
+    const timeout = { id: undefined as number | undefined };
+
+    const finish = (thumbnailUrl: string | null) => {
+      if (isSettled) return;
+
+      isSettled = true;
+      if (timeout.id !== undefined) {
+        window.clearTimeout(timeout.id);
+      }
+      video.onloadeddata = null;
+      video.onloadedmetadata = null;
+      video.onseeked = null;
+      video.onerror = null;
+      video.removeAttribute("src");
+      video.load();
+      resolve(thumbnailUrl);
+    };
+
+    const captureFrame = () => {
+      if (!video.videoWidth || !video.videoHeight) {
+        finish(null);
+        return;
+      }
+
+      try {
+        const maxDimension = 480;
+        const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+        canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
+        finish(canvas.toDataURL("image/jpeg", 0.82));
+      } catch {
+        finish(null);
+      }
+    };
+
+    timeout.id = window.setTimeout(() => finish(null), 4000);
+
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.onloadeddata = () => {
+      if (!seekRequested) {
+        captureFrame();
+      }
+    };
+    video.onloadedmetadata = () => {
+      const targetTime = Number.isFinite(video.duration) && video.duration > 0.2 ? 0.1 : 0;
+
+      if (targetTime <= 0) {
+        return;
+      }
+
+      try {
+        seekRequested = true;
+        video.currentTime = targetTime;
+      } catch {
+        seekRequested = false;
+        captureFrame();
+      }
+    };
+    video.onseeked = captureFrame;
+    video.onerror = () => finish(null);
     video.src = previewUrl;
     video.load();
   });
@@ -192,6 +272,7 @@ export function ReplyMediaAttachmentControl({
         alt: "Miniatura da mídia selecionada",
         orientation: selectedMedia.orientation,
         src: selectedMedia.previewUrl,
+        thumbnailSrc: selectedMedia.thumbnailUrl ?? null,
         type: selectedMedia.type,
         unoptimized: true,
       }
@@ -200,15 +281,20 @@ export function ReplyMediaAttachmentControl({
           alt: currentType === "video" ? "Vídeo atual anexado" : "Imagem atual anexada",
           orientation: resolvedCurrentMediaOrientation,
           src: currentSrc,
+          thumbnailSrc: currentMedia?.thumbnailUrl
+            ? resolvePublicMediaUrl(currentMedia.thumbnailUrl)
+            : null,
           type: currentType,
-          unoptimized: isPublicMediaUrl(currentMedia?.mediaUrl),
+          unoptimized:
+            isPublicMediaUrl(currentMedia?.mediaUrl) ||
+            isPublicMediaUrl(currentMedia?.thumbnailUrl),
         }
       : null;
   const isEditor = variant === "editor";
   const editorPreview = editorPreviewClassNames(activeMedia?.orientation);
 
   const openFileDialog = () => {
-    if (!mediaPermission.canAttach || disabled) return;
+    if (!mediaPermission.canAttach || disabled || selectedMedia) return;
 
     onOpenDialog?.();
     fileInputRef.current?.click();
@@ -239,13 +325,13 @@ export function ReplyMediaAttachmentControl({
             className="relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-lectum-soft"
             role="img"
           >
-            {activeMedia.type === "image" ? (
+            {activeMedia.type === "image" || activeMedia.thumbnailSrc ? (
               <Image
                 alt={activeMedia.alt}
                 className="object-cover"
                 fill
                 sizes="136px"
-                src={activeMedia.src}
+                src={activeMedia.thumbnailSrc ?? activeMedia.src}
                 unoptimized={activeMedia.unoptimized}
               />
             ) : (
@@ -275,41 +361,47 @@ export function ReplyMediaAttachmentControl({
         </div>
       ) : null;
 
-    const renderComposerTrigger = () => (
-      <button
-        aria-label={
-          selectedMedia
-            ? "Substituir mídia anexada"
-            : mediaPermission.canAttach
-              ? "Anexar mídia"
-              : "Mídia indisponível"
-        }
-        className={cn(
-          "grid h-11 w-11 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15",
-          mediaPermission.canAttach
-            ? "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
-            : "cursor-not-allowed border-border bg-surface-muted text-subtle",
-        )}
-        disabled={!mediaPermission.canAttach || disabled}
-        onClick={openFileDialog}
-        onMouseDown={(event) => event.preventDefault()}
-        title={
-          mediaPermission.canAttach
-            ? selectedMedia
-              ? "Substituir mídia anexada"
-              : "Anexar mídia"
-            : mediaPermission.reason
-        }
-        type="button"
-      >
-        {isUploading ? (
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <AnimatedImagesIcon className="h-4 w-4" aria-hidden="true" />
-        )}
-        <span className="sr-only">Anexar mídia</span>
-      </button>
-    );
+    const renderComposerTrigger = () => {
+      const hasSelectedMedia = Boolean(selectedMedia);
+      const triggerDisabled = !mediaPermission.canAttach || disabled || hasSelectedMedia;
+
+      return (
+        <button
+          aria-label={
+            hasSelectedMedia
+              ? "Mídia já anexada"
+              : mediaPermission.canAttach
+                ? "Anexar mídia"
+                : "Mídia indisponível"
+          }
+          className={cn(
+            "grid h-11 w-11 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:active:scale-100",
+            !mediaPermission.canAttach || hasSelectedMedia
+              ? "cursor-not-allowed border-border bg-surface-muted text-subtle opacity-75"
+              : "border-primary/30 bg-primary-soft text-primary shadow-lectum-soft hover:border-primary/45 hover:bg-primary-soft/80",
+            disabled && "opacity-60",
+          )}
+          disabled={triggerDisabled}
+          onClick={openFileDialog}
+          onMouseDown={(event) => event.preventDefault()}
+          title={
+            hasSelectedMedia
+              ? "Remova a mídia anexada para escolher outra"
+              : mediaPermission.canAttach
+                ? "Anexar mídia"
+                : mediaPermission.reason
+          }
+          type="button"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <AnimatedImagesIcon className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span className="sr-only">Anexar mídia</span>
+        </button>
+      );
+    };
 
     return (
       <div className={cn("flex shrink-0 items-center text-xs text-muted", className)}>
@@ -341,13 +433,13 @@ export function ReplyMediaAttachmentControl({
           <div
             className={cn("relative w-full overflow-hidden bg-surface-muted", editorPreview.frame)}
           >
-            {activeMedia.type === "image" ? (
+            {activeMedia.type === "image" || activeMedia.thumbnailSrc ? (
               <Image
                 alt={activeMedia.alt}
                 className="object-cover"
                 fill
                 sizes={editorPreview.sizes}
-                src={activeMedia.src}
+                src={activeMedia.thumbnailSrc ?? activeMedia.src}
                 unoptimized={activeMedia.unoptimized}
               />
             ) : (
