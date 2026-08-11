@@ -121,6 +121,75 @@ export const createReplySchema: IValidatorRequest = {
   ],
 };
 
+export const replyMediaMultipartInitiateSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "fileName",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 255,
+      optional: true,
+    },
+    {
+      key: "mimeType",
+      coerse: "string",
+      method: "string",
+      min: 3,
+      max: 80,
+    },
+    {
+      key: "size",
+      coerse: "number",
+      method: "numeric",
+      int: true,
+      positive: true,
+      max: 200 * 1024 * 1024,
+    },
+  ],
+};
+
+export const replyMediaMultipartCompleteSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "uploadSessionId",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 4096,
+    },
+    {
+      key: "parts",
+      custom: z
+        .array(
+          z
+            .object({
+              partNumber: z.number().int().min(1).max(10_000),
+              partToken: z.string().min(1).max(4096),
+            })
+            .strict(),
+        )
+        .min(1)
+        .max(10_000),
+    },
+  ],
+};
+
+export const replyMediaMultipartAbortSchema: IValidatorRequest = {
+  params: idParams,
+  body: [
+    {
+      key: "uploadSessionId",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 4096,
+    },
+  ],
+};
+
 export const updatePostSchema: IValidatorRequest = {
   params: idParams,
   body: [
@@ -311,6 +380,9 @@ export const showValidator = validator(showSchema);
 export const repliesValidator = validator(repliesSchema);
 export const listValidator = validator(listSchema);
 export const createReplyValidator = validator(createReplySchema);
+export const replyMediaMultipartInitiateValidator = validator(replyMediaMultipartInitiateSchema);
+export const replyMediaMultipartCompleteValidator = validator(replyMediaMultipartCompleteSchema);
+export const replyMediaMultipartAbortValidator = validator(replyMediaMultipartAbortSchema);
 export const updatePostValidator = validator(updatePostSchema);
 export const updateReplyValidator = validator(updateReplySchema);
 export const voteValidator = validator(voteSchema);

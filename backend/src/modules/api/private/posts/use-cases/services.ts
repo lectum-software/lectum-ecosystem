@@ -11,6 +11,12 @@ export {
 } from "./services/media-actions";
 export { createReply, mine, replies, replyThread, saved, show } from "./services/queries-replies";
 export {
+  abortReplyMediaMultipartUpload,
+  completeReplyMediaMultipartUpload,
+  initiateReplyMediaMultipartUpload,
+  uploadReplyMediaMultipartPart,
+} from "./services/reply-media-multipart";
+export {
   deletePost,
   deleteReply,
   mute,

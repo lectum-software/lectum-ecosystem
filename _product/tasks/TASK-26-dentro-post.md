@@ -1505,3 +1505,36 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check` (primeira tentativa falhou por limite de tamanho do controller; o fluxo foi extraído para `reply-submit.ts` e a repetição passou)
 - [x] `git diff --check`
 - [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP da rota; sem API/autenticação local disponível, a validação autenticada final de envio real fica para smoke de homologação após push.
+## Complemento 2026-08-11 - upload multipart para videos grandes em respostas
+
+- Pedido do usuario: o mesmo video grande que antes excedia 50MB continuava falhando no envio da resposta, agora com erro generico de envio de midia.
+- Referencia visual/auditavel: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 17.25.01.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: o limite logico ja estava em 200MB, mas o fluxo antigo ainda enviava o arquivo inteiro em um unico request multipart ao backend e o storage bufferizava todo o arquivo antes de gravar no bucket. Videos grandes ficavam sujeitos a limite intermediario, timeout e pressao de memoria.
+- Backend: adicionado fluxo multipart aditivo para respostas com endpoints de iniciar, enviar parte, completar e abortar upload; cada parte e pequena e o resultado final continua `{ media_url, media_type }` com URL publica em `/public/files/posts/media/`.
+- Backend: tokens de sessao/partes sao opacos e criptografados com `JWT_SECRET_KEY`, evitando expor detalhes internos do provedor no contrato publico.
+- Frontend: arquivos acima de 40MB passam automaticamente pelo fluxo multipart; em 404/405, o cliente faz fallback para o upload simples para tolerar rollout com backend antigo.
+- Frontend: mensagens legadas que ainda mencionem 50MB passam a ser normalizadas para o limite vigente de 200MB, e erros crus de upload sao convertidos em copy de produto.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR criado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Midias grandes em respostas usam upload em partes, sem depender de um unico request acima de 50MB.
+- [x] O contrato final de midia da resposta permanece `{ media_url, media_type }` e a criacao da resposta continua inalterada.
+- [x] O fluxo preserva permissao profissional, limite de 200MB, tipos permitidos e URLs publicas ja aceitas pelo backend.
+- [x] Frontend novo tolera backend antigo com fallback para o upload simples.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend biome:check`
+- [x] `pnpm --dir backend typecheck`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

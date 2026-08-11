@@ -1,10 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  abortReplyMediaMultipartUpload as abortReplyMediaMultipartUploadService,
   authorizeReplyMediaUpload as authorizeReplyMediaUploadService,
+  completeReplyMediaMultipartUpload as completeReplyMediaMultipartUploadService,
   createReply as createReplyService,
   deletePost as deletePostService,
   deleteReply as deleteReplyService,
+  initiateReplyMediaMultipartUpload as initiateReplyMediaMultipartUploadService,
   mine as mineService,
   mute as muteService,
   replies as repliesService,
@@ -20,6 +23,7 @@ import {
   unsave as unsaveService,
   updatePost as updatePostService,
   updateReply as updateReplyService,
+  uploadReplyMediaMultipartPart as uploadReplyMediaMultipartPartService,
   uploadReplyMedia as uploadReplyMediaService,
   vote as voteService,
 } from "./services";
@@ -144,6 +148,57 @@ export const uploadReplyMedia = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_reply_media_upload", err);
+  }
+};
+
+export const initiateReplyMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await initiateReplyMediaMultipartUploadService(
+      req as unknown as Parameters<typeof initiateReplyMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_initiate", err);
+  }
+};
+
+export const uploadReplyMediaMultipartPart = async (req: Request, res: Response) => {
+  try {
+    const resolve = await uploadReplyMediaMultipartPartService({
+      auth: req.auth,
+      b: req.body as Parameters<typeof uploadReplyMediaMultipartPartService>[0]["b"],
+      file: req.file,
+      p: req.params as unknown as Parameters<typeof uploadReplyMediaMultipartPartService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_part", err);
+  }
+};
+
+export const completeReplyMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await completeReplyMediaMultipartUploadService(
+      req as unknown as Parameters<typeof completeReplyMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_complete", err);
+  }
+};
+
+export const abortReplyMediaMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await abortReplyMediaMultipartUploadService(
+      req as unknown as Parameters<typeof abortReplyMediaMultipartUploadService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_reply_media_multipart_abort", err);
   }
 };
 

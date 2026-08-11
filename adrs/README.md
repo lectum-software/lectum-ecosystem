@@ -482,3 +482,4 @@ Formato recomendado:
 - [ADR-0449 — Instalar aplicativo no perfil](0449-instalar-aplicativo-perfil.md)
 - [ADR-0450 — Permissão nativa direta de notificações](0450-permissao-nativa-direta-notificacoes.md)
 - [ADR-0451 — Digests temporais para push de notificacoes](0451-digests-temporais-push-notificacoes.md)
+- [ADR-0452 — Upload multipart para midia grande em respostas](0452-upload-multipart-midia-respostas.md)

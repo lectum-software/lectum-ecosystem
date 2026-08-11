@@ -1,11 +1,16 @@
-import { Router } from "express";
-import multer from "@/config/multer";
+import { type NextFunction, type Request, type Response, Router } from "express";
+import multerPackage from "multer";
+import publicMulter from "@/config/multer";
+import { resolve } from "@/helpers/translate/resolve";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import {
+  abortReplyMediaMultipartUpload,
   authorizeReplyMediaUpload,
+  completeReplyMediaMultipartUpload,
   createReply,
   deletePost,
   deleteReply,
+  initiateReplyMediaMultipartUpload,
   mine,
   mute,
   replies,
@@ -22,12 +27,17 @@ import {
   updatePost,
   updateReply,
   uploadReplyMedia,
+  uploadReplyMediaMultipartPart,
   vote,
 } from "./use-cases/controller";
+import { POST_REPLY_MEDIA_MULTIPART_CHUNK_LIMIT_MB } from "./use-cases/services/reply-media-multipart";
 import {
   createReplyValidator,
   listValidator,
   repliesValidator,
+  replyMediaMultipartAbortValidator,
+  replyMediaMultipartCompleteValidator,
+  replyMediaMultipartInitiateValidator,
   replyReportValidator,
   replySaveValidator,
   replyShareValidator,
@@ -43,6 +53,41 @@ import {
 const routes = Router();
 
 const POST_REPLY_MEDIA_UPLOAD_LIMIT_MB = 200;
+const replyMediaMultipartChunkUpload = multerPackage({
+  limits: {
+    fieldNameSize: 100,
+    fieldSize: 4096,
+    fields: 2,
+    files: 1,
+    fileSize: POST_REPLY_MEDIA_MULTIPART_CHUNK_LIMIT_MB * 1024 * 1024,
+    parts: 3,
+  },
+  storage: multerPackage.memoryStorage(),
+}).single("chunk");
+
+const replyMediaMultipartChunkMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  replyMediaMultipartChunkUpload(req, res, (err: unknown) => {
+    if (err instanceof multerPackage.MulterError) {
+      return res.status(400).json({
+        code: "upload_error",
+        status: 400,
+        success: false,
+        error: resolve("error.upload_error"),
+      });
+    }
+
+    if (err) {
+      return res.status(400).json({
+        code: "upload_error",
+        status: 400,
+        success: false,
+        error: resolve("error.upload_error"),
+      });
+    }
+
+    return next();
+  });
+};
 
 routes.get("/mine", privateAuth, listValidator, mine);
 routes.get("/saved", privateAuth, listValidator, saved);
@@ -53,7 +98,7 @@ routes.post(
   privateAuth,
   showValidator,
   authorizeReplyMediaUpload,
-  multer({
+  publicMulter({
     single: "media",
     allowed: [
       "image/jpeg",
@@ -66,6 +111,31 @@ routes.post(
     size: POST_REPLY_MEDIA_UPLOAD_LIMIT_MB,
   }),
   uploadReplyMedia,
+);
+routes.post(
+  "/:id/replies/media/multipart/initiate",
+  privateAuth,
+  replyMediaMultipartInitiateValidator,
+  initiateReplyMediaMultipartUpload,
+);
+routes.post(
+  "/:id/replies/media/multipart/part",
+  privateAuth,
+  showValidator,
+  replyMediaMultipartChunkMiddleware,
+  uploadReplyMediaMultipartPart,
+);
+routes.post(
+  "/:id/replies/media/multipart/complete",
+  privateAuth,
+  replyMediaMultipartCompleteValidator,
+  completeReplyMediaMultipartUpload,
+);
+routes.delete(
+  "/:id/replies/media/multipart",
+  privateAuth,
+  replyMediaMultipartAbortValidator,
+  abortReplyMediaMultipartUpload,
 );
 routes.post("/:id/replies", privateAuth, createReplyValidator, createReply);
 routes.post("/:id/replies/:replyId/save", privateAuth, replySaveValidator, saveReply);

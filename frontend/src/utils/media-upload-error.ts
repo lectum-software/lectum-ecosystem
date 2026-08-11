@@ -16,7 +16,7 @@ export const resolveMediaUploadError = (error: unknown) => {
   const normalized = message.toLowerCase();
 
   if (normalized.includes("50mb") || normalized.includes("50 mb")) {
-    return "A mídia precisa ter até 50MB.";
+    return COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE;
   }
 
   if (
@@ -29,6 +29,10 @@ export const resolveMediaUploadError = (error: unknown) => {
 
   if (normalized.includes("tipo") || normalized.includes("permit")) {
     return "Envie uma imagem ou vídeo em formato permitido.";
+  }
+
+  if (normalized.includes("upload") || normalized.includes("arquivo agora")) {
+    return "Não foi possível anexar a mídia agora. Tente novamente.";
   }
 
   if (normalized.includes("plano") || normalized.includes("verific")) {

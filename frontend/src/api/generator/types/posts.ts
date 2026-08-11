@@ -174,6 +174,31 @@ export type PostReplyMediaUploadResponse = {
   media_type: "image" | "video";
 };
 
+export type PostReplyMediaMultipartInitiatePayload = {
+  fileName: string;
+  mimeType: string;
+  size: number;
+};
+
+export type PostReplyMediaMultipartInitiateResponse = {
+  chunk_size: number;
+  max_file_size: number;
+  upload_session_id: string;
+};
+
+export type PostReplyMediaMultipartPartResponse = {
+  part_number: number;
+  part_token: string;
+};
+
+export type PostReplyMediaMultipartCompletePayload = {
+  parts: Array<{
+    partNumber: number;
+    partToken: string;
+  }>;
+  uploadSessionId: string;
+};
+
 export type PostReportReason = "spam" | "abuse" | "self_harm" | "privacy" | "other";
 
 export type PostReportPayload = {
