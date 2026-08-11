@@ -306,3 +306,31 @@ Validacao adicional:
 - `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
 - `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local pode depender de autenticacao/dados de homologacao para validacao visual final.
+
+## Atualizacao 2026-08-11 - limite de 200MB para midia em respostas
+
+O limite anterior de 50MB para `POST /api/private/posts/:id/replies/media` estava bloqueando videos de respostas/comentarios em uso real no mobile. A decisao e aumentar o limite de produto desse upload para 200MB, preservando o mesmo entitlement profissional e o mesmo storage publico R2.
+
+Decisao complementar:
+
+- Alterar o limite do middleware `multer` do upload de midia de respostas para 200MB.
+- Validar no frontend, antes de iniciar upload, arquivos acima de 200MB no composer e na edicao de respostas.
+- Manter os tipos permitidos atuais: JPEG, PNG, WebP, MP4, WebM e QuickTime/MOV.
+- Manter compatibilidade de rollout: se uma versao antiga do backend ainda responder com mensagem de 50MB durante deploy, o frontend preserva essa informacao em vez de anunciar 200MB incorretamente.
+- Nao alterar payload, persistencia, permissao profissional, buckets, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- Videos de respostas ate 200MB passam a ser aceitos pelo backend quando a permissao profissional ja existir.
+- O storage atual ainda valida assinatura a partir do buffer antes de enviar ao R2; portanto arquivos maiores aumentam uso de memoria/tempo de upload, mitigado pela concorrencia/fila de upload ja existentes.
+- Rollback: reverter este commit retorna o limite para 50MB e remove a validacao local de 200MB.
+
+Validacao adicional:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; validacao autenticada final fica para smoke de homologacao apos push.

@@ -21,7 +21,11 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
-import { resolveMediaUploadError } from "@/utils/media-upload-error";
+import {
+  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
+  isCommunityMediaFileTooLarge,
+  resolveMediaUploadError,
+} from "@/utils/media-upload-error";
 import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
@@ -254,6 +258,12 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
 
     if (!canManageMedia) {
       toast.error(mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.");
+      focusLastEditor();
+      return;
+    }
+
+    if (files.some(isCommunityMediaFileTooLarge)) {
+      toast.error(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
       focusLastEditor();
       return;
     }

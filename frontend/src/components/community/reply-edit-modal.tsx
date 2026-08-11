@@ -23,7 +23,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
-import { resolveMediaUploadError } from "@/utils/media-upload-error";
+import {
+  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
+  isCommunityMediaFileTooLarge,
+  resolveMediaUploadError,
+} from "@/utils/media-upload-error";
 import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
@@ -169,6 +173,12 @@ export function ReplyEditModal({
       setActionError(
         mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.",
       );
+      focusEditor();
+      return;
+    }
+
+    if (isCommunityMediaFileTooLarge(file)) {
+      setActionError(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
       focusEditor();
       return;
     }

@@ -1445,3 +1445,31 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
 - [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; a API local pode depender de autenticacao/dados de homologacao para validacao visual final.
+
+## Complemento 2026-08-11 - limite de 200MB para midia em respostas
+
+- Pedido do usuario: aumentar de 50MB para 200MB o limite de videos/midia anexados nas respostas/comentarios, apos erro real exibido no composer mobile.
+- Referencia visual/auditavel: screenshot do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 16.09.34.jpeg`, alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Backend: `POST /api/private/posts/:id/replies/media` passa a usar limite de `200MB` no middleware real de upload (`multer` + R2 publico), mantendo os mesmos tipos permitidos: JPEG, PNG, WebP, MP4, WebM e QuickTime/MOV.
+- Frontend: o composer de respostas valida o tamanho do arquivo ja na selecao e mostra a mensagem de produto `A midia precisa ter ate 200MB.`, evitando tentar upload de arquivos acima do novo limite.
+- Frontend: a edicao de respostas usa a mesma validacao local de 200MB e preserva a compatibilidade de rollout para mensagens antigas de backend quando alguma versao ainda informar 50MB.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, buckets, endpoints, payloads, permissao de midia, votos, salvos, denuncias ou tracking.
+- Impacto de deploy: aumento de limite no backend pode elevar consumo de memoria/tempo de upload porque o storage atual valida assinatura a partir do buffer antes de enviar ao R2; `UPLOAD_MAX_CONCURRENCY` e fila existentes continuam limitando concorrencia. Rollback: reverter este commit volta o limite para 50MB.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Upload de midia em respostas/comentarios aceita arquivos de ate 200MB no backend.
+- [x] Composer e edicao de resposta bloqueiam localmente arquivos acima de 200MB com mensagem clara em PT-BR.
+- [x] Tipos permitidos, permissao profissional e upload real em R2 permanecem inalterados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; validacao autenticada final fica para smoke de homologacao apos push.

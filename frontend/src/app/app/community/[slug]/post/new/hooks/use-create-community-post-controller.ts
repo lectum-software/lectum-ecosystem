@@ -19,7 +19,11 @@ import {
 import { useAppSelector } from "@/hooks/redux";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
-import { resolveMediaUploadError } from "@/utils/media-upload-error";
+import {
+  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
+  isCommunityMediaFileTooLarge,
+  resolveMediaUploadError,
+} from "@/utils/media-upload-error";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
   createVideoThumbnailFile,
@@ -291,6 +295,12 @@ export const useCreateCommunityPostController = ({
 
     if (!mediaPermission.canAttach) {
       toast.error(mediaPermission.reason || "Mídia disponível apenas para psicólogos verificados.");
+      focusLastEditor();
+      return;
+    }
+
+    if (files.some(isCommunityMediaFileTooLarge)) {
+      toast.error(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
       focusLastEditor();
       return;
     }

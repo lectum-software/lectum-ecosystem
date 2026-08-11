@@ -27,6 +27,8 @@ import {
 
 const routes = Router();
 
+const COMMUNITY_POST_MEDIA_UPLOAD_LIMIT_MB = 200;
+
 routes.get("", indexValidator, index);
 routes.get("/feed/posts", feedValidator, feed);
 routes.get("/top-mentors", topMentorsValidator, topMentors);
@@ -49,7 +51,7 @@ routes.post(
       "video/webm",
       "video/quicktime",
     ],
-    size: 50,
+    size: COMMUNITY_POST_MEDIA_UPLOAD_LIMIT_MB,
   }),
   uploadPostMedia,
 );

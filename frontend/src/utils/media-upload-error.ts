@@ -1,5 +1,12 @@
 import { getSafeApiErrorMessage } from "@/api/errors";
 
+export const COMMUNITY_MEDIA_UPLOAD_LIMIT_MB = 200;
+export const COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES = COMMUNITY_MEDIA_UPLOAD_LIMIT_MB * 1024 * 1024;
+export const COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE = `A mídia precisa ter até ${COMMUNITY_MEDIA_UPLOAD_LIMIT_MB}MB.`;
+
+export const isCommunityMediaFileTooLarge = (file: File) =>
+  file.size > COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES;
+
 export const resolveMediaUploadError = (error: unknown) => {
   const message = getSafeApiErrorMessage(
     error,
@@ -7,12 +14,16 @@ export const resolveMediaUploadError = (error: unknown) => {
   );
   const normalized = message.toLowerCase();
 
+  if (normalized.includes("50mb") || normalized.includes("50 mb")) {
+    return "A mídia precisa ter até 50MB.";
+  }
+
   if (
     normalized.includes("tamanho") ||
     normalized.includes("limite") ||
-    normalized.includes("50")
+    normalized.includes(`${COMMUNITY_MEDIA_UPLOAD_LIMIT_MB}`)
   ) {
-    return "A mídia precisa ter até 50MB.";
+    return COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE;
   }
 
   if (normalized.includes("tipo") || normalized.includes("permit")) {

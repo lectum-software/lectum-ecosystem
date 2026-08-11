@@ -26,6 +26,10 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
+  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
+  isCommunityMediaFileTooLarge,
+} from "@/utils/media-upload-error";
+import {
   COMMENT_GUIDANCE_MESSAGE,
   confirmDiscardReplyDraft,
   POST_DETAIL_MOBILE_QUERY,
@@ -88,9 +92,10 @@ export const ReplyComposer = ({
   } | null>(null);
   const visibleError = useMemo(() => {
     if (apiError) return apiError;
-    if (!hook.formState.isSubmitted) return null;
+    const firstError = Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
+    if (!hook.formState.isSubmitted && !firstError) return null;
 
-    return Object.values(hook.formState.errors)[0]?.message?.toString() ?? null;
+    return firstError;
   }, [apiError, hook.formState.errors, hook.formState.isSubmitted]);
   const content = hook.watch("content");
   const draft = String(content ?? "").trim();
@@ -328,6 +333,16 @@ export const ReplyComposer = ({
 
     if (!file || !mediaPermission.canAttach) {
       endMediaPickerInteraction();
+      return;
+    }
+
+    if (isCommunityMediaFileTooLarge(file)) {
+      hook.setError("content", {
+        message: COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
+        type: "manual",
+      });
+      endMediaPickerInteraction();
+      focusComposerInput();
       return;
     }
 

@@ -516,3 +516,29 @@ Validação complementar 2026-08-10:
   `0.1.20`, clique autenticado mantendo a URL em `/app/comunidades/feed`, sem `Carregando página`, 1
   `dialog` com título `Criar Post`, `transitionDuration=0.3s` e alternância da sheet de
   `translate-y-full` para `translate-y-0`.
+
+## Atualizacao 2026-08-11 - limite de 200MB para midia em posts de comunidade
+
+Para manter consistencia com o novo limite de midia em respostas, o upload real de midia de posts raiz tambem passa de 50MB para 200MB. Isso evita que um psicologo consiga publicar um video de resposta maior, mas seja bloqueado ao publicar ou editar um post de comunidade com o mesmo tipo de midia.
+
+Decisao complementar:
+
+- Alterar o limite do middleware `multer` de `POST /api/private/community/:slug/posts/media` para 200MB.
+- Validar no frontend, antes de iniciar upload, arquivos acima de 200MB na criacao e edicao de posts.
+- Manter os tipos permitidos atuais: JPEG, PNG, WebP, MP4, WebM e QuickTime/MOV.
+- Nao alterar payload, persistencia, carrossel, permissao profissional, buckets, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- Videos e imagens de posts de comunidade ate 200MB passam a ser aceitos pelo backend quando a permissao profissional ja existir.
+- O storage atual ainda valida assinatura a partir do buffer antes de enviar ao R2; portanto arquivos maiores aumentam uso de memoria/tempo de upload, mitigado pela concorrencia/fila de upload ja existentes.
+- Rollback: reverter este commit retorna o limite para 50MB e remove a validacao local de 200MB.
+
+Validacao adicional:
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `git diff --check`

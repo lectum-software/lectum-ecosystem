@@ -423,3 +423,28 @@ Validacoes finais deste complemento:
 - Fonte visual auditável: screenshot do PWA enviado pelo usuário em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-10 at 10.05.22.jpeg` e protótipos `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`_product/proto/Criar Nova Postagem - Psicólogo.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
 - ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
 - Validações executadas: `pnpm check:version`, `pnpm check:cycles`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `git diff --check` nos arquivos do ajuste e Chrome/CDP mobile em `http://127.0.0.1:3138/app/comunidades/feed`, confirmando frontend `0.1.20`, clique autenticado mantendo a URL em `/app/comunidades/feed`, sem `Carregando página`, 1 `dialog` com título `Criar Post`, `transitionDuration=0.3s` e sheet alternando de `translate-y-full` para `translate-y-0`.
+
+## Complemento 2026-08-11 - limite de 200MB para midia em posts de comunidade
+
+- Pedido relacionado: ao elevar o limite de videos/midia nas respostas de comunidade para 200MB, o upload de midia de posts raiz tambem foi alinhado para evitar divergencia entre criar post, editar post e responder com video.
+- Backend: `POST /api/private/community/:slug/posts/media` passa a usar limite de `200MB` no middleware real de upload (`multer` + R2 publico), mantendo os mesmos tipos permitidos: JPEG, PNG, WebP, MP4, WebM e QuickTime/MOV.
+- Frontend: criacao e edicao de posts validam localmente arquivos acima de 200MB antes do upload e mostram a mensagem de produto `A midia precisa ter ate 200MB.`.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, buckets, endpoints, payloads, anonimato, permissao de midia, carrossel, votos ou tracking.
+- Impacto de deploy: aumento de limite no backend pode elevar consumo de memoria/tempo de upload porque o storage atual valida assinatura a partir do buffer antes de enviar ao R2; `UPLOAD_MAX_CONCURRENCY` e fila existentes continuam limitando concorrencia. Rollback: reverter este commit volta o limite para 50MB.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Upload de midia em posts de comunidade aceita arquivos de ate 200MB no backend.
+- [x] Criacao e edicao de posts bloqueiam localmente arquivos acima de 200MB com mensagem clara em PT-BR.
+- [x] Tipos permitidos, permissao profissional, carrossel de imagens e upload real em R2 permanecem inalterados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`

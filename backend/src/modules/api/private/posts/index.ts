@@ -42,6 +42,8 @@ import {
 
 const routes = Router();
 
+const POST_REPLY_MEDIA_UPLOAD_LIMIT_MB = 200;
+
 routes.get("/mine", privateAuth, listValidator, mine);
 routes.get("/saved", privateAuth, listValidator, saved);
 routes.get("/:id/replies", repliesValidator, replies);
@@ -61,7 +63,7 @@ routes.post(
       "video/webm",
       "video/quicktime",
     ],
-    size: 50,
+    size: POST_REPLY_MEDIA_UPLOAD_LIMIT_MB,
   }),
   uploadReplyMedia,
 );
