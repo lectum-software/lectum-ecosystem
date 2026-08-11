@@ -98,7 +98,11 @@ export const getSafeApiErrorMessage = (error: unknown, fallback = DEFAULT_MESSAG
   }
   if (status && status >= 500) return statusFallback(status, fallback);
 
-  const candidates = [payload?.error, payload?.message];
+  const candidates = [
+    payload?.error,
+    payload?.message,
+    error instanceof Error ? error.message : undefined,
+  ];
 
   for (const candidate of candidates) {
     const normalized = normalizeCandidate(candidate);

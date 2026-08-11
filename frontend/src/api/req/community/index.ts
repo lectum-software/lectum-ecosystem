@@ -17,6 +17,7 @@ import type {
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import { handleReq } from "@/api/handle";
+import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 
 export const getCommunities = async (query: CommunityListQuery = {}) => {
   const handle = callEndpoint({
@@ -118,6 +119,7 @@ export const uploadCommunityPostMedia = async (slug: string, file: File) => {
     method: "POST",
     params: { slug },
     body,
+    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
   });
 
   return handleReq<CommunityPostMediaUploadResponse>({

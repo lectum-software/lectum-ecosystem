@@ -334,3 +334,31 @@ Validacao adicional:
 - `pnpm check`
 - `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; validacao autenticada final fica para smoke de homologacao apos push.
+
+## Atualizacao 2026-08-11 - erro por etapa e thumbnail best-effort no envio de respostas
+
+O reteste em homologação após elevar o limite para 200MB mostrou que o composer ainda podia exibir apenas a mensagem genérica `Não foi possível publicar sua resposta agora.` quando a resposta com mídia falhava. O fluxo real possuía etapas diferentes com riscos distintos: upload do arquivo principal, geração/upload da miniatura de vídeo e criação da resposta.
+
+Decisão complementar:
+
+- Diferenciar mensagens de erro por etapa no frontend: falhas no upload principal informam que a mídia não foi enviada; falhas na mutation de criação informam que a resposta não foi publicada.
+- Preservar mensagens públicas seguras vindas do backend, incluindo limite de arquivo, permissão profissional e moderação, sem expor status técnico, stack, storage ou provider.
+- Considerar thumbnail de vídeo como melhoria visual best-effort: se a geração local ou o upload da thumbnail falhar, publicar a resposta com o vídeo principal e omitir `thumbnailUrl`.
+- Aumentar o timeout client-side dos uploads de mídia de comunidades/respostas para 600s, alinhado ao limite de 200MB e a redes móveis mais lentas.
+- Extrair o fluxo compartilhado de submit com mídia para `modules/reply-submit.ts`, mantendo controllers de detalhe/thread dentro do limite arquitetural de tamanho.
+- Não alterar contrato, endpoint, payload, validação backend, permissão profissional, storage, Prisma, migrations, envs ou packages.
+
+Consequências:
+
+- O usuário recebe orientação mais útil quando a falha está no upload da mídia, em vez de sempre parecer erro da publicação da resposta.
+- Vídeos não deixam de ser publicados apenas porque a thumbnail falhou; o card pode usar fallback visual do player quando `thumbnailUrl` não existir.
+- O timeout maior reduz falsos negativos no frontend para arquivos grandes, mas não elimina possíveis limites de infraestrutura; se o provedor interromper a requisição, a UI ainda mostra mensagem segura por etapa.
+- Rollback: reverter este commit retorna ao fluxo inline anterior, ao timeout padrão de `FormData` e ao abortamento do envio quando a thumbnail falha.
+
+Validação adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check` (primeira tentativa falhou por limite de tamanho do controller; resolvido com extração para `reply-submit.ts` e repetido com sucesso)
+- `git diff --check`
+- Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP da rota; validação autenticada final fica para smoke de homologação após push.

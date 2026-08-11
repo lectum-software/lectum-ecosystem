@@ -1,9 +1,13 @@
 import { type MouseEventHandler, useCallback, useEffect, useRef, useState } from "react";
-import { getSafeApiErrorMessage } from "@/api/errors";
+import { getApiErrorStatus, getSafeApiErrorMessage } from "@/api/errors";
 import type { PostReply } from "@/api/generator/types/posts";
 import { useAppSelector } from "@/hooks/redux";
 import { formatCommunityRelativeTime as formatRelativeTime } from "@/utils/community-display";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import {
+  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
+  resolveMediaUploadError,
+} from "@/utils/media-upload-error";
 
 export const REPLIES_LIMIT = 8;
 
@@ -66,6 +70,12 @@ export type ReplyMediaPermission = {
 };
 
 export const COMMENT_GUIDANCE_MESSAGE = "Comente com respeito e empatia, mesmo quando discordar.";
+
+export const REPLY_MEDIA_UPLOAD_ERROR_MESSAGE =
+  "Não foi possível enviar a mídia. Verifique sua conexão e tente novamente.";
+
+export const REPLY_PUBLISH_ERROR_MESSAGE =
+  "Não foi possível publicar sua resposta agora. Verifique sua conexão e tente novamente.";
 
 export const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 
@@ -210,6 +220,43 @@ export const resolveReplyError = (error: unknown) => {
   }
 
   return rawMessage || "Não foi possível publicar sua resposta agora.";
+};
+
+export const resolveReplyMediaUploadError = (error: unknown) => {
+  const status = getApiErrorStatus(error);
+  const message = resolveMediaUploadError(error);
+  const normalized = message.toLowerCase();
+
+  if (status === 413) return COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE;
+
+  if (
+    normalized.includes("conectar") ||
+    normalized.includes("conex") ||
+    normalized.includes("demor") ||
+    normalized.includes("temporariamente")
+  ) {
+    return REPLY_MEDIA_UPLOAD_ERROR_MESSAGE;
+  }
+
+  return message || REPLY_MEDIA_UPLOAD_ERROR_MESSAGE;
+};
+
+export const resolveReplyPublishError = (error: unknown) => {
+  const status = getApiErrorStatus(error);
+  const message = resolveReplyError(error);
+  const normalized = message.toLowerCase();
+
+  if (
+    status === 408 ||
+    normalized.includes("conectar") ||
+    normalized.includes("conex") ||
+    normalized.includes("demor") ||
+    normalized.includes("temporariamente")
+  ) {
+    return REPLY_PUBLISH_ERROR_MESSAGE;
+  }
+
+  return message || REPLY_PUBLISH_ERROR_MESSAGE;
 };
 
 export const isVerifiedProfessionalReply = (reply: PostReply) =>

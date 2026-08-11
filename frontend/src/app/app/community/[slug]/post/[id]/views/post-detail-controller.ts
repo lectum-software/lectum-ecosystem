@@ -29,10 +29,8 @@ import {
   type LectumShareVideoTarget,
   normalizeLectumShareProfessionalRole,
 } from "@/utils/lectum-share-target";
-import {
-  createVideoThumbnailFile,
-  type LectumVideoThumbnailFrameOptions,
-} from "@/utils/video-thumbnail";
+import type { LectumVideoThumbnailFrameOptions } from "@/utils/video-thumbnail";
+import { submitReplyWithOptionalMedia } from "../modules/reply-submit";
 import {
   confirmDiscardReplyDraft,
   createReplyPageRange,
@@ -46,11 +44,12 @@ import {
   type ReportTarget,
   resolvePostError,
   resolveReplyError,
+  resolveReplyPublishError,
   useIsPostDetailMobile,
   useReplyFocusHighlight,
   useReplyMediaPermission,
 } from "../modules/reply-support";
-import { type ReplyComposerForm, toCreatePostReplyPayload } from "../use-form";
+import type { ReplyComposerForm } from "../use-form";
 
 export const usePostDetailController = () => {
   const router = useRouter();
@@ -102,11 +101,9 @@ export const usePostDetailController = () => {
   const trackLectumShare = useLectumShareTracking(shareVideoTarget);
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
-    onError: (error) => setReplyError(resolveReplyError(error)),
+    onError: (error) => setReplyError(resolveReplyPublishError(error)),
   });
-  const uploadReplyMediaMutation = useUploadPostReplyMedia({
-    onError: (error) => setReplyError(resolveReplyError(error)),
-  });
+  const uploadReplyMediaMutation = useUploadPostReplyMedia();
   const reportMutation = useReportPost({
     onSuccess: () => {
       setReportError(null);
@@ -445,13 +442,6 @@ export const usePostDetailController = () => {
       return;
     }
 
-    setReplyError(null);
-    const media = mediaFile
-      ? await uploadReplyMediaMutation.mutateAsync({
-          file: mediaFile,
-          id: post.id,
-        })
-      : null;
     const parentReply = parentReplyId ? findPostReplyInTree(replies, parentReplyId) : null;
     const thumbnailFrame =
       mediaFile && currentUser?.role === "psicologo"
@@ -469,34 +459,15 @@ export const usePostDetailController = () => {
             sourceText: parentReply?.content ?? post.title,
           } satisfies LectumVideoThumbnailFrameOptions)
         : null;
-    const thumbnailFile =
-      mediaFile && media?.media_type === "video"
-        ? await createVideoThumbnailFile(mediaFile, {
-            lectumShareFrame: thumbnailFrame,
-          })
-        : null;
-    const thumbnail = thumbnailFile
-      ? await uploadReplyMediaMutation.mutateAsync({
-          file: thumbnailFile,
-          id: post.id,
-        })
-      : null;
-
-    const createdReply = await createReplyMutation.mutateAsync({
-      id: post.id,
-      body: toCreatePostReplyPayload(
-        values,
-        parentReplyId,
-        media
-          ? {
-              mediaType: media.media_type,
-              mediaUrl: media.media_url,
-              ...(media.media_type === "video" && thumbnail
-                ? { thumbnailUrl: thumbnail.media_url }
-                : {}),
-            }
-          : null,
-      ),
+    const createdReply = await submitReplyWithOptionalMedia({
+      createReply: createReplyMutation.mutateAsync,
+      mediaFile,
+      parentReplyId,
+      postId: post.id,
+      setReplyError,
+      thumbnailFrame,
+      uploadReplyMedia: uploadReplyMediaMutation.mutateAsync,
+      values,
     });
 
     resetReplyFocusHighlight();

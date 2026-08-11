@@ -34,13 +34,11 @@ import {
   normalizeLectumShareProfessionalRole,
 } from "@/utils/lectum-share-target";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
-import {
-  createVideoThumbnailFile,
-  type LectumVideoThumbnailFrameOptions,
-} from "@/utils/video-thumbnail";
+import type { LectumVideoThumbnailFrameOptions } from "@/utils/video-thumbnail";
 import { ThreadOriginalPostCard } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
 import { PostReportModal, ReplyComposer } from "../components/reply-composer";
+import { submitReplyWithOptionalMedia } from "../modules/reply-submit";
 import {
   confirmDiscardReplyDraft,
   EMPTY_REPLY_TARGETS,
@@ -50,11 +48,12 @@ import {
   type ReportTarget,
   resolvePostError,
   resolveReplyError,
+  resolveReplyPublishError,
   useIsPostDetailMobile,
   useReplyFocusHighlight,
   useReplyMediaPermission,
 } from "../modules/reply-support";
-import { type ReplyComposerForm, toCreatePostReplyPayload, toPostReportPayload } from "../use-form";
+import { type ReplyComposerForm, toPostReportPayload } from "../use-form";
 
 export const PostReplyThreadLogic = () => {
   const router = useRouter();
@@ -85,11 +84,9 @@ export const PostReplyThreadLogic = () => {
   const trackLectumShare = useLectumShareTracking(shareVideoTarget);
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
-    onError: (error) => setReplyError(resolveReplyError(error)),
+    onError: (error) => setReplyError(resolveReplyPublishError(error)),
   });
-  const uploadReplyMediaMutation = useUploadPostReplyMedia({
-    onError: (error) => setReplyError(resolveReplyError(error)),
-  });
+  const uploadReplyMediaMutation = useUploadPostReplyMedia();
   const reportReplyMutation = useReportReply({
     onSuccess: () => {
       setReportError(null);
@@ -230,13 +227,6 @@ export const PostReplyThreadLogic = () => {
       return;
     }
 
-    setReplyError(null);
-    const media = mediaFile
-      ? await uploadReplyMediaMutation.mutateAsync({
-          file: mediaFile,
-          id: post.id,
-        })
-      : null;
     const parentReply = findPostReplyInTree([rootReply], parentReplyId ?? rootReply.id);
     const thumbnailFrame =
       mediaFile && currentUser?.role === "psicologo"
@@ -254,34 +244,15 @@ export const PostReplyThreadLogic = () => {
             sourceText: parentReply?.content ?? post.title,
           } satisfies LectumVideoThumbnailFrameOptions)
         : null;
-    const thumbnailFile =
-      mediaFile && media?.media_type === "video"
-        ? await createVideoThumbnailFile(mediaFile, {
-            lectumShareFrame: thumbnailFrame,
-          })
-        : null;
-    const thumbnail = thumbnailFile
-      ? await uploadReplyMediaMutation.mutateAsync({
-          file: thumbnailFile,
-          id: post.id,
-        })
-      : null;
-
-    const createdReply = await createReplyMutation.mutateAsync({
-      id: post.id,
-      body: toCreatePostReplyPayload(
-        values,
-        parentReplyId ?? rootReply.id,
-        media
-          ? {
-              mediaType: media.media_type,
-              mediaUrl: media.media_url,
-              ...(media.media_type === "video" && thumbnail
-                ? { thumbnailUrl: thumbnail.media_url }
-                : {}),
-            }
-          : null,
-      ),
+    const createdReply = await submitReplyWithOptionalMedia({
+      createReply: createReplyMutation.mutateAsync,
+      mediaFile,
+      parentReplyId: parentReplyId ?? rootReply.id,
+      postId: post.id,
+      setReplyError,
+      thumbnailFrame,
+      uploadReplyMedia: uploadReplyMediaMutation.mutateAsync,
+      values,
     });
 
     resetReplyFocusHighlight();

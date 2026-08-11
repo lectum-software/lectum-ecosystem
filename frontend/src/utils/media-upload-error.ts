@@ -2,6 +2,7 @@ import { getSafeApiErrorMessage } from "@/api/errors";
 
 export const COMMUNITY_MEDIA_UPLOAD_LIMIT_MB = 200;
 export const COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES = COMMUNITY_MEDIA_UPLOAD_LIMIT_MB * 1024 * 1024;
+export const COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS = 600_000;
 export const COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE = `A mídia precisa ter até ${COMMUNITY_MEDIA_UPLOAD_LIMIT_MB}MB.`;
 
 export const isCommunityMediaFileTooLarge = (file: File) =>

@@ -25,6 +25,7 @@ import type {
   UserPostsResponse,
 } from "@/api/generator/types/posts";
 import { handleReq } from "@/api/handle";
+import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 
 export const getMyPosts = async (query: UserPostsQuery = {}) => {
   const handle = callEndpoint({
@@ -132,6 +133,7 @@ export const uploadPostReplyMedia = async (id: string, file: File) => {
     method: "POST",
     params: { id },
     body,
+    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
   });
 
   return handleReq<PostReplyMediaUploadResponse>({

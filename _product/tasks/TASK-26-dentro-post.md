@@ -1473,3 +1473,35 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check`
 - [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
 - [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP 200 da rota; validacao autenticada final fica para smoke de homologacao apos push.
+
+## Complemento 2026-08-11 - erro claro no envio de resposta com mídia
+
+- Pedido do usuário: após aumentar o limite para 200MB, o envio de uma resposta com mídia ainda podia falhar exibindo apenas `Não foi possível publicar sua resposta agora.`; o usuário pediu identificar e corrigir o erro.
+- Referência visual/auditável: screenshot do usuário `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 16.40.44.jpeg`, além de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta callable nesta sessão.
+- Diagnóstico: o composer tratava upload da mídia, geração/upload da miniatura de vídeo e criação da resposta com o mesmo fallback genérico; quando a falha vinha sem corpo JSON seguro ou a mensagem sanitizada ficava apenas no `Error.message`, a UI perdia a causa de produto.
+- Frontend: o tratamento de erro passou a diferenciar falha de upload (`Não foi possível enviar a mídia. Verifique sua conexão e tente novamente.`) de falha na publicação da resposta (`Não foi possível publicar sua resposta agora. Verifique sua conexão e tente novamente.`), preservando mensagens de domínio seguras como limite, permissão e moderação.
+- Frontend: o upload/geração da miniatura de vídeo agora é best-effort; se a miniatura não puder ser gerada ou enviada, a resposta continua sendo publicada com o vídeo anexado e sem `thumbnailUrl`, em vez de abortar todo o envio.
+- Frontend: uploads de mídia de comunidade/resposta usam timeout client-side dedicado de 600s para ficar compatível com arquivos de até 200MB em redes móveis mais lentas.
+- Arquitetura: o fluxo comum de envio com mídia foi extraído para `modules/reply-submit.ts`, evitando crescimento do controller legado acima do limite de tamanho.
+- Escopo: sem mudanças de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, permissões de mídia, buckets, votos, salvos, denúncias ou tracking.
+- Impacto de deploy: mudança frontend-only; versões antigas e novas do backend continuam compatíveis. O upload ainda pode falhar por limite/timeout de infraestrutura, mas a UI passa a indicar a etapa correta sem expor detalhes técnicos. Rollback: reverter este commit restaura o fallback genérico e o abortamento por falha de thumbnail.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Critérios de aceite do complemento
+
+- [x] Falhas no upload da mídia exibem mensagem específica de envio de mídia, sem depender do fallback genérico de publicação.
+- [x] Falhas na criação/publicação da resposta exibem mensagem específica de publicação, preservando mensagens seguras de domínio.
+- [x] Falha ao gerar ou subir thumbnail de vídeo não bloqueia a publicação da resposta com vídeo.
+- [x] Uploads client-side de mídia de comunidade/resposta têm timeout compatível com o limite de 200MB.
+- [x] O controller do detalhe permanece abaixo do limite de tamanho por extração do fluxo de submit com mídia.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validações
+
+- [x] `pnpm --dir frontend exec biome check --write "src/api/errors.ts" "src/utils/media-upload-error.ts" "src/api/req/posts/index.ts" "src/api/req/community/index.ts" "src/app/app/community/[slug]/post/[id]/modules/reply-support.ts" "src/app/app/community/[slug]/post/[id]/views/post-detail-controller.ts" "src/app/app/community/[slug]/post/[id]/views/reply-thread.tsx"`
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/modules/reply-submit.ts" "src/app/app/community/[slug]/post/[id]/views/post-detail-controller.ts" "src/app/app/community/[slug]/post/[id]/views/reply-thread.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check` (primeira tentativa falhou por limite de tamanho do controller; o fluxo foi extraído para `reply-submit.ts` e a repetição passou)
+- [x] `git diff --check`
+- [x] Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP da rota; sem API/autenticação local disponível, a validação autenticada final de envio real fica para smoke de homologação após push.
