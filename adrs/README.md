@@ -481,3 +481,4 @@ Formato recomendado:
 - [ADR-0448 — Localizacao declarada do paciente](0448-localizacao-declarada-paciente.md)
 - [ADR-0449 — Instalar aplicativo no perfil](0449-instalar-aplicativo-perfil.md)
 - [ADR-0450 — Permissão nativa direta de notificações](0450-permissao-nativa-direta-notificacoes.md)
+- [ADR-0451 — Digests temporais para push de notificacoes](0451-digests-temporais-push-notificacoes.md)

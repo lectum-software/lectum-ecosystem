@@ -1,22 +1,14 @@
 import prisma from "@/infra/database/prisma";
 import { isChannelAllowed } from "../preferences";
+import { PROFESSIONAL_DAILY_DIGEST_KEYS, type ProfessionalDailyDigestKey } from "../push-policy";
 import { markDigestChecked, sendDigestPush } from "./psychologist";
-import {
-  type DigestTargetUser,
-  getDigestSince,
-  getDigestState,
-  PROFESSIONAL_DAILY_KEYS,
-  type ProfessionalDailyKey,
-  saveDigestState,
-} from "./state";
+import { type DigestTargetUser, getDigestSince, getDigestState, saveDigestState } from "./state";
 
-export const createProfessionalDailyCounts = (): Record<ProfessionalDailyKey, number> => ({
-  clique_whatsapp: 0,
-  nova_avaliacao: 0,
-  nova_resposta: 0,
-  novo_favorito: 0,
+export const createProfessionalDailyCounts = (): Record<ProfessionalDailyDigestKey, number> => ({
+  compartilhamento: 0,
   salvamento: 0,
   upvote: 0,
+  visualizacao_perfil: 0,
 });
 
 export const getProfessionalDailyCounts = async (
@@ -24,7 +16,7 @@ export const getProfessionalDailyCounts = async (
   since: Date,
   now: Date,
 ) => {
-  const allowedKeys = PROFESSIONAL_DAILY_KEYS.filter((key) =>
+  const allowedKeys = PROFESSIONAL_DAILY_DIGEST_KEYS.filter((key) =>
     isChannelAllowed(user.notification_preference?.prefs, key, "push"),
   );
   const counts = createProfessionalDailyCounts();
@@ -49,51 +41,81 @@ export const getProfessionalDailyCounts = async (
   });
 
   for (const notification of notifications) {
-    if (!PROFESSIONAL_DAILY_KEYS.includes(notification.message_key as ProfessionalDailyKey)) {
+    if (
+      !PROFESSIONAL_DAILY_DIGEST_KEYS.includes(
+        notification.message_key as ProfessionalDailyDigestKey,
+      )
+    ) {
       continue;
     }
 
-    counts[notification.message_key as ProfessionalDailyKey]++;
+    counts[notification.message_key as ProfessionalDailyDigestKey]++;
   }
 
   return counts;
 };
 
-export const hasProfessionalDailyActivity = (counts: Record<ProfessionalDailyKey, number>) =>
+export const hasProfessionalDailyActivity = (counts: Record<ProfessionalDailyDigestKey, number>) =>
   Object.values(counts).some((count) => count > 0);
 
 export const formatCount = (value: number, singular: string, plural: string) =>
   `${value} ${value === 1 ? singular : plural}`;
 
 export const buildProfessionalDailyDigestContent = (
-  counts: Record<ProfessionalDailyKey, number>,
+  counts: Record<ProfessionalDailyDigestKey, number>,
 ) => {
-  if (counts.clique_whatsapp > 0) {
-    const whatsapp = formatCount(
-      counts.clique_whatsapp,
-      "clique no WhatsApp",
-      "cliques no WhatsApp",
-    );
-    const complements = counts.nova_avaliacao + counts.novo_favorito + counts.nova_resposta;
+  const interactions = counts.upvote + counts.salvamento + counts.compartilhamento;
 
+  if (counts.visualizacao_perfil > 0 && interactions > 0) {
     return {
-      body:
-        complements > 0
-          ? `Você recebeu ${whatsapp} e novas interações no seu perfil hoje.`
-          : `Você recebeu ${whatsapp} no seu perfil hoje.`,
+      body: `Seu perfil recebeu ${formatCount(
+        counts.visualizacao_perfil,
+        "visualização",
+        "visualizações",
+      )} e seus conteúdos tiveram ${formatCount(
+        interactions,
+        "nova interação",
+        "novas interações",
+      )} hoje.`,
       title: "Seu desempenho hoje na Lectum",
     };
   }
 
-  if (counts.nova_avaliacao + counts.novo_favorito > 0) {
+  if (counts.visualizacao_perfil > 0) {
     return {
-      body: "Seu perfil recebeu novos sinais de confiança hoje.",
+      body: `Seu perfil recebeu ${formatCount(
+        counts.visualizacao_perfil,
+        "visualização",
+        "visualizações",
+      )} hoje.`,
+      title: "Seu desempenho hoje na Lectum",
+    };
+  }
+
+  if (counts.compartilhamento > 0) {
+    return {
+      body: `Seus conteúdos foram compartilhados ${formatCount(
+        counts.compartilhamento,
+        "vez",
+        "vezes",
+      )} hoje.`,
+      title: "Seu desempenho hoje na Lectum",
+    };
+  }
+
+  if (counts.salvamento > 0) {
+    return {
+      body: `Seus conteúdos foram salvos ${formatCount(counts.salvamento, "vez", "vezes")} hoje.`,
       title: "Seu desempenho hoje na Lectum",
     };
   }
 
   return {
-    body: "Suas respostas e publicações tiveram novas interações hoje.",
+    body: `Seus conteúdos receberam ${formatCount(
+      counts.upvote,
+      "novo upvote",
+      "novos upvotes",
+    )} hoje.`,
     title: "Seu desempenho hoje na Lectum",
   };
 };

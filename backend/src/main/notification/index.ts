@@ -6,6 +6,7 @@ import { messages } from "./constants";
 import { createNotificationDelivery } from "./deliveries";
 import { isChannelAllowed } from "./preferences";
 import { sendWebPushToSubscriptions } from "./push";
+import { isImmediatePushSuppressedByDigestPolicy } from "./push-policy";
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -70,15 +71,11 @@ const shouldSuppressImmediatePush = async (params: {
   role?: string | null;
   userId: string;
 }) => {
-  if (params.role === "paciente" && params.messageKey === "novo_post") {
+  if (isImmediatePushSuppressedByDigestPolicy(params.role, params.messageKey)) {
     return true;
   }
 
   if (params.role !== "psicologo") return false;
-
-  if (["upvote", "downvote", "salvamento"].includes(params.messageKey)) {
-    return true;
-  }
 
   if (params.messageKey === "novo_favorito") {
     return hasRecentNotificationWithProp({

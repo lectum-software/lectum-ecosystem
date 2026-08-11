@@ -14,8 +14,10 @@ export const DEFAULT_DIGEST_INTERVAL_MS = 10 * 60 * 1000;
 export const TOP_MENTOR_MAX_POSITION = 5;
 
 export type DigestKind =
+  | "patient_engagement_digest"
   | "favorites_lunch_digest"
   | "community_evening_digest"
+  | "psychologist_new_posts_digest"
   | "professional_daily_digest";
 
 export type DigestWindowState = {
@@ -54,19 +56,16 @@ export type CommunityDigestCandidate = {
   postId: string;
 };
 
-export const PROFESSIONAL_DAILY_KEYS = [
-  "clique_whatsapp",
-  "nova_avaliacao",
-  "novo_favorito",
-  "nova_resposta",
-  "upvote",
-  "salvamento",
-] as const;
-
-export type ProfessionalDailyKey = (typeof PROFESSIONAL_DAILY_KEYS)[number];
-
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value && typeof value === "object" && !Array.isArray(value));
+
+export const DIGEST_KINDS = [
+  "patient_engagement_digest",
+  "favorites_lunch_digest",
+  "community_evening_digest",
+  "psychologist_new_posts_digest",
+  "professional_daily_digest",
+] as const satisfies readonly DigestKind[];
 
 export const toStringSet = (values: string[]) => new Set(values.filter(Boolean));
 
@@ -74,11 +73,7 @@ export const parseDigestState = (value: unknown): DigestState => {
   if (!isRecord(value)) return {};
 
   const state: DigestState = {};
-  for (const key of [
-    "favorites_lunch_digest",
-    "community_evening_digest",
-    "professional_daily_digest",
-  ] as const) {
+  for (const key of DIGEST_KINDS) {
     const entry = value[key];
     if (!isRecord(entry)) continue;
 

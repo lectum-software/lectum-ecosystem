@@ -8,6 +8,7 @@ import {
   isInsideWindow,
   listDigestTargetUsers,
 } from "./state";
+import { processPatientEngagementDigest, processPsychologistNewPostsDigest } from "./temporal";
 
 export const runNotificationDigestScheduler = async (now = new Date()) => {
   if (!isWebPushConfigured()) return;
@@ -17,30 +18,28 @@ export const runNotificationDigestScheduler = async (now = new Date()) => {
   const shouldRunEveningDigest = isInsideWindow(parts, 19, 30, 21, 0);
   const shouldRunProfessionalDailyDigest = isInsideWindow(parts, 18, 30, 19, 30);
 
-  if (!shouldRunLunchDigest && !shouldRunEveningDigest && !shouldRunProfessionalDailyDigest) {
-    return;
-  }
+  const patientUsers = await listDigestTargetUsers("paciente");
 
-  if (shouldRunLunchDigest || shouldRunEveningDigest) {
-    const users = await listDigestTargetUsers("paciente");
-
-    for (const user of users) {
-      if (shouldRunLunchDigest) {
-        await processLunchDigest(user, now, parts.dateKey);
-      }
-
-      if (shouldRunEveningDigest) {
-        await processEveningDigest(user, now, parts.dateKey);
-      }
+  for (const user of patientUsers) {
+    if (shouldRunLunchDigest) {
+      await processLunchDigest(user, now, parts.dateKey);
     }
+
+    if (shouldRunEveningDigest) {
+      await processEveningDigest(user, now, parts.dateKey);
+    }
+
+    await processPatientEngagementDigest(user, now, parts.dateKey);
   }
 
-  if (shouldRunProfessionalDailyDigest) {
-    const users = await listDigestTargetUsers("psicologo");
+  const psychologistUsers = await listDigestTargetUsers("psicologo");
 
-    for (const user of users) {
+  for (const user of psychologistUsers) {
+    if (shouldRunProfessionalDailyDigest) {
       await processProfessionalDailyDigest(user, now, parts.dateKey);
     }
+
+    await processPsychologistNewPostsDigest(user, now, parts.dateKey);
   }
 };
 
