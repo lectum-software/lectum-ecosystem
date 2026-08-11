@@ -225,89 +225,81 @@ export function ReplyMediaAttachmentControl({
 
   if (!isEditor) {
     return (
-      <div
-        className={cn(
-          "flex flex-wrap items-center justify-between gap-2 px-0.5 text-xs text-muted",
-          className,
-        )}
-      >
+      <div className={cn("flex shrink-0 items-center text-xs text-muted", className)}>
         {mediaInput}
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          {activeMedia ? (
+        {activeMedia ? (
+          <div
+            className={cn(
+              "relative shrink-0 overflow-visible",
+              composerPreviewSizeClassName(activeMedia.orientation),
+            )}
+          >
             <div
-              className={cn(
-                "relative shrink-0 overflow-visible",
-                composerPreviewSizeClassName(activeMedia.orientation),
-              )}
+              aria-label={activeMedia.alt}
+              className="relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-lectum-soft"
+              role="img"
             >
-              <div
-                aria-label={activeMedia.alt}
-                className="relative h-full w-full overflow-hidden rounded-[inherit] border border-primary/20 bg-surface-muted shadow-lectum-soft"
-                role="img"
-              >
-                {activeMedia.type === "image" ? (
-                  <Image
-                    alt={activeMedia.alt}
-                    className="object-cover"
-                    fill
-                    sizes="136px"
-                    src={activeMedia.src}
-                    unoptimized={activeMedia.unoptimized}
-                  />
-                ) : (
-                  <video
-                    aria-label={activeMedia.alt}
-                    className="h-full w-full object-cover"
-                    muted
-                    playsInline
-                    preload="metadata"
-                    src={activeMedia.src}
-                  />
-                )}
-              </div>
-              <button
-                aria-label="Remover mídia anexada"
-                className="absolute -top-1 -right-1 z-10 grid h-5 w-5 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={disabled}
-                onClick={() => {
-                  onRemoveSelected();
-                  onAfterAction?.();
-                }}
-                onMouseDown={(event) => event.preventDefault()}
-                type="button"
-              >
-                <X className="h-3 w-3" aria-hidden="true" />
-              </button>
-            </div>
-          ) : (
-            <button
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
-                mediaPermission.canAttach
-                  ? "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
-                  : "cursor-not-allowed border-border bg-surface-muted text-subtle",
+              {activeMedia.type === "image" ? (
+                <Image
+                  alt={activeMedia.alt}
+                  className="object-cover"
+                  fill
+                  sizes="136px"
+                  src={activeMedia.src}
+                  unoptimized={activeMedia.unoptimized}
+                />
+              ) : (
+                <video
+                  aria-label={activeMedia.alt}
+                  className="h-full w-full object-cover"
+                  muted
+                  playsInline
+                  preload="metadata"
+                  src={activeMedia.src}
+                />
               )}
-              disabled={!mediaPermission.canAttach || disabled}
-              onClick={openFileDialog}
+            </div>
+            <button
+              aria-label="Remover mídia anexada"
+              className="absolute -top-1 -right-1 z-10 grid h-5 w-5 place-items-center rounded-full border border-border bg-surface text-muted shadow-[var(--lectum-shadow-soft)] transition hover:bg-surface-muted hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={disabled}
+              onClick={() => {
+                onRemoveSelected();
+                onAfterAction?.();
+              }}
               onMouseDown={(event) => event.preventDefault()}
-              title={mediaPermission.canAttach ? "Anexar mídia" : mediaPermission.reason}
               type="button"
             >
-              {isUploading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              Anexar mídia
+              <X className="h-3 w-3" aria-hidden="true" />
             </button>
-          )}
+          </div>
+        ) : (
+          <button
+            aria-label={mediaPermission.canAttach ? "Anexar mídia" : "Mídia indisponível"}
+            className={cn(
+              "grid h-11 w-11 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15",
+              mediaPermission.canAttach
+                ? "border-border bg-surface text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
+                : "cursor-not-allowed border-border bg-surface-muted text-subtle",
+            )}
+            disabled={!mediaPermission.canAttach || disabled}
+            onClick={openFileDialog}
+            onMouseDown={(event) => event.preventDefault()}
+            title={mediaPermission.canAttach ? "Anexar mídia" : mediaPermission.reason}
+            type="button"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <AnimatedImagesIcon className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span className="sr-only">Anexar mídia</span>
+          </button>
+        )}
 
-          {!mediaPermission.canAttach && mediaPermission.reason ? (
-            <span className="min-w-0 flex-1 basis-56 whitespace-normal break-words leading-4 text-muted">
-              {mediaPermission.reason}
-            </span>
-          ) : null}
-        </div>
+        {!mediaPermission.canAttach && mediaPermission.reason ? (
+          <span className="sr-only">{mediaPermission.reason}</span>
+        ) : null}
       </div>
     );
   }

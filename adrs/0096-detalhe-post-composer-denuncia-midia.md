@@ -148,3 +148,22 @@ Validacao adicional:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Atualizacao 2026-08-11 - composer mobile solido e midia icon-only
+
+O produto comparou a barra de comentario da Lectum com a do Reddit em capturas reais de iPhone e apontou tres problemas: o compositor parecia deixar a tela vazar por tras, o controle de anexo ocupava uma linha propria com o texto `Anexar midia`, e a barra nativa do iOS com setas/check parecia fazer parte da Lectum sem utilidade clara.
+
+Decisao complementar:
+
+- Tornar o composer fixo mobile uma superficie solida (`bg-surface`) sem translucidez/backdrop blur, com topo arredondado, borda superior e camada acima do conteudo (`z-[80]`).
+- Mover o controle de midia para a esquerda do campo de comentario no mesmo row do textarea e do botao de envio.
+- No modo composer, renderizar o controle de midia como botao circular icon-only, mantendo `aria-label`, `title`, permissao real e input de arquivo existente.
+- Preservar React Hook Form/Zod e o controller `textarea` da TASK-02; nao trocar por `contenteditable` nem criar hack frágil apenas para tentar esconder a toolbar nativa do iOS. Essa toolbar e controlada pelo navegador/PWA, entao o ajuste da Lectum deve evitar que ela pareca parte quebrada da interface, mas nao depender de removela via CSS.
+- Manter endpoint, payload, upload real, permissao profissional, validacao backend, safe area e fluxo de envio inalterados.
+
+Consequencias:
+
+- O compositor fica mais proximo do padrao de bottom sheet do Reddit, mais limpo e com menor altura.
+- O botao de midia continua descobrivel para psicologos elegiveis, mas sem ocupar texto/linha extra.
+- Usuarios que nao podem anexar midia continuam bloqueados visualmente e pelo backend; a razao fica preservada em `title`/texto acessivel.
+- Nenhum contrato de API, schema, migration, env, pacote ou dado persistido foi alterado.

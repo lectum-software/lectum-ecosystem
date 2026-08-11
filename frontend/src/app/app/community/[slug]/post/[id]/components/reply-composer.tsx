@@ -93,8 +93,8 @@ export const ReplyComposer = ({
   const ready = hasDraft || Boolean(selectedMedia);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
-  const shouldShowMediaControls =
-    Boolean(selectedMedia) || mediaPickerActive || (composerActive && mediaPermission.showControl);
+  const shouldShowMediaControlInRow =
+    Boolean(selectedMedia) || mediaPickerActive || mediaPermission.showControl;
   const shouldShowGuidance =
     composerActive || hasDraft || Boolean(selectedMedia) || mediaPickerActive;
   const autoFocusTargetId = replyTarget?.id ?? "main";
@@ -307,12 +307,12 @@ export const ReplyComposer = ({
   return (
     <form
       className={cn(
-        "grid gap-2 border-border bg-surface/95 p-3 dark:border-border dark:bg-surface/95",
+        "grid gap-2 border-border bg-surface p-3 dark:border-border dark:bg-surface",
         composerActive && "max-sm:touch-none",
         draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
         isInline
           ? "mt-3 rounded-[20px] border shadow-none"
-          : "fixed inset-x-0 bottom-0 z-40 border-t pb-[var(--lectum-bottom-fixed-padding)] shadow-lectum-soft backdrop-blur-md sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft sm:backdrop-blur-0 dark:sm:bg-surface",
+          : "fixed inset-x-0 bottom-0 z-[80] rounded-t-[24px] border-t bg-surface pb-[var(--lectum-bottom-fixed-padding)] shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
       )}
       noValidate
       onBlur={(event) => {
@@ -338,6 +338,20 @@ export const ReplyComposer = ({
       ) : null}
 
       <div className="flex items-end gap-2">
+        {shouldShowMediaControlInRow ? (
+          <ReplyMediaAttachmentControl
+            className="pb-0"
+            disabled={disabled}
+            fileInputRef={fileInputRef}
+            isUploading={disabled && Boolean(selectedMedia)}
+            mediaPermission={mediaPermission}
+            onAfterAction={() => setComposerActive(true)}
+            onMediaChange={handleMediaChange}
+            onOpenDialog={beginMediaPickerInteraction}
+            onRemoveSelected={clearSelectedMedia}
+            selectedMedia={selectedMedia}
+          />
+        ) : null}
         <div className="min-w-0 flex-1">
           <FieldComponent control={hook.control} {...formProps.fields[0]} />
         </div>
@@ -366,20 +380,6 @@ export const ReplyComposer = ({
           )}
         </Button>
       </div>
-
-      {shouldShowMediaControls ? (
-        <ReplyMediaAttachmentControl
-          disabled={disabled}
-          fileInputRef={fileInputRef}
-          isUploading={disabled && Boolean(selectedMedia)}
-          mediaPermission={mediaPermission}
-          onAfterAction={() => setComposerActive(true)}
-          onMediaChange={handleMediaChange}
-          onOpenDialog={beginMediaPickerInteraction}
-          onRemoveSelected={clearSelectedMedia}
-          selectedMedia={selectedMedia}
-        />
-      ) : null}
 
       {visibleError ? (
         <InlineAlert title="Não foi possível responder" variant="error">

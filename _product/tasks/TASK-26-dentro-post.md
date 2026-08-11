@@ -1271,3 +1271,14 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `git diff --check` (sem erro; apenas aviso local de normalizacao CRLF/LF no ADR atualizado)
 - [x] API local em `GET /api/private/posts/cmr26lrh70003nouhg6pd23j6/replies?limit=20` confirmou a resposta `cmr2797pm0003msuhqbqs3a4b` como `is_post_author=true`, `author.anonymous=true` e alias `Membro Anônimo #2624`.
 - [x] Chrome/CDP local mobile 390x844 em `/community/autocuidado-em-pratica/post/cmr26lrh70003nouhg6pd23j6?focusReplyId=cmr2797pm0003msuhqbqs3a4b#reply-cmr2797pm0003msuhqbqs3a4b` confirmou `Membro Anônimo #2624`, `Autor · há ... · editado` e ausencia de `Túlio Rezende` no comentario.
+
+## Complemento 2026-08-11 - composer mobile alinhado ao padrao Reddit
+
+- Pedido do usuario: comparar a barra de comentario da Lectum com a do Reddit e ajustar o composer porque a UI parecia vazar por tras, o controle `Anexar midia` ocupava espaco excessivo e a barra nativa com setas/check parecia sem funcao clara.
+- Referencias visuais/auditaveis: screenshots do usuario `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.43.37.jpeg` (Lectum) e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-11 at 10.43.20.jpeg` (Reddit), alem de `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: o composer fixo mobile passou a usar superficie solida `bg-surface`, sem translucidez/backdrop blur, com topo arredondado e camada `z-[80]` para reduzir a sensacao de vazamento da thread por tras.
+- Frontend: o controle de midia do modo composer virou botao circular icon-only e foi movido para a esquerda do campo `Comentar no post`, preservando input de arquivo, permissao real, `aria-label`, `title`, previa/remocao de midia selecionada e envio real.
+- Decisao de UX/tecnica: a barra com setas/check e controlada pelo iOS/browser quando o `textarea` recebe foco; a implementacao nao troca o controller React Hook Form/Zod por `contenteditable` fragil apenas para tentar ocultar uma UI nativa fora do controle CSS do app.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, endpoints, payloads, upload real, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+- Validacoes executadas: `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/reply-composer.tsx" src/components/community/reply-media-attachment-control.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` e Chrome headless local em viewport 390x844. A API local respondeu `Post indisponivel`, entao a validacao visual autenticada final ficou para o smoke em homologacao apos o push.
