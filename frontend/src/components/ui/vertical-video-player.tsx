@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
+import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
 import {
@@ -42,6 +43,7 @@ export const VerticalVideoPlayer = ({
   fullscreenVariant = "default",
   onContentClick,
   onVideoElementReady,
+  persistentControlsLayout = "stacked",
   poster,
   preload = "metadata",
   src,
@@ -67,6 +69,8 @@ export const VerticalVideoPlayer = ({
   const [duration, setDuration] = useState(0);
   const usesMinimalControls = controls && controlsVariant === "minimal";
   const usesPersistentControls = controls && controlsVariant === "persistent";
+  const usesMediaPersistentControls =
+    usesPersistentControls && persistentControlsLayout === "media";
   const hasNativeControls = controls && !usesMinimalControls && !usesPersistentControls;
   const {
     controlsList: videoControlsList,
@@ -77,7 +81,6 @@ export const VerticalVideoPlayer = ({
     ...passthroughVideoProps
   } = videoProps ?? {};
   const defaultNativeControlsList = "nodownload noplaybackrate noremoteplayback";
-
   useLayoutEffect(() => {
     latestSourceRef.current = src;
   }, [src]);
@@ -256,6 +259,13 @@ export const VerticalVideoPlayer = ({
 
     setIsMuted(video.muted || video.volume <= 0);
   }, []);
+
+  const handlePersistentFullscreen = useCallback(() => {
+    void requestVideoFullscreen(videoRef.current, {
+      forceContain: fullscreenVariant === "content",
+      temporaryControls: true,
+    });
+  }, [fullscreenVariant]);
 
   const ensureBlobBackedVideoForSeek = useCallback(
     (targetTime: number) => {
@@ -623,19 +633,38 @@ export const VerticalVideoPlayer = ({
         onClick={handleContentClick}
         style={{
           bottom: usesPersistentControls
-            ? "calc(var(--lectum-bottom-fixed-padding) + 5.25rem)"
+            ? usesMediaPersistentControls
+              ? "calc(var(--lectum-bottom-fixed-padding) + 4.5rem)"
+              : "calc(var(--lectum-bottom-fixed-padding) + 5.25rem)"
             : controls
               ? "max(64px, 20%)"
               : 0,
         }}
         type="button"
       />
+      {usesMediaPersistentControls ? (
+        <button
+          aria-label={isPaused ? `Reproduzir vídeo: ${title}` : `Pausar vídeo: ${title}`}
+          className="absolute top-1/2 left-1/2 z-[2] grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface/75 text-foreground shadow-[var(--lectum-shadow-soft)] backdrop-blur transition hover:scale-[1.03] hover:bg-surface/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95 sm:h-[4.5rem] sm:w-[4.5rem]"
+          onClick={handlePersistentPlayPause}
+          onPointerDown={(event) => event.stopPropagation()}
+          type="button"
+        >
+          {isPaused ? (
+            <Play className="ml-1 h-9 w-9 fill-current sm:h-10 sm:w-10" />
+          ) : (
+            <Pause className="h-8 w-8 fill-current sm:h-9 sm:w-9" />
+          )}
+        </button>
+      ) : null}
       {usesPersistentControls ? (
         <VerticalVideoPlayerPersistentControls
           currentTime={currentTime}
           duration={duration}
           isMuted={isMuted}
           isPaused={isPaused}
+          layout={persistentControlsLayout}
+          onFullscreen={usesMediaPersistentControls ? handlePersistentFullscreen : undefined}
           onMuteToggle={handlePersistentMuteToggle}
           onPlayPause={handlePersistentPlayPause}
           onProgressKeyDown={handlePersistentProgressKeyDown}

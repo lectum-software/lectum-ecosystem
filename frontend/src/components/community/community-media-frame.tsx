@@ -378,9 +378,11 @@ export const CommunityMediaBlock = ({
             viewportClassName,
             videoClassName,
           )}
+          controlsVariant="persistent"
           fit="contain"
           fullscreenVariant="content"
           onVideoElementReady={handleVideoElementReady}
+          persistentControlsLayout="media"
           poster={resolvedPosterUrl}
           src={resolvedUrl}
           style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}

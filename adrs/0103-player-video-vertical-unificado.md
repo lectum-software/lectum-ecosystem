@@ -138,3 +138,34 @@ Os vídeos de posts continuam podendo usar a proporção real detectada, preserv
 - Vídeos não verticais dentro de respostas aparecem com letterbox/fundo do player, sem distorção ou crop agressivo.
 - A remoção do texto de upvotes reduz ruído visual e evita misturar métrica da resposta no cabeçalho do destaque.
 - Não há alteração de backend, Prisma, endpoints, dados, envs ou dependências.
+
+## Complemento 2026-08-12 - controles inline de video em cards de comunidade
+
+### Contexto
+
+A comparacao entre screenshots de iPhone e Android mostrou que os controles nativos do video ficam inconsistentes: no Android, minutagem, volume e fullscreen aparecem agrupados na parte inferior; no iPhone/Safari, volume e fullscreen sao reposicionados no topo do video quando o player usa controles nativos. Essa UI nativa nao e estilizada de forma confiavel por CSS.
+
+### Decisao
+
+Adicionar ao `VerticalVideoPlayer` um layout persistente `media` para videos de conteudo de comunidade. Esse layout desativa os controles nativos no card e renderiza controles proprios:
+
+- botao central de play/pause;
+- linha inferior com minutagem, volume e ampliar video;
+- barra de progresso logo abaixo;
+- acionamento de fullscreen pelo helper `requestVideoFullscreen`, com controles nativos temporarios somente durante a tela cheia.
+
+O `CommunityMediaBlock` passa a usar `controlsVariant="persistent"` e `persistentControlsLayout="media"` para videos. O layout persistente anterior `stacked` permanece como padrao para nao alterar automaticamente os demais usos do componente.
+
+### Consequencias
+
+- iPhone e Android passam a ter a mesma hierarquia visual de controles no card de video de comunidade.
+- A decisao evita depender da composicao nativa do Safari para a UI embutida.
+- Fullscreen continua usando o caminho nativo/compatibilidade ja existente, minimizando regressao em iOS.
+- Nao ha mudanca de backend, Prisma, endpoints, contratos, dados, envs, packages ou armazenamento.
+
+### Validacao
+
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Validacao estatica via Node para confirmar o layout persistente `media`, a linha de controles com minutagem/volume/fullscreen e o helper de fullscreen.
+- Browser local/headless mobile em 390x844 na rota do detalhe de post com video.

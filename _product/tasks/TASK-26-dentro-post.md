@@ -2111,3 +2111,38 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.78`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - controles de video consistentes entre iPhone e Android
+
+- Pedido do usuario: comparar as visualizacoes de iPhone e Android e deixar, no iPhone, os controles de volume e ampliar video na mesma linha da minutagem, como ja aparece no Android.
+- Fonte visual auditavel: screenshots enviados pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 19.18.31.jpeg` (iPhone) e `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 19.18.26.jpeg` (Android), alem da referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Diagnostico: videos de comunidade ainda dependiam dos controles nativos do navegador; no iOS/Safari a UI nativa reposiciona volume/fullscreen no topo e nao permite padronizacao confiavel por CSS.
+- Frontend: videos renderizados por `CommunityMediaBlock` passaram a usar `VerticalVideoPlayer` com `controlsVariant="persistent"` e `persistentControlsLayout="media"`, removendo a dependencia dos controles nativos no card.
+- Frontend: o novo layout `media` coloca minutagem, volume e ampliar video na mesma linha inferior, com a barra de progresso logo abaixo e botao central de play/pause.
+- Frontend: o botao de ampliar usa o helper compartilhado `requestVideoFullscreen` com controles nativos apenas durante a tela cheia, preservando compatibilidade com iOS/Safari.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, upload, votos, salvos ou regras de permissao.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Videos de comunidade deixam de depender dos controles nativos embutidos no card.
+- [x] Minutagem, volume e ampliar video aparecem na mesma linha inferior do player.
+- [x] A barra de progresso permanece acessivel logo abaixo da linha de controles.
+- [x] O iOS/Safari usa controle customizado no card e fallback nativo apenas ao entrar em fullscreen.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `controlsVariant="persistent"`/`persistentControlsLayout="media"`, linha de controles com minutagem/volume/fullscreen e uso de `requestVideoFullscreen`.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.79`)
+- [x] Browser local/headless mobile no frontend buildado: `http://127.0.0.1:3053` respondeu `/version` `0.1.78` antes do bump; apos o bump, `http://127.0.0.1:3054` respondeu `/version` `0.1.79` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844.
+- [x] `pnpm check` (primeira tentativa falhou por limite de linhas no player; apos reduzir uma linha, foi repetido com sucesso)
+- [x] `git diff --check` (apos normalizar EOF da task/ADR)
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.79`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

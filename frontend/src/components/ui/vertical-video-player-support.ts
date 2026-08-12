@@ -3,6 +3,7 @@ import type { CSSProperties, VideoHTMLAttributes } from "react";
 export type VideoFit = "contain" | "cover";
 
 export type ControlsVariant = "native" | "minimal" | "persistent";
+export type PersistentControlsLayout = "stacked" | "media";
 
 export type VideoDataAttributes = {
   [key: `data-${string}`]: string | undefined;
@@ -22,6 +23,7 @@ export type VerticalVideoPlayerProps = {
   fullscreenVariant?: "default" | "content";
   onContentClick?: () => void;
   onVideoElementReady?: (video: HTMLVideoElement | null) => void;
+  persistentControlsLayout?: PersistentControlsLayout;
   poster?: string | null;
   preload?: "auto" | "metadata" | "none";
   src: string;
