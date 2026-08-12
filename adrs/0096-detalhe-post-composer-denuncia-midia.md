@@ -390,3 +390,32 @@ Validacao adicional:
 - `git diff --check`
 - `pnpm version:bump`
 - `pnpm check:version`
+
+## Atualizacao 2026-08-12 - thumbnails armazenadas nas modais de edicao
+
+O teste mobile da modal `Editar comentario` mostrou que midias de video ja persistidas podiam aparecer como um quadro vazio no editor. A causa pratica e que o preview do editor dependia do proprio elemento `<video>` carregar metadata/frame inicial; em iOS/Safari isso pode demorar, falhar ou renderizar um frame branco, mesmo quando a API ja possui `thumbnail_url` para aquela midia.
+
+Decisao complementar:
+
+- No `ReplyMediaAttachmentControl` em modo editor, resolver e usar `thumbnail_url` da midia atual para imagem de preview sempre que ela estiver disponivel, inclusive para videos.
+- Usar a thumbnail como fonte da deteccao de orientacao quando presente, mantendo o fallback para a midia principal quando nao houver thumbnail.
+- Na `PostEditModal`, resolver URLs publicas de midias armazenadas e renderizar a thumbnail de videos persistidos com `next/image`; sem thumbnail, manter o fallback para `<video preload="metadata">`.
+- Nao alterar upload, payload, persistencia, regras de permissao, backend, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- As modais de edicao deixam de exibir placeholders vazios para videos que ja possuem thumbnail armazenada.
+- A experiencia fica mais consistente entre iOS/Safari, Android/Chrome e desktop porque a primeira pintura do preview usa uma imagem estavel.
+- Videos antigos sem `thumbnail_url` continuam usando o fallback anterior do elemento de video.
+- Rollback: reverter este commit volta a depender do frame inicial do video nas modais de edicao, podendo reaparecer o quadro branco em alguns navegadores.
+
+Validacao adicional:
+
+- Validacao estatica via Node confirmou uso de thumbnail no editor de comentario e no preview da edicao de post antes do fallback para video.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3052`: `/version` respondeu `0.1.77` e a rota do detalhe carregou em viewport 390x844; a modal autenticada fica para reteste em homologacao mobile.
+- `pnpm check`: sucesso na segunda tentativa, apos timeout local da primeira execucao.
+- `git diff --check`: sucesso, com aviso local de normalizacao CRLF/LF neste ADR.
+- `pnpm version:bump` para `0.1.78`: sucesso.
+- `pnpm check:version`: sucesso.

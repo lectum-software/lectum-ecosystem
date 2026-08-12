@@ -43,6 +43,7 @@ import {
   type PostEditModalProps,
   type PostMediaPreviewItem,
   postEditSchema,
+  resolveEditableMediaPreviewUrls,
   type SelectedPostMedia,
 } from "./post-edit-modal-support";
 import { PostEditModalView } from "./post-edit-modal-view";
@@ -551,6 +552,8 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         className="mt-2 flex max-h-28 shrink-0 gap-2 overflow-x-auto overflow-y-hidden pb-1"
       >
         {editableMediaItems.map((mediaItem, index) => {
+          const { imagePreviewSrc, mediaSrc, shouldRenderImagePreview } =
+            resolveEditableMediaPreviewUrls(mediaItem);
           const frameClassName =
             mediaItem.orientation === "landscape"
               ? "h-20 w-32 sm:h-[5.5rem] sm:w-[9.75rem]"
@@ -566,9 +569,13 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
               )}
               key={`${mediaItem.source}-${mediaItem.id}`}
             >
-              {mediaItem.type === "image" ? (
+              {shouldRenderImagePreview && imagePreviewSrc ? (
                 <Image
-                  alt={`Miniatura da imagem anexada ${index + 1}`}
+                  alt={
+                    mediaItem.type === "video"
+                      ? `Miniatura do vídeo anexado ${index + 1}`
+                      : `Miniatura da imagem anexada ${index + 1}`
+                  }
                   className="object-cover"
                   fill
                   onLoad={(event) => {
@@ -586,7 +593,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                     updateStoredMediaOrientation(mediaItem.id, orientation);
                   }}
                   sizes="160px"
-                  src={mediaItem.src}
+                  src={imagePreviewSrc}
                   unoptimized
                 />
               ) : (
@@ -610,7 +617,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                   }}
                   playsInline
                   preload="metadata"
-                  src={mediaItem.src}
+                  src={mediaSrc}
                 />
               )}
 

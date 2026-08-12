@@ -2081,3 +2081,33 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `git diff --check`
 - [x] `pnpm version:bump` para `0.1.75`
 - [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - miniatura na edicao de midia
+
+- Pedido do usuario: na edicao de post/comentario com midia, exibir a imagem de miniatura da midia em vez de deixar o quadro de preview vazio.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 19.11.37.jpeg` e referencias locais `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `ReplyMediaAttachmentControl` no modo editor passou a resolver `thumbnail_url` tambem para videos ja persistidos e a usar essa imagem como preview quando disponivel.
+- Frontend: a deteccao de orientacao da midia atual passa a usar a thumbnail como fonte de medicao quando ela existir, evitando que o editor dependa do carregamento do player de video para calcular o formato da miniatura.
+- Frontend: a `PostEditModal` tambem passa a resolver URLs publicas armazenadas e a renderizar a thumbnail de videos persistidos com `next/image`; quando nao houver thumbnail, preserva o fallback para `<video>` com `preload="metadata"`.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, upload, votos, salvos, denuncia, permissoes ou regras de edicao.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A modal de editar comentario exibe thumbnail para midia de video persistida quando `thumbnail_url` estiver disponivel.
+- [x] A modal de editar post exibe thumbnail para midia de video persistida quando `thumbnail_url` estiver disponivel.
+- [x] Imagens persistidas e videos sem thumbnail continuam tendo fallback visual compativel com o comportamento anterior.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou que o editor de comentario usa `thumbnailSrc: currentThumbnailSrc`, mede orientacao pela thumbnail quando houver e que a edicao de post renderiza thumbnail antes do fallback de video.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3052`: `/version` respondeu `0.1.77` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844; sem API local/autenticacao real, a validacao visual autenticada da modal fica para homologacao mobile.
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluiu com sucesso)
+- [x] `git diff --check` (sem erro; apenas avisos locais de normalizacao CRLF/LF na task e no ADR atualizados)
+- [x] `pnpm version:bump` para `0.1.78`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

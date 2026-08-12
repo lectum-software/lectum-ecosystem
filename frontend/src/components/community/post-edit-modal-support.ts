@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { PostDetail } from "@/api/generator/types/posts";
 import type { Field } from "@/hooks/form";
+import { resolvePublicMediaUrl } from "@/utils/media";
 
 export const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght400_GRAD0_opsz24.svg";
 
@@ -66,6 +67,24 @@ export type PostMediaPreviewItem = {
 export type EditablePostMediaPreviewItem = PostMediaPreviewItem & {
   selectedIndex?: number;
   source: "selected" | "stored";
+};
+
+export const resolveEditableMediaPreviewUrls = (mediaItem: EditablePostMediaPreviewItem) => {
+  const mediaSrc =
+    mediaItem.source === "stored"
+      ? (resolvePublicMediaUrl(mediaItem.src) ?? mediaItem.src)
+      : mediaItem.src;
+  const thumbnailSrc = mediaItem.thumbnailUrl
+    ? mediaItem.source === "stored"
+      ? (resolvePublicMediaUrl(mediaItem.thumbnailUrl) ?? mediaItem.thumbnailUrl)
+      : mediaItem.thumbnailUrl
+    : null;
+
+  return {
+    imagePreviewSrc: mediaItem.type === "video" ? thumbnailSrc : mediaSrc,
+    mediaSrc,
+    shouldRenderImagePreview: mediaItem.type === "image" || Boolean(thumbnailSrc),
+  };
 };
 
 export const createSelectedMediaId = () =>

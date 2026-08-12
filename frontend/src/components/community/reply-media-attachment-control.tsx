@@ -238,6 +238,14 @@ export function ReplyMediaAttachmentControl({
   const currentType = normalizeMediaType(currentMedia?.mediaType);
   const currentSrc =
     currentMedia?.mediaUrl && currentType ? resolvePublicMediaUrl(currentMedia.mediaUrl) : null;
+  const currentThumbnailSrc =
+    currentMedia?.thumbnailUrl && currentType
+      ? resolvePublicMediaUrl(currentMedia.thumbnailUrl)
+      : null;
+  const currentOrientationProbeSrc = currentThumbnailSrc ?? currentSrc;
+  const currentOrientationProbeType: ReplyMediaType | null = currentThumbnailSrc
+    ? "image"
+    : currentType;
   const [currentMediaOrientation, setCurrentMediaOrientation] = useState<{
     src: string;
     type: ReplyMediaType;
@@ -245,25 +253,32 @@ export function ReplyMediaAttachmentControl({
   } | null>(null);
 
   useEffect(() => {
-    if (!currentSrc || !currentType || removeCurrent) {
+    if (!currentOrientationProbeSrc || !currentOrientationProbeType || removeCurrent) {
       return;
     }
 
     let isMounted = true;
 
-    detectReplyMediaOrientation(currentSrc, currentType).then((orientation) => {
-      if (isMounted) {
-        setCurrentMediaOrientation({ src: currentSrc, type: currentType, value: orientation });
-      }
-    });
+    detectReplyMediaOrientation(currentOrientationProbeSrc, currentOrientationProbeType).then(
+      (orientation) => {
+        if (isMounted) {
+          setCurrentMediaOrientation({
+            src: currentOrientationProbeSrc,
+            type: currentOrientationProbeType,
+            value: orientation,
+          });
+        }
+      },
+    );
 
     return () => {
       isMounted = false;
     };
-  }, [currentSrc, currentType, removeCurrent]);
+  }, [currentOrientationProbeSrc, currentOrientationProbeType, removeCurrent]);
 
   const resolvedCurrentMediaOrientation =
-    currentMediaOrientation?.src === currentSrc && currentMediaOrientation.type === currentType
+    currentMediaOrientation?.src === currentOrientationProbeSrc &&
+    currentMediaOrientation.type === currentOrientationProbeType
       ? currentMediaOrientation.value
       : undefined;
 
@@ -283,10 +298,7 @@ export function ReplyMediaAttachmentControl({
           isPreparingPreview: false,
           orientation: resolvedCurrentMediaOrientation,
           src: currentSrc,
-          thumbnailSrc:
-            currentType !== "video" && currentMedia?.thumbnailUrl
-              ? resolvePublicMediaUrl(currentMedia.thumbnailUrl)
-              : null,
+          thumbnailSrc: currentThumbnailSrc,
           type: currentType,
           unoptimized:
             isPublicMediaUrl(currentMedia?.mediaUrl) ||
