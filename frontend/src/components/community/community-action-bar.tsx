@@ -28,12 +28,16 @@ type SaveAction = {
   disabled?: boolean;
   label?: string;
   onClick?: ActionHandler;
+  textLabel?: string;
+  textOnly?: boolean;
 };
 
 type ShareAction = {
   count?: number;
   label?: string;
   onClick?: ActionHandler;
+  textLabel?: string;
+  textOnly?: boolean;
 };
 
 export type CommunityActionBarProps = {
@@ -50,6 +54,7 @@ export type CommunityActionBarProps = {
     tipTarget?: string;
   };
   save?: SaveAction;
+  secondaryActionsPlacement?: "trailing" | "inline";
   share?: ShareAction;
   size?: CommunityActionSize;
   downvotesCount?: number;
@@ -92,6 +97,7 @@ const separatorClassName = (size: CommunityActionSize, presentation: VotePresent
 const textOnlyReplyClassName = (size: CommunityActionSize) =>
   cn(
     "inline-flex min-w-0 items-center justify-center rounded-md leading-none tracking-[-0.01em] text-muted transition-[color,transform] duration-200 hover:text-foreground active:scale-[0.97]",
+    "disabled:pointer-events-none disabled:opacity-60",
     size === "xs"
       ? "h-7 shrink px-1"
       : size === "md"
@@ -119,6 +125,7 @@ export const CommunityActionBar = ({
   onVote,
   reply,
   save,
+  secondaryActionsPlacement = "trailing",
   share,
   showUpvoteText = true,
   size = "sm",
@@ -129,6 +136,100 @@ export const CommunityActionBar = ({
 }: CommunityActionBarProps) => {
   const canVote = Boolean(onVote);
   const inlineEndSlot = endSlotAlignment === "inline";
+  const shouldRenderSecondaryActionsInline = secondaryActionsPlacement === "inline";
+
+  const renderSaveAction = () => {
+    if (!save) return null;
+
+    const saveLabel = save.label ?? (save.active ? "Remover dos salvos" : "Salvar");
+    const saveTextLabel = save.textLabel ?? (save.active ? "Salvo" : "Salvar");
+
+    if (save.textOnly) {
+      const className = cn(
+        textOnlyReplyClassName(size),
+        save.active && "text-primary hover:text-primary",
+      );
+
+      return save.onClick ? (
+        <button
+          aria-label={saveLabel}
+          aria-pressed={save.active}
+          className={className}
+          disabled={save.disabled}
+          onClick={stopActionPropagation(save.onClick)}
+          title={saveLabel}
+          type="button"
+        >
+          <span className={textOnlyReplyTextClassName}>{saveTextLabel}</span>
+        </button>
+      ) : (
+        <span className={className} title={saveLabel}>
+          <span className={textOnlyReplyTextClassName}>{saveTextLabel}</span>
+        </span>
+      );
+    }
+
+    return save.onClick ? (
+      <PostActionButton
+        active={save.active}
+        count={save.count}
+        disabled={save.disabled}
+        icon={Bookmark}
+        iconClassName={save.active ? "fill-current" : undefined}
+        label={saveLabel}
+        onClick={stopActionPropagation(save.onClick)}
+        size={size}
+      />
+    ) : (
+      <PostActionMetric
+        active={save.active}
+        count={save.count}
+        icon={Bookmark}
+        iconClassName={save.active ? "fill-current" : undefined}
+        label={save.label ?? "Salvar"}
+        size={size}
+      />
+    );
+  };
+
+  const renderShareAction = () => {
+    if (!share) return null;
+
+    const shareLabel = share.label ?? "Compartilhar";
+    const shareTextLabel = share.textLabel ?? "Compartilhar";
+
+    if (share.textOnly) {
+      const className = textOnlyReplyClassName(size);
+
+      return share.onClick ? (
+        <button
+          aria-label={shareLabel}
+          className={className}
+          onClick={stopActionPropagation(share.onClick)}
+          title={shareLabel}
+          type="button"
+        >
+          <span className={textOnlyReplyTextClassName}>{shareTextLabel}</span>
+        </button>
+      ) : (
+        <span className={className} title={shareLabel}>
+          <span className={textOnlyReplyTextClassName}>{shareTextLabel}</span>
+        </span>
+      );
+    }
+
+    return share.onClick ? (
+      <PostActionButton
+        count={share.count}
+        icon={Share2}
+        label={shareLabel}
+        onClick={stopActionPropagation(share.onClick)}
+        size={size}
+      />
+    ) : (
+      <PostActionMetric count={share.count} icon={Share2} label={shareLabel} size={size} />
+    );
+  };
 
   return (
     <div
@@ -238,6 +339,13 @@ export const CommunityActionBar = ({
             Responder
           </PostActionButton>
         ) : null}
+
+        {shouldRenderSecondaryActionsInline ? (
+          <>
+            {renderShareAction()}
+            {renderSaveAction()}
+          </>
+        ) : null}
       </div>
 
       <div
@@ -252,48 +360,9 @@ export const CommunityActionBar = ({
               : "ml-auto gap-1 pl-2 sm:ml-0 sm:gap-1 sm:pl-1",
         )}
       >
-        {save ? (
-          save.onClick ? (
-            <PostActionButton
-              active={save.active}
-              count={save.count}
-              disabled={save.disabled}
-              icon={Bookmark}
-              iconClassName={save.active ? "fill-current" : undefined}
-              label={save.label ?? (save.active ? "Remover dos salvos" : "Salvar")}
-              onClick={stopActionPropagation(save.onClick)}
-              size={size}
-            />
-          ) : (
-            <PostActionMetric
-              active={save.active}
-              count={save.count}
-              icon={Bookmark}
-              iconClassName={save.active ? "fill-current" : undefined}
-              label={save.label ?? "Salvar"}
-              size={size}
-            />
-          )
-        ) : null}
+        {shouldRenderSecondaryActionsInline ? null : renderSaveAction()}
 
-        {share ? (
-          share.onClick ? (
-            <PostActionButton
-              count={share.count}
-              icon={Share2}
-              label={share.label ?? "Compartilhar"}
-              onClick={stopActionPropagation(share.onClick)}
-              size={size}
-            />
-          ) : (
-            <PostActionMetric
-              count={share.count}
-              icon={Share2}
-              label={share.label ?? "Compartilhar"}
-              size={size}
-            />
-          )
-        ) : null}
+        {shouldRenderSecondaryActionsInline ? null : renderShareAction()}
 
         {endSlot}
       </div>

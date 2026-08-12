@@ -2,13 +2,11 @@
 
 import {
   BadgeCheck,
-  Bookmark,
   ChevronDown,
   ChevronUp,
   Flag,
   MoreHorizontal,
   Pencil,
-  Share2,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -26,7 +24,6 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { cn } from "@/lib/utils";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
   countReplyTreeDescendants,
@@ -49,10 +46,7 @@ export type ReplyOverflowMenuProps = {
   onDelete: () => void;
   onEdit: () => void;
   onReport: () => void;
-  onShare: () => void;
-  onToggleSave: MouseEventHandler<HTMLButtonElement>;
   reply: PostReply;
-  savePending?: boolean;
 };
 
 export const ReplyOverflowMenu = ({
@@ -61,10 +55,7 @@ export const ReplyOverflowMenu = ({
   onDelete,
   onEdit,
   onReport,
-  onShare,
-  onToggleSave,
   reply,
-  savePending,
 }: ReplyOverflowMenuProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -79,7 +70,7 @@ export const ReplyOverflowMenu = ({
       <button
         aria-expanded={menuOpen}
         aria-haspopup="menu"
-        aria-label="Mais ações da resposta"
+        aria-label={`Mais ações do ${replyKind}`}
         className="grid h-7 w-7 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97] dark:text-muted dark:hover:text-foreground"
         onClick={(event) => {
           event.stopPropagation();
@@ -92,7 +83,7 @@ export const ReplyOverflowMenu = ({
 
       {menuOpen ? (
         <div
-          className="absolute right-0 bottom-8 z-[120] w-56 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-lectum-soft dark:border-border dark:bg-surface"
+          className="absolute top-7 right-0 z-[120] w-56 overflow-hidden rounded-2xl border border-border bg-surface p-1.5 text-sm shadow-lectum-soft dark:border-border dark:bg-surface"
           role="menu"
         >
           {isOwnReply ? (
@@ -110,38 +101,6 @@ export const ReplyOverflowMenu = ({
               Editar
             </button>
           ) : null}
-
-          <button
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60 dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-            disabled={savePending}
-            onClick={(event) => {
-              event.stopPropagation();
-              setMenuOpen(false);
-              onToggleSave(event);
-            }}
-            role="menuitem"
-            type="button"
-          >
-            <Bookmark
-              className={cn("h-4 w-4", reply.saved && "fill-current text-primary")}
-              aria-hidden="true"
-            />
-            {reply.saved ? "Remover dos salvos" : "Salvar"}
-          </button>
-
-          <button
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
-            onClick={(event) => {
-              event.stopPropagation();
-              setMenuOpen(false);
-              onShare();
-            }}
-            role="menuitem"
-            type="button"
-          >
-            <Share2 className="h-4 w-4" aria-hidden="true" />
-            Compartilhar
-          </button>
 
           {isOwnReply ? (
             <button
@@ -192,13 +151,8 @@ export const ReplyOverflowMenu = ({
 
 export const ReplyVoteBar = ({
   currentVote,
-  deletePending,
   disabled,
-  isOwnReply,
-  onDelete,
-  onEdit,
   onReply,
-  onReport,
   onShare,
   onToggleSave,
   onVote,
@@ -206,13 +160,8 @@ export const ReplyVoteBar = ({
   savePending,
 }: {
   currentVote: 1 | -1 | null;
-  deletePending?: boolean;
   disabled?: boolean;
-  isOwnReply: boolean;
-  onDelete: () => void;
-  onEdit: () => void;
   onReply: () => void;
-  onReport: () => void;
   onShare: () => void;
   onToggleSave: MouseEventHandler<HTMLButtonElement>;
   onVote: (value: 1 | -1) => void;
@@ -239,20 +188,21 @@ export const ReplyVoteBar = ({
         onClick: onReply,
         textOnly: true,
       }}
-      endSlot={
-        <ReplyOverflowMenu
-          deletePending={deletePending}
-          isOwnReply={isOwnReply}
-          onDelete={onDelete}
-          onEdit={onEdit}
-          onReport={onReport}
-          onShare={handleShare}
-          onToggleSave={handleToggleSave}
-          reply={reply}
-          savePending={savePending}
-        />
-      }
-      endSlotAlignment="inline"
+      save={{
+        active: reply.saved,
+        disabled: savePending,
+        label: reply.saved ? "Remover dos salvos" : "Salvar comentário",
+        onClick: handleToggleSave,
+        textLabel: reply.saved ? "Salvo" : "Salvar",
+        textOnly: true,
+      }}
+      secondaryActionsPlacement="inline"
+      share={{
+        label: "Compartilhar comentário",
+        onClick: handleShare,
+        textLabel: "Compartilhar",
+        textOnly: true,
+      }}
       showUpvoteText={false}
       size="xs"
       upvotesCount={reply.upvotes_count}
@@ -479,6 +429,14 @@ export const ReplyCard = ({
                 </p>
               )}
             </div>
+            <ReplyOverflowMenu
+              deletePending={deleteReplyPending}
+              isOwnReply={isOwnReply}
+              onDelete={() => onDeleteReply(reply)}
+              onEdit={() => setEditModalOpen(true)}
+              onReport={() => onReportReply(reply)}
+              reply={reply}
+            />
           </div>
 
           <div>
@@ -517,13 +475,8 @@ export const ReplyCard = ({
           <div data-comment-collapse-ignore="true">
             <ReplyVoteBar
               currentVote={reply.current_user_vote}
-              deletePending={deleteReplyPending}
               disabled={votePending}
-              isOwnReply={isOwnReply}
-              onDelete={() => onDeleteReply(reply)}
-              onEdit={() => setEditModalOpen(true)}
               onReply={() => onReply(reply)}
-              onReport={() => onReportReply(reply)}
               onShare={() => onShare(reply)}
               onToggleSave={toggleSaveReply}
               onVote={(value) => onVote(reply.id, value)}

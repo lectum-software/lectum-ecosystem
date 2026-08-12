@@ -1542,6 +1542,37 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
 
+## Complemento 2026-08-12 - ações inline e menu no cabeçalho dos comentários
+
+- Pedido do usuário: nos comentários dos posts, remover `Compartilhar` e `Salvar` do menu de três pontinhos, colocar essas ações ao lado de `Responder` e mover os três pontinhos para a linha do nome do autor, alinhados à direita.
+- Frontend: o menu `ReplyOverflowMenu` passou a conter somente ações contextuais de moderação/autoria (`Denunciar`, `Editar`, `Excluir`, conforme o usuário), sem `Compartilhar` e sem `Salvar`.
+- Frontend: `Compartilhar` e `Salvar` passaram a ser ações textuais inline na `CommunityActionBar`, logo após `Responder`, mantendo o estado `Salvo` quando aplicável e o mesmo fluxo real de autenticação/conversão para salvar respostas.
+- Frontend: os três pontinhos foram renderizados na linha de autor do `ReplyCard`, com alinhamento à direita e dropdown abrindo abaixo do botão para acompanhar a nova posição.
+- Escopo: sem mudanças de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, denúncias, edição/exclusão ou regras de permissão.
+- Fonte visual auditável: screenshot enviado pelo usuário em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 14.02.16.jpeg` e referência local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+
+### Critérios de aceite do complemento
+
+- [x] `Compartilhar` não aparece mais dentro do menu de três pontinhos dos comentários.
+- [x] `Salvar` não aparece mais dentro do menu de três pontinhos dos comentários.
+- [x] `Compartilhar` e `Salvar` aparecem na linha de ações do comentário ao lado de `Responder`.
+- [x] Os três pontinhos aparecem na linha do nome do autor e ficam alinhados à direita.
+- [x] O menu mantém somente `Denunciar` para comentários de outros usuários e `Editar`/`Excluir` para comentários próprios.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validações
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (reexecutado após o bump para `0.1.68`)
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.68`
+- [x] `pnpm check:version`
+- [x] Smoke estático do `ReplyCard` confirmou que o menu não contém `Compartilhar`/`Salvar`, mantém `Denunciar`/`Editar`/`Excluir`, renderiza ações secundárias inline e posiciona o menu antes do conteúdo.
+- [x] Browser local mobile no frontend buildado em `http://127.0.0.1:3033/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`; a rota autenticada local exibiu indisponibilidade de API (`Não foi possível conectar ao serviço`), então a validação visual específica dos dados reais fica para homologação após o push.
+
 ## Complemento 2026-08-12 - composer estavel ao abrir midia
 
 - Pedido do usuario: ao tocar no botao de midia, o bloco de comentarios nao deve ser empurrado para baixo nem espremer os elementos enquanto a folha nativa de escolha de arquivo aparece.

@@ -281,3 +281,48 @@ Validacao complementar 2026-08-12:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.63`: sucesso.
+
+## Atualizacao 2026-08-12 - ações inline e menu no cabeçalho dos comentários
+
+A revisão visual da árvore de comentários em mobile mostrou que o menu de três pontinhos estava
+misturando ações de leitura (`Compartilhar`, `Salvar`) com ações contextuais de autoria/moderação
+(`Denunciar`, `Editar`, `Excluir`). Além disso, o botão de três pontinhos ficava na barra inferior do
+comentário, competindo com `Responder` e deslocado da identidade do autor.
+
+Decisão complementar:
+
+- Remover `Compartilhar` e `Salvar` do `ReplyOverflowMenu`.
+- Manter no menu somente ações que dependem do usuário atual: `Denunciar` para conteúdo de terceiros e
+  `Editar`/`Excluir` para conteúdo próprio.
+- Mover o botão de três pontinhos para a linha do autor no `ReplyCard`, alinhado à direita do bloco do
+  comentário, com dropdown abrindo abaixo do botão.
+- Expor `Compartilhar` e `Salvar` como ações textuais inline na `CommunityActionBar`, imediatamente após
+  `Responder`, reutilizando a lógica real já existente de compartilhamento e salvamento.
+- Estender a `CommunityActionBar` com posicionamento opcional de ações secundárias inline, mantendo o
+  comportamento padrão de posts/cards inalterado.
+- Não alterar API, payload, cache, schema, migrations, endpoints, denúncias, edição/exclusão, votos,
+  permissões, envs ou packages.
+
+Consequências:
+
+- A barra de ações dos comentários fica mais explícita: `Responder`, `Compartilhar` e `Salvar` aparecem
+  no mesmo nível de decisão do usuário.
+- O menu de três pontinhos fica mais semântico, restrito a ações contextuais e perigosas quando
+  aplicável.
+- O ajuste vale para a tela principal do detalhe e para threads dedicadas porque reutiliza o mesmo
+  `ReplyCard`.
+- Rollback: reverter este complemento devolve `Compartilhar`/`Salvar` ao menu e reposiciona os três
+  pontinhos para a barra inferior.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso, reexecutado após o bump para `0.1.68`.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:version` após `pnpm version:bump` para `0.1.68`: sucesso.
+- Smoke estático do `ReplyCard`: sucesso ao confirmar menu sem `Compartilhar`/`Salvar`, ações
+  secundárias inline e três pontinhos antes do conteúdo.
+- Browser/CDP mobile em `http://127.0.0.1:3033/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`:
+  carregamento HTTP `200`; a rota autenticada local não conseguiu conectar à API para dados reais, então
+  a conferência visual com comentários reais fica para homologação após o push.
