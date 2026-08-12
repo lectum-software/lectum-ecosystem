@@ -54,6 +54,7 @@ const { getOrCreateAnalyticsIdentity, safeGetItem, safeSetItem, VISITOR_ID_KEY }
 const { releaseActivePrompt, reserveActivePrompt } = await import("./prompt-coordinator.ts");
 const {
   consumeDeferredPwaInstallPrompt,
+  getManualInstallPlatform,
   PWA_INSTALLED_KEY,
   setDeferredPwaInstallPrompt,
   shouldShowPwaInstallProfileEntry,
@@ -135,7 +136,10 @@ const createPwaInstallPromptEvent = () => ({
   userChoice: Promise.resolve({ outcome: "dismissed", platform: "web" }),
 });
 
-const withPwaInstallWindow = async ({ maxTouchPoints = 0, matchesMobile = false }, callback) => {
+const withPwaInstallWindow = async (
+  { maxTouchPoints = 0, matchesMobile = false, matchesStandalone = false },
+  callback,
+) => {
   const previousWindow = globalThis.window;
   const localStorage = new MemoryStorage();
   const sessionStorage = new MemoryStorage();
@@ -145,10 +149,16 @@ const withPwaInstallWindow = async ({ maxTouchPoints = 0, matchesMobile = false 
     dispatchEvent() {},
     localStorage,
     matchMedia(query) {
+      const mediaQuery = String(query);
+
       return {
         addEventListener() {},
-        matches: matchesMobile && String(query).includes("(max-width: 767px), (pointer: coarse)"),
-        media: String(query),
+        matches:
+          (matchesMobile && mediaQuery.includes("(max-width: 767px), (pointer: coarse)")) ||
+          (matchesStandalone &&
+            (mediaQuery.includes("(display-mode: standalone)") ||
+              mediaQuery.includes("(display-mode: fullscreen)"))),
+        media: mediaQuery,
         removeEventListener() {},
       };
     },
@@ -370,11 +380,26 @@ test("mantem instalar aplicativo no perfil mobile quando nao esta instalado", as
   });
 });
 
-test("oculta instalar aplicativo no perfil mobile quando ja esta marcado como instalado", async () => {
+test("mantem instalar aplicativo no perfil mobile quando marca local instalada esta obsoleta", async () => {
   await withPwaInstallWindow({ maxTouchPoints: 5, matchesMobile: true }, ({ localStorage }) => {
     localStorage.setItem(PWA_INSTALLED_KEY, "true");
 
-    assert.equal(shouldShowPwaInstallProfileEntry(), false);
+    assert.equal(shouldShowPwaInstallProfileEntry(), true);
+  });
+});
+
+test("oculta instalar aplicativo no perfil mobile em modo standalone real", async () => {
+  await withPwaInstallWindow(
+    { maxTouchPoints: 5, matchesMobile: true, matchesStandalone: true },
+    () => {
+      assert.equal(shouldShowPwaInstallProfileEntry(), false);
+    },
+  );
+});
+
+test("resolve instrucoes manuais de instalar aplicativo para Android", async () => {
+  await withPwaInstallWindow({ maxTouchPoints: 5, matchesMobile: true }, () => {
+    assert.equal(getManualInstallPlatform(), "android");
   });
 });
 

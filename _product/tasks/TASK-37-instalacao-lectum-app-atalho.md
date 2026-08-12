@@ -226,3 +226,35 @@ Persistência local:
   - `pnpm --dir frontend build`;
   - `pnpm check`;
   - browser local via Chrome/CDP em `http://127.0.0.1:3007/app/favorites`, viewport mobile `390x844`, user agent iOS/Safari e estado local temporário de usuário confirmado, confirmando nova copy, CTA **"Adicionar à tela inicial"** e ausência de **"O ícone ficará visível"**.
+
+## Complemento 2026-08-12 - opção de instalação para pacientes Android
+
+- Pedido do usuario: garantir que a opcao de instalar aplicativo apareca corretamente para pacientes; no Android, sem a Lectum instalada, a opcao nao estava aparecendo.
+- Diagnostico: o fluxo usava `lectum.pwaInstall.installed` como bloqueio para a entrada persistente do perfil. Essa marca local pode ficar obsoleta quando o usuario desinstala o atalho/app fora do navegador, porque o site nao recebe evento confiavel de desinstalacao.
+- Referencia tecnica: a documentacao atual do Chrome/web.dev informa que `beforeinstallprompt` so dispara quando o navegador considera o app elegivel e atende heuristicas como interacao/tempo; portanto a UI Android nao pode depender exclusivamente desse evento para existir.
+- Frontend: a entrada `Instalar aplicativo` no perfil passou a depender apenas de experiencia mobile e ausencia de modo `standalone` real, ignorando a marca local possivelmente obsoleta de instalado.
+- Frontend: clicar em `Instalar` no perfil tambem deixou de abortar por causa da marca local; se nao houver `beforeinstallprompt`, abre instrucoes manuais para Android/iOS/generico.
+- Frontend: a modal contextual em Android agora tambem pode oferecer fallback manual quando o `beforeinstallprompt` ainda nao foi disponibilizado; se houver prompt nativo, ele continua sendo preferido e chamado apenas apos o CTA.
+- Frontend: o prompt contextual ainda respeita `Agora nao`/cooldown e modo `standalone`; a marca local de instalado continua evitando insistencia automatica quando nao ha indicio nativo de instalabilidade, mas nao remove a acao manual do perfil.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, notificacoes, service worker ou dados publicados.
+
+### Criterios de aceite do complemento
+
+- [x] Paciente em Android/mobile, fora de `standalone`, continua vendo a entrada de instalar no perfil mesmo se existir uma marca local antiga `lectum.pwaInstall.installed=true`.
+- [x] O modo `standalone` real continua ocultando a entrada de instalar.
+- [x] Android sem `beforeinstallprompt` recebe instrucao manual em vez de ficar sem opcao.
+- [x] Android com `beforeinstallprompt` continua usando o prompt nativo somente apos toque no CTA.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend test`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile no frontend buildado validou `/manifest.webmanifest`, `/auth/login` e `/app/perfil` com HTTP 200; captura mobile 390x844 gerada em `/auth/login`; a regra autenticada do perfil/PWA foi coberta por testes unitarios e sera revalidada em homologacao Android real.
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetido com timeout maior e concluido sem erro)
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

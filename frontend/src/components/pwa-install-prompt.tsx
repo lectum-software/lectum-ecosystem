@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Share, Smartphone, X } from "lucide-react";
+import { Download, MoreHorizontal, Share, Smartphone, X } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -22,6 +22,7 @@ import {
   consumeDeferredPwaInstallPrompt,
   dispatchPwaInstallPromptAccepted,
   getDeferredPwaInstallPrompt,
+  isAndroidDevice,
   isIosDevice,
   isMobileExperience,
   isPwaMarkedInstalled,
@@ -33,18 +34,22 @@ import {
   subscribeToDeferredPwaInstallPrompt,
 } from "@/utils/pwa-install";
 
-type PromptKind = "native" | "ios";
+type PromptKind = "android" | "ios" | "native";
 
 const ACTIVE_PROMPT_VALUE = "pwa-install";
 const SHOW_DELAY_MS = 1400;
 
 const isPrivateAppPath = (pathname: string) => pathname === "/app" || pathname.startsWith("/app/");
 
-const isDismissedByPreference = () => {
+const isDismissedByPreference = ({
+  ignoreInstalledMarker = false,
+}: {
+  ignoreInstalledMarker?: boolean;
+} = {}) => {
   const storage = getBrowserStorage("localStorage");
   if (!storage) return true;
 
-  if (isPwaMarkedInstalled()) return true;
+  if (!ignoreInstalledMarker && isPwaMarkedInstalled()) return true;
 
   const dismissedUntil = Number(readStorageItem(storage, PWA_DISMISSED_UNTIL_KEY) ?? 0);
 
@@ -76,7 +81,7 @@ export function PwaInstallPrompt() {
   const user = useAppSelector((state) => state.user);
   const [isVisible, setIsVisible] = useState(false);
   const [promptKind, setPromptKind] = useState<PromptKind>("native");
-  const [showIosSteps, setShowIosSteps] = useState(false);
+  const [showManualSteps, setShowManualSteps] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
     getDeferredPwaInstallPrompt(),
   );
@@ -123,9 +128,10 @@ export function PwaInstallPrompt() {
     if (isVisible) return;
 
     const isPrivateAppRoute = isPrivateAppPath(pathname);
+    const androidDevice = isAndroidDevice();
     const iosDevice = isIosDevice();
     const canInstallNatively = Boolean(deferredPrompt);
-    const canOfferInstall = iosDevice || canInstallNatively;
+    const canOfferInstall = androidDevice || iosDevice || canInstallNatively;
 
     if (
       !isPrivateAppRoute ||
@@ -133,7 +139,7 @@ export function PwaInstallPrompt() {
       !isMobileExperience() ||
       !canOfferInstall ||
       isStandaloneMode() ||
-      isDismissedByPreference()
+      isDismissedByPreference({ ignoreInstalledMarker: canInstallNatively })
     ) {
       return;
     }
@@ -141,7 +147,7 @@ export function PwaInstallPrompt() {
     const timer = window.setTimeout(() => {
       if (!reserveActivePrompt()) return;
 
-      setPromptKind(iosDevice ? "ios" : "native");
+      setPromptKind(canInstallNatively ? "native" : iosDevice ? "ios" : "android");
       setIsVisible(true);
     }, SHOW_DELAY_MS);
 
@@ -155,7 +161,7 @@ export function PwaInstallPrompt() {
     releaseActivePrompt();
     const timer = window.setTimeout(() => {
       setIsVisible(false);
-      setShowIosSteps(false);
+      setShowManualSteps(false);
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -180,13 +186,13 @@ export function PwaInstallPrompt() {
   const handleInstall = async () => {
     if (isInstalling) return;
 
-    if (promptKind === "ios") {
-      if (showIosSteps) {
+    if (promptKind !== "native") {
+      if (showManualSteps) {
         closePrompt("cooldown");
         return;
       }
 
-      setShowIosSteps(true);
+      setShowManualSteps(true);
       return;
     }
 
@@ -261,16 +267,30 @@ export function PwaInstallPrompt() {
           </div>
         </div>
 
-        {promptKind === "ios" && showIosSteps ? (
+        {promptKind !== "native" && showManualSteps ? (
           <div className="mt-3 rounded-2xl border border-border bg-surface-muted p-3 text-sm text-foreground">
             <div className="mb-2 flex items-center gap-2 font-bold">
-              <Share className="h-4 w-4 text-primary" aria-hidden="true" />
-              No iPhone ou iPad
+              {promptKind === "ios" ? (
+                <Share className="h-4 w-4 text-primary" aria-hidden="true" />
+              ) : (
+                <MoreHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />
+              )}
+              {promptKind === "ios" ? "No iPhone ou iPad" : "No Android"}
             </div>
             <ol className="list-decimal space-y-1 pl-5 text-muted">
-              <li>Abra a Lectum no Safari.</li>
-              <li>Toque em Compartilhar.</li>
-              <li>Escolha Adicionar à Tela de Início e confirme.</li>
+              {promptKind === "ios" ? (
+                <>
+                  <li>Abra a Lectum no Safari.</li>
+                  <li>Toque em Compartilhar.</li>
+                  <li>Escolha Adicionar à Tela de Início e confirme.</li>
+                </>
+              ) : (
+                <>
+                  <li>Abra o menu do navegador.</li>
+                  <li>Toque em Instalar app ou Adicionar à tela inicial.</li>
+                  <li>Confirme para criar o atalho da Lectum.</li>
+                </>
+              )}
             </ol>
           </div>
         ) : null}
@@ -282,7 +302,7 @@ export function PwaInstallPrompt() {
             onClick={handleInstall}
             type="button"
           >
-            {promptKind === "ios" && showIosSteps ? (
+            {promptKind !== "native" && showManualSteps ? (
               <Smartphone className="h-4 w-4" aria-hidden="true" />
             ) : (
               <Download className="h-4 w-4" aria-hidden="true" />
@@ -290,7 +310,7 @@ export function PwaInstallPrompt() {
             <span>
               {isInstalling
                 ? "Abrindo instalação..."
-                : promptKind === "ios" && showIosSteps
+                : promptKind !== "native" && showManualSteps
                   ? "Entendi"
                   : "Adicionar à tela inicial"}
             </span>

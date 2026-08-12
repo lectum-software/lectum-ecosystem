@@ -158,3 +158,32 @@ Refinamento posterior em 2026-07-04:
 - TASK-38 deve implementar o pedido contextual de permissão de notificações usando consentimento
   separado e sem empilhar com o prompt PWA.
 - Validação em dispositivo físico iOS/Android real deve ser repetida antes de produção.
+
+## Atualizacao 2026-08-12 - recuperação da opção de instalar para pacientes Android
+
+Em Android real, paciente sem a Lectum instalada relatou que a opção de instalar aplicativo não aparecia. A causa provável é a combinação de dois comportamentos:
+
+- `lectum.pwaInstall.installed` é uma marca local gravada quando o navegador dispara `appinstalled`, mas ela não é necessariamente removida quando o usuário desinstala o atalho/app pelo sistema operacional;
+- no Chromium, `beforeinstallprompt` é disponibilizado pelo navegador apenas quando critérios e heurísticas de instalabilidade são atendidos, então a UI não deve depender exclusivamente desse evento para existir.
+
+Decisão complementar:
+
+- Tratar `lectum.pwaInstall.installed` como indicativo local para reduzir insistência automática, não como bloqueio permanente da ação manual no perfil.
+- Exibir a entrada `Instalar aplicativo` no perfil mobile sempre que a experiência não estiver em `standalone` real, mesmo que exista uma marca local antiga de instalação.
+- Permitir que o CTA do perfil tente o prompt nativo quando houver `beforeinstallprompt`; se não houver, abrir instruções manuais para Android, iOS ou navegador genérico.
+- Na modal contextual, oferecer fallback manual específico para Android quando o `beforeinstallprompt` ainda não existir, mantendo preferência pelo prompt nativo quando ele estiver disponível.
+- Manter cooldown de `Agora não`, coordenação `lectum.activePrompt`, separação de notificações e ausência de backend/env/package/migration.
+
+Consequências:
+
+- Pacientes que desinstalaram o atalho/app podem voltar ao perfil e reinstalar sem precisar limpar dados do navegador.
+- Android/Chromium não fica sem UI só porque o navegador ainda não expôs `beforeinstallprompt`.
+- Usuários que realmente estão usando a Lectum em modo instalado/standalone não recebem a opção duplicada.
+- Rollback: reverter este commit restaura o bloqueio pela marca local de instalado e remove o fallback manual Android da modal contextual.
+
+Validação adicional:
+
+- `pnpm --dir frontend test`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Demais validações registradas em `_product/tasks/TASK-37-instalacao-lectum-app-atalho.md`.

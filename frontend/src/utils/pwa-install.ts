@@ -78,7 +78,7 @@ export const isIosDevice = () => {
   return /iphone|ipad|ipod/.test(userAgent) || isTouchMac;
 };
 
-const isAndroidDevice = () => {
+export const isAndroidDevice = () => {
   if (typeof window === "undefined") return false;
 
   return window.navigator.userAgent.toLowerCase().includes("android");
@@ -112,7 +112,7 @@ export const markPwaInstalled = () => {
 
 export const shouldShowPwaInstallProfileEntry = () => {
   if (typeof window === "undefined") return false;
-  if (isStandaloneMode() || isPwaMarkedInstalled()) return false;
+  if (isStandaloneMode()) return false;
 
   return isMobileExperience();
 };

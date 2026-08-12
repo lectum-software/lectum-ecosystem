@@ -7,7 +7,6 @@ import {
   consumeDeferredPwaInstallPrompt,
   dispatchPwaInstallPromptAccepted,
   getManualInstallPlatform,
-  isPwaMarkedInstalled,
   isStandaloneMode,
   type ManualInstallPlatform,
   markPwaInstalled,
@@ -163,7 +162,7 @@ export const usePwaInstallAccountAction = () => {
   const handleInstall = useCallback(async () => {
     if (isInstalling) return;
 
-    if (isStandaloneMode() || isPwaMarkedInstalled()) {
+    if (isStandaloneMode()) {
       syncVisibility();
       return;
     }
