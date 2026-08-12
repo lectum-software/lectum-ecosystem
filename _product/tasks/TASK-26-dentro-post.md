@@ -1667,3 +1667,33 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-11 - comentarios sem moldura externa e composer com camera
+
+- Pedido do usuario: videos publicados em comentarios nao devem exibir a moldura de compartilhamento externo (`Respondido na Lectum`, caixa azul e identificacao do psicologo), pois essa formatacao pertence apenas ao material compartilhado fora da Lectum.
+- Frontend: a criacao/edicao de respostas passa a gerar miniatura crua do video, sem `lectumShareFrame`; a renderizacao de midia de resposta tambem ignora miniaturas armazenadas de video para nao reaproveitar molduras antigas ja salvas.
+- Frontend: o icone de anexar midia do composer de resposta foi movido para dentro do campo de comentario, passou a usar camera e continua desabilitado quando ja existe uma midia selecionada.
+- Frontend: o placeholder interno do campo passa a ser `Adicionar comentario`, mantendo o contexto `Respondendo [nome]` no chip acima do campo.
+- Frontend: apos selecionar uma midia, o arquivo entra imediatamente no campo de resposta; a preparacao de orientacao/miniatura de video passa a ser agendada depois da volta ao composer, com indicador de carregamento no proprio preview.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, votos, salvos, denuncias ou tracking; o compartilhamento externo continua usando o fluxo proprio de share.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Videos de comentarios/respostas sao exibidos dentro da Lectum sem caixa azul de pergunta, sem selo `Respondido na Lectum` e sem identificacao visual do psicologo embutida na midia.
+- [x] Novas respostas e edicoes de respostas geram thumbnails cruas de video, sem moldura de compartilhamento externo.
+- [x] O icone de adicionar midia fica dentro do campo de resposta e usa camera.
+- [x] O placeholder do textarea de resposta e `Adicionar comentario`.
+- [x] A selecao de video retorna imediatamente para o campo de resposta e o carregamento da miniatura acontece no preview do composer, nao prendendo a galeria.
+- [x] A formatacao de compartilhamento externo permanece restrita ao fluxo de compartilhamento fora da Lectum.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

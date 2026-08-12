@@ -256,8 +256,9 @@ export const CommunityMediaBlock = ({
 }: CommunityMediaBlockProps) => {
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
+  const shouldUseStoredVideoThumbnail = normalizedMediaType === "video" && variant !== "reply";
   const resolvedThumbnailUrl =
-    normalizedMediaType === "video" && thumbnailUrl ? resolvePublicMediaUrl(thumbnailUrl) : null;
+    shouldUseStoredVideoThumbnail && thumbnailUrl ? resolvePublicMediaUrl(thumbnailUrl) : null;
   const fallbackPosterKey =
     normalizedMediaType === "video" && !resolvedThumbnailUrl ? resolvedUrl : null;
   const [fallbackPoster, setFallbackPoster] = useState<{ key: string; url: string } | null>(null);

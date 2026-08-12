@@ -69,7 +69,7 @@ export const ReplyComposer = ({
   replyTarget: ReplyTarget;
   variant?: "inline" | "main";
 }) => {
-  const form = useReplyComposerForm(replyTarget?.name ?? replyToName);
+  const form = useReplyComposerForm();
   const { formProps, hook } = form;
   const [composerActive, setComposerActive] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -120,9 +120,10 @@ export const ReplyComposer = ({
       inputClassName: cn(
         formProps.fields[0].inputClassName,
         "border-0 bg-transparent px-3.5 shadow-none focus:border-transparent focus:ring-0 dark:bg-transparent",
+        shouldShowMediaControlInRow && "pl-14",
       ),
     }),
-    [formProps.fields],
+    [formProps.fields, shouldShowMediaControlInRow],
   );
   const composerStyle = useMemo(() => {
     const style: CSSProperties = {};
@@ -183,6 +184,39 @@ export const ReplyComposer = ({
       inputNode?.focus({ preventScroll: true });
     }, 0);
   }, []);
+
+  const scheduleSelectedMediaPreviewPreparation = useCallback(
+    (previewUrl: string, type: SelectedReplyMedia["type"]) => {
+      window.setTimeout(() => {
+        window.requestAnimationFrame(() => {
+          void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
+            setSelectedMedia((current) =>
+              current?.previewUrl === previewUrl ? { ...current, orientation } : current,
+            );
+          });
+
+          if (type !== "video") return;
+
+          void createReplyVideoThumbnail(previewUrl)
+            .then((thumbnailUrl) => {
+              setSelectedMedia((current) =>
+                current?.previewUrl === previewUrl
+                  ? { ...current, isPreparingPreview: false, thumbnailUrl }
+                  : current,
+              );
+            })
+            .catch(() => {
+              setSelectedMedia((current) =>
+                current?.previewUrl === previewUrl
+                  ? { ...current, isPreparingPreview: false }
+                  : current,
+              );
+            });
+        });
+      }, 120);
+    },
+    [],
+  );
 
   const resetCancelDrag = useCallback(() => {
     cancelDragRef.current = null;
@@ -352,28 +386,16 @@ export const ReplyComposer = ({
     selectedMediaPreviewUrlRef.current = previewUrl;
     setSelectedMedia({
       file,
+      isPreparingPreview: type === "video",
       orientation: undefined,
       previewUrl,
       type,
     });
-    void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
-      setSelectedMedia((current) =>
-        current?.previewUrl === previewUrl ? { ...current, orientation } : current,
-      );
-    });
-    if (type === "video") {
-      void createReplyVideoThumbnail(previewUrl).then((thumbnailUrl) => {
-        if (!thumbnailUrl) return;
-
-        setSelectedMedia((current) =>
-          current?.previewUrl === previewUrl ? { ...current, thumbnailUrl } : current,
-        );
-      });
-    }
     hook.clearErrors("content");
     endMediaPickerInteraction();
     setComposerActive(true);
     focusComposerInput();
+    scheduleSelectedMediaPreviewPreparation(previewUrl, type);
   };
 
   const handleCancelPointerDown = (event: ReactPointerEvent<HTMLFormElement>) => {
@@ -496,22 +518,22 @@ export const ReplyComposer = ({
       ) : null}
 
       <div className="flex items-end gap-2">
-        {shouldShowMediaControlInRow ? (
-          <ReplyMediaAttachmentControl
-            className="pb-0"
-            composerMode="trigger"
-            disabled={disabled}
-            fileInputRef={fileInputRef}
-            isUploading={disabled && Boolean(selectedMedia)}
-            mediaPermission={mediaPermission}
-            onAfterAction={() => setComposerActive(true)}
-            onMediaChange={handleMediaChange}
-            onOpenDialog={beginMediaPickerInteraction}
-            onRemoveSelected={clearSelectedMedia}
-            selectedMedia={selectedMedia}
-          />
-        ) : null}
-        <div className="grid min-w-0 flex-1 rounded-[18px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
+        <div className="relative grid min-w-0 flex-1 rounded-[18px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
+          {shouldShowMediaControlInRow ? (
+            <ReplyMediaAttachmentControl
+              className="absolute top-0 left-2 z-10"
+              composerMode="trigger"
+              disabled={disabled}
+              fileInputRef={fileInputRef}
+              isUploading={disabled && Boolean(selectedMedia)}
+              mediaPermission={mediaPermission}
+              onAfterAction={() => setComposerActive(true)}
+              onMediaChange={handleMediaChange}
+              onOpenDialog={beginMediaPickerInteraction}
+              onRemoveSelected={clearSelectedMedia}
+              selectedMedia={selectedMedia}
+            />
+          ) : null}
           <FieldComponent control={hook.control} {...composerContentField} />
           {selectedMedia ? (
             <ReplyMediaAttachmentControl
@@ -543,12 +565,7 @@ export const ReplyComposer = ({
         </Button>
       </div>
 
-      <p
-        className={cn(
-          "text-[11px] font-medium leading-4 text-subtle",
-          shouldShowMediaControlInRow ? "px-[3.25rem]" : "pr-[3.25rem]",
-        )}
-      >
+      <p className={cn("text-[11px] font-medium leading-4 text-subtle", "pr-[3.25rem]")}>
         {COMMENT_GUIDANCE_MESSAGE}
       </p>
 

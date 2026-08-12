@@ -3,10 +3,7 @@ import type {
   PostReply,
   PostReplyMediaUploadResponse,
 } from "@/api/generator/types/posts";
-import {
-  createVideoThumbnailFile,
-  type LectumVideoThumbnailFrameOptions,
-} from "@/utils/video-thumbnail";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import { type ReplyComposerForm, toCreatePostReplyPayload } from "../use-form";
 
 import { resolveReplyMediaUploadError, resolveReplyPublishError } from "./reply-support";
@@ -27,7 +24,6 @@ export type SubmitReplyWithOptionalMediaInput = {
   parentReplyId?: string | null;
   postId: string;
   setReplyError: (message: string | null) => void;
-  thumbnailFrame?: LectumVideoThumbnailFrameOptions | null;
   uploadReplyMedia: (input: ReplyMediaUploadInput) => Promise<PostReplyMediaUploadResponse>;
   values: ReplyComposerForm;
 };
@@ -55,12 +51,8 @@ const uploadBestEffortVideoThumbnail = async ({
   media,
   mediaFile,
   postId,
-  thumbnailFrame,
   uploadReplyMedia,
-}: Pick<
-  SubmitReplyWithOptionalMediaInput,
-  "mediaFile" | "postId" | "thumbnailFrame" | "uploadReplyMedia"
-> & {
+}: Pick<SubmitReplyWithOptionalMediaInput, "mediaFile" | "postId" | "uploadReplyMedia"> & {
   media: PostReplyMediaUploadResponse | null;
 }) => {
   if (!mediaFile || media?.media_type !== "video") return null;
@@ -68,9 +60,7 @@ const uploadBestEffortVideoThumbnail = async ({
   let thumbnailFile: File | null = null;
 
   try {
-    thumbnailFile = await createVideoThumbnailFile(mediaFile, {
-      lectumShareFrame: thumbnailFrame ?? null,
-    });
+    thumbnailFile = await createVideoThumbnailFile(mediaFile);
   } catch {
     thumbnailFile = null;
   }
@@ -90,7 +80,6 @@ export const submitReplyWithOptionalMedia = async ({
   parentReplyId,
   postId,
   setReplyError,
-  thumbnailFrame,
   uploadReplyMedia,
   values,
 }: SubmitReplyWithOptionalMediaInput) => {
@@ -106,7 +95,6 @@ export const submitReplyWithOptionalMedia = async ({
     media,
     mediaFile,
     postId,
-    thumbnailFrame,
     uploadReplyMedia,
   });
 

@@ -27,6 +27,8 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - O identificador opaco de cada parte é exposto como `part_id`, não como `part_token`, para não ser removido pelo sanitizador público que protege campos de autenticação.
 - Durante o rollout, o backend também aceita `partToken` na finalização e devolve `part_token` como alias legado restrito ao endpoint de parte, porque PWAs/browsers podem manter o JavaScript anterior em cache por alguns minutos.
 - A validação de permissão de mídia em respostas permanece a mesma: psicólogo com CFP verificado e Plano Profissional ativo, ou cortesia administrativa ativa.
+- Thumbnails de video em respostas/comentarios dentro da Lectum sao cruas, sem moldura `Respondido na Lectum`; a moldura com caixa azul e identificacao profissional fica restrita ao fluxo de compartilhamento externo.
+- A preparacao local de preview/miniatura de videos selecionados e agendada apos o retorno ao composer, para que a galeria nativa feche e o carregamento aconteca no campo de resposta.
 
 ## Consequências
 
@@ -40,6 +42,7 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - Vídeos médios, como o arquivo real de 13,89 MB usado no diagnóstico de 2026-08-11, também deixam de depender do upload simples e passam a ser enviados em partes.
 - O chunk de 8 MB funcionava no R2, mas ainda ficava perto de limites intermediarios de proxy/runtime quando embalado em `multipart/form-data`; por isso o chunk publicado passa a 5 MB.
 - O arquivo real `IMG_3087.MP4` de 120,05 MB foi validado localmente em 25 chunks de 5 MB, e o multipart direto no R2 completou com sucesso; a mitigacao restante fica no cliente/rede/PWA, nao no storage.
+- Videos de comentarios ja publicados com thumbnail de compartilhamento podem continuar tendo a miniatura antiga no registro, mas a UI de resposta ignora essa thumbnail para renderizar o video sem a moldura externa.
 
 ## Produção e rollout
 

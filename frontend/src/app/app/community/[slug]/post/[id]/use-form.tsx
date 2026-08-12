@@ -22,14 +22,14 @@ export const postReportSchema = z.object({
 
 export type PostReportForm = z.infer<typeof postReportSchema>;
 
-const buildFields = (replyingToName?: string | null) =>
+const buildFields = () =>
   [
     {
       name: "content",
       field: "textarea",
       className: "gap-0 [&>span:last-child]:hidden",
       label: undefined,
-      placeholder: replyingToName ? `Responder ${replyingToName}` : "Comentar no post",
+      placeholder: "Adicionar comentário",
       required: false,
       rows: 1,
       max: 2000,
@@ -82,8 +82,8 @@ export const toPostReportPayload = (values: PostReportForm): PostReportPayload =
   reason: values.reason as PostReportReason,
 });
 
-export const useReplyComposerForm = (replyingToName?: string | null) => {
-  const fields = useMemo(() => buildFields(replyingToName), [replyingToName]);
+export const useReplyComposerForm = () => {
+  const fields = useMemo(() => buildFields(), []);
 
   return useFormList<ReplyComposerForm>({
     fields,

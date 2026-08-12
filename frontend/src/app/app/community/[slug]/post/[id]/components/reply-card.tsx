@@ -571,7 +571,6 @@ export const ReplyCard = ({
               open={editModalOpen}
               postId={postId}
               reply={reply}
-              sourceText={postSourceText}
             />
           ) : null}
 

@@ -1,9 +1,8 @@
 "use client";
 
-import { Loader2, X } from "lucide-react";
+import { Camera, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, type RefObject, useEffect, useState } from "react";
-import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -15,6 +14,7 @@ export type ReplyMediaOrientation = "landscape" | "portrait" | "square";
 
 export type SelectedReplyMedia = {
   file: File;
+  isPreparingPreview?: boolean;
   orientation?: ReplyMediaOrientation;
   previewUrl: string;
   thumbnailUrl?: string | null;
@@ -270,6 +270,7 @@ export function ReplyMediaAttachmentControl({
   const activeMedia = selectedMedia
     ? {
         alt: "Miniatura da mídia selecionada",
+        isPreparingPreview: selectedMedia.isPreparingPreview,
         orientation: selectedMedia.orientation,
         src: selectedMedia.previewUrl,
         thumbnailSrc: selectedMedia.thumbnailUrl ?? null,
@@ -279,11 +280,13 @@ export function ReplyMediaAttachmentControl({
     : !removeCurrent && currentSrc && currentType
       ? {
           alt: currentType === "video" ? "Vídeo atual anexado" : "Imagem atual anexada",
+          isPreparingPreview: false,
           orientation: resolvedCurrentMediaOrientation,
           src: currentSrc,
-          thumbnailSrc: currentMedia?.thumbnailUrl
-            ? resolvePublicMediaUrl(currentMedia.thumbnailUrl)
-            : null,
+          thumbnailSrc:
+            currentType !== "video" && currentMedia?.thumbnailUrl
+              ? resolvePublicMediaUrl(currentMedia.thumbnailUrl)
+              : null,
           type: currentType,
           unoptimized:
             isPublicMediaUrl(currentMedia?.mediaUrl) ||
@@ -344,6 +347,12 @@ export function ReplyMediaAttachmentControl({
                 src={activeMedia.src}
               />
             )}
+            {activeMedia.isPreparingPreview ? (
+              <span className="absolute inset-0 grid place-items-center bg-foreground/20 text-surface">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Preparando video</span>
+              </span>
+            ) : null}
           </div>
           <button
             aria-label="Remover mídia anexada"
@@ -396,7 +405,7 @@ export function ReplyMediaAttachmentControl({
           {isUploading ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
-            <AnimatedImagesIcon className="h-4 w-4" aria-hidden="true" />
+            <Camera className="h-4 w-4" aria-hidden="true" />
           )}
           <span className="sr-only">Anexar mídia</span>
         </button>
@@ -452,6 +461,12 @@ export function ReplyMediaAttachmentControl({
                 src={activeMedia.src}
               />
             )}
+            {activeMedia.isPreparingPreview ? (
+              <span className="absolute inset-0 grid place-items-center bg-foreground/20 text-surface">
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Preparando video</span>
+              </span>
+            ) : null}
 
             <button
               aria-label="Remover mídia anexada"
@@ -505,7 +520,7 @@ export function ReplyMediaAttachmentControl({
             {isUploading ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <AnimatedImagesIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              <Camera className="h-3.5 w-3.5" aria-hidden="true" />
             )}
             Mídia
           </button>

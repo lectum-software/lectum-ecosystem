@@ -22,16 +22,12 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
-import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
 import {
   COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
   isCommunityMediaFileTooLarge,
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
-import {
-  createVideoThumbnailFile,
-  type LectumVideoThumbnailFrameOptions,
-} from "@/utils/video-thumbnail";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 
 const replyEditSchema = z.object({
   content: z.string().trim().max(2000, "Use no máximo 2000 caracteres no texto"),
@@ -53,7 +49,6 @@ type ReplyEditModalProps = {
   open: boolean;
   postId: string;
   reply: EditableReply;
-  sourceText?: string | null;
 };
 
 const fields = [
@@ -71,14 +66,7 @@ const fields = [
   },
 ] satisfies Field<ReplyEditForm>[];
 
-export function ReplyEditModal({
-  onClose,
-  onUpdated,
-  open,
-  postId,
-  reply,
-  sourceText,
-}: ReplyEditModalProps) {
+export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: ReplyEditModalProps) {
   const storedUser = useAppSelector((state) => state.user);
   const mediaPermission = getCommunityMediaPermission(storedUser);
   const canManageMedia = mediaPermission.canAttach && reply.author.role === "psicologo";
@@ -120,6 +108,39 @@ export function ReplyEditModal({
       document.getElementById("edit-reply-content")?.focus({ preventScroll: true });
     }, 0);
   }, []);
+
+  const scheduleSelectedMediaPreviewPreparation = useCallback(
+    (previewUrl: string, type: SelectedReplyMedia["type"]) => {
+      window.setTimeout(() => {
+        window.requestAnimationFrame(() => {
+          void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
+            setSelectedMedia((current) =>
+              current?.previewUrl === previewUrl ? { ...current, orientation } : current,
+            );
+          });
+
+          if (type !== "video") return;
+
+          void createReplyVideoThumbnail(previewUrl)
+            .then((thumbnailUrl) => {
+              setSelectedMedia((current) =>
+                current?.previewUrl === previewUrl
+                  ? { ...current, isPreparingPreview: false, thumbnailUrl }
+                  : current,
+              );
+            })
+            .catch(() => {
+              setSelectedMedia((current) =>
+                current?.previewUrl === previewUrl
+                  ? { ...current, isPreparingPreview: false }
+                  : current,
+              );
+            });
+        });
+      }, 120);
+    },
+    [],
+  );
 
   const revokeSelectedMediaPreview = useCallback(() => {
     if (!selectedMediaPreviewUrlRef.current) return;
@@ -189,28 +210,16 @@ export function ReplyEditModal({
     selectedMediaPreviewUrlRef.current = previewUrl;
     setSelectedMedia({
       file,
+      isPreparingPreview: type === "video",
       orientation: undefined,
       previewUrl,
       type,
     });
-    void detectReplyMediaOrientation(previewUrl, type).then((orientation) => {
-      setSelectedMedia((current) =>
-        current?.previewUrl === previewUrl ? { ...current, orientation } : current,
-      );
-    });
-    if (type === "video") {
-      void createReplyVideoThumbnail(previewUrl).then((thumbnailUrl) => {
-        if (!thumbnailUrl) return;
-
-        setSelectedMedia((current) =>
-          current?.previewUrl === previewUrl ? { ...current, thumbnailUrl } : current,
-        );
-      });
-    }
     setRemoveMedia(false);
     setActionError(null);
     hook.clearErrors("content");
     focusEditor();
+    scheduleSelectedMediaPreviewPreparation(previewUrl, type);
   };
 
   const handleSubmit = hook.handleSubmit(async (values) => {
@@ -231,24 +240,9 @@ export function ReplyEditModal({
             id: postId,
           })
         : null;
-      const thumbnailFrame =
-        selectedMedia && reply.author.role === "psicologo"
-          ? ({
-              cardLabel: "Respondido na Lectum",
-              professional: {
-                avatar: reply.author.avatar,
-                name: reply.author.name,
-                roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
-                verified: reply.author.verified,
-              },
-              sourceText: sourceText ?? reply.content,
-            } satisfies LectumVideoThumbnailFrameOptions)
-          : null;
       const thumbnailFile =
         selectedMedia && uploadedMedia?.media_type === "video"
-          ? await createVideoThumbnailFile(selectedMedia.file, {
-              lectumShareFrame: thumbnailFrame,
-            })
+          ? await createVideoThumbnailFile(selectedMedia.file)
           : null;
       const uploadedThumbnail = thumbnailFile
         ? await uploadMutation.mutateAsync({

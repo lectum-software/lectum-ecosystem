@@ -340,7 +340,6 @@ export const ReplyOwnerActionMenu = ({
           open={editModalOpen}
           postId={post.id}
           reply={reply}
-          sourceText={reply.parent_content ?? post.title}
         />
       ) : null}
 

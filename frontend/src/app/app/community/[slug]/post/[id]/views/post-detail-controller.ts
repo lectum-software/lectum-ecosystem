@@ -27,9 +27,7 @@ import {
   findPostReplyInTree,
   type LectumShareChannel,
   type LectumShareVideoTarget,
-  normalizeLectumShareProfessionalRole,
 } from "@/utils/lectum-share-target";
-import type { LectumVideoThumbnailFrameOptions } from "@/utils/video-thumbnail";
 import { submitReplyWithOptionalMedia } from "../modules/reply-submit";
 import {
   confirmDiscardReplyDraft,
@@ -442,30 +440,12 @@ export const usePostDetailController = () => {
       return;
     }
 
-    const parentReply = parentReplyId ? findPostReplyInTree(replies, parentReplyId) : null;
-    const thumbnailFrame =
-      mediaFile && currentUser?.role === "psicologo"
-        ? ({
-            cardLabel: "Respondido na Lectum",
-            professional: {
-              avatar: currentUser.avatar ?? null,
-              name: currentUser.name || "Profissional Lectum",
-              roleLabel: normalizeLectumShareProfessionalRole(null),
-              verified: Boolean(
-                currentUser.psychologist_profile?.cfp_verified_at ||
-                  currentUser.psychologist_profile?.crp_status === "aprovado",
-              ),
-            },
-            sourceText: parentReply?.content ?? post.title,
-          } satisfies LectumVideoThumbnailFrameOptions)
-        : null;
     const createdReply = await submitReplyWithOptionalMedia({
       createReply: createReplyMutation.mutateAsync,
       mediaFile,
       parentReplyId,
       postId: post.id,
       setReplyError,
-      thumbnailFrame,
       uploadReplyMedia: uploadReplyMediaMutation.mutateAsync,
       values,
     });
