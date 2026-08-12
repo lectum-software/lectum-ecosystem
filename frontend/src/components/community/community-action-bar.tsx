@@ -48,6 +48,7 @@ export type CommunityActionBarProps = {
   endSlotAlignment?: "trailing" | "inline";
   endSlot?: ReactNode;
   reply?: {
+    iconOnly?: boolean;
     label?: string;
     onClick: ActionHandler;
     textOnly?: boolean;
@@ -354,14 +355,14 @@ export const CommunityActionBar = ({
             onClick={stopActionPropagation(reply.onClick)}
             size={size}
           >
-            Responder
+            {reply.iconOnly ? null : "Responder"}
           </PostActionButton>
         ) : null}
 
         {shouldRenderSecondaryActionsInline ? (
           <>
-            {renderShareAction()}
             {renderSaveAction()}
+            {renderShareAction()}
           </>
         ) : null}
       </div>

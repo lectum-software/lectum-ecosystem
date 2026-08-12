@@ -185,24 +185,20 @@ export const ReplyVoteBar = ({
       disabled={disabled}
       onVote={onVote}
       reply={{
+        iconOnly: true,
         label: "Responder",
         onClick: onReply,
-        textOnly: true,
       }}
       save={{
         active: reply.saved,
         disabled: savePending,
-        label: reply.saved ? "Remover dos salvos" : "Salvar comentário",
+        label: reply.saved ? "Remover dos salvos" : "Salvar coment\u00e1rio",
         onClick: handleToggleSave,
-        textLabel: reply.saved ? "Salvo" : "Salvar",
-        textOnly: true,
       }}
       secondaryActionsPlacement="inline"
       share={{
-        label: "Compartilhar comentário",
+        label: "Compartilhar coment\u00e1rio",
         onClick: handleShare,
-        textLabel: "Compartilhar",
-        textOnly: true,
       }}
       showUpvoteText={false}
       size="xs"

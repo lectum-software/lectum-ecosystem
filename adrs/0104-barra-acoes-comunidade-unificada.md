@@ -89,3 +89,22 @@ No feed mobile, o pill agrupado de upvote/downvote podia aparecer com parte do c
 - O pill de votos do feed fica alguns pixels menor e alinhado aos demais botoes da action bar.
 - A borda passa a ser menos suscetivel a cortes por overflow sem alterar handlers, contadores, estados ativos, voto otimista, salvamento ou compartilhamento.
 - A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs ou packages.
+
+## Atualizacao 2026-08-12 - acoes iconicas em comentarios
+
+### Contexto
+
+A linha de acoes dos comentarios vinha exibindo `Responder`, `Compartilhar` e `Salvar` por texto. Em cards empilhados no mobile, esses textos ocupavam largura horizontal demais e repetiam a mesma leitura em cada comentario. O produto pediu acoes mais compactas por icone e a ordem especifica `Responder`, `Salvar`, `Compartilhar`.
+
+### Decisao
+
+- Manter `CommunityActionBar` como fonte unica da barra de acoes.
+- Adicionar `reply.iconOnly` para permitir que o botao de responder use o icone `Reply` sem texto visivel, preservando label acessivel e handler.
+- No modo `secondaryActionsPlacement="inline"`, renderizar salvar antes de compartilhar.
+- No `ReplyVoteBar`, deixar responder, salvar e compartilhar como botoes icon-only, mantendo `size="xs"` e votos inline sem capsula.
+
+### Consequencias
+
+- Comentarios e respostas ficam mais compactos no mobile, com ordem visual Responder, Salvar e Compartilhar depois dos votos.
+- A semantica acessivel continua disponivel por `aria-label`/`title`, e os mesmos handlers de responder, salvar e compartilhar permanecem ativos.
+- A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs, packages, permissao, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.

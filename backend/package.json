@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.70",
+  "version": "0.1.71",
   "private": true,
   "prisma": {
     "schema": "prisma/schema.prisma"

@@ -1959,3 +1959,37 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.69`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - acoes de comentarios por icones
+
+- Pedido do usuario: nos comentarios, trocar os textos `Responder`, `Salvar` e `Compartilhar` por icones e deixar a ordem `Responder`, `Salvar`, `Compartilhar`.
+- Fonte visual auditavel: screenshot enviado em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 15.50.05.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a `CommunityActionBar` ganhou suporte explicito a `reply.iconOnly`, preservando `aria-label`, `title`, foco e handler do botao de responder.
+- Frontend: a ordenacao de acoes secundarias inline foi ajustada para renderizar salvar antes de compartilhar; como esse modo inline e usado nos comentarios, a linha fica `upvote`, `downvote`, `Responder` por icone, `Salvar` por icone e `Compartilhar` por icone.
+- Frontend: o `ReplyVoteBar` deixou de usar as variantes textuais para responder, salvar e compartilhar, mantendo os mesmos handlers, estados de salvo, votos e compartilhamento.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, ranking, composer, denuncia, edicao, exclusao ou arvore de respostas.
+- ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Comentarios e respostas exibem Responder, Salvar e Compartilhar como icones, sem texto visivel.
+- [x] A ordem das acoes nos comentarios e Responder, Salvar, Compartilhar.
+- [x] Labels acessiveis, handlers, estado ativo de salvo e fluxo de compartilhamento permanecem preservados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Next local buildado em `http://127.0.0.1:3036`: `/version` respondeu 200 e `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu 200.
+- [x] `pnpm check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
