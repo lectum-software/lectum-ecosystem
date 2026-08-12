@@ -43,6 +43,7 @@ import {
   usePostReportForm,
   useReplyComposerForm,
 } from "../use-form";
+import { findReplyComposerInput } from "./reply-composer-dom";
 
 export const ReplyComposer = ({
   apiError,
@@ -127,7 +128,6 @@ export const ReplyComposer = ({
   );
   const composerStyle = useMemo(() => {
     const style: CSSProperties = {};
-
     if (!isInline && keyboardOffset > 0) {
       style.bottom = `${keyboardOffset}px`;
     }
@@ -178,7 +178,7 @@ export const ReplyComposer = ({
 
   const focusComposerInput = useCallback(() => {
     window.setTimeout(() => {
-      const inputNode = composerFormNodeRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+      const inputNode = findReplyComposerInput(composerFormNodeRef.current);
       composerActivatedAtRef.current = Date.now();
       inputNode?.focus({ preventScroll: true });
     }, 0);
@@ -225,7 +225,7 @@ export const ReplyComposer = ({
 
   const dismissComposerKeyboard = useCallback(() => {
     const activeElement = document.activeElement;
-    const inputNode = composerFormNodeRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+    const inputNode = findReplyComposerInput(composerFormNodeRef.current);
 
     inputNode?.blur();
     if (
@@ -261,7 +261,7 @@ export const ReplyComposer = ({
     if (!autoFocus || !autoFocusTargetId) return;
 
     const timer = window.setTimeout(() => {
-      const inputNode = composerFormNodeRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+      const inputNode = findReplyComposerInput(composerFormNodeRef.current);
       inputNode?.focus({ preventScroll: true });
     }, 0);
 
@@ -335,7 +335,8 @@ export const ReplyComposer = ({
 
       const activeElement = document.activeElement;
       if (
-        !(activeElement instanceof HTMLTextAreaElement) ||
+        !(activeElement instanceof HTMLElement) ||
+        activeElement !== findReplyComposerInput(composerFormNodeRef.current) ||
         !composerFormNodeRef.current?.contains(activeElement)
       ) {
         return;

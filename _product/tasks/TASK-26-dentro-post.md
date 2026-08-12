@@ -937,6 +937,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
+- [x] Chrome headless local em `/smoke-reply-composer` confirmou `contenteditable` renderizado, sem `textarea` nativo no composer.
 - [x] `pnpm check`
 - [x] `git diff --check`
 
@@ -1776,3 +1777,34 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - composer de comentarios sem textarea nativo no iOS
+
+- Pedido do usuario: fazer o campo de comentario seguir a abordagem de editor customizado, como no ChatGPT, para evitar que o iOS/Safari trate o composer como um formulario nativo navegavel e exiba a barra de anterior/proximo/concluir.
+- Referencia visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta direta nesta sessao, entao a execucao seguiu a imagem local inventariada.
+- Frontend: foi criado o controller `contenteditable` na fundacao de formularios (`frontend/src/components/controllers`) com React Hook Form, Zod e texto plano via `textContent`.
+- Frontend: o `ReplyComposer` de comentarios/respostas passou a usar esse controller somente no campo `content`, preservando placeholder, limite de 2000 caracteres, quebras de linha, erro inline, autoGrow visual e envio pelo payload existente.
+- Frontend: foco, autofocus, blur, cancelamento por gesto e retorno apos selecao de midia passaram a procurar um seletor compartilhado que aceita tanto o `textarea` legado quanto o novo textbox `contenteditable`.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, upload, permissao de midia, votos, salvos, denuncias ou tracking.
+- ADR criado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O composer principal e inline de comentarios/respostas nao usa `textarea` nativo para o campo `content`.
+- [x] O valor enviado continua sendo texto plano validado por React Hook Form/Zod, sem HTML persistido.
+- [x] O limite de 2000 caracteres e a experiencia multiline foram preservados.
+- [x] Foco, cancelamento e selecao de midia continuam funcionando com o novo campo focavel.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Chrome headless local em `/smoke-reply-composer` confirmou `contenteditable` renderizado, sem `textarea` nativo no composer.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico. Validacao especifica da barra do teclado precisa ser feita em iPhone/Safari ou PWA publicado.

@@ -483,3 +483,4 @@ Formato recomendado:
 - [ADR-0450 — Permissão nativa direta de notificações](0450-permissao-nativa-direta-notificacoes.md)
 - [ADR-0451 — Digests temporais para push de notificacoes](0451-digests-temporais-push-notificacoes.md)
 - [ADR-0452 — Upload multipart para midia grande em respostas](0452-upload-multipart-midia-respostas.md)
+- [ADR-0453 — Composer de comentarios com editor plaintext](0453-composer-comentarios-editor-plaintext.md)

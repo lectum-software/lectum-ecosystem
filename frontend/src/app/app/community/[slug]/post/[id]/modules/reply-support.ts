@@ -81,6 +81,9 @@ export const POST_DETAIL_MOBILE_QUERY = "(max-width: 639px)";
 
 export const POST_REPLY_CANCEL_DRAG_THRESHOLD = 56;
 
+export const POST_REPLY_COMPOSER_INPUT_SELECTOR =
+  "textarea, [role='textbox'][contenteditable='true'], [role='textbox'][contenteditable='plaintext-only']";
+
 export const PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR =
   '[data-psychologist-tip-target="community-reply"]';
 

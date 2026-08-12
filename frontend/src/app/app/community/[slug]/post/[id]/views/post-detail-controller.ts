@@ -35,6 +35,7 @@ import {
   EMPTY_REPLY_TARGETS,
   findReplyInTree,
   mergeUniqueReplies,
+  POST_REPLY_COMPOSER_INPUT_SELECTOR,
   PSYCHOLOGIST_COMMUNITY_REPLY_TIP_SELECTOR,
   REPLIES_LIMIT,
   type ReplyTarget,
@@ -321,7 +322,9 @@ export const usePostDetailController = () => {
   const focusComposerTextarea = useCallback(
     ({ scrollDesktop = false }: { scrollDesktop?: boolean } = {}) => {
       const composerNode = composerRef.current;
-      const inputNode = composerNode?.querySelector<HTMLTextAreaElement>("textarea");
+      const inputNode = composerNode?.querySelector<HTMLElement>(
+        POST_REPLY_COMPOSER_INPUT_SELECTOR,
+      );
 
       if (!isMobile && scrollDesktop) {
         composerNode?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -399,8 +402,9 @@ export const usePostDetailController = () => {
 
       if (desktopReplyTargets[reply.id]) {
         window.setTimeout(() => {
-          const inputNode =
-            inlineReplyFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
+          const inputNode = inlineReplyFormRef.current?.querySelector<HTMLElement>(
+            POST_REPLY_COMPOSER_INPUT_SELECTOR,
+          );
           inputNode?.focus({ preventScroll: true });
         }, 0);
         return;

@@ -26,7 +26,7 @@ const buildFields = () =>
   [
     {
       name: "content",
-      field: "textarea",
+      field: "contenteditable",
       className: "gap-0 [&>span:last-child]:hidden",
       label: undefined,
       placeholder: "Adicionar comentário",

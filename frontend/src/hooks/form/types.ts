@@ -5,6 +5,7 @@ import type { z } from "zod";
 export type FieldType =
   | "input"
   | "textarea"
+  | "contenteditable"
   | "checkbox"
   | "select"
   | "switch"
