@@ -70,3 +70,22 @@ Validacao complementar:
 - pnpm --dir frontend build
 - pnpm check
 - Chrome/CDP autenticado validando 11 barras no post e 3 barras na thread, todas com salvar/compartilhar, toggle visual de salvo e link copiado com ancora de reply.
+
+## Atualizacao 2026-08-12 - borda interna do cluster de votos no feed
+
+### Contexto
+
+No feed mobile, o pill agrupado de upvote/downvote podia aparecer com parte do contorno cortada. A causa visual provavel era a combinacao de `ring` desenhado para fora da caixa do cluster com a action bar em linha unica e overflow horizontal, alem de o cluster estar alguns pixels mais alto que os demais controles.
+
+### Decisao
+
+- Manter a `CommunityActionBar` como fonte unica da barra de acoes.
+- Trocar a moldura do cluster padrao de votos de `ring` externa para `border` interna, evitando que o contorno dependa de pixels fora da caixa do componente.
+- Reduzir o padding externo do cluster para `p-px` e compactar os controles internos dos tamanhos `sm` e `md` em uma etapa apenas quando a apresentacao for `cluster`.
+- Preservar a apresentacao `inline` usada em comentarios/respostas e preservar a variante `xs` sem mudanca de comportamento.
+
+### Consequencias
+
+- O pill de votos do feed fica alguns pixels menor e alinhado aos demais botoes da action bar.
+- A borda passa a ser menos suscetivel a cortes por overflow sem alterar handlers, contadores, estados ativos, voto otimista, salvamento ou compartilhamento.
+- A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs ou packages.

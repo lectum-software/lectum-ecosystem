@@ -82,9 +82,18 @@ const voteClusterClassName = (size: CommunityActionSize, presentation: VotePrese
   }
 
   return cn(
-    "inline-flex shrink-0 items-center overflow-visible rounded-full bg-surface-muted p-0.5 ring-1 ring-border dark:bg-surface-muted dark:ring-border",
-    size === "xs" ? "min-h-8" : size === "md" ? "min-h-11" : "min-h-10",
+    "inline-flex shrink-0 items-center overflow-visible rounded-full border border-border bg-surface-muted p-px dark:border-border dark:bg-surface-muted",
+    size === "xs" ? "min-h-8" : size === "md" ? "min-h-10" : "min-h-9",
   );
+};
+
+const clusteredVoteControlClassName = (
+  size: CommunityActionSize,
+  presentation: VotePresentation,
+) => {
+  if (presentation !== "cluster" || size === "xs") return undefined;
+
+  return size === "md" ? "h-9" : "h-8";
 };
 
 const separatorClassName = (size: CommunityActionSize, presentation: VotePresentation) =>
@@ -247,6 +256,7 @@ export const CommunityActionBar = ({
         <div className={voteClusterClassName(size, votePresentation)}>
           {canVote && onVote ? (
             <VoteActionButton
+              className={clusteredVoteControlClassName(size, votePresentation)}
               count={upvotesCount}
               currentVote={currentVote}
               disabled={disabled}
@@ -259,13 +269,20 @@ export const CommunityActionBar = ({
               variant={votePresentation === "inline" ? "ghost" : "default"}
             />
           ) : (
-            <PostActionMetric count={upvotesCount} icon={ArrowUp} label={voteLabel} size={size}>
+            <PostActionMetric
+              className={clusteredVoteControlClassName(size, votePresentation)}
+              count={upvotesCount}
+              icon={ArrowUp}
+              label={voteLabel}
+              size={size}
+            >
               Útil
             </PostActionMetric>
           )}
           <span className={separatorClassName(size, votePresentation)} aria-hidden="true" />
           {canVote && onVote ? (
             <VoteActionButton
+              className={clusteredVoteControlClassName(size, votePresentation)}
               count={downvotesCount}
               currentVote={currentVote}
               disabled={disabled}
@@ -279,6 +296,7 @@ export const CommunityActionBar = ({
             />
           ) : (
             <PostActionMetric
+              className={clusteredVoteControlClassName(size, votePresentation)}
               count={downvotesCount}
               icon={ArrowDown}
               label="Dar downvote"

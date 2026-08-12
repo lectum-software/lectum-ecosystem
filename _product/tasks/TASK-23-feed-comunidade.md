@@ -476,3 +476,34 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm check:version`
 - [x] `git diff --check`
 - [x] Browser local mobile 390x844 abriu `http://localhost:3000/` com HTTP 200; a API local/externa do feed retornou estado `Feed indisponivel`, entao a sessao nao usou mock/seed para forcar card real.
+
+## Complemento 2026-08-12 - ajuste fino do pill de votos do feed
+
+- Pedido do usuario: no feed mobile, a borda do grupo upvote/downvote estava cortando um pedaco e deveria ser reduzida apenas alguns pixels para nao perder o contorno.
+- Fonte visual auditavel: screenshot enviado em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 14.38.13.jpeg` e referencia local `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o cluster padrao de votos da `CommunityActionBar` deixou de usar `ring`, que desenha para fora da caixa e pode ser cortado por containers com overflow horizontal, e passou a usar `border` interna.
+- Frontend: o padding externo do pill foi reduzido de `p-0.5` para `p-px`; nos tamanhos `sm` e `md`, os controles internos do cluster foram reduzidos uma etapa para alinhar a altura do pill aos demais botoes da barra sem alterar icones, contadores, texto `Util`, votos ou mutations.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, ranking, votos, salvos, comentarios ou compartilhamento.
+- ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O pill de upvote/downvote do feed fica alguns pixels menor e preserva todo o contorno visivel.
+- [x] A borda do pill e interna ao componente, evitando corte por overflow horizontal da action bar.
+- [x] As acoes de voto mantem a mesma semantica, handlers, contadores e estados ativos.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] Next local buildado em `http://127.0.0.1:3035`: `/version` respondeu 200, `/app/community/feed` respondeu 308 para `/app/comunidades/feed`, e `/app/comunidades/feed` respondeu 200.
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
