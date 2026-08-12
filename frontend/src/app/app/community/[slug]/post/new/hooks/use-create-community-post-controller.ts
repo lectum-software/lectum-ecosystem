@@ -32,6 +32,7 @@ import {
 import {
   communityNameCollator,
   createSelectedMediaId,
+  EDITOR_FIELD_IDS,
   LAST_CREATED_POST_HREF_KEY,
   MAX_POST_CAROUSEL_IMAGES,
   normalizeParam,
@@ -85,6 +86,7 @@ export const useCreateCommunityPostController = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastFocusedEditorIdRef = useRef("create-post-title");
   const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
+  const titleAutoFocusCancelledRef = useRef(false);
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
@@ -199,30 +201,62 @@ export const useCreateCommunityPostController = ({
     }
   }, [contentMeetsMinimum, hook, hook.formState.errors.content]);
 
-  const focusEditorElement = useCallback((targetId = lastFocusedEditorIdRef.current) => {
-    const target = document.getElementById(targetId);
-
-    if (!target) return;
-
-    target.focus({ preventScroll: true });
-
-    if (target instanceof HTMLElement && target.isContentEditable) {
-      moveContenteditableCaretToEnd(target);
-      return;
-    }
-
-    try {
-      if (
-        (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) &&
-        typeof target.setSelectionRange === "function"
-      ) {
-        const cursorPosition = target.value.length;
-        target.setSelectionRange(cursorPosition, cursorPosition);
-      }
-    } catch {
-      // Alguns inputs mobile podem nao suportar selecao programatica; o foco ainda abre o teclado.
+  const registerEditorInteraction = useCallback((targetId = lastFocusedEditorIdRef.current) => {
+    lastFocusedEditorIdRef.current = targetId;
+    if (targetId !== "create-post-title") {
+      titleAutoFocusCancelledRef.current = true;
     }
   }, []);
+
+  const focusEditorElement = useCallback(
+    (
+      targetId = lastFocusedEditorIdRef.current,
+      options: { moveCaretToEnd?: boolean; registerInteraction?: boolean } = {},
+    ) => {
+      const target = document.getElementById(targetId);
+
+      if (!target) return;
+
+      if (options.registerInteraction) {
+        registerEditorInteraction(targetId);
+      }
+
+      target.focus({ preventScroll: true });
+
+      if (target instanceof HTMLElement && target.isContentEditable) {
+        if (options.moveCaretToEnd !== false) {
+          moveContenteditableCaretToEnd(target);
+        }
+        return;
+      }
+
+      try {
+        if (
+          options.moveCaretToEnd !== false &&
+          (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) &&
+          typeof target.setSelectionRange === "function"
+        ) {
+          const cursorPosition = target.value.length;
+          target.setSelectionRange(cursorPosition, cursorPosition);
+        }
+      } catch {
+        // Alguns inputs mobile podem nao suportar selecao programatica; o foco ainda abre o teclado.
+      }
+    },
+    [registerEditorInteraction],
+  );
+
+  const focusEditorFromUserGesture = useCallback(
+    (targetId: string) => {
+      registerEditorInteraction(targetId);
+      const target = document.getElementById(targetId);
+
+      if (!target || document.activeElement === target) return;
+
+      target.focus({ preventScroll: true });
+    },
+    [registerEditorInteraction],
+  );
 
   const focusLastEditor = () => {
     window.setTimeout(() => {
@@ -237,10 +271,8 @@ export const useCreateCommunityPostController = ({
     if (event.target !== event.currentTarget) return;
 
     event.preventDefault();
-    window.setTimeout(() => {
-      lastFocusedEditorIdRef.current = targetEditorId;
-      focusEditorElement(targetEditorId);
-    }, 0);
+    registerEditorInteraction(targetEditorId);
+    focusEditorElement(targetEditorId);
   };
 
   const revokeSelectedMediaPreview = useCallback(() => {
@@ -337,7 +369,18 @@ export const useCreateCommunityPostController = ({
       openFrame = window.requestAnimationFrame(() => setIsSheetOpen(true));
     });
     const focusTitle = () => {
-      lastFocusedEditorIdRef.current = "create-post-title";
+      const activeElement = document.activeElement;
+
+      if (
+        titleAutoFocusCancelledRef.current ||
+        (activeElement instanceof HTMLElement &&
+          EDITOR_FIELD_IDS.has(activeElement.id) &&
+          activeElement.id !== "create-post-title") ||
+        lastFocusedEditorIdRef.current !== "create-post-title"
+      ) {
+        return;
+      }
+
       focusEditorElement("create-post-title");
     };
     const focusTimers = [0, 90, 280, 420].map((delay) => window.setTimeout(focusTitle, delay));
@@ -593,6 +636,7 @@ export const useCreateCommunityPostController = ({
     clearCorrectedFormErrorsSoon,
     communitiesQuery,
     fileInputRef,
+    focusEditorFromUserGesture,
     focusLastEditor,
     formProps,
     handleClose,
@@ -610,6 +654,7 @@ export const useCreateCommunityPostController = ({
     mediaPermission,
     onSubmit,
     preserveEditorFocusFromBlankTap,
+    registerEditorInteraction,
     removeSelectedMediaAt,
     requiredFieldsReady,
     selectedMediaItems,

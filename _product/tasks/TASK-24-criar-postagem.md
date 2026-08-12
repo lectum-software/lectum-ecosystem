@@ -619,3 +619,30 @@ Validacoes finais deste complemento:
 - [x] Browser local Chrome headless sobre frontend build em `http://127.0.0.1:3040`, confirmando `titleEditable=true`, `contentEditable=true`, foco programatico de titulo -> descricao, placeholder do titulo em peso `700` e placeholder da descricao em peso `400`.
 - [x] `pnpm version:bump` para `0.1.72`
 - [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - foco persistente na descricao no iPhone
+
+- Pedido do usuario: no iPhone, a modal `Criar Post` ainda voltava o foco para o titulo quando o usuario tocava no campo de descricao para escrever.
+- Frontend: a modal agora registra explicitamente qual editor recebeu intencao de toque/foco (`create-post-title` ou `create-post-content`) antes do bubbling dos guards de toque.
+- Frontend: ao tocar a area da descricao, o foco do `contenteditable` de conteudo e aplicado de forma sincronizada dentro do gesto do usuario, evitando depender de um `setTimeout` posterior para abrir/manter teclado em iOS/PWA.
+- Frontend: os timers curtos de autofocus do titulo sao cancelados assim que a descricao e escolhida ou quando outro editor textual ja esta ativo; isso evita que uma tentativa tardia de foco do titulo roube o foco da descricao.
+- Frontend: o guard de toque vazio continua contextual e preserva o foco do editor correto, ignorando areas nao editoriais como a faixa de midias anexadas.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de publicacao, midia, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: screenshot anexado pelo usuario `WhatsApp Image 2026-08-12 at 15.57.26.jpeg` e feedback complementar desta conversa; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] No iPhone/PWA, tocar no campo de descricao da modal `Criar Post` nao deve voltar o foco ao titulo.
+- [x] O autofocus inicial do titulo continua existindo, mas nao rouba foco apos a descricao receber intencao de toque/foco.
+- [x] O guard de areas vazias continua focando titulo ou descricao conforme a area tocada.
+- [x] Areas auxiliares, como preview/remocao de midia anexada, nao sao tratadas como toque no editor de descricao.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Chrome/CDP mobile local em `http://127.0.0.1:3041/app/comunidades/feed/publicacao/nova`, com cookie local apenas para atravessar o proxy privado, confirmando que um toque visivel na descricao aos ~268ms de abertura mantem `document.activeElement.id === "create-post-content"` apos os timers de autofocus do titulo.

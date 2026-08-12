@@ -762,3 +762,28 @@ Validacao complementar 2026-08-12:
 - `git diff --check`: sucesso.
 - Browser local Chrome headless sobre frontend build em `http://127.0.0.1:3040`: sucesso ao confirmar `titleEditable=true`, `contentEditable=true`, foco programatico de titulo -> descricao, placeholder do titulo em peso `700` e placeholder da descricao em peso `400`.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.72`: sucesso.
+
+## Atualizacao 2026-08-12 - cancelamento de autofocus tardio do titulo no iOS
+
+A validacao em iPhone indicou que a troca para `contenteditable` nao eliminou todos os casos em que a modal `Criar Post` ficava presa no titulo. O ponto critico era a combinacao entre foco inicial agressivo do titulo, timers curtos para acionar teclado mobile e guards de toque usados para impedir perda de teclado/scroll em uma sheet.
+
+Decisoes complementares:
+
+- Manter o autofocus inicial do titulo para preservar a abertura app-like da composicao quando permitido pelo navegador apos o gesto do usuario.
+- Registrar uma intencao explicita de editor ativo antes do bubbling de `pointerdown`/`touchstart` nas areas de titulo e descricao.
+- Focar a descricao sincronamente durante o gesto do usuario quando a area de conteudo for tocada, sem esperar `setTimeout`, para melhorar a chance de abertura/manutencao do teclado em iOS/PWA.
+- Cancelar os timers tardios de autofocus do titulo assim que a descricao, ou qualquer editor diferente do titulo, receber intencao/foco.
+- Manter o guard de toque vazio contextual e ignorar areas auxiliares de midia anexada para nao abrir teclado ao interagir com preview/remocao.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- A descricao passa a ser selecionavel diretamente em iPhone/PWA mesmo durante a janela inicial de abertura da sheet.
+- O titulo continua recebendo foco inicial quando nenhum outro editor foi escolhido, mas deixa de disputar foco com a descricao apos o toque do usuario.
+- O comportamento fica restrito a `CreateCommunityPostLogic` e ao hook da propria modal; rollback reverte apenas a politica de foco, sem efeito persistente em dados ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3041/app/comunidades/feed/publicacao/nova`: sucesso ao tocar a descricao em uma sheet recem-aberta e confirmar que o foco permaneceu em `#create-post-content` apos os timers do titulo.

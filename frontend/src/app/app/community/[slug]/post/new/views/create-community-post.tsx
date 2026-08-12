@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
   useEffect,
   useRef,
 } from "react";
@@ -40,6 +41,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     clearCorrectedFormErrorsSoon,
     communitiesQuery,
     fileInputRef,
+    focusEditorFromUserGesture,
     focusLastEditor,
     formProps,
     handleClose,
@@ -53,10 +55,10 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     isSubmitDisabled,
     isSubmitting,
     keyboardViewportOffset,
-    lastFocusedEditorIdRef,
     mediaPermission,
     onSubmit,
     preserveEditorFocusFromBlankTap,
+    registerEditorInteraction,
     removeSelectedMediaAt,
     requiredFieldsReady,
     selectedMediaItems,
@@ -73,6 +75,22 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
   const preserveContentBlankTapFocus = preserveBlankTapFocus
     ? (event: ReactPointerEvent<HTMLElement>) => preserveBlankTapFocus(event, "create-post-content")
     : undefined;
+  const registerTitleEditorGesture = () => registerEditorInteraction("create-post-title");
+  const focusContentEditorFromGesture = (
+    event: ReactPointerEvent<HTMLElement> | ReactTouchEvent<HTMLElement>,
+  ) => {
+    const target = event.target;
+
+    if (
+      target instanceof Element &&
+      (target.closest("button,a,input,select,textarea,[role='button']") ||
+        target.closest("[data-create-post-editor-ignore='true']"))
+    ) {
+      return;
+    }
+
+    focusEditorFromUserGesture("create-post-content");
+  };
 
   useEffect(() => {
     const overlay = overlayRef.current;
@@ -257,6 +275,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     return (
       <ul
         aria-label="Mídias anexadas"
+        data-create-post-editor-ignore="true"
         className="mt-2 flex max-h-28 shrink-0 gap-2 overflow-x-auto overflow-y-hidden pb-1"
       >
         {selectedMediaItems.map((mediaItem, index) => {
@@ -449,7 +468,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
           onFocusCapture={(event) => {
             const target = event.target as HTMLElement;
             if (EDITOR_FIELD_IDS.has(target.id)) {
-              lastFocusedEditorIdRef.current = target.id;
+              registerEditorInteraction(target.id);
             }
           }}
           onSubmit={onSubmit}
@@ -477,13 +496,19 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <div onPointerDown={preserveTitleBlankTapFocus}>
+                <div
+                  onPointerDown={preserveTitleBlankTapFocus}
+                  onPointerDownCapture={registerTitleEditorGesture}
+                  onTouchStartCapture={registerTitleEditorGesture}
+                >
                   {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
                 </div>
 
                 <div
                   className="flex min-h-0 flex-1 flex-col"
                   onPointerDown={preserveContentBlankTapFocus}
+                  onPointerDownCapture={focusContentEditorFromGesture}
+                  onTouchStartCapture={focusContentEditorFromGesture}
                 >
                   {formProps.fields
                     .filter((field) => field.name === "content")
