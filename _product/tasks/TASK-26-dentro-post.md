@@ -1636,3 +1636,34 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+
+## Complemento 2026-08-11 - chunks menores para atravessar proxy/runtime
+
+- Pedido do usuario: o video real de aproximadamente `120MB` continuava exibindo `Nao foi possivel anexar a midia agora`, inclusive em homologacao no desktop.
+- Diagnostico: o arquivo e o R2 estavam validos, mas o chunk anterior de `8MB` gerava requests `multipart/form-data` proximos de limites intermediarios comuns de proxy/runtime. Como a requisicao passa primeiro pelo backend publicado antes de ir ao R2, uma parte pode falhar antes de chegar na aplicacao, resultando na mensagem generica de anexo.
+- Backend/frontend: o tamanho de chunk do multipart de respostas foi reduzido de `8MB` para `5MB`. Assim o video `IMG_3087.MP4` passa de `16` requests grandes para `25` requests menores, mantendo cada parte acima do minimo de multipart do R2, abaixo do limite backend de `10MB` e com retry por parte.
+- Frontend: o limiar para trocar do upload simples para multipart acompanha o chunk de `5MB`, evitando que videos/arquivos medios continuem passando por um request unico.
+- Escopo: sem mudancas de Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, tipos permitidos, payload de criacao de resposta, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O video real `IMG_3087.MP4` e classificado como multipart em `25` chunks de `5MB`.
+- [x] O chunk publicado fica abaixo do limite backend de `10MB` e reduz risco de bloqueio por proxy/runtime intermediario.
+- [x] Arquivos acima de `5MB` usam multipart; arquivos pequenos continuam usando upload simples.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Diagnostico local confirmou `IMG_3087.MP4` com `125.880.310` bytes (`120,05MB`) e `25` chunks de `5MB`.
+- [x] Diagnostico direto de storage R2 com `IMG_3087.MP4` enviou `25` partes de `5MB`, completou multipart e removeu a chave temporaria.
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

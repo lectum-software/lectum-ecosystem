@@ -18,7 +18,7 @@ Em ambientes publicados, esse fluxo fica suscetível a limite intermediário de 
 
 Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas de post:
 
-- O frontend usa o upload simples para arquivos pequenos e troca automaticamente para multipart quando a mídia passa de 8 MB, alinhado ao tamanho seguro de chunk do backend.
+- O frontend usa o upload simples para arquivos pequenos e troca automaticamente para multipart quando a midia passa de 5 MB, alinhado ao tamanho seguro de chunk do backend.
 - O backend expõe endpoints de iniciar, enviar parte, completar e abortar upload multipart, mantendo o contrato final `{ media_url, media_type }` e o prefixo público `/public/files/posts/media/`.
 - Cada parte enviada ao backend tem tamanho pequeno, com upload direto do chunk para o bucket público por multipart server-side.
 - O cliente faz até 3 tentativas por parte em falhas transitórias/rede antes de abortar a sessão multipart.
@@ -38,7 +38,8 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - Campos públicos do fluxo multipart não usam sufixo `token`, evitando conflito com a política global de sanitização de respostas.
 - A compatibilidade com `part_token` é uma exceção transitória e não representa token de autenticação; o valor continua opaco, criptografado, expira e só é aceito junto da sessão do mesmo usuário.
 - Vídeos médios, como o arquivo real de 13,89 MB usado no diagnóstico de 2026-08-11, também deixam de depender do upload simples e passam a ser enviados em partes.
-- O arquivo real `IMG_3087.MP4` de 120,05 MB foi validado localmente em 16 chunks de 8 MB, e o multipart direto no R2 completou com sucesso; a mitigação restante fica no cliente/rede/PWA, não no storage.
+- O chunk de 8 MB funcionava no R2, mas ainda ficava perto de limites intermediarios de proxy/runtime quando embalado em `multipart/form-data`; por isso o chunk publicado passa a 5 MB.
+- O arquivo real `IMG_3087.MP4` de 120,05 MB foi validado localmente em 25 chunks de 5 MB, e o multipart direto no R2 completou com sucesso; a mitigacao restante fica no cliente/rede/PWA, nao no storage.
 
 ## Produção e rollout
 
