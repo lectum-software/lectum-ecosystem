@@ -41,6 +41,7 @@ import { submitReplyWithOptionalMedia } from "../modules/reply-submit";
 import {
   confirmDiscardReplyDraft,
   EMPTY_REPLY_TARGETS,
+  FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS,
   findReplyInTree,
   type ReplyTarget,
   type ReplyTargetMap,
@@ -65,6 +66,8 @@ export const PostReplyThreadLogic = () => {
   const currentUserId = currentUser?.id ?? null;
   const conversion = useProgressiveConversion();
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(null);
+  const [composerFocusReplyId, setComposerFocusReplyId] = useState<string | null>(null);
+  const [composerFocusRequestKey, setComposerFocusRequestKey] = useState(0);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -112,6 +115,11 @@ export const PostReplyThreadLogic = () => {
     activeFocusReplyId,
     threadQuery.isFetching,
   );
+  const resetReplyComposerFocusHighlight = useReplyFocusHighlight(composerFocusReplyId, false, {
+    focusKey: composerFocusRequestKey,
+    scrollMode: "composer-start",
+    viewportFollowMs: FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS,
+  });
 
   const shareReply = async (reply: PostReply) => {
     if (!post || typeof window === "undefined") return;
@@ -163,6 +171,15 @@ export const PostReplyThreadLogic = () => {
     return true;
   }, [closeDesktopReplyTarget, desktopReplyTargets, isMobile]);
 
+  const requestReplyComposerFocus = useCallback(
+    (targetReplyId: string) => {
+      resetReplyComposerFocusHighlight();
+      setComposerFocusReplyId(targetReplyId);
+      setComposerFocusRequestKey((currentKey) => currentKey + 1);
+    },
+    [resetReplyComposerFocusHighlight],
+  );
+
   const handleReplyTarget = useCallback(
     (reply: PostReply) => {
       setReplyError(null);
@@ -182,6 +199,7 @@ export const PostReplyThreadLogic = () => {
       const target = { id: reply.id, name: getCommunityAuthorDisplayName(reply.author) };
 
       if (isMobile) {
+        requestReplyComposerFocus(reply.id);
         setMobileReplyTarget(target);
         window.setTimeout(() => {
           findReplyComposerInput(composerRef.current)?.focus({ preventScroll: true });
@@ -190,6 +208,7 @@ export const PostReplyThreadLogic = () => {
       }
 
       if (desktopReplyTargets[reply.id]) {
+        requestReplyComposerFocus(reply.id);
         window.setTimeout(() => {
           findReplyComposerInput(inlineReplyFormRef.current)?.focus({ preventScroll: true });
         }, 0);
@@ -198,10 +217,18 @@ export const PostReplyThreadLogic = () => {
 
       if (!requestCloseDesktopReplyTarget()) return;
 
+      requestReplyComposerFocus(reply.id);
       inlineReplyHasDraftRef.current = false;
       setDesktopReplyTargets({ [reply.id]: target });
     },
-    [conversion, desktopReplyTargets, isMobile, postId, requestCloseDesktopReplyTarget],
+    [
+      conversion,
+      desktopReplyTargets,
+      isMobile,
+      postId,
+      requestCloseDesktopReplyTarget,
+      requestReplyComposerFocus,
+    ],
   );
 
   const submitReply = async (
@@ -411,6 +438,7 @@ export const PostReplyThreadLogic = () => {
               postSourceText={post.title}
               replies={[rootReply]}
               replyApiError={replyError}
+              replyComposerTargetId={activeMobileReplyTarget?.id ?? null}
               replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
               showSectionTitle={false}
               threadHrefBase={`/comunidades/${post.community.slug}/publicacao/${post.id}/resposta`}

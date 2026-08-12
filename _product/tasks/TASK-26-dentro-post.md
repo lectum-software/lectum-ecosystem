@@ -1926,3 +1926,36 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - foco no comentario ao responder
+
+- Pedido do usuario: ao tocar em `Responder` em um comentario, a tela deve mover o comentario respondido para cima e manter foco visual nele, como na experiencia do Reddit mostrada na referencia enviada.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 14.05.25.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o foco de comentarios ganhou modo `composer-start`, que calcula offset superior mobile/desktop, rola o comentario para perto do topo, aplica foco acessivel temporario e reaproveita o pulso visual existente.
+- Frontend: quando o teclado mobile abre e altera o `visualViewport`, o foco agenda pequenos reajustes de rolagem para manter o comentario no topo durante a animacao do teclado.
+- Frontend: o comentario alvo permanece destacado com fundo `primary-soft` enquanto o composer esta respondendo aquele comentario; no desktop, o mesmo estado e derivado do composer inline aberto.
+- O ajuste foi aplicado tanto na tela principal do post quanto na tela dedicada de thread de respostas.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] Clicar em `Responder` agenda rolagem do comentario alvo para o topo da area visivel antes/depois do foco do composer.
+- [x] O comentario respondido recebe foco visual persistente enquanto for o alvo ativo do composer.
+- [x] A rolagem se reajusta durante a abertura do teclado mobile para evitar que o comentario selecionado fique perdido atras do composer/teclado.
+- [x] A tela de thread dedicada usa o mesmo comportamento da tela principal do post.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (primeira tentativa excedeu timeout local; repetido apos encerrar servidores Next locais antigos e concluiu sem erro)
+- [x] Smoke estatico confirmou modo `composer-start`, reajuste por viewport/teclado, destaque do alvo e propagacao para detalhe/thread.
+- [x] Browser local mobile/headless em `http://127.0.0.1:3034/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou a rota com viewport 390px; sem API local/autenticacao real, nao havia comentarios reais para clicar sem usar mocks.
+- [x] `git diff --check`
+- [x] `pnpm check`
+- [x] `pnpm version:bump` para `0.1.69`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

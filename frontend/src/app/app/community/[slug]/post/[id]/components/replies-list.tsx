@@ -39,6 +39,7 @@ export const RepliesList = ({
   postSourceText,
   replies,
   replyApiError,
+  replyComposerTargetId,
   replyDisabled,
   showSectionTitle = true,
   threadHrefBase,
@@ -69,6 +70,7 @@ export const RepliesList = ({
   postSourceText: string;
   replies: PostReply[];
   replyApiError?: string | null;
+  replyComposerTargetId?: string | null;
   replyDisabled?: boolean;
   showSectionTitle?: boolean;
   threadHrefBase?: string;
@@ -135,6 +137,7 @@ export const RepliesList = ({
                   professionalThread={professionalTree}
                   reply={reply}
                   replyApiError={replyApiError}
+                  replyComposerTargetId={replyComposerTargetId}
                   replyDisabled={replyDisabled}
                   threadHrefBase={threadHrefBase}
                   votePending={votePending}

@@ -326,3 +326,45 @@ Validacao complementar 2026-08-12:
 - Browser/CDP mobile em `http://127.0.0.1:3033/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`:
   carregamento HTTP `200`; a rota autenticada local não conseguiu conectar à API para dados reais, então
   a conferência visual com comentários reais fica para homologação após o push.
+
+## Atualizacao 2026-08-12 - foco do comentario respondido
+
+A interacao de responder em mobile precisava aproximar a experiencia do Reddit: o usuario toca em
+`Responder`, o comentario de origem sobe para o topo da area visivel e fica destacado enquanto o
+composer recebe texto/midia. Antes, o foco ia direto para o composer fixo e o comentario de contexto
+podia ficar fora da area de atencao, especialmente com teclado aberto.
+
+Decisao complementar:
+
+- Reaproveitar `useReplyFocusHighlight` em vez de criar um novo mecanismo paralelo de scroll/foco.
+- Estender o hook com `scrollMode="composer-start"`, `focusKey` para permitir focar novamente o mesmo
+  comentario e `viewportFollowMs` para pequenos reajustes durante a abertura do teclado mobile.
+- Calcular um offset superior seguro com fallback mobile/desktop e altura do header flutuante quando
+  ele estiver visivel, evitando que o comentario fique coberto.
+- Manter o foco real de digitacao no composer, mas aplicar foco acessivel temporario e destaque visual
+  ao comentario alvo antes de devolver a interacao ao campo.
+- Propagar `replyComposerTargetId` pela `RepliesList`/`ReplyCard`, mantendo fundo `primary-soft` no
+  comentario ativo enquanto houver alvo de resposta; no desktop o destaque tambem acompanha o composer
+  inline aberto.
+- Aplicar a mesma decisao na tela principal do post e na tela dedicada de thread.
+- Nao alterar backend, contratos, cache, dados, schema, migrations, envs ou packages.
+
+Consequencias:
+
+- A relacao entre o composer e o comentario respondido fica evidente, reduzindo perda de contexto em
+  conversas longas.
+- A rolagem programatica acontece somente apos gesto explicito de `Responder`; o composer principal e
+  os fluxos de envio continuam inalterados.
+- O foco acompanha a animacao do teclado por uma janela curta, sem capturar scroll manual posterior do
+  usuario.
+- Rollback: remover o `scrollMode="composer-start"`/`replyComposerTargetId` volta ao comportamento
+  anterior, mantendo apenas o foco direto no composer.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend biome:check`: sucesso.
+- `pnpm --dir frontend typecheck`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso apos repetir com timeout maior e encerrar servidores Next locais antigos.
+- Smoke estatico do codigo: sucesso para scroll `composer-start`, follow de viewport, alvo destacado e aplicacao em detalhe/thread.
+- Browser local mobile/headless em `http://127.0.0.1:3034/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`: rota carregou em 390px; sem API local/autenticacao real nao havia comentarios reais clicaveis sem mocks.

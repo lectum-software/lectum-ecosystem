@@ -33,6 +33,7 @@ import {
   confirmDiscardReplyDraft,
   createReplyPageRange,
   EMPTY_REPLY_TARGETS,
+  FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS,
   findReplyInTree,
   mergeUniqueReplies,
   POST_REPLY_COMPOSER_INPUT_SELECTOR,
@@ -67,6 +68,8 @@ export const usePostDetailController = () => {
   const conversion = useProgressiveConversion();
   const [loadedReplyPages, setLoadedReplyPages] = useState(() => createReplyPageRange(1));
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(focusReplyIdFromUrl);
+  const [composerFocusReplyId, setComposerFocusReplyId] = useState<string | null>(null);
+  const [composerFocusRequestKey, setComposerFocusRequestKey] = useState(0);
   const [focusLookupReplyId, setFocusLookupReplyId] = useState<string | null>(focusReplyIdFromUrl);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
@@ -157,6 +160,11 @@ export const usePostDetailController = () => {
     activeFocusReplyId,
     isRepliesFetching || Boolean(focusLookupReplyId),
   );
+  const resetReplyComposerFocusHighlight = useReplyFocusHighlight(composerFocusReplyId, false, {
+    focusKey: composerFocusRequestKey,
+    scrollMode: "composer-start",
+    viewportFollowMs: FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS,
+  });
 
   useEffect(() => {
     if (!postId) return;
@@ -166,6 +174,7 @@ export const usePostDetailController = () => {
       setLoadedReplyPages(createReplyPageRange(1));
       setFocusLookupReplyId(focusReplyIdFromUrl);
       setActiveFocusReplyId(focusReplyIdFromUrl);
+      setComposerFocusReplyId(null);
     }, 0);
 
     return () => window.clearTimeout(syncTimer);
@@ -371,6 +380,15 @@ export const usePostDetailController = () => {
     postId,
   ]);
 
+  const requestReplyComposerFocus = useCallback(
+    (replyId: string) => {
+      resetReplyComposerFocusHighlight();
+      setComposerFocusReplyId(replyId);
+      setComposerFocusRequestKey((currentKey) => currentKey + 1);
+    },
+    [resetReplyComposerFocusHighlight],
+  );
+
   const handleReplyTarget = useCallback(
     (reply: PostReply) => {
       setReplyError(null);
@@ -390,6 +408,7 @@ export const usePostDetailController = () => {
       const target = { id: reply.id, name: getCommunityAuthorDisplayName(reply.author) };
 
       if (isMobile) {
+        requestReplyComposerFocus(reply.id);
         setMobileReplyTarget(target);
         focusComposerTextarea();
 
@@ -401,6 +420,7 @@ export const usePostDetailController = () => {
       }
 
       if (desktopReplyTargets[reply.id]) {
+        requestReplyComposerFocus(reply.id);
         window.setTimeout(() => {
           const inputNode = inlineReplyFormRef.current?.querySelector<HTMLElement>(
             POST_REPLY_COMPOSER_INPUT_SELECTOR,
@@ -412,6 +432,7 @@ export const usePostDetailController = () => {
 
       if (!requestCloseDesktopReplyTarget()) return;
 
+      requestReplyComposerFocus(reply.id);
       inlineReplyHasDraftRef.current = false;
       setDesktopReplyTargets({ [reply.id]: target });
     },
@@ -421,6 +442,7 @@ export const usePostDetailController = () => {
       focusComposerTextarea,
       isMobile,
       postId,
+      requestReplyComposerFocus,
       requestCloseDesktopReplyTarget,
     ],
   );

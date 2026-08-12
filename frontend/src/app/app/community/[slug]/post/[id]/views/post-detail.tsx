@@ -128,6 +128,7 @@ const PostDetailFloatingHeader = ({
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none -translate-y-2 opacity-0",
       )}
+      data-post-detail-floating-header="true"
       onPointerDownCapture={onInteractionStart}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
@@ -441,6 +442,7 @@ export const PostDetailLogic = () => {
                 postSourceText={post.title}
                 replies={replies}
                 replyApiError={replyError}
+                replyComposerTargetId={activeMobileReplyTarget?.id ?? null}
                 replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 threadHrefBase={`/comunidades/${post.community.slug}/publicacao/${post.id}/resposta`}
                 votePending={voteMutation.isPending}

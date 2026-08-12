@@ -94,6 +94,14 @@ export const FOCUSED_REPLY_HIGHLIGHT_DURATION_MS = 3200;
 
 export const FOCUSED_REPLY_RETRY_ATTEMPTS = 30;
 
+export const FOCUSED_REPLY_COMPOSER_TOP_OFFSET_PX = 72;
+
+export const FOCUSED_REPLY_COMPOSER_DESKTOP_TOP_OFFSET_PX = 28;
+
+export const FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_MS = 1100;
+
+export const FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_DELAYS_MS = [120, 280, 520, 860] as const;
+
 export const REPLY_DRAFT_DISCARD_CONFIRMATION =
   "Você tem uma resposta em rascunho. Deseja descartá-la?";
 
@@ -121,22 +129,93 @@ export const useReplyMediaPermission = (): ReplyMediaPermission => {
   return getCommunityMediaPermission(user);
 };
 
-export const useReplyFocusHighlight = (replyId?: string | null, pending = false) => {
-  const lastFocusedReplyIdRef = useRef<string | null>(null);
+export type ReplyFocusScrollMode = "center" | "composer-start";
+
+export type ReplyFocusHighlightOptions = {
+  focusKey?: number;
+  scrollMode?: ReplyFocusScrollMode;
+  viewportFollowMs?: number;
+};
+
+const getReplyFocusMotionBehavior = (): ScrollBehavior => {
+  if (typeof window === "undefined") return "smooth";
+
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+};
+
+const getReplyComposerFocusTopOffset = () => {
+  const floatingHeader = document.querySelector<HTMLElement>(
+    '[data-post-detail-floating-header="true"][aria-hidden="false"]',
+  );
+  const floatingHeaderHeight = floatingHeader?.getBoundingClientRect().height ?? 0;
+  const fallbackOffset = window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches
+    ? FOCUSED_REPLY_COMPOSER_TOP_OFFSET_PX
+    : FOCUSED_REPLY_COMPOSER_DESKTOP_TOP_OFFSET_PX;
+
+  return Math.ceil(Math.max(fallbackOffset, floatingHeaderHeight + 10));
+};
+
+const scrollReplyElementIntoFocus = (
+  target: HTMLElement,
+  scrollMode: ReplyFocusScrollMode,
+  behavior: ScrollBehavior,
+) => {
+  if (scrollMode === "composer-start") {
+    const targetTop = target.getBoundingClientRect().top + window.scrollY;
+
+    window.scrollTo({
+      behavior,
+      top: Math.max(0, targetTop - getReplyComposerFocusTopOffset()),
+    });
+    return;
+  }
+
+  target.scrollIntoView({ behavior, block: "center", inline: "nearest" });
+};
+
+export const useReplyFocusHighlight = (
+  replyId?: string | null,
+  pending = false,
+  { focusKey = 0, scrollMode = "center", viewportFollowMs = 0 }: ReplyFocusHighlightOptions = {},
+) => {
+  const lastFocusedReplyRequestRef = useRef<{ focusKey: number; replyId: string } | null>(null);
 
   const resetReplyFocusHighlight = useCallback(() => {
-    lastFocusedReplyIdRef.current = null;
+    lastFocusedReplyRequestRef.current = null;
   }, []);
 
   useEffect(() => {
     if (!replyId || pending) return;
-    if (lastFocusedReplyIdRef.current === replyId) return;
+    if (
+      lastFocusedReplyRequestRef.current?.replyId === replyId &&
+      lastFocusedReplyRequestRef.current.focusKey === focusKey
+    ) {
+      return;
+    }
 
     let retryTimer: number | null = null;
     let highlightTimer: number | null = null;
+    const viewportFollowTimers: number[] = [];
     let highlightedTarget: HTMLElement | null = null;
     let previousTargetTabIndex: string | null = null;
     let attempts = 0;
+    const motionBehavior = getReplyFocusMotionBehavior();
+
+    const scheduleViewportFollow = () => {
+      if (scrollMode !== "composer-start" || viewportFollowMs <= 0) return;
+
+      for (const delay of FOCUSED_REPLY_COMPOSER_VIEWPORT_FOLLOW_DELAYS_MS) {
+        if (delay > viewportFollowMs) continue;
+
+        viewportFollowTimers.push(
+          window.setTimeout(() => {
+            if (!highlightedTarget) return;
+
+            scrollReplyElementIntoFocus(highlightedTarget, scrollMode, "auto");
+          }, delay),
+        );
+      }
+    };
 
     const focusReply = () => {
       const target = document.getElementById(`reply-${replyId}`);
@@ -148,7 +227,7 @@ export const useReplyFocusHighlight = (replyId?: string | null, pending = false)
         return;
       }
 
-      lastFocusedReplyIdRef.current = replyId;
+      lastFocusedReplyRequestRef.current = { focusKey, replyId };
       highlightedTarget = target;
       previousTargetTabIndex = target.getAttribute("tabindex");
       if (previousTargetTabIndex === null) {
@@ -158,7 +237,8 @@ export const useReplyFocusHighlight = (replyId?: string | null, pending = false)
       void target.offsetWidth;
       target.classList.add(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
       target.focus({ preventScroll: true });
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      scrollReplyElementIntoFocus(target, scrollMode, motionBehavior);
+      scheduleViewportFollow();
 
       highlightTimer = window.setTimeout(() => {
         target.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
@@ -176,6 +256,9 @@ export const useReplyFocusHighlight = (replyId?: string | null, pending = false)
     return () => {
       if (retryTimer) window.clearTimeout(retryTimer);
       if (highlightTimer) window.clearTimeout(highlightTimer);
+      for (const timer of viewportFollowTimers) {
+        window.clearTimeout(timer);
+      }
       if (highlightedTarget) {
         highlightedTarget.classList.remove(...FOCUSED_REPLY_HIGHLIGHT_CLASSES);
         if (previousTargetTabIndex === null) {
@@ -185,7 +268,7 @@ export const useReplyFocusHighlight = (replyId?: string | null, pending = false)
         }
       }
     };
-  }, [pending, replyId]);
+  }, [focusKey, pending, replyId, scrollMode, viewportFollowMs]);
 
   return resetReplyFocusHighlight;
 };

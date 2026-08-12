@@ -24,6 +24,7 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { cn } from "@/lib/utils";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
   countReplyTreeDescendants,
@@ -234,6 +235,7 @@ export const ReplyCard = ({
   professionalThread,
   reply,
   replyApiError,
+  replyComposerTargetId,
   replyDisabled,
   threadHrefBase,
   votePending,
@@ -263,6 +265,7 @@ export const ReplyCard = ({
   professionalThread?: boolean;
   reply: PostReply;
   replyApiError?: string | null;
+  replyComposerTargetId?: string | null;
   replyDisabled?: boolean;
   threadHrefBase?: string;
   votePending?: boolean;
@@ -277,6 +280,7 @@ export const ReplyCard = ({
   const psychologistProfileHref = isProfessional ? `/psicologos/${reply.author.id}` : null;
   const inlineReplyTarget = inlineReplyTargets[reply.id] ?? null;
   const isReplyComposerOpen = Boolean(inlineReplyTarget);
+  const isComposerReplyTarget = isReplyComposerOpen || replyComposerTargetId === reply.id;
   const [contentExpanded, setContentExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [treeCollapsed, setTreeCollapsed] = useState(false);
@@ -355,7 +359,10 @@ export const ReplyCard = ({
 
   return (
     <article
-      className="relative rounded-[20px] py-0.5 text-foreground transition-[background-color,box-shadow] duration-500 dark:text-foreground"
+      className={cn(
+        "relative rounded-[20px] py-0.5 text-foreground transition-[background-color,box-shadow] duration-500 dark:text-foreground",
+        isComposerReplyTarget ? "bg-primary-soft/70 ring-1 ring-primary/20" : undefined,
+      )}
       id={`reply-${reply.id}`}
     >
       {hasTreeContinuation ? (
@@ -591,6 +598,7 @@ export const ReplyCard = ({
                 professionalThread={highlightedProfessionalThread}
                 reply={child}
                 replyApiError={replyApiError}
+                replyComposerTargetId={replyComposerTargetId}
                 replyDisabled={replyDisabled}
                 threadHrefBase={threadHrefBase}
                 votePending={votePending}
