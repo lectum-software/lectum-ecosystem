@@ -2,7 +2,14 @@
 
 import { ArrowLeft, Flag, Loader2, MessageCircle, MoreVertical } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  type TouchEvent as ReactTouchEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { PostDetail } from "@/api/generator/types/posts";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
 import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
@@ -25,11 +32,14 @@ import { usePostDetailController } from "./post-detail-controller";
 
 const FLOATING_HEADER_MIN_SCROLL_Y = 96;
 const FLOATING_HEADER_SCROLL_DELTA = 6;
+const FLOATING_HEADER_INTERACTION_LOCK_MS = 700;
+const FLOATING_HEADER_TOUCH_TAP_THRESHOLD_PX = 14;
 
 const PostDetailFloatingHeader = ({
   currentUserId,
   onBack,
   onDeleted,
+  onInteractionStart,
   onReport,
   post,
   visible,
@@ -37,26 +47,100 @@ const PostDetailFloatingHeader = ({
   currentUserId?: string | null;
   onBack: () => void;
   onDeleted: () => void;
+  onInteractionStart: () => void;
   onReport: () => void;
   post: PostDetail;
   visible: boolean;
 }) => {
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextClickRef = useRef(false);
+
+  const clearSuppressedClick = useCallback(() => {
+    window.setTimeout(() => {
+      suppressNextClickRef.current = false;
+    }, 450);
+  }, []);
+
+  const handleBackTouchStart = useCallback(
+    (event: ReactTouchEvent<HTMLButtonElement>) => {
+      onInteractionStart();
+
+      const touch = event.changedTouches.item(0);
+      if (!touch) return;
+
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+      };
+    },
+    [onInteractionStart],
+  );
+
+  const handleBackTouchEnd = useCallback(
+    (event: ReactTouchEvent<HTMLButtonElement>) => {
+      const touchStart = touchStartRef.current;
+      const touch = event.changedTouches.item(0);
+      touchStartRef.current = null;
+
+      if (!touchStart || !touch) return;
+
+      const moved =
+        Math.abs(touch.clientX - touchStart.x) > FLOATING_HEADER_TOUCH_TAP_THRESHOLD_PX ||
+        Math.abs(touch.clientY - touchStart.y) > FLOATING_HEADER_TOUCH_TAP_THRESHOLD_PX;
+
+      if (moved) return;
+
+      suppressNextClickRef.current = true;
+
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+
+      event.stopPropagation();
+      onInteractionStart();
+      onBack();
+      clearSuppressedClick();
+    },
+    [clearSuppressedClick, onBack, onInteractionStart],
+  );
+
+  const handleBackClick = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>) => {
+      if (suppressNextClickRef.current) {
+        event.preventDefault();
+        event.stopPropagation();
+        suppressNextClickRef.current = false;
+        return;
+      }
+
+      onBack();
+    },
+    [onBack],
+  );
 
   return (
     <header
       aria-hidden={!visible}
       className={cn(
-        "fixed inset-x-0 top-0 z-[90] border-border border-b bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur-md transition-all duration-200 sm:hidden",
-        visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0",
+        "fixed inset-x-0 top-0 z-[90] border-border border-b bg-surface/95 text-foreground shadow-lectum-soft backdrop-blur-md transition-[transform,opacity,box-shadow,background-color] duration-150 ease-out sm:hidden",
+        visible
+          ? "pointer-events-auto translate-y-0 opacity-100"
+          : "pointer-events-none -translate-y-2 opacity-0",
       )}
+      onPointerDownCapture={onInteractionStart}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto flex h-14 max-w-[430px] items-center justify-between px-5">
         <Button
           aria-label="Voltar"
-          className="h-10 w-10 rounded-full p-0 text-muted hover:bg-surface-muted hover:text-foreground"
-          onClick={onBack}
+          className="h-10 w-10 touch-manipulation rounded-full p-0 text-muted hover:bg-surface-muted hover:text-foreground active:scale-95"
+          onClick={handleBackClick}
+          onTouchCancel={() => {
+            touchStartRef.current = null;
+          }}
+          onTouchEnd={handleBackTouchEnd}
+          onTouchStart={handleBackTouchStart}
           tabIndex={visible ? 0 : -1}
           type="button"
           variant="ghost"
@@ -75,7 +159,7 @@ const PostDetailFloatingHeader = ({
           <details className="group relative" key={visible ? "visible" : "hidden"}>
             <summary
               aria-label="Mais opções"
-              className="grid h-10 w-10 list-none place-items-center rounded-full text-muted transition hover:bg-surface-muted [&::-webkit-details-marker]:hidden"
+              className="grid h-10 w-10 touch-manipulation list-none place-items-center rounded-full text-muted transition hover:bg-surface-muted [&::-webkit-details-marker]:hidden"
               tabIndex={visible ? 0 : -1}
             >
               <MoreVertical className="h-5 w-5" aria-hidden="true" />
@@ -109,6 +193,7 @@ const PostDetailFloatingHeader = ({
 
 export const PostDetailLogic = () => {
   const [floatingHeaderVisible, setFloatingHeaderVisible] = useState(false);
+  const floatingHeaderInteractionUntilRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const scrollFrameRef = useRef<number | null>(null);
   const {
@@ -165,6 +250,11 @@ export const PostDetailLogic = () => {
     voteMutation,
   } = usePostDetailController();
 
+  const lockFloatingHeaderInteraction = useCallback(() => {
+    floatingHeaderInteractionUntilRef.current = Date.now() + FLOATING_HEADER_INTERACTION_LOCK_MS;
+    setFloatingHeaderVisible(true);
+  }, []);
+
   useEffect(() => {
     const updateFloatingHeader = () => {
       if (scrollFrameRef.current !== null) return;
@@ -173,7 +263,9 @@ export const PostDetailLogic = () => {
         const nextScrollY = window.scrollY;
         const delta = nextScrollY - lastScrollYRef.current;
 
-        if (nextScrollY <= FLOATING_HEADER_MIN_SCROLL_Y) {
+        if (Date.now() < floatingHeaderInteractionUntilRef.current) {
+          setFloatingHeaderVisible(true);
+        } else if (nextScrollY <= FLOATING_HEADER_MIN_SCROLL_Y) {
           setFloatingHeaderVisible(false);
         } else if (delta < -FLOATING_HEADER_SCROLL_DELTA) {
           setFloatingHeaderVisible(true);
@@ -252,6 +344,7 @@ export const PostDetailLogic = () => {
               currentUserId={currentUserId}
               onBack={handlePostBack}
               onDeleted={() => router.replace(`/comunidades/${post.community.slug}`)}
+              onInteractionStart={lockFloatingHeaderInteraction}
               onReport={() => {
                 setReportError(null);
                 setReportTarget({ type: "post" });

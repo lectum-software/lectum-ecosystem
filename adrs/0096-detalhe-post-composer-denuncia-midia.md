@@ -362,3 +362,31 @@ Validação adicional:
 - `pnpm check` (primeira tentativa falhou por limite de tamanho do controller; resolvido com extração para `reply-submit.ts` e repetido com sucesso)
 - `git diff --check`
 - Chrome headless local 390x844 no frontend buildado em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` confirmou carregamento HTTP da rota; validação autenticada final fica para smoke de homologação após push.
+
+## Atualizacao 2026-08-12 - toque unico no header flutuante do detalhe
+
+O teste de uso dentro do post mostrou que o header flutuante exibido ao rolar para cima podia exigir dois toques na seta de voltar. A causa provavel e a combinacao de momentum scroll mobile, transicao do header e eventos `touch`/`click`: o primeiro toque pode apenas estabilizar a rolagem ou ser recebido enquanto o header ainda alterna estado visual.
+
+Decisao complementar:
+
+- Manter uma janela curta de bloqueio de interacao do header quando ele recebe `pointerdown`, preservando-o visivel enquanto o toque e processado.
+- Fazer a seta de voltar ativar a navegacao em `touchend` para toques validos, medidos por deslocamento pequeno, e suprimir o `click` sintetico subsequente para evitar dupla navegacao.
+- Preservar `onClick` para mouse, teclado e tecnologias assistivas.
+- Reduzir a transicao do header e explicitar `pointer-events` apenas no estado visivel.
+- Nao alterar rota, historico, payloads, backend, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- O usuario mobile nao precisa tocar duas vezes na seta do header flutuante para voltar.
+- Gestos de arrasto sobre a seta nao disparam navegacao acidental por causa do limite de movimento.
+- Rollback: reverter este commit retorna ao comportamento anterior; a mudanca e puramente frontend e nao altera dados persistidos.
+
+Validacao adicional:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local/headless 390x844 no frontend buildado.
+- `git diff --check`
+- `pnpm version:bump`
+- `pnpm check:version`

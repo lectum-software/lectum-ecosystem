@@ -1867,3 +1867,31 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - header flutuante do detalhe com toque unico
+
+- Pedido do usuario: dentro do post, o header que aparece ao rolar para cima nao reconhecia a seta de voltar de forma fluida e podia exigir dois toques.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o header flutuante passou a manter uma janela curta de interacao quando recebe toque/pointer, evitando que o listener de scroll esconda ou reprocesse o header entre `touchstart`, `touchend` e `click`.
+- Frontend: a seta de voltar do header flutuante agora ativa a navegacao no `touchend` quando o toque fica dentro de um limite pequeno de movimento, suprimindo o `click` duplicado posterior; mouse, teclado e acessibilidade continuam pelo `onClick` normal.
+- Frontend: a animacao do header foi suavizada e encurtada, com `pointer-events` explicito somente quando visivel e `touch-action: manipulation` nos controles.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] A seta de voltar do header flutuante aciona a navegacao no primeiro toque em navegadores mobile.
+- [x] O header nao perde interacao durante a janela curta apos toque/pointer, mesmo com scroll recente.
+- [x] Mouse, teclado e o header estatico do topo continuam usando o fluxo de clique/acessibilidade existente.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] Browser local/headless 390x844 validou o frontend buildado em `/auth/login` e a rota do detalhe respondeu `200` em `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`; dados reais/autenticados e teste de toque final ficam para homologacao mobile.
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
