@@ -392,6 +392,7 @@ export function ReplyMediaAttachmentControl({
               : "border-primary bg-primary text-primary-foreground shadow-lectum-soft hover:border-primary-hover hover:bg-primary-hover",
             disabled && "opacity-60",
           )}
+          data-reply-media-trigger="true"
           disabled={triggerDisabled}
           onClick={openFileDialog}
           onMouseDown={(event) => event.preventDefault()}

@@ -1539,12 +1539,38 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
 
+## Complemento 2026-08-12 - composer estavel ao abrir midia
+
+- Pedido do usuario: ao tocar no botao de midia, o bloco de comentarios nao deve ser empurrado para baixo nem espremer os elementos enquanto a folha nativa de escolha de arquivo aparece.
+- Frontend: abrir o seletor de midia deixa de ativar visualmente o composer e deixa de exibir o chip `Respondendo...` antes de existir foco real no campo ou midia selecionada.
+- Frontend: o padding inferior compacto agora e usado somente quando o teclado foi detectado pelo `visualViewport`; sem teclado, o composer mantem o mesmo espacamento do estado em standby.
+- Frontend: o botao de camera recebe um marcador interno para que seu foco nao altere o estado ativo do campo.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, upload, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Tocar no botao de camera em standby nao desloca o composer para baixo.
+- [x] A folha nativa de midia abre sem exibir o chip `Respondendo...` apenas por causa do clique de midia.
+- [x] O padding inferior compacto do composer fica restrito ao estado com teclado detectado.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
 ## Complemento 2026-08-12 - raio e safe-area do composer de comentarios
 
 - Pedido do usuario: arredondar mais o campo de comentario, reduzir o botao de midia para ter margem uniforme e proteger a base do composer no mobile para evitar elementos escondidos.
 - Frontend: o campo de comentario passa de `rounded-[18px]` para `rounded-[24px]`, alinhado ao formato pill do botao de midia.
 - Frontend: o botao de camera passa de `44px` para `36px`, com `left-1` e centralizacao vertical, deixando margem visual equivalente na esquerda, topo e base do campo.
-- Frontend: quando o composer esta ativo no mobile, a base usa `var(--lectum-bottom-nav-padding)` em vez de `pb-2`, reaproveitando o espacamento de safe-area usado na navegacao inferior.
+- Frontend: quando o composer esta ativo no mobile com teclado detectado, a base usa `var(--lectum-bottom-nav-padding)`; sem teclado, mantem o espacamento fixo para nao deslocar o bloco.
 - Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, upload, votos, salvos, denuncias ou tracking.
 - ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
 
@@ -1552,7 +1578,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 
 - [x] O campo de comentario tem bordas mais arredondadas, com aparencia de pill.
 - [x] O botao de camera fica menor e com margem equilibrada em relacao as bordas esquerda, superior e inferior do campo.
-- [x] No mobile, a base do composer respeita o espacamento de safe-area usado na navegacao inferior quando o campo esta ativo.
+- [x] No mobile, a base do composer respeita o espacamento de safe-area usado na navegacao inferior quando o teclado esta aberto.
 - [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
 
 ### Validacoes

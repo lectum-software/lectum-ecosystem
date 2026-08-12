@@ -106,8 +106,8 @@ export const ReplyComposer = ({
   const isInline = variant === "inline";
   const shouldShowMediaTriggerInField =
     !selectedMedia && (mediaPickerActive || mediaPermission.showControl);
-  const shouldShowGuidance =
-    composerActive || hasDraft || Boolean(selectedMedia) || mediaPickerActive;
+  const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
+  const shouldUseKeyboardSafeArea = composerActive && keyboardOffset > 0;
   const autoFocusTargetId = replyTarget?.id ?? "main";
   const replyContextLabel = replyTarget?.name
     ? `Respondendo ${replyTarget.name}`
@@ -155,7 +155,6 @@ export const ReplyComposer = ({
     mediaPickerActiveRef.current = true;
     setMediaPickerActive(true);
     composerActivatedAtRef.current = Date.now();
-    setComposerActive(true);
   }, []);
 
   const assignComposerFormRef = useCallback((node: HTMLFormElement | null) => {
@@ -283,14 +282,13 @@ export const ReplyComposer = ({
     const handleWindowFocus = () => {
       window.setTimeout(() => {
         endMediaPickerInteraction();
-        focusComposerInput();
       }, 250);
     };
 
     window.addEventListener("focus", handleWindowFocus);
 
     return () => window.removeEventListener("focus", handleWindowFocus);
-  }, [endMediaPickerInteraction, focusComposerInput, mediaPickerActive]);
+  }, [endMediaPickerInteraction, mediaPickerActive]);
 
   useEffect(() => {
     if (isInline || typeof window === "undefined") return;
@@ -484,7 +482,7 @@ export const ReplyComposer = ({
           ? "mt-3 rounded-[20px] border shadow-none"
           : cn(
               "fixed inset-x-0 bottom-0 z-[80] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
-              composerActive
+              shouldUseKeyboardSafeArea
                 ? "pb-[var(--lectum-bottom-nav-padding)]"
                 : "pb-[var(--lectum-bottom-fixed-padding)]",
             ),
@@ -498,7 +496,11 @@ export const ReplyComposer = ({
         setComposerActive(false);
         resetCancelDrag();
       }}
-      onFocusCapture={() => {
+      onFocusCapture={(event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.closest("[data-reply-media-trigger='true']")) {
+          return;
+        }
         composerActivatedAtRef.current = Date.now();
         setComposerActive(true);
       }}
@@ -529,7 +531,6 @@ export const ReplyComposer = ({
               fileInputRef={fileInputRef}
               isUploading={disabled && Boolean(selectedMedia)}
               mediaPermission={mediaPermission}
-              onAfterAction={() => setComposerActive(true)}
               onMediaChange={handleMediaChange}
               onOpenDialog={beginMediaPickerInteraction}
               onRemoveSelected={clearSelectedMedia}
