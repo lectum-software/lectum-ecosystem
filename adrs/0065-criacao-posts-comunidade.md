@@ -661,3 +661,43 @@ Validacao complementar 2026-08-12:
 - `node --experimental-strip-types .tmp-create-post-scroll-smoke.mjs`: sucesso com `PASS create post modal touch scroll guard`.
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
+
+## Atualizacao 2026-08-12 - rolagem interna quando ha midia anexada
+
+A correcao anterior bloqueou gestos de scroll sem overflow real na modal `Criar Post`, resolvendo a
+sensacao de rubber-band quando a descricao estava vazia. A validacao seguinte em iPhone/PWA mostrou um
+caso complementar: ao anexar uma midia, o conteudo vertical da composicao pode ficar maior que a area
+util da sheet, especialmente com teclado aberto, e precisa ser acessivel por rolagem interna.
+
+Decisoes complementares:
+
+- A area central da composicao passa a ser o unico container vertical rolavel quando existe pelo menos
+  uma midia anexada (`selectedMediaItems.length > 0`). Sem midia, ela continua com `overflow-hidden`,
+  preservando o bloqueio de gesto vazio definido no complemento anterior.
+- O wrapper interno deixa de depender de `flex-1` no modo com midia e passa a manter altura minima da
+  area visivel (`min-h-full`) com crescimento por conteudo. Assim, titulo, descricao, preview de midia
+  e alertas podem exceder a area util e gerar scroll real somente nesse modo.
+- `preserveEditorFocusFromBlankTap` fica inativo enquanto ha midia selecionada, porque a mesma
+  prevencao de `pointerdown` que mantem o teclado aberto em espacos vazios tambem pode bloquear o
+  inicio de gestos de rolagem no container central.
+- O guard nativo de `touchmove` permanece como fronteira: ele libera o gesto apenas quando o container
+  realmente tem overflow e ainda pode rolar na direcao solicitada, evitando vazamento para a pagina de
+  fundo.
+- Nao alterar API, payload, schema, autorizacao, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- Posts com midia anexada podem ser revisados por completo dentro da propria modal, mesmo em telas
+  pequenas e com teclado virtual ocupando parte do viewport.
+- O comportamento sem midia continua enxuto: descricao vazia nao cria rolagem/rubber-band artificial.
+- O trade-off aceito e que, no modo com midia, toques em areas vazias priorizam rolagem/acesso ao
+  conteudo em vez de refoco automatico do campo ativo.
+- Rollback: reverter este complemento volta a manter a area central sempre travada, sem impacto
+  persistente em dados, storage ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.62`: sucesso.

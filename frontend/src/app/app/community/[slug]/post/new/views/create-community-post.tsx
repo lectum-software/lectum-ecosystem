@@ -60,6 +60,8 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     updateSelectedMediaOrientation,
     uploadMutation,
   } = controller;
+  const hasSelectedMedia = selectedMediaItems.length > 0;
+  const preserveBlankTapFocus = hasSelectedMedia ? undefined : preserveEditorFocusFromBlankTap;
 
   useEffect(() => {
     const overlay = overlayRef.current;
@@ -442,10 +444,21 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
           onSubmit={onSubmit}
         >
           <div
-            className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-4 pb-4"
-            onPointerDown={preserveEditorFocusFromBlankTap}
+            className={cn(
+              "flex min-h-0 flex-1 flex-col px-5 pt-4 pb-4",
+              hasSelectedMedia
+                ? "overflow-x-hidden overflow-y-auto overscroll-contain"
+                : "overflow-hidden",
+            )}
+            data-create-post-editor-scroll={hasSelectedMedia ? "media" : "locked"}
+            onPointerDown={preserveBlankTapFocus}
           >
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div
+              className={cn(
+                "flex min-h-0 flex-col gap-3",
+                hasSelectedMedia ? "min-h-full flex-none" : "flex-1",
+              )}
+            >
               <div className="flex items-start justify-between gap-3">
                 {formProps.fields
                   .filter((field) => field.name === "community_slug")
@@ -453,14 +466,11 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <div onPointerDown={preserveEditorFocusFromBlankTap}>
+                <div onPointerDown={preserveBlankTapFocus}>
                   {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
                 </div>
 
-                <div
-                  className="flex min-h-0 flex-1 flex-col"
-                  onPointerDown={preserveEditorFocusFromBlankTap}
-                >
+                <div className="flex min-h-0 flex-1 flex-col" onPointerDown={preserveBlankTapFocus}>
                   {formProps.fields
                     .filter((field) => field.name === "content")
                     .map(renderFormField)}

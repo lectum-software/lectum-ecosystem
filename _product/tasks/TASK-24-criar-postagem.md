@@ -534,3 +534,31 @@ Validacoes finais deste complemento:
 - [x] `pnpm check`
 - [x] `pnpm version:bump` para `0.1.61`
 - [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - rolagem interna com midia anexada na modal Criar Post
+
+- Pedido do usuario: quando existir midia anexada na modal de criar conteudo, permitir rolagem dentro da modal para que todo o conteudo continue acessivel, inclusive com teclado aberto.
+- Frontend: a area central do editor passa a alternar comportamento conforme `selectedMediaItems.length`: sem midia permanece `overflow-hidden` para preservar o bloqueio de scroll vazio; com midia recebe `overflow-y-auto` e `overscroll-contain` somente nesse painel interno.
+- Frontend: a prevencao de refoco ao tocar em areas vazias (`preserveEditorFocusFromBlankTap`) fica desativada enquanto houver midia anexada, evitando `preventDefault()` em gestos que precisam iniciar a rolagem vertical da modal.
+- Frontend: a rolagem vertical da descricao longa e a rolagem horizontal da faixa de midias selecionadas continuam dependentes de overflow real e seguem protegidas pelo guard nativo de touch da modal.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de anonimato, upload/storage, envs, providers, packages ou dados publicados.
+- Fonte visual auditavel: screenshot anexado pelo usuario `WhatsApp Image 2026-08-12 at 11.57.18.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente, entao a validacao usou a UI atual, os prototipos locais da TASK-24 e validacoes automatizadas.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Com midia anexada, a area central da modal `Criar Post` rola internamente para permitir ver todo o conteudo.
+- [x] Sem midia anexada, a modal continua sem rolagem externa quando a descricao esta vazia.
+- [x] A tela de fundo permanece travada enquanto a modal estiver aberta.
+- [x] A rolagem horizontal da faixa de midias e a rolagem vertical de campos com overflow real permanecem funcionais.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `pnpm version:bump` para `0.1.62`
+- [x] `pnpm check:version`
