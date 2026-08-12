@@ -180,6 +180,14 @@ export const PostReplyThreadLogic = () => {
     [resetReplyComposerFocusHighlight],
   );
 
+  const focusComposerInput = useCallback(() => {
+    const inputNode = findReplyComposerInput(composerRef.current);
+
+    inputNode?.focus({ preventScroll: true });
+
+    return Boolean(inputNode);
+  }, []);
+
   const handleReplyTarget = useCallback(
     (reply: PostReply) => {
       setReplyError(null);
@@ -201,8 +209,9 @@ export const PostReplyThreadLogic = () => {
       if (isMobile) {
         requestReplyComposerFocus(reply.id);
         setMobileReplyTarget(target);
+        focusComposerInput();
         window.setTimeout(() => {
-          findReplyComposerInput(composerRef.current)?.focus({ preventScroll: true });
+          focusComposerInput();
         }, 0);
         return;
       }
@@ -224,6 +233,7 @@ export const PostReplyThreadLogic = () => {
     [
       conversion,
       desktopReplyTargets,
+      focusComposerInput,
       isMobile,
       postId,
       requestCloseDesktopReplyTarget,

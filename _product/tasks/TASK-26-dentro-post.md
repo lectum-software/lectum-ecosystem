@@ -1993,3 +1993,30 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - foco do Responder na continuacao da conversa
+
+- Pedido do usuario: na tela `Respostas` / `Continuacao da conversa`, tocar em `Responder` nao abria o teclado nem focava o campo de resposta.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 16.33.05.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o fluxo mobile de `handleReplyTarget` da tela dedicada de thread agora tenta focar o composer principal imediatamente, ainda dentro do gesto do usuario, antes do reforco em `setTimeout`.
+- Frontend: a tela de thread passou a reutilizar um helper local `focusComposerInput`, baseado no seletor compartilhado do composer, compativel com o editor `contenteditable` e com eventual textarea legado.
+- O comportamento fica alinhado ao detalhe principal do post, onde o foco sincronico ja existia para abrir o teclado em iOS/Safari.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] Na tela dedicada de thread, clicar em `Responder` tenta focar o composer imediatamente dentro do gesto do usuario.
+- [x] O reforco assincrono de foco permanece para acomodar o rerender do alvo de resposta.
+- [x] A tela principal do post e o composer inline permanecem inalterados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Next local buildado em `http://127.0.0.1:3042`: `/version` respondeu `0.1.72`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video/resposta/demo-reply` respondeu `200` e o arquivo do thread contem foco sincronico antes do reforco por timeout.
+- [x] `pnpm check` (primeira tentativa excedeu timeout local; repetida com timeout maior e concluiu com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.73`
+- [x] `pnpm check:version`

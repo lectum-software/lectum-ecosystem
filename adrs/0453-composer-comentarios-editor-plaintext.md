@@ -77,3 +77,29 @@ Validacao complementar:
 - `pnpm check`
 - Chrome headless local em `http://localhost:3010/auth/login` confirmou render mobile basico e o meta viewport com `interactive-widget=resizes-content`.
 - A sobreposicao do teclado Android depende de UI nativa e deve ser conferida no dispositivo apos o deploy de homologacao.
+
+## Atualizacao 2026-08-12 - foco sincronico no responder da tela de thread
+
+A tela dedicada `Respostas` / `Continuacao da conversa` reutiliza o `ReplyComposer` principal fixo no rodape, mas o handler mobile de `Responder` focava o editor apenas em um `setTimeout`. No iOS/Safari, foco programatico fora da mesma ativacao de usuario pode nao abrir o teclado, mesmo que o elemento receba foco visual depois.
+
+Decisao complementar:
+
+- Adicionar um helper local `focusComposerInput` na tela de thread, usando o seletor compartilhado que reconhece o editor `contenteditable` do composer e tambem cobre um textarea legado.
+- No ramo mobile de `handleReplyTarget`, chamar `focusComposerInput()` imediatamente apos definir o alvo de resposta, ainda no mesmo ciclo do clique/toque.
+- Manter o `setTimeout` subsequente como reforco para o rerender do contexto `Respondendo`, sem depender exclusivamente dele para abrir o teclado.
+- Nao alterar o contrato do composer, payload de resposta, endpoints, upload, votos, salvos, denuncias, storage, envs ou packages.
+
+Consequencias:
+
+- A tela de thread passa a ter a mesma estrategia de foco da tela principal do post: foco sincronico para satisfazer iOS/Safari e reforco assincrono para estabilidade apos state update.
+- O ajuste reduz risco de o usuario tocar em `Responder` e continuar vendo o composer inativo no rodape.
+- Rollback: reverter este complemento volta a depender apenas do foco agendado por timeout na tela de thread, sem efeito persistente em dados ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Next local buildado em `http://127.0.0.1:3042`: `/version` respondeu `0.1.72`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video/resposta/demo-reply` respondeu `200` e o arquivo do thread contem foco sincronico antes do reforco por timeout.
+- `pnpm check`: sucesso apos repetir com timeout maior; a primeira tentativa excedeu o tempo local e terminou em seguida sem resultado capturado.
+- `git diff --check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.73`: sucesso.
