@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Bookmark, MessageCircle, Reply, Share2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Bookmark, MessageCircle, Share2 } from "lucide-react";
 import type { MouseEventHandler, ReactNode } from "react";
 import {
   PostActionButton,
@@ -350,7 +350,7 @@ export const CommunityActionBar = ({
         ) : reply ? (
           <PostActionButton
             data-psychologist-tip-target={reply.tipTarget}
-            icon={Reply}
+            icon={MessageCircle}
             label={reply.label ?? "Responder"}
             onClick={stopActionPropagation(reply.onClick)}
             size={size}

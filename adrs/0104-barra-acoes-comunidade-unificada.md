@@ -108,3 +108,34 @@ A linha de acoes dos comentarios vinha exibindo `Responder`, `Compartilhar` e `S
 - Comentarios e respostas ficam mais compactos no mobile, com ordem visual Responder, Salvar e Compartilhar depois dos votos.
 - A semantica acessivel continua disponivel por `aria-label`/`title`, e os mesmos handlers de responder, salvar e compartilhar permanecem ativos.
 - A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs, packages, permissao, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.
+
+## Atualizacao 2026-08-12 - responder com icone de comentario
+
+### Contexto
+
+A acao `Responder` dos comentarios estava icon-only, mas usava o icone de seta curvada (`Reply`), diferente do icone de balao usado pela acao de comentar do post original. O produto pediu consistencia visual entre responder um comentario e comentar no post.
+
+### Decisao
+
+- Manter `CommunityActionBar` como fonte unica da barra de acoes.
+- Renderizar `reply` com `MessageCircle`, reutilizando o mesmo icone da acao `comments`.
+- Preservar `aria-label`, `title`, handler, modo icon-only, ordem das acoes compactas e estados de votos/salvos/compartilhamento.
+
+### Consequencias
+
+- A linha de comentarios passa a comunicar resposta/comentario com a mesma linguagem visual do post original.
+- A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs, packages, permissao, votos, salvos, compartilhamento, denuncia, edicao, exclusao ou arvore de respostas.
+
+Validacao complementar:
+
+- Validacao estatica confirmou que `CommunityActionBar` usa `MessageCircle` tanto em `comments` quanto em `reply`.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Next local buildado em `http://127.0.0.1:3049`: `/version` respondeu `0.1.75` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`.
+- `pnpm check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm version:bump` para `0.1.75`: sucesso.
+- `pnpm check:version`: sucesso.

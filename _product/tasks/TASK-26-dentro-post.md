@@ -2051,3 +2051,33 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check:tasks`
 - [x] `pnpm version:bump` para `0.1.74`
 - [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - icone de responder igual ao comentario do post
+
+- Pedido do usuario: alterar o icone de `Responder` nos comentarios para o mesmo icone de comentario usado no post original.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 17.42.19.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a `CommunityActionBar` passou a renderizar a acao `reply` com `MessageCircle`, o mesmo icone usado pela acao `comments` do post.
+- Frontend: a troca preserva o modo icon-only de comentarios, `aria-label`, `title`, handler de resposta, ordem `Responder`, `Salvar`, `Compartilhar`, votos inline e estado de salvo.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, compartilhamento, denuncia, edicao, exclusao ou arvore de respostas.
+
+### Criterios de aceite do complemento
+
+- [x] O botao `Responder` dos comentarios usa o mesmo icone `MessageCircle` da acao de comentar do post original.
+- [x] A acao continua sem texto visivel na barra compacta de comentarios.
+- [x] Labels acessiveis, handlers, ordem de acoes e demais icones permanecem preservados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica confirmou que `CommunityActionBar` usa `MessageCircle` tanto em `comments` quanto em `reply`.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Next local buildado em `http://127.0.0.1:3049`: `/version` respondeu `0.1.75` e `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`.
+- [x] `pnpm check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.75`
+- [x] `pnpm check:version`
