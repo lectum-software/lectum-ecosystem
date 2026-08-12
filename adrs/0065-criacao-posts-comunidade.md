@@ -701,3 +701,35 @@ Validacao complementar 2026-08-12:
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.62`: sucesso.
+
+## Atualizacao 2026-08-12 - peso do placeholder do titulo da modal Criar Post
+
+A revisao visual em mobile mostrou que a dica cinza do campo de titulo podia parecer leve demais na
+modal de criacao, principalmente porque o titulo digitado usa hierarquia forte. Como pacientes e
+psicologos compartilham a mesma classe de campo de titulo, a decisao foi ajustar o token visual no CSS
+compartilhado em vez de duplicar estilos por role.
+
+Decisoes complementares:
+
+- Elevar o `font-weight` de `.create-post-title-input::placeholder` de `500` para `700`.
+- Manter a cor do placeholder em `var(--lectum-subtle)`, sem aproximar a dica do contraste do texto
+  digitado nem alterar o tamanho, line-height ou letter-spacing.
+- Reutilizar o mesmo seletor compartilhado pelas variacoes de paciente e psicologo da modal `Criar Post`.
+- Nao alterar controllers, schema de formulario, API, payload, persistencia, midia, envs ou packages.
+
+Consequencias:
+
+- A dica do titulo fica mais legivel e mais proxima da hierarquia visual esperada, mas continua cinza e
+  distinguivel do conteudo digitado.
+- O ajuste vale igualmente para pacientes e psicologos sem bifurcar a implementacao por perfil.
+- Rollback: reverter este complemento devolve o placeholder ao peso 500, sem efeito persistente em dados
+  ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso, reexecutado apos o bump para `0.1.67`.
+- `pnpm check`: sucesso em `0.1.67`; uma tentativa anterior com timeout menor excedeu o tempo local sem erro reportado.
+- `git diff --check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.67`: sucesso.
+- Browser/CDP mobile em `http://127.0.0.1:3032/app/comunidades/feed/publicacao/nova`: rota redirecionou para login por ausencia de cookie autenticado; a validacao do CSS global injetou `TEXTAREA.create-post-title-input` e confirmou `::placeholder.fontWeight=700`, cor cinza `rgb(148, 163, 184)` e texto digitado em peso `900`.

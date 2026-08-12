@@ -562,3 +562,30 @@ Validacoes finais deste complemento:
 - [x] `pnpm check`
 - [x] `pnpm version:bump` para `0.1.62`
 - [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - dica do titulo mais bold na modal Criar Post
+
+- Pedido do usuario: na modal de criar novo post, tanto para pacientes quanto para psicologos, deixar a dica cinza do titulo mais bold.
+- Frontend: o placeholder do campo de titulo (`.create-post-title-input::placeholder`) passou de peso 500 para 700, mantendo a cor cinza tokenizada `var(--lectum-subtle)` e a mesma classe compartilhada pelas variacoes de paciente e psicologo.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de publicacao, midia, envs, providers ou packages.
+- Fonte visual auditavel: prototipos locais da TASK-24 em `_product/proto/Criar Nova Postagem - Pacientes.jpg` e `_product/proto/Criar Nova Postagem - Psicólogo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A dica cinza do titulo fica mais bold na modal Criar Post para pacientes.
+- [x] A dica cinza do titulo fica mais bold na modal Criar Post para psicologos.
+- [x] A cor cinza e a hierarquia do titulo digitado permanecem preservadas.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (reexecutado apos o bump para `0.1.67`)
+- [x] `pnpm check` em `0.1.67` (uma tentativa anterior com timeout menor excedeu o tempo local; a final concluiu com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.67`
+- [x] `pnpm check:version`
+- [x] Browser local mobile em `http://127.0.0.1:3032/app/comunidades/feed/publicacao/nova`; sem cookie autenticado, a rota redirecionou para login, entao a validacao injetou um `TEXTAREA` com a classe real `.create-post-title-input` na pagina carregada e confirmou `::placeholder.fontWeight=700`, cor `rgb(148, 163, 184)` e texto digitado em peso `900`.
