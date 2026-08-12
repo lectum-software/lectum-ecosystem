@@ -2,13 +2,18 @@
 
 import { Camera, Info, Lightbulb, Loader2, X } from "lucide-react";
 import Image from "next/image";
-import type { CSSProperties } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
 import { Controller } from "react-hook-form";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { useCreateCommunityPostController } from "../hooks/use-create-community-post-controller";
+import {
+  type CreatePostModalTouchScrollState,
+  recordCreatePostModalTouchStart,
+  shouldAllowCreatePostModalTouchMove,
+} from "../modules/create-post-scroll-guard";
 import {
   anonymousTipText,
   COMMUNITY_POST_MEDIA_ACCEPT,
@@ -19,6 +24,12 @@ import {
 } from "../modules/create-post-support";
 
 export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPostLogicProps) => {
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const touchScrollStateRef = useRef<CreatePostModalTouchScrollState>({
+    startX: 0,
+    startY: 0,
+    target: null,
+  });
   const controller = useCreateCommunityPostController({ onCloseComplete });
   const {
     clearCorrectedFormErrorsSoon,
@@ -49,6 +60,29 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     updateSelectedMediaOrientation,
     uploadMutation,
   } = controller;
+
+  useEffect(() => {
+    const overlay = overlayRef.current;
+
+    if (!overlay) return;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      recordCreatePostModalTouchStart(touchScrollStateRef.current, event);
+    };
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!shouldAllowCreatePostModalTouchMove(touchScrollStateRef.current, event, overlay)) {
+        event.preventDefault();
+      }
+    };
+
+    overlay.addEventListener("touchstart", handleTouchStart, { passive: true });
+    overlay.addEventListener("touchmove", handleTouchMove, { passive: false });
+
+    return () => {
+      overlay.removeEventListener("touchstart", handleTouchStart);
+      overlay.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
 
   const renderFormField = (field: (typeof formProps.fields)[number]) => {
     const Component = components[field.field];
@@ -335,16 +369,17 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
   const sheet = (
     <div
       className={cn(
-        "fixed inset-0 z-[70] flex items-end justify-center transition-opacity duration-200 ease-out",
+        "fixed inset-0 z-[70] flex items-end justify-center overflow-hidden overscroll-none transition-opacity duration-200 ease-out",
         "bg-foreground/45 backdrop-blur-[8px] dark:bg-background/75",
         isSheetOpen ? "opacity-100" : "opacity-0",
       )}
+      ref={overlayRef}
     >
       <section
         aria-labelledby="create-post-title-heading"
         aria-modal="true"
         className={cn(
-          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[transform,height,margin-bottom] duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden overscroll-contain rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[transform,height,margin-bottom] duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
           isSheetOpen ? "translate-y-0" : "translate-y-full",
         )}
         data-create-post-sheet="true"

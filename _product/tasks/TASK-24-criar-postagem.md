@@ -505,3 +505,32 @@ Validacoes finais deste complemento:
 - [x] `pnpm check`
 - [x] `pnpm check:version` apos `pnpm version:bump` para `0.1.58`
 - [x] Chrome/CDP mobile local em `http://127.0.0.1:3026/app/comunidades/feed/publicacao/nova`, confirmando foco no titulo, `body` fixo/`overflow: hidden`, `html` travado, footer compacto e, com offset visual simulado de `260px` no CSS var de teclado em headless, `sheetMarginBottom=260px`, `sheetHeight=572.75px`, `footerHeight=55px` e `footerBottomToKeyboardTop=1px`.
+
+## Complemento 2026-08-12 - bloqueio de gesto sem scroll na modal Criar Post
+
+- Pedido do usuario: a modal `Criar Post` ainda aceitava um gesto de rolagem quando a descricao estava vazia, parecendo acompanhar a rolagem da tela de fundo; sem texto escrito, a modal nao deveria permitir essa rolagem.
+- Frontend: foi adicionado um guard nativo de `touchstart`/`touchmove` no overlay da modal. O gesto so e permitido quando nasce dentro de um ancestral realmente rolavel e ainda ha espaco para rolar na direcao do movimento.
+- Frontend: o overlay e a sheet receberam `overflow-hidden`/`overscroll` tokenizados por classe utilitaria, reforcando que a superficie modal nao cria rolagem externa propria.
+- Frontend: a rolagem vertical do textarea de descricao continua permitida quando o texto excede a altura util; a rolagem horizontal da faixa de midias selecionadas tambem continua permitida quando ha overflow real.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de anonimato, upload/storage, envs, packages ou dados publicados.
+- Fonte visual auditavel: comportamento relatado pelo usuario na modal `Criar Post`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente, entao a validacao usou a UI atual, prototipos locais da TASK-24 e smoke unitario do guard.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Gesto vertical na descricao vazia nao gera rolagem/rubber-band da modal.
+- [x] Areas internas com overflow real continuam rolando na direcao possivel.
+- [x] Faixa horizontal de midias selecionadas preserva rolagem horizontal quando aplicavel.
+- [x] Tela de fundo permanece travada enquanto `Criar Post` estiver aberta.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `node --experimental-strip-types .tmp-create-post-scroll-smoke.mjs` temporario: `PASS create post modal touch scroll guard`.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `pnpm version:bump` para `0.1.61`
+- [x] `pnpm check:version`

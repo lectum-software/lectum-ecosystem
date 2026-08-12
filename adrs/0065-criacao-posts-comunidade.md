@@ -626,3 +626,38 @@ Validacao complementar 2026-08-12:
   footer base compacto (`61px`) e, com offset de teclado de `260px` aplicado ao CSS var em headless,
   `sheetMarginBottom=260px`, `sheetHeight=572.75px`, `footerHeight=55px` e
   `footerBottomToKeyboardTop=1px`.
+
+## Atualizacao 2026-08-12 - guard de touch scroll na modal Criar Post
+
+Mesmo com o `body` fixo, a validacao em iPhone/PWA mostrou que um gesto vertical dentro da
+descricao vazia podia produzir a sensacao de rolagem/rubber-band da modal ou do fundo. O problema nao
+era conteudo excedente: o textarea estava vazio, mas o browser ainda tentava propagar o gesto ate uma
+superficie rolavel.
+
+Decisoes complementares:
+
+- Adicionar `create-post-scroll-guard.ts` no modulo da rota de criacao para centralizar a regra de
+  `touchstart`/`touchmove` sem criar dependencia global nem pacote novo.
+- Registrar o alvo inicial do toque e, a cada `touchmove`, permitir o gesto apenas se houver ancestral
+  com `overflow` rolavel (`auto`/`scroll`/`overlay`), conteudo maior que o viewport local e espaco para
+  rolar na direcao do movimento.
+- Bloquear com `preventDefault()` todos os demais movimentos dentro do overlay. Assim, textarea vazio,
+  fim/inicio de textarea longo e pan vertical sobre a faixa de midias nao vazam para a pagina de fundo.
+- Manter excecao natural para rolagem horizontal da faixa de midias e para rolagem vertical da descricao
+  somente quando o texto realmente ultrapassar a altura disponivel.
+- Nao alterar contrato, API, payload, schema, autorizacao, upload, storage, anonimato, envs ou packages.
+
+Consequencias:
+
+- A modal deixa de aparentar acompanhar a rolagem do fundo quando nao ha conteudo escrito na descricao.
+- Conteudo longo continua editavel porque o guard libera a rolagem interna apenas quando existe
+  overflow real e ainda ha espaco na direcao do gesto.
+- A solucao fica limitada a `CreateCommunityPostLogic`, reduzindo risco para outros modais.
+- Rollback: reverter este complemento remove o listener nativo e volta ao lock baseado apenas em
+  `body` fixo/`overscroll`.
+
+Validacao complementar 2026-08-12:
+
+- `node --experimental-strip-types .tmp-create-post-scroll-smoke.mjs`: sucesso com `PASS create post modal touch scroll guard`.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
