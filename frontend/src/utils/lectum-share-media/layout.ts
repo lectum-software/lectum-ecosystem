@@ -297,17 +297,44 @@ export const drawMediaContain = (
   ctx.drawImage(media, targetX, targetY, targetWidth, targetHeight);
 };
 
+const TEXT_ELLIPSIS = "...";
+
+const truncateCanvasTextToWidth = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  forceEllipsis = false,
+) => {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const suffix = forceEllipsis || ctx.measureText(normalized).width > maxWidth ? TEXT_ELLIPSIS : "";
+
+  if (!suffix) return normalized;
+
+  let next = normalized;
+  while (next.length > 1 && ctx.measureText(`${next}${suffix}`).width > maxWidth) {
+    next = next.slice(0, -1).trimEnd();
+  }
+
+  return `${next}${suffix}`;
+};
+
 export const wrapText = (
   ctx: CanvasRenderingContext2D,
   text: string,
   maxWidth: number,
   maxLines: number,
 ) => {
-  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const safeMaxLines = Math.max(0, Math.floor(maxLines));
+  if (!normalized || safeMaxLines === 0) return [];
+
+  const words = normalized.split(" ").filter(Boolean);
   const lines: string[] = [];
   let currentLine = "";
+  let truncated = false;
 
-  for (const word of words) {
+  for (let index = 0; index < words.length; index += 1) {
+    const word = words[index];
     const candidate = currentLine ? `${currentLine} ${word}` : word;
 
     if (ctx.measureText(candidate).width <= maxWidth) {
@@ -317,28 +344,46 @@ export const wrapText = (
 
     if (currentLine) {
       lines.push(currentLine);
+
+      if (lines.length >= safeMaxLines) {
+        truncated = true;
+        currentLine = "";
+        break;
+      }
+
       currentLine = word;
     } else {
-      lines.push(word);
-    }
+      lines.push(truncateCanvasTextToWidth(ctx, word, maxWidth));
 
-    if (lines.length >= maxLines) break;
+      if (lines.length >= safeMaxLines) {
+        truncated = index < words.length - 1;
+        break;
+      }
+    }
   }
 
-  if (currentLine && lines.length < maxLines) {
+  if (currentLine && lines.length < safeMaxLines) {
     lines.push(currentLine);
+  } else if (currentLine) {
+    truncated = true;
   }
 
-  if (lines.length > maxLines) {
-    lines.length = maxLines;
+  if (lines.length > safeMaxLines) {
+    lines.length = safeMaxLines;
+    truncated = true;
   }
 
-  if (lines.length === maxLines && words.join(" ") !== lines.join(" ")) {
-    let lastLine = lines[maxLines - 1];
-    while (lastLine.length > 1 && ctx.measureText(`${lastLine}...`).width > maxWidth) {
-      lastLine = lastLine.slice(0, -1).trimEnd();
-    }
-    lines[maxLines - 1] = `${lastLine}...`;
+  if (lines.join(" ") !== normalized) {
+    truncated = true;
+  }
+
+  if (truncated && lines.length > 0) {
+    lines[lines.length - 1] = truncateCanvasTextToWidth(
+      ctx,
+      lines[lines.length - 1],
+      maxWidth,
+      true,
+    );
   }
 
   return lines;
@@ -348,18 +393,7 @@ export const truncateTextToWidth = (
   ctx: CanvasRenderingContext2D,
   text: string,
   maxWidth: number,
-) => {
-  const normalized = text.replace(/\s+/g, " ").trim();
-
-  if (ctx.measureText(normalized).width <= maxWidth) return normalized;
-
-  let next = normalized;
-  while (next.length > 1 && ctx.measureText(`${next}...`).width > maxWidth) {
-    next = next.slice(0, -1).trimEnd();
-  }
-
-  return `${next}...`;
-};
+) => truncateCanvasTextToWidth(ctx, text, maxWidth);
 
 export const drawVerifiedBadge = (
   ctx: CanvasRenderingContext2D,

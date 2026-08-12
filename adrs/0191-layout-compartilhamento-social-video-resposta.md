@@ -96,3 +96,33 @@ As decisoes de produto definidas em 2026-06-30 foram: usar o mesmo botao Share, 
 A share sheet de conteudo textual preserva o fluxo simples de link, sem preview social e com apenas `Copiar link` e `WhatsApp` habilitados. No desktop, a largura maxima da sheet textual passa a ser 430px, alinhada a base mobile-first existente, para que a linha completa `Copiar link`, `WhatsApp`, `Instagram`, `TikTok` e `Mais` permaneça visivel sem corte lateral apesar do padding interno da modal. Nao houve mudanca de canal, payload, persistencia de `post_share`, fallback ou composicao social 9:16.
 
 Validacao complementar: `pnpm --dir frontend exec biome check --write "src/components/share/lectum-share-video-modal.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, HTTP local `200` em `/community/autocuidado-em-pratica/post/cmr26lrh70003nouhg6pd23j6` e Chrome/CDP local desktop 1365x768 confirmando as cinco acoes dentro da sheet de 430px.
+
+## Complemento 2026-08-12: clamp real de duas linhas no card de pergunta
+
+O preview da share sheet continuava exibindo uma terceira linha cortada no card superior `Respondido na Lectum`. A causa provavel era a combinacao de `-webkit-line-clamp` com padding vertical no mesmo elemento textual, comportamento que pode vazar linhas extras em WebKit/iOS.
+
+Decisao complementar:
+
+- Manter o layout 9:16 e o card superior existentes.
+- Separar o padding do card em um wrapper e aplicar `-webkit-line-clamp: 2` somente no elemento interno de texto.
+- Adicionar `max-height` equivalente a duas linhas no elemento clampado para impedir que uma terceira linha seja parcialmente visivel.
+- Remover a truncagem fixa por quantidade de caracteres no preview HTML, deixando a largura real do card determinar a elipse de duas linhas.
+- Reforcar o `wrapText` do canvas/exportacao para respeitar `maxQuestionLines=2` e aplicar reticencias na ultima linha quando houver truncagem.
+
+Consequencias:
+
+- Preview e arquivo exportado ficam alinhados: pergunta/titulo em ate duas linhas, com reticencias quando necessario.
+- A mudanca e apenas visual no frontend; nao altera API, backend, banco, envs, packages, persistencia de `post_share`, upload ou tracking.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`: sucesso, repetido apos o bump em `0.1.76`.
+- `pnpm --dir frontend build`: sucesso, repetido apos o bump em `0.1.76`.
+- Next local buildado em `http://127.0.0.1:3050`: `/version` respondeu `0.1.75`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`, e validacao estatica confirmou `maxHeight: "2.16em"` no clamp do preview e `maxQuestionLines: 2`/reticencias no canvas; repetido em `http://127.0.0.1:3051` apos o bump, com `/version` em `0.1.76` e rota `200`.
+- `pnpm check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm version:bump` para `0.1.76`: sucesso.
+- `pnpm check:version`: sucesso.

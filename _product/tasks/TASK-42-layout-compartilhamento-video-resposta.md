@@ -278,6 +278,37 @@ Regras de UI obrigatórias:
 - [x] `pnpm check`
 - [x] `git diff --check`
 
+## Complemento 2026-08-12 - clamp de 2 linhas no preview de compartilhamento
+
+- Pedido do usuario: no preview do video a compartilhar, a caixinha de pergunta ainda mostrava 3 linhas com a ultima cortada; deve exibir somente 2 linhas com reticencias.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 17.43.16.jpeg` e referencia local `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o preview HTML da share sheet separou o padding do elemento que aplica `-webkit-line-clamp`, evitando o vazamento conhecido do WebKit/iOS quando o clamp fica no mesmo elemento com padding vertical.
+- Frontend: o texto da pergunta no preview passou a depender do clamp visual de 2 linhas, com `max-height` equivalente a duas linhas e normalizacao de espacos, em vez de truncagem fixa por quantidade de caracteres.
+- Frontend: o `wrapText` do canvas/exportacao foi reforcado para respeitar `maxQuestionLines=2` e aplicar reticencias na ultima linha quando houver conteudo truncado.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, persistencia de compartilhamento, tracking ou upload.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A caixinha de pergunta do preview da share sheet mostra no maximo 2 linhas.
+- [x] Quando a pergunta/titulo passa de 2 linhas, a segunda linha recebe reticencias e a terceira nao aparece cortada.
+- [x] A exportacao por canvas segue o mesmo limite de 2 linhas com reticencias.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check` (repetido apos o bump em `0.1.76`)
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.76`)
+- [x] Next local buildado em `http://127.0.0.1:3050`: `/version` respondeu `0.1.75`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`, e validacao estatica confirmou `maxHeight: "2.16em"` no clamp do preview e `maxQuestionLines: 2`/reticencias no canvas; repetido em `http://127.0.0.1:3051` apos o bump, com `/version` em `0.1.76` e rota `200`.
+- [x] `pnpm check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.76`
+- [x] `pnpm check:version`
+
 ## Complemento 2026-07-07 - exemplos locais com video-respostas diretas
 
 - Pedido do usuario: apos restringir o destaque automatico a respostas diretas ao post, ajustar os exemplos locais para que video-respostas de psicologos aparecam em destaque nos posts de pacientes.

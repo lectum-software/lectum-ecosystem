@@ -51,6 +51,7 @@ const twoLineClampStyle = {
   WebkitBoxOrient: "vertical",
   WebkitLineClamp: 2,
   display: "-webkit-box",
+  maxHeight: "2.16em",
 } as CSSProperties;
 
 const shareSheetActions = [
@@ -86,13 +87,7 @@ const shareSheetActions = [
   },
 ] as const;
 
-const truncatePreviewText = (value: string, maxLength: number) => {
-  const normalized = value.replace(/\s+/g, " ").trim();
-
-  if (normalized.length <= maxLength) return normalized;
-
-  return `${normalized.slice(0, maxLength).trimEnd()}...`;
-};
+const normalizePreviewText = (value: string) => value.replace(/\s+/g, " ").trim();
 
 const isInteractiveDragTarget = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
@@ -116,7 +111,7 @@ const whatsappShareUrl = (target: LectumShareVideoTarget) => {
 const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
   const mediaSrc = resolvePublicMediaUrl(target.mediaUrl);
   const professionalTagName = truncateLectumShareProfessionalTagName(target.professional.name);
-  const sourcePreview = truncatePreviewText(target.sourceText, 64);
+  const sourcePreview = normalizePreviewText(target.sourceText);
 
   return (
     <div
@@ -169,15 +164,17 @@ const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
         <p className="share-preview-header border-primary-foreground/20 border-b px-3.5 py-[7px] text-center text-[10px] font-bold leading-none tracking-[-0.01em] text-primary-foreground shadow-lectum-soft sm:px-3 sm:py-[6px] sm:text-[8px] sm:leading-none">
           {target.cardLabel}
         </p>
-        <p
-          className={cn(
-            "share-preview-body overflow-hidden px-3.5 py-2 text-center font-semibold tracking-[-0.02em] text-foreground sm:px-3 sm:py-1.5",
-            "text-[clamp(0.7rem,2.35vw,0.84rem)] leading-[1.08] sm:text-[10px] sm:leading-[1.08]",
-          )}
-          style={twoLineClampStyle}
-        >
-          {sourcePreview}
-        </p>
+        <div className="share-preview-body px-3.5 py-2 text-center sm:px-3 sm:py-1.5">
+          <p
+            className={cn(
+              "m-0 overflow-hidden break-words font-semibold tracking-[-0.02em] text-foreground",
+              "text-[clamp(0.7rem,2.35vw,0.84rem)] leading-[1.08] sm:text-[10px] sm:leading-[1.08]",
+            )}
+            style={twoLineClampStyle}
+          >
+            {sourcePreview}
+          </p>
+        </div>
       </div>
 
       <div className="absolute bottom-[23.5%] left-1/2 z-10 flex max-w-[72%] -translate-x-1/2 items-center px-1 py-0 text-primary-foreground [text-shadow:0_1px_4px_rgb(0_0_0_/_70%)]">
