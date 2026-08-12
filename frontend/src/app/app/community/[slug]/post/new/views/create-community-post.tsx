@@ -1,10 +1,10 @@
 "use client";
 
-import { Info, Lightbulb, Loader2, X } from "lucide-react";
+import { Camera, Info, Lightbulb, Loader2, X } from "lucide-react";
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { Controller } from "react-hook-form";
 import { components } from "@/components/controllers";
-import { AnimatedImagesIcon } from "@/components/ui/animated-images-icon";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -36,6 +36,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     isSheetOpen,
     isSubmitDisabled,
     isSubmitting,
+    keyboardViewportOffset,
     lastFocusedEditorIdRef,
     mediaPermission,
     onSubmit,
@@ -299,11 +300,12 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
       <button
         aria-label="Adicionar mídia ao post"
         className={cn(
-          "inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-primary/15",
+          "grid h-11 w-11 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:active:scale-100",
           mediaPermission.canAttach
-            ? "border-border bg-surface-muted text-muted hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
-            : "cursor-not-allowed border-border bg-surface-muted text-subtle hover:border-border hover:bg-surface-muted hover:text-subtle",
+            ? "border-primary bg-primary text-primary-foreground shadow-lectum-soft hover:border-primary-hover hover:bg-primary-hover"
+            : "cursor-not-allowed border-border bg-surface-muted text-subtle opacity-75",
         )}
+        data-reply-media-trigger="true"
         disabled={!mediaPermission.canAttach || isSubmitting}
         onClick={() => {
           fileInputRef.current?.click();
@@ -315,11 +317,11 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
         type="button"
       >
         {uploadMutation.isPending ? (
-          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         ) : (
-          <AnimatedImagesIcon className="h-5 w-5" aria-hidden="true" />
+          <Camera className="h-4 w-4" aria-hidden="true" />
         )}
-        <span className="hidden sm:inline">{"M\u00eddia"}</span>
+        <span className="sr-only">Adicionar mídia</span>
       </button>
 
       {!mediaPermission.canAttach && mediaPermission.reason ? (
@@ -342,10 +344,15 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
         aria-labelledby="create-post-title-heading"
         aria-modal="true"
         className={cn(
-          "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface pb-[var(--lectum-create-post-keyboard-offset)] text-foreground shadow-[var(--lectum-shadow)] transition-[transform,padding-bottom] duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
           isSheetOpen ? "translate-y-0" : "translate-y-full",
         )}
         role="dialog"
+        style={
+          {
+            "--lectum-create-post-keyboard-offset": `${keyboardViewportOffset}px`,
+          } as CSSProperties
+        }
       >
         <header className="relative flex h-16 shrink-0 items-center justify-center border-border/70 border-b px-4">
           <button
@@ -445,11 +452,12 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
 
               <Button
                 className={cn(
-                  "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 text-base font-black shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
+                  "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 font-sans text-base font-[800] leading-none tracking-[-0.02em] shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
                   !requiredFieldsReady &&
                     "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
                 )}
                 disabled={isSubmitDisabled}
+                style={{ fontFamily: "var(--font-sans)", fontWeight: 800 }}
                 type="submit"
               >
                 {isSubmitting ? (

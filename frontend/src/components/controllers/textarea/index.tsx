@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Controller, type FieldValues } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
@@ -18,6 +19,7 @@ export function TextareaController<FormType extends FieldValues>({
   id,
   placeholder,
   autoGrow,
+  autoFocus,
   disabled,
   readOnly,
   tabIndex,
@@ -26,6 +28,7 @@ export function TextareaController<FormType extends FieldValues>({
   onChangeCallback,
 }: ControllerFieldProps<FormType>) {
   const inputId = fieldId(name, id);
+  const hasAutoFocused = useRef(false);
   const resizeTextarea = (element: HTMLTextAreaElement | null) => {
     if (!autoGrow || !element) return;
 
@@ -85,6 +88,10 @@ export function TextareaController<FormType extends FieldValues>({
               ref={(element) => {
                 field.ref(element);
                 resizeTextarea(element);
+                if (autoFocus && element && !disabled && !readOnly && !hasAutoFocused.current) {
+                  hasAutoFocused.current = true;
+                  element.focus({ preventScroll: true });
+                }
               }}
               required={false}
               rows={rows}

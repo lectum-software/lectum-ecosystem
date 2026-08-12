@@ -448,3 +448,32 @@ Validacoes finais deste complemento:
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Complemento 2026-08-12 - teclado e rodape da modal Criar Post
+
+- Pedido do usuario: ajustar a modal `Criar Post` no PWA/mobile para alinhar botao de midia, tipografia do CTA, seletor de comunidade, abertura do teclado e posicionamento do rodape acima do teclado, usando como referencia os screenshots anexados de 2026-08-11/12 e o padrao do Reddit.
+- Frontend: o botao de midia da criacao de post passou a usar a mesma identidade do botao azul circular do compositor de comentarios (`Camera`, `bg-primary`, `text-primary-foreground`, borda primaria e sombra Lectum), sem alterar permissao, upload real, tipos aceitos ou payload.
+- Frontend: o CTA `Postar` agora explicita a familia textual Lectum (`var(--font-sans)`/Manrope) e peso 800 para nao parecer texto de familia nativa diferente quando estiver desabilitado.
+- Frontend: o seletor de comunidade deixou a superficie cinza e passou para `bg-surface`, borda tokenizada, sombra suave e copy `Selecionar comunidade`, evitando a leitura visual de campo desabilitado.
+- Frontend: o `TextareaController` da fundacao de formularios passou a respeitar `autoFocus` por foco imperativo no `ref`, sem usar atributo nativo bloqueado por lint/a11y; a modal tambem refoca o titulo em tentativas curtas ao montar para abrir o teclado quando o navegador permitir apos o gesto do usuario.
+- Frontend: a sheet monitora `window.visualViewport` e aplica padding inferior dinamico para manter o footer (midia, switch anonimo e `Postar`) acima do teclado em iOS/PWA; em headless/desktop sem teclado virtual o offset permanece `0px`.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de anonimato, storage, envs ou packages.
+- Fonte visual auditavel: screenshots anexados pelo usuario (`WhatsApp Image 2026-08-12 at 08.12.25.jpeg`, `WhatsApp Image 2026-08-11 at 23.03.39.jpeg`, `WhatsApp Image 2026-08-12 at 08.16.41.jpeg`) e prototipos `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`Criar Nova Postagem - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Botao de midia da modal usa a mesma identidade azul circular do compositor de comentarios.
+- [x] `Postar` usa a familia textual Lectum/Manrope e nao depende de fallback nativo visual.
+- [x] Seletor de comunidade nao aparenta estar desabilitado.
+- [x] Titulo recebe foco ao abrir a modal para acionar teclado no mobile quando permitido pelo navegador.
+- [x] Footer da modal reserva offset de `visualViewport` para aparecer acima do teclado.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Chrome/CDP mobile local em `http://127.0.0.1:3019/app/comunidades/feed/publicacao/nova`

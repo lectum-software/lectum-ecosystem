@@ -45,6 +45,15 @@ export type UseCreateCommunityPostControllerOptions = {
   onCloseComplete?: () => void;
 };
 
+const resolveKeyboardViewportOffset = () => {
+  if (typeof window === "undefined" || !window.visualViewport) return 0;
+
+  const viewport = window.visualViewport;
+  const overlap = window.innerHeight - viewport.height - viewport.offsetTop;
+
+  return Math.max(0, Math.round(overlap));
+};
+
 export const useCreateCommunityPostController = ({
   onCloseComplete,
 }: UseCreateCommunityPostControllerOptions = {}) => {
@@ -59,6 +68,7 @@ export const useCreateCommunityPostController = ({
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [keyboardViewportOffset, setKeyboardViewportOffset] = useState(0);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
   const closeTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -178,13 +188,27 @@ export const useCreateCommunityPostController = ({
     }
   }, [contentMeetsMinimum, hook, hook.formState.errors.content]);
 
+  const focusEditorElement = useCallback((targetId = lastFocusedEditorIdRef.current) => {
+    const target = document.getElementById(targetId) as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | null;
+
+    if (!target) return;
+
+    target.focus({ preventScroll: true });
+
+    try {
+      const cursorPosition = target.value.length;
+      target.setSelectionRange(cursorPosition, cursorPosition);
+    } catch {
+      // Alguns inputs mobile podem nao suportar selecao programatica; o foco ainda abre o teclado.
+    }
+  }, []);
+
   const focusLastEditor = () => {
     window.setTimeout(() => {
-      const target = document.getElementById(lastFocusedEditorIdRef.current) as
-        | HTMLInputElement
-        | HTMLTextAreaElement
-        | null;
-      target?.focus({ preventScroll: true });
+      focusEditorElement();
     }, 0);
   };
 
@@ -252,13 +276,47 @@ export const useCreateCommunityPostController = ({
   }, [communitySlugFromQuery, onCloseComplete, routeSlug, router]);
 
   useEffect(() => {
+    const visualViewport = window.visualViewport;
+
+    if (!visualViewport) return;
+
+    let frame: number | null = null;
+    const updateKeyboardOffset = () => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        setKeyboardViewportOffset(resolveKeyboardViewportOffset());
+      });
+    };
+
+    updateKeyboardOffset();
+    visualViewport.addEventListener("resize", updateKeyboardOffset);
+    visualViewport.addEventListener("scroll", updateKeyboardOffset);
+    window.addEventListener("orientationchange", updateKeyboardOffset);
+
+    return () => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+      visualViewport.removeEventListener("resize", updateKeyboardOffset);
+      visualViewport.removeEventListener("scroll", updateKeyboardOffset);
+      window.removeEventListener("orientationchange", updateKeyboardOffset);
+    };
+  }, []);
+
+  useEffect(() => {
     let openFrame: number | null = null;
     const frame = window.requestAnimationFrame(() => {
       openFrame = window.requestAnimationFrame(() => setIsSheetOpen(true));
     });
-    const focusTimer = window.setTimeout(() => {
-      document.getElementById("create-post-title")?.focus({ preventScroll: true });
-    }, 280);
+    const focusTitle = () => {
+      lastFocusedEditorIdRef.current = "create-post-title";
+      focusEditorElement("create-post-title");
+    };
+    const focusTimers = [0, 90, 280, 420].map((delay) => window.setTimeout(focusTitle, delay));
     const previousBodyOverflow = document.body.style.overflow;
     const previousDocumentOverflow = document.documentElement.style.overflow;
     const handleEscape = (event: KeyboardEvent) => {
@@ -275,13 +333,15 @@ export const useCreateCommunityPostController = ({
     return () => {
       window.cancelAnimationFrame(frame);
       if (openFrame !== null) window.cancelAnimationFrame(openFrame);
-      window.clearTimeout(focusTimer);
+      focusTimers.forEach((timer) => {
+        window.clearTimeout(timer);
+      });
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousDocumentOverflow;
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [handleClose]);
+  }, [focusEditorElement, handleClose]);
 
   useEffect(() => {
     return () => revokeSelectedMediaPreview();
@@ -497,6 +557,7 @@ export const useCreateCommunityPostController = ({
     isSheetOpen,
     isSubmitDisabled,
     isSubmitting,
+    keyboardViewportOffset,
     lastFocusedEditorIdRef,
     mediaPermission,
     onSubmit,

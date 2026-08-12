@@ -47,8 +47,8 @@ const buildFields = ({
       field: "select",
       className:
         "relative w-fit max-w-full gap-0 pb-5 [&>span:last-child]:absolute [&>span:last-child]:top-11 [&>span:last-child]:left-0 [&>span:last-child]:w-max [&>span:last-child]:max-w-[calc(100vw-2.5rem)] [&>span:last-child]:pl-0",
-      placeholder: "Comunidade",
-      emptyLabel: "Comunidade",
+      placeholder: "Selecionar comunidade",
+      emptyLabel: "Selecionar comunidade",
       hideEmptyOption: true,
       options: communityOptions,
       loading: loadingCommunities,
@@ -58,7 +58,7 @@ const buildFields = ({
       emptySearchLabel: "Nenhuma comunidade encontrada",
       required: true,
       inputClassName:
-        "h-10 w-fit max-w-[calc(100vw-40px)] min-w-[188px] overflow-visible rounded-full border-transparent bg-surface-muted px-4 py-0 text-sm font-bold leading-[1.35] text-foreground shadow-none focus:border-transparent focus:ring-0 [&>span]:leading-[1.35]",
+        "h-10 w-fit max-w-[calc(100vw-40px)] min-w-[188px] overflow-visible rounded-full border border-border/80 bg-surface px-4 py-0 text-sm font-[800] leading-[1.35] text-foreground shadow-[var(--lectum-shadow-soft)] hover:border-primary/25 hover:bg-background focus:border-primary/35 focus:ring-4 focus:ring-primary/10 [&>span]:text-foreground [&>span]:leading-[1.35]",
     },
     {
       name: "title",

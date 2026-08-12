@@ -542,3 +542,45 @@ Validacao adicional:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `git diff --check`
+
+## Atualizacao 2026-08-12 - composicao mobile da modal Criar Post
+
+Feedback real em iPhone/PWA mostrou regressao visual e de comportamento na modal de criacao de post:
+o seletor de comunidade parecia desabilitado por usar superficie cinza, o botao de midia nao seguia
+o padrao azul do compositor de comentarios, o CTA `Postar` precisava explicitar a familia textual da
+Lectum e o rodape da composicao precisava acompanhar a abertura do teclado como em apps sociais.
+
+Decisoes complementares:
+
+- Reutilizar a identidade do botao azul circular de midia dos comentarios: `bg-primary`, texto/icone em
+  `text-primary-foreground`, borda primaria, sombra Lectum e icone `Camera` do `lucide-react`.
+- Manter `Postar` com a familia de texto Lectum via `fontFamily: var(--font-sans)` e peso explicito
+  para evitar fallback visual do botao nativo quando o CTA estiver desabilitado.
+- Tornar o seletor de comunidade ativo visualmente: superficie `bg-surface`, borda tokenizada,
+  sombra suave, texto em `text-foreground` e copy `Selecionar comunidade`.
+- Fazer o controller de `textarea` respeitar `autoFocus` por foco imperativo no `ref`, sem usar o
+  atributo nativo proibido por lint/a11y. A modal tambem refoca o titulo em tentativas curtas ao montar.
+- Monitorar `window.visualViewport` e aplicar a diferenca entre layout viewport e visual viewport como
+  padding inferior da sheet. Assim, o footer que contem midia/switch/`Postar` sobe acima do teclado em
+  navegadores/PWAs que nao recalculam `100dvh` junto com o teclado.
+- Nao alterar API, payload, schema, permissao de midia, anonimato, storage, envs, packages ou backend.
+
+Consequencias:
+
+- A experiencia continua mobile-first e app-like: ao abrir a modal, o titulo recebe foco imediatamente
+  e, em iOS/PWA real, isso deve acionar o teclado quando permitido pelo navegador apos o gesto do usuario.
+- O rodape permanece dentro da mesma sheet e nao cria componente paralelo; apenas reserva espaco dinamico
+  quando o teclado ocupa parte do viewport.
+- Em navegadores/headless sem teclado virtual, o offset permanece `0px`, preservando desktop e testes.
+- Rollback: reverter este complemento volta ao foco anterior, ao seletor cinza e ao footer sem offset de
+  `visualViewport`, sem efeito persistente em dados.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3019/app/comunidades/feed/publicacao/nova`, com cookie local
+  apenas para atravessar o proxy privado: sucesso ao confirmar `dialog` `Criar Post`, foco ativo no
+  `TEXTAREA#create-post-title`, seletor com `bg-surface`/texto foreground/copy `Selecionar comunidade`,
+  CTA `Postar` com `fontFamily` Manrope/`var(--font-sans)` e `fontWeight=800`, footer no rodape da sheet
+  e offset de teclado `0px` no ambiente headless sem teclado virtual.
