@@ -589,3 +589,33 @@ Validacoes finais deste complemento:
 - [x] `pnpm version:bump` para `0.1.67`
 - [x] `pnpm check:version`
 - [x] Browser local mobile em `http://127.0.0.1:3032/app/comunidades/feed/publicacao/nova`; sem cookie autenticado, a rota redirecionou para login, entao a validacao injetou um `TEXTAREA` com a classe real `.create-post-title-input` na pagina carregada e confirmou `::placeholder.fontWeight=700`, cor `rgb(148, 163, 184)` e texto digitado em peso `900`.
+
+## Complemento 2026-08-12 - foco iOS entre titulo e descricao na modal Criar Post
+
+- Pedido do usuario: no iPhone, a criacao de post ficava presa no campo de titulo e nao permitia tocar nem usar a seta do teclado para mover o foco ao campo de descricao.
+- Frontend: titulo e descricao da modal `Criar Post` passaram a usar o controller `contenteditable` da fundacao de formularios, mantendo React Hook Form/Zod, ids, classes visuais, limites de 100/2000 caracteres e placeholders atuais.
+- Frontend: o helper de foco da modal agora reconhece elementos `contenteditable` e posiciona o cursor no fim do texto sem depender de `setSelectionRange`, que e especifico de inputs/textareas nativos.
+- Frontend: toques em area vazia do bloco de titulo focam o titulo, e toques em area vazia do bloco de descricao focam a descricao; assim o guard que preserva o teclado nao refoca o titulo por engano.
+- Frontend: os estilos globais de placeholder tambem cobrem `:empty::before`, preservando a dica cinza/bold do titulo e a dica da descricao apos trocar de textarea para contenteditable.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de publicacao, midia, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: screenshot anexado pelo usuario `WhatsApp Image 2026-08-12 at 15.57.26.jpeg` e prototipos locais `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`_product/proto/Criar Nova Postagem - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] No iPhone, tocar no bloco de descricao nao deve refocar o titulo por causa do guard de toque vazio.
+- [x] Titulo e descricao continuam integrados a React Hook Form/Zod e aos limites existentes.
+- [x] A hierarquia visual e os placeholders da modal Criar Post permanecem preservados para pacientes e psicologos.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] Browser local Chrome headless sobre frontend build em `http://127.0.0.1:3040`, confirmando `titleEditable=true`, `contentEditable=true`, foco programatico de titulo -> descricao, placeholder do titulo em peso `700` e placeholder da descricao em peso `400`.
+- [x] `pnpm version:bump` para `0.1.72`
+- [x] `pnpm check:version`

@@ -54,6 +54,17 @@ const resolveKeyboardViewportOffset = () => {
   return Math.max(0, Math.round(overlap));
 };
 
+const moveContenteditableCaretToEnd = (element: HTMLElement) => {
+  const selection = window.getSelection();
+  if (!selection) return;
+
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  range.collapse(false);
+  selection.removeAllRanges();
+  selection.addRange(range);
+};
+
 export const useCreateCommunityPostController = ({
   onCloseComplete,
 }: UseCreateCommunityPostControllerOptions = {}) => {
@@ -189,18 +200,25 @@ export const useCreateCommunityPostController = ({
   }, [contentMeetsMinimum, hook, hook.formState.errors.content]);
 
   const focusEditorElement = useCallback((targetId = lastFocusedEditorIdRef.current) => {
-    const target = document.getElementById(targetId) as
-      | HTMLInputElement
-      | HTMLTextAreaElement
-      | null;
+    const target = document.getElementById(targetId);
 
     if (!target) return;
 
     target.focus({ preventScroll: true });
 
+    if (target instanceof HTMLElement && target.isContentEditable) {
+      moveContenteditableCaretToEnd(target);
+      return;
+    }
+
     try {
-      const cursorPosition = target.value.length;
-      target.setSelectionRange(cursorPosition, cursorPosition);
+      if (
+        (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) &&
+        typeof target.setSelectionRange === "function"
+      ) {
+        const cursorPosition = target.value.length;
+        target.setSelectionRange(cursorPosition, cursorPosition);
+      }
     } catch {
       // Alguns inputs mobile podem nao suportar selecao programatica; o foco ainda abre o teclado.
     }
@@ -212,11 +230,17 @@ export const useCreateCommunityPostController = ({
     }, 0);
   };
 
-  const preserveEditorFocusFromBlankTap = (event: ReactPointerEvent<HTMLElement>) => {
+  const preserveEditorFocusFromBlankTap = (
+    event: ReactPointerEvent<HTMLElement>,
+    targetEditorId = lastFocusedEditorIdRef.current,
+  ) => {
     if (event.target !== event.currentTarget) return;
 
     event.preventDefault();
-    focusLastEditor();
+    window.setTimeout(() => {
+      lastFocusedEditorIdRef.current = targetEditorId;
+      focusEditorElement(targetEditorId);
+    }, 0);
   };
 
   const revokeSelectedMediaPreview = useCallback(() => {

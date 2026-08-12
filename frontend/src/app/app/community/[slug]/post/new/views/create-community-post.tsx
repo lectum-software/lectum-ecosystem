@@ -2,7 +2,12 @@
 
 import { Camera, Info, Lightbulb, Loader2, X } from "lucide-react";
 import Image from "next/image";
-import { type CSSProperties, useEffect, useRef } from "react";
+import {
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+} from "react";
 import { Controller } from "react-hook-form";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -62,6 +67,12 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
   } = controller;
   const hasSelectedMedia = selectedMediaItems.length > 0;
   const preserveBlankTapFocus = hasSelectedMedia ? undefined : preserveEditorFocusFromBlankTap;
+  const preserveTitleBlankTapFocus = preserveBlankTapFocus
+    ? (event: ReactPointerEvent<HTMLElement>) => preserveBlankTapFocus(event, "create-post-title")
+    : undefined;
+  const preserveContentBlankTapFocus = preserveBlankTapFocus
+    ? (event: ReactPointerEvent<HTMLElement>) => preserveBlankTapFocus(event, "create-post-content")
+    : undefined;
 
   useEffect(() => {
     const overlay = overlayRef.current;
@@ -466,11 +477,14 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-0">
-                <div onPointerDown={preserveBlankTapFocus}>
+                <div onPointerDown={preserveTitleBlankTapFocus}>
                   {formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
                 </div>
 
-                <div className="flex min-h-0 flex-1 flex-col" onPointerDown={preserveBlankTapFocus}>
+                <div
+                  className="flex min-h-0 flex-1 flex-col"
+                  onPointerDown={preserveContentBlankTapFocus}
+                >
                   {formProps.fields
                     .filter((field) => field.name === "content")
                     .map(renderFormField)}

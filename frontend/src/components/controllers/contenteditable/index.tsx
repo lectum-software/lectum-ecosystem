@@ -231,7 +231,7 @@ function ContenteditableElement<FormType extends FieldValues>({
       skipHtmlFor
       tooltip={tooltip}
     >
-      {/* biome-ignore lint/a11y/useSemanticElements: contenteditable is intentional for the mobile comment composer; role keeps textbox semantics without using a native form field. */}
+      {/* biome-ignore lint/a11y/useSemanticElements: contenteditable is intentional for mobile free-text editors; role keeps textbox semantics without using a native form field. */}
       <div
         aria-describedby={describedBy({ id: inputId, description, error })}
         aria-disabled={disabled || undefined}

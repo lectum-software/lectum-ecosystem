@@ -62,7 +62,7 @@ const buildFields = ({
     },
     {
       name: "title",
-      field: "textarea",
+      field: "contenteditable",
       id: "create-post-title",
       label: "Título do post",
       placeholder: isPsychologist
@@ -80,7 +80,7 @@ const buildFields = ({
     },
     {
       name: "content",
-      field: "textarea",
+      field: "contenteditable",
       id: "create-post-content",
       label: "Conteúdo do post",
       placeholder: isPsychologist ? psychologistContentPlaceholder : contentGuidancePlaceholder,

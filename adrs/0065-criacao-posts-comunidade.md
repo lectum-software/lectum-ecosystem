@@ -733,3 +733,32 @@ Validacao complementar 2026-08-12:
 - `git diff --check`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.67`: sucesso.
 - Browser/CDP mobile em `http://127.0.0.1:3032/app/comunidades/feed/publicacao/nova`: rota redirecionou para login por ausencia de cookie autenticado; a validacao do CSS global injetou `TEXTAREA.create-post-title-input` e confirmou `::placeholder.fontWeight=700`, cor cinza `rgb(148, 163, 184)` e texto digitado em peso `900`.
+
+## Atualizacao 2026-08-12 - editor sem textarea nativo na modal Criar Post para iOS
+
+A validacao em iPhone mostrou que a sheet `Criar Post` podia ficar presa no campo de titulo: tocar na descricao ou usar a navegacao nativa do teclado do Safari nao movia o foco de forma confiavel. O comportamento estava relacionado ao uso de textareas nativos em uma sheet com lock de scroll, foco preservado e footer reposicionado pelo teclado virtual.
+
+Decisoes complementares:
+
+- Reutilizar o `ContenteditableController` da fundacao de formularios para os campos de titulo e conteudo da criacao de post, evitando depender da navegacao nativa de campos do Safari dentro da sheet.
+- Manter os mesmos nomes de campo (`title`, `content`), ids (`create-post-title`, `create-post-content`), classes visuais e validacoes Zod/backend ja existentes.
+- Ajustar o helper de foco da modal para detectar `contenteditable`, chamar `focus({ preventScroll: true })` e mover o caret ao fim por Selection/Range em vez de `setSelectionRange`.
+- Tornar o guard de toque vazio contextual: area vazia do titulo foca titulo, area vazia da descricao foca descricao, e areas gerais continuam preservando o ultimo editor ativo.
+- Estender o CSS dos placeholders da modal para `:empty::before`, pois contenteditable nao usa `::placeholder` nativo.
+- Nao alterar contratos, payloads, persistencia, upload/storage, regras de anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- A composicao deixa de depender das setas nativas do teclado iOS para alternar entre titulo e descricao; cada area textual tem foco direto e previsivel.
+- A barra de navegacao de formulario do Safari deixa de ser uma premissa do fluxo de criacao, aproximando o comportamento do compositor de comentarios e de editores web modernos.
+- O trade-off aceito e usar `contenteditable` para texto livre em uma area controlada por React Hook Form; o controller compartilhado normaliza texto simples, limita tamanho e preserva acessibilidade por `role="textbox"`.
+- Rollback: reverter este complemento volta titulo/conteudo da criacao para textareas nativos e restaura a dependencia da navegacao de formulario do iOS, sem efeito persistente em dados ou contratos.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- Browser local Chrome headless sobre frontend build em `http://127.0.0.1:3040`: sucesso ao confirmar `titleEditable=true`, `contentEditable=true`, foco programatico de titulo -> descricao, placeholder do titulo em peso `700` e placeholder da descricao em peso `400`.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.72`: sucesso.
