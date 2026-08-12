@@ -1697,3 +1697,30 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - refinamento do botao de midia no composer
+
+- Pedido do usuario: alinhar o botao de imagem dentro do campo de resposta seguindo a referencia do Instagram, usar azul mais escuro e ocultar o botao quando ja houver midia selecionada.
+- Frontend: o trigger de midia do composer passa a ficar centralizado verticalmente dentro do campo, sem deslocar o preview quando uma midia estiver anexada.
+- Frontend: o botao usa `bg-primary`/`primary-foreground`, em vez de `bg-primary-soft`, para ficar com contraste mais forte.
+- Frontend: quando existe midia selecionada, o trigger de camera some; ele volta automaticamente apos remover a midia pelo botao `x` do preview.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, upload, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O botao de camera fica alinhado verticalmente dentro do campo de resposta, como acao interna do input.
+- [x] O botao de camera usa azul mais escuro e texto/icone com contraste adequado.
+- [x] Ao selecionar midia, o botao de camera some em vez de ficar desabilitado.
+- [x] Ao excluir a midia selecionada, o botao de camera reaparece.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

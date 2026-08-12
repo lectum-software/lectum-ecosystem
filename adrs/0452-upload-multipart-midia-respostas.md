@@ -29,6 +29,7 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - A validação de permissão de mídia em respostas permanece a mesma: psicólogo com CFP verificado e Plano Profissional ativo, ou cortesia administrativa ativa.
 - Thumbnails de video em respostas/comentarios dentro da Lectum sao cruas, sem moldura `Respondido na Lectum`; a moldura com caixa azul e identificacao profissional fica restrita ao fluxo de compartilhamento externo.
 - A preparacao local de preview/miniatura de videos selecionados e agendada apos o retorno ao composer, para que a galeria nativa feche e o carregamento aconteca no campo de resposta.
+- O trigger de midia do composer de respostas fica dentro do campo, centralizado verticalmente, com contraste forte; quando uma midia esta anexada, ele e ocultado ate a remocao da midia.
 
 ## Consequências
 

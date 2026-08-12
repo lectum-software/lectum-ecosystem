@@ -374,6 +374,8 @@ export function ReplyMediaAttachmentControl({
       const hasSelectedMedia = Boolean(selectedMedia);
       const triggerDisabled = !mediaPermission.canAttach || disabled || hasSelectedMedia;
 
+      if (hasSelectedMedia) return null;
+
       return (
         <button
           aria-label={
@@ -387,7 +389,7 @@ export function ReplyMediaAttachmentControl({
             "grid h-11 w-11 shrink-0 place-items-center rounded-full border p-0 transition focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.98] disabled:active:scale-100",
             !mediaPermission.canAttach || hasSelectedMedia
               ? "cursor-not-allowed border-border bg-surface-muted text-subtle opacity-75"
-              : "border-primary/30 bg-primary-soft text-primary shadow-lectum-soft hover:border-primary/45 hover:bg-primary-soft/80",
+              : "border-primary bg-primary text-primary-foreground shadow-lectum-soft hover:border-primary-hover hover:bg-primary-hover",
             disabled && "opacity-60",
           )}
           disabled={triggerDisabled}

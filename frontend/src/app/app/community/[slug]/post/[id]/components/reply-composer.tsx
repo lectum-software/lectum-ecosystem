@@ -104,8 +104,8 @@ export const ReplyComposer = ({
   const ready = hasDraft || Boolean(selectedMedia);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
-  const shouldShowMediaControlInRow =
-    Boolean(selectedMedia) || mediaPickerActive || mediaPermission.showControl;
+  const shouldShowMediaTriggerInField =
+    !selectedMedia && (mediaPickerActive || mediaPermission.showControl);
   const shouldShowGuidance =
     composerActive || hasDraft || Boolean(selectedMedia) || mediaPickerActive;
   const autoFocusTargetId = replyTarget?.id ?? "main";
@@ -120,10 +120,10 @@ export const ReplyComposer = ({
       inputClassName: cn(
         formProps.fields[0].inputClassName,
         "border-0 bg-transparent px-3.5 shadow-none focus:border-transparent focus:ring-0 dark:bg-transparent",
-        shouldShowMediaControlInRow && "pl-14",
+        shouldShowMediaTriggerInField && "pl-14",
       ),
     }),
-    [formProps.fields, shouldShowMediaControlInRow],
+    [formProps.fields, shouldShowMediaTriggerInField],
   );
   const composerStyle = useMemo(() => {
     const style: CSSProperties = {};
@@ -519,9 +519,9 @@ export const ReplyComposer = ({
 
       <div className="flex items-end gap-2">
         <div className="relative grid min-w-0 flex-1 rounded-[18px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
-          {shouldShowMediaControlInRow ? (
+          {shouldShowMediaTriggerInField ? (
             <ReplyMediaAttachmentControl
-              className="absolute top-0 left-2 z-10"
+              className="absolute top-1/2 left-2 z-10 -translate-y-1/2"
               composerMode="trigger"
               disabled={disabled}
               fileInputRef={fileInputRef}
