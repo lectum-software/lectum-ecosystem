@@ -11,14 +11,14 @@ A tela interna de post precisa permitir discussões mais profundas sem poluir a 
 ## Decisão
 
 - Permitir respostas a comentários próprios e de outros usuários, desde que o comentário exista no post e não esteja removido.
-- Manter a tela principal do post com até cinco camadas visuais por árvore: comentário raiz mais quatro níveis de respostas aninhadas.
-- Quando houver respostas abaixo do quinto nível visual, exibir "Ver mais X respostas" alinhado à camada onde as próximas respostas existiriam e navegar para uma tela focada naquele fio.
+- Manter a tela principal do post com ate quatro camadas visuais por arvore: comentario raiz mais tres niveis de respostas aninhadas.
+- Quando houver respostas abaixo do quarto nivel visual, exibir "Ver mais X respostas" alinhado a camada onde as proximas respostas existiriam e navegar para uma tela focada naquele fio.
 - Adicionar suporte a denúncia de comentário usando o mesmo fluxo de moderação de posts, com vínculo opcional ao `reply_id`.
 - Preservar o composer fixo único no mobile, alternando o contexto de resposta em vez de abrir múltiplos campos inline.
 - Tratar “Discussão” como cabeçalho independente da seção, sem linha azul lateral e sem parecer parte do primeiro comentário.
 - Renderizar cada comentário direto ao post como uma árvore própria de primeira camada; apenas respostas a comentários entram aninhadas na árvore daquele comentário.
 - Definir o fundo da árvore pelo autor do comentário raiz: branco para paciente e azul claro para psicólogo verificado, sem fundo esverdeado e sem alterar a regra de ordenação/prioridade do primeiro psicólogo verificado mais votado.
-- Compactar os recuos da árvore e manter apenas linhas finas cinza de hierarquia, limitando cada tela a cinco níveis visuais para preservar leitura em mobile e desktop.
+- Compactar os recuos da arvore e manter apenas linhas finas cinza de hierarquia, limitando cada tela a quatro niveis visuais para preservar leitura em mobile e desktop.
 
 ## Consequências
 
@@ -254,3 +254,30 @@ A navegacao por paginas no fim do detalhe do post interrompia a leitura da conve
 - `git diff --check`
 - HTTP local `200` em `/app/community/ansiedade-em-equilibrio/post/demo-post-ansiedade-apresentacao-video`
 - Chrome headless local em viewport mobile 390x844 validando ausencia de `Anterior`, `Proxima` e contador de paginas no DOM renderizado.
+
+## Atualizacao 2026-08-12 - limite de quatro camadas visuais
+
+A validacao em uso real mostrou que cinco camadas inline deixavam a arvore de respostas longa demais antes da navegacao para a thread dedicada. O produto decidiu reduzir uma camada: a tela principal deve mostrar somente quatro camadas visuais e abrir `Ver mais X resposta(s)` a partir da proxima camada.
+
+Decisao complementar:
+
+- Reduzir `MAX_REPLY_TREE_DEPTH` de 4 para 3 no frontend. Como o comentario direto ao post inicia em `depth=0`, isso renderiza comentario raiz + tres niveis de respostas, totalizando quatro camadas visuais.
+- Reduzir `INLINE_REPLY_DESCENDANT_DEPTH` de 4 para 3 no backend para hidratar somente os descendentes necessarios a essas quatro camadas, mantendo `replies_count` para calcular o `Ver mais X resposta(s)` no limite.
+- Manter a tela dedicada de thread como continuacao para a quinta camada e as demais, com o mesmo componente de arvore e o mesmo limite por tela.
+- Nao alterar schema, migrations, endpoints, payload publico, ordenacao, destaque de psicologos verificados, votos, salvos, composer, denuncia, midia, envs ou packages.
+
+Consequencias:
+
+- A leitura inline fica mais curta e menos indentada no mobile.
+- Conversas profundas continuam acessiveis, mas a navegacao para thread acontece uma camada antes.
+- A reducao de hidratacao diminui dados retornados na listagem principal sem contrair dados persistidos.
+- Rollback: restaurar os dois limites para 4 volta a exibir cinco camadas visuais.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir backend check`: sucesso.
+- `pnpm --dir backend build`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.63`: sucesso.

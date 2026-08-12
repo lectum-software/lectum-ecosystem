@@ -956,6 +956,8 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.63`
+- [x] `pnpm check:version`
 ## Execução complementar: chips sem sombra no perfil do psicólogo (2026-06-23)
 
 - Pedido do usuário: remover o sombreamento atrás dos chips de especialidades, atendimento (`Modalidade`, `Abordagens`, `Serviços`, `Público atendido`, `Idiomas`) e `Formação & Títulos` no perfil público do psicólogo.
@@ -1810,3 +1812,30 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico. Validacao especifica da barra do teclado precisa ser feita em iPhone/Safari ou PWA publicado.
+
+## Complemento 2026-08-12 - limite de 4 camadas na arvore de respostas
+
+- Pedido do usuario: a arvore de conteudo estava exibindo 5 camadas de respostas antes de mostrar `Ver mais X resposta(s)` e abrir a tela de thread; reduzir uma camada e permitir somente 4 camadas visuais.
+- Backend: a hidratacao hierarquica da listagem principal de respostas foi reduzida de 4 para 3 descendentes em `INLINE_REPLY_DESCENDANT_DEPTH`, mantendo o comentario direto ao post como primeira camada visual e evitando overfetch da quinta camada.
+- Frontend: `MAX_REPLY_TREE_DEPTH` foi reduzido de 4 para 3; como o comentario direto usa `depth=0`, a tela principal e a tela de thread passam a renderizar no maximo 4 camadas visuais antes do link `Ver mais X resposta(s)`.
+- A rota dedicada de thread permanece como continuacao para respostas abaixo da quarta camada, sem alterar ordenacao, votos, salvos, composer, denuncia, media, permissao profissional ou destaque de psicologos verificados.
+- Escopo: sem mudancas de Prisma schema, migrations, endpoints, payloads publicos, packages, envs, storage ou dados publicados.
+- Fonte visual auditavel: `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0102-arvore-comentarios-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A arvore inline de respostas renderiza no maximo 4 camadas visuais antes de `Ver mais X resposta(s)`.
+- [x] A quinta camada e camadas abaixo permanecem acessiveis pela tela dedicada de thread.
+- [x] Backend hidrata apenas os descendentes necessarios para as 4 camadas visuais da tela principal.
+- [x] Ordenacao, destaque profissional, votos, salvos, denuncia, composer e midia permanecem inalterados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`

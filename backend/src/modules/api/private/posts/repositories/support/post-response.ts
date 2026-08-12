@@ -25,7 +25,8 @@ export const DEFAULT_LIMIT = 20;
 
 export const MAX_LIMIT = 50;
 
-export const INLINE_REPLY_DESCENDANT_DEPTH = 4;
+// Three descendant hops + the direct comment = four visual layers in the main thread.
+export const INLINE_REPLY_DESCENDANT_DEPTH = 3;
 
 export const REPLY_DOWNVOTE_RANKING_WEIGHT = 0.6;
 

@@ -11,7 +11,8 @@ import {
 
 export const REPLIES_LIMIT = 8;
 
-export const MAX_REPLY_TREE_DEPTH = 4;
+// Depth starts at 0 for the direct comment, so 3 renders 4 visual layers.
+export const MAX_REPLY_TREE_DEPTH = 3;
 
 export const createReplyPageRange = (page: number) =>
   Array.from({ length: Math.max(1, page) }, (_, index) => index + 1);
