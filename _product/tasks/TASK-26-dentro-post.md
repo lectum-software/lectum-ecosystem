@@ -1839,3 +1839,31 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend build`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Complemento 2026-08-12 - composer acima do teclado no Android
+
+- Pedido do usuario: em alguns Androids, ao focar o campo de comentario/resposta, parte do bloco do composer ficava escondida atras do teclado.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 11.03.04.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `ReplyComposer` principal passou a medir, durante a abertura/animacao do teclado, a sobreposicao real entre o bloco fixo e o `visualViewport`, somando uma folga curta para manter o bloco completamente acima do teclado.
+- Frontend: o calculo roda tambem em eventos tardios de `resize`/`scroll` do `visualViewport`, porque Android/Chrome e teclados de terceiros podem estabilizar a altura alguns frames depois do foco.
+- Frontend: o viewport global agora declara `interactiveWidget: "resizes-content"` para navegadores compativeis manterem elementos fixos acima do teclado; navegadores que ignorarem essa diretiva continuam cobertos pelo fallback medido do composer.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O composer principal de comentarios/respostas aplica offset medido para ficar inteiro acima do teclado no Android quando focado.
+- [x] A folga do teclado nao desloca o composer inline dentro da arvore de respostas.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] Chrome headless local em `http://localhost:3010/auth/login` validou render mobile basico e o meta viewport com `interactive-widget=resizes-content`; teclado Android real precisa ser conferido apos deploy de homologacao.
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

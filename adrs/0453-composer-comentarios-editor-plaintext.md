@@ -51,3 +51,29 @@ Criar um controller `contenteditable` na fundação de formulários do frontend 
 ## Pendências
 
 - Validar o comportamento específico da barra no iOS real após o deploy de homologação, pois o ambiente local disponível valida build/DOM, mas não emula a UI nativa do teclado do Safari.
+
+## Atualizacao 2026-08-12 - ancoragem acima do teclado no Android
+
+Apos a troca do campo nativo por editor plaintext, foi identificada uma regressao visual em alguns Androids: o teclado virtual podia cobrir a parte inferior do composer fixo de comentarios/respostas. A causa pratica e a diferenca de comportamento entre navegadores/teclados ao tratar elementos `position: fixed` durante a animacao do teclado; alguns redimensionam o viewport visual, outros mantem o layout viewport e apenas sobrepoem o conteudo.
+
+Decisao complementar:
+
+- O viewport do frontend passa a declarar `interactiveWidget: "resizes-content"`, permitindo que navegadores compativeis redimensionem o conteudo quando o teclado abre.
+- O `ReplyComposer` principal, somente no modo fixo mobile, mede a sobreposicao real entre o bloco e o `visualViewport` e aplica `bottom` dinamico com uma pequena folga.
+- O calculo e reexecutado em `resize`/`scroll` do `visualViewport` e em atrasos curtos apos o evento inicial, pois Android/Chrome e teclados de terceiros podem estabilizar a altura final alguns frames depois do foco.
+- O composer inline dentro da arvore de respostas nao recebe esse deslocamento, porque ele participa do fluxo normal da pagina.
+
+Consequencias:
+
+- O campo de comentario deve permanecer visivel acima do teclado em Android sem depender apenas da heuristica `innerHeight - visualViewport.height`.
+- A mudanca e frontend-only, sem impacto em payloads, backend, banco, storage, uploads ou permissoes.
+- Navegadores que ignorarem `interactiveWidget` continuam usando o fallback medido no componente.
+- Rollback: reverter o commit volta ao comportamento anterior, com risco de o teclado cobrir parte do composer em alguns Androids.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Chrome headless local em `http://localhost:3010/auth/login` confirmou render mobile basico e o meta viewport com `interactive-widget=resizes-content`.
+- A sobreposicao do teclado Android depende de UI nativa e deve ser conferida no dispositivo apos o deploy de homologacao.

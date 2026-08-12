@@ -43,6 +43,7 @@ import {
   useReplyComposerForm,
 } from "../use-form";
 import { findReplyComposerInput } from "./reply-composer-dom";
+import { useReplyComposerKeyboardOffset } from "./use-reply-composer-keyboard-offset";
 
 export const ReplyComposer = ({
   apiError,
@@ -74,7 +75,6 @@ export const ReplyComposer = ({
   const [composerActive, setComposerActive] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [draggingToCancel, setDraggingToCancel] = useState(false);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
   const composerFormNodeRef = useRef<HTMLElement | null>(null);
@@ -104,6 +104,11 @@ export const ReplyComposer = ({
   const ready = hasDraft || Boolean(selectedMedia);
   const FieldComponent = components[formProps.fields[0].field];
   const isInline = variant === "inline";
+  const keyboardOffset = useReplyComposerKeyboardOffset({
+    composerActive,
+    composerRef: composerFormNodeRef,
+    isInline,
+  });
   const shouldShowMediaTriggerInField =
     !selectedMedia && (mediaPickerActive || mediaPermission.showControl);
   const shouldShowGuidance = composerActive || hasDraft || Boolean(selectedMedia);
@@ -127,8 +132,11 @@ export const ReplyComposer = ({
   );
   const composerStyle = useMemo(() => {
     const style: CSSProperties = {};
-    if (!isInline && keyboardOffset > 0) {
-      style.bottom = `${keyboardOffset}px`;
+    if (!isInline) {
+      style.bottom =
+        keyboardOffset > 0
+          ? `max(${keyboardOffset}px, env(keyboard-inset-height, 0px))`
+          : "env(keyboard-inset-height, 0px)";
     }
 
     if (dragOffset > 0) {
@@ -288,37 +296,6 @@ export const ReplyComposer = ({
 
     return () => window.removeEventListener("focus", handleWindowFocus);
   }, [endMediaPickerInteraction, mediaPickerActive]);
-
-  useEffect(() => {
-    if (isInline || typeof window === "undefined") return;
-
-    const viewport = window.visualViewport;
-    const updateKeyboardOffset = () => {
-      if (!composerActive || !window.matchMedia(POST_DETAIL_MOBILE_QUERY).matches || !viewport) {
-        setKeyboardOffset(0);
-        return;
-      }
-
-      const nextKeyboardOffset = Math.max(
-        0,
-        Math.round(window.innerHeight - viewport.height - viewport.offsetTop),
-      );
-      setKeyboardOffset(nextKeyboardOffset > 24 ? nextKeyboardOffset : 0);
-    };
-
-    updateKeyboardOffset();
-    viewport?.addEventListener("resize", updateKeyboardOffset);
-    viewport?.addEventListener("scroll", updateKeyboardOffset);
-    window.addEventListener("orientationchange", updateKeyboardOffset);
-    window.addEventListener("resize", updateKeyboardOffset);
-
-    return () => {
-      viewport?.removeEventListener("resize", updateKeyboardOffset);
-      viewport?.removeEventListener("scroll", updateKeyboardOffset);
-      window.removeEventListener("orientationchange", updateKeyboardOffset);
-      window.removeEventListener("resize", updateKeyboardOffset);
-    };
-  }, [composerActive, isInline]);
 
   useEffect(() => {
     if (!composerActive || isInline || typeof window === "undefined") return;
