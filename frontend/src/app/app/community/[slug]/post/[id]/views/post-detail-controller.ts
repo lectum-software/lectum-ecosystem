@@ -76,8 +76,8 @@ export const usePostDetailController = () => {
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
-  const composerRef = useRef<HTMLFormElement | null>(null);
-  const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
+  const composerRef = useRef<HTMLElement | null>(null);
+  const inlineReplyFormRef = useRef<HTMLElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
   const hasShownPsychologistReplyTipThisVisitRef = useRef(false);
   const hasPersistedPsychologistReplyTipSeenRef = useRef(false);

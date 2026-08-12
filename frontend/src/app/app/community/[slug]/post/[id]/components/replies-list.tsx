@@ -44,7 +44,7 @@ export const RepliesList = ({
   threadHrefBase,
   votePending,
 }: {
-  activeInlineReplyFormRef?: RefObject<HTMLFormElement | null>;
+  activeInlineReplyFormRef?: RefObject<HTMLElement | null>;
   currentUserId?: string | null;
   deleteReplyPending?: boolean;
   errorMessage?: string | null;

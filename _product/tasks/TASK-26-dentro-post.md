@@ -1785,6 +1785,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - Frontend: foi criado o controller `contenteditable` na fundacao de formularios (`frontend/src/components/controllers`) com React Hook Form, Zod e texto plano via `textContent`.
 - Frontend: o `ReplyComposer` de comentarios/respostas passou a usar esse controller somente no campo `content`, preservando placeholder, limite de 2000 caracteres, quebras de linha, erro inline, autoGrow visual e envio pelo payload existente.
 - Frontend: foco, autofocus, blur, cancelamento por gesto e retorno apos selecao de midia passaram a procurar um seletor compartilhado que aceita tanto o `textarea` legado quanto o novo textbox `contenteditable`.
+- Depois do teste no iOS, o wrapper nativo `<form>` do `ReplyComposer` tambem foi removido; o envio passou a usar o botao com `hook.handleSubmit()`, preservando validacao e payload sem acionar semantica nativa de formulario no Safari.
 - Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, upload, permissao de midia, votos, salvos, denuncias ou tracking.
 - ADR criado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
 
@@ -1794,6 +1795,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] O valor enviado continua sendo texto plano validado por React Hook Form/Zod, sem HTML persistido.
 - [x] O limite de 2000 caracteres e a experiencia multiline foram preservados.
 - [x] Foco, cancelamento e selecao de midia continuam funcionando com o novo campo focavel.
+- [x] O wrapper principal do composer de comentarios/respostas nao usa `<form>` nativo; apenas o modal de denuncia mantem formulario nativo.
 - [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
 
 ### Validacoes
@@ -1802,7 +1804,7 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm --dir frontend typecheck`
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
-- [x] Chrome headless local em `/smoke-reply-composer` confirmou `contenteditable` renderizado, sem `textarea` nativo no composer.
+- [x] Chrome headless local em `/smoke-reply-composer` confirmou `contenteditable` renderizado, sem `textarea` nativo e sem `<form>` no composer.
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] `pnpm version:bump`

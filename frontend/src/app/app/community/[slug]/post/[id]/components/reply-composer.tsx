@@ -4,7 +4,6 @@ import { Loader2, Send, X } from "lucide-react";
 import {
   type ChangeEvent,
   type CSSProperties,
-  type FormEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
   useCallback,
@@ -61,7 +60,7 @@ export const ReplyComposer = ({
   apiError?: string | null;
   autoFocus?: boolean;
   disabled?: boolean;
-  formRef?: RefObject<HTMLFormElement | null>;
+  formRef?: RefObject<HTMLElement | null>;
   mediaPermission: ReplyMediaPermission;
   onCancelContext?: () => void;
   onDraftStateChange?: (hasDraft: boolean) => void;
@@ -78,7 +77,7 @@ export const ReplyComposer = ({
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
-  const composerFormNodeRef = useRef<HTMLFormElement | null>(null);
+  const composerFormNodeRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const composerActivatedAtRef = useRef(0);
   const composerInternalPointerAtRef = useRef(0);
@@ -157,7 +156,7 @@ export const ReplyComposer = ({
     composerActivatedAtRef.current = Date.now();
   }, []);
 
-  const assignComposerFormRef = useCallback((node: HTMLFormElement | null) => {
+  const assignComposerFormRef = useCallback((node: HTMLElement | null) => {
     composerFormNodeRef.current = node;
   }, []);
 
@@ -165,7 +164,7 @@ export const ReplyComposer = ({
     composerInternalPointerAtRef.current = Date.now();
   }, []);
 
-  useImperativeHandle<HTMLFormElement | null, HTMLFormElement | null>(
+  useImperativeHandle<HTMLElement | null, HTMLElement | null>(
     formRef,
     () => composerFormNodeRef.current,
     [],
@@ -397,7 +396,7 @@ export const ReplyComposer = ({
     scheduleSelectedMediaPreviewPreparation(previewUrl, type);
   };
 
-  const handleCancelPointerDown = (event: ReactPointerEvent<HTMLFormElement>) => {
+  const handleCancelPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     if (event.pointerType !== "touch" || !canUseMobileCancelGesture()) return;
 
     cancelDragRef.current = {
@@ -408,7 +407,7 @@ export const ReplyComposer = ({
     };
   };
 
-  const handleCancelPointerMove = (event: ReactPointerEvent<HTMLFormElement>) => {
+  const handleCancelPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     const gesture = cancelDragRef.current;
     if (!gesture || gesture.pointerId !== event.pointerId) return;
 
@@ -432,7 +431,7 @@ export const ReplyComposer = ({
     }
   };
 
-  const handleCancelPointerEnd = (event: ReactPointerEvent<HTMLFormElement>) => {
+  const handleCancelPointerEnd = (event: ReactPointerEvent<HTMLElement>) => {
     const gesture = cancelDragRef.current;
     if (!gesture || gesture.pointerId !== event.pointerId) return;
 
@@ -451,7 +450,7 @@ export const ReplyComposer = ({
     resetCancelDrag();
   };
 
-  const handleComposerSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const submitComposer = () => {
     void hook.handleSubmit(async (values) => {
       if (!String(values.content ?? "").trim() && !selectedMedia) {
         hook.setError("content", {
@@ -471,11 +470,12 @@ export const ReplyComposer = ({
       } catch {
         // O estado de erro é tratado pela mutation para manter o campo preenchido.
       }
-    })(event);
+    })();
   };
 
   return (
-    <form
+    // biome-ignore lint/a11y/noStaticElementInteractions: wrapper handles focus and pointer state without using a native form element on iOS.
+    <div
       className={cn(
         "grid gap-2 border-border bg-surface p-3 dark:border-border dark:bg-surface",
         draggingToCancel ? "transition-none" : "transition-transform duration-200 ease-out",
@@ -488,7 +488,6 @@ export const ReplyComposer = ({
                 : "pb-[var(--lectum-bottom-fixed-padding)]",
             ),
       )}
-      noValidate
       onBlur={(event) => {
         const nextTarget = event.relatedTarget;
         if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
@@ -511,7 +510,6 @@ export const ReplyComposer = ({
       onPointerDown={handleCancelPointerDown}
       onPointerMove={handleCancelPointerMove}
       onPointerUp={handleCancelPointerEnd}
-      onSubmit={handleComposerSubmit}
       onTouchStartCapture={markComposerInternalPointer}
       ref={assignComposerFormRef}
       style={composerStyle}
@@ -559,7 +557,8 @@ export const ReplyComposer = ({
           aria-label="Enviar resposta"
           className="h-11 w-11 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-lectum-soft hover:bg-primary-hover disabled:bg-surface-muted disabled:text-subtle disabled:opacity-100 disabled:shadow-none"
           disabled={disabled || !ready}
-          type="submit"
+          onClick={submitComposer}
+          type="button"
         >
           {disabled && ready ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -578,7 +577,7 @@ export const ReplyComposer = ({
           {visibleError}
         </InlineAlert>
       ) : null}
-    </form>
+    </div>
   );
 };
 

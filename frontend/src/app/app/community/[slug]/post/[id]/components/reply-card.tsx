@@ -288,7 +288,7 @@ export const ReplyCard = ({
   threadHrefBase,
   votePending,
 }: {
-  activeInlineReplyFormRef?: RefObject<HTMLFormElement | null>;
+  activeInlineReplyFormRef?: RefObject<HTMLElement | null>;
   currentUserId?: string | null;
   deleteReplyPending?: boolean;
   depth?: number;

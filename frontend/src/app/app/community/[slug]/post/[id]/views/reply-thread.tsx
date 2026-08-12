@@ -36,6 +36,7 @@ import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { ThreadOriginalPostCard } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
 import { PostReportModal, ReplyComposer } from "../components/reply-composer";
+import { findReplyComposerInput } from "../components/reply-composer-dom";
 import { submitReplyWithOptionalMedia } from "../modules/reply-submit";
 import {
   confirmDiscardReplyDraft,
@@ -72,8 +73,8 @@ export const PostReplyThreadLogic = () => {
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
-  const composerRef = useRef<HTMLFormElement | null>(null);
-  const inlineReplyFormRef = useRef<HTMLFormElement | null>(null);
+  const composerRef = useRef<HTMLElement | null>(null);
+  const inlineReplyFormRef = useRef<HTMLElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
   const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
@@ -183,17 +184,14 @@ export const PostReplyThreadLogic = () => {
       if (isMobile) {
         setMobileReplyTarget(target);
         window.setTimeout(() => {
-          const inputNode = composerRef.current?.querySelector<HTMLTextAreaElement>("textarea");
-          inputNode?.focus({ preventScroll: true });
+          findReplyComposerInput(composerRef.current)?.focus({ preventScroll: true });
         }, 0);
         return;
       }
 
       if (desktopReplyTargets[reply.id]) {
         window.setTimeout(() => {
-          const inputNode =
-            inlineReplyFormRef.current?.querySelector<HTMLTextAreaElement>("textarea");
-          inputNode?.focus({ preventScroll: true });
+          findReplyComposerInput(inlineReplyFormRef.current)?.focus({ preventScroll: true });
         }, 0);
         return;
       }
