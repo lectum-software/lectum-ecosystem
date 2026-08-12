@@ -584,3 +584,45 @@ Validacao complementar 2026-08-12:
   `TEXTAREA#create-post-title`, seletor com `bg-surface`/texto foreground/copy `Selecionar comunidade`,
   CTA `Postar` com `fontFamily` Manrope/`var(--font-sans)` e `fontWeight=800`, footer no rodape da sheet
   e offset de teclado `0px` no ambiente headless sem teclado virtual.
+
+## Atualizacao 2026-08-12 - footer da modal proximo ao teclado e scroll lock mobile
+
+O primeiro refinamento com `visualViewport` mantinha o footer acima do teclado, mas fazia isso por
+padding inferior interno da sheet. Em iPhone/PWA real, esse padding podia aparecer como uma faixa
+branca abaixo da linha de acoes, deixando camera/`Postar` altos demais e consumindo area textual. A
+mesma validacao mostrou que `overflow: hidden` simples em `body/html` nao era suficiente para impedir
+rolagem da tela de fundo em todos os gestos mobile.
+
+Decisoes complementares:
+
+- Trocar o padding inferior de offset por reposicionamento da sheet: `margin-bottom` recebe o offset de
+  `visualViewport` e a altura da sheet subtrai o mesmo valor. Assim, o fundo da sheet termina no topo do
+  teclado e o footer permanece junto a essa borda, sem espaco branco interno abaixo dele.
+- Compactar o footer mobile: `pt-2`, CTA `Postar` com `h-11` e padding inferior reduzido para `0.35rem`
+  quando existe teclado virtual; sem teclado, o padding volta a respeitar `env(safe-area-inset-bottom)`.
+- Fortalecer o scroll lock da modal fixando o `body` no scroll atual (`position: fixed`, `top` negativo,
+  `left/right: 0`, `width: 100%`) e aplicando `overflow: hidden`/`overscroll-behavior: none` em
+  `body`/`html`. No unmount, todos os estilos anteriores e a posicao de scroll sao restaurados.
+- Manter a solucao local ao `CreateCommunityPostLogic`, sem criar dependencia global ou pacote novo e
+  sem alterar contrato, persistencia, permissao de midia, anonimato, storage ou backend.
+
+Consequencias:
+
+- O rodape da composicao fica mais proximo do teclado e libera mais area para titulo/conteudo no mobile.
+- A tela de fundo nao deve rolar enquanto a modal estiver aberta, inclusive em PWAs iOS onde apenas
+  `overflow: hidden` costuma ser insuficiente.
+- A restauracao do scroll original evita salto visual ao fechar a modal e retornar ao feed/comunidade.
+- Rollback: reverter este complemento volta ao padding interno baseado em `visualViewport` e ao scroll
+  lock simples; nao ha efeito persistente em dados ou providers.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.58`: sucesso.
+- Chrome/CDP mobile em `http://127.0.0.1:3026/app/comunidades/feed/publicacao/nova`: sucesso ao
+  confirmar foco ativo no titulo, `bodyPosition=fixed`, `bodyOverflow=hidden`, `htmlOverflow=hidden`,
+  footer base compacto (`61px`) e, com offset de teclado de `260px` aplicado ao CSS var em headless,
+  `sheetMarginBottom=260px`, `sheetHeight=572.75px`, `footerHeight=55px` e
+  `footerBottomToKeyboardTop=1px`.

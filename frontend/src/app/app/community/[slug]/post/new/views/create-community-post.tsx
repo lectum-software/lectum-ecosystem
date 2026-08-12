@@ -344,12 +344,15 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
         aria-labelledby="create-post-title-heading"
         aria-modal="true"
         className={cn(
-          "flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface pb-[var(--lectum-create-post-keyboard-offset)] text-foreground shadow-[var(--lectum-shadow)] transition-[transform,padding-bottom] duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[transform,height,margin-bottom] duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
           isSheetOpen ? "translate-y-0" : "translate-y-full",
         )}
+        data-create-post-sheet="true"
         role="dialog"
         style={
           {
+            "--lectum-create-post-footer-bottom-padding":
+              keyboardViewportOffset > 0 ? "0.35rem" : "max(0.75rem, env(safe-area-inset-bottom))",
             "--lectum-create-post-keyboard-offset": `${keyboardViewportOffset}px`,
           } as CSSProperties
         }
@@ -446,13 +449,13 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
             </div>
           </div>
 
-          <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
-            <div className="flex min-h-12 items-center justify-between gap-3">
+          <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-2 pb-[var(--lectum-create-post-footer-bottom-padding)] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+            <div className="flex min-h-11 items-center justify-between gap-3">
               {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
 
               <Button
                 className={cn(
-                  "h-12 min-w-[6.5rem] shrink-0 rounded-full px-6 font-sans text-base font-[800] leading-none tracking-[-0.02em] shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
+                  "h-11 min-w-[6.5rem] shrink-0 rounded-full px-6 font-sans text-base font-[800] leading-none tracking-[-0.02em] shadow-[var(--lectum-shadow-soft)] disabled:bg-surface-muted disabled:text-muted disabled:opacity-100 disabled:shadow-none",
                   !requiredFieldsReady &&
                     "bg-surface-muted text-muted shadow-none hover:bg-surface-muted",
                 )}

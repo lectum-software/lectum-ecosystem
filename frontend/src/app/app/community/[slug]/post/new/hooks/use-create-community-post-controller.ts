@@ -317,8 +317,17 @@ export const useCreateCommunityPostController = ({
       focusEditorElement("create-post-title");
     };
     const focusTimers = [0, 90, 280, 420].map((delay) => window.setTimeout(focusTitle, delay));
+    const lockedScrollX = window.scrollX;
+    const lockedScrollY = window.scrollY;
     const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyRight = document.body.style.right;
+    const previousBodyLeft = document.body.style.left;
+    const previousBodyWidth = document.body.style.width;
+    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
     const previousDocumentOverflow = document.documentElement.style.overflow;
+    const previousDocumentOverscrollBehavior = document.documentElement.style.overscrollBehavior;
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -327,7 +336,14 @@ export const useCreateCommunityPostController = ({
     };
 
     document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.right = "0";
+    document.body.style.left = "0";
+    document.body.style.width = "100%";
+    document.body.style.overscrollBehavior = "none";
     document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
     window.addEventListener("keydown", handleEscape);
 
     return () => {
@@ -338,8 +354,16 @@ export const useCreateCommunityPostController = ({
       });
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
       document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.right = previousBodyRight;
+      document.body.style.left = previousBodyLeft;
+      document.body.style.width = previousBodyWidth;
+      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
       document.documentElement.style.overflow = previousDocumentOverflow;
+      document.documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior;
       window.removeEventListener("keydown", handleEscape);
+      window.scrollTo(lockedScrollX, lockedScrollY);
     };
   }, [focusEditorElement, handleClose]);
 

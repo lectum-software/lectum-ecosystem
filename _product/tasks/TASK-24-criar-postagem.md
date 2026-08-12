@@ -477,3 +477,31 @@ Validacoes finais deste complemento:
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
 - [x] Chrome/CDP mobile local em `http://127.0.0.1:3019/app/comunidades/feed/publicacao/nova`
+
+## Complemento 2026-08-12 - rodape compacto e bloqueio de scroll da modal Criar Post
+
+- Pedido do usuario: apos o ajuste do teclado, a linha do icone de camera e do botao `Postar` ficou alta demais em relacao ao teclado, reduzindo a area textual, e a tela de fundo ainda podia rolar com a modal aberta.
+- Frontend: o offset de `visualViewport` deixou de ser aplicado como padding inferior interno da sheet e passou a reposicionar a propria sheet por `margin-bottom`, reduzindo a altura da sheet pelo mesmo offset. Com isso, nao sobra faixa branca abaixo do footer e a linha de acoes fica colada ao topo do teclado.
+- Frontend: o footer ficou mais compacto (`pt-2`, botao `Postar` com `h-11` e padding inferior menor quando o teclado esta aberto), preservando o botao azul de midia, o switch anonimo e o CTA na mesma composicao.
+- Frontend: o scroll de fundo agora usa trava mobile robusta: ao montar a modal, o `body` fica `position: fixed`, com `overflow: hidden`, largura preservada e scroll original restaurado no fechamento; `html` tambem recebe `overflow: hidden`/`overscroll-behavior: none`.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de anonimato, storage, envs, packages ou dados publicados.
+- Fonte visual auditavel: screenshot anexado pelo usuario `WhatsApp Image 2026-08-12 at 09.03.17.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente, entao a validacao usou a imagem anexada e Chrome/CDP local.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Linha de midia/`Postar` fica mais proxima do teclado, sem faixa branca causada por padding de offset abaixo do footer.
+- [x] Footer continua sempre acima do teclado usando `visualViewport`, mas com altura compacta para aumentar a area textual.
+- [x] Tela atras da modal nao rola enquanto `Criar Post` estiver aberta.
+- [x] Fechamento da modal restaura o scroll original da pagina de fundo.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `pnpm check:version` apos `pnpm version:bump` para `0.1.58`
+- [x] Chrome/CDP mobile local em `http://127.0.0.1:3026/app/comunidades/feed/publicacao/nova`, confirmando foco no titulo, `body` fixo/`overflow: hidden`, `html` travado, footer compacto e, com offset visual simulado de `260px` no CSS var de teclado em headless, `sheetMarginBottom=260px`, `sheetHeight=572.75px`, `footerHeight=55px` e `footerBottomToKeyboardTop=1px`.
