@@ -2020,3 +2020,34 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `git diff --check`
 - [x] `pnpm version:bump` para `0.1.73`
 - [x] `pnpm check:version`
+
+## Complemento 2026-08-12 - foco isolado no comentario respondido
+
+- Pedido do usuario: o foco visual ao clicar em `Responder` deve ser aplicado somente ao comentario que esta sendo respondido, e nao a arvore inteira de respostas abaixo dele.
+- Fonte visual auditavel: referencia anterior do Reddit enviada pelo usuario e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `ReplyCard` preserva o container externo `id="reply-[id]"` para ancora e agrupamento da arvore, mas adiciona uma superficie interna `id="reply-focus-[id]"` envolvendo apenas o comentario direto.
+- Frontend: o destaque persistente do alvo de resposta (`primary-soft`/ring) saiu do `article` externo e passou para essa superficie interna, evitando colorir os filhos da arvore.
+- Frontend: `useReplyFocusHighlight` agora prefere `reply-focus-[id]` para foco, pulso e scroll; se a superficie interna nao existir, ainda cai para `reply-[id]` por compatibilidade.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regra de permissao profissional.
+
+### Criterios de aceite do complemento
+
+- [x] Ao responder um comentario com filhos, o destaque visual fica apenas no comentario alvo.
+- [x] A arvore abaixo do comentario alvo nao recebe fundo/ring/pulso por heranca do container externo.
+- [x] As ancoras `reply-[id]` continuam preservadas para links e estrutura da arvore.
+- [x] A tela principal do post e a tela dedicada de thread continuam usando o mesmo foco/scroll.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check` (repetido apos o bump em `0.1.74`)
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.74`)
+- [x] Next local buildado em `http://127.0.0.1:3044`: `/version` respondeu `0.1.73`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`, e o codigo confirma `reply-focus-[id]` no `ReplyCard` e preferencia por esse alvo em `useReplyFocusHighlight`; repetido em `http://127.0.0.1:3046` apos o bump, com `/version` em `0.1.74` e rota `200`.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.74`
+- [x] `pnpm check:version`

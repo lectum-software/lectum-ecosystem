@@ -355,10 +355,7 @@ export const ReplyCard = ({
 
   return (
     <article
-      className={cn(
-        "relative rounded-[20px] py-0.5 text-foreground transition-[background-color,box-shadow] duration-500 dark:text-foreground",
-        isComposerReplyTarget ? "bg-primary-soft/70 ring-1 ring-primary/20" : undefined,
-      )}
+      className="relative rounded-[20px] py-0.5 text-foreground dark:text-foreground"
       id={`reply-${reply.id}`}
     >
       {hasTreeContinuation ? (
@@ -368,7 +365,13 @@ export const ReplyCard = ({
         />
       ) : null}
 
-      <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-colors sm:grid-cols-[2.25rem_minmax(0,1fr)]">
+      <div
+        className={cn(
+          "grid grid-cols-[2rem_minmax(0,1fr)] gap-x-2.5 rounded-[20px] transition-[background-color,box-shadow] duration-500 sm:grid-cols-[2.25rem_minmax(0,1fr)]",
+          isComposerReplyTarget ? "bg-primary-soft/70 ring-1 ring-primary/20" : undefined,
+        )}
+        id={`reply-focus-${reply.id}`}
+      >
         <div className="relative flex justify-center">
           <AuthorAvatar
             anonymous={Boolean(reply.author.anonymous)}

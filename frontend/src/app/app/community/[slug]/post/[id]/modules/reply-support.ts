@@ -218,7 +218,9 @@ export const useReplyFocusHighlight = (
     };
 
     const focusReply = () => {
-      const target = document.getElementById(`reply-${replyId}`);
+      const target =
+        document.getElementById(`reply-focus-${replyId}`) ??
+        document.getElementById(`reply-${replyId}`);
       if (!target) {
         if (attempts < FOCUSED_REPLY_RETRY_ATTEMPTS) {
           attempts += 1;

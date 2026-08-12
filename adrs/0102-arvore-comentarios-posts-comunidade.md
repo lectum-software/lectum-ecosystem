@@ -368,3 +368,35 @@ Validacao complementar 2026-08-12:
 - `pnpm --dir frontend build`: sucesso apos repetir com timeout maior e encerrar servidores Next locais antigos.
 - Smoke estatico do codigo: sucesso para scroll `composer-start`, follow de viewport, alvo destacado e aplicacao em detalhe/thread.
 - Browser local mobile/headless em `http://127.0.0.1:3034/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video`: rota carregou em 390px; sem API local/autenticacao real nao havia comentarios reais clicaveis sem mocks.
+
+## Atualizacao 2026-08-12 - superficie de foco separada da arvore de respostas
+
+A interacao de responder passou a rolar e destacar o comentario alvo. Na estrutura atual, o `article#reply-[id]` tambem engloba `reply-children-[id]`; aplicar foco, pulso e fundo ativo nesse container externo fazia a arvore inteira abaixo do comentario parecer selecionada.
+
+Decisao complementar:
+
+- Preservar `id="reply-[id]"` no `article` externo para manter ancoras, links e agrupamento semantico da arvore.
+- Adicionar `id="reply-focus-[id]"` em uma superficie interna do `ReplyCard`, limitada ao comentario imediato e suas acoes diretas, sem envolver `reply-children-[id]`.
+- Mover o destaque persistente do alvo ativo (`primary-soft`/ring) para essa superficie interna.
+- Fazer `useReplyFocusHighlight` preferir `reply-focus-[id]` para scroll, foco acessivel temporario e pulso visual, mantendo fallback para `reply-[id]` caso algum card legado nao tenha a superficie interna.
+- Nao alterar backend, payloads, cache, schema, endpoints, storage, permissoes, envs ou packages.
+
+Consequencias:
+
+- O usuario continua vendo o comentario respondido subir e receber foco visual, mas os descendentes da arvore deixam de parecer parte da selecao.
+- Links e anchors existentes que apontam para `#reply-[id]` continuam funcionando, porque o container externo nao foi removido nem renomeado.
+- O mesmo comportamento vale para a tela principal do post e para a tela dedicada de thread, pois ambas reutilizam `ReplyCard` e `useReplyFocusHighlight`.
+- Rollback: reverter este complemento volta a aplicar foco no container externo e pode destacar a arvore inteira abaixo do comentario alvo.
+
+Validacao complementar 2026-08-12:
+
+- `pnpm --dir frontend check`: sucesso, repetido apos o bump em `0.1.74`.
+- `pnpm --dir frontend build`: sucesso, repetido apos o bump em `0.1.74`.
+- Next local buildado em `http://127.0.0.1:3044`: `/version` respondeu `0.1.73`, a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200`, e o codigo confirma `reply-focus-[id]` no `ReplyCard` e preferencia por esse alvo em `useReplyFocusHighlight`; repetido em `http://127.0.0.1:3046` apos o bump, com `/version` em `0.1.74` e rota `200`.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `pnpm version:bump` para `0.1.74`: sucesso.
+- `pnpm check:version`: sucesso.
