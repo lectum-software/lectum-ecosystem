@@ -120,7 +120,7 @@ export const ReplyComposer = ({
       inputClassName: cn(
         formProps.fields[0].inputClassName,
         "border-0 bg-transparent px-3.5 shadow-none focus:border-transparent focus:ring-0 dark:bg-transparent",
-        shouldShowMediaTriggerInField && "pl-14",
+        shouldShowMediaTriggerInField && "pl-12",
       ),
     }),
     [formProps.fields, shouldShowMediaTriggerInField],
@@ -484,7 +484,9 @@ export const ReplyComposer = ({
           ? "mt-3 rounded-[20px] border shadow-none"
           : cn(
               "fixed inset-x-0 bottom-0 z-[80] rounded-t-[24px] border-t bg-surface shadow-lectum-soft sm:static sm:rounded-[22px] sm:border sm:bg-surface sm:pb-3 sm:shadow-lectum-soft dark:sm:bg-surface",
-              composerActive ? "pb-2" : "pb-[var(--lectum-bottom-fixed-padding)]",
+              composerActive
+                ? "pb-[var(--lectum-bottom-nav-padding)]"
+                : "pb-[var(--lectum-bottom-fixed-padding)]",
             ),
       )}
       noValidate
@@ -518,10 +520,10 @@ export const ReplyComposer = ({
       ) : null}
 
       <div className="flex items-end gap-2">
-        <div className="relative grid min-w-0 flex-1 rounded-[18px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
+        <div className="relative grid min-w-0 flex-1 rounded-[24px] border border-border bg-surface shadow-none transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 dark:bg-surface">
           {shouldShowMediaTriggerInField ? (
             <ReplyMediaAttachmentControl
-              className="absolute top-1/2 left-2 z-10 -translate-y-1/2"
+              className="absolute top-1/2 left-1 z-10 -translate-y-1/2"
               composerMode="trigger"
               disabled={disabled}
               fileInputRef={fileInputRef}

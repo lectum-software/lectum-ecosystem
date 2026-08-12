@@ -30,6 +30,7 @@ Adicionar um fluxo aditivo de upload multipart para mídia grande em respostas d
 - Thumbnails de video em respostas/comentarios dentro da Lectum sao cruas, sem moldura `Respondido na Lectum`; a moldura com caixa azul e identificacao profissional fica restrita ao fluxo de compartilhamento externo.
 - A preparacao local de preview/miniatura de videos selecionados e agendada apos o retorno ao composer, para que a galeria nativa feche e o carregamento aconteca no campo de resposta.
 - O trigger de midia do composer de respostas fica dentro do campo, centralizado verticalmente, com contraste forte; quando uma midia esta anexada, ele e ocultado ate a remocao da midia.
+- O composer ativo em mobile reaproveita o padding de safe-area da navegacao inferior, e o campo usa raio `24px` com botao de camera de `36px` para manter margens internas equilibradas.
 
 ## Consequências
 

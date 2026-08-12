@@ -35,7 +35,7 @@ const buildFields = () =>
       max: 2000,
       autoGrow: true,
       inputClassName:
-        "min-h-[44px] max-h-[160px] rounded-[16px] border-border bg-surface px-3.5 py-2.5 text-sm leading-5 shadow-none placeholder:text-subtle focus:border-primary focus:ring-primary/10 dark:bg-surface",
+        "min-h-[44px] max-h-[160px] rounded-[24px] border-border bg-surface px-3.5 py-2.5 text-sm leading-5 shadow-none placeholder:text-subtle focus:border-primary focus:ring-primary/10 dark:bg-surface",
     },
   ] satisfies Field<ReplyComposerForm>[];
 

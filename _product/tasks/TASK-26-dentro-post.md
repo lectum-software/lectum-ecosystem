@@ -1539,6 +1539,32 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
 
+## Complemento 2026-08-12 - raio e safe-area do composer de comentarios
+
+- Pedido do usuario: arredondar mais o campo de comentario, reduzir o botao de midia para ter margem uniforme e proteger a base do composer no mobile para evitar elementos escondidos.
+- Frontend: o campo de comentario passa de `rounded-[18px]` para `rounded-[24px]`, alinhado ao formato pill do botao de midia.
+- Frontend: o botao de camera passa de `44px` para `36px`, com `left-1` e centralizacao vertical, deixando margem visual equivalente na esquerda, topo e base do campo.
+- Frontend: quando o composer esta ativo no mobile, a base usa `var(--lectum-bottom-nav-padding)` em vez de `pb-2`, reaproveitando o espacamento de safe-area usado na navegacao inferior.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, permissao de midia, limite de 200MB, upload, votos, salvos, denuncias ou tracking.
+- ADR atualizado: `adrs/0452-upload-multipart-midia-respostas.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O campo de comentario tem bordas mais arredondadas, com aparencia de pill.
+- [x] O botao de camera fica menor e com margem equilibrada em relacao as bordas esquerda, superior e inferior do campo.
+- [x] No mobile, a base do composer respeita o espacamento de safe-area usado na navegacao inferior quando o campo esta ativo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
 ## Complemento 2026-08-11 - multipart resiliente para videos reais no celular
 
 - Pedido do usuario: simular o comentario com o video real `c:/Users/tulio/Downloads/IMG_3087.MP4`, pois o arquivo correto do celular tem aproximadamente `120MB` e o erro de anexar midia continuava.
