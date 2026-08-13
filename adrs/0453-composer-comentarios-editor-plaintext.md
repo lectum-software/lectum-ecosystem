@@ -103,3 +103,32 @@ Validacao complementar 2026-08-12:
 - `pnpm check`: sucesso apos repetir com timeout maior; a primeira tentativa excedeu o tempo local e terminou em seguida sem resultado capturado.
 - `git diff --check`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.73`: sucesso.
+
+## Atualizacao 2026-08-13 - edicao de comentario com editor plaintext
+
+O teste em iPhone mostrou que a modal `Editar comentario` ainda podia apresentar comportamento visual inconsistente no campo textual. Diferente do composer principal, a edicao continuava usando um `textarea` nativo dentro de uma modal com midia e teclado virtual, mantendo a UI nativa de navegacao do iOS/Safari e deixando comentarios com quebra final posicionarem o cursor em uma linha vazia.
+
+Decisao complementar:
+
+- Reutilizar o controller `contenteditable` da fundacao de formularios no campo `content` da `ReplyEditModal`, preservando React Hook Form, Zod, limite de 2000 caracteres e payload texto plano.
+- Normalizar apenas o valor inicial de edicao com `trimEnd()`, removendo espacos/quebras finais que ja seriam removidos no salvamento e evitando caret deslocado em comentario curto.
+- Manter o `<form>` da modal para o submit dos botoes de acao, pois nao ha mais campo textual nativo que dependa da navegacao de formulario do Safari.
+- Nao alterar backend, endpoint, payload, upload, thumbnails, permissoes, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- A edicao de comentarios fica alinhada ao composer principal no iOS, reduzindo a chance de barra nativa e bugs de caret associados a `textarea`.
+- Comentarios legados com newline final abrem com a mesma representacao que sera salva, sem linha vazia artificial no editor.
+- Rollback: reverter este complemento volta o editor da modal para `textarea` nativo e pode reintroduzir a barra/caret visualmente quebrado no iOS.
+
+Validacao complementar 2026-08-13:
+
+- Validacao estatica via Node confirmou `field: "contenteditable"`, ausencia de `field: "textarea"` e default com `normalizeReplyEditContent`.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.87`: sucesso.

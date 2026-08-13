@@ -51,10 +51,12 @@ type ReplyEditModalProps = {
   reply: EditableReply;
 };
 
+const normalizeReplyEditContent = (content: string) => content.trimEnd();
+
 const fields = [
   {
     name: "content",
-    field: "textarea",
+    field: "contenteditable",
     id: "edit-reply-content",
     placeholder: "Edite seu comentário",
     max: 2000,
@@ -79,7 +81,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     fields,
     schema: replyEditSchema,
     defaultValues: {
-      content: reply.content,
+      content: normalizeReplyEditContent(reply.content),
     },
   });
   const { formProps, hook } = form;

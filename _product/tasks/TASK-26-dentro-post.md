@@ -2179,3 +2179,37 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.86`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-13 - campo de edicao de comentario no iOS
+
+- Pedido do usuario: o campo de texto da modal `Editar comentario` aparece bugado no iPhone ao editar comentario com midia.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 21.09.14.jpeg` e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Diagnostico: a modal de edicao ainda usava `textarea` nativo, enquanto o composer de comentarios ja havia migrado para editor plaintext para reduzir interferencias do iOS/Safari; alem disso, comentarios legados com quebra/espaco final podiam posicionar o cursor em uma linha visual vazia.
+- Frontend: `ReplyEditModal` passou a usar o controller `contenteditable` da fundacao da TASK-02 no campo `content`, mantendo React Hook Form, Zod, limite de 2000 caracteres, texto plano e quebras de linha.
+- Frontend: o valor inicial da edicao agora aplica `trimEnd()` antes de popular o editor, evitando que quebras finais persistidas deixem o cursor deslocado para a linha de baixo sem alterar o payload de salvamento, que ja era trimado.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, denuncia, upload ou regras de permissao.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A modal `Editar comentario` nao renderiza mais `textarea` nativo para o campo textual.
+- [x] O campo de edicao reutiliza o controller `contenteditable` com texto plano, limite de caracteres e acessibilidade de textbox multilinha.
+- [x] O conteudo inicial remove apenas espacos/quebras finais, evitando cursor em linha vazia quando o comentario salvo termina com newline.
+- [x] O fluxo de salvar, manter/remover/substituir midia e mensagens seguras permanecem inalterados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `ReplyEditModal` com `field: "contenteditable"`, sem `field: "textarea"`, e default trimado com `normalizeReplyEditContent`.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3067`: `/version` respondeu `0.1.86` antes do bump e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844 com estado seguro `Post indisponivel` por falta de conexao/API local; a modal autenticada fica para reteste em homologacao mobile.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.87`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
