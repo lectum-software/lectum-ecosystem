@@ -3,7 +3,7 @@
 import { ArrowRight, CheckCircle2, Loader2, MapPin, RefreshCw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
@@ -21,6 +21,7 @@ import {
   PSYCHOLOGIST_ONBOARDING_PATHS,
 } from "@/utils/psychologist-onboarding";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
+import { CITY_OPTIONS_BY_STATE } from "../../profile/setup/brazil-cities";
 import {
   type BillingAddressForm,
   toBillingAddressPayload,
@@ -56,6 +57,25 @@ const getViaCepState = (value?: string | null) => {
   return normalized && /^[A-Z]{2}$/.test(normalized) ? normalized : null;
 };
 
+const normalizeLocationOption = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
+
+const getCityValueForState = (state: string | null, city?: string | null) => {
+  const normalizedCity = getViaCepValue(city);
+  if (!state || !normalizedCity) return null;
+
+  const cityOption = (CITY_OPTIONS_BY_STATE[state] ?? []).find(
+    (option) =>
+      normalizeLocationOption(String(option.value)) === normalizeLocationOption(normalizedCity),
+  );
+
+  return cityOption ? String(cityOption.value) : null;
+};
+
 const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
   if (!currentPeriodEnd) return true;
 
@@ -81,8 +101,7 @@ const AddressHeader = () => (
       Complete os dados da sua assinatura
     </h1>
     <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-muted">
-      Informe seu endereço profissional, como o endereço de um consultório. Os dados de Cidade e
-      Estado já ficarão salvos no seu perfil para o filtro de localidade.
+      Informe seu endereço comercial para faturamento.
     </p>
   </header>
 );
@@ -93,6 +112,8 @@ export const ProfessionalBillingAddressLogic = () => {
   const billingAddressForm = useBillingAddressForm();
   const { control, getValues, setValue } = billingAddressForm.hook;
   const zip = useWatch({ control, name: "zip" });
+  const state = useWatch({ control, name: "state" });
+  const previousStateRef = useRef<string | undefined>(undefined);
   const AddressForm = billingAddressForm.Form;
 
   const billing = usePsychologistBilling({
@@ -123,6 +144,27 @@ export const ProfessionalBillingAddressLogic = () => {
 
     router.replace(courtesyRedirectPath);
   }, [activeCourtesy, courtesyRedirectPath, router]);
+
+  useEffect(() => {
+    const currentState = typeof state === "string" ? state : "";
+    const previousState = previousStateRef.current;
+    previousStateRef.current = currentState;
+
+    if (previousState === undefined || previousState === currentState) {
+      return;
+    }
+
+    const currentCity = getValues("city");
+    if (!currentCity) return;
+
+    const cityBelongsToState = (CITY_OPTIONS_BY_STATE[currentState] ?? []).some(
+      (option) => String(option.value) === currentCity,
+    );
+
+    if (!cityBelongsToState) {
+      setValue("city", "", AUTOFILLED_ADDRESS_FIELDS);
+    }
+  }, [getValues, setValue, state]);
 
   useEffect(() => {
     const normalizedZip = typeof zip === "string" ? zip.replace(/\D/g, "") : "";
@@ -156,11 +198,12 @@ export const ProfessionalBillingAddressLogic = () => {
         if (controller.signal.aborted || data.erro) return;
         if (getValues("zip") !== normalizedZip) return;
 
+        const nextState = getViaCepState(data.uf);
         applyAutofilledValue("street", getViaCepValue(data.logradouro));
         applyAutofilledValue("complement", getViaCepValue(data.complemento));
         applyAutofilledValue("district", getViaCepValue(data.bairro));
-        applyAutofilledValue("city", getViaCepValue(data.localidade));
-        applyAutofilledValue("state", getViaCepState(data.uf));
+        applyAutofilledValue("state", nextState);
+        applyAutofilledValue("city", getCityValueForState(nextState, data.localidade));
       } catch {
         // A consulta por CEP é apenas conveniência: em falha, os campos permanecem editáveis.
       }
@@ -264,12 +307,12 @@ export const ProfessionalBillingAddressLogic = () => {
                     disabled={billing.address.isPending}
                     type="submit"
                   >
+                    Salvar e continuar
                     {billing.address.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                     ) : (
                       <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     )}
-                    Salvar e continuar
                   </Button>
                 </AddressForm>
               </>

@@ -623,3 +623,41 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Ajuste em 2026-08-13: localidade do endereco de faturamento
+
+- Pedido direto de produto: na etapa `/app/profissional/assinatura/endereco`, trocar a copy
+  introdutoria para **Informe seu endereco comercial para faturamento.**, fazer **Estado** e
+  **Cidade** funcionarem como na edicao do perfil do psicologo e mover a seta do botao para a
+  direita do texto **Salvar e continuar**.
+- Ajuste: o formulario de faturamento passa a reutilizar `STATE_OPTIONS` e
+  `CITY_OPTIONS_BY_STATE`, exigindo primeiro a selecao do estado e depois a cidade em dropdown
+  filtravel.
+- O autopreenchimento por CEP continua silencioso em caso de falha, mas agora aplica UF antes da
+  cidade para respeitar a dependencia entre os campos; se o estado for trocado manualmente, cidade
+  incompatível e limpa.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+- Referencia visual ativa: capturas enviadas pelo usuario em 2026-08-13; Builder/Quick Copy nao
+  esta exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0455-autopreenchimento-cep-endereco-assinatura.md`.
+
+### Criterios de aceite do ajuste de localidade
+
+- [x] A copy da tela usa **Informe seu endereco comercial para faturamento.**
+- [x] O campo **Estado** aparece antes de **Cidade** e usa dropdown filtravel.
+- [x] O campo **Cidade** fica dependente do Estado e usa dropdown filtravel com as cidades do UF
+  selecionado.
+- [x] O autopreenchimento por CEP preenche UF/cidade quando encontrados, sem exibir erro quando nao
+  encontrar.
+- [x] O botao **Salvar e continuar** exibe a seta a direita do texto.
+
+### Validacao do ajuste de localidade
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Validacao de fonte confirmou Estado antes de Cidade, cidade dependente de `state`, uso de
+  `CITY_OPTIONS_BY_STATE` e seta depois do texto do botao.
+- Smoke local com `next start -p 3211`: `/app/profissional/assinatura/endereco` retornou `307`
+  para login sem sessao e `/app/professional/billing/address` retornou `308` para a rota PT-BR.
+- `pnpm check`

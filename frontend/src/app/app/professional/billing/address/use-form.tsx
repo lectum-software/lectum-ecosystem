@@ -3,6 +3,7 @@
 import { z } from "zod";
 import type { BillingAddressPayload } from "@/api/generator/types/billing";
 import { type Field, useFormList } from "@/hooks/form";
+import { CITY_OPTIONS_BY_STATE } from "../../profile/setup/brazil-cities";
 import { STATE_OPTIONS } from "../../profile/setup/options";
 
 export type BillingAddressForm = {
@@ -71,15 +72,6 @@ export const billingAddressFields = [
     className: "md:col-span-1",
   },
   {
-    name: "city",
-    field: "input",
-    label: "Cidade",
-    placeholder: "Ex.: São Paulo",
-    required: true,
-    autoComplete: "address-level2",
-    className: "md:col-span-1",
-  },
-  {
     name: "state",
     field: "select",
     label: "Estado",
@@ -89,6 +81,24 @@ export const billingAddressFields = [
     useCustomSelect: true,
     searchable: true,
     searchMode: "dropdown",
+    className: "md:col-span-1",
+  },
+  {
+    name: "city",
+    field: "select",
+    label: "Cidade",
+    required: true,
+    autoComplete: "address-level2",
+    optionsByField: {
+      name: "state",
+      options: CITY_OPTIONS_BY_STATE,
+      emptyLabel: "Selecione o estado primeiro",
+    },
+    emptyLabel: "Selecione a cidade",
+    searchable: true,
+    searchMode: "dropdown",
+    searchPlaceholder: "Buscar cidade",
+    emptySearchLabel: "Nenhuma cidade encontrada para este estado.",
     className: "md:col-span-1",
   },
 ] satisfies Field<BillingAddressForm>[];
