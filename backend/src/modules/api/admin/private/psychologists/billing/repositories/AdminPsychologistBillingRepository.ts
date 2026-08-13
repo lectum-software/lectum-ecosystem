@@ -31,6 +31,16 @@ import {
   valueContainsReference,
 } from "./support/billing-query";
 
+export type AdminPsychologistBillingCancelAudit = {
+  adminId: string;
+  changedFields: string[];
+  metadata: Prisma.InputJsonObject;
+  reason: string;
+  safeAfter: Prisma.InputJsonObject;
+  safeBefore: Prisma.InputJsonObject;
+  targetId: string;
+};
+
 const historyDateKey = (date?: Date | null) => (date ? date.toISOString().slice(0, 10) : null);
 
 const mergeGatewaySummaryPaymentHistory = (
@@ -465,6 +475,90 @@ export class AdminPsychologistBillingRepository {
       }
 
       return revokedGrant;
+    });
+  }
+
+  async cancelSubscription(input: {
+    audit: AdminPsychologistBillingCancelAudit;
+    gatewaySubscriptionId: string;
+    subscription: AdminPsychologistBillingSubscription;
+  }): Promise<professional_subscription> {
+    return prisma.$transaction(async (tx) => {
+      const current = await tx.professional_subscription.findUnique({
+        where: {
+          id: input.subscription.id,
+        },
+        select: {
+          current_period_end: true,
+          deleted: true,
+          gateway: true,
+          gateway_subscription_id: true,
+          id: true,
+          plan: {
+            select: {
+              name: true,
+              price_cents: true,
+              slug: true,
+            },
+          },
+          psychologist_id: true,
+          source: true,
+          status: true,
+        },
+      });
+
+      if (!current || current.deleted) {
+        throw new Error("admin_subscription_cancel_target_not_found");
+      }
+
+      if (current.status === "cancelada") {
+        throw new Error("admin_subscription_cancel_already_cancelled");
+      }
+
+      if (
+        current.source !== "mercadopago" ||
+        (current.gateway && current.gateway !== "mercadopago") ||
+        !current.gateway_subscription_id
+      ) {
+        throw new Error("admin_subscription_cancel_target_invalid");
+      }
+
+      const cancelledSubscription = await tx.professional_subscription.update({
+        where: {
+          id: current.id,
+        },
+        data: {
+          current_period_end: null,
+          gateway: "mercadopago",
+          gateway_subscription_id: input.gatewaySubscriptionId,
+          status: "cancelada",
+        },
+        include: {
+          plan: true,
+        },
+      });
+
+      await tx.admin_activity_log.create({
+        data: {
+          action: "psychologist_subscription_cancelled",
+          admin_id: input.audit.adminId,
+          area: "financeiro",
+          changed_fields: input.audit.changedFields as Prisma.InputJsonValue,
+          domain: "psychologist_subscription",
+          metadata: input.audit.metadata,
+          reason: input.audit.reason,
+          safe_after: input.audit.safeAfter,
+          safe_before: input.audit.safeBefore,
+          source: "admin_panel",
+          target_id: input.audit.targetId,
+          target_type: "psychologist",
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      return cancelledSubscription;
     });
   }
 }

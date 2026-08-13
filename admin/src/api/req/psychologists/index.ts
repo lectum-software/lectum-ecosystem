@@ -10,6 +10,7 @@ export {
 } from "./billing-statistics";
 export {
   approveAdminPsychologistRegistryVerification,
+  cancelAdminPsychologistSubscription,
   grantAdminPsychologistCourtesy,
   rejectAdminPsychologistRegistryVerification,
   revokeAdminPsychologistCourtesy,
@@ -185,6 +186,8 @@ export type {
   AdminPsychologistApproveRegistryVerificationInput,
   AdminPsychologistBilling,
   AdminPsychologistBillingPaymentHistoryItem,
+  AdminPsychologistCancelSubscriptionInput,
+  AdminPsychologistCancelSubscriptionResponse,
   AdminPsychologistCatalogItem,
   AdminPsychologistChangeEmailInput,
   AdminPsychologistDetail,

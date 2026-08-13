@@ -192,15 +192,20 @@ export const buildAdminPsychologistActivityItems = async ({
     ...adminLogs.flatMap((log) => {
       const type = adminLogType(log.action);
       if (!type) return [];
+      const isAccountAction = log.action.startsWith("psychologist_account_");
+      const isReportAction = log.action.startsWith("psychologist_report_");
+      const isSubscriptionAction = log.action.startsWith("psychologist_subscription_");
 
       return [
         makeActivity({
           actor: actorFromAdmin(log.admin),
-          area: log.action.startsWith("psychologist_account_")
+          area: isAccountAction
             ? "conta"
-            : log.action.startsWith("psychologist_report_")
+            : isReportAction
               ? "denuncias"
-              : "perfil",
+              : isSubscriptionAction
+                ? "financeiro"
+                : "perfil",
           description: adminLogDescription(log),
           id: `admin-activity-${log.id}`,
           occurred_at: log.createdAt,

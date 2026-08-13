@@ -73,8 +73,29 @@ export const grantSchema: IValidatorRequest = {
   ],
 };
 
+export const cancelSchema: IValidatorRequest = {
+  params: [psychologistParam],
+  body: [
+    {
+      key: "confirmation",
+      coerse: "string",
+      method: "string",
+      min: 1,
+      max: 40,
+    },
+    {
+      key: "reason",
+      coerse: "string",
+      method: "string",
+      min: 10,
+      max: 500,
+    },
+  ],
+};
+
 export const showValidator = validator(showSchema);
 export const grantValidator = validator(grantSchema);
 export const revokeValidator = validator(showSchema);
+export const cancelValidator = validator(cancelSchema);
 
 export default showValidator;

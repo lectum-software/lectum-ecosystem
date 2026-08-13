@@ -42,7 +42,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
   - CPF/CRP/regional já preenchidos quando existirem;
   - data de inscrição no CRP obrigatória quando necessária para concessão;
   - confirmação antes de aplicar.
-- O botão "Cancelar assinatura" fica fora da V1 se não houver cancelamento real via gateway com confirmação forte.
+- O botao "Cancelar assinatura" aparece somente quando houver assinatura Mercado Pago cancelavel e usa cancelamento real via gateway com confirmacao forte.
 - "Alterar forma de pagamento" pelo Admin fica fora da V1; cartão deve continuar sendo tokenizado pelo usuário/gateway.
 
 ## Escopo backend
@@ -50,12 +50,13 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Criar endpoints admin privados:
   - `GET /api/admin/private/psychologists/:id/billing`;
   - `POST /api/admin/private/psychologists/:id/billing/grant-courtesy`;
+  - `POST /api/admin/private/psychologists/:id/billing/subscription/cancel`;
 - Reutilizar a regra do comando `subscription:grant`, sem duplicar regra de domínio.
 - Registrar auditoria real do admin responsável quando a audiência admin estiver disponível.
 
 ## Fora do escopo
 
-- Cancelar assinatura paga via Admin.
+- Cancelar assinatura paga via Admin sem gateway real, sem motivo interno ou sem confirmacao forte.
 - Alterar cartão pelo Admin.
 - Criar cobrança manual.
 - Simular pagamentos Mercado Pago.
@@ -92,6 +93,9 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - [x] Sobrescrita administrativa de identidade não preenche `cfp_verified_at` sem consulta real.
 - [x] Data de inscrição CRP é exigida quando necessária.
 - [x] Cancelar assinatura e alterar cartão não aparecem/habilitam sem implementação real.
+- [x] Cancelamento administrativo de assinatura paga chama o gateway real antes de atualizar o plano local.
+- [x] Cancelamento administrativo exige confirmacao forte `CANCELAR ASSINATURA` e motivo interno no frontend e backend.
+- [x] Cancelamento administrativo registra auditoria segura em `admin_activity_log` e aparece como atividade financeira.
 - [x] Não há simulação de pagamento.
 - [x] Form usa React Hook Form/Zod/controllers.
 - [x] UI mobile-first validada.
@@ -385,3 +389,16 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de schema Prisma, migrations, envs, packages, dados publicados ou simulacao de pagamento.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela ja existente da TASK-56.
 - Validacoes executadas: `pnpm --dir backend exec node --import tsx --test "src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts"`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`. Smoke HTTP local do Admin nao foi concluido porque nao havia servidor ativo em `localhost:3002` e a ferramenta bloqueou iniciar processo em background; a validacao visual ficou limitada ao build e a conferencia estatica da tela existente.
+
+
+## Ajuste complementar 2026-08-13 - cancelamento administrativo de assinatura
+
+- Pedido do usuario: criar no Admin uma opcao para cancelar assinaturas pagas com confirmacao forte.
+- O endpoint Admin privado `POST /api/admin/private/psychologists/:id/billing/subscription/cancel` foi adicionado e aceita somente assinaturas `source="mercadopago"`, plano `profissional`, com `gateway_subscription_id` e status ainda nao cancelado.
+- A operacao exige a frase `CANCELAR ASSINATURA` e um motivo interno de pelo menos 10 caracteres tanto no frontend quanto no backend.
+- O backend chama o cancelamento real do gateway Mercado Pago antes de persistir `professional_subscription.status="cancelada"` e `current_period_end=null`; se o gateway falhar, o plano local nao e cancelado.
+- A UI Admin mostra a acao somente quando `billing.plan.can_cancel=true`, abre uma modal mobile-first com resumo da assinatura, alerta de impacto, campo de motivo e campo de confirmacao forte.
+- A acao grava `admin_activity_log` com `action="psychologist_subscription_cancelled"`, `domain="psychologist_subscription"`, `area="financeiro"`, motivo e snapshots seguros, sem expor token, PAN/CVV, payload bruto ou detalhes tecnicos do provedor.
+- Nao houve alteracao de schema Prisma, migrations, envs, packages, dados publicados ou simulacao de pagamento.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Plano e pagamentos.png` e a captura enviada pelo usuario.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e smoke HTTP local do Admin em `GET http://127.0.0.1:3002/version` + `GET /psicologos/cmsrqz0qj000f01qvd2um0qgg?tab=plano`, ambos com status 200.

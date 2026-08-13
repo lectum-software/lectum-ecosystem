@@ -53,6 +53,7 @@ export type AdminPsychologistActivityType =
   | "report_upheld"
   | "review_received"
   | "review_responded"
+  | "subscription_cancelled"
   | "subscription_started"
   | "whatsapp_click"
   | "whatsapp_verified";

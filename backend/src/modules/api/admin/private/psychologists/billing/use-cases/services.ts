@@ -2,6 +2,10 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type { admin } from "@/interfaces/objects";
 import {
+  getPaymentGateway,
+  isPaymentGatewayConfigurationError,
+} from "@/modules/billing/payment-gateway";
+import {
   grantProfessionalSubscription,
   parseGrantCrpRegistrationDate,
 } from "@/operations/subscriptions/grant-professional-subscription-service";
@@ -10,6 +14,7 @@ import type {
   AdminPsychologistBillingDTO,
   AdminPsychologistBillingPaymentHistory,
   AdminPsychologistBillingPlan,
+  IAdminPsychologistBillingCancelDTO,
   IAdminPsychologistBillingGrantDTO,
   IAdminPsychologistBillingRevokeDTO,
   IAdminPsychologistBillingShowDTO,
@@ -28,6 +33,8 @@ const COURTESY_PERIOD_OPTIONS = [
   { days: 365, label: "1 ano" },
 ];
 const COURTESY_GRANT_CONFIRMATION = "CONCEDER CORTESIA";
+export const SUBSCRIPTION_CANCEL_CONFIRMATION = "CANCELAR ASSINATURA";
+const CANCEL_REASON_MIN_LENGTH = 10;
 
 const trimOrNull = (value?: string | null) => {
   const normalized = value?.trim();
@@ -60,6 +67,18 @@ const hasExternalBilling = (subscription: AdminPsychologistBillingSubscription |
         subscription.gateway_subscription_id),
   );
 
+const isAdminCancelableGatewaySubscription = (
+  subscription: AdminPsychologistBillingSubscription | null,
+) =>
+  Boolean(
+    subscription &&
+      subscription.source === "mercadopago" &&
+      (!subscription.gateway || subscription.gateway === "mercadopago") &&
+      subscription.gateway_subscription_id &&
+      subscription.plan.slug === "profissional" &&
+      subscription.status !== "cancelada",
+  );
+
 const hasBlockingExternalSubscription = (profile: AdminPsychologistBillingRecord) =>
   profile.subscriptions.some((subscription) => hasExternalBilling(subscription));
 
@@ -86,7 +105,7 @@ const buildPlan = (
   subscription: AdminPsychologistBillingSubscription | null,
   paymentMetrics: AdminPsychologistBillingPaymentMetrics,
 ): AdminPsychologistBillingPlan => ({
-  can_cancel: false,
+  can_cancel: isAdminCancelableGatewaySubscription(subscription),
   can_change_payment_method: false,
   current_period_end: subscription?.current_period_end ?? null,
   gateway: subscription?.gateway ?? null,
@@ -182,6 +201,22 @@ const adminActor = (adminUser: admin | undefined) => {
   const id = trimOrNull(adminUser.id);
 
   return [name, email, id ? `(${id})` : null].filter(Boolean).join(" ") || "admin:unknown";
+};
+
+const adminId = (adminUser: admin | undefined) => trimOrNull(adminUser?.id);
+
+const planLabel = (subscription: AdminPsychologistBillingSubscription | null) =>
+  subscription?.plan.name?.trim() || "Plano Profissional";
+
+const statusLabel = (status?: string | null) => {
+  const labels: Record<string, string> = {
+    ativa: "Ativa",
+    cancelada: "Cancelada",
+    inadimplente: "Inadimplente",
+    inativa: "Inativa",
+  };
+
+  return labels[status || ""] ?? status ?? "Nao informado";
 };
 
 const mapGrantError = (err: unknown): Resolve => {
@@ -376,4 +411,135 @@ export const revokeCourtesy = async (
       },
     },
   };
+};
+
+export const cancelSubscription = async (
+  data: IAdminPsychologistBillingCancelDTO,
+): Promise<Resolve> => {
+  const repository = new AdminPsychologistBillingRepository();
+  const profile = await repository.findPsychologist(data.p.id);
+
+  if (!profile) return notFound();
+
+  const actorAdmin = data.auth ?? data.admin;
+  const responsibleAdminId = adminId(actorAdmin);
+
+  if (!responsibleAdminId) {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
+    };
+  }
+
+  if (data.b.confirmation?.trim().toUpperCase() !== SUBSCRIPTION_CANCEL_CONFIRMATION) {
+    return {
+      status: 400,
+      ...error("admin_subscription_cancel_confirmation_invalid", {}),
+    };
+  }
+
+  const reason = trimOrNull(data.b.reason);
+
+  if (!reason || reason.length < CANCEL_REASON_MIN_LENGTH) {
+    return {
+      status: 400,
+      ...error("admin_subscription_cancel_reason_required", {}),
+    };
+  }
+
+  const currentSubscription = await repository.findCurrentSubscription(profile.id);
+  const scheduledGatewaySubscription =
+    currentSubscription?.source === "admin_grant" && isActiveAt(currentSubscription, new Date())
+      ? await repository.findScheduledGatewaySubscription(profile.id)
+      : null;
+  const subscription = scheduledGatewaySubscription ?? currentSubscription;
+
+  if (
+    !isAdminCancelableGatewaySubscription(subscription) ||
+    !subscription?.gateway_subscription_id
+  ) {
+    return {
+      status: 409,
+      ...error("admin_subscription_cancel_unavailable", {}),
+    };
+  }
+
+  try {
+    const gatewayResult = await getPaymentGateway().cancelSubscription({
+      gatewaySubscriptionId: subscription.gateway_subscription_id,
+    });
+
+    if (gatewayResult.status !== "cancelada") {
+      return {
+        status: 502,
+        ...error("admin_subscription_cancel_gateway_failed", {}),
+      };
+    }
+
+    const cancelledSubscription = await repository.cancelSubscription({
+      audit: {
+        adminId: responsibleAdminId,
+        changedFields: ["Assinatura", "Status", "Provedor de pagamento"],
+        metadata: {
+          gateway: "mercadopago",
+          gateway_status: gatewayResult.gateway_status ?? null,
+          plan_slug: subscription.plan.slug,
+          subscription_id: subscription.id,
+        },
+        reason,
+        safeAfter: {
+          Assinatura: planLabel(subscription),
+          "Provedor de pagamento": "Mercado Pago",
+          Status: "Cancelada",
+        },
+        safeBefore: {
+          Assinatura: planLabel(subscription),
+          "Provedor de pagamento": "Mercado Pago",
+          Status: statusLabel(subscription.status),
+        },
+        targetId: profile.user.id,
+      },
+      gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
+      subscription,
+    });
+    const billing = await showAdminPsychologistBilling(data);
+
+    return {
+      status: 200,
+      ...msg("billing_subscription_cancelled", {}),
+      data: {
+        billing: billing.data,
+        cancelled: {
+          gateway_status: gatewayResult.gateway_status,
+          id: cancelledSubscription.id,
+          status: "cancelada",
+        },
+      },
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "unknown";
+
+    if (
+      message === "admin_subscription_cancel_target_not_found" ||
+      message === "admin_subscription_cancel_already_cancelled" ||
+      message === "admin_subscription_cancel_target_invalid"
+    ) {
+      return {
+        status: 409,
+        ...error("admin_subscription_cancel_unavailable", {}),
+      };
+    }
+
+    const configError = isPaymentGatewayConfigurationError(err);
+
+    return {
+      status: configError ? 503 : 502,
+      ...error(
+        configError
+          ? "admin_subscription_cancel_gateway_config_error"
+          : "admin_subscription_cancel_gateway_failed",
+        {},
+      ),
+    };
+  }
 };

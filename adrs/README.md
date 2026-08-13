@@ -488,3 +488,4 @@ Formato recomendado:
 - [ADR-0455 — Autopreenchimento de endereço por CEP na assinatura](0455-autopreenchimento-cep-endereco-assinatura.md)
 - [ADR-0456 — Mensagens públicas para recusas de cartão no Mercado Pago](0456-mensagens-publicas-recusa-cartao-mercado-pago.md)
 - [ADR-0457 — Plano efetivo gratuito após assinatura profissional declinada](0457-plano-efetivo-gratuito-apos-assinatura-declinada.md)
+- [ADR-0458 — Cancelamento administrativo real de assinatura profissional](0458-cancelamento-admin-assinatura-mercado-pago.md)

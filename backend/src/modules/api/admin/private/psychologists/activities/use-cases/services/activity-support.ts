@@ -61,6 +61,7 @@ export const TYPE_LABELS: Record<AdminPsychologistActivityType, string> = {
   report_upheld: "Den\u00fancia procedente",
   review_received: "Avaliação recebida",
   review_responded: "Resposta à avaliação",
+  subscription_cancelled: "Assinatura cancelada",
   subscription_started: "Assinatura registrada",
   whatsapp_click: "Clique no WhatsApp",
   whatsapp_verified: "WhatsApp verificado",
@@ -257,6 +258,7 @@ export const adminLogType = (action: string): AdminPsychologistActivityType | nu
   if (action === "psychologist_report_dismissed") return "report_dismissed";
   if (action === "psychologist_report_upheld") return "report_upheld";
   if (action === "psychologist_report_content_removed") return "report_content_removed";
+  if (action === "psychologist_subscription_cancelled") return "subscription_cancelled";
 
   return null;
 };
@@ -291,10 +293,19 @@ export const adminReportActionLabel = (action: string) => {
   return labels[action] ?? "atualizou a den\u00fancia";
 };
 
+export const adminSubscriptionActionLabel = (action: string) => {
+  const labels: Record<string, string> = {
+    psychologist_subscription_cancelled: "cancelou a assinatura profissional",
+  };
+
+  return labels[action] ?? "atualizou a assinatura";
+};
+
 export const adminLogDescription = (log: AdminPsychologistActivityAdminLog) => {
   const fields = changedFieldsFromAudit(log.changed_fields);
   const isAccountAction = log.action.startsWith("psychologist_account_");
   const isReportAction = log.action.startsWith("psychologist_report_");
+  const isSubscriptionAction = log.action.startsWith("psychologist_subscription_");
   const fieldsText =
     fields.length > 0
       ? fields.join(", ")
@@ -302,17 +313,21 @@ export const adminLogDescription = (log: AdminPsychologistActivityAdminLog) => {
         ? "conta"
         : isReportAction
           ? "den\u00fancia"
-          : "campos do perfil";
+          : isSubscriptionAction
+            ? "assinatura"
+            : "campos do perfil";
   const actionLabel = isAccountAction
     ? adminAccountActionLabel(log.action)
     : isReportAction
       ? adminReportActionLabel(log.action)
-      : log.action === "psychologist_personal_data_updated"
-        ? "dados pessoais"
-        : "dados profissionais";
+      : isSubscriptionAction
+        ? adminSubscriptionActionLabel(log.action)
+        : log.action === "psychologist_personal_data_updated"
+          ? "dados pessoais"
+          : "dados profissionais";
   const reason = log.reason?.trim();
   const prefix =
-    isAccountAction || isReportAction
+    isAccountAction || isReportAction || isSubscriptionAction
       ? `Painel administrativo ${actionLabel}`
       : `Painel administrativo atualizou ${actionLabel}`;
 

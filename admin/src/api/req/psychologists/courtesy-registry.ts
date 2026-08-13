@@ -4,6 +4,8 @@ import type { ApiResponse } from "@/api/types";
 
 import type {
   AdminPsychologistApproveRegistryVerificationInput,
+  AdminPsychologistCancelSubscriptionInput,
+  AdminPsychologistCancelSubscriptionResponse,
   AdminPsychologistGrantCourtesyInput,
   AdminPsychologistGrantCourtesyResponse,
   AdminPsychologistRegistryVerification,
@@ -18,6 +20,18 @@ export const grantAdminPsychologistCourtesy = async (
 ) => {
   const response = await adminApi.post<ApiResponse<AdminPsychologistGrantCourtesyResponse>>(
     `/api/admin/private/psychologists/${encodeURIComponent(id)}/billing/grant-courtesy`,
+    input,
+  );
+
+  return resolveApiData(response.data);
+};
+
+export const cancelAdminPsychologistSubscription = async (
+  id: string,
+  input: AdminPsychologistCancelSubscriptionInput,
+) => {
+  const response = await adminApi.post<ApiResponse<AdminPsychologistCancelSubscriptionResponse>>(
+    `/api/admin/private/psychologists/${encodeURIComponent(id)}/billing/subscription/cancel`,
     input,
   );
 

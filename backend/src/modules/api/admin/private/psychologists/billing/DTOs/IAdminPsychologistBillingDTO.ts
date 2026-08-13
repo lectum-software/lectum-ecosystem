@@ -3,7 +3,7 @@ import type { admin } from "@/interfaces/objects";
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
 
 export type AdminPsychologistBillingPlan = {
-  can_cancel: false;
+  can_cancel: boolean;
   can_change_payment_method: false;
   current_period_end: Date | null;
   gateway: string | null;
@@ -82,6 +82,11 @@ export type AdminPsychologistBillingGrantBody = {
   regional_crp?: string | null;
 };
 
+export type AdminPsychologistBillingCancelBody = {
+  confirmation: string;
+  reason: string;
+};
+
 export type IAdminPsychologistBillingShowDTO = Request & {
   p: {
     id: string;
@@ -103,6 +108,15 @@ export type IAdminPsychologistBillingRevokeDTO = Request & {
   p: {
     id: string;
   };
+  auth: admin;
+  admin: admin;
+};
+
+export type IAdminPsychologistBillingCancelDTO = Request & {
+  p: {
+    id: string;
+  };
+  b: AdminPsychologistBillingCancelBody;
   auth: admin;
   admin: admin;
 };

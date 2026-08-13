@@ -904,6 +904,8 @@ Complemento 2026-07-10: no Admin, a mesma operação de cortesia pode sobrescrev
 
 Complemento 2026-07-10: quando uma cortesia administrativa ativa precisa ser revogada pelo Admin, a operação cancela somente a assinatura `professional_subscription` vigente com `source="admin_grant"`, gravando `status="cancelada"` e `current_period_end` no momento da revogação. A revogação não cancela assinatura Mercado Pago, não altera cartão e não apaga CPF/Regional/CRP do `psychologist_profile`; esses campos permanecem como histórico operacional e eventual ponto de partida para nova concessão.
 
+Complemento TASK-56 (2026-08-13): o cancelamento administrativo de assinatura paga usa `professional_subscription` existente e nao cria nova coluna. A operacao e permitida somente para assinatura Mercado Pago do plano `profissional` com `gateway_subscription_id`, exige motivo interno e confirmacao forte `CANCELAR ASSINATURA`, chama o gateway real antes de gravar `status="cancelada"` e `current_period_end=null`, e registra `admin_activity_log` com `action="psychologist_subscription_cancelled"`, `domain="psychologist_subscription"`, `area="financeiro"`, snapshots seguros e metadata sem token de gateway, PAN/CVV, payload bruto ou detalhes sensiveis do provedor.
+
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 
 | Campo | Tipo | Notas |

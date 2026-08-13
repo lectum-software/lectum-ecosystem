@@ -304,7 +304,7 @@ export type AdminPsychologistBilling = {
     last4: string | null;
   } | null;
   plan: {
-    can_cancel: false;
+    can_cancel: boolean;
     can_change_payment_method: false;
     current_period_end: string | null;
     gateway: string | null;
@@ -343,6 +343,11 @@ export type AdminPsychologistGrantCourtesyInput = {
   regional_crp: string;
 };
 
+export type AdminPsychologistCancelSubscriptionInput = {
+  confirmation: string;
+  reason: string;
+};
+
 export type AdminPsychologistGrantCourtesyResponse = {
   billing: AdminPsychologistBilling;
   grant: {
@@ -370,6 +375,15 @@ export type AdminPsychologistGrantCourtesyResponse = {
       source: string;
       status: string;
     };
+  };
+};
+
+export type AdminPsychologistCancelSubscriptionResponse = {
+  billing: AdminPsychologistBilling;
+  cancelled: {
+    gateway_status: string | null;
+    id: string;
+    status: "cancelada";
   };
 };
 

@@ -352,7 +352,7 @@ export const PlanBillingTab = ({ detail, id }: { detail: AdminPsychologistDetail
   return (
     <div className="space-y-5" data-psychologist-detail-tab="plano">
       <div className="grid gap-5 xl:grid-cols-2">
-        <CurrentPlanCard billing={query.data} detail={detail} />
+        <CurrentPlanCard billing={query.data} detail={detail} id={id} />
         {showActiveCourtesy ? (
           <ActiveCourtesyCard billing={query.data} id={id} />
         ) : showCourtesyBesidePlan ? (

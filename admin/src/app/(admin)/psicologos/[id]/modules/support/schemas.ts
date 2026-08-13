@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { COURTESY_GRANT_CONFIRMATION } from "./config";
+import { COURTESY_GRANT_CONFIRMATION, SUBSCRIPTION_CANCEL_CONFIRMATION } from "./config";
 
 const ISO_DATE_INPUT_WITH_FOUR_DIGIT_YEAR_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -52,6 +52,27 @@ export const courtesyConfirmationSchema = z
 export type CourtesyFormValues = z.infer<typeof courtesyDetailsSchema>;
 
 export type CourtesyConfirmationFormValues = z.infer<typeof courtesyConfirmationSchema>;
+
+export const subscriptionCancelSchema = z
+  .object({
+    confirmation: z.string(),
+    reason: z
+      .string()
+      .trim()
+      .min(10, "Informe um motivo interno com pelo menos 10 caracteres.")
+      .max(500, "Use no maximo 500 caracteres."),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmation.trim().toUpperCase() !== SUBSCRIPTION_CANCEL_CONFIRMATION) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Digite ${SUBSCRIPTION_CANCEL_CONFIRMATION} para confirmar.`,
+        path: ["confirmation"],
+      });
+    }
+  });
+
+export type SubscriptionCancelFormValues = z.infer<typeof subscriptionCancelSchema>;
 
 export const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
 
