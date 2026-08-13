@@ -488,7 +488,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
                       <p className="mt-2 text-sm leading-6 text-muted">
                         {isCourtesyRenewal
                           ? "Seu cartão será usado apenas para a cobrança futura ao fim da cortesia."
-                          : "Aceitamos apenas cartão de crédito para manter sua assinatura mensal ativa."}
+                          : "Adicione um cartão de crédito para ativar sua assinatura."}
                       </p>
                     </div>
                     {cardPaymentStatus === "error" ? (
