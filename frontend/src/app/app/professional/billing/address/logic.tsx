@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, Loader2, MapPin, RefreshCw, ShieldCheck } fro
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { usePsychologistBilling } from "@/api/callers/psychologist-billing";
 import { getSafeApiErrorMessage } from "@/api/errors";
@@ -28,6 +29,32 @@ import {
 
 const resolveApiError = (error: unknown) =>
   getSafeApiErrorMessage(error, "Não foi possível salvar o endereço agora.");
+
+const VIACEP_ENDPOINT = "https://viacep.com.br/ws";
+const VIACEP_ZIP_PATTERN = /^\d{8}$/;
+const AUTOFILLED_ADDRESS_FIELDS = {
+  shouldDirty: true,
+  shouldValidate: true,
+} as const;
+
+type ViaCepAddressResponse = {
+  erro?: boolean;
+  logradouro?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  localidade?: string | null;
+  uf?: string | null;
+};
+
+const getViaCepValue = (value?: string | null) => {
+  const normalized = value?.trim();
+  return normalized || null;
+};
+
+const getViaCepState = (value?: string | null) => {
+  const normalized = getViaCepValue(value)?.toUpperCase();
+  return normalized && /^[A-Z]{2}$/.test(normalized) ? normalized : null;
+};
 
 const isCurrentPeriodValid = (currentPeriodEnd?: string | null) => {
   if (!currentPeriodEnd) return true;
@@ -64,6 +91,8 @@ export const ProfessionalBillingAddressLogic = () => {
   const router = useRouter();
   const user = useAppSelector((state) => state.user);
   const billingAddressForm = useBillingAddressForm();
+  const { control, getValues, setValue } = billingAddressForm.hook;
+  const zip = useWatch({ control, name: "zip" });
   const AddressForm = billingAddressForm.Form;
 
   const billing = usePsychologistBilling({
@@ -94,6 +123,55 @@ export const ProfessionalBillingAddressLogic = () => {
 
     router.replace(courtesyRedirectPath);
   }, [activeCourtesy, courtesyRedirectPath, router]);
+
+  useEffect(() => {
+    const normalizedZip = typeof zip === "string" ? zip.replace(/\D/g, "") : "";
+    if (!VIACEP_ZIP_PATTERN.test(normalizedZip)) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const applyAutofilledValue = (
+      name: "street" | "complement" | "district" | "city" | "state",
+      value: string | null,
+    ) => {
+      if (!value) return;
+
+      setValue(name, value, AUTOFILLED_ADDRESS_FIELDS);
+    };
+
+    const autofillAddress = async () => {
+      try {
+        const response = await fetch(`${VIACEP_ENDPOINT}/${normalizedZip}/json/`, {
+          cache: "no-store",
+          credentials: "omit",
+          referrerPolicy: "no-referrer",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) return;
+
+        const data = (await response.json()) as ViaCepAddressResponse;
+        if (controller.signal.aborted || data.erro) return;
+        if (getValues("zip") !== normalizedZip) return;
+
+        applyAutofilledValue("street", getViaCepValue(data.logradouro));
+        applyAutofilledValue("complement", getViaCepValue(data.complemento));
+        applyAutofilledValue("district", getViaCepValue(data.bairro));
+        applyAutofilledValue("city", getViaCepValue(data.localidade));
+        applyAutofilledValue("state", getViaCepState(data.uf));
+      } catch {
+        // A consulta por CEP é apenas conveniência: em falha, os campos permanecem editáveis.
+      }
+    };
+
+    void autofillAddress();
+
+    return () => {
+      controller.abort();
+    };
+  }, [getValues, setValue, zip]);
 
   const submitAddress = billingAddressForm.hook.handleSubmit((values: BillingAddressForm) => {
     billing.address.mutate(toBillingAddressPayload(values));

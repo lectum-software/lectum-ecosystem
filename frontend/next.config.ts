@@ -28,6 +28,7 @@ const mercadoPagoStaticCspSources = [
   "https://http2.mlstatic.com",
   "https://api-static.mercadopago.com",
 ];
+const cepLookupCspSources = ["https://viacep.com.br"];
 const mercadoPagoScriptCspSources = [
   "https://sdk.mercadopago.com",
   "https://www.mercadopago.com",
@@ -54,7 +55,7 @@ const contentSecurityPolicy = [
   `font-src 'self' data: ${mercadoPagoStaticCspSources.join(" ")}`,
   `img-src 'self' data: blob: ${assetCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${mercadoPagoCoreCspSources.join(" ")}`,
   `media-src 'self' blob: ${assetCspSources.join(" ")}`,
-  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} https://*.mercadolibre.com`,
+  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} https://*.mercadolibre.com`,
   `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
