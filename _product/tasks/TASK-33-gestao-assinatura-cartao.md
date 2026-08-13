@@ -661,3 +661,38 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke local com `next start -p 3211`: `/app/profissional/assinatura/endereco` retornou `307`
   para login sem sessao e `/app/professional/billing/address` retornou `308` para a rota PT-BR.
 - `pnpm check`
+
+## Ajuste em 2026-08-13: badge de pagamento aprovado no checkout
+
+- Pedido direto de produto: na pagina de inserir dados do cartao
+  (`/app/profissional/assinatura/pagamento`), apos a aprovacao do pagamento, exibir um badge verde
+  **Pagamento bem-sucedido**.
+- Ajuste: o checkout passa a reconhecer status de gateway aprovados (`authorized`, `approved` e
+  `accredited`) ou a assinatura profissional ativa apos sincronizacao para exibir o badge. Enquanto
+  o redirecionamento para o endereco acontece, o badge permanece visivel por um curto intervalo para
+  confirmar a aprovacao ao usuario.
+- O Card Payment Brick real segue sendo a unica entrada de dados de cartao. Quando o pagamento ja
+  foi aprovado no fluxo atual, o formulario nao e reapresentado no mesmo estado de sucesso.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration, mutacao de dados ou
+  alteracao de contrato foi criada.
+- Referencia visual ativa: pedido direto do usuario em 2026-08-13 e padrao de badge ja usado na
+  etapa de endereco; Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0204-upgrade-direto-checkout-profissional.md`.
+
+### Criterios de aceite do ajuste de badge
+
+- [x] A tela de pagamento/cartao exibe o badge verde **Pagamento bem-sucedido** apos aprovacao.
+- [x] O badge tambem aparece durante o estado de redirecionamento para a etapa de endereco.
+- [x] O fluxo continua usando o Card Payment Brick real, sem coletar PAN/CVV na Lectum.
+
+### Validacao do ajuste de badge
+
+- Validacao de fonte confirmou `PaymentSuccessBadge`, uso dos status aprovados e exibicao do badge
+  antes do redirecionamento para endereco.
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start -p 3212`: `/version` retornou `200`,
+  `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessao e
+  `/app/professional/billing/checkout` retornou `308` para a rota PT-BR.
+- `pnpm check`

@@ -1,7 +1,7 @@
 "use client";
 
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
-import { ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -87,6 +87,8 @@ const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
 const AUTO_SYNC_INTERVAL_MS = 3000;
 const AUTO_SYNC_MAX_ATTEMPTS = 20;
 const CARD_PAYMENT_LOAD_TIMEOUT_MS = 10_000;
+const PAYMENT_SUCCESS_REDIRECT_DELAY_MS = 1200;
+const APPROVED_GATEWAY_STATUSES = new Set(["authorized", "approved", "accredited"]);
 
 type CardPaymentFormData = {
   token?: string;
@@ -97,6 +99,19 @@ type CardPaymentAdditionalData = {
   lastFourDigits?: string;
   paymentTypeId?: string;
 };
+
+const isApprovedGatewayStatus = (status?: string | null) =>
+  APPROVED_GATEWAY_STATUSES.has(String(status || "").toLowerCase());
+
+const PaymentSuccessBadge = () => (
+  <span
+    className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm font-extrabold text-success"
+    role="status"
+  >
+    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+    Pagamento bem-sucedido
+  </span>
+);
 
 const SummaryCard = ({
   isCourtesyRenewal,
@@ -216,6 +231,11 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const shouldBypassActiveRedirect = isCourtesyRenewal && activeCourtesy;
   const pendingProfessional =
     Boolean(checkoutResult?.pending_confirmation) || isPendingProfessional(current);
+  const showPaymentSuccessBadge = Boolean(
+    !isCourtesyRenewal &&
+      checkoutResult &&
+      (activeProfessional || isApprovedGatewayStatus(checkoutResult.gateway_status)),
+  );
   const amount = professionalPlan ? professionalPlan.price_cents / 100 : 0;
   const canRenderCardPayment = Boolean(
     isMercadoPagoPublicConfigurationValid && amount > 0 && payerEmail,
@@ -235,6 +255,16 @@ export const ProfessionalBillingCheckoutLogic = () => {
       return;
     }
 
+    if (showPaymentSuccessBadge) {
+      const redirectTimeout = window.setTimeout(() => {
+        router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
+      }, PAYMENT_SUCCESS_REDIRECT_DELAY_MS);
+
+      return () => {
+        window.clearTimeout(redirectTimeout);
+      };
+    }
+
     router.replace(PSYCHOLOGIST_ONBOARDING_PATHS.billingAddress);
   }, [
     activeCourtesy,
@@ -243,6 +273,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
     isCurrentSubscriptionLoading,
     router,
     shouldBypassActiveRedirect,
+    showPaymentSuccessBadge,
   ]);
 
   const initialization = useMemo(
@@ -390,13 +421,20 @@ export const ProfessionalBillingCheckoutLogic = () => {
     return (
       <PrivateTemplate showHeader={false}>
         <section className="mx-auto grid min-h-[55vh] w-full max-w-[430px] place-items-center">
-          <LoadingState
-            label={
-              activeCourtesy
-                ? "Redirecionando para sua próxima etapa"
-                : "Redirecionando para endereço"
-            }
-          />
+          {showPaymentSuccessBadge ? (
+            <div className="grid justify-items-center gap-5 text-center">
+              <PaymentSuccessBadge />
+              <LoadingState label="Redirecionando para endereço" />
+            </div>
+          ) : (
+            <LoadingState
+              label={
+                activeCourtesy
+                  ? "Redirecionando para sua próxima etapa"
+                  : "Redirecionando para endereço"
+              }
+            />
+          )}
         </section>
       </PrivateTemplate>
     );
@@ -476,7 +514,13 @@ export const ProfessionalBillingCheckoutLogic = () => {
                   </InlineAlert>
                 ) : null}
 
-                {canRenderCardPayment ? (
+                {showPaymentSuccessBadge ? (
+                  <div className="flex justify-center rounded-3xl border border-success/20 bg-success/5 p-4">
+                    <PaymentSuccessBadge />
+                  </div>
+                ) : null}
+
+                {!showPaymentSuccessBadge && canRenderCardPayment ? (
                   <div
                     className={cn(
                       "rounded-3xl border border-border bg-surface-muted p-3 md:p-4",
