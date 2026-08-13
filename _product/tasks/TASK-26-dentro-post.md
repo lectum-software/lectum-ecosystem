@@ -2146,3 +2146,36 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.79`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+
+## Complemento 2026-08-13 - acoes no header flutuante do post
+
+- Pedido do usuario: dentro do post, quando o header fixo aparecer na rolagem para cima, substituir os 3 pontinhos a direita por dois icones: Salvar e Compartilhar.
+- Fonte visual auditavel: referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o `PostDetailFloatingHeader` deixou de renderizar menu de proprietario/denuncia no lado direito e passou a renderizar botoes icon-only de salvar e compartilhar.
+- Frontend: as acoes reutilizam `PostActionButton`, `Bookmark` e `Share2`, preservando a linguagem visual da barra de acoes do post e o estado ativo de salvo.
+- Frontend: o botao Salvar reaproveita `handleTogglePostSave`, incluindo o fluxo de conversao para visitante anonimo e o bloqueio durante a mutation pendente; Compartilhar reaproveita `sharePost` e abre o preview/share ja existente.
+- Frontend: o layout do header flutuante ficou em tres colunas simetricas para manter o titulo `Post` centralizado mesmo com dois icones no lado direito.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.
+- ADR atualizado: `adrs/0104-barra-acoes-comunidade-unificada.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Ao aparecer na rolagem para cima, o header flutuante do detalhe do post exibe Salvar e Compartilhar como icones no lado direito.
+- [x] O menu de 3 pontinhos nao aparece mais nesse header flutuante.
+- [x] Salvar preserva estado ativo, label acessivel e mutation/fluxo de conversao existente.
+- [x] Compartilhar preserva o fluxo existente de preview/share do post.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica confirmou que o header flutuante usa `PostActionButton` com `Bookmark`/`Share2`, labels acessiveis de salvar/compartilhar e nao renderiza `details`/menu de 3 pontinhos.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile 390x844 em `http://127.0.0.1:3061` com backend local: `/ping` e `/version` responderam `0.1.85`, mas a base local nao tinha posts publicados; sem mocks ou seeds, a rota exibiu estado `Post indisponivel`. Repetido em `http://127.0.0.1:3063` apontando para API publica de homologacao; a metadata carregou, mas o browser local nao conseguiu renderizar o detalhe client-side por restricao de ambiente. A validacao visual completa ficou para o smoke em homologacao apos o push.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.86`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

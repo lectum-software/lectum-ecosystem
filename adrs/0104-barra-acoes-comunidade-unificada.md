@@ -139,3 +139,24 @@ Validacao complementar:
 - `git diff --check`: sucesso.
 - `pnpm version:bump` para `0.1.75`: sucesso.
 - `pnpm check:version`: sucesso.
+
+
+## Atualizacao 2026-08-13 - acoes no header flutuante do post
+
+### Contexto
+
+No detalhe do post mobile, o header flutuante exibido durante a rolagem para cima ainda usava um menu de 3 pontinhos no lado direito. O produto pediu que esse header priorize acoes frequentes do post, exibindo Salvar e Compartilhar diretamente como icones.
+
+### Decisao
+
+- Reutilizar as primitivas existentes `PostActionButton`, `Bookmark` e `Share2` no `PostDetailFloatingHeader`.
+- Substituir o menu de 3 pontinhos apenas no header flutuante; o header/card principal continua usando as opcoes contextuais existentes de proprietario ou denuncia.
+- Conectar Salvar a `handleTogglePostSave`, preservando estado ativo, label acessivel, mutation otimista e fluxo de conversao para visitante anonimo.
+- Conectar Compartilhar a `sharePost`, preservando o preview/share padrao da Lectum.
+- Manter o titulo `Post` centralizado por grid de tres colunas simetricas no mobile.
+
+### Consequencias
+
+- O usuario ganha acesso direto a salvar e compartilhar no header fixo sem abrir menu.
+- Acoes menos frequentes continuam disponiveis no contexto principal do post, evitando duplicar menus no header flutuante.
+- A mudanca e apenas visual/estrutural no frontend; nao altera API, backend, banco, envs, packages, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.
