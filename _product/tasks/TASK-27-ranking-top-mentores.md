@@ -258,3 +258,42 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - [x] Commit próprio criado e push em `homolog` executado.
+
+## Complemento 2026-08-13 - classificacao geral sem posicao e tracking robusto
+
+- Pedido do usuario: na `Classificacao geral` da tela Top Mentores, remover a medalha e o numero de posicao do ranking, remover o fundo verde do botao de WhatsApp e garantir que cliques nesse CTA contem nos analytics do psicologo.
+- Referencia visual ativa: screenshot do usuario `WhatsApp Image 2026-08-12 at 23.02.05.jpeg` e `_product/proto/Top 5 Mentores da comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao, mantendo fallback auditavel por imagem local.
+- Frontend: a lista inferior deixou de exibir medalha e numero antes do avatar. O podio superior mantem os indicadores de Top 1/2/3, pois o pedido foi restrito a lista de `Classificacao geral`.
+- Frontend: o CTA de WhatsApp segue usando `PsychologistWhatsAppRedirectButton` e `WhatsAppIcon`, mas sem background verde atras do botao; a cor verde permanece no icone para manter reconhecimento da acao.
+- Analytics: o CTA continua disparando `contact-click` e `important_action_event` com `pageKind: community_top_mentors`, `targetType: psychologist` e `targetId` do psicologo.
+- Backend: o analytics do psicologo passou a reconhecer explicitamente `page_kind = community_top_mentors`, alem dos paths existentes, para atribuir os cliques ao bloco `Top Mentores` mesmo se a rota canonica/alias variar.
+- Escopo: sem mudanca de formula, ordenacao, score, elegibilidade, schema, migrations, envs, packages, seeds, snapshots ou mocks.
+- ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
+
+### Criterios especificos deste complemento
+
+- [x] Medalha da lista de `Classificacao geral` removida.
+- [x] Numero de posicao da lista de `Classificacao geral` removido.
+- [x] Fundo verde do botao de WhatsApp removido sem substituir o componente canonico de redirecionamento.
+- [x] Clique no WhatsApp da tela Top Mentores continua criando evento de contato/analytics para o psicologo.
+- [x] Analytics do psicologo reconhece `page_kind = community_top_mentors` como origem Top Mentores.
+- [x] Nenhuma migration, env obrigatoria nova ou package novo foi criada.
+
+### Validacoes deste complemento
+
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/psychologist/analytics/repositories/queries/PsychologistAnalyticsCommunityRepository.ts src/modules/api/private/psychologist/analytics/repositories/support/traffic.ts src/utils/admin-psychologist-analytics/whatsapp-origins.ts`
+- [x] Validacao estatica de ausencia de `Medal`/posicao dentro do `RankingCard` e presenca de `pageKind: "community_top_mentors"` no CTA.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] Browser local em `/comunidades/top-mentores?community=ansiedade-em-equilibrio` e `/app/comunidades/top-mentores?community=ansiedade-em-equilibrio`.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit proprio criado e push em `homolog` executado.

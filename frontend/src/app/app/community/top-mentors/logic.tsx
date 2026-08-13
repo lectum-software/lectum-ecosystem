@@ -279,7 +279,6 @@ const RankingHero = ({
 };
 
 const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
-  const tone = rankTone(mentor.position);
   const isTopThree = mentor.position <= 3;
   const professionalType = professionLabel(mentor);
   const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
@@ -291,18 +290,6 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         className="group/profile flex min-w-0 flex-1 items-center gap-3"
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
-        <span
-          className={cn(
-            "flex w-11 shrink-0 items-center justify-center gap-1 text-sm font-black tabular-nums",
-            tone.listAccent,
-          )}
-        >
-          <Medal
-            className={cn("h-4 w-4", isTopThree ? tone.listAccent : "text-muted")}
-            aria-hidden="true"
-          />
-          <span>{String(mentor.position).padStart(2, "0")}</span>
-        </span>
         <Avatar mentor={mentor} ringed={isTopThree} size={62} />
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-0.5">
@@ -326,8 +313,8 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         className={cn(
           "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-4 focus:ring-success/15",
           canOpenWhatsApp
-            ? "border-success/20 bg-success/10 text-success hover:border-success/35 hover:bg-success/15"
-            : "cursor-not-allowed border-border bg-surface-muted text-subtle",
+            ? "border-transparent bg-transparent text-success hover:border-success/20 hover:bg-transparent"
+            : "cursor-not-allowed border-transparent bg-transparent text-subtle",
         )}
         psychologist={{
           avatar: mentor.professional.avatar,

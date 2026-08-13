@@ -159,6 +159,7 @@ export const classifyWhatsappTrafficAction = (
   const targetType = action.target_type;
 
   if (
+    action.page_kind === "community_top_mentors" ||
     trafficActionPathIncludes(action, "/community/top-mentors") ||
     trafficActionPathIncludes(action, "/comunidades/top-mentores")
   ) {

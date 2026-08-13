@@ -349,10 +349,12 @@ export const buildTrafficBreakdownItem = (input: {
   whatsapp_clicks: input.metric === "whatsapp_clicks" ? input.value : 0,
 });
 
-export const isCommunityTopMentorsTrafficPath = (path: string | null) => {
+export const isCommunityTopMentorsTrafficPath = (path: string | null, pageKind?: string | null) => {
   const normalized = (path ?? "").toLowerCase();
+  const normalizedPageKind = (pageKind ?? "").toLowerCase();
 
   return (
+    normalizedPageKind === "community_top_mentors" ||
     normalized.includes("/comunidades/top-mentores") ||
     normalized.includes("/community/top-mentors") ||
     normalized.includes("traffic_origin=community_top_mentors")
@@ -431,7 +433,7 @@ export const toTrafficSources = (input: {
     (action) =>
       action.page_kind === "psychologist_profile" &&
       !isFavoritesTrafficPath(action.path) &&
-      !isCommunityTopMentorsTrafficPath(action.path),
+      !isCommunityTopMentorsTrafficPath(action.path, action.page_kind),
   ).length;
   const favoritesFromVideo = presentationVideoActions.filter(
     (action) => action.action_type === "psychologist_video_favorite",

@@ -84,3 +84,33 @@ Produto pediu que a `Classificação geral` da tela Top Mentores removesse a set
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Browser local em `/app/comunidades/top-mentores` para verificar ausência do chevron, presença do ícone WhatsApp, label `Psicólogo`/`Psicóloga` em title case e selo `VerifiedBadgeIcon`.
+
+## Complemento 2026-08-13 - lista geral sem posicao e WhatsApp sem fundo
+
+### Contexto
+
+Produto pediu um refinamento especifico na `Classificacao geral` da tela Top Mentores: remover a medalha e o numero de posicao da lista inferior, retirar o fundo verde atras do CTA de WhatsApp e confirmar que os cliques desse CTA entram nos analytics do psicologo.
+
+### Decisao
+
+- Restringir a remocao de medalha/numero aos cards da `Classificacao geral`; o podio superior continua exibindo posicao porque ele representa o reconhecimento principal do ranking.
+- Manter avatar, nome, selo verificado e label profissional como hierarquia suficiente nos cards da lista.
+- Preservar `PsychologistWhatsAppRedirectButton` como fonte unica do fluxo de contato, modal de transicao, `contact-click` e `important_action_event`.
+- Remover apenas o background verde do botao, mantendo o icone WhatsApp em verde e o alvo de toque de 40px.
+- Tornar a atribuicao do analytics mais robusta: o backend passa a classificar a origem Top Mentores tambem por `page_kind = community_top_mentors`, alem dos paths/queries ja suportados.
+
+### Consequencias
+
+- A lista fica visualmente mais limpa sem perder o CTA principal de contato.
+- Os cliques continuam somando no total de WhatsApp via `contact_request` e na origem Top Mentores via `important_action_event`.
+- A mudanca e aditiva para analytics e nao altera schema, migrations, envs, packages, formula do ranking, score ou elegibilidade.
+- Rollback direto: reverter o commit restaura medalha/numero na lista, fundo verde do botao e atribuicao apenas por path/query.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
+- Browser local nas rotas publica e privada de Top Mentores.

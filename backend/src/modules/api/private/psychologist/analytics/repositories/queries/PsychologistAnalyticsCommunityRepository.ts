@@ -233,6 +233,9 @@ export class PsychologistAnalyticsCommunityRepository {
               {
                 OR: [
                   {
+                    page_kind: "community_top_mentors",
+                  },
+                  {
                     path: {
                       contains: "/comunidades/top-mentores",
                       mode: "insensitive",
