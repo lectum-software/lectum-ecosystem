@@ -171,6 +171,9 @@ redundantes nem textos auxiliares repetidos no campo.
 - Remover da configuração inicial o alerta verde de WhatsApp já salvo e o botão
   `Configurar perfil`, porque ambos competiam com a ação principal de editar e
   salvar o número.
+- Atualização de 2026-08-13: remover também o bloco informativo azul
+  **Privacidade do número** da etapa `/app/professional/whatsapp/verify`, mantendo a
+  explicação principal do cabeçalho, o campo de WhatsApp e o CTA de salvamento.
 
 ### Consequências
 
@@ -182,6 +185,17 @@ redundantes nem textos auxiliares repetidos no campo.
   consistente e menos colada à borda.
 - Não há alteração em validação de posse do número, Twilio, `wa.me`,
   `contact_request` ou `whatsapp_verified_at`.
+- A remoção do bloco azul é apenas visual; o telefone bruto segue fora do perfil
+  público e só é usado no link `wa.me` pelos fluxos internos já documentados.
+
+Validações da atualização de 2026-08-13:
+
+- Validação de fonte confirmou ausência do texto **Privacidade do número** na tela.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start -p 3213`: `/app/profissional/whatsapp/verificar`
+  retornou `307` para login sem sessão e o alias EN retornou `308` para a rota
+  PT-BR.
 
 ## Atualização em 2026-06-26: mensagem WhatsApp personalizada por contexto
 

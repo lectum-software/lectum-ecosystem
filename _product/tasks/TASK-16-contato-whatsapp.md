@@ -182,6 +182,36 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Ajuste visual em 2026-08-13: remover privacidade do numero na etapa de WhatsApp
+
+- Pedido direto de produto: remover o bloco azul **Privacidade do numero** da tela
+  `/app/profissional/whatsapp/verificar`.
+- Ajuste: o alerta informativo dentro do formulario foi removido, mantendo o titulo, a descricao
+  principal, o campo **WhatsApp profissional** e o botao **Salvar WhatsApp**.
+- A regra de dominio nao mudou: o telefone bruto continua fora do perfil publico e o link `wa.me`
+  segue sendo gerado somente pelos fluxos internos ja existentes.
+- Nenhum backend, schema, migration, endpoint, package, env, mock, seed ou dado publicado foi
+  alterado.
+- Referencia visual ativa: captura enviada pelo usuario em 2026-08-13; Builder/Quick Copy nao esta
+  exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0022-contato-whatsapp-wa-me.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco azul **Privacidade do numero** nao aparece mais na etapa de WhatsApp profissional.
+- [x] Campo e botao principal permanecem disponiveis.
+- [x] A politica de privacidade operacional do `wa.me` nao foi alterada.
+
+### Validacao do ajuste
+
+- Validacao de fonte confirmou ausencia do texto **Privacidade do numero** na tela.
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/whatsapp/verify/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start -p 3213`: `/version` retornou `200`,
+  `/app/profissional/whatsapp/verificar` retornou `307` para login sem sessao e
+  `/app/professional/whatsapp/verify` retornou `308` para a rota PT-BR.
 - Smoke real de API com paciente e psicólogo temporários: persistiu `contact_request`, atualizou `patient_profile.phone` normalizado e retornou `whatsapp_url` `wa.me`.
 - Browser local headless em Chrome na rota `/app/psychologist/[id]/contact`: renderizou cópia de WhatsApp, profissional temporário real, privacidade/consentimento, CTA e telefone inicial.
 
