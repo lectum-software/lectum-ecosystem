@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Loader2,
-  MapPin,
-  RefreshCw,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, MapPin, RefreshCw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -62,8 +54,8 @@ const AddressHeader = () => (
       Complete os dados da sua assinatura
     </h1>
     <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-muted">
-      Este endereço fica vinculado ao seu cadastro de cobrança e só é salvo depois da assinatura
-      profissional estar ativa na Lectum.
+      Informe seu endereço profissional, como o endereço de um consultório. Os dados de Cidade e
+      Estado já ficarão salvos no seu perfil para o filtro de localidade.
     </p>
   </header>
 );
@@ -120,14 +112,6 @@ export const ProfessionalBillingAddressLogic = () => {
   return (
     <PrivateTemplate showHeader={false}>
       <section className="mx-auto grid w-full max-w-[430px] gap-5 md:max-w-3xl">
-        <Link
-          className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
-          href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Voltar para pagamento
-        </Link>
-
         <div className="rounded-[var(--lectum-card-radius)] border border-border bg-surface px-5 py-7 shadow-[var(--lectum-shadow-soft)] md:px-8">
           <AddressHeader />
 
