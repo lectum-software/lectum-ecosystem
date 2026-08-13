@@ -91,7 +91,7 @@ export class WebhookRepository implements IWebhookRepository {
     status: "inativa" | "ativa" | "inadimplente" | "cancelada";
     currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null> {
-    return this.subscriptionRepository.update({
+    const subscription = await this.subscriptionRepository.update({
       where: {
         id: data.subscriptionId,
       },
@@ -105,5 +105,23 @@ export class WebhookRepository implements IWebhookRepository {
         plan: true,
       },
     });
+
+    if (data.status === "ativa" && subscription.plan?.slug !== "gratuito") {
+      await prisma.psychologist_profile.updateMany({
+        where: {
+          deleted: false,
+          id: subscription.psychologist_id,
+          show_experience_tag: false,
+          updatedAt: {
+            lte: subscription.grant_started_at ?? subscription.createdAt,
+          },
+        },
+        data: {
+          show_experience_tag: true,
+        },
+      });
+    }
+
+    return subscription;
   }
 }

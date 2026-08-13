@@ -2,6 +2,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional-experience-tag";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -227,6 +228,7 @@ export const getUserWithProfile = (userId: string) => {
       psychologist_profile: {
         select: {
           id: true,
+          updatedAt: true,
           professional_first_name: true,
           professional_last_name: true,
           headline: true,
@@ -402,6 +404,11 @@ export const toResponse = async (
   const planSlug = current?.plan?.slug || null;
   const catalogs = await getCatalogs();
   const isFree = planSlug === "gratuito" || !planSlug;
+  const showExperienceTag = resolveProfessionalExperienceTagVisibility({
+    profile,
+    subscription: current,
+    hasProfessionalEntitlement: !isFree,
+  });
   const canUploadVideo = true;
   const specialtyLimit = isFree ? 3 : 10;
   const serviceLimit = isFree ? 1 : Math.max(catalogs.services.length, 1);
@@ -481,7 +488,7 @@ export const toResponse = async (
       discount_first_session: profile.discount_first_session,
       social_value: profile.social_value,
       accepts_insurance: profile.accepts_insurance,
-      show_experience_tag: profile.show_experience_tag,
+      show_experience_tag: showExperienceTag,
       academic,
       academic_formations: academicFormations,
       available_days: normalizeStringArray(profile.available_days),

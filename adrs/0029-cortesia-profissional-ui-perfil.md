@@ -63,6 +63,20 @@ A opção "Minha Assinatura" no menu do perfil agora abre `/app/professional/bil
 - TASK-32: implementar checkout/cartão real Mercado Pago.
 - Futuro: suporte a legenda/transcrição para vídeos enviados por profissionais.
 
+## Atualizacao em 2026-08-13: default do selo de tempo de experiencia
+
+Psicologos que chegam a uma assinatura profissional ou cortesia administrativa a partir do Plano Gratuito podiam carregar `psychologist_profile.show_experience_tag=false`, pois o plano gratuito bloqueia e persiste o controle desligado. A partir deste ajuste, o selo "Exibir tempo de experiencia" e ligado por default na entrada da camada profissional.
+
+A regra nao deve apagar opt-outs reais feitos por assinantes. Por isso, o backend compara `psychologist_profile.updatedAt` com o inicio do entitlement ativo (`professional_subscription.grant_started_at` quando existir, senao `createdAt`):
+
+- se `show_experience_tag=false` foi salvo antes da assinatura/cortesia ativa, a exibicao publica resolve para `true`;
+- se o profissional desligou o selo depois de ja estar na camada profissional, o valor `false` e preservado;
+- para perfis gratuitos, o bloqueio anterior permanece.
+
+Uma migration de dados aplica o mesmo criterio aos registros ja existentes para manter cards, perfil publico e filtros que dependem do campo persistido. Novas concessoes administrativas e ativacoes Mercado Pago tambem passam a ativar o default na transicao para assinatura profissional.
+
+Validacao: `pnpm --dir backend db:migrate` foi executado; depois da correcao de encoding do SQL, o Prisma bloqueou a aplicacao local por drift historico em migrations antigas ja aplicadas e sugeriu reset do schema, que nao foi executado. `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` passaram.
+
 ## Atualizacao em 2026-06-21: bloqueio de CPF/CRP em cortesia verificada
 
 Perfis em cortesia administrativa podem carregar CPF/CRP ja preenchidos antes de existir o painel administrativo definitivo. Para evitar que o proprio psicologo sobrescreva dados sensiveis vinculados a uma cortesia ativa, a edicao de `CPF`, `Regional do CRP` e `No. Registro CRP` fica bloqueada quando:

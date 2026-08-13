@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional-experience-tag";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -254,6 +255,7 @@ export class FavoriteRepository implements IFavoriteRepository {
                 select: {
                   professional_first_name: true,
                   professional_last_name: true,
+                  updatedAt: true,
                   headline: true,
                   bio: true,
                   cover_image_url: true,
@@ -277,6 +279,8 @@ export class FavoriteRepository implements IFavoriteRepository {
                   subscriptions: {
                     where: activeProfessionalEntitlementWhere(),
                     select: {
+                      createdAt: true,
+                      grant_started_at: true,
                       id: true,
                       source: true,
                     },
@@ -348,6 +352,11 @@ export class FavoriteRepository implements IFavoriteRepository {
             fallbackName: displayName,
             firstName: profile.professional_first_name,
           });
+          const showExperienceTag = resolveProfessionalExperienceTagVisibility({
+            profile,
+            subscription: profile.subscriptions[0] ?? null,
+            hasProfessionalEntitlement: profile.subscriptions.length > 0,
+          });
 
           return {
             id: item.psychologist.id,
@@ -373,7 +382,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             discount_first_session: profile.discount_first_session,
             social_value: profile.social_value,
             accepts_insurance: profile.accepts_insurance,
-            show_experience_tag: profile.show_experience_tag,
+            show_experience_tag: showExperienceTag,
             whatsapp_url: buildWhatsappUrl(profile.whatsapp, displayName, whatsappDisplayName),
             favorited: item.psychologist.favorited_by_patients.length > 0,
             followed: item.psychologist.followed_by_patients.length > 0,

@@ -192,6 +192,15 @@ A TASK-18 completa permanece bloqueada por TASK-11 porque inclui Documentos / CR
 - O perfil publico e os cards passam a respeitar `show_experience_tag` e usam `video_cover_url` como poster/preview quando informado.
 - A opcao "Adicionar imagem de capa do video" deixou de ser pendencia visual e agora chama endpoint real, sem mock.
 
+## Ajuste complementar em 2026-08-13 - default do selo para assinantes/cortesia
+
+- Psicologos com entitlement profissional ativo, incluindo cortesia administrativa, passam a receber `show_experience_tag=true` por default quando o valor `false` veio do periodo gratuito anterior.
+- O backend calcula a visibilidade publica do selo comparando `psychologist_profile.updatedAt` com o inicio da assinatura (`grant_started_at` ou `createdAt`), preservando opt-outs feitos depois que o profissional ja estava na camada paga/cortesia.
+- Uma migration de dados segura ativa o selo apenas para registros existentes cujo `false` antecede uma assinatura profissional ativa; nao altera perfis gratuitos nem opt-outs posteriores ao entitlement.
+- Novas concessoes administrativas e ativacoes Mercado Pago tambem aplicam o default no momento da transicao para o plano profissional.
+- ADR atualizado: `adrs/0029-cortesia-profissional-ui-perfil.md`.
+- Validacoes: `pnpm --dir backend db:migrate` executado; apos remover BOM do SQL, o Prisma bloqueou por drift historico em migrations antigas ja aplicadas e sugeriu reset, que nao foi executado. `pnpm --dir backend check`, `pnpm --dir backend build` e `pnpm check` executados com sucesso.
+
 ## Registro de ajuste complementar em 2026-06-12 — edição de imagem de capa
 
 - Adicionada seção `Imagem de capa` em `/app/professional/profile/setup`, independente do vídeo de apresentação.

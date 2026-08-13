@@ -306,7 +306,7 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
       });
     }
 
-    return tx.professional_subscription.create({
+    const subscription = await tx.professional_subscription.create({
       data: {
         current_period_end: periodEnd,
         gateway: null,
@@ -324,6 +324,22 @@ export const grantProfessionalSubscription = async (args: GrantProfessionalSubsc
         plan: true,
       },
     });
+
+    await tx.psychologist_profile.updateMany({
+      where: {
+        deleted: false,
+        id: target.profileId,
+        show_experience_tag: false,
+        updatedAt: {
+          lte: now,
+        },
+      },
+      data: {
+        show_experience_tag: true,
+      },
+    });
+
+    return subscription;
   });
 
   return {

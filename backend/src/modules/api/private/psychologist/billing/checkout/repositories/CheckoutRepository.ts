@@ -180,7 +180,7 @@ export class CheckoutRepository implements ICheckoutRepository {
       status?: SubscriptionStatus;
     } = {},
   ): Promise<professional_subscription> {
-    return this.subscriptionRepository.update({
+    const subscription = await this.subscriptionRepository.update({
       where: {
         id: subscriptionId,
       },
@@ -195,6 +195,24 @@ export class CheckoutRepository implements ICheckoutRepository {
         plan: true,
       },
     });
+
+    if (options.status === "ativa" && subscription.plan?.slug !== "gratuito") {
+      await prisma.psychologist_profile.updateMany({
+        where: {
+          deleted: false,
+          id: subscription.psychologist_id,
+          show_experience_tag: false,
+          updatedAt: {
+            lte: subscription.grant_started_at ?? subscription.createdAt,
+          },
+        },
+        data: {
+          show_experience_tag: true,
+        },
+      });
+    }
+
+    return subscription;
   }
 
   async cancelSubscription(subscriptionId: string): Promise<void> {

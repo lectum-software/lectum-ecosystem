@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional-experience-tag";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
@@ -442,6 +443,11 @@ export class IndexRepository implements IIndexRepository {
           fallbackName: displayName,
           firstName: item.professional_first_name,
         });
+        const showExperienceTag = resolveProfessionalExperienceTagVisibility({
+          profile: item,
+          subscription: item.subscriptions[0] ?? null,
+          hasProfessionalEntitlement: item.subscriptions.length > 0,
+        });
 
         return {
           id: item.user.id,
@@ -464,7 +470,7 @@ export class IndexRepository implements IIndexRepository {
           discount_first_session: item.discount_first_session,
           social_value: item.social_value,
           accepts_insurance: item.accepts_insurance,
-          show_experience_tag: item.show_experience_tag,
+          show_experience_tag: showExperienceTag,
           whatsapp_url: buildWhatsappUrl(item.whatsapp, displayName, whatsappName),
           favorited: item.user.favorited_by_patients.length > 0,
           followed: item.user.followed_by_patients.length > 0,
