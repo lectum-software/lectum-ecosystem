@@ -538,3 +538,23 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke local com `next start --port 3118` antes do bump de release: `/version` retornou `0.1.91`; `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessão e a CSP enviada continha `sdk.mercadopago.com`, `http2.mlstatic.com`, `api-static.mercadopago.com` e domínios Mercado Pago necessários ao Brick.
 - `pnpm check`
 - `pnpm check:version` após `pnpm version:bump`, confirmando manifests sincronizados em `0.1.92`.
+## Correcao em 2026-08-13: paridade site/PWA no Plano Gratuito
+
+- Incidente observado em homologacao/iPhone: em `/app/profissional/assinatura` no Safari, psicologo gratuito podia ver o estado **Assinatura nao encontrada**, enquanto o PWA exibia a tela persuasiva de **Plano Gratuito** com CTA **Fazer upgrade**.
+- Ajuste: a rota principal de **Minha Assinatura** passa a reutilizar a mesma view gratuita quando a API retorna assinatura gratuita ou quando nao ha assinatura vigente, evitando o empty state antigo no fluxo gratuito.
+- A view compartilhada agora trata ausencia de assinatura como fallback visual de Plano Gratuito, sem criar mock, seed, dado fake, env nova, package novo, migration ou alteracao de contrato.
+- A gestao paga/cortesia permanece inalterada quando existe assinatura profissional/cortesia real.
+- ADR atualizado: `adrs/0183-prioridade-plano-gratuito-billing.md`.
+
+### Criterios de aceite da correcao
+
+- [x] `/app/profissional/assinatura` nao exibe **Assinatura nao encontrada** para psicologo gratuito/sem assinatura vigente.
+- [x] O site e o PWA reutilizam a mesma tela de **Plano Gratuito** com beneficios e CTA **Fazer upgrade**.
+- [x] Assinaturas profissionais/cortesias reais continuam seguindo a tela de gestao atual.
+
+### Validacao da correcao site/PWA
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

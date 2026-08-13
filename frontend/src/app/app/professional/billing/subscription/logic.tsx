@@ -128,8 +128,10 @@ export const ProfessionalBillingSubscriptionView = ({
     subscription?.source === "admin_grant" &&
     subscription.status === "ativa" &&
     subscription.plan?.slug === "profissional";
-  const isFreePlan = subscription?.plan?.slug === "gratuito";
-  const planName = subscription?.plan?.name || "Plano não encontrado";
+  const isFreePlan = !subscription || subscription.plan?.slug === "gratuito";
+  const planName = isFreePlan
+    ? "Plano Gratuito"
+    : subscription?.plan?.name || "Plano não encontrado";
   const expirationLabel = formatDate(subscription?.current_period_end);
   const shouldShowPlanDetails = Boolean(subscription) && !isFreePlan;
   const shouldShowExpiration =

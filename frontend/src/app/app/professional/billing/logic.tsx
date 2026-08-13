@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  ArrowRight,
   BadgeCheck,
   CalendarClock,
   CheckCircle2,
@@ -21,7 +20,6 @@ import type {
   ProfessionalSubscription,
 } from "@/api/generator/types/billing";
 import { AppPageHeader } from "@/components/ui/app-page-header";
-import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
@@ -312,12 +310,7 @@ export const ProfessionalBillingLogic = () => {
       : "Adicionar"
     : "Alterar";
 
-  if (
-    !subscriptionQuery.isLoading &&
-    !subscriptionQuery.isError &&
-    subscription?.status === "ativa" &&
-    isFreePlan
-  ) {
+  if (!subscriptionQuery.isLoading && !subscriptionQuery.isError && (!subscription || isFreePlan)) {
     return (
       <ProfessionalBillingSubscriptionView
         error={subscriptionQuery.error}
@@ -353,22 +346,6 @@ export const ProfessionalBillingLogic = () => {
           <InlineAlert title="Não foi possível carregar sua assinatura" variant="error">
             {getErrorMessage(subscriptionQuery.error)}
           </InlineAlert>
-        ) : null}
-
-        {!subscriptionQuery.isLoading && !subscriptionQuery.isError && !subscription ? (
-          <EmptyState
-            action={
-              <Button asChild className="h-11 rounded-full">
-                <Link href="/app/profissional/assinatura/planos">
-                  Escolher plano
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
-            }
-            description="Nenhuma assinatura foi encontrada para o seu perfil. Escolha um plano para continuar."
-            icon={CreditCard}
-            title="Assinatura não encontrada"
-          />
         ) : null}
 
         {!subscriptionQuery.isLoading && !subscriptionQuery.isError && subscription ? (
