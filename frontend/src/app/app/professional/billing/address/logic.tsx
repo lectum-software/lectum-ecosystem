@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, Loader2, MapPin, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2, MapPin, RefreshCw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -286,36 +286,24 @@ export const ProfessionalBillingAddressLogic = () => {
                 <LoadingState label="Redirecionando para sua próxima etapa" />
               </div>
             ) : (
-              <>
-                <div className="mt-6 flex justify-center">
-                  <span
-                    className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm font-extrabold text-success"
-                    role="status"
-                  >
-                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                    Pagamento bem-sucedido
-                  </span>
-                </div>
-
-                <AddressForm
-                  className="mt-6 grid gap-1 md:grid-cols-2 md:gap-x-4"
-                  {...billingAddressForm.formProps}
-                  onSubmit={submitAddress}
+              <AddressForm
+                className="mt-6 grid gap-1 md:grid-cols-2 md:gap-x-4"
+                {...billingAddressForm.formProps}
+                onSubmit={submitAddress}
+              >
+                <Button
+                  className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
+                  disabled={billing.address.isPending}
+                  type="submit"
                 >
-                  <Button
-                    className="mt-3 h-14 w-full rounded-full text-base md:col-span-2"
-                    disabled={billing.address.isPending}
-                    type="submit"
-                  >
-                    Salvar e continuar
-                    {billing.address.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    )}
-                  </Button>
-                </AddressForm>
-              </>
+                  Salvar e continuar
+                  {billing.address.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </Button>
+              </AddressForm>
             )
           ) : null}
         </div>

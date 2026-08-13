@@ -603,3 +603,8 @@ Uma task só pode ser marcada como concluída quando:
 - Psicologos no Plano Profissional pago seguem, apos pagamento real e endereco de faturamento, para `/app/profissional/whatsapp/verificar`.
 - Depois de cadastrar o WhatsApp, psicologos pagos com verificacao profissional pendente seguem para `/app/profissional/cfp`.
 - A edicao/publicacao do perfil profissional pago permanece bloqueada ate a verificacao profissional ser aprovada por API automatica ou aprovacao manual auditada.
+
+## Atualizacao visual em 2026-08-13: endereco de assinatura
+
+- A etapa `/app/profissional/assinatura/endereco` nao exibe mais a faixa verde de pagamento bem-sucedido.
+- No desktop, Numero fica ao lado de Logradouro e Cidade fica ao lado de Estado; no mobile o formulario continua em uma coluna unica.

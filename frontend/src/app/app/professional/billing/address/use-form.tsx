@@ -34,7 +34,7 @@ export const billingAddressFields = [
     placeholder: "00000-000",
     required: true,
     autoComplete: "postal-code",
-    className: "md:col-span-1",
+    className: "md:col-start-1 md:col-end-2 md:row-start-1",
   },
   {
     name: "street",
@@ -43,7 +43,7 @@ export const billingAddressFields = [
     placeholder: "Ex.: Rua das Flores",
     required: true,
     autoComplete: "address-line1",
-    className: "md:col-span-2",
+    className: "md:col-start-1 md:col-end-2 md:row-start-2",
   },
   {
     name: "number",
@@ -52,7 +52,7 @@ export const billingAddressFields = [
     placeholder: "123",
     required: true,
     autoComplete: "address-line2",
-    className: "md:col-span-1",
+    className: "md:col-start-2 md:col-end-3 md:row-start-2",
   },
   {
     name: "district",
@@ -61,7 +61,7 @@ export const billingAddressFields = [
     placeholder: "Ex.: Centro",
     required: true,
     autoComplete: "address-level3",
-    className: "md:col-span-1",
+    className: "md:col-start-1 md:col-end-2 md:row-start-3",
   },
   {
     name: "complement",
@@ -69,7 +69,7 @@ export const billingAddressFields = [
     label: "Complemento",
     placeholder: "Apto, sala ou referência",
     autoComplete: "address-line3",
-    className: "md:col-span-1",
+    className: "md:col-start-2 md:col-end-3 md:row-start-3",
   },
   {
     name: "state",
@@ -81,7 +81,7 @@ export const billingAddressFields = [
     useCustomSelect: true,
     searchable: true,
     searchMode: "dropdown",
-    className: "md:col-span-1",
+    className: "md:col-start-1 md:col-end-2 md:row-start-4",
   },
   {
     name: "city",
@@ -99,7 +99,7 @@ export const billingAddressFields = [
     searchMode: "dropdown",
     searchPlaceholder: "Buscar cidade",
     emptySearchLabel: "Nenhuma cidade encontrada para este estado.",
-    className: "md:col-span-1",
+    className: "md:col-start-2 md:col-end-3 md:row-start-4",
   },
 ] satisfies Field<BillingAddressForm>[];
 

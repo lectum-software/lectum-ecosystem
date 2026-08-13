@@ -230,3 +230,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   detalhes do provedor.
 - Logs do gateway registram apenas `status`, `status_detail` e `cause_codes` sanitizados.
 - ADR registrado: `adrs/0456-mensagens-publicas-recusa-cartao-mercado-pago.md`.
+
+## Ajuste visual do endereço em 2026-08-13
+
+- A etapa `/app/profissional/assinatura/endereco` deixou de exibir a faixa verde
+  "Pagamento bem-sucedido" no formulário de endereço, tanto no mobile quanto no desktop.
+- No desktop, o grid do endereço foi reorganizado para manter Número à direita de Logradouro e
+  Cidade à direita de Estado, preservando a ordem vertical mobile e os controllers da TASK-02.
+- Sem mudança de contrato, banco, gateway ou env; rollback é revert do ajuste visual.
+- ADR atualizado: `adrs/0455-autopreenchimento-cep-endereco-assinatura.md`.

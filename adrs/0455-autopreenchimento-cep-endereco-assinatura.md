@@ -28,6 +28,11 @@ estado e depois a cidade em dropdown filtrável; quando o CEP retorna cidade/UF,
 antes da cidade para manter a dependência entre os campos. Se o estado for alterado manualmente, uma
 cidade incompatível é limpa.
 
+Atualização de 2026-08-13: a confirmação visual de pagamento foi removida da etapa de endereço para
+evitar redundância após o checkout. No desktop, o grid usa posicionamento responsivo para deixar
+`Número` à direita de `Logradouro` e `Cidade` à direita de `Estado`, enquanto o mobile mantém uma
+coluna única e a mesma sequência de preenchimento dependente entre estado e cidade.
+
 O frontend libera `https://viacep.com.br` no `connect-src` da CSP para permitir a consulta no
 navegador. A requisição usa `credentials: "omit"`, `referrerPolicy: "no-referrer"` e não registra o
 CEP em logs.
@@ -38,6 +43,8 @@ CEP em logs.
 - Mantém o fluxo resiliente: falhas do ViaCEP não bloqueiam a etapa nem exibem erro técnico.
 - Evita divergência entre localidade do faturamento e localidade do perfil ao usar a mesma lista de
   UF/cidade já adotada no perfil profissional.
+- Reduz ruído visual na etapa pós-pagamento e melhora o aproveitamento horizontal do formulário no
+  desktop, sem criar layout alternativo para mobile.
 - Introduz dependência externa pública sem variável de ambiente e sem pacote novo.
 - O CEP digitado é consultado no provider externo; a consulta não envia credenciais da Lectum e não
   salva dados antes do submit do formulário.
@@ -61,6 +68,11 @@ CEP em logs.
 - `pnpm --dir frontend build`
 - Atualização de 2026-08-13: validação de fonte confirmou Estado antes de Cidade, cidade
   dependente de `state`, uso de `CITY_OPTIONS_BY_STATE` e seta após o texto do botão.
+- Atualização de 2026-08-13: validação de fonte confirmou remoção da faixa de sucesso e
+  posicionamento desktop explícito para Logradouro/Número e Estado/Cidade.
+- Atualização de 2026-08-13: validações executadas para o ajuste visual: `pnpm --dir frontend
+  check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm check:version` e smoke local com `next
+  start --port 3214` retornando `/version` 200 e a rota PT-BR protegida por login com 307.
 - Atualização de 2026-08-13: smoke local com `next start -p 3211` confirmou a rota PT-BR de
   endereço protegida por login e o alias legado redirecionando para a rota PT-BR.
 - Smoke de homologação após push.
