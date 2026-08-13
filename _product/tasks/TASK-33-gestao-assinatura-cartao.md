@@ -224,6 +224,12 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend build`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
+- Validacao de fonte via PowerShell confirmou o card com
+  `href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}` e o item **Minha Assinatura** preservado em
+  `/app/profissional/assinatura`.
+- Smoke local com `next start -p 3208`: `/app/perfil` retornou `200` e
+  `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessao, preservando a
+  protecao da rota privada.
 - `pnpm check`
 - Smoke local com `next start --port 3107`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessao e `/auth/login` retornou `200`.
 
@@ -586,4 +592,34 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
+- `pnpm check`
+
+## Ajuste em 2026-08-13: upgrade do perfil direto para pagamento
+
+- Pedido direto de produto: no perfil privado do psicologo, o card azul **Upgrade para o Plano
+  Profissional** deve levar diretamente para a tela de pagamento/cartao, em vez de abrir **Minha
+  Assinatura**.
+- Ajuste: o card de upgrade em `/app/perfil` passa a usar `PSYCHOLOGIST_ONBOARDING_PATHS.checkout`,
+  apontando para `/app/profissional/assinatura/pagamento`.
+- A decisao reaproveita o fluxo ja aprovado no ADR-0204 para upgrade direto ao checkout e preserva a
+  tela **Minha Assinatura** apenas para o menu explicito da conta.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+- Referencia visual ativa: captura enviada pelo usuario em 2026-08-13; Builder/Quick Copy nao esta
+  exposto como ferramenta direta neste ambiente.
+- ADR atualizado: `adrs/0204-upgrade-direto-checkout-profissional.md`.
+
+### Criterios de aceite do ajuste do perfil
+
+- [x] O card azul **Upgrade para o Plano Profissional** do perfil aponta para
+  `/app/profissional/assinatura/pagamento`.
+- [x] O item **Minha Assinatura** do menu da conta continua apontando para
+  `/app/profissional/assinatura`.
+- [x] O ajuste reutiliza a constante compartilhada do fluxo de onboarding/assinatura, sem rota
+  hardcoded nova.
+
+### Validacao do ajuste do perfil
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
 - `pnpm check`

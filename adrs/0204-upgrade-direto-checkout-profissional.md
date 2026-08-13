@@ -17,9 +17,15 @@ Como o CTA já expressa a intenção de upgrade para o Plano Profissional, a eta
 
 O CTA **Fazer upgrade** da tela de assinatura passa a apontar diretamente para `PSYCHOLOGIST_ONBOARDING_PATHS.checkout`, ou seja, `/app/professional/billing/checkout`.
 
+Atualização de 2026-08-13: a mesma regra passa a valer para o card azul
+**Upgrade para o Plano Profissional** exibido no perfil privado do psicólogo (`/app/perfil`). Esse
+card também usa `PSYCHOLOGIST_ONBOARDING_PATHS.checkout`, levando o psicólogo direto para
+`/app/profissional/assinatura/pagamento`, enquanto o item explícito **Minha Assinatura** continua
+abrindo a gestão da assinatura.
+
 O fluxo resultante é:
 
-1. Plano Gratuito ativo em `/app/professional/billing`;
+1. Plano Gratuito ativo em `/app/professional/billing` ou no perfil privado do psicólogo;
 2. clique em **Fazer upgrade**;
 3. abertura imediata do checkout do Plano Profissional para inserir dados do cartão;
 4. confirmação e ativação continuam dependentes do fluxo real Mercado Pago/webhook já existente.
@@ -37,6 +43,11 @@ O fluxo resultante é:
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - Validação de fonte: PowerShell confirmou `href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}` no CTA.
+- Atualização de 2026-08-13: PowerShell confirmou o card de upgrade do perfil usando
+  `href={PSYCHOLOGIST_ONBOARDING_PATHS.checkout}` e o item **Minha Assinatura** mantendo
+  `/app/profissional/assinatura`.
+- Atualização de 2026-08-13: smoke local com `next start -p 3208` confirmou `/app/perfil` com
+  `200` e `/app/profissional/assinatura/pagamento` com `307` para login sem sessão.
 - Smoke local com `next start --port 3105`: `/app/professional/billing/checkout` retornou `307` para login sem sessão, preservando a proteção da rota privada; `/auth/login` retornou `200`.
 
 ## Pendências
