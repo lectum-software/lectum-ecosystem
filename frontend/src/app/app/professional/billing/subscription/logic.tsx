@@ -61,14 +61,18 @@ const professionalBenefitGroups: BenefitGroup[] = [
     items: [
       "Prioridade na busca de pacientes",
       "Respostas destacadas nas comunidades",
-      "Respostas nas comunidades com mídia",
+      "Respostas com mídia nas comunidades",
       "Elegível ao Top Mentor",
     ],
   },
   {
     icon: BarChart3,
     title: "Mais recursos para seu perfil",
-    items: ["Até 10 especialidades", "Serviços profissionais ilimitados", "Estatísticas de perfil"],
+    items: [
+      "Até 10 especialidades",
+      "Serviços profissionais ilimitados",
+      "Analytics do seu perfil",
+    ],
   },
 ];
 

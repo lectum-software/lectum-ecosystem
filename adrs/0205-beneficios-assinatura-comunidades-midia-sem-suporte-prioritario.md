@@ -61,3 +61,37 @@ locais, o print e browser local via Chrome/CDP.
 ## Pendências
 
 - Nenhuma pendência funcional desta alteração.
+
+
+## Atualizacao em 2026-08-13: copy de limites gratuitos, midia e analytics
+
+### Contexto
+
+A comparacao de planos mostrava no Plano Gratuito uma linha negativa de `Servicos profissionais ilimitados`,
+alem de textos que precisavam ficar mais claros: `1 servico profissional`, `Respostas nas comunidades
+com midia` e `Estatisticas de perfil`.
+
+### Decisao
+
+- Remover `Servicos profissionais ilimitados` da lista de indisponiveis do Plano Gratuito em
+  `/app/professional/billing/plans`.
+- Renomear o limite gratuito para `Ate 1 servico profissional`.
+- Usar `Respostas com midia nas comunidades` nas telas de planos e Minha assinatura.
+- Usar `Analytics do seu perfil` nas telas de planos e Minha assinatura.
+- Manter `Servicos profissionais ilimitados` como beneficio positivo do Plano Profissional e da secao de upgrade.
+- Nao alterar preco, gateway, checkout, API, entitlement, schema Prisma, env ou pacote.
+
+### Consequencias
+
+- A comparacao gratuita fica menos redundante e comunica o limite de servico como teto.
+- A nomenclatura de analytics fica alinhada ao menu/area `Meus Analytics`.
+- O rollout e somente frontend e tolera backend/admin em versao anterior.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- Script local de validacao estatica confirmou os novos textos e a ausencia de `Servicos profissionais ilimitados` no bloco do Plano Gratuito.
+- Browser local: tentativa de subir `next start` em background para smoke local foi bloqueada pela politica do shell; sem sessao autenticada real disponivel neste ambiente, a validacao visual autenticada ficou coberta por build e inspecao estatica da lista renderizada.

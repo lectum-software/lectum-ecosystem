@@ -280,3 +280,24 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend build`
 - `pnpm check`
 - Consulta local Prisma confirmou `slug="profissional"`, `price_cents=2990` e `gateway_plan_id=null` após a migration.
+
+
+## Ajuste de copy em 2026-08-13: limites e analytics nos cards de planos
+
+- Pedido direto de produto: ajustar a lista de beneficios da tela `/app/professional/billing/plans`.
+- No Plano Gratuito, o item positivo `1 servico profissional` passou para `Ate 1 servico profissional`.
+- No Plano Gratuito, a linha negativa `Servicos profissionais ilimitados` foi removida para evitar repeticao de um beneficio que ja fica implicito no Plano Profissional.
+- Nos dois planos, `Respostas nas comunidades com midia` passou para `Respostas com midia nas comunidades`.
+- Nos dois planos, `Estatisticas de perfil` passou para `Analytics do seu perfil`.
+- Escopo restrito a copy/renderizacao frontend; nenhuma regra de preco, checkout, gateway, entitlement, API, schema Prisma, env ou pacote foi alterada.
+- Impacto de deploy: compativel com versoes diferentes de frontend/backend, sem backfill, sem ordem especial e rollback por reversao do commit.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/plans/logic.tsx src/app/app/professional/billing/subscription/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check:version`
+- Script local de validacao estatica confirmou os novos textos e a ausencia de `Servicos profissionais ilimitados` no bloco do Plano Gratuito.
+- Browser local: tentativa de subir `next start` em background para smoke local foi bloqueada pela politica do shell; sem sessao autenticada real disponivel neste ambiente, a validacao visual autenticada ficou coberta por build e inspecao estatica da lista renderizada.
+- ADR atualizado: `adrs/0205-beneficios-assinatura-comunidades-midia-sem-suporte-prioritario.md`.

@@ -64,7 +64,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "1 serviço profissional",
+        label: "Até 1 serviço profissional",
       },
       {
         included: false,
@@ -84,7 +84,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: false,
-        label: "Respostas nas comunidades com mídia",
+        label: "Respostas com mídia nas comunidades",
       },
       {
         included: false,
@@ -92,11 +92,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: false,
-        label: "Serviços profissionais ilimitados",
-      },
-      {
-        included: false,
-        label: "Estatísticas de perfil",
+        label: "Analytics do seu perfil",
       },
     ];
   }
@@ -121,7 +117,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "Respostas nas comunidades com mídia",
+        label: "Respostas com mídia nas comunidades",
       },
       {
         included: true,
@@ -137,7 +133,7 @@ const getFeatureRows = (plan: SubscriptionPlan): FeatureRow[] => {
       },
       {
         included: true,
-        label: "Estatísticas de perfil",
+        label: "Analytics do seu perfil",
       },
     ];
   }
