@@ -643,3 +643,49 @@ retornava erro generico de credenciais quando o e-mail nao existia.
 - `pnpm --dir frontend check` ficou bloqueado por erro de sintaxe preexistente em
   `frontend/src/templates/private/index.tsx`, arquivo ja modificado antes desta
   correcao.
+
+
+## Atualizacao em 2026-08-13: branding do OAuth Google controlado pelo provedor
+
+### Contexto
+
+No seletor de conta do Google em `accounts.google.com`, o usuario viu "Prosseguir para
+lectum.com.br" e solicitou substituir o dominio por "Lectum". A tela pertence ao Google,
+nao ao frontend Lectum, e aparece antes do retorno para `/auth/redirect`.
+
+### Decisao
+
+- Nao alterar o contrato OAuth do backend nem tentar sobrescrever o texto por query
+  string, porque o authorization endpoint oficial aceita parametros como `client_id`,
+  `redirect_uri`, `scope`, `state`, `login_hint` e `prompt`, mas nao um nome de app por
+  request.
+- Manter o fluxo real existente (`/api/public/google/login/:deviceId` -> Google ->
+  callback -> `/auth/redirect`) com `prompt=select_account`, `scope=[profile,email]` e
+  `state` protegido.
+- Tratar a troca de "lectum.com.br" para "Lectum" como configuracao externa do Google
+  Auth Platform/OAuth consent branding: App information > App name = `Lectum` no projeto
+  OAuth usado por homologacao e producao.
+- Se o Google exigir publicacao, revisao ou verificacao do branding para exibir o app
+  name, a liberacao depende desse processo do provedor.
+
+### Consequencias
+
+- Nao ha mudanca segura no repositorio capaz de produzir imediatamente o texto "Lectum"
+  na pagina hospedada pelo Google.
+- A pendencia deve ser executada por alguem com acesso ao Google Cloud Console do projeto
+  OAuth, sem expor `GOOGLE_CLIENT_SECRET_API_USER` ou outros segredos.
+- O OAuth continua compativel com homologacao e producao, sem env nova, pacote novo,
+  migration ou endpoint paralelo.
+
+### Validacao
+
+- Inspecao do fluxo em `backend/src/modules/api/public/google/login/index.ts`,
+  `backend/src/modules/api/middlewares/_auth/passport.ts`,
+  `backend/src/modules/api/public/google/utils/config.ts` e
+  `frontend/src/utils/trusted-navigation.ts`.
+- Consulta a documentacao oficial do Google sobre OAuth consent/branding e parametros do
+  authorization endpoint.
+- `pnpm check:encoding`
+- `pnpm check:adrs`
+- `pnpm check:tasks`
+- `pnpm check:version`
