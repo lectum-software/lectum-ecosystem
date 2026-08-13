@@ -16,6 +16,10 @@ import {
 import type { FreeProfileForm } from "../use-form";
 
 const catalogTagTextClassName = "text-[10px] leading-[1.15]";
+const chipPickerSelectableChipStyle = {
+  ...profileSetupSelectableChipStyle,
+  boxShadow: "none",
+};
 
 type CatalogPickerFieldName = keyof Pick<
   FreeProfileForm,
@@ -327,10 +331,11 @@ export const ChipPicker = ({
             aria-pressed={checked}
             className={cn(
               profileSetupSelectableChip,
+              "shadow-none",
               checked &&
                 "border-primary bg-primary text-primary-foreground shadow-none hover:border-primary hover:bg-primary hover:text-primary-foreground",
             )}
-            style={profileSetupSelectableChipStyle}
+            style={chipPickerSelectableChipStyle}
             key={item.value}
             onClick={() => onChange(toggleValue(selected, item.value))}
             type="button"

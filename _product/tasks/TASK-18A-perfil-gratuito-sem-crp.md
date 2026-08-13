@@ -591,6 +591,7 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `pnpm check:version`
+- Dev server local em `http://127.0.0.1:3148`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.109"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
 - Verificacao estatica confirmou que tags e placeholder usam `catalogTagTextClassName = "text-[10px] leading-[1.15]"`.
 - Dev server local em `http://127.0.0.1:3116`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.22"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando protecao da rota privada.
 
@@ -651,3 +652,24 @@ Validacoes executadas:
 - `pnpm check:version`
 - Verificacao estatica confirmou `dateDisplayFormat: "pt-BR"` no campo `birthdate`, sem `type="date"` para este uso.
 - Dev server local em `http://127.0.0.1:3136`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.27"}`; rota canonica privada `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao; rota legada `/app/professional/profile/setup` respondeu `308` para a canonica. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-13 - sombra das chips de dias da semana
+
+- Pedido do usuario: remover a sombra atras das chips de dias da semana em `/app/profissional/perfil/configurar`.
+- O ajuste ficou restrito ao `ChipPicker` usado por `Dias com horarios disponiveis`, removendo a sombra projetada do estado base e preservando borda, fundo, foco acessivel e estado selecionado.
+- A implementacao reutiliza o componente existente da tela de perfil profissional, sem criar controle paralelo.
+- Nao houve alteracao de backend, Prisma, APIs, contratos, dados persistidos, envs ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel foi o print enviado pelo usuario e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+
+Criterios complementares:
+
+- [x] As chips de dias da semana aparecem sem sombra projetada no estado padrao.
+- [x] O estado selecionado continua distinguivel por cor primaria e sem sombra.
+- [x] Nenhum mock, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`

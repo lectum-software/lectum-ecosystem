@@ -254,3 +254,18 @@ Validacoes:
 - `pnpm check:version`
 - Dev server local: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.24"}`; a rota canonica privada redirecionou para login sem sessao. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
 - `pnpm check` falhou em `check:encoding` por BOM UTF-8 em arquivos de moderacao/admin fora deste ajuste, mantidos como pendencia externa a esta decisao.
+
+## Atualizacao em 2026-08-13 - chips de dias da semana sem sombra
+
+A edicao profissional (`/app/profissional/perfil/configurar`) removeu a sombra projetada apenas das chips de `Dias com horarios disponiveis`.
+
+Decisao:
+
+- manter o `ChipPicker` existente, sem criar componente paralelo;
+- remover a sombra do estado base das chips de dias por meio de `shadow-none`, preservando borda, fundo, foco acessivel e estado selecionado;
+- restringir o ajuste ao frontend visual, sem alterar dados persistidos, contratos, backend, envs ou packages.
+
+Impacto de deploy:
+
+- Frontend-only, compativel com versoes atuais do backend.
+- Rollback por reversao simples do commit restaura a sombra anterior.
