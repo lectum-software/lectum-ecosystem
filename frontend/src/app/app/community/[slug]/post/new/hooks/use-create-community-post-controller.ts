@@ -81,6 +81,7 @@ export const useCreateCommunityPostController = ({
   const [isGuidanceOpen, setIsGuidanceOpen] = useState(false);
   const [isAnonymousTipDismissed, setIsAnonymousTipDismissed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [hasSheetOpened, setHasSheetOpened] = useState(false);
   const [keyboardViewportOffset, setKeyboardViewportOffset] = useState(0);
   const [selectedMediaItems, setSelectedMediaItems] = useState<SelectedPostMedia[]>([]);
   const closeTimerRef = useRef<number | null>(null);
@@ -191,6 +192,7 @@ export const useCreateCommunityPostController = ({
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
   const isSubmitting = mutation.isPending || uploadMutation.isPending;
   const isSubmitDisabled = isSubmitting || communitiesQuery.isLoading || hasNoCommunities;
+  const sheetMotionState = isSheetOpen ? "enter" : hasSheetOpened ? "exit" : "initial";
 
   useEffect(() => {
     if (selectedCommunityIsValid && hook.formState.errors.community_slug) {
@@ -386,7 +388,10 @@ export const useCreateCommunityPostController = ({
   useEffect(() => {
     let openFrame: number | null = null;
     const frame = window.requestAnimationFrame(() => {
-      openFrame = window.requestAnimationFrame(() => setIsSheetOpen(true));
+      openFrame = window.requestAnimationFrame(() => {
+        setHasSheetOpened(true);
+        setIsSheetOpen(true);
+      });
     });
     const focusTitle = () => {
       const activeElement = document.activeElement;
@@ -683,6 +688,7 @@ export const useCreateCommunityPostController = ({
     selectedMediaItems,
     setIsAnonymousTipDismissed,
     setIsGuidanceOpen,
+    sheetMotionState,
     updateSelectedMediaOrientation,
     uploadMutation,
   };

@@ -68,6 +68,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     selectedMediaItems,
     setIsAnonymousTipDismissed,
     setIsGuidanceOpen,
+    sheetMotionState,
     updateSelectedMediaOrientation,
     uploadMutation,
   } = controller;
@@ -79,6 +80,9 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
   const preserveContentBlankTapFocus = preserveBlankTapFocus
     ? (event: ReactPointerEvent<HTMLElement>) => preserveBlankTapFocus(event, "create-post-content")
     : undefined;
+  const discardConfirmationDescription = isPsychologist
+    ? "O que você escreveu e as mídias anexadas nesta criação serão excluídos definitivamente."
+    : "O que você escreveu nesta criação será excluído definitivamente.";
   const registerTitleEditorGesture = () => registerEditorInteraction("create-post-title");
   const focusContentEditorFromGesture = (
     event: ReactPointerEvent<HTMLElement> | ReactTouchEvent<HTMLElement>,
@@ -415,12 +419,14 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
         aria-labelledby="create-post-title-heading"
         aria-modal="true"
         className={cn(
-          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden overscroll-contain rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[transform,height,margin-bottom] will-change-transform sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] transform-gpu flex-col overflow-hidden overscroll-contain rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[height,margin-bottom,transform] will-change-transform sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
           isSheetOpen
             ? "translate-y-0 duration-[340ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
             : "translate-y-[calc(100%+2rem)] duration-[300ms] ease-[cubic-bezier(0.4,0,1,1)]",
         )}
+        data-create-post-author-role={isPsychologist ? "psychologist" : "patient"}
         data-create-post-sheet="true"
+        data-create-post-sheet-motion={sheetMotionState}
         data-create-post-sheet-state={isSheetOpen ? "open" : "closed"}
         role="dialog"
         style={
@@ -572,12 +578,62 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
       <CommunityDeleteConfirmationModal
         actionLabel="Excluir e fechar"
         closeLabel="Fechar confirmação de descarte"
-        description="O que você escreveu e as mídias anexadas nesta criação serão excluídos definitivamente."
+        description={discardConfirmationDescription}
         onClose={cancelDiscardConfirmation}
         onConfirm={confirmDiscardAndClose}
         open={discardConfirmationOpen}
         title="Descartar conteúdo?"
       />
+      <style>{`
+        [data-create-post-sheet] {
+          translate: 0 0;
+        }
+
+        [data-create-post-sheet][data-create-post-sheet-motion="initial"] {
+          transform: translate3d(0, calc(100% + 2rem), 0);
+        }
+
+        [data-create-post-sheet][data-create-post-sheet-motion="enter"] {
+          animation: lectum-create-post-sheet-enter 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        [data-create-post-sheet][data-create-post-sheet-motion="exit"] {
+          animation: lectum-create-post-sheet-exit 300ms cubic-bezier(0.4, 0, 1, 1) both;
+        }
+
+        @keyframes lectum-create-post-sheet-enter {
+          from {
+            transform: translate3d(0, calc(100% + 2rem), 0);
+          }
+
+          to {
+            transform: translate3d(0, 0, 0);
+          }
+        }
+
+        @keyframes lectum-create-post-sheet-exit {
+          from {
+            transform: translate3d(0, 0, 0);
+          }
+
+          to {
+            transform: translate3d(0, calc(100% + 2rem), 0);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          [data-create-post-sheet][data-create-post-sheet-motion="enter"] {
+            animation: none;
+            transform: translate3d(0, 0, 0);
+          }
+
+          [data-create-post-sheet][data-create-post-sheet-motion="initial"],
+          [data-create-post-sheet][data-create-post-sheet-motion="exit"] {
+            animation: none;
+            transform: translate3d(0, calc(100% + 2rem), 0);
+          }
+        }
+      `}</style>
     </>
   );
 };

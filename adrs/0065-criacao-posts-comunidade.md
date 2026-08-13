@@ -849,3 +849,33 @@ Validacao complementar 2026-08-13:
 - `git diff --check`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.85`: sucesso.
 - Chrome/CDP mobile local em `http://127.0.0.1:3067/app/comunidades/feed/publicacao/nova`: a rota privada redirecionou para login por ausencia de cookie autenticado local; nao foi criado mock de sessao. O comportamento autenticado da modal foi validado por inspecao do fluxo real, typecheck/lint/testes e build.
+
+## Atualizacao 2026-08-13 - movimento role-neutral e copy de descarte para pacientes
+
+A validacao de produto indicou que a animacao vertical da modal `Criar Post` parecia perceptivel apenas no fluxo de psicologo no iPhone. Como pacientes e psicologos compartilham a mesma sheet, a decisao foi tornar o motor de movimento explicitamente role-neutral e auditavel por atributos de estado/role, reforcando a animacao por keyframes CSS locais da propria modal.
+
+Decisoes complementares:
+
+- Manter a mesma bottom sheet para pacientes e psicologos, sem bifurcar componente, rota ou contrato de formulario.
+- Expor `data-create-post-author-role` com `patient` ou `psychologist` somente para auditoria/validacao visual, sem impacto em API ou persistencia.
+- Expor `data-create-post-sheet-motion` com `initial`, `enter` e `exit`, diferenciando o primeiro estado fechado do fechamento real.
+- Reforcar a entrada e a saida com keyframes CSS `lectum-create-post-sheet-enter` e `lectum-create-post-sheet-exit`, preservando classes de fallback, safe-area, offsets de teclado e `prefers-reduced-motion`.
+- Evitar animacao de saida falsa no primeiro render: `exit` so ocorre depois que a sheet ja abriu ao menos uma vez.
+- Ajustar a confirmacao de descarte para pacientes para a copy exata `O que você escreveu nesta criação será excluído definitivamente.`
+- Manter para psicologos a copy que tambem menciona midias anexadas, pois esse fluxo pode ter upload local ainda nao publicado.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- O fluxo de paciente passa a ter evidencia tecnica e visual do mesmo movimento vertical usado na composicao de psicologos, em qualquer breakpoint.
+- O fechamento continua aguardando `SHEET_CLOSE_DELAY_MS`; a alteracao so torna a animacao mais robusta contra coalescencia de frames.
+- A copy de descarte do paciente fica mais simples e alinhada ao fato de que pacientes nao anexam midia na criacao de post.
+- Rollback: reverter esta atualizacao devolve a transicao anterior baseada apenas em troca de classes e a copy generica de descarte.
+
+Validacao complementar 2026-08-13:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts src/app/app/community/[slug]/post/new/views/create-community-post.tsx`: sucesso.
+- Validacao estatica via Node confirmou atributos de role/motion, keyframes de entrada/saida e copy de descarte do paciente.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.

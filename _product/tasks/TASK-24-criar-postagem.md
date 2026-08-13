@@ -716,3 +716,39 @@ Validacoes finais deste complemento:
 - [x] `pnpm version:bump` para `0.1.85`
 - [x] `pnpm check:version`
 - [x] Chrome/CDP mobile local em `http://127.0.0.1:3067/app/comunidades/feed/publicacao/nova`; sem cookie autenticado local, a rota redirecionou para `/auth/login`, entao nao foi usado mock para forcar sessao. A validacao da modal autenticada ficou coberta por analise do fluxo real, check e build.
+
+## Complemento 2026-08-13 - animacao e descarte da modal Criar Post para pacientes
+
+- Pedido do usuario: na modal de criacao de post para paciente, em qualquer dispositivo, garantir entrada arrastando para cima e saida arrastando para baixo; tambem ajustar a copy de descarte do rascunho do paciente para `O que voce escreveu nesta criacao sera excluido definitivamente.`
+- Frontend: a sheet agora expoe `data-create-post-author-role="patient"`/`"psychologist"` e `data-create-post-sheet-motion="initial" | "enter" | "exit"`, permitindo validar que o mesmo motor de movimento e aplicado ao fluxo de paciente e ao fluxo de psicologo.
+- Frontend: o estado inicial da sheet permanece fora da viewport inferior sem animacao de saida falsa; apos o primeiro frame de abertura, a sheet toca a animacao `lectum-create-post-sheet-enter` e, ao fechar, toca `lectum-create-post-sheet-exit` antes de desmontar/navegar.
+- Frontend: as animacoes foram reforcadas por keyframes CSS da propria modal, preservando o fallback de classes `translate-y-0`/`translate-y-[calc(100%+2rem)]`, offsets de teclado/safe-area e respeito a `prefers-reduced-motion`.
+- Frontend: para pacientes, a confirmacao de descarte passa a exibir exatamente `O que você escreveu nesta criação será excluído definitivamente.`; para psicologos, permanece a copy que tambem menciona midias anexadas.
+- Fonte visual auditavel: `_product/proto/Criar Nova Postagem - Pacientes.jpg` e comportamento atual da sheet da TASK-24; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Escopo: sem mudanca de backend, endpoints, payload, Prisma, migrations, envs, providers, packages, upload/storage, anonimato ou regras de publicacao.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A modal `Criar Post` do paciente usa o mesmo fluxo de entrada vertical por bottom sheet em qualquer breakpoint.
+- [x] A modal `Criar Post` do paciente usa o mesmo fluxo de saida vertical antes de desmontar/navegar.
+- [x] O primeiro estado fechado da sheet nao toca uma animacao de saida visivel antes da entrada.
+- [x] A confirmacao de descarte do paciente exibe `O que você escreveu nesta criação será excluído definitivamente.`
+- [x] O fluxo de psicologo preserva a copy que menciona midias anexadas.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts src/app/app/community/[slug]/post/new/views/create-community-post.tsx`
+- [x] Validacao estatica via Node confirmou `data-create-post-author-role`, `data-create-post-sheet-motion`, keyframes de entrada/saida e copy de descarte do paciente.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile da rota de criacao de post quando disponivel no ambiente local.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit proprio criado e push em `homolog` executado.
