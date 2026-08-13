@@ -487,3 +487,4 @@ Formato recomendado:
 - [ADR-0454 — CSP do CardPayment no checkout profissional](0454-csp-mercado-pago-cardpayment-checkout.md)
 - [ADR-0455 — Autopreenchimento de endereço por CEP na assinatura](0455-autopreenchimento-cep-endereco-assinatura.md)
 - [ADR-0456 — Mensagens públicas para recusas de cartão no Mercado Pago](0456-mensagens-publicas-recusa-cartao-mercado-pago.md)
+- [ADR-0457 — Plano efetivo gratuito após assinatura profissional declinada](0457-plano-efetivo-gratuito-apos-assinatura-declinada.md)

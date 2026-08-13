@@ -30,9 +30,7 @@ export const activeFreeSubscriptionWhere = (): Prisma.professional_subscriptionW
 export const actionableProfessionalGatewaySubscriptionWhere =
   (): Prisma.professional_subscriptionWhereInput => ({
     deleted: false,
-    status: {
-      in: ["inativa", "inadimplente"],
-    },
+    status: "inativa",
     gateway_subscription_id: {
       not: null,
     },

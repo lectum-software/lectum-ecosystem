@@ -1,5 +1,6 @@
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription } from "@/interfaces/objects";
+import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
 import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
@@ -57,8 +58,6 @@ export class CurrentRepository implements ICurrentRepository {
       },
     });
 
-    if (actionableGatewayProfessional) return actionableGatewayProfessional;
-
     const activeFree = await this.subscriptionRepository.findFirst({
       where: {
         ...activeFreeSubscriptionWhere(),
@@ -72,19 +71,10 @@ export class CurrentRepository implements ICurrentRepository {
       },
     });
 
-    if (activeFree) return activeFree;
-
-    return this.subscriptionRepository.findFirst({
-      where: {
-        psychologist_id: profile.id,
-        deleted: false,
-      },
-      include: {
-        plan: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+    return resolveEffectiveBillingSubscription({
+      activeProfessional,
+      actionableGatewayProfessional,
+      activeFree,
     });
   }
 }

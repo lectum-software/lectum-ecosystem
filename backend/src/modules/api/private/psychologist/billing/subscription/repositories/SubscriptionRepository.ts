@@ -4,6 +4,7 @@ import type {
   payment_method,
   professional_subscription,
 } from "@/interfaces/objects";
+import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
 import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
@@ -228,19 +229,10 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       },
     });
 
-    if (activeFree) return activeFree;
-
-    return this.subscriptionRepository.findFirst({
-      where: {
-        psychologist_id: psychologistId,
-        deleted: false,
-      },
-      include: {
-        plan: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+    return resolveEffectiveBillingSubscription({
+      activeProfessional,
+      actionableGatewayProfessional,
+      activeFree,
     });
   }
 

@@ -558,3 +558,32 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 - `pnpm check`
+
+## Correcao em 2026-08-13: plano efetivo gratuito apos assinatura declinada
+
+- Incidente observado em homologacao/Android: uma tentativa de assinatura profissional encerrada
+  aparecia em **Minha Assinatura** como **Plano Profissional** com status **Cancelado**, mesmo sem
+  pagamento confirmado ou cartao cadastrado.
+- Ajuste: os endpoints de plano atual deixam de usar a ultima assinatura encerrada como fallback.
+  Agora o contrato expõe apenas profissional ativo, profissional `inativa` ainda com referencia real
+  aguardando confirmacao ou plano gratuito ativo; sem esses estados, retorna `null` e a UI reutiliza
+  a experiencia de **Plano Gratuito**.
+- Assinaturas `cancelada` ou `inadimplente` continuam preservadas no banco/historico operacional,
+  mas deixam de ser o plano principal exibido ao psicologo.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao automatica de
+  dados publicados foi criada.
+- ADR registrado: `adrs/0457-plano-efetivo-gratuito-apos-assinatura-declinada.md`.
+
+### Criterios de aceite da correcao
+
+- [x] Assinatura profissional cancelada nao aparece como plano atual do psicologo.
+- [x] Ausencia de assinatura vigente cai na tela de **Plano Gratuito** com CTA de upgrade.
+- [x] Assinatura profissional `inativa` com referencia real ainda pode aparecer como aguardando
+  confirmacao.
+- [x] Nenhum dado real de assinatura foi resetado, apagado ou reclassificado em massa.
+
+### Validacao da correcao de plano efetivo
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm check`
