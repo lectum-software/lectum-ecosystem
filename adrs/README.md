@@ -484,3 +484,4 @@ Formato recomendado:
 - [ADR-0451 — Digests temporais para push de notificacoes](0451-digests-temporais-push-notificacoes.md)
 - [ADR-0452 — Upload multipart para midia grande em respostas](0452-upload-multipart-midia-respostas.md)
 - [ADR-0453 — Composer de comentarios com editor plaintext](0453-composer-comentarios-editor-plaintext.md)
+- [ADR-0454 — CSP do CardPayment no checkout profissional](0454-csp-mercado-pago-cardpayment-checkout.md)

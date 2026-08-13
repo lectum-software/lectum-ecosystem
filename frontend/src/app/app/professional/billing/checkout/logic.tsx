@@ -86,6 +86,7 @@ const isPendingProfessional = (subscription?: ProfessionalSubscription | null) =
 const CREDIT_CARD_PAYMENT_TYPE = "credit_card";
 const AUTO_SYNC_INTERVAL_MS = 3000;
 const AUTO_SYNC_MAX_ATTEMPTS = 20;
+const CARD_PAYMENT_LOAD_TIMEOUT_MS = 10_000;
 
 type CardPaymentFormData = {
   token?: string;
@@ -188,6 +189,10 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const syncMutateAsyncRef = useRef(syncMutateAsync);
   const currentRefetchRef = useRef(currentRefetch);
   const autoSyncInFlightRef = useRef(false);
+  const [cardPaymentStatus, setCardPaymentStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const [cardPaymentRetryIndex, setCardPaymentRetryIndex] = useState(0);
 
   useEffect(() => {
     checkoutMutateAsyncRef.current = checkoutMutateAsync;
@@ -218,6 +223,7 @@ export const ProfessionalBillingCheckoutLogic = () => {
   const cardPaymentKey = `${payerEmail || "anonymous"}-${amount}-${
     isCourtesyRenewal ? "courtesy" : "checkout"
   }`;
+  const cardPaymentInstanceKey = `${cardPaymentKey}-${cardPaymentRetryIndex}`;
 
   useEffect(() => {
     if (isCurrentSubscriptionLoading || !activeProfessional || shouldBypassActiveRedirect) return;
@@ -306,11 +312,17 @@ export const ProfessionalBillingCheckoutLogic = () => {
   );
 
   const handleBrickReady = useCallback(() => {
-    // Callback obrigatório do Brick; mantém a renderização real sem efeitos paralelos.
+    setCardPaymentStatus("ready");
   }, []);
 
   const handleBrickError = useCallback(() => {
+    setCardPaymentStatus("error");
     toast.error("Não foi possível carregar o formulário de cartão.");
+  }, []);
+
+  const handleRetryCardPayment = useCallback(() => {
+    setCardPaymentStatus("loading");
+    setCardPaymentRetryIndex((current) => current + 1);
   }, []);
 
   const handleSyncStatus = useCallback(async () => {
@@ -359,6 +371,20 @@ export const ProfessionalBillingCheckoutLogic = () => {
       if (interval) clearInterval(interval);
     };
   }, [activeProfessional, pendingProfessional]);
+
+  useEffect(() => {
+    if (!canRenderCardPayment || cardPaymentStatus !== "loading") return;
+
+    const timeout = setTimeout(() => {
+      setCardPaymentStatus((currentStatus) =>
+        currentStatus === "ready" ? currentStatus : "error",
+      );
+    }, CARD_PAYMENT_LOAD_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [canRenderCardPayment, cardPaymentStatus]);
 
   if (!isCurrentSubscriptionLoading && activeProfessional && !shouldBypassActiveRedirect) {
     return (
@@ -465,16 +491,51 @@ export const ProfessionalBillingCheckoutLogic = () => {
                           : "Aceitamos apenas cartão de crédito para manter sua assinatura mensal ativa."}
                       </p>
                     </div>
-                    <CardPayment
-                      customization={customization}
-                      id="lectum-card-payment-brick"
-                      initialization={initialization}
-                      key={cardPaymentKey}
-                      locale="pt-BR"
-                      onError={handleBrickError}
-                      onReady={handleBrickReady}
-                      onSubmit={handleSubmit}
-                    />
+                    {cardPaymentStatus === "error" ? (
+                      <InlineAlert
+                        className="bg-surface"
+                        title="Campos do cartão não carregaram"
+                        variant="error"
+                      >
+                        <div className="grid gap-3">
+                          <p>Recarregue o formulário seguro para informar o cartão de crédito.</p>
+                          <Button
+                            className="h-10 w-fit rounded-full"
+                            onClick={handleRetryCardPayment}
+                            type="button"
+                            variant="outline"
+                          >
+                            Tentar novamente
+                          </Button>
+                        </div>
+                      </InlineAlert>
+                    ) : (
+                      <div
+                        className={cn(
+                          "relative",
+                          cardPaymentStatus === "loading" && "min-h-[220px]",
+                        )}
+                      >
+                        {cardPaymentStatus === "loading" ? (
+                          <LoadingState
+                            className="absolute inset-0 rounded-2xl bg-surface px-4 py-8"
+                            label="Carregando campos seguros do cartão"
+                          />
+                        ) : null}
+                        <div className={cn(cardPaymentStatus === "loading" && "opacity-0")}>
+                          <CardPayment
+                            customization={customization}
+                            id="lectum-card-payment-brick"
+                            initialization={initialization}
+                            key={cardPaymentInstanceKey}
+                            locale="pt-BR"
+                            onError={handleBrickError}
+                            onReady={handleBrickReady}
+                            onSubmit={handleSubmit}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : null}
 

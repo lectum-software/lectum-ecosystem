@@ -18,6 +18,22 @@ const remotePatterns: RemotePattern[] = publicAssetSources.map((source) => ({
 }));
 const assetCspSources = publicAssetSources.map((source) => source.origin);
 const allowedDevOrigins = new Set<string>();
+const mercadoPagoCoreCspSources = [
+  "https://mercadopago.com",
+  "https://*.mercadopago.com",
+  "https://mercadopago.com.br",
+  "https://*.mercadopago.com.br",
+];
+const mercadoPagoStaticCspSources = [
+  "https://http2.mlstatic.com",
+  "https://api-static.mercadopago.com",
+];
+const mercadoPagoScriptCspSources = [
+  "https://sdk.mercadopago.com",
+  "https://www.mercadopago.com",
+  "https://www.mercadopago.com.br",
+  ...mercadoPagoStaticCspSources,
+];
 
 const getApiCspSources = () => {
   const source = getPublicApiSource();
@@ -33,13 +49,13 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://sdk.mercadopago.com`,
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data:",
-  `img-src 'self' data: blob: ${assetCspSources.join(" ")}`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} ${mercadoPagoScriptCspSources.join(" ")}`,
+  `style-src 'self' 'unsafe-inline' ${mercadoPagoStaticCspSources.join(" ")}`,
+  `font-src 'self' data: ${mercadoPagoStaticCspSources.join(" ")}`,
+  `img-src 'self' data: blob: ${assetCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${mercadoPagoCoreCspSources.join(" ")}`,
   `media-src 'self' blob: ${assetCspSources.join(" ")}`,
-  `connect-src 'self' ${getApiCspSources().join(" ")} https://api.mercadopago.com https://*.mercadopago.com https://*.mercadolibre.com`,
-  "frame-src https://*.mercadopago.com https://*.mercadolibre.com",
+  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} https://*.mercadolibre.com`,
+  `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
 ].join("; ");

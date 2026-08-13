@@ -502,3 +502,39 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir frontend build`
 - `pnpm check:version`
 - `pnpm check`
+
+## Correção em 2026-08-13: campos do CardPayment visíveis no pagamento profissional
+
+- Incidente observado em homologação/iPhone: a tela `/app/profissional/assinatura/pagamento`
+  exibia o resumo **Cartão de crédito**, mas o campo seguro de cartão ficava ausente abaixo do bloco.
+- Causa técnica provável: a CSP do frontend permitia o SDK principal do Mercado Pago, porém não
+  contemplava todos os assets dinâmicos usados pelo Card Payment Brick em runtime. Quando o carregamento
+  externo falhava, o componente React do provider mantinha o container vazio, sem feedback visual para o
+  usuário.
+- Ajuste: `frontend/next.config.ts` passou a centralizar as fontes CSP do Mercado Pago, incluindo os
+  assets estáticos do Brick em `https://http2.mlstatic.com` e `https://api-static.mercadopago.com` nas
+  diretivas necessárias. A tela de checkout
+  também ganhou estado explícito de carregamento, timeout honesto e ação **Tentar novamente** para o
+  CardPayment, preservando a tokenização real do provider e sem coletar PAN/CVV na Lectum.
+- Referência visual local consultada: `_product/proto/Finalizar Assinatura - Psicólogo.jpg`; Builder
+  Quick Copy não está exposto como ferramenta direta neste ambiente.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou alteração de contrato foi
+  criado.
+- ADR registrado: `adrs/0454-csp-mercado-pago-cardpayment-checkout.md`.
+
+### Critérios de aceite da correção
+
+- [x] A tela de pagamento do Plano Profissional continua usando o Card Payment Brick real do Mercado Pago.
+- [x] A CSP do frontend permite os assets necessários para o Brick montar os campos seguros do cartão.
+- [x] Se o carregamento externo falhar, a UI deixa de ficar em branco e mostra feedback com ação de retry.
+- [x] A regra de crédito recorrente, tokenização no provider e ausência de PAN/CVV no frontend/backend foram
+  preservadas.
+
+### Validação da correção do CardPayment
+
+- `pnpm --dir frontend exec biome check --write next.config.ts src/app/app/professional/billing/checkout/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start --port 3118` antes do bump de release: `/version` retornou `0.1.91`; `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessão e a CSP enviada continha `sdk.mercadopago.com`, `http2.mlstatic.com`, `api-static.mercadopago.com` e domínios Mercado Pago necessários ao Brick.
+- `pnpm check`
+- `pnpm check:version` após `pnpm version:bump`, confirmando manifests sincronizados em `0.1.92`.
