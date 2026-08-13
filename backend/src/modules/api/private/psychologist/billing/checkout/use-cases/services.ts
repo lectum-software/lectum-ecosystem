@@ -2,6 +2,7 @@ import { error, msg } from "@/helpers/translate";
 import {
   getPaymentGateway,
   isPaymentGatewayConfigurationError,
+  resolvePaymentGatewayPublicError,
   sanitizePaymentGatewayError,
 } from "@/modules/billing/payment-gateway";
 import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGateway";
@@ -485,13 +486,11 @@ export default async (data: ICheckoutDTO) => {
     );
 
     const configError = isPaymentGatewayConfigurationError(err);
+    const publicError = resolvePaymentGatewayPublicError(err, "billing_gateway_checkout_failed");
 
     return {
-      status: configError ? 503 : 502,
-      ...error(
-        configError ? "billing_gateway_config_error" : "billing_gateway_checkout_failed",
-        {},
-      ),
+      status: configError ? 503 : publicError.status,
+      ...error(configError ? "billing_gateway_config_error" : publicError.code, {}),
     };
   }
 };

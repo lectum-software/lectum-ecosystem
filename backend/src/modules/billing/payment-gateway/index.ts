@@ -1,3 +1,4 @@
+import { sanitizePaymentGatewayError } from "./error-log";
 import { MercadoPagoAdapter } from "./MercadoPagoAdapter";
 import type { PaymentGateway } from "./PaymentGateway";
 
@@ -25,11 +26,16 @@ export const getPaymentGateway = (): PaymentGateway => {
 export const isPaymentGatewayConfigurationError = (err: unknown) => {
   const message = err instanceof Error ? err.message : "";
 
-  return PAYMENT_GATEWAY_CONFIGURATION_ERROR_CODES.some((code) => message.includes(code));
+  if (PAYMENT_GATEWAY_CONFIGURATION_ERROR_CODES.some((code) => message.includes(code))) {
+    return true;
+  }
+
+  const gatewayStatus = sanitizePaymentGatewayError(err).status;
+
+  return gatewayStatus === 401 || gatewayStatus === 403;
 };
 
-export { sanitizePaymentGatewayError } from "./error-log";
-
+export { getPaymentGatewayErrorDetails, sanitizePaymentGatewayError } from "./error-log";
 export type {
   BillingSubscriptionStatus,
   GatewayCancelSubscriptionInput,
@@ -45,3 +51,4 @@ export type {
   PaymentGateway,
   VerifyWebhookSignatureInput,
 } from "./PaymentGateway";
+export { resolvePaymentGatewayPublicError } from "./public-error";

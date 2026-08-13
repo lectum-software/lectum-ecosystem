@@ -220,3 +220,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - O caminho alternativo sem plano e os retries experimentais foram removidos. Uma referência de
   plano só é limpa automaticamente quando o Mercado Pago confirma `404`.
 - Decisão e configuração operacional consolidadas em `adrs/0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md`.
+
+## Ajuste de mensagens de recusa em 2026-08-13
+
+- Recusas de cartão no checkout e na atualização de método de pagamento passaram a traduzir
+  `status_detail`/códigos seguros do Mercado Pago para mensagens públicas em PT-BR.
+- Erros esperados de cartão retornam `402` e deixam de aparecer como falha genérica de conexão.
+- Configuração/credencial do gateway continua retornando indisponibilidade operacional, sem expor
+  detalhes do provedor.
+- Logs do gateway registram apenas `status`, `status_detail` e `cause_codes` sanitizados.
+- ADR registrado: `adrs/0456-mensagens-publicas-recusa-cartao-mercado-pago.md`.

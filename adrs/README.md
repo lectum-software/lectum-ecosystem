@@ -486,3 +486,4 @@ Formato recomendado:
 - [ADR-0453 — Composer de comentarios com editor plaintext](0453-composer-comentarios-editor-plaintext.md)
 - [ADR-0454 — CSP do CardPayment no checkout profissional](0454-csp-mercado-pago-cardpayment-checkout.md)
 - [ADR-0455 — Autopreenchimento de endereço por CEP na assinatura](0455-autopreenchimento-cep-endereco-assinatura.md)
+- [ADR-0456 — Mensagens públicas para recusas de cartão no Mercado Pago](0456-mensagens-publicas-recusa-cartao-mercado-pago.md)

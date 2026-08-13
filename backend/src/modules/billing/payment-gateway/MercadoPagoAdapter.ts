@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
+import type { PaymentGatewayErrorDetails } from "./error-log";
 import type {
   BillingSubscriptionStatus,
   GatewayCancelSubscriptionInput,
@@ -42,9 +43,7 @@ const GATEWAY = "mercadopago";
 const MERCADO_PAGO_CURRENT_USER_URL = "https://api.mercadopago.com/users/me";
 const MERCADO_PAGO_REQUEST_TIMEOUT_MS = 10_000;
 
-type MercadoPagoSafeErrorDetails = {
-  status?: number;
-};
+type MercadoPagoSafeErrorDetails = PaymentGatewayErrorDetails;
 
 const firstHeaderValue = (value?: string | string[]) => {
   if (Array.isArray(value)) return value[0];
@@ -95,6 +94,12 @@ const toStringOrNull = (value: unknown) => {
 
 const toSafeString = (value: unknown) => (typeof value === "string" ? value : undefined);
 
+const toSafeGatewayCode = (value: unknown) => {
+  const normalized = toStringOrNull(value)?.trim().toLowerCase() || "";
+
+  return /^[a-z0-9_]{2,80}$/.test(normalized) ? normalized : undefined;
+};
+
 const toFiniteNumberOrNull = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value !== "string") return null;
@@ -127,10 +132,26 @@ const toIsoDateString = (value?: Date | string | null) => {
 const sanitizeMercadoPagoError = (err: unknown): MercadoPagoSafeErrorDetails => {
   if (!isObject(err)) return {};
 
-  const status = err.status;
-  return typeof status === "number" && Number.isInteger(status) && status >= 100 && status <= 599
-    ? { status }
-    : {};
+  const rawStatus = toFiniteNumberOrNull(err.status);
+  const status =
+    rawStatus !== null && Number.isInteger(rawStatus) && rawStatus >= 100 && rawStatus <= 599
+      ? rawStatus
+      : undefined;
+  const rawCause = Array.isArray(err.cause) ? err.cause : [];
+  const causeCodes = rawCause
+    .map((item) => {
+      if (!isObject(item)) return toSafeGatewayCode(item);
+
+      return toSafeGatewayCode(item.code ?? item.status_detail ?? item.error);
+    })
+    .filter((item): item is string => Boolean(item));
+
+  return {
+    status,
+    status_detail: toSafeGatewayCode(err.status_detail),
+    error: toSafeGatewayCode(err.error ?? err.code),
+    cause_codes: Array.from(new Set(causeCodes)).slice(0, 8),
+  };
 };
 
 export class MercadoPagoAdapterError extends Error {

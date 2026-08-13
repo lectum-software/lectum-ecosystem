@@ -2,6 +2,7 @@ import { error, msg } from "@/helpers/translate";
 import {
   getPaymentGateway,
   isPaymentGatewayConfigurationError,
+  resolvePaymentGatewayPublicError,
 } from "@/modules/billing/payment-gateway";
 import type { IPaymentMethodSessionDTO } from "../DTOs/IPaymentMethodSessionDTO";
 import { PaymentMethodSessionRepository } from "../repositories/PaymentMethodSessionRepository";
@@ -74,13 +75,14 @@ export default async (data: IPaymentMethodSessionDTO) => {
     };
   } catch (err) {
     const configError = isPaymentGatewayConfigurationError(err);
+    const publicError = resolvePaymentGatewayPublicError(
+      err,
+      "billing_gateway_payment_method_failed",
+    );
 
     return {
-      status: configError ? 503 : 502,
-      ...error(
-        configError ? "billing_gateway_config_error" : "billing_gateway_payment_method_failed",
-        {},
-      ),
+      status: configError ? 503 : publicError.status,
+      ...error(configError ? "billing_gateway_config_error" : publicError.code, {}),
     };
   }
 };
