@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BadgeCheck, ChevronRight, Medal } from "lucide-react";
+import { ArrowLeft, ChevronRight, Medal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,6 +11,7 @@ import type { CommunityTopMentor } from "@/api/generator/types/community";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -298,13 +299,13 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
       </span>
       <Avatar mentor={mentor} ringed={isTopThree} size={62} />
       <span className="min-w-0 flex-1">
-        <span className="flex min-w-0 items-center gap-1.5">
+        <span className="flex min-w-0 items-center gap-0.5">
           <strong className="truncate text-base font-black tracking-[-0.02em] text-foreground dark:text-foreground">
             {mentor.professional.name}
           </strong>
-          <BadgeCheck
-            className="h-4.5 w-4.5 shrink-0 fill-primary text-primary-foreground"
-            aria-label="Profissional verificado"
+          <VerifiedBadgeIcon
+            className="h-[18px] w-[18px] shrink-0"
+            aria-label="Perfil verificado"
           />
         </span>
         <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-[0.08em] text-muted dark:text-muted">

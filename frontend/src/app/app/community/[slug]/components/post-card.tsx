@@ -152,7 +152,7 @@ export const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
               verified={reply.author.verified}
             />
             <Link
-              className="pointer-events-auto min-w-0 cursor-pointer truncate text-[11px] font-semibold text-muted"
+              className="pointer-events-auto min-w-0 cursor-pointer truncate text-[11px] font-semibold leading-tight text-muted"
               href={profileHref}
               onClick={(event) => event.stopPropagation()}
             >
@@ -374,7 +374,7 @@ export const PostCard = ({
           author={post.author}
           href={psychologistProfileHref}
         />
-        <div className="grid min-w-0 flex-1 gap-1">
+        <div className="grid min-w-0 flex-1 gap-0.5">
           <AuthorIdentityLine
             badge={post.author.featured_badge ?? post.featured_badge}
             href={psychologistProfileHref}
@@ -383,14 +383,14 @@ export const PostCard = ({
           />
           {psychologistProfileHref ? (
             <Link
-              className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+              className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
               href={psychologistProfileHref}
             >
               {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
               {formatPostTimeLabel(post.created_at, post.edited_at)}
             </Link>
           ) : (
-            <p className="text-[11px] font-semibold text-muted">
+            <p className="text-[11px] font-semibold leading-tight text-muted">
               {formatPostTimeLabel(post.created_at, post.edited_at)}
             </p>
           )}

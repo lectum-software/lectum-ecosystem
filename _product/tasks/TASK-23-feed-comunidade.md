@@ -507,3 +507,35 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-12 - identidade do psicologo mais compacta e selo unificado
+
+- Pedido do usuario: na identificacao do psicologo em comunidades, reduzir o espaco entre nome e metadata (`Psicologo • ha 5d`), reduzir o espaco entre nome e selo verificado, e garantir que o selo das paginas de comunidade seja o mesmo do perfil publico do psicologo.
+- Fonte visual auditavel: screenshot enviado em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 19.26.56.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: as linhas de autoria das comunidades passaram a usar `gap-0.5` entre nome e selo verificado e `gap-0.5` entre a linha do nome e a metadata, com `leading-tight` nos textos envolvidos para reduzir o espaco vertical sem alterar conteudo.
+- Frontend: posts do feed/comunidade, resposta profissional destacada, detalhe do post, continuacao de conversa, replies e Top Mentores da comunidade passaram a renderizar o selo com `VerifiedBadgeIcon`, o mesmo componente usado no perfil publico do psicologo.
+- Escopo: sem alteracao de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, ranking, dados de verificacao ou regras de exibicao; apenas apresentacao frontend.
+- ADR atualizado: `adrs/0085-truncamento-medido-feed-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O espaco entre nome do psicologo e a linha de metadata foi reduzido nas identificacoes de comunidade.
+- [x] O espaco entre nome do psicologo e selo verificado foi reduzido nas identificacoes de comunidade.
+- [x] O selo verificado das paginas de comunidade usa o mesmo `VerifiedBadgeIcon` do perfil publico do psicologo.
+- [x] O ajuste cobre feed/comunidade, detalhe do post, thread/continuacao, respostas e ranking Top Mentores de comunidade.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes do complemento
+
+- [x] `pnpm --dir frontend biome:check`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump para validar `0.1.81`)
+- [x] Next local buildado em `http://127.0.0.1:3057`: `/version` respondeu `0.1.80`; HTTP local 200 em `/app/comunidades/feed`, `/comunidades/ansiedade-em-equilibrio` e `/psicologos/demo-psychologist-camila-rocha`; Chrome headless mobile 390x844 abriu as tres rotas; apos o bump, `http://127.0.0.1:3058/version` respondeu `0.1.81` e as mesmas tres rotas responderam HTTP 200.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.81`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

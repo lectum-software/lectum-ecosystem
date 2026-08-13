@@ -40,3 +40,31 @@ Ajuste complementar de UX visual da TASK-23 em `/app/community/feed`.
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke HTTP local em `http://127.0.0.1:3000/app/community/feed`
+
+## Complemento 2026-08-12 - selo verificado unificado e autoria compacta
+
+### Contexto
+
+A identificacao de psicologos nos cards e telas de comunidade ainda usava duas variacoes visuais para o selo verificado: em alguns pontos `BadgeCheck` do Lucide preenchido, em outros `VerifiedBadgeIcon`, que ja e o componente do perfil publico. Alem disso, a combinacao de `gap-1`, `gap-[5px]` e line-height padrao deixava a metadata profissional (`Psicologo • ha 5d`) afastada do nome em telas mobile.
+
+### Decisao
+
+- Usar `VerifiedBadgeIcon` nas superficies de comunidade em que o autor/mentor profissional e identificado: feed, cards compartilhados, resposta profissional destacada, detalhe do post, thread/continuacao, replies e Top Mentores.
+- Reduzir a distancia horizontal nome/selo para `gap-0.5`.
+- Reduzir a distancia vertical nome/metadata para `gap-0.5` e aplicar `leading-tight` nos textos de autoria e metadata.
+- Nao alterar regras de verificacao, ranking, featured badges, links para perfil, conteudo textual ou contratos de API.
+
+### Consequencias
+
+- A comunidade e o perfil publico passam a compartilhar o mesmo desenho de selo verificado.
+- A autoria do psicologo fica mais compacta e proxima do padrao visual solicitado no mobile, sem criar componente paralelo nem mudar dados.
+- Mantem-se compatibilidade total com backend antigo/novo porque o ajuste e apenas de apresentacao frontend.
+
+### Validacoes
+
+- `pnpm --dir frontend biome:check`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build` antes e apos o bump para `0.1.81`.
+- Next local buildado em `http://127.0.0.1:3057` e depois em `http://127.0.0.1:3058`, com HTTP 200 nas rotas de comunidade e perfil publico usadas para comparacao visual e `/version` em `0.1.81` apos o bump.
+
+- `pnpm check`, `git diff --check`, `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm version:bump` para `0.1.81` e `pnpm check:version`.

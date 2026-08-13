@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  BadgeCheck,
-  ChevronDown,
-  ChevronUp,
-  Flag,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { type MouseEventHandler, type RefObject, useEffect, useMemo, useState } from "react";
 import { useSaveReply } from "@/api/callers/posts";
@@ -24,6 +16,7 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
@@ -384,24 +377,26 @@ export const ReplyCard = ({
 
         <div className="min-w-0 rounded-[18px] px-0.5 py-0.5">
           <div className="flex items-start justify-between gap-2">
-            <div className="grid min-w-0 gap-1">
+            <div className="grid min-w-0 gap-0.5">
               <div className="flex min-w-0 items-center gap-x-2">
-                <div className="flex min-w-0 items-center gap-[5px]">
+                <div className="flex min-w-0 items-center gap-0.5">
                   {isProfessional ? (
                     <Link
-                      className="truncate text-sm font-black text-inherit no-underline hover:text-inherit hover:no-underline"
+                      className="truncate text-sm font-black leading-tight text-inherit no-underline hover:text-inherit hover:no-underline"
                       href={`/psicologos/${reply.author.id}`}
                       onClick={stopReplyTreeCollapsePropagation}
                     >
                       {authorDisplayName}
                     </Link>
                   ) : (
-                    <h3 className="truncate text-sm font-black">{authorDisplayName}</h3>
+                    <h3 className="truncate text-sm font-black leading-tight">
+                      {authorDisplayName}
+                    </h3>
                   )}
                   {reply.author.verified ? (
-                    <BadgeCheck
-                      className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-                      aria-hidden="true"
+                    <VerifiedBadgeIcon
+                      className="h-4 w-4 shrink-0"
+                      aria-label="Perfil verificado"
                     />
                   ) : null}
                 </div>
@@ -413,7 +408,7 @@ export const ReplyCard = ({
               </div>
               {psychologistProfileHref ? (
                 <Link
-                  className="w-fit cursor-pointer text-[11px] font-semibold text-muted no-underline hover:text-muted hover:no-underline"
+                  className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline hover:text-muted hover:no-underline"
                   href={psychologistProfileHref}
                   onClick={stopReplyTreeCollapsePropagation}
                 >
@@ -425,7 +420,7 @@ export const ReplyCard = ({
                   )}
                 </Link>
               ) : (
-                <p className="text-[11px] font-semibold text-muted">
+                <p className="text-[11px] font-semibold leading-tight text-muted">
                   {formatReplyAuthorMeta(
                     reply.author,
                     reply.created_at,

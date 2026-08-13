@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, FileText, Reply } from "lucide-react";
+import { FileText, Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -400,38 +400,28 @@ export const CommunityPostCard = ({
             href={psychologistProfileHref}
             name={displayAuthorName}
           />
-          <div className="grid min-w-0 flex-1 gap-1">
+          <div className="grid min-w-0 flex-1 gap-0.5">
             <div
               className={cn(
                 "flex min-w-0 items-center gap-x-2 gap-y-1",
                 profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
               )}
             >
-              <div className="flex min-w-0 items-center gap-[5px]">
+              <div className="flex min-w-0 items-center gap-0.5">
                 {psychologistProfileHref ? (
                   <Link
-                    className="min-w-0 truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={psychologistProfileHref}
                   >
                     {displayAuthorName}
                   </Link>
                 ) : (
-                  <h2 className="min-w-0 truncate text-sm font-black text-foreground">
+                  <h2 className="min-w-0 truncate text-sm font-black leading-tight text-foreground">
                     {displayAuthorName}
                   </h2>
                 )}
                 {displayAuthor.verified ? (
-                  profilePublicationMode ? (
-                    <VerifiedBadgeIcon
-                      className="h-4 w-4 shrink-0"
-                      aria-label="Perfil verificado"
-                    />
-                  ) : (
-                    <BadgeCheck
-                      className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-                      aria-hidden="true"
-                    />
-                  )
+                  <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
                 ) : null}
               </div>
               <MentorBadge
@@ -442,7 +432,7 @@ export const CommunityPostCard = ({
             </div>
             {psychologistProfileHref ? (
               <Link
-                className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+                className="w-fit text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
                 href={psychologistProfileHref}
               >
                 {displayAuthor.type_label} <span aria-hidden="true">&bull;</span>{" "}
@@ -456,7 +446,9 @@ export const CommunityPostCard = ({
                 ) : null}
               </Link>
             ) : (
-              <p className="text-[11px] font-semibold text-muted">{displayTimeLabel}</p>
+              <p className="text-[11px] font-semibold leading-tight text-muted">
+                {displayTimeLabel}
+              </p>
             )}
           </div>
         </div>

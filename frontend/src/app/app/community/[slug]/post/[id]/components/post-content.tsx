@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BadgeCheck, FileText, Flag, MoreVertical, UserX } from "lucide-react";
+import { ArrowLeft, FileText, Flag, MoreVertical, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
@@ -197,24 +198,23 @@ export const PostHeader = ({
           author={post.author}
           href={psychologistProfileHref}
         />
-        <div className="grid min-w-0 flex-1 gap-1">
+        <div className="grid min-w-0 flex-1 gap-0.5">
           <div className="flex min-w-0 items-center gap-x-2">
-            <div className="flex min-w-0 items-center gap-[5px]">
+            <div className="flex min-w-0 items-center gap-0.5">
               {psychologistProfileHref ? (
                 <Link
-                  className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                  className="truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                   href={psychologistProfileHref}
                 >
                   {authorDisplayName}
                 </Link>
               ) : (
-                <h2 className="truncate text-sm font-black text-foreground">{authorDisplayName}</h2>
+                <h2 className="truncate text-sm font-black leading-tight text-foreground">
+                  {authorDisplayName}
+                </h2>
               )}
               {post.author.verified ? (
-                <BadgeCheck
-                  className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-                  aria-hidden="true"
-                />
+                <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
               ) : null}
             </div>
             <MentorBadge
@@ -224,14 +224,14 @@ export const PostHeader = ({
           </div>
           {psychologistProfileHref ? (
             <Link
-              className="w-fit text-[11px] font-semibold text-muted no-underline transition hover:text-muted hover:no-underline"
+              className="w-fit text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
               href={psychologistProfileHref}
             >
               {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
               {formatPostTimeLabel(post.created_at, post.edited_at)}
             </Link>
           ) : (
-            <p className="text-[11px] font-semibold text-muted">
+            <p className="text-[11px] font-semibold leading-tight text-muted">
               {formatPostTimeLabel(post.created_at, post.edited_at)}
             </p>
           )}
@@ -372,26 +372,23 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
             href={psychologistProfileHref}
             size="sm"
           />
-          <div className="grid min-w-0 flex-1 gap-1">
+          <div className="grid min-w-0 flex-1 gap-0.5">
             <div className="flex min-w-0 items-center gap-x-2">
-              <div className="flex min-w-0 items-center gap-[5px]">
+              <div className="flex min-w-0 items-center gap-0.5">
                 {psychologistProfileHref ? (
                   <Link
-                    className="truncate text-sm font-black text-foreground no-underline transition hover:text-foreground hover:no-underline"
+                    className="truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={psychologistProfileHref}
                   >
                     {authorDisplayName}
                   </Link>
                 ) : (
-                  <h2 className="truncate text-sm font-black text-foreground">
+                  <h2 className="truncate text-sm font-black leading-tight text-foreground">
                     {authorDisplayName}
                   </h2>
                 )}
                 {post.author.verified ? (
-                  <BadgeCheck
-                    className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-                    aria-hidden="true"
-                  />
+                  <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
                 ) : null}
               </div>
               <MentorBadge
@@ -399,7 +396,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                 href={psychologistProfileHref}
               />
             </div>
-            <p className="text-[11px] font-semibold text-muted">
+            <p className="text-[11px] font-semibold leading-tight text-muted">
               {isPsychologistPost && post.author.type_label ? `${post.author.type_label} • ` : ""}
               {formatPostTimeLabel(post.created_at, post.edited_at)}
             </p>

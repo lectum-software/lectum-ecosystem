@@ -1,20 +1,12 @@
 "use client";
 
-import {
-  ArrowRight,
-  BadgeCheck,
-  Check,
-  ChevronDown,
-  Compass,
-  Search,
-  Settings,
-  UserX,
-} from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Compass, Search, Settings, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import { Input } from "@/registry/new-york-v4/ui/input";
 import {
@@ -118,10 +110,10 @@ export const AuthorIdentityLine = ({
   onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
   verified?: boolean;
 }) => {
-  const nameClassName = "min-w-0 truncate text-sm font-black text-foreground";
+  const nameClassName = "min-w-0 truncate text-sm font-black leading-tight text-foreground";
 
   return (
-    <div className="flex min-w-0 max-w-full items-center gap-1">
+    <div className="flex min-w-0 max-w-full items-center gap-0.5">
       {href ? (
         <Link
           className={cn("pointer-events-auto cursor-pointer", nameClassName)}
@@ -134,10 +126,7 @@ export const AuthorIdentityLine = ({
         <h2 className={nameClassName}>{name}</h2>
       )}
       {verified ? (
-        <BadgeCheck
-          className="h-4 w-4 shrink-0 fill-primary text-primary-foreground"
-          aria-label="Psicólogo verificado"
-        />
+        <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
       ) : null}
       <MentorBadge badge={badge} href={href} onClick={onClick} />
     </div>
