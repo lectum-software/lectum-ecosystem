@@ -121,7 +121,10 @@ export const useCreateCommunityPostController = ({
       }
       setIsSheetOpen(false);
       toast.success("Post publicado!");
-      router.replace(publicationHref);
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = window.setTimeout(() => {
+        router.replace(publicationHref);
+      }, SHEET_CLOSE_DELAY_MS);
     },
     onError: (error) => {
       const resolution = resolveCreatePostError(error);

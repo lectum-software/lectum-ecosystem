@@ -787,3 +787,36 @@ Validacao complementar 2026-08-12:
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - Chrome/CDP mobile em `http://127.0.0.1:3041/app/comunidades/feed/publicacao/nova`: sucesso ao tocar a descricao em uma sheet recem-aberta e confirmar que o foco permaneceu em `#create-post-content` apos os timers do titulo.
+
+## Atualizacao 2026-08-13 - animacao vertical da bottom sheet Criar Post
+
+A modal de criacao de post ja usava uma apresentacao de bottom sheet, mas o tempo de desmontagem/rota era menor que a transicao visual e podia cortar a percepcao de saida. O produto pediu explicitamente que a entrada parecesse um arraste para cima e que a saida parecesse um arraste para baixo.
+
+Decisoes complementares:
+
+- Manter a modal como bottom sheet fixa no rodape e alterar apenas os estados de transformacao, sem introduzir nova biblioteca de motion.
+- Definir o estado fechado como `translate-y-[calc(100%+2rem)]`, garantindo que a sheet parta e termine completamente abaixo da viewport mesmo com bordas arredondadas e sombras.
+- Usar curva de entrada `cubic-bezier(0.16,1,0.3,1)` por `340ms` para uma subida mais natural e curva de saida `cubic-bezier(0.4,0,1,1)` por `300ms` para descida direta.
+- Elevar `SHEET_CLOSE_DELAY_MS` para `360ms`, deixando margem sobre a duracao da saida antes de chamar `onCloseComplete`, fallback de navegacao ou `router.replace` apos publicacao.
+- Expor `data-create-post-sheet-state` apenas como atributo de estado/validacao, sem impacto em contrato de API ou persistencia.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- A abertura da composicao fica mais alinhada ao padrao mobile de bottom sheet que sobe da borda inferior.
+- O fechamento por X/Escape/voltar e a navegacao apos publicar deixam de cortar a animacao de saida.
+- O trade-off aceito e adicionar ate `360ms` antes da navegacao apos postar para preservar a continuidade visual.
+- Rollback: reverter este complemento devolve o fechamento imediato anterior, sem efeito persistente em dados, storage ou contratos.
+
+Validacao complementar 2026-08-13:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso em `0.1.81` e reexecutado com sucesso apos o bump para `0.1.82`.
+- Browser/CDP mobile em `http://127.0.0.1:3059/app/comunidades/feed/publicacao/nova`: sucesso ao confirmar estado `open` com `translate-y-0 duration-[340ms]`, estado `closed` com `translate-y-[calc(100%+2rem)] duration-[300ms]` e desmontagem/navegacao somente apos a janela de saida.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.82`: sucesso.
+- Browser local `http://127.0.0.1:3060/version`: sucesso ao retornar `{"application":"frontend","version":"0.1.82"}`.

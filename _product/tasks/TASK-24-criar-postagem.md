@@ -646,3 +646,39 @@ Validacoes finais deste complemento:
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
 - [x] Chrome/CDP mobile local em `http://127.0.0.1:3041/app/comunidades/feed/publicacao/nova`, com cookie local apenas para atravessar o proxy privado, confirmando que um toque visivel na descricao aos ~268ms de abertura mantem `document.activeElement.id === "create-post-content"` apos os timers de autofocus do titulo.
+
+## Complemento 2026-08-13 - animacao vertical da modal Criar Post
+
+- Pedido do usuario: fazer a modal de criacao de post entrar com animacao arrastando para cima e sair arrastando para baixo.
+- Frontend: a sheet `Criar Post` agora inicia fora da viewport inferior (`translate-y-[calc(100%+2rem)]`) e transiciona para `translate-y-0` com curva ease-out mais fluida, simulando a subida da modal como bottom sheet mobile.
+- Frontend: ao fechar, a sheet troca para o estado `closed` e desce novamente para fora da viewport antes de desmontar/navegar.
+- Frontend: `SHEET_CLOSE_DELAY_MS` foi alinhado para `360ms`, garantindo que o fechamento por X/Escape/voltar e a navegacao apos publicar respeitem a duracao da animacao de saida.
+- Frontend: o atributo `data-create-post-sheet-state` explicita `open`/`closed` para validacao e futuras auditorias, sem alterar contrato publico.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de publicacao, midia, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: modal atual da TASK-24 e fluxo mobile-first ja implementado; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Ao abrir, a modal `Criar Post` sobe a partir de fora da area visivel inferior ate a posicao final.
+- [x] Ao fechar, a modal `Criar Post` desce para fora da area visivel inferior antes de desmontar/navegar.
+- [x] O atraso de fechamento fica maior que a duracao de saida para nao cortar a animacao.
+- [x] O overlay, o lock da tela de fundo e os offsets de teclado/safe-area permanecem preservados.
+- [x] A navegacao apos postar tambem aguarda a animacao de saida.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` em `0.1.81` e reexecutado apos o bump em `0.1.82`
+- [x] Browser local Chrome headless mobile em `http://127.0.0.1:3059/app/comunidades/feed/publicacao/nova`, confirmando sheet aberta com `data-create-post-sheet-state="open"`, classe `translate-y-0 duration-[340ms]`, fechamento com `data-create-post-sheet-state="closed"` e classe `translate-y-[calc(100%+2rem)] duration-[300ms]` antes do desmontar/navegar.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.82`
+- [x] `pnpm check:version`
+- [x] Browser local `http://127.0.0.1:3060/version` confirmou `{"application":"frontend","version":"0.1.82"}`.

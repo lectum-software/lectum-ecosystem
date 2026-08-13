@@ -99,7 +99,7 @@ export const communityNameCollator = new Intl.Collator("pt-BR", {
   sensitivity: "base",
 });
 
-export const SHEET_CLOSE_DELAY_MS = 220;
+export const SHEET_CLOSE_DELAY_MS = 360;
 
 export const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 

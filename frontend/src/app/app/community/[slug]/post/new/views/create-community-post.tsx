@@ -411,10 +411,13 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
         aria-labelledby="create-post-title-heading"
         aria-modal="true"
         className={cn(
-          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden overscroll-contain rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[transform,height,margin-bottom] duration-300 ease-out sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
-          isSheetOpen ? "translate-y-0" : "translate-y-full",
+          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] flex-col overflow-hidden overscroll-contain rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[transform,height,margin-bottom] will-change-transform sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          isSheetOpen
+            ? "translate-y-0 duration-[340ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+            : "translate-y-[calc(100%+2rem)] duration-[300ms] ease-[cubic-bezier(0.4,0,1,1)]",
         )}
         data-create-post-sheet="true"
+        data-create-post-sheet-state={isSheetOpen ? "open" : "closed"}
         role="dialog"
         style={
           {
