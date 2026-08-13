@@ -117,16 +117,16 @@ export const toAmountCents = (value: unknown): number | null => {
   return Math.round(parsed * 100);
 };
 
-export const extractPaymentAmountCents = (payload: unknown) =>
-  toAmountCents(
-    findPayloadValue(payload, [
-      "transaction_amount",
-      "total_paid_amount",
-      "paid_amount",
-      "amount",
-      "value",
-    ]),
-  );
+export const extractPaymentAmountCents = (payload: unknown) => {
+  const directAmount = findPayloadValue(payload, [
+    "transaction_amount",
+    "total_paid_amount",
+    "paid_amount",
+  ]);
+  const fallbackAmount = directAmount ?? findPayloadValue(payload, ["amount"]);
+
+  return toAmountCents(asRecord(fallbackAmount)?.value ?? fallbackAmount);
+};
 
 export const isConfirmedPaymentStatus = (payload: unknown) => {
   const status = normalizeText(
@@ -185,6 +185,7 @@ export const buildGatewaySummaryPaymentHistoryItem = (
   const amountCents =
     summary.last_charged_amount_cents ??
     (summary.charged_quantity === 1 ? summary.charged_amount_cents : null);
+  const planName = subscription.plan?.name?.trim() || "Plano profissional";
 
   return {
     amount_cents: amountCents,
@@ -197,8 +198,8 @@ export const buildGatewaySummaryPaymentHistoryItem = (
     id: `gateway-summary:${summary.gateway_subscription_id}:latest-paid-installment`,
     occurred_at: toDateOrNull(summary.last_charged_at),
     status: "pago",
-    status_label: "Pago",
-    title: "Mensalidade",
+    status_label: "Sucesso",
+    title: planName,
   };
 };
 

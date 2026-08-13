@@ -49,53 +49,99 @@ const valueContainsReference = (value: unknown, references: string[], depth = 0)
   return Object.values(record).some((item) => valueContainsReference(item, references, depth + 1));
 };
 
-const findPayloadValue = (value: unknown, keys: string[], depth = 0): string | number | null => {
-  if (depth > 8) return null;
+const findPayloadValue = (value: unknown, keys: string[], depth = 0): unknown => {
+  if (depth > 8) return undefined;
 
   if (Array.isArray(value)) {
     for (const item of value) {
       const found = findPayloadValue(item, keys, depth + 1);
-      if (found !== null) return found;
+      if (found !== undefined) return found;
     }
 
-    return null;
+    return undefined;
   }
 
   const record = asRecord(value);
-  if (!record) {
-    return typeof value === "string" || typeof value === "number" ? value : null;
-  }
+  if (!record) return undefined;
 
+  const normalizedKeys = keys.map((key) => key.toLowerCase());
   for (const [key, item] of Object.entries(record)) {
-    if (keys.includes(key) && (typeof item === "string" || typeof item === "number")) {
-      return item;
-    }
+    if (normalizedKeys.includes(key.toLowerCase())) return item;
   }
 
   for (const item of Object.values(record)) {
     const found = findPayloadValue(item, keys, depth + 1);
-    if (found !== null) return found;
+    if (found !== undefined) return found;
+  }
+
+  return undefined;
+};
+
+const toAmountCents = (value: unknown) => {
+  const amountValue = asRecord(value)?.value ?? value;
+
+  const amount =
+    typeof amountValue === "number"
+      ? amountValue
+      : typeof amountValue === "string"
+        ? Number(amountValue.replace(",", "."))
+        : null;
+  if (amount === null || !Number.isFinite(amount) || amount < 0) return null;
+
+  return Math.round(amount * 100);
+};
+
+const extractPaymentAmountCents = (payload: unknown) => {
+  const directAmount = findPayloadValue(payload, [
+    "transaction_amount",
+    "total_paid_amount",
+    "paid_amount",
+  ]);
+  const fallbackAmount = directAmount ?? findPayloadValue(payload, ["amount"]);
+
+  return toAmountCents(fallbackAmount);
+};
+
+const normalizeSubscriptionPaymentAmountCents = (
+  amountCents: number | null,
+  subscription: professional_subscription,
+) => {
+  const planPriceCents = subscription.plan?.price_cents ?? null;
+
+  if (amountCents !== null) {
+    const maxExpectedByPlan =
+      planPriceCents && planPriceCents > 0 ? Math.max(planPriceCents * 12, 100_000) : null;
+    const isReasonableWithoutPlan = !maxExpectedByPlan && amountCents <= 500_000;
+
+    if (maxExpectedByPlan ? amountCents <= maxExpectedByPlan : isReasonableWithoutPlan) {
+      return amountCents;
+    }
   }
 
   return null;
 };
 
-const toAmountCents = (value: string | number | null) => {
-  if (value === null) return null;
+const normalizeText = (value: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 
-  const amount = typeof value === "number" ? value : Number(value.replace(",", "."));
-  if (!Number.isFinite(amount) || amount < 0) return null;
+const isPaymentEvent = (event: Pick<payment_event, "payload" | "type">) => {
+  const typeText = normalizeText(event.type);
+  if (typeText.includes("payment")) return true;
 
-  return Math.round(amount * 100);
+  const topic = normalizeText(findPayloadValue(event.payload, ["topic", "type", "action"]));
+  return topic.includes("payment");
 };
 
 const resolvePaymentHistoryStatus = (
   event: payment_event,
 ): { status: BillingPaymentHistoryStatus; label: string } => {
-  const payloadStatus = toSafeString(
-    findPayloadValue(event.payload, ["status", "status_detail", "action"]),
+  const payloadStatus = normalizeText(
+    findPayloadValue(event.payload, ["status", "status_detail", "action", "payment_status"]),
   );
-  const source = `${payloadStatus ?? ""} ${event.type ?? ""}`.toLowerCase();
+  const source = `${payloadStatus} ${normalizeText(event.type)}`;
 
   if (
     source.includes("approved") ||
@@ -103,7 +149,7 @@ const resolvePaymentHistoryStatus = (
     source.includes("authorized") ||
     source.includes("paid")
   ) {
-    return { status: "pago", label: "Pago" };
+    return { status: "pago", label: "Sucesso" };
   }
 
   if (
@@ -126,36 +172,88 @@ const resolvePaymentHistoryStatus = (
   return { status: "processado", label: "Processado" };
 };
 
+const paymentHistoryDescription = (status: BillingPaymentHistoryStatus) => {
+  const labels: Record<BillingPaymentHistoryStatus, string> = {
+    cancelado: "Pagamento cancelado pelo provedor.",
+    pago: "Pagamento confirmado pelo provedor.",
+    pendente: "Pagamento pendente no provedor.",
+    processado: "Evento de pagamento processado pelo provedor.",
+    recusado: "Pagamento recusado pelo provedor.",
+  };
+
+  return labels[status];
+};
+
+const dateKey = (date?: Date | null) => (date ? date.toISOString().slice(0, 10) : "sem-data");
+
+const dedupePaymentHistoryItems = (items: BillingPaymentHistoryItem[]) => {
+  const deduped = new Map<string, BillingPaymentHistoryItem>();
+
+  for (const item of items) {
+    const key =
+      item.status === "pago"
+        ? ["pago", dateKey(item.occurred_at), item.amount_cents ?? "sem-valor", item.title].join(
+            ":",
+          )
+        : item.id;
+
+    if (!deduped.has(key)) {
+      deduped.set(key, item);
+    }
+  }
+
+  return Array.from(deduped.values());
+};
+
 const buildPaymentHistoryItem = (
   event: payment_event,
   subscription: professional_subscription,
-): BillingPaymentHistoryItem => {
+): BillingPaymentHistoryItem | null => {
   const type = event.type ?? "";
-  const isPaymentEvent = type.toLowerCase().includes("payment");
+  if (!isPaymentEvent(event)) return null;
+
   const status = resolvePaymentHistoryStatus(event);
-  const amountFromPayload = toAmountCents(
-    findPayloadValue(event.payload, [
-      "transaction_amount",
-      "amount",
-      "total_paid_amount",
-      "paid_amount",
-    ]),
-  );
+  const amountFromPayload = extractPaymentAmountCents(event.payload);
+
+  if (status.status === "processado" && amountFromPayload === null) return null;
+
+  const amountCents = normalizeSubscriptionPaymentAmountCents(amountFromPayload, subscription);
 
   return {
-    id: event.id ?? `${event.gateway ?? "mercadopago"}:${event.external_id ?? type}`,
-    title: isPaymentEvent ? "Assinatura mensal" : "Atualização da assinatura",
-    description: isPaymentEvent
-      ? "Cobrança registrada com sucesso."
-      : "Evento de cobrança confirmado.",
-    amount_cents:
-      amountFromPayload ?? (isPaymentEvent ? (subscription.plan?.price_cents ?? null) : null),
+    id: event.id ?? [event.gateway ?? "mercadopago", event.external_id ?? type].join(":"),
+    title: subscription.plan?.name?.trim() || "Plano profissional",
+    description: paymentHistoryDescription(status.status),
+    amount_cents: amountCents,
     status: status.status,
     status_label: status.label,
     occurred_at: event.createdAt ?? null,
     gateway: event.gateway ?? "mercadopago",
     external_id: event.external_id ?? "",
   };
+};
+
+export const buildPaymentHistoryItemsForSubscription = (
+  events: payment_event[],
+  subscription: professional_subscription,
+) => {
+  const references = [subscription.id, subscription.gateway_subscription_id].filter(
+    (reference): reference is string => Boolean(reference),
+  );
+
+  if (references.length === 0) return [];
+
+  const items = events
+    .filter((event) => valueContainsReference(event.payload, references))
+    .map((event) => buildPaymentHistoryItem(event, subscription))
+    .filter((item): item is BillingPaymentHistoryItem => Boolean(item))
+    .sort((left, right) => {
+      const leftTime = left.occurred_at?.getTime() ?? 0;
+      const rightTime = right.occurred_at?.getTime() ?? 0;
+
+      return rightTime - leftTime;
+    });
+
+  return dedupePaymentHistoryItems(items).slice(0, MAX_PAYMENT_HISTORY_ITEMS);
 };
 
 export class SubscriptionRepository implements ISubscriptionRepository {
@@ -336,12 +434,6 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   ): Promise<BillingPaymentHistoryItem[]> {
     if (!subscription) return [];
 
-    const references = [subscription.id, subscription.gateway_subscription_id].filter(
-      (reference): reference is string => Boolean(reference),
-    );
-
-    if (references.length === 0) return [];
-
     const events = await this.paymentEventRepository.findMany({
       where: {
         gateway: subscription.gateway || "mercadopago",
@@ -353,9 +445,6 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       take: MAX_PAYMENT_EVENTS_TO_SCAN,
     });
 
-    return events
-      .filter((event) => valueContainsReference(event.payload, references))
-      .slice(0, MAX_PAYMENT_HISTORY_ITEMS)
-      .map((event) => buildPaymentHistoryItem(event, subscription));
+    return buildPaymentHistoryItemsForSubscription(events, subscription);
   }
 }

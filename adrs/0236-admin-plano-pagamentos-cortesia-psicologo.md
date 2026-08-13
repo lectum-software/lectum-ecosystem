@@ -444,3 +444,22 @@ Validação complementar:
 - Verificação estática do `CurrentPlanCard`
 - Smoke HTTP local `GET /psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=plano` com status 200
 - `pnpm check` foi executado e ficou bloqueado por formatação em alterações locais não relacionadas da TASK-72 nos módulos backend de métricas/engajamento e em `backend/src/utils/admin-psychologist-analytics.ts`
+
+
+## Complemento 2026-08-13 - historico de pagamento sem eventos duplicados nem IDs como valor
+
+Foi identificado em homologacao que a aba Admin `Plano e pagamentos` podia exibir multiplos eventos no mesmo dia para uma unica assinatura, valores absurdos e status `Processado` em cinza. O problema vinha de webhooks locais brutos e de um parser legado que podia retornar primitivos aninhados, como `data.id`, quando buscava campos monetarios.
+
+Decisao:
+
+- Para assinaturas Mercado Pago com `gateway_subscription_id`, o detalhe Admin passa a usar `getSubscriptionPaymentSummary` como reconciliacao da ultima cobranca confirmada quando `charged_quantity > 0`, substituindo linhas locais do mesmo dia e preservando historico local valido de outros dias.
+- O item reconciliado usa `subscription.plan.name` como titulo da coluna de descricao, e status aprovado retorna `status=pago`/`status_label=Sucesso`, mantendo a badge verde da UI.
+- O fallback local por `payment_event` continua existindo para indisponibilidade do gateway, mas fica limitado a eventos de pagamento, deduplica sucessos do mesmo dia por data/valor/plano e extrai valor apenas de chaves monetarias explicitas (`transaction_amount`, `total_paid_amount`, `paid_amount`, `amount`/`amount.value`).
+- IDs do provedor, como `data.id`, deixam de ser elegiveis como valor monetario; quando o provedor nao informa valor, o item nao inventa receita.
+- Nao ha mutation de dados, migration, pacote novo ou variavel de ambiente nova.
+
+Consequencia: a tela passa a mostrar o pagamento real reconciliado quando o gateway confirma a cobranca, evita linhas duplicadas de webhook e falha de forma honesta quando o valor monetario nao esta disponivel.
+
+Validacao complementar:
+
+- Teste unitario novo cobre deduplicacao de cobrancas aprovadas no mesmo dia, uso do nome do plano e protecao contra IDs do Mercado Pago como valor. Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`.

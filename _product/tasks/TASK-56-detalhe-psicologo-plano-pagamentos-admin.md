@@ -373,3 +373,15 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Não houve alteração de backend, endpoint, schema Prisma, migrations, packages ou cálculo financeiro.
 - Builder/Quick Copy não está exposto como ferramenta no ambiente; a referência visual usada foi o PNG local `_product/proto/admin/Psicólogos/Detalhes do psicólogo/Plano e pagamentos.png` e a captura enviada pelo usuário.
 - Validações executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `git diff --check` nos arquivos alterados, verificação estática do `CurrentPlanCard` e smoke HTTP local em `/psicologos/cmrgrztri7000tn0uh1q4n8vxf?tab=plano` com status 200. `pnpm check` foi executado e ficou bloqueado por formatação em alterações locais não relacionadas da TASK-72 nos módulos backend de métricas/engajamento e no arquivo não rastreado `backend/src/utils/admin-psychologist-analytics.ts`.
+
+
+## Ajuste complementar 2026-08-13 - historico de pagamentos conciliado no Admin
+
+- Pedido do usuario: corrigir o historico de pagamentos do detalhe Admin porque eventos brutos do mesmo dia apareciam como varias linhas, o valor podia ser exibido a partir de identificadores do Mercado Pago, a descricao precisava mostrar o nome do plano e o status de sucesso precisava ficar verde.
+- Diagnostico: o detalhe do psicologo usava `payment_event` local bruto para a tabela. Webhooks de `preapproval`/atualizacao eram elegiveis, e o parser legado podia aceitar primitivos aninhados quando buscava campos monetarios, permitindo que `data.id` do provedor fosse tratado como valor.
+- O backend agora consulta o resumo real do Mercado Pago para assinaturas `mercadopago` com `gateway_subscription_id` e usa a ultima cobranca confirmada para substituir linhas locais do mesmo dia, preservando historico local valido de outros dias quando existir.
+- O fallback local por `payment_event` ficou restrito a eventos de pagamento, deduplica sucessos no mesmo dia por data/valor/plano, usa apenas chaves monetarias explicitas e nunca converte IDs do provedor em valor financeiro.
+- A coluna de descricao passa a exibir o nome real do plano como titulo do item, e pagamentos aprovados usam `status=pago` com label `Sucesso`, preservando a badge verde ja existente no Admin.
+- Nao houve alteracao de schema Prisma, migrations, envs, packages, dados publicados ou simulacao de pagamento.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela ja existente da TASK-56.
+- Validacoes executadas: `pnpm --dir backend exec node --import tsx --test "src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts"`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build` e `pnpm check`. Smoke HTTP local do Admin nao foi concluido porque nao havia servidor ativo em `localhost:3002` e a ferramenta bloqueou iniciar processo em background; a validacao visual ficou limitada ao build e a conferencia estatica da tela existente.

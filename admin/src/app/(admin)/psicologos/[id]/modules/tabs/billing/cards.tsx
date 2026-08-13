@@ -253,7 +253,7 @@ export const PaymentHistoryCard = ({ billing }: { billing: AdminPsychologistBill
           <thead className="border-b border-border text-xs text-muted">
             <tr>
               <th className="py-3 pr-3 font-black">Data</th>
-              <th className="px-3 py-3 font-black">Descricao</th>
+              <th className="px-3 py-3 font-black">Descrição</th>
               <th className="px-3 py-3 font-black">Valor</th>
               <th className="px-3 py-3 font-black">Status</th>
             </tr>

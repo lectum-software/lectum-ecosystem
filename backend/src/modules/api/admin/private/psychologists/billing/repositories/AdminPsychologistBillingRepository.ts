@@ -31,6 +31,25 @@ import {
   valueContainsReference,
 } from "./support/billing-query";
 
+const historyDateKey = (date?: Date | null) => (date ? date.toISOString().slice(0, 10) : null);
+
+const mergeGatewaySummaryPaymentHistory = (
+  localItems: BillingPaymentHistoryItem[],
+  gatewayItem: BillingPaymentHistoryItem | null,
+) => {
+  if (!gatewayItem) return localItems;
+
+  const gatewayDate = historyDateKey(gatewayItem.occurred_at);
+  const localWithoutGatewayDay = gatewayDate
+    ? localItems.filter((item) => historyDateKey(item.occurred_at) !== gatewayDate)
+    : localItems.filter(
+        (item) =>
+          item.status !== gatewayItem.status || item.amount_cents !== gatewayItem.amount_cents,
+      );
+
+  return [gatewayItem, ...localWithoutGatewayDay].slice(0, 10);
+};
+
 export class AdminPsychologistBillingRepository {
   async findPsychologist(id: string): Promise<AdminPsychologistBillingRecord | null> {
     return prisma.psychologist_profile.findFirst({
@@ -177,23 +196,23 @@ export class AdminPsychologistBillingRepository {
     subscription: professional_subscription | null,
   ): Promise<BillingPaymentHistoryItem[]> {
     const repository = new SubscriptionRepository();
-    const items = await repository.showPaymentHistory(subscription);
+    const localItems = await repository.showPaymentHistory(subscription);
 
-    if (items.length > 0 || !subscription || !isMercadoPagoPaymentHistorySource(subscription)) {
-      return items;
+    if (subscription && isMercadoPagoPaymentHistorySource(subscription)) {
+      try {
+        const gateway = getPaymentGateway();
+        const summary = await gateway.getSubscriptionPaymentSummary(
+          subscription.gateway_subscription_id!,
+        );
+        const gatewayItem = buildGatewaySummaryPaymentHistoryItem(subscription, summary);
+
+        return mergeGatewaySummaryPaymentHistory(localItems, gatewayItem);
+      } catch {
+        // Mantem fallback local para payment_event real quando a reconciliacao online falhar.
+      }
     }
 
-    try {
-      const gateway = getPaymentGateway();
-      const summary = await gateway.getSubscriptionPaymentSummary(
-        subscription.gateway_subscription_id!,
-      );
-      const fallbackItem = buildGatewaySummaryPaymentHistoryItem(subscription, summary);
-
-      return fallbackItem ? [fallbackItem] : [];
-    } catch {
-      return items;
-    }
+    return localItems;
   }
 
   private async summarizeGatewayPaymentMetrics(
