@@ -329,3 +329,38 @@ Regras de UI obrigatórias:
 - [x] `pnpm --dir backend check`
 - [x] `pnpm check`
 - [x] `git diff --check`
+
+## Complemento 2026-08-12 - som no preview do video compartilhavel
+
+- Pedido do usuario: no preview do video a ser compartilhado, exibir/reproduzir o som do video.
+- Fonte visual auditavel: screenshot enviado pelo usuario em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-12 at 17.43.16.jpeg` e referencia local `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Diagnostico: o preview HTML da share sheet renderizava o `<video>` com `muted`, entao a previa ficava sempre silenciosa apesar de a exportacao ja tentar capturar trilhas de audio via `captureStream` quando o navegador suporta.
+- Frontend: o preview foi extraido para `frontend/src/components/share/lectum-share-preview.tsx` para manter a modal abaixo do limite de tamanho e isolar a logica de midia.
+- Frontend: videos no preview agora tentam iniciar com som por `playVideoWithSound`; quando o navegador bloqueia autoplay com audio, o preview continua tocando mudo e exibe um botao de som para ativacao por gesto do usuario.
+- Frontend: a modal continua usando a mesma share sheet e o arquivo exportado segue preservando trilhas de audio quando disponiveis pelo suporte nativo do browser.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, persistencia de compartilhamento, upload ou tracking.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O preview de video da share sheet nao fica mais forcado como mudo no markup.
+- [x] A previa tenta reproduzir com som ao abrir a modal.
+- [x] Se o navegador bloquear autoplay com audio, existe botao de som no preview para ativar por gesto do usuario.
+- [x] A exportacao continua preservando audio quando `captureStream` disponibiliza trilhas de audio.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `playVideoWithSound`, `muted={videoIsMuted}`, botao `Ativar som do video do preview`, extracao de `SharePreview` e preservacao de `getAudioTracks()` na exportacao.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump para validar a versao `0.1.80`)
+- [x] Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3055`: `/version` respondeu `0.1.79` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844; repetido apos o bump em `http://127.0.0.1:3056`, com `/version` em `0.1.80`.
+- [x] `pnpm check` (primeira tentativa falhou por caractere corrompido na documentacao; apos normalizar para ASCII, foi repetido com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.80`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

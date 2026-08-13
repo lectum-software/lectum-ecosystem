@@ -2,22 +2,20 @@
 
 import { Copy, Loader2, type LucideIcon, MoreHorizontal, X } from "lucide-react";
 import Image from "next/image";
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import {
   copyLectumShareText,
   copyLectumShareUrl,
   shareLectumVideoResponse,
 } from "@/utils/lectum-share-media";
-import {
-  type LectumShareChannel,
-  type LectumShareSocialTarget,
-  type LectumShareVideoTarget,
-  truncateLectumShareProfessionalTagName,
+import type {
+  LectumShareChannel,
+  LectumShareSocialTarget,
+  LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
-import { resolvePublicMediaUrl } from "@/utils/media";
+import { SharePreview } from "./lectum-share-preview";
 
 type LectumShareVideoModalProps = {
   onClose: () => void;
@@ -41,18 +39,6 @@ type DragState = {
 const CLOSE_ANIMATION_MS = 220;
 const DRAG_CLOSE_THRESHOLD_PX = 96;
 const DRAG_START_TOLERANCE_PX = 4;
-
-const sharePreviewClassName = "w-[min(74vw,300px,31.5dvh)] sm:w-[min(34vw,340px,36dvh)]";
-
-const sharePreviewCardClassName =
-  "top-[6%] left-[10%] right-[10%] overflow-hidden rounded-[8px] sm:top-[6.75%] sm:left-[11%] sm:right-[11%] sm:rounded-[7px]";
-
-const twoLineClampStyle = {
-  WebkitBoxOrient: "vertical",
-  WebkitLineClamp: 2,
-  display: "-webkit-box",
-  maxHeight: "2.16em",
-} as CSSProperties;
 
 const shareSheetActions = [
   {
@@ -87,8 +73,6 @@ const shareSheetActions = [
   },
 ] as const;
 
-const normalizePreviewText = (value: string) => value.replace(/\s+/g, " ").trim();
-
 const isInteractiveDragTarget = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   Boolean(target.closest("a,button,input,select,textarea,[role='button']"));
@@ -106,97 +90,6 @@ const whatsappShareUrl = (target: LectumShareVideoTarget) => {
       : [target.shareText, target.shareUrl].filter(Boolean).join("\n");
 
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
-};
-
-const SharePreview = ({ target }: { target: LectumShareSocialTarget }) => {
-  const mediaSrc = resolvePublicMediaUrl(target.mediaUrl);
-  const professionalTagName = truncateLectumShareProfessionalTagName(target.professional.name);
-  const sourcePreview = normalizePreviewText(target.sourceText);
-
-  return (
-    <div
-      className={cn(
-        "relative mx-auto aspect-[9/16] overflow-hidden rounded-[28px] bg-foreground text-primary-foreground",
-        sharePreviewClassName,
-      )}
-    >
-      {mediaSrc && target.mediaType === "video" ? (
-        <video
-          aria-label="Prévia do vídeo no layout de compartilhamento Lectum"
-          autoPlay
-          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
-          crossOrigin="anonymous"
-          loop
-          muted
-          playsInline
-          src={mediaSrc}
-        />
-      ) : mediaSrc ? (
-        <>
-          <Image
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-xl"
-            fill
-            sizes="(min-width: 640px) 340px, 300px"
-            src={mediaSrc}
-            unoptimized
-          />
-          <Image
-            alt="Prévia da imagem no layout de compartilhamento Lectum"
-            className="pointer-events-none absolute inset-0 h-full w-full object-contain"
-            fill
-            sizes="(min-width: 640px) 340px, 300px"
-            src={mediaSrc}
-            unoptimized
-          />
-        </>
-      ) : (
-        <div className="absolute inset-0 bg-foreground" />
-      )}
-
-      <div
-        className={cn(
-          "absolute border border-media-foreground/80 bg-surface/95 text-foreground shadow-lectum-soft ring-1 ring-foreground/10 backdrop-blur-xl",
-          sharePreviewCardClassName,
-        )}
-      >
-        <p className="share-preview-header border-primary-foreground/20 border-b px-3.5 py-[7px] text-center text-[10px] font-bold leading-none tracking-[-0.01em] text-primary-foreground shadow-lectum-soft sm:px-3 sm:py-[6px] sm:text-[8px] sm:leading-none">
-          {target.cardLabel}
-        </p>
-        <div className="share-preview-body px-3.5 py-2 text-center sm:px-3 sm:py-1.5">
-          <p
-            className={cn(
-              "m-0 overflow-hidden break-words font-semibold tracking-[-0.02em] text-foreground",
-              "text-[clamp(0.7rem,2.35vw,0.84rem)] leading-[1.08] sm:text-[10px] sm:leading-[1.08]",
-            )}
-            style={twoLineClampStyle}
-          >
-            {sourcePreview}
-          </p>
-        </div>
-      </div>
-
-      <div className="absolute bottom-[23.5%] left-1/2 z-10 flex max-w-[72%] -translate-x-1/2 items-center px-1 py-0 text-primary-foreground [text-shadow:0_1px_4px_rgb(0_0_0_/_70%)]">
-        <span className="flex min-w-0 flex-col items-start justify-center">
-          <span className="flex min-w-0 items-center gap-1 leading-[1.05]">
-            <span className="min-w-0 whitespace-nowrap text-left text-[11px] font-bold leading-[1.05] tracking-[-0.02em] text-primary-foreground sm:text-[9.5px]">
-              {professionalTagName}
-            </span>
-            {target.professional.verified ? (
-              <VerifiedBadgeIcon
-                aria-hidden="true"
-                className="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5"
-              />
-            ) : null}
-          </span>
-          <span className="mt-0.5 whitespace-nowrap text-left text-[8.5px] font-medium leading-[1.25] tracking-[-0.01em] text-primary-foreground/75 sm:text-[7.5px] sm:leading-[1.25]">
-            {target.professional.roleLabel}
-          </span>
-        </span>
-      </div>
-    </div>
-  );
 };
 
 const ShareResponseTextPanel = ({

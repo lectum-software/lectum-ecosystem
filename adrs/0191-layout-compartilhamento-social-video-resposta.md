@@ -126,3 +126,33 @@ Validacao complementar:
 - `git diff --check`: sucesso.
 - `pnpm version:bump` para `0.1.76`: sucesso.
 - `pnpm check:version`: sucesso.
+
+## Complemento 2026-08-12 - audio audivel no preview de compartilhamento
+
+### Contexto
+
+O preview do layout social de compartilhamento usava `<video muted autoplay loop>`, o que garantia reproducao automatica silenciosa, mas impedia ouvir o audio original antes de compartilhar. A experiencia desejada e permitir que o usuario confira o som do video dentro da propria share sheet.
+
+### Decisao
+
+Extrair o preview social para `SharePreview` e alterar o comportamento de videos:
+
+- tentar iniciar a previa com som usando `playVideoWithSound`;
+- se o navegador bloquear autoplay com audio, manter o video tocando mudo como fallback visual honesto;
+- exibir um botao discreto de som no preview para ativacao por gesto do usuario;
+- preservar a exportacao existente, que adiciona ao canvas as trilhas de audio obtidas via `captureStream` quando suportadas pelo navegador.
+
+### Consequencias
+
+- Browsers que permitem reproducao com som apos a acao de compartilhar passam a abrir a previa audivel.
+- Em iOS/Safari e outros navegadores com politica restritiva, a previa continua visivel e o usuario pode tocar no botao de som para ativar audio sem quebrar autoplay mudo.
+- A modal ficou menor porque o preview foi isolado em arquivo dedicado.
+- Nao ha alteracao de backend, banco, endpoints, packages, envs, storage ou tracking.
+
+### Validacao
+
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Validacao estatica via Node para confirmar som habilitado no preview, fallback com botao de audio e preservacao de trilhas de audio na exportacao.
+- Browser local/headless mobile em 390x844 na rota do detalhe de post com video, antes e apos o bump para `0.1.80`.
+- `pnpm version:bump` para `0.1.80` e `pnpm check:version`.
