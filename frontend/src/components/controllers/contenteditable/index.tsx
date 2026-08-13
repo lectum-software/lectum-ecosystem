@@ -41,16 +41,74 @@ const selectedTextLength = (element: HTMLElement) => {
   return normalizeEditableText(selection?.toString() ?? "").length;
 };
 
-const moveCaretToEnd = (element: HTMLElement) => {
+const plainTextOffsetFromSelection = (element: HTMLElement) => {
+  const selection = window.getSelection();
+  if (!selectionBelongsToElement(element, selection) || !selection?.isCollapsed) return null;
+
+  const focusNode = selection.focusNode;
+  if (!focusNode) return null;
+
+  try {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    range.setEnd(focusNode, selection.focusOffset);
+
+    return normalizeEditableText(range.toString()).length;
+  } catch {
+    return null;
+  }
+};
+
+const moveCaretToTextOffset = (element: HTMLElement, offset: number) => {
   const selection = window.getSelection();
   if (!selection) return;
 
+  const safeOffset = Math.max(0, offset);
+  let traversed = 0;
+  let targetNode: Text | null = null;
+  let targetOffset = 0;
+  let lastTextNode: Text | null = null;
+
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  let currentNode = walker.nextNode() as Text | null;
+
+  while (currentNode) {
+    lastTextNode = currentNode;
+    const textLength = normalizeEditableText(currentNode.data).length;
+
+    if (traversed + textLength >= safeOffset) {
+      targetNode = currentNode;
+      targetOffset = Math.min(currentNode.data.length, Math.max(0, safeOffset - traversed));
+      break;
+    }
+
+    traversed += textLength;
+    currentNode = walker.nextNode() as Text | null;
+  }
+
+  if (!targetNode && lastTextNode) {
+    targetNode = lastTextNode;
+    targetOffset = lastTextNode.data.length;
+  }
+
   const range = document.createRange();
-  range.selectNodeContents(element);
-  range.collapse(false);
+  if (targetNode) {
+    range.setStart(targetNode, targetOffset);
+    range.setEnd(targetNode, targetOffset);
+  } else {
+    range.setStart(element, 0);
+    range.setEnd(element, 0);
+  }
   selection.removeAllRanges();
   selection.addRange(range);
 };
+
+const moveCaretToEnd = (element: HTMLElement) => {
+  moveCaretToTextOffset(element, normalizeEditableText(element.textContent ?? "").length);
+};
+
+const hasOnlyTextNodes = (element: HTMLElement) =>
+  Array.from(element.childNodes).every((node) => node.nodeType === Node.TEXT_NODE);
 
 const replaceSelectionWithText = (element: HTMLElement, text: string) => {
   if (!text) return;
@@ -70,8 +128,8 @@ const replaceSelectionWithText = (element: HTMLElement, text: string) => {
   range.deleteContents();
   const textNode = document.createTextNode(text);
   range.insertNode(textNode);
-  range.setStartAfter(textNode);
-  range.setEndAfter(textNode);
+  range.setStart(textNode, textNode.data.length);
+  range.setEnd(textNode, textNode.data.length);
   selection?.removeAllRanges();
   selection?.addRange(range);
 };
@@ -131,10 +189,15 @@ function ContenteditableElement<FormType extends FieldValues>({
     (element: HTMLDivElement) => {
       const rawValue = normalizeEditableText(element.textContent ?? "");
       const nextValue = maxLength ? rawValue.slice(0, maxLength) : rawValue;
+      const caretOffset = plainTextOffsetFromSelection(element);
 
-      if (nextValue !== rawValue || (nextValue.length === 0 && element.childNodes.length > 0)) {
+      if (
+        nextValue !== rawValue ||
+        !hasOnlyTextNodes(element) ||
+        (nextValue.length === 0 && element.childNodes.length > 0)
+      ) {
         element.textContent = nextValue;
-        moveCaretToEnd(element);
+        moveCaretToTextOffset(element, caretOffset ?? nextValue.length);
       }
 
       field.onChange(nextValue);
@@ -242,6 +305,7 @@ function ContenteditableElement<FormType extends FieldValues>({
         aria-readonly={readOnly || undefined}
         className={cn(
           "min-h-28 w-full whitespace-pre-wrap break-words rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 py-3 text-sm text-foreground shadow-sm outline-none transition empty:before:pointer-events-none empty:before:text-subtle empty:before:content-[attr(data-placeholder)] focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+          "[-webkit-user-modify:read-write-plaintext-only]",
           error && "border-danger focus:border-danger focus:ring-danger/10",
           (disabled || readOnly) && "cursor-not-allowed bg-surface-muted text-muted",
           autoGrow && "resize-none overflow-y-auto",

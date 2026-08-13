@@ -2247,3 +2247,37 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.88`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-13 - caret da edicao de comentario no iOS
+
+- Pedido do usuario: no iPhone, o campo textual da modal `Editar comentario` ainda podia exibir o cursor na linha de baixo enquanto o texto digitado ficava na linha superior.
+- Referencia visual ativa: screenshot do usuario `WhatsApp Image 2026-08-12 at 21.09.14.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao, mantendo fallback auditavel pela imagem anexada e pela imagem local de `Dentro do Post` da TASK-26.
+- Diagnostico: no Safari/iOS, `contenteditable` pode manter ou inserir nos/blocos internos mesmo em fluxo de texto puro. Quando o selection/caret fica ancorado no container ou apos um bloco interno, o navegador pode renderizar o cursor visualmente em uma nova linha embora o texto esteja na linha anterior.
+- Frontend: o controller `contenteditable` agora normaliza o DOM interno para nos de texto puro ao commitar o input, achatando blocos criados pelo navegador quando eles aparecem.
+- Frontend: antes de reescrever o DOM interno, o controller calcula o offset textual do caret e o restaura no no de texto correspondente, evitando que a correcao jogue o cursor para o final quando o usuario edita no meio do comentario.
+- Frontend: o editor tambem declara `-webkit-user-modify: read-write-plaintext-only` como reforco para navegadores WebKit, sem substituir React Hook Form/Zod nem persistir HTML.
+- Escopo: sem mudanca de backend, endpoints, payload, upload, midia, storage, Prisma, migrations, envs, packages, votos, salvos ou denuncias.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios especificos deste complemento
+
+- [x] O controller `contenteditable` achata nos internos nao textuais criados pelo navegador.
+- [x] O caret e restaurado por offset textual ao normalizar o DOM, em vez de colapsar no container.
+- [x] O campo segue integrado a React Hook Form/Zod e continua enviando texto plano.
+- [x] Nenhuma migration, env obrigatoria nova ou package novo foi criada.
+
+### Validacoes deste complemento
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/controllers/contenteditable/index.tsx`
+- [x] Validacao estatica via Node confirmou `plainTextOffsetFromSelection`, `moveCaretToTextOffset`, `hasOnlyTextNodes`, normalizacao de nos nao textuais e reforco WebKit.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local/headless mobile da rota de post/comentarios quando disponivel no ambiente local.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit proprio criado e push em `homolog` executado.

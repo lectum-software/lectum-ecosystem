@@ -162,3 +162,30 @@ Validacao complementar 2026-08-13:
 - `pnpm check:adrs`: sucesso.
 - `pnpm check:tasks`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.88`: sucesso.
+
+## Atualizacao 2026-08-13 - caret da edicao de comentario no iOS
+
+A validacao em iPhone mostrou uma segunda classe de problema na `ReplyEditModal`: mesmo usando o controller `contenteditable`, o cursor podia aparecer na linha abaixo do texto digitado. O comportamento e compativel com uma particularidade do Safari/iOS: o editor pode manter blocos internos ou ancorar o selection no container, fazendo a linha visual do caret divergir da linha do texto.
+
+Decisao complementar:
+
+- O controller `contenteditable` passa a detectar nos internos nao textuais ao commitar o input.
+- Quando o DOM interno nao esta em texto puro, o controller calcula o offset textual do caret, reescreve `textContent` com o valor normalizado e restaura a selecao no no de texto correspondente.
+- `moveCaretToEnd` deixa de colapsar a selecao no container e passa a posicionar o range no ultimo no textual, evitando a ancoragem que o WebKit pode desenhar como proxima linha.
+- O editor declara `-webkit-user-modify: read-write-plaintext-only` como reforco de comportamento plaintext em WebKit.
+- O contrato continua sendo texto puro controlado por React Hook Form/Zod; HTML colado ou criado pelo navegador nao e persistido.
+
+Consequencias:
+
+- A edicao de comentarios deve manter texto e cursor na mesma linha ao digitar ou focar comentarios curtos no iOS.
+- A normalizacao preserva a posicao textual do caret quando possivel, reduzindo saltos para o final em edicoes no meio do texto.
+- A mudanca afeta o controller compartilhado `contenteditable`, mas preserva payloads existentes, limites de caracteres, acessibilidade e validacao.
+- Sem backend, schema, migration, env, package ou dados persistidos novos.
+- Rollback: reverter o commit retorna a selecao baseada no container e pode reintroduzir o cursor deslocado no Safari/iOS.
+
+Validacao complementar:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Validacao estatica do controller confirmando normalizacao de nos internos e restauracao de caret por offset textual.
