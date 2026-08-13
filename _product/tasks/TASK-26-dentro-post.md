@@ -2213,3 +2213,37 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.87`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-13 - destaque do comentario respondido segue foco do composer
+
+- Pedido do usuario: dentro do post, ao selecionar `Responder` em um comentario, o comentario de origem fica destacado; ao fechar o foco da barra de comentar, esse destaque precisa sumir.
+- Fonte visual auditavel: referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Diagnostico: o destaque persistente do comentario nao vinha apenas do pulso temporario de scroll, mas do `replyComposerTargetId` enquanto o composer principal mobile mantinha o `replyTarget` selecionado.
+- Frontend: o `ReplyComposer` agora expõe `onComposerActiveChange`, notificando foco/blur, fechamento por scroll, envio, cancelamento e interacoes de midia sem alterar o payload nem o rascunho.
+- Frontend: no detalhe do post e na tela de continuacao da conversa, o `replyComposerTargetId` passado para a arvore de comentarios agora depende de `replyComposerActive`; o alvo da resposta continua preservado para envio, mas o fundo/ring do comentario some quando o composer perde foco.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage, votos, salvos, compartilhamento, denuncia, edicao ou exclusao.
+- ADR atualizado: `adrs/0453-composer-comentarios-editor-plaintext.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Selecionar `Responder` em um comentario continua focando o composer e destacando o comentario enquanto o campo esta ativo.
+- [x] Quando o composer principal perde foco ou o teclado/barra de comentar e fechado, o destaque visual do comentario de origem desaparece.
+- [x] O alvo da resposta continua preservado para envio enquanto o rascunho/contexto do composer existir.
+- [x] A tela principal do post e a tela `Respostas` usam a mesma regra de destaque condicionada ao foco do composer.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `onComposerActiveChange`, blur com `updateComposerActive(false)` e `replyComposerTargetId` condicionado a `replyComposerActive` no detalhe e na thread.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.88`)
+- [x] Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3068` carregou a rota em viewport 390x844 antes do bump; apos o bump, `http://127.0.0.1:3069/version` respondeu `0.1.88` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` respondeu `200` por HTTP direto. Sem dados/API local autenticados, a validacao do gesto fica para homologacao mobile.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.88`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

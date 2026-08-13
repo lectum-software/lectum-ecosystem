@@ -52,6 +52,7 @@ export const ReplyComposer = ({
   formRef,
   mediaPermission,
   onCancelContext,
+  onComposerActiveChange,
   onDraftStateChange,
   onSubmit,
   replyToName,
@@ -64,6 +65,7 @@ export const ReplyComposer = ({
   formRef?: RefObject<HTMLElement | null>;
   mediaPermission: ReplyMediaPermission;
   onCancelContext?: () => void;
+  onComposerActiveChange?: (active: boolean) => void;
   onDraftStateChange?: (hasDraft: boolean) => void;
   onSubmit: (values: ReplyComposerForm, mediaFile?: File | null) => Promise<void> | void;
   replyToName?: string | null;
@@ -183,6 +185,14 @@ export const ReplyComposer = ({
     setMediaPickerActive(false);
   }, []);
 
+  const updateComposerActive = useCallback(
+    (active: boolean) => {
+      setComposerActive(active);
+      onComposerActiveChange?.(active);
+    },
+    [onComposerActiveChange],
+  );
+
   const focusComposerInput = useCallback(() => {
     window.setTimeout(() => {
       const inputNode = findReplyComposerInput(composerFormNodeRef.current);
@@ -242,9 +252,9 @@ export const ReplyComposer = ({
       activeElement.blur();
     }
 
-    setComposerActive(false);
+    updateComposerActive(false);
     resetCancelDrag();
-  }, [resetCancelDrag]);
+  }, [resetCancelDrag, updateComposerActive]);
 
   const cancelComposer = () => {
     if (hasDiscardableDraft && !confirmDiscardReplyDraft()) return;
@@ -278,6 +288,10 @@ export const ReplyComposer = ({
   useEffect(() => {
     onDraftStateChange?.(hasDiscardableDraft);
   }, [hasDiscardableDraft, onDraftStateChange]);
+
+  useEffect(() => {
+    return () => onComposerActiveChange?.(false);
+  }, [onComposerActiveChange]);
 
   useEffect(() => {
     return () => revokeSelectedMediaPreview();
@@ -368,7 +382,7 @@ export const ReplyComposer = ({
     });
     hook.clearErrors("content");
     endMediaPickerInteraction();
-    setComposerActive(true);
+    updateComposerActive(true);
     focusComposerInput();
     scheduleSelectedMediaPreviewPreparation(previewUrl, type);
   };
@@ -442,7 +456,7 @@ export const ReplyComposer = ({
         hook.reset({ content: "" });
         clearSelectedMedia();
         endMediaPickerInteraction();
-        setComposerActive(false);
+        updateComposerActive(false);
         onDraftStateChange?.(false);
       } catch {
         // O estado de erro é tratado pela mutation para manter o campo preenchido.
@@ -470,7 +484,7 @@ export const ReplyComposer = ({
         if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
         if (mediaPickerActiveRef.current) return;
         if (Date.now() - composerInternalPointerAtRef.current < 600) return;
-        setComposerActive(false);
+        updateComposerActive(false);
         resetCancelDrag();
       }}
       onFocusCapture={(event) => {
@@ -479,7 +493,7 @@ export const ReplyComposer = ({
           return;
         }
         composerActivatedAtRef.current = Date.now();
-        setComposerActive(true);
+        updateComposerActive(true);
       }}
       onMouseDownCapture={markComposerInternalPointer}
       onPointerCancel={handleCancelPointerEnd}
@@ -522,7 +536,7 @@ export const ReplyComposer = ({
               fileInputRef={fileInputRef}
               isUploading={disabled && Boolean(selectedMedia)}
               mediaPermission={mediaPermission}
-              onAfterAction={() => setComposerActive(true)}
+              onAfterAction={() => updateComposerActive(true)}
               onMediaChange={handleMediaChange}
               onOpenDialog={beginMediaPickerInteraction}
               onRemoveSelected={clearSelectedMedia}

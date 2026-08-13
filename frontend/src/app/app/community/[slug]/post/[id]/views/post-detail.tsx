@@ -187,6 +187,7 @@ const PostDetailFloatingHeader = ({
 
 export const PostDetailLogic = () => {
   const [floatingHeaderVisible, setFloatingHeaderVisible] = useState(false);
+  const [replyComposerActive, setReplyComposerActive] = useState(false);
   const floatingHeaderInteractionUntilRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const scrollFrameRef = useRef<number | null>(null);
@@ -395,8 +396,10 @@ export const PostDetailLogic = () => {
                 mediaPermission={mediaPermission}
                 onCancelContext={() => {
                   setReplyError(null);
+                  setReplyComposerActive(false);
                   setMobileReplyTarget(null);
                 }}
+                onComposerActiveChange={setReplyComposerActive}
                 onSubmit={(values, mediaFile) =>
                   submitReply(values, activeMobileReplyTarget?.id ?? null, mediaFile)
                 }
@@ -432,7 +435,9 @@ export const PostDetailLogic = () => {
                 postSourceText={post.title}
                 replies={replies}
                 replyApiError={replyError}
-                replyComposerTargetId={activeMobileReplyTarget?.id ?? null}
+                replyComposerTargetId={
+                  replyComposerActive ? (activeMobileReplyTarget?.id ?? null) : null
+                }
                 replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
                 threadHrefBase={`/comunidades/${post.community.slug}/publicacao/${post.id}/resposta`}
                 votePending={voteMutation.isPending}

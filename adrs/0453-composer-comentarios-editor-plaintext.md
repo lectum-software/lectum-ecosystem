@@ -132,3 +132,33 @@ Validacao complementar 2026-08-13:
 - `pnpm check:adrs`: sucesso.
 - `pnpm check:tasks`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.87`: sucesso.
+
+## Atualizacao 2026-08-13 - destaque do comentario respondido condicionado ao foco
+
+A experiencia mobile mostrou que, ao tocar em `Responder`, o comentario de origem continuava com fundo/ring de destaque mesmo depois de o usuario fechar o foco da barra de comentar. O alvo da resposta precisa continuar existindo para o envio correto do rascunho, mas o destaque visual deve representar apenas o estado ativo de foco do composer.
+
+Decisao complementar:
+
+- Fazer o `ReplyComposer` notificar o pai por `onComposerActiveChange` sempre que seu estado ativo muda por foco, blur, fechamento por scroll, envio, cancelamento ou retorno de interacoes de midia.
+- No detalhe do post e na tela dedicada `Respostas`, manter `mobileReplyTarget` como alvo de envio, mas enviar `replyComposerTargetId` para a arvore somente enquanto o composer principal estiver ativo.
+- Preservar os forms inline de desktop, onde o destaque continua associado ao formulario aberto abaixo do comentario.
+- Nao alterar backend, endpoint, payload, upload, votos, salvos, denuncias, storage, Prisma, migrations, envs ou packages.
+
+Consequencias:
+
+- O comentario respondido fica destacado enquanto o teclado/composer esta em foco, ajudando o usuario a entender o contexto imediato.
+- Ao desfocar/fechar o composer, a arvore volta ao estado visual neutro sem perder o alvo de resposta nem o rascunho.
+- Rollback: reverter este complemento volta a condicionar o destaque diretamente ao `replyTarget`, podendo manter o comentario visualmente destacado apos blur.
+
+Validacao complementar 2026-08-13:
+
+- Validacao estatica via Node confirmou `onComposerActiveChange`, blur com `updateComposerActive(false)` e `replyComposerTargetId` condicionado a `replyComposerActive` no detalhe e na thread.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso; repetido apos o bump em `0.1.88`.
+- Browser local/headless mobile no frontend buildado em `http://127.0.0.1:3068` carregou a rota do detalhe em viewport 390x844 antes do bump; apos o bump, `http://127.0.0.1:3069/version` respondeu `0.1.88` e a rota do detalhe respondeu `200` por HTTP direto. Sem dados/API local autenticados, o gesto fica para homologacao mobile.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:encoding`: sucesso.
+- `pnpm check:adrs`: sucesso.
+- `pnpm check:tasks`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.88`: sucesso.

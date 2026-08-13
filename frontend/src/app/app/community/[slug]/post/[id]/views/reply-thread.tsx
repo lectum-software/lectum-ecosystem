@@ -68,6 +68,7 @@ export const PostReplyThreadLogic = () => {
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(null);
   const [composerFocusReplyId, setComposerFocusReplyId] = useState<string | null>(null);
   const [composerFocusRequestKey, setComposerFocusRequestKey] = useState(0);
+  const [replyComposerActive, setReplyComposerActive] = useState(false);
   const [mobileReplyTarget, setMobileReplyTarget] = useState<ReplyTarget>(null);
   const [desktopReplyTargets, setDesktopReplyTargets] = useState<ReplyTargetMap>({});
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -448,7 +449,9 @@ export const PostReplyThreadLogic = () => {
               postSourceText={post.title}
               replies={[rootReply]}
               replyApiError={replyError}
-              replyComposerTargetId={activeMobileReplyTarget?.id ?? null}
+              replyComposerTargetId={
+                replyComposerActive ? (activeMobileReplyTarget?.id ?? null) : null
+              }
               replyDisabled={createReplyMutation.isPending || uploadReplyMediaMutation.isPending}
               showSectionTitle={false}
               threadHrefBase={`/comunidades/${post.community.slug}/publicacao/${post.id}/resposta`}
@@ -463,8 +466,10 @@ export const PostReplyThreadLogic = () => {
               mediaPermission={mediaPermission}
               onCancelContext={() => {
                 setReplyError(null);
+                setReplyComposerActive(false);
                 setMobileReplyTarget(null);
               }}
+              onComposerActiveChange={setReplyComposerActive}
               onSubmit={(values, mediaFile) =>
                 submitReply(values, activeMobileReplyTarget?.id ?? rootReply.id, mediaFile)
               }
