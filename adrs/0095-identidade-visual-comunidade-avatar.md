@@ -106,3 +106,31 @@ proxy/ngrok e sem duplicar pipeline de asset.
 - HTTP local `200 text/html` em `http://127.0.0.1:3010/community/depressao` via `next start` temporario
 - HTTP local `200 image/png` em `http://127.0.0.1:3010/images/community/explore/depressao.png`
 - Chrome/CDP mobile 390x844 em `https://tunnel-autorizado.example/community/depressao`, com header `ngrok-skip-browser-warning`, confirmando `Image` do avatar com `src=/_next/image?url=%2Fimages%2Fcommunity%2Fexplore%2Fdepressao.png`, `naturalWidth=76` e `naturalHeight=76`
+
+## Atualizacao 2026-08-13 - contraste controlado do degrade
+
+### Contexto
+
+Após o ajuste de junho que deixou a faixa superior das comunidades mais suave, produto observou no header de `Depressão: Redescobrindo a Vida` que a parte mais escura do degradê ficou clara demais e com pouca presença visual.
+
+### Decisão
+
+Manter a derivação pastel da paleta e escurecer apenas os stops profundos no próprio `CommunityHeader`:
+
+- o stop intermediário passa a misturar `coverDepth` com uma fração da cor primária da comunidade;
+- o stop final passa a misturar `coverEnd` com uma fração da cor escura da comunidade;
+- o início do degradê, o halo claro, o avatar, o botão de seguir e os CTAs permanecem inalterados.
+
+### Consequências
+
+- A faixa ganha contraste suficiente no mobile sem retornar aos tons pesados/marrons que motivaram a suavização anterior.
+- A mudança é puramente visual, sem alterar schema, contrato, dados persistidos, endpoints, packages ou envs.
+- O rollback é simples: remover as misturas adicionais do `linear-gradient` restaura o comportamento anterior.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/components/community-header.tsx"`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser/smoke na rota de comunidade para verificar que a faixa carrega com os novos stops de degradê.

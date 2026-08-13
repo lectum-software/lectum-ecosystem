@@ -203,7 +203,7 @@ export const CommunityHeader = ({
         className="relative min-h-[132px] px-5 pt-4 text-primary-foreground"
         style={{
           background:
-            "radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--lectum-media-foreground) 50%, transparent) 0%, color-mix(in srgb, var(--lectum-media-foreground) 18%, transparent) 38%, transparent 62%), linear-gradient(145deg, var(--community-cover-start) 0%, var(--community-cover-depth) 56%, var(--community-cover-end) 100%)",
+            "radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--lectum-media-foreground) 50%, transparent) 0%, color-mix(in srgb, var(--lectum-media-foreground) 18%, transparent) 38%, transparent 62%), linear-gradient(145deg, var(--community-cover-start) 0%, color-mix(in srgb, var(--community-cover-depth) 88%, var(--community-primary-color) 12%) 56%, color-mix(in srgb, var(--community-cover-end) 78%, var(--community-primary-dark) 22%) 100%)",
         }}
       >
         <div className="relative z-10 flex items-center justify-between">
