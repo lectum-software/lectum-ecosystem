@@ -41,6 +41,7 @@ import {
   SHEET_CLOSE_DELAY_MS,
 } from "../modules/create-post-support";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "../use-form";
+import { useCreatePostDiscardConfirmation } from "./use-create-post-discard-confirmation";
 
 export type UseCreateCommunityPostControllerOptions = {
   onCloseComplete?: () => void;
@@ -179,6 +180,11 @@ export const useCreateCommunityPostController = ({
   );
   const titleMeetsMinimum = String(watchedTitle ?? "").trim().length >= 3;
   const contentMeetsMinimum = String(watchedContent ?? "").trim().length >= 10;
+  const hasDraftContent = Boolean(
+    String(watchedTitle ?? "").trim().length > 0 ||
+      String(watchedContent ?? "").trim().length > 0 ||
+      selectedMediaItems.length > 0,
+  );
   const requiredFieldsReady = Boolean(
     selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum,
   );
@@ -261,11 +267,11 @@ export const useCreateCommunityPostController = ({
     [registerEditorInteraction],
   );
 
-  const focusLastEditor = () => {
+  const focusLastEditor = useCallback(() => {
     window.setTimeout(() => {
       focusEditorElement();
     }, 0);
-  };
+  }, [focusEditorElement]);
 
   const preserveEditorFocusFromBlankTap = (
     event: ReactPointerEvent<HTMLElement>,
@@ -313,7 +319,7 @@ export const useCreateCommunityPostController = ({
     [],
   );
 
-  const handleClose = useCallback(() => {
+  const performClose = useCallback(() => {
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
@@ -333,6 +339,17 @@ export const useCreateCommunityPostController = ({
       navigateBackWithFallback(router, fallbackHref);
     }, SHEET_CLOSE_DELAY_MS);
   }, [communitySlugFromQuery, onCloseComplete, routeSlug, router]);
+
+  const {
+    cancelDiscardConfirmation,
+    confirmDiscardAndClose,
+    discardConfirmationOpen,
+    requestClose: handleClose,
+  } = useCreatePostDiscardConfirmation({
+    hasDraftContent,
+    onCancel: focusLastEditor,
+    onClose: performClose,
+  });
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
@@ -637,7 +654,10 @@ export const useCreateCommunityPostController = ({
 
   return {
     clearCorrectedFormErrorsSoon,
+    cancelDiscardConfirmation,
     communitiesQuery,
+    confirmDiscardAndClose,
+    discardConfirmationOpen,
     fileInputRef,
     focusEditorFromUserGesture,
     focusLastEditor,

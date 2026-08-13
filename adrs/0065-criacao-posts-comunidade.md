@@ -139,7 +139,7 @@ Consequencias:
 Validacao complementar:
 
 - `pnpm --dir frontend check`: sucesso.
-- `pnpm --dir frontend build`: sucesso.
+- `pnpm --dir frontend build`: sucesso em `0.1.84` e reexecutado com sucesso apos o bump para `0.1.85`.
 - `pnpm check`: sucesso.
 - Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: erro de comunidade removido apos selecao, sem alerta geral ativo apos correcao, titulo digitado em 24.32px/900, copy `Publicar anonimamente?`, tip com texto atualizado e fechamento por `X` mantendo `aria-checked=true` no switch.
 
@@ -820,3 +820,32 @@ Validacao complementar 2026-08-13:
 - `pnpm check:tasks`: sucesso.
 - `pnpm check:version` apos `pnpm version:bump` para `0.1.82`: sucesso.
 - Browser local `http://127.0.0.1:3060/version`: sucesso ao retornar `{"application":"frontend","version":"0.1.82"}`.
+
+
+## Atualizacao 2026-08-13 - confirmacao de descarte de rascunho na modal Criar Post
+
+A modal `Criar Post` passou a proteger rascunhos locais antes de fechar. O produto pediu que, quando o usuario ja tiver digitado titulo, descricao ou anexado midia, o fechamento explicito informe que esse conteudo sera excluido definitivamente.
+
+Decisoes complementares:
+
+- Definir rascunho descartavel apenas por conteudo produzido pelo usuario: titulo com texto, descricao com texto ou midia selecionada. A comunidade pre-selecionada por rota/query nao conta como rascunho para nao criar friccao ao abrir e fechar a modal vazia.
+- Reutilizar o modal de confirmacao existente de comunidades, evitando novo pacote ou novo padrao visual para uma confirmacao destrutiva semelhante.
+- Manter a animacao vertical de saida: a confirmacao apenas libera o fechamento; apos confirmar, o fluxo usa o mesmo atraso de `SHEET_CLOSE_DELAY_MS` antes de desmontar ou navegar.
+- Tratar `Escape` com o mesmo guard do botao `X`: se houver rascunho, abre/fecha a confirmacao em vez de descartar silenciosamente.
+- Ao cancelar a confirmacao, manter a sheet aberta e refocar o ultimo editor, preservando a continuidade de escrita no mobile.
+- Nao alterar API, payload, schema, persistencia, upload/storage, anonimato, envs, providers ou packages.
+
+Consequencias:
+
+- O usuario deixa de perder acidentalmente titulo, texto ou midia local ao tocar no fechamento da modal.
+- Abrir a criacao ja com comunidade contextual continua leve, pois fechar sem escrever nada nao exige confirmacao.
+- A decisao fica restrita ao estado local do frontend; nao ha efeito persistente em dados nem necessidade de migracao.
+
+Validacao complementar 2026-08-13:
+
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.85`: sucesso.
+- Chrome/CDP mobile local em `http://127.0.0.1:3067/app/comunidades/feed/publicacao/nova`: a rota privada redirecionou para login por ausencia de cookie autenticado local; nao foi criado mock de sessao. O comportamento autenticado da modal foi validado por inspecao do fluxo real, typecheck/lint/testes e build.

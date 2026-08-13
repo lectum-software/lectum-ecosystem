@@ -445,7 +445,7 @@ Validacoes finais deste complemento:
 - [x] `pnpm --dir backend check`
 - [x] `pnpm --dir backend build`
 - [x] `pnpm --dir frontend check`
-- [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir frontend build` em `0.1.84` e reexecutado apos o bump em `0.1.85`
 - [x] `pnpm check`
 - [x] `git diff --check`
 
@@ -682,3 +682,37 @@ Validacoes finais deste complemento:
 - [x] `pnpm version:bump` para `0.1.82`
 - [x] `pnpm check:version`
 - [x] Browser local `http://127.0.0.1:3060/version` confirmou `{"application":"frontend","version":"0.1.82"}`.
+
+
+## Complemento 2026-08-13 - confirmacao de descarte da modal Criar Post
+
+- Pedido do usuario: ao clicar em fechar a modal de criar novo post, se ja houver titulo, texto ou midia selecionada, exibir confirmacao avisando que o conteudo sera excluido definitivamente.
+- Frontend: o controller da modal agora considera rascunho apenas quando existe titulo com texto, descricao com texto ou pelo menos uma midia anexada; a comunidade pre-selecionada nao dispara confirmacao sozinha.
+- Frontend: o botao X e o Escape passam pelo mesmo guard de fechamento. Sem rascunho, a saida continua imediata com a animacao vertical existente; com rascunho, abre confirmacao de descarte antes de desmontar/navegar.
+- Frontend: a confirmacao reutiliza o modal de confirmacao existente da area de comunidades, com titulo `Descartar conteudo`, aviso de exclusao definitiva e acao `Excluir e fechar`; cancelar retorna o foco ao editor.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de publicacao, upload/storage, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: modal atual da TASK-24 e prototipos locais `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`_product/proto/Criar Nova Postagem - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Fechar a modal sem titulo, texto ou midia continua fechando sem confirmacao.
+- [x] Fechar a modal com titulo digitado abre confirmacao antes de descartar.
+- [x] Fechar a modal com descricao digitada abre confirmacao antes de descartar.
+- [x] Fechar a modal com midia anexada abre confirmacao antes de descartar.
+- [x] A confirmacao informa que o conteudo sera excluido definitivamente e oferece acao explicita para excluir e fechar.
+- [x] Cancelar a confirmacao mantem a modal aberta e preserva o rascunho.
+- [x] Confirmar o descarte mantem a animacao de saida ja implementada antes de desmontar/navegar.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.85`
+- [x] `pnpm check:version`
+- [x] Chrome/CDP mobile local em `http://127.0.0.1:3067/app/comunidades/feed/publicacao/nova`; sem cookie autenticado local, a rota redirecionou para `/auth/login`, entao nao foi usado mock para forcar sessao. A validacao da modal autenticada ficou coberta por analise do fluxo real, check e build.

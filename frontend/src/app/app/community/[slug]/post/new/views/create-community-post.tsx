@@ -10,6 +10,7 @@ import {
   useRef,
 } from "react";
 import { Controller } from "react-hook-form";
+import { CommunityDeleteConfirmationModal } from "@/components/community/community-delete-confirmation-modal";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,10 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
   const controller = useCreateCommunityPostController({ onCloseComplete });
   const {
     clearCorrectedFormErrorsSoon,
+    cancelDiscardConfirmation,
     communitiesQuery,
+    confirmDiscardAndClose,
+    discardConfirmationOpen,
     fileInputRef,
     focusEditorFromUserGesture,
     focusLastEditor,
@@ -562,5 +566,18 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     </div>
   );
 
-  return sheet;
+  return (
+    <>
+      {sheet}
+      <CommunityDeleteConfirmationModal
+        actionLabel="Excluir e fechar"
+        closeLabel="Fechar confirmação de descarte"
+        description="O que você escreveu e as mídias anexadas nesta criação serão excluídos definitivamente."
+        onClose={cancelDiscardConfirmation}
+        onConfirm={confirmDiscardAndClose}
+        open={discardConfirmationOpen}
+        title="Descartar conteúdo?"
+      />
+    </>
+  );
 };
