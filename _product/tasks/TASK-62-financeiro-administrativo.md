@@ -970,3 +970,29 @@ Frontend esperado:
 - Smoke HTTP local: `GET http://localhost:3002/financeiro/cobrancas` retornou `200`.
 - Chrome headless local abriu `/financeiro/cobrancas`; sem sessão Admin no perfil temporário, a validação visual autenticada ficou limitada às capturas enviadas pelo usuário, ao build e à inspeção estática da UI.
 - Smoke de service real: `listAdminFinanceCharges({ period: "all", q: "C00001" })` retornou `status=200`, `count=1`; `listAdminFinanceCharges({ period: "all", q: "A00020" })` retornou `status=200`, `count=2`; `listAdminFinanceSubscriptions({ period: "all", q: "A00020" })` retornou `status=200`, `count=1`.
+
+## Ajuste pós-feedback 2026-08-13 - Conciliação financeira com resumo do Mercado Pago
+
+- Pedido do usuário: corrigir o Financeiro Admin porque a compra aprovada do psicólogo Austin aparecia em `/financeiro/assinaturas`, mas não aparecia em `/financeiro/cobrancas`, e revisar valores absurdos/linhas duplicadas no histórico.
+- A lista `/financeiro/cobrancas`, o card **Últimas cobranças realizadas**, a série de receita e o LTV médio passaram a conciliar `payment_event` local com o resumo real de assinaturas do Mercado Pago (`preapproval.summarized`) quando o webhook local não foi gravado.
+- A conciliação é somente leitura: não cria `payment_event`, não cria cobrança artificial e não persiste dado simulado. Quando a origem é somente o resumo do gateway, o ID operacional da cobrança fica indisponível e a UI exibe `—` em vez de `C00000`.
+- Cobranças locais e resumo do gateway são deduplicados por assinatura e dia, priorizando `payment_event` real quando há valor monetário válido e usando o resumo do gateway quando o webhook local está ausente ou sem valor confiável.
+- A extração de valor monetário deixou de aceitar chaves genéricas como `value`; somente campos monetários explícitos (`transaction_amount`, `total_paid_amount`, `paid_amount`, `amount`/`amount.value`) entram nos cálculos, evitando interpretar IDs do Mercado Pago como valores.
+- O histórico de pagamentos vinculado às assinaturas financeiras usa o nome do plano como título da cobrança e mantém status de sucesso em verde quando a origem confirmada vem do gateway.
+- Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Financeiro.png`, `_product/tasks/PROTO-INVENTORY.md` e as capturas autenticadas enviadas pelo usuário em 2026-08-13.
+- ADR atualizado: `adrs/0242-admin-financeiro-receita-mrr-exportacao.md`.
+
+### Critérios de aceite do ajuste
+
+- [x] `/financeiro/cobrancas` inclui uma cobrança confirmada para assinatura Mercado Pago aprovada mesmo quando não existe `payment_event` local gravado.
+- [x] `latest_charges`, série de receita e LTV médio reconciliam resumo real do Mercado Pago com eventos locais sem duplicar cobranças do mesmo dia/assinatura.
+- [x] Valores financeiros não usam IDs genéricos do payload como centavos ou reais.
+- [x] Cobranças vindas apenas do resumo do gateway não exibem `C00000`; exibem `—` para indicar ausência honesta de ID operacional local.
+- [x] Status de pagamento bem-sucedido permanece verde nas listas/históricos financeiros quando a cobrança é confirmada pelo gateway.
+- [x] A descrição/título do histórico de pagamento vinculado à assinatura usa o nome do plano.
+- [x] Nenhum package, schema Prisma, migration, mock, seed, reset ou cobrança simulada foi adicionado.
+
+### Validação complementar executada
+
+- `pnpm --dir backend exec node --import tsx --test "src/modules/api/admin/private/finance/dashboard/use-cases/services/finance-reconciliation.test.ts"`.
+- `pnpm --dir backend typecheck`.

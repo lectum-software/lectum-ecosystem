@@ -1,3 +1,4 @@
+import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 import {
   addDays,
   endOfDate,
@@ -277,15 +278,16 @@ export const toAmountCents = (value: unknown): number | null => {
 };
 
 export const extractPaymentAmountCents = (payload: unknown) =>
-  toAmountCents(
-    findPayloadValue(payload, [
+  (() => {
+    const directAmount = findPayloadValue(payload, [
       "transaction_amount",
       "total_paid_amount",
       "paid_amount",
-      "amount",
-      "value",
-    ]),
-  );
+    ]);
+    const fallbackAmount = directAmount ?? findPayloadValue(payload, ["amount"]);
+
+    return toAmountCents(isRecord(fallbackAmount) ? fallbackAmount.value : fallbackAmount);
+  })();
 
 export const isConfirmedPaymentStatus = (payload: unknown) => {
   const status = normalizeText(
@@ -311,6 +313,8 @@ export type LifetimeSubscriptionRecord = Awaited<
   ReturnType<AdminFinanceDashboardRepository["listPaidSubscriptionsForLifetime"]>
 >[number];
 
+export type GatewaySummaryBySubscriptionId = Map<string, GatewaySubscriptionPaymentSummary>;
+
 export type CancelledLifetimeSubscriptionRecord = Awaited<
   ReturnType<AdminFinanceDashboardRepository["listCancelledPaidSubscriptionsForLifetime"]>
 >[number];
@@ -320,6 +324,24 @@ export type PaymentRevenue = {
   missing_amount_count: number;
   revenue_cents: number;
 };
+
+export const summarizeChargeItemsRevenue = (
+  items: Pick<AdminFinanceChargeItem, "amount_available" | "amount_cents">[],
+): PaymentRevenue =>
+  items.reduce<PaymentRevenue>(
+    (accumulator, item) => {
+      accumulator.confirmed_count += 1;
+
+      if (!item.amount_available || item.amount_cents === null) {
+        accumulator.missing_amount_count += 1;
+        return accumulator;
+      }
+
+      accumulator.revenue_cents += item.amount_cents;
+      return accumulator;
+    },
+    { confirmed_count: 0, missing_amount_count: 0, revenue_cents: 0 },
+  );
 
 export const summarizeRevenue = (events: PaymentEventRecord[]): PaymentRevenue =>
   events.reduce<PaymentRevenue>(
@@ -345,13 +367,36 @@ export const summarizeRevenue = (events: PaymentEventRecord[]): PaymentRevenue =
 export const summarizeAverageLtv = (
   subscriptions: LifetimeSubscriptionRecord[],
   paymentEvents: PaymentEventRecord[],
+  gatewaySummaries?: GatewaySummaryBySubscriptionId,
 ) => {
   const paidPsychologistCount = new Set(
     subscriptions.map((subscription) => subscription.psychologist_id),
   ).size;
+  let gatewayLinkedConfirmedPayments = 0;
+  let gatewayMissingAmountCount = 0;
+  let gatewayRevenueCents = 0;
+  const subscriptionsWithoutGatewaySummary: LifetimeSubscriptionRecord[] = [];
+
+  for (const subscription of subscriptions) {
+    const summary = gatewaySummaries?.get(subscription.id);
+    if (!summary || summary.charged_quantity <= 0) {
+      subscriptionsWithoutGatewaySummary.push(subscription);
+      continue;
+    }
+
+    gatewayLinkedConfirmedPayments += summary.charged_quantity;
+
+    if (summary.charged_quantity > 0 && summary.charged_amount_cents === null) {
+      gatewayMissingAmountCount += 1;
+      continue;
+    }
+
+    gatewayRevenueCents += summary.charged_amount_cents ?? 0;
+  }
+
   const references = Array.from(
     new Set(
-      subscriptions.flatMap((subscription) =>
+      subscriptionsWithoutGatewaySummary.flatMap((subscription) =>
         [subscription.id, subscription.gateway_subscription_id].filter(
           (reference): reference is string => Boolean(reference && reference.length > 3),
         ),
@@ -380,15 +425,19 @@ export const summarizeAverageLtv = (
     }
   }
 
-  const available = missingAmountCount === 0;
+  const totalMissingAmountCount = missingAmountCount + gatewayMissingAmountCount;
+  const totalRevenueCents = revenueCents + gatewayRevenueCents;
+  const available = totalMissingAmountCount === 0;
 
   return {
     available,
-    linkedConfirmedPayments,
+    linkedConfirmedPayments: linkedConfirmedPayments + gatewayLinkedConfirmedPayments,
     paidPsychologistCount,
-    unavailableReason: available ? null : "payment_event_vinculado_sem_valor_monetario_extraivel",
+    unavailableReason: available ? null : "pagamento_confirmado_sem_valor_monetario_extraivel",
     valueCents:
-      available && paidPsychologistCount > 0 ? Math.round(revenueCents / paidPsychologistCount) : 0,
+      available && paidPsychologistCount > 0
+        ? Math.round(totalRevenueCents / paidPsychologistCount)
+        : 0,
   };
 };
 

@@ -304,3 +304,23 @@ Consequências:
 - O operador distingue cobrança e assinatura pela própria célula de ID, preservando uma tabela curta e sem prefixo textual `ID:`.
 - O padrão é reversível e auditável a partir do banco local: remover o prefixo e zeros à esquerda recupera o `internal_id`.
 - A decisão não altera schema, chaves primárias, contratos financeiros centrais, gateway Mercado Pago, CSV ou packages.
+
+## Ajuste 2026-08-13: conciliação de cobranças com resumo do Mercado Pago
+
+Feedback de homologação mostrou uma assinatura Mercado Pago aprovada para o psicólogo Austin aparecendo como assinatura ativa, mas sem linha correspondente em `/financeiro/cobrancas`; também havia risco de valores absurdos quando payloads do gateway continham apenas IDs numéricos.
+
+Decisões:
+
+- Manter `payment_event` local como fonte preferencial para cobranças, porque possui ID operacional (`payment_event.internal_id`) e maior granularidade.
+- Consultar, de forma somente leitura, o resumo real da assinatura no Mercado Pago (`preapproval.summarized`) quando houver `professional_subscription.source="mercadopago"` e `gateway_subscription_id`.
+- Usar o resumo do gateway para complementar `/financeiro/cobrancas`, `latest_charges`, série de receita e LTV médio quando o webhook local não foi gravado ou não tem valor monetário confiável.
+- Não persistir eventos sintéticos nem criar cobranças artificiais; linhas vindas apenas do resumo do gateway recebem `source="gateway_subscription_summary"`, `internal_id_available=false` e a UI exibe `—` no lugar de um código como `C00000`.
+- Deduplicar cobranças por assinatura e dia, priorizando `payment_event` local quando há valor confiável e usando o resumo do gateway como fallback real.
+- Restringir a extração de valores financeiros a chaves explicitamente monetárias (`transaction_amount`, `total_paid_amount`, `paid_amount`, `amount`/`amount.value`), nunca a campos genéricos como `value` isolado ou IDs numéricos do payload.
+
+Consequências:
+
+- O Admin passa a enxergar cobranças aprovadas existentes no Mercado Pago mesmo quando o webhook não populou `payment_event` local, reduzindo divergência operacional entre **Assinaturas** e **Cobranças**.
+- LTV médio e cartões/série de receita ficam mais completos sem simular cobrança nem multiplicar quantidade de assinaturas por preço de plano.
+- A lista de cobranças pode exibir uma linha sem ID operacional local quando a única evidência é o resumo do gateway; isso é uma limitação honesta até existir uma tabela normalizada de cobranças/tentativas.
+- A reconciliação por resumo do gateway não substitui uma futura persistência normalizada de pagamentos, mas evita apresentar zeros ou valores impossíveis em homologação/produção.

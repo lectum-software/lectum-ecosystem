@@ -1,7 +1,9 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import type {
   AdminFinanceChargeItem,
+  AdminFinanceDateRange,
   AdminFinancePaymentHealth,
   AdminFinanceQuery,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
@@ -12,6 +14,7 @@ import {
   DEFAULT_LIST_LIMIT,
   extractPaymentAmountCents,
   formatFinanceOperationalCode,
+  type GatewaySummaryBySubscriptionId,
   isConfirmedPaymentStatus,
   isPaymentEvent,
   MAX_LIST_LIMIT,
@@ -25,6 +28,7 @@ import {
 
 import {
   extractPaymentReference,
+  mapGatewaySummaryPaymentHistoryItem,
   mapSubscription,
   type PaymentReferenceSubscriptionRecord,
   type SubscriptionRelationRecord,
@@ -38,6 +42,83 @@ export const findSubscriptionForPayment = (
   subscriptions.find((subscription) =>
     payloadContainsAnyReference(event.payload, subscriptionReferenceValues(subscription)),
   ) ?? null;
+
+export type GatewaySummaryEligibleSubscription = Pick<
+  PaymentReferenceSubscriptionRecord,
+  "gateway" | "gateway_subscription_id" | "id" | "source"
+>;
+
+const isMercadoPagoSummaryEligibleSubscription = (
+  subscription: GatewaySummaryEligibleSubscription,
+) =>
+  Boolean(
+    subscription.gateway_subscription_id &&
+      subscription.source === "mercadopago" &&
+      (subscription.gateway === "mercadopago" || !subscription.gateway),
+  );
+
+export const fetchGatewayPaymentSummaries = async (
+  subscriptions: GatewaySummaryEligibleSubscription[],
+): Promise<GatewaySummaryBySubscriptionId> => {
+  const eligibleSubscriptions = subscriptions.filter(isMercadoPagoSummaryEligibleSubscription);
+  if (eligibleSubscriptions.length === 0) return new Map();
+
+  try {
+    const gateway = getPaymentGateway();
+    const settledSummaries = await Promise.allSettled(
+      eligibleSubscriptions.map((subscription) =>
+        gateway.getSubscriptionPaymentSummary(subscription.gateway_subscription_id!),
+      ),
+    );
+
+    return settledSummaries.reduce<GatewaySummaryBySubscriptionId>((summaries, result, index) => {
+      if (result.status === "fulfilled") {
+        summaries.set(eligibleSubscriptions[index].id, result.value);
+      }
+
+      return summaries;
+    }, new Map());
+  } catch {
+    return new Map();
+  }
+};
+
+const isDateInRange = (date: Date, range?: AdminFinanceDateRange) =>
+  !range || (date >= range.start && date <= range.end);
+
+export const mapGatewaySummaryCharge = (
+  subscription: PaymentReferenceSubscriptionRecord,
+  summaries: GatewaySummaryBySubscriptionId,
+  range?: AdminFinanceDateRange,
+): AdminFinanceChargeItem | null => {
+  const historyItem = mapGatewaySummaryPaymentHistoryItem(
+    subscription,
+    summaries.get(subscription.id),
+  );
+  if (!historyItem) return null;
+
+  const occurredAt = new Date(historyItem.occurred_at);
+  if (Number.isNaN(occurredAt.getTime()) || !isDateInRange(occurredAt, range)) return null;
+
+  return {
+    amount_available: historyItem.amount_available,
+    amount_cents: historyItem.amount_cents,
+    detail_url: `/psicologos/${subscription.psychologist.user.id}`,
+    event_id: historyItem.event_id,
+    event_type: historyItem.event_type,
+    external_id: historyItem.external_id,
+    gateway: "mercadopago",
+    internal_id: 0,
+    internal_id_available: false,
+    occurred_at: occurredAt.toISOString(),
+    reference: historyItem.reference,
+    source: "gateway_subscription_summary",
+    status: "confirmed",
+    status_label: "Confirmada",
+    subscription: mapSubscription(subscription, [], summaries),
+    unavailable_reason: historyItem.unavailable_reason,
+  };
+};
 
 export const mapCharge = (
   event: PaymentEventRecord,
@@ -58,11 +139,13 @@ export const mapCharge = (
     external_id: event.external_id,
     gateway: "mercadopago",
     internal_id: event.internal_id,
+    internal_id_available: event.internal_id > 0,
     occurred_at: event.createdAt.toISOString(),
     reference:
       subscription?.gateway_subscription_id ??
       subscription?.id ??
       extractPaymentReference(event.payload),
+    source: "payment_event",
     status: "confirmed",
     status_label: "Confirmada",
     subscription: subscription ? mapSubscription(subscription, [event]) : null,
@@ -71,14 +154,61 @@ export const mapCharge = (
   };
 };
 
+const chargeDateKey = (item: AdminFinanceChargeItem) => item.occurred_at.slice(0, 10);
+
+const chargeReferenceKey = (item: AdminFinanceChargeItem) =>
+  item.subscription?.id ?? item.reference ?? item.event_id;
+
+const chargeDedupeKey = (item: AdminFinanceChargeItem) =>
+  [chargeReferenceKey(item), chargeDateKey(item)].join("|");
+
+const preferChargeItem = (current: AdminFinanceChargeItem, candidate: AdminFinanceChargeItem) => {
+  if (current.source !== candidate.source) {
+    if (candidate.source === "payment_event" && candidate.amount_available) return candidate;
+    if (!current.amount_available && candidate.amount_available) return candidate;
+
+    return current;
+  }
+
+  if (!current.amount_available && candidate.amount_available) return candidate;
+  if (candidate.internal_id > current.internal_id) return candidate;
+
+  return Date.parse(candidate.occurred_at) > Date.parse(current.occurred_at) ? candidate : current;
+};
+
+export const dedupeChargeItems = (items: AdminFinanceChargeItem[]) => {
+  const byKey = new Map<string, AdminFinanceChargeItem>();
+
+  for (const item of items) {
+    const key = chargeDedupeKey(item);
+    const current = byKey.get(key);
+
+    byKey.set(key, current ? preferChargeItem(current, item) : item);
+  }
+
+  return [...byKey.values()];
+};
+
 export const buildChargeItems = (
   events: PaymentEventRecord[],
   subscriptions: PaymentReferenceSubscriptionRecord[],
+  options: {
+    gatewaySummaries?: GatewaySummaryBySubscriptionId;
+    range?: AdminFinanceDateRange;
+  } = {},
 ) =>
-  events
-    .map((event) => mapCharge(event, subscriptions))
-    .filter((item): item is AdminFinanceChargeItem => Boolean(item))
-    .sort((left, right) => Date.parse(right.occurred_at) - Date.parse(left.occurred_at));
+  dedupeChargeItems([
+    ...events
+      .map((event) => mapCharge(event, subscriptions))
+      .filter((item): item is AdminFinanceChargeItem => Boolean(item)),
+    ...(options.gatewaySummaries
+      ? subscriptions
+          .map((subscription) =>
+            mapGatewaySummaryCharge(subscription, options.gatewaySummaries!, options.range),
+          )
+          .filter((item): item is AdminFinanceChargeItem => Boolean(item))
+      : []),
+  ]).sort((left, right) => Date.parse(right.occurred_at) - Date.parse(left.occurred_at));
 
 export type ChargeServiceFilters = {
   q?: string;
@@ -221,10 +351,14 @@ export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise
     repository.listPaymentEvents(current),
     repository.listPaidSubscriptionsForPaymentReferenceAt(current.end),
   ]);
+  const gatewaySummaries = await fetchGatewayPaymentSummaries(paymentReferenceSubscriptions);
   const pagination = normalizeFinancePagination(query ?? {});
   const filters = normalizeChargeFilters(query ?? {});
   const charges = filterChargeItems(
-    buildChargeItems(paymentEvents, paymentReferenceSubscriptions),
+    buildChargeItems(paymentEvents, paymentReferenceSubscriptions, {
+      gatewaySummaries,
+      range: current,
+    }),
     filters,
   );
   const page = paginateItems(charges, pagination.page, pagination.limit);
@@ -235,7 +369,7 @@ export const listAdminFinanceCharges = async (query: AdminFinanceQuery): Promise
     data: {
       ...page,
       period,
-      source: "payment_event+professional_subscription",
+      source: "payment_event+gateway_subscription_summary+professional_subscription",
     },
   };
 };
@@ -270,8 +404,9 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
         : Promise.resolve([] as SubscriptionRelationRecord[]),
       repository.listPaymentEventsForLifetime(),
     ]);
+    const gatewaySummaries = await fetchGatewayPaymentSummaries(subscriptions);
     const filteredItems = subscriptions
-      .map((subscription) => mapSubscription(subscription, lifetimePaymentEvents))
+      .map((subscription) => mapSubscription(subscription, lifetimePaymentEvents, gatewaySummaries))
       .filter((subscription) => subscription.payment_health.status === paymentHealth);
     const page = paginateItems(filteredItems, pagination.page, pagination.limit);
 
@@ -299,6 +434,7 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
     ),
     repository.listPaymentEventsForLifetime(),
   ]);
+  const gatewaySummaries = await fetchGatewayPaymentSummaries(subscriptions);
 
   return {
     status: 200,
@@ -306,7 +442,7 @@ export const listAdminFinanceSubscriptions = async (query: AdminFinanceQuery): P
     data: {
       count,
       data: subscriptions.map((subscription) =>
-        mapSubscription(subscription, lifetimePaymentEvents),
+        mapSubscription(subscription, lifetimePaymentEvents, gatewaySummaries),
       ),
       page: pagination.page,
       pages: pagination.pages,

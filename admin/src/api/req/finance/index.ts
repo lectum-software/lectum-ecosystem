@@ -96,8 +96,10 @@ export type FinancePaymentHistoryItem = {
   external_id: string;
   gateway: "mercadopago";
   internal_id: number;
+  internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
+  source: "gateway_subscription_summary" | "payment_event";
   status: FinancePaymentHistoryStatus;
   status_detail: string | null;
   status_label: string;
@@ -109,7 +111,10 @@ export type FinancePaymentHistory = {
   available: boolean;
   items: FinancePaymentHistoryItem[];
   reason: string | null;
-  source: AdminPublicSource<"payment_event.filtered_by_subscription_reference">;
+  source: AdminPublicSource<
+    | "payment_event.filtered_by_subscription_reference"
+    | "payment_event+gateway_subscription_summary"
+  >;
   total: number;
 };
 
@@ -123,7 +128,7 @@ export type FinancePaymentHealth = {
   last_success_at: string | null;
   notes: string[];
   pending_payments: number;
-  source: AdminPublicSource<"payment_event+professional_subscription">;
+  source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
   status: FinancePaymentHealthStatus;
   successful_payments: number;
   success_rate_percent: number | null;
@@ -186,8 +191,10 @@ export type FinanceChargeItem = {
   external_id: string;
   gateway: "mercadopago";
   internal_id: number;
+  internal_id_available: boolean;
   occurred_at: string;
   reference: string | null;
+  source: "gateway_subscription_summary" | "payment_event";
   status: "confirmed";
   status_label: "Confirmada";
   subscription: FinanceSubscriptionItem | null;
@@ -210,7 +217,7 @@ export type AdminFinanceDashboard = {
     description: string;
     linked_confirmed_payments: number;
     paid_psychologist_count: number;
-    source: AdminPublicSource<"payment_event_linked_to_paid_psychologists">;
+    source: AdminPublicSource<"payment_event+gateway_subscription_summary_linked_to_paid_psychologists">;
     unavailable_reason: string | null;
     value_cents: number;
   };
@@ -242,7 +249,7 @@ export type AdminFinanceDashboard = {
   };
   latest_charges: {
     items: FinanceChargeItem[];
-    source: AdminPublicSource<"payment_event+professional_subscription">;
+    source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
     total: number;
   };
   new_subscriptions: {
@@ -253,7 +260,7 @@ export type AdminFinanceDashboard = {
   period: FinancePeriod;
   series: {
     points: FinanceSeriesPoint[];
-    source: AdminPublicSource<"payment_event+professional_subscription">;
+    source: AdminPublicSource<"payment_event+gateway_subscription_summary+professional_subscription">;
   };
   subscription_relation: {
     items: FinanceSubscriptionItem[];
@@ -293,7 +300,12 @@ export const getAdminFinanceDashboard = async (input: FinanceDashboardQuery) => 
 
 export const getAdminFinanceCharges = async (input: FinanceListQuery) => {
   const response = await adminApi.get<
-    ApiResponse<FinanceListResponse<FinanceChargeItem, "payment_event+professional_subscription">>
+    ApiResponse<
+      FinanceListResponse<
+        FinanceChargeItem,
+        "payment_event+gateway_subscription_summary+professional_subscription"
+      >
+    >
   >("/api/admin/private/finance/charges", {
     params: cleanParams(input),
   });

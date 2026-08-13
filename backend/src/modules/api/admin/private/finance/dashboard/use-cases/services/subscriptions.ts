@@ -1,3 +1,4 @@
+import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 import { startOfDate } from "@/utils/date-range";
 import type {
   AdminFinancePaymentHealth,
@@ -13,6 +14,7 @@ import {
   type Bucket,
   extractPaymentAmountCents,
   findPayloadValue,
+  type GatewaySummaryBySubscriptionId,
   isConfirmedPaymentStatus,
   isPaymentEvent,
   MAX_PAYMENT_HISTORY_ITEMS,
@@ -177,6 +179,7 @@ export const resolvePaymentHistoryStatus = (
 
 export const mapPaymentHistoryItem = (
   event: PaymentEventRecord,
+  options: { title?: string } = {},
 ): AdminFinancePaymentHistoryItem => {
   const amountCents = extractPaymentAmountCents(event.payload);
   const status = resolvePaymentHistoryStatus(event);
@@ -189,12 +192,14 @@ export const mapPaymentHistoryItem = (
     external_id: event.external_id,
     gateway: "mercadopago",
     internal_id: event.internal_id,
+    internal_id_available: event.internal_id > 0,
     occurred_at: event.createdAt.toISOString(),
     reference: extractPaymentReference(event.payload),
+    source: "payment_event",
     status: status.status,
     status_detail: extractPaymentStatusDetail(event.payload),
     status_label: status.label,
-    title: "Cobrança da assinatura",
+    title: options.title || "Cobrança da assinatura",
     unavailable_reason:
       amountCents === null && status.status === "successful"
         ? "payment_event_confirmado_sem_valor_monetario_extraivel"
@@ -202,20 +207,92 @@ export const mapPaymentHistoryItem = (
   };
 };
 
-export const paymentHistoryForSubscription = (
-  subscription: SubscriptionReferenceRecord,
-  paymentEvents?: PaymentEventRecord[],
+export const toDateOrNull = (value?: string | null) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const mapGatewaySummaryPaymentHistoryItem = (
+  subscription: FinanceSubscriptionRecord,
+  summary?: GatewaySubscriptionPaymentSummary | null,
+): AdminFinancePaymentHistoryItem | null => {
+  if (!summary || summary.charged_quantity <= 0) return null;
+
+  const occurredAt = toDateOrNull(summary.last_charged_at);
+  if (!occurredAt) return null;
+
+  const amountCents =
+    summary.last_charged_amount_cents ??
+    (summary.charged_quantity === 1 ? summary.charged_amount_cents : null);
+
+  return {
+    amount_available: amountCents !== null,
+    amount_cents: amountCents,
+    event_id: `gateway-summary:${subscription.id}:latest-paid-installment`,
+    event_type: "subscription.summary",
+    external_id: summary.gateway_subscription_id,
+    gateway: "mercadopago",
+    internal_id: 0,
+    internal_id_available: false,
+    occurred_at: occurredAt.toISOString(),
+    reference: summary.gateway_subscription_id || subscription.gateway_subscription_id,
+    source: "gateway_subscription_summary",
+    status: "successful",
+    status_detail: null,
+    status_label: "Sucesso",
+    title: subscription.plan.name || "Plano Profissional",
+    unavailable_reason:
+      amountCents === null ? "gateway_summary_confirmado_sem_valor_monetario_extraivel" : null,
+  };
+};
+
+const paymentHistoryDateKey = (item: AdminFinancePaymentHistoryItem) =>
+  item.occurred_at.slice(0, 10);
+
+export const mergeGatewaySummaryPaymentHistory = (
+  localItems: AdminFinancePaymentHistoryItem[],
+  gatewayItem: AdminFinancePaymentHistoryItem | null,
 ) => {
-  if (!paymentEvents || paymentEvents.length === 0) return [];
+  if (!gatewayItem) return localItems;
+
+  const gatewayDate = paymentHistoryDateKey(gatewayItem);
+  const localWithoutGatewayDay = localItems.filter(
+    (item) => paymentHistoryDateKey(item) !== gatewayDate,
+  );
+
+  return [gatewayItem, ...localWithoutGatewayDay];
+};
+
+export const paymentHistoryForSubscription = (
+  subscription: FinanceSubscriptionRecord,
+  paymentEvents?: PaymentEventRecord[],
+  gatewaySummary?: GatewaySubscriptionPaymentSummary | null,
+) => {
+  const gatewayItem = mapGatewaySummaryPaymentHistoryItem(subscription, gatewaySummary);
+
+  if (!paymentEvents || paymentEvents.length === 0) {
+    return gatewayItem ? [gatewayItem] : [];
+  }
 
   const references = subscriptionReferenceValues(subscription);
-  if (references.length === 0) return [];
+  if (references.length === 0) return gatewayItem ? [gatewayItem] : [];
 
-  return paymentEvents
+  const localItems = paymentEvents
     .filter((event) => isPaymentEvent(event.type, event.payload))
     .filter((event) => payloadContainsAnyReference(event.payload, references))
-    .map(mapPaymentHistoryItem)
+    .map((event) =>
+      mapPaymentHistoryItem(event, {
+        title: subscription.plan.name || "Plano Profissional",
+      }),
+    )
     .sort((left, right) => Date.parse(right.occurred_at) - Date.parse(left.occurred_at));
+
+  return mergeGatewaySummaryPaymentHistory(localItems, gatewayItem).sort(
+    (left, right) => Date.parse(right.occurred_at) - Date.parse(left.occurred_at),
+  );
 };
 
 export const buildPaymentHealthSummary = (params: {
@@ -274,12 +351,13 @@ export const buildPaymentHealthSummary = (params: {
 export const buildPaymentInsights = (
   subscription: FinanceSubscriptionRecord,
   paymentEvents?: PaymentEventRecord[],
+  gatewaySummary?: GatewaySubscriptionPaymentSummary | null,
 ): {
   health: AdminFinancePaymentHealth;
   history: AdminFinancePaymentHistory;
 } => {
   const now = new Date();
-  const allHistory = paymentHistoryForSubscription(subscription, paymentEvents);
+  const allHistory = paymentHistoryForSubscription(subscription, paymentEvents, gatewaySummary);
   const successfulPayments = allHistory.filter((item) => item.status === "successful");
   const failedPayments = allHistory.filter((item) => item.status === "failed");
   const pendingPayments = allHistory.filter((item) => item.status === "pending");
@@ -376,7 +454,7 @@ export const buildPaymentInsights = (
       last_success_at: lastSuccessAt,
       notes,
       pending_payments: pendingPayments.length,
-      source: "payment_event+professional_subscription",
+      source: "payment_event+gateway_subscription_summary+professional_subscription",
       status,
       successful_payments: successfulPayments.length,
       success_rate_percent: successRatePercent,
@@ -388,7 +466,9 @@ export const buildPaymentInsights = (
       items: allHistory.slice(0, MAX_PAYMENT_HISTORY_ITEMS),
       reason:
         allHistory.length > 0 ? null : "Nenhum pagamento foi encontrado para esta assinatura.",
-      source: "payment_event.filtered_by_subscription_reference",
+      source: allHistory.some((item) => item.source === "gateway_subscription_summary")
+        ? "payment_event+gateway_subscription_summary"
+        : "payment_event.filtered_by_subscription_reference",
       total: allHistory.length,
     },
   };
@@ -418,9 +498,18 @@ export const findLatestConfirmedPaymentForSubscription = (
 export const mapSubscription = (
   subscription: FinanceSubscriptionRecord,
   paymentEvents?: PaymentEventRecord[],
+  gatewaySummaries?: GatewaySummaryBySubscriptionId,
 ): AdminFinanceSubscriptionItem => {
   const latestPayment = findLatestConfirmedPaymentForSubscription(subscription, paymentEvents);
-  const paymentInsights = buildPaymentInsights(subscription, paymentEvents);
+  const gatewaySummary = gatewaySummaries?.get(subscription.id) ?? null;
+  const latestGatewayPayment = mapGatewaySummaryPaymentHistoryItem(subscription, gatewaySummary);
+  const latestLocalPaymentAt = latestPayment?.createdAt ?? null;
+  const latestGatewayPaymentAt = toDateOrNull(latestGatewayPayment?.occurred_at);
+  const latestPaymentAt =
+    latestLocalPaymentAt && latestGatewayPaymentAt
+      ? new Date(Math.max(latestLocalPaymentAt.getTime(), latestGatewayPaymentAt.getTime()))
+      : (latestLocalPaymentAt ?? latestGatewayPaymentAt);
+  const paymentInsights = buildPaymentInsights(subscription, paymentEvents, gatewaySummary);
 
   return {
     cancelled_at: subscription.status === "cancelada" ? subscription.updatedAt.toISOString() : null,
@@ -431,7 +520,7 @@ export const mapSubscription = (
     gateway_subscription_id: subscription.gateway_subscription_id,
     id: subscription.id,
     internal_id: subscription.internal_id,
-    last_charge_at: latestPayment?.createdAt.toISOString() ?? null,
+    last_charge_at: latestPaymentAt?.toISOString() ?? null,
     next_charge_at: subscription.current_period_end?.toISOString() ?? null,
     payment_health: paymentInsights.health,
     payment_history: paymentInsights.history,

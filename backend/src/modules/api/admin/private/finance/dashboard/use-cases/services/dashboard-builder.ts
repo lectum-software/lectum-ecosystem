@@ -1,24 +1,24 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import type {
+  AdminFinanceChargeItem,
   AdminFinanceDashboard,
   AdminFinanceQuery,
   AdminFinanceSeriesPoint,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 import { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
-import { buildChargeItems } from "./charges-lists";
+import { buildChargeItems, fetchGatewayPaymentSummaries } from "./charges-lists";
 import {
   type Bucket,
   buildBuckets,
   DASHBOARD_TABLE_PREVIEW_TAKE,
   DEFAULT_SUBSCRIPTION_TAKE,
   metric,
-  type PaymentEventRecord,
   type PaymentRevenue,
   resolveAdminFinancePeriod,
   summarizeAverageLtv,
   summarizeAverageSubscriptionLifetime,
-  summarizeRevenue,
+  summarizeChargeItemsRevenue,
 } from "./period-revenue";
 import {
   calculateChurnRatePercent,
@@ -31,7 +31,7 @@ import {
 
 export const buildSeries = async (
   buckets: Bucket[],
-  paymentEvents: PaymentEventRecord[],
+  chargeItems: AdminFinanceChargeItem[],
   newSubscriptionValues: NewSubscriptionValueRecord[],
   repository: AdminFinanceDashboardRepository,
 ): Promise<AdminFinanceSeriesPoint[]> =>
@@ -42,7 +42,17 @@ export const buildSeries = async (
         repository.countActivePaidSubscriptionsAt(bucket.end),
         repository.countCancelledPaidSubscriptions(bucket),
       ]);
-      const revenue = summarizeRevenue(recordsInBucket(paymentEvents, bucket));
+      const revenue = summarizeChargeItemsRevenue(
+        chargeItems.filter((item) => {
+          const occurredAt = new Date(item.occurred_at);
+
+          return (
+            !Number.isNaN(occurredAt.getTime()) &&
+            occurredAt >= bucket.start &&
+            occurredAt <= bucket.end
+          );
+        }),
+      );
 
       return {
         active_subscriptions: activeSubscriptions,
@@ -69,7 +79,7 @@ export const buildUnavailable = (
         "Existem pagamentos confirmados sem valor informado pelo Mercado Pago; a receita total fica indisponível para evitar uma soma parcial.",
       id: "revenue_total",
       label: "Receita total",
-      source: "payment_event.payload",
+      source: "payment_event.payload+gateway_subscription_summary",
     });
   }
 
@@ -112,6 +122,7 @@ export const buildAdminFinanceDashboard = async (
     lifetimePaymentEvents,
     newSubscriptions,
     paymentReferenceSubscriptions,
+    previousPaymentReferenceSubscriptions,
     subscriptionRelationTotal,
     subscriptionRelationItems,
   ] = await Promise.all([
@@ -130,14 +141,40 @@ export const buildAdminFinanceDashboard = async (
     repository.listPaymentEventsForLifetime(),
     repository.listNewPaidSubscriptions(current, subscriptionTake),
     repository.listPaidSubscriptionsForPaymentReferenceAt(current.end),
+    repository.listPaidSubscriptionsForPaymentReferenceAt(previous.end),
     repository.countPaidSubscriptionsForRelation(current),
     repository.listPaidSubscriptionsForRelation(current, {
       take: tableTake,
     }),
   ]);
 
-  const currentRevenue = summarizeRevenue(currentPaymentEvents);
-  const previousRevenue = summarizeRevenue(previousPaymentEvents);
+  const [
+    currentGatewaySummaries,
+    previousGatewaySummaries,
+    lifetimeGatewaySummaries,
+    newSubscriptionGatewaySummaries,
+    subscriptionRelationGatewaySummaries,
+  ] = await Promise.all([
+    fetchGatewayPaymentSummaries(paymentReferenceSubscriptions),
+    fetchGatewayPaymentSummaries(previousPaymentReferenceSubscriptions),
+    fetchGatewayPaymentSummaries(lifetimeSubscriptions),
+    fetchGatewayPaymentSummaries(newSubscriptions),
+    fetchGatewayPaymentSummaries(subscriptionRelationItems),
+  ]);
+  const currentCharges = buildChargeItems(currentPaymentEvents, paymentReferenceSubscriptions, {
+    gatewaySummaries: currentGatewaySummaries,
+    range: current,
+  });
+  const previousCharges = buildChargeItems(
+    previousPaymentEvents,
+    previousPaymentReferenceSubscriptions,
+    {
+      gatewaySummaries: previousGatewaySummaries,
+      range: previous,
+    },
+  );
+  const currentRevenue = summarizeChargeItemsRevenue(currentCharges);
+  const previousRevenue = summarizeChargeItemsRevenue(previousCharges);
   const revenueAvailable =
     currentRevenue.missing_amount_count === 0 && previousRevenue.missing_amount_count === 0;
   const mrrCents = activeSubscriptions.reduce(
@@ -156,7 +193,11 @@ export const buildAdminFinanceDashboard = async (
     currentCancellationCount,
     currentChurnOpeningBaseCount,
   );
-  const averageLtv = summarizeAverageLtv(lifetimeSubscriptions, lifetimePaymentEvents);
+  const averageLtv = summarizeAverageLtv(
+    lifetimeSubscriptions,
+    lifetimePaymentEvents,
+    lifetimeGatewaySummaries,
+  );
   const averageSubscriptionLifetime = summarizeAverageSubscriptionLifetime(
     cancelledLifetimeSubscriptions,
   );
@@ -166,11 +207,10 @@ export const buildAdminFinanceDashboard = async (
   const buckets = buildBuckets(current, groupBy);
   const series = await buildSeries(
     buckets,
-    currentPaymentEvents,
+    currentCharges,
     currentNewSubscriptionValues,
     repository,
   );
-  const currentCharges = buildChargeItems(currentPaymentEvents, paymentReferenceSubscriptions);
   const unavailable = buildUnavailable(currentRevenue, previousRevenue);
 
   const dashboard: AdminFinanceDashboard = {
@@ -180,7 +220,7 @@ export const buildAdminFinanceDashboard = async (
         "Receita confirmada durante todo o histórico, dividida pelos psicólogos com assinatura paga pelo Mercado Pago.",
       linked_confirmed_payments: averageLtv.linkedConfirmedPayments,
       paid_psychologist_count: averageLtv.paidPsychologistCount,
-      source: "payment_event_linked_to_paid_psychologists",
+      source: "payment_event+gateway_subscription_summary_linked_to_paid_psychologists",
       unavailable_reason: averageLtv.unavailableReason,
       value_cents: averageLtv.valueCents,
     },
@@ -204,10 +244,10 @@ export const buildAdminFinanceDashboard = async (
         id: "revenue_total",
         label: "Receita total",
         previous: previousRevenue.revenue_cents,
-        source: "payment_event.gateway=mercadopago",
+        source: "payment_event+gateway_subscription_summary.gateway=mercadopago",
         unavailableReason: revenueAvailable
           ? null
-          : "payment_event_confirmado_sem_valor_monetario_extraivel",
+          : "pagamento_confirmado_sem_valor_monetario_extraivel",
         unit: "currency_cents",
       }),
       active_subscriptions: metric({
@@ -252,8 +292,8 @@ export const buildAdminFinanceDashboard = async (
       }),
     },
     coverage_notes: [
-      "A receita considera somente pagamentos confirmados com valor informado pelo Mercado Pago; não há projeção por quantidade de assinaturas.",
-      "O LTV médio considera todo o histórico de pagamentos confirmados vinculados às assinaturas pagas.",
+      "A receita considera pagamentos confirmados com valor informado pelo Mercado Pago, conciliando webhooks locais e resumo da assinatura no gateway sem projetar por quantidade de assinaturas.",
+      "O LTV médio considera todo o histórico de pagamentos confirmados vinculados às assinaturas pagas, conciliando resumo do gateway quando o webhook local não foi gravado.",
       "O tempo médio de permanência considera todo o histórico das assinaturas pagas já canceladas.",
       "Plano gratuito e cortesia administrativa não entram na receita, no MRR, no LTV médio, no tempo médio de permanência ou nos indicadores financeiros.",
       "O churn considera cancelamentos confirmados e divide as saídas pela base paga no início do período, sem inferir cancelamento por ausência de renovação.",
@@ -273,12 +313,12 @@ export const buildAdminFinanceDashboard = async (
     },
     latest_charges: {
       items: currentCharges.slice(0, tableTake),
-      source: "payment_event+professional_subscription",
+      source: "payment_event+gateway_subscription_summary+professional_subscription",
       total: currentCharges.length,
     },
     new_subscriptions: {
       items: newSubscriptions.map((subscription) =>
-        mapSubscription(subscription, lifetimePaymentEvents),
+        mapSubscription(subscription, lifetimePaymentEvents, newSubscriptionGatewaySummaries),
       ),
       source: "professional_subscription+subscription_plan+psychologist_profile+user",
       total: currentNewSubscriptionCount,
@@ -286,11 +326,11 @@ export const buildAdminFinanceDashboard = async (
     period,
     series: {
       points: series,
-      source: "payment_event+professional_subscription",
+      source: "payment_event+gateway_subscription_summary+professional_subscription",
     },
     subscription_relation: {
       items: subscriptionRelationItems.map((subscription) =>
-        mapSubscription(subscription, lifetimePaymentEvents),
+        mapSubscription(subscription, lifetimePaymentEvents, subscriptionRelationGatewaySummaries),
       ),
       source: "professional_subscription+subscription_plan+psychologist_profile+user",
       total: subscriptionRelationTotal,
