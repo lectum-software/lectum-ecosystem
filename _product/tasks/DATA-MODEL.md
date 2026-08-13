@@ -751,6 +751,13 @@ necessario materializar para performance, criar `mentor_score_snapshot`
 (`psychologist_id`, `community_id`, `score Int`, `period String`, `position Int`) ou modelo equivalente apos ADR
 especifica de snapshot.
 
+Complemento 2026-08-13: o contrato `GET /api/private/community/top-mentors` pode retornar, em
+`professional`, os campos derivados `whatsapp_name` e `whatsapp_url` para acionar o CTA de WhatsApp
+na tela Top Mentores. Esses campos usam `psychologist_profile.whatsapp`,
+`psychologist_profile.professional_first_name` e o helper canônico de mensagem pronta de WhatsApp,
+sem persistir novo dado e sem alterar a fórmula, ordenação, elegibilidade ou snapshot do ranking.
+Frontends devem tratar esses campos como opcionais durante rollout entre versões.
+
 Complemento 2026-08-02: o bloco `communities` do `GET /api/private/psychologist/analytics` considera comunidades
 ativas em que o psicologo segue (`community_member`) ou tem participacao real por posts/respostas, mas a UI nao expõe
 mais detalhes por comunidade. O contrato agrega conteudo comunitario em quatro grupos: posts com video, posts sem video,

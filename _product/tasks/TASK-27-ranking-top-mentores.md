@@ -218,3 +218,43 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudanças de backend, Prisma, migrations, packages, endpoint, fórmula, ordenação ou dados do ranking.
 - ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
 - Validações executadas: `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx src/app/globals.css`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em `/app/community/top-mentors?community=luto-e-ressignificacao`.
+
+## Complemento 2026-08-13 - CTA WhatsApp na classificacao geral
+
+- Pedido do usuário: na tela Top Mentores, trocar a seta lateral de perfil por ícone WhatsApp já usado na Lectum, ajustar o texto `Psicólogo` para fonte textual com primeira letra maiúscula e demais minúsculas, e garantir o mesmo selo verificado do restante do produto.
+- Referência visual ativa: screenshot do usuário `WhatsApp Image 2026-08-12 at 19.33.12.jpeg` e `_product/proto/Top 5 Mentores da comunidade.jpg`; Builder/Quick Copy não está exposto como ferramenta callable nesta sessão, mantendo fallback auditável pela imagem local.
+- Frontend: a `Classificação geral` mantém o corpo do card como link para o perfil público, mas a affordance lateral deixou de ser `ChevronRight` e passou a ser um botão independente com `PsychologistWhatsAppRedirectButton` + `WhatsAppIcon`.
+- Backend: `GET /api/private/community/top-mentors` passou a retornar, de forma aditiva, `professional.whatsapp_name` e `professional.whatsapp_url`, derivados do perfil profissional e do helper canônico `buildProfessionalWhatsappUrl`.
+- Rollout: os novos campos são opcionais no frontend para tolerar backend e frontend em versões diferentes; enquanto o backend antigo responder sem URL, o ícone aparece desabilitado em vez de quebrar a tela.
+- Identidade profissional: o label passa a exibir `Psicólogo`/`Psicóloga` em title case com `font-sans`, sem uppercase/tracking exagerado.
+- Selo verificado: segue usando o componente compartilhado `VerifiedBadgeIcon`, o mesmo usado nas páginas de comunidade e no perfil público do psicólogo.
+- Escopo: sem alteração de fórmula, ordenação, score, elegibilidade, schema, migrations, envs, packages, seeds, snapshots ou mocks.
+- ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
+
+### Critérios específicos deste complemento
+
+- [x] Seta/chevron da linha de classificação removida e substituída por ícone WhatsApp já existente na Lectum.
+- [x] CTA WhatsApp usa URL real derivada do perfil profissional, sem mock ou dado fake.
+- [x] `Psicólogo`/`Psicóloga` aparece em title case com fonte textual já usada no produto.
+- [x] Selo verificado usa `VerifiedBadgeIcon`, sem criar novo asset ou ícone paralelo.
+- [x] Contrato backend/frontend permanece compatível durante rollout por campos aditivos e opcionais.
+- [x] Nenhuma migration, env obrigatória nova ou package novo foi criada.
+- [x] ADR e `DATA-MODEL.md` atualizados com a decisão de contrato e rollout.
+
+### Validações deste complemento
+
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/community/repositories/support/community-feed.ts src/modules/api/private/community/repositories/queries/CommunityMentorRepository.ts src/modules/api/private/community/DTOs/ICommunityDTO.ts`
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx src/api/generator/types/community.ts`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Browser local em `/app/comunidades/top-mentores` (rota carregada no servidor local; validação visual detalhada limitada pelo estado autenticado, sem criar usuário/dado artificial em homologação)
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] Commit próprio criado e push em `homolog` executado.

@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { getProfessionalWhatsappDisplayName } from "@/utils/professional-name";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
 import type { ICommunityTopMentorsDTO } from "../../DTOs/ICommunityDTO";
 import {
@@ -17,6 +18,7 @@ import {
   topMentorUserSelect,
 } from "../support/community-feed";
 import {
+  buildProfessionalWhatsappUrl,
   buildUserProfessionalDisplayName,
   emptyTopMentorMetrics,
   hasTopMentorRankingSignal,
@@ -548,6 +550,11 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
     const items = ranked.map((item, index) => {
       const position = index + 1;
       const profile = item.mentor.psychologist_profile;
+      const displayName = buildUserProfessionalDisplayName(item.mentor);
+      const whatsappDisplayName = getProfessionalWhatsappDisplayName({
+        fallbackName: displayName,
+        firstName: profile?.professional_first_name,
+      });
 
       return {
         position,
@@ -555,13 +562,20 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
         badge: topMentorBadgeForPosition(position),
         professional: {
           id: item.mentor.id,
-          name: buildUserProfessionalDisplayName(item.mentor),
+          name: displayName,
           avatar: item.mentor.avatar,
           headline: profile?.headline ?? null,
           crp: profile?.crp ?? null,
           rating_avg: profile?.rating_avg ?? 0,
           rating_count: profile?.rating_count ?? 0,
           profile_url: `/psicologos/${item.mentor.id}`,
+          whatsapp_name: whatsappDisplayName || null,
+          whatsapp_url: buildProfessionalWhatsappUrl(
+            profile,
+            displayName,
+            whatsappDisplayName,
+            "profile",
+          ),
         },
         metrics: {
           upvotes_received: item.metrics.upvotes_received,

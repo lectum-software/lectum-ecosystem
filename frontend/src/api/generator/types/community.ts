@@ -241,6 +241,8 @@ export type CommunityTopMentor = {
     rating_avg: number;
     rating_count: number;
     profile_url: string;
+    whatsapp_name?: string | null;
+    whatsapp_url?: string | null;
   };
   metrics: CommunityTopMentorMetrics;
   score_breakdown: CommunityTopMentorBreakdown;

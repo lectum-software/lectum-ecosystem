@@ -55,3 +55,32 @@ Produto pediu uma limpeza visual na tela `/app/community/top-mentors`, especialm
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Chrome/CDP autenticado em `/app/community/top-mentors?community=luto-e-ressignificacao` para verificar fundo uniforme, pódio centralizado no mobile, lista sem fundo metálico na posição e cards mais estreitos no desktop.
+
+## Complemento 2026-08-13 — CTA WhatsApp e identidade profissional nos cards
+
+### Contexto
+
+Produto pediu que a `Classificação geral` da tela Top Mentores removesse a seta lateral que indicava navegação para perfil e usasse o ícone de WhatsApp já existente na Lectum. O mesmo ajuste também exigiu harmonizar o texto `Psicólogo` com uma fonte textual já usada no produto, sem caixa alta completa, e garantir que o selo de verificado fosse o mesmo componente exibido nas páginas de comunidade e no perfil público do psicólogo.
+
+### Decisão
+
+- Manter o corpo principal do card como link para o perfil público do mentor, preservando a descoberta do profissional, mas trocar a affordance lateral por um CTA independente de WhatsApp.
+- Reutilizar `PsychologistWhatsAppRedirectButton` e `WhatsAppIcon`, já usados nos fluxos de contato da Lectum, para manter rastreamento, modal de transição e normalização segura de URL.
+- Estender de forma aditiva o contrato `GET /api/private/community/top-mentors` com `professional.whatsapp_name` e `professional.whatsapp_url`, derivados de `psychologist_profile.whatsapp` e dos helpers canônicos de nome/mensagem pronta.
+- Tratar os novos campos como opcionais no frontend; enquanto o backend antigo ainda não tiver sido publicado, o ícone fica visível, porém desabilitado, evitando quebra no rollout.
+- Exibir `Psicólogo`/`Psicóloga` em title case com estilo `font-sans` sem tracking de caixa alta, mantendo hierarquia discreta abaixo do nome.
+- Continuar usando `VerifiedBadgeIcon` compartilhado como única fonte visual do selo verificado.
+
+### Consequências
+
+- A mudança é compatível com versões diferentes de frontend e backend porque os campos novos são aditivos e opcionais para a UI.
+- Não há alteração de schema Prisma, migrations, envs, packages, fórmula, score, elegibilidade, ordenação ou snapshot do ranking.
+- O rollback é direto: reverter o commit remove o CTA e os campos derivados sem afetar dados persistidos.
+
+### Validação
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local em `/app/comunidades/top-mentores` para verificar ausência do chevron, presença do ícone WhatsApp, label `Psicólogo`/`Psicóloga` em title case e selo `VerifiedBadgeIcon`.

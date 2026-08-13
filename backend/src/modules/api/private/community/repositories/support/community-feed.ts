@@ -95,9 +95,19 @@ export const topMentorUserSelect = {
       headline: true,
       professional_first_name: true,
       professional_last_name: true,
+      whatsapp: true,
+      cfp_verified_at: true,
+      crp_status: true,
       crp: true,
       rating_avg: true,
       rating_count: true,
+      subscriptions: {
+        where: activeProfessionalEntitlementWhere(),
+        select: {
+          id: true,
+          source: true,
+        },
+      },
     },
   },
 } satisfies Prisma.userSelect;

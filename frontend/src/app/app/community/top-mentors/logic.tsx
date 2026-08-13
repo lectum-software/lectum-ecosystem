@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronRight, Medal } from "lucide-react";
+import { ArrowLeft, Medal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,10 +8,12 @@ import { useMemo } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityTopMentor } from "@/api/generator/types/community";
+import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -279,41 +281,73 @@ const RankingHero = ({
 const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   const tone = rankTone(mentor.position);
   const isTopThree = mentor.position <= 3;
+  const professionalType = professionLabel(mentor);
+  const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
 
   return (
-    <Link
-      className="group flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-border bg-surface px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface"
-      href={topMentorProfileUrl(mentor.professional.profile_url)}
-    >
-      <span
-        className={cn(
-          "flex w-11 shrink-0 items-center justify-center gap-1 text-sm font-black tabular-nums",
-          tone.listAccent,
-        )}
+    <article className="flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-border bg-surface px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface">
+      <Link
+        aria-label={`Ver perfil de ${mentor.professional.name}`}
+        className="group/profile flex min-w-0 flex-1 items-center gap-3"
+        href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
-        <Medal
-          className={cn("h-4 w-4", isTopThree ? tone.listAccent : "text-muted")}
-          aria-hidden="true"
-        />
-        <span>{String(mentor.position).padStart(2, "0")}</span>
-      </span>
-      <Avatar mentor={mentor} ringed={isTopThree} size={62} />
-      <span className="min-w-0 flex-1">
-        <span className="flex min-w-0 items-center gap-0.5">
-          <strong className="truncate text-base font-black tracking-[-0.02em] text-foreground dark:text-foreground">
-            {mentor.professional.name}
-          </strong>
-          <VerifiedBadgeIcon
-            className="h-[18px] w-[18px] shrink-0"
-            aria-label="Perfil verificado"
+        <span
+          className={cn(
+            "flex w-11 shrink-0 items-center justify-center gap-1 text-sm font-black tabular-nums",
+            tone.listAccent,
+          )}
+        >
+          <Medal
+            className={cn("h-4 w-4", isTopThree ? tone.listAccent : "text-muted")}
+            aria-hidden="true"
           />
+          <span>{String(mentor.position).padStart(2, "0")}</span>
         </span>
-        <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-[0.08em] text-muted dark:text-muted">
-          {professionLabel(mentor)}
+        <Avatar mentor={mentor} ringed={isTopThree} size={62} />
+        <span className="min-w-0 flex-1">
+          <span className="flex min-w-0 items-center gap-0.5">
+            <strong className="truncate text-base font-black tracking-[-0.02em] text-foreground transition group-hover/profile:text-primary dark:text-foreground">
+              {mentor.professional.name}
+            </strong>
+            <VerifiedBadgeIcon
+              className="h-[18px] w-[18px] shrink-0"
+              aria-label="Perfil verificado"
+            />
+          </span>
+          <span className="mt-0.5 block truncate font-sans text-[0.82rem] font-semibold leading-5 tracking-[-0.01em] text-muted dark:text-muted">
+            {professionalType}
+          </span>
         </span>
-      </span>
-      <ChevronRight className="h-5 w-5 shrink-0 text-muted transition group-hover:translate-x-1 group-hover:text-primary" />
-    </Link>
+      </Link>
+      <PsychologistWhatsAppRedirectButton
+        aria-label={`Fale com ${
+          mentor.professional.whatsapp_name || mentor.professional.name
+        } no WhatsApp`}
+        className={cn(
+          "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-4 focus:ring-success/15",
+          canOpenWhatsApp
+            ? "border-success/20 bg-success/10 text-success hover:border-success/35 hover:bg-success/15"
+            : "cursor-not-allowed border-border bg-surface-muted text-subtle",
+        )}
+        psychologist={{
+          avatar: mentor.professional.avatar,
+          crp: mentor.professional.crp,
+          id: mentor.professional.id,
+          name: mentor.professional.name,
+          typeLabel: professionalType,
+          whatsappName: mentor.professional.whatsapp_name,
+          whatsappUrl: mentor.professional.whatsapp_url,
+        }}
+        stopPropagation
+        trackingContext={{
+          pageKind: "community_top_mentors",
+          targetId: mentor.professional.id,
+          targetType: "psychologist",
+        }}
+      >
+        <WhatsAppIcon className="h-[1.15rem] w-[1.15rem]" aria-hidden="true" />
+      </PsychologistWhatsAppRedirectButton>
+    </article>
   );
 };
 

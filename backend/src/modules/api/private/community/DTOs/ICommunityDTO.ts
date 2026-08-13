@@ -278,6 +278,8 @@ export type CommunityTopMentorDTO = {
     rating_avg: number;
     rating_count: number;
     profile_url: string;
+    whatsapp_name: string | null;
+    whatsapp_url: string | null;
   };
   metrics: CommunityTopMentorMetricsDTO;
   score_breakdown: CommunityTopMentorBreakdownDTO;
