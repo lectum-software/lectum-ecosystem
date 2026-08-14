@@ -89,3 +89,10 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - O backend passa a classificar tanto `code=609` quanto `code=615` como indisponibilidade temporaria da origem (`cfp_provider_unavailable`), preservando compatibilidade com os dois codigos observados em operacao.
 - Esse tratamento nao aprova automaticamente o psicologo, nao preenche `cfp_verified_at` e nao cria mock ou retry cego. A tentativa permanece auditada e o caminho alternativo e a aprovacao humana existente no Admin, conforme ADR-0251.
 - A resposta HTTP permanece `502`, pois a dependencia externa nao concluiu a consulta; o codigo de dominio permite que a interface apresente a orientacao correta de suporte e aprovacao manual, em vez de erro inesperado generico.
+
+## Ajuste 2026-08-14 - copy do selo verificado
+
+- A decisao de dominio permanece a mesma: o selo de verificado so pode ser concedido apos validacao real automatica ou aprovacao manual auditada.
+- A tela `/psychologist/cfp` passa a deixar explicito que a consulta existe para conceder o selo de verificado, reduzindo ambiguidade sobre liberacao de configuracao de perfil.
+- O helper do CPF passa a mencionar a busca do registro junto ao Conselho Federal de Psicologia.
+- Nao houve mudanca de provider, endpoint, dados persistidos, seguranca, env, schema Prisma ou politica de fallback.

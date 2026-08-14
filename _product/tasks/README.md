@@ -622,3 +622,9 @@ Uma task só pode ser marcada como concluída quando:
 
 - O icone de alerta da aba `Perfil e cadastro` no detalhe Admin do psicologo passa a indicar somente perfil nao visivel para pacientes por falta de configuracoes publicas.
 - CRP pendente por si so nao aciona o alerta; desativacao manual de `Perfil visivel para pacientes`, com perfil completo, tambem nao aciona alerta.
+
+## Atualizacao visual em 2026-08-14: copy da verificacao profissional
+
+- A tela `/psychologist/cfp` passa a comunicar que a consulta CFP e necessaria para conceder o selo de verificado.
+- O texto auxiliar do CPF passa a informar que o registro sera buscado junto ao Conselho Federal de Psicologia.
+- A alteracao e apenas de copy no frontend e nao altera contrato, banco, provider CFP, packages ou envs.

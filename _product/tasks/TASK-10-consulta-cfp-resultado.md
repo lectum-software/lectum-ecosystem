@@ -273,3 +273,19 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Consulta real ao endpoint `GET /api/private/psychologist/free-profile` com token temporario real removido ao final confirmou que o CRP confirmado e exposto como `<REGIÃO>/<REGISTRO>`, preservando `nome_regional` e `registro` da auditoria CFP.
+
+## Ajuste pos-feedback 2026-08-14 - copy da verificacao profissional
+
+- Pedido direto de produto aplicado em `/psychologist/cfp`.
+- A copy principal passa a explicar que a consulta e necessaria para conceder o selo de verificado.
+- A descricao do campo CPF passa a informar que a busca sera feita junto ao Conselho Federal de Psicologia.
+- Nao houve alteracao de backend, endpoint, contrato, schema Prisma, migration, package novo, mock, seed ou dado persistido.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a imagem anexada pelo usuario foi usada como referencia visual e textual.
+- UI mantida mobile-first, reaproveitando a tela, componentes e formulario existentes da TASK-10/TASK-02.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Texto principal da tela de verificacao profissional ajustado conforme pedido.
+- [x] Texto auxiliar do campo CPF ajustado conforme pedido.
+- [x] Nenhum contrato, banco, provider ou fluxo de aprovacao CFP foi alterado.

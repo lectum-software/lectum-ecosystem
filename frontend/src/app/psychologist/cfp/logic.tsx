@@ -145,7 +145,7 @@ export const PsychologistCfpLogic = () => {
     <PageFrame>
       <PremiumPanel>
         <CfpHero
-          description="Antes de liberar a configuração completa do perfil, precisamos confirmar que você é um profissional com registro ativo no Conselho Federal de Psicologia."
+          description="Para conceder o selo de verificado, precisamos confirmar que você é um profissional com registro ativo no Conselho Federal de Psicologia."
           title="Verificação Profissional"
         />
 
