@@ -205,7 +205,7 @@ const SubscriptionCancelAction = ({
             type="button"
           >
             <AlertTriangle aria-hidden className="h-4 w-4" />
-            Cancelar assinatura
+            Cancelar
           </button>
         </div>
       </div>

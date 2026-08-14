@@ -199,6 +199,7 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de backend, endpoint, regra de revogacao, banco, packages ou dados persistidos.
 - Validacao browser local headless Chrome/CDP, viewport mobile-first 390px, confirmou a nova copy, `Até 10/07/2027`, ausencia do bloco operacional, ausencia de e-mail/id do admin e `scrollWidth=390`.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+- Smoke local: `GET http://127.0.0.1:3215/version` retornou 200 e a rota protegida `/psicologos/cmsix7srr006k01p9j8f4yy3n?tab=plano` retornou 307 para login, esperado sem sessao Admin local.
 
 ## Ajuste complementar 2026-07-11 - Plano atual enxuto com revogacao inline
 
@@ -402,3 +403,11 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de schema Prisma, migrations, envs, packages, dados publicados ou simulacao de pagamento.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Plano e pagamentos.png` e a captura enviada pelo usuario.
 - Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check`, `git diff --check` e smoke HTTP local do Admin em `GET http://127.0.0.1:3002/version` + `GET /psicologos/cmsrqz0qj000f01qvd2um0qgg?tab=plano`, ambos com status 200.
+
+## Ajuste complementar 2026-08-13 - copy curta do botao de cancelamento
+
+- Pedido do usuario: no card de cancelamento da aba Assinatura do detalhe do psicologo, trocar o texto do botao de `Cancelar assinatura` para `Cancelar`.
+- A mudanca e apenas visual no botao que abre a modal; titulo do bloco, titulo da modal, confirmacao forte `CANCELAR ASSINATURA`, endpoint real, gateway e auditoria permanecem inalterados.
+- Nao houve alteracao de backend, schema Prisma, migrations, envs, packages, dados publicados ou regra de dominio.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela ja existente da TASK-56.
+- Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.

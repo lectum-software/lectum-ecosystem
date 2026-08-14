@@ -608,3 +608,7 @@ Uma task só pode ser marcada como concluída quando:
 
 - A etapa `/app/profissional/assinatura/endereco` nao exibe mais a faixa verde de pagamento bem-sucedido.
 - No desktop, Numero fica ao lado de Logradouro e Cidade fica ao lado de Estado; no mobile o formulario continua em uma coluna unica.
+
+## Atualizacao visual em 2026-08-13: Admin cancelamento de assinatura
+
+- Na aba Assinatura do detalhe do psicologo, o botao do card de cancelamento administrativo exibe `Cancelar`; a modal, a confirmacao forte e o cancelamento real no gateway permanecem inalterados.

@@ -18,6 +18,7 @@ A tela existente da TASK-56 ja exibe plano, forma de pagamento mascarada e histo
 - Persistir o cancelamento local em `professional_subscription` com `status="cancelada"`, `current_period_end=null`, `gateway="mercadopago"` e a referencia retornada pelo gateway.
 - Registrar auditoria em `admin_activity_log` com `action="psychologist_subscription_cancelled"`, `domain="psychologist_subscription"`, `area="financeiro"`, motivo interno, snapshots seguros e metadata minima.
 - Nao expor token de gateway, PAN/CVV, payload bruto, stack, SQL ou detalhes tecnicos do provedor em resposta publica, UI ou logs de auditoria.
+- Ajuste de 2026-08-13: o botao visivel no card que abre a modal passa a exibir apenas `Cancelar`, mantendo o titulo `Cancelar assinatura`, a modal com o mesmo titulo, a confirmacao forte `CANCELAR ASSINATURA` e o contrato do endpoint sem alteracao.
 
 ## Consequencias
 
