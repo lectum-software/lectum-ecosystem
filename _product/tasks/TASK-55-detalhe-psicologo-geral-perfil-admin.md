@@ -494,3 +494,29 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `git diff --check -- "admin/src/app/(admin)/psicologos/[id]/client.tsx"`
 - Smoke HTTP local: GET http://localhost:3002/psicologos/cmrgztri7000tn0uh1q4n8vxf retornou 200.
 - Validacao visual autenticada em browser interativo nao foi executada porque o ambiente nao expoe a sessao Admin do navegador do usuario; a validacao local ficou limitada ao build, checks, referencia visual e smoke HTTP da rota.
+
+## Ajuste pos-feedback 2026-08-13 - nome profissional no header Admin
+
+- Pedido direto de produto aplicado ao header do detalhe Admin do psicologo.
+- A causa do bug era que `header.name` vinha de `user.name` (nome da conta/login), enquanto o card **Dados pessoais** ja usava o nome profissional separado em `psychologist_profile.professional_first_name` + `professional_last_name`.
+- O endpoint `GET /api/admin/private/psychologists/:id` agora monta `header.name` pela mesma regra de `profile.personal.full_name`: nome profissional separado quando existir e fallback real para `user.name` em perfis legados.
+- Nao houve alteracao de schema Prisma, migration, package, seed, mock, endpoint novo ou contrato quebravel; o campo `header.name` permanece string e apenas sua fonte foi corrigida.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable neste ambiente; as referencias auditaveis foram a captura enviada pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- ADR atualizado: `adrs/0313-admin-dados-pessoais-nomes-exibicao.md`.
+
+### Criterios do ajuste pos-feedback
+
+- [x] O header do detalhe Admin do psicologo usa o nome profissional separado quando disponivel.
+- [x] O header e o campo **Nome completo** nao divergem mais para psicologos com `user.name` diferente do nome profissional.
+- [x] Perfis legados sem nome profissional separado continuam exibindo fallback real de `user.name`.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+
+### Validacao complementar planejada/executada
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `git diff --check`
+- Smoke de homologacao apos push em `homolog`: backend `/ping`, `/health`, `/ready` e Admin `/version`.

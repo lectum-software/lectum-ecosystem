@@ -612,3 +612,8 @@ Uma task só pode ser marcada como concluída quando:
 ## Atualizacao visual em 2026-08-13: Admin cancelamento de assinatura
 
 - Na aba Assinatura do detalhe do psicologo, o botao do card de cancelamento administrativo exibe `Cancelar`; a modal, a confirmacao forte e o cancelamento real no gateway permanecem inalterados.
+
+## Atualizacao operacional em 2026-08-13: nome profissional no header Admin
+
+- O detalhe Admin de psicologo passa a exibir no header o mesmo nome profissional usado em **Dados pessoais > Nome completo**.
+- `user.name` fica apenas como fallback para perfis legados sem `professional_first_name`/`professional_last_name`, evitando divergencia como conta `Tulio Rezende` com perfil profissional `Sebastiao Rezende`.
