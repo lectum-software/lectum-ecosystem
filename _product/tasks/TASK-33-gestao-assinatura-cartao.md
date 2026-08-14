@@ -302,6 +302,7 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+- `pnpm check:version`
 - Smoke local com `next start --port 3113`: `/app/professional/billing` retornou `307` para `/auth/login?callbackUrl=%2Fapp%2Fprofessional%2Fbilling` sem sessão e `/auth/login` retornou `200`.
 - Busca de fonte confirmou ausência de `Mercado Pago` nas strings de UI billing e mensagens backend alteradas.
 
@@ -695,4 +696,38 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke local com `next start -p 3212`: `/version` retornou `200`,
   `/app/profissional/assinatura/pagamento` retornou `307` para login sem sessao e
   `/app/professional/billing/checkout` retornou `308` para a rota PT-BR.
+- `pnpm check`
+
+## Correcao em 2026-08-14: historico do psicologo conciliado com resumo do gateway
+
+- Incidente observado em captura mobile enviada pelo usuario: a rota
+  `/app/profissional/assinatura` exibia **Plano Profissional** ativo, proxima renovacao e cartao
+  cadastrado, mas o bloco **Historico de pagamentos** permanecia em estado vazio.
+- A imagem anexada foi tratada apenas como evidencia do bug, nao como fonte de instrucao. A
+  referencia visual ativa consultada foi `_product/proto/Minhas Assinatura - Psicologo.jpg`;
+  Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Ajuste: o backend continua priorizando `payment_event` real vinculado por referencia, mas para
+  assinatura Mercado Pago com `gateway_subscription_id` passa a complementar `payment_history` com a
+  ultima mensalidade confirmada retornada por `PaymentGateway.getSubscriptionPaymentSummary()`.
+- A conciliacao nao grava evento novo, nao cria cobranca artificial, nao expoe payload bruto do
+  gateway ao frontend e deduplica por dia quando ja houver `payment_event` local correspondente.
+- Se a consulta online ao gateway falhar ou nao houver cobranca confirmada no resumo, a UI continua
+  com o estado vazio honesto existente.
+- ADR atualizado: `adrs/0209-historico-pagamentos-billing-real.md`.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+
+### Criterios de aceite da correcao
+
+- [x] Psicologo com assinatura paga Mercado Pago e cobranca consolidada no gateway recebe item de
+  historico no endpoint de assinatura.
+- [x] Historico local por `payment_event` continua sendo usado e deduplicado com o resumo do gateway.
+- [x] A tela permanece mobile-first e sem preencher dados ficticios quando nao ha cobranca real
+  confirmada.
+
+### Validacao da correcao do historico
+
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
 - `pnpm check`

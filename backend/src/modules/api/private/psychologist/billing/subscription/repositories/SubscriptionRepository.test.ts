@@ -1,14 +1,21 @@
 import { strict as assert } from "node:assert";
 import { before, describe, it } from "node:test";
 import type { payment_event, professional_subscription } from "@/interfaces/objects";
+import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 
 let buildPaymentHistoryItemsForSubscription: typeof import("./SubscriptionRepository").buildPaymentHistoryItemsForSubscription;
+let buildGatewaySummaryPaymentHistoryItem: typeof import("./SubscriptionRepository").buildGatewaySummaryPaymentHistoryItem;
+let mergeGatewaySummaryPaymentHistory: typeof import("./SubscriptionRepository").mergeGatewaySummaryPaymentHistory;
 
 before(async () => {
   process.env.DATABASE_URL ??= "postgresql://lectum:lectum@localhost:5432/lectum_test";
   process.env.JWT_SECRET_KEY ??= "lectum-test-secret-key-with-minimum-length";
 
-  ({ buildPaymentHistoryItemsForSubscription } = await import("./SubscriptionRepository"));
+  ({
+    buildGatewaySummaryPaymentHistoryItem,
+    buildPaymentHistoryItemsForSubscription,
+    mergeGatewaySummaryPaymentHistory,
+  } = await import("./SubscriptionRepository"));
 });
 
 const subscription = {
@@ -98,5 +105,60 @@ describe("buildPaymentHistoryItemsForSubscription", () => {
 
     assert.equal(items.length, 1);
     assert.equal(items[0].amount_cents, null);
+  });
+
+  it("usa o resumo confirmado do gateway quando o webhook local de pagamento nao tem vinculo suficiente", () => {
+    const summary = {
+      charged_amount_cents: 2990,
+      charged_quantity: 1,
+      gateway_subscription_id: "preapproval-123",
+      last_charged_amount_cents: 2990,
+      last_charged_at: "2026-08-13T20:10:00.000Z",
+      raw: null,
+    } satisfies GatewaySubscriptionPaymentSummary;
+
+    const item = buildGatewaySummaryPaymentHistoryItem(subscription, summary);
+    const merged = mergeGatewaySummaryPaymentHistory([], item);
+
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].id, "gateway-summary:preapproval-123:latest-paid-installment");
+    assert.equal(merged[0].amount_cents, 2990);
+    assert.equal(merged[0].status, "pago");
+    assert.equal(merged[0].status_label, "Sucesso");
+    assert.equal(merged[0].occurred_at?.toISOString(), "2026-08-13T20:10:00.000Z");
+  });
+
+  it("deduplica o resumo do gateway com o evento local confirmado do mesmo dia", () => {
+    const localItems = buildPaymentHistoryItemsForSubscription(
+      [
+        {
+          createdAt: new Date("2026-08-13T12:00:00.000Z"),
+          external_id: "payment-local",
+          gateway: "mercadopago",
+          id: "evt-payment-local",
+          payload: {
+            preapproval_id: "preapproval-123",
+            status: "approved",
+            transaction_amount: 29.9,
+            type: "payment",
+          },
+          type: "payment",
+        },
+      ],
+      subscription,
+    );
+    const gatewayItem = buildGatewaySummaryPaymentHistoryItem(subscription, {
+      charged_amount_cents: 2990,
+      charged_quantity: 1,
+      gateway_subscription_id: "preapproval-123",
+      last_charged_amount_cents: 2990,
+      last_charged_at: "2026-08-13T20:10:00.000Z",
+      raw: null,
+    });
+
+    const merged = mergeGatewaySummaryPaymentHistory(localItems, gatewayItem);
+
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].id, "gateway-summary:preapproval-123:latest-paid-installment");
   });
 });

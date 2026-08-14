@@ -6,6 +6,10 @@ import type {
 } from "@/interfaces/objects";
 import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
 import {
+  type GatewaySubscriptionPaymentSummary,
+  getPaymentGateway,
+} from "@/modules/billing/payment-gateway";
+import {
   actionableProfessionalGatewaySubscriptionWhere,
   activeFreeSubscriptionWhere,
   activeProfessionalEntitlementWhere,
@@ -205,6 +209,57 @@ const dedupePaymentHistoryItems = (items: BillingPaymentHistoryItem[]) => {
   return Array.from(deduped.values());
 };
 
+const toDateOrNull = (value?: string | null) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date;
+};
+
+export const buildGatewaySummaryPaymentHistoryItem = (
+  subscription: professional_subscription,
+  summary: GatewaySubscriptionPaymentSummary,
+): BillingPaymentHistoryItem | null => {
+  if (summary.charged_quantity <= 0) return null;
+
+  const amountCents =
+    summary.last_charged_amount_cents ??
+    (summary.charged_quantity === 1 ? summary.charged_amount_cents : null);
+
+  return {
+    amount_cents: amountCents,
+    description:
+      summary.charged_quantity === 1 ? "Cobrança confirmada." : "Última mensalidade confirmada.",
+    external_id: summary.gateway_subscription_id,
+    gateway: subscription.gateway ?? "mercadopago",
+    id: `gateway-summary:${summary.gateway_subscription_id}:latest-paid-installment`,
+    occurred_at: toDateOrNull(summary.last_charged_at),
+    status: "pago",
+    status_label: "Sucesso",
+    title: subscription.plan?.name?.trim() || "Plano profissional",
+  };
+};
+
+export const mergeGatewaySummaryPaymentHistory = (
+  localItems: BillingPaymentHistoryItem[],
+  gatewayItem: BillingPaymentHistoryItem | null,
+) => {
+  if (!gatewayItem) return localItems;
+
+  const gatewayDate = dateKey(gatewayItem.occurred_at);
+  const localWithoutGatewayDay =
+    gatewayDate !== "sem-data"
+      ? localItems.filter((item) => dateKey(item.occurred_at) !== gatewayDate)
+      : localItems.filter(
+          (item) =>
+            item.status !== gatewayItem.status || item.amount_cents !== gatewayItem.amount_cents,
+        );
+
+  return [gatewayItem, ...localWithoutGatewayDay].slice(0, MAX_PAYMENT_HISTORY_ITEMS);
+};
+
 const buildPaymentHistoryItem = (
   event: payment_event,
   subscription: professional_subscription,
@@ -255,6 +310,14 @@ export const buildPaymentHistoryItemsForSubscription = (
 
   return dedupePaymentHistoryItems(items).slice(0, MAX_PAYMENT_HISTORY_ITEMS);
 };
+
+const isMercadoPagoPaymentHistorySource = (subscription: professional_subscription | null) =>
+  Boolean(
+    subscription?.gateway_subscription_id &&
+      (subscription.source === "mercadopago" ||
+        subscription.gateway === "mercadopago" ||
+        !subscription.gateway),
+  );
 
 export class SubscriptionRepository implements ISubscriptionRepository {
   readonly profileRepository: ORM["psychologist_profile"];
@@ -445,6 +508,22 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       take: MAX_PAYMENT_EVENTS_TO_SCAN,
     });
 
-    return buildPaymentHistoryItemsForSubscription(events, subscription);
+    const localItems = buildPaymentHistoryItemsForSubscription(events, subscription);
+
+    if (isMercadoPagoPaymentHistorySource(subscription)) {
+      try {
+        const gateway = getPaymentGateway();
+        const summary = await gateway.getSubscriptionPaymentSummary(
+          subscription.gateway_subscription_id!,
+        );
+        const gatewayItem = buildGatewaySummaryPaymentHistoryItem(subscription, summary);
+
+        return mergeGatewaySummaryPaymentHistory(localItems, gatewayItem);
+      } catch {
+        // Mantém o histórico local quando a reconciliação online não estiver disponível.
+      }
+    }
+
+    return localItems;
   }
 }
