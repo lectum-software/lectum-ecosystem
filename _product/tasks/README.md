@@ -617,3 +617,8 @@ Uma task só pode ser marcada como concluída quando:
 
 - O detalhe Admin de psicologo passa a exibir no header o mesmo nome profissional usado em **Dados pessoais > Nome completo**.
 - `user.name` fica apenas como fallback para perfis legados sem `professional_first_name`/`professional_last_name`, evitando divergencia como conta `Tulio Rezende` com perfil profissional `Sebastiao Rezende`.
+
+## Atualizacao operacional em 2026-08-13: alerta de Perfil e cadastro no Admin
+
+- O icone de alerta da aba `Perfil e cadastro` no detalhe Admin do psicologo passa a indicar somente perfil nao visivel para pacientes por falta de configuracoes publicas.
+- CRP pendente por si so nao aciona o alerta; desativacao manual de `Perfil visivel para pacientes`, com perfil completo, tambem nao aciona alerta.

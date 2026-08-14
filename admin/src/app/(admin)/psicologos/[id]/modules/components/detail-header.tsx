@@ -25,7 +25,7 @@ import {
   getHeaderPlanLabel,
   getHeaderRatingLabel,
   getPsychologistTitle,
-  needsManualRegistryReview,
+  needsProfileConfigurationAlert,
 } from "../support/formatters";
 import { Avatar, CardShell } from "./shared";
 
@@ -40,7 +40,7 @@ export const DetailHeader = ({
 }) => {
   const pathname = usePathname();
   const header = detail.header;
-  const showProfileRegistryAlert = needsManualRegistryReview(detail);
+  const showProfileConfigurationAlert = needsProfileConfigurationAlert(detail);
   const headerPlan = getHeaderPlanLabel(detail);
   const headerRating = getHeaderRatingLabel(header);
   const headerWhatsapp = formatHeaderWhatsappDisplay(detail.profile.personal.phone);
@@ -130,7 +130,7 @@ export const DetailHeader = ({
         <nav aria-label="Abas do detalhe do psicólogo" className="flex min-w-max gap-1 py-1">
           {TABS.map((item) => {
             const active = item.id === tab;
-            const showRegistryAlert = item.id === "perfil" && showProfileRegistryAlert;
+            const showConfigurationAlert = item.id === "perfil" && showProfileConfigurationAlert;
             const showReportsAlert = item.id === "denuncias" && pendingReportsCount > 0;
             const className = cn(
               "relative inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-3.5 text-sm font-black transition",
@@ -145,9 +145,9 @@ export const DetailHeader = ({
                 key={item.id}
               >
                 <span>{item.label}</span>
-                {showRegistryAlert ? (
+                {showConfigurationAlert ? (
                   <AlertTriangle
-                    aria-label="Registro profissional pendente de verificação manual"
+                    aria-label="Perfil não visível por configurações pendentes"
                     className="h-4 w-4 text-danger"
                   />
                 ) : null}

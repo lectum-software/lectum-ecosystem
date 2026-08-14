@@ -20,7 +20,11 @@ import {
   PROFILE_STATUS_COPY,
 } from "../../support/config";
 import { formatDate } from "../../support/date-period";
-import { emptyToNull, listText } from "../../support/formatters";
+import {
+  emptyToNull,
+  hasProfileVisibilityConfigurationGaps,
+  listText,
+} from "../../support/formatters";
 import type { ProfileProfessionalDataFormValues } from "../../support/schemas";
 import { profileProfessionalDataSchema } from "../../support/schemas";
 import { FieldRow } from "../general/index";
@@ -447,11 +451,14 @@ export const ProfileReadOnlyProfessionalData = ({
   const professional = detail.profile.professional;
   const personal = detail.profile.personal;
   const visibilityStatus = detail.header.active ? "active" : "inactive";
+  const hasVisibilityConfigurationGaps = hasProfileVisibilityConfigurationGaps(detail);
   const visibilityDescription = detail.header.active
     ? "Perfil aparece para pacientes na busca pública."
-    : detail.header.published
-      ? "Visibilidade ativada pelo psicólogo, mas o perfil ainda não cumpre todos os critérios públicos."
-      : "Visibilidade desativada pelo psicólogo.";
+    : hasVisibilityConfigurationGaps
+      ? "Perfil ainda não cumpre todos os critérios públicos de configuração."
+      : detail.header.published
+        ? "Visibilidade ativada pelo psicólogo, mas o perfil ainda não cumpre outros critérios públicos."
+        : "Visibilidade desativada pelo psicólogo.";
 
   return (
     <>

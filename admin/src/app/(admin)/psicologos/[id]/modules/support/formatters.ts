@@ -127,17 +127,35 @@ export const getHeaderAccountStatus = (
   };
 };
 
-export const needsManualRegistryReview = (detail: AdminPsychologistDetail) => {
-  const subscription = detail.general.subscription;
-  const hasActiveProfessionalPlan =
-    subscription.status === "ativa" &&
-    subscription.plan_slug !== "gratuito" &&
-    subscription.source !== "admin_grant";
-  const hasActiveRegistry =
-    detail.header.verified || detail.profile.professional.crp_status === "aprovado";
+const hasTextValue = (value?: string | null) => Boolean(value?.trim());
 
-  return hasActiveProfessionalPlan && !hasActiveRegistry;
+const hasItemsValue = <T>(value?: T[] | null) => Boolean(value?.length);
+
+export const hasProfileVisibilityConfigurationGaps = (detail: AdminPsychologistDetail) => {
+  const { content, personal, professional } = detail.profile;
+  const address = personal.address;
+
+  return !(
+    hasTextValue(detail.header.name) &&
+    hasTextValue(content.video_url) &&
+    hasTextValue(professional.modality) &&
+    hasItemsValue(professional.specialties) &&
+    hasItemsValue(professional.services) &&
+    hasItemsValue(professional.approaches) &&
+    hasItemsValue(professional.target_audience) &&
+    hasTextValue(professional.gender) &&
+    hasTextValue(personal.cpf) &&
+    Boolean(personal.birthdate) &&
+    (hasTextValue(professional.crp) ||
+      (hasTextValue(professional.regional_crp) &&
+        hasTextValue(professional.registration_number))) &&
+    hasTextValue(address.state) &&
+    hasTextValue(address.city)
+  );
 };
+
+export const needsProfileConfigurationAlert = (detail: AdminPsychologistDetail) =>
+  !detail.header.active && hasProfileVisibilityConfigurationGaps(detail);
 
 export const formatGrantedByName = (value?: string | null) => {
   const formatted = formatNullable(value);

@@ -520,3 +520,32 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm check`
 - `git diff --check`
 - Smoke de homologacao apos push em `homolog`: backend `/ping`, `/health`, `/ready` e Admin `/version`.
+
+## Ajuste pos-feedback 2026-08-13 - alerta de configuracao do perfil no menu Admin
+
+- Pedido direto de produto aplicado ao header/tabs do detalhe Admin do psicologo.
+- O icone de alerta da aba `Perfil e cadastro` deixou de representar CRP pendente de revisao manual.
+- O alerta agora aparece somente quando o perfil nao esta visivel para pacientes e faltam configuracoes necessarias para a publicacao publica do perfil: video, modalidade, especialidade, servico, abordagem, publico atendido, genero, CPF, nascimento, CRP e cidade/estado.
+- Quando o psicologo apenas desativa a preferencia `Perfil visivel para pacientes` e o perfil esta configurado, a aba nao mostra alerta.
+- A descricao da linha `Perfil visivel para pacientes` foi ajustada para diferenciar pendencia de configuracao de desativacao explicita pelo psicologo.
+- Nao houve alteracao de backend, endpoint, contrato, schema Prisma, migration, package novo, mock, seed ou dado persistido.
+- UI permanece mobile-first por reutilizar o header/tabs e o `FieldRow` responsivo da TASK-55.
+- Builder/Quick Copy nao esteve acessivel como ferramenta callable neste ambiente; as referencias auditaveis foram as capturas enviadas pelo usuario e o PNG local `_product/proto/admin/Psicologos/Detalhes do psicologo/Perfil e Cadastro.png`.
+- ADR atualizado: `adrs/0253-admin-visibilidade-publica-perfil-psicologo.md`.
+
+### Criterios do ajuste pos-feedback
+
+- [x] Sebastiao Rezende nao exibe alerta na aba `Perfil e cadastro` apenas por CRP pendente.
+- [x] Austin exibe alerta na aba `Perfil e cadastro` quando o perfil nao esta visivel por falta de configuracoes publicas.
+- [x] Desativar manualmente `Perfil visivel para pacientes`, com perfil completo, nao aciona alerta.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo ou migration foi criado.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validacao complementar planejada/executada
+
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- `pnpm check:version`
+- `git diff --check`
+- Smoke de homologacao apos push em `homolog`: backend `/ping`, `/health`, `/ready`, frontend `/version` e Admin `/version`.
