@@ -33,3 +33,10 @@ A tela existente da TASK-56 ja exibe plano, forma de pagamento mascarada e histo
 - Cancelar somente no banco: rejeitado porque manteria cobranca recorrente real ativa no Mercado Pago.
 - Permitir cancelamento sem frase digitada: rejeitado por risco operacional alto em ambiente com dados reais.
 - Delegar apenas ao psicologo o cancelamento: rejeitado porque o Admin precisa de suporte operacional auditavel.
+
+
+## Atualizacao 2026-08-15: confirmacao forte em portal modal
+
+A confirmacao forte do cancelamento administrativo passa a ser renderizada pelo Admin via `createPortal(document.body)`, mantendo overlay de viewport, foco/scroll gerenciados pelo hook de dialogo existente e o mesmo contrato de backend (`CANCELAR ASSINATURA` + motivo interno). A decisao corrige a percepcao visual de bloco inline na aba de assinatura sem alterar gateway, endpoint, schema, env ou auditoria.
+
+Consequencia operacional: rollback do commit volta ao dialogo renderizado na arvore da aba, mas nao altera a seguranca do backend nem reativa recorrencias ja canceladas no Mercado Pago.

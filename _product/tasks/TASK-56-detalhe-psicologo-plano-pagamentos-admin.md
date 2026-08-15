@@ -411,3 +411,30 @@ Exibir plano, método e histórico financeiro do psicólogo e permitir concessã
 - Nao houve alteracao de backend, schema Prisma, migrations, envs, packages, dados publicados ou regra de dominio.
 - Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela ja existente da TASK-56.
 - Validacoes executadas: `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e `git diff --check`.
+
+
+## Ajuste complementar 2026-08-15 - confirmacao forte de cancelamento em modal de viewport
+
+- Pedido do usuario: a confirmacao forte do cancelamento administrativo de assinatura deve aparecer em forma de modal.
+- A acao `Cancelar` continua disponivel somente quando `billing.plan.can_cancel=true` e preserva o contrato real com frase `CANCELAR ASSINATURA` e motivo interno.
+- A UI do Admin passou a renderizar a confirmacao de cancelamento via `createPortal(document.body)`, com overlay de viewport, backdrop e dialog acessivel `role="dialog"` para evitar que a confirmacao fique parecendo um bloco inline dentro da aba.
+- O modal mantem resumo da assinatura, alerta de impacto, campo de motivo, campo de confirmacao forte e bloqueio de fechamento durante a chamada real ao gateway.
+- Nao houve alteracao de backend, endpoint, schema Prisma, migrations, envs, packages, dados publicados ou regra de dominio/gateway.
+- Builder/Quick Copy nao esta exposto como ferramenta no ambiente; a referencia visual usada foi a captura enviada pelo usuario e a tela existente da TASK-56.
+
+### Criterios complementares
+
+- [x] Cancelamento administrativo continua exigindo a frase `CANCELAR ASSINATURA`.
+- [x] Confirmacao forte abre em modal sobre a viewport do Admin, nao como conteudo inline da aba.
+- [x] Modal preserva motivo interno obrigatorio e chamada real ao endpoint/gateway.
+- [x] Nenhum mock, dado fake permanente, package novo ou alteracao de banco foi usado.
+
+### Validacoes executadas
+
+- `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/[id]/modules/tabs/billing/cards.tsx"`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check:version`
+- `pnpm check`
+- `git diff --check`
+- Smoke HTTP local do Admin ficou limitado: a ferramenta bloqueou as tentativas de iniciar servidor local em background; a validacao visual foi coberta por build, checagem estatica do modal portalado e smoke de homologacao apos o push.

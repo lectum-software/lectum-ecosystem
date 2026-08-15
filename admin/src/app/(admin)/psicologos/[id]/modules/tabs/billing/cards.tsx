@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, CreditCard, Gift, Loader2, Wallet, X } from "lucide-react";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { FormProvider, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
@@ -188,6 +189,97 @@ const SubscriptionCancelAction = ({
     }
   };
 
+  const modal = open ? (
+    <div
+      aria-labelledby="subscription-cancel-title"
+      aria-modal="true"
+      className="admin-premium-pilot fixed inset-0 z-[80] flex min-h-dvh items-end justify-center overflow-y-auto bg-overlay p-3 backdrop-blur-[2px] sm:items-center sm:p-6"
+      data-subscription-cancel-modal="true"
+      ref={dialogRef}
+      role="dialog"
+      tabIndex={-1}
+    >
+      <div className="max-h-[calc(100dvh-1.5rem)] w-full overflow-y-auto rounded-[28px] border border-border bg-surface p-5 shadow-admin sm:max-w-2xl sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-danger">
+              Confirmação forte
+            </p>
+            <h3 className="mt-1 text-xl font-bold text-foreground" id="subscription-cancel-title">
+              Cancelar assinatura
+            </h3>
+          </div>
+          <button
+            aria-label="Fechar"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={mutation.isPending}
+            onClick={closeModal}
+            type="button"
+          >
+            <X aria-hidden className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-danger/25 bg-danger/5 p-4 text-sm font-bold leading-6 text-danger">
+          Esta ação cancela a recorrência no provedor de pagamento e remove o acesso ao Plano
+          Profissional após a confirmação. Use somente quando o cancelamento foi solicitado ou
+          aprovado internamente.
+        </div>
+
+        <dl className="mt-5 divide-y divide-border rounded-2xl border border-border bg-surface-muted px-4 text-sm">
+          <FieldRow label="Plano" value={planTitle} />
+          <FieldRow label="Status atual" value={plan.status || "Não informado"} />
+          <FieldRow label="Gateway" value={plan.gateway_label || "Mercado Pago"} />
+          <FieldRow label="Próxima renovação" value={formatDate(plan.current_period_end)} />
+        </dl>
+
+        <FormProvider {...form}>
+          <form className="mt-5 space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+            <TextareaController<SubscriptionCancelFormValues>
+              disabled={mutation.isPending}
+              label="Motivo/observação interna"
+              name="reason"
+              placeholder="Registre por que o Admin está cancelando esta assinatura."
+              required
+              rows={3}
+            />
+            <InputController<SubscriptionCancelFormValues>
+              autoComplete="off"
+              disabled={mutation.isPending}
+              label={["Digite ", SUBSCRIPTION_CANCEL_CONFIRMATION, " para confirmar"].join("")}
+              name="confirmation"
+              placeholder={SUBSCRIPTION_CANCEL_CONFIRMATION}
+              required
+            />
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                className="inline-flex h-12 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={mutation.isPending}
+                onClick={closeModal}
+                type="button"
+              >
+                Manter assinatura
+              </button>
+              <button
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-primary-foreground transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+                disabled={mutation.isPending}
+                type="submit"
+              >
+                {mutation.isPending ? (
+                  <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+                ) : (
+                  <AlertTriangle aria-hidden className="h-4 w-4" />
+                )}
+                Confirmar cancelamento
+              </button>
+            </div>
+          </form>
+        </FormProvider>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <>
       <div className="mt-5 rounded-3xl border border-danger/25 bg-danger/5 p-4">
@@ -210,98 +302,7 @@ const SubscriptionCancelAction = ({
         </div>
       </div>
 
-      {open ? (
-        <div
-          aria-labelledby="subscription-cancel-title"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4"
-          ref={dialogRef}
-          role="dialog"
-          tabIndex={-1}
-        >
-          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] border border-border bg-surface p-5 shadow-admin-soft sm:max-w-2xl sm:rounded-[28px]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-danger">
-                  Confirmação forte
-                </p>
-                <h3
-                  className="mt-1 text-xl font-bold text-foreground"
-                  id="subscription-cancel-title"
-                >
-                  Cancelar assinatura
-                </h3>
-              </div>
-              <button
-                aria-label="Fechar"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={mutation.isPending}
-                onClick={closeModal}
-                type="button"
-              >
-                <X aria-hidden className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-danger/25 bg-danger/5 p-4 text-sm font-bold leading-6 text-danger">
-              Esta ação cancela a recorrência no provedor de pagamento e remove o acesso ao Plano
-              Profissional após a confirmação. Use somente quando o cancelamento foi solicitado ou
-              aprovado internamente.
-            </div>
-
-            <dl className="mt-5 divide-y divide-border rounded-2xl border border-border bg-surface-muted px-4 text-sm">
-              <FieldRow label="Plano" value={planTitle} />
-              <FieldRow label="Status atual" value={plan.status || "Não informado"} />
-              <FieldRow label="Gateway" value={plan.gateway_label || "Mercado Pago"} />
-              <FieldRow label="Próxima renovação" value={formatDate(plan.current_period_end)} />
-            </dl>
-
-            <FormProvider {...form}>
-              <form className="mt-5 space-y-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
-                <TextareaController<SubscriptionCancelFormValues>
-                  disabled={mutation.isPending}
-                  label="Motivo/observação interna"
-                  name="reason"
-                  placeholder="Registre por que o Admin está cancelando esta assinatura."
-                  required
-                  rows={3}
-                />
-                <InputController<SubscriptionCancelFormValues>
-                  autoComplete="off"
-                  disabled={mutation.isPending}
-                  label={`Digite ${SUBSCRIPTION_CANCEL_CONFIRMATION} para confirmar`}
-                  name="confirmation"
-                  placeholder={SUBSCRIPTION_CANCEL_CONFIRMATION}
-                  required
-                />
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button
-                    className="inline-flex h-12 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={mutation.isPending}
-                    onClick={closeModal}
-                    type="button"
-                  >
-                    Manter assinatura
-                  </button>
-                  <button
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-control bg-danger px-4 text-sm font-black text-primary-foreground transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
-                    disabled={mutation.isPending}
-                    type="submit"
-                  >
-                    {mutation.isPending ? (
-                      <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <AlertTriangle aria-hidden className="h-4 w-4" />
-                    )}
-                    Confirmar cancelamento
-                  </button>
-                </div>
-              </form>
-            </FormProvider>
-          </div>
-        </div>
-      ) : null}
+      {modal && typeof document !== "undefined" ? createPortal(modal, document.body) : null}
     </>
   );
 };
