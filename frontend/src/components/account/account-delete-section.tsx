@@ -84,6 +84,12 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
       createDeleteGoogleIntent: {
         onError: (error) => setDeleteAccountError(resolveDeleteAccountError(error)),
         onSuccess: (data) => {
+          const immediateUrl = buildTrustedGoogleLoginUrlFromIntent(data.url, data.device_id);
+          if (immediateUrl) {
+            window.location.assign(immediateUrl);
+            return;
+          }
+
           void (async () => {
             try {
               const deviceId = await fingerprint();

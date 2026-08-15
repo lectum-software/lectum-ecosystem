@@ -313,6 +313,7 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
   await withEnvironment(
     {
       NEXT_PUBLIC_API_URL: "https://api.example.com",
+      NEXT_PUBLIC_LOGIN_URL: undefined,
       NODE_ENV: "production",
     },
     () => {
@@ -331,8 +332,24 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
 
       assert.equal(
         buildTrustedGoogleLoginUrlFromIntent(
-          "https://api.example.com/api/private/account/delete/google-intent?intent=delete_account",
-          "device_identifier_123",
+          "https://api.example.com/api/public/google/login/backend_device_123?intent=delete_account&delete_token=token-assinado",
+          null,
+        ),
+        "https://api.example.com/api/public/google/login/backend_device_123?intent=delete_account&delete_token=token-assinado",
+      );
+      assert.equal(
+        new URL(
+          buildTrustedGoogleLoginUrlFromIntent(
+            "https://api.example.com/api/private/account/delete/google-intent?intent=delete_account&delete_token=token-assinado",
+            "device_identifier_123",
+          ),
+        ).pathname,
+        "/api/public/google/login/device_identifier_123",
+      );
+      assert.equal(
+        buildTrustedGoogleLoginUrlFromIntent(
+          "https://api.example.com/api/public/google/login?intent=delete_account",
+          null,
         ),
         null,
       );

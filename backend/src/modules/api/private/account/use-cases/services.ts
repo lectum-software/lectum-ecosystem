@@ -430,6 +430,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
   url.searchParams.set("callbackUrl", sanitizeDeleteCallbackUrl(data.b.callback_url, current.role));
 
   const response: AccountDeleteGoogleIntentResponse = {
+    device_id: device.id,
     url: url.toString(),
   };
 

@@ -21,6 +21,7 @@ export type AccountDeleteGoogleIntentBody = {
 };
 
 export type AccountDeleteGoogleIntentResponse = {
+  device_id: string;
   url: string;
 };
 

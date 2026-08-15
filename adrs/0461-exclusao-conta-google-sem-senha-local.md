@@ -29,6 +29,14 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
   retornados pelo backend e recompõe o caminho público como
   `/api/public/google/login/{deviceId}` usando o mesmo identificador de dispositivo usado na
   requisição autenticada.
+- Ajuste posterior em 2026-08-15: para evitar falso bloqueio no próprio modal, se o backend já
+  retornar uma URL confiável de `/api/public/google/login/{deviceId}`, o frontend deve navegar
+  diretamente para ela. A recomposição local fica restrita a URLs confiáveis que ainda não tenham o
+  segmento de device, usando `device_id` retornado pelo backend ou, como fallback temporário de
+  rollout, o fingerprint local.
+- A resposta de `POST /api/private/account/delete/google-intent` passa a incluir `device_id` de
+  forma aditiva para permitir que clientes novos recomponham a URL sem depender de uma segunda
+  resolução assíncrona de fingerprint após a intenção já ter sido criada.
 - O backend também passa a responder `400 device_id_not_found` no caminho público sem dispositivo
   (`/api/public/google/login`), evitando uma página genérica de 404 quando algum cliente antigo ou
   configuração incompleta tentar iniciar OAuth sem o segmento obrigatório.
@@ -44,6 +52,8 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - Links antigos/incompletos de confirmação Google deixam de cair em 404 genérico e falham de forma
   controlada; clientes novos sempre enviam o usuário ao login Google com device id no path,
   preservando a validação do token curto no callback.
+- Durante o rollout, frontend novo funciona com backend antigo quando a URL já contém device no
+  caminho; backend novo funciona com frontend antigo porque `device_id` é apenas campo adicional.
 
 ## Task relacionada
 
@@ -66,3 +76,6 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
   `pnpm --dir frontend test`, `pnpm --dir backend test`, `pnpm --dir frontend check`,
   `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`,
   `pnpm check`, `git diff --check` e smoke publicado registrados no fechamento do ajuste.
+- 2026-08-15: validação da correção de falso bloqueio do modal: `pnpm --dir frontend test`,
+  `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir frontend build`,
+  `pnpm --dir backend build`, `pnpm check` e smoke publicado registrados no fechamento do ajuste.

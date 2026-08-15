@@ -240,3 +240,28 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check`;
   - `git diff --check`;
   - smoke de homologação registrado no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-15 - desbloqueio do modal após intenção Google
+
+- Pedido direto de produto: após a correção anterior, o modal passou a exibir **Exclusão bloqueada**
+  com a mensagem “Não foi possível iniciar a confirmação com o Google.”.
+- Diagnóstico: a validação local da URL da intenção ficou estrita demais e podia bloquear a
+  navegação mesmo quando o backend já entregava uma URL confiável com `/api/public/google/login/{deviceId}`.
+- Decisão: se a intenção assinada já vier com uma URL confiável de login Google contendo o device no
+  caminho, o frontend navega diretamente. A recomposição local é usada somente quando a URL confiável
+  ainda não tem o device, preferindo `device_id` retornado pelo backend e usando fingerprint local
+  apenas como fallback de compatibilidade.
+- Backend: a resposta de `POST /api/private/account/delete/google-intent` passa a incluir
+  `device_id` de forma aditiva, sem quebrar clientes antigos.
+- Frontend: `buildTrustedGoogleLoginUrlFromIntent` passou a aceitar URL confiável já pronta e o modal
+  evita uma segunda resolução assíncrona de fingerprint quando ela não é necessária.
+- ADR atualizado: `adrs/0461-exclusao-conta-google-sem-senha-local.md`.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - smoke de homologação registrado no fechamento do ajuste.
