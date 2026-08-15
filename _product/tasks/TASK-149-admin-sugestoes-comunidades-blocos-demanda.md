@@ -140,3 +140,17 @@ Packages usados:
 - A task não alterou `/app/comunidades/sugerir` nem o endpoint privado de usuário.
 - Builder/Quick Copy não esteve acessível como ferramenta nesta sessão; foram usadas as screenshots enviadas pelo usuário e o padrão visual registrado em `_product/tasks/PROTO-INVENTORY.md`.
 - `prisma migrate dev` indicou drift preexistente em migrations antigas aplicadas no banco Supabase configurado; nenhum reset destrutivo foi executado. A migration desta task é apenas expansiva e foi aplicada com `migrate deploy`, seguida de `prisma migrate status` sem pendências.
+
+
+## Execucao complementar: chips do menu de moderacao (2026-08-15)
+
+- Pedido do usuario: no menu lateral do Admin, adicionar em `Sugestoes de comunidades` uma chip com a quantidade de novas sugestoes e nao exibir chips com valor `0` nos submenus de `Moderacao`.
+- Fonte visual/auditavel: screenshot do usuario em `homolog.admin.lectum.com.br/moderacao/sugestoes-comunidades`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Backend: `GET /api/admin/private/moderation/summary` passou a expor `community_suggestions.new_suggestions_total` e `community_suggestions.total_suggestions` de forma aditiva, usando o resumo real de `community_suggestion`. `new_suggestions_total` usa o total de sugestoes sem bloco e nao arquivadas.
+- Admin: o submenu `Sugestoes de comunidades` ganhou badge `sugestoesComunidades`; o total do grupo `Moderacao` passa a somar essas novas sugestoes.
+- Admin: os badges dos submenus de `Moderacao` agora so aparecem quando o contador for maior que zero, evitando chips visuais `0` em `Denuncias`, `Compliance`, `Operacionais`, `Sugestoes de comunidades` ou `Conteudo sensivel`.
+- Compatibilidade de deploy: contrato aditivo e Admin tolerante a backend antigo com fallback `0`; backend novo continua compativel com Admin antigo.
+- Nao houve alteracao de Prisma schema, migrations, dados persistidos, seeds, variaveis de ambiente ou packages.
+- ADR atualizado: `adrs/0445-blocos-demanda-sugestoes-comunidades-admin.md`.
+- Validacoes executadas: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`; validacao final de `pnpm check`, `git diff --check`, smoke local e smoke de homologacao devem ser registrados no resumo final do commit.
+- Criterios de aceite revalidados: [x] dados reais sem mock, [x] UI Admin mobile-first preservada, [x] contrato aditivo, [x] nenhum package/env/migration novo, [x] checks/builds relevantes executados.

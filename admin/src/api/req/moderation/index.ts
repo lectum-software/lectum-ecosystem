@@ -390,6 +390,10 @@ export type AdminModerationSummary = {
   by_decision: Record<string, number>;
   by_severity: Record<string, number>;
   by_status: Record<string, number>;
+  community_suggestions?: {
+    new_suggestions_total?: number;
+    total_suggestions?: number;
+  };
   latest_pending: AdminModerationEvent[];
   operational_alerts: AdminModerationOperationalAlerts;
   overview_charts: AdminModerationOverviewCharts;

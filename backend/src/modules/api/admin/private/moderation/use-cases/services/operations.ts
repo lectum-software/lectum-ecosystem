@@ -13,6 +13,7 @@ import type {
   IAdminModerationSummaryDTO,
 } from "../../DTOs/IAdminModerationDTO";
 import { AdminModerationRepository } from "../../repositories/AdminModerationRepository";
+import { AdminModerationCommunitySuggestionsRepository } from "../../repositories/queries/AdminModerationCommunitySuggestionsRepository";
 import { mapReportAlert } from "./alert-signals";
 
 import {
@@ -61,15 +62,24 @@ export {
 
 export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Resolve> => {
   const repository = new AdminModerationRepository();
-  const [allEvents, latestPending, pendingTotal, urgentPendingTotal, operationalAlerts, reports] =
-    await Promise.all([
-      repository.listEvents({}),
-      repository.listLatestPending(5),
-      repository.countPending(),
-      repository.countUrgentPending(),
-      buildOperationalAlerts(repository),
-      repository.listPostReports(),
-    ]);
+  const communitySuggestionsRepository = new AdminModerationCommunitySuggestionsRepository();
+  const [
+    allEvents,
+    latestPending,
+    pendingTotal,
+    urgentPendingTotal,
+    operationalAlerts,
+    reports,
+    communitySuggestionsSummary,
+  ] = await Promise.all([
+    repository.listEvents({}),
+    repository.listLatestPending(5),
+    repository.countPending(),
+    repository.countUrgentPending(),
+    buildOperationalAlerts(repository),
+    repository.listPostReports(),
+    communitySuggestionsRepository.getSummary(),
+  ]);
   const limitedOperationalAlerts: AdminModerationOperationalAlertsDTO = {
     ...operationalAlerts,
     items: operationalAlerts.items.slice(0, OPERATIONAL_ALERT_LIMIT),
@@ -80,6 +90,10 @@ export const getSummary = async (_data: IAdminModerationSummaryDTO): Promise<Res
     by_decision: countBy(allEvents, (event) => [event.decision]),
     by_severity: countBy(allEvents, (event) => [event.severity]),
     by_status: countBy(allEvents, (event) => [event.status]),
+    community_suggestions: {
+      new_suggestions_total: communitySuggestionsSummary.ungroupedTotal,
+      total_suggestions: communitySuggestionsSummary.totalSuggestions,
+    },
     latest_pending: latestPending.map((event) => mapEvent(event, replyMap)),
     operational_alerts: limitedOperationalAlerts,
     overview_charts: buildOverviewCharts(allEvents, reports, operationalAlerts),

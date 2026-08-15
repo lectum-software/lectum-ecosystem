@@ -19,7 +19,12 @@ type SidebarContentProps = {
   premiumPilot?: boolean;
 };
 
-type ModerationSubmenuBadge = "compliance" | "conteudoSensivel" | "denuncias" | "operacionais";
+type ModerationSubmenuBadge =
+  | "compliance"
+  | "conteudoSensivel"
+  | "denuncias"
+  | "operacionais"
+  | "sugestoesComunidades";
 
 const hrefPathname = (href: string) => href.split("?")[0].split("#")[0];
 
@@ -38,6 +43,7 @@ const moderationSubmenuBadgeTone: Record<ModerationSubmenuBadge, "danger" | "war
   conteudoSensivel: "warning",
   denuncias: "danger",
   operacionais: "warning",
+  sugestoesComunidades: "warning",
 };
 
 const isPremiumPilotPath = (pathname: string) =>
@@ -83,9 +89,12 @@ const SidebarContent = ({
   const openGroupHref =
     openGroupOverride?.pathname === pathname ? openGroupOverride.href : activeGroupHref;
   const moderationSummary = useAdminModerationSummary();
+  const communitySuggestionsNewTotal =
+    moderationSummary.data?.community_suggestions?.new_suggestions_total ?? 0;
   const moderationPendingTotal =
     (moderationSummary.data?.pending_total ?? 0) +
-    (moderationSummary.data?.operational_alerts?.counts.total ?? 0);
+    (moderationSummary.data?.operational_alerts?.counts.total ?? 0) +
+    communitySuggestionsNewTotal;
   const moderationUrgentTotal =
     (moderationSummary.data?.urgent_pending_total ?? 0) +
     (moderationSummary.data?.operational_alerts?.counts.urgent_total ?? 0);
@@ -95,6 +104,7 @@ const SidebarContent = ({
     conteudoSensivel: moderationSummary.data?.pending_total ?? 0,
     denuncias: moderationSummary.data?.operational_alerts?.counts.pending_reports ?? 0,
     operacionais: moderationSummary.data?.operational_alerts?.counts.operational_total ?? 0,
+    sugestoesComunidades: communitySuggestionsNewTotal,
   };
   const moderationTotalLabel = `${moderationPendingTotal} ${
     moderationPendingTotal === 1 ? "ação" : "ações"
@@ -258,7 +268,7 @@ const SidebarContent = ({
                           ? moderationSubmenuBadgeTone[childBadge]
                           : null;
                         const childPendingTitle =
-                          childPendingCount === null
+                          childPendingCount === null || childPendingCount <= 0
                             ? null
                             : `${pendingCountLabel(childPendingCount)} em ${child.label}`;
 
@@ -283,7 +293,7 @@ const SidebarContent = ({
                             }}
                           >
                             <span className="min-w-0 flex-1 truncate">{child.label}</span>
-                            {childPendingCount !== null ? (
+                            {childPendingCount !== null && childPendingCount > 0 ? (
                               <>
                                 <span
                                   aria-hidden="true"

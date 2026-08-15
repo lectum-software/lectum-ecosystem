@@ -23,7 +23,11 @@ export const adminNavItems = [
       { label: "Denúncias", href: "/moderacao/denuncias", badge: "denuncias" },
       { label: "Compliance", href: "/moderacao/compliance", badge: "compliance" },
       { label: "Operacionais", href: "/moderacao/operacionais", badge: "operacionais" },
-      { label: "Sugestões de comunidades", href: "/moderacao/sugestoes-comunidades" },
+      {
+        label: "Sugestões de comunidades",
+        href: "/moderacao/sugestoes-comunidades",
+        badge: "sugestoesComunidades",
+      },
       {
         label: "Conteúdo sensível",
         href: "/moderacao/conteudo-sensivel",

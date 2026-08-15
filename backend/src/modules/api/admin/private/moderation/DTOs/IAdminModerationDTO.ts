@@ -491,6 +491,10 @@ export type AdminModerationSummaryDTO = {
   by_decision: Record<string, number>;
   by_severity: Record<string, number>;
   by_status: Record<string, number>;
+  community_suggestions: {
+    new_suggestions_total: number;
+    total_suggestions: number;
+  };
   latest_pending: AdminModerationEventItemDTO[];
   operational_alerts: AdminModerationOperationalAlertsDTO;
   overview_charts: AdminModerationOverviewChartsDTO;

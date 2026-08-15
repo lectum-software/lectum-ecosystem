@@ -48,3 +48,32 @@ Blocos usam status simples: `monitorando`, `candidata`, `convertida` e `arquivad
 
 - Corrigir o drift do banco de desenvolvimento/homologação ou fornecer um banco local descartável para `prisma migrate dev` aplicar a migration sem resetar dados reais.
 - Em task futura, definir a conversão formal de bloco `candidata`/`convertida` em comunidade real e eventual notificação aos usuários interessados.
+
+
+## Atualizacao 2026-08-15 - badges de novas sugestoes no menu Admin
+
+### Contexto
+
+A rota `/moderacao/sugestoes-comunidades` ja exibia sugestoes reais e blocos de demanda, mas o menu lateral de `Moderacao` nao indicava novas sugestoes nesse submenu. Ao mesmo tempo, submenus sem pendencias podiam renderizar chips com `0`, criando ruido visual.
+
+### Decisao
+
+- Ampliar de forma aditiva o resumo existente `GET /api/admin/private/moderation/summary` com `community_suggestions.new_suggestions_total` e `community_suggestions.total_suggestions`.
+- Definir `new_suggestions_total` como sugestoes sem bloco e nao arquivadas, isto e, itens que ainda exigem triagem inicial.
+- Fazer o menu lateral do Admin somar essas novas sugestoes ao badge do grupo `Moderacao` e exibir a chip no submenu `Sugestoes de comunidades` somente quando o valor for maior que zero.
+- Ocultar chips dos submenus de `Moderacao` quando o contador for `0`, incluindo `Denuncias`, `Compliance`, `Operacionais`, `Sugestoes de comunidades` e `Conteudo sensivel`.
+
+### Consequencias
+
+- O Admin ganha um alerta discreto para novas sugestoes sem criar uma rota paralela nem consultar dados simulados.
+- O contrato permanece aditivo; Admin novo usa fallback `0` caso o backend antigo ainda esteja publicado durante rollout.
+- Nao ha mudanca de schema, migration, env, packages ou dados publicados.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Smoke local e smoke de homologacao nas rotas/versionamentos afetados.
