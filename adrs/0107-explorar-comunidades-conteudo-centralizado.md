@@ -203,3 +203,30 @@ Na rota publica `/community`, os cards de `Mais Populares` exibiam titulo, descr
 - `git diff --check`
 - HTTP local `200` em `/community`
 - Chrome/CDP em `/community`: desktop 1440x900 e mobile 390x844 com 4 cards populares sem descricoes, apenas contagem em `p`, titulo com `overflowY=visible` e mobile sem overflow horizontal (`documentWidth=390`).
+
+## Atualizacao 2026-08-15 - cards populares com quantidade de posts
+
+### Contexto
+
+Na rota publica `/comunidades`, o carrossel `Mais Populares` ainda exibia a quantidade de seguidores em cada card. A decisao de produto posterior foi usar esse espaco para comunicar atividade de conteudo, exibindo a quantidade de posts da comunidade.
+
+### Decisao
+
+- Trocar a contagem visual dos cards populares de `seguidor/seguidores` para `post/posts`.
+- Consumir `posts_count` no `CommunityExploreCard`, com fallback `0` para tolerar rollout entre frontend e backend.
+- Ajustar o endpoint existente `GET /api/private/community` para calcular `posts_count` real de posts publicados mesmo quando a listagem e acessada sem usuario autenticado; dados de participacao, como `following` e novidades de comunidades seguidas, continuam condicionados a sessao.
+
+### Consequencias
+
+- Os cards de `Mais Populares` passam a destacar volume de conteudo real sem criar endpoint paralelo, mock, seed ou campo persistido novo.
+- A alteracao de contrato permanece aditiva e compativel com versoes anteriores durante o deploy.
+- Nao ha impacto em Prisma schema, migrations, variaveis de ambiente, packages ou dados publicados.
+
+### Validacao
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local e smoke de homologacao nas rotas/versionamentos afetados.

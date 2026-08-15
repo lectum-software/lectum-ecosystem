@@ -43,10 +43,10 @@ const resolveCommunityError = (error: unknown) => {
   return rawMessage || "Não foi possível carregar as comunidades agora.";
 };
 
-const formatFollowers = (value: number) => {
-  if (value === 1) return "1 seguidor";
+const formatPosts = (value: number) => {
+  if (value === 1) return "1 post";
 
-  return `${value.toLocaleString("pt-BR")} seguidores`;
+  return `${value.toLocaleString("pt-BR")} posts`;
 };
 
 const FeaturedCommunity = ({ community }: { community: CommunityExploreCard }) => {
@@ -110,7 +110,7 @@ const CommunityCard = ({ community }: { community: CommunityExploreCard }) => {
             {community.name}
           </h3>
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-primary-foreground/65">
-            {formatFollowers(community.membersCount)}
+            {formatPosts(community.postsCount)}
           </p>
         </div>
         <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-surface px-4 text-[13px] font-extrabold text-primary transition group-hover:translate-x-1">

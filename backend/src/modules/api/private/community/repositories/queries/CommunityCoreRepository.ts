@@ -155,53 +155,56 @@ export class CommunityCoreRepository extends CommunityRepositoryContext {
       userId ? prisma.community_post.count({ where: followedPostsTodayWhere }) : Promise.resolve(0),
     ]);
     const itemIds = items.map((item) => item.id);
-    const [memberships, postsCount, newPostsCount] =
+    const [memberships, postsCount, newPostsCount] = await Promise.all([
       userId && itemIds.length > 0
-        ? await Promise.all([
-            prisma.community_member.findMany({
-              where: {
-                user_id: userId,
-                community_id: {
-                  in: itemIds,
-                },
-                deleted: false,
+        ? prisma.community_member.findMany({
+            where: {
+              user_id: userId,
+              community_id: {
+                in: itemIds,
               },
-              select: {
-                community_id: true,
-                createdAt: true,
+              deleted: false,
+            },
+            select: {
+              community_id: true,
+              createdAt: true,
+            },
+          })
+        : Promise.resolve([]),
+      itemIds.length > 0
+        ? prisma.community_post.groupBy({
+            by: ["community_id"],
+            where: {
+              community_id: {
+                in: itemIds,
               },
-            }),
-            prisma.community_post.groupBy({
-              by: ["community_id"],
-              where: {
-                community_id: {
-                  in: itemIds,
-                },
-                deleted: false,
-                status: "publicado",
+              deleted: false,
+              status: "publicado",
+            },
+            _count: {
+              _all: true,
+            },
+          })
+        : Promise.resolve([]),
+      userId && itemIds.length > 0
+        ? prisma.community_post.groupBy({
+            by: ["community_id"],
+            where: {
+              community_id: {
+                in: itemIds,
               },
-              _count: {
-                _all: true,
+              deleted: false,
+              status: "publicado",
+              createdAt: {
+                gte: todayStart,
               },
-            }),
-            prisma.community_post.groupBy({
-              by: ["community_id"],
-              where: {
-                community_id: {
-                  in: itemIds,
-                },
-                deleted: false,
-                status: "publicado",
-                createdAt: {
-                  gte: todayStart,
-                },
-              },
-              _count: {
-                _all: true,
-              },
-            }),
-          ])
-        : [[], [], []];
+            },
+            _count: {
+              _all: true,
+            },
+          })
+        : Promise.resolve([]),
+    ]);
     const membershipByCommunityId = new Map(
       memberships.map((item) => [item.community_id, item.createdAt]),
     );
