@@ -268,10 +268,9 @@ const buildPaymentHistoryItem = (
   if (!isPaymentEvent(event)) return null;
 
   const status = resolvePaymentHistoryStatus(event);
+  if (status.status !== "pago") return null;
+
   const amountFromPayload = extractPaymentAmountCents(event.payload);
-
-  if (status.status === "processado" && amountFromPayload === null) return null;
-
   const amountCents = normalizeSubscriptionPaymentAmountCents(amountFromPayload, subscription);
 
   return {

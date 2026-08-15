@@ -189,14 +189,6 @@ const StatusBadge = ({ label, status }: { label?: string; status?: string | null
   );
 };
 
-const paymentHistoryTone: Record<string, string> = {
-  cancelado: "border-warning/30 bg-warning/10 text-warning",
-  pago: "border-success/30 bg-success/10 text-success",
-  pendente: "border-warning/30 bg-warning/10 text-warning",
-  processado: "border-primary/25 bg-primary-soft text-primary",
-  recusado: "border-danger/30 bg-danger/10 text-danger",
-};
-
 const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) => (
   <article className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
     <div className="flex gap-3">
@@ -230,14 +222,6 @@ const PaymentHistoryCard = ({ items }: { items: BillingPaymentHistoryItem[] }) =
                   {formatPrice(item.amount_cents)}
                 </p>
               ) : null}
-              <span
-                className={cn(
-                  "mt-1 inline-flex rounded-full border px-2.5 py-0.5 text-[0.68rem] font-black uppercase tracking-[0.08em]",
-                  paymentHistoryTone[item.status] ?? paymentHistoryTone.processado,
-                )}
-              >
-                {item.status_label || "Processado"}
-              </span>
             </div>
           </li>
         ))}

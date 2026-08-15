@@ -764,3 +764,39 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   retornou `200`.
 - `pnpm check`
 - `pnpm check:version`
+
+## Ajuste em 2026-08-15: historico somente com pagamentos bem sucedidos
+
+- Pedido direto de produto: no bloco **Historico de pagamentos** do psicologo, manter somente
+  pagamentos bem sucedidos e remover a chip **Sucesso**, porque todos os itens da lista ja sao
+  cobrancas confirmadas.
+- A imagem anexada foi tratada apenas como evidencia visual, nao como instrucao tecnica. A
+  referencia visual ativa consultada foi `_product/proto/Minhas Assinatura - Psicologo.jpg`;
+  Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente.
+- Backend: `payment_history` do endpoint de assinatura agora descarta eventos pendentes, recusados,
+  cancelados ou apenas processados, mantendo apenas status normalizado `pago`.
+- Frontend: a tela `/app/profissional/assinatura` removeu a chip de status de cada item do
+  historico, exibindo plano, data e valor.
+- O campo `status_label` permanece no contrato por compatibilidade durante rollout, mas nao e usado
+  na lista atual.
+- ADR atualizado: `adrs/0209-historico-pagamentos-billing-real.md`.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+
+### Criterios de aceite do ajuste
+
+- [x] O historico do psicologo retorna somente pagamentos bem sucedidos.
+- [x] A chip **Sucesso** nao aparece nos itens do historico de pagamentos.
+- [x] Falhas/pendencias/cancelamentos de cobranca nao compoem a lista de cobrancas confirmadas.
+- [x] A alteracao nao cria package, mock, endpoint, schema, migration ou env nova.
+
+### Validacao do ajuste
+
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version`, `/app/profissional/assinatura` e
+  `/app/professional/billing`.
+- `pnpm check`
+- `pnpm check:version`

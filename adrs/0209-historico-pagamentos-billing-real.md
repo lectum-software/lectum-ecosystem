@@ -81,3 +81,29 @@ mantem o historico local anterior e a tela segue com estado honesto.
 - `pnpm --dir backend build`
 - `pnpm check`
 - `pnpm check:version`
+
+## Atualizacao em 2026-08-15: historico somente com pagamentos bem sucedidos
+
+### Contexto
+
+O bloco **Historico de pagamentos** da tela de assinatura do psicologo e descrito como
+**Cobrancas confirmadas**. Como a lista deve conter somente pagamentos bem sucedidos, a chip verde
+**Sucesso** repetia uma informacao implicita em todos os itens e deixava a leitura mobile mais
+poluida.
+
+### Decisao
+
+- O builder backend de `payment_history` para o psicologo passa a descartar eventos de pagamento
+  pendentes, recusados, cancelados ou apenas processados, retornando somente itens com status
+  normalizado `pago`.
+- A UI da tela `/app/profissional/assinatura` deixa de renderizar a chip de status em cada item do
+  historico; o item mostra plano, data e valor.
+- O campo `status_label` permanece no contrato por compatibilidade com clientes em rollout, mas nao
+  e mais usado para exibir a chip no frontend atual.
+
+### Consequencias
+
+- Falhas e pendencias de cobranca nao aparecem no historico do psicologo como se fossem itens
+  financeiros confirmados.
+- A lista fica coerente com a copy **Cobrancas confirmadas** e mais enxuta no mobile.
+- Nao ha nova tabela, migration, env, package ou gravacao de dados.

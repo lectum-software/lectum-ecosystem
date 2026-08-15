@@ -107,6 +107,55 @@ describe("buildPaymentHistoryItemsForSubscription", () => {
     assert.equal(items[0].amount_cents, null);
   });
 
+  it("ignora pagamentos pendentes, recusados e cancelados no historico do psicologo", () => {
+    const items = buildPaymentHistoryItemsForSubscription(
+      [
+        {
+          createdAt: new Date("2026-08-14T10:00:00.000Z"),
+          external_id: "payment-pending",
+          gateway: "mercadopago",
+          id: "evt-payment-pending",
+          payload: {
+            preapproval_id: "preapproval-123",
+            status: "pending",
+            transaction_amount: 29.9,
+            type: "payment",
+          },
+          type: "payment",
+        },
+        {
+          createdAt: new Date("2026-08-14T11:00:00.000Z"),
+          external_id: "payment-rejected",
+          gateway: "mercadopago",
+          id: "evt-payment-rejected",
+          payload: {
+            preapproval_id: "preapproval-123",
+            status: "rejected",
+            transaction_amount: 29.9,
+            type: "payment",
+          },
+          type: "payment",
+        },
+        {
+          createdAt: new Date("2026-08-14T12:00:00.000Z"),
+          external_id: "payment-cancelled",
+          gateway: "mercadopago",
+          id: "evt-payment-cancelled",
+          payload: {
+            preapproval_id: "preapproval-123",
+            status: "cancelled",
+            transaction_amount: 29.9,
+            type: "payment",
+          },
+          type: "payment",
+        },
+      ],
+      subscription,
+    );
+
+    assert.equal(items.length, 0);
+  });
+
   it("usa o resumo confirmado do gateway quando o webhook local de pagamento nao tem vinculo suficiente", () => {
     const summary = {
       charged_amount_cents: 2990,
