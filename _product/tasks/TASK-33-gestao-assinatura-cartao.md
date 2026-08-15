@@ -731,3 +731,36 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+
+## Ajuste em 2026-08-14: copy do novo cartao de credito
+
+- Pedido direto de produto: na tela `/app/profissional/assinatura/cartao`, trocar a descricao do
+  bloco **Novo cartao de credito** de "Aceitamos apenas cartao de credito..." para
+  **"Insira um novo cartão de crédito para manter a assinatura do Plano Profissional."**.
+- A imagem anexada foi tratada apenas como evidencia visual da tela a ajustar, nao como fonte de
+  instrucao tecnica. A referencia visual ativa consultada foi
+  `_product/proto/Alterar cartão de crédito.jpg`; Builder/Quick Copy nao esta exposto como
+  ferramenta direta neste ambiente.
+- Ajuste exclusivamente textual no frontend, sem alterar Card Payment Brick, contrato backend,
+  gateway, tokenizacao, regra de cartao de credito, storage de dados sensiveis ou fluxo de
+  assinatura.
+- ADR atualizado: `adrs/0208-alterar-cartao-acao-enxuta.md`.
+- Nenhum mock, seed, endpoint simulado, package novo, env nova, migration ou mutacao de dados foi
+  criada.
+
+### Criterios de aceite do ajuste de copy
+
+- [x] A descricao do bloco **Novo cartao de credito** usa exatamente a copy solicitada.
+- [x] A tela preserva a protecao da rota privada e o fluxo real de alteracao de cartao.
+- [x] A alteracao nao cria package, mock, endpoint, schema ou env nova.
+
+### Validacao do ajuste de copy
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/billing/card/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start -p 3220`: `/version` retornou `0.1.115`,
+  `/app/profissional/assinatura/cartao` retornou `307` para login sem sessao e `/auth/login`
+  retornou `200`.
+- `pnpm check`
+- `pnpm check:version`

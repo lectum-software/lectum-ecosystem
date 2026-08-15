@@ -288,8 +288,8 @@ export const ProfessionalBillingCardLogic = () => {
                           Novo cartão de crédito
                         </h2>
                         <p className="mt-2 text-sm leading-6 text-muted">
-                          Aceitamos apenas cartão de crédito para manter a recorrência mensal do
-                          Plano Profissional.
+                          Insira um novo cartão de crédito para manter a assinatura do Plano
+                          Profissional.
                         </p>
                       </div>
                     </div>
