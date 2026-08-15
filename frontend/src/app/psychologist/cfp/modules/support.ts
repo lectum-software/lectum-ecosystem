@@ -16,6 +16,12 @@ export const supportLinkProps = {
 export const cfpSystemErrorMessage =
   "N\u00e3o foi poss\u00edvel concluir a verifica\u00e7\u00e3o autom\u00e1tica agora.";
 
+export const cfpAttemptLimitMessage =
+  "Você excedeu o número de tentativas de busca de CPF. Entre em contato com o suporte para continuar a verificação do seu registro.";
+
+export const cfpProviderUnavailableMessage =
+  "O sistema do Conselho Federal de Psicologia está indisponível no momento. Entre em contato com o suporte para a consulta manual do seu registro.";
+
 export type ApiError = Error & {
   data?: unknown;
   response?: {
@@ -41,6 +47,14 @@ export const getStatusValue = (value: unknown) => {
   return undefined;
 };
 
+const cfpAttemptLimitCodes = new Set(["cfp_search_attempts_exceeded"]);
+const cfpConnectionErrorCodes = new Set(["cfp_provider_unavailable"]);
+
+const isGenericConnectionMessage = (message: string) =>
+  /conectar ao servi\u00e7o|servi\u00e7o temporariamente indispon\u00edvel|temporariamente indispon\u00edvel/i.test(
+    message,
+  );
+
 export const resolveApiError = (error: unknown) => {
   const apiError = error as ApiError;
   const data = isRecord(apiError?.data) ? apiError.data : {};
@@ -49,11 +63,23 @@ export const resolveApiError = (error: unknown) => {
     getStatusValue(data.status) ||
     getStatusValue(responseData.status) ||
     getStatusValue(apiError?.response?.status);
+  const code = getStringValue(data.code) || getStringValue(responseData.code);
   const rawMessage = getSafeApiErrorMessage(error, cfpSystemErrorMessage);
+  const isAttemptLimit = Boolean(code && cfpAttemptLimitCodes.has(code));
+  const isProviderUnavailable = Boolean(code && cfpConnectionErrorCodes.has(code));
+  const isOperationalUnavailable =
+    isProviderUnavailable ||
+    (typeof status === "number" && status >= 500) ||
+    (!status && isGenericConnectionMessage(rawMessage));
 
   return {
-    code: getStringValue(data.code) || getStringValue(responseData.code),
-    message: rawMessage,
+    code,
+    message: isAttemptLimit
+      ? cfpAttemptLimitMessage
+      : isOperationalUnavailable
+        ? cfpProviderUnavailableMessage
+        : rawMessage,
+    showSupportGuidance: isAttemptLimit || isOperationalUnavailable,
     status,
   };
 };
@@ -65,12 +91,14 @@ export const supportableCfpErrorCodes = new Set([
   "cfp_provider_error",
   "cfp_provider_rate_limited",
   "cfp_provider_unavailable",
+  "cfp_search_attempts_exceeded",
 ]);
 
 export const shouldShowCfpSupportGuidance = (error?: ResolvedApiError | null) =>
   Boolean(
     error &&
-      ((error.code && supportableCfpErrorCodes.has(error.code)) ||
+      (error.showSupportGuidance ||
+        (error.code && supportableCfpErrorCodes.has(error.code)) ||
         (typeof error.status === "number" && error.status >= 500)),
   );
 

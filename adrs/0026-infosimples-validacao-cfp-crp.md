@@ -96,3 +96,11 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - A tela `/psychologist/cfp` passa a deixar explicito que a consulta existe para conceder o selo de verificado, reduzindo ambiguidade sobre liberacao de configuracao de perfil.
 - O helper do CPF passa a mencionar a busca do registro junto ao Conselho Federal de Psicologia.
 - Nao houve mudanca de provider, endpoint, dados persistidos, seguranca, env, schema Prisma ou politica de fallback.
+
+## Ajuste 2026-08-15 - mensagens publicas de falha CFP
+
+- A decisao de dominio permanece a mesma: falha automatica nunca aprova o psicologo nem preenche `cfp_verified_at`.
+- O limite de 3 consultas por CPF (`cfp_search_attempts_exceeded`) passa a ser comunicado como excesso de tentativas do usuario, com orientacao para contato com suporte.
+- Indisponibilidade da origem (`cfp_provider_unavailable`), HTTP 5xx ou falha generica de conexao no fluxo CFP passam a ser apresentados como indisponibilidade do sistema do Conselho Federal de Psicologia, com orientacao para consulta manual do registro pelo suporte.
+- As mensagens publicas evitam mencionar InfoSimples, token, endpoint, stack, payload ou detalhes tecnicos; a auditoria e os logs sanitizados continuam sendo a camada operacional para diagnostico.
+- Nao houve mudanca de provider, endpoint, schema Prisma, env, pacote, armazenamento de dados ou politica de fallback.

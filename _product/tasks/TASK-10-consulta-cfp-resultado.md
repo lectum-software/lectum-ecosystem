@@ -289,3 +289,19 @@ Validacoes executadas:
 - [x] Texto principal da tela de verificacao profissional ajustado conforme pedido.
 - [x] Texto auxiliar do campo CPF ajustado conforme pedido.
 - [x] Nenhum contrato, banco, provider ou fluxo de aprovacao CFP foi alterado.
+
+## Ajuste pos-feedback 2026-08-15 - mensagens de falha CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp`, usando a imagem anexada pelo usuario como evidencia visual do estado de erro.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia local `_product/proto/Verificação de CPF - Consulta CFP.jpg` foi consultada como fallback visual da TASK-10.
+- Quando o backend retorna `cfp_search_attempts_exceeded`, a UI passa a informar que o psicologo excedeu o numero de tentativas de busca de CPF e deve entrar em contato com o suporte para continuar a verificacao.
+- Quando o erro for `cfp_provider_unavailable`, HTTP 5xx ou falha generica de conexao no fluxo CFP, a UI passa a informar que o sistema do Conselho Federal de Psicologia esta indisponivel e orienta contato com suporte para consulta manual do registro.
+- A traducao backend de `cfp_provider_unavailable` e `cfp_search_attempts_exceeded` foi alinhada ao mesmo texto publico, sem expor InfoSimples, stack, token, CPF ou detalhes tecnicos.
+- Nao houve alteracao de schema Prisma, migrations, endpoints, env, packages, mocks, seeds ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Limite de 3 tentativas de busca de CPF exibe orientacao para contato com suporte.
+- [x] Erro de conexao/indisponibilidade da consulta CFP exibe orientacao para consulta manual pelo suporte.
+- [x] Mensagens publicas permanecem sem detalhes tecnicos do provider e sem alterar a regra de aprovacao real/manual.
