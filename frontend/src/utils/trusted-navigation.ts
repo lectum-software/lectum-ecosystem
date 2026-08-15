@@ -64,3 +64,25 @@ export const buildTrustedGoogleLoginUrl = (
 
   return url.toString();
 };
+
+export const buildTrustedGoogleLoginUrlFromIntent = (
+  value: string,
+  deviceId: string | null | undefined,
+) => {
+  if (!deviceId) throw new Error("Device identifier is unavailable");
+
+  const trustedIntentUrl = normalizeTrustedApiUrl(value);
+  if (!trustedIntentUrl) return null;
+
+  const url = new URL(trustedIntentUrl);
+  const googleLoginPath = "/api/public/google/login";
+  const normalizedPath = url.pathname.replace(/\/+$/, "");
+
+  if (normalizedPath !== googleLoginPath && !normalizedPath.startsWith(`${googleLoginPath}/`)) {
+    return null;
+  }
+
+  url.pathname = `${googleLoginPath}/${encodeURIComponent(deviceId)}`;
+
+  return url.toString();
+};

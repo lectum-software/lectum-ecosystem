@@ -12,7 +12,8 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useSignOut } from "@/hooks/cookies/signout";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { normalizeTrustedApiUrl } from "@/utils/trusted-navigation";
+import { fingerprint } from "@/utils/fingerprint";
+import { buildTrustedGoogleLoginUrlFromIntent } from "@/utils/trusted-navigation";
 import { useDeleteAccountForm } from "./use-delete-account-form";
 
 type ApiErrorData = {
@@ -83,13 +84,20 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
       createDeleteGoogleIntent: {
         onError: (error) => setDeleteAccountError(resolveDeleteAccountError(error)),
         onSuccess: (data) => {
-          const url = normalizeTrustedApiUrl(data.url);
-          if (!url) {
-            setDeleteAccountError("Não foi possível iniciar a confirmação com o Google.");
-            return;
-          }
+          void (async () => {
+            try {
+              const deviceId = await fingerprint();
+              const url = buildTrustedGoogleLoginUrlFromIntent(data.url, deviceId);
+              if (!url) {
+                setDeleteAccountError("Não foi possível iniciar a confirmação com o Google.");
+                return;
+              }
 
-          window.location.assign(url);
+              window.location.assign(url);
+            } catch {
+              setDeleteAccountError("Não foi possível iniciar a confirmação com o Google.");
+            }
+          })();
         },
       },
       deleteAccount: {

@@ -213,3 +213,30 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Validação local em browser autenticado ficou limitada: a tentativa de subir `next start` local em
   processo auxiliar foi bloqueada pela política da ferramenta. A validação visual/operacional final
   fica registrada pelo build de produção e pelo smoke publicado em homologação após o push.
+
+## Ajuste complementar em 2026-08-15 - confirmação Google de exclusão com device no login
+
+- Pedido direto de produto: ao tocar em **Confirmar com Google** no modal de exclusão de uma conta
+  Google, o navegador abriu a API de homologação com 404 genérico.
+- Diagnóstico: o endpoint público de OAuth exige o identificador do dispositivo no caminho
+  `/api/public/google/login/{deviceId}`. A navegação de exclusão passa a recompor esse caminho a
+  partir da intenção assinada retornada pelo backend, usando o mesmo fingerprint/dispositivo do
+  cliente, em vez de apenas confiar na URL absoluta recebida.
+- Backend: `GET /api/public/google/login` sem device agora responde `400 device_id_not_found`,
+  mantendo falha fechada e sem expor detalhes técnicos quando houver cliente antigo ou URL
+  incompleta.
+- Frontend: a URL da intenção de exclusão é validada contra a origem pública da API, os parâmetros
+  assinados (`intent`, `delete_token`, `callbackUrl`) são preservados e o path final sempre inclui o
+  device id antes de navegar para o OAuth Google.
+- ADR atualizado: `adrs/0461-exclusao-conta-google-sem-senha-local.md`.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `git diff --check`;
+  - smoke de homologação registrado no fechamento do ajuste.

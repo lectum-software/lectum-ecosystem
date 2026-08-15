@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  createGoogleOAuthLoginUrl,
   isGoogleOAuthConfigured,
   parseGoogleHttpUrl,
   sanitizeGoogleCallbackTarget,
@@ -133,6 +134,21 @@ describe("Google OAuth URL config", () => {
       { ...baseEnvironment, CALLBACK_URL_API_USER: "javascript:alert(1)" },
       () => {
         assert.equal(isGoogleOAuthConfigured(), false);
+      },
+    );
+  });
+
+  it("gera a URL pública de login Google com o identificador do dispositivo no caminho", () => {
+    withGoogleEnvironment(
+      {
+        GOOGLE_OAUTH_BASE_URL: "https://api.example.com",
+        NODE_ENV: "production",
+      },
+      () => {
+        assert.equal(
+          createGoogleOAuthLoginUrl("device_identifier_123")?.toString(),
+          "https://api.example.com/api/public/google/login/device_identifier_123",
+        );
       },
     );
   });

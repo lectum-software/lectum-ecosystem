@@ -24,6 +24,14 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - A UI do modal não renderiza o campo **Senha atual** para contas Google e só mostra o formulário
   destrutivo após carregar o contrato real de segurança da conta, evitando flicker de senha durante
   o loading.
+- Atualização em 2026-08-15: a UI não navega mais cegamente para a URL absoluta retornada pela
+  intenção de exclusão. Ela valida a origem da API, preserva apenas os parâmetros assinados
+  retornados pelo backend e recompõe o caminho público como
+  `/api/public/google/login/{deviceId}` usando o mesmo identificador de dispositivo usado na
+  requisição autenticada.
+- O backend também passa a responder `400 device_id_not_found` no caminho público sem dispositivo
+  (`/api/public/google/login`), evitando uma página genérica de 404 quando algum cliente antigo ou
+  configuração incompleta tentar iniciar OAuth sem o segmento obrigatório.
 
 ## Consequências
 
@@ -33,6 +41,9 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
   de ambiente nova.
 - Contas sem Google e sem senha continuam bloqueadas com erro de domínio seguro, sem exclusão
   automática.
+- Links antigos/incompletos de confirmação Google deixam de cair em 404 genérico e falham de forma
+  controlada; clientes novos sempre enviam o usuário ao login Google com device id no path,
+  preservando a validação do token curto no callback.
 
 ## Task relacionada
 
@@ -51,3 +62,7 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - `pnpm check:version`
 - `pnpm check`
 - Smoke de homologação registrado no fechamento da task após o push.
+- 2026-08-15: validação adicional da URL de confirmação Google e da proteção do caminho sem device:
+  `pnpm --dir frontend test`, `pnpm --dir backend test`, `pnpm --dir frontend check`,
+  `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`,
+  `pnpm check`, `git diff --check` e smoke publicado registrados no fechamento do ajuste.

@@ -20,6 +20,13 @@ const limiter = getLimiter({ window: 5, max: 30 });
 routes.use(passport.initialize());
 
 //Routes
+routes.get("/", limiter, (_req, res) =>
+  send(res, {
+    status: 400,
+    ...error("device_id_not_found", {}),
+  }),
+);
+
 routes.get("/:id", limiter, (req, res, next) => {
   const deviceId = typeof req.params.id === "string" ? req.params.id : "";
 

@@ -60,6 +60,7 @@ const {
   shouldShowPwaInstallProfileEntry,
 } = await import("./pwa-install.ts");
 const { isConfirmedUserSessionRejection } = await import("./session-rejection.ts");
+const { buildTrustedGoogleLoginUrlFromIntent } = await import("./trusted-navigation.ts");
 const { applyStoredBearerFallback } = await import("../api/auth-cookie.ts");
 
 class MemoryStorage {
@@ -304,6 +305,44 @@ test("aceita retorno administrativo interno ou da origem configurada", async () 
       ]) {
         assert.equal(normalizeAdminReturnUrl(value), null, value);
       }
+    },
+  );
+});
+
+test("mantém confirmação Google de exclusão com o dispositivo no caminho público de login", async () => {
+  await withEnvironment(
+    {
+      NEXT_PUBLIC_API_URL: "https://api.example.com",
+      NODE_ENV: "production",
+    },
+    () => {
+      const result = buildTrustedGoogleLoginUrlFromIntent(
+        "https://api.example.com/api/public/google/login?intent=delete_account&delete_token=token-assinado&callbackUrl=%2Fapp%2Fperfil%2Feditar%3FdeleteReauth%3Dok",
+        "device_identifier_123",
+      );
+
+      assert.ok(result);
+      const url = new URL(result);
+      assert.equal(url.origin, "https://api.example.com");
+      assert.equal(url.pathname, "/api/public/google/login/device_identifier_123");
+      assert.equal(url.searchParams.get("intent"), "delete_account");
+      assert.equal(url.searchParams.get("delete_token"), "token-assinado");
+      assert.equal(url.searchParams.get("callbackUrl"), "/app/perfil/editar?deleteReauth=ok");
+
+      assert.equal(
+        buildTrustedGoogleLoginUrlFromIntent(
+          "https://api.example.com/api/private/account/delete/google-intent?intent=delete_account",
+          "device_identifier_123",
+        ),
+        null,
+      );
+      assert.equal(
+        buildTrustedGoogleLoginUrlFromIntent(
+          "https://evil.example/api/public/google/login?intent=delete_account",
+          "device_identifier_123",
+        ),
+        null,
+      );
     },
   );
 });
