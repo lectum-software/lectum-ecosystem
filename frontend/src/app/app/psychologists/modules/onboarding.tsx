@@ -38,13 +38,16 @@ export const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
 
 export const VIDEO_LONG_PRESS_DELAY_MS = 520;
 
-export const VIDEO_PROGRESS_BOTTOM_WITH_NAV = "var(--lectum-mobile-bottom-nav-height)";
+export const MOBILE_BOTTOM_NAV_OFFSET = "var(--lectum-mobile-bottom-nav-height)";
+
+export const VIDEO_PROGRESS_BOTTOM_WITH_NAV =
+  "calc(var(--lectum-mobile-bottom-nav-height) + 0.625rem)";
 
 export const VIDEO_PROGRESS_TRACK_COLOR =
-  "color-mix(in srgb, var(--lectum-media-foreground) 22%, transparent)";
+  "color-mix(in srgb, var(--lectum-media-foreground) 34%, transparent)";
 
 export const VIDEO_PROGRESS_FILL_COLOR =
-  "color-mix(in srgb, var(--lectum-media-foreground) 75%, transparent)";
+  "color-mix(in srgb, var(--lectum-media-foreground) 96%, transparent)";
 
 export const DEFAULT_VIDEO_PLAYBACK_RATE = 1;
 

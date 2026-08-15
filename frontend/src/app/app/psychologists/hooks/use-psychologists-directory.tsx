@@ -19,7 +19,11 @@ import {
   buildBenefitChips,
   buildDirectoryFilterSearchTrackingItems,
 } from "../modules/filter-config";
-import { FILTER_DIALOG_CLOSE_DELAY_MS, PAGE_LIMIT } from "../modules/onboarding";
+import {
+  FILTER_DIALOG_CLOSE_DELAY_MS,
+  MOBILE_BOTTOM_NAV_OFFSET,
+  PAGE_LIMIT,
+} from "../modules/onboarding";
 import { filterPsychologistsByName, normalizeFormValues, toQuery } from "../modules/profile-format";
 import { PsychologistFilterSearchSuggestions } from "../modules/search-suggestions";
 import { resolveDirectoryErrorMessage } from "../modules/viewport";
@@ -352,7 +356,9 @@ export const usePsychologistsDirectory = () => {
 
   const canSwipeBetweenPsychologists = psychologists.length > 1;
 
-  const infoSectionBottom = `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + ${metrics.bioBottomOffset}px)`;
+  const infoSectionBottom = metrics.isDesktopLayout
+    ? `${metrics.bioBottomOffset}px`
+    : `calc(${MOBILE_BOTTOM_NAV_OFFSET} + ${metrics.bioBottomOffset}px)`;
 
   const searchSuggestionItems = useMemo(
     () => filterPsychologistsByName(searchSuggestionsDirectory.data?.data, searchDraft, 5),

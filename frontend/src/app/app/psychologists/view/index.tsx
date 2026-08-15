@@ -8,7 +8,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { cn } from "@/lib/utils";
 import { PrivateTemplate } from "@/templates/private";
 import { FILTER_FEATURE_OPTIONS, FilterFeatureCard } from "../modules/filter-config";
-import { PsychologistsCoachMark } from "../modules/onboarding";
+import { MOBILE_BOTTOM_NAV_OFFSET, PsychologistsCoachMark } from "../modules/onboarding";
 import { PsychologistsDesktopRail } from "./components/desktop-rail";
 import { PsychologistsFeed } from "./components/feed";
 import { PsychologistsFeedStyles } from "./components/feed-styles";
@@ -395,7 +395,9 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                 aria-live="polite"
                 className="psychologists-swipe-hint pointer-events-none absolute left-1/2 z-50 inline-flex max-w-[calc(100%-2rem)] items-center justify-center rounded-full border border-media-foreground/70 bg-surface/95 px-4 py-2.5 text-center text-[13px] font-extrabold text-foreground shadow-lectum-soft ring-1 ring-border/80 backdrop-blur-md"
                 style={{
-                  bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom) + 14px)`,
+                  bottom: metrics.isDesktopLayout
+                    ? `calc(${metrics.navBarHeight}px + 14px)`
+                    : `calc(${MOBILE_BOTTOM_NAV_OFFSET} + 14px)`,
                 }}
               >
                 <span>

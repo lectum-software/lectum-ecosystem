@@ -6,7 +6,11 @@ import type { DirectoryPsychologist } from "@/api/generator/types/directory";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl } from "@/utils/media";
-import { VIDEO_PROGRESS_FILL_COLOR, VIDEO_PROGRESS_TRACK_COLOR } from "../../modules/onboarding";
+import {
+  MOBILE_BOTTOM_NAV_OFFSET,
+  VIDEO_PROGRESS_FILL_COLOR,
+  VIDEO_PROGRESS_TRACK_COLOR,
+} from "../../modules/onboarding";
 import { getInitials } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
 import { PsychologistSlideDetails } from "./slide-details";
@@ -237,7 +241,7 @@ export const PsychologistSlide = ({
               aria-valuemin={0}
               aria-valuenow={isActiveSlide ? Math.round(videoProgress.currentTime) : 0}
               className={cn(
-                "absolute z-50 flex h-6 items-end outline-none",
+                "absolute z-50 flex h-7 items-end outline-none",
                 slideCanSeekProgress ? "pointer-events-auto cursor-pointer" : "pointer-events-none",
               )}
               data-psychologists-scroll-lock="true"
@@ -271,7 +275,9 @@ export const PsychologistSlide = ({
                 className="relative w-full overflow-hidden transition-[height] duration-150 ease-out"
                 style={{
                   backgroundColor: VIDEO_PROGRESS_TRACK_COLOR,
-                  height: isActiveSlide && isVideoProgressSeeking ? "5px" : "3px",
+                  boxShadow:
+                    "0 0 14px color-mix(in srgb, var(--lectum-media-foreground) 28%, transparent)",
+                  height: isActiveSlide && isVideoProgressSeeking ? "6px" : "4px",
                 }}
               >
                 <div
@@ -326,7 +332,7 @@ export const PsychologistSlide = ({
               slideUiVisibilityClass,
             )}
             style={{
-              bottom: `calc(${metrics.navBarHeight}px + env(safe-area-inset-bottom))`,
+              bottom: metrics.isDesktopLayout ? "0px" : MOBILE_BOTTOM_NAV_OFFSET,
               height: `${metrics.bioBottomOffset}px`,
             }}
           />

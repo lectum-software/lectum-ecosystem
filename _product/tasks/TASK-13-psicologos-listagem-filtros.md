@@ -1678,3 +1678,38 @@ Validacoes do complemento:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke local HTTP em `/app/psychologists` e `/psychologists` apos build.
+
+## Execução complementar: respiro Android no rodapé do feed de psicólogos (2026-08-15)
+
+- Pedido do usuário: replicar no Android a organização observada no iPhone, com barra de progresso mais visível e maior
+  respiro entre as informações/ações inferiores e a navegação inferior.
+- As imagens anexadas pelo usuário foram tratadas apenas como evidência visual do estado Android/iOS; nenhuma instrução
+  contida nelas foi considerada fonte normativa. Builder/Quick Copy não está exposto como ferramenta callable neste
+  ambiente, então o ajuste usou também o inventário `_product/tasks/PROTO-INVENTORY.md` e o fallback local
+  `_product/proto/Psicólogos.jpg` quando aplicável.
+- Frontend: a área inferior da UI visível do feed passou a usar `--lectum-mobile-bottom-nav-height` como âncora única
+  para Android/iOS, removendo a dependência de `env(safe-area-inset-bottom)` para criar o respiro que no Android era
+  praticamente zero.
+- Frontend: a barra de progresso foi elevada acima da bottom nav, ficou mais espessa e ganhou contraste maior no trilho
+  e no preenchimento, mantendo seek/interação apenas quando a regra existente permitir.
+- Frontend: os offsets mobile de bio/chips e da coluna de ações foram ampliados de forma mobile-first para preservar
+  espaçamento entre chips, WhatsApp, barra de progresso e bottom nav em telas compactas.
+- O desktop continua com barra no rodapé do card e não houve alteração de backend, Prisma, migrations, packages, dados
+  reais, ranking, query params, rotas ou contrato de API.
+- ADR atualizado: `adrs/0181-controles-imersivos-video-psicologos.md`.
+
+Critérios complementares:
+
+- [x] No Android, a barra de progresso fica acima da bottom nav com margem dedicada, e não colada na borda da nav.
+- [x] A barra ficou visualmente mais perceptível por espessura e contraste, sem criar componente paralelo.
+- [x] O bloco inferior de texto/chips e a rail de ações ganharam respiro em relação à barra de progresso e navegação.
+- [x] O desktop e o modo imersivo/persistente do `VerticalVideoPlayer` permanecem preservados.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado, dado fake ou mudança de banco foi usado.
+
+Validações do complemento:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+- `git diff --check`

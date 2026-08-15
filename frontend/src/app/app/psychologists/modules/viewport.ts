@@ -51,7 +51,7 @@ export const useViewportMetrics = () => {
     return {
       actionButtonSize,
       actionAvatarSize: actionButtonSize,
-      actionGap: isCompact ? 4 : 6,
+      actionGap: isCompact ? 6 : 8,
       actionHitSize,
       actionIconSize: isTiny ? 14 : 15,
       actionPrimaryButtonSize,
@@ -59,7 +59,7 @@ export const useViewportMetrics = () => {
       actionRailWidth: actionHitSize,
       actionStandaloneIconSize: isTiny ? 18 : 20,
       availableBadgeTextSize: isTiny ? 10 : 11,
-      bioBottomOffset: isDesktop ? 24 : 8,
+      bioBottomOffset: isDesktop ? 24 : isCompact ? 22 : 24,
       ratingIconSize: isCompact ? 9 : 10,
       ratingLineHeight: 13,
       ratingTextSize: 10,

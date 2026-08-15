@@ -68,6 +68,31 @@ a barra dentro da area branca da navegacao e abaixo do stacking context da nav.
   nav mude de tamanho.
 - Nao ha mudanca de backend, schema, API, dados persistidos, packages ou analytics.
 
+## Complemento 2026-08-15 - respiro mobile no Android
+
+### Contexto
+
+Depois da primeira correção, novas capturas comparando iPhone e Android mostraram que o Android ainda mantinha a barra
+de progresso muito colada na bottom nav e com menor legibilidade, além de menor respiro entre chips, WhatsApp e a área
+inferior. O iPhone parecia melhor porque o safe-area inferior adicionava espaço adicional que não existe na maioria dos
+Androids.
+
+### Decisão
+
+- Introduzir `MOBILE_BOTTOM_NAV_OFFSET` como alias semântico de `--lectum-mobile-bottom-nav-height` para todos os
+  elementos inferiores da tela de psicólogos que precisam acompanhar a bottom nav.
+- Posicionar a barra de progresso em `calc(var(--lectum-mobile-bottom-nav-height) + 0.625rem)`, elevando-a da borda da
+  nav também quando `env(safe-area-inset-bottom)` é zero.
+- Aumentar contraste/espessura da barra customizada e ampliar os offsets mobile de bio/chips e rail de ações, sem
+  alterar a âncora desktop nem duplicar o player compartilhado.
+
+### Consequências
+
+- Android passa a receber uma folga própria equivalente ao efeito visual que o safe-area já produzia no iPhone.
+- A UI inferior fica mais legível em telas compactas e a barra permanece manipulável quando o modo de seek estiver
+  habilitado.
+- Não há mudança de contrato, banco, packages, backend, analytics ou dados persistidos.
+
 ## Pendencias
 
 - Validar manualmente em dispositivo/navegador mobile real com videos de psicologos publicados para confirmar o seek persistente no Safari/Chrome mobile.
