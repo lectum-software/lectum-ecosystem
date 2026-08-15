@@ -85,3 +85,26 @@ Após discussão de produto, a Lectum precisa de uma régua de cobrança para as
 - Smoke local HTTP no frontend buildado em `http://127.0.0.1:3075`: `/version` respondeu `0.1.124` antes do bump; `/app/profissional/assinatura` e `/app/profissional/assinatura/cartao` responderam `307` para o guard autenticado.
 - `pnpm check`: sucesso.
 - `pnpm check:version` após `pnpm version:bump` para `0.1.125`: sucesso.
+
+## Ajuste pós-feedback em 2026-08-15
+
+Quando uma assinatura profissional Mercado Pago for cancelada antes de o psicólogo concluir as etapas obrigatórias do fluxo pago, a Lectum deve restaurar o plano efetivo gratuito sem exigir intervenção manual.
+
+### Critérios complementares
+
+- [x] Cancelamento via sync manual, webhook, ação do psicólogo ou Admin restaura plano gratuito ativo quando não houver outro entitlement profissional.
+- [x] Estados legados com assinatura profissional cancelada e sem plano gratuito são corrigidos de forma idempotente ao ler o plano atual.
+- [x] A etapa de endereço de faturamento não mantém bloqueio de checkout quando o plano efetivo volta a ser gratuito, cancelado ou inexistente.
+- [x] Não houve migration, env nova, reset, seed ou mock.
+
+### Validação complementar
+
+- `pnpm --dir backend test`: sucesso.
+- `pnpm --dir backend exec tsc --noEmit --pretty false`: sucesso.
+- `pnpm --dir frontend exec tsc --noEmit --pretty false`: sucesso.
+- `pnpm --dir backend check`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir backend build`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- `pnpm check`: sucesso.
+- `pnpm check:version` após `pnpm version:bump` para `0.1.128`: sucesso.

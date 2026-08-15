@@ -72,6 +72,7 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
     mutationFn: () => api.selectPsychologistBillingFreePlan(),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.current() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
       callbacks?.selectFree?.onSuccess?.(data);
     },
     onError: callbacks?.selectFree?.onError,
@@ -92,6 +93,7 @@ export const usePsychologistBilling = ({ callbacks }: UsePsychologistBillingProp
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.current() });
       queryClient.invalidateQueries({ queryKey: keys.psychologistBilling.subscription() });
+      queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "auth_hydrate" });
       callbacks?.sync?.onSuccess?.(data);
     },
     onError: callbacks?.sync?.onError,

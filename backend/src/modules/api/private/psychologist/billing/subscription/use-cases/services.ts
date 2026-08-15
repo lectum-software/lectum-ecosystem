@@ -98,7 +98,7 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
       };
     }
 
-    const cancelledSubscription = await repository.cancelSubscription({
+    const cancellation = await repository.cancelSubscription({
       subscriptionId: subscription.id!,
       gatewaySubscriptionId: gatewayResult.gateway_subscription_id,
     });
@@ -107,8 +107,8 @@ export const cancelSubscription = async (data: ISubscriptionDTO) => {
       status: 200,
       ...msg("billing_subscription_cancelled", {}),
       data: {
-        current: cancelledSubscription,
-        subscription: cancelledSubscription,
+        current: cancellation.current,
+        subscription: cancellation.cancelled,
         gateway_status: gatewayResult.gateway_status,
         canceled: true,
       },

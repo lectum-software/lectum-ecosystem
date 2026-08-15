@@ -1,6 +1,7 @@
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { payment_event, professional_subscription } from "@/interfaces/objects";
 import type { BillingDunningUpdate } from "@/modules/billing/dunning";
+import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
 import type { IWebhookRepository } from "./interfaces/IWebhookRepository";
 
 const toJson = (payload: unknown) => JSON.parse(JSON.stringify(payload));
@@ -93,30 +94,51 @@ export class WebhookRepository implements IWebhookRepository {
     billingDunning?: BillingDunningUpdate;
     currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null> {
-    const subscription = await this.subscriptionRepository.update({
-      where: {
-        id: data.subscriptionId,
-      },
-      data: {
-        status: data.status,
-        ...data.billingDunning,
-        gateway: "mercadopago",
-        gateway_subscription_id: data.gatewaySubscriptionId,
-        current_period_end: data.currentPeriodEnd ?? null,
-      },
-      include: {
-        plan: true,
-      },
+    const subscription = await prisma.$transaction(async (tx) => {
+      const updated = await tx.professional_subscription.update({
+        where: {
+          id: data.subscriptionId,
+        },
+        data: {
+          status: data.status,
+          ...data.billingDunning,
+          gateway: "mercadopago",
+          gateway_subscription_id: data.gatewaySubscriptionId,
+          current_period_end: data.currentPeriodEnd ?? null,
+        },
+        include: {
+          plan: true,
+        },
+      });
+
+      if (data.status !== "cancelada" || updated.plan?.slug === "gratuito") {
+        return updated;
+      }
+
+      return (
+        (await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: updated.id,
+          psychologistId: updated.psychologist_id,
+          tx,
+        })) ?? updated
+      );
     });
 
-    if (data.status === "ativa" && subscription.plan?.slug !== "gratuito") {
+    const entitlementStartedAt = subscription.grant_started_at ?? subscription.createdAt ?? null;
+
+    if (
+      data.status === "ativa" &&
+      subscription.plan?.slug !== "gratuito" &&
+      subscription.psychologist_id &&
+      entitlementStartedAt
+    ) {
       await prisma.psychologist_profile.updateMany({
         where: {
           deleted: false,
           id: subscription.psychologist_id,
           show_experience_tag: false,
           updatedAt: {
-            lte: subscription.grant_started_at ?? subscription.createdAt,
+            lte: entitlementStartedAt,
           },
         },
         data: {

@@ -3,6 +3,7 @@ import prisma from "@/infra/database/prisma";
 import type { payment_method, professional_subscription } from "@/interfaces/objects";
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
 import { SubscriptionRepository } from "@/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository";
+import { restoreFreePlanAfterProfessionalCancellation } from "@/modules/billing/free-subscription";
 import { getPaymentGateway } from "@/modules/billing/payment-gateway";
 import {
   actionableProfessionalGatewaySubscriptionWhere,
@@ -537,6 +538,14 @@ export class AdminPsychologistBillingRepository {
           plan: true,
         },
       });
+
+      if (cancelledSubscription.plan?.slug !== "gratuito") {
+        await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: cancelledSubscription.id,
+          psychologistId: cancelledSubscription.psychologist_id,
+          tx,
+        });
+      }
 
       await tx.admin_activity_log.create({
         data: {

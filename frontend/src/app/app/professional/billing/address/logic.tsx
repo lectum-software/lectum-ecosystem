@@ -89,6 +89,11 @@ const isActiveProfessional = (subscription?: ProfessionalSubscription | null) =>
   subscription.plan?.slug === "profissional" &&
   isCurrentPeriodValid(subscription.current_period_end);
 
+const shouldLeavePaidAddressStep = (subscription?: ProfessionalSubscription | null) =>
+  !subscription ||
+  subscription.status === "cancelada" ||
+  (subscription.status === "ativa" && subscription.plan?.slug === "gratuito");
+
 const AddressHeader = () => (
   <header className="text-center">
     <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-primary-soft text-primary">
@@ -134,9 +139,24 @@ export const ProfessionalBillingAddressLogic = () => {
   const current = billing.current.data?.current ?? null;
   const activeProfessional = isActiveProfessional(current);
   const activeCourtesy = isAdministrativeCourtesySubscription(current);
+  const currentIsError = billing.current.isError;
+  const userWithCurrentSubscription =
+    user && current?.status === "ativa" && user.psychologist_profile
+      ? {
+          ...user,
+          psychologist_profile: {
+            ...user.psychologist_profile,
+            subscriptions: [current],
+          },
+        }
+      : user;
   const courtesyRedirectPath = user
     ? (getPsychologistRegistrationRequirementPath(user) ?? "/app/profissional/assinatura")
     : null;
+  const freeFallbackRedirectPath = userWithCurrentSubscription
+    ? (getPsychologistRegistrationRequirementPath(userWithCurrentSubscription) ??
+      "/app/profissional/assinatura")
+    : PSYCHOLOGIST_ONBOARDING_PATHS.plans;
   const isLoading = billing.current.isLoading;
 
   useEffect(() => {
@@ -144,6 +164,13 @@ export const ProfessionalBillingAddressLogic = () => {
 
     router.replace(courtesyRedirectPath);
   }, [activeCourtesy, courtesyRedirectPath, router]);
+
+  useEffect(() => {
+    if (isLoading || currentIsError || activeProfessional) return;
+    if (!shouldLeavePaidAddressStep(current)) return;
+
+    router.replace(freeFallbackRedirectPath);
+  }, [activeProfessional, current, currentIsError, freeFallbackRedirectPath, isLoading, router]);
 
   useEffect(() => {
     const currentState = typeof state === "string" ? state : "";
@@ -242,7 +269,7 @@ export const ProfessionalBillingAddressLogic = () => {
             </div>
           ) : null}
 
-          {billing.current.isError ? (
+          {currentIsError ? (
             <InlineAlert
               className="mt-8"
               title="Não foi possível verificar a assinatura"
@@ -252,7 +279,10 @@ export const ProfessionalBillingAddressLogic = () => {
             </InlineAlert>
           ) : null}
 
-          {!isLoading && !billing.current.isError && !activeProfessional ? (
+          {!isLoading &&
+          !currentIsError &&
+          !activeProfessional &&
+          !shouldLeavePaidAddressStep(current) ? (
             <div className="mt-8">
               <EmptyState
                 description="A assinatura profissional ainda não está ativa. Conclua o checkout e aguarde a confirmação do pagamento antes de salvar o endereço."
@@ -280,7 +310,7 @@ export const ProfessionalBillingAddressLogic = () => {
             </div>
           ) : null}
 
-          {!isLoading && !billing.current.isError && activeProfessional ? (
+          {!isLoading && !currentIsError && activeProfessional ? (
             activeCourtesy ? (
               <div className="mt-8">
                 <LoadingState label="Redirecionando para sua próxima etapa" />

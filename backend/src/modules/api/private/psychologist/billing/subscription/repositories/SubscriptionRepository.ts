@@ -6,6 +6,10 @@ import type {
 } from "@/interfaces/objects";
 import { resolveEffectiveBillingSubscription } from "@/modules/billing/effective-subscription";
 import {
+  cancelledProfessionalGatewaySubscriptionWhere,
+  restoreFreePlanAfterProfessionalCancellation,
+} from "@/modules/billing/free-subscription";
+import {
   type GatewaySubscriptionPaymentSummary,
   getPaymentGateway,
 } from "@/modules/billing/payment-gateway";
@@ -389,11 +393,41 @@ export class SubscriptionRepository implements ISubscriptionRepository {
       },
     });
 
-    return resolveEffectiveBillingSubscription({
-      activeProfessional,
-      actionableGatewayProfessional,
-      activeFree,
+    return (
+      resolveEffectiveBillingSubscription({
+        activeProfessional,
+        actionableGatewayProfessional,
+        activeFree,
+      }) ?? this.restoreFreeAfterLatestCancelledProfessional(psychologistId)
+    );
+  }
+
+  private async restoreFreeAfterLatestCancelledProfessional(
+    psychologistId: string,
+  ): Promise<professional_subscription | null> {
+    const cancelledProfessional = await this.subscriptionRepository.findFirst({
+      where: {
+        ...cancelledProfessionalGatewaySubscriptionWhere(),
+        psychologist_id: psychologistId,
+      },
+      include: {
+        plan: true,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
     });
+
+    if (!cancelledProfessional?.id) return null;
+
+    return prisma.$transaction(
+      async (tx) =>
+        (await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: cancelledProfessional.id,
+          psychologistId,
+          tx,
+        })) ?? null,
+    );
   }
 
   async findCancelableSubscription(
@@ -457,20 +491,36 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   async cancelSubscription(data: {
     subscriptionId: string;
     gatewaySubscriptionId: string;
-  }): Promise<professional_subscription> {
-    return this.subscriptionRepository.update({
-      where: {
-        id: data.subscriptionId,
-      },
-      data: {
-        status: "cancelada",
-        gateway: "mercadopago",
-        gateway_subscription_id: data.gatewaySubscriptionId,
-        current_period_end: null,
-      },
-      include: {
-        plan: true,
-      },
+  }): Promise<{
+    cancelled: professional_subscription;
+    current: professional_subscription;
+  }> {
+    return prisma.$transaction(async (tx) => {
+      const cancelled = await tx.professional_subscription.update({
+        where: {
+          id: data.subscriptionId,
+        },
+        data: {
+          status: "cancelada",
+          gateway: "mercadopago",
+          gateway_subscription_id: data.gatewaySubscriptionId,
+          current_period_end: null,
+        },
+        include: {
+          plan: true,
+        },
+      });
+      const current =
+        (await restoreFreePlanAfterProfessionalCancellation({
+          cancelledSubscriptionId: cancelled.id,
+          psychologistId: cancelled.psychologist_id,
+          tx,
+        })) ?? cancelled;
+
+      return {
+        cancelled,
+        current,
+      };
     });
   }
 

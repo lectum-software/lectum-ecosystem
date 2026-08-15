@@ -630,3 +630,8 @@ Uma task só pode ser marcada como concluída quando:
 - A tela `/psychologist/cfp` passa a comunicar que a consulta CFP e necessaria para conceder o selo de verificado.
 - O texto auxiliar do CPF passa a informar que o registro sera buscado junto ao Conselho Federal de Psicologia.
 - A alteracao e apenas de copy no frontend e nao altera contrato, banco, provider CFP, packages ou envs.
+
+## Atualizacao operacional em 2026-08-15: cancelamento pago volta ao gratuito
+
+- Ajuste pos-feedback da TASK-156: cancelamentos reais de assinatura profissional Mercado Pago agora restauram o Plano Gratuito ativo quando nao houver outro entitlement profissional, inclusive por sync, webhook, cancelamento do psicologo, cancelamento Admin ou correcao idempotente ao ler o plano atual.
+- A etapa de endereco de faturamento nao deve manter o usuario preso no fluxo pago quando o plano efetivo ja voltou para gratuito/cancelado/inexistente.

@@ -490,3 +490,4 @@ Formato recomendado:
 - [ADR-0457 — Plano efetivo gratuito após assinatura profissional declinada](0457-plano-efetivo-gratuito-apos-assinatura-declinada.md)
 - [ADR-0458 — Cancelamento administrativo real de assinatura profissional](0458-cancelamento-admin-assinatura-mercado-pago.md)
 - [ADR-0459 — Régua de cobrança para assinatura profissional](0459-regua-cobranca-assinatura.md)
+- [ADR-0460 — Restaurar plano gratuito após cancelamento de assinatura paga](0460-restauracao-plano-gratuito-apos-cancelamento-pago.md)
