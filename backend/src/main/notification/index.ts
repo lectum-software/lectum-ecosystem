@@ -11,6 +11,7 @@ import { isImmediatePushSuppressedByDigestPolicy } from "./push-policy";
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 type NotifyMeta = {
+  actor_id?: string | null;
   message_key: string;
   message_props?: Record<string, unknown>;
   redirect?: string;
@@ -24,6 +25,31 @@ const getStringProp = (value: unknown, key: string) => {
 
   const prop = value[key];
   return typeof prop === "string" ? prop : undefined;
+};
+
+const normalizePushActorName = (value: unknown) => {
+  if (typeof value !== "string") return undefined;
+
+  const name = value.trim().replace(/\s+/g, " ");
+  return name.length > 0 ? name.slice(0, 120) : undefined;
+};
+
+const resolvePushMessageProps = async (meta: NotifyMeta) => {
+  const props = { ...(meta.message_props ?? {}) };
+  if (getStringProp(props, "name") || !meta.actor_id) return props;
+
+  const actor = await prisma.user.findFirst({
+    where: {
+      deleted: false,
+      id: meta.actor_id,
+    },
+    select: {
+      name: true,
+    },
+  });
+  const actorName = normalizePushActorName(actor?.name);
+
+  return actorName ? { ...props, name: actorName } : props;
 };
 
 const hasRecentNotificationWithProp = async (params: {
@@ -179,7 +205,10 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       await emitNotification(emittedUserIds);
     }
 
-    const build = messages[meta.message_key as keyof typeof messages];
+    const build = messages[meta.message_key as keyof typeof messages] as
+      | ((data: Record<string, unknown>) => { body: string; title: string })
+      | undefined;
+    const pushMessageProps = build ? await resolvePushMessageProps(meta) : {};
     let targeted = 0;
     let sent = 0;
     let failed = 0;
@@ -222,7 +251,7 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       }
 
       const content = build
-        ? build(meta.message_props ?? {})
+        ? build(pushMessageProps)
         : { body: "Voce tem uma nova notificacao", title: "Lectum" };
       const result = await sendWebPushToSubscriptions({
         body: content.body,

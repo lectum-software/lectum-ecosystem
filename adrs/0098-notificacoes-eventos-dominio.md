@@ -88,3 +88,12 @@ Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir f
 - Como `backend/prisma/schema.prisma` mudou, foi executado `prisma migrate dev` com a migration `20260630000554_add_profile_view_post_share_events`; antes disso, o banco de desenvolvimento foi resetado com autorizacao explicita do usuario porque uma migration ja aplicada estava modificada.
 
 Validacao: `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e smoke local HTTP em `http://localhost:3000/psychologists`/`http://localhost:3000/community` com `200 OK`.
+
+## Complemento 2026-08-15 - nome real em push com ator
+
+- O produtor de dominio passa o `actor_id` para o dispatcher como metadado interno de renderizacao de push, sem gravar esse id adicional nem snapshot de nome em `notification.message_props`.
+- Para mensagens push que usam `{{name}}`, o dispatcher busca o nome atual do usuario ator no backend antes de montar o payload do Web Push.
+- `nova_avaliacao` passa a renderizar o nome real do usuario que enviou a avaliacao no push do sistema operacional.
+- A camada de mensagem possui fallback "Um usuario" para impedir que placeholders crus, como `{{name}}`, sejam exibidos caso o nome esteja ausente.
+- A decisao preserva a politica de persistencia anterior: a central in-app continua hidratando autoria por ids reais na leitura, e o push usa o nome apenas no payload efemero enviado ao navegador.
+- Nao ha migration, endpoint, env, package, mock ou alteracao de preferencias.

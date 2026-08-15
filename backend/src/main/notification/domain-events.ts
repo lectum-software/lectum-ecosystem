@@ -89,6 +89,7 @@ const notifyOnce = async (event: DispatchEvent) => {
   if (eligibleRecipients.length === 0) return;
 
   await notify(eligibleRecipients, {
+    actor_id: event.actorId,
     message_key: event.messageKey,
     message_props: {
       ...(event.props ?? {}),

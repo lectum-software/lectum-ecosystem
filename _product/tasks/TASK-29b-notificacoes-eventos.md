@@ -377,3 +377,22 @@ Implementado:
 - `pnpm --dir backend check`
 - `pnpm --dir backend build`
 - `pnpm check`
+
+## Complemento 2026-08-15 - nome real no push de avaliacao
+
+Pedido direto de produto aplicado ao canal push: a imagem anexada pelo usuario foi usada apenas como evidencia visual de que o texto `{{name}}` estava chegando cru na notificacao "Nova avaliacao recebida".
+
+Implementado:
+
+- O dispatcher passa a receber o `actor_id` do produtor de dominio sem persisti-lo nem salvar snapshot de nome em `notification.message_props`.
+- Antes de montar o payload push, o backend busca o nome real atual do usuario ator e injeta esse nome apenas no contexto de renderizacao da mensagem.
+- A copy de `nova_avaliacao` mantem `{{name}}`, mas agora e interpolada para o nome real do usuario que enviou a avaliacao.
+- Como defesa contra regressao, a montagem da mensagem de push de nova avaliacao usa fallback "Um usuario" quando o nome nao estiver disponivel, evitando exibir placeholders crus no sistema operacional.
+- Nao houve schema, migration, env, package novo, mock, endpoint paralelo ou alteracao de preferencias.
+
+### Criterios de aceite do complemento
+
+- [x] Push de `nova_avaliacao` exibe o nome real do usuario autor quando disponivel.
+- [x] Push de `nova_avaliacao` nao exibe `{{name}}` quando o nome estiver ausente.
+- [x] O nome usado no push nao e persistido como snapshot em `notification.message_props`.
+- [x] Eventos existentes continuam usando produtores reais e respeitando preferencias.
