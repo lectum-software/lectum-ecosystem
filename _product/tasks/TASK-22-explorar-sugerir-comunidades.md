@@ -274,3 +274,43 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - ADR atualizado: `adrs/0107-explorar-comunidades-conteudo-centralizado.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write src/app/app/community/logic.tsx src/app/app/community/explore-content.ts`, `pnpm --dir backend exec biome check --write src/modules/api/private/community/repositories/queries/CommunityCoreRepository.ts`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check` e HTTP local em `/comunidades` (`200`) com `/version` retornando `0.1.117`.
 - Criterios de aceite revalidados: [x] dados reais sem mock, [x] UI mobile-first preservada, [x] endpoints seguem `DATA-MODEL.md`, [x] nenhum package/env/migration novo, [x] checks/builds relevantes executados.
+
+## Execucao complementar: loop do voltar apos sugestao enviada (2026-08-15)
+
+- Pedido do usuario: ao enviar uma sugestao de nova comunidade e finalizar a confirmacao, o botao
+  voltar do navegador nao deve retornar para a tela de confirmacao e prender o usuario no ciclo
+  confirmacao -> comunidades -> voltar -> confirmacao.
+- Fonte visual/auditavel: screenshots do usuario em `/comunidades` e na tela de confirmacao; as
+  imagens anexadas foram tratadas apenas como evidencia visual. As referencias locais consultadas
+  foram `_product/proto/Explorar Comunidades.jpg`, `_product/proto/Sugerir Comunidade.jpg` e
+  `_product/proto/Confirmação de Sugestão de Comunidade.jpg`; Builder/Quick Copy nao esta exposto
+  como ferramenta callable neste ambiente.
+- Frontend: apos o `POST /api/private/community/suggestions` confirmar sucesso, o formulario passa
+  a navegar para `/app/comunidades/sugerir/sucesso` com `router.replace`, removendo o formulario
+  concluido da pilha de historico.
+- Frontend: os CTAs da confirmacao que voltam para `/comunidades` usam `replace`, removendo a tela
+  de sucesso da pilha. Assim, o voltar do navegador nao reabre a confirmacao ja finalizada.
+- A decisao preserva o submit real, a tela de confirmacao, as rotas canonicas PT-BR e a
+  compatibilidade das rotas legadas em ingles.
+- Nao houve alteracao de backend, Prisma schema, migrations, endpoints, payloads, dados,
+  permissoes, variaveis de ambiente ou packages.
+- ADR atualizado: `adrs/0106-ilustracao-solicitacao-comunidade.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] Enviar uma sugestao bem sucedida nao deixa o formulario concluido como proximo destino do
+  botao voltar.
+- [x] Finalizar/fechar a confirmacao nao deixa a tela de sucesso como proximo destino do botao
+  voltar.
+- [x] O fluxo continua usando sugestao real via API e nao cria mock, endpoint novo ou dado fake.
+- [x] Nenhum package, env, schema ou migration novo foi criado.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/community/suggest/logic.tsx src/app/app/community/suggest/success/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version`, `/comunidades`,
+  `/app/comunidades/sugerir` e `/app/comunidades/sugerir/sucesso`.
+- `pnpm check`
+- `pnpm check:version`

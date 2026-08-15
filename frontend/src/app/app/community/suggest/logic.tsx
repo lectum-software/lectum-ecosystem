@@ -41,7 +41,7 @@ export const SuggestCommunityLogic = () => {
   const mutation = useSuggestCommunity({
     onSuccess: () => {
       setApiError(null);
-      router.push("/app/comunidades/sugerir/sucesso");
+      router.replace("/app/comunidades/sugerir/sucesso");
     },
     onError: (error) => setApiError(resolveSuggestError(error)),
   });

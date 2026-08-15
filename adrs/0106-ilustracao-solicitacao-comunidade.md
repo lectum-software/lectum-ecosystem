@@ -50,3 +50,26 @@ Na tela `/app/community/suggest`, a ilustracao do topo estava centralizada com l
 - `git diff --check`
 - HTTP local `200` em `/app/community/suggest`
 - Browser/CDP headless confirmou o guard de perfil protegido quando nao ha sessao; a tela autenticada foi validada por screenshot do usuario e inspecao do codigo renderizado da rota protegida.
+
+## Atualizacao 2026-08-15 - confirmacao fora do loop de historico
+
+### Contexto
+
+No fluxo de sugestao de comunidade, uma sugestao bem sucedida levava o usuario para a confirmacao e,
+ao finalizar, de volta para `/comunidades`. Como ambas as navegacoes usavam insercao normal no
+historico, a pilha ficava com a confirmacao antes da pagina de comunidades; ao tocar no voltar do
+navegador, a confirmacao era reaberta e o usuario podia entrar em um ciclo.
+
+### Decisao
+
+- Trocar a navegacao de sucesso do formulario para `router.replace("/app/comunidades/sugerir/sucesso")`,
+  substituindo o formulario ja concluido pela tela de confirmacao.
+- Marcar os links de fechar/finalizar da confirmacao com `replace` ao voltar para `/comunidades`.
+- Manter as rotas, a chamada real de sugestao, o layout e os textos atuais; a mudanca e somente na
+  semantica de historico do Next App Router.
+
+### Consequencias
+
+- O botao voltar do navegador nao retorna para uma confirmacao ja finalizada.
+- O usuario volta para o contexto anterior de comunidades sem precisar repetir a acao de finalizar.
+- Nao ha alteracao de contrato, backend, dados persistidos, packages ou envs.
