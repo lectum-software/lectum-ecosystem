@@ -180,3 +180,36 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem alteração em formulários, validações de senha/e-mail, endpoints de conta, Google OAuth, packages ou schema Prisma.
 - ADR criado: `adrs/0119-header-secundario-premium-compartilhado.md`.
 - Validações executadas: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e Chrome/CDP autenticado em mobile 390x844 e desktop 1024x768 sem overflow horizontal.
+
+## Ajuste complementar em 2026-08-15 - exclusão de conta Google sem senha local
+
+- Pedido direto de produto: a captura do usuário mostrou uma conta cadastrada com Google recebendo
+  campo obrigatório de **Senha atual** no modal de exclusão.
+- Referência visual: screenshot anexo do usuário e `_product/proto/Configurações de Conta - Login Google.jpg`.
+  Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- Decisão: em exclusão própria, `user.provider="google"` passa a exigir reautenticação Google,
+  independentemente de existir senha local legada. Senha atual fica restrita a contas não Google com
+  senha cadastrada.
+- Backend: `POST /api/private/account/delete/google-intent` passa a aceitar contas Google com senha
+  legada; `POST /api/private/account/delete` valida reautenticação Google recente antes de excluir
+  qualquer conta Google.
+- Frontend: o modal não renderiza **Senha atual** para contas Google e aguarda carregar o contrato
+  real de segurança antes de exibir o formulário destrutivo, evitando flicker de senha durante o
+  loading.
+- ADR criado: `adrs/0461-exclusao-conta-google-sem-senha-local.md`; ADR-0113 atualizado para deixar
+  claro que a confirmação por Google prevalece sobre senhas locais legadas.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir backend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir frontend exec tsc --noEmit --pretty false`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir admin build`;
+  - `pnpm check:version`;
+  - `pnpm check`.
+- Validação local em browser autenticado ficou limitada: a tentativa de subir `next start` local em
+  processo auxiliar foi bloqueada pela política da ferramenta. A validação visual/operacional final
+  fica registrada pelo build de produção e pelo smoke publicado em homologação após o push.

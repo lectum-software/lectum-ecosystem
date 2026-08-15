@@ -30,6 +30,10 @@ import {
   resolveAuthenticatedLogoutDeviceId,
   runBestEffortLogoutSubscriptionCleanup,
 } from "../repositories/support/logout-subscription";
+import {
+  requiresGoogleDeleteReauth,
+  requiresPasswordDeleteConfirmation,
+} from "./delete-confirmation";
 
 const DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN = "10m";
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -394,7 +398,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
     };
   }
 
-  if (current.password || current.provider !== "google") {
+  if (!requiresGoogleDeleteReauth(current)) {
     return {
       status: 400,
       ...error("account_delete_google_reauth_unavailable", {}),
@@ -463,10 +467,7 @@ export const destroy = async (data: IAccountDeleteDTO) => {
     };
   }
 
-  if (current.password) {
-    const passwordError = await validateCurrentPassword(current, data.b.current_password || "");
-    if (passwordError) return passwordError;
-  } else if (current.provider === "google") {
+  if (requiresGoogleDeleteReauth(current)) {
     const hasRecentGoogleReauth = await repository.hasRecentGoogleDeleteReauth(
       current.id,
       device.id,
@@ -478,6 +479,9 @@ export const destroy = async (data: IAccountDeleteDTO) => {
         ...error("account_delete_google_reauth_required", {}),
       };
     }
+  } else if (requiresPasswordDeleteConfirmation(current)) {
+    const passwordError = await validateCurrentPassword(current, data.b.current_password || "");
+    if (passwordError) return passwordError;
   } else {
     return {
       status: 403,

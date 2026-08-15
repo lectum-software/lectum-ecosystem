@@ -635,3 +635,8 @@ Uma task só pode ser marcada como concluída quando:
 
 - Ajuste pos-feedback da TASK-156: cancelamentos reais de assinatura profissional Mercado Pago agora restauram o Plano Gratuito ativo quando nao houver outro entitlement profissional, inclusive por sync, webhook, cancelamento do psicologo, cancelamento Admin ou correcao idempotente ao ler o plano atual.
 - A etapa de endereco de faturamento nao deve manter o usuario preso no fluxo pago quando o plano efetivo ja voltou para gratuito/cancelado/inexistente.
+
+## Atualizacao operacional em 2026-08-15: exclusao de conta Google
+
+- Ajuste pos-feedback da TASK-30: no fluxo proprio de exclusao de conta, `user.provider="google"` exige reautenticacao Google e nao senha atual, mesmo quando existir senha local legada.
+- Senha atual permanece exigida somente para contas nao Google com senha cadastrada; contas sem metodo confirmavel continuam bloqueadas por erro de dominio seguro.

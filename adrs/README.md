@@ -491,3 +491,4 @@ Formato recomendado:
 - [ADR-0458 — Cancelamento administrativo real de assinatura profissional](0458-cancelamento-admin-assinatura-mercado-pago.md)
 - [ADR-0459 — Régua de cobrança para assinatura profissional](0459-regua-cobranca-assinatura.md)
 - [ADR-0460 — Restaurar plano gratuito após cancelamento de assinatura paga](0460-restauracao-plano-gratuito-apos-cancelamento-pago.md)
+- [ADR-0461 — Exclusão de conta Google sem senha local](0461-exclusao-conta-google-sem-senha-local.md)
