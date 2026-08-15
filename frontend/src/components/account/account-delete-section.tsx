@@ -9,7 +9,7 @@ import { getSafeApiErrorMessage } from "@/api/errors";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useSignOut } from "@/hooks/cookies/signout";
+import { clearLocalAuthSession } from "@/hooks/cookies/signout";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { fingerprint } from "@/utils/fingerprint";
@@ -71,7 +71,6 @@ const resolveDeleteAccountError = (error: unknown) => {
 export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { out } = useSignOut();
   const googleReauthParam = searchParams.get("deleteReauth");
   const hasGoogleReauthParam = googleReauthParam === "ok";
   const [isOpen, setIsOpen] = useState(hasGoogleReauthParam);
@@ -108,7 +107,11 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
       },
       deleteAccount: {
         onError: (error) => setDeleteAccountError(resolveDeleteAccountError(error)),
-        onSuccess: () => out("/auth/login"),
+        onSuccess: () => {
+          void clearLocalAuthSession().finally(() => {
+            window.location.replace("/auth/login");
+          });
+        },
       },
     },
   });

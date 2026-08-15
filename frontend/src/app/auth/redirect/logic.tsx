@@ -26,7 +26,9 @@ export const RedirectLogic = () => {
         ? DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT
         : DELETE_ACCOUNT_PATIENT_REDIRECT;
   }, [intent]);
-  const { setter } = useUserSet(fallbackRedirect);
+  const { setter } = useUserSet(fallbackRedirect, {
+    skipOnboardingRedirect: intent === "delete_account",
+  });
   const { googleMe } = useAuth({
     callbacks: {
       googleMe: {

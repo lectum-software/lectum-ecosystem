@@ -265,3 +265,33 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir backend build`;
   - `pnpm check`;
   - smoke de homologação registrado no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-15 - conclusão da exclusão após reautenticação Google
+
+- Pedido direto de produto: após confirmar com Google, clicar em **Excluir conta** retornava para a
+  página inicial e a conta continuava sem ser excluída.
+- Diagnóstico: o callback Google de exclusão voltava direto para a tela final, sem passar pelo fluxo
+  `/auth/redirect` que consome o cookie transitório e recria a sessão `HttpOnly` do frontend. Em
+  paralelo, uma eventual resposta `401` no `POST /api/private/account/delete` disparava signout
+  automático, ocultando o erro real no modal.
+- Backend: o callback `intent=delete_account` agora grava o cookie transitório de troca e redireciona
+  para `/auth/redirect?intent=delete_account&callbackUrl=...`, preservando o retorno interno
+  `deleteReauth=ok`.
+- Frontend: `/auth/redirect` passou a ignorar apenas os bloqueios de onboarding/plano quando a
+  intenção é `delete_account`, permitindo voltar ao modal mesmo se o psicólogo ainda tiver etapas
+  obrigatórias pendentes.
+- Frontend: a chamada final de exclusão não faz signout automático em `401`; falhas permanecem no
+  modal com mensagem segura. Após sucesso real, a sessão local é limpa diretamente e o usuário é
+  levado a `/auth/login`, sem uma segunda chamada de logout contra a conta já anonimizada.
+- Sem migration, sem package novo, sem variável de ambiente nova e sem mocks.
+- Validação local em browser não executou exclusão real de conta para preservar dados publicados; a
+  validação operacional é limitada a checks, builds e smoke de rotas públicas/saúde após deploy.
+- Validações executadas durante o ajuste:
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `pnpm check:version`;
+  - `git diff --check`;
+  - smoke de homologação registrado no fechamento do ajuste.

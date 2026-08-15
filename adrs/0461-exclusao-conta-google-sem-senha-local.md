@@ -40,6 +40,17 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - O backend também passa a responder `400 device_id_not_found` no caminho público sem dispositivo
   (`/api/public/google/login`), evitando uma página genérica de 404 quando algum cliente antigo ou
   configuração incompleta tentar iniciar OAuth sem o segmento obrigatório.
+- Correção complementar em 2026-08-15: no fluxo de exclusão, o callback Google deixa de retornar
+  diretamente para a tela final e passa antes por `/auth/redirect?intent=delete_account`, preservando
+  `callbackUrl` interno. Essa troca consome o cookie transitório em `/api/public/google/me`, recria a
+  sessão `HttpOnly` da aplicação e só então abre o modal com `deleteReauth=ok`.
+- Para a intenção `delete_account`, o redirecionamento pós-Google ignora apenas os bloqueios de
+  onboarding/plano que poderiam substituir o destino seguro pela home ou pela seleção de plano. Essa
+  exceção é restrita ao retorno da exclusão e não altera o login normal.
+- A chamada final `POST /api/private/account/delete` não executa signout automático em `401`; assim,
+  se a sessão ainda estiver inválida, o modal mostra erro seguro em vez de levar o usuário para a
+  página inicial. Quando a exclusão realmente conclui, o frontend limpa a sessão local diretamente e
+  redireciona para `/auth/login`, sem fazer um segundo logout contra uma conta já anonimizada.
 
 ## Consequências
 
@@ -54,6 +65,10 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
   preservando a validação do token curto no callback.
 - Durante o rollout, frontend novo funciona com backend antigo quando a URL já contém device no
   caminho; backend novo funciona com frontend antigo porque `device_id` é apenas campo adicional.
+- O retorno de reautenticação Google volta ao modal de exclusão mesmo para psicólogos com etapas
+  obrigatórias pendentes, sem desbloquear onboarding fora desse fluxo.
+- Em caso de sessão expirada, o usuário permanece na modal e recebe instrução segura; não há
+  redirecionamento silencioso para a home nem tentativa de exclusão sem autenticação válida.
 
 ## Task relacionada
 
@@ -79,3 +94,7 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - 2026-08-15: validação da correção de falso bloqueio do modal: `pnpm --dir frontend test`,
   `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir frontend build`,
   `pnpm --dir backend build`, `pnpm check` e smoke publicado registrados no fechamento do ajuste.
+- 2026-08-15: validação do retorno final do modal após Google: `pnpm --dir frontend check`,
+  `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`,
+  `pnpm check`, `pnpm check:version`, `git diff --check` e smoke publicado registrados no
+  fechamento do ajuste. Não foi executada exclusão real de conta em homologação.

@@ -11,6 +11,9 @@ export const USER_HOME_PATHS = {
 } as const;
 
 type RedirectFallback = string | null;
+type ResolveAuthRedirectOptions = {
+  skipOnboardingRedirect?: boolean;
+};
 
 export function getUserHomePath(
   data: Partial<Pick<user, "role" | "patient_profile" | "psychologist_profile">> | null | undefined,
@@ -35,6 +38,7 @@ export function resolveAuthRedirect(
   explicitRedirect: string | null,
   fallback: RedirectFallback,
   legacyCallbackUrl?: string | null,
+  options: ResolveAuthRedirectOptions = {},
 ) {
   if (data && "confirmed" in data && data.confirmed === false) {
     const pendingRedirect = normalizeSafeInternalRedirect(explicitRedirect ?? legacyCallbackUrl);
@@ -46,8 +50,10 @@ export function resolveAuthRedirect(
     return "/auth/verify-email";
   }
 
-  const psychologistPlanSelectionRequirement = getPsychologistPlanSelectionRequirementPath(data);
-  if (psychologistPlanSelectionRequirement) return psychologistPlanSelectionRequirement;
+  if (!options.skipOnboardingRedirect) {
+    const psychologistPlanSelectionRequirement = getPsychologistPlanSelectionRequirementPath(data);
+    if (psychologistPlanSelectionRequirement) return psychologistPlanSelectionRequirement;
+  }
 
   const safeExplicitRedirect = normalizeSafeInternalRedirect(explicitRedirect);
   const safeLegacyCallbackUrl = normalizeSafeInternalRedirect(legacyCallbackUrl);
@@ -56,5 +62,9 @@ export function resolveAuthRedirect(
   if (safeLegacyCallbackUrl) return safeLegacyCallbackUrl;
   if (!fallback) return null;
 
-  return normalizeSafeInternalRedirect(getUserHomePath(data, fallback), "/psicologos");
+  const fallbackTarget = options.skipOnboardingRedirect
+    ? fallback
+    : getUserHomePath(data, fallback);
+
+  return normalizeSafeInternalRedirect(fallbackTarget, "/psicologos");
 }

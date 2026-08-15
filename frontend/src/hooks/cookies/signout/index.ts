@@ -24,13 +24,7 @@ export const revokeSession = async () => {
     if (!isConfirmedUserSessionRejection(error)) throw error;
   }
 
-  await unsubscribeCurrentPushSubscription().catch(() => {
-    // Browser offline/bloqueado não pode impedir o logout local.
-  });
-
-  resetAnalyticsSession();
-  removeToken();
-  removeUser();
+  await clearLocalAuthSession();
 };
 
 const clearStorageKeys = (storageName: "localStorage" | "sessionStorage", keys: string[]) => {
@@ -46,11 +40,20 @@ const clearStorageKeys = (storageName: "localStorage" | "sessionStorage", keys: 
   }
 };
 
-export const signOut = async (callback?: boolean, redirect?: string) => {
-  await revokeSession();
+export const clearLocalAuthSession = async () => {
+  await unsubscribeCurrentPushSubscription().catch(() => {
+    // Browser offline/bloqueado não pode impedir a limpeza local após exclusão confirmada.
+  });
 
+  resetAnalyticsSession();
+  removeToken();
+  removeUser();
   clearStorageKeys("localStorage", AUTH_STORAGE_KEYS);
   clearStorageKeys("sessionStorage", AUTH_SESSION_STORAGE_KEYS);
+};
+
+export const signOut = async (callback?: boolean, redirect?: string) => {
+  await revokeSession();
 
   if (typeof window === "undefined") return;
 

@@ -14,17 +14,30 @@ const sourceRoot = new URL("../", import.meta.url);
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (!specifier.startsWith("@/")) return nextResolve(specifier, context);
+    const resolveCandidate = (candidates, baseUrl) => {
+      for (const candidate of candidates) {
+        const url = new URL(candidate, baseUrl);
+        if (existsSync(fileURLToPath(url))) return { shortCircuit: true, url: url.href };
+      }
 
-    const path = specifier.slice(2);
-    for (const candidate of [
-      `${path}.ts`,
-      `${path}.tsx`,
-      `${path}/index.ts`,
-      `${path}/index.tsx`,
-    ]) {
-      const url = new URL(candidate, sourceRoot);
-      if (existsSync(fileURLToPath(url))) return { shortCircuit: true, url: url.href };
+      return null;
+    };
+
+    if (specifier.startsWith("@/")) {
+      const path = specifier.slice(2);
+      const resolved = resolveCandidate(
+        [`${path}.ts`, `${path}.tsx`, `${path}/index.ts`, `${path}/index.tsx`],
+        sourceRoot,
+      );
+      if (resolved) return resolved;
+    }
+
+    if (specifier.startsWith("./") || specifier.startsWith("../")) {
+      const resolved = resolveCandidate(
+        [`${specifier}.ts`, `${specifier}.tsx`, `${specifier}/index.ts`, `${specifier}/index.tsx`],
+        context.parentURL,
+      );
+      if (resolved) return resolved;
     }
 
     return nextResolve(specifier, context);
@@ -61,6 +74,7 @@ const {
 } = await import("./pwa-install.ts");
 const { isConfirmedUserSessionRejection } = await import("./session-rejection.ts");
 const { buildTrustedGoogleLoginUrlFromIntent } = await import("./trusted-navigation.ts");
+const { resolveAuthRedirect } = await import("./auth-redirect.ts");
 const { applyStoredBearerFallback } = await import("../api/auth-cookie.ts");
 
 class MemoryStorage {
@@ -361,6 +375,25 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
         null,
       );
     },
+  );
+});
+
+test("mantém retorno ao modal de exclusão Google mesmo quando onboarding do psicólogo está pendente", () => {
+  const user = {
+    confirmed: true,
+    psychologist_profile: null,
+    role: "psicologo",
+  };
+
+  assert.equal(
+    resolveAuthRedirect(user, null, "/app/profissional/perfil/configurar?deleteReauth=ok", null, {
+      skipOnboardingRedirect: true,
+    }),
+    "/app/profissional/perfil/configurar?deleteReauth=ok",
+  );
+  assert.equal(
+    resolveAuthRedirect(user, null, "/app/profissional/perfil/configurar?deleteReauth=ok"),
+    "/app/profissional/assinatura/planos",
   );
 });
 

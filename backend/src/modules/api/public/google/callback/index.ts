@@ -1,5 +1,5 @@
 //Lib
-import { Router } from "express";
+import { type Response, Router } from "express";
 
 //Middlewares
 import passport from "@/modules/api/middlewares/_auth/passport";
@@ -113,6 +113,32 @@ const appendCallbackQuery = (targetValue: string | undefined, queryString: strin
   return isAbsolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
 };
 
+const toInternalCallbackPath = (targetValue: string) => {
+  const url = new URL(targetValue, "https://lectum.local");
+
+  return `${url.pathname}${url.search}${url.hash}`;
+};
+
+const resolveDeleteAccountExchangeUrl = (query: GoogleCallbackQuery, user: GoogleCallbackUser) => {
+  const callbackPath = toInternalCallbackPath(resolveDeleteAccountCallbackUrl(query, user));
+  const frontendOrigin = getFrontendOrigin();
+  const url = new URL("/auth/redirect", frontendOrigin || "https://lectum.local");
+  url.searchParams.set("intent", "delete_account");
+  url.searchParams.set("callbackUrl", callbackPath);
+
+  return frontendOrigin ? url.toString() : `${url.pathname}${url.search}`;
+};
+
+const setGoogleExchangeCookie = (res: Response, token: string) => {
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: isPublishedRuntime(),
+    sameSite: "lax",
+    maxAge: GOOGLE_EXCHANGE_COOKIE_TTL_MS,
+    path: "/api/public/google/me",
+  });
+};
+
 //Routes
 routes.get(
   "",
@@ -142,10 +168,6 @@ routes.get(
       );
     }
 
-    if (originalQuery.intent === "delete_account") {
-      return res.redirect(resolveDeleteAccountCallbackUrl(originalQuery, user));
-    }
-
     const token = user?.data?.user_tokens?.[0].token;
     if (!token) {
       return res.redirect(
@@ -156,13 +178,11 @@ routes.get(
       );
     }
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: isPublishedRuntime(),
-      sameSite: "lax",
-      maxAge: GOOGLE_EXCHANGE_COOKIE_TTL_MS,
-      path: "/api/public/google/me",
-    });
+    setGoogleExchangeCookie(res, token);
+
+    if (originalQuery.intent === "delete_account") {
+      return res.redirect(resolveDeleteAccountExchangeUrl(originalQuery, user));
+    }
 
     res.redirect(appendCallbackQuery(process.env.CALLBACK_URL_API_USER, originalQueryStr));
   },
