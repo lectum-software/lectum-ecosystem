@@ -36,27 +36,10 @@ import {
 } from "./delete-confirmation";
 
 const DELETE_GOOGLE_REAUTH_TOKEN_EXPIRES_IN = "10m";
+const DELETE_GOOGLE_REAUTH_CALLBACK = "/app/configuracoes/conta?deleteReauth=ok";
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-const sanitizeDeleteCallbackUrl = (value?: string | null, role?: string | null) => {
-  const fallback =
-    role === "psicologo"
-      ? "/app/profissional/perfil/configurar?deleteReauth=ok"
-      : "/app/perfil/editar?deleteReauth=ok";
-  const raw = value?.trim() || fallback;
-
-  if (!raw.startsWith("/app/")) return fallback;
-  if (raw.startsWith("//")) return fallback;
-
-  try {
-    const url = new URL(raw, "https://lectum.local");
-    url.searchParams.set("deleteReauth", "ok");
-
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return fallback;
-  }
-};
+const sanitizeDeleteCallbackUrl = () => DELETE_GOOGLE_REAUTH_CALLBACK;
 
 const getCurrentUser = async (auth: user) => {
   if (!auth.id) return null;
@@ -427,7 +410,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
 
   url.searchParams.set("intent", "delete_account");
   url.searchParams.set("delete_token", token);
-  url.searchParams.set("callbackUrl", sanitizeDeleteCallbackUrl(data.b.callback_url, current.role));
+  url.searchParams.set("callbackUrl", sanitizeDeleteCallbackUrl());
 
   const response: AccountDeleteGoogleIntentResponse = {
     device_id: device.id,

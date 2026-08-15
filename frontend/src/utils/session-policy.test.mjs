@@ -332,7 +332,7 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
     },
     () => {
       const result = buildTrustedGoogleLoginUrlFromIntent(
-        "https://api.example.com/api/public/google/login?intent=delete_account&delete_token=token-assinado&callbackUrl=%2Fapp%2Fperfil%2Feditar%3FdeleteReauth%3Dok",
+        "https://api.example.com/api/public/google/login?intent=delete_account&delete_token=token-assinado&callbackUrl=%2Fapp%2Fconfiguracoes%2Fconta%3FdeleteReauth%3Dok",
         "device_identifier_123",
       );
 
@@ -342,7 +342,7 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
       assert.equal(url.pathname, "/api/public/google/login/device_identifier_123");
       assert.equal(url.searchParams.get("intent"), "delete_account");
       assert.equal(url.searchParams.get("delete_token"), "token-assinado");
-      assert.equal(url.searchParams.get("callbackUrl"), "/app/perfil/editar?deleteReauth=ok");
+      assert.equal(url.searchParams.get("callbackUrl"), "/app/configuracoes/conta?deleteReauth=ok");
 
       assert.equal(
         buildTrustedGoogleLoginUrlFromIntent(
@@ -386,13 +386,13 @@ test("mantém retorno ao modal de exclusão Google mesmo quando onboarding do ps
   };
 
   assert.equal(
-    resolveAuthRedirect(user, null, "/app/profissional/perfil/configurar?deleteReauth=ok", null, {
+    resolveAuthRedirect(user, null, "/app/configuracoes/conta?deleteReauth=ok", null, {
       skipOnboardingRedirect: true,
     }),
-    "/app/profissional/perfil/configurar?deleteReauth=ok",
+    "/app/configuracoes/conta?deleteReauth=ok",
   );
   assert.equal(
-    resolveAuthRedirect(user, null, "/app/profissional/perfil/configurar?deleteReauth=ok"),
+    resolveAuthRedirect(user, null, "/app/configuracoes/conta?deleteReauth=ok"),
     "/app/profissional/assinatura/planos",
   );
 });

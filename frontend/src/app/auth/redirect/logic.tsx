@@ -6,14 +6,12 @@ import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
 import { getSafeApiErrorMessage } from "@/api/errors";
-import type { user } from "@/api/generator/types";
 import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { CenterTemplate } from "@/templates/center";
 
 const DEFAULT_AUTHENTICATED_REDIRECT = "/psicologos";
-const DELETE_ACCOUNT_PATIENT_REDIRECT = "/app/perfil/editar?deleteReauth=ok";
-const DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT = "/app/profissional/perfil/configurar?deleteReauth=ok";
+const DELETE_ACCOUNT_REDIRECT = "/app/configuracoes/conta?deleteReauth=ok";
 
 export const RedirectLogic = () => {
   const searchParams = useSearchParams();
@@ -21,10 +19,7 @@ export const RedirectLogic = () => {
   const fallbackRedirect = useMemo(() => {
     if (intent !== "delete_account") return DEFAULT_AUTHENTICATED_REDIRECT;
 
-    return (data: user) =>
-      data.role === "psicologo"
-        ? DELETE_ACCOUNT_PSYCHOLOGIST_REDIRECT
-        : DELETE_ACCOUNT_PATIENT_REDIRECT;
+    return () => DELETE_ACCOUNT_REDIRECT;
   }, [intent]);
   const { setter } = useUserSet(fallbackRedirect, {
     skipOnboardingRedirect: intent === "delete_account",

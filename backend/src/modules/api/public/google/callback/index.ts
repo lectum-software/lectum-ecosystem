@@ -26,8 +26,7 @@ type GoogleCallbackUser = {
   };
 };
 
-const DELETE_ACCOUNT_PATIENT_CALLBACK = "/app/perfil/editar?deleteReauth=ok";
-const DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK = "/app/profissional/perfil/configurar?deleteReauth=ok";
+const DELETE_ACCOUNT_CALLBACK = "/app/configuracoes/conta?deleteReauth=ok";
 const GOOGLE_EXCHANGE_COOKIE_TTL_MS = 2 * 60 * 1000;
 const GOOGLE_CALLBACK_INTERNAL_QUERY_KEYS = new Set([
   "analytics_session_id",
@@ -40,26 +39,8 @@ const getFrontendOrigin = () => {
   return parseGoogleHttpUrl(process.env.CALLBACK_URL_API_USER)?.origin ?? "";
 };
 
-const sanitizeAppCallbackUrl = (value: unknown, fallback: string) => {
-  const raw = typeof value === "string" ? value.trim() : "";
-
-  if (!raw?.startsWith("/app/") || raw.startsWith("//")) return fallback;
-
-  try {
-    const url = new URL(raw, "https://lectum.local");
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return fallback;
-  }
-};
-
-const resolveDeleteAccountCallbackUrl = (query: GoogleCallbackQuery, user: GoogleCallbackUser) => {
-  const fallback =
-    user.data?.role === "psicologo"
-      ? DELETE_ACCOUNT_PSYCHOLOGIST_CALLBACK
-      : DELETE_ACCOUNT_PATIENT_CALLBACK;
-  const path = sanitizeAppCallbackUrl(query.callbackUrl, fallback);
-  const url = new URL(path, "https://lectum.local");
+const resolveDeleteAccountCallbackUrl = () => {
+  const url = new URL(DELETE_ACCOUNT_CALLBACK, "https://lectum.local");
   url.searchParams.set("deleteReauth", "ok");
 
   const frontendOrigin = getFrontendOrigin();
@@ -119,8 +100,8 @@ const toInternalCallbackPath = (targetValue: string) => {
   return `${url.pathname}${url.search}${url.hash}`;
 };
 
-const resolveDeleteAccountExchangeUrl = (query: GoogleCallbackQuery, user: GoogleCallbackUser) => {
-  const callbackPath = toInternalCallbackPath(resolveDeleteAccountCallbackUrl(query, user));
+const resolveDeleteAccountExchangeUrl = () => {
+  const callbackPath = toInternalCallbackPath(resolveDeleteAccountCallbackUrl());
   const frontendOrigin = getFrontendOrigin();
   const url = new URL("/auth/redirect", frontendOrigin || "https://lectum.local");
   url.searchParams.set("intent", "delete_account");
@@ -181,7 +162,7 @@ routes.get(
     setGoogleExchangeCookie(res, token);
 
     if (originalQuery.intent === "delete_account") {
-      return res.redirect(resolveDeleteAccountExchangeUrl(originalQuery, user));
+      return res.redirect(resolveDeleteAccountExchangeUrl());
     }
 
     res.redirect(appendCallbackQuery(process.env.CALLBACK_URL_API_USER, originalQueryStr));

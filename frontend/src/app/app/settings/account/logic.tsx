@@ -16,6 +16,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useAccount } from "@/api/callers/account";
 import { getSafeApiErrorMessage } from "@/api/errors";
+import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -464,6 +465,8 @@ export const AccountSettingsLogic = () => {
             />
           </div>
         ) : null}
+
+        {security ? <AccountDeleteSection className="mt-6" /> : null}
       </section>
     </PrivateTemplate>
   );

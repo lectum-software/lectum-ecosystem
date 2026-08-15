@@ -98,3 +98,9 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
   `pnpm --dir backend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`,
   `pnpm check`, `pnpm check:version`, `git diff --check` e smoke publicado registrados no
   fechamento do ajuste. Não foi executada exclusão real de conta em homologação.
+
+## Complemento em 2026-08-15 - retorno estavel apos Google
+
+- O retorno de exclusao Google passa a ser sempre `/app/configuracoes/conta?deleteReauth=ok`. A rota de configuracoes da conta e permitida durante bloqueios de onboarding/assinatura, e a secao de exclusao passa a existir nessa tela para contas Google-only.
+- Callbacks antigos para telas de perfil/setup deixam de ser usados no backend para essa intencao, evitando que guards substituam o destino e aparentem levar o usuario para a home antes da exclusao.
+- A decisao preserva o historico Git salvo (`0.1.130` / `4d2c3391`) como referencia sem resetar a branch publicada; qualquer retorno de comportamento deve ocorrer por commit incremental/revert seguro.

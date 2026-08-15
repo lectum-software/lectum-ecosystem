@@ -295,3 +295,24 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check:version`;
   - `git diff --check`;
   - smoke de homologação registrado no fechamento do ajuste.
+
+
+## Ajuste complementar em 2026-08-15 - retorno estavel da exclusao Google
+
+- Pedido direto de produto: o fluxo ainda apresentava problema em homologacao e havia duvida se a versao local que funcionava estava salva.
+- Diagnostico: o historico Git preserva a versao anterior (`0.1.130` / `4d2c3391`) como referencia, mas reverter diretamente a branch publicada poderia desfazer correcoes ja implantadas. A causa provavel do comportamento em homologacao e que o retorno pos-Google usava telas de perfil que podem ser interceptadas pelo bloqueio de onboarding/assinatura de psicologos pendentes.
+- Decisao: manter a correcao incremental e direcionar toda reautenticacao Google de exclusao para `/app/configuracoes/conta?deleteReauth=ok`, rota ja permitida durante bloqueios obrigatorios.
+- Frontend: a tela de **Email e senha** passa a renderizar a secao de exclusao de conta tambem para contas Google-only; ao retornar do Google, a modal reabre nessa rota estavel.
+- Backend: a intencao e o callback de exclusao Google ignoram callbacks antigos para telas de perfil e normalizam o retorno para configuracoes da conta, preservando `deleteReauth=ok`.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `pnpm check:version`;
+  - `git diff --check`;
+  - smoke de homologacao registrado no fechamento do ajuste.
