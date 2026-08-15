@@ -589,3 +589,40 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Escopo: sem mudancas de backend, Prisma schema, migrations, packages, endpoint, filtros reais, paginacao, favoritos persistidos ou tracking de WhatsApp.
 - ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
 - Validacoes executadas: `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `git diff --check`, HTTP local `200` em `/app/favoritos` e Chrome headless local em viewport 390x844.
+
+## Complemento 2026-08-15 - imagens reais em Comunidades seguidas
+
+- Pedido do usuario: em `Comunidades seguidas`, corrigir as imagens do bloco **Em destaque** e o
+  avatar das demais comunidades.
+- Fonte visual/auditavel: screenshot do usuario em `/app/comunidades-seguidas`; a imagem anexada
+  foi tratada apenas como evidencia visual. As referencias locais consultadas foram
+  `_product/proto/Seguindo.jpg`, `_product/proto/Explorar Comunidades.jpg` e
+  `_product/proto/Feed Comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta
+  callable neste ambiente.
+- Frontend: `/app/following` e a rota canonica `/app/comunidades-seguidas` passaram a reutilizar
+  `buildCommunityExploreCard` para resolver os assets reais/catalogados das comunidades.
+- O card **Em destaque** agora renderiza `next/image` em background com o mesmo asset da comunidade,
+  mantendo overlay escuro para legibilidade.
+- Os cards de **Minhas comunidades** e **Recomendados para voce** renderizam a imagem/avatar da
+  comunidade no lugar do bloco gradiente com iniciais; as iniciais permanecem apenas como fallback
+  atras da imagem.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, endpoints, filtros reais,
+  paginacao, participacao em comunidades ou tracking.
+- ADR atualizado: `adrs/0073-comunidades-seguidas.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco **Em destaque** de Comunidades seguidas exibe imagem real/catalogada da comunidade.
+- [x] Os cards das demais comunidades exibem avatar/imagem real/catalogada, sem trocar por iniciais
+  quando houver asset disponivel.
+- [x] A tela continua usando `next/image`, sem `<img>` cru.
+- [x] A alteracao nao cria mock, dado fake, endpoint, schema, migration, env ou package novo.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/following/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version`, `/app/comunidades-seguidas` e `/app/following`.
+- `pnpm check`
+- `pnpm check:version`

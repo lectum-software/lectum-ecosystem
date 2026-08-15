@@ -1,11 +1,13 @@
 "use client";
 
 import { ChevronRight, Compass, UsersRound } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCommunities, useFollowCommunity } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { Community } from "@/api/generator/types/community";
+import { buildCommunityExploreCard } from "@/app/app/community/explore-content";
 import { CommunityFollowButton } from "@/components/community/community-follow-button";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -41,6 +43,9 @@ const getInitials = (name: string) => {
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
+
+const resolveCommunityImage = (community: Community, index = 0) =>
+  buildCommunityExploreCard(community, index).imageUrl;
 
 const formatCommunityCount = (value: number) =>
   `${value.toLocaleString("pt-BR")} ${value === 1 ? "Comunidade" : "Comunidades"}`;
@@ -103,67 +108,88 @@ const ActivityCard = ({
 
 const CommunityVisual = ({
   community,
+  imageIndex = 0,
   size = "md",
 }: {
   community: Community;
+  imageIndex?: number;
   size?: "sm" | "md" | "lg";
 }) => {
-  const variants = [
-    "from-primary-soft via-surface-muted to-primary-soft text-primary",
-    "from-primary-soft via-primary-soft to-primary-soft text-primary",
-    "from-primary-soft via-surface-muted to-primary-soft text-success",
-    "from-primary-soft via-surface-muted to-primary-soft text-warning",
-  ];
-  const variant =
-    variants[Math.abs(community.slug.length + community.name.length) % variants.length];
+  const imageUrl = resolveCommunityImage(community, imageIndex);
+  const sizes = size === "lg" ? "96px" : size === "md" ? "80px" : "56px";
 
   return (
     <span
       className={cn(
-        "relative grid shrink-0 place-items-center overflow-hidden rounded-[18px] bg-gradient-to-br font-black shadow-inner",
-        variant,
+        "relative grid shrink-0 place-items-center overflow-hidden rounded-[18px] border border-border bg-surface-muted font-black text-primary shadow-inner",
         size === "lg" && "h-24 w-24 text-xl",
         size === "md" && "h-20 w-20 text-lg",
         size === "sm" && "h-14 w-14 text-sm",
       )}
     >
-      <span className="absolute -left-4 top-2 h-12 w-12 rounded-full bg-surface/50 blur-xl" />
-      <span className="absolute -right-4 bottom-0 h-16 w-16 rounded-full bg-media-background/10 blur-2xl" />
-      <span className="relative z-10">{getInitials(community.name)}</span>
+      <span className="relative z-0">{getInitials(community.name)}</span>
+      <Image
+        alt={`Imagem da comunidade ${community.name}`}
+        className="z-10 object-cover"
+        fill
+        sizes={sizes}
+        src={imageUrl}
+      />
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 z-20 bg-gradient-to-tr from-media-background/10 via-transparent to-media-foreground/10"
+      />
     </span>
   );
 };
 
-const FeaturedCommunity = ({ community }: { community: Community }) => (
-  <section className="grid gap-5">
-    <SectionTitle>Em destaque</SectionTitle>
-    <Link
-      className="group relative min-h-[168px] overflow-hidden rounded-[22px] bg-foreground p-6 text-primary-foreground shadow-lectum-soft transition hover:-translate-y-0.5 hover:shadow-lectum-soft"
-      href={`/comunidades/${community.slug}`}
-    >
-      <div className="following-feature-overlay absolute inset-0" />
-      <div className="following-feature-base absolute inset-x-0 bottom-0 h-24" />
-      <div className="relative z-10 flex min-h-[120px] flex-col justify-end gap-3">
-        <span className="w-fit rounded-full bg-primary px-3 py-1 text-xs font-black uppercase tracking-[0.04em]">
-          {community.new_posts_count ? "Novidade" : "Seguindo"}
-        </span>
-        <h3 className="line-clamp-2 text-[1.7rem] font-black leading-tight tracking-[-0.04em]">
-          {community.name}
-        </h3>
-        <span className="inline-flex h-11 w-fit items-center rounded-full bg-surface px-5 text-base font-black text-foreground transition group-hover:translate-x-1">
-          Explorar
-        </span>
-      </div>
-    </Link>
-  </section>
-);
+const FeaturedCommunity = ({ community }: { community: Community }) => {
+  const imageUrl = resolveCommunityImage(community);
 
-const MyCommunityCard = ({ community }: { community: Community }) => (
+  return (
+    <section className="grid gap-5">
+      <SectionTitle>Em destaque</SectionTitle>
+      <Link
+        className="group relative min-h-[168px] overflow-hidden rounded-[22px] bg-foreground p-6 text-primary-foreground shadow-lectum-soft transition hover:-translate-y-0.5 hover:shadow-lectum-soft"
+        href={`/comunidades/${community.slug}`}
+      >
+        <Image
+          alt={`Imagem da comunidade ${community.name}`}
+          className="object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
+          fill
+          priority
+          sizes="(min-width: 768px) 672px, 100vw"
+          src={imageUrl}
+        />
+        <div aria-hidden="true" className="community-card-overlay absolute inset-0" />
+        <div className="relative z-10 flex min-h-[120px] flex-col justify-end gap-3">
+          <span className="w-fit rounded-full bg-primary px-3 py-1 text-xs font-black uppercase tracking-[0.04em]">
+            {community.new_posts_count ? "Novidade" : "Seguindo"}
+          </span>
+          <h3 className="line-clamp-2 text-[1.7rem] font-black leading-tight tracking-[-0.04em]">
+            {community.name}
+          </h3>
+          <span className="inline-flex h-11 w-fit items-center rounded-full bg-surface px-5 text-base font-black text-foreground transition group-hover:translate-x-1">
+            Explorar
+          </span>
+        </div>
+      </Link>
+    </section>
+  );
+};
+
+const MyCommunityCard = ({
+  community,
+  imageIndex,
+}: {
+  community: Community;
+  imageIndex: number;
+}) => (
   <Link
     className="grid min-h-[158px] justify-items-center gap-3 rounded-[18px] bg-surface px-4 py-6 text-center shadow-lectum-soft transition hover:-translate-y-0.5 hover:shadow-lectum-soft"
     href={`/comunidades/${community.slug}`}
   >
-    <CommunityVisual community={community} />
+    <CommunityVisual community={community} imageIndex={imageIndex} />
     <div className="grid gap-3">
       <h3 className="line-clamp-2 text-lg font-black leading-tight text-foreground">
         {community.name}
@@ -178,16 +204,18 @@ const MyCommunityCard = ({ community }: { community: Community }) => (
 const RecommendedCard = ({
   community,
   disabled,
+  imageIndex,
   isPending,
   onFollow,
 }: {
   community: Community;
   disabled?: boolean;
+  imageIndex: number;
   isPending?: boolean;
   onFollow: (community: Community) => void;
 }) => (
   <article className="grid w-[178px] shrink-0 justify-items-center gap-4 rounded-[18px] bg-surface p-5 text-center shadow-lectum-soft">
-    <CommunityVisual community={community} size="sm" />
+    <CommunityVisual community={community} imageIndex={imageIndex} size="sm" />
     <div className="grid gap-1">
       <h3 className="line-clamp-2 text-base font-black leading-tight text-foreground">
         {community.name}
@@ -284,8 +312,12 @@ export const FollowingCommunitiesLogic = () => {
                 <SectionTitle>Minhas comunidades</SectionTitle>
                 {followingCommunities.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                    {followingCommunities.map((community) => (
-                      <MyCommunityCard community={community} key={community.id} />
+                    {followingCommunities.map((community, index) => (
+                      <MyCommunityCard
+                        community={community}
+                        imageIndex={index}
+                        key={community.id}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -330,10 +362,11 @@ export const FollowingCommunitiesLogic = () => {
                 {recommendedCommunities.length > 0 ? (
                   <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
                     <div className="flex min-w-max gap-4">
-                      {recommendedCommunities.map((community) => (
+                      {recommendedCommunities.map((community, index) => (
                         <RecommendedCard
                           community={community}
                           disabled={followMutation.isPending}
+                          imageIndex={index}
                           isPending={pendingSlug === community.slug && followMutation.isPending}
                           key={community.id}
                           onFollow={handleFollow}
