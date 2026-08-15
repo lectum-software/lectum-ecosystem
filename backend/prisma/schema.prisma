@@ -687,6 +687,10 @@ model professional_subscription {
   gateway                 String?
   gateway_subscription_id String?
   current_period_end      DateTime?
+  billing_issue_started_at DateTime?
+  billing_grace_ends_at    DateTime?
+  billing_downgraded_at    DateTime?
+  billing_last_notice_key  String?
   grant_reason            String?
   grant_notes             String?
   granted_by              String?
@@ -698,6 +702,8 @@ model professional_subscription {
   @@index([plan_id])
   @@index([source, status])
   @@index([status, current_period_end])
+  @@index([status, billing_grace_ends_at])
+  @@index([billing_last_notice_key, billing_grace_ends_at])
   @@map("professional_subscriptions")
 }
 

@@ -12,6 +12,22 @@ const withNotificationName = (data: Record<string, unknown>) => ({
   name: normalizeNotificationName(data.name),
 });
 
+const resolveBillingNoticeStage = (data: Record<string, unknown>) => {
+  const stage = typeof data.billing_notice_stage === "string" ? data.billing_notice_stage : "";
+
+  if (
+    stage === "payment_failed" ||
+    stage === "reminder_d3" ||
+    stage === "final_d6" ||
+    stage === "downgraded" ||
+    stage === "regularized"
+  ) {
+    return stage;
+  }
+
+  return "payment_failed";
+};
+
 export const messages = {
   nova_avaliacao: (data: Record<string, unknown>) => {
     const props = withNotificationName(data);
@@ -73,6 +89,14 @@ export const messages = {
     return {
       title: resolve("notification.salvamento.title", data),
       body: resolve("notification.salvamento.body", data),
+    };
+  },
+  billing_subscription_status: (data: Record<string, unknown>) => {
+    const stage = resolveBillingNoticeStage(data);
+
+    return {
+      title: resolve(`notification.billing_subscription_status.${stage}.title`, data),
+      body: resolve(`notification.billing_subscription_status.${stage}.body`, data),
     };
   },
   admin_campaign: (data: Record<string, unknown>) => {

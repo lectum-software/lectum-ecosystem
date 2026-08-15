@@ -495,6 +495,28 @@
     "salvamento": {
       "title": "Conteúdo salvo",
       "body": "Seu conteúdo foi salvo por um novo usuário. Clique para ver."
+    },
+    "billing_subscription_status": {
+      "payment_failed": {
+        "title": "Pagamento da assinatura pendente",
+        "body": "Não conseguimos confirmar a cobrança. Atualize o cartão para manter seu Plano Profissional."
+      },
+      "reminder_d3": {
+        "title": "Regularize sua assinatura",
+        "body": "Sua assinatura ainda tem pagamento pendente. Atualize o cartão para evitar o downgrade."
+      },
+      "final_d6": {
+        "title": "Aviso final de cobrança",
+        "body": "Regularize o cartão hoje para evitar que o plano seja rebaixado para Gratuito."
+      },
+      "downgraded": {
+        "title": "Plano rebaixado para Gratuito",
+        "body": "O prazo de regularização terminou e os benefícios profissionais foram removidos."
+      },
+      "regularized": {
+        "title": "Pagamento regularizado",
+        "body": "Seu Plano Profissional permanece ativo na Lectum."
+      }
     }
   },
   "email": {
@@ -509,7 +531,8 @@
     "recovery_code": "Código de recuperação",
     "confirm_code": "Código de confirmação",
     "btn_open_notification": "Abrir na Lectum",
-    "btn_recovery_password": "Recuperar senha"
+    "btn_recovery_password": "Recuperar senha",
+    "btn_regularize_card": "Regularizar cartão"
   },
   "sms": {
     "code": "Código de confirmação",

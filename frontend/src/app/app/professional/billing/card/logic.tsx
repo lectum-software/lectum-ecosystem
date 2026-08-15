@@ -132,6 +132,8 @@ export const ProfessionalBillingCardLogic = () => {
   const paymentMethod = subscriptionQuery.data?.payment_method ?? null;
   const canSubmit = canUpdateCard(subscription);
   const amount = subscription?.plan?.price_cents ? subscription.plan.price_cents / 100 : 0;
+  const isDunningSubscription = subscription?.status === "inadimplente";
+  const cardActionLabel = isDunningSubscription ? "Regularizar cartão" : "Alterar cartão";
 
   const initialization = useMemo(
     () => ({
@@ -156,11 +158,11 @@ export const ProfessionalBillingCardLogic = () => {
           theme: "default",
         },
         texts: {
-          formSubmit: "Alterar cartão",
+          formSubmit: cardActionLabel,
         },
       },
     }),
-    [],
+    [cardActionLabel],
   );
 
   const handleSubmit = useCallback(
@@ -202,7 +204,7 @@ export const ProfessionalBillingCardLogic = () => {
         <AppPageHeader
           backHref="/app/profissional/assinatura"
           backLabel="Voltar"
-          title="Alterar cartão"
+          title={cardActionLabel}
         />
 
         {subscriptionQuery.isLoading ? <LoadingState label="Carregando sua assinatura" /> : null}
@@ -259,7 +261,9 @@ export const ProfessionalBillingCardLogic = () => {
                       Cartão alterado com sucesso
                     </h2>
                     <p className="mt-3 max-w-md text-sm leading-6 text-muted md:text-base md:leading-7">
-                      O novo cartão de crédito já está vinculado à sua assinatura.
+                      {isDunningSubscription
+                        ? "O novo cartão de crédito já está vinculado à sua assinatura. A regularização será confirmada quando o pagamento retornar com sucesso."
+                        : "O novo cartão de crédito já está vinculado à sua assinatura."}
                     </p>
                   </div>
                   <div className="grid w-full gap-3 sm:max-w-sm sm:grid-cols-2">
@@ -288,8 +292,9 @@ export const ProfessionalBillingCardLogic = () => {
                           Novo cartão de crédito
                         </h2>
                         <p className="mt-2 text-sm leading-6 text-muted">
-                          Insira um novo cartão de crédito para manter a assinatura do Plano
-                          Profissional.
+                          {isDunningSubscription
+                            ? "Insira um novo cartão de crédito para regularizar a pendência da assinatura do Plano Profissional."
+                            : "Insira um novo cartão de crédito para manter a assinatura do Plano Profissional."}
                         </p>
                       </div>
                     </div>

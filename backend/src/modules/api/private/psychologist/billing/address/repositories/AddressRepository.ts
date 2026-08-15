@@ -4,6 +4,7 @@ import type {
   professional_subscription,
   psychologist_profile,
 } from "@/interfaces/objects";
+import type { BillingDunningUpdate } from "@/modules/billing/dunning";
 import type { BillingSubscriptionStatus } from "@/modules/billing/payment-gateway";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { IAddressDTO } from "../DTOs/IAddressDTO";
@@ -81,6 +82,7 @@ export class AddressRepository implements IAddressRepository {
     subscriptionId: string;
     gatewaySubscriptionId: string;
     status: BillingSubscriptionStatus;
+    billingDunning?: BillingDunningUpdate;
     currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null> {
     return this.subscriptionRepository.update({
@@ -89,6 +91,7 @@ export class AddressRepository implements IAddressRepository {
       },
       data: {
         status: data.status,
+        ...data.billingDunning,
         gateway: "mercadopago",
         gateway_subscription_id: data.gatewaySubscriptionId,
         current_period_end: data.currentPeriodEnd ?? null,

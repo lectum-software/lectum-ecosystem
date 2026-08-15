@@ -58,6 +58,15 @@ const formatDate = (value?: string | null) => {
   return dateFormatter.format(date);
 };
 
+const isFutureDate = (value?: string | null) => {
+  if (!value) return false;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+
+  return date.getTime() > Date.now();
+};
+
 const formatPaymentDate = (value?: string | null) => {
   if (!value) return "Data indisponível";
 
@@ -278,7 +287,20 @@ export const ProfessionalBillingLogic = () => {
   const canManageCard = Boolean(hasGatewayBilling && subscription?.status !== "cancelada");
   const canCancelSubscription = Boolean(hasGatewayBilling && subscription?.status === "ativa");
   const priceTitle = isCourtesy ? "Valor da cortesia" : "Valor recorrente";
-  const periodTitle = isCourtesy ? "Expiração da cortesia" : "Próxima renovação";
+  const billingGraceEndsAt = subscription?.billing_grace_ends_at ?? null;
+  const billingDowngradedAt = subscription?.billing_downgraded_at ?? null;
+  const isBillingDunningGrace = Boolean(
+    subscription?.status === "inadimplente" &&
+      billingGraceEndsAt &&
+      !billingDowngradedAt &&
+      isFutureDate(billingGraceEndsAt),
+  );
+  const periodTitle = isBillingDunningGrace
+    ? "Regularizar até"
+    : isCourtesy
+      ? "Expiração da cortesia"
+      : "Próxima renovação";
+  const periodDate = isBillingDunningGrace ? billingGraceEndsAt : subscription?.current_period_end;
   const priceLabel = useMemo(
     () => (isCourtesy ? "Sem cobrança" : `${formatPrice(subscription?.plan?.price_cents)} / mês`),
     [isCourtesy, subscription?.plan?.price_cents],
@@ -292,7 +314,9 @@ export const ProfessionalBillingLogic = () => {
     ? visiblePaymentMethod
       ? "Alterar"
       : "Adicionar"
-    : "Alterar";
+    : isBillingDunningGrace
+      ? "Regularizar cartão"
+      : "Alterar";
 
   if (!subscriptionQuery.isLoading && !subscriptionQuery.isError && (!subscription || isFreePlan)) {
     return (
@@ -383,7 +407,7 @@ export const ProfessionalBillingLogic = () => {
                     <div>
                       <p className="text-sm font-bold text-muted">{periodTitle}</p>
                       <p className="mt-1 text-sm font-extrabold text-foreground">
-                        {formatDate(subscription.current_period_end)}
+                        {formatDate(periodDate)}
                       </p>
                     </div>
                   </div>
@@ -488,8 +512,20 @@ export const ProfessionalBillingLogic = () => {
 
                 {subscription.status === "inadimplente" ? (
                   <InlineAlert title="Regularize seu pagamento" variant="error">
-                    Identificamos pendência na cobrança. Atualize o cartão ou regularize o pagamento
-                    para manter os benefícios do plano.
+                    <div className="grid gap-3">
+                      <p>
+                        {isBillingDunningGrace
+                          ? `Você mantém os benefícios do Plano Profissional até ${formatDate(
+                              billingGraceEndsAt,
+                            )}. Atualize o cartão para evitar o downgrade para o Gratuito.`
+                          : "Identificamos pendência na cobrança. Atualize o cartão ou regularize o pagamento para retomar os benefícios do plano."}
+                      </p>
+                      {canManageCard ? (
+                        <Button asChild className="h-10 w-full rounded-full text-xs font-extrabold">
+                          <Link href="/app/profissional/assinatura/cartao">Regularizar cartão</Link>
+                        </Button>
+                      ) : null}
+                    </div>
                   </InlineAlert>
                 ) : null}
 

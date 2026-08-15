@@ -1,4 +1,5 @@
 import { prisma } from "@/external/prisma/client";
+import { startBillingDunningScheduler, stopBillingDunningScheduler } from "@/main/billing/dunning";
 import {
   startNotificationCampaignScheduler,
   stopNotificationCampaignScheduler,
@@ -16,6 +17,7 @@ const server = app.listen(env.PORT, () => {
   console.log("Backend iniciado.");
   startNotificationDigestScheduler();
   startNotificationCampaignScheduler();
+  startBillingDunningScheduler();
 });
 
 let shuttingDown = false;
@@ -26,6 +28,7 @@ const shutdown = async () => {
 
   stopNotificationCampaignScheduler();
   stopNotificationDigestScheduler();
+  stopBillingDunningScheduler();
   soc?.disconnectSockets(true);
 
   const forceCloseTimer = setTimeout(() => {

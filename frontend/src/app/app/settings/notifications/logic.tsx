@@ -6,6 +6,7 @@ import {
   BellOff,
   BellRing,
   Bookmark,
+  CreditCard,
   Eye,
   Heart,
   Info,
@@ -45,7 +46,8 @@ type NotificationCategory = {
     | "nova_resposta"
     | "upvote"
     | "compartilhamento"
-    | "salvamento";
+    | "salvamento"
+    | "billing_subscription_status";
   label: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 };
@@ -105,6 +107,17 @@ const SECTIONS: { key: string; label: string; categories: NotificationCategory[]
         key: "compartilhamento",
         label: "Novos compartilhamentos",
         icon: Share2,
+      },
+    ],
+  },
+  {
+    key: "assinatura",
+    label: "ASSINATURA",
+    categories: [
+      {
+        key: "billing_subscription_status",
+        label: "Cobrança da assinatura",
+        icon: CreditCard,
       },
     ],
   },
@@ -190,6 +203,7 @@ const notificationSettingsSchema = z.object({
   upvote__enabled: z.boolean(),
   compartilhamento__enabled: z.boolean(),
   salvamento__enabled: z.boolean(),
+  billing_subscription_status__enabled: z.boolean(),
   novo_post__post_author_scope: z.enum([
     "patients_only",
     "professionals_only",
@@ -391,7 +405,7 @@ export const NotificationSettingsLogic = () => {
     () =>
       sessionRole === "psicologo"
         ? SECTIONS
-        : SECTIONS.filter((section) => section.key !== "perfil"),
+        : SECTIONS.filter((section) => section.key !== "perfil" && section.key !== "assinatura"),
     [sessionRole],
   );
 

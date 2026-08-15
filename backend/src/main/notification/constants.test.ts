@@ -35,4 +35,12 @@ describe("notification push messages", () => {
     assert.equal(content.body.includes("{{name}}"), false);
     assert.equal(content.body, "Um usuário enviou uma nova avaliação. Clique para ver.");
   });
+  it("resolve conteudo da regua de cobranca por etapa", () => {
+    const content = messages.billing_subscription_status({
+      billing_notice_stage: "final_d6",
+    });
+
+    assert.equal(content.title, "Aviso final de cobrança");
+    assert.equal(content.body.includes("Gratuito"), true);
+  });
 });

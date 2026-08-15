@@ -1,10 +1,23 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 
-export const activeSubscriptionPeriodWhere = (): Prisma.professional_subscriptionWhereInput => ({
-  deleted: false,
-  status: "ativa",
-  OR: [{ current_period_end: null }, { current_period_end: { gt: new Date() } }],
-});
+export const activeSubscriptionPeriodWhere = (): Prisma.professional_subscriptionWhereInput => {
+  const now = new Date();
+
+  return {
+    deleted: false,
+    OR: [
+      {
+        status: "ativa",
+        OR: [{ current_period_end: null }, { current_period_end: { gt: now } }],
+      },
+      {
+        billing_downgraded_at: null,
+        billing_grace_ends_at: { gt: now },
+        status: "inadimplente",
+      },
+    ],
+  };
+};
 
 export const activeProfessionalEntitlementWhere =
   (): Prisma.professional_subscriptionWhereInput => ({

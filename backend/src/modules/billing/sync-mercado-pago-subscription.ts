@@ -1,5 +1,11 @@
 import type { professional_subscription } from "@/interfaces/objects";
 import {
+  type BillingDunningUpdate,
+  buildBillingDunningUpdate,
+  resolveBillingDunningTransitionNotice,
+  sendBillingDunningNotice,
+} from "@/modules/billing/dunning";
+import {
   type BillingSubscriptionStatus,
   type GatewaySubscription,
   getPaymentGateway,
@@ -7,7 +13,15 @@ import {
 
 type LocalGatewaySubscription = Pick<
   professional_subscription,
-  "id" | "gateway_subscription_id"
+  | "billing_downgraded_at"
+  | "billing_grace_ends_at"
+  | "billing_issue_started_at"
+  | "billing_last_notice_key"
+  | "current_period_end"
+  | "gateway_subscription_id"
+  | "id"
+  | "source"
+  | "status"
 > & {
   plan?: {
     interval?: string | null;
@@ -19,6 +33,7 @@ type MercadoPagoSubscriptionSyncRepository = {
     subscriptionId: string;
     gatewaySubscriptionId: string;
     status: BillingSubscriptionStatus;
+    billingDunning?: BillingDunningUpdate;
     currentPeriodEnd?: Date | null;
   }): Promise<professional_subscription | null>;
 };
@@ -183,8 +198,19 @@ export const syncMercadoPagoSubscriptionRecord = async ({
     receivedGatewaySubscription ??
     (await gateway.getSubscription(localSubscription.gateway_subscription_id));
   const status = resolveLocalSubscriptionStatus(gatewaySubscription);
+  const now = new Date();
+  const billingDunning = buildBillingDunningUpdate({
+    now,
+    previous: localSubscription,
+    status,
+  });
+  const noticeStage = resolveBillingDunningTransitionNotice({
+    previous: localSubscription,
+    status,
+  });
 
   const current = await repository.updateSubscriptionStatus({
+    billingDunning,
     subscriptionId: localSubscription.id,
     gatewaySubscriptionId: gatewaySubscription.gateway_subscription_id,
     status,
@@ -196,6 +222,13 @@ export const syncMercadoPagoSubscriptionRecord = async ({
           })
         : null,
   });
+
+  if (noticeStage && current?.id) {
+    await sendBillingDunningNotice({
+      stage: noticeStage,
+      subscriptionId: current.id,
+    });
+  }
 
   return {
     current,

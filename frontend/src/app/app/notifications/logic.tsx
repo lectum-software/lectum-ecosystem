@@ -5,6 +5,7 @@ import {
   Bell,
   Bookmark,
   CheckCheck,
+  CreditCard,
   Eye,
   Heart,
   MessageSquare,
@@ -107,6 +108,12 @@ const LABELS: Record<string, NotificationView> = {
     title: "Seu conteúdo foi salvo por um novo usuário.",
     description: "Clique para ver o conteúdo salvo.",
     icon: Bookmark,
+    tone: NOTIFICATION_ICON_TONE,
+  },
+  billing_subscription_status: {
+    title: "Atualização da sua assinatura",
+    description: "Acompanhe a regularização do pagamento.",
+    icon: CreditCard,
     tone: NOTIFICATION_ICON_TONE,
   },
 };

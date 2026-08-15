@@ -229,6 +229,10 @@ export interface professional_subscription extends PersistedObject {
   gateway?: string | null;
   gateway_subscription_id?: string | null;
   current_period_end?: Date | null;
+  billing_issue_started_at?: Date | null;
+  billing_grace_ends_at?: Date | null;
+  billing_downgraded_at?: Date | null;
+  billing_last_notice_key?: string | null;
   grant_reason?: string | null;
   grant_notes?: string | null;
   granted_by?: string | null;

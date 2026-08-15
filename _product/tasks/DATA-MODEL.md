@@ -807,10 +807,12 @@ Push real foi decidido na TASK-03 (ver ADR-0006), usando `web-push`/VAPID e `not
 Complemento 2026-07-10 / TASK-63: o Admin passa a ter fundação de campanhas e logs sem e-mail.
 
 - `admin_notification_campaign` (`@@map("admin_notification_campaigns")`): rascunho/agendamento/envio/cancelamento de campanhas manuais criadas por `admin`, com `title`, `body`, `redirect`, `audience`, `channels Json` limitado a `in_app`/`push`, `status` (`draft`, `scheduled`, `sending`, `sent`, `canceled`, `failed`), `scheduled_at`, `sent_at`, `canceled_at` e `created_by_admin_id`.
-- `notification_delivery` (`@@map("notification_deliveries")`): log por usuário/canal/origem com `campaign_id?`, `notification_id?`, `user_id`, `source` (`manual`/`automatic`), `trigger_key`, `channel` (`in_app`/`push`), `status` (`queued`, `sent`, `delivered`, `read`, `clicked`, `failed`, `skipped`), `sent_at`, `delivered_at`, `read_at`, `clicked_at`, `failure_reason` e `metadata`.
+- `notification_delivery` (`@@map("notification_deliveries")`): log por usuário/canal/origem com `campaign_id?`, `notification_id?`, `user_id`, `source` (`manual`/`automatic`), `trigger_key`, `channel` (`in_app`/`push`/`email`), `status` (`queued`, `sent`, `delivered`, `read`, `clicked`, `failed`, `skipped`), `sent_at`, `delivered_at`, `read_at`, `clicked_at`, `failure_reason` e `metadata`.
 - `message_key="admin_campaign"` representa uma notificação manual do Admin na central in-app. As preferências existentes são respeitadas por chave/canal; se o usuário tiver `admin_campaign.enabled=false`, `in_app=false` ou `push=false`, a entrega é registrada como `skipped` sem alcance.
 - Abertura in-app usa o evento real de leitura (`PUT /api/private/notification/update/:id` ou `clean`) e clique usa `POST /api/private/notification/:id/click`. Push não tem abertura por recebimento; só pode ser contado quando houver interação real registrada.
 - Endpoints Admin privados: `/api/admin/private/notifications/campaigns`, `/api/admin/private/notifications/campaigns/:id`, `/send`, `/schedule`, `/cancel`, `/automatic-logs` e `/metrics`. E-mail, SMTP, pixel de tracking e métricas inventadas permanecem fora do escopo.
+
+Complemento TASK-156 (2026-08-15): a régua de cobrança usa `message_key="billing_subscription_status"` para notificações automáticas in-app, push web e e-mail transacional dos estágios `payment_failed`, `reminder_d3`, `final_d6`, `downgraded` e `regularized`. A preferência aparece como **Cobrança da assinatura** apenas para psicólogos; canais desabilitados geram `notification_delivery.status="skipped"`. Redirects de problema de cobrança apontam para `/app/profissional/assinatura/cartao`; regularização aponta para `/app/profissional/assinatura`.
 
 ---
 
@@ -846,7 +848,7 @@ Trocar de provedor = novo adapter. **Limite real:** card tokens são específico
 | `cancelled` | `cancelada` |
 | pagamento recorrente rejeitado / chargeback | `inadimplente` |
 
-**Soberania de dados:** o entitlement ("é Pro?") é respondido pelo nosso banco (`professional_subscription.status` + `current_period_end`, atualizado via webhook ou concessão administrativa auditada) — nunca por chamada síncrona ao MP. `gateway` (= `"mercadopago"`), `gateway_subscription_id`, `gateway_token` e `payment_event` bruto sustentam auditoria, replay e reconciliação.
+**Soberania de dados:** o entitlement ("é Pro?") é respondido pelo nosso banco (`professional_subscription.status` + `current_period_end` e, na régua de cobrança, `billing_grace_ends_at`/`billing_downgraded_at`, atualizado via webhook/sync, scheduler ou concessão administrativa auditada) — nunca por chamada síncrona ao MP. `gateway` (= `"mercadopago"`), `gateway_subscription_id`, `gateway_token` e `payment_event` bruto sustentam auditoria, replay e reconciliação.
 
 `subscription_plan` (TASK-31; PRD §13):
 
@@ -879,12 +881,17 @@ com valor hardcoded; ausência do plano deve retornar erro honesto.
 | `gateway` | `String?` | nome do provedor (TASK-03) |
 | `gateway_subscription_id` | `String?` | id externo; nunca dados de cartão |
 | `current_period_end` | `DateTime?` | obrigatório para concessões administrativas com prazo; `null` em plano gratuito/legado sem expiração |
+| `billing_issue_started_at` | `DateTime?` | início da régua de cobrança D+0 para assinatura paga recorrente previamente ativa |
+| `billing_grace_ends_at` | `DateTime?` | fim da janela de graça D+7; enquanto futuro e sem downgrade, mantém entitlement profissional |
+| `billing_downgraded_at` | `DateTime?` | momento em que a régua D+7 removeu benefícios profissionais por inadimplência |
+| `billing_last_notice_key` | `String?` | última etapa enviada (`payment_failed`, `reminder_d3`, `final_d6`, `downgraded`) para idempotência |
 | `grant_reason` | `String?` | campo legado opcional; o fluxo vigente de cortesia administrativa não coleta motivo |
 | `grant_notes` | `String?` | observações internas opcionais da concessão |
 | `granted_by` | `String?` | responsável operacional pela concessão; texto livre enquanto `admin` segue fora do MVP |
 | `grant_started_at` | `DateTime?` | data/hora da concessão administrativa |
 | `@@index([psychologist_id, status])` | | habilita selo/destaque/ranking quando `ativa` |
 | `@@index([source, status])`, `@@index([status, current_period_end])` | | auditoria e filtro de entitlement ativo não expirado |
+| `@@index([status, billing_grace_ends_at])`, `@@index([billing_last_notice_key, billing_grace_ends_at])` | | scheduler da régua de cobrança e consultas de inadimplência |
 
 Complemento 2026-07-23: contratos administrativos de leitura financeira que retornam `professional_subscription`
 podem expor `cancelled_at` como campo derivado e nullable. Para `status="cancelada"`, `cancelled_at`
@@ -905,6 +912,8 @@ Complemento 2026-07-10: no Admin, a mesma operação de cortesia pode sobrescrev
 Complemento 2026-07-10: quando uma cortesia administrativa ativa precisa ser revogada pelo Admin, a operação cancela somente a assinatura `professional_subscription` vigente com `source="admin_grant"`, gravando `status="cancelada"` e `current_period_end` no momento da revogação. A revogação não cancela assinatura Mercado Pago, não altera cartão e não apaga CPF/Regional/CRP do `psychologist_profile`; esses campos permanecem como histórico operacional e eventual ponto de partida para nova concessão.
 
 Complemento TASK-56 (2026-08-13): o cancelamento administrativo de assinatura paga usa `professional_subscription` existente e nao cria nova coluna. A operacao e permitida somente para assinatura Mercado Pago do plano `profissional` com `gateway_subscription_id`, exige motivo interno e confirmacao forte `CANCELAR ASSINATURA`, chama o gateway real antes de gravar `status="cancelada"` e `current_period_end=null`, e registra `admin_activity_log` com `action="psychologist_subscription_cancelled"`, `domain="psychologist_subscription"`, `area="financeiro"`, snapshots seguros e metadata sem token de gateway, PAN/CVV, payload bruto ou detalhes sensiveis do provedor.
+
+Complemento TASK-156 (2026-08-15): falha de cobrança recorrente em assinatura Mercado Pago previamente ativa abre régua local D+0/D+3/D+6/D+7. Em D+0 o sync/webhook grava `status="inadimplente"`, `billing_issue_started_at=now`, `billing_grace_ends_at=now+7 dias` e `billing_last_notice_key="payment_failed"`, mantendo benefícios profissionais até o fim da graça. O scheduler, habilitado somente com `BILLING_DUNNING_SCHEDULER_ENABLED=true`, envia lembrete D+3 (`reminder_d3`), aviso final D+6 (`final_d6`) e, no D+7, grava `billing_downgraded_at` e `billing_last_notice_key="downgraded"`, removendo o entitlement profissional sem apagar a assinatura nem chamar cobrança manual. Regularização confirmada pelo gateway (`status="ativa"`) limpa os campos da régua e gera aviso `regularized`. Falha na primeira tentativa de checkout que ainda estava `inativa` não entra na régua.
 
 `billing_address` (TASK-32, "Endereço de Faturamento"):
 

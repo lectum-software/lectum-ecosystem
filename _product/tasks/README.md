@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 162 tasks: `TASK-00` a `TASK-155`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 163 tasks: `TASK-00` a `TASK-156`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -253,6 +253,7 @@ ou cortesia manual.
 | 153 | [TASK-153 - Permissao nativa direta de notificacoes](TASK-153-permissao-nativa-direta-notificacoes.md) | Completed | 12, 29A, 38 |
 | 154 | [TASK-154 - Digests temporais para push de notificacoes](TASK-154-digests-temporais-push-notificacoes.md) | Completed | 29A, 29B, 38, 63 |
 | 155 | [TASK-155 - Ocultar instalar aplicativo no desktop](TASK-155-ocultar-instalar-aplicativo-desktop.md) | Completed | 12, 21, 37, 152 |
+| 156 | [TASK-156 - Regua de cobranca e regularizacao da assinatura](TASK-156-regua-cobranca-assinatura.md) | Completed | 32, 33, 63, 64, 80 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -389,6 +390,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 125. [TASK-155 - Ocultar instalar aplicativo no desktop](TASK-155-ocultar-instalar-aplicativo-desktop.md) foi adicionada e concluida em 2026-08-11 para manter a entrada manual de instalacao do PWA apenas na experiencia mobile/tablet e ocultar a linha do perfil em desktop mesmo quando o navegador oferece `beforeinstallprompt`.
 126. [TASK-56 - Detalhe administrativo do psicologo: Plano, pagamentos e cortesia](TASK-56-detalhe-psicologo-plano-pagamentos-admin.md) recebeu ajuste pos-feedback em 2026-08-13 para permitir cancelamento administrativo real de assinatura Mercado Pago com confirmacao forte, motivo interno, auditoria em `admin_activity_log` e sem expor dados sensiveis de pagamento.
 127. [TASK-18A - Perfil gratuito sem documento CRP](TASK-18A-perfil-gratuito-sem-crp.md) recebeu ajuste pos-feedback em 2026-08-13 para remover a sombra projetada das chips de dias da semana na edicao profissional, preservando estados de foco e selecao sem alterar contratos ou dados.
+128. [TASK-156 - Regua de cobranca e regularizacao da assinatura](TASK-156-regua-cobranca-assinatura.md) foi adicionada e concluida em 2026-08-15 para abrir janela D+0 a D+7 em falhas de cobranca Mercado Pago, manter beneficios durante a graca, notificar psicologos e oferecer botao **Regularizar cartao** em **Minha Assinatura**.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.
