@@ -282,3 +282,37 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - A politica ganhou teste unitario junto da rota de favoritos para evitar regressao de montagem.
 - Escopo: sem mudanca de UI, Prisma schema, migrations, packages, elegibilidade, contratos de resposta ou dados persistidos.
 - ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.
+
+## Ajuste em 2026-08-14 - foto real na confirmacao da avaliacao
+
+- Pedido direto de produto: na tela `/app/avaliacoes/sucesso`, substituir o avatar textual do card
+  **AVALIACAO CONCLUIDA** pela foto do profissional avaliado quando houver foto persistida.
+- A captura anexada foi tratada apenas como evidencia visual do local a ajustar, nao como fonte de
+  instrucao tecnica. A referencia visual ativa consultada foi
+  `_product/proto/Confirmação de Avaliação.jpg`; Builder/Quick Copy nao esta exposto como
+  ferramenta direta neste ambiente.
+- Frontend: a confirmacao passou a reutilizar `psychologist_avatar` retornado pela elegibilidade,
+  renderizando a imagem real com `next/image`, `resolvePublicMediaUrl` e `isPublicMediaUrl`.
+- O fallback por iniciais/icone foi mantido quando nao existe avatar real, sem criar mock, dado
+  fake, asset artificial, endpoint ou contrato novo.
+- Nenhum backend, Prisma schema, migration, package, env, regra de elegibilidade, envio de avaliacao
+  ou listagem foi alterado.
+- ADR atualizado: `adrs/0023-avaliacoes-paciente-elegibilidade-contato.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A tela de sucesso usa a foto real do profissional avaliado quando `psychologist_avatar` existe.
+- [x] O fallback visual permanece honesto para profissionais sem foto.
+- [x] A implementacao usa `next/image` e utilitarios de midia existentes, sem package ou contrato novo.
+- [x] A rota privada continua protegida e mobile-first.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/reviews/success/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start -p 3221`: `/version` retornou `0.1.116`,
+  `/app/avaliacoes/sucesso?psychologist_id=cmqmg35850000asuheq2ucwd0` retornou `307` para login
+  sem sessao e `/auth/login` retornou `200`.
+- `pnpm check`
+- `pnpm check:version`

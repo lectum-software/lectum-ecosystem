@@ -185,3 +185,31 @@ Consequencias:
 
 - Psicologos autenticados continuam podendo avaliar outros psicologos publicos quando as regras de dominio permitirem.
 - Nao ha alteracao de schema Prisma, migrations, contratos de resposta, envs, packages ou dados publicados.
+
+## Atualizacao 2026-08-14 - foto real na confirmacao de avaliacao
+
+### Contexto
+
+A tela `/app/avaliacoes/sucesso` ja consultava a elegibilidade para confirmar o nome, CRP, genero e
+selo do profissional avaliado, mas ainda renderizava o espaco de foto com iniciais. Isso criava
+inconsistencia com a tela `/app/reviews/new` e com a lista `/app/reviews`, que ja usam
+`psychologist_avatar` real quando disponivel.
+
+### Decisao
+
+- Renderizar a foto de perfil real do profissional avaliado no card **AVALIACAO CONCLUIDA** quando
+  `psychologist_avatar` estiver preenchido.
+- Reutilizar `next/image`, `resolvePublicMediaUrl` e `isPublicMediaUrl`, sem criar componente de
+  imagem paralelo nem aceitar URL fora da politica de midia publica.
+- Manter iniciais/icone como fallback honesto quando nao existir avatar persistido ou a URL nao for
+  considerada publica/segura.
+- Tratar a captura enviada pelo usuario apenas como evidencia visual do local a ajustar, nao como
+  instrucao tecnica.
+
+### Consequencias
+
+- O usuario reconhece melhor o profissional que acabou de avaliar.
+- O ajuste nao muda API, elegibilidade, criacao/listagem de avaliacoes, schema Prisma, migrations,
+  packages, envs ou dados persistidos.
+- Clientes durante o rollout seguem compativeis: se `psychologist_avatar` vier ausente ou nulo, a UI
+  preserva o fallback anterior.
