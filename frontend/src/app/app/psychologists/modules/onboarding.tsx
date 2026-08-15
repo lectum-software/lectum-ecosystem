@@ -38,9 +38,7 @@ export const isPsychologistsScrollLockTarget = (target: EventTarget | null) => {
 
 export const VIDEO_LONG_PRESS_DELAY_MS = 520;
 
-export const VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT = 64;
-
-export const VIDEO_PROGRESS_NAVBAR_OVERLAP_PX = 1;
+export const VIDEO_PROGRESS_BOTTOM_WITH_NAV = "var(--lectum-mobile-bottom-nav-height)";
 
 export const VIDEO_PROGRESS_TRACK_COLOR =
   "color-mix(in srgb, var(--lectum-media-foreground) 22%, transparent)";

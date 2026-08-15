@@ -42,6 +42,32 @@ A pagina publica de descoberta de psicologos usa um player customizado, diferent
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
 
+## Complemento 2026-08-15 - progresso acima da bottom nav no Android
+
+### Contexto
+
+Screenshots enviados pelo usuario mostraram que a barra de progresso do feed de psicologos aparecia no iOS, mas ficava
+invisivel no Android. A barra era posicionada por um offset fixo baseado em `64px + env(safe-area-inset-bottom)`,
+enquanto a bottom nav compartilhada do `PrivateTemplate` calcula sua altura real por
+`--lectum-mobile-bottom-nav-height`. Em Android, onde o safe-area inferior e normalmente zero, o offset fixo podia deixar
+a barra dentro da area branca da navegacao e abaixo do stacking context da nav.
+
+### Decisao
+
+- O feed de psicologos passa a posicionar a barra customizada usando `--lectum-mobile-bottom-nav-height`, a mesma fonte
+  de verdade da bottom nav compartilhada.
+- O offset desktop continua `0px`, preservando a barra no rodape do card desktop.
+- O modo imersivo continua usando os controles persistentes do `VerticalVideoPlayer`; a barra customizada segue
+  restrita a UI visivel do feed.
+
+### Consequencias
+
+- A barra fica imediatamente acima da navegacao inferior em Android e iOS, sem depender de safe-area para corrigir a
+  altura da nav.
+- A mudanca evita duplicar calculo de altura de navegacao na tela de psicologos e reduz divergencia futura caso a bottom
+  nav mude de tamanho.
+- Nao ha mudanca de backend, schema, API, dados persistidos, packages ou analytics.
+
 ## Pendencias
 
 - Validar manualmente em dispositivo/navegador mobile real com videos de psicologos publicados para confirmar o seek persistente no Safari/Chrome mobile.

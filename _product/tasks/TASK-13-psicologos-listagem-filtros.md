@@ -1648,3 +1648,33 @@ Validacoes do complemento:
   filtros abriu, o select `Especialidade` exibiu dropdown com overflow vertical (`scrollHeight=3848`,
   `clientHeight=286`) e o clique real na area da scrollbar interna manteve `#specialty-listbox` aberto com
   `aria-expanded="true"`.
+
+## Execucao complementar: barra de progresso visivel no Android (2026-08-15)
+
+- Pedido do usuario: no Android, a barra de progresso do feed imersivo de psicologos nao aparece, enquanto a mesma tela
+  no iOS exibe a barra logo acima da navegacao inferior.
+- Referencia visual ativa: inventario `_product/tasks/PROTO-INVENTORY.md`, fallback local
+  `_product/proto/Psicólogos.jpg` e screenshots enviados pelo usuario em Android/iOS; Builder/Quick Copy nao esta
+  exposto como ferramenta callable neste ambiente.
+- Frontend: o offset inferior da barra de progresso deixou de usar altura fixa de `64px + env(safe-area-inset-bottom)`
+  e passou a usar a variavel compartilhada `--lectum-mobile-bottom-nav-height`, a mesma fonte de verdade da navegacao
+  inferior do `PrivateTemplate`.
+- A mudanca mantem a barra imediatamente acima da bottom nav em Android sem depender do safe-area do navegador e sem
+  alterar o comportamento desktop ou o modo imersivo/persistente do `VerticalVideoPlayer`.
+- Nao houve alteracao de backend, Prisma, migrations, packages, dados reais, ranking, query params, rotas ou contrato de
+  API.
+- ADR atualizado: `adrs/0181-controles-imersivos-video-psicologos.md`.
+
+Criterios complementares:
+
+- [x] A barra de progresso usa a altura real da bottom nav compartilhada para ficar visivel no Android.
+- [x] O indicador permanece acima da navegacao inferior em mobile e continua no rodape do card em desktop.
+- [x] O modo imersivo/persistente do `VerticalVideoPlayer` nao foi duplicado nem substituido por componente paralelo.
+- [x] Nenhum `<img>`, package novo, mock, endpoint simulado, dado fake ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local HTTP em `/app/psychologists` e `/psychologists` apos build.

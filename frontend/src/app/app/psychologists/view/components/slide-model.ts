@@ -1,11 +1,7 @@
 import type { DirectoryPsychologist } from "@/api/generator/types/directory";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import { buildBenefitChips } from "../../modules/filter-config";
-import {
-  clampNumber,
-  VIDEO_PROGRESS_NAVBAR_OVERLAP_PX,
-  VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT,
-} from "../../modules/onboarding";
+import { clampNumber, VIDEO_PROGRESS_BOTTOM_WITH_NAV } from "../../modules/onboarding";
 import { splitNameForBadge } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
 
@@ -92,10 +88,7 @@ export const buildPsychologistSlideView = ({
       ? clampNumber(videoProgress.currentTime / videoProgress.duration, 0, 1)
       : 0;
 
-  const slideProgressBottom =
-    metrics.navBarHeight > 0
-      ? `calc(${VIDEO_PROGRESS_VISIBLE_NAV_BAR_HEIGHT}px + env(safe-area-inset-bottom) - ${VIDEO_PROGRESS_NAVBAR_OVERLAP_PX}px)`
-      : "0px";
+  const slideProgressBottom = metrics.navBarHeight > 0 ? VIDEO_PROGRESS_BOTTOM_WITH_NAV : "0px";
 
   const slideCanSeekProgress =
     isActiveSlide && slideShouldShowVideo && slideIsUiHidden && !slideUsesNativeVideoControls;
