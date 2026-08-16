@@ -89,7 +89,7 @@
     "google_link_expired": "A solicitação de vínculo com o Google expirou. Tente novamente.",
     "google_link_email_mismatch": "Use no Google o mesmo e-mail da sua conta Lectum para concluir o vínculo.",
     "account_delete_confirmation_invalid": "Digite EXCLUIR para confirmar a exclusão da conta.",
-    "account_delete_active_subscription": "Não é possível excluir a conta com assinatura paga vinculada ao gateway ou pagamento em aberto. Cancele ou regularize a cobrança antes de continuar.",
+    "account_delete_active_subscription": "Cancele a assinatura ativa antes de excluir sua conta.",
     "post_reply_media_invalid": "A mídia da resposta não é válida. Envie novamente pelo fluxo de anexar mídia.",
     "post_reply_media_professional_plan": "Envio de mídia em respostas está disponível apenas para psicólogos verificados com Plano Profissional ativo.",
     "post_report_reason_invalid": "Selecione um motivo válido para denunciar a publicação.",

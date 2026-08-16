@@ -370,3 +370,17 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Validacoes executadas durante o ajuste:
   - `pnpm --dir backend check`;
   - demais checks, build, versionamento e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - bloquear exclusao com assinatura ativa antes do Google
+
+- Pedido direto de produto: verificar se o erro estava associado a assinatura de plano e, quando a conta tiver assinatura ativa, informar que o psicologo deve cancelar a assinatura primeiro.
+- Diagnostico: a exclusao ja bloqueava assinatura paga/gateway antes de apagar a conta, mas essa validacao acontecia somente depois da confirmacao forte. Para contas Google, isso podia levar o usuario ao fluxo de reautenticacao antes de receber a orientacao correta sobre a assinatura.
+- Decisao: a criacao da intencao Google de exclusao passa a verificar assinatura bloqueante do psicologo antes de criar `delete_token` e antes de abrir o OAuth. Quando houver assinatura ativa/paga vinculada ao gateway ou estado inadimplente, o backend retorna erro de dominio e o frontend exibe: "Cancele a assinatura ativa antes de excluir sua conta."
+- A validacao final de exclusao continua preservada como defesa em profundidade, evitando corrida caso a assinatura mude entre a intencao e a exclusao.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend build`;
+  - `pnpm --dir frontend build`;
+  - demais checks, versionamento e smoke de homologacao registrados no fechamento do ajuste.

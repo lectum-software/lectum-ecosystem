@@ -46,7 +46,7 @@ const resolveDeleteAccountError = (error: unknown) => {
   }
 
   if (normalized.includes("assinatura") || normalized.includes("pagamento")) {
-    return "Cancele ou regularize a assinatura paga antes de excluir a conta.";
+    return "Cancele a assinatura ativa antes de excluir sua conta.";
   }
 
   if (normalized.includes("senha atual") || normalized.includes("incorreta")) {

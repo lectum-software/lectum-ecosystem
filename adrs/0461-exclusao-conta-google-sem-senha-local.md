@@ -130,3 +130,9 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - O `delete_token` de reautenticacao Google e um token curto, assinado e escopado a `intent=delete_account_google_reauth`, `device_id`, e-mail e usuario. Ele precisa chegar ao endpoint publico de login Google para que o callback valide a intencao antes da exclusao.
 - A sanitizacao global continua removendo JWTs e tokens de respostas por padrao. A excecao fica restrita a `POST /api/private/account/delete/google-intent`, que retorna apenas `{ device_id, url }` e marca `allowAuthTokens: true` para preservar o token dentro da URL de OAuth.
 - Qualquer outra resposta continua sem autorizacao de tokens por padrao; o token curto ainda nao exclui a conta sozinho, apenas habilita a reautenticacao Google recente depois do callback validar e-mail/device.
+
+## Complemento em 2026-08-16 - assinatura ativa bloqueia antes do OAuth
+
+- A exclusao de psicologo com assinatura profissional paga/gateway ativa ou inadimplente deve falhar antes de iniciar reautenticacao Google. O usuario recebe a mensagem de dominio para cancelar a assinatura ativa antes de excluir a conta.
+- A validacao final de `POST /api/private/account/delete` continua existindo como defesa em profundidade caso o estado da assinatura mude entre a intencao Google e a confirmacao final.
+- Essa decisao evita enviar o usuario ao Google quando a conta ainda nao pode ser excluida por regra financeira, sem expor detalhes de provedor, IDs de gateway ou PII.

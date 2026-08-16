@@ -388,6 +388,18 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
     };
   }
 
+  if (current.role === "psicologo") {
+    const repository = new AccountRepository();
+    const blockingSubscription = await repository.findBlockingSubscription(current.id);
+
+    if (blockingSubscription) {
+      return {
+        status: 409,
+        ...error("account_delete_active_subscription", {}),
+      };
+    }
+  }
+
   const token = jwt.sign(
     {
       device_id: device.id,
