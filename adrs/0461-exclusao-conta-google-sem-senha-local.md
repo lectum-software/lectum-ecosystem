@@ -124,3 +124,9 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - A confirmacao Google de exclusao passa a tratar a URL retornada pela API privada apenas como transportadora da intencao assinada quando a origem nao puder ser validada pelo bundle do cliente.
 - Se houver `intent=delete_account` e `delete_token`, o frontend extrai esses parametros e recompoe o destino no endpoint publico de login Google da API Lectum configurada, com o device id autenticado. A origem desconhecida da URL original e ignorada e nunca vira destino de navegacao.
 - URLs sem token, sem intencao de exclusao ou sem device continuam bloqueadas no modal. O token curto ainda e validado pelo backend no callback antes de permitir a exclusao.
+
+## Complemento em 2026-08-16 - delete_token permitido somente na intencao Google
+
+- O `delete_token` de reautenticacao Google e um token curto, assinado e escopado a `intent=delete_account_google_reauth`, `device_id`, e-mail e usuario. Ele precisa chegar ao endpoint publico de login Google para que o callback valide a intencao antes da exclusao.
+- A sanitizacao global continua removendo JWTs e tokens de respostas por padrao. A excecao fica restrita a `POST /api/private/account/delete/google-intent`, que retorna apenas `{ device_id, url }` e marca `allowAuthTokens: true` para preservar o token dentro da URL de OAuth.
+- Qualquer outra resposta continua sem autorizacao de tokens por padrao; o token curto ainda nao exclui a conta sozinho, apenas habilita a reautenticacao Google recente depois do callback validar e-mail/device.

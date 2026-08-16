@@ -418,6 +418,7 @@ export const createDeleteGoogleIntent = async (data: IAccountDeleteGoogleIntentD
   };
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("account_delete_google_intent_created", {}),
     data: response,

@@ -67,6 +67,16 @@ describe("sanitizeSensitiveData", () => {
     );
   });
 
+  it("preserva URL de intencao curta quando a resposta autoriza tokens", () => {
+    const url =
+      "https://homolog-api.lectum.com.br/api/public/google/login/device_identifier_123456?intent=delete_account&delete_token=eyJhbGciOiJIUzI1NiJ9.payload.signature";
+
+    assert.deepEqual(sanitizeSensitiveData({ url }, { removeAuthTokens: false }), { url });
+    assert.deepEqual(sanitizeSensitiveData({ url }, { removeAuthTokens: true }), {
+      url: "[REDACTED]",
+    });
+  });
+
   it("não recursa indefinidamente em estruturas circulares", () => {
     const circular: Record<string, unknown> = { safe: true };
     circular.self = circular;

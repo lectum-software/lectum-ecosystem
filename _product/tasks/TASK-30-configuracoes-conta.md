@@ -360,3 +360,13 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Validacoes executadas durante o ajuste:
   - `pnpm --dir frontend check`;
   - demais checks, build, versionamento e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - preservar delete_token na resposta de intencao
+
+- Evidencia de produto: mesmo apos recompor a URL no cliente, o modal continuou exibindo "Nao foi possivel iniciar a confirmacao com o Google".
+- Diagnostico real: a API privada criava corretamente a URL de OAuth com `delete_token`, mas o helper global de resposta redigia strings com padrao de JWT por seguranca. Assim, o frontend recebia `url: "[REDACTED]"`, nao encontrava `intent=delete_account`/`delete_token` e bloqueava antes de abrir o Google.
+- Decisao: a resposta especifica de `POST /api/private/account/delete/google-intent` passa a marcar `allowAuthTokens: true`, limitada ao payload `{ device_id, url }` e ao token curto/escopado de reautenticacao Google. A sanitizacao global permanece fail-closed para as demais respostas.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir backend check`;
+  - demais checks, build, versionamento e smoke de homologacao registrados no fechamento do ajuste.
