@@ -76,6 +76,7 @@ const { isConfirmedUserSessionRejection } = await import("./session-rejection.ts
 const { buildTrustedGoogleLoginUrlFromIntent } = await import("./trusted-navigation.ts");
 const { resolveAuthRedirect } = await import("./auth-redirect.ts");
 const { applyStoredBearerFallback } = await import("../api/auth-cookie.ts");
+const { getSafePublicErrorMessage } = await import("../api/errors.ts");
 
 class MemoryStorage {
   #items = new Map();
@@ -392,6 +393,13 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
       );
     },
   );
+});
+
+test("mantém mensagem pública para login Google sem cadastro", () => {
+  const message =
+    "Não localizamos cadastro para este e-mail. Crie uma conta ou use outra conta do Google.";
+
+  assert.equal(getSafePublicErrorMessage(message, "fallback"), message);
 });
 
 test("mantém retorno ao modal de exclusão Google mesmo quando onboarding do psicólogo está pendente", () => {

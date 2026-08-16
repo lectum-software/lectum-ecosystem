@@ -4,6 +4,10 @@ import { type Response, Router } from "express";
 //Middlewares
 import passport from "@/modules/api/middlewares/_auth/passport";
 import { isPublishedRuntime } from "@/utils/runtime-config";
+import {
+  GOOGLE_AUTH_FALLBACK_MESSAGE,
+  resolveGoogleCallbackFailureMessage,
+} from "../utils/callback-error";
 import { parseGoogleHttpUrl, sanitizeGoogleCallbackTarget } from "../utils/config";
 import {
   GOOGLE_DELETE_REAUTH_STATE_COOKIE,
@@ -21,6 +25,7 @@ routes.use(passport.initialize());
 
 type GoogleCallbackQuery = Record<string, string | string[] | undefined>;
 type GoogleCallbackUser = {
+  code?: string;
   success?: boolean;
   error?: string;
   data?: {
@@ -153,10 +158,7 @@ routes.get(
     if (!user?.success) {
       const fallbackPath = failPath || process.env.CALLBACK_URL_API_USER || "/";
       return res.redirect(
-        resolveFailureCallbackUrl(
-          fallbackPath,
-          "Não foi possível concluir a autenticação com o Google.",
-        ),
+        resolveFailureCallbackUrl(fallbackPath, resolveGoogleCallbackFailureMessage(user)),
       );
     }
 
@@ -165,7 +167,7 @@ routes.get(
       return res.redirect(
         resolveFailureCallbackUrl(
           failPath || process.env.CALLBACK_URL_API_USER || "/",
-          "Não foi possível concluir a autenticação com o Google.",
+          GOOGLE_AUTH_FALLBACK_MESSAGE,
         ),
       );
     }

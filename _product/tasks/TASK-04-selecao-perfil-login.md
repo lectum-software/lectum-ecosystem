@@ -536,3 +536,24 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - `pnpm check:adrs`
 - `pnpm check:tasks`
 - `pnpm check:version`
+
+## Ajuste posterior em 2026-08-16: erro específico para login Google sem cadastro
+
+- Pedido direto de produto: quando o usuário tentar fazer login com uma conta Google cujo e-mail ainda não possui cadastro na Lectum, a tela de erro deve informar que o e-mail não foi localizado e orientar cadastro ou uso de outra conta.
+- A referência visual usada foi o print enviado pelo usuário da tela `/auth/error`; o inventário ativo mantém `_product/proto/Login.jpg` e `_product/proto/Seleção de Perfil.jpg` como referências locais para a jornada de autenticação. Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- O callback Google passou a transformar o código `account_not_registered` em uma mensagem pública específica: `Não localizamos cadastro para este e-mail. Crie uma conta ou use outra conta do Google.`.
+- O erro continua sem expor o endereço de e-mail real, dados técnicos, stack trace, URL interna ou detalhes do provedor.
+- O fluxo de cadastro Google permanece inalterado e continua criando conta somente quando o `state` representa cadastro real; o login sem cadastro continua sem criar usuário.
+- Nenhum pacote, schema, migration, env nova, endpoint paralelo ou mock foi criado.
+
+### Validação do ajuste
+
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/public/google/utils/callback-error.test.ts`
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local de `/auth/error?error=...&clearSession=1`, confirmando renderização da mensagem específica.
+- ADR atualizado: `adrs/0008-fluxo-publico-auth-selecao-perfil-login.md`.
