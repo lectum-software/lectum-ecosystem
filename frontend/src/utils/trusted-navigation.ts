@@ -1,4 +1,4 @@
-import { getPublicApiSource } from "@/utils/public-asset-sources";
+import { getPublicApiSource, isLocalAssetHostname } from "@/utils/public-asset-sources";
 
 export const normalizeTrustedApiUrl = (value: string) => {
   const configuredApiUrl = getPublicApiSource()?.origin;
@@ -65,14 +65,38 @@ export const buildTrustedGoogleLoginUrl = (
   return url.toString();
 };
 
+const isTrustedFallbackGoogleLoginOrigin = (url: URL) => {
+  if (url.protocol !== "https:" || url.username || url.password || url.hostname.length === 0) {
+    return false;
+  }
+
+  const hostname = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (hostname === "api.lectum.com.br" || hostname.endsWith("-api.lectum.com.br")) {
+    return true;
+  }
+
+  return process.env.NODE_ENV !== "production" && isLocalAssetHostname(hostname);
+};
+
+const parseTrustedGoogleIntentUrl = (value: string) => {
+  const trustedIntentUrl = normalizeTrustedApiUrl(value);
+  if (trustedIntentUrl) return new URL(trustedIntentUrl);
+
+  try {
+    const url = new URL(value.trim());
+    return isTrustedFallbackGoogleLoginOrigin(url) ? url : null;
+  } catch {
+    return null;
+  }
+};
+
 export const buildTrustedGoogleLoginUrlFromIntent = (
   value: string,
   deviceId: string | null | undefined,
 ) => {
-  const trustedIntentUrl = normalizeTrustedApiUrl(value);
-  if (!trustedIntentUrl) return null;
+  const url = parseTrustedGoogleIntentUrl(value);
+  if (!url) return null;
 
-  const url = new URL(trustedIntentUrl);
   const googleLoginPath = "/api/public/google/login";
   const normalizedPath = url.pathname.replace(/\/+$/, "");
   const hasDeleteAccountIntent =
@@ -87,5 +111,14 @@ export const buildTrustedGoogleLoginUrlFromIntent = (
 
   if (!deviceId) return null;
 
-  return buildTrustedGoogleLoginUrl(deviceId, url.searchParams);
+  try {
+    return buildTrustedGoogleLoginUrl(deviceId, url.searchParams);
+  } catch {
+    if (!isTrustedFallbackGoogleLoginOrigin(url)) return null;
+
+    const fallbackUrl = new URL(`${googleLoginPath}/${encodeURIComponent(deviceId)}`, url.origin);
+    fallbackUrl.search = url.search;
+
+    return fallbackUrl.toString();
+  }
 };

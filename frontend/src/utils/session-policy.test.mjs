@@ -470,6 +470,34 @@ test("nao exibe instalar aplicativo no perfil desktop mesmo com prompt nativo di
   });
 });
 
+test("aceita URL absoluta da API Lectum para exclusao mesmo sem NEXT_PUBLIC_API_URL", async () => {
+  await withEnvironment(
+    {
+      NEXT_PUBLIC_API_URL: undefined,
+      NEXT_PUBLIC_LOGIN_URL: undefined,
+      NODE_ENV: "production",
+    },
+    () => {
+      const result = buildTrustedGoogleLoginUrlFromIntent(
+        "https://homolog-api.lectum.com.br/api/public/google/login/device_identifier_123?intent=delete_account&delete_token=token-assinado",
+        null,
+      );
+
+      assert.equal(
+        result,
+        "https://homolog-api.lectum.com.br/api/public/google/login/device_identifier_123?intent=delete_account&delete_token=token-assinado",
+      );
+      assert.equal(
+        buildTrustedGoogleLoginUrlFromIntent(
+          "https://evil.example/api/public/google/login/device_identifier_123?intent=delete_account&delete_token=token-assinado",
+          null,
+        ),
+        null,
+      );
+    },
+  );
+});
+
 test("mantem instalar aplicativo no perfil mobile quando nao esta instalado", async () => {
   await withPwaInstallWindow({ maxTouchPoints: 5, matchesMobile: true }, () => {
     assert.equal(shouldShowPwaInstallProfileEntry(), true);

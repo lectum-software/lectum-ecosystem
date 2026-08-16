@@ -111,3 +111,10 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - A reautenticacao Google de exclusao passa a ter um cookie HttpOnly assinado e curto, criado no inicio do OAuth, para impedir que uma perda do state/nonce no retorno mobile transforme o fluxo em login normal para /psicologos.
 - O fallback assinado e aceito somente para intent=delete_account com delete_token presente. A exclusao segue bloqueada ate o callback validar o token curto, o device e o e-mail retornado pelo Google.
 - O frontend tambem deixa de navegar para URLs de OAuth incompletas; sem intent e delete_token, a tentativa fica bloqueada na modal com erro seguro.
+
+## Complemento em 2026-08-16 - origem absoluta confiavel da API
+
+- O cliente nao deve depender exclusivamente de `NEXT_PUBLIC_API_URL` para abrir a URL de OAuth de exclusao retornada pelo backend, porque a env publica pode estar ausente ou normalizada de forma diferente no build publicado.
+- A URL absoluta passa a ser aceita como fallback somente se for HTTPS, sem credenciais embutidas, em `api.lectum.com.br` ou `*-api.lectum.com.br`, apontar para `/api/public/google/login` e carregar `intent=delete_account` com `delete_token`.
+- Dominios externos seguem bloqueados, e URLs sem intencao assinada continuam falhando fechadas no modal, sem virar login Google normal.
+- Validacao adicional: `pnpm --dir frontend test`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm check:version`, `git diff --check` e smoke publicado no fechamento do ajuste.

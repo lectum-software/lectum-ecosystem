@@ -336,3 +336,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check:version`;
   - `git diff --check`;
   - smoke de homologacao registrado no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - origem publica da API no cliente
+
+- Evidencia de produto: a captura enviada em 2026-08-16 mostra o erro local **Exclusao bloqueada** com a mensagem "Nao foi possivel iniciar a confirmacao com o Google." antes de abrir o OAuth.
+- Diagnostico: a validacao do frontend dependia exclusivamente de `NEXT_PUBLIC_API_URL` para aceitar a URL absoluta retornada pelo backend. Se a env publica estiver ausente, vazia ou normalizada de forma diferente no build, a URL `https://homolog-api.lectum.com.br/...` e recusada antes da navegacao, mesmo contendo `intent=delete_account` e `delete_token`.
+- Decisao: manter a navegacao fail-closed, mas aceitar URLs HTTPS absolutas dos hosts publicos da API Lectum (`api.lectum.com.br` e `*-api.lectum.com.br`) somente para o endpoint `/api/public/google/login` e somente quando a intencao de exclusao assinada estiver presente.
+- Frontend: `buildTrustedGoogleLoginUrlFromIntent` passa a usar essa origem publica confiavel como fallback quando `normalizeTrustedApiUrl` nao puder validar a env local, preservando a recomposicao do path com device quando necessario.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir frontend build`;
+  - demais checks e smoke de homologacao registrados no fechamento do ajuste.
