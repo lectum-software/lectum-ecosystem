@@ -175,10 +175,10 @@ export const WelcomePatientLogic = () => {
               <Image
                 alt="Lectum"
                 className="lectum-welcome-symbol h-auto w-11 sm:w-[58px]"
-                height={512}
+                height={1500}
                 priority
-                src="/icon.png"
-                width={512}
+                src="/logo-icon.svg"
+                width={1500}
               />
               <h1 className="lectum-welcome-brand mt-5 max-w-[318px] text-[1.58rem] font-extrabold leading-[1.08] tracking-[-0.04em] sm:max-w-[680px] sm:text-[2.65rem]">
                 Bem-vindo &agrave; Lectum

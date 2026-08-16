@@ -367,3 +367,38 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
     `POST /api/public/user/store`: `Participar da comunidade` redirecionou para `/`, e
     `Encontrar um profissional` redirecionou para `/psychologists`. Os usuarios temporarios foram
     removidos do banco ao final.
+
+## Ajuste posterior em 2026-08-16: logo transparente na primeira tela
+
+- Pedido direto do usuario: na primeira tela de boas-vindas, usar a logo da Lectum com fundo
+  transparente em vez do icone com quadrado branco visto no Android.
+- Fonte visual/auditavel: screenshot do usuario em `/paciente/boas-vindas`; a imagem anexada foi
+  tratada apenas como evidencia visual. Referencias locais pertinentes: `_product/proto/Boas-vindas
+  Paciente - 1.jpg` e assets oficiais em `frontend/public/logo-icon.svg` e `frontend/public/icon.png`.
+  Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a primeira etapa de `/patient/welcome` e da rota canonica `/paciente/boas-vindas`
+  deixou de usar `/icon.png`, pois esse asset e o icone PWA/favico com canvas branco opaco.
+- A tela passou a renderizar `/logo-icon.svg`, o simbolo oficial ja versionado com fundo
+  transparente, via `next/image` e sem `<img>` cru.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, envs, rotas, persistencia
+  de onboarding, redirects por objetivo ou icones PWA usados fora desta tela.
+- ADR atualizado: `adrs/0171-boas-vindas-paciente-layout-premium.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A logo da primeira tela de boas-vindas usa asset com fundo transparente.
+- [x] O ajuste preserva `next/image` e nao introduz `<img>` cru.
+- [x] O icone PWA `/icon.png` nao foi alterado globalmente; somente a tela de boas-vindas passou a
+  usar o SVG transparente.
+- [x] Nenhum mock, seed permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/patient/welcome/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version` retornou 200, `/logo-icon.svg` e `/icon.png`
+  retornaram 200, `/paciente/boas-vindas` manteve guarda privada com 307 para login sem sessao e
+  `/patient/welcome` manteve 308 para a rota canonica.
+- Browser local/headless renderizando `frontend/public/logo-icon.svg` sobre fundo xadrez e
+  comparando com `frontend/public/icon.png`, confirmando que o SVG nao possui o quadrado branco.

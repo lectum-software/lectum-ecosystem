@@ -232,3 +232,36 @@ Validacao adicional:
 - Browser local/headless via Chrome/CDP validou os dois caminhos com usuarios pacientes temporarios
   reais criados via API e removidos do banco: `Participar da comunidade` -> `/`; `Encontrar um
   profissional` -> `/psychologists`.
+
+## Atualizacao 2026-08-16 - logo transparente na primeira tela
+
+O produto identificou no Android que o simbolo da primeira tela de boas-vindas aparecia com um
+quadrado branco ao redor. A causa era o uso de `/icon.png`, que e adequado para favicon/PWA, mas
+possui canvas branco opaco quando renderizado dentro da interface sobre o background claro.
+
+Decisao adicional:
+
+- Trocar somente a primeira tela de `/patient/welcome` e `/paciente/boas-vindas` para renderizar
+  `/logo-icon.svg` via `next/image`.
+- Manter `/icon.png` intocado para PWA, push e favicon, evitando uma alteracao global de identidade
+  que poderia afetar instalacao do app e notificacoes.
+- Nao criar asset novo: reutilizar o SVG oficial transparente ja versionado.
+- Preservar o fluxo real de onboarding, chamadas `GET /api/private/patient/profile` e
+  `PUT /api/private/patient/onboarding`, redirects por objetivo e estilos mobile-first.
+
+Consequencias adicionais:
+
+- A marca da tela se integra ao background sem o bloco branco artificial.
+- O ajuste fica isolado ao onboarding do paciente e nao muda icones de sistema que podem depender de
+  canvas opaco.
+- Como o asset transparente e SVG, a tela mantem nitidez em densidades diferentes sem pacote novo.
+
+Validacao adicional:
+
+- `pnpm --dir frontend exec biome check --write src/app/patient/welcome/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version` 200, `/logo-icon.svg` 200, `/icon.png` 200,
+  `/paciente/boas-vindas` 307 para login sem sessao e `/patient/welcome` 308 para a rota canonica.
+- Browser local/headless renderizou `logo-icon.svg` sobre fundo xadrez e confirmou a ausencia do
+  quadrado branco presente no `icon.png`.
