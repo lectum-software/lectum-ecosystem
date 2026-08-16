@@ -369,6 +369,13 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
       );
       assert.equal(
         buildTrustedGoogleLoginUrlFromIntent(
+          "https://api.example.com/api/public/google/login/backend_device_123",
+          null,
+        ),
+        null,
+      );
+      assert.equal(
+        buildTrustedGoogleLoginUrlFromIntent(
           "https://evil.example/api/public/google/login?intent=delete_account",
           "device_identifier_123",
         ),

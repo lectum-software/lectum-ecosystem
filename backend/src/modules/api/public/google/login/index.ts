@@ -7,8 +7,11 @@ import { error } from "@/helpers/translate";
 //Middlewares
 import passport from "@/modules/api/middlewares/_auth/passport";
 import {
+  createGoogleDeleteReauthStateCookie,
   createGoogleOAuthState,
+  GOOGLE_DELETE_REAUTH_STATE_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
+  googleDeleteReauthStateCookieOptions,
   googleOAuthStateCookieOptions,
   isValidGoogleDeviceId,
 } from "../utils/state";
@@ -38,7 +41,15 @@ routes.get("/:id", limiter, (req, res, next) => {
   }
 
   const { nonce, state } = createGoogleOAuthState(deviceId, req.query);
+  const deleteReauthCookie = createGoogleDeleteReauthStateCookie(deviceId, req.query);
   res.cookie(GOOGLE_OAUTH_STATE_COOKIE, nonce, googleOAuthStateCookieOptions());
+  if (deleteReauthCookie) {
+    res.cookie(
+      GOOGLE_DELETE_REAUTH_STATE_COOKIE,
+      deleteReauthCookie,
+      googleDeleteReauthStateCookieOptions(),
+    );
+  }
 
   passport.authenticate("google", {
     // Forca o seletor/confirmacao de conta do Google mesmo quando ha uma

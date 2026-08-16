@@ -316,3 +316,23 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm check:version`;
   - `git diff --check`;
   - smoke de homologacao registrado no fechamento do ajuste.
+
+
+## Ajuste complementar em 2026-08-16 - reautenticacao Google fail-closed para exclusao
+
+- Evidencia de produto: video enviado em 2026-08-16 mostra que, apos escolher o perfil no Google, o usuario era levado para /psicologos e a conta nao era excluida.
+- Diagnostico: esse destino e o fallback de login normal; portanto, a intencao de exclusao nao podia depender apenas do retorno padrao do OAuth. Se a intencao curta se perder no retorno mobile, o fluxo deve falhar fechado em vez de virar login normal.
+- Decisao: o inicio do OAuth de exclusao passa a gravar um cookie HttpOnly assinado e curto com device, callback e delete_token. O callback e a estrategia Google aceitam esse cookie como fallback quando o state/nonce nao estiver disponivel, validando depois o delete_token e o e-mail Google antes de marcar a reautenticacao recente.
+- Frontend: a URL de intencao de exclusao Google agora exige intent=delete_account e delete_token antes de navegar. URL incompleta nao abre Google como login normal.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend test`;
+  - `pnpm --dir backend test`;
+  - `pnpm --dir frontend check`;
+  - `pnpm --dir backend check`;
+  - `pnpm --dir frontend build`;
+  - `pnpm --dir backend build`;
+  - `pnpm check`;
+  - `pnpm check:version`;
+  - `git diff --check`;
+  - smoke de homologacao registrado no fechamento do ajuste.

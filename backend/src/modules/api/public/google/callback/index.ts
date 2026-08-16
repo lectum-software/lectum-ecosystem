@@ -6,8 +6,11 @@ import passport from "@/modules/api/middlewares/_auth/passport";
 import { isPublishedRuntime } from "@/utils/runtime-config";
 import { parseGoogleHttpUrl, sanitizeGoogleCallbackTarget } from "../utils/config";
 import {
+  GOOGLE_DELETE_REAUTH_STATE_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
+  googleDeleteReauthStateClearCookieOptions,
   googleOAuthStateClearCookieOptions,
+  verifyGoogleDeleteReauthStateCookie,
   verifyGoogleOAuthState,
 } from "../utils/state";
 
@@ -60,10 +63,16 @@ const resolveFailureCallbackUrl = (fallbackPath: string, message: string) => {
   return isAbsolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
 };
 
-const parseGoogleStateQuery = (state: unknown, cookieNonce: unknown) => {
+const parseGoogleStateQuery = (
+  state: unknown,
+  cookieNonce: unknown,
+  deleteReauthCookie: unknown,
+) => {
   const query: GoogleCallbackQuery = {};
   const params = new URLSearchParams();
-  const statePayload = verifyGoogleOAuthState(state, cookieNonce);
+  const statePayload =
+    verifyGoogleOAuthState(state, cookieNonce) ||
+    verifyGoogleDeleteReauthStateCookie(deleteReauthCookie);
 
   if (statePayload) {
     Object.entries(statePayload.query).forEach(([key, value]) => {
@@ -136,8 +145,10 @@ routes.get(
     const { query: originalQuery, queryString: originalQueryStr } = parseGoogleStateQuery(
       state,
       _req.cookies?.[GOOGLE_OAUTH_STATE_COOKIE],
+      _req.cookies?.[GOOGLE_DELETE_REAUTH_STATE_COOKIE],
     );
     res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, googleOAuthStateClearCookieOptions());
+    res.clearCookie(GOOGLE_DELETE_REAUTH_STATE_COOKIE, googleDeleteReauthStateClearCookieOptions());
 
     if (!user?.success) {
       const fallbackPath = failPath || process.env.CALLBACK_URL_API_USER || "/";

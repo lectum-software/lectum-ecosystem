@@ -13,7 +13,9 @@ import prisma from "@/infra/database/prisma";
 import { LoginRepository } from "@/modules/api/public/auth/login/repositories/LoginRepository";
 import { getGoogleOAuthCallbackUrl } from "@/modules/api/public/google/utils/config";
 import {
+  GOOGLE_DELETE_REAUTH_STATE_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
+  verifyGoogleDeleteReauthStateCookie,
   verifyGoogleOAuthState,
 } from "@/modules/api/public/google/utils/state";
 import { isPrismaErrorCode } from "@/utils/prisma-transaction";
@@ -40,6 +42,13 @@ type GoogleLinkPayload = JwtPayload & {
   user_id?: string;
 };
 type GoogleDeleteAccountPayload = GoogleLinkPayload;
+
+const resolveGoogleCallbackState = (req: Request) => {
+  return (
+    verifyGoogleOAuthState(req.query.state, req.cookies?.[GOOGLE_OAUTH_STATE_COOKIE]) ||
+    verifyGoogleDeleteReauthStateCookie(req.cookies?.[GOOGLE_DELETE_REAUTH_STATE_COOKIE])
+  );
+};
 
 const parseUserRole = (role: unknown): UserRole | undefined => {
   if (typeof role !== "string") return undefined;
@@ -79,10 +88,7 @@ passport.use(
     },
     async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
       try {
-        const state = verifyGoogleOAuthState(
-          req.query.state,
-          req.cookies?.[GOOGLE_OAUTH_STATE_COOKIE],
-        );
+        const state = resolveGoogleCallbackState(req);
         const device_id = state?.device_id;
         let deleteToken: string | undefined;
         let intent: string | undefined;

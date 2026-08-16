@@ -10,7 +10,9 @@ import { getJwtSecret, JWT_ALGORITHM } from "@/modules/api/middlewares/_auth/uti
 import { isPublishedRuntime } from "@/utils/runtime-config";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "lectum_google_oauth_nonce";
+export const GOOGLE_DELETE_REAUTH_STATE_COOKIE = "lectum_google_delete_reauth";
 const GOOGLE_OAUTH_STATE_AUDIENCE = "lectum-google-oauth";
+const GOOGLE_DELETE_REAUTH_STATE_AUDIENCE = "lectum-google-delete-reauth";
 const GOOGLE_OAUTH_STATE_ISSUER = "lectum-api";
 const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const GOOGLE_OAUTH_STATE_VERSION = "v1";
@@ -39,6 +41,10 @@ type GoogleOAuthStatePayload = {
 };
 
 type LegacyGoogleOAuthStatePayload = JwtPayload & Omit<GoogleOAuthStatePayload, "expires_at">;
+type GoogleDeleteReauthStatePayload = JwtPayload & {
+  device_id?: string;
+  query?: Record<string, unknown>;
+};
 
 const hasControlCharacters = (value: string) =>
   Array.from(value).some((character) => {
@@ -99,6 +105,13 @@ export const googleOAuthStateCookieOptions = () => ({
 
 export const googleOAuthStateClearCookieOptions = () => {
   const { maxAge: _maxAge, ...options } = googleOAuthStateCookieOptions();
+  return options;
+};
+
+export const googleDeleteReauthStateCookieOptions = () => googleOAuthStateCookieOptions();
+
+export const googleDeleteReauthStateClearCookieOptions = () => {
+  const { maxAge: _maxAge, ...options } = googleDeleteReauthStateCookieOptions();
   return options;
 };
 
@@ -225,6 +238,68 @@ export const createGoogleOAuthState = (deviceId: string, query: Record<string, u
   });
 
   return { nonce, state };
+};
+
+export const createGoogleDeleteReauthStateCookie = (
+  deviceId: string,
+  query: Record<string, unknown>,
+) => {
+  const sanitizedQuery = sanitizeGoogleQuery(query);
+
+  if (
+    sanitizedQuery.intent !== "delete_account" ||
+    !sanitizedQuery.delete_token ||
+    !isValidGoogleDeviceId(deviceId)
+  ) {
+    return null;
+  }
+
+  return jwt.sign(
+    {
+      device_id: deviceId,
+      query: sanitizedQuery,
+    },
+    getJwtSecret(),
+    {
+      algorithm: JWT_ALGORITHM,
+      audience: GOOGLE_DELETE_REAUTH_STATE_AUDIENCE,
+      expiresIn: Math.floor(GOOGLE_OAUTH_STATE_TTL_MS / 1000),
+      issuer: GOOGLE_OAUTH_STATE_ISSUER,
+    },
+  );
+};
+
+export const verifyGoogleDeleteReauthStateCookie = (
+  cookieValue: unknown,
+): GoogleOAuthStatePayload | null => {
+  if (typeof cookieValue !== "string" || !cookieValue.trim()) return null;
+
+  try {
+    const payload = jwt.verify(cookieValue, getJwtSecret(), {
+      algorithms: [JWT_ALGORITHM],
+      audience: GOOGLE_DELETE_REAUTH_STATE_AUDIENCE,
+      issuer: GOOGLE_OAUTH_STATE_ISSUER,
+    }) as GoogleDeleteReauthStatePayload;
+    const deviceId = payload.device_id || "";
+    const sanitizedQuery = sanitizeGoogleQuery(payload.query ?? {});
+
+    if (
+      !isValidGoogleDeviceId(deviceId) ||
+      sanitizedQuery.intent !== "delete_account" ||
+      !sanitizedQuery.delete_token
+    ) {
+      return null;
+    }
+
+    return {
+      device_id: deviceId,
+      expires_at: typeof payload.exp === "number" ? payload.exp * 1000 : Date.now(),
+      nonce: "delete-reauth-cookie",
+      query: sanitizedQuery,
+    };
+  } catch {
+    return null;
+  }
 };
 
 export const verifyGoogleOAuthState = (

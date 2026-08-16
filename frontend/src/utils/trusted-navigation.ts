@@ -75,6 +75,11 @@ export const buildTrustedGoogleLoginUrlFromIntent = (
   const url = new URL(trustedIntentUrl);
   const googleLoginPath = "/api/public/google/login";
   const normalizedPath = url.pathname.replace(/\/+$/, "");
+  const hasDeleteAccountIntent =
+    url.searchParams.get("intent") === "delete_account" &&
+    Boolean(url.searchParams.get("delete_token"));
+
+  if (!hasDeleteAccountIntent) return null;
 
   if (normalizedPath.startsWith(`${googleLoginPath}/`)) {
     return url.toString();

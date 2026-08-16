@@ -104,3 +104,10 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - O retorno de exclusao Google passa a ser sempre `/app/configuracoes/conta?deleteReauth=ok`. A rota de configuracoes da conta e permitida durante bloqueios de onboarding/assinatura, e a secao de exclusao passa a existir nessa tela para contas Google-only.
 - Callbacks antigos para telas de perfil/setup deixam de ser usados no backend para essa intencao, evitando que guards substituam o destino e aparentem levar o usuario para a home antes da exclusao.
 - A decisao preserva o historico Git salvo (`0.1.130` / `4d2c3391`) como referencia sem resetar a branch publicada; qualquer retorno de comportamento deve ocorrer por commit incremental/revert seguro.
+
+
+## Complemento em 2026-08-16 - fallback assinado para reautenticacao Google
+
+- A reautenticacao Google de exclusao passa a ter um cookie HttpOnly assinado e curto, criado no inicio do OAuth, para impedir que uma perda do state/nonce no retorno mobile transforme o fluxo em login normal para /psicologos.
+- O fallback assinado e aceito somente para intent=delete_account com delete_token presente. A exclusao segue bloqueada ate o callback validar o token curto, o device e o e-mail retornado pelo Google.
+- O frontend tambem deixa de navegar para URLs de OAuth incompletas; sem intent e delete_token, a tentativa fica bloqueada na modal com erro seguro.
