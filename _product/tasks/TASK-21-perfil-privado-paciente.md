@@ -264,3 +264,15 @@ Criterios complementares:
 - [x] `Minha Busca` e `WhatsApp` sao salvas como vistas ao visualizar a dica ou ao clicar no alvo antes dela.
 - [x] A dica de criar post e acionavel no alvo `+`, sem CTA separado.
 - [x] Preferencias persistidas por usuario foram documentadas em `DATA-MODEL.md` e ADR.
+
+## Ajuste complementar em 2026-08-16 - copy de localização do paciente
+
+- Pedido do usuário: no campo `Estado` de `/app/profile/edit`, trocar a descrição `Opcional. Use para aproximarmos psicólogos da sua região.` por `Informe para aproximarmos psicólogos da sua região.`.
+- A referência visual usada foi o print enviado pelo usuário da tela mobile de edição do perfil do paciente; o inventário ativo mantém `_product/proto/Editar Perfil - Paciente.jpg` como referência local auditável. Builder/Quick Copy não está exposto como ferramenta callable neste ambiente.
+- O ajuste altera apenas copy do formulário existente, preservando React Hook Form, Zod, `useFormList`, controllers compartilhados, validações de estado/cidade e comportamento mobile-first.
+- Não houve alteração de backend, Prisma, contratos, persistência, envs, packages, uploads ou navegação.
+
+Critérios complementares:
+
+- [x] A descrição do campo `Estado` exibe `Informe para aproximarmos psicólogos da sua região.`.
+- [x] A copy antiga `Opcional. Use para aproximarmos psicólogos da sua região.` não permanece no formulário de edição do paciente.

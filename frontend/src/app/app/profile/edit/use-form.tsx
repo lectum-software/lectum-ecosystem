@@ -169,7 +169,7 @@ const fields = [
     name: "state",
     field: "select",
     label: "Estado",
-    description: "Opcional. Use para aproximarmos psicólogos da sua região.",
+    description: "Informe para aproximarmos psicólogos da sua região.",
     placeholder: "Selecione seu estado",
     options: STATE_OPTIONS,
     searchable: true,
