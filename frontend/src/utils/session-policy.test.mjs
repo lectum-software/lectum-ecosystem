@@ -360,6 +360,15 @@ test("mantém confirmação Google de exclusão com o dispositivo no caminho pú
         ).pathname,
         "/api/public/google/login/device_identifier_123",
       );
+      const recomposedFromUnknownOrigin = buildTrustedGoogleLoginUrlFromIntent(
+        "https://legacy.example.com/api/public/google/login?intent=delete_account&delete_token=token-assinado&callbackUrl=%2Fapp%2Fconfiguracoes%2Fconta%3FdeleteReauth%3Dok",
+        "device_identifier_123",
+      );
+      assert.ok(recomposedFromUnknownOrigin);
+      const recomposedUrl = new URL(recomposedFromUnknownOrigin);
+      assert.equal(recomposedUrl.origin, "https://api.example.com");
+      assert.equal(recomposedUrl.pathname, "/api/public/google/login/device_identifier_123");
+      assert.equal(recomposedUrl.searchParams.get("delete_token"), "token-assinado");
       assert.equal(
         buildTrustedGoogleLoginUrlFromIntent(
           "https://api.example.com/api/public/google/login?intent=delete_account",

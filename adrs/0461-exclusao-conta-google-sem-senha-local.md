@@ -118,3 +118,9 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - A URL absoluta passa a ser aceita como fallback somente se for HTTPS, sem credenciais embutidas, em `api.lectum.com.br` ou `*-api.lectum.com.br`, apontar para `/api/public/google/login` e carregar `intent=delete_account` com `delete_token`.
 - Dominios externos seguem bloqueados, e URLs sem intencao assinada continuam falhando fechadas no modal, sem virar login Google normal.
 - Validacao adicional: `pnpm --dir frontend test`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm check:version`, `git diff --check` e smoke publicado no fechamento do ajuste.
+
+## Complemento em 2026-08-16 - recomposicao pela intencao assinada
+
+- A confirmacao Google de exclusao passa a tratar a URL retornada pela API privada apenas como transportadora da intencao assinada quando a origem nao puder ser validada pelo bundle do cliente.
+- Se houver `intent=delete_account` e `delete_token`, o frontend extrai esses parametros e recompoe o destino no endpoint publico de login Google da API Lectum configurada, com o device id autenticado. A origem desconhecida da URL original e ignorada e nunca vira destino de navegacao.
+- URLs sem token, sem intencao de exclusao ou sem device continuam bloqueadas no modal. O token curto ainda e validado pelo backend no callback antes de permitir a exclusao.

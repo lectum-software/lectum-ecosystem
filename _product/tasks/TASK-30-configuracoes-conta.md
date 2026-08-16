@@ -349,3 +349,14 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir frontend check`;
   - `pnpm --dir frontend build`;
   - demais checks e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-16 - recomposicao por parametros assinados
+
+- Evidencia de produto: mesmo apos publicar a origem publica da API, o modal continuou exibindo "Nao foi possivel iniciar a confirmacao com o Google".
+- Diagnostico: a mensagem ainda so ocorre antes de abrir o OAuth, quando o cliente nao consegue montar uma URL confiavel a partir da resposta autenticada da API. Para cobrir diferencas de origem, URL legada ou resposta sem origem validavel no bundle carregado, o frontend deve depender menos da URL inteira e mais da intencao assinada pelo backend.
+- Decisao: quando a resposta autenticada contiver `intent=delete_account` e `delete_token`, o cliente pode extrair apenas os parametros assinados e recompor `/api/public/google/login/{device}` na origem confiavel configurada da API. A URL original nunca e usada para navegar quando a origem nao e confiavel.
+- Frontend: `buildTrustedGoogleLoginUrlFromIntent` preserva o comportamento fail-closed sem token, mas passa a tolerar origem desconhecida ou URL legada como fonte de parametros, sempre redirecionando para a API Lectum configurada.
+- Sem migration, sem package novo, sem variavel de ambiente nova e sem mocks.
+- Validacoes executadas durante o ajuste:
+  - `pnpm --dir frontend check`;
+  - demais checks, build, versionamento e smoke de homologacao registrados no fechamento do ajuste.

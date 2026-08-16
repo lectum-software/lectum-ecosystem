@@ -70,12 +70,44 @@ const isTrustedFallbackGoogleLoginOrigin = (url: URL) => {
     return false;
   }
 
-  const hostname = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  if (hostname === "api.lectum.com.br" || hostname.endsWith("-api.lectum.com.br")) {
+  const hostname = url.hostname
+    .replace(/^\[|\]$/g, "")
+    .toLowerCase()
+    .replace(/\.+$/, "");
+  if (
+    hostname === "api.lectum.com.br" ||
+    hostname.endsWith("-api.lectum.com.br") ||
+    hostname.endsWith(".api.lectum.com.br")
+  ) {
     return true;
   }
 
   return process.env.NODE_ENV !== "production" && isLocalAssetHostname(hostname);
+};
+
+const parseGoogleIntentSearchParams = (value: string) => {
+  const raw = value.trim();
+  const hasControlCharacter = Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  });
+
+  if (
+    !raw ||
+    raw.length > 8192 ||
+    raw.startsWith("//") ||
+    raw.includes("*") ||
+    raw.includes("\\") ||
+    hasControlCharacter
+  ) {
+    return null;
+  }
+
+  try {
+    return new URL(raw, "https://lectum.invalid").searchParams;
+  } catch {
+    return null;
+  }
 };
 
 const parseTrustedGoogleIntentUrl = (value: string) => {
@@ -90,31 +122,30 @@ const parseTrustedGoogleIntentUrl = (value: string) => {
   }
 };
 
+const hasDeleteAccountIntent = (searchParams: URLSearchParams) =>
+  searchParams.get("intent") === "delete_account" && Boolean(searchParams.get("delete_token"));
+
 export const buildTrustedGoogleLoginUrlFromIntent = (
   value: string,
   deviceId: string | null | undefined,
 ) => {
   const url = parseTrustedGoogleIntentUrl(value);
-  if (!url) return null;
+  const searchParams = url?.searchParams ?? parseGoogleIntentSearchParams(value);
+  if (!searchParams || !hasDeleteAccountIntent(searchParams)) return null;
 
   const googleLoginPath = "/api/public/google/login";
-  const normalizedPath = url.pathname.replace(/\/+$/, "");
-  const hasDeleteAccountIntent =
-    url.searchParams.get("intent") === "delete_account" &&
-    Boolean(url.searchParams.get("delete_token"));
+  const normalizedPath = url?.pathname.replace(/\/+$/, "");
 
-  if (!hasDeleteAccountIntent) return null;
-
-  if (normalizedPath.startsWith(`${googleLoginPath}/`)) {
+  if (url && normalizedPath?.startsWith(`${googleLoginPath}/`)) {
     return url.toString();
   }
 
   if (!deviceId) return null;
 
   try {
-    return buildTrustedGoogleLoginUrl(deviceId, url.searchParams);
+    return buildTrustedGoogleLoginUrl(deviceId, searchParams);
   } catch {
-    if (!isTrustedFallbackGoogleLoginOrigin(url)) return null;
+    if (!url || !isTrustedFallbackGoogleLoginOrigin(url)) return null;
 
     const fallbackUrl = new URL(`${googleLoginPath}/${encodeURIComponent(deviceId)}`, url.origin);
     fallbackUrl.search = url.search;
