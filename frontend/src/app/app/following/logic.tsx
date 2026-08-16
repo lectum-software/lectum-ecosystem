@@ -144,13 +144,15 @@ const CommunityVisual = ({
 };
 
 const FeaturedCommunity = ({ community }: { community: Community }) => {
-  const imageUrl = resolveCommunityImage(community);
+  const featuredContent = buildCommunityExploreCard(community, 0);
+  const description = (community.description ?? featuredContent.description).trim();
+  const shouldShowDescription = description.length > 0 && description !== "Comunidade Lectum";
 
   return (
     <section className="grid gap-5">
       <SectionTitle>Em destaque</SectionTitle>
       <Link
-        className="group relative min-h-[168px] overflow-hidden rounded-[22px] bg-foreground p-6 text-primary-foreground shadow-lectum-soft transition hover:-translate-y-0.5 hover:shadow-lectum-soft"
+        className="group relative min-h-[218px] overflow-hidden rounded-[22px] bg-foreground p-6 text-primary-foreground shadow-lectum-soft transition hover:-translate-y-0.5 hover:shadow-lectum-soft"
         href={`/comunidades/${community.slug}`}
       >
         <Image
@@ -159,16 +161,23 @@ const FeaturedCommunity = ({ community }: { community: Community }) => {
           fill
           priority
           sizes="(min-width: 768px) 672px, 100vw"
-          src={imageUrl}
+          src={featuredContent.imageUrl}
         />
         <div aria-hidden="true" className="community-card-overlay absolute inset-0" />
-        <div className="relative z-10 flex min-h-[120px] flex-col justify-end gap-3">
+        <div className="relative z-10 flex min-h-[170px] flex-col justify-end gap-3">
           <span className="w-fit rounded-full bg-primary px-3 py-1 text-xs font-black uppercase tracking-[0.04em]">
             {community.new_posts_count ? "Novidade" : "Seguindo"}
           </span>
-          <h3 className="line-clamp-2 text-[1.7rem] font-black leading-tight tracking-[-0.04em]">
-            {community.name}
-          </h3>
+          <div className="grid gap-2">
+            <h3 className="line-clamp-2 text-[1.7rem] font-black leading-tight tracking-[-0.04em]">
+              {community.name}
+            </h3>
+            {shouldShowDescription ? (
+              <p className="line-clamp-2 max-w-[92%] text-[13px] font-semibold leading-5 text-primary-foreground/88">
+                {description}
+              </p>
+            ) : null}
+          </div>
           <span className="inline-flex h-11 w-fit items-center rounded-full bg-surface px-5 text-base font-black text-foreground transition group-hover:translate-x-1">
             Explorar
           </span>

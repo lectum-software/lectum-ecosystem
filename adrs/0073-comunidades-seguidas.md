@@ -95,3 +95,38 @@ e as demais comunidades perderem os assets reais ja disponiveis.
 - O comportamento de seguir, recomendacoes, contadores e novidades permanece inalterado.
 - A decisao substitui a premissa antiga de que a tela precisava usar apenas identidade derivada por
   nome/slug; os assets agora existem no catalogo visual vigente.
+
+## Complemento 2026-08-16: descricao no card de destaque
+
+### Contexto
+
+Com as imagens reais/catalogadas ja aplicadas em `/app/comunidades-seguidas`, o card **Em destaque**
+passou a ter espaco visual suficiente para retomar uma descricao curta abaixo do titulo. O produto
+solicitou explicitamente esse texto no destaque, sem alterar os demais cards nem a navegacao.
+
+### Decisao
+
+- Reintroduzir uma descricao somente no card **Em destaque** da tela de comunidades seguidas.
+- Priorizar `community.description` quando o backend fornecer conteudo real e usar a descricao
+  catalogada por `buildCommunityExploreCard` para comunidades conhecidas.
+- Nao exibir fallback generico no destaque quando nao houver descricao real ou catalogada com valor
+  editorial.
+- Ajustar a altura minima do card de forma mobile-first para preservar legibilidade sobre a imagem e
+  manter badge, titulo, descricao e CTA no mesmo bloco.
+- Nao alterar contrato de API, schema Prisma, endpoints, packages ou regras de participacao.
+
+### Consequencias
+
+- A tela ganha contexto textual no destaque sem criar dados artificiais persistentes.
+- Comunidades sem descricao continuam sem texto generico no destaque, evitando copy de baixo valor.
+- O ajuste revisa a decisao visual de 2026-06-17 apenas para o estado atual com assets reais no
+  destaque; as demais secoes permanecem compactas.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write src/app/app/following/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version` 200, `/app/comunidades-seguidas` 307 para login sem sessao
+  e `/app/following` 308 para a rota canonica.
+- `pnpm check`

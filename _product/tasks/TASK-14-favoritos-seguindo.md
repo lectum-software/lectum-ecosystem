@@ -626,3 +626,37 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke local com `next start`: `/version`, `/app/comunidades-seguidas` e `/app/following`.
 - `pnpm check`
 - `pnpm check:version`
+
+## Complemento 2026-08-16 - descricao abaixo do destaque em Comunidades seguidas
+
+- Pedido do usuario: adicionar um texto de descricao abaixo do titulo da comunidade de destaque em
+  `Comunidades seguidas`.
+- Fonte visual/auditavel: screenshot do usuario em `/app/comunidades-seguidas`; a imagem anexada foi
+  tratada apenas como evidencia visual. Referencia local pertinente: `_product/proto/Seguindo.jpg`.
+  Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: o card **Em destaque** de `/app/following` e da rota canonica
+  `/app/comunidades-seguidas` passou a renderizar uma descricao logo abaixo do titulo.
+- A descricao usa dado real da comunidade quando existir (`community.description`) e reaproveita a
+  descricao catalogada por `buildCommunityExploreCard` para comunidades conhecidas; fallback generico
+  sem conteudo editorial nao e exibido no destaque.
+- O card teve altura minima mobile-first ajustada para acomodar badge, titulo, descricao e CTA sem
+  sobrepor a imagem de fundo nem reduzir legibilidade.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, packages, endpoints, participacao em
+  comunidades, contadores, recomendacoes ou tracking.
+- ADR atualizado: `adrs/0073-comunidades-seguidas.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O bloco **Em destaque** exibe uma descricao abaixo do titulo da comunidade.
+- [x] A descricao vem de dados reais/catalogados ja existentes e nao cria mock, seed ou endpoint novo.
+- [x] A tela continua usando `next/image`, sem `<img>` cru.
+- [x] O ajuste preserva a rota canonica `/app/comunidades-seguidas` e o alias `/app/following`.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend exec biome check --write src/app/app/following/logic.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Smoke local com `next start`: `/version` retornou 200, `/app/comunidades-seguidas` manteve guarda
+  privada com 307 para login sem sessao e `/app/following` manteve 308 para a rota canonica.
+- `pnpm check`
