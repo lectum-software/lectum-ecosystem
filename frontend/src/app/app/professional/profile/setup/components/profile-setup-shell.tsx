@@ -53,8 +53,7 @@ export const ProfileHiddenBanner = () => (
           Perfil não visível para pacientes
         </p>
         <p className="mt-1 text-sm leading-6 text-foreground/80">
-          Com esta configuração, seu perfil fica oculto da busca e do perfil público. Ative a
-          visibilidade abaixo e salve as alterações para voltar a aparecer para pacientes.
+          Seu perfil está oculto. Ative a visibilidade para voltar a aparecer para pacientes.
         </p>
       </div>
     </div>

@@ -725,3 +725,21 @@ Validacoes executadas:
 - `pnpm check`
 - `pnpm check:version`
 - Smoke local sem sessao em `http://127.0.0.1:3144`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.145"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+## Ajuste complementar em 2026-08-17 - copy do alerta de perfil oculto
+
+- Pedido do usuario: simplificar o texto do alerta de perfil oculto na edicao profissional.
+- O alerta vermelho de `/app/profissional/perfil/configurar` passa a exibir exatamente: `Seu perfil está oculto. Ative a visibilidade para voltar a aparecer para pacientes.`
+- A mudanca e apenas de copy no frontend, sem alterar regra de dominio, backend, banco, contratos, envs, providers ou packages.
+
+Criterio complementar:
+
+- [x] Alerta de perfil oculto usa a nova copy solicitada pelo usuario.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/profile-setup-shell.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+- Smoke local sem sessao em `http://127.0.0.1:3145`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.146"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada.

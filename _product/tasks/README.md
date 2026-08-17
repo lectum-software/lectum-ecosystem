@@ -652,3 +652,7 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-18A: `Perfil visivel para pacientes` em `/app/profissional/perfil/configurar` passa a usar switch com status textual e alerta vermelho especifico quando o perfil esta oculto.
 - O menu privado `/app/perfil` preserva o indicador em `Editar perfil` quando o perfil esta oculto ou incompleto.
 - Campos de catalogo escondem o placeholder `Adicione...` quando o limite de selecoes do plano ja foi atingido, sem alterar backend, banco, contratos, packages ou envs.
+## Atualizacao visual em 2026-08-17: copy do alerta de perfil oculto
+
+- Ajuste pos-feedback da TASK-18A: o alerta vermelho de perfil oculto em `/app/profissional/perfil/configurar` passa a usar a copy curta `Seu perfil está oculto. Ative a visibilidade para voltar a aparecer para pacientes.`
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages ou envs.
