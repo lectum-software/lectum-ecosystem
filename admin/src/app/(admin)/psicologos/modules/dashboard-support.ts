@@ -14,6 +14,7 @@ export const CARD_ORDER = [
   "subscriber_psychologists",
   "courtesy_psychologists",
   "new_signups",
+  "deleted_accounts",
   "churn",
 ] as const;
 
@@ -336,6 +337,7 @@ export const hasDashboardRecords = (summary: AdminPsychologistsDashboard) => {
       point.subscriber_psychologists > 0 ||
       point.courtesy_psychologists > 0 ||
       point.new_signups > 0 ||
+      point.deleted_accounts > 0 ||
       point.churn > 0,
   );
 

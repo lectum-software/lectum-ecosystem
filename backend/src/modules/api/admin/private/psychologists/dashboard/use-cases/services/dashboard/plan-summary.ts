@@ -13,6 +13,7 @@ import type {
   AdminPsychologistAttentionRecord,
   AdminPsychologistCommunityTrafficPlatformDataset,
   AdminPsychologistContentAttentionRecord,
+  AdminPsychologistDeletedAccountRecord,
   AdminPsychologistEventRecord,
   AdminPsychologistPlatformPageViewRecord,
   AdminPsychologistPlatformPwaInstallRecord,
@@ -310,10 +311,15 @@ export const buildPsychologistsList = (
 
 export const roundRankingScore = (value: number) => Math.round(value * 1000) / 10;
 
-export const getAllPeriodStartDate = (profiles: AdminPsychologistProfileRecord[]) =>
-  profiles.reduce<Date | undefined>((earliest, profile) => {
-    const createdAt = profile.user.createdAt;
-    if (!earliest || createdAt < earliest) return createdAt;
+export const getAllPeriodStartDate = (
+  profiles: AdminPsychologistProfileRecord[],
+  deletedAccounts: AdminPsychologistDeletedAccountRecord[] = [],
+) =>
+  [
+    ...profiles.map((profile) => profile.user.createdAt),
+    ...deletedAccounts.flatMap((account) => (account.deletedAt ? [account.deletedAt] : [])),
+  ].reduce<Date | undefined>((earliest, date) => {
+    if (!earliest || date < earliest) return date;
 
     return earliest;
   }, undefined);

@@ -27,6 +27,14 @@ export class AdminPsychologistsDashboardRepository
     return this.directoryRepository.listPsychologistProfiles(...args);
   }
 
+  listDeletedPsychologistAccounts(
+    ...args: Parameters<
+      AdminPsychologistsDashboardDirectoryRepository["listDeletedPsychologistAccounts"]
+    >
+  ): ReturnType<AdminPsychologistsDashboardDirectoryRepository["listDeletedPsychologistAccounts"]> {
+    return this.directoryRepository.listDeletedPsychologistAccounts(...args);
+  }
+
   listPublicRankingCandidates(
     ...args: Parameters<
       AdminPsychologistsDashboardDirectoryRepository["listPublicRankingCandidates"]

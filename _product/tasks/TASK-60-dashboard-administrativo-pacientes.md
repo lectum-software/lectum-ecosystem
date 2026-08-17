@@ -1165,3 +1165,31 @@ Frontend esperado:
 - Smoke de servico local `listAdminPatients({ limit: 1 })` retornou `status=200`, `count=155` e `source` com `community_post+post_reply+post_vote+post_save+post_reply_save`, confirmando calculo real sem mock.
 - Browser local/headless em `http://localhost:3002/pacientes/lista`, mobile `390x844`, validou **Atividade**, **Sem atividade**, ausencia de **Engajamento** na lista e `scrollWidth=390`; screenshot salvo em `.tmp/admin-patients-list-activity-mobile.png`.
 - Admin temporario de validacao `codex-activity-list-20260802@example.com` foi removido do banco apos a verificacao.
+
+## Ajuste pos-feedback 2026-08-17 - contador de Descadastros
+
+- Pedido do usuario: no dashboard Admin de pacientes, adicionar em **Visao geral** um contador de **Descadastros**, representando pacientes que excluiram a conta.
+- Backend Admin: `GET /api/admin/private/patients/dashboard` passa a retornar `cards.deleted_accounts` e `series.points[].deleted_accounts`, calculados por `user.role="paciente"`, `user.deleted=true`, `user.account_status="deleted"` e `user.deletedAt` dentro do periodo selecionado.
+- O card de **Descadastros** usa comparativo com o periodo anterior; a serie temporal agrega descadastros por dia/mes sem somar esses usuarios aos totais, ativos ou inativos do dashboard.
+- A UI Admin adiciona o card em **Visao geral**, com toggle de serie no grafico e grade responsiva mobile-first para comportar o novo contador.
+- Nenhum schema Prisma, migration, package novo, seed, mock, endpoint simulado, env nova ou backfill artificial foi criado.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Pacientes/Pacientes - Dashboard.png` e os screenshots enviados pelo usuario.
+- ADR criado: `adrs/0462-descadastros-dashboard-admin.md`.
+
+### Criterios complementares
+
+- [x] O dashboard `/pacientes` exibe o card **Descadastros** na **Visao geral**.
+- [x] O backend conta somente contas de pacientes soft-deletadas com `deletedAt` no periodo selecionado.
+- [x] A serie temporal possui `deleted_accounts` em todos os pontos do grafico.
+- [x] Totais, pacientes ativos e pacientes inativos continuam excluindo contas deletadas.
+- [x] Nenhum mock, seed artificial, migration, package novo ou endpoint simulado foi adicionado.
+
+### Validacao complementar
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Smoke de service local `buildPatientsDashboard({ period: "all" })` confirmou `cards.deleted_accounts` numerico e `series.points[].deleted_accounts` numerico.
+- Smoke HTTP local em `http://localhost:3002/pacientes` retornou 200 no servidor Admin buildado.

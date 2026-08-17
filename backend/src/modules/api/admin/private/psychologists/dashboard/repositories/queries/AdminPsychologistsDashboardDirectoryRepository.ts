@@ -141,6 +141,27 @@ export class AdminPsychologistsDashboardDirectoryRepository {
     });
   }
 
+  async listDeletedPsychologistAccounts() {
+    return prisma.user.findMany({
+      orderBy: {
+        deletedAt: "desc",
+      },
+      select: {
+        createdAt: true,
+        deletedAt: true,
+        id: true,
+      },
+      where: {
+        account_status: "deleted",
+        deleted: true,
+        deletedAt: {
+          not: null,
+        },
+        role: "psicologo",
+      },
+    });
+  }
+
   async listPublicRankingCandidates() {
     return prisma.psychologist_profile.findMany({
       orderBy: {

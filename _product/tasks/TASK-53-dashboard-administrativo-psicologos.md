@@ -369,3 +369,31 @@ Packages usados:
 - O ajuste é apenas de copy/hierarquia visual no Admin, mobile-first, sem alteração de backend, contrato HTTP, Prisma, migration, package novo, mock, seed ou fonte de dados.
 - Builder/Quick Copy não está exposto como ferramenta callable neste ambiente; a alteração usou a referência local `_product/proto/admin/Psicólogos/Psicólogos - Dashboard.png` e o screenshot enviado pelo usuário.
 - Validações deste ajuste: `pnpm --dir admin exec biome check --write "src/app/(admin)/psicologos/client.tsx"`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check` e smoke HTTP local em `http://localhost:3002/psicologos` retornando 200. O build exigiu pausar/reiniciar o dev server Admin local para liberar o lock do Next; o servidor foi reiniciado depois.
+
+## Ajuste pos-feedback 2026-08-17 - contador de Descadastros
+
+- Pedido do usuario: no dashboard Admin de psicologos, adicionar em **Visao geral** um contador de **Descadastros**, representando psicologos que excluiram a conta.
+- Backend Admin: `GET /api/admin/private/psychologists/dashboard` passa a retornar `cards.deleted_accounts` e `timeline.points[].deleted_accounts`, calculados por `user.role="psicologo"`, `user.deleted=true`, `user.account_status="deleted"` e `user.deletedAt` dentro do periodo selecionado.
+- O card de **Descadastros** usa comparativo com o periodo anterior; a serie temporal agrega descadastros por dia/mes sem somar esses usuarios aos totais ativos do dashboard.
+- A UI Admin adiciona o card em **Visao geral**, com toggle de serie no grafico e grade responsiva mobile-first para comportar o novo contador.
+- Nenhum schema Prisma, migration, package novo, seed, mock, endpoint simulado, env nova ou backfill artificial foi criado.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; a execucao usou `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/admin/Psicologos/Psicologos - Dashboard.png` e os screenshots enviados pelo usuario.
+- ADR criado: `adrs/0462-descadastros-dashboard-admin.md`.
+
+### Criterios complementares
+
+- [x] O dashboard `/psicologos` exibe o card **Descadastros** na **Visao geral**.
+- [x] O backend conta somente contas de psicologos soft-deletadas com `deletedAt` no periodo selecionado.
+- [x] A serie temporal possui `deleted_accounts` em todos os pontos do grafico.
+- [x] Totais e segmentos de psicologos continuam excluindo contas deletadas.
+- [x] Nenhum mock, seed artificial, migration, package novo ou endpoint simulado foi adicionado.
+
+### Validacao complementar
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `NODE_OPTIONS=--max-old-space-size=8192 pnpm --dir admin build`
+- `pnpm check`
+- Smoke de service local `buildPsychologistsDashboard({ period: "all" })` confirmou `cards.deleted_accounts` numerico e `timeline.points[].deleted_accounts` numerico.
+- Smoke HTTP local em `http://localhost:3002/psicologos` retornou 200 no servidor Admin buildado.

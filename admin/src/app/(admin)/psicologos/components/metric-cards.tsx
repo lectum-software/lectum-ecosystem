@@ -8,6 +8,7 @@ import {
   UserCheck,
   UserPlus,
   UsersRound,
+  UserX,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type {
@@ -60,6 +61,7 @@ export const hexToRgba = colorWithAlpha;
 export const DASHBOARD_METRIC_CONFIG = {
   churn: { color: "var(--admin-danger)", icon: TrendingDown },
   courtesy_psychologists: { color: "var(--admin-chart-accent)", icon: Award },
+  deleted_accounts: { color: "var(--admin-danger)", icon: UserX },
   free_psychologists: { color: "var(--admin-success)", icon: UsersRound },
   new_signups: { color: "var(--admin-warning)", icon: UserPlus },
   subscriber_psychologists: { color: "var(--admin-primary)", icon: UserCheck },
@@ -401,7 +403,7 @@ export const MetricCard = ({
 };
 
 export const LoadingGrid = () => (
-  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-7">
     {CARD_ORDER.map((key) => (
       <CardShell
         className="h-[8.75rem] animate-pulse bg-surface-muted xl:h-[8.25rem]"

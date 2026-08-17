@@ -663,3 +663,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-18A: o card de ativacao do perfil proprio em `/app/psicologo/[id]` passa a explicar que o perfil esta oculto porque o proprio psicologo desativou a visibilidade.
 - A copy orienta ativar novamente para voltar a aparecer para pacientes: `Seu perfil não está visível porque você desativou a visibilidade. Ative novamente para o perfil voltar a ficar visível para pacientes.`
 - Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages ou envs.
+
+## Atualizacao operacional em 2026-08-17: descadastros nos dashboards Admin
+
+- Ajuste pos-feedback das TASK-53 e TASK-60: dashboards Admin de psicologos e pacientes exibem o contador **Descadastros** na **Visao geral**.
+- A contagem usa soft delete real em `user.deleted=true`, `user.account_status="deleted"`, `user.deletedAt` e `role` correspondente, sem incluir contas excluidas nos totais ativos/inativos.
+- O contrato e aditivo (`cards.deleted_accounts` e pontos temporais com `deleted_accounts`), sem schema Prisma, migration, package novo, seed, mock, backfill artificial ou env nova.

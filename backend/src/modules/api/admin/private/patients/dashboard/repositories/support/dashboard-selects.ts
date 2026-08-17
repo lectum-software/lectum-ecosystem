@@ -26,6 +26,12 @@ export const patientSnapshotSelect = {
   },
 } satisfies Prisma.userSelect;
 
+export const patientDeletedAccountSelect = {
+  createdAt: true,
+  deletedAt: true,
+  id: true,
+} satisfies Prisma.userSelect;
+
 export const communitySelect = {
   id: true,
   name: true,
@@ -274,6 +280,10 @@ export const recentPatientSelect = {
 
 export type AdminPatientSnapshotRecord = Prisma.userGetPayload<{
   select: typeof patientSnapshotSelect;
+}>;
+
+export type AdminPatientDeletedAccountRecord = Prisma.userGetPayload<{
+  select: typeof patientDeletedAccountSelect;
 }>;
 
 export type AdminPatientRecentRecord = Prisma.userGetPayload<{

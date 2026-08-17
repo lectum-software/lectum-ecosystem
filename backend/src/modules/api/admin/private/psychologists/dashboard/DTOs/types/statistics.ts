@@ -43,6 +43,7 @@ export type AdminPsychologistsDashboardDailyPoint = {
   churn: number;
   courtesy_psychologists: number;
   date: string;
+  deleted_accounts: number;
   free_psychologists: number;
   new_signups: number;
   subscriber_psychologists: number;

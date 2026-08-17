@@ -264,7 +264,7 @@ export const MetricCard = ({
 };
 
 export const LoadingGrid = () => (
-  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
     {CARD_ORDER.map((key) => (
       <CardShell
         className="h-[8.75rem] animate-pulse bg-surface-muted xl:h-[8.25rem]"
@@ -380,7 +380,7 @@ export const CardsGrid = ({
   const cards = summary.cards;
 
   return (
-    <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
       <legend className="sr-only">Contadores exibidos no gráfico da visão geral</legend>
       {CARD_ORDER.map((key) => {
         const config = DASHBOARD_METRIC_CONFIG[key];

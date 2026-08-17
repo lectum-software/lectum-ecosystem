@@ -5,6 +5,7 @@ import type {
   AdminPsychologistsDashboardDateRange,
 } from "../../../DTOs/IAdminPsychologistsDashboardDTO";
 import type {
+  AdminPsychologistDeletedAccountRecord,
   AdminPsychologistProfileRecord,
   AdminPsychologistSubscriptionRecord,
 } from "../../../repositories/interfaces/IAdminPsychologistsDashboardRepository";
@@ -110,12 +111,24 @@ const countByDate = <T extends { createdAt: Date }>(items: T[], labels: string[]
 
 const getDateCount = (counts: Map<string, number>, label: string) => counts.get(label) ?? 0;
 
+export const deletedAccountInRange = (
+  account: AdminPsychologistDeletedAccountRecord,
+  range: AdminPsychologistsDashboardDateRange,
+) => Boolean(account.deletedAt && dateInRange(account.deletedAt, range));
+
 export const buildTimeline = (params: {
+  deletedAccounts?: AdminPsychologistDeletedAccountRecord[];
   labels: string[];
   profiles: AdminPsychologistProfileRecord[];
 }): AdminPsychologistsDashboardDailyPoint[] => {
   const newSignupsByDate = countByDate(
     params.profiles.map((profile) => ({ createdAt: profile.user.createdAt })),
+    params.labels,
+  );
+  const deletedAccountsByDate = countByDate(
+    (params.deletedAccounts ?? []).flatMap((account) =>
+      account.deletedAt ? [{ createdAt: account.deletedAt }] : [],
+    ),
     params.labels,
   );
 
@@ -132,6 +145,7 @@ export const buildTimeline = (params: {
         hasActiveCourtesyAt(profile, dayEnd),
       ).length,
       date,
+      deleted_accounts: getDateCount(deletedAccountsByDate, date),
       free_psychologists: profilesCreatedUntilDay.filter((profile) =>
         hasCurrentFreePlanAt(profile, dayEnd),
       ).length,

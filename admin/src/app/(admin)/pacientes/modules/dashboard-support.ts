@@ -2,7 +2,7 @@ import { startOfCurrentWeek } from "@/lib/date-period";
 
 export { startOfCurrentWeek };
 
-import { type LucideIcon, UserCheck, UserPlus, UserRound, UsersRound } from "lucide-react";
+import { type LucideIcon, UserCheck, UserPlus, UserRound, UsersRound, UserX } from "lucide-react";
 import type {
   AdminPatientsDashboard,
   PatientsDashboardEngagementSegment,
@@ -16,6 +16,7 @@ export const CARD_ORDER = [
   "active_patients",
   "inactive_patients",
   "new_signups",
+  "deleted_accounts",
 ] as const;
 
 export type DeviceUsageItem = AdminPatientsDashboard["device_usage"]["items"][number];
@@ -253,6 +254,7 @@ export const DASHBOARD_METRIC_CONFIG: Record<
   { color: string; icon: LucideIcon }
 > = {
   active_patients: { color: CHART_COLORS[1], icon: UserCheck },
+  deleted_accounts: { color: "var(--admin-danger)", icon: UserX },
   inactive_patients: { color: CHART_COLORS[2], icon: UserRound },
   new_signups: { color: CHART_COLORS[3], icon: UserPlus },
   total_patients: { color: CHART_COLORS[0], icon: UsersRound },

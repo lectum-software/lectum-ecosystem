@@ -379,6 +379,7 @@ export type AdminPsychologistsDashboard = {
   cards: {
     churn: PsychologistsDashboardMetric;
     courtesy_psychologists: PsychologistsDashboardMetric;
+    deleted_accounts: PsychologistsDashboardMetric;
     free_psychologists: PsychologistsDashboardMetric;
     new_signups: PsychologistsDashboardMetric;
     subscriber_psychologists: PsychologistsDashboardMetric;
@@ -412,7 +413,7 @@ export type AdminPsychologistsDashboard = {
   statistics: PsychologistsDashboardStatistics;
   timeline: {
     points: PsychologistsDashboardDailyPoint[];
-    source: AdminPublicSource<"user+professional_subscription">;
+    source: AdminPublicSource<"user+professional_subscription+user.deletedAt">;
   };
   profile_activity: PsychologistsDashboardProfileActivityResults;
   profile_coverage: PsychologistsDashboardProfileCoverageResults;

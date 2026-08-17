@@ -88,6 +88,12 @@ export type AdminPsychologistProfileRecord = {
   whatsapp: string | null;
 };
 
+export type AdminPsychologistDeletedAccountRecord = {
+  createdAt: Date;
+  deletedAt: Date | null;
+  id: string;
+};
+
 export type AdminPsychologistRankingCandidateRecord = Omit<
   AdminPsychologistProfileRecord,
   "subscriptions"
@@ -432,6 +438,7 @@ export interface IAdminPsychologistsDashboardRepository {
     range: AdminPsychologistsDashboardDateRange,
     psychologistIds: string[],
   ): Promise<AdminPsychologistProfileTrafficPlatformDataset>;
+  listDeletedPsychologistAccounts(): Promise<AdminPsychologistDeletedAccountRecord[]>;
   listPsychologistProfiles(): Promise<AdminPsychologistProfileRecord[]>;
   listPublicRankingCandidates(): Promise<AdminPsychologistRankingCandidateRecord[]>;
   listPublishedReviews(

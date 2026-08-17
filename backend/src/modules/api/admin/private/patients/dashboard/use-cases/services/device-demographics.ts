@@ -12,6 +12,7 @@ import type {
   AdminPatientsDashboardSummary,
 } from "../../DTOs/IAdminPatientsDashboardDTO";
 import type {
+  AdminPatientDeletedAccountRecord,
   AdminPatientLocationRecord,
   AdminPatientPageViewRecord,
   AdminPatientPlatformSessionRecord,
@@ -220,17 +221,27 @@ export const dateInRange = (date: Date, range: AdminPatientsDashboardDateRange) 
 export const createdUntil = (patient: AdminPatientSnapshotRecord, date: Date) =>
   patient.createdAt <= date;
 
+export const deletedAccountInRange = (
+  account: AdminPatientDeletedAccountRecord,
+  range: AdminPatientsDashboardDateRange,
+) => Boolean(account.deletedAt && dateInRange(account.deletedAt, range));
+
 export const buildSeries = (
   patients: AdminPatientSnapshotRecord[],
   labels: string[],
+  deletedAccounts: AdminPatientDeletedAccountRecord[] = [],
 ): AdminPatientsDashboardSummary["series"]["points"] =>
   labels.map((label) => {
     const dayEnd = endOfDate(parseDateOnly(label, "start") ?? new Date(label));
     const visible = patients.filter((patient) => patient.createdAt <= dayEnd);
+    const deletedAccountsCount = deletedAccounts.filter(
+      (account) => account.deletedAt && toDateKey(account.deletedAt) === label,
+    ).length;
 
     return {
       active_patients: visible.filter((patient) => patient.active).length,
       date: label,
+      deleted_accounts: deletedAccountsCount,
       inactive_patients: visible.filter((patient) => !patient.active).length,
       new_signups: patients.filter((patient) => toDateKey(patient.createdAt) === label).length,
       total_patients: visible.length,

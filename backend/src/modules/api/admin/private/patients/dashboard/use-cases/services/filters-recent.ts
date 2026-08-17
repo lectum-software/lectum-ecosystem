@@ -7,6 +7,7 @@ import type {
   AdminPatientsDashboardSummary,
 } from "../../DTOs/IAdminPatientsDashboardDTO";
 import type {
+  AdminPatientDeletedAccountRecord,
   AdminPatientLocationRecord,
   AdminPatientPageViewRecord,
   AdminPatientPlatformSessionRecord,
@@ -234,9 +235,15 @@ export const mapRecentPatient = (
   };
 };
 
-export const getAllPeriodStartDate = (patients: AdminPatientSnapshotRecord[]) =>
-  patients.reduce<Date | undefined>((earliest, patient) => {
-    if (!earliest || patient.createdAt < earliest) return patient.createdAt;
+export const getAllPeriodStartDate = (
+  patients: AdminPatientSnapshotRecord[],
+  deletedAccounts: AdminPatientDeletedAccountRecord[] = [],
+) =>
+  [
+    ...patients.map((patient) => patient.createdAt),
+    ...deletedAccounts.flatMap((account) => (account.deletedAt ? [account.deletedAt] : [])),
+  ].reduce<Date | undefined>((earliest, date) => {
+    if (!earliest || date < earliest) return date;
 
     return earliest;
   }, undefined);

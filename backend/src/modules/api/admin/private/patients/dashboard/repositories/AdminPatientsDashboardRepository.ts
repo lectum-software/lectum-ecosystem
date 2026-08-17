@@ -7,6 +7,7 @@ import {
   type AdminPatientAnonymousConversionPageViewRecord,
   type AdminPatientAnonymousConversionSessionRecord,
   type AdminPatientCommunityEngagementEventRecord,
+  type AdminPatientDeletedAccountRecord,
   type AdminPatientLocationRecord,
   type AdminPatientPageViewRecord,
   type AdminPatientPlatformSessionRecord,
@@ -16,6 +17,7 @@ import {
   type AdminPatientSnapshotRecord,
   patientAnonymousConversionPageViewSelect,
   patientAnonymousConversionSessionSelect,
+  patientDeletedAccountSelect,
   patientIntentFavoriteSelect,
   patientIntentProfileViewSelect,
   patientIntentWhatsappClickSelect,
@@ -37,6 +39,23 @@ export class AdminPatientsDashboardRepository {
       select: patientSnapshotSelect,
       where: {
         deleted: false,
+        role: "paciente",
+      },
+    });
+  }
+
+  async listDeletedPatientAccounts(): Promise<AdminPatientDeletedAccountRecord[]> {
+    return prisma.user.findMany({
+      orderBy: {
+        deletedAt: "desc",
+      },
+      select: patientDeletedAccountSelect,
+      where: {
+        account_status: "deleted",
+        deleted: true,
+        deletedAt: {
+          not: null,
+        },
         role: "paciente",
       },
     });
@@ -549,6 +568,7 @@ export type {
   AdminPatientAnonymousConversionPageViewRecord,
   AdminPatientAnonymousConversionSessionRecord,
   AdminPatientCommunityEngagementEventRecord,
+  AdminPatientDeletedAccountRecord,
   AdminPatientIntentFavoriteRecord,
   AdminPatientIntentProfileViewRecord,
   AdminPatientIntentWhatsappClickRecord,

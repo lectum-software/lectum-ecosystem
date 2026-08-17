@@ -39,6 +39,7 @@ export type AdminPatientsDashboardMetric = {
 
 export type AdminPatientsDashboardDailyPoint = {
   active_patients: number;
+  deleted_accounts: number;
   date: string;
   inactive_patients: number;
   new_signups: number;
@@ -362,6 +363,7 @@ export type AdminPatientsDashboardSummary = {
   anonymous_conversion: AdminPatientsDashboardAnonymousConversion;
   cards: {
     active_patients: AdminPatientsDashboardMetric;
+    deleted_accounts: AdminPatientsDashboardMetric;
     inactive_patients: AdminPatientsDashboardMetric;
     new_signups: AdminPatientsDashboardMetric;
     total_patients: AdminPatientsDashboardMetric;
@@ -405,7 +407,7 @@ export type AdminPatientsDashboardSummary = {
   };
   series: {
     points: AdminPatientsDashboardDailyPoint[];
-    source: "user.createdAt+user.active";
+    source: "user.createdAt+user.active+user.deletedAt";
   };
   unavailable: AdminPatientsDashboardUnavailableMetric[];
 };

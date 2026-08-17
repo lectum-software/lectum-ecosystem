@@ -33,18 +33,26 @@ import {
   normalizeName,
   summarizePreSignupConversion,
 } from "./services/pre-signup/conversion";
-import { buildTimeline, calculateChurnPercent } from "./services/subscriptions/timeline";
+import {
+  buildTimeline,
+  calculateChurnPercent,
+  deletedAccountInRange,
+} from "./services/subscriptions/timeline";
 import { metric, resolvePeriod } from "./services/support/metrics";
 
 export const buildPsychologistsDashboard = async (
   query: AdminPsychologistsDashboardQuery,
 ): Promise<Resolve> => {
   const repository = new AdminPsychologistsDashboardRepository();
-  const [profiles, directoryFilters] = await Promise.all([
+  const [profiles, directoryFilters, deletedAccounts] = await Promise.all([
     repository.listPsychologistProfiles(),
     repository.listDirectoryFilters(),
+    repository.listDeletedPsychologistAccounts(),
   ]);
-  const resolvedPeriod = resolvePeriod(query ?? {}, getAllPeriodStartDate(profiles));
+  const resolvedPeriod = resolvePeriod(
+    query ?? {},
+    getAllPeriodStartDate(profiles, deletedAccounts),
+  );
   if (!resolvedPeriod.success) {
     return {
       status: 400,
@@ -129,6 +137,12 @@ export const buildPsychologistsDashboard = async (
   const previousProfiles = profiles.filter((profile) => profileCreatedUntil(profile, previous.end));
   const previousNewSignups = profiles.filter((profile) =>
     dateInRange(profile.user.createdAt, previous),
+  );
+  const currentDeletedAccounts = deletedAccounts.filter((account) =>
+    deletedAccountInRange(account, current),
+  );
+  const previousDeletedAccounts = deletedAccounts.filter((account) =>
+    deletedAccountInRange(account, previous),
   );
   const currentFree = currentProfiles.filter((profile) =>
     hasCurrentFreePlanAt(profile, current.end),
@@ -245,6 +259,14 @@ export const buildPsychologistsDashboard = async (
         previous: previousCourtesy.length,
         source: "professional_subscription.source=admin_grant/status=ativa",
       }),
+      deleted_accounts: metric({
+        current: currentDeletedAccounts.length,
+        description: "Psicólogos que excluíram a conta no período selecionado.",
+        id: "deleted_accounts",
+        label: "Descadastros",
+        previous: previousDeletedAccounts.length,
+        source: "user.role=psicologo+user.deleted=true+user.account_status=deleted+user.deletedAt",
+      }),
       free_psychologists: metric({
         current: currentFree.length,
         description:
@@ -325,10 +347,11 @@ export const buildPsychologistsDashboard = async (
     statistics,
     timeline: {
       points: buildTimeline({
+        deletedAccounts,
         labels,
         profiles,
       }),
-      source: "user+professional_subscription",
+      source: "user+professional_subscription+user.deletedAt",
     },
     profile_activity: profileActivity,
     profile_coverage: profileCoverage,

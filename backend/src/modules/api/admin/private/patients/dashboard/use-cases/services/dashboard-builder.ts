@@ -20,6 +20,7 @@ import {
   buildSeries,
   createdUntil,
   dateInRange,
+  deletedAccountInRange,
 } from "./device-demographics";
 import {
   buildPatientIntentFilters,
@@ -37,11 +38,15 @@ export const buildPatientsDashboard = async (
   query: AdminPatientsDashboardQuery,
 ): Promise<Resolve> => {
   const repository = new AdminPatientsDashboardRepository();
-  const [patients, recentPatients] = await Promise.all([
+  const [patients, recentPatients, deletedAccounts] = await Promise.all([
     repository.listPatientSnapshots(),
     repository.listRecentPatients(5),
+    repository.listDeletedPatientAccounts(),
   ]);
-  const resolvedPeriod = resolvePeriod(query ?? {}, getAllPeriodStartDate(patients));
+  const resolvedPeriod = resolvePeriod(
+    query ?? {},
+    getAllPeriodStartDate(patients, deletedAccounts),
+  );
   if (!resolvedPeriod.success) {
     return {
       status: 400,
@@ -57,6 +62,12 @@ export const buildPatientsDashboard = async (
   );
   const previousPeriodPatients = patients.filter((patient) =>
     dateInRange(patient.createdAt, previous),
+  );
+  const currentDeletedAccounts = deletedAccounts.filter((account) =>
+    deletedAccountInRange(account, current),
+  );
+  const previousDeletedAccounts = deletedAccounts.filter((account) =>
+    deletedAccountInRange(account, previous),
   );
   const currentPeriodPatientIds = currentPeriodPatients.map((patient) => patient.id);
   const [
@@ -164,6 +175,14 @@ export const buildPatientsDashboard = async (
         previous: previousActivePatients.length,
         source: "user.role=paciente+user.active=true",
       }),
+      deleted_accounts: metric({
+        current: currentDeletedAccounts.length,
+        description: "Pacientes que excluíram a conta no período selecionado.",
+        id: "deleted_accounts",
+        label: "Descadastros",
+        previous: previousDeletedAccounts.length,
+        source: "user.role=paciente+user.deleted=true+user.account_status=deleted+user.deletedAt",
+      }),
       inactive_patients: metric({
         current: inactivePatients.length,
         description: "Contas de pacientes inativas no momento da consulta.",
@@ -197,6 +216,7 @@ export const buildPatientsDashboard = async (
       "A distribuição de sistemas operacionais considera somente sessões autenticadas de pacientes e não armazena a identificação completa do navegador.",
       "A jornada pré-cadastro considera pacientes cadastrados no período e a navegação anônima anterior que pôde ser associada ao cadastro; outros visitantes ficam fora deste bloco.",
       "Gênero e forma de cadastro consideram somente pacientes cadastrados no período selecionado; em Todo o período incluem a base completa.",
+      "Descadastros consideram contas de pacientes marcadas como excluídas pela data registrada da exclusão no período selecionado.",
       "O tempo médio considera visualizações autenticadas e ignora períodos em que o aplicativo fica oculto ou minimizado.",
       "A localização usa cidade e estado declarados pelo paciente no perfil; quem não informou aparece como Não informado, e coordenadas, IP e endereço não são exibidos.",
       "Análise de intenção usa apenas agregados de abertura de perfil, favoritos ativos e cliques no WhatsApp; não expõe conversa, diagnóstico ou atendimento.",
@@ -224,8 +244,8 @@ export const buildPatientsDashboard = async (
       total: patients.length,
     },
     series: {
-      points: buildSeries(patients, labels),
-      source: "user.createdAt+user.active",
+      points: buildSeries(patients, labels, deletedAccounts),
+      source: "user.createdAt+user.active+user.deletedAt",
     },
     unavailable: [
       ...(platformUsage.duration_unavailable_reason

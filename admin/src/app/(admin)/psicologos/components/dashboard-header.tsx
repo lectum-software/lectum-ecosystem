@@ -134,7 +134,7 @@ export const CardsGrid = ({
   const cards = summary.cards;
 
   return (
-    <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+    <fieldset className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-7">
       <legend className="sr-only">Contadores exibidos no gráfico da visão geral</legend>
       {CARD_ORDER.map((key) => {
         const config = DASHBOARD_METRIC_CONFIG[key];
