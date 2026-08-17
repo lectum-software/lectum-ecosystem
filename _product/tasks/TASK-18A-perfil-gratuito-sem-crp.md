@@ -673,3 +673,26 @@ Validacoes executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - `pnpm check:version`
+
+## Ajuste complementar em 2026-08-17 - fonte das chips de catalogo
+
+- Pedido do usuario: as chips selecionadas dos catalogos (`Adultos`, `Terapia Online`, `Psicanalise`, etc.) devem ter o mesmo tamanho visual do texto do select `Portugues`.
+- O ajuste ficou restrito ao `CatalogTagField` da rota `/app/profissional/perfil/configurar`, separando a classe de fonte das chips selecionadas da classe do placeholder interno.
+- As chips selecionadas agora usam `text-sm`, o mesmo tamanho configurado nos selects da fundacao de formulario (`SelectController`); os placeholders internos continuam com a classe compacta anterior para preservar a linha propria mobile-first.
+- Nao houve alteracao de backend, Prisma, APIs, contratos, dados persistidos, envs, providers ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a referencia auditavel permanece o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`, enquanto o ajuste foi definido pela configuracao real de componentes do sistema.
+
+Criterios complementares:
+
+- [x] Chips selecionadas de `CatalogTagField` usam `text-sm`, alinhadas ao tamanho do select `Idiomas`.
+- [x] O placeholder interno dos campos de catalogo preserva a linha propria e nao muda para `text-sm`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check` (primeira tentativa excedeu o timeout da ferramenta; reexecucao com timeout maior concluiu sem erros)
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Verificacao estatica confirmou `catalogTagChipTextClassName = "text-sm leading-[1.15]"` para chips selecionadas e `catalogTagPlaceholderTextClassName = "text-[10px] leading-[1.15]"` para placeholders.
+- Smoke local autenticado ficou limitado por nao haver sessao real de psicologo disponivel sem criar mock; tentativas de subir `next start` em portas locais 3139/3140 expiraram sem deixar porta ativa para consulta.

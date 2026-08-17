@@ -15,7 +15,8 @@ import {
 } from "../modules/profile-setup-support";
 import type { FreeProfileForm } from "../use-form";
 
-const catalogTagTextClassName = "text-[10px] leading-[1.15]";
+const catalogTagChipTextClassName = "text-sm leading-[1.15]";
+const catalogTagPlaceholderTextClassName = "text-[10px] leading-[1.15]";
 const chipPickerSelectableChipStyle = {
   ...profileSetupSelectableChipStyle,
   boxShadow: "none",
@@ -113,7 +114,7 @@ export const CatalogPicker = ({
 export const CatalogTagField = ({
   description,
   error,
-  placeholderClassName = catalogTagTextClassName,
+  placeholderClassName = catalogTagPlaceholderTextClassName,
   items,
   groupedItems,
   limit,
@@ -199,7 +200,7 @@ export const CatalogTagField = ({
               <span
                 className={cn(
                   "inline-flex max-w-full items-center gap-1 rounded-md bg-primary-soft px-2 py-1 font-bold text-primary",
-                  catalogTagTextClassName,
+                  catalogTagChipTextClassName,
                 )}
                 key={item.id}
               >

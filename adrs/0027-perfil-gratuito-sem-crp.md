@@ -269,3 +269,31 @@ Impacto de deploy:
 
 - Frontend-only, compativel com versoes atuais do backend.
 - Rollback por reversao simples do commit restaura a sombra anterior.
+
+## Atualizacao em 2026-08-17 - tipografia das chips de catalogo selecionadas
+
+A edicao profissional (`/app/profissional/perfil/configurar`) passa a exibir as chips selecionadas de catalogos
+(`Adultos`, `Terapia Online`, `Psicanalise`, etc.) com o mesmo tamanho visual do select `Idiomas`, cujo valor
+`Portugues` usa `text-sm` na fundacao de formularios.
+
+Decisao:
+
+- manter o `CatalogTagField` existente, sem criar controle paralelo;
+- separar a classe tipografica das chips selecionadas da classe do placeholder interno;
+- aplicar `text-sm leading-[1.15]` somente nas chips selecionadas, alinhando o tamanho ao `SelectController`;
+- preservar os placeholders internos com `text-[10px] leading-[1.15]`, mantendo a linha propria compacta validada nos ajustes anteriores;
+- restringir o ajuste ao frontend visual, sem alterar catalogos reais, limites de plano, backend, contratos, dados persistidos, envs ou packages.
+
+Impacto de deploy:
+
+- Frontend-only, compativel com backend/admin em versoes atuais ou anteriores.
+- Sem migration, env, backfill, job ou provider externo.
+- Rollback por reversao simples do commit restaura a classe tipografica anterior das chips.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check` (reexecutado com timeout maior apos a primeira tentativa exceder o limite da ferramenta)
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Verificacao estatica confirmou `catalogTagChipTextClassName = "text-sm leading-[1.15]"` e `catalogTagPlaceholderTextClassName = "text-[10px] leading-[1.15]"`.
