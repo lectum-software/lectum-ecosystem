@@ -215,18 +215,19 @@ export const CatalogTagField = ({
                 </button>
               </span>
             ))}
-            <button
-              aria-expanded={open}
-              className={cn(
-                "w-full basis-full whitespace-nowrap py-1 text-left text-subtle outline-none",
-                placeholderClassName,
-                limitReached && "text-muted",
-              )}
-              onClick={() => setOpen((current) => !current)}
-              type="button"
-            >
-              {placeholder}
-            </button>
+            {limitReached ? null : (
+              <button
+                aria-expanded={open}
+                className={cn(
+                  "w-full basis-full whitespace-nowrap py-1 text-left text-subtle outline-none",
+                  placeholderClassName,
+                )}
+                onClick={() => setOpen((current) => !current)}
+                type="button"
+              >
+                {placeholder}
+              </button>
+            )}
           </div>
           <button
             aria-label={`Abrir opções de ${title}`}

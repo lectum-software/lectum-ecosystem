@@ -237,8 +237,9 @@ export const useProfessionalProfileSetupController = () => {
         }
       : lockedIdentityFieldProps;
   const showInactiveProfileBanner = Boolean(
-    profile.data?.activation && !profile.data.activation.active,
+    profile.data?.activation && !profile.data.activation.active && published,
   );
+  const showHiddenProfileBanner = Boolean(profile.data && !published);
   const isSavingMedia =
     uploadAvatar.isPending ||
     deleteAvatar.isPending ||
@@ -669,6 +670,7 @@ export const useProfessionalProfileSetupController = () => {
     setShowProfileVideoTip,
     setVideoRemovalConfirmOpen,
     showInactiveProfileBanner,
+    showHiddenProfileBanner,
     showProfileVideoTip,
     submit,
     targetAudienceError,

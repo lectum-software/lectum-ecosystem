@@ -297,3 +297,29 @@ Validacoes:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Verificacao estatica confirmou `catalogTagChipTextClassName = "text-sm leading-[1.15]"` e `catalogTagPlaceholderTextClassName = "text-[10px] leading-[1.15]"`.
+
+## Atualizacao em 2026-08-17 - visibilidade explicita e placeholders por limite
+
+A edicao profissional (`/app/profissional/perfil/configurar`) passa a tratar `psychologist_profile.published` como estado explicito de visibilidade para pacientes, separado do estado de completude obrigatoria do perfil.
+
+Decisao:
+
+- manter o campo persistido `published` e o contrato atual do `free-profile`, sem migration ou novo endpoint;
+- substituir o checkbox visual por um switch acessivel com status textual, para comunicar `Visivel para pacientes` ou `Nao visivel para pacientes`;
+- exibir alerta vermelho especifico quando a configuracao atual deixa o perfil oculto, reservando o alerta de `Perfil nao ativo` para pendencias obrigatorias quando o perfil esta marcado como visivel;
+- manter no menu privado `/app/perfil` o indicador de alerta em `Editar perfil`, com texto acessivel especifico quando o perfil esta oculto;
+- ocultar o placeholder `Adicione...` dos campos `CatalogTagField` quando o limite de selecoes ja foi atingido, preservando dropdown, remocao de chips e bloqueio de novas selecoes acima do limite real retornado pela API.
+
+Impacto de deploy:
+
+- Frontend-only, compativel com versoes atuais do backend e admin.
+- Sem env, migration, backfill, job, provider externo ou manipulacao de dados persistidos.
+- Rollback por reversao simples do commit restaura o checkbox visual e os placeholders sempre visiveis.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/profile/logic.tsx src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/components/profile-setup-shell.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` (primeira tentativa excedeu o timeout da ferramenta; reexecucao com timeout maior concluiu sem erros)
+- `pnpm check`
+- `pnpm check:version`

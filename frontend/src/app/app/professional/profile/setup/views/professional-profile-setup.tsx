@@ -6,6 +6,7 @@ import {
   Camera,
   ExternalLink,
   Eye,
+  EyeOff,
   FileVideo,
   Filter,
   GraduationCap,
@@ -32,6 +33,7 @@ import { AvatarEditor } from "../components/avatar-editor";
 import { BooleanBenefit, CatalogTagField, ChipPicker } from "../components/catalog-fields";
 import { ProfileImagesPreview } from "../components/profile-images-preview";
 import {
+  ProfileHiddenBanner,
   ProfileInactiveBanner,
   SectionCard,
   VideoRemovalConfirmationModal,
@@ -86,6 +88,7 @@ export const ProfessionalProfileSetupLogic = () => {
     setCatalogValue,
     setShowProfileVideoTip,
     setVideoRemovalConfirmOpen,
+    showHiddenProfileBanner,
     showInactiveProfileBanner,
     showProfileVideoTip,
     submit,
@@ -140,6 +143,7 @@ export const ProfessionalProfileSetupLogic = () => {
           title="Editar perfil"
         />
 
+        {showHiddenProfileBanner ? <ProfileHiddenBanner /> : null}
         {showInactiveProfileBanner ? <ProfileInactiveBanner /> : null}
 
         <ProfileImagesPreview controller={controller} />
@@ -569,28 +573,61 @@ export const ProfessionalProfileSetupLogic = () => {
             </SectionCard>
 
             <section className="rounded-[var(--lectum-card-radius)] border border-border bg-surface p-5 shadow-[var(--lectum-shadow-soft)]">
-              <label className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4 text-left">
-                <span className="grid min-w-0 gap-1">
+              <div
+                className={cn(
+                  "flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4 text-left",
+                  !published && "border-danger/25 bg-danger/5",
+                )}
+              >
+                <span className="grid min-w-0 gap-2">
                   <span className="block font-bold text-foreground">
-                    Perfil visível para pacientes
+                    {published ? "Perfil visível para pacientes" : "Perfil oculto para pacientes"}
+                  </span>
+                  <span
+                    className={cn(
+                      "inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-extrabold",
+                      published ? "bg-success/10 text-success" : "bg-danger/10 text-danger",
+                    )}
+                  >
+                    {published ? (
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                    ) : (
+                      <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
+                    {published ? "Visível para pacientes" : "Não visível para pacientes"}
                   </span>
                   <span className="block text-sm leading-5 text-muted">
                     Em caso de férias ou agenda lotada, desabilite a visibilidade para pausar a
                     exibição do seu perfil aos pacientes.
                   </span>
                 </span>
-                <input
-                  checked={published}
-                  className="h-5 w-5 accent-primary"
-                  onChange={(event) =>
-                    form.hook.setValue("published", event.target.checked, {
+                <button
+                  aria-checked={published}
+                  aria-label={
+                    published ? "Desativar visibilidade do perfil" : "Ativar visibilidade do perfil"
+                  }
+                  className={cn(
+                    "relative h-8 w-14 shrink-0 rounded-full border border-border bg-border-strong transition focus:outline-none focus:ring-4 focus:ring-primary/10",
+                    published && "border-primary bg-primary",
+                    !published && "border-danger/30 bg-danger/20 focus:ring-danger/10",
+                  )}
+                  onClick={() =>
+                    form.hook.setValue("published", !published, {
                       shouldDirty: true,
                       shouldValidate: true,
                     })
                   }
-                  type="checkbox"
-                />
-              </label>
+                  role="switch"
+                  type="button"
+                >
+                  <span
+                    className={cn(
+                      "absolute top-1 left-1 h-6 w-6 rounded-full bg-surface shadow-sm transition",
+                      published && "translate-x-6",
+                    )}
+                  />
+                </button>
+              </div>
             </section>
 
             <div className="sticky bottom-4 z-10 rounded-full bg-surface/90 p-2 shadow-[var(--lectum-shadow-soft)] backdrop-blur">

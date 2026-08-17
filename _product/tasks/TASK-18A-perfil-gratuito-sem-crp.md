@@ -696,3 +696,32 @@ Validacoes executadas:
 - `pnpm check`
 - Verificacao estatica confirmou `catalogTagChipTextClassName = "text-sm leading-[1.15]"` para chips selecionadas e `catalogTagPlaceholderTextClassName = "text-[10px] leading-[1.15]"` para placeholders.
 - Smoke local autenticado ficou limitado por nao haver sessao real de psicologo disponivel sem criar mock; tentativas de subir `next start` em portas locais 3139/3140 expiraram sem deixar porta ativa para consulta.
+
+## Ajuste complementar em 2026-08-17 - visibilidade do perfil e limite de placeholders
+
+- Pedido do usuario: trocar a opcao de visibilidade do perfil por um switch que informe se o perfil esta visivel para pacientes, alertar no topo quando o perfil estiver oculto e remover o placeholder de adicao quando um catalogo ja atingiu o limite de selecoes.
+- A tela `/app/profissional/perfil/configurar` agora separa dois estados de alerta: perfil oculto por `published=false` e perfil nao ativo por informacoes obrigatorias pendentes. O alerta de perfil oculto usa destaque vermelho no topo e orienta a ativar a visibilidade e salvar.
+- A opcao de visibilidade deixou de ser checkbox e passou a ser um switch acessivel (`role="switch"`) com status textual `Visivel para pacientes` / `Nao visivel para pacientes`.
+- O menu privado `/app/perfil` mantem o alerta visual em `Editar perfil` quando o perfil nao esta ativo e diferencia o texto acessivel quando o motivo for perfil oculto para pacientes.
+- `CatalogTagField` deixa de renderizar o placeholder `Adicione...` quando `selected.length >= limit`, preservando chips selecionadas, dropdown, remocao de itens e limites reais do plano.
+- Nao houve alteracao de backend, Prisma, migrations, contratos publicos, dados persistidos, envs, providers ou packages.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram os prints enviados pelo usuario em 2026-08-17 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Controle de `Perfil visivel para pacientes` renderiza como switch, nao como checkbox.
+- [x] Switch informa visualmente se o perfil esta visivel ou nao para pacientes.
+- [x] Perfil oculto exibe alerta vermelho no topo da edicao do perfil profissional.
+- [x] `Editar perfil` no menu privado do psicologo mantem o indicador de alerta quando o perfil esta oculto ou incompleto.
+- [x] Campos de catalogo com limite atingido nao exibem mais o texto `Adicione...`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/profile/logic.tsx src/app/app/professional/profile/setup/components/catalog-fields.tsx src/app/app/professional/profile/setup/components/profile-setup-shell.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build` (primeira tentativa excedeu o timeout da ferramenta; reexecucao com timeout maior concluiu sem erros)
+- `pnpm check`
+- `pnpm check:version`
+- Smoke local sem sessao em `http://127.0.0.1:3144`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.145"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.

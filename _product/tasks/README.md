@@ -646,3 +646,9 @@ Uma task só pode ser marcada como concluída quando:
 
 - Ajuste pos-feedback da TASK-18A: chips selecionadas dos catalogos em `/app/profissional/perfil/configurar` passam a usar `text-sm`, igual ao select `Idiomas`, para aproximar `Adultos`, `Terapia Online`, `Psicanalise` e equivalentes do tamanho visual de `Portugues`.
 - O placeholder interno dos campos de catalogo permanece compacto em linha propria; nao houve alteracao de backend, banco, contratos, packages ou envs.
+
+## Atualizacao visual em 2026-08-17: switch de visibilidade e placeholders no limite
+
+- Ajuste pos-feedback da TASK-18A: `Perfil visivel para pacientes` em `/app/profissional/perfil/configurar` passa a usar switch com status textual e alerta vermelho especifico quando o perfil esta oculto.
+- O menu privado `/app/perfil` preserva o indicador em `Editar perfil` quando o perfil esta oculto ou incompleto.
+- Campos de catalogo escondem o placeholder `Adicione...` quando o limite de selecoes do plano ja foi atingido, sem alterar backend, banco, contratos, packages ou envs.

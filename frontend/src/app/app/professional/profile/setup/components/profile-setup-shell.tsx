@@ -42,6 +42,25 @@ export const ProfileInactiveBanner = () => (
   </div>
 );
 
+export const ProfileHiddenBanner = () => (
+  <div className="rounded-[var(--lectum-card-radius)] border border-danger/25 bg-danger/10 px-4 py-4 shadow-lectum-soft">
+    <div className="flex items-start gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface/80 text-danger shadow-sm">
+        <TriangleAlert className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-extrabold tracking-[-0.01em] text-danger">
+          Perfil não visível para pacientes
+        </p>
+        <p className="mt-1 text-sm leading-6 text-foreground/80">
+          Com esta configuração, seu perfil fica oculto da busca e do perfil público. Ative a
+          visibilidade abaixo e salve as alterações para voltar a aparecer para pacientes.
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
 export const VideoRemovalConfirmationModal = ({
   disabled = false,
   onClose,

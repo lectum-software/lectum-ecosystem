@@ -181,11 +181,18 @@ export const ProfileLogic = () => {
   const pwaInstall = usePwaInstallAccountAction();
   const isPsychologist = user?.role === "psicologo";
   const psychologistProfile = usePsychologistFreeProfile({ enabled: Boolean(isPsychologist) });
+  const professionalProfileData = psychologistProfile.profile.data;
+  const isProfessionalProfileHidden = Boolean(
+    isPsychologist && professionalProfileData && !professionalProfileData.profile.published,
+  );
   const showProfileActivationAlert = Boolean(
     isPsychologist &&
-      psychologistProfile.profile.data?.activation &&
-      !psychologistProfile.profile.data.activation.active,
+      professionalProfileData?.activation &&
+      !professionalProfileData.activation.active,
   );
+  const editProfileWarningLabel = isProfessionalProfileHidden
+    ? "Perfil não visível para pacientes"
+    : "Perfil não ativo";
 
   if (!user) {
     return (
@@ -243,10 +250,10 @@ export const ProfileLogic = () => {
       trailing: showProfileActivationAlert ? (
         <span
           className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-danger/10 text-danger"
-          title="Perfil não ativo"
+          title={editProfileWarningLabel}
         >
           <TriangleAlert className="h-4 w-4" aria-hidden="true" />
-          <span className="sr-only">Perfil não ativo</span>
+          <span className="sr-only">{editProfileWarningLabel}</span>
         </span>
       ) : null,
     },
