@@ -33,7 +33,7 @@ export const InactivePublicProfileState = ({
         <p className="mx-auto mt-3 max-w-[350px] text-sm leading-6 text-muted dark:text-muted">
           {hasPendingFields
             ? "Para exibir seu perfil publicamente na Lectum, complete as informações obrigatórias do seu perfil profissional."
-            : "Seu perfil não possui campos obrigatórios pendentes, mas ainda não está disponível publicamente. Revise a publicação na tela de edição."}
+            : "Seu perfil não está visível porque você desativou a visibilidade. Ative novamente para o perfil voltar a ficar visível para pacientes."}
         </p>
 
         {hasPendingFields ? (

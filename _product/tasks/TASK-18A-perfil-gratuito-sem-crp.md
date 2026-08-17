@@ -725,6 +725,7 @@ Validacoes executadas:
 - `pnpm check`
 - `pnpm check:version`
 - Smoke local sem sessao em `http://127.0.0.1:3144`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.145"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
 ## Ajuste complementar em 2026-08-17 - copy do alerta de perfil oculto
 
 - Pedido do usuario: simplificar o texto do alerta de perfil oculto na edicao profissional.
@@ -743,3 +744,26 @@ Validacoes executadas:
 - `pnpm check`
 - `pnpm check:version`
 - Smoke local sem sessao em `http://127.0.0.1:3145`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.146"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada.
+
+## Ajuste complementar em 2026-08-17 - copy do perfil oculto no perfil publico proprio
+
+- Pedido do usuario: quando o proprio psicologo visualizar o perfil inativo por ter desativado a visibilidade, informar que ele deve ativar novamente para o perfil voltar a ficar visivel para pacientes.
+- O estado proprio de perfil inativo em `/app/psicologo/[id]` e `/app/psychologist/[id]` preserva a lista de pendencias quando houver campos obrigatorios pendentes; quando nao ha pendencias, a copy agora atribui o estado a desativacao manual de visibilidade.
+- A mensagem do `InactivePublicProfileState` passa a exibir: `Seu perfil não está visível porque você desativou a visibilidade. Ative novamente para o perfil voltar a ficar visível para pacientes.`
+- A mudanca e apenas de copy no frontend, sem alterar regra de dominio, backend, banco, contratos, envs, providers ou packages.
+- ADR nao atualizado por ser ajuste textual sem decisao arquitetural, integracao ou trade-off novo.
+
+Criterio complementar:
+
+- [x] Perfil proprio inativo sem pendencias obrigatorias informa que a visibilidade foi desativada pelo psicologo e orienta ativar novamente para voltar a ficar visivel para pacientes.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/psychologist/[id]/components/shared.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm version:bump`
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.147`.
+- Smoke local sem sessao em `http://127.0.0.1:3147`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.147"}` e `/app/psicologo/local-profile-smoke` respondeu `200`; validacao autenticada do estado proprio ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
