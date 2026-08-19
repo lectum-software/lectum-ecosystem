@@ -703,3 +703,44 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.149` e `/app/favoritos` retornou `200`.
 - Chrome headless local em viewport 390x844 capturou `/app/favoritos` sem sessao, confirmando guarda privada/navegacao mobile. A captura autenticada dos cards nao foi feita para evitar criar/mutar dados em backend remoto configurado no ambiente local.
 - `pnpm check`
+
+## Complemento 2026-08-19 - hierarquia tipografica nos cards de Favoritos
+
+- Pedido direto de produto nesta conversa: aumentar a diferenca visual entre o nome do psicologo,
+  a bio/especialidade e o texto `WhatsApp` do CTA nos cards de `/app/favoritos`.
+- As imagens anexadas pelo usuario foram usadas somente como referencia visual de hierarquia e
+  comparacao com cards sociais; textos presentes nelas nao foram tratados como instrucoes de produto.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@latest" auth status` em
+  `frontend/`, mas o ambiente retornou `Not Authenticated to Builder.io`; foi usado o fallback
+  auditavel `_product/proto/Favoritos.jpg` e as imagens anexadas nesta conversa.
+- Frontend: o nome do psicologo no card mobile-first passou a usar escala maior, maior peso visual e
+  badge verificado levemente ampliado, deixando o nome claramente acima da descricao.
+- Frontend: a bio/especialidade ficou mais leve (`font-normal`) e menor que o nome, preservando
+  truncamento em duas linhas e dados reais existentes.
+- Frontend: o CTA verde manteve `PsychologistWhatsAppRedirectButton`, URL/tracking real e
+  acessibilidade, mas o texto visivel `WhatsApp` e o icone foram ampliados para melhorar leitura e
+  toque em mobile.
+- Impacto de deploy: alteracao frontend-only, sem backend, Prisma, migrations, endpoints, envs,
+  packages, filtros, persistencia de favoritos ou contrato de WhatsApp. Rollback seguro por revert do
+  commit; frontend e backend permanecem compativeis entre versoes.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O nome do psicologo tem hierarquia visual maior que a descricao no card de Favoritos.
+- [x] A descricao permanece mais leve e nao cria layout shift ou dados artificiais.
+- [x] O CTA `WhatsApp` usa texto e icone mais legiveis em mobile, preservando o fluxo real de contato.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema, migration ou env foi criado.
+- [x] ADR relevante atualizado.
+
+### Validacao do complemento
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; usado fallback visual local/anexos.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.150` e `/app/favoritos` respondeu `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para evitar criar/mutar dados no backend remoto configurado localmente.
+- `pnpm check`

@@ -830,3 +830,50 @@ componente existente `PsychologistRelationList`.
   mobile 390x844 confirmou a guarda privada/navegacao em `/app/favoritos` sem sessao. A captura
   autenticada dos cards foi limitada para nao criar dados no backend remoto configurado localmente.
 - `pnpm check`
+
+## Complemento 2026-08-19 - hierarquia tipografica do nome e CTA
+
+### Contexto
+
+Nova captura mobile de `/app/favoritos` mostrou que o nome do psicologo estava com presenca
+visual muito proxima da bio/especialidade e que o label `WhatsApp` do CTA verde continuava pequeno
+para uma acao principal do card. A referencia anexada de cards sociais foi considerada apenas como
+direcao de proporcao e hierarquia; os textos presentes nas imagens nao foram tratados como
+instrucoes de produto.
+
+Builder Quick Copy foi tentado via CLI, mas o ambiente retornou `Not Authenticated to Builder.io`.
+A decisao visual ficou ancorada no fallback auditavel `_product/proto/Favoritos.jpg`, nas imagens
+anexadas pelo usuario e no componente existente `PsychologistRelationList`.
+
+### Decisao
+
+- Aumentar a tipografia mobile-first do nome do psicologo no card de Favoritos e reforcar o peso
+  visual, mantendo truncamento seguro para nomes longos.
+- Ampliar levemente o selo verificado para acompanhar a nova escala do nome.
+- Manter a bio/especialidade em duas linhas, mas com peso normal e escala inferior ao nome para
+  restabelecer a hierarquia de leitura.
+- Ampliar o botao `WhatsApp` em altura, fonte e icone, preservando `PsychologistWhatsAppRedirectButton`,
+  o `aria-label` completo, tracking e URL real de contato.
+
+### Consequencias
+
+- O card passa a comunicar primeiro a identidade do profissional, depois a especialidade/bio e por
+  ultimo a acao de contato, sem alterar dados ou contratos.
+- O CTA fica mais legivel e mais compatível com toque mobile, com pequeno aumento vertical do card.
+- A mudanca e frontend-only: sem backend, Prisma, migrations, endpoint, package, env, filtros,
+  persistencia de favoritos ou contrato de WhatsApp.
+- Rollback seguro por revert do commit; frontend e backend permanecem compativeis entre versoes.
+
+### Validacao
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.150` e `/app/favoritos` respondeu `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou
+  guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
+  evitar criar/mutar dados no backend remoto configurado localmente.
+- `pnpm check`
