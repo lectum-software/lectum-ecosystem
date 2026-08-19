@@ -300,7 +300,7 @@ const FavoriteMedia = ({ psychologist }: { psychologist: PatientRelationPsycholo
       className="object-cover object-top"
       fill
       priority={false}
-      sizes="(min-width: 640px) 108px, 76px"
+      sizes="(min-width: 640px) 124px, 96px"
       src={mediaSrc}
       unoptimized={mediaIsPublic}
     />
@@ -332,9 +332,9 @@ const FavoritePsychologistCard = ({
   return (
     <article
       aria-label={`Abrir perfil de ${displayName}`}
-      className="group relative isolate mx-auto flex min-h-[238px] w-full max-w-none flex-col overflow-hidden rounded-[22px] border border-border bg-surface text-center shadow-lectum-soft transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lectum-soft dark:border-border dark:bg-surface sm:min-h-[308px] sm:rounded-[24px] sm:shadow-lectum-soft"
+      className="group relative isolate mx-auto flex min-h-[242px] w-full max-w-none flex-col overflow-hidden rounded-[22px] border border-border bg-surface text-center shadow-lectum-soft transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lectum-soft dark:border-border dark:bg-surface sm:min-h-[318px] sm:rounded-[24px] sm:shadow-lectum-soft"
     >
-      <div className="relative h-[58px] w-full overflow-hidden bg-primary-soft sm:h-[86px]">
+      <div className="relative h-[68px] w-full overflow-hidden bg-primary-soft sm:h-[92px]">
         <FavoriteCoverMedia psychologist={psychologist} />
         <span
           className="absolute inset-0 bg-gradient-to-b from-media-background/5 to-media-background/10"
@@ -362,7 +362,7 @@ const FavoritePsychologistCard = ({
           className="grid min-h-0 content-start justify-items-center text-center no-underline hover:no-underline"
           href={route}
         >
-          <div className="relative -mt-8 h-[76px] w-[76px] rounded-full sm:-mt-12 sm:h-[108px] sm:w-[108px]">
+          <div className="relative -mt-10 h-[96px] w-[96px] rounded-full sm:-mt-14 sm:h-[124px] sm:w-[124px]">
             <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-media-foreground bg-surface-muted ring-1 ring-border dark:border-surface dark:ring-border">
               <FavoriteMedia psychologist={psychologist} />
             </div>
@@ -392,9 +392,9 @@ const FavoritePsychologistCard = ({
           </div>
         </Link>
 
-        <div className="mt-auto pt-4 sm:pt-5">
+        <div className="mt-3 sm:mt-4">
           <PsychologistWhatsAppRedirectButton
-            aria-label={`Fale com ${whatsappName} no WhatsApp`}
+            aria-label={`Enviar mensagem pelo WhatsApp para ${displayName}`}
             className="inline-flex min-h-[30px] w-full min-w-0 items-center justify-center gap-1 rounded-[11px] bg-success px-2 py-1.5 text-[10px] font-extrabold leading-none text-primary-foreground transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[34px] sm:gap-1.5 sm:rounded-[13px] sm:px-2.5 sm:py-1.5 sm:text-[11px]"
             psychologist={{
               avatar: psychologist.avatar,
@@ -415,7 +415,7 @@ const FavoritePsychologistCard = ({
           >
             <PsychologistWhatsAppButtonContent
               iconClassName="h-3 w-3 sm:h-3.5 sm:w-3.5"
-              label={`Fale com ${whatsappName}`}
+              label="WhatsApp"
               labelClassName="inline-flex min-w-max shrink-0 items-center self-center !overflow-visible !text-clip text-[10px] font-extrabold leading-none sm:text-[11px]"
             />
           </PsychologistWhatsAppRedirectButton>

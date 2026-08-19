@@ -660,3 +660,46 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke local com `next start`: `/version` retornou 200, `/app/comunidades-seguidas` manteve guarda
   privada com 307 para login sem sessao e `/app/following` manteve 308 para a rota canonica.
 - `pnpm check`
+
+## Complemento 2026-08-19 - avatar maior e CTA compacto em Favoritos
+
+- Pedido direto de produto nesta conversa: reduzir o espaco vazio entre texto e botao nos cards de
+  `/app/favoritos`, aumentar a foto de perfil inspirada na proporcao dos cards de sugestao do
+  Instagram e trocar o texto visivel do botao verde para icone + `WhatsApp`.
+- As imagens anexadas pelo usuario foram usadas somente como referencia visual de proporcao e
+  densidade; textos presentes nelas nao foram tratados como instrucoes de produto.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@latest" auth status` em
+  `frontend/`, mas o ambiente retornou `Not Authenticated to Builder.io`; foi usado o fallback
+  auditavel `_product/proto/Favoritos.jpg` e as imagens anexadas nesta conversa.
+- O card de favorito manteve dados reais, capa real/fallback neutro, avatar real via `next/image`,
+  remocao por coracao, filtros reais e o fluxo/tracking existente de
+  `PsychologistWhatsAppRedirectButton`.
+- O avatar mobile passou de 76px para 96px e o avatar em `sm` passou de 108px para 124px; a capa
+  superior foi ajustada para manter o encaixe visual do avatar maior.
+- O CTA deixou de usar `mt-auto`, aproximando o botao do bloco de nome/bio para eliminar o vazio
+  entre texto e acao.
+- O label visivel do CTA passou de `Fale com {nome}` para `WhatsApp`; o `aria-label` permanece
+  acionavel e explicito: `Enviar mensagem pelo WhatsApp para {nome do psicologo}`.
+- Nao houve alteracao de backend, Prisma, migrations, endpoints, pacotes, filtros, persistencia de
+  favoritos ou contrato de WhatsApp.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Avatar do card de favorito aumentado em mobile-first sem usar `<img>`.
+- [x] Espaco entre texto/bio e botao reduzido sem remover dados reais do card.
+- [x] CTA verde renderiza somente icone + `WhatsApp`, com label acessivel completo.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema ou migration foi criado.
+- [x] ADR relevante atualizado.
+
+### Validacao do complemento
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; usado fallback visual local/anexos.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.149` e `/app/favoritos` retornou `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos` sem sessao, confirmando guarda privada/navegacao mobile. A captura autenticada dos cards nao foi feita para evitar criar/mutar dados em backend remoto configurado no ambiente local.
+- `pnpm check`

@@ -785,3 +785,48 @@ O estado vazio autenticado de `/app/favoritos` estava com distribuicao vertical 
 
 - O estado vazio fica mais denso e legivel na largura mobile de referencia, sem criar componente paralelo nem afetar outras telas.
 - Nao ha mudanca de contrato de API, schema, endpoint, pacote, favoritos persistidos ou tracking.
+
+## Complemento 2026-08-19 - avatar maior e CTA `WhatsApp`
+
+### Contexto
+
+Produto avaliou, a partir de captura mobile de `/app/favoritos`, que os cards ainda exibiam um
+espaco em branco grande entre a bio/especialidade e o botao verde. A referencia visual de comparacao
+foi um card de sugestao do Instagram, usado apenas para proporcao de avatar e densidade, nao como
+fonte de arquitetura ou copy.
+
+Builder Quick Copy nao estava autenticado/acessivel via CLI nesta sessao; a decisao visual foi
+ancorada no fallback auditavel `_product/proto/Favoritos.jpg`, nas imagens anexadas pelo usuario e no
+componente existente `PsychologistRelationList`.
+
+### Decisao
+
+- Manter a estrutura atual do card de favorito, com capa dedicada/fallback neutro, avatar real via
+  `next/image`, coracao de remocao, bio derivada de dados reais e CTA real de WhatsApp.
+- Aumentar o avatar do card para 96px no mobile e 124px a partir de `sm`, usando a foto como elemento
+  principal do card sem transformar o layout em rede social generica.
+- Ajustar a altura da capa para acomodar o avatar maior e preservar o recorte circular sobreposto.
+- Remover o espacador automatico (`mt-auto`) antes do CTA, aproximando a acao do texto e reduzindo o
+  vazio vertical percebido.
+- Trocar apenas o label visivel do CTA para `WhatsApp`; manter o fluxo/tracking existente de
+  `PsychologistWhatsAppRedirectButton` e adicionar `aria-label` explicito com a acao completa.
+
+### Consequencias
+
+- O card ganha mais presenca humana e melhor aproveitamento vertical na grade mobile de duas colunas.
+- A acao principal fica mais curta e escalavel para nomes longos, sem perder clareza para tecnologia
+  assistiva.
+- Nenhum contrato de API, schema, endpoint, package, filtro, favorito persistido ou tracking foi
+  alterado.
+
+### Validacao
+
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `git diff --check`
+- Smoke local com `next start`: `/version` e `/app/favoritos` responderam `200`; Chrome headless
+  mobile 390x844 confirmou a guarda privada/navegacao em `/app/favoritos` sem sessao. A captura
+  autenticada dos cards foi limitada para nao criar dados no backend remoto configurado localmente.
+- `pnpm check`
