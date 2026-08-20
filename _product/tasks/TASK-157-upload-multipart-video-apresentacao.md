@@ -52,6 +52,14 @@ identificador correlaciona início, partes, conclusão, persistência e abort se
 nome do arquivo, sessão, `UploadId`, key, ETag ou mensagem crua do provider. Rejeições do parser,
 anteriores à leitura da sessão, registram apenas escopo, limite e motivo controlado.
 
+No smoke autenticado da versão `0.1.157`, a iniciação gerou uma sessão válida e o abort posterior
+conseguiu descriptografar a mesma sessão, mas a primeira parte recebeu `upload_session_invalid`. Os
+logs mostraram rejeição sem `traceId`, indicando que a rota de parte não recebeu o token validado.
+A reprodução HTTP local confirmou o contrato legado do package validator: depois de
+`Multer -> validator`, os campos validados ficam em `req.b` e `req.body` é limpo. O controller da
+parte era a única etapa desse fluxo que ainda lia `req.body`; o ajuste passa a consumir `req.b` e
+cobre a sequência real com teste sem mock.
+
 ## Objetivo
 
 Permitir upload autenticado de vídeos de apresentação de até 300 MB por partes pequenas, com
@@ -129,6 +137,10 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
     abort, com whitelist de campos operacionais e classificação controlada de falha.
 14. Manter compatibilidade com sessões criadas antes da observabilidade: `traceId` é opcional na
     leitura e obrigatório apenas para sessões novas, sem invalidar uploads iniciados no rollout.
+15. Consumir `uploadSessionId` e `partNumber` pelo alias validado `req.b` no controller da parte,
+    preservando o contrato do package validator que limpa `req.body` depois da validação.
+16. Diferenciar nos logs internos sessão ausente, token inválido, expiração e divergência de
+    contexto, mantendo para a API o único código público seguro `upload_session_invalid`.
 
 ### Frontend
 
@@ -179,6 +191,10 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
 - [x] Endpoint simples legado continua disponível para compatibilidade.
 - [x] Parser aceita exatamente duas fields e um chunk de 5 MiB, rejeita uma field adicional e
   rejeita chunk que ultrapassa o teto em um byte.
+- [x] Teste HTTP real cobre `Multer -> validator` e confirma que uma sessão longa chega integral em
+  `req.b`, com `partNumber` normalizado, mesmo após `req.body` ser limpo.
+- [x] Controller da parte usa o alias validado `req.b`, evitando transformar sessão presente em
+  string vazia antes da descriptografia.
 - [x] Validador aceita MOV com marca `qt  ` principal/compatível e QuickTime legado plausível, mas
   continua rejeitando HEIC, `ftyp` malformado e átomo genérico isolado.
 - [x] Sessão inválida, tamanho incorreto da parte e conteúdo incompatível retornam códigos públicos
@@ -211,7 +227,8 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
 - `pnpm --dir backend check`: aprovado, incluindo testes dos fallbacks/overrides das 13 envs e do
   particionamento de 250 MiB em 50 partes, além da regressão real do parser multipart para os
   thresholds de partes e bytes, das variantes ISO BMFF/QuickTime aceitas e rejeitadas e da whitelist
-  de observabilidade multipart.
+  de observabilidade multipart. O teste também executa `Multer -> validator` e verifica a sessão
+  integral no alias `req.b` consumido pelo controller.
 - `pnpm --dir backend build`: aprovado.
 - `pnpm --dir frontend check`: aprovado sem warning de Biome/ESLint/TypeScript.
 - `pnpm --dir frontend build`: aprovado, incluindo `/app/profissional/perfil/configurar`.

@@ -12,6 +12,7 @@ import {
   isSafeMultipartTraceId,
   logMultipartUpload,
   type MultipartUploadLogEvent,
+  type MultipartUploadLogReason,
 } from "./multipart-logging";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "./s3";
 
@@ -174,16 +175,22 @@ const readSession = (
   context: MultipartContext,
   operation: MultipartSessionOperation,
 ) => {
-  const payload = decryptPayload(sessionId);
-  const validPayload = isSessionPayload(payload);
-
-  if (!validPayload || !isFresh(payload) || !contextMatches(payload, context)) {
+  const rejectSession = (reason: MultipartUploadLogReason, traceId?: string): never => {
     logMultipartUpload(sessionRejectionEvent[operation], {
-      reason: "session",
+      reason,
       scope: context.scope,
-      traceId: validPayload ? payload.traceId : undefined,
+      traceId,
     });
     throw new PublicMultipartValidationError("session");
+  };
+
+  if (!sessionId) return rejectSession("session_missing");
+
+  const payload = decryptPayload(sessionId);
+  if (!isSessionPayload(payload)) return rejectSession("session_invalid");
+  if (!isFresh(payload)) return rejectSession("session_expired", payload.traceId);
+  if (!contextMatches(payload, context)) {
+    return rejectSession("session_context", payload.traceId);
   }
 
   return payload;

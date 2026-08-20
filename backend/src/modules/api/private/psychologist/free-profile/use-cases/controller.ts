@@ -31,7 +31,7 @@ export const uploadProfileVideoMultipartPart = async (req: Request, res: Respons
   try {
     const resolve = await uploadProfileVideoMultipartPartService({
       auth: req.auth,
-      b: req.body as Parameters<typeof uploadProfileVideoMultipartPartService>[0]["b"],
+      b: req.b as Parameters<typeof uploadProfileVideoMultipartPartService>[0]["b"],
       file: req.file,
     });
     return send(res, resolve);

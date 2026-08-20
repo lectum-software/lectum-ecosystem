@@ -29,6 +29,11 @@ Com homologação publicada, novos erros precisam ser localizáveis pelo operado
 container sem aumentar a exposição de dados. O identificador de usuário, o token da sessão, os IDs
 do R2 e mensagens cruas do SDK não podem ser usados como correlação.
 
+O primeiro smoke com essa observabilidade mostrou iniciação e abort bem-sucedidos para o mesmo
+`traceId`, enquanto a parte era rejeitada como sessão inválida sem correlação. A causa não estava no
+R2 nem na criptografia: o package validator move campos aceitos para `req.b` e limpa `req.body`, mas
+o controller da parte ainda montava o DTO a partir de `req.body`.
+
 ## Decisão
 
 - Definir 300 MB como limite de produto para o vídeo de apresentação, suficiente para o arquivo de
@@ -72,6 +77,11 @@ do R2 e mensagens cruas do SDK não podem ser usados como correlação.
   Propriedades extras são descartadas mesmo se um chamador contornar a tipagem.
 - Nunca registrar usuário, filename, token de sessão/parte, bucket/objeto, `UploadId`, key, ETag,
   conteúdo binário, credencial, erro bruto, mensagem ou stack do provider.
+- Ler `uploadSessionId` e `partNumber` de `req.b` depois do validator. Não adicionar fallback para
+  `req.body`, porque isso contornaria a sanitização/normalização que constitui o contrato vigente.
+- Classificar internamente a rejeição de sessão como `session_missing`, `session_invalid`,
+  `session_expired` ou `session_context`; todas continuam retornando o mesmo erro público seguro e
+  nenhuma classificação inclui o token ou a identidade do usuário.
 - Configurar `fileSize`, `fieldSize` e `parts` internos uma unidade acima do máximo inclusivo do
   produto. Busboy sinaliza esses thresholds ao alcançá-los; a compensação aceita exatamente o teto
   declarado e continua rejeitando o primeiro byte ou parte excedente.
@@ -102,6 +112,9 @@ do R2 e mensagens cruas do SDK não podem ser usados como correlação.
   limitado pela Cloudflare/reverse proxy; mídia grande deve usar um fluxo multipart.
 - A semântica inclusiva fica coberta por teste HTTP multipart real, sem mock: duas fields e um chunk
   de 5 MiB são aceitos, enquanto uma field ou um byte adicional são rejeitados.
+- A mesma regressão HTTP cobre a cadeia `Multer -> validator`: uma sessão longa permanece integral
+  em `req.b`, `partNumber` é convertido para número e `req.body` fica vazio como previsto. Isso
+  impede o controller de voltar a depender do corpo bruto.
 - MOVs com `qt  ` em `major_brand` ou `compatible_brands`, `ftyp` após preenchimento e cabeçalhos
   QuickTime legados ficam cobertos por regressões; HEIC, caixa malformada e preenchimento genérico
   isolado permanecem rejeitados.
