@@ -539,3 +539,32 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm version:bump` para `0.1.81`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-20 - proporcao do selo e metadata profissional
+
+### Contexto
+
+O screenshot enviado pelo usuario em 2026-08-20 mostrou que, na resposta profissional destacada do feed, o selo verificado competia com o nome do psicologo e a linha `Psicologo • tempo` parecia pesada demais para a hierarquia secundaria.
+
+Builder/Quick Copy nao estava autenticado neste ambiente (`npx "@builder.io/dev-tools@latest" auth status` retornou `Not Authenticated to Builder.io`), entao a referencia visual usada foi o screenshot do usuario junto das imagens locais `_product/proto/Feed Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`.
+
+### Criterios de aceite do complemento
+
+- [x] O selo verificado em autoria profissional de comunidade fica levemente menor que antes, sem trocar o componente `VerifiedBadgeIcon`.
+- [x] O espacamento horizontal entre nome do psicologo e selo evita a sensacao de selo colado ao texto.
+- [x] A linha `Psicologo • tempo` fica visualmente secundaria, com menor peso, preservando tamanho e contraste tokenizado.
+- [x] O ajuste cobre o preview de resposta profissional destacada e o header de autoria compartilhado dos cards de comunidade.
+- [x] O ajuste permanece frontend-only, sem schema, migration, endpoint, package novo ou env nova.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write -- "src/components/community/community-post-card-reply-preview.tsx" "src/components/community/community-post-card.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` antes do bump em `0.1.152`.
+- [x] `pnpm version:bump` para `0.1.153`.
+- [x] `pnpm check:version`
+- [x] `pnpm --dir frontend build` apos o bump em `0.1.153`.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] Browser local mobile-first no frontend buildado em `http://127.0.0.1:3062`: `/version` respondeu `0.1.153`, `/app/comunidades/feed` respondeu HTTP 200, e Chrome headless mobile 390x844 abriu a rota.
