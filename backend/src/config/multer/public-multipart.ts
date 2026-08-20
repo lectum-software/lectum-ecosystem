@@ -47,10 +47,20 @@ export type PublicMultipartPartReference = {
   partToken?: string;
 };
 
+export type PublicMultipartValidationReason =
+  | "file_signature"
+  | "part_size"
+  | "parts"
+  | "request"
+  | "session";
+
 export class PublicMultipartValidationError extends Error {
-  constructor() {
+  public readonly reason: PublicMultipartValidationReason;
+
+  constructor(reason: PublicMultipartValidationReason = "request") {
     super("PUBLIC_MULTIPART_INVALID");
     this.name = "PublicMultipartValidationError";
+    this.reason = reason;
   }
 }
 
@@ -146,7 +156,7 @@ const readSession = (sessionId: string, context: MultipartContext) => {
   const payload = decryptPayload(sessionId);
 
   if (!isSessionPayload(payload) || !isFresh(payload) || !contextMatches(payload, context)) {
-    throw new PublicMultipartValidationError();
+    throw new PublicMultipartValidationError("session");
   }
 
   return payload;
@@ -182,7 +192,7 @@ const toCompletedParts = (
 ) => {
   const expectedPartCount = getPublicMultipartPartCount(session.size, session.chunkSize);
   if (parts.length !== expectedPartCount || expectedPartCount > PUBLIC_MULTIPART_MAX_PARTS) {
-    throw new PublicMultipartValidationError();
+    throw new PublicMultipartValidationError("parts");
   }
 
   const verifiedParts = parts.map((reference) => {
@@ -195,18 +205,20 @@ const toCompletedParts = (
       part.key !== session.key ||
       part.exp !== session.exp
     ) {
-      throw new PublicMultipartValidationError();
+      throw new PublicMultipartValidationError("parts");
     }
 
     return part;
   });
 
   const uniquePartNumbers = new Set(verifiedParts.map((part) => part.partNumber));
-  if (uniquePartNumbers.size !== expectedPartCount) throw new PublicMultipartValidationError();
+  if (uniquePartNumbers.size !== expectedPartCount) {
+    throw new PublicMultipartValidationError("parts");
+  }
 
   const sortedParts = [...verifiedParts].sort((left, right) => left.partNumber - right.partNumber);
   if (sortedParts.some((part, index) => part.partNumber !== index + 1)) {
-    throw new PublicMultipartValidationError();
+    throw new PublicMultipartValidationError("parts");
   }
 
   return sortedParts.map(
@@ -228,7 +240,7 @@ export const createPublicMultipartUpload = async (
 
   const partCount = getPublicMultipartPartCount(input.size);
   if (partCount < 1 || partCount > PUBLIC_MULTIPART_MAX_PARTS) {
-    throw new PublicMultipartValidationError();
+    throw new PublicMultipartValidationError("request");
   }
 
   try {
@@ -280,14 +292,14 @@ export const uploadPublicMultipartPart = async (
   );
 
   if (!expectedSize || input.chunk.length !== expectedSize) {
-    throw new PublicMultipartValidationError();
+    throw new PublicMultipartValidationError("part_size");
   }
   if (
     input.validateFirstPartSignature &&
     input.partNumber === 1 &&
     !matchesDeclaredFileType(input.chunk, session.mimeType)
   ) {
-    throw new PublicMultipartValidationError();
+    throw new PublicMultipartValidationError("file_signature");
   }
 
   try {

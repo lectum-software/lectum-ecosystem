@@ -36,6 +36,21 @@ const invalidUpload = () => ({
   ...error("upload_error", {}),
 });
 
+const invalidUploadSession = () => ({
+  status: 400,
+  ...error("upload_session_invalid", {}),
+});
+
+const invalidUploadChunk = () => ({
+  status: 400,
+  ...error("upload_chunk_invalid", {}),
+});
+
+const invalidVideoContent = () => ({
+  status: 400,
+  ...error("upload_file_content_invalid", {}),
+});
+
 const uploadUnavailable = () => ({
   status: 503,
   success: false as const,
@@ -63,7 +78,12 @@ const multipartContext = (userId: string) => ({
 });
 
 const knownMultipartFailure = (uploadError: unknown) => {
-  if (uploadError instanceof PublicMultipartValidationError) return invalidUpload();
+  if (uploadError instanceof PublicMultipartValidationError) {
+    if (uploadError.reason === "session") return invalidUploadSession();
+    if (uploadError.reason === "part_size") return invalidUploadChunk();
+    if (uploadError.reason === "file_signature") return invalidVideoContent();
+    return invalidUpload();
+  }
   if (uploadError instanceof PublicMultipartInfrastructureError) return uploadUnavailable();
   return null;
 };

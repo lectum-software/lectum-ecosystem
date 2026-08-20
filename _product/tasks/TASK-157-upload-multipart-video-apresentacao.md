@@ -36,6 +36,15 @@ semântica atingia um arquivo exatamente igual ao teto de `fileSize`. O ajuste p
 limites públicos inclusivos e configura os thresholds internos uma unidade acima, sem ampliar o
 máximo efetivamente aceito.
 
+No segundo smoke, já na versão `0.1.155`, o DevTools confirmou o contrato exato da request: somente
+`uploadSessionId`, `partNumber=1` e o binário de um arquivo `.mov`. Isso eliminou nome de field e
+quantidade de partes como causa. A validação binária restante considerava apenas `major_brand` na
+posição fixa do primeiro `ftyp`; MOV/QuickTime válido também pode declarar compatibilidade em
+`compatible_brands`, posicionar `ftyp` após átomos de preenchimento ou, em arquivos legados, não
+possuir `ftyp`. O ajuste passa a interpretar as caixas ISO BMFF necessárias, mantém HEIC e estruturas
+malformadas rejeitados e retorna códigos públicos distintos para sessão, tamanho de parte e conteúdo,
+sem revelar token, key, ETag ou detalhe do R2.
+
 ## Objetivo
 
 Permitir upload autenticado de vídeos de apresentação de até 300 MB por partes pequenas, com
@@ -105,6 +114,10 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
    novo objeto recém-criado em best-effort, sem tocar em mídia anterior.
 10. Tratar os thresholds exclusivos do Busboy/Multer sem rejeitar a quantidade exata de partes nem
     um arquivo exatamente no limite anunciado; continuar rejeitando uma parte/byte adicional.
+11. Interpretar `major_brand` e `compatible_brands`, localizar `ftyp` após átomos de preenchimento e
+    reconhecer somente átomos QuickTime legados plausíveis quando `ftyp` estiver ausente.
+12. Diferenciar rejeição de sessão, tamanho de parte e assinatura em códigos/mensagens públicas
+    acionáveis, sem expor a razão criptográfica ou detalhes do storage.
 
 ### Frontend
 
@@ -155,6 +168,10 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
 - [x] Endpoint simples legado continua disponível para compatibilidade.
 - [x] Parser aceita exatamente duas fields e um chunk de 5 MiB, rejeita uma field adicional e
   rejeita chunk que ultrapassa o teto em um byte.
+- [x] Validador aceita MOV com marca `qt  ` principal/compatível e QuickTime legado plausível, mas
+  continua rejeitando HEIC, `ftyp` malformado e átomo genérico isolado.
+- [x] Sessão inválida, tamanho incorreto da parte e conteúdo incompatível retornam códigos públicos
+  distintos e seguros para orientar uma nova tentativa.
 - [x] Todos os 11 endpoints binários baseados em Multer usam limite próprio centralizado e as 13
   envs (incluindo totais multipart) preservam fallback seguro quando não configuradas.
 - [x] Nenhum detalhe técnico de Cloudflare/R2, segredo ou identificador interno aparece em UI/API.
@@ -166,13 +183,17 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
 
 - Cloudflare 413: `https://developers.cloudflare.com/support/troubleshooting/http-status-codes/4xx-client-error/error-413/`.
 - R2 uploads: `https://developers.cloudflare.com/r2/objects/upload-objects/`.
+- Apple QuickTime `ftyp`:
+  `https://developer.apple.com/documentation/quicktime-file-format/file_type_compatibility_atom`.
+- Registro oficial de marcas ISO BMFF: `https://mp4ra.org/registered-types/brands`.
+- W3C ISO BMFF: `https://www.w3.org/TR/mse-byte-stream-format-isobmff/`.
 - Padrão interno: `adrs/0452-upload-multipart-midia-respostas.md`.
 
 ## Validação executada
 
 - `pnpm --dir backend check`: aprovado, incluindo testes dos fallbacks/overrides das 13 envs e do
   particionamento de 250 MiB em 50 partes, além da regressão real do parser multipart para os
-  thresholds de partes e bytes.
+  thresholds de partes e bytes e das variantes ISO BMFF/QuickTime aceitas e rejeitadas.
 - `pnpm --dir backend build`: aprovado.
 - `pnpm --dir frontend check`: aprovado sem warning de Biome/ESLint/TypeScript.
 - `pnpm --dir frontend build`: aprovado, incluindo `/app/profissional/perfil/configurar`.
@@ -183,3 +204,6 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
   disponível neste cliente, limitação registrada sem substituir a validação por mock.
 - Upload real de 250 MB em homologação fica como smoke operacional do usuário após o deploy; caso um
   chunk de 5 MiB ainda retorne `413`, será necessária inspeção manual da conta Cloudflare de homolog.
+- O payload real informado no segundo smoke continha somente as duas fields esperadas e um chunk
+  `.mov`; o vídeo completo não foi copiado para o workspace e deve ser reenviado em sessão nova após
+  o deploy, pois sessões publicadas em conversa não devem ser reutilizadas.

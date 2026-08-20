@@ -19,6 +19,12 @@ ponto e ainda ampliaria pressão de memória, timeout e banda no processo Node.
 O R2 suporta multipart e recomenda esse método para vídeos/arquivos grandes. A Lectum já usa chunks
 de 5 MiB no upload de mídia de respostas, com sucesso real registrado na ADR-0452.
 
+Após corrigir os thresholds do parser, uma request real `.mov` ainda foi rejeitada no primeiro
+chunk. O payload observado continha exatamente as duas fields e o arquivo esperados. A inspeção de
+assinatura era restrita a um `ftyp` no início do arquivo e somente à marca principal; o formato
+QuickTime permite indicar compatibilidade também na lista de marcas e arquivos legados podem omitir
+essa caixa.
+
 ## Decisão
 
 - Definir 300 MB como limite de produto para o vídeo de apresentação, suficiente para o arquivo de
@@ -39,6 +45,16 @@ de 5 MiB no upload de mídia de respostas, com sucesso real registrado na ADR-04
   escopo e perfil. Nenhum `UploadId`, key interna ou ETag do provider é exposto diretamente.
 - Exigir tamanho exato de cada parte a partir do tamanho declarado, validar assinatura do primeiro
   chunk e exigir todas as partes, na ordem, antes da conclusão.
+- Para ISO BMFF/QuickTime, ler a estrutura da caixa `ftyp`, considerar marca principal e marcas
+  compatíveis e permitir sua localização após no máximo oito átomos de preenchimento dentro dos
+  primeiros 4 KiB. Na ausência de `ftyp`, aceitar como `video/quicktime` somente cabeçalhos de átomos
+  legados plausíveis (`mdat`, `moov`, `pnot` ou `wide`); prefixos genéricos isolados não bastam.
+- Não classificar QuickTime legado como MP4 e continuar recusando marcas de imagem, `ftyp` truncado
+  ou malformado. Essa validação é uma barreira de conteúdo complementar ao MIME/extensão, não uma
+  análise ou transcodificação integral do vídeo.
+- Manter a razão interna da rejeição tipada e converter sessão, tamanho de parte e assinatura em
+  códigos públicos distintos, traduzidos e acionáveis. A resposta não revela token, `UploadId`, key,
+  ETag, erro criptográfico ou mensagem do R2.
 - Configurar `fileSize`, `fieldSize` e `parts` internos uma unidade acima do máximo inclusivo do
   produto. Busboy sinaliza esses thresholds ao alcançá-los; a compensação aceita exatamente o teto
   declarado e continua rejeitando o primeiro byte ou parte excedente.
@@ -69,6 +85,9 @@ de 5 MiB no upload de mídia de respostas, com sucesso real registrado na ADR-04
   limitado pela Cloudflare/reverse proxy; mídia grande deve usar um fluxo multipart.
 - A semântica inclusiva fica coberta por teste HTTP multipart real, sem mock: duas fields e um chunk
   de 5 MiB são aceitos, enquanto uma field ou um byte adicional são rejeitados.
+- MOVs com `qt  ` em `major_brand` ou `compatible_brands`, `ftyp` após preenchimento e cabeçalhos
+  QuickTime legados ficam cobertos por regressões; HEIC, caixa malformada e preenchimento genérico
+  isolado permanecem rejeitados.
 
 ## Rollout e rollback
 
@@ -86,4 +105,10 @@ de 5 MiB no upload de mídia de respostas, com sucesso real registrado na ADR-04
   `https://developers.cloudflare.com/support/troubleshooting/http-status-codes/4xx-client-error/error-413/`.
 - Cloudflare R2 multipart:
   `https://developers.cloudflare.com/r2/objects/upload-objects/`.
+- Apple QuickTime File Format — File type compatibility atom:
+  `https://developer.apple.com/documentation/quicktime-file-format/file_type_compatibility_atom`.
+- MP4 Registration Authority — marcas registradas:
+  `https://mp4ra.org/registered-types/brands`.
+- W3C ISO BMFF byte stream format:
+  `https://www.w3.org/TR/mse-byte-stream-format-isobmff/`.
 - ADR-0452: upload multipart de mídia grande em respostas.
