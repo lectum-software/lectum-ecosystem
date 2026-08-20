@@ -395,7 +395,7 @@ const FavoritePsychologistCard = ({
         <div className="mt-3 sm:mt-4">
           <PsychologistWhatsAppRedirectButton
             aria-label={`Enviar mensagem pelo WhatsApp para ${displayName}`}
-            className="inline-flex min-h-[36px] w-full min-w-0 items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 py-2 text-[13px] font-extrabold leading-none text-primary-foreground transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[38px] sm:rounded-[13px] sm:px-3 sm:text-sm"
+            className="inline-flex min-h-[36px] w-full min-w-0 items-center justify-center gap-1.5 rounded-[12px] bg-success px-2.5 py-2 text-xs font-bold leading-none text-primary-foreground transition-colors hover:bg-success/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-success/45 sm:min-h-[38px] sm:rounded-[13px] sm:px-3 sm:text-[13px]"
             psychologist={{
               avatar: psychologist.avatar,
               crp: psychologist.crp,
@@ -416,7 +416,7 @@ const FavoritePsychologistCard = ({
             <PsychologistWhatsAppButtonContent
               iconClassName="h-4 w-4 sm:h-[17px] sm:w-[17px]"
               label="WhatsApp"
-              labelClassName="inline-flex min-w-max shrink-0 items-center self-center !overflow-visible !text-clip text-[13px] font-extrabold leading-none sm:text-sm"
+              labelClassName="inline-flex min-w-max shrink-0 items-center self-center !overflow-visible !text-clip text-xs font-bold leading-none sm:text-[13px]"
             />
           </PsychologistWhatsAppRedirectButton>
         </div>

@@ -909,3 +909,34 @@ acessivel via CLI nesta sessao, entao a decisao foi ancorada no fallback auditav
 - A alteracao permanece local ao frontend de Favoritos e nao altera backend, Prisma, migrations,
   endpoints, packages, envs, filtros, favoritos persistidos ou tracking de WhatsApp.
 - Rollback seguro por revert do commit; frontend e backend continuam compativeis entre versoes.
+
+## Complemento 2026-08-20 - peso tipografico menor no CTA WhatsApp
+
+### Contexto
+
+Nova captura mobile de `/app/favoritos` mostrou que o texto visivel `WhatsApp` no botao verde passou
+a competir visualmente com o nome do psicologo, ficando grande/pesado demais para a escala compacta
+do card. O pedido de produto foi reduzir a fonte textual do CTA sem diminuir a area de toque.
+
+A imagem anexada pelo usuario foi tratada apenas como evidencia visual de escala; textos e demais
+elementos presentes nela nao foram usados como instrucoes de produto. Builder Quick Copy retornou
+`Not Authenticated to Builder.io`, entao a decisao foi ancorada no fallback auditavel
+`_product/proto/Favoritos.jpg`, na captura anexada e no componente existente
+`PsychologistRelationList`.
+
+### Decisao
+
+- Manter o botao verde e o componente `PsychologistWhatsAppRedirectButton`, preservando URL real,
+  tracking e `aria-label` completo.
+- Reduzir somente o peso/escala tipografica do label visivel: de `13px/extrabold` para
+  `text-xs/font-bold` no mobile e de `text-sm` para `13px` no breakpoint `sm`.
+- Preservar altura minima, padding, icone e area de toque para nao reduzir acessibilidade ou
+  conversao.
+
+### Consequencias
+
+- A hierarquia volta a priorizar avatar, nome e especialidade antes da acao de WhatsApp.
+- O CTA continua claro e acionavel, mas com menor dominancia visual dentro do card de duas colunas.
+- A mudanca e frontend-only: sem backend, Prisma, migrations, endpoint, package, env, filtros,
+  persistencia de favoritos ou contrato de WhatsApp.
+- Rollback seguro por revert do commit; frontend e backend permanecem compativeis entre versoes.

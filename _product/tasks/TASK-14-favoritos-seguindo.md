@@ -794,3 +794,46 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou
   guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
   evitar criar/mutar dados reais no backend remoto configurado localmente.
+
+## Complemento 2026-08-20 - CTA WhatsApp menos pesado nos cards de Favoritos
+
+- Pedido direto de produto nesta conversa: reduzir a presenca visual do texto `WhatsApp` no botao
+  verde dos cards de `/app/favoritos`, porque a fonte textual estava grande em relacao ao restante
+  do card.
+- A imagem anexada pelo usuario foi usada somente como evidencia visual de escala do CTA; textos e
+  demais elementos presentes na captura nao foram tratados como instrucoes de produto alem do pedido
+  explicito.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@latest" auth status` em
+  `frontend/`, mas retornou `Not Authenticated to Builder.io`; foi usado o fallback auditavel
+  `_product/proto/Favoritos.jpg` e a captura anexada.
+- Frontend: o label do CTA `WhatsApp` passou de `13px/extrabold` para `text-xs/font-bold` no mobile
+  e de `text-sm` para `13px` em `sm`, mantendo a altura do botao, o icone, o `aria-label` completo e
+  o fluxo real `PsychologistWhatsAppRedirectButton`.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, packages, envs, filtros reais,
+  favoritos persistidos ou tracking de WhatsApp.
+- Impacto de deploy: alteracao frontend-only, compativel com backend em versoes diferentes. Rollback
+  seguro por revert do commit. Nenhuma env nova e nenhum ALERTA DE DEPLOY.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] O texto visivel `WhatsApp` do CTA fica menos pesado no card mobile-first.
+- [x] A altura do botao e a area de toque foram preservadas.
+- [x] O fluxo real de WhatsApp, tracking e `aria-label` completo foram preservados.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, schema, migration ou env foi criado.
+- [x] ADR relevante atualizado.
+
+### Validacao do ajuste
+
+- `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; usado fallback visual local/anexo.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm version:bump` atualizou os quatro manifests de `0.1.151` para `0.1.152`.
+- `pnpm check:version`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.152` e
+  `/app/favoritos` retornou `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou
+  guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
+  evitar criar/mutar dados reais no backend remoto configurado localmente.
