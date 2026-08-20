@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID } from "node:crypto";
 import {
   AbortMultipartUploadCommand,
   type CompletedPart,
@@ -8,6 +8,11 @@ import {
 } from "@aws-sdk/client-s3";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { matchesDeclaredFileType } from "./file-signature";
+import {
+  isSafeMultipartTraceId,
+  logMultipartUpload,
+  type MultipartUploadLogEvent,
+} from "./multipart-logging";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "./s3";
 
 export const PUBLIC_MULTIPART_CHUNK_BYTES = 5 * 1024 * 1024;
@@ -29,6 +34,7 @@ type MultipartSessionPayload = MultipartContext & {
   kind: "public_r2_multipart_session";
   mimeType: string;
   size: number;
+  traceId?: string;
   uploadId: string;
 };
 
@@ -71,6 +77,16 @@ export class PublicMultipartInfrastructureError extends Error {
   }
 }
 
+type MultipartSessionOperation = "abort" | "complete" | "part";
+
+const sessionRejectionEvent: Record<MultipartSessionOperation, MultipartUploadLogEvent> = {
+  abort: "ABORT_REJECTED",
+  complete: "COMPLETE_REJECTED",
+  part: "PART_REJECTED",
+};
+
+const elapsedSince = (startedAt: number) => Math.max(0, Date.now() - startedAt);
+
 const isObjectPayload = (payload: unknown): payload is Record<string, unknown> =>
   typeof payload === "object" && payload !== null && !Array.isArray(payload);
 
@@ -88,7 +104,8 @@ const isSessionPayload = (payload: unknown): payload is MultipartSessionPayload 
   typeof payload.key === "string" &&
   typeof payload.mimeType === "string" &&
   typeof payload.size === "number" &&
-  typeof payload.chunkSize === "number";
+  typeof payload.chunkSize === "number" &&
+  (payload.traceId === undefined || isSafeMultipartTraceId(payload.traceId));
 
 const isPartPayload = (payload: unknown): payload is MultipartPartPayload =>
   isObjectPayload(payload) &&
@@ -152,10 +169,20 @@ const contextMatches = (payload: MultipartContext, expected: MultipartContext) =
   payload.scope === expected.scope &&
   payload.userId === expected.userId;
 
-const readSession = (sessionId: string, context: MultipartContext) => {
+const readSession = (
+  sessionId: string,
+  context: MultipartContext,
+  operation: MultipartSessionOperation,
+) => {
   const payload = decryptPayload(sessionId);
+  const validPayload = isSessionPayload(payload);
 
-  if (!isSessionPayload(payload) || !isFresh(payload) || !contextMatches(payload, context)) {
+  if (!validPayload || !isFresh(payload) || !contextMatches(payload, context)) {
+    logMultipartUpload(sessionRejectionEvent[operation], {
+      reason: "session",
+      scope: context.scope,
+      traceId: validPayload ? payload.traceId : undefined,
+    });
     throw new PublicMultipartValidationError("session");
   }
 
@@ -236,11 +263,38 @@ export const createPublicMultipartUpload = async (
     ttlSeconds: number;
   },
 ) => {
-  if (!isR2Configured()) throw infrastructureFailure();
-
+  const traceId = randomUUID();
+  const startedAt = Date.now();
   const partCount = getPublicMultipartPartCount(input.size);
+  logMultipartUpload("INITIATE_START", {
+    chunkSizeBytes: PUBLIC_MULTIPART_CHUNK_BYTES,
+    mimeType: input.mimeType,
+    partCount,
+    scope: input.scope,
+    sizeBytes: input.size,
+    traceId,
+  });
+
   if (partCount < 1 || partCount > PUBLIC_MULTIPART_MAX_PARTS) {
+    logMultipartUpload("INITIATE_REJECTED", {
+      elapsedMs: elapsedSince(startedAt),
+      partCount,
+      reason: "request",
+      scope: input.scope,
+      sizeBytes: input.size,
+      traceId,
+    });
     throw new PublicMultipartValidationError("request");
+  }
+
+  if (!isR2Configured()) {
+    logMultipartUpload("INITIATE_FAILED", {
+      elapsedMs: elapsedSince(startedAt),
+      reason: "storage_unavailable",
+      scope: input.scope,
+      traceId,
+    });
+    throw infrastructureFailure();
   }
 
   try {
@@ -265,13 +319,33 @@ export const createPublicMultipartUpload = async (
       resourceId: input.resourceId,
       scope: input.scope,
       size: input.size,
+      traceId,
       uploadId: started.UploadId,
       userId: input.userId,
+    });
+
+    logMultipartUpload("INITIATE_SUCCESS", {
+      chunkSizeBytes: PUBLIC_MULTIPART_CHUNK_BYTES,
+      elapsedMs: elapsedSince(startedAt),
+      partCount,
+      scope: input.scope,
+      sizeBytes: input.size,
+      traceId,
+      ttlSeconds,
     });
 
     return { chunkSize: PUBLIC_MULTIPART_CHUNK_BYTES, sessionId };
   } catch (uploadError) {
     if (uploadError instanceof PublicMultipartValidationError) throw uploadError;
+    logMultipartUpload("INITIATE_FAILED", {
+      elapsedMs: elapsedSince(startedAt),
+      reason:
+        uploadError instanceof PublicMultipartInfrastructureError
+          ? "storage_response"
+          : "infrastructure",
+      scope: input.scope,
+      traceId,
+    });
     throw infrastructureFailure();
   }
 };
@@ -284,7 +358,10 @@ export const uploadPublicMultipartPart = async (
     validateFirstPartSignature?: boolean;
   },
 ) => {
-  const session = readSession(input.sessionId, input);
+  const startedAt = Date.now();
+  const session = readSession(input.sessionId, input, "part");
+  const traceId = session.traceId;
+  const partCount = getPublicMultipartPartCount(session.size, session.chunkSize);
   const expectedSize = getPublicMultipartExpectedPartSize(
     session.size,
     input.partNumber,
@@ -292,6 +369,16 @@ export const uploadPublicMultipartPart = async (
   );
 
   if (!expectedSize || input.chunk.length !== expectedSize) {
+    logMultipartUpload("PART_REJECTED", {
+      elapsedMs: elapsedSince(startedAt),
+      expectedBytes: expectedSize || undefined,
+      partCount,
+      partNumber: input.partNumber,
+      reason: "part_size",
+      receivedBytes: input.chunk.length,
+      scope: session.scope,
+      traceId,
+    });
     throw new PublicMultipartValidationError("part_size");
   }
   if (
@@ -299,8 +386,28 @@ export const uploadPublicMultipartPart = async (
     input.partNumber === 1 &&
     !matchesDeclaredFileType(input.chunk, session.mimeType)
   ) {
+    logMultipartUpload("PART_REJECTED", {
+      elapsedMs: elapsedSince(startedAt),
+      expectedBytes: expectedSize,
+      mimeType: session.mimeType,
+      partCount,
+      partNumber: input.partNumber,
+      reason: "file_signature",
+      receivedBytes: input.chunk.length,
+      scope: session.scope,
+      traceId,
+    });
     throw new PublicMultipartValidationError("file_signature");
   }
+
+  logMultipartUpload("PART_START", {
+    expectedBytes: expectedSize,
+    partCount,
+    partNumber: input.partNumber,
+    receivedBytes: input.chunk.length,
+    scope: session.scope,
+    traceId,
+  });
 
   try {
     const uploaded = await S3.send(
@@ -314,6 +421,15 @@ export const uploadPublicMultipartPart = async (
       }),
     );
     if (!uploaded.ETag) throw infrastructureFailure();
+
+    logMultipartUpload("PART_SUCCESS", {
+      elapsedMs: elapsedSince(startedAt),
+      partCount,
+      partNumber: input.partNumber,
+      receivedBytes: input.chunk.length,
+      scope: session.scope,
+      traceId,
+    });
 
     return {
       partId: encryptPayload({
@@ -331,6 +447,18 @@ export const uploadPublicMultipartPart = async (
     };
   } catch (uploadError) {
     if (uploadError instanceof PublicMultipartValidationError) throw uploadError;
+    logMultipartUpload("PART_FAILED", {
+      elapsedMs: elapsedSince(startedAt),
+      partCount,
+      partNumber: input.partNumber,
+      reason:
+        uploadError instanceof PublicMultipartInfrastructureError
+          ? "storage_response"
+          : "infrastructure",
+      receivedBytes: input.chunk.length,
+      scope: session.scope,
+      traceId,
+    });
     throw infrastructureFailure();
   }
 };
@@ -341,8 +469,30 @@ export const completePublicMultipartUpload = async (
     sessionId: string;
   },
 ) => {
-  const session = readSession(input.sessionId, input);
-  const completedParts = toCompletedParts(session, input.parts);
+  const startedAt = Date.now();
+  const session = readSession(input.sessionId, input, "complete");
+  const traceId = session.traceId;
+  let completedParts: CompletedPart[];
+
+  try {
+    completedParts = toCompletedParts(session, input.parts);
+  } catch (uploadError) {
+    logMultipartUpload("COMPLETE_REJECTED", {
+      elapsedMs: elapsedSince(startedAt),
+      partCount: input.parts.length,
+      reason: uploadError instanceof PublicMultipartValidationError ? uploadError.reason : "parts",
+      scope: session.scope,
+      traceId,
+    });
+    throw uploadError;
+  }
+
+  logMultipartUpload("COMPLETE_START", {
+    partCount: completedParts.length,
+    scope: session.scope,
+    sizeBytes: session.size,
+    traceId,
+  });
 
   try {
     await S3.send(
@@ -354,8 +504,28 @@ export const completePublicMultipartUpload = async (
       }),
     );
 
-    return { key: session.key, mimeType: session.mimeType, size: session.size };
+    logMultipartUpload("COMPLETE_SUCCESS", {
+      elapsedMs: elapsedSince(startedAt),
+      partCount: completedParts.length,
+      scope: session.scope,
+      sizeBytes: session.size,
+      traceId,
+    });
+
+    return {
+      key: session.key,
+      mimeType: session.mimeType,
+      size: session.size,
+      traceId,
+    };
   } catch {
+    logMultipartUpload("COMPLETE_FAILED", {
+      elapsedMs: elapsedSince(startedAt),
+      partCount: completedParts.length,
+      reason: "infrastructure",
+      scope: session.scope,
+      traceId,
+    });
     throw infrastructureFailure();
   }
 };
@@ -363,8 +533,23 @@ export const completePublicMultipartUpload = async (
 export const abortPublicMultipartUpload = async (
   input: MultipartContext & { sessionId: string },
 ) => {
-  const session = readSession(input.sessionId, input);
-  if (!isR2Configured()) return;
+  const startedAt = Date.now();
+  const session = readSession(input.sessionId, input, "abort");
+  const traceId = session.traceId;
+  logMultipartUpload("ABORT_START", {
+    scope: session.scope,
+    traceId,
+  });
+
+  if (!isR2Configured()) {
+    logMultipartUpload("ABORT_FAILED", {
+      elapsedMs: elapsedSince(startedAt),
+      reason: "storage_unavailable",
+      scope: session.scope,
+      traceId,
+    });
+    return;
+  }
 
   try {
     await S3.send(
@@ -374,7 +559,18 @@ export const abortPublicMultipartUpload = async (
         UploadId: session.uploadId,
       }),
     );
+    logMultipartUpload("ABORT_SUCCESS", {
+      elapsedMs: elapsedSince(startedAt),
+      scope: session.scope,
+      traceId,
+    });
   } catch {
+    logMultipartUpload("ABORT_FAILED", {
+      elapsedMs: elapsedSince(startedAt),
+      reason: "infrastructure",
+      scope: session.scope,
+      traceId,
+    });
     throw infrastructureFailure();
   }
 };

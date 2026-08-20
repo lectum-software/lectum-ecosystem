@@ -25,6 +25,10 @@ assinatura era restrita a um `ftyp` no início do arquivo e somente à marca pri
 QuickTime permite indicar compatibilidade também na lista de marcas e arquivos legados podem omitir
 essa caixa.
 
+Com homologação publicada, novos erros precisam ser localizáveis pelo operador no terminal do
+container sem aumentar a exposição de dados. O identificador de usuário, o token da sessão, os IDs
+do R2 e mensagens cruas do SDK não podem ser usados como correlação.
+
 ## Decisão
 
 - Definir 300 MB como limite de produto para o vídeo de apresentação, suficiente para o arquivo de
@@ -55,6 +59,19 @@ essa caixa.
 - Manter a razão interna da rejeição tipada e converter sessão, tamanho de parte e assinatura em
   códigos públicos distintos, traduzidos e acionáveis. A resposta não revela token, `UploadId`, key,
   ETag, erro criptográfico ou mensagem do R2.
+- Gerar um UUID aleatório de observabilidade no início e armazená-lo apenas dentro da sessão
+  criptografada. Sessões antigas sem esse campo continuam válidas durante o rollout.
+- Emitir eventos estruturados `UPLOAD_MULTIPART_*` em parser, início, parte, conclusão, persistência
+  e abort. Eventos de sucesso usam `info`, rejeições de contrato usam `warn` e falhas de
+  infraestrutura/persistência usam `error`.
+- Como o parser executa antes da leitura da sessão, suas rejeições não recebem o `traceId`; elas
+  carregam somente escopo, teto de bytes e motivo enumerado. As etapas posteriores permanecem
+  correlacionadas pelo UUID da sessão.
+- Aplicar uma whitelist runtime antes do `console`: somente scope interno, UUID de correlação,
+  MIME normalizado, contagens, número/tamanho de partes, duração e motivo enumerado são permitidos.
+  Propriedades extras são descartadas mesmo se um chamador contornar a tipagem.
+- Nunca registrar usuário, filename, token de sessão/parte, bucket/objeto, `UploadId`, key, ETag,
+  conteúdo binário, credencial, erro bruto, mensagem ou stack do provider.
 - Configurar `fileSize`, `fieldSize` e `parts` internos uma unidade acima do máximo inclusivo do
   produto. Busboy sinaliza esses thresholds ao alcançá-los; a compensação aceita exatamente o teto
   declarado e continua rejeitando o primeiro byte ou parte excedente.
@@ -88,6 +105,10 @@ essa caixa.
 - MOVs com `qt  ` em `major_brand` ou `compatible_brands`, `ftyp` após preenchimento e cabeçalhos
   QuickTime legados ficam cobertos por regressões; HEIC, caixa malformada e preenchimento genérico
   isolado permanecem rejeitados.
+- Um vídeo de 250 MiB gera aproximadamente dois eventos por parte, além de início/conclusão,
+  privilegiando diagnóstico de travamentos e falhas pontuais. O volume é aceito para este fluxo
+  operacional e pode ser agregado em task posterior sem alterar o contrato público.
+- A instrumentação não cria env, package, schema, migration ou dependência de serviço externo.
 
 ## Rollout e rollback
 
@@ -95,6 +116,8 @@ essa caixa.
 - Como o contrato é aditivo, frontend/backend em versões diferentes continuam funcionais para o
   caminho legado; fallback para backend antigo é restrito a arquivos de até 50 MB.
 - Após deploy, validar `/health`, `/ready`, versões e repetir o upload com o vídeo real.
+- No terminal, filtrar por `UPLOAD_MULTIPART` e acompanhar um único `traceId`; a sequência saudável é
+  `INITIATE_SUCCESS`, pares `PART_START`/`PART_SUCCESS`, `COMPLETE_SUCCESS` e `PERSIST_SUCCESS`.
 - Nenhuma ação Cloudflare é esperada para partes de 5 MiB. Se elas ainda retornarem `413`, a conta de
   homologação deverá ser verificada manualmente, pois ela é diferente da conta disponível no projeto.
 - Rollback é somente de código e restaura o comportamento de 50 MB; não exige reversão de dados.

@@ -27,6 +27,7 @@ import {
 const routes = Router();
 const videoMultipartChunkMiddleware = createMultipartChunkMiddleware({
   maxFileSizeMb: UPLOAD_LIMITS.psychologist.videoMultipartChunkMb,
+  scope: "psychologist_profile_video",
 });
 
 routes.get("", show);

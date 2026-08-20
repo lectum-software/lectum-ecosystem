@@ -53,6 +53,7 @@ const routes = Router();
 
 const replyMediaMultipartChunkMiddleware = createMultipartChunkMiddleware({
   maxFileSizeMb: UPLOAD_LIMITS.postReply.multipartChunkMb,
+  scope: "post_reply_media",
 });
 
 routes.get("/mine", privateAuth, listValidator, mine);

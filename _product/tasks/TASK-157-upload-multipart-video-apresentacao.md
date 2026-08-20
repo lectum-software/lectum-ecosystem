@@ -45,6 +45,13 @@ possuir `ftyp`. O ajuste passa a interpretar as caixas ISO BMFF necessárias, ma
 malformadas rejeitados e retorna códigos públicos distintos para sessão, tamanho de parte e conteúdo,
 sem revelar token, key, ETag ou detalhe do R2.
 
+Depois da publicação da versão `0.1.156`, foi solicitada observabilidade operacional para permitir
+acompanhar novos uploads diretamente no terminal do container. O fluxo passa a emitir eventos
+estruturados com um `traceId` aleatório persistido somente dentro da sessão criptografada. O mesmo
+identificador correlaciona início, partes, conclusão, persistência e abort sem registrar usuário,
+nome do arquivo, sessão, `UploadId`, key, ETag ou mensagem crua do provider. Rejeições do parser,
+anteriores à leitura da sessão, registram apenas escopo, limite e motivo controlado.
+
 ## Objetivo
 
 Permitir upload autenticado de vídeos de apresentação de até 300 MB por partes pequenas, com
@@ -118,6 +125,10 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
     reconhecer somente átomos QuickTime legados plausíveis quando `ftyp` estiver ausente.
 12. Diferenciar rejeição de sessão, tamanho de parte e assinatura em códigos/mensagens públicas
     acionáveis, sem expor a razão criptográfica ou detalhes do storage.
+13. Registrar eventos `UPLOAD_MULTIPART_*` para parser, início, cada parte, conclusão, persistência e
+    abort, com whitelist de campos operacionais e classificação controlada de falha.
+14. Manter compatibilidade com sessões criadas antes da observabilidade: `traceId` é opcional na
+    leitura e obrigatório apenas para sessões novas, sem invalidar uploads iniciados no rollout.
 
 ### Frontend
 
@@ -172,6 +183,12 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
   continua rejeitando HEIC, `ftyp` malformado e átomo genérico isolado.
 - [x] Sessão inválida, tamanho incorreto da parte e conteúdo incompatível retornam códigos públicos
   distintos e seguros para orientar uma nova tentativa.
+- [x] Terminal do backend permite correlacionar início, partes, storage e persistência final de um
+  upload novo pelo mesmo `traceId`; falhas anteriores no parser são identificadas por escopo e motivo.
+- [x] Sanitizador de observabilidade descarta campos adicionais, identificador fora do formato,
+  MIME inválido e números inseguros antes de chamar `console`.
+- [x] Logs não contêm usuário, filename, sessão, objeto/bucket, `UploadId`, key, ETag, credencial,
+  conteúdo binário nem mensagem/stack do provider.
 - [x] Todos os 11 endpoints binários baseados em Multer usam limite próprio centralizado e as 13
   envs (incluindo totais multipart) preservam fallback seguro quando não configuradas.
 - [x] Nenhum detalhe técnico de Cloudflare/R2, segredo ou identificador interno aparece em UI/API.
@@ -193,7 +210,8 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
 
 - `pnpm --dir backend check`: aprovado, incluindo testes dos fallbacks/overrides das 13 envs e do
   particionamento de 250 MiB em 50 partes, além da regressão real do parser multipart para os
-  thresholds de partes e bytes e das variantes ISO BMFF/QuickTime aceitas e rejeitadas.
+  thresholds de partes e bytes, das variantes ISO BMFF/QuickTime aceitas e rejeitadas e da whitelist
+  de observabilidade multipart.
 - `pnpm --dir backend build`: aprovado.
 - `pnpm --dir frontend check`: aprovado sem warning de Biome/ESLint/TypeScript.
 - `pnpm --dir frontend build`: aprovado, incluindo `/app/profissional/perfil/configurar`.

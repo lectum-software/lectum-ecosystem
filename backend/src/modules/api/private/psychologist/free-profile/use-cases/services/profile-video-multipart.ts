@@ -1,5 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { UPLOAD_LIMITS } from "@/config/multer/limits";
+import { logMultipartUpload } from "@/config/multer/multipart-logging";
 import {
   abortPublicMultipartUpload,
   completePublicMultipartUpload,
@@ -77,6 +78,8 @@ const multipartContext = (userId: string) => ({
   userId,
 });
 
+const uploadLogContext = { scope: PROFILE_VIDEO_MULTIPART_SCOPE } as const;
+
 const knownMultipartFailure = (uploadError: unknown) => {
   if (uploadError instanceof PublicMultipartValidationError) {
     if (uploadError.reason === "session") return invalidUploadSession();
@@ -92,16 +95,52 @@ export const initiateProfileVideoMultipartUpload = async (
   data: IFreeProfessionalProfileInitiateVideoMultipartDTO,
 ) => {
   const access = await resolveProfileVideoAccess(data.auth);
-  if (!access.allowed) return access.response;
+  if (!access.allowed) {
+    logMultipartUpload("INITIATE_REJECTED", {
+      ...uploadLogContext,
+      reason: "access",
+    });
+    return access.response;
+  }
 
   const mimeType = normalizeMimeType(data.b.mimeType);
   const size = Number(data.b.size);
-  if (!Number.isSafeInteger(size) || size <= 0) return invalidUpload();
-  if (size > PROFILE_VIDEO_MULTIPART_LIMIT_BYTES) return fileLimitExceeded();
-  if (!PROFILE_VIDEO_ALLOWED_MIME_TYPES.has(mimeType)) return unexpectedType(mimeType);
+  if (!Number.isSafeInteger(size) || size <= 0) {
+    logMultipartUpload("INITIATE_REJECTED", {
+      ...uploadLogContext,
+      reason: "request",
+      sizeBytes: size,
+    });
+    return invalidUpload();
+  }
+  if (size > PROFILE_VIDEO_MULTIPART_LIMIT_BYTES) {
+    logMultipartUpload("INITIATE_REJECTED", {
+      ...uploadLogContext,
+      reason: "file_size",
+      sizeBytes: size,
+    });
+    return fileLimitExceeded();
+  }
+  if (!PROFILE_VIDEO_ALLOWED_MIME_TYPES.has(mimeType)) {
+    logMultipartUpload("INITIATE_REJECTED", {
+      ...uploadLogContext,
+      mimeType,
+      reason: "file_type",
+      sizeBytes: size,
+    });
+    return unexpectedType(mimeType);
+  }
 
   const extension = PROFILE_VIDEO_EXTENSION_BY_MIME[mimeType];
-  if (!extension) return invalidUpload();
+  if (!extension) {
+    logMultipartUpload("INITIATE_REJECTED", {
+      ...uploadLogContext,
+      mimeType,
+      reason: "file_type",
+      sizeBytes: size,
+    });
+    return invalidUpload();
+  }
 
   try {
     const session = await createPublicMultipartUpload({
@@ -132,11 +171,22 @@ export const uploadProfileVideoMultipartPart = async (
   data: IFreeProfessionalProfileUploadVideoMultipartPartDTO,
 ) => {
   if (data.auth.role !== "psicologo") {
+    logMultipartUpload("PART_REJECTED", {
+      ...uploadLogContext,
+      reason: "access",
+    });
     return { status: 403, ...error("role_not_authorized", {}) };
   }
 
   const chunk = data.file?.buffer;
-  if (!chunk?.length) return invalidUpload();
+  if (!chunk?.length) {
+    logMultipartUpload("PART_REJECTED", {
+      ...uploadLogContext,
+      partNumber: Number(data.b.partNumber),
+      reason: "missing_chunk",
+    });
+    return invalidUpload();
+  }
 
   try {
     const uploaded = await uploadPublicMultipartPart({
@@ -166,7 +216,13 @@ export const completeProfileVideoMultipartUpload = async (
   data: IFreeProfessionalProfileCompleteVideoMultipartDTO,
 ) => {
   const access = await resolveProfileVideoAccess(data.auth);
-  if (!access.allowed) return access.response;
+  if (!access.allowed) {
+    logMultipartUpload("COMPLETE_REJECTED", {
+      ...uploadLogContext,
+      reason: "access",
+    });
+    return access.response;
+  }
 
   let completed: Awaited<ReturnType<typeof completePublicMultipartUpload>>;
   try {
@@ -182,12 +238,30 @@ export const completeProfileVideoMultipartUpload = async (
   }
 
   const videoUrl = publicFileUrl(completed.key);
+  const persistenceStartedAt = Date.now();
+  logMultipartUpload("PERSIST_START", {
+    ...uploadLogContext,
+    sizeBytes: completed.size,
+    traceId: completed.traceId,
+  });
   try {
     const updated = await access.repository.updateVideo(data.auth.id!, videoUrl);
     if (!updated) {
+      logMultipartUpload("PERSIST_REJECTED", {
+        ...uploadLogContext,
+        elapsedMs: Date.now() - persistenceStartedAt,
+        reason: "persistence",
+        traceId: completed.traceId,
+      });
       await deletePublicProfileMedia(videoUrl);
       return invalidUpload();
     }
+
+    logMultipartUpload("PERSIST_SUCCESS", {
+      ...uploadLogContext,
+      elapsedMs: Date.now() - persistenceStartedAt,
+      traceId: completed.traceId,
+    });
 
     return {
       status: 200,
@@ -198,6 +272,12 @@ export const completeProfileVideoMultipartUpload = async (
       },
     };
   } catch (persistenceError) {
+    logMultipartUpload("PERSIST_FAILED", {
+      ...uploadLogContext,
+      elapsedMs: Date.now() - persistenceStartedAt,
+      reason: "persistence",
+      traceId: completed.traceId,
+    });
     await deletePublicProfileMedia(videoUrl);
     throw persistenceError;
   }
@@ -207,6 +287,10 @@ export const abortProfileVideoMultipartUpload = async (
   data: IFreeProfessionalProfileAbortVideoMultipartDTO,
 ) => {
   if (data.auth.role !== "psicologo") {
+    logMultipartUpload("ABORT_REJECTED", {
+      ...uploadLogContext,
+      reason: "access",
+    });
     return { status: 403, ...error("role_not_authorized", {}) };
   }
 
