@@ -28,6 +28,14 @@ O projeto já possui o padrão de upload multipart server-side em chunks de 5 Mi
 respostas (TASK-26/ADR-0452). Esta task leva o mesmo padrão ao vídeo de apresentação sem quebrar o
 endpoint simples existente.
 
+No primeiro smoke autenticado após a publicação da versão `0.1.154`, a rota de parte respondeu
+`400 upload_error` antes de alcançar o R2. A reprodução local com o mesmo middleware mostrou que o
+Busboy/Multer dispara `partsLimit` quando o contador fica **igual** ao threshold: configurar `3`
+rejeitava justamente as três partes válidas (`uploadSessionId`, `partNumber` e `chunk`). A mesma
+semântica atingia um arquivo exatamente igual ao teto de `fileSize`. O ajuste pós-feedback mantém os
+limites públicos inclusivos e configura os thresholds internos uma unidade acima, sem ampliar o
+máximo efetivamente aceito.
+
 ## Objetivo
 
 Permitir upload autenticado de vídeos de apresentação de até 300 MB por partes pequenas, com
@@ -95,6 +103,8 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
    iniciar e antes de concluir.
 9. Atualizar o banco somente após `CompleteMultipartUpload`; em falha posterior, remover apenas o
    novo objeto recém-criado em best-effort, sem tocar em mídia anterior.
+10. Tratar os thresholds exclusivos do Busboy/Multer sem rejeitar a quantidade exata de partes nem
+    um arquivo exatamente no limite anunciado; continuar rejeitando uma parte/byte adicional.
 
 ### Frontend
 
@@ -143,6 +153,8 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
 - [x] Perfil só recebe o novo `video_url` depois da conclusão real do multipart no R2.
 - [x] Frontend mostra progresso e mantém ações conflitantes desabilitadas durante o envio.
 - [x] Endpoint simples legado continua disponível para compatibilidade.
+- [x] Parser aceita exatamente duas fields e um chunk de 5 MiB, rejeita uma field adicional e
+  rejeita chunk que ultrapassa o teto em um byte.
 - [x] Todos os 11 endpoints binários baseados em Multer usam limite próprio centralizado e as 13
   envs (incluindo totais multipart) preservam fallback seguro quando não configuradas.
 - [x] Nenhum detalhe técnico de Cloudflare/R2, segredo ou identificador interno aparece em UI/API.
@@ -159,7 +171,8 @@ menor limite existente no caminho (Cloudflare, reverse proxy ou ingress), mesmo 
 ## Validação executada
 
 - `pnpm --dir backend check`: aprovado, incluindo testes dos fallbacks/overrides das 13 envs e do
-  particionamento de 250 MiB em 50 partes.
+  particionamento de 250 MiB em 50 partes, além da regressão real do parser multipart para os
+  thresholds de partes e bytes.
 - `pnpm --dir backend build`: aprovado.
 - `pnpm --dir frontend check`: aprovado sem warning de Biome/ESLint/TypeScript.
 - `pnpm --dir frontend build`: aprovado, incluindo `/app/profissional/perfil/configurar`.

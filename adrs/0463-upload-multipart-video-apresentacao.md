@@ -39,6 +39,9 @@ de 5 MiB no upload de mídia de respostas, com sucesso real registrado na ADR-04
   escopo e perfil. Nenhum `UploadId`, key interna ou ETag do provider é exposto diretamente.
 - Exigir tamanho exato de cada parte a partir do tamanho declarado, validar assinatura do primeiro
   chunk e exigir todas as partes, na ordem, antes da conclusão.
+- Configurar `fileSize`, `fieldSize` e `parts` internos uma unidade acima do máximo inclusivo do
+  produto. Busboy sinaliza esses thresholds ao alcançá-los; a compensação aceita exatamente o teto
+  declarado e continua rejeitando o primeiro byte ou parte excedente.
 - Revalidar as regras profissionais no início e na conclusão; a URL só é persistida após o R2
   confirmar o objeto completo.
 - Exibir progresso percentual no frontend e aplicar retry limitado somente a falhas transitórias.
@@ -64,6 +67,8 @@ de 5 MiB no upload de mídia de respostas, com sucesso real registrado na ADR-04
   com fallback, portanto não existe **ALERTA DE DEPLOY** obrigatório nem risco de boot por ausência.
 - A configuração de Multer não substitui limites anteriores ao Express. Upload simples continua
   limitado pela Cloudflare/reverse proxy; mídia grande deve usar um fluxo multipart.
+- A semântica inclusiva fica coberta por teste HTTP multipart real, sem mock: duas fields e um chunk
+  de 5 MiB são aceitos, enquanto uma field ou um byte adicional são rejeitados.
 
 ## Rollout e rollback
 

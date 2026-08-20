@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import multer from "multer";
 import { resolve } from "@/helpers/translate/resolve";
+import { toMulterExclusiveThreshold } from "./limits";
 
 type MultipartChunkMiddlewareOptions = {
   fieldName?: string;
@@ -16,11 +17,11 @@ export const createMultipartChunkMiddleware = ({
   const upload = multer({
     limits: {
       fieldNameSize: 100,
-      fieldSize: 4096,
+      fieldSize: toMulterExclusiveThreshold(4096),
       fields: maxTextFields,
       files: 1,
-      fileSize: maxFileSizeMb * 1024 * 1024,
-      parts: maxTextFields + 1,
+      fileSize: toMulterExclusiveThreshold(maxFileSizeMb * 1024 * 1024),
+      parts: toMulterExclusiveThreshold(maxTextFields + 1),
     },
     storage: multer.memoryStorage(),
   }).single(fieldName);

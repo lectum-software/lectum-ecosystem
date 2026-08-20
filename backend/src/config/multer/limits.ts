@@ -26,6 +26,11 @@ const MULTIPART_LIMIT_MIN_MB = 5;
 const MULTIPART_CHUNK_LIMIT_MAX_MB = 50;
 const MULTIPART_CHUNK_LIMIT_MIN_MB = 5;
 
+// O Busboy dispara alguns limites quando o valor configurado e alcancado,
+// nao apenas quando ele e ultrapassado. O threshold interno precisa ficar
+// uma unidade acima do maximo de produto para manter a regra publica inclusiva.
+export const toMulterExclusiveThreshold = (inclusiveLimit: number) => inclusiveLimit + 1;
+
 const imageLimit = (value: unknown, fallback = 5) =>
   parsePositiveInteger(value, fallback, { max: IMAGE_LIMIT_MAX_MB });
 
