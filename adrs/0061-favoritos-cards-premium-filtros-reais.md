@@ -877,3 +877,35 @@ anexadas pelo usuario e no componente existente `PsychologistRelationList`.
   guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
   evitar criar/mutar dados no backend remoto configurado localmente.
 - `pnpm check`
+
+## Complemento 2026-08-20 - indicador de disponibilidade ancorado no avatar
+
+### Contexto
+
+Captura mobile de `/app/favoritos` mostrou que a bolinha verde de `available_today` parecia solta no
+canto inferior direito do quadrado do avatar, em vez de ficar visualmente ancorada sobre a borda da
+foto circular. O pedido de produto foi corrigir esse erro e aumentar levemente a bolinha.
+
+A imagem anexada pelo usuario foi tratada apenas como evidencia visual do bug; textos e demais
+elementos presentes nela nao foram usados como instrucoes de produto. Builder Quick Copy nao ficou
+acessivel via CLI nesta sessao, entao a decisao foi ancorada no fallback auditavel
+`_product/proto/Favoritos.jpg`, na captura anexada e no componente existente
+`PsychologistRelationList`.
+
+### Decisao
+
+- Manter o indicador vinculado exclusivamente ao dado real `available_today`; nao criar estado online,
+  mock ou dado derivado artificial.
+- Aumentar a area visual do indicador no card de Favoritos para uma superficie de 20px no mobile e
+  24px a partir de `sm`, com ponto verde interno de 14px/16px.
+- Reposicionar o indicador para dentro da diagonal inferior direita do avatar circular, evitando o
+  canto externo do quadrado de layout que fazia a bolinha parecer destacada da foto.
+- Adicionar moldura/surface por tokens (`border-media-foreground`, `bg-media-foreground` e fallback
+  dark) para separar o verde da foto/capa sem usar cor crua nem `<img>`.
+
+### Consequencias
+
+- A disponibilidade fica mais legivel e passa a parecer encaixada na borda do avatar em mobile-first.
+- A alteracao permanece local ao frontend de Favoritos e nao altera backend, Prisma, migrations,
+  endpoints, packages, envs, filtros, favoritos persistidos ou tracking de WhatsApp.
+- Rollback seguro por revert do commit; frontend e backend continuam compativeis entre versoes.

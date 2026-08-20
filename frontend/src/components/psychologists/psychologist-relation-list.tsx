@@ -369,11 +369,11 @@ const FavoritePsychologistCard = ({
 
             {psychologist.available_today ? (
               <span
-                className="absolute right-1 bottom-1 grid h-3.5 w-3.5 place-items-center rounded-full sm:right-2 sm:bottom-2 sm:h-4 sm:w-4"
+                className="absolute right-1.5 bottom-1.5 grid h-5 w-5 place-items-center rounded-full border-2 border-media-foreground bg-media-foreground shadow-lectum-soft sm:right-2 sm:bottom-2 sm:h-6 sm:w-6 dark:border-surface dark:bg-surface"
                 title="Disponível hoje"
               >
-                <span className="absolute h-3 w-3 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-3.5 sm:w-3.5" />
-                <span className="relative h-2.5 w-2.5 rounded-full bg-success ring-2 ring-media-foreground dark:ring-surface sm:h-3 sm:w-3" />
+                <span className="absolute top-1/2 left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-success/35 motion-safe:animate-[ping_2.4s_cubic-bezier(0,0,0.2,1)_infinite] sm:h-5 sm:w-5" />
+                <span className="relative h-3.5 w-3.5 rounded-full bg-success ring-1 ring-success/20 sm:h-4 sm:w-4" />
                 <span className="sr-only">Disponível hoje</span>
               </span>
             ) : null}

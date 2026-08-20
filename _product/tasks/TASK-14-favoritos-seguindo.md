@@ -744,3 +744,53 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.150` e `/app/favoritos` respondeu `200`.
 - Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para evitar criar/mutar dados no backend remoto configurado localmente.
 - `pnpm check`
+
+## Complemento 2026-08-20 - bolinha verde ancorada no avatar em Favoritos
+
+- Pedido direto de produto nesta conversa: corrigir a bolinha verde de disponibilidade no card de
+  `/app/favoritos`, que aparecia solta no canto inferior direito do avatar, e aumentar um pouco o
+  tamanho dela.
+- A imagem anexada pelo usuario foi usada somente como evidencia visual do desalinhamento; textos e
+  demais elementos presentes na captura nao foram tratados como instrucoes de produto alem do pedido
+  explicito.
+- Builder Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas o CLI falhou com `ENOENT` no cache local do `npx`; foi usado o fallback auditavel
+  `_product/proto/Favoritos.jpg` e a captura anexada.
+- Frontend: o indicador `available_today` do card de favorito passou de 14px/16px para uma superficie
+  de 20px/24px, com ponto verde interno de 14px/16px.
+- Frontend: a posicao foi recalibrada para ficar na diagonal inferior direita da foto circular, sem
+  usar o canto externo do quadrado do avatar, e ganhou moldura/surface por tokens para separar da
+  imagem.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, packages, envs, filtros reais,
+  favoritos persistidos ou tracking de WhatsApp.
+- Impacto de deploy: alteracao frontend-only, compativel com backend em versoes diferentes. Rollback
+  seguro por revert do commit. Nenhuma env nova e nenhum ALERTA DE DEPLOY.
+- ADR atualizado: `adrs/0061-favoritos-cards-premium-filtros-reais.md`.
+
+### Criterios de aceite do ajuste
+
+- [x] A bolinha verde fica visualmente ancorada sobre a borda inferior direita do avatar, nao no
+  canto externo do quadrado da imagem.
+- [x] O indicador ficou maior e mais legivel em mobile-first.
+- [x] O indicador continua dependendo somente do dado real `available_today`, sem mock ou estado
+  online artificial.
+- [x] A tela continua usando `next/image`, sem `<img>` cru.
+- [x] Nenhum backend, schema, migration, package, env, endpoint ou tracking foi alterado.
+- [x] ADR relevante atualizado.
+
+### Validacao do ajuste
+
+- `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/` falhou com `ENOENT`; usado fallback
+  visual local/anexo.
+- `pnpm --dir frontend exec biome check --write src/components/psychologists/psychologist-relation-list.tsx`
+- `pnpm --dir frontend check` passou em nova execucao com timeout maior; a primeira tentativa excedeu
+  o timeout local de 120s.
+- `pnpm version:bump` atualizou os quatro manifests de `0.1.150` para `0.1.151`.
+- `pnpm check:version`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local com `next start` na porta 3100: `/version` retornou `200` com `0.1.151` e
+  `/app/favoritos` retornou `200`.
+- Chrome headless local em viewport 390x844 capturou `/app/favoritos`; sem sessao, validou
+  guarda/estado restrito e navegacao mobile. A captura autenticada dos cards nao foi feita para
+  evitar criar/mutar dados reais no backend remoto configurado localmente.
