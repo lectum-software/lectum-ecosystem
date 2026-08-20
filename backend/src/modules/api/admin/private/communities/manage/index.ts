@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "@/config/multer";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import {
   activities,
   authorizeAvatarUpload,
@@ -64,7 +65,7 @@ routes.post(
     single: "avatar",
     feature: "community",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.community.avatarMb,
   }),
   avatar,
 );

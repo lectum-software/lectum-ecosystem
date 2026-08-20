@@ -17,6 +17,7 @@ import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-prof
 import { components } from "@/components/controllers";
 import { useAppSelector } from "@/hooks/redux";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { PROFILE_VIDEO_DEFAULT_LIMIT_MB } from "@/utils/profile-video-upload";
 import { CITY_OPTIONS_BY_STATE } from "../brazil-cities";
 import {
   AVATAR_MAX_SIZE_BYTES,
@@ -39,6 +40,7 @@ import {
   toWhatsappPhoneE164,
   useFreeProfileForm,
 } from "../use-form";
+import { useProfileVideoUpload } from "./use-profile-video-upload";
 
 export const useProfessionalProfileSetupController = () => {
   const router = useRouter();
@@ -151,6 +153,14 @@ export const useProfessionalProfileSetupController = () => {
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
+  const videoUploadLimitMb =
+    profile.data?.upload_limits?.presentation_video_mb ?? PROFILE_VIDEO_DEFAULT_LIMIT_MB;
+  const { handleFileChange: handleVideoChange, progress: videoUploadProgress } =
+    useProfileVideoUpload({
+      maxSizeMb: videoUploadLimitMb,
+      onFileSelected: () => setVideoActionsOpen(false),
+      startUpload: (input, onSettled) => uploadVideo.mutate(input, { onSettled }),
+    });
   const shouldLockProfessionalIdentityFields = Boolean(
     profile.data?.profile.identity_fields_locked,
   );
@@ -512,15 +522,6 @@ export const useProfessionalProfileSetupController = () => {
     coverImageInputRef.current?.click();
   };
 
-  const handleVideoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) return;
-    setVideoActionsOpen(false);
-    uploadVideo.mutate(file);
-  };
-
   const handleVideoCoverChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -679,6 +680,8 @@ export const useProfessionalProfileSetupController = () => {
     uploadCoverImage,
     uploadVideo,
     uploadVideoCover,
+    videoUploadLimitMb,
+    videoUploadProgress,
     videoActionsOpen,
     videoCoverInputRef,
     videoCoverSrc,

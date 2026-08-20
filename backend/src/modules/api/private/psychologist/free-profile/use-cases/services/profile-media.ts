@@ -15,6 +15,7 @@ import {
   publicFileUrl,
   requiresPaidRegistryVerification,
 } from "./profile-validation";
+import { resolveProfileVideoAccess } from "./profile-video-policy";
 
 export const uploadAvatar = async (data: IFreeProfessionalProfileUploadAvatarDTO) => {
   if (data.auth.role !== "psicologo") {
@@ -93,12 +94,8 @@ export const removeAvatar = async (data: IFreeProfessionalProfileRemoveAvatarDTO
 };
 
 export const uploadVideo = async (data: IFreeProfessionalProfileUploadVideoDTO) => {
-  if (data.auth.role !== "psicologo") {
-    return {
-      status: 403,
-      ...error("role_not_authorized", {}),
-    };
-  }
+  const access = await resolveProfileVideoAccess(data.auth);
+  if (!access.allowed) return access.response;
 
   const key = data.file?.path || data.file?.key;
   if (!key?.startsWith("psychologist/video/")) {
@@ -108,29 +105,8 @@ export const uploadVideo = async (data: IFreeProfessionalProfileUploadVideoDTO) 
     };
   }
 
-  const repository = new FreeProfileRepository();
-  const current = await repository.show(data.auth.id!);
-
-  if (!current) {
-    return {
-      status: 404,
-      ...error("not_found", { model: "psychologist_profile" }),
-    };
-  }
-
-  if (requiresPaidRegistryVerification(current)) {
-    return paidRegistryVerificationRequired();
-  }
-
-  if (!current.plan.can_upload_video) {
-    return {
-      status: 403,
-      ...error("profile_video_professional_plan", {}),
-    };
-  }
-
   const videoUrl = publicFileUrl(key);
-  const updated = await repository.updateVideo(data.auth.id!, videoUrl);
+  const updated = await access.repository.updateVideo(data.auth.id!, videoUrl);
 
   return {
     status: 200,
@@ -186,12 +162,8 @@ export const uploadCoverImage = async (data: IFreeProfessionalProfileUploadCover
 };
 
 export const uploadVideoCover = async (data: IFreeProfessionalProfileUploadVideoCoverDTO) => {
-  if (data.auth.role !== "psicologo") {
-    return {
-      status: 403,
-      ...error("role_not_authorized", {}),
-    };
-  }
+  const access = await resolveProfileVideoAccess(data.auth);
+  if (!access.allowed) return access.response;
 
   const key = data.file?.path || data.file?.key;
   if (!key?.startsWith("psychologist/video-cover/")) {
@@ -201,29 +173,8 @@ export const uploadVideoCover = async (data: IFreeProfessionalProfileUploadVideo
     };
   }
 
-  const repository = new FreeProfileRepository();
-  const current = await repository.show(data.auth.id!);
-
-  if (!current) {
-    return {
-      status: 404,
-      ...error("not_found", { model: "psychologist_profile" }),
-    };
-  }
-
-  if (requiresPaidRegistryVerification(current)) {
-    return paidRegistryVerificationRequired();
-  }
-
-  if (!current.plan.can_upload_video) {
-    return {
-      status: 403,
-      ...error("profile_video_professional_plan", {}),
-    };
-  }
-
   const videoCoverUrl = publicFileUrl(key);
-  const updated = await repository.updateVideoCover(data.auth.id!, videoCoverUrl);
+  const updated = await access.repository.updateVideoCover(data.auth.id!, videoCoverUrl);
 
   return {
     status: 200,
@@ -269,35 +220,10 @@ export const removeCoverImage = async (data: IFreeProfessionalProfileRemoveCover
 };
 
 export const removeVideo = async (data: IFreeProfessionalProfileRemoveVideoDTO) => {
-  if (data.auth.role !== "psicologo") {
-    return {
-      status: 403,
-      ...error("role_not_authorized", {}),
-    };
-  }
+  const access = await resolveProfileVideoAccess(data.auth);
+  if (!access.allowed) return access.response;
 
-  const repository = new FreeProfileRepository();
-  const current = await repository.show(data.auth.id!);
-
-  if (!current) {
-    return {
-      status: 404,
-      ...error("not_found", { model: "psychologist_profile" }),
-    };
-  }
-
-  if (requiresPaidRegistryVerification(current)) {
-    return paidRegistryVerificationRequired();
-  }
-
-  if (!current.plan.can_upload_video) {
-    return {
-      status: 403,
-      ...error("profile_video_professional_plan", {}),
-    };
-  }
-
-  const updated = await repository.removeVideo(data.auth.id!);
+  const updated = await access.repository.removeVideo(data.auth.id!);
 
   return {
     status: 200,

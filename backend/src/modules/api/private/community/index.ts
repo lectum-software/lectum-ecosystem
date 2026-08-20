@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "@/config/multer";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import {
   authorizePostMediaUpload,
@@ -27,8 +28,6 @@ import {
 
 const routes = Router();
 
-const COMMUNITY_POST_MEDIA_UPLOAD_LIMIT_MB = 200;
-
 routes.get("", indexValidator, index);
 routes.get("/feed/posts", feedValidator, feed);
 routes.get("/top-mentors", topMentorsValidator, topMentors);
@@ -51,7 +50,7 @@ routes.post(
       "video/webm",
       "video/quicktime",
     ],
-    size: COMMUNITY_POST_MEDIA_UPLOAD_LIMIT_MB,
+    size: UPLOAD_LIMITS.community.postMediaMb,
   }),
   uploadPostMedia,
 );

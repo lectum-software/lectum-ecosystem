@@ -8,3 +8,9 @@ export {
   uploadVideo,
   uploadVideoCover,
 } from "./services/profile-media";
+export {
+  abortProfileVideoMultipartUpload,
+  completeProfileVideoMultipartUpload,
+  initiateProfileVideoMultipartUpload,
+  uploadProfileVideoMultipartPart,
+} from "./services/profile-video-multipart";

@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
+  abortProfileVideoMultipartUpload as abortProfileVideoMultipartUploadService,
+  completeProfileVideoMultipartUpload as completeProfileVideoMultipartUploadService,
+  initiateProfileVideoMultipartUpload as initiateProfileVideoMultipartUploadService,
   removeAvatar as removeAvatarService,
   removeCoverImage as removeCoverImageService,
   removeVideo as removeVideoService,
@@ -8,9 +11,56 @@ import {
   update as updateService,
   uploadAvatar as uploadAvatarService,
   uploadCoverImage as uploadCoverImageService,
+  uploadProfileVideoMultipartPart as uploadProfileVideoMultipartPartService,
   uploadVideoCover as uploadVideoCoverService,
   uploadVideo as uploadVideoService,
 } from "./services";
+
+export const initiateProfileVideoMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await initiateProfileVideoMultipartUploadService(
+      req as unknown as Parameters<typeof initiateProfileVideoMultipartUploadService>[0],
+    );
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "psychologist_profile_video_multipart_initiate", err);
+  }
+};
+
+export const uploadProfileVideoMultipartPart = async (req: Request, res: Response) => {
+  try {
+    const resolve = await uploadProfileVideoMultipartPartService({
+      auth: req.auth,
+      b: req.body as Parameters<typeof uploadProfileVideoMultipartPartService>[0]["b"],
+      file: req.file,
+    });
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "psychologist_profile_video_multipart_part", err);
+  }
+};
+
+export const completeProfileVideoMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await completeProfileVideoMultipartUploadService(
+      req as unknown as Parameters<typeof completeProfileVideoMultipartUploadService>[0],
+    );
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "psychologist_profile_video_multipart_complete", err);
+  }
+};
+
+export const abortProfileVideoMultipartUpload = async (req: Request, res: Response) => {
+  try {
+    const resolve = await abortProfileVideoMultipartUploadService(
+      req as unknown as Parameters<typeof abortProfileVideoMultipartUploadService>[0],
+    );
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "psychologist_profile_video_multipart_abort", err);
+  }
+};
 
 export const show = async (req: Request, res: Response) => {
   try {

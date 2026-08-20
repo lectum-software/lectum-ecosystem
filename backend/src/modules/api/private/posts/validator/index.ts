@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { type IValidatorRequest, validator } from "@/utils/validator";
 
 const idParams = [
@@ -145,7 +146,7 @@ export const replyMediaMultipartInitiateSchema: IValidatorRequest = {
       method: "numeric",
       int: true,
       positive: true,
-      max: 200 * 1024 * 1024,
+      max: UPLOAD_LIMITS.postReply.multipartTotalMb * 1024 * 1024,
     },
   ],
 };

@@ -53,6 +53,11 @@ export interface UsePsychologistFreeProfileProps {
   };
 }
 
+export type PsychologistProfileVideoUploadInput = {
+  file: File;
+  onProgress?: (percentage: number) => void;
+};
+
 export const usePsychologistFreeProfile = ({
   callbacks,
   enabled = true,
@@ -148,7 +153,8 @@ export const usePsychologistFreeProfile = ({
   });
 
   const uploadVideo = useMutation({
-    mutationFn: (file: File) => api.uploadPsychologistFreeProfileVideo(file),
+    mutationFn: ({ file, onProgress }: PsychologistProfileVideoUploadInput) =>
+      api.uploadPsychologistFreeProfileVideo(file, onProgress),
     onSuccess: (data) => {
       if (data.profile) {
         queryClient.setQueryData(keys.psychologistFreeProfile.root(), data.profile);

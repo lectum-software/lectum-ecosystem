@@ -1,6 +1,11 @@
 import { Router } from "express";
 import multer from "@/config/multer";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
+import { createMultipartChunkMiddleware } from "@/config/multer/multipart-chunk";
 import {
+  abortProfileVideoMultipartUpload,
+  completeProfileVideoMultipartUpload,
+  initiateProfileVideoMultipartUpload,
   removeAvatar,
   removeCoverImage,
   removeVideo,
@@ -8,11 +13,21 @@ import {
   update,
   uploadAvatar,
   uploadCoverImage,
+  uploadProfileVideoMultipartPart,
   uploadVideo,
   uploadVideoCover,
 } from "./use-cases/controller";
+import {
+  videoMultipartAbortValidator,
+  videoMultipartCompleteValidator,
+  videoMultipartInitiateValidator,
+  videoMultipartPartValidator,
+} from "./validator";
 
 const routes = Router();
+const videoMultipartChunkMiddleware = createMultipartChunkMiddleware({
+  maxFileSizeMb: UPLOAD_LIMITS.psychologist.videoMultipartChunkMb,
+});
 
 routes.get("", show);
 routes.put("", update);
@@ -21,7 +36,7 @@ routes.post(
   multer({
     single: "avatar",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.psychologist.avatarMb,
   }),
   uploadAvatar,
 );
@@ -31,17 +46,34 @@ routes.post(
   multer({
     single: "cover-image",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.psychologist.coverImageMb,
   }),
   uploadCoverImage,
 );
 routes.delete("/cover-image", removeCoverImage);
 routes.post(
+  "/video/multipart/initiate",
+  videoMultipartInitiateValidator,
+  initiateProfileVideoMultipartUpload,
+);
+routes.post(
+  "/video/multipart/part",
+  videoMultipartChunkMiddleware,
+  videoMultipartPartValidator,
+  uploadProfileVideoMultipartPart,
+);
+routes.post(
+  "/video/multipart/complete",
+  videoMultipartCompleteValidator,
+  completeProfileVideoMultipartUpload,
+);
+routes.delete("/video/multipart", videoMultipartAbortValidator, abortProfileVideoMultipartUpload);
+routes.post(
   "/video",
   multer({
     single: "video",
     allowed: ["video/mp4", "video/webm", "video/quicktime"],
-    size: 50,
+    size: UPLOAD_LIMITS.psychologist.videoSimpleMb,
   }),
   uploadVideo,
 );
@@ -50,7 +82,7 @@ routes.post(
   multer({
     single: "video-cover",
     allowed: ["image/jpeg", "image/png", "image/webp"],
-    size: 5,
+    size: UPLOAD_LIMITS.psychologist.videoCoverMb,
   }),
   uploadVideoCover,
 );

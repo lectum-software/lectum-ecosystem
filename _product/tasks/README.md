@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 163 tasks: `TASK-00` a `TASK-156`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 164 tasks: `TASK-00` a `TASK-157`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -254,6 +254,7 @@ ou cortesia manual.
 | 154 | [TASK-154 - Digests temporais para push de notificacoes](TASK-154-digests-temporais-push-notificacoes.md) | Completed | 29A, 29B, 38, 63 |
 | 155 | [TASK-155 - Ocultar instalar aplicativo no desktop](TASK-155-ocultar-instalar-aplicativo-desktop.md) | Completed | 12, 21, 37, 152 |
 | 156 | [TASK-156 - Regua de cobranca e regularizacao da assinatura](TASK-156-regua-cobranca-assinatura.md) | Completed | 32, 33, 63, 64, 80 |
+| 157 | [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) | Completed | 03, 18A, 26, 146 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -392,6 +393,7 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 127. [TASK-18A - Perfil gratuito sem documento CRP](TASK-18A-perfil-gratuito-sem-crp.md) recebeu ajuste pos-feedback em 2026-08-13 para remover a sombra projetada das chips de dias da semana na edicao profissional, preservando estados de foco e selecao sem alterar contratos ou dados.
 128. [TASK-156 - Regua de cobranca e regularizacao da assinatura](TASK-156-regua-cobranca-assinatura.md) foi adicionada e concluida em 2026-08-15 para abrir janela D+0 a D+7 em falhas de cobranca Mercado Pago, manter beneficios durante a graca, notificar psicologos e oferecer botao **Regularizar cartao** em **Minha Assinatura**.
 129. [TASK-18A - Perfil gratuito sem documento CRP](TASK-18A-perfil-gratuito-sem-crp.md) recebeu ajuste pos-feedback em 2026-08-17 para alinhar as chips selecionadas dos catalogos ao tamanho visual do select `Idiomas` (`Portugues`), preservando os placeholders compactos.
+130. [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) foi adicionada e concluída em 2026-08-20 para dividir vídeos grandes em partes de 5 MiB, exibir progresso, preservar o endpoint legado e centralizar em 13 envs opcionais os limites dos 11 endpoints binários baseados em Multer.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.

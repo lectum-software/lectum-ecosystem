@@ -102,6 +102,8 @@ export const ProfessionalProfileSetupLogic = () => {
     videoInputRef,
     videoRemovalConfirmOpen,
     videoSrc,
+    videoUploadLimitMb,
+    videoUploadProgress,
     whatsappUrl,
   } = controller;
 
@@ -286,9 +288,34 @@ export const ProfessionalProfileSetupLogic = () => {
                     </div>
 
                     <p className="mt-3 w-full text-xs leading-5 text-muted">
-                      Envie um vídeo vertical de até 50MB. Ele é obrigatório para publicar o perfil
-                      e aparecer na área pública da Lectum.
+                      Envie um vídeo vertical de até {videoUploadLimitMb}MB. Ele é obrigatório para
+                      publicar o perfil e aparecer na área pública da Lectum.
                     </p>
+
+                    {uploadVideo.isPending ? (
+                      <div className="mt-4" aria-live="polite">
+                        <div className="flex items-center justify-between gap-3 text-xs font-semibold text-foreground">
+                          <span>Enviando vídeo</span>
+                          <span>{videoUploadProgress ?? 0}%</span>
+                        </div>
+                        <div
+                          aria-label="Progresso do envio do vídeo"
+                          aria-valuemax={100}
+                          aria-valuemin={0}
+                          aria-valuenow={videoUploadProgress ?? 0}
+                          className="mt-2 h-2 overflow-hidden rounded-full bg-border"
+                          role="progressbar"
+                        >
+                          <div
+                            className="h-full rounded-full bg-primary transition-[width] duration-200"
+                            style={{ width: `${videoUploadProgress ?? 0}%` }}
+                          />
+                        </div>
+                        <p className="mt-2 text-xs leading-5 text-muted">
+                          Mantenha esta tela aberta até o envio terminar.
+                        </p>
+                      </div>
+                    ) : null}
 
                     {videoSrc ? (
                       <VerticalVideoPlayer
@@ -318,7 +345,9 @@ export const ProfessionalProfileSetupLogic = () => {
                             />
                           )}
                           <span className="mt-3 block text-sm font-bold text-foreground">
-                            Toque para enviar seu vídeo
+                            {uploadVideo.isPending
+                              ? "Enviando vídeo..."
+                              : "Toque para enviar seu vídeo"}
                           </span>
                           <span className="mt-1 block text-xs text-muted">MP4, MOV ou WebM.</span>
                         </span>

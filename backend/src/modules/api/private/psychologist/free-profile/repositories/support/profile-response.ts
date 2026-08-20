@@ -1,4 +1,5 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
@@ -516,6 +517,9 @@ export const toResponse = async (
     activation: {
       active: profile.published && pendingFields.length === 0,
       pending_fields: pendingFields,
+    },
+    upload_limits: {
+      presentation_video_mb: UPLOAD_LIMITS.psychologist.videoMultipartTotalMb,
     },
     catalogs,
   };

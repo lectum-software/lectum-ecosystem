@@ -1,4 +1,4 @@
-import { getApiErrorStatus, isRetryableApiError } from "@/api/errors";
+import { getApiErrorStatus } from "@/api/errors";
 import { callEndpoint } from "@/api/generator";
 import type {
   CreatePostReplyPayload,
@@ -31,10 +31,9 @@ import type {
 } from "@/api/generator/types/posts";
 import { handleReq } from "@/api/handle";
 import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
+import { MULTIPART_DEFAULT_CHUNK_BYTES, uploadFileMultipart } from "@/utils/multipart-upload";
 
-const REPLY_MEDIA_MULTIPART_FALLBACK_CHUNK_BYTES = 5 * 1024 * 1024;
-const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = REPLY_MEDIA_MULTIPART_FALLBACK_CHUNK_BYTES;
-const REPLY_MEDIA_MULTIPART_PART_MAX_ATTEMPTS = 3;
+const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
 const REPLY_MEDIA_ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -55,8 +54,6 @@ const REPLY_MEDIA_MIME_BY_EXTENSION: Record<string, string> = {
 
 const shouldUseMultipartReplyUpload = (file: File) =>
   file.size > REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES;
-
-const sleep = (ms: number) => new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 
 const resolveReplyMediaMimeType = (file: File) => {
   const declaredMimeType = file.type.trim().toLowerCase().split(";", 1)[0] ?? "";
@@ -82,25 +79,6 @@ const withReplyMediaFileType = (file: File) => {
     }),
     mimeType,
   };
-};
-
-const retryMultipartPartUpload = async <T>(upload: () => Promise<T>) => {
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= REPLY_MEDIA_MULTIPART_PART_MAX_ATTEMPTS; attempt += 1) {
-    try {
-      return await upload();
-    } catch (error) {
-      lastError = error;
-      if (attempt >= REPLY_MEDIA_MULTIPART_PART_MAX_ATTEMPTS || !isRetryableApiError(error)) {
-        throw error;
-      }
-
-      await sleep(600 * attempt);
-    }
-  }
-
-  throw lastError;
 };
 
 export const getMyPosts = async (query: UserPostsQuery = {}) => {
@@ -297,60 +275,26 @@ const abortPostReplyMediaMultipartUpload = async (id: string, uploadSessionId: s
 };
 
 const uploadPostReplyMediaMultipart = async (id: string, file: File) => {
-  let uploadSessionId: string | null = null;
   const { mimeType } = withReplyMediaFileType(file);
 
-  try {
-    const session = await initiatePostReplyMediaMultipartUpload(id, {
-      fileName: file.name || "media",
-      mimeType,
-      size: file.size,
-    });
-    uploadSessionId = session.upload_session_id;
-
-    const chunkSize =
-      Number.isInteger(session.chunk_size) && session.chunk_size > 0
-        ? session.chunk_size
-        : REPLY_MEDIA_MULTIPART_FALLBACK_CHUNK_BYTES;
-    const parts: PostReplyMediaMultipartCompletePayload["parts"] = [];
-    let partNumber = 1;
-
-    for (let offset = 0; offset < file.size; offset += chunkSize) {
-      const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size), mimeType);
-      const currentPartNumber = partNumber;
-      const uploadedPart = await retryMultipartPartUpload(() =>
-        uploadPostReplyMediaMultipartPart(
-          id,
-          session.upload_session_id,
-          currentPartNumber,
-          chunk,
-          file.name || "media",
-        ),
-      );
-      const uploadedPartId = uploadedPart.part_id || uploadedPart.part_token;
-
-      if (!uploadedPartId) {
-        throw new Error("reply_media_part_missing");
-      }
-
-      parts.push({
-        partNumber: uploadedPart.part_number,
-        partId: uploadedPartId,
-      });
-      partNumber += 1;
-    }
-
-    return await completePostReplyMediaMultipartUpload(id, {
-      parts,
-      uploadSessionId: session.upload_session_id,
-    });
-  } catch (error) {
-    if (uploadSessionId) {
-      await abortPostReplyMediaMultipartUpload(id, uploadSessionId).catch(() => undefined);
-    }
-
-    throw error;
-  }
+  return uploadFileMultipart({
+    abort: (sessionId) => abortPostReplyMediaMultipartUpload(id, sessionId),
+    complete: ({ parts, sessionId }) =>
+      completePostReplyMediaMultipartUpload(id, {
+        parts,
+        uploadSessionId: sessionId,
+      } satisfies PostReplyMediaMultipartCompletePayload),
+    file,
+    initiate: () =>
+      initiatePostReplyMediaMultipartUpload(id, {
+        fileName: file.name || "media",
+        mimeType,
+        size: file.size,
+      }),
+    mimeType,
+    uploadPart: ({ chunk, fileName, partNumber, sessionId }) =>
+      uploadPostReplyMediaMultipartPart(id, sessionId, partNumber, chunk, fileName),
+  });
 };
 
 export const uploadPostReplyMedia = async (id: string, file: File) => {

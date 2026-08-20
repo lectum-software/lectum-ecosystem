@@ -8,6 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { createId } from "@paralleldrive/cuid2";
 import { matchesDeclaredFileType } from "@/config/multer/file-signature";
+import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { error, msg } from "@/helpers/translate";
 import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
@@ -28,9 +29,9 @@ import {
   publicFileUrl,
 } from "./post-support";
 
-export const POST_REPLY_MEDIA_UPLOAD_LIMIT_MB = 200;
 export const POST_REPLY_MEDIA_MULTIPART_CHUNK_BYTES = 5 * 1024 * 1024;
-export const POST_REPLY_MEDIA_MULTIPART_CHUNK_LIMIT_MB = 10;
+const POST_REPLY_MEDIA_UPLOAD_LIMIT_MB = UPLOAD_LIMITS.postReply.multipartTotalMb;
+const POST_REPLY_MEDIA_MULTIPART_CHUNK_LIMIT_MB = UPLOAD_LIMITS.postReply.multipartChunkMb;
 
 const POST_REPLY_MEDIA_UPLOAD_LIMIT_BYTES = POST_REPLY_MEDIA_UPLOAD_LIMIT_MB * 1024 * 1024;
 const POST_REPLY_MEDIA_MULTIPART_MAX_PARTS = 10_000;
