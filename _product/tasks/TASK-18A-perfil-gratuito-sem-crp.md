@@ -799,3 +799,32 @@ Validacoes executadas:
 - `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.164`.
 - `pnpm check`
 - Smoke local sem sessao em `http://127.0.0.1:3164`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.164"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-21 - especialidades e servicos obrigatorios
+
+- Pedido do usuario: na edicao do perfil do psicologo, `Especialidades` e `Servicos` tambem devem ser tratados como obrigatorios.
+- O schema Zod de `/app/profissional/perfil/configurar` agora exige ao menos uma especialidade e ao menos um servico, exibindo mensagens de obrigatoriedade em portugues para os dois campos.
+- A rolagem para o primeiro campo pendente reutiliza a ordem mobile-first existente: `Especialidades`, `Abordagens`, `Servicos`, `Publico`, sem criar componente paralelo.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-21 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, dados persistidos, envs, providers ou packages.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `Especialidades` vazio exibe erro inline de obrigatoriedade em portugues.
+- [x] `Servicos` vazio exibe erro inline de obrigatoriedade em portugues.
+- [x] Submit invalido continua rolando para o primeiro campo pendente na ordem real da tela mobile.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/use-form.tsx`
+- Verificacao estatica confirmou `.min(1, ...)` em `specialty_ids` e `service_ids`, alem da ordem de rolagem `specialty_ids`, `approach_ids`, `service_ids`.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump` (`0.1.165` -> `0.1.166`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.166`.
+- `pnpm check` (primeira tentativa falhou por timeout no teste backend `boot-safety.test.mjs`, fora do escopo alterado; o teste isolado passou e a reexecucao completa concluiu sem erros)
+- `pnpm --dir backend exec node --import tsx --test scripts/boot-safety.test.mjs`
+- Smoke local sem sessao em `http://127.0.0.1:3166`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.166"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.

@@ -721,3 +721,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-26: videos de comunidade com player customizado passam a ocultar os controles quando a reproducao inicia, deixando o card mais limpo e imersivo.
 - Um toque/clique na area do video revela novamente botao central, minutagem, volume, fullscreen e progresso por tempo curto enquanto o video segue tocando; pausado/finalizado permanece com controles visiveis.
 - Alteracao frontend-only no player compartilhado; sem mudanca de backend, banco, contratos, packages, envs, upload/storage ou dados publicados.
+
+## Atualizacao visual em 2026-08-21: especialidades e servicos obrigatorios no perfil profissional
+
+- Ajuste pos-feedback da TASK-18A: `Especialidades` e `Servicos` em `/app/profissional/perfil/configurar` agora tambem exigem ao menos uma selecao no schema Zod, alinhando a validacao ao asterisco visual desses campos.
+- O erro inline fica em portugues e indica obrigatoriedade, enquanto a rolagem para o primeiro campo pendente reutiliza a ordem mobile-first ja existente.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages, envs, providers ou dados publicados.

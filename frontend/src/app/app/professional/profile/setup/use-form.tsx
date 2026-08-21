@@ -196,8 +196,14 @@ export const freeProfileSchema = z
     address_zip: z.string({ error: "CEP deve ser um texto válido" }).trim().max(20),
     address_city: requiredText("Cidade é obrigatória").max(120),
     address_state: requiredText("Estado é obrigatório").min(2, "Estado é obrigatório").max(2),
-    specialty_ids: stringArray("Especialidades devem estar em uma lista válida"),
-    service_ids: stringArray("Serviços devem estar em uma lista válida"),
+    specialty_ids: stringArray("Especialidades devem estar em uma lista válida").min(
+      1,
+      "Especialidade é obrigatória",
+    ),
+    service_ids: stringArray("Serviços devem estar em uma lista válida").min(
+      1,
+      "Serviço é obrigatório",
+    ),
     approach_ids: stringArray("Abordagem é obrigatória").min(1, "Abordagem é obrigatória"),
     target_audience: stringArray("Público atendido é obrigatório").min(
       1,

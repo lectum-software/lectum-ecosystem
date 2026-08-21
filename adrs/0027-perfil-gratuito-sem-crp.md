@@ -349,3 +349,32 @@ Validacoes:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Smoke local sem sessao confirmou `/version` publico e redirecionamento `307` da rota privada de edicao.
+
+## Atualizacao em 2026-08-21 - especialidades e servicos obrigatorios
+
+A edicao profissional em `/app/profissional/perfil/configurar` passa a alinhar a validacao dos catalogos ao asterisco visual exibido para `Especialidades` e `Servicos`.
+
+Decisao:
+
+- manter `CatalogTagField`, React Hook Form e Zod como fundacao unica, sem componente ou validator paralelo;
+- exigir `min(1)` em `specialty_ids` e `service_ids`, do mesmo modo que `approach_ids` e `target_audience` ja eram obrigatorios;
+- usar mensagens inline em portugues de obrigatoriedade para campos vazios;
+- preservar a ordem mobile-first de rolagem ja existente para levar o usuario ao primeiro campo pendente.
+
+Impacto de deploy:
+
+- Frontend-only, compativel com backend/admin em versoes atuais ou anteriores.
+- Sem migration, env, backfill, job, provider externo, package novo, mock ou manipulacao de dados persistidos.
+- Rollback por reversao simples do commit remove o `min(1)` desses dois campos e restaura o comportamento anterior.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/use-form.tsx`
+- Verificacao estatica do schema e da ordem de rolagem.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump` (`0.1.165` -> `0.1.166`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.166`.
+- `pnpm check` (primeira tentativa falhou por timeout no teste backend `boot-safety.test.mjs`; o teste isolado passou e a reexecucao completa concluiu sem erros)
+- Smoke local sem sessao em `http://127.0.0.1:3166`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.166"}` e a rota privada de edicao respondeu `307` para login.
