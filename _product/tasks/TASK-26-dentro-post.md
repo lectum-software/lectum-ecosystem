@@ -2281,3 +2281,40 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - [x] Commit proprio criado e push em `homolog` executado.
+
+
+## Complemento 2026-08-21 - controles imersivos no player de videos de comunidade
+
+- Pedido do usuario: ao dar play em um video de comunidade, os controles devem sumir para uma visualizacao mais limpa e imersiva; ao clicar/tocar na tela, os controles devem aparecer novamente.
+- Fonte visual auditavel: screenshot enviada pelo usuario em homologacao (`homolog.lectum.com.br`) e referencias locais `_product/proto/Feed Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: o layout persistente `media` criado para padronizar iPhone/Android mantinha botao central, minutagem, volume, fullscreen e progresso sempre visiveis durante a reproducao, cobrindo parte do video.
+- Frontend: o `VerticalVideoPlayer` agora usa um hook dedicado para controles imersivos persistentes; videos em reproducao ficam com controles ocultos por padrao e o alvo transparente de toque cobre todo o frame quando os controles estao escondidos.
+- Frontend: tocar/clicar no video em reproducao revela os controles temporariamente sem pausar o video; pausado ou encerrado segue exibindo controles para permitir retomar a reproducao.
+- Frontend: controles ocultos recebem `aria-hidden`, deixam de ser tabulaveis e nao interceptam pointer events, preservando acesso por teclado quando estao visiveis.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, upload/storage, votos, salvos, analytics ou dados publicados.
+- ADR atualizado: `adrs/0103-player-video-vertical-unificado.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Ao iniciar a reproducao, os controles persistentes do video de comunidade somem do card.
+- [x] Um toque/clique na area do video em reproducao revela novamente botao central e controles inferiores.
+- [x] O toque para revelar nao pausa o video; pausar continua sendo acao explicita do botao de play/pause visivel.
+- [x] Videos pausados ou finalizados continuam com controles visiveis.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou estado oculto por padrao durante reproducao, toque para revelar, alvo de toque expandido e controles ocultos fora da navegacao por teclado.
+- [x] `pnpm --dir frontend exec biome check --write src/components/ui/vertical-video-player.tsx src/components/ui/vertical-video-player-persistent-controls.tsx src/components/ui/vertical-video-player-immersive-controls.ts`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (antes do bump em `0.1.164` e repetido apos o bump em `0.1.165`)
+- [x] Browser/local smoke no frontend buildado: `/version` em `http://127.0.0.1:3165` respondeu `0.1.165`; rota protegida `/app` respondeu redirecionamento seguro para login.
+- [x] `pnpm check` (primeira tentativa falhou por timeout transitorio no teste backend `boot-safety`; teste isolado passou e o comando raiz foi repetido com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.165`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

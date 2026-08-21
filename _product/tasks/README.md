@@ -715,3 +715,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-18A: o submit invalido de `/app/profissional/perfil/configurar` passa a rolar para o primeiro campo obrigatorio pendente na ordem mobile-first da tela.
 - Mensagens genericas `Invalid input` em campos vazios foram substituidas por mensagens em portugues de obrigatoriedade no schema Zod do perfil profissional, preservando mensagens especificas de formato para CPF, WhatsApp e data invalida.
 - Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages ou envs.
+
+## Atualizacao visual em 2026-08-21: controles imersivos nos videos de comunidade
+
+- Ajuste pos-feedback da TASK-26: videos de comunidade com player customizado passam a ocultar os controles quando a reproducao inicia, deixando o card mais limpo e imersivo.
+- Um toque/clique na area do video revela novamente botao central, minutagem, volume, fullscreen e progresso por tempo curto enquanto o video segue tocando; pausado/finalizado permanece com controles visiveis.
+- Alteracao frontend-only no player compartilhado; sem mudanca de backend, banco, contratos, packages, envs, upload/storage ou dados publicados.

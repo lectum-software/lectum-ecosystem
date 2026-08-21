@@ -169,3 +169,38 @@ O `CommunityMediaBlock` passa a usar `controlsVariant="persistent"` e `persisten
 - `pnpm --dir frontend build`.
 - Validacao estatica via Node para confirmar o layout persistente `media`, a linha de controles com minutagem/volume/fullscreen e o helper de fullscreen.
 - Browser local/headless mobile em 390x844 na rota do detalhe de post com video.
+
+
+## Complemento 2026-08-21 - controles imersivos durante reproducao
+
+### Contexto
+
+Apos a padronizacao dos controles customizados de videos de comunidade entre iPhone e Android, o card passou a manter botao central, minutagem, volume, fullscreen e progresso sempre visiveis. Em videos verticais isso reduzia a sensacao de imersao e cobria parte relevante da imagem durante a reproducao.
+
+### Decisao
+
+Adicionar ao `VerticalVideoPlayer` um comportamento imersivo para `controlsVariant="persistent"`:
+
+- controles persistentes ficam visiveis enquanto o video esta pausado ou finalizado;
+- ao iniciar a reproducao, os controles ficam ocultos por padrao;
+- quando ocultos, o alvo transparente de toque/click cobre todo o frame para revelar os controles;
+- tocar/clicar no frame durante a reproducao revela os controles temporariamente sem alternar play/pause;
+- play/pause permanece uma acao explicita dos botoes do player quando visiveis;
+- controles ocultos recebem `aria-hidden`, `tabIndex=-1` nos focaveis e `pointer-events:none` no conteudo interativo.
+
+A regra fica centralizada em hook proprio do player compartilhado para evitar espalhar estado de UI por cards de feed, detalhe, perfil publico ou analytics. O fullscreen continua usando o helper existente `requestVideoFullscreen`, que habilita controles nativos apenas durante tela cheia quando necessario.
+
+### Consequencias
+
+- Videos de comunidade ficam mais limpos durante a reproducao no Android e tambem mantem consistencia no iPhone/Safari.
+- O usuario consegue recuperar os controles com um toque no video sem interromper a reproducao.
+- O player compartilhado mantem compatibilidade com usos pausados/preview, controles `minimal` e controles nativos.
+- Nao ha mudanca de backend, Prisma, endpoints, contratos, dados, envs, packages ou armazenamento.
+
+### Validacao
+
+- Validacao estatica via Node para checar ocultacao em reproducao, reveal por toque, alvo expandido e controles ocultos fora da navegacao por teclado.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check`.
+- Browser/local smoke no build do frontend e smoke de homologacao apos deploy da branch `homolog`.

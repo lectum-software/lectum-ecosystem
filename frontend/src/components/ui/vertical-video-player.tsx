@@ -12,8 +12,7 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
-import { requestVideoFullscreen } from "@/lib/video-fullscreen";
-import { toggleVideoElementPlayback } from "@/lib/video-interactions";
+import { useVerticalVideoPlayerImmersiveControls } from "./vertical-video-player-immersive-controls";
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
 import {
   clampNumber,
@@ -233,39 +232,20 @@ export const VerticalVideoPlayer = ({
     };
   }, [usesMinimalControls, usesPersistentControls]);
 
-  const handleContentClick = useCallback(() => {
-    if (onContentClick) {
-      onContentClick();
-      return;
-    }
-
-    void toggleVideoElementPlayback(videoRef.current);
-  }, [onContentClick]);
-
-  const handlePersistentPlayPause = useCallback(() => {
-    void toggleVideoElementPlayback(videoRef.current);
-  }, []);
-
-  const handlePersistentMuteToggle = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const nextMuted = !(video.muted || video.volume <= 0);
-    video.muted = nextMuted;
-
-    if (!nextMuted && video.volume <= 0) {
-      video.volume = 1;
-    }
-
-    setIsMuted(video.muted || video.volume <= 0);
-  }, []);
-
-  const handlePersistentFullscreen = useCallback(() => {
-    void requestVideoFullscreen(videoRef.current, {
-      forceContain: fullscreenVariant === "content",
-      temporaryControls: true,
-    });
-  }, [fullscreenVariant]);
+  const {
+    controlsHidden: persistentControlsHidden,
+    handleContentClick,
+    handleControlsInteraction,
+    handleFullscreen: handlePersistentFullscreen,
+    handleMuteToggle: handlePersistentMuteToggle,
+    handlePlayPause: handlePersistentPlayPause,
+  } = useVerticalVideoPlayerImmersiveControls({
+    enabled: usesPersistentControls,
+    fullscreenVariant,
+    isPaused,
+    onContentClick,
+    videoRef,
+  });
 
   const ensureBlobBackedVideoForSeek = useCallback(
     (targetTime: number) => {
@@ -577,12 +557,11 @@ export const VerticalVideoPlayer = ({
   const handleVideoClick = useCallback(
     (event: MouseEvent<HTMLVideoElement>) => {
       onVideoClick?.(event);
-
-      if (!event.defaultPrevented && usesPersistentControls && onContentClick) {
-        onContentClick();
+      if (!event.defaultPrevented && usesPersistentControls) {
+        handleContentClick();
       }
     },
-    [onContentClick, onVideoClick, usesPersistentControls],
+    [handleContentClick, onVideoClick, usesPersistentControls],
   );
 
   const persistentProgressRatio = duration > 0 ? clampNumber(currentTime / duration, 0, 1) : 0;
@@ -625,24 +604,28 @@ export const VerticalVideoPlayer = ({
       </video>
       <button
         aria-label={
-          onContentClick
-            ? `Mostrar interface do vídeo: ${title}`
-            : `Alternar reprodução do vídeo: ${title}`
+          persistentControlsHidden
+            ? `Mostrar controles do vídeo: ${title}`
+            : onContentClick
+              ? `Mostrar interface do vídeo: ${title}`
+              : `Alternar reprodução do vídeo: ${title}`
         }
         className="absolute inset-x-0 top-0 z-[1] cursor-pointer border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/50"
         onClick={handleContentClick}
         style={{
           bottom: usesPersistentControls
-            ? usesMediaPersistentControls
-              ? "calc(var(--lectum-bottom-fixed-padding) + 4.5rem)"
-              : "calc(var(--lectum-bottom-fixed-padding) + 5.25rem)"
+            ? persistentControlsHidden
+              ? 0
+              : usesMediaPersistentControls
+                ? "calc(var(--lectum-bottom-fixed-padding) + 4.5rem)"
+                : "calc(var(--lectum-bottom-fixed-padding) + 5.25rem)"
             : controls
               ? "max(64px, 20%)"
               : 0,
         }}
         type="button"
       />
-      {usesMediaPersistentControls ? (
+      {usesMediaPersistentControls && !persistentControlsHidden ? (
         <button
           aria-label={isPaused ? `Reproduzir vídeo: ${title}` : `Pausar vídeo: ${title}`}
           className="absolute top-1/2 left-1/2 z-[2] grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-surface/75 text-foreground shadow-[var(--lectum-shadow-soft)] backdrop-blur transition hover:scale-[1.03] hover:bg-surface/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95 sm:h-[4.5rem] sm:w-[4.5rem]"
@@ -663,7 +646,9 @@ export const VerticalVideoPlayer = ({
           duration={duration}
           isMuted={isMuted}
           isPaused={isPaused}
+          hidden={persistentControlsHidden}
           layout={persistentControlsLayout}
+          onInteraction={handleControlsInteraction}
           onFullscreen={usesMediaPersistentControls ? handlePersistentFullscreen : undefined}
           onMuteToggle={handlePersistentMuteToggle}
           onPlayPause={handlePersistentPlayPause}
