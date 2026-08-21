@@ -13,9 +13,12 @@ const PROFILE_VIDEO_MIME_BY_EXTENSION: Record<string, string> = {
 export const resolveProfileVideoMimeType = (file: File) => {
   const declaredMimeType = file.type.trim().toLowerCase().split(";", 1)[0] ?? "";
   if (PROFILE_VIDEO_ALLOWED_MIME_TYPES.has(declaredMimeType)) return declaredMimeType;
+  if (declaredMimeType) return "";
 
-  const extension = file.name.toLowerCase().split(".").pop() ?? "";
-  return PROFILE_VIDEO_MIME_BY_EXTENSION[extension] || declaredMimeType;
+  const normalizedName = file.name.trim().toLowerCase();
+  const lastDotIndex = normalizedName.lastIndexOf(".");
+  const extension = lastDotIndex >= 0 ? normalizedName.slice(lastDotIndex + 1) : "";
+  return PROFILE_VIDEO_MIME_BY_EXTENSION[extension] || "";
 };
 
 export const isAllowedProfileVideo = (file: File) =>

@@ -17,6 +17,7 @@ import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-prof
 import { components } from "@/components/controllers";
 import { useAppSelector } from "@/hooks/redux";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaKind } from "@/utils/media-preparation";
 import { isProfileVideoUploadCanceled } from "@/utils/profile-video-optimization";
 import { PROFILE_VIDEO_DEFAULT_LIMIT_MB } from "@/utils/profile-video-upload";
 import { CITY_OPTIONS_BY_STATE } from "../brazil-cities";
@@ -26,6 +27,7 @@ import {
   type AvatarDragState,
   clampPercent,
   cropAvatarFile,
+  isSupportedStaticAvatarFile,
 } from "../components/avatar-city-fields";
 import {
   compareCatalogItems,
@@ -172,7 +174,6 @@ export const useProfessionalProfileSetupController = () => {
     profile.isSuccess &&
     accountTips.onboardingTips.isSuccess &&
     !accountTips.onboardingTips.data?.has_seen_psychologist_profile_video_tip;
-
   const persistProfileVideoTipSeen = useCallback(() => {
     if (
       !accountTips.userId ||
@@ -373,8 +374,7 @@ export const useProfessionalProfileSetupController = () => {
     setAvatarEditorOpen(false);
     setAvatarDraft(null);
   };
-
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
 
@@ -386,8 +386,8 @@ export const useProfessionalProfileSetupController = () => {
       return;
     }
 
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      toast.error("Envie uma imagem PNG, JPG ou WebP.");
+    if (!(await isSupportedStaticAvatarFile(file))) {
+      toast.error("Envie uma imagem estática PNG, JPG ou WebP.");
       return;
     }
 
@@ -498,7 +498,7 @@ export const useProfessionalProfileSetupController = () => {
       return;
     }
 
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    if (resolvePublicMediaKind(file) !== "image") {
       toast.error("Envie uma imagem PNG, JPG ou WebP para a capa.");
       return;
     }
@@ -535,7 +535,7 @@ export const useProfessionalProfileSetupController = () => {
       return;
     }
 
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    if (resolvePublicMediaKind(file) !== "image") {
       toast.error("Envie uma imagem PNG, JPG ou WebP para a capa.");
       return;
     }

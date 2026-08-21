@@ -1,20 +1,18 @@
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { createId } from "@paralleldrive/cuid2";
+import type { Request } from "express";
 import type multer from "multer";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
-import { parsePositiveInteger } from "@/utils/runtime-config";
 import { streamToBuffer } from "./buffer";
 import { UploadInfrastructureError, UploadValidationError } from "./errors";
 import { matchesDeclaredFileType } from "./file-signature";
+import { acquireUploadSlot, releaseUploadSlot } from "./upload-concurrency";
 
-const maxConcurrentUploads = parsePositiveInteger(process.env.UPLOAD_MAX_CONCURRENCY, 2, {
-  max: 16,
-});
-const maxQueuedUploads = parsePositiveInteger(process.env.UPLOAD_MAX_QUEUE_SIZE, 100, {
-  max: 1000,
-});
-let activeUploads = 0;
-const uploadQueue: Array<() => void> = [];
+type UploadSlotDependencies = {
+  acquire: typeof acquireUploadSlot;
+  isConfigured: typeof isR2Configured;
+  release: typeof releaseUploadSlot;
+};
 
 const sanitizeOriginalFilename = (value: string) =>
   Array.from(Buffer.from(value, "latin1").toString("utf8").normalize("NFC"))
@@ -25,38 +23,64 @@ const sanitizeOriginalFilename = (value: string) =>
     .join("")
     .slice(0, 255);
 
-const acquireUploadSlot = async () => {
-  if (activeUploads >= maxConcurrentUploads) {
-    if (uploadQueue.length >= maxQueuedUploads) {
-      throw new UploadInfrastructureError("R2_UPLOAD_QUEUE_FULL");
-    }
-
-    await new Promise<void>((resolve) => uploadQueue.push(resolve));
-  }
-
-  activeUploads += 1;
-};
-
-const releaseUploadSlot = () => {
-  activeUploads = Math.max(0, activeUploads - 1);
-  uploadQueue.shift()?.();
-};
-
 const normalizeStorageError = (error: unknown) =>
   error instanceof Error ? error : new UploadInfrastructureError("R2_UPLOAD_FAILED");
 
-export const storage: multer.StorageEngine = {
+const requestUploadSignal = (req: Request, stream: NodeJS.ReadableStream) => {
+  const controller = new AbortController();
+  const response = req.res;
+  const abort = () => controller.abort();
+  const abortClosedRequest = () => {
+    if (!req.readableEnded) abort();
+  };
+  const abortClosedResponse = () => {
+    if (!response?.writableEnded) abort();
+  };
+  const abortClosedStream = () => {
+    const readable = stream as NodeJS.ReadableStream & { readableEnded?: boolean };
+    if (!readable.readableEnded) abort();
+  };
+
+  req.once("aborted", abort);
+  req.once("error", abort);
+  req.once("close", abortClosedRequest);
+  response?.once("close", abortClosedResponse);
+  stream.once("error", abort);
+  stream.once("close", abortClosedStream);
+
+  if (req.aborted || (req.destroyed && !req.readableEnded)) abort();
+
+  return {
+    cleanup: () => {
+      req.removeListener("aborted", abort);
+      req.removeListener("error", abort);
+      req.removeListener("close", abortClosedRequest);
+      response?.removeListener("close", abortClosedResponse);
+      stream.removeListener("error", abort);
+      stream.removeListener("close", abortClosedStream);
+    },
+    signal: controller.signal,
+  };
+};
+
+export const createPublicUploadStorage = ({
+  acquire = acquireUploadSlot,
+  isConfigured = isR2Configured,
+  release = releaseUploadSlot,
+}: Partial<UploadSlotDependencies> = {}): multer.StorageEngine => ({
   _handleFile: async (req, file, cb) => {
     const feature = req.uploadFeature || req.baseUrl.split("/")[3];
+    const uploadSignal = requestUploadSignal(req, file.stream as NodeJS.ReadableStream);
     let hasUploadSlot = false;
 
     try {
-      if (!isR2Configured()) {
+      if (!isConfigured()) {
         throw new UploadInfrastructureError("R2_UPLOAD_NOT_CONFIGURED");
       }
 
-      await acquireUploadSlot();
+      await acquire(uploadSignal.signal);
       hasUploadSlot = true;
+      uploadSignal.signal.throwIfAborted();
 
       const originalname = sanitizeOriginalFilename(file.originalname);
 
@@ -88,7 +112,10 @@ export const storage: multer.StorageEngine = {
       req.feature = feature;
       req.bucket = bucketName;
 
-      const buffer = await streamToBuffer(file.stream as NodeJS.ReadableStream);
+      const buffer = await streamToBuffer(
+        file.stream as NodeJS.ReadableStream,
+        uploadSignal.signal,
+      );
       if (!matchesDeclaredFileType(buffer, file.mimetype)) {
         throw new UploadValidationError(
           "O conteúdo do arquivo não corresponde ao formato informado.",
@@ -106,7 +133,7 @@ export const storage: multer.StorageEngine = {
         ContentType: file.mimetype,
         ContentLength: contentLength,
       });
-      await S3.send(uploadCommand);
+      await S3.send(uploadCommand, { abortSignal: uploadSignal.signal });
 
       cb(null, {
         bucket: bucketName,
@@ -119,7 +146,8 @@ export const storage: multer.StorageEngine = {
     } catch (error) {
       cb(normalizeStorageError(error));
     } finally {
-      if (hasUploadSlot) releaseUploadSlot();
+      uploadSignal.cleanup();
+      if (hasUploadSlot) release();
     }
   },
   _removeFile: async (_req, file, cb) => {
@@ -135,4 +163,6 @@ export const storage: multer.StorageEngine = {
       cb(normalizeStorageError(error));
     }
   },
-};
+});
+
+export const storage = createPublicUploadStorage();

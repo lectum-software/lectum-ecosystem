@@ -15,6 +15,7 @@ import type {
   DirectoryPsychologistsResponse,
 } from "@/api/generator/types/directory";
 import * as api from "@/api/req/patient";
+import { prepareUpload } from "@/utils/media-preparation";
 
 export interface UsePatientProps {
   enableProfile?: boolean;
@@ -237,7 +238,10 @@ export const usePatient = ({
   });
 
   const uploadAvatar = useMutation({
-    mutationFn: (file: File) => api.uploadPatientProfileAvatar(file),
+    mutationFn: async (file: File) => {
+      const prepared = await prepareUpload({ file, purpose: "patient-avatar" });
+      return api.uploadPatientProfileAvatar(prepared.file);
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(profileKey, data.profile.profile);
       queryClient.invalidateQueries({ queryKey: profileKey });

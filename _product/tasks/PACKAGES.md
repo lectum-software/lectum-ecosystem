@@ -31,8 +31,8 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 | `react-hook-form` | `^7.77.0` | `7.77.0` | Formulários |
 | `@hookform/resolvers` | `^5.4.0` | `5.4.0` | Zod resolver |
 | `zod` | `^4.4.3` | `4.4.3` | Schema validation |
-| `mediabunny` | `^1.55.1` | `1.55.1` | Leitura e otimização client-side best effort do vídeo de apresentação em Web Worker (TASK-158) |
-| `@mediabunny/aac-encoder` | `^1.55.1` | `1.55.1` | Fallback AAC carregado no worker somente quando o navegador não oferece encoder nativo (TASK-158) |
+| `mediabunny` | `^1.55.1` | `1.55.1` | Leitura e otimização client-side best effort de vídeos públicos em Web Worker (TASK-158/TASK-159) |
+| `@mediabunny/aac-encoder` | `^1.55.1` | `1.55.1` | Fallback AAC carregado no worker somente quando o navegador não oferece encoder nativo (TASK-158/TASK-159) |
 | `@mercadopago/sdk-react` | `^1.0.7` | `1.0.7` | Checkout Bricks/Card Payment Brick |
 | `@reduxjs/toolkit` | `^2.12.0` | `2.12.0` | Client state |
 | `react-redux` | `^9.3.0` | `9.3.0` | Redux bindings |

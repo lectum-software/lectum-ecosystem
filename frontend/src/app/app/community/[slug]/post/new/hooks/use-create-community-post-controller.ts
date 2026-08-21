@@ -19,6 +19,8 @@ import {
 import { useAppSelector } from "@/hooks/redux";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import { mapWithConcurrency } from "@/utils/map-with-concurrency";
+import { resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
   COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
   isCommunityMediaFileTooLarge,
@@ -190,7 +192,8 @@ export const useCreateCommunityPostController = ({
     selectedCommunityIsValid && titleMeetsMinimum && contentMeetsMinimum,
   );
   const hasNoCommunities = communitiesQuery.isSuccess && communityOptions.length === 0;
-  const isSubmitting = mutation.isPending || uploadMutation.isPending;
+  const isSubmitting =
+    hook.formState.isSubmitting || mutation.isPending || uploadMutation.isPending;
   const isSubmitDisabled = isSubmitting || communitiesQuery.isLoading || hasNoCommunities;
   const sheetMotionState = isSheetOpen ? "enter" : hasSheetOpened ? "exit" : "initial";
 
@@ -481,8 +484,14 @@ export const useCreateCommunityPostController = ({
       return;
     }
 
-    const videoFiles = files.filter((file) => file.type.startsWith("video/"));
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (files.some((file) => resolvePublicMediaKind(file) === null)) {
+      toast.error("Envie uma imagem ou vídeo em formato permitido.");
+      focusLastEditor();
+      return;
+    }
+
+    const videoFiles = files.filter((file) => resolvePublicMediaKind(file) === "video");
+    const imageFiles = files.filter((file) => resolvePublicMediaKind(file) === "image");
 
     if (videoFiles.length > 0) {
       if (files.length > 1 || imageFiles.length > 0) {
@@ -504,12 +513,6 @@ export const useCreateCommunityPostController = ({
           type: "video",
         },
       ]);
-      focusLastEditor();
-      return;
-    }
-
-    if (imageFiles.length === 0) {
-      toast.error("Envie uma imagem ou vídeo em formato permitido.");
       focusLastEditor();
       return;
     }
@@ -565,13 +568,11 @@ export const useCreateCommunityPostController = ({
             }),
           ]
         : mediaFiles.length > 0
-          ? await Promise.all(
-              mediaFiles.map((mediaItem) =>
-                uploadMutation.mutateAsync({
-                  file: mediaItem.file,
-                  slug: values.community_slug,
-                }),
-              ),
+          ? await mapWithConcurrency(mediaFiles, 2, (mediaItem) =>
+              uploadMutation.mutateAsync({
+                file: mediaItem.file,
+                slug: values.community_slug,
+              }),
             )
           : [];
       const thumbnailFrame = isPsychologist
@@ -597,6 +598,7 @@ export const useCreateCommunityPostController = ({
       const uploadedThumbnail = thumbnailFile
         ? await uploadMutation.mutateAsync({
             file: thumbnailFile,
+            purpose: "generated-video-thumbnail",
             slug: values.community_slug,
           })
         : null;

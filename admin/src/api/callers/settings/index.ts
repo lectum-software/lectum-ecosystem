@@ -21,6 +21,7 @@ import {
   updateAdminSpecialtyCategory,
   uploadAdminSeoMetadataImage,
 } from "@/api/req/settings";
+import { prepareImageUpload } from "@/lib/image-preparation";
 
 export const useAdminSettingsCatalogs = () =>
   useQuery({
@@ -157,6 +158,8 @@ export const useAdminSeoMetadataUpdate = () => {
 
 export const useAdminSeoMetadataImageUpload = () =>
   useMutation({
-    mutationFn: ({ file, pageKey }: { file: File; pageKey: AdminSeoMetadataPageKey }) =>
-      uploadAdminSeoMetadataImage(pageKey, file),
+    mutationFn: async ({ file, pageKey }: { file: File; pageKey: AdminSeoMetadataPageKey }) => {
+      const prepared = await prepareImageUpload(file, { purpose: "seo-open-graph" });
+      return uploadAdminSeoMetadataImage(pageKey, prepared.file);
+    },
   });

@@ -23,10 +23,10 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import * as userActions from "@/store/modules/user/actions";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaKind } from "@/utils/media-preparation";
 import { toPatientProfilePayload, usePatientProfileForm } from "./use-form";
 
 const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
-const AVATAR_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 const getInitials = (name?: string | null, email?: string | null) => {
   const source = name?.trim() || email?.split("@")[0] || "Lectum";
@@ -143,7 +143,7 @@ export const ProfileEditLogic = () => {
       return;
     }
 
-    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+    if (resolvePublicMediaKind(file) !== "image") {
       setApiError("Envie uma foto PNG, JPG ou WebP.");
       return;
     }

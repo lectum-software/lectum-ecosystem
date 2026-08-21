@@ -1,4 +1,5 @@
 import { isRetryableApiError } from "@/api/errors";
+import { scheduleBestEffortCleanup } from "@/utils/upload-lifecycle";
 
 export const MULTIPART_DEFAULT_CHUNK_BYTES = 5 * 1024 * 1024;
 
@@ -140,7 +141,10 @@ export const uploadFileMultipart = async <T>({
     onProgress?.(100);
     return result;
   } catch (uploadError) {
-    if (sessionId) await abort(sessionId).catch(() => undefined);
+    if (sessionId) {
+      const failedSessionId = sessionId;
+      scheduleBestEffortCleanup(() => abort(failedSessionId));
+    }
     throw uploadError;
   }
 };

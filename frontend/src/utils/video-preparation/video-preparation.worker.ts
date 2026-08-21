@@ -11,27 +11,29 @@ import {
   Quality,
 } from "mediabunny";
 import {
-  PROFILE_VIDEO_AUDIO_BITRATE,
-  PROFILE_VIDEO_MAX_OUTPUT_BYTES,
-  resolveProfileVideoContainer,
-  resolveProfileVideoEncodingPolicy,
-  shouldOptimizeProfileVideo,
+  getVideoPreparationPurposePolicy,
+  resolveVideoContainer,
+  resolveVideoEncodingPolicy,
+  shouldOptimizeVideo,
 } from "./policy";
-import type {
-  ProfileVideoOptimizationWorkerRequest,
-  ProfileVideoOptimizationWorkerResponse,
+import {
+  isVideoPreparationPurpose,
+  type VideoOptimizationWorkerRequest,
+  type VideoOptimizationWorkerResponse,
+  type VideoPreparationPurpose,
+  type VideoPreparationStage,
 } from "./types";
 
-type ProfileVideoWorkerScope = {
-  onmessage: ((event: MessageEvent<ProfileVideoOptimizationWorkerRequest>) => void) | null;
-  postMessage: (message: ProfileVideoOptimizationWorkerResponse, transfer?: Transferable[]) => void;
+type VideoWorkerScope = {
+  onmessage: ((event: MessageEvent<VideoOptimizationWorkerRequest>) => void) | null;
+  postMessage: (message: VideoOptimizationWorkerResponse, transfer?: Transferable[]) => void;
 };
 
-const workerScope = self as unknown as ProfileVideoWorkerScope;
+const workerScope = self as unknown as VideoWorkerScope;
 let activeConversion: Conversion | null = null;
 let canceledByUser = false;
 
-const postProgress = (stage: "analyzing" | "optimizing", percentage: number | null) => {
+const postProgress = (stage: VideoPreparationStage, percentage: number | null) => {
   workerScope.postMessage({ percentage, stage, type: "progress" });
 };
 
@@ -44,7 +46,8 @@ const ensureAacEncoder = async (numberOfChannels: number, sampleRate: number, qu
   return canEncodeAudio("aac", options);
 };
 
-const optimizeProfileVideo = async (file: File) => {
+const optimizeVideo = async (file: File, purpose: VideoPreparationPurpose) => {
+  const purposePolicy = getVideoPreparationPurposePolicy(purpose);
   const input = new Input({
     formats: ALL_FORMATS,
     source: new BlobSource(file),
@@ -91,7 +94,7 @@ const optimizeProfileVideo = async (file: File) => {
         : await input.computeDuration([videoTrack, ...(audioTrack ? [audioTrack] : [])]);
     const analysis = {
       audioCodec,
-      container: resolveProfileVideoContainer(inputMimeType || file.type),
+      container: resolveVideoContainer(inputMimeType || file.type),
       durationSeconds: durationSeconds > 0 ? durationSeconds : null,
       fileSize: file.size,
       frameRate: frameRateMetrics.bestGuessFrameRate,
@@ -99,22 +102,25 @@ const optimizeProfileVideo = async (file: File) => {
       videoCodec,
       width,
     };
-    const policy = resolveProfileVideoEncodingPolicy(analysis);
-    if (!policy) {
+    const encodingPolicy = resolveVideoEncodingPolicy(analysis, purpose);
+    if (!encodingPolicy) {
       workerScope.postMessage({ reason: "unsupported", type: "use-original" });
       return;
     }
-    if (!shouldOptimizeProfileVideo(analysis, policy)) {
+    if (!shouldOptimizeVideo(analysis, encodingPolicy, purpose)) {
       workerScope.postMessage({ reason: "already-efficient", type: "use-original" });
       return;
     }
 
-    const videoQuality = new Quality({ bitrate: policy.videoBitrate, bitrateMode: "variable" });
+    const videoQuality = new Quality({
+      bitrate: encodingPolicy.videoBitrate,
+      bitrateMode: "variable",
+    });
     if (
       !(await canEncodeVideo("avc", {
-        height: policy.height,
+        height: encodingPolicy.height,
         quality: videoQuality,
-        width: policy.width,
+        width: encodingPolicy.width,
       }))
     ) {
       workerScope.postMessage({ reason: "unsupported", type: "use-original" });
@@ -122,7 +128,7 @@ const optimizeProfileVideo = async (file: File) => {
     }
 
     const audioQuality = new Quality({
-      bitrate: PROFILE_VIDEO_AUDIO_BITRATE,
+      bitrate: purposePolicy.audioBitrate,
       bitrateMode: "variable",
     });
     const audioConfig = audioTrack
@@ -164,11 +170,11 @@ const optimizeProfileVideo = async (file: File) => {
         codec: "avc",
         fit: "contain",
         forceTranscode: true,
-        frameRate: policy.frameRate,
-        height: policy.height,
+        frameRate: encodingPolicy.frameRate,
+        height: encodingPolicy.height,
         keyFrameInterval: 2,
         quality: videoQuality,
-        width: policy.width,
+        width: encodingPolicy.width,
       },
     });
     if (!conversion.isValid) {
@@ -179,7 +185,7 @@ const optimizeProfileVideo = async (file: File) => {
     activeConversion = conversion;
     let outputLimitExceeded = false;
     target.on("write", ({ end }) => {
-      if (end <= PROFILE_VIDEO_MAX_OUTPUT_BYTES || outputLimitExceeded) return;
+      if (end <= purposePolicy.maxOutputBytes || outputLimitExceeded) return;
       outputLimitExceeded = true;
       void conversion.cancel();
     });
@@ -190,7 +196,7 @@ const optimizeProfileVideo = async (file: File) => {
     await conversion.execute();
 
     const buffer = target.buffer;
-    if (!buffer || outputLimitExceeded || buffer.byteLength > PROFILE_VIDEO_MAX_OUTPUT_BYTES) {
+    if (!buffer || outputLimitExceeded || buffer.byteLength > purposePolicy.maxOutputBytes) {
       workerScope.postMessage({ reason: "failed", type: "use-original" });
       return;
     }
@@ -214,5 +220,9 @@ workerScope.onmessage = (event) => {
   }
 
   canceledByUser = false;
-  void optimizeProfileVideo(event.data.file);
+  if (!isVideoPreparationPurpose(event.data.purpose)) {
+    workerScope.postMessage({ reason: "unsupported", type: "use-original" });
+    return;
+  }
+  void optimizeVideo(event.data.file, event.data.purpose);
 };

@@ -12,6 +12,7 @@ import type { AdminCommunityIdentity } from "@/api/req/communities";
 import { InputController, TextareaController } from "@/components/controllers";
 import { renderableImageSrc } from "@/lib/admin-media";
 import { communityHeaderBackground, deriveCommunityVisualPalette } from "@/lib/community-visual";
+import { resolveImageFileMimeType } from "@/lib/image-preparation";
 import { cn } from "@/lib/utils";
 
 import {
@@ -24,7 +25,6 @@ import {
 } from "../modules/detail-support";
 
 const COMMUNITY_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
-const COMMUNITY_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export const CommunityEditForm = ({
   community,
@@ -70,7 +70,7 @@ export const CommunityEditForm = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!COMMUNITY_AVATAR_TYPES.has(file.type)) {
+    if (!resolveImageFileMimeType(file)) {
       toast.error("Envie uma imagem JPEG, PNG ou WebP.");
       event.target.value = "";
       return;

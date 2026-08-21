@@ -15,6 +15,12 @@ import type {
   SuggestCommunityPayload,
 } from "@/api/generator/types/community";
 import * as api from "@/api/req/community";
+import {
+  type MediaPreparationPurpose,
+  type MediaUploadProgress,
+  prepareUpload,
+  resolveCommunityPostPreparationPurpose,
+} from "@/utils/media-preparation";
 
 const invalidateDirectoryPsychologistQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
   queryClient.invalidateQueries({
@@ -182,8 +188,35 @@ export const useUploadCommunityPostMedia = (callbacks?: {
   onSuccess?: (data: CommunityPostMediaUploadResponse) => void;
 }) => {
   return useMutation({
-    mutationFn: ({ file, slug }: { file: File; slug: string }) =>
-      api.uploadCommunityPostMedia(slug, file),
+    mutationFn: async ({
+      file,
+      onProgress,
+      purpose,
+      signal,
+      slug,
+    }: {
+      file: File;
+      onProgress?: (progress: MediaUploadProgress) => void;
+      purpose?: Extract<
+        MediaPreparationPurpose,
+        "community-post-image" | "community-post-video" | "generated-video-thumbnail"
+      >;
+      signal?: AbortSignal;
+      slug: string;
+    }) => {
+      const prepared = await prepareUpload({
+        file,
+        onProgress: (progress) => onProgress?.({ ...progress, phase: "preparing" }),
+        purpose: purpose ?? resolveCommunityPostPreparationPurpose(file),
+        signal,
+      });
+      return api.uploadCommunityPostMedia(
+        slug,
+        prepared.file,
+        (percentage) => onProgress?.({ percentage, phase: "uploading", stage: "uploading" }),
+        signal,
+      );
+    },
     onError: callbacks?.onError,
     onSuccess: callbacks?.onSuccess,
   });

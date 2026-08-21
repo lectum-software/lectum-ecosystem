@@ -63,6 +63,32 @@ export type CommunityPostMediaUploadResponse = {
   media_type: "image" | "video";
 };
 
+export type CommunityPostMediaMultipartInitiateBody = {
+  fileName?: string;
+  mimeType: string;
+  size: number;
+};
+
+export type CommunityPostMediaMultipartPartBody = {
+  partNumber: number | string;
+  uploadSessionId: string;
+};
+
+export type CommunityPostMediaMultipartPartReference = {
+  partId?: string;
+  partNumber: number;
+  partToken?: string;
+};
+
+export type CommunityPostMediaMultipartCompleteBody = {
+  parts: CommunityPostMediaMultipartPartReference[];
+  uploadSessionId: string;
+};
+
+export type CommunityPostMediaMultipartAbortBody = {
+  uploadSessionId: string;
+};
+
 export type CommunityDTO = {
   id: string;
   name: string;
@@ -337,6 +363,31 @@ export type ICommunityUploadPostMediaDTO = {
   p: CommunityParams;
   auth: user;
   file?: Express.Multer.File & { key?: string; path?: string };
+};
+
+export type ICommunityInitiatePostMediaMultipartDTO = {
+  p: CommunityParams;
+  b: CommunityPostMediaMultipartInitiateBody;
+  auth: user;
+};
+
+export type ICommunityUploadPostMediaMultipartPartDTO = {
+  p: CommunityParams;
+  b: CommunityPostMediaMultipartPartBody;
+  auth: user;
+  file?: Express.Multer.File;
+};
+
+export type ICommunityCompletePostMediaMultipartDTO = {
+  p: CommunityParams;
+  b: CommunityPostMediaMultipartCompleteBody;
+  auth: user;
+};
+
+export type ICommunityAbortPostMediaMultipartDTO = {
+  p: CommunityParams;
+  b: CommunityPostMediaMultipartAbortBody;
+  auth: user;
 };
 
 export type ICommunityPostsDTO = {

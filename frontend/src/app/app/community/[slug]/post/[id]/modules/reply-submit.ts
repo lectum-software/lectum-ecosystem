@@ -11,6 +11,7 @@ import { resolveReplyMediaUploadError, resolveReplyPublishError } from "./reply-
 type ReplyMediaUploadInput = {
   file: File;
   id: string;
+  purpose?: "generated-video-thumbnail" | "post-reply-image" | "post-reply-video";
 };
 
 type ReplyCreateInput = {
@@ -68,7 +69,11 @@ const uploadBestEffortVideoThumbnail = async ({
   if (!thumbnailFile) return null;
 
   try {
-    return await uploadReplyMedia({ file: thumbnailFile, id: postId });
+    return await uploadReplyMedia({
+      file: thumbnailFile,
+      id: postId,
+      purpose: "generated-video-thumbnail",
+    });
   } catch {
     return null;
   }

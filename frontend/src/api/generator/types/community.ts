@@ -289,6 +289,32 @@ export type CommunityPostMediaUploadResponse = {
   media_type: "image" | "video";
 };
 
+export type CommunityPostMediaMultipartInitiatePayload = {
+  fileName: string;
+  mimeType: string;
+  size: number;
+};
+
+export type CommunityPostMediaMultipartInitiateResponse = {
+  chunk_size: number;
+  max_file_size: number;
+  upload_session_id: string;
+};
+
+export type CommunityPostMediaMultipartPartResponse = {
+  part_id?: string;
+  part_number: number;
+  part_token?: string;
+};
+
+export type CommunityPostMediaMultipartCompletePayload = {
+  parts: Array<{
+    partId: string;
+    partNumber: number;
+  }>;
+  uploadSessionId: string;
+};
+
 export type SuggestCommunityPayload = {
   theme: string;
 };

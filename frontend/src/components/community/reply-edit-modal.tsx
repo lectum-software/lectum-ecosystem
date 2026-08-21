@@ -206,9 +206,15 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       return;
     }
 
+    const type = mediaTypeFromFile(file);
+    if (!type) {
+      setActionError("Envie uma imagem ou vídeo em formato permitido.");
+      focusEditor();
+      return;
+    }
+
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
-    const type = mediaTypeFromFile(file);
     selectedMediaPreviewUrlRef.current = previewUrl;
     setSelectedMedia({
       file,
@@ -250,6 +256,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
         ? await uploadMutation.mutateAsync({
             file: thumbnailFile,
             id: postId,
+            purpose: "generated-video-thumbnail",
           })
         : null;
 

@@ -5,6 +5,12 @@ import { Controller } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
 import { cn } from "@/lib/utils";
+import {
+  detectImageAnimation,
+  type ImageMimeType,
+  resolveImageFileMimeType,
+  withImageFileExtension,
+} from "@/utils/image-preparation";
 import type { FreeProfileForm, useFreeProfileForm } from "../use-form";
 
 export const normalizeCitySearch = (value: string) =>
@@ -37,40 +43,63 @@ export const AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
 export const AVATAR_CROP_SIZE = 512;
 
+export const isSupportedStaticAvatarFile = async (file: File) => {
+  const mimeType = resolveImageFileMimeType(file);
+  if (!mimeType) return false;
+
+  try {
+    return (await detectImageAnimation(file, mimeType)) === "static";
+  } catch {
+    return false;
+  }
+};
+
 export const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
 
+const loadAvatarImage = (file: File) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    const cleanup = () => URL.revokeObjectURL(objectUrl);
+
+    image.decoding = "async";
+    image.onload = () => {
+      cleanup();
+      resolve(image);
+    };
+    image.onerror = () => {
+      cleanup();
+      reject(new Error("Não foi possível preparar a imagem."));
+    };
+    image.src = objectUrl;
+  });
+
 export const cropAvatarFile = async (draft: AvatarDraft) => {
-  const bitmap = await createImageBitmap(draft.file);
-  const sourceSize = Math.min(bitmap.width, bitmap.height);
-  const sourceX = Math.round((bitmap.width - sourceSize) * (draft.position.x / 100));
-  const sourceY = Math.round((bitmap.height - sourceSize) * (draft.position.y / 100));
+  // HTMLImageElement keeps EXIF orientation on Safari/iOS when the Blob path
+  // of createImageBitmap does not.
+  const image = await loadAvatarImage(draft.file);
+  const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const outputSize = Math.min(AVATAR_CROP_SIZE, sourceSize);
+  const sourceX = Math.round((image.naturalWidth - sourceSize) * (draft.position.x / 100));
+  const sourceY = Math.round((image.naturalHeight - sourceSize) * (draft.position.y / 100));
   const canvas = document.createElement("canvas");
-  canvas.width = AVATAR_CROP_SIZE;
-  canvas.height = AVATAR_CROP_SIZE;
+  canvas.width = outputSize;
+  canvas.height = outputSize;
   const context = canvas.getContext("2d");
 
   if (!context) {
-    bitmap.close();
+    image.src = "";
     throw new Error("Não foi possível preparar a imagem.");
   }
 
-  context.drawImage(
-    bitmap,
-    sourceX,
-    sourceY,
-    sourceSize,
-    sourceSize,
-    0,
-    0,
-    AVATAR_CROP_SIZE,
-    AVATAR_CROP_SIZE,
-  );
-  bitmap.close();
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, outputSize, outputSize);
+  image.src = "";
 
-  const outputType =
-    draft.file.type === "image/png" || draft.file.type === "image/webp"
-      ? draft.file.type
-      : "image/jpeg";
+  const inputType = resolveImageFileMimeType(draft.file);
+  const outputType: ImageMimeType =
+    inputType === "image/png" || inputType === "image/webp" ? inputType : "image/jpeg";
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, outputType, 0.92),
   );
@@ -79,7 +108,7 @@ export const cropAvatarFile = async (draft: AvatarDraft) => {
     throw new Error("Não foi possível preparar a imagem.");
   }
 
-  return new File([blob], draft.file.name, {
+  return new File([blob], withImageFileExtension(draft.file.name, outputType), {
     lastModified: Date.now(),
     type: outputType,
   });

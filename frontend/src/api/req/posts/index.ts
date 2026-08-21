@@ -32,6 +32,10 @@ import type {
 import { handleReq } from "@/api/handle";
 import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 import { MULTIPART_DEFAULT_CHUNK_BYTES, uploadFileMultipart } from "@/utils/multipart-upload";
+import {
+  MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS,
+  throwIfMediaUploadCanceled,
+} from "@/utils/upload-lifecycle";
 
 const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
 const REPLY_MEDIA_ALLOWED_MIME_TYPES = new Set([
@@ -178,7 +182,13 @@ export const updatePostReply = async (
   });
 };
 
-const uploadPostReplyMediaSingle = async (id: string, file: File) => {
+const uploadPostReplyMediaSingle = async (
+  id: string,
+  file: File,
+  onProgress?: (percentage: number) => void,
+  signal?: AbortSignal,
+) => {
+  throwIfMediaUploadCanceled(signal);
   const body = new FormData();
   const { file: uploadFile } = withReplyMediaFileType(file);
   body.append("media", uploadFile);
@@ -188,25 +198,38 @@ const uploadPostReplyMediaSingle = async (id: string, file: File) => {
     method: "POST",
     params: { id },
     body,
-    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
+    config: {
+      onUploadProgress: (progressEvent) => {
+        if (!progressEvent.total) return;
+        onProgress?.(Math.round((progressEvent.loaded / progressEvent.total) * 100));
+      },
+      signal,
+      timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS,
+    },
   });
 
-  return handleReq<PostReplyMediaUploadResponse>({
-    ...handle,
-    hideError: true,
-  });
+  try {
+    return await handleReq<PostReplyMediaUploadResponse>({
+      ...handle,
+      hideError: true,
+    });
+  } catch (uploadError) {
+    throwIfMediaUploadCanceled(signal);
+    throw uploadError;
+  }
 };
 
 const initiatePostReplyMediaMultipartUpload = async (
   id: string,
   body: PostReplyMediaMultipartInitiatePayload,
+  signal?: AbortSignal,
 ) => {
   const handle = callEndpoint({
     route: "/api/private/posts/:id/replies/media/multipart/initiate",
     method: "POST",
     params: { id },
     body,
-    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
+    config: { signal, timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
   });
 
   return handleReq<PostReplyMediaMultipartInitiateResponse>({
@@ -221,6 +244,8 @@ const uploadPostReplyMediaMultipartPart = async (
   partNumber: number,
   chunk: Blob,
   fileName: string,
+  onProgress: (loadedBytes: number) => void,
+  signal?: AbortSignal,
 ) => {
   const body = new FormData();
   body.append("uploadSessionId", uploadSessionId);
@@ -232,7 +257,11 @@ const uploadPostReplyMediaMultipartPart = async (
     method: "POST",
     params: { id },
     body,
-    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
+    config: {
+      onUploadProgress: (progressEvent) => onProgress(progressEvent.loaded),
+      signal,
+      timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS,
+    },
   });
 
   return handleReq<PostReplyMediaMultipartPartResponse>({
@@ -244,13 +273,14 @@ const uploadPostReplyMediaMultipartPart = async (
 const completePostReplyMediaMultipartUpload = async (
   id: string,
   body: PostReplyMediaMultipartCompletePayload,
+  signal?: AbortSignal,
 ) => {
   const handle = callEndpoint({
     route: "/api/private/posts/:id/replies/media/multipart/complete",
     method: "POST",
     params: { id },
     body,
-    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
+    config: { signal, timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
   });
 
   return handleReq<PostReplyMediaUploadResponse>({
@@ -265,7 +295,7 @@ const abortPostReplyMediaMultipartUpload = async (id: string, uploadSessionId: s
     method: "DELETE",
     params: { id },
     body: { uploadSessionId },
-    config: { timeout: COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS },
+    config: { timeout: MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS },
   });
 
   return handleReq<{ aborted: boolean }>({
@@ -274,45 +304,74 @@ const abortPostReplyMediaMultipartUpload = async (id: string, uploadSessionId: s
   });
 };
 
-const uploadPostReplyMediaMultipart = async (id: string, file: File) => {
-  const { mimeType } = withReplyMediaFileType(file);
+const uploadPostReplyMediaMultipart = async (
+  id: string,
+  file: File,
+  onProgress?: (percentage: number) => void,
+  signal?: AbortSignal,
+) => {
+  const { file: uploadFile, mimeType } = withReplyMediaFileType(file);
 
   return uploadFileMultipart({
     abort: (sessionId) => abortPostReplyMediaMultipartUpload(id, sessionId),
     complete: ({ parts, sessionId }) =>
-      completePostReplyMediaMultipartUpload(id, {
-        parts,
-        uploadSessionId: sessionId,
-      } satisfies PostReplyMediaMultipartCompletePayload),
-    file,
+      completePostReplyMediaMultipartUpload(
+        id,
+        {
+          parts,
+          uploadSessionId: sessionId,
+        } satisfies PostReplyMediaMultipartCompletePayload,
+        signal,
+      ),
+    file: uploadFile,
     initiate: () =>
-      initiatePostReplyMediaMultipartUpload(id, {
-        fileName: file.name || "media",
-        mimeType,
-        size: file.size,
-      }),
+      initiatePostReplyMediaMultipartUpload(
+        id,
+        {
+          fileName: uploadFile.name || "media",
+          mimeType,
+          size: uploadFile.size,
+        },
+        signal,
+      ),
     mimeType,
-    uploadPart: ({ chunk, fileName, partNumber, sessionId }) =>
-      uploadPostReplyMediaMultipartPart(id, sessionId, partNumber, chunk, fileName),
+    onProgress,
+    signal,
+    uploadPart: ({ chunk, fileName, onProgress: onChunkProgress, partNumber, sessionId }) =>
+      uploadPostReplyMediaMultipartPart(
+        id,
+        sessionId,
+        partNumber,
+        chunk,
+        fileName,
+        onChunkProgress,
+        signal,
+      ),
   });
 };
 
-export const uploadPostReplyMedia = async (id: string, file: File) => {
+export const uploadPostReplyMedia = async (
+  id: string,
+  file: File,
+  onProgress?: (percentage: number) => void,
+  signal?: AbortSignal,
+) => {
   if (shouldUseMultipartReplyUpload(file)) {
     try {
-      return await uploadPostReplyMediaMultipart(id, file);
+      return await uploadPostReplyMediaMultipart(id, file, onProgress, signal);
     } catch (error) {
+      throwIfMediaUploadCanceled(signal);
       const status = getApiErrorStatus(error);
 
       if (status === 404 || status === 405) {
-        return uploadPostReplyMediaSingle(id, file);
+        return uploadPostReplyMediaSingle(id, file, onProgress, signal);
       }
 
       throw error;
     }
   }
 
-  return uploadPostReplyMediaSingle(id, file);
+  return uploadPostReplyMediaSingle(id, file, onProgress, signal);
 };
 
 export const reportPost = async (id: string, body: PostReportPayload) => {

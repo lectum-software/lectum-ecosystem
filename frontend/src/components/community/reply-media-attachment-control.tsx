@@ -5,6 +5,7 @@ import Image from "next/image";
 import { type ChangeEvent, type RefObject, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { resolvePublicMediaKind } from "@/utils/media-preparation";
 
 export const REPLY_MEDIA_ACCEPT =
   "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
@@ -181,8 +182,8 @@ export const createReplyVideoThumbnail = (previewUrl: string): Promise<string | 
   });
 };
 
-export const mediaTypeFromFile = (file: File): ReplyMediaType =>
-  file.type.startsWith("image/") ? "image" : "video";
+export const mediaTypeFromFile = (file: File): ReplyMediaType | null =>
+  resolvePublicMediaKind(file);
 
 const composerPreviewSizeClassName = (orientation?: ReplyMediaOrientation) => {
   if (orientation === "portrait") return "h-20 w-14 rounded-[1.15rem]";

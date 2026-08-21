@@ -12,8 +12,6 @@ export const OG_IMAGE_MAX_SIZE_BYTES = OG_IMAGE_MAX_SIZE_MB * 1024 * 1024;
 
 export const OG_IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
 
-export const OG_IMAGE_ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-
 export const resolveOpenGraphPreviewSource = (value?: string | null) =>
   renderableImageSrc(value ?? null);
 

@@ -34,6 +34,7 @@ import {
   updateAdminCommunityStatus,
   uploadAdminCommunityAvatar,
 } from "@/api/req/communities";
+import { prepareImageUpload } from "@/lib/image-preparation";
 
 export const useAdminCommunitiesDashboard = (
   input: CommunitiesDashboardQuery,
@@ -174,7 +175,10 @@ export const useAdminCommunityAvatarUpload = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (file: File) => uploadAdminCommunityAvatar(id, file),
+    mutationFn: async (file: File) => {
+      const prepared = await prepareImageUpload(file, { purpose: "community-avatar" });
+      return uploadAdminCommunityAvatar(id, prepared.file);
+    },
     onSuccess: () => invalidateCommunity(queryClient, id),
   });
 };

@@ -5,6 +5,7 @@ type UploadLimitEnvironment = Partial<
     NodeJS.ProcessEnv,
     | "UPLOAD_LIMIT_ADMIN_SEO_OG_IMAGE_MB"
     | "UPLOAD_LIMIT_ADMIN_COMMUNITY_AVATAR_MB"
+    | "UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB"
     | "UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MB"
     | "UPLOAD_LIMIT_PATIENT_AVATAR_MB"
     | "UPLOAD_LIMIT_POST_REPLY_MEDIA_MULTIPART_CHUNK_MB"
@@ -34,14 +35,14 @@ export const toMulterExclusiveThreshold = (inclusiveLimit: number) => inclusiveL
 const imageLimit = (value: unknown, fallback = 5) =>
   parsePositiveInteger(value, fallback, { max: IMAGE_LIMIT_MAX_MB });
 
-const singleRequestLimit = (value: unknown, fallback: number) =>
-  parsePositiveInteger(value, fallback, { max: SINGLE_REQUEST_LIMIT_MAX_MB });
-
 const multipartCompatibleSimpleLimit = (value: unknown, fallback: number) =>
   parsePositiveInteger(value, fallback, {
     max: SINGLE_REQUEST_LIMIT_MAX_MB,
     min: MULTIPART_LIMIT_MIN_MB,
   });
+
+const singleRequestLimit = (value: unknown, fallback: number) =>
+  parsePositiveInteger(value, fallback, { max: SINGLE_REQUEST_LIMIT_MAX_MB });
 
 const multipartTotalLimit = (value: unknown, fallback: number) =>
   parsePositiveInteger(value, fallback, {
@@ -62,6 +63,10 @@ export const resolveUploadLimits = (env: UploadLimitEnvironment = process.env) =
   community: {
     avatarMb: imageLimit(env.UPLOAD_LIMIT_ADMIN_COMMUNITY_AVATAR_MB),
     postMediaMb: singleRequestLimit(env.UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MB, 200),
+    postMediaMultipartTotalMb: multipartTotalLimit(
+      env.UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB,
+      200,
+    ),
   },
   patient: {
     avatarMb: imageLimit(env.UPLOAD_LIMIT_PATIENT_AVATAR_MB),

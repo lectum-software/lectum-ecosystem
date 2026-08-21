@@ -21,6 +21,8 @@ import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
+import { mapWithConcurrency } from "@/utils/map-with-concurrency";
+import { resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
   COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
   isCommunityMediaFileTooLarge,
@@ -97,7 +99,11 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     },
   });
   const canManageMedia = mediaPermission.canAttach && isPsychologistPost;
-  const isSubmitting = uploadMutation.isPending || updateMutation.isPending;
+  const isSubmitting =
+    hook.formState.isSubmitting || uploadMutation.isPending || updateMutation.isPending;
+  const isUploadingMedia =
+    uploadMutation.isPending ||
+    (hook.formState.isSubmitting && selectedMediaItems.length > 0 && !updateMutation.isPending);
   const normalizedPostMediaType = normalizeMediaType(post.media_type);
   const storedMediaItems = useMemo<PostMediaPreviewItem[]>(() => {
     const mediaItems = (post.media_items ?? [])
@@ -269,8 +275,14 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       return;
     }
 
-    const videoFiles = files.filter((file) => file.type.startsWith("video/"));
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (files.some((file) => resolvePublicMediaKind(file) === null)) {
+      toast.error("Envie uma imagem ou vídeo em formato permitido.");
+      focusLastEditor();
+      return;
+    }
+
+    const videoFiles = files.filter((file) => resolvePublicMediaKind(file) === "video");
+    const imageFiles = files.filter((file) => resolvePublicMediaKind(file) === "image");
     const hasAttachedMedia = editableMediaItems.length > 0;
     const hasAttachedVideo = editableMediaItems.some((item) => item.type === "video");
 
@@ -303,12 +315,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
           type: "video",
         },
       ]);
-      focusLastEditor();
-      return;
-    }
-
-    if (imageFiles.length === 0) {
-      toast.error("Envie uma imagem ou vídeo em formato permitido.");
       focusLastEditor();
       return;
     }
@@ -363,13 +369,11 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
             }),
           ]
         : selectedMediaItems.length > 0
-          ? await Promise.all(
-              selectedMediaItems.map((mediaItem) =>
-                uploadMutation.mutateAsync({
-                  file: mediaItem.file,
-                  slug: post.community.slug,
-                }),
-              ),
+          ? await mapWithConcurrency(selectedMediaItems, 2, (mediaItem) =>
+              uploadMutation.mutateAsync({
+                file: mediaItem.file,
+                slug: post.community.slug,
+              }),
             )
           : [];
       const thumbnailFrame =
@@ -393,6 +397,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       const uploadedThumbnail = thumbnailFile
         ? await uploadMutation.mutateAsync({
             file: thumbnailFile,
+            purpose: "generated-video-thumbnail",
             slug: post.community.slug,
           })
         : null;
@@ -663,7 +668,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
             canManageMedia={canManageMedia}
             fileInputRef={fileInputRef}
             isSubmitting={isSubmitting}
-            isUploading={uploadMutation.isPending}
+            isUploading={isUploadingMedia}
             mediaPermissionReason={mediaPermission.reason}
             onFocusEditor={focusLastEditor}
             onMediaChange={handleMediaChange}

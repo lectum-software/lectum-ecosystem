@@ -10,6 +10,7 @@ describe("upload limits", () => {
     assert.equal(limits.psychologist.videoSimpleMb, 50);
     assert.equal(limits.psychologist.videoMultipartTotalMb, 300);
     assert.equal(limits.community.postMediaMb, 200);
+    assert.equal(limits.community.postMediaMultipartTotalMb, 200);
     assert.equal(limits.postReply.multipartTotalMb, 200);
   });
 
@@ -18,6 +19,7 @@ describe("upload limits", () => {
       UPLOAD_LIMIT_ADMIN_COMMUNITY_AVATAR_MB: "6",
       UPLOAD_LIMIT_ADMIN_SEO_OG_IMAGE_MB: "7",
       UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MB: "210",
+      UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB: "320",
       UPLOAD_LIMIT_PATIENT_AVATAR_MB: "8",
       UPLOAD_LIMIT_POST_REPLY_MEDIA_MULTIPART_CHUNK_MB: "11",
       UPLOAD_LIMIT_POST_REPLY_MEDIA_MULTIPART_MB: "350",
@@ -33,6 +35,7 @@ describe("upload limits", () => {
     assert.equal(limits.admin.seoOgImageMb, 7);
     assert.equal(limits.community.avatarMb, 6);
     assert.equal(limits.community.postMediaMb, 210);
+    assert.equal(limits.community.postMediaMultipartTotalMb, 320);
     assert.equal(limits.patient.avatarMb, 8);
     assert.equal(limits.postReply.multipartChunkMb, 11);
     assert.equal(limits.postReply.multipartTotalMb, 350);
@@ -45,9 +48,11 @@ describe("upload limits", () => {
     assert.equal(limits.psychologist.videoSimpleMb, 60);
   });
 
-  it("usa fallback para valores perigosos ou invalidos", () => {
+  it("preserva limite legado baixo e usa fallback para valores invalidos", () => {
     const limits = resolveUploadLimits({
       UPLOAD_LIMIT_ADMIN_SEO_OG_IMAGE_MB: "1000",
+      UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MB: "4",
+      UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB: "4",
       UPLOAD_LIMIT_POST_REPLY_MEDIA_MULTIPART_CHUNK_MB: "4",
       UPLOAD_LIMIT_POST_REPLY_MEDIA_SIMPLE_MB: "501",
       UPLOAD_LIMIT_PSYCHOLOGIST_VIDEO_MULTIPART_MB: "4",
@@ -55,6 +60,8 @@ describe("upload limits", () => {
     });
 
     assert.equal(limits.admin.seoOgImageMb, 5);
+    assert.equal(limits.community.postMediaMb, 4);
+    assert.equal(limits.community.postMediaMultipartTotalMb, 200);
     assert.equal(limits.postReply.multipartChunkMb, 10);
     assert.equal(limits.postReply.simpleMb, 200);
     assert.equal(limits.psychologist.videoMultipartTotalMb, 300);

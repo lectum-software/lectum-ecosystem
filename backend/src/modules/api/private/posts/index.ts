@@ -2,6 +2,7 @@ import { Router } from "express";
 import publicMulter from "@/config/multer";
 import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { createMultipartChunkMiddleware } from "@/config/multer/multipart-chunk";
+import { uploadConcurrencyMiddleware } from "@/config/multer/upload-concurrency";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import {
   abortReplyMediaMultipartUpload,
@@ -89,6 +90,7 @@ routes.post(
   "/:id/replies/media/multipart/part",
   privateAuth,
   showValidator,
+  uploadConcurrencyMiddleware,
   replyMediaMultipartChunkMiddleware,
   uploadReplyMediaMultipartPart,
 );

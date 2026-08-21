@@ -496,3 +496,4 @@ Formato recomendado:
 - [ADR-0463 — Upload multipart para vídeo de apresentação](0463-upload-multipart-video-apresentacao.md)
 - [ADR-0464 — Otimização client-side do vídeo de apresentação com MediaBunny](0464-otimizacao-client-side-video-mediabunny.md)
 - [ADR-0465 — Observabilidade Sentry em aplicações separadas](0465-observabilidade-sentry-aplicacoes-separadas.md)
+- [ADR-0466 — Preparação de mídia pública por finalidade](0466-preparacao-midia-publica-por-finalidade.md)

@@ -4,9 +4,9 @@ import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { PsychologistProfileVideoUploadInput } from "@/api/callers/psychologist-free-profile";
+import { prepareUpload } from "@/utils/media-preparation";
 import {
   isProfileVideoUploadCanceled,
-  prepareProfileVideo,
   throwIfProfileVideoUploadCanceled,
 } from "@/utils/profile-video-optimization";
 import { isAllowedProfileVideo } from "@/utils/profile-video-upload";
@@ -46,18 +46,21 @@ export const useProfileVideoUpload = ({
   const uploadFile = useCallback(
     async (file: File) => {
       const controller = new AbortController();
+      let uploadStarted = false;
       activeControllerRef.current = controller;
       setVideoUploadPhase("analyzing");
       setVideoUploadProgress(null);
       setVideoUploadSummary(null);
 
       try {
-        const prepared = await prepareProfileVideo(file, {
+        const prepared = await prepareUpload({
+          file,
           onProgress: ({ percentage, stage }) => {
             if (!mountedRef.current || controller.signal.aborted) return;
             setVideoUploadPhase(stage);
             setVideoUploadProgress(percentage);
           },
+          purpose: "profile-presentation-video",
           signal: controller.signal,
         });
         throwIfProfileVideoUploadCanceled(controller.signal);
@@ -70,6 +73,7 @@ export const useProfileVideoUpload = ({
         }
         setVideoUploadPhase("uploading");
         setVideoUploadProgress(0);
+        uploadStarted = true;
         await startUpload({
           file: prepared.file,
           onProgress: (percentage) => {
@@ -81,7 +85,12 @@ export const useProfileVideoUpload = ({
         });
       } catch (error) {
         if (isProfileVideoUploadCanceled(error)) return;
-        // O callback da mutation mantém a mensagem pública centralizada e sem detalhes técnicos.
+        if (!uploadStarted) {
+          toast.error(
+            "Não foi possível preparar o vídeo. Escolha outro arquivo e tente novamente.",
+          );
+        }
+        // Erros após o início do transporte usam a mensagem pública centralizada da mutation.
       } finally {
         if (activeControllerRef.current === controller) activeControllerRef.current = null;
         if (mountedRef.current) {

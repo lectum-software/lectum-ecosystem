@@ -3,11 +3,11 @@
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { type ChangeEvent, useId, useRef } from "react";
 import { toast } from "sonner";
+import { resolveImageFileMimeType } from "@/lib/image-preparation";
 import { cn } from "@/lib/utils";
 import {
   canRenderOpenGraphPreview,
   OG_IMAGE_ACCEPT,
-  OG_IMAGE_ACCEPTED_TYPES,
   OG_IMAGE_MAX_SIZE_BYTES,
   OG_IMAGE_MAX_SIZE_MB,
   resolveOpenGraphPreviewSource,
@@ -42,7 +42,7 @@ export const OpenGraphImageField = ({
 
     if (!file) return;
 
-    if (!OG_IMAGE_ACCEPTED_TYPES.has(file.type)) {
+    if (!resolveImageFileMimeType(file)) {
       toast.error("Envie uma imagem JPG, PNG ou WebP.");
       return;
     }

@@ -17,6 +17,12 @@ import type {
   UpdatePostReplyPayload,
 } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
+import {
+  type MediaPreparationPurpose,
+  type MediaUploadProgress,
+  prepareUpload,
+  resolvePostReplyPreparationPurpose,
+} from "@/utils/media-preparation";
 
 import { invalidateDirectoryPsychologistQueries } from "./queries";
 
@@ -87,7 +93,35 @@ export const useCreatePostReply = (callbacks?: {
 
 export const useUploadPostReplyMedia = (callbacks?: { onError?: (error: unknown) => void }) => {
   return useMutation({
-    mutationFn: ({ file, id }: { file: File; id: string }) => api.uploadPostReplyMedia(id, file),
+    mutationFn: async ({
+      file,
+      id,
+      onProgress,
+      purpose,
+      signal,
+    }: {
+      file: File;
+      id: string;
+      onProgress?: (progress: MediaUploadProgress) => void;
+      purpose?: Extract<
+        MediaPreparationPurpose,
+        "generated-video-thumbnail" | "post-reply-image" | "post-reply-video"
+      >;
+      signal?: AbortSignal;
+    }) => {
+      const prepared = await prepareUpload({
+        file,
+        onProgress: (progress) => onProgress?.({ ...progress, phase: "preparing" }),
+        purpose: purpose ?? resolvePostReplyPreparationPurpose(file),
+        signal,
+      });
+      return api.uploadPostReplyMedia(
+        id,
+        prepared.file,
+        (percentage) => onProgress?.({ percentage, phase: "uploading", stage: "uploading" }),
+        signal,
+      );
+    },
     onError: callbacks?.onError,
   });
 };

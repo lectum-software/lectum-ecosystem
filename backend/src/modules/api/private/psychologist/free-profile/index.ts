@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "@/config/multer";
 import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { createMultipartChunkMiddleware } from "@/config/multer/multipart-chunk";
+import { uploadConcurrencyMiddleware } from "@/config/multer/upload-concurrency";
 import {
   abortProfileVideoMultipartUpload,
   completeProfileVideoMultipartUpload,
@@ -59,6 +60,7 @@ routes.post(
 );
 routes.post(
   "/video/multipart/part",
+  uploadConcurrencyMiddleware,
   videoMultipartChunkMiddleware,
   videoMultipartPartValidator,
   uploadProfileVideoMultipartPart,

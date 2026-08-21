@@ -369,9 +369,19 @@ export const ReplyComposer = ({
       return;
     }
 
+    const type = mediaTypeFromFile(file);
+    if (!type) {
+      hook.setError("content", {
+        message: "Envie uma imagem ou vídeo em formato permitido.",
+        type: "manual",
+      });
+      endMediaPickerInteraction();
+      focusComposerInput();
+      return;
+    }
+
     revokeSelectedMediaPreview();
     const previewUrl = URL.createObjectURL(file);
-    const type = mediaTypeFromFile(file);
     selectedMediaPreviewUrlRef.current = previewUrl;
     setSelectedMedia({
       file,
