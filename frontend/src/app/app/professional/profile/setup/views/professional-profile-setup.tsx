@@ -38,6 +38,7 @@ import {
   SectionCard,
   VideoRemovalConfirmationModal,
 } from "../components/profile-setup-shell";
+import { ProfileVideoUploadProgress } from "../components/profile-video-upload-progress";
 import { useProfessionalProfileSetupController } from "../hooks/use-professional-profile-setup-controller";
 import {
   PROFESSIONAL_PROFILE_MENU_HREF,
@@ -55,6 +56,7 @@ export const ProfessionalProfileSetupLogic = () => {
     addressState,
     availableDaysError,
     canUploadVideo,
+    cancelVideoUpload,
     cityOptions,
     confirmVideoRemoval,
     deleteVideo,
@@ -94,7 +96,6 @@ export const ProfessionalProfileSetupLogic = () => {
     submit,
     targetAudienceError,
     update,
-    uploadVideo,
     uploadVideoCover,
     videoActionsOpen,
     videoCoverInputRef,
@@ -103,7 +104,10 @@ export const ProfessionalProfileSetupLogic = () => {
     videoRemovalConfirmOpen,
     videoSrc,
     videoUploadLimitMb,
+    videoUploadBusy,
+    videoUploadPhase,
     videoUploadProgress,
+    videoUploadSummary,
     whatsappUrl,
   } = controller;
 
@@ -226,9 +230,7 @@ export const ProfessionalProfileSetupLogic = () => {
                           aria-label="Editar vídeo de apresentação"
                           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-primary transition hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={
-                            uploadVideo.isPending ||
-                            uploadVideoCover.isPending ||
-                            deleteVideo.isPending
+                            videoUploadBusy || uploadVideoCover.isPending || deleteVideo.isPending
                           }
                           data-psychologist-tip-target={videoSrc ? "profile-video" : undefined}
                           onClick={handleVideoActionsToggle}
@@ -246,7 +248,7 @@ export const ProfessionalProfileSetupLogic = () => {
                               className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
                               disabled={
                                 !videoSrc ||
-                                uploadVideo.isPending ||
+                                videoUploadBusy ||
                                 uploadVideoCover.isPending ||
                                 deleteVideo.isPending
                               }
@@ -259,7 +261,7 @@ export const ProfessionalProfileSetupLogic = () => {
                             </button>
                             <button
                               className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-foreground transition hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-45"
-                              disabled={uploadVideo.isPending || uploadVideoCover.isPending}
+                              disabled={videoUploadBusy || uploadVideoCover.isPending}
                               onClick={openVideoFilePicker}
                               role="menuitem"
                               type="button"
@@ -271,7 +273,7 @@ export const ProfessionalProfileSetupLogic = () => {
                               className="flex w-full items-center gap-2 px-4 py-3 text-xs font-semibold text-danger transition hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-45"
                               disabled={
                                 !videoSrc ||
-                                uploadVideo.isPending ||
+                                videoUploadBusy ||
                                 uploadVideoCover.isPending ||
                                 deleteVideo.isPending
                               }
@@ -292,29 +294,13 @@ export const ProfessionalProfileSetupLogic = () => {
                       publicar o perfil e aparecer na área pública da Lectum.
                     </p>
 
-                    {uploadVideo.isPending ? (
-                      <div className="mt-4" aria-live="polite">
-                        <div className="flex items-center justify-between gap-3 text-xs font-semibold text-foreground">
-                          <span>Enviando vídeo</span>
-                          <span>{videoUploadProgress ?? 0}%</span>
-                        </div>
-                        <div
-                          aria-label="Progresso do envio do vídeo"
-                          aria-valuemax={100}
-                          aria-valuemin={0}
-                          aria-valuenow={videoUploadProgress ?? 0}
-                          className="mt-2 h-2 overflow-hidden rounded-full bg-border"
-                          role="progressbar"
-                        >
-                          <div
-                            className="h-full rounded-full bg-primary transition-[width] duration-200"
-                            style={{ width: `${videoUploadProgress ?? 0}%` }}
-                          />
-                        </div>
-                        <p className="mt-2 text-xs leading-5 text-muted">
-                          Mantenha esta tela aberta até o envio terminar.
-                        </p>
-                      </div>
+                    {videoUploadPhase ? (
+                      <ProfileVideoUploadProgress
+                        onCancel={cancelVideoUpload}
+                        phase={videoUploadPhase}
+                        progress={videoUploadProgress}
+                        summary={videoUploadSummary}
+                      />
                     ) : null}
 
                     {videoSrc ? (
@@ -327,13 +313,13 @@ export const ProfessionalProfileSetupLogic = () => {
                     ) : (
                       <button
                         className="mt-4 grid min-h-32 w-full place-items-center rounded-2xl border border-dashed border-border bg-surface px-4 py-6 text-center transition hover:border-primary hover:bg-primary-soft/40 disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={uploadVideo.isPending}
+                        disabled={videoUploadBusy}
                         data-psychologist-tip-target={!videoSrc ? "profile-video" : undefined}
                         onClick={handleVideoUploadCardClick}
                         type="button"
                       >
                         <span>
-                          {uploadVideo.isPending ? (
+                          {videoUploadBusy ? (
                             <Loader2
                               className="mx-auto h-8 w-8 animate-spin text-primary"
                               aria-hidden="true"
@@ -345,8 +331,8 @@ export const ProfessionalProfileSetupLogic = () => {
                             />
                           )}
                           <span className="mt-3 block text-sm font-bold text-foreground">
-                            {uploadVideo.isPending
-                              ? "Enviando vídeo..."
+                            {videoUploadBusy
+                              ? "Preparando vídeo..."
                               : "Toque para enviar seu vídeo"}
                           </span>
                           <span className="mt-1 block text-xs text-muted">MP4, MOV ou WebM.</span>

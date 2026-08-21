@@ -17,6 +17,7 @@ import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-prof
 import { components } from "@/components/controllers";
 import { useAppSelector } from "@/hooks/redux";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { isProfileVideoUploadCanceled } from "@/utils/profile-video-optimization";
 import { PROFILE_VIDEO_DEFAULT_LIMIT_MB } from "@/utils/profile-video-upload";
 import { CITY_OPTIONS_BY_STATE } from "../brazil-cities";
 import {
@@ -112,7 +113,9 @@ export const useProfessionalProfileSetupController = () => {
       },
       video: {
         onSuccess: () => toast.success("Vídeo de apresentação atualizado"),
-        onError: (error) => toast.error(resolveApiError(error)),
+        onError: (error) => {
+          if (!isProfileVideoUploadCanceled(error)) toast.error(resolveApiError(error));
+        },
       },
       videoCover: {
         onSuccess: () => toast.success("Imagem de capa do vídeo atualizada"),
@@ -155,12 +158,11 @@ export const useProfessionalProfileSetupController = () => {
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
   const videoUploadLimitMb =
     profile.data?.upload_limits?.presentation_video_mb ?? PROFILE_VIDEO_DEFAULT_LIMIT_MB;
-  const { handleFileChange: handleVideoChange, progress: videoUploadProgress } =
-    useProfileVideoUpload({
-      maxSizeMb: videoUploadLimitMb,
-      onFileSelected: () => setVideoActionsOpen(false),
-      startUpload: (input, onSettled) => uploadVideo.mutate(input, { onSettled }),
-    });
+  const videoUpload = useProfileVideoUpload({
+    maxSizeMb: videoUploadLimitMb,
+    onFileSelected: () => setVideoActionsOpen(false),
+    startUpload: (input) => uploadVideo.mutateAsync(input),
+  });
   const shouldLockProfessionalIdentityFields = Boolean(
     profile.data?.profile.identity_fields_locked,
   );
@@ -255,7 +257,7 @@ export const useProfessionalProfileSetupController = () => {
     deleteAvatar.isPending ||
     uploadCoverImage.isPending ||
     deleteCoverImage.isPending ||
-    uploadVideo.isPending ||
+    videoUpload.videoUploadBusy ||
     uploadVideoCover.isPending ||
     deleteVideo.isPending;
   const isSubmitting = update.isPending || isSavingMedia;
@@ -633,7 +635,6 @@ export const useProfessionalProfileSetupController = () => {
     handleCoverImageChange,
     handleCoverImageRemoval,
     handleVideoActionsToggle,
-    handleVideoChange,
     handleVideoCoverChange,
     handleVideoCoverRequest,
     handleVideoRemoval,
@@ -678,10 +679,9 @@ export const useProfessionalProfileSetupController = () => {
     update,
     uploadAvatar,
     uploadCoverImage,
-    uploadVideo,
     uploadVideoCover,
     videoUploadLimitMb,
-    videoUploadProgress,
+    ...videoUpload,
     videoActionsOpen,
     videoCoverInputRef,
     videoCoverSrc,

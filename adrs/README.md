@@ -494,4 +494,5 @@ Formato recomendado:
 - [ADR-0461 — Exclusão de conta Google sem senha local](0461-exclusao-conta-google-sem-senha-local.md)
 - [ADR-0462 — Descadastros nos dashboards Admin](0462-descadastros-dashboard-admin.md)
 - [ADR-0463 — Upload multipart para vídeo de apresentação](0463-upload-multipart-video-apresentacao.md)
+- [ADR-0464 — Otimização client-side do vídeo de apresentação com MediaBunny](0464-otimizacao-client-side-video-mediabunny.md)
 - [ADR-0465 — Observabilidade Sentry em aplicações separadas](0465-observabilidade-sentry-aplicacoes-separadas.md)

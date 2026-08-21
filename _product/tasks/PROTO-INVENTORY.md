@@ -116,7 +116,7 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Avaliações | Confirmação de Avaliação | `_product/proto/Confirmação de Avaliação.jpg` | 390x1006 | TASK-17 |
 | Avaliações | Avaliações Feitas - Paciente | `_product/proto/Avaliações Feitas - Paciente.jpg` | 390x1056 | TASK-17 |
 | Psicólogo privado | Perfil - Psicólogo | `_product/proto/Perfil - Psicólogo.jpg` | 430x1254 | TASK-18 |
-| Psicólogo privado | Editar Perfil - Psicólogo | `_product/proto/Editar Perfil - Psicólogo.jpg` | 394x4078 | TASK-18 |
+| Psicólogo privado | Editar Perfil - Psicólogo | `_product/proto/Editar Perfil - Psicólogo.jpg` | 394x4078 | TASK-18, TASK-157, TASK-158 |
 | Psicólogo privado | Modal de Atualização de Perfil do Psicólogo | `_product/proto/Modal de Atualização de Perfil do Psicólogo.jpg` | 430x925 | TASK-18 |
 | Psicólogo privado | Minhas Avaliações - Psicólogo | `_product/proto/Minhas Avaliações - Psicólogo.jpg` | 390x1506 | TASK-19 |
 | Psicólogo privado | Meus Analytics - Psicólogo | `_product/proto/Meus Analytics - Psicólogo.jpg` | 390x1284 | TASK-20 |

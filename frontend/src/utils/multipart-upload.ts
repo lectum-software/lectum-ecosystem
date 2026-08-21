@@ -34,21 +34,40 @@ type MultipartUploadInput<T> = {
   maxPartAttempts?: number;
   mimeType: string;
   onProgress?: (percentage: number) => void;
+  signal?: AbortSignal;
   uploadPart: (input: MultipartPartInput) => Promise<MultipartPart>;
 };
 
-const sleep = (ms: number) => new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const timeout = globalThis.setTimeout(() => {
+      signal?.removeEventListener("abort", handleAbort);
+      resolve();
+    }, ms);
+    const handleAbort = () => {
+      globalThis.clearTimeout(timeout);
+      reject(signal?.reason ?? new DOMException("Aborted", "AbortError"));
+    };
 
-const retryMultipartPart = async <T>(upload: () => Promise<T>, maxAttempts: number) => {
+    signal?.addEventListener("abort", handleAbort, { once: true });
+    if (signal?.aborted) handleAbort();
+  });
+
+const retryMultipartPart = async <T>(
+  upload: () => Promise<T>,
+  maxAttempts: number,
+  signal?: AbortSignal,
+) => {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    signal?.throwIfAborted();
     try {
       return await upload();
     } catch (uploadError) {
       lastError = uploadError;
       if (attempt >= maxAttempts || !isRetryableApiError(uploadError)) throw uploadError;
-      await sleep(600 * attempt);
+      await sleep(600 * attempt, signal);
     }
   }
 
@@ -66,9 +85,11 @@ export const uploadFileMultipart = async <T>({
   maxPartAttempts = 3,
   mimeType,
   onProgress,
+  signal,
   uploadPart,
 }: MultipartUploadInput<T>) => {
   let sessionId: string | null = null;
+  signal?.throwIfAborted();
   onProgress?.(0);
 
   try {
@@ -83,6 +104,7 @@ export const uploadFileMultipart = async <T>({
     let partNumber = 1;
 
     for (let offset = 0; offset < file.size; offset += chunkSize) {
+      signal?.throwIfAborted();
       const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size), mimeType);
       const currentPartNumber = partNumber;
       let reportedChunkBytes = 0;
@@ -102,6 +124,7 @@ export const uploadFileMultipart = async <T>({
             sessionId: session.upload_session_id,
           }),
         maxPartAttempts,
+        signal,
       );
       const partId = uploadedPart.part_id || uploadedPart.part_token;
       if (!partId) throw new Error("multipart_part_missing");
@@ -112,6 +135,7 @@ export const uploadFileMultipart = async <T>({
       partNumber += 1;
     }
 
+    signal?.throwIfAborted();
     const result = await complete({ parts, sessionId: session.upload_session_id });
     onProgress?.(100);
     return result;
