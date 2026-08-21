@@ -702,3 +702,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback das TASK-53 e TASK-60: dashboards Admin de psicologos e pacientes exibem o contador **Descadastros** na **Visao geral**.
 - A contagem usa soft delete real em `user.deleted=true`, `user.account_status="deleted"`, `user.deletedAt` e `role` correspondente, sem incluir contas excluidas nos totais ativos/inativos.
 - O contrato e aditivo (`cards.deleted_accounts` e pontos temporais com `deleted_accounts`), sem schema Prisma, migration, package novo, seed, mock, backfill artificial ou env nova.
+
+## Atualizacao visual em 2026-08-21: abertura da modal Criar Post no Android
+
+- Ajuste pos-feedback da TASK-24: a modal `Criar Post` em Android/touch deixa de focar o titulo no mesmo frame de montagem, aguardando a animacao da bottom sheet antes de acionar o teclado virtual.
+- O backdrop mobile da modal nao usa mais blur de tela cheia; `sm+` preserva o blur. A sheet anima somente `transform` e isola pintura para reduzir repaint sobre o feed com midia.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages, envs, upload/storage ou dados publicados.

@@ -752,3 +752,39 @@ Validacoes finais deste complemento:
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - [x] Commit proprio criado e push em `homolog` executado.
+
+## Complemento 2026-08-21 - abertura fluida da modal Criar Post no Android
+
+- Pedido do usuario: observar o video `WhatsApp Video 2026-08-21 at 10.22.52.mp4` e reduzir o travamento percebido ao abrir a modal `Criar Post` em Android.
+- Observacao do video: a sheet inicia a entrada e o teclado virtual aparece praticamente junto da animacao, fazendo o compositor perder frames e a modal parecer "pular" para o estado final.
+- Frontend: o campo de titulo deixou de usar `autoFocus` direto no controller `contenteditable`, evitando foco/teclado no mesmo frame de montagem da sheet.
+- Frontend: em dispositivos touch/coarse pointer e Android, o foco inicial do titulo agora e agendado somente apos a animacao de entrada da bottom sheet; desktop preserva os timers imediatos.
+- Frontend: o backdrop mobile deixou de aplicar blur de tela cheia; o blur foi preservado em `sm+`, reduzindo custo de composicao sobre feed com cards e midia.
+- Frontend: a sheet passou a transicionar apenas `transform` e recebeu isolamento de pintura (`contain: layout paint style`), evitando animar altura/margem durante resize do teclado.
+- Escopo: sem mudancas de backend, Prisma, migrations, endpoints, payload, regra de publicacao, upload/storage, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: video anexado pelo usuario e prototipos locais `_product/proto/Criar Nova Postagem - Pacientes.jpg`/`_product/proto/Criar Nova Postagem - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A modal `Criar Post` nao aciona foco/teclado no mesmo frame de montagem em Android/touch.
+- [x] A entrada da sheet continua subindo de baixo, mas sem competir com animacao de teclado no inicio.
+- [x] O backdrop mobile reduz custo de GPU removendo blur de tela cheia na base mobile.
+- [x] Desktop/tablet `sm+` preserva o blur visual ja existente.
+- [x] A sheet anima somente transform durante entrada/saida, mantendo offsets de teclado e safe-area.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] Extracao/observacao local de frames do video anexado via Chrome/CDP: abertura entre `9.50s` e `9.65s` mostrou sheet, backdrop e teclado competindo durante a entrada.
+- [x] Smoke estatico via Node confirmou ausencia de `autoFocus: true`, atraso de foco touch, blur apenas em `sm+`, transicao restrita a transform e isolamento de pintura da sheet.
+- [x] `pnpm --dir frontend exec biome check --write ...`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` reexecutado apos o bump para `0.1.154`
+- [x] `pnpm version:bump` para `0.1.154`
+- [x] `pnpm check:version`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] Browser local/headless mobile em `http://127.0.0.1:3073/version` confirmou frontend `0.1.154`; a rota privada `/app/comunidades/feed/publicacao/nova` redirecionou para login sem cookie autenticado, entao nao foi usado mock para forcar sessao.

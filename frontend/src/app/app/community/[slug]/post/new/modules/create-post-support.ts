@@ -100,6 +100,8 @@ export const communityNameCollator = new Intl.Collator("pt-BR", {
 });
 
 export const SHEET_CLOSE_DELAY_MS = 360;
+export const SHEET_ENTER_ANIMATION_MS = 340;
+export const CREATE_POST_TOUCH_AUTOFOCUS_DELAY_MS = SHEET_ENTER_ANIMATION_MS + 120;
 
 export const EDITOR_FIELD_IDS = new Set(["create-post-title", "create-post-content"]);
 
@@ -120,6 +122,26 @@ export type SelectedPostMedia = {
 
 export const createSelectedMediaId = () =>
   globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+export const resolveKeyboardViewportOffset = () => {
+  if (typeof window === "undefined" || !window.visualViewport) return 0;
+
+  const viewport = window.visualViewport;
+  const overlap = window.innerHeight - viewport.height - viewport.offsetTop;
+
+  return Math.max(0, Math.round(overlap));
+};
+
+const shouldDeferInitialEditorFocus = () => {
+  if (typeof window === "undefined") return false;
+
+  return window.matchMedia("(pointer: coarse)").matches || /Android/i.test(navigator.userAgent);
+};
+
+export const getCreatePostInitialEditorFocusDelays = () =>
+  shouldDeferInitialEditorFocus()
+    ? [CREATE_POST_TOUCH_AUTOFOCUS_DELAY_MS, CREATE_POST_TOUCH_AUTOFOCUS_DELAY_MS + 180]
+    : [0, 90, 280, 420];
 
 export type CreateCommunityPostLogicProps = {
   asModalSlot?: boolean;

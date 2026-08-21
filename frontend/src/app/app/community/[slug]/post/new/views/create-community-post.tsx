@@ -410,7 +410,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     <div
       className={cn(
         "fixed inset-0 z-[70] flex items-end justify-center overflow-hidden overscroll-none transition-opacity duration-200 ease-out",
-        "bg-foreground/45 backdrop-blur-[8px] dark:bg-background/75",
+        "bg-foreground/32 dark:bg-background/72 sm:bg-foreground/45 sm:backdrop-blur-[8px] sm:dark:bg-background/75",
         isSheetOpen ? "opacity-100" : "opacity-0",
       )}
       ref={overlayRef}
@@ -419,7 +419,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
         aria-labelledby="create-post-title-heading"
         aria-modal="true"
         className={cn(
-          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] transform-gpu flex-col overflow-hidden overscroll-contain rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-[height,margin-bottom,transform] will-change-transform sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
+          "mb-[var(--lectum-create-post-keyboard-offset)] flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem_-_var(--lectum-create-post-keyboard-offset))] w-full max-w-[min(100vw,44rem)] transform-gpu flex-col overflow-hidden overscroll-contain rounded-t-[2rem] border border-border bg-surface text-foreground shadow-[var(--lectum-shadow)] transition-transform will-change-transform sm:mb-6 sm:h-[min(86dvh,760px)] sm:rounded-[2rem]",
           isSheetOpen
             ? "translate-y-0 duration-[340ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
             : "translate-y-[calc(100%+2rem)] duration-[300ms] ease-[cubic-bezier(0.4,0,1,1)]",
@@ -586,6 +586,8 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
       />
       <style>{`
         [data-create-post-sheet] {
+          backface-visibility: hidden;
+          contain: layout paint style;
           translate: 0 0;
         }
 

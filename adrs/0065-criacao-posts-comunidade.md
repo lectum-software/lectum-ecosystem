@@ -166,7 +166,6 @@ Validacao complementar:
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
-- Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: titulo renderizado como `TEXTAREA`, placeholder claro e responsivo, texto real do titulo em 24.32px/900, switch sem interrogacao, `content` com `overflow-y: auto`, area externa sem scroll inicial (`scrollHeight == clientHeight`) e backdrop em opacidade baixa.
 
 ## Atualizacao 2026-06-19 - modal route interceptada para Criar Post
 
@@ -879,3 +878,51 @@ Validacao complementar 2026-08-13:
 - `pnpm --dir frontend check`: sucesso.
 - `pnpm --dir frontend build`: sucesso.
 - `pnpm check`: sucesso.
+
+## Atualizacao 2026-08-21 - abertura fluida da bottom sheet no Android
+
+O video anexado pelo usuario em 2026-08-21 mostrou que, no Android, a abertura da modal `Criar Post`
+parecia travar: a bottom sheet começava a subir, enquanto o foco automatico do titulo acionava o
+teclado virtual e forçava resize do viewport praticamente no mesmo intervalo da animacao.
+
+Decisoes complementares:
+
+- Remover o `autoFocus` direto do campo `contenteditable` de titulo na configuracao do formulario da
+  modal. O foco passa a ser controlado apenas pelo hook da propria sheet.
+- Em Android/dispositivos touch (`pointer: coarse`), atrasar o primeiro foco programatico para depois
+  da animacao de entrada (`SHEET_ENTER_ANIMATION_MS + 120ms`). Desktop preserva os timers imediatos
+  para manter a composicao rapida com teclado fisico.
+- Remover o `backdrop-blur` da base mobile da modal e preservar o blur em `sm+`. O objetivo e reduzir
+  custo de GPU/composicao em celulares, especialmente quando o feed de fundo contem cards com midia.
+- Limitar a transicao da sheet a `transform`; alteracoes de altura/margem provocadas pelo teclado e
+  pelo `visualViewport` deixam de ser animadas junto da entrada.
+- Isolar a sheet com `contain: layout paint style` e `backface-visibility: hidden` para reduzir area
+  de repaint durante o movimento.
+- Nao alterar contratos de API, backend, schema, payload, upload/storage, anonimato, envs, providers,
+  dados persistidos ou packages.
+
+Consequencias:
+
+- A abertura mobile prioriza primeiro a animacao da bottom sheet e so depois chama o teclado virtual,
+  reduzindo a competicao de trabalho no mesmo frame em Android.
+- O titulo continua recebendo foco automaticamente em touch, mas com um atraso intencional pequeno.
+- A percepcao visual mobile fica menos pesada porque o fundo escurece sem blur; em telas maiores o blur
+  anterior permanece.
+- Rollback: reverter este complemento devolve o autofocus imediato, o blur mobile integral e a
+  transicao de altura/margem; nao ha efeito persistente em dados ou integracoes.
+
+Validacao complementar 2026-08-21:
+
+- Observacao local de frames do video anexado via Chrome/CDP confirmou que a janela critica de abertura
+  concentrava sheet, backdrop e teclado entre aproximadamente `9.50s` e `9.65s`.
+- Smoke estatico via Node confirmou ausencia de `autoFocus: true`, atraso de foco touch, blur apenas em
+  `sm+`, transicao restrita a transform e isolamento de pintura da sheet.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso, reexecutado apos o bump para `0.1.154`.
+- `pnpm check:version` apos `pnpm version:bump` para `0.1.154`: sucesso.
+- `pnpm check`: sucesso.
+- `git diff --check`: sucesso.
+- Browser/CDP mobile em `http://127.0.0.1:3073/version`: sucesso ao confirmar frontend `0.1.154`.
+- Browser/CDP mobile em `http://127.0.0.1:3073/app/comunidades/feed/publicacao/nova`: redirecionou para
+  login por ausencia de cookie autenticado local; nao foi criado mock de sessao.
+- Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: titulo renderizado como `TEXTAREA`, placeholder claro e responsivo, texto real do titulo em 24.32px/900, switch sem interrogacao, `content` com `overflow-y: auto`, area externa sem scroll inicial (`scrollHeight == clientHeight`) e backdrop em opacidade baixa.

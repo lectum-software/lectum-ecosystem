@@ -35,10 +35,12 @@ import {
   communityNameCollator,
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
+  getCreatePostInitialEditorFocusDelays,
   LAST_CREATED_POST_HREF_KEY,
   MAX_POST_CAROUSEL_IMAGES,
   normalizeParam,
   resolveCreatePostError,
+  resolveKeyboardViewportOffset,
   type SelectedPostMedia,
   SHEET_CLOSE_DELAY_MS,
 } from "../modules/create-post-support";
@@ -47,15 +49,6 @@ import { useCreatePostDiscardConfirmation } from "./use-create-post-discard-conf
 
 export type UseCreateCommunityPostControllerOptions = {
   onCloseComplete?: () => void;
-};
-
-const resolveKeyboardViewportOffset = () => {
-  if (typeof window === "undefined" || !window.visualViewport) return 0;
-
-  const viewport = window.visualViewport;
-  const overlap = window.innerHeight - viewport.height - viewport.offsetTop;
-
-  return Math.max(0, Math.round(overlap));
 };
 
 const moveContenteditableCaretToEnd = (element: HTMLElement) => {
@@ -411,7 +404,9 @@ export const useCreateCommunityPostController = ({
 
       focusEditorElement("create-post-title");
     };
-    const focusTimers = [0, 90, 280, 420].map((delay) => window.setTimeout(focusTitle, delay));
+    const focusTimers = getCreatePostInitialEditorFocusDelays().map((delay) =>
+      window.setTimeout(focusTitle, delay),
+    );
     const lockedScrollX = window.scrollX;
     const lockedScrollY = window.scrollY;
     const previousBodyOverflow = document.body.style.overflow;

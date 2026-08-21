@@ -70,7 +70,6 @@ const buildFields = ({
         : "Título (Diga o assunto ou faça uma pergunta)",
       required: true,
       max: 100,
-      autoFocus: true,
       rows: 1,
       autoGrow: true,
       className:
