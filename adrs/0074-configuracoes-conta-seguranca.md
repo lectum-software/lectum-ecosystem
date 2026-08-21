@@ -55,3 +55,14 @@ As referências visuais ativas foram as imagens locais `_product/proto/Configura
 
 - Nenhuma pendência bloqueante para a TASK-30.
 - Se OAuth Google estiver ausente em algum ambiente, o backend retorna `google_oauth_not_configured` e a UI bloqueia a ação sem mock.
+
+## Complemento em 2026-08-20 - intenção de vínculo no transporte cookie-aware
+
+- A URL criada por `POST /api/public/google/link/intent` contém um `link_token` transitório de dez
+  minutos, assinado e vinculado a intenção, usuário, e-mail e device; ele não é JWT de sessão.
+- O DTO mínimo `{ url }` passa a declarar `allowAuthTokens: true`, permitindo que o sanitizador
+  preserve apenas essa capability curta até a navegação OAuth. Respostas sem opt-in continuam
+  redigidas.
+- A capability `Lectum-User-Cookie-Auth` só pode forçar `allowAuthTokens: false` ao retirar o
+  contrato top-level `user_tokens` de sessão do JSON. O limite geral e a exclusão Google estão
+  detalhados no complemento de 2026-08-20 da ADR-0461.

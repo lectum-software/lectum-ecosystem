@@ -648,6 +648,15 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-30: no fluxo proprio de exclusao de conta, `user.provider="google"` exige reautenticacao Google e nao senha atual, mesmo quando existir senha local legada.
 - Senha atual permanece exigida somente para contas nao Google com senha cadastrada; contas sem metodo confirmavel continuam bloqueadas por erro de dominio seguro.
 
+## Atualizacao operacional em 2026-08-20: intenção Google com autenticação por cookie
+
+- Ajuste pós-feedback da TASK-30: o transporte cookie-aware só remove `user_tokens` e força a
+  sanitização de tokens quando a resposta realmente contém o contrato de sessão. A intenção curta
+  e explicitamente autorizada de exclusão Google deixa de chegar como `url="[REDACTED]"`.
+- Respostas sem opt-in continuam fail-closed; no cliente cookie-aware, JWT de sessão permanece
+  exclusivo do cookie HttpOnly. A mesma fronteira preserva o `link_token` curto do vínculo Google
+  sem alterar frontend, banco, packages ou envs.
+
 ## Atualizacao visual em 2026-08-17: chips selecionadas no perfil profissional
 
 - Ajuste pos-feedback da TASK-18A: chips selecionadas dos catalogos em `/app/profissional/perfil/configurar` passam a usar `text-sm`, igual ao select `Idiomas`, para aproximar `Adultos`, `Terapia Online`, `Psicanalise` e equivalentes do tamanho visual de `Portugues`.

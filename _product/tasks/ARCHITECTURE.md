@@ -165,6 +165,11 @@ Arquivos `index.ts`, `controller.ts` e `services.ts` são limites públicos/comp
   `X-Requested-With: Lectum-Admin-Cookie-Auth` permitem ao backend omitir JWTs do JSON somente para
   clientes que já entendem cookie. Não remover o fallback bearer antes de confirmar que versões
   antigas não estão mais em uso.
+- No transporte do usuário, a conversão para cookie só pode sobrescrever `allowAuthTokens` quando a
+  resposta realmente trouxer o contrato de sessão top-level `user_tokens`. Respostas sem
+  `user_tokens` permanecem sob a política padrão do `send`; uma exceção `allowAuthTokens: true`
+  exige DTO mínimo, token transitório curto e escopado e ADR específico. Nunca liberar essa exceção
+  globalmente nem usá-la para devolver JWT de sessão ao cliente compatível com cookie.
 - O cookie legível pelo frontend é apenas um marcador de navegação. Ele nunca substitui a validação
   da API e não pode conter JWT no cliente atual.
 - Não contornar `getDevice`, `passToken`, `LoginRepository.hidrate`, cookies de sessão ou o fluxo de

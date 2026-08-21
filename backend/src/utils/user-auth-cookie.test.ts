@@ -86,6 +86,52 @@ test("entrega token somente no cookie para o frontend compatível", () => {
   }
 });
 
+test("preserva payload transitório autorizado quando não há token de sessão", () => {
+  const writtenCookies: unknown[][] = [];
+  const response = {
+    cookie: (...args: unknown[]) => {
+      writtenCookies.push(args);
+      return response;
+    },
+  } as unknown as Response;
+  const resolve = {
+    allowAuthTokens: true,
+    data: {
+      device_id: "device_identifier_123",
+      url: "https://api.example.com/api/public/google/login/device_identifier_123?intent=delete_account&delete_token=eyJhbGciOiJIUzI1NiJ9.payload.signature",
+    },
+    success: true,
+  };
+
+  assert.equal(
+    applyUserAuthCookie(requestStub({ cookieClient: true }), response, resolve),
+    resolve,
+  );
+  assert.deepEqual(writtenCookies, []);
+});
+
+test("remove contrato de sessão vazio ou malformado e mantém sanitização fechada", () => {
+  const writtenCookies: unknown[][] = [];
+  const response = {
+    cookie: (...args: unknown[]) => {
+      writtenCookies.push(args);
+      return response;
+    },
+  } as unknown as Response;
+
+  for (const userTokens of [[], null, "invalid"]) {
+    const result = applyUserAuthCookie(requestStub({ cookieClient: true }), response, {
+      allowAuthTokens: true,
+      data: { id: "user-id", user_tokens: userTokens },
+      success: true,
+    });
+
+    assert.deepEqual(result.data, { id: "user-id" });
+    assert.equal(result.allowAuthTokens, false);
+  }
+  assert.deepEqual(writtenCookies, []);
+});
+
 test("mantém resposta legada intacta quando o cliente não declara suporte", () => {
   const response = {
     cookie: () => response,

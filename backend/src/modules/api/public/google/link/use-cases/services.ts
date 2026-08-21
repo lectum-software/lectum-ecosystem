@@ -69,6 +69,7 @@ export const createIntent = async (data: IGoogleLinkDTO) => {
   };
 
   return {
+    allowAuthTokens: true,
     status: 200,
     ...msg("google_link_intent_created", {}),
     data: response,

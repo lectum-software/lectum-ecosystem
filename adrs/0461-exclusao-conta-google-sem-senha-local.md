@@ -136,3 +136,22 @@ sendo Google e a exigência de senha local cria bloqueio indevido.
 - A exclusao de psicologo com assinatura profissional paga/gateway ativa ou inadimplente deve falhar antes de iniciar reautenticacao Google. O usuario recebe a mensagem de dominio para cancelar a assinatura ativa antes de excluir a conta.
 - A validacao final de `POST /api/private/account/delete` continua existindo como defesa em profundidade caso o estado da assinatura mude entre a intencao Google e a confirmacao final.
 - Essa decisao evita enviar o usuario ao Google quando a conta ainda nao pode ser excluida por regra financeira, sem expor detalhes de provedor, IDs de gateway ou PII.
+
+## Complemento em 2026-08-20 - token transitório autorizado com sessão HttpOnly
+
+- A capability `Lectum-User-Cookie-Auth` existe para retirar `user_tokens` de sessão do JSON e
+  transportá-lo somente em cookie HttpOnly. Ela não deve cancelar uma autorização transitória de
+  outro contrato quando a resposta não possui `user_tokens`.
+- `applyUserAuthCookie` passa a transformar a resposta somente quando `data` contém a propriedade
+  top-level própria `user_tokens`. Array vazio ou valor malformado continua removido e com
+  `allowAuthTokens: false`, mantendo falha fechada.
+- Sem `user_tokens`, o helper preserva o resolve original. Assim, o opt-in já restrito de
+  `POST /api/private/account/delete/google-intent` mantém a URL com `delete_token` curto até o
+  frontend; respostas sem `allowAuthTokens: true` continuam redigidas pelo sanitizador global.
+- A mesma fronteira corrige a intenção de vínculo Google: `POST /api/public/google/link/intent`
+  autoriza explicitamente apenas `{ url }`, com `link_token` de dez minutos ligado a usuário,
+  e-mail e device. Isso não autoriza JWT de sessão no body.
+- Não houve redução da sanitização padrão, persistência nova, migration, package ou env. Backend
+  antigo e novo permanecem compatíveis com frontend antigo e novo durante o rollout independente.
+- A regressão passa a ser coberta no pipeline HTTP real do helper de resposta, além dos testes do
+  transporte por cookie e do caso de uso de vínculo.

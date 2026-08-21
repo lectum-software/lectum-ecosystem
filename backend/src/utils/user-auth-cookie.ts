@@ -116,6 +116,12 @@ const omitUserTokens = (data: unknown) => {
   return safeData;
 };
 
+const hasUserTokensPayload = (data: unknown) =>
+  typeof data === "object" &&
+  data !== null &&
+  !Array.isArray(data) &&
+  Object.hasOwn(data, "user_tokens");
+
 /**
  * O header de capacidade permite publicar backend e frontend em qualquer ordem:
  * clientes antigos seguem com bearer; clientes novos usam cookie HttpOnly.
@@ -127,6 +133,7 @@ export const applyUserAuthCookie = <T extends AuthResolve>(
 ): T => {
   const cookieCapable = isUserCookieAuthCapable(request);
   if (!cookieCapable) return resolve;
+  if (!hasUserTokensPayload(resolve.data)) return resolve;
 
   const token = readTokenFromResolve(resolve);
   if (token) setUserAuthCookie(response, token);

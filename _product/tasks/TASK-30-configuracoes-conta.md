@@ -384,3 +384,34 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   - `pnpm --dir backend build`;
   - `pnpm --dir frontend build`;
   - demais checks, versionamento e smoke de homologacao registrados no fechamento do ajuste.
+
+## Ajuste complementar em 2026-08-20 - preservar intenções Google no transporte por cookie
+
+- Evidência real em homologação: `POST /api/private/account/delete/google-intent` respondeu `200`,
+  mas entregou `data.url="[REDACTED]"`; o frontend então bloqueou antes de navegar e exibiu “Não foi
+  possível iniciar a confirmação com o Google.”.
+- Diagnóstico: o endpoint já marcava o DTO mínimo `{ device_id, url }` com
+  `allowAuthTokens: true`, mas `applyUserAuthCookie` sobrescrevia a autorização para `false` em toda
+  request com `Lectum-User-Cookie-Auth`, mesmo quando a resposta não continha `user_tokens` de
+  sessão. O sanitizador voltava a detectar o JWT curto dentro da URL e redigia a string inteira.
+- Decisão: a transformação cookie-aware só remove `user_tokens` e força `allowAuthTokens: false`
+  quando o payload realmente possui esse contrato top-level. Respostas sem `user_tokens` preservam
+  a política explícita do caso de uso; sem opt-in, a sanitização continua fail-closed.
+- O mesmo limite passa a preservar a intenção curta de vínculo Google (`link_token`), que também é
+  ligada a usuário, e-mail e device e expira em dez minutos. A resposta continua limitada a
+  `{ url }`; nenhum JWT de sessão é liberado no JSON do cliente compatível com cookie.
+- Escopo backend-only, sem alteração de frontend, banco, migration, package ou env. O rollout é
+  aditivo e tolera clientes antigos/novos; rollback é revert do commit.
+
+### Critérios de aceite do complemento
+
+- [x] A intenção de exclusão explicitamente autorizada atravessa
+  `send -> applyUserAuthCookie -> sanitizeSensitiveData` sem virar `[REDACTED]`.
+- [x] Resposta sem opt-in continua redigindo a mesma string com JWT.
+- [x] Payload com `user_tokens` continua gravando cookie HttpOnly, removendo o campo do JSON e
+  forçando sanitização de tokens de sessão, inclusive quando o array está vazio ou malformado.
+- [x] A intenção de vínculo Google marca explicitamente o DTO transitório mínimo como autorizado.
+- [x] Testes backend, check, build, checks da raiz, versionamento, commit, push e smoke de
+  homologação são concluídos sem expor tokens nem excluir conta real.
+- [x] ADR-0074, ADR-0461 e a regra de autenticação em `ARCHITECTURE.md` registram a fronteira de
+  segurança.
