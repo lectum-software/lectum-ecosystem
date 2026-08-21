@@ -54,6 +54,7 @@ export const ProfessionalProfileSetupLogic = () => {
     academicFormations,
     addressCity,
     addressState,
+    approachIdsError,
     availableDaysError,
     canUploadVideo,
     cancelVideoUpload,
@@ -89,6 +90,7 @@ export const ProfessionalProfileSetupLogic = () => {
     setArrayValue,
     setCatalogValue,
     setShowProfileVideoTip,
+    specialtyIdsError,
     setVideoRemovalConfirmOpen,
     showHiddenProfileBanner,
     showInactiveProfileBanner,
@@ -210,7 +212,10 @@ export const ProfessionalProfileSetupLogic = () => {
                 {renderField("headline")}
                 {renderField("bio")}
                 {canUploadVideo ? (
-                  <div className="rounded-2xl border border-border bg-surface-muted p-4">
+                  <div
+                    className="rounded-2xl border border-border bg-surface-muted p-4"
+                    data-profile-field="profile_video"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary shadow-sm">
@@ -356,7 +361,10 @@ export const ProfessionalProfileSetupLogic = () => {
                     />
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center opacity-80">
+                  <div
+                    className="rounded-2xl border border-dashed border-border bg-surface-muted p-4 text-center opacity-80"
+                    data-profile-field="profile_video"
+                  >
                     <FileVideo className="mx-auto h-8 w-8 text-muted" aria-hidden="true" />
                     <p className="mt-2 text-sm font-bold text-foreground">
                       Vídeo de Apresentação <span className="text-danger">*</span>
@@ -385,6 +393,7 @@ export const ProfessionalProfileSetupLogic = () => {
                       ? "Selecione até 3 opções. Faça o upgrade para adicionar 10 especialidades."
                       : "Selecione até 10 especialidades."
                   }
+                  error={specialtyIdsError}
                   items={profile.data.catalogs.specialties}
                   groupedItems={orderedSpecialtyGroups}
                   limit={profile.data.plan.specialty_limit}
@@ -401,6 +410,7 @@ export const ProfessionalProfileSetupLogic = () => {
                       ? "Selecione 1 opção. Faça o upgrade para adicionar várias abordagens."
                       : "Selecione todas as abordagens que fazem parte da sua prática."
                   }
+                  error={approachIdsError}
                   items={orderedApproachOptions}
                   limit={profile.data.plan.approach_limit}
                   name="approach_ids"
@@ -574,13 +584,15 @@ export const ProfessionalProfileSetupLogic = () => {
                   {renderField("address_zip")}
                 </div>
                 {renderField("address_state")}
-                <CityField
-                  control={form.hook.control}
-                  key={addressState || "sem-estado"}
-                  options={cityOptions}
-                  selectedValue={addressCity}
-                  stateSelected={Boolean(addressState)}
-                />
+                <div data-profile-field="address_city">
+                  <CityField
+                    control={form.hook.control}
+                    key={addressState || "sem-estado"}
+                    options={cityOptions}
+                    selectedValue={addressCity}
+                    stateSelected={Boolean(addressState)}
+                  />
+                </div>
                 <p className="text-xs leading-5 text-muted">
                   Suas informações de cidade e estado ficarão disponíveis no seu perfil público.
                 </p>

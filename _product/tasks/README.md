@@ -708,3 +708,10 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-24: a modal `Criar Post` em Android/touch deixa de focar o titulo no mesmo frame de montagem, aguardando a animacao da bottom sheet antes de acionar o teclado virtual.
 - O backdrop mobile da modal nao usa mais blur de tela cheia; `sm+` preserva o blur. A sheet anima somente `transform` e isola pintura para reduzir repaint sobre o feed com midia.
 - Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages, envs, upload/storage ou dados publicados.
+
+
+## Atualizacao visual em 2026-08-21: obrigatorios no perfil profissional
+
+- Ajuste pos-feedback da TASK-18A: o submit invalido de `/app/profissional/perfil/configurar` passa a rolar para o primeiro campo obrigatorio pendente na ordem mobile-first da tela.
+- Mensagens genericas `Invalid input` em campos vazios foram substituidas por mensagens em portugues de obrigatoriedade no schema Zod do perfil profissional, preservando mensagens especificas de formato para CPF, WhatsApp e data invalida.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages ou envs.

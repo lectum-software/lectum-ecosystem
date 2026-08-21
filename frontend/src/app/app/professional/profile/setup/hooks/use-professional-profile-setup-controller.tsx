@@ -10,11 +10,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { type FieldPath, useFieldArray } from "react-hook-form";
+import { useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
 import { useAccount } from "@/api/callers/account";
 import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-profile";
-import { components } from "@/components/controllers";
 import { useAppSelector } from "@/hooks/redux";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { resolvePublicMediaKind } from "@/utils/media-preparation";
@@ -30,12 +29,17 @@ import {
   isSupportedStaticAvatarFile,
 } from "../components/avatar-city-fields";
 import {
+  renderProfileSetupAcademicField,
+  renderProfileSetupField,
+} from "../modules/profile-setup-field-renderers";
+import {
   compareCatalogItems,
   createOrderedSpecialtyGroups,
+  handleProfileSetupInvalidSubmit,
   PROFESSIONAL_PROFILE_MENU_HREF,
   PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR,
   resolveApiError,
-  toFreeProfessionalProfilePayload,
+  submitProfileSetupForm,
 } from "../modules/profile-setup-support";
 import {
   type AcademicFormationForm,
@@ -272,6 +276,8 @@ export const useProfessionalProfileSetupController = () => {
     addressCity && !baseCityOptions.some((item) => item.value === addressCity)
       ? [{ label: addressCity, value: addressCity }, ...baseCityOptions]
       : baseCityOptions;
+  const specialtyIdsError = form.hook.formState.errors.specialty_ids?.message;
+  const approachIdsError = form.hook.formState.errors.approach_ids?.message;
   const serviceIdsError = form.hook.formState.errors.service_ids?.message;
   const targetAudienceError = form.hook.formState.errors.target_audience?.message;
   const availableDaysError = form.hook.formState.errors.available_days?.message;
@@ -319,9 +325,7 @@ export const useProfessionalProfileSetupController = () => {
   const setArrayValue = (
     name: keyof Pick<FreeProfileForm, "target_audience" | "available_days">,
     value: string[],
-  ) => {
-    form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
-  };
+  ) => form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
 
   const setCatalogValue = (
     name: keyof Pick<
@@ -329,40 +333,32 @@ export const useProfessionalProfileSetupController = () => {
       "specialty_ids" | "service_ids" | "approach_ids" | "target_audience"
     >,
     value: string[],
-  ) => {
-    form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
-  };
+  ) => form.hook.setValue(name, value, { shouldDirty: true, shouldValidate: true });
 
   const renderField = (
     name: keyof FreeProfileForm,
     override: Partial<(typeof renderedFields)[number]> = {},
-  ) => {
-    const field = renderedFields.find((item) => item.name === name);
-    if (!field) return null;
-    const Component = components[field.field];
-    if (!Component) return null;
-
-    return <Component control={form.hook.control} key={String(name)} {...field} {...override} />;
-  };
+  ) =>
+    renderProfileSetupField({
+      control: form.hook.control,
+      fields: renderedFields,
+      name,
+      override,
+    });
 
   const renderAcademicField = (
     index: number,
     name: keyof AcademicFormationForm,
     label: string,
     placeholder: string,
-  ) => {
-    const Component = components.input;
-
-    return (
-      <Component
-        control={form.hook.control}
-        field="input"
-        label={label}
-        name={`academic_formations.${index}.${name}` as FieldPath<FreeProfileForm>}
-        placeholder={placeholder}
-      />
-    );
-  };
+  ) =>
+    renderProfileSetupAcademicField({
+      control: form.hook.control,
+      index,
+      label,
+      name,
+      placeholder,
+    });
 
   const clearAvatarDraft = () => {
     if (avatarDraftUrlRef.current) {
@@ -594,22 +590,24 @@ export const useProfessionalProfileSetupController = () => {
     videoInputRef.current?.click();
   };
 
-  const submit = form.hook.handleSubmit((values) => {
-    if (values.published && !videoSrc) {
-      toast.error("Adicione um vídeo de apresentação antes de publicar seu perfil.");
-      return;
-    }
-
-    update.mutate(
-      toFreeProfessionalProfilePayload(values, profile.data, shouldLockProfessionalIdentityFields),
-    );
-  });
+  const submit = form.hook.handleSubmit(
+    (values) =>
+      submitProfileSetupForm({
+        lockProfessionalIdentity: shouldLockProfessionalIdentityFields,
+        profile: profile.data,
+        updateProfile: update.mutate,
+        values,
+        videoSrc,
+      }),
+    handleProfileSetupInvalidSubmit,
+  );
 
   return {
     Form,
     academicFormations,
     addressCity,
     addressState,
+    approachIdsError,
     applyAvatarDraft,
     availableDaysError,
     avatarActionsOpen,
@@ -663,6 +661,7 @@ export const useProfessionalProfileSetupController = () => {
     selectedSpecialties,
     selectedTargets,
     serviceIdsError,
+    specialtyIdsError,
     setArrayValue,
     setAvatarActionsOpen,
     setAvatarEditorOpen,

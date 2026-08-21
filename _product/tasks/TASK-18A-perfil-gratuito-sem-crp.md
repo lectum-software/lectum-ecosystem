@@ -767,3 +767,35 @@ Validacoes executadas:
 - `pnpm check:version`
 - `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.147`.
 - Smoke local sem sessao em `http://127.0.0.1:3147`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.147"}` e `/app/psicologo/local-profile-smoke` respondeu `200`; validacao autenticada do estado proprio ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+
+## Ajuste complementar em 2026-08-21 - obrigatorios na edicao do perfil profissional
+
+- Pedido do usuario: na edicao de perfil do psicologo, quando faltar campo obrigatorio, a tela deve rolar para o primeiro campo pendente; mensagens genericas `Invalid input` devem aparecer em portugues e como obrigatoriedade.
+- A causa era a normalizacao da fundacao de formulario para `null` em selects e calendario vazios, enquanto partes do schema Zod aceitavam apenas `string`, acionando a mensagem padrao do Zod.
+- O schema do perfil profissional agora define mensagens de tipo/obrigatoriedade em portugues para campos obrigatorios e para listas do formulario, mantendo mensagens especificas de formato apenas quando ha valor invalido, como CPF ou data de nascimento malformados.
+- O submit usa o callback invalido do React Hook Form para localizar o primeiro erro na ordem mobile-first da tela e rolar suavemente ate o campo com `data-profile-field`.
+- O bloco de video obrigatorio tambem ganhou alvo de rolagem quando o perfil esta marcado como visivel e ainda nao possui video de apresentacao.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario em 2026-08-21 e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos, dados persistidos, envs, providers ou packages.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Submit invalido rola para o primeiro campo com erro na ordem real da tela mobile.
+- [x] `Data de Nascimento`, `Genero` e demais selects/listas obrigatorios nao exibem mais `Invalid input` quando vazios.
+- [x] Campos obrigatorios vazios exibem mensagem em portugues indicando obrigatoriedade.
+- [x] Mensagens de formato especificas continuam preservadas para CPF, WhatsApp e data preenchidos de forma invalida.
+- [x] O video de apresentacao continua obrigatorio para perfil visivel e agora tambem recebe foco/rolagem quando for a primeira pendencia apos validacao dos campos.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/use-form.tsx src/app/app/professional/profile/setup/modules/profile-setup-support.ts src/app/app/professional/profile/setup/modules/profile-setup-field-renderers.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx src/app/app/professional/profile/setup/components/catalog-fields.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump`
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.164`.
+- `pnpm check`
+- Smoke local sem sessao em `http://127.0.0.1:3164`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.164"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.

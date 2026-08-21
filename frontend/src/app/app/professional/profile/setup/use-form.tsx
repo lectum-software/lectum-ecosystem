@@ -124,79 +124,104 @@ const toBirthdateInput = (value?: string | null) => {
   return `${day}/${month}/${year}`;
 };
 
+const requiredText = (message: string) => z.string({ error: message }).trim().min(1, message);
+
+const optionalText = (max: number, message: string) =>
+  z.string({ error: message }).trim().max(max, message).nullable();
+
+const stringArray = (message: string) => z.array(z.string(), { error: message });
+
 export const freeProfileSchema = z
   .object({
-    professional_first_name: z.string().trim().min(2, "Informe seu nome").max(80),
-    professional_last_name: z.string().trim().min(1, "Informe seu sobrenome").max(120),
-    gender: z.string().trim().min(1, "Selecione seu gênero").max(40),
-    race_color: z.string().trim().max(40).nullable(),
-    religion: z.string().trim().max(80).nullable(),
-    cpf: z.string().refine((value) => onlyDigits(value).length === 11, "Informe um CPF válido"),
+    professional_first_name: requiredText("Nome é obrigatório").min(2, "Informe seu nome").max(80),
+    professional_last_name: requiredText("Sobrenome é obrigatório").max(120),
+    gender: requiredText("Gênero é obrigatório").max(40),
+    race_color: optionalText(40, "Raça/cor deve ter no máximo 40 caracteres"),
+    religion: optionalText(80, "Religião deve ter no máximo 80 caracteres"),
+    cpf: requiredText("CPF é obrigatório").refine(
+      (value) => onlyDigits(value).length === 11,
+      "Informe um CPF válido",
+    ),
     birthdate: z
-      .string()
+      .string({ error: "Data de nascimento é obrigatória" })
       .trim()
-      .min(1, "Informe sua data de nascimento")
+      .min(1, "Data de nascimento é obrigatória")
       .refine(isValidBirthdate, "Informe uma data de nascimento válida"),
-    crp_region: z
-      .string()
-      .trim()
-      .min(1, "Selecione a Regional do CRP")
-      .max(120, "Regional muito longa"),
-    crp_number: z
-      .string()
-      .trim()
-      .min(1, "Informe o Nº Registro CRP")
-      .max(40, "Registro muito longo"),
-    countryCode: z.string().min(1, "Selecione o país"),
-    whatsapp: z.string(),
+    crp_region: requiredText("Regional do CRP é obrigatória").max(120, "Regional muito longa"),
+    crp_number: requiredText("Nº Registro CRP é obrigatório").max(40, "Registro muito longo"),
+    countryCode: requiredText("País é obrigatório"),
+    whatsapp: requiredText("WhatsApp profissional é obrigatório"),
     headline: z
-      .string()
+      .string({ error: "Bio deve ser um texto válido" })
       .trim()
       .max(120, "A bio curta deve ter no máximo 120 caracteres")
       .refine((value) => value.length === 0 || value.length >= 3, {
         message: "Informe uma bio com pelo menos 3 caracteres",
       }),
     bio: z
-      .string()
+      .string({ error: "Apresentação deve ser um texto válido" })
       .trim()
       .max(2000)
       .refine((value) => value.length === 0 || value.length >= 20, {
         message: "Escreva uma apresentação com pelo menos 20 caracteres",
       }),
-    modality: z.enum(["online", "presencial", "hibrido", ""], {
-      message: "Selecione a modalidade",
-    }),
-    language: z.string().trim().min(2, "Selecione um idioma"),
-    published: z.boolean(),
-    discount_first_session: z.boolean(),
-    social_value: z.boolean(),
-    accepts_insurance: z.boolean(),
-    show_experience_tag: z.boolean(),
+    modality: z
+      .enum(["online", "presencial", "hibrido", ""], {
+        error: "Modalidade é obrigatória",
+      })
+      .refine((value) => value !== "", "Modalidade é obrigatória"),
+    language: requiredText("Idioma é obrigatório").min(2, "Selecione um idioma"),
+    published: z.boolean({ error: "Visibilidade do perfil deve ser informada" }),
+    discount_first_session: z.boolean({ error: "Informe se oferece desconto na primeira sessão" }),
+    social_value: z.boolean({ error: "Informe se oferece valor social" }),
+    accepts_insurance: z.boolean({ error: "Informe se aceita convênios" }),
+    show_experience_tag: z.boolean({ error: "Informe se deseja exibir tempo de experiência" }),
     academic_formations: z
       .array(
         z.object({
-          title: z.string().trim().max(160),
-          institution: z.string().trim().max(160),
-          graduation_year: z.string().trim().max(20),
+          title: z.string({ error: "Título deve ser um texto válido" }).trim().max(160),
+          institution: z.string({ error: "Instituição deve ser um texto válido" }).trim().max(160),
+          graduation_year: z
+            .string({ error: "Ano de formação deve ser um texto válido" })
+            .trim()
+            .max(20),
         }),
+        { error: "Formações acadêmicas devem ser informadas em uma lista válida" },
       )
       .max(5, "Adicione no máximo 5 formações"),
-    address_street: z.string().trim().max(160),
-    address_number: z.string().trim().max(40),
-    address_complement: z.string().trim().max(80),
-    address_district: z.string().trim().max(120),
-    address_zip: z.string().trim().max(20),
-    address_city: z.string().trim().min(1, "Selecione a cidade").max(120),
-    address_state: z.string().trim().min(2, "Selecione o estado").max(2),
-    specialty_ids: z.array(z.string()),
-    service_ids: z.array(z.string()),
-    approach_ids: z.array(z.string()).min(1, "Selecione uma abordagem"),
-    target_audience: z.array(z.string()).min(1, "Selecione pelo menos um público"),
-    available_days: z.array(z.string()),
+    address_street: z.string({ error: "Logradouro deve ser um texto válido" }).trim().max(160),
+    address_number: z.string({ error: "Número deve ser um texto válido" }).trim().max(40),
+    address_complement: z.string({ error: "Complemento deve ser um texto válido" }).trim().max(80),
+    address_district: z.string({ error: "Bairro deve ser um texto válido" }).trim().max(120),
+    address_zip: z.string({ error: "CEP deve ser um texto válido" }).trim().max(20),
+    address_city: requiredText("Cidade é obrigatória").max(120),
+    address_state: requiredText("Estado é obrigatório").min(2, "Estado é obrigatório").max(2),
+    specialty_ids: stringArray("Especialidades devem estar em uma lista válida"),
+    service_ids: stringArray("Serviços devem estar em uma lista válida"),
+    approach_ids: stringArray("Abordagem é obrigatória").min(1, "Abordagem é obrigatória"),
+    target_audience: stringArray("Público atendido é obrigatório").min(
+      1,
+      "Público atendido é obrigatório",
+    ),
+    available_days: stringArray("Dias disponíveis devem estar em uma lista válida"),
   })
-  .refine((data) => isPhoneLengthValid(data.whatsapp, data.countryCode), {
-    message: "Informe um WhatsApp válido",
-    path: ["whatsapp"],
+  .superRefine((data, context) => {
+    if (!onlyDigits(data.whatsapp)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "WhatsApp profissional é obrigatório",
+        path: ["whatsapp"],
+      });
+      return;
+    }
+
+    if (!isPhoneLengthValid(data.whatsapp, data.countryCode)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Informe um WhatsApp válido",
+        path: ["whatsapp"],
+      });
+    }
   });
 
 type ProfileCatalogFieldOptions = {

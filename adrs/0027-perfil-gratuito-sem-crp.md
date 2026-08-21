@@ -323,3 +323,29 @@ Validacoes:
 - `pnpm --dir frontend build` (primeira tentativa excedeu o timeout da ferramenta; reexecucao com timeout maior concluiu sem erros)
 - `pnpm check`
 - `pnpm check:version`
+
+
+## Atualizacao em 2026-08-21 - validacao client-side de obrigatorios
+
+A edicao profissional em `/app/profissional/perfil/configurar` passa a tratar campos vazios normalizados como `null` pela fundacao de formularios com mensagens explicitas em portugues no schema Zod, em vez de deixar a mensagem padrao `Invalid input` chegar ao usuario.
+
+Decisao:
+
+- manter React Hook Form, Zod e os controllers da TASK-02 como unica fundacao de formulario;
+- definir mensagens de tipo/obrigatoriedade no schema do perfil profissional, preservando mensagens de formato apenas para valores preenchidos e invalidos;
+- usar o callback invalido de `handleSubmit` para rolar ate o primeiro campo pendente na ordem mobile-first da tela;
+- marcar os componentes manuais de catalogo, cidade e video com `data-profile-field`, sem criar controle paralelo ou dependencia nova;
+- manter o video de apresentacao como requisito de publicacao e rolar ate o bloco quando ele for a primeira pendencia apos os campos do formulario.
+
+Impacto de deploy:
+
+- Frontend-only, compativel com backend/admin em versoes atuais ou anteriores.
+- Sem migration, env, backfill, job, provider externo, dados fake ou manipulacao de dados persistidos.
+- Rollback por reversao simples do commit restaura o comportamento anterior de mensagens e submit.
+
+Validacoes:
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local sem sessao confirmou `/version` publico e redirecionamento `307` da rota privada de edicao.

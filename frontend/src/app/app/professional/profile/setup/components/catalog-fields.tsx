@@ -171,7 +171,7 @@ export const CatalogTagField = ({
   };
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2" data-profile-field={String(name)}>
       <div>
         <h3 className="flex items-center gap-1 text-sm font-bold text-foreground">
           <span>{title}</span>

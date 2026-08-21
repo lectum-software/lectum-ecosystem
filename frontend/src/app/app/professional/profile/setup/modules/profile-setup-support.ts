@@ -1,4 +1,6 @@
 import type { CSSProperties } from "react";
+import type { FieldErrors } from "react-hook-form";
+import { toast } from "sonner";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type {
   FreeProfessionalProfile,
@@ -13,6 +15,92 @@ export const PROFESSIONAL_PROFILE_MENU_HREF = "/app/perfil";
 
 export const PSYCHOLOGIST_PROFILE_VIDEO_TIP_SELECTOR =
   '[data-psychologist-tip-target="profile-video"]';
+
+export type ProfileSetupScrollTarget = keyof FreeProfileForm | "profile_video";
+
+export const PROFILE_SETUP_SCROLL_TARGETS = [
+  "professional_first_name",
+  "professional_last_name",
+  "cpf",
+  "birthdate",
+  "gender",
+  "crp_region",
+  "crp_number",
+  "whatsapp",
+  "profile_video",
+  "specialty_ids",
+  "approach_ids",
+  "service_ids",
+  "target_audience",
+  "language",
+  "modality",
+  "address_state",
+  "address_city",
+] satisfies ProfileSetupScrollTarget[];
+
+const PROFILE_SETUP_SCROLL_OFFSET_PX = 96;
+
+const PROFILE_SETUP_FOCUSABLE_SELECTOR =
+  'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const escapeSelectorValue = (value: string) => {
+  if (typeof CSS !== "undefined" && CSS.escape) {
+    return CSS.escape(value);
+  }
+
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+};
+
+export const getFirstProfileSetupErrorTarget = (
+  errors: Partial<Record<keyof FreeProfileForm, unknown>>,
+): ProfileSetupScrollTarget | null => {
+  for (const target of PROFILE_SETUP_SCROLL_TARGETS) {
+    if (target !== "profile_video" && Object.hasOwn(errors, target)) {
+      return target;
+    }
+  }
+
+  const [fallback] = Object.keys(errors);
+
+  return fallback ? (fallback as keyof FreeProfileForm) : null;
+};
+
+export const scrollToProfileSetupField = (target: ProfileSetupScrollTarget) => {
+  if (typeof document === "undefined" || typeof window === "undefined") return false;
+
+  const element = document.querySelector(
+    `[data-profile-field="${escapeSelectorValue(String(target))}"]`,
+  );
+
+  if (!element) return false;
+
+  const top = Math.max(
+    element.getBoundingClientRect().top + window.scrollY - PROFILE_SETUP_SCROLL_OFFSET_PX,
+    0,
+  );
+
+  window.scrollTo({ behavior: "smooth", top });
+
+  const focusable = element.matches(PROFILE_SETUP_FOCUSABLE_SELECTOR)
+    ? element
+    : element.querySelector(PROFILE_SETUP_FOCUSABLE_SELECTOR);
+
+  if (focusable instanceof HTMLElement) {
+    window.setTimeout(() => focusable.focus({ preventScroll: true }), 260);
+  }
+
+  return true;
+};
+
+export const handleProfileSetupInvalidSubmit = (errors: FieldErrors<FreeProfileForm>) => {
+  const target = getFirstProfileSetupErrorTarget(errors);
+
+  if (target) {
+    scrollToProfileSetupField(target);
+  }
+
+  toast.error("Preencha os campos obrigatórios destacados.");
+};
 
 export const resolveApiError = (error: unknown) =>
   getSafeApiErrorMessage(error, "Não foi possível salvar o perfil agora.");
@@ -159,6 +247,28 @@ export const toFreeProfessionalProfilePayload = (
     approach_ids: values.approach_ids,
     published: values.published,
   };
+};
+
+export const submitProfileSetupForm = ({
+  lockProfessionalIdentity,
+  profile,
+  updateProfile,
+  values,
+  videoSrc,
+}: {
+  lockProfessionalIdentity: boolean;
+  profile: FreeProfessionalProfile | undefined;
+  updateProfile: (payload: FreeProfessionalProfilePayload) => void;
+  values: FreeProfileForm;
+  videoSrc: string | null;
+}) => {
+  if (values.published && !videoSrc) {
+    scrollToProfileSetupField("profile_video");
+    toast.error("Adicione um vídeo de apresentação antes de publicar seu perfil.");
+    return;
+  }
+
+  updateProfile(toFreeProfessionalProfilePayload(values, profile, lockProfessionalIdentity));
 };
 
 export const toggleValue = (values: string[], id: string) => {
