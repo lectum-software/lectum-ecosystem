@@ -2,6 +2,7 @@ import {
   createLectumShareFrameImageFile,
   type LectumShareFrameTarget,
 } from "@/utils/lectum-share-media";
+import { MediaUploadCanceledError, throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 
 const DEFAULT_THUMBNAIL_TIMEOUT_MS = 8000;
 const DEFAULT_THUMBNAIL_QUALITY = 0.86;
@@ -21,6 +22,7 @@ export type LectumVideoThumbnailFrameOptions = {
 
 type CreateVideoThumbnailOptions = {
   lectumShareFrame?: LectumVideoThumbnailFrameOptions | null;
+  signal?: AbortSignal;
 };
 
 type ThumbnailFrameScore = {
@@ -240,10 +242,11 @@ export const createVideoThumbnailFile = async (
   file: File,
   options: CreateVideoThumbnailOptions = {},
 ): Promise<File | null> => {
+  throwIfMediaUploadCanceled(options.signal);
   if (typeof document === "undefined") return null;
   if (!file.type.startsWith("video/")) return null;
 
-  return new Promise<File | null>((resolve) => {
+  return new Promise<File | null>((resolve, reject) => {
     const video = document.createElement("video");
     const objectUrl = URL.createObjectURL(file);
     const lectumShareFrameTarget = toLectumShareFrameTarget(options.lectumShareFrame);
@@ -253,6 +256,7 @@ export const createVideoThumbnailFile = async (
 
     const cleanup = () => {
       if (timeoutId) window.clearTimeout(timeoutId);
+      options.signal?.removeEventListener("abort", handleAbort);
       video.removeAttribute("src");
       video.load();
       URL.revokeObjectURL(objectUrl);
@@ -263,6 +267,13 @@ export const createVideoThumbnailFile = async (
       settled = true;
       cleanup();
       resolve(thumbnail);
+    };
+
+    const handleAbort = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new MediaUploadCanceledError());
     };
 
     const captureFrame = () => {
@@ -327,6 +338,11 @@ export const createVideoThumbnailFile = async (
     };
 
     timeoutId = window.setTimeout(() => finish(null), DEFAULT_THUMBNAIL_TIMEOUT_MS);
+    options.signal?.addEventListener("abort", handleAbort, { once: true });
+    if (options.signal?.aborted) {
+      handleAbort();
+      return;
+    }
     video.addEventListener("loadedmetadata", () => void selectFrameAndCapture(), { once: true });
     video.addEventListener("loadeddata", () => {
       if (!video.videoWidth || !video.videoHeight) return;

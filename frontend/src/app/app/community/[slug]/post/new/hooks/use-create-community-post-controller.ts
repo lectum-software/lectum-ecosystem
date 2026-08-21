@@ -17,50 +17,38 @@ import {
   useUploadCommunityPostMedia,
 } from "@/api/callers/community";
 import { useAppSelector } from "@/hooks/redux";
+import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
-import { resolvePublicMediaKind } from "@/utils/media-preparation";
+import { isUploadPreparationCanceled, resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
-  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
-  isCommunityMediaFileTooLarge,
+  getCommunityMediaFileSelectionSizeError,
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
 } from "@/utils/video-thumbnail";
 import {
-  communityNameCollator,
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
   getCreatePostInitialEditorFocusDelays,
   LAST_CREATED_POST_HREF_KEY,
   MAX_POST_CAROUSEL_IMAGES,
+  moveContenteditableCaretToEnd,
   normalizeParam,
+  resolveCommunityOptions,
   resolveCreatePostError,
   resolveKeyboardViewportOffset,
   type SelectedPostMedia,
   SHEET_CLOSE_DELAY_MS,
+  type UseCreateCommunityPostControllerOptions,
 } from "../modules/create-post-support";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "../use-form";
 import { useCreatePostDiscardConfirmation } from "./use-create-post-discard-confirmation";
-
-export type UseCreateCommunityPostControllerOptions = {
-  onCloseComplete?: () => void;
-};
-
-const moveContenteditableCaretToEnd = (element: HTMLElement) => {
-  const selection = window.getSelection();
-  if (!selection) return;
-
-  const range = document.createRange();
-  range.selectNodeContents(element);
-  range.collapse(false);
-  selection.removeAllRanges();
-  selection.addRange(range);
-};
 
 export const useCreateCommunityPostController = ({
   onCloseComplete,
@@ -87,13 +75,7 @@ export const useCreateCommunityPostController = ({
 
   const communitiesQuery = useCommunities({ limit: 50 });
   const communityOptions = useMemo(
-    () =>
-      (communitiesQuery.data?.data ?? [])
-        .map((community) => ({
-          label: community.name,
-          value: community.slug,
-        }))
-        .sort((a, b) => communityNameCollator.compare(a.label, b.label)),
+    () => resolveCommunityOptions(communitiesQuery.data?.data ?? []),
     [communitiesQuery.data?.data],
   );
   const defaultCommunitySlug =
@@ -106,6 +88,8 @@ export const useCreateCommunityPostController = ({
     loadingCommunities: communitiesQuery.isLoading,
   });
   const { formProps, hook } = form;
+  const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
+    useCommunityVideoUpload();
 
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
@@ -143,6 +127,7 @@ export const useCreateCommunityPostController = ({
   });
   const uploadMutation = useUploadCommunityPostMedia({
     onError: (error) => {
+      if (isUploadPreparationCanceled(error)) return;
       toast.error(resolveMediaUploadError(error));
     },
   });
@@ -318,6 +303,7 @@ export const useCreateCommunityPostController = ({
   );
 
   const performClose = useCallback(() => {
+    abortActiveVideoUpload();
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
 
@@ -336,7 +322,7 @@ export const useCreateCommunityPostController = ({
 
       navigateBackWithFallback(router, fallbackHref);
     }, SHEET_CLOSE_DELAY_MS);
-  }, [communitySlugFromQuery, onCloseComplete, routeSlug, router]);
+  }, [abortActiveVideoUpload, communitySlugFromQuery, onCloseComplete, routeSlug, router]);
 
   const {
     cancelDiscardConfirmation,
@@ -473,14 +459,15 @@ export const useCreateCommunityPostController = ({
       return;
     }
 
-    if (files.some(isCommunityMediaFileTooLarge)) {
-      toast.error(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
+    if (files.some((file) => resolvePublicMediaKind(file) === null)) {
+      toast.error("Envie uma imagem ou vídeo em formato permitido.");
       focusLastEditor();
       return;
     }
 
-    if (files.some((file) => resolvePublicMediaKind(file) === null)) {
-      toast.error("Envie uma imagem ou vídeo em formato permitido.");
+    const sizeError = files.map(getCommunityMediaFileSelectionSizeError).find(Boolean);
+    if (sizeError) {
+      toast.error(resolveMediaUploadError(sizeError));
       focusLastEditor();
       return;
     }
@@ -555,48 +542,64 @@ export const useCreateCommunityPostController = ({
     try {
       const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];
       const selectedVideo = mediaFiles.find((mediaItem) => mediaItem.type === "video") ?? null;
-      const uploadedMedia = selectedVideo
-        ? [
-            await uploadMutation.mutateAsync({
-              file: selectedVideo.file,
-              slug: values.community_slug,
-            }),
-          ]
-        : mediaFiles.length > 0
-          ? await mapWithConcurrency(mediaFiles, 2, (mediaItem) =>
-              uploadMutation.mutateAsync({
-                file: mediaItem.file,
+      const { uploadedMedia, uploadedThumbnail } = await (async () => {
+        const operation = selectedVideo ? beginVideoUpload() : null;
+
+        try {
+          const uploadedMedia = selectedVideo
+            ? [
+                await uploadMutation.mutateAsync({
+                  file: selectedVideo.file,
+                  onProgress: operation?.onProgress,
+                  signal: operation?.signal,
+                  slug: values.community_slug,
+                }),
+              ]
+            : mediaFiles.length > 0
+              ? await mapWithConcurrency(mediaFiles, 2, (mediaItem) =>
+                  uploadMutation.mutateAsync({
+                    file: mediaItem.file,
+                    slug: values.community_slug,
+                  }),
+                )
+              : [];
+          const thumbnailFrame = isPsychologist
+            ? ({
+                cardLabel: "Postado na Lectum",
+                professional: {
+                  avatar: storedUser?.avatar ?? null,
+                  name: storedUser?.name || "Profissional Lectum",
+                  roleLabel: "Psicólogo",
+                  verified: Boolean(
+                    storedUser?.psychologist_profile?.cfp_verified_at ||
+                      storedUser?.psychologist_profile?.crp_status === "aprovado",
+                  ),
+                },
+                sourceText: values.title,
+              } satisfies LectumVideoThumbnailFrameOptions)
+            : null;
+          const thumbnailFile = selectedVideo
+            ? await createVideoThumbnailFile(selectedVideo.file, {
+                lectumShareFrame: thumbnailFrame,
+                signal: operation?.signal,
+              })
+            : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+          const uploadedThumbnail = thumbnailFile
+            ? await uploadMutation.mutateAsync({
+                file: thumbnailFile,
+                purpose: "generated-video-thumbnail",
+                signal: operation?.signal,
                 slug: values.community_slug,
-              }),
-            )
-          : [];
-      const thumbnailFrame = isPsychologist
-        ? ({
-            cardLabel: "Postado na Lectum",
-            professional: {
-              avatar: storedUser?.avatar ?? null,
-              name: storedUser?.name || "Profissional Lectum",
-              roleLabel: "Psicólogo",
-              verified: Boolean(
-                storedUser?.psychologist_profile?.cfp_verified_at ||
-                  storedUser?.psychologist_profile?.crp_status === "aprovado",
-              ),
-            },
-            sourceText: values.title,
-          } satisfies LectumVideoThumbnailFrameOptions)
-        : null;
-      const thumbnailFile = selectedVideo
-        ? await createVideoThumbnailFile(selectedVideo.file, {
-            lectumShareFrame: thumbnailFrame,
-          })
-        : null;
-      const uploadedThumbnail = thumbnailFile
-        ? await uploadMutation.mutateAsync({
-            file: thumbnailFile,
-            purpose: "generated-video-thumbnail",
-            slug: values.community_slug,
-          })
-        : null;
+              })
+            : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+
+          return { uploadedMedia, uploadedThumbnail };
+        } finally {
+          operation?.complete();
+        }
+      })();
       const firstMedia = uploadedMedia[0] ?? null;
       const imageMediaItems = uploadedMedia
         .filter((media) => media.media_type === "image")
@@ -656,6 +659,7 @@ export const useCreateCommunityPostController = ({
 
   return {
     clearCorrectedFormErrorsSoon,
+    cancelActiveVideoUpload,
     cancelDiscardConfirmation,
     communitiesQuery,
     confirmDiscardAndClose,
@@ -688,6 +692,7 @@ export const useCreateCommunityPostController = ({
     sheetMotionState,
     updateSelectedMediaOrientation,
     uploadMutation,
+    videoUploadProgress,
   };
 };
 

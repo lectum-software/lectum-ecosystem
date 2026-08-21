@@ -497,3 +497,4 @@ Formato recomendado:
 - [ADR-0464 — Otimização client-side do vídeo de apresentação com MediaBunny](0464-otimizacao-client-side-video-mediabunny.md)
 - [ADR-0465 — Observabilidade Sentry em aplicações separadas](0465-observabilidade-sentry-aplicacoes-separadas.md)
 - [ADR-0466 — Preparação de mídia pública por finalidade](0466-preparacao-midia-publica-por-finalidade.md)
+- [ADR-0467 — Limites de vídeo após preparação e saída temporária em OPFS](0467-limites-video-safari-photos-opfs.md)

@@ -17,6 +17,7 @@ import { MentorBadge } from "@/components/community/mentor-badge";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
@@ -245,6 +246,7 @@ export const ReplyCard = ({
     values: ReplyComposerForm,
     parentReplyId: string,
     mediaFile?: File | null,
+    videoUploadOperation?: CommunityVideoUploadOperation,
   ) => Promise<void> | void;
   focusReplyId?: string | null;
   maxInlineDepth?: number;
@@ -537,7 +539,9 @@ export const ReplyCard = ({
                 mediaPermission={mediaPermission}
                 onCancelContext={() => onCancelInlineReplyTarget(reply.id)}
                 onDraftStateChange={onInlineReplyDraftChange}
-                onSubmit={(values, mediaFile) => onSubmitReply(values, reply.id, mediaFile)}
+                onSubmit={(values, mediaFile, videoUploadOperation) =>
+                  onSubmitReply(values, reply.id, mediaFile, videoUploadOperation)
+                }
                 replyTarget={inlineReplyTarget}
                 variant="inline"
                 autoFocus

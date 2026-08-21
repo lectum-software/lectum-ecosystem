@@ -18,6 +18,7 @@ import {
 import type { PostReply } from "@/api/generator/types/posts";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { useAppSelector } from "@/hooks/redux";
+import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
@@ -451,6 +452,7 @@ export const usePostDetailController = () => {
     values: ReplyComposerForm,
     parentReplyId?: string | null,
     mediaFile?: File | null,
+    videoUploadOperation?: CommunityVideoUploadOperation,
   ) => {
     if (!post) return;
     if (!conversion.isAuthenticated) {
@@ -474,6 +476,7 @@ export const usePostDetailController = () => {
       setReplyError,
       uploadReplyMedia: uploadReplyMediaMutation.mutateAsync,
       values,
+      videoUploadOperation,
     });
 
     resetReplyFocusHighlight();

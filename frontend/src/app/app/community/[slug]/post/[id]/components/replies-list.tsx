@@ -6,6 +6,7 @@ import type { PostReply } from "@/api/generator/types/posts";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import {
   isVerifiedProfessionalReply,
   MAX_REPLY_TREE_DEPTH,
@@ -63,6 +64,7 @@ export const RepliesList = ({
     values: ReplyComposerForm,
     parentReplyId: string,
     mediaFile?: File | null,
+    videoUploadOperation?: CommunityVideoUploadOperation,
   ) => Promise<void> | void;
   onVote: (replyId: string, value: 1 | -1) => void;
   focusReplyId?: string | null;

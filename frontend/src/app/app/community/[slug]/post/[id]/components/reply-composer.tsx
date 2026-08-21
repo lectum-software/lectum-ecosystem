@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Send, X } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import {
   type ChangeEvent,
   type CSSProperties,
@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import {
   createReplyVideoThumbnail,
   detectReplyMediaOrientation,
@@ -22,11 +23,15 @@ import {
 } from "@/components/community/reply-media-attachment-control";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import {
+  type CommunityVideoUploadOperation,
+  useCommunityVideoUpload,
+} from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
-  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
-  isCommunityMediaFileTooLarge,
+  getCommunityMediaSelectionSizeError,
+  resolveMediaUploadError,
 } from "@/utils/media-upload-error";
 import {
   COMMENT_GUIDANCE_MESSAGE,
@@ -36,12 +41,7 @@ import {
   type ReplyMediaPermission,
   type ReplyTarget,
 } from "../modules/reply-support";
-import {
-  type PostReportForm,
-  type ReplyComposerForm,
-  usePostReportForm,
-  useReplyComposerForm,
-} from "../use-form";
+import { type ReplyComposerForm, useReplyComposerForm } from "../use-form";
 import { findReplyComposerInput } from "./reply-composer-dom";
 import { useReplyComposerKeyboardOffset } from "./use-reply-composer-keyboard-offset";
 
@@ -67,7 +67,11 @@ export const ReplyComposer = ({
   onCancelContext?: () => void;
   onComposerActiveChange?: (active: boolean) => void;
   onDraftStateChange?: (hasDraft: boolean) => void;
-  onSubmit: (values: ReplyComposerForm, mediaFile?: File | null) => Promise<void> | void;
+  onSubmit: (
+    values: ReplyComposerForm,
+    mediaFile?: File | null,
+    videoUploadOperation?: CommunityVideoUploadOperation,
+  ) => Promise<void> | void;
   replyToName?: string | null;
   replyTarget: ReplyTarget;
   variant?: "inline" | "main";
@@ -79,6 +83,8 @@ export const ReplyComposer = ({
   const [draggingToCancel, setDraggingToCancel] = useState(false);
   const [mediaPickerActive, setMediaPickerActive] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<SelectedReplyMedia | null>(null);
+  const { beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
+    useCommunityVideoUpload();
   const composerFormNodeRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const composerActivatedAtRef = useRef(0);
@@ -359,20 +365,20 @@ export const ReplyComposer = ({
       return;
     }
 
-    if (isCommunityMediaFileTooLarge(file)) {
+    const type = mediaTypeFromFile(file);
+    if (!type) {
       hook.setError("content", {
-        message: COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
+        message: "Envie uma imagem ou vídeo em formato permitido.",
         type: "manual",
       });
       endMediaPickerInteraction();
       focusComposerInput();
       return;
     }
-
-    const type = mediaTypeFromFile(file);
-    if (!type) {
+    const sizeError = getCommunityMediaSelectionSizeError(file, type);
+    if (sizeError) {
       hook.setError("content", {
-        message: "Envie uma imagem ou vídeo em formato permitido.",
+        message: resolveMediaUploadError(sizeError),
         type: "manual",
       });
       endMediaPickerInteraction();
@@ -461,8 +467,10 @@ export const ReplyComposer = ({
         return;
       }
 
+      const videoUploadOperation = selectedMedia?.type === "video" ? beginVideoUpload() : undefined;
+
       try {
-        await onSubmit(values, selectedMedia?.file ?? null);
+        await onSubmit(values, selectedMedia?.file ?? null, videoUploadOperation);
         hook.reset({ content: "" });
         clearSelectedMedia();
         endMediaPickerInteraction();
@@ -470,6 +478,8 @@ export const ReplyComposer = ({
         onDraftStateChange?.(false);
       } catch {
         // O estado de erro é tratado pela mutation para manter o campo preenchido.
+      } finally {
+        videoUploadOperation?.complete();
       }
     })();
   };
@@ -573,6 +583,13 @@ export const ReplyComposer = ({
         {COMMENT_GUIDANCE_MESSAGE}
       </p>
 
+      {videoUploadProgress ? (
+        <CommunityVideoUploadProgress
+          onCancel={cancelActiveVideoUpload}
+          progress={videoUploadProgress}
+        />
+      ) : null}
+
       {visibleError ? (
         <InlineAlert title="Não foi possível responder" variant="error">
           {visibleError}
@@ -582,118 +599,4 @@ export const ReplyComposer = ({
   );
 };
 
-export const PostReportModal = ({
-  apiError,
-  disabled,
-  onClose,
-  onSubmit,
-  open,
-  subject,
-  title,
-}: {
-  apiError?: string | null;
-  disabled?: boolean;
-  onClose: () => void;
-  onSubmit: (values: PostReportForm) => Promise<void> | void;
-  open: boolean;
-  subject: string;
-  title: string;
-}) => {
-  const form = usePostReportForm();
-  const { Form: ReportForm, formProps, hook } = form;
-  const resetReportForm = hook.reset;
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, open]);
-
-  useEffect(() => {
-    if (!open) return;
-    resetReportForm({ description: "", reason: "spam" });
-  }, [open, resetReportForm]);
-
-  if (!open) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[120] grid place-items-center bg-foreground/55 px-4 py-6 backdrop-blur-md"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="post-report-title"
-    >
-      <div className="w-full max-w-[430px] rounded-[28px] border border-media-foreground/70 bg-surface p-5 shadow-lectum-soft dark:border-border dark:bg-surface">
-        <div className="flex items-start justify-between gap-4">
-          <div className="grid gap-1">
-            <p className="text-xs font-black tracking-[0.12em] text-muted uppercase">
-              Moderação Lectum
-            </p>
-            <h2
-              className="text-xl font-black tracking-[-0.03em] text-foreground"
-              id="post-report-title"
-            >
-              {title}
-            </h2>
-            <p className="line-clamp-2 text-sm leading-5 text-muted">{subject}</p>
-          </div>
-          <button
-            aria-label="Fechar denúncia"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-muted text-muted transition hover:bg-surface-muted hover:text-foreground"
-            onClick={onClose}
-            type="button"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-
-        <ReportForm
-          className="mt-5 grid gap-3"
-          fields={formProps.fields}
-          hook={hook}
-          onSubmit={hook.handleSubmit(async (values) => {
-            try {
-              await onSubmit(values);
-            } catch {
-              // A mutation exibe a mensagem no modal sem fechar o fluxo.
-            }
-          })}
-        >
-          {apiError ? (
-            <InlineAlert title="Não foi possível enviar" variant="error">
-              {apiError}
-            </InlineAlert>
-          ) : null}
-
-          <div className="flex justify-end gap-2 pt-1">
-            <Button
-              className="h-10 rounded-full px-4"
-              onClick={onClose}
-              type="button"
-              variant="outline"
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="h-10 rounded-full bg-primary px-5 font-black hover:bg-primary-hover"
-              disabled={disabled}
-              type="submit"
-            >
-              {disabled ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-              Enviar denúncia
-            </Button>
-          </div>
-        </ReportForm>
-      </div>
-    </div>
-  );
-};
+export { PostReportModal } from "./post-report-modal";

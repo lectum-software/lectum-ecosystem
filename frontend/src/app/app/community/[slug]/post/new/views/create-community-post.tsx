@@ -11,6 +11,7 @@ import {
 } from "react";
 import { Controller } from "react-hook-form";
 import { CommunityDeleteConfirmationModal } from "@/components/community/community-delete-confirmation-modal";
+import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
   const controller = useCreateCommunityPostController({ onCloseComplete });
   const {
     clearCorrectedFormErrorsSoon,
+    cancelActiveVideoUpload,
     cancelDiscardConfirmation,
     communitiesQuery,
     confirmDiscardAndClose,
@@ -71,6 +73,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
     sheetMotionState,
     updateSelectedMediaOrientation,
     uploadMutation,
+    videoUploadProgress,
   } = controller;
   const hasSelectedMedia = selectedMediaItems.length > 0;
   const preserveBlankTapFocus = hasSelectedMedia ? undefined : preserveEditorFocusFromBlankTap;
@@ -547,6 +550,13 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
           </div>
 
           <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-2 pb-[var(--lectum-create-post-footer-bottom-padding)] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+            {videoUploadProgress ? (
+              <CommunityVideoUploadProgress
+                className="mb-2"
+                onCancel={cancelActiveVideoUpload}
+                progress={videoUploadProgress}
+              />
+            ) : null}
             <div className="flex min-h-11 items-center justify-between gap-3">
               {isPsychologist ? renderPsychologistMediaButton() : renderAnonymousControls()}
 

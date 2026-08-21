@@ -9,6 +9,16 @@ export type VideoPreparationPurpose = (typeof VIDEO_PREPARATION_PURPOSES)[number
 export const isVideoPreparationPurpose = (value: unknown): value is VideoPreparationPurpose =>
   VIDEO_PREPARATION_PURPOSES.includes(value as VideoPreparationPurpose);
 
+export const isVideoPreparationTemporaryFileName = (value: unknown): value is string => {
+  if (typeof value !== "string") return false;
+
+  const match = /^lectum-video-(\d{13})-([0-9a-f]{8}-[0-9a-f-]{27})\.mp4$/i.exec(value);
+  if (!match) return false;
+
+  const createdAt = Number(match[1]);
+  return Number.isSafeInteger(createdAt) && createdAt > 0;
+};
+
 export type VideoPreparationStage = "analyzing" | "optimizing";
 
 export type VideoPreparationProgress = {
@@ -17,6 +27,7 @@ export type VideoPreparationProgress = {
 };
 
 export type PreparedVideo = {
+  cleanup: () => Promise<void>;
   file: File;
   optimized: boolean;
   originalSize: number;
@@ -29,8 +40,15 @@ export type VideoOptimizationWorkerRequest =
 
 export type VideoOptimizationWorkerResponse =
   | { percentage: number | null; stage: VideoPreparationStage; type: "progress" }
+  | { temporaryFileName: string; type: "temporary-file-created" }
   | { reason: "already-efficient" | "failed" | "unsupported"; type: "use-original" }
-  | { buffer: ArrayBuffer; outputSize: number; type: "optimized" }
+  | { buffer: ArrayBuffer; outputSize: number; type: "optimized-buffer" }
+  | {
+      file: File;
+      outputSize: number;
+      temporaryFileName: string;
+      type: "optimized-file";
+    }
   | { type: "canceled" };
 
 export class VideoUploadCanceledError extends Error {
@@ -58,11 +76,23 @@ export const isVideoOptimizationWorkerResponse = (
 
   const message = value as Record<string, unknown>;
   if (message.type === "canceled") return true;
-  if (message.type === "optimized") {
+  if (message.type === "temporary-file-created") {
+    return isVideoPreparationTemporaryFileName(message.temporaryFileName);
+  }
+  if (message.type === "optimized-buffer") {
     return (
       message.buffer instanceof ArrayBuffer &&
       Number.isInteger(message.outputSize) &&
       message.outputSize === message.buffer.byteLength
+    );
+  }
+  if (message.type === "optimized-file") {
+    return (
+      typeof File !== "undefined" &&
+      message.file instanceof File &&
+      Number.isInteger(message.outputSize) &&
+      message.outputSize === message.file.size &&
+      isVideoPreparationTemporaryFileName(message.temporaryFileName)
     );
   }
   if (message.type === "progress") {

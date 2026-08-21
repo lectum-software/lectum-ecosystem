@@ -1,6 +1,5 @@
 "use client";
 
-import { X } from "lucide-react";
 import Image from "next/image";
 import {
   type ChangeEvent,
@@ -15,23 +14,26 @@ import { toast } from "sonner";
 import { useUploadCommunityPostMedia } from "@/api/callers/community";
 import { useUpdatePost } from "@/api/callers/posts";
 import { getSafeApiErrorMessage } from "@/api/errors";
+import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import { components } from "@/components/controllers";
 import { useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
+import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
-import { resolvePublicMediaKind } from "@/utils/media-preparation";
+import { isUploadPreparationCanceled, resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
-  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
-  isCommunityMediaFileTooLarge,
+  getCommunityMediaFileSelectionSizeError,
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
+import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import {
   createVideoThumbnailFile,
   type LectumVideoThumbnailFrameOptions,
 } from "@/utils/video-thumbnail";
+import { PostEditMediaPreview } from "./post-edit-media-preview";
 import { PostEditAnonymousControls, PostEditMediaButton } from "./post-edit-modal-controls";
 import {
   buildFields,
@@ -45,7 +47,6 @@ import {
   type PostEditModalProps,
   type PostMediaPreviewItem,
   postEditSchema,
-  resolveEditableMediaPreviewUrls,
   type SelectedPostMedia,
 } from "./post-edit-modal-support";
 import { PostEditModalView } from "./post-edit-modal-view";
@@ -83,8 +84,15 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     },
   });
   const { formProps, hook } = form;
+  const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
+    useCommunityVideoUpload();
+  const handleClose = useCallback(() => {
+    abortActiveVideoUpload();
+    onClose();
+  }, [abortActiveVideoUpload, onClose]);
   const uploadMutation = useUploadCommunityPostMedia({
     onError: (error) => {
+      if (isUploadPreparationCanceled(error)) return;
       toast.error(resolveMediaUploadError(error));
     },
   });
@@ -92,7 +100,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     onSuccess: (updatedPost) => {
       toast.success("Post atualizado!");
       onUpdated?.(updatedPost);
-      onClose();
+      handleClose();
     },
     onError: (error) => {
       toast.error(getSafeApiErrorMessage(error, "Não foi possível atualizar o post."));
@@ -238,7 +246,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     const previousBodyOverflow = document.body.style.overflow;
     const previousDocumentOverflow = document.documentElement.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") handleClose();
     };
 
     document.body.style.overflow = "hidden";
@@ -251,7 +259,7 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       document.documentElement.style.overflow = previousDocumentOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, open]);
+  }, [handleClose, open]);
 
   useEffect(() => {
     return () => revokeSelectedMediaPreview();
@@ -269,14 +277,15 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       return;
     }
 
-    if (files.some(isCommunityMediaFileTooLarge)) {
-      toast.error(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
+    if (files.some((file) => resolvePublicMediaKind(file) === null)) {
+      toast.error("Envie uma imagem ou vídeo em formato permitido.");
       focusLastEditor();
       return;
     }
 
-    if (files.some((file) => resolvePublicMediaKind(file) === null)) {
-      toast.error("Envie uma imagem ou vídeo em formato permitido.");
+    const sizeError = files.map(getCommunityMediaFileSelectionSizeError).find(Boolean);
+    if (sizeError) {
+      toast.error(resolveMediaUploadError(sizeError));
       focusLastEditor();
       return;
     }
@@ -361,46 +370,62 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     try {
       const selectedVideo =
         selectedMediaItems.find((mediaItem) => mediaItem.type === "video") ?? null;
-      const uploadedMedia = selectedVideo
-        ? [
-            await uploadMutation.mutateAsync({
-              file: selectedVideo.file,
-              slug: post.community.slug,
-            }),
-          ]
-        : selectedMediaItems.length > 0
-          ? await mapWithConcurrency(selectedMediaItems, 2, (mediaItem) =>
-              uploadMutation.mutateAsync({
-                file: mediaItem.file,
+      const { uploadedMedia, uploadedThumbnail } = await (async () => {
+        const operation = selectedVideo ? beginVideoUpload() : null;
+
+        try {
+          const uploadedMedia = selectedVideo
+            ? [
+                await uploadMutation.mutateAsync({
+                  file: selectedVideo.file,
+                  onProgress: operation?.onProgress,
+                  signal: operation?.signal,
+                  slug: post.community.slug,
+                }),
+              ]
+            : selectedMediaItems.length > 0
+              ? await mapWithConcurrency(selectedMediaItems, 2, (mediaItem) =>
+                  uploadMutation.mutateAsync({
+                    file: mediaItem.file,
+                    slug: post.community.slug,
+                  }),
+                )
+              : [];
+          const thumbnailFrame =
+            selectedVideo && post.author.role === "psicologo"
+              ? ({
+                  cardLabel: "Postado na Lectum",
+                  professional: {
+                    avatar: post.author.avatar,
+                    name: post.author.name,
+                    roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
+                    verified: post.author.verified,
+                  },
+                  sourceText: values.title,
+                } satisfies LectumVideoThumbnailFrameOptions)
+              : null;
+          const thumbnailFile = selectedVideo
+            ? await createVideoThumbnailFile(selectedVideo.file, {
+                lectumShareFrame: thumbnailFrame,
+                signal: operation?.signal,
+              })
+            : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+          const uploadedThumbnail = thumbnailFile
+            ? await uploadMutation.mutateAsync({
+                file: thumbnailFile,
+                purpose: "generated-video-thumbnail",
+                signal: operation?.signal,
                 slug: post.community.slug,
-              }),
-            )
-          : [];
-      const thumbnailFrame =
-        selectedVideo && post.author.role === "psicologo"
-          ? ({
-              cardLabel: "Postado na Lectum",
-              professional: {
-                avatar: post.author.avatar,
-                name: post.author.name,
-                roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
-                verified: post.author.verified,
-              },
-              sourceText: values.title,
-            } satisfies LectumVideoThumbnailFrameOptions)
-          : null;
-      const thumbnailFile = selectedVideo
-        ? await createVideoThumbnailFile(selectedVideo.file, {
-            lectumShareFrame: thumbnailFrame,
-          })
-        : null;
-      const uploadedThumbnail = thumbnailFile
-        ? await uploadMutation.mutateAsync({
-            file: thumbnailFile,
-            purpose: "generated-video-thumbnail",
-            slug: post.community.slug,
-          })
-        : null;
+              })
+            : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+
+          return { uploadedMedia, uploadedThumbnail };
+        } finally {
+          operation?.complete();
+        }
+      })();
       const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video") ?? null;
       const uploadedImageMediaItems = uploadedMedia
         .filter((media) => media.media_type === "image")
@@ -548,110 +573,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
     return <Component control={hook.control} key={`edit-post-${String(field.name)}`} {...field} />;
   };
 
-  const renderSelectedMediaPreview = () => {
-    if (editableMediaItems.length === 0) return null;
-
-    return (
-      <ul
-        aria-label="Mídias anexadas ao post"
-        className="mt-2 flex max-h-28 shrink-0 gap-2 overflow-x-auto overflow-y-hidden pb-1"
-      >
-        {editableMediaItems.map((mediaItem, index) => {
-          const { imagePreviewSrc, mediaSrc, shouldRenderImagePreview } =
-            resolveEditableMediaPreviewUrls(mediaItem);
-          const frameClassName =
-            mediaItem.orientation === "landscape"
-              ? "h-20 w-32 sm:h-[5.5rem] sm:w-[9.75rem]"
-              : mediaItem.orientation === "portrait"
-                ? "h-24 w-[4.4rem] sm:h-28 sm:w-20"
-                : "h-20 w-20 sm:h-[5.5rem] sm:w-[5.5rem]";
-
-          return (
-            <li
-              className={cn(
-                "relative shrink-0 overflow-hidden rounded-[1.05rem] border border-border bg-surface-muted shadow-none",
-                frameClassName,
-              )}
-              key={`${mediaItem.source}-${mediaItem.id}`}
-            >
-              {shouldRenderImagePreview && imagePreviewSrc ? (
-                <Image
-                  alt={
-                    mediaItem.type === "video"
-                      ? `Miniatura do vídeo anexado ${index + 1}`
-                      : `Miniatura da imagem anexada ${index + 1}`
-                  }
-                  className="object-cover"
-                  fill
-                  onLoad={(event) => {
-                    const { naturalHeight, naturalWidth } = event.currentTarget;
-                    const orientation =
-                      naturalWidth && naturalHeight && naturalWidth / naturalHeight >= 1.12
-                        ? "landscape"
-                        : "portrait";
-
-                    if (mediaItem.source === "selected") {
-                      updateSelectedMediaOrientation(mediaItem.id, orientation);
-                      return;
-                    }
-
-                    updateStoredMediaOrientation(mediaItem.id, orientation);
-                  }}
-                  sizes="160px"
-                  src={imagePreviewSrc}
-                  unoptimized
-                />
-              ) : (
-                <video
-                  aria-label="Miniatura do vídeo anexado"
-                  className="h-full w-full object-cover"
-                  muted
-                  onLoadedMetadata={(event) => {
-                    const { videoHeight, videoWidth } = event.currentTarget;
-                    const orientation =
-                      videoWidth && videoHeight && videoWidth / videoHeight >= 1.12
-                        ? "landscape"
-                        : "portrait";
-
-                    if (mediaItem.source === "selected") {
-                      updateSelectedMediaOrientation(mediaItem.id, orientation);
-                      return;
-                    }
-
-                    updateStoredMediaOrientation(mediaItem.id, orientation);
-                  }}
-                  playsInline
-                  preload="metadata"
-                  src={mediaSrc}
-                />
-              )}
-
-              {canManageMedia ? (
-                <button
-                  aria-label={`Remover mídia anexada ${index + 1}`}
-                  className="absolute top-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-surface/92 text-muted shadow-none ring-1 ring-border/70 transition hover:bg-surface hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15"
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    if (mediaItem.source === "selected") {
-                      removeSelectedMediaAt(mediaItem.selectedIndex ?? 0);
-                    } else {
-                      removeStoredMedia(mediaItem.id);
-                    }
-                    focusLastEditor();
-                  }}
-                  onMouseDown={(event) => event.preventDefault()}
-                  tabIndex={-1}
-                  type="button"
-                >
-                  <X className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
-    );
-  };
   if (!open) return null;
 
   return (
@@ -679,8 +600,19 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
       }
       isGuidanceOpen={isGuidanceOpen}
       isSubmitting={isSubmitting}
-      mediaPreview={renderSelectedMediaPreview()}
-      onClose={onClose}
+      mediaPreview={
+        <PostEditMediaPreview
+          canManageMedia={canManageMedia}
+          disabled={isSubmitting}
+          items={editableMediaItems}
+          onFocusEditor={focusLastEditor}
+          onRemoveSelected={removeSelectedMediaAt}
+          onRemoveStored={removeStoredMedia}
+          onUpdateSelectedOrientation={updateSelectedMediaOrientation}
+          onUpdateStoredOrientation={updateStoredMediaOrientation}
+        />
+      }
+      onClose={handleClose}
       onFocusCapture={(event) => {
         const target = event.target as HTMLElement;
         if (EDITOR_FIELD_IDS.has(target.id)) {
@@ -694,6 +626,14 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
         focusLastEditor();
       }}
       titleFields={formProps.fields.filter((field) => field.name === "title").map(renderFormField)}
+      uploadStatus={
+        videoUploadProgress ? (
+          <CommunityVideoUploadProgress
+            onCancel={cancelActiveVideoUpload}
+            progress={videoUploadProgress}
+          />
+        ) : null
+      }
     />
   );
 }

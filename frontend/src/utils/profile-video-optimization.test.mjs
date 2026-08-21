@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
+import { registerHooks } from "node:module";
 import test from "node:test";
+import { createVideoPreparationInactivityWatchdog } from "./video-preparation/inactivity-watchdog.ts";
+import {
+  cleanupVideoPreparationTemporaryFile,
+  createBoundedVideoOutputWritable,
+  shouldUseMemoryVideoOutputFallback,
+  VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_INPUT_BYTES,
+  VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_OUTPUT_BYTES,
+  VideoOutputLimitExceededError,
+} from "./video-preparation/opfs-output.ts";
 import {
   getVideoPreparationPurposePolicy,
   resolveVideoContainer,
@@ -13,6 +23,7 @@ import {
 import {
   isVideoOptimizationWorkerResponse,
   isVideoPreparationPurpose,
+  isVideoPreparationTemporaryFileName,
   isVideoUploadCanceled,
   throwIfVideoUploadCanceled,
   VIDEO_PREPARATION_PURPOSES,
@@ -30,6 +41,30 @@ const createAnalysis = (overrides = {}) => ({
   width: 1080,
   ...overrides,
 });
+
+const wait = (milliseconds) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+
+const loadPrepareVideoClient = async () => {
+  const hooks = registerHooks({
+    resolve: (specifier, context, nextResolve) => {
+      const isLocalVideoPreparationImport =
+        (specifier.startsWith("./") || specifier.startsWith("../")) &&
+        context.parentURL?.includes("/src/utils/video-preparation/") &&
+        !specifier.endsWith(".ts");
+
+      return nextResolve(isLocalVideoPreparationImport ? `${specifier}.ts` : specifier, context);
+    },
+  });
+
+  try {
+    return await import("./video-preparation/client.ts");
+  } finally {
+    hooks.deregister();
+  }
+};
 
 test("expõe preparação genérica para cada finalidade mantendo a política conservadora", () => {
   assert.deepEqual(VIDEO_PREPARATION_PURPOSES, [
@@ -186,10 +221,27 @@ test("classifica containers e valida somente mensagens conhecidas do worker", ()
     isVideoOptimizationWorkerResponse({
       buffer: new ArrayBuffer(8),
       outputSize: 8,
-      type: "optimized",
+      type: "optimized-buffer",
     }),
     true,
   );
+  const temporaryFileName = "lectum-video-1750000000000-12345678-1234-1234-1234-123456789abc.mp4";
+  const storedFile = new File([new Uint8Array(8)], "temporario.mp4", { type: "video/mp4" });
+  assert.equal(
+    isVideoOptimizationWorkerResponse({
+      file: storedFile,
+      outputSize: storedFile.size,
+      temporaryFileName,
+      type: "optimized-file",
+    }),
+    true,
+  );
+  assert.equal(
+    isVideoOptimizationWorkerResponse({ temporaryFileName, type: "temporary-file-created" }),
+    true,
+  );
+  assert.equal(isVideoPreparationTemporaryFileName(temporaryFileName), true);
+  assert.equal(isVideoPreparationTemporaryFileName("../outro.mp4"), false);
   assert.equal(isVideoOptimizationWorkerResponse({ type: "canceled" }), true);
   assert.equal(
     isVideoOptimizationWorkerResponse({ reason: "technical-detail", type: "use-original" }),
@@ -205,4 +257,302 @@ test("cancelamento é controlado e não entra no fallback de falha", () => {
   assert.throws(() => throwIfVideoUploadCanceled(controller.signal), VideoUploadCanceledError);
   assert.equal(isVideoUploadCanceled(new VideoUploadCanceledError()), true);
   assert.equal(isVideoUploadCanceled(new Error("falha")), false);
+});
+
+test("limita fallback em memória a entradas e saídas realmente pequenas", () => {
+  assert.equal(
+    shouldUseMemoryVideoOutputFallback(
+      VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_INPUT_BYTES,
+      VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_OUTPUT_BYTES,
+    ),
+    true,
+  );
+  assert.equal(
+    shouldUseMemoryVideoOutputFallback(
+      VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_INPUT_BYTES + 1,
+      VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_OUTPUT_BYTES,
+    ),
+    false,
+  );
+  assert.equal(
+    shouldUseMemoryVideoOutputFallback(
+      VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_INPUT_BYTES,
+      VIDEO_PREPARATION_MEMORY_FALLBACK_MAX_OUTPUT_BYTES + 1,
+    ),
+    false,
+  );
+});
+
+test("escreve saída OPFS por posição, trata short writes e fecha uma única vez", async () => {
+  const writes = [];
+  let closeCount = 0;
+  let flushCount = 0;
+  let truncateCount = 0;
+  const accessHandle = {
+    close: () => {
+      closeCount += 1;
+    },
+    flush: () => {
+      flushCount += 1;
+    },
+    truncate: (size) => {
+      assert.equal(size, 0);
+      truncateCount += 1;
+    },
+    write: (data, { at }) => {
+      const written = Math.min(2, data.byteLength);
+      writes.push({ at, data: [...new Uint8Array(data.buffer, data.byteOffset, written)] });
+      return written;
+    },
+  };
+  const fileHandle = {
+    createSyncAccessHandle: async () => accessHandle,
+    getFile: async () => new File([], "unused"),
+  };
+  const bounded = await createBoundedVideoOutputWritable(fileHandle, 16);
+  const writer = bounded.writable.getWriter();
+
+  await writer.write({
+    data: Uint8Array.from([1, 2, 3, 4, 5]),
+    position: 4,
+    type: "write",
+  });
+  await writer.close();
+  await bounded.close();
+
+  assert.deepEqual(writes, [
+    { at: 4, data: [1, 2] },
+    { at: 6, data: [3, 4] },
+    { at: 8, data: [5] },
+  ]);
+  assert.equal(truncateCount, 1);
+  assert.equal(flushCount, 1);
+  assert.equal(closeCount, 1);
+});
+
+test("usa createWritable quando a criação ou inicialização do handle síncrono falha", async () => {
+  for (const syncFailure of ["create", "truncate"]) {
+    const writes = [];
+    let asyncCloseCount = 0;
+    let syncCloseCount = 0;
+    const fileStream = {
+      abort: async () => undefined,
+      close: async () => {
+        asyncCloseCount += 1;
+      },
+      write: async (chunk) => {
+        writes.push(chunk);
+      },
+    };
+    const fileHandle = {
+      createSyncAccessHandle: async () => {
+        if (syncFailure === "create") throw new Error("sync unavailable");
+        return {
+          close: () => {
+            syncCloseCount += 1;
+          },
+          flush: () => undefined,
+          truncate: () => {
+            throw new Error("truncate unavailable");
+          },
+          write: () => 0,
+        };
+      },
+      createWritable: async () => fileStream,
+      getFile: async () => new File([], "unused"),
+    };
+    const bounded = await createBoundedVideoOutputWritable(fileHandle, 16);
+    const writer = bounded.writable.getWriter();
+    const chunk = { data: Uint8Array.from([1, 2, 3]), position: 4, type: "write" };
+
+    await writer.write(chunk);
+    await writer.close();
+    await bounded.close();
+
+    assert.deepEqual(writes, [chunk]);
+    assert.equal(asyncCloseCount, 1);
+    assert.equal(syncCloseCount, syncFailure === "truncate" ? 1 : 0);
+  }
+});
+
+test("watchdog renova a atividade e dispara o lifecycle de fallback uma única vez", async (t) => {
+  const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  const removedFiles = [];
+  const directory = {
+    removeEntry: async (fileName) => {
+      removedFiles.push(fileName);
+    },
+  };
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      storage: {
+        getDirectory: async () => ({
+          getDirectoryHandle: async () => directory,
+        }),
+      },
+    },
+  });
+
+  t.after(() => {
+    if (originalNavigator) {
+      Object.defineProperty(globalThis, "navigator", originalNavigator);
+    } else {
+      Reflect.deleteProperty(globalThis, "navigator");
+    }
+  });
+
+  const temporaryFileName = "lectum-video-1750000000000-12345678-1234-1234-1234-123456789abc.mp4";
+  let cleanupPromise = Promise.resolve();
+  let fallbackCount = 0;
+  let terminateCount = 0;
+  const watchdog = createVideoPreparationInactivityWatchdog(() => {
+    fallbackCount += 1;
+    terminateCount += 1;
+    cleanupPromise = cleanupVideoPreparationTemporaryFile(temporaryFileName);
+  }, 200);
+
+  watchdog.reset();
+  await wait(20);
+  assert.equal(terminateCount, 0);
+
+  watchdog.reset();
+  await wait(100);
+  assert.equal(terminateCount, 0);
+  await wait(120);
+
+  await cleanupPromise;
+  assert.equal(fallbackCount, 1);
+  assert.equal(terminateCount, 1);
+  assert.deepEqual(removedFiles, [temporaryFileName]);
+  await wait(210);
+  assert.equal(fallbackCount, 1);
+});
+
+test("prepareVideo renova watchdog e limpa OPFS ao cair no original por inatividade", async (t) => {
+  const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  const originalWorker = Object.getOwnPropertyDescriptor(globalThis, "Worker");
+  const removedFiles = [];
+  const directory = {
+    removeEntry: async (fileName) => {
+      removedFiles.push(fileName);
+    },
+  };
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      storage: {
+        getDirectory: async () => ({
+          getDirectoryHandle: async () => directory,
+        }),
+      },
+    },
+  });
+
+  class WorkerDouble {
+    static instance;
+
+    onerror = null;
+    onmessage = null;
+    onmessageerror = null;
+    requests = [];
+    terminated = false;
+
+    constructor() {
+      WorkerDouble.instance = this;
+    }
+
+    emit(data) {
+      this.onmessage?.({ data });
+    }
+
+    postMessage(message) {
+      this.requests.push(message);
+    }
+
+    terminate() {
+      this.terminated = true;
+    }
+  }
+  Object.defineProperty(globalThis, "Worker", {
+    configurable: true,
+    value: WorkerDouble,
+  });
+  t.after(() => {
+    if (originalNavigator) {
+      Object.defineProperty(globalThis, "navigator", originalNavigator);
+    } else {
+      Reflect.deleteProperty(globalThis, "navigator");
+    }
+    if (originalWorker) {
+      Object.defineProperty(globalThis, "Worker", originalWorker);
+    } else {
+      Reflect.deleteProperty(globalThis, "Worker");
+    }
+  });
+
+  const { prepareVideo } = await loadPrepareVideoClient();
+  const source = new File([new Uint8Array(32)], "source.mov", { type: "video/quicktime" });
+  const progressEvents = [];
+  const preparation = prepareVideo(source, {
+    inactivityTimeoutMs: 200,
+    onProgress: (progress) => progressEvents.push(progress),
+    purpose: "community-reply",
+  });
+  const workerInstance = WorkerDouble.instance;
+  const temporaryFileName = "lectum-video-1750000000000-12345678-1234-1234-1234-123456789abc.mp4";
+
+  assert.ok(workerInstance);
+  assert.deepEqual(workerInstance.requests, [
+    { file: source, purpose: "community-reply", type: "start" },
+  ]);
+  workerInstance.emit({ temporaryFileName, type: "temporary-file-created" });
+  await wait(20);
+  assert.equal(workerInstance.terminated, false);
+
+  workerInstance.emit({ percentage: 25, stage: "optimizing", type: "progress" });
+  await wait(100);
+  assert.equal(workerInstance.terminated, false);
+  await wait(120);
+
+  const result = await preparation;
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(result.file, source);
+  assert.equal(result.optimized, false);
+  assert.equal(workerInstance.terminated, true);
+  assert.deepEqual(progressEvents, [{ percentage: 25, stage: "optimizing" }]);
+  assert.deepEqual(removedFiles, [temporaryFileName]);
+});
+
+test("hard cap recusa o chunk antes de gravar qualquer byte", async () => {
+  let writeCount = 0;
+  let closeCount = 0;
+  const accessHandle = {
+    close: () => {
+      closeCount += 1;
+    },
+    flush: () => undefined,
+    truncate: () => undefined,
+    write: () => {
+      writeCount += 1;
+      return 1;
+    },
+  };
+  const bounded = await createBoundedVideoOutputWritable(
+    {
+      createSyncAccessHandle: async () => accessHandle,
+      getFile: async () => new File([], "unused"),
+    },
+    8,
+  );
+  const writer = bounded.writable.getWriter();
+
+  await assert.rejects(
+    writer.write({ data: Uint8Array.from([1, 2]), position: 7, type: "write" }),
+    VideoOutputLimitExceededError,
+  );
+  await bounded.close();
+
+  assert.equal(writeCount, 0);
+  assert.equal(closeCount, 1);
 });

@@ -400,8 +400,13 @@ export const PostDetailLogic = () => {
                   setMobileReplyTarget(null);
                 }}
                 onComposerActiveChange={setReplyComposerActive}
-                onSubmit={(values, mediaFile) =>
-                  submitReply(values, activeMobileReplyTarget?.id ?? null, mediaFile)
+                onSubmit={(values, mediaFile, videoUploadOperation) =>
+                  submitReply(
+                    values,
+                    activeMobileReplyTarget?.id ?? null,
+                    mediaFile,
+                    videoUploadOperation,
+                  )
                 }
                 replyToName={getCommunityAuthorDisplayName(post.author)}
                 replyTarget={activeMobileReplyTarget}
@@ -427,8 +432,8 @@ export const PostDetailLogic = () => {
                   setReportTarget({ reply, type: "reply" });
                 }}
                 onShare={shareReply}
-                onSubmitReply={(values, parentReplyId, mediaFile) =>
-                  submitReply(values, parentReplyId, mediaFile)
+                onSubmitReply={(values, parentReplyId, mediaFile, videoUploadOperation) =>
+                  submitReply(values, parentReplyId, mediaFile, videoUploadOperation)
                 }
                 onVote={handleVoteReply}
                 postId={post.id}

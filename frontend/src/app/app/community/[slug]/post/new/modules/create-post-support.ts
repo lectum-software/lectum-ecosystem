@@ -17,6 +17,21 @@ export type CreatePostErrorResolution = {
   message: string;
 };
 
+export type UseCreateCommunityPostControllerOptions = {
+  onCloseComplete?: () => void;
+};
+
+export const moveContenteditableCaretToEnd = (element: HTMLElement) => {
+  const selection = window.getSelection();
+  if (!selection) return;
+
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  range.collapse(false);
+  selection.removeAllRanges();
+  selection.addRange(range);
+};
+
 export const MODERATION_BLOCKED_MESSAGE =
   "Não foi possível publicar este conteúdo. Remova links, convites externos ou trechos que violem as diretrizes da comunidade.";
 
@@ -98,6 +113,11 @@ export const COMMUNITY_SELECTOR_ICON_SRC = "/svg/public_24dp_64748B_FILL0_wght40
 export const communityNameCollator = new Intl.Collator("pt-BR", {
   sensitivity: "base",
 });
+
+export const resolveCommunityOptions = (communities: Array<{ name: string; slug: string }>) =>
+  communities
+    .map((community) => ({ label: community.name, value: community.slug }))
+    .sort((a, b) => communityNameCollator.compare(a.label, b.label));
 
 export const SHEET_CLOSE_DELAY_MS = 360;
 export const SHEET_ENTER_ANIMATION_MS = 340;

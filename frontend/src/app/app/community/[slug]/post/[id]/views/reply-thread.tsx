@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
+import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -246,6 +247,7 @@ export const PostReplyThreadLogic = () => {
     values: ReplyComposerForm,
     parentReplyId?: string | null,
     mediaFile?: File | null,
+    videoUploadOperation?: CommunityVideoUploadOperation,
   ) => {
     if (!post || !rootReply) return;
     if (!conversion.isAuthenticated) {
@@ -269,6 +271,7 @@ export const PostReplyThreadLogic = () => {
       setReplyError,
       uploadReplyMedia: uploadReplyMediaMutation.mutateAsync,
       values,
+      videoUploadOperation,
     });
 
     resetReplyFocusHighlight();
@@ -441,8 +444,8 @@ export const PostReplyThreadLogic = () => {
                 setReportTarget({ reply, type: "reply" });
               }}
               onShare={shareReply}
-              onSubmitReply={(values, parentReplyId, mediaFile) =>
-                submitReply(values, parentReplyId, mediaFile)
+              onSubmitReply={(values, parentReplyId, mediaFile, videoUploadOperation) =>
+                submitReply(values, parentReplyId, mediaFile, videoUploadOperation)
               }
               onVote={handleVoteThreadReply}
               postId={post.id}
@@ -470,8 +473,13 @@ export const PostReplyThreadLogic = () => {
                 setMobileReplyTarget(null);
               }}
               onComposerActiveChange={setReplyComposerActive}
-              onSubmit={(values, mediaFile) =>
-                submitReply(values, activeMobileReplyTarget?.id ?? rootReply.id, mediaFile)
+              onSubmit={(values, mediaFile, videoUploadOperation) =>
+                submitReply(
+                  values,
+                  activeMobileReplyTarget?.id ?? rootReply.id,
+                  mediaFile,
+                  videoUploadOperation,
+                )
               }
               replyToName={getCommunityAuthorDisplayName(rootReply.author)}
               replyTarget={activeMobileReplyTarget}

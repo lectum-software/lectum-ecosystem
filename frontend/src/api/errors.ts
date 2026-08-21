@@ -63,6 +63,12 @@ const readStatus = (error: unknown, payload: UnknownRecord | null) => {
 
 export const getApiErrorStatus = (error: unknown) => readStatus(error, readPayload(error));
 
+export const getApiErrorCode = (error: unknown) => {
+  const code = readPayload(error)?.code;
+
+  return typeof code === "string" && code.trim() ? code.trim() : undefined;
+};
+
 export const isRetryableApiError = (error: unknown) => {
   const payload = readPayload(error);
   const status = readStatus(error, payload);

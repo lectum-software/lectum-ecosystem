@@ -18,6 +18,7 @@ type PostEditModalViewProps = {
   onSubmit: FormEventHandler<HTMLFormElement>;
   onToggleGuidance: () => void;
   titleFields: ReactNode;
+  uploadStatus: ReactNode;
 };
 
 export const PostEditModalView = ({
@@ -33,6 +34,7 @@ export const PostEditModalView = ({
   onSubmit,
   onToggleGuidance,
   titleFields,
+  uploadStatus,
 }: PostEditModalViewProps) => (
   <div className="fixed inset-0 z-[70] flex items-end justify-center bg-media-background/35 opacity-100 backdrop-blur-[8px] transition-opacity duration-200 ease-out supports-[backdrop-filter]:bg-media-background/35">
     <section
@@ -98,6 +100,7 @@ export const PostEditModalView = ({
         </div>
 
         <footer className="relative shrink-0 border-border/70 border-t bg-surface/95 px-4 pt-3 pb-[var(--lectum-bottom-fixed-padding-compact)] backdrop-blur supports-[backdrop-filter]:bg-surface/90">
+          {uploadStatus ? <div className="mb-2">{uploadStatus}</div> : null}
           <div className="flex min-h-12 items-center justify-between gap-3">
             {footerControls}
             <Button

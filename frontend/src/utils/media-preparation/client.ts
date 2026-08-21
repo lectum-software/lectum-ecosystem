@@ -25,6 +25,7 @@ export type MediaUploadProgress =
   | { percentage: number; phase: "uploading"; stage: "uploading" };
 
 export type PreparedUpload = {
+  cleanup?: () => Promise<void>;
   file: File;
   kind: "image" | "video";
   optimized: boolean;
@@ -45,6 +46,7 @@ const toPreparedUpload = (
   purpose: MediaPreparationPurpose,
   kind: PreparedUpload["kind"],
 ): PreparedUpload => ({
+  ...(kind === "video" ? { cleanup: (prepared as PreparedVideo).cleanup } : {}),
   file: prepared.file,
   kind,
   optimized: prepared.optimized,

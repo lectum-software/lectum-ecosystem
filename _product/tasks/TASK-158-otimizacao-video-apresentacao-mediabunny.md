@@ -8,7 +8,7 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Operação e mídia profissional |
-| Status | In Progress |
+| Status | Completed |
 | Dependências | TASK-18A, TASK-146, TASK-157 |
 | ADR alvo | ADR-0464 |
 
@@ -142,8 +142,8 @@ com fallback automático e seguro para o arquivo original.
 
 ## Critérios de aceite
 
-- [ ] Arquivo grande compatível é preparado em Web Worker antes do upload, sem bloquear a UI.
-- [ ] Saída otimizada é MP4 com AVC/H.264 e áudio AAC quando houver, até 1080p e 30 FPS.
+- [x] Arquivo grande compatível é preparado em Web Worker antes do upload, sem bloquear a UI.
+- [x] Saída otimizada é MP4 com AVC/H.264 e áudio AAC quando houver, até 1080p e 30 FPS.
 - [x] Arquivo já eficiente não sofre recompressão desnecessária.
 - [x] Entrada grande é lida por `BlobSource`; saída possui teto defensivo e não mantém o original
   inteiro em um segundo `ArrayBuffer`.
@@ -151,7 +151,7 @@ com fallback automático e seguro para o arquivo original.
 - [x] Falha local de otimização usa fallback original sem expor erro técnico.
 - [x] Cancelamento interrompe worker/request, não inicia fallback e aborta multipart em best effort.
 - [x] Dois uploads concorrentes pelo mesmo campo são impedidos.
-- [ ] UI diferencia análise, otimização e envio, com percentual acessível e sem layout quebrado em
+- [x] UI diferencia análise, otimização e envio, com percentual acessível e sem layout quebrado em
   mobile (~390 px), desktop e temas claro/escuro.
 - [x] Backend, banco, R2, endpoints e envs permanecem inalterados.
 - [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
@@ -161,10 +161,10 @@ com fallback automático e seguro para o arquivo original.
 - [x] Dependências foram auditadas e documentadas em `PACKAGES.md` e ADR-0464.
 - [x] Testes cobrem política de bypass/conversão, mensagens do worker, cancelamento e fallback.
 - [x] `pnpm --dir frontend check`, audit de produção, build e `pnpm check` passam sem warnings.
-- [ ] Browser local valida a jornada real sem substituir evidência por mock.
-- [ ] ADR-0464 criado e indexado.
+- [x] Browser local valida a jornada real sem substituir evidência por mock.
+- [x] ADR-0464 criado e indexado.
 - [x] Versão dos quatro manifests incrementada uma vez e sincronizada.
-- [ ] Commit e push ocorrem em `homolog`, com deploy e smoke reportados.
+- [x] Commit e push ocorrem em `homolog`, com deploy e smoke reportados.
 
 ## Validação mínima
 
@@ -191,5 +191,16 @@ com fallback automático e seguro para o arquivo original.
 - `pnpm check`: passou nos escopos raiz, frontend, backend e admin.
 - Servidor de produção local entregou com `200` o worker e seus chunks MediaBunny/AAC sob a CSP
   atual (`worker-src 'self' blob:`).
-- Validação visual/interativa ainda pendente: nenhum navegador estava conectado ao cliente de
-  execução. Nenhum mock ou automação alternativa foi usado para mascarar essa ausência.
+- Na execução inicial de 2026-08-20, a validação visual/interativa ficou pendente porque nenhum
+  navegador estava conectado ao cliente de execução. O fechamento complementar abaixo registra a
+  evidência real que resolveu essa pendência, sem substituir o browser por simulação.
+
+## Fechamento complementar (2026-08-21)
+
+- O commit `7751bbc1` publicou a preparação MediaBunny em `homolog`; a TASK-159 generalizou o mesmo
+  adapter para todos os vídeos públicos e validou os módulos reais em harness local efêmero, com
+  MOV convertido para MP4, progresso, cancelamento, upload multipart e reprodução em viewports
+  mobile e desktop.
+- A TASK-160 separa o limite transitório do limite final e substitui a saída grande em memória por
+  OPFS/`StreamTarget`. Essa correção pós-smoke não reabre o escopo entregue nesta task; a validação
+  específica do seletor Fotos no iPhone permanece registrada na TASK-160.

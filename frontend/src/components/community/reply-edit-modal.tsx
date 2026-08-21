@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
+import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import {
   createReplyVideoThumbnail,
   detectReplyMediaOrientation,
@@ -19,14 +20,16 @@ import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { type Field, useFormList } from "@/hooks/form";
 import { useAppSelector } from "@/hooks/redux";
+import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import { isUploadPreparationCanceled } from "@/utils/media-preparation";
 import {
-  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
-  isCommunityMediaFileTooLarge,
+  getCommunityMediaSelectionSizeError,
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
+import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 
 const replyEditSchema = z.object({
@@ -85,8 +88,15 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     },
   });
   const { formProps, hook } = form;
+  const { abortActiveVideoUpload, beginVideoUpload, cancelActiveVideoUpload, videoUploadProgress } =
+    useCommunityVideoUpload();
+  const handleClose = useCallback(() => {
+    abortActiveVideoUpload();
+    onClose();
+  }, [abortActiveVideoUpload, onClose]);
   const uploadMutation = useUploadPostReplyMedia({
     onError: (error) => {
+      if (isUploadPreparationCanceled(error)) return;
       setActionError(resolveMediaUploadError(error));
     },
   });
@@ -94,7 +104,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     onSuccess: (updatedReply) => {
       toast.success("Comentário atualizado!");
       onUpdated?.(updatedReply);
-      onClose();
+      handleClose();
     },
     onError: (error) => {
       setActionError(getSafeApiErrorMessage(error, "Não foi possível atualizar o comentário."));
@@ -167,7 +177,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     const previousBodyOverflow = document.body.style.overflow;
     const previousDocumentOverflow = document.documentElement.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") handleClose();
     };
 
     document.body.style.overflow = "hidden";
@@ -180,7 +190,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       document.documentElement.style.overflow = previousDocumentOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, open]);
+  }, [handleClose, open]);
 
   useEffect(() => {
     return () => revokeSelectedMediaPreview();
@@ -200,15 +210,16 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       return;
     }
 
-    if (isCommunityMediaFileTooLarge(file)) {
-      setActionError(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
+    const type = mediaTypeFromFile(file);
+    if (!type) {
+      setActionError("Envie uma imagem ou vídeo em formato permitido.");
       focusEditor();
       return;
     }
 
-    const type = mediaTypeFromFile(file);
-    if (!type) {
-      setActionError("Envie uma imagem ou vídeo em formato permitido.");
+    const sizeError = getCommunityMediaSelectionSizeError(file, type);
+    if (sizeError) {
+      setActionError(resolveMediaUploadError(sizeError));
       focusEditor();
       return;
     }
@@ -242,23 +253,40 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
     }
 
     try {
-      const uploadedMedia = selectedMedia
-        ? await uploadMutation.mutateAsync({
-            file: selectedMedia.file,
-            id: postId,
-          })
-        : null;
-      const thumbnailFile =
-        selectedMedia && uploadedMedia?.media_type === "video"
-          ? await createVideoThumbnailFile(selectedMedia.file)
-          : null;
-      const uploadedThumbnail = thumbnailFile
-        ? await uploadMutation.mutateAsync({
-            file: thumbnailFile,
-            id: postId,
-            purpose: "generated-video-thumbnail",
-          })
-        : null;
+      const { uploadedMedia, uploadedThumbnail } = await (async () => {
+        const operation = selectedMedia?.type === "video" ? beginVideoUpload() : null;
+
+        try {
+          const uploadedMedia = selectedMedia
+            ? await uploadMutation.mutateAsync({
+                file: selectedMedia.file,
+                id: postId,
+                onProgress: operation?.onProgress,
+                signal: operation?.signal,
+              })
+            : null;
+          const thumbnailFile =
+            selectedMedia && uploadedMedia?.media_type === "video"
+              ? await createVideoThumbnailFile(selectedMedia.file, {
+                  signal: operation?.signal,
+                })
+              : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+          const uploadedThumbnail = thumbnailFile
+            ? await uploadMutation.mutateAsync({
+                file: thumbnailFile,
+                id: postId,
+                purpose: "generated-video-thumbnail",
+                signal: operation?.signal,
+              })
+            : null;
+          throwIfMediaUploadCanceled(operation?.signal);
+
+          return { uploadedMedia, uploadedThumbnail };
+        } finally {
+          operation?.complete();
+        }
+      })();
 
       await updateMutation.mutateAsync({
         body: {
@@ -306,7 +334,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       aria-modal="true"
       className="fixed inset-0 z-[1000] flex pointer-events-auto items-center justify-center overflow-y-auto bg-media-background/55 px-4 py-[max(1rem,env(safe-area-inset-top))] text-foreground backdrop-blur-md animate-in fade-in duration-200"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) handleClose();
       }}
       role="dialog"
     >
@@ -316,7 +344,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
             aria-label="Fechar edição de comentário"
             className="absolute left-3 grid h-10 w-10 place-items-center rounded-full text-foreground transition hover:bg-surface-muted focus:outline-none focus:ring-4 focus:ring-primary/15 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
-            onClick={onClose}
+            onClick={handleClose}
             type="button"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -362,6 +390,13 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
                 />
               ) : null}
 
+              {videoUploadProgress ? (
+                <CommunityVideoUploadProgress
+                  onCancel={cancelActiveVideoUpload}
+                  progress={videoUploadProgress}
+                />
+              ) : null}
+
               {actionError ? (
                 <InlineAlert title="Não foi possível salvar" variant="error">
                   {actionError}
@@ -375,7 +410,7 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
               <Button
                 className="h-12 rounded-full border-border bg-surface px-6 font-bold text-muted shadow-none hover:border-primary/25 hover:bg-primary-soft hover:text-foreground focus-visible:outline-primary active:scale-[0.98] disabled:opacity-60"
                 disabled={isSubmitting}
-                onClick={onClose}
+                onClick={handleClose}
                 type="button"
                 variant="outline"
               >

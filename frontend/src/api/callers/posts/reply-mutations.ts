@@ -21,8 +21,14 @@ import {
   type MediaPreparationPurpose,
   type MediaUploadProgress,
   prepareUpload,
+  requireMediaPreparationFileKind,
   resolvePostReplyPreparationPurpose,
 } from "@/utils/media-preparation";
+import { COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES } from "@/utils/media-upload-error";
+import {
+  assertMediaUploadFinalSize,
+  assertMediaUploadSourceSize,
+} from "@/utils/media-upload-limits";
 
 import { invalidateDirectoryPsychologistQueries } from "./queries";
 
@@ -109,18 +115,30 @@ export const useUploadPostReplyMedia = (callbacks?: { onError?: (error: unknown)
       >;
       signal?: AbortSignal;
     }) => {
+      const resolvedPurpose = purpose ?? resolvePostReplyPreparationPurpose(file);
+      const kind = requireMediaPreparationFileKind(file, resolvedPurpose);
+      assertMediaUploadSourceSize(file, kind, COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES);
       const prepared = await prepareUpload({
         file,
         onProgress: (progress) => onProgress?.({ ...progress, phase: "preparing" }),
-        purpose: purpose ?? resolvePostReplyPreparationPurpose(file),
+        purpose: resolvedPurpose,
         signal,
       });
-      return api.uploadPostReplyMedia(
-        id,
-        prepared.file,
-        (percentage) => onProgress?.({ percentage, phase: "uploading", stage: "uploading" }),
-        signal,
-      );
+      try {
+        assertMediaUploadFinalSize(
+          prepared.file,
+          prepared.kind,
+          COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES,
+        );
+        return await api.uploadPostReplyMedia(
+          id,
+          prepared.file,
+          (percentage) => onProgress?.({ percentage, phase: "uploading", stage: "uploading" }),
+          signal,
+        );
+      } finally {
+        await prepared.cleanup?.();
+      }
     },
     onError: callbacks?.onError,
   });
