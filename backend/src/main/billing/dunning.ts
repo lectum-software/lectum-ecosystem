@@ -1,3 +1,4 @@
+import { captureOperationalError } from "@/infra/observability/sentry";
 import { processBillingDunningQueue } from "@/modules/billing/dunning";
 import { parsePositiveInteger } from "@/utils/runtime-config";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
@@ -28,6 +29,11 @@ export const runBillingDunningSafely = async () => {
       console.log(`[BILLING DUNNING] ${result.processed} assinatura(s) processada(s).`);
     }
   } catch (error) {
+    captureOperationalError(error, {
+      boundary: "scheduler",
+      classification: "BillingDunningSchedulerError",
+      operation: "billing_dunning",
+    });
     console.error(
       "[BILLING DUNNING] Falha no scheduler.",
       toSafeErrorLog(error, "BillingDunningSchedulerError"),

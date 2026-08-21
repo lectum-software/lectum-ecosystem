@@ -1,4 +1,5 @@
 import { prisma } from "@/external/prisma/client";
+import { captureOperationalError, flushSentry } from "@/infra/observability/sentry";
 import { startBillingDunningScheduler, stopBillingDunningScheduler } from "@/main/billing/dunning";
 import {
   startNotificationCampaignScheduler,
@@ -50,12 +51,17 @@ const shutdown = async () => {
     await prisma.$disconnect();
     process.exitCode = 0;
   } catch (error) {
+    captureOperationalError(error, {
+      boundary: "shutdown",
+      classification: "BackendShutdownError",
+    });
     console.error("[SHUTDOWN] Falha ao encerrar a API com segurança.", {
       ...toSafeErrorLog(error, "UnknownShutdownError"),
     });
     process.exitCode = 1;
   } finally {
     clearTimeout(forceCloseTimer);
+    await flushSentry();
   }
 };
 

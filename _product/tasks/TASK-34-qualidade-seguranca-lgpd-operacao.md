@@ -263,3 +263,80 @@ Validações executadas:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - Browser local headless em `http://localhost:3100/app/professional/profile/setup`, viewport 390x844, contra o build atual.
+
+## Complemento 2026-08-20 — observabilidade Sentry nas três aplicações
+
+Solicitação operacional: instalar a integração já decidida na ADR-0006 em `frontend/`, `backend/`
+e `admin/`, respeitando que os três runtimes e deploys são separados. O usuário informou que já
+criou dois projetos Next e um projeto Node no Sentry; valores de credenciais não foram solicitados,
+copiados nem persistidos no repositório.
+
+Escopo:
+
+- captura error-only em client/server/edge dos dois Next e em Express/catches operacionais do Node;
+- source maps condicionais no build dos apps Next;
+- fallback seguro quando DSN/credenciais de build estiverem ausentes;
+- sanitização defensiva sem PII, credenciais, request, SQL ou mensagem crua de provider;
+- sem tracing, Replay, Logs, User Feedback, profiling, banco, migration ou contrato novo.
+
+Critérios complementares:
+
+- [x] `frontend/` usa seu projeto Next, captura error boundaries e erros de request do App Router e
+  continua operando/buildando sem env Sentry.
+- [x] `admin/` usa seu projeto Next, captura error boundaries e erros de request do App Router e
+  continua operando/buildando sem env Sentry.
+- [x] `backend/` inicializa Sentry antes de Express/Prisma, captura somente falhas inesperadas e
+  continua com `/health`, `/ready` e `/ping` funcionais sem DSN.
+- [x] Eventos removem PII, headers, cookies, bodies, query strings, tokens, SQL, breadcrumbs,
+  variáveis locais, context lines, caminhos absolutos e mensagens cruas de providers.
+- [x] Tracing, Replay, Logs, User Feedback e profiling permanecem desabilitados.
+- [x] Source maps Next são publicados somente quando DSN, environment, token, org e projeto
+  existirem e forem válidos no build, sem bloquear build quando faltarem ou quando o provider
+  falhar; a limpeza verificada não deixa mapas externos ou inline no artefato público.
+- [x] CSP permite somente o origin HTTPS validado do DSN configurado; DSN inválido não amplia a CSP.
+- [x] `@sentry/nextjs@10.70.0` e `@sentry/node@10.70.0` foram auditados e registrados em
+  `PACKAGES.md`/ADR-0465, preservando instalações independentes.
+- [x] Envs e ordem de rollout foram documentadas sem valores; nenhum segredo recebeu prefixo
+  `NEXT_PUBLIC_`.
+- [x] Testes, audits, checks, builds, versionamento, commit, push e smoke de homolog foram
+  concluídos; ativação no provider permanece pendente apenas das envs reais.
+
+Decisão arquitetural: ADR-0465.
+
+Evidências do complemento:
+
+- `frontend/` e `admin/` usam os entrypoints oficiais do App Router para client, Node e Edge,
+  preservam os error boundaries já existentes e deixam inventário de rotas, tracing, Replay,
+  Logs, profiling, sessões automáticas e propagação de trace fora do bundle/runtime ativo.
+- As duas policies Next validam DSN Sentry SaaS, environment e credenciais de build; a CSP recebe
+  somente o origin HTTPS sem a chave pública. Frames e metadados de debug mantêm identificadores
+  sintéticos correlacionáveis, sem segmentos, símbolos ou caminhos absolutos do filesystem.
+- O pipeline de source maps só é habilitado com DSN, environment, token, organização e projeto
+  válidos. Builds do Admin e Frontend contra um endpoint local indisponível confirmaram que falha
+  do provider não bloqueia o build e que a limpeza pós-build verificada deixa zero `.map` e zero
+  source map inline nos artefatos públicos.
+- O backend inicializa o SDK antes do import dinâmico de Express/Prisma, instala o middleware antes
+  do handler público e captura catches operacionais pelo helper compartilhado. Handlers fatais
+  próprios permanecem ativos sem DSN e testes em subprocesso confirmam exit `1` com mensagem
+  genérica, sem segredo ou stack.
+- O in-app browser não estava conectado neste ambiente (`agent.browsers.list()` vazio). Como não
+  houve mudança visual, a limitação foi registrada e o smoke local foi concluído por HTTP no build
+  real: frontend `/` e `/version` `200`; Admin `/` redireciona para `/login`, `/login` e `/version`
+  `200`; backend `/health`, `/ready` e `/ping` `200`. Sem DSN, nenhuma CSP inclui origem Sentry.
+
+Validações finais executadas:
+
+- `pnpm check` — frontend 43 testes, backend 204 testes e Admin 23 testes;
+- `pnpm --dir frontend build`, `pnpm --dir backend build` e `pnpm --dir admin build` sem env Sentry;
+- `pnpm audit --prod` separado na raiz, frontend, backend e Admin — zero vulnerabilidades;
+- `pnpm --dir backend exec prisma validate` — schema válido, sem migration ou conexão destrutiva;
+- `pnpm check:env`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm check:secrets` e
+  `git diff --check`.
+- `pnpm version:bump` executado uma única vez, `pnpm check:version` aprovado e manifests
+  sincronizados em `0.1.160`.
+
+Ativação externa pendente, por solicitação do usuário: cadastrar as envs reais nos seis deploys
+(homologação e produção de cada aplicação). Primeiro o código é publicado desativado em
+homolog; depois das envs e de um novo deploy, deve-se confirmar no provider as releases e artefatos
+dos dois Next e a primeira issue orgânica, sanitizada e simbolicada de cada projeto. Produção só
+recebe as envs após essa validação. Nenhum valor foi solicitado, exibido ou persistido.

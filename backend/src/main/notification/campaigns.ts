@@ -1,3 +1,4 @@
+import { captureOperationalError } from "@/infra/observability/sentry";
 import {
   dispatchDueNotificationCampaigns,
   isNotificationCampaignSchedulerEnabled,
@@ -23,6 +24,11 @@ const runCampaignsSafely = async () => {
     );
     await dispatchDueNotificationCampaigns(new Date(), batchSize);
   } catch (error) {
+    captureOperationalError(error, {
+      boundary: "scheduler",
+      classification: "CampaignSchedulerError",
+      operation: "notification_campaign",
+    });
     console.error(
       "[NOTIFICATION CAMPAIGNS] Falha no scheduler.",
       toSafeErrorLog(error, "CampaignSchedulerError"),

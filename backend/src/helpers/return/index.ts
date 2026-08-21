@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { captureOperationalError } from "@/infra/observability/sentry";
 import { sanitizePublicErrorData, sanitizePublicErrorMessage } from "@/utils/public-error";
 import { sanitizePublicResponseData } from "@/utils/public-response";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
@@ -63,6 +64,11 @@ export const send = (res: Response, resolve: Resolve) => {
 };
 
 export const error500 = (res: Response, type: number | string, err: unknown) => {
+  captureOperationalError(err, {
+    boundary: "http_controller",
+    classification: "HttpControllerError",
+    operation: type,
+  });
   console.error("[INTERNAL ERROR] Falha ao processar a solicitação.", {
     ...toSafeErrorLog(err),
     type,

@@ -1,14 +1,14 @@
 {
   "name": "frontend",
-  "version": "0.1.159",
+  "version": "0.1.160",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
     "dev:turbo": "next dev --turbo",
-    "build": "next build --webpack",
+    "build": "next build --webpack && node scripts/remove-production-source-maps.mjs",
     "start": "next start",
     "lint": "eslint --max-warnings=0",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/public-policy.test.mjs src/utils/session-policy.test.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/public-policy.test.mjs src/utils/sentry-policy.test.mjs src/utils/session-policy.test.mjs",
     "typecheck": "tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
@@ -20,6 +20,7 @@
     "@mercadopago/sdk-react": "^1.0.7",
     "@radix-ui/react-slot": "^1.2.4",
     "@reduxjs/toolkit": "^2.12.0",
+    "@sentry/nextjs": "10.70.0",
     "@tanstack/react-query": "^5.101.0",
     "axios": "^1.19.0",
     "class-variance-authority": "^0.7.1",
@@ -52,7 +53,13 @@
     "typescript": "^5"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "sharp",
+      "unrs-resolver"
+    ],
     "overrides": {
+      "brace-expansion@>=3.0.0 <5.0.9": "5.0.9",
       "form-data": "4.0.6",
       "nanoid@<3.3.17": "3.3.17",
       "postcss": "8.5.26",

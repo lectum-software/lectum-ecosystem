@@ -1,11 +1,24 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import packageMetadata from "./package.json";
 import { isLoopbackHostname, parseConfiguredHttpOrigin } from "./src/lib/http-origin-policy";
+import {
+  parseSentryDsn,
+  parseSentryEnvironment,
+  resolveSentryBuildConfiguration,
+} from "./src/lib/sentry-policy";
 
 const DEFAULT_API_URL = "http://localhost:3001";
 const apiUrl =
   parseConfiguredHttpOrigin(process.env.NEXT_PUBLIC_API_URL) ??
   (process.env.NODE_ENV === "development" ? new URL(DEFAULT_API_URL) : null);
+const sentryDsnConfiguration = parseSentryDsn(process.env.NEXT_PUBLIC_SENTRY_DSN);
+const sentryEnvironment = parseSentryEnvironment(process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT);
+const sentryBuildConfiguration = resolveSentryBuildConfiguration(process.env);
+const sentryUploadConfiguration =
+  sentryDsnConfiguration && sentryEnvironment ? sentryBuildConfiguration : null;
+const canUploadSentrySourceMaps = Boolean(sentryUploadConfiguration);
+let didWarnAboutSentryUploadFailure = false;
 type ImageRemotePattern = {
   hostname: string;
   port?: string;
@@ -72,6 +85,13 @@ const getApiCspSources = () => {
   return [apiUrl.origin, `${socketProtocol}//${apiUrl.host}`];
 };
 
+const getConnectCspSources = () => {
+  const sources = new Set(getApiCspSources());
+  if (sentryDsnConfiguration && sentryEnvironment) sources.add(sentryDsnConfiguration.origin);
+
+  return Array.from(sources);
+};
+
 const configuredAssetSources = Array.from(assetCspSources).join(" ");
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -84,7 +104,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   `img-src 'self' data: blob: ${configuredAssetSources}`,
   `media-src 'self' blob: ${configuredAssetSources}`,
-  `connect-src 'self' ${getApiCspSources().join(" ")}`,
+  `connect-src 'self' ${getConnectCspSources().join(" ")}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
 ].join("; ");
@@ -125,4 +145,32 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  ...(sentryUploadConfiguration ?? {}),
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+    excludeReplayWorker: true,
+    excludeTracing: true,
+  },
+  errorHandler: () => {
+    if (didWarnAboutSentryUploadFailure) return;
+    didWarnAboutSentryUploadFailure = true;
+    console.warn("O upload dos mapas de código de observabilidade não foi concluído.");
+  },
+  release: {
+    create: canUploadSentrySourceMaps,
+    finalize: canUploadSentrySourceMaps,
+    name: `lectum-admin@${packageMetadata.version}`,
+  },
+  routeManifestInjection: false,
+  silent: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+    disable: !canUploadSentrySourceMaps,
+  },
+  suppressOnRouterTransitionStartWarning: true,
+  telemetry: false,
+  widenClientFileUpload: false,
+});

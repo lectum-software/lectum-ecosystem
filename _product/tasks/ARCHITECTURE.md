@@ -63,6 +63,40 @@ Regras:
 - Para mudança backend, validar `/health` (processo) e `/ready` (dependências) após deploy em homologação.
 - Toda task deve declarar riscos de deploy, rollback e ações manuais; “nenhum” também deve ser registrado quando confirmado.
 
+### Observabilidade de aplicações
+
+- Frontend, backend e admin usam projetos Sentry separados e mantêm SDK, DSN, release, build e
+  configuração próprios. O repositório compartilhado não autoriza um runtime ou projeto Sentry
+  único para as três aplicações.
+- O rollout inicial é somente de erros. Tracing/performance, Replay, Logs, User Feedback e profiling
+  permanecem desabilitados até task e ADR específicos avaliarem custo, consentimento e privacidade.
+- DSN ou environment explícito ausente/inválido desabilita a integração sem impedir boot,
+  build, navegação, jobs, `/health`, `/ready`, `/ping` ou `/version`. Não existe fallback de
+  ativação para `NODE_ENV`, evitando misturar eventos de homolog e produção. Observabilidade é
+  degradável; produto e deploy não dependem da disponibilidade do provider.
+- Eventos nunca incluem usuário, e-mail, CPF, telefone, cookies, headers, request/response body,
+  query string, token, segredo, SQL, variáveis de stack, context lines, breadcrumbs ou mensagens
+  cruas de provider. A allowlist mantém tipo genérico/controlado da exceção, frames com
+  identificadores sintéticos sem segmentos ou símbolos da origem, tags operacionais literais e
+  metadados técnicos validados necessários à simbolicação, como event id, timestamp, level,
+  platform, release, environment e debug ids; caminho absoluto de filesystem não pode sair da
+  aplicação.
+- Erros 4xx, autenticação recusada, rate limit, health/readiness degradado e demais respostas
+  esperadas não viram issues. Falhas 5xx e catches operacionais inesperados podem ser capturados
+  depois de sanitização.
+- Nos apps Next, `NEXT_PUBLIC_SENTRY_DSN` e o environment público explícito são incorporados no
+  build; o token de upload de source maps é segredo exclusivo do CI/build. Upload exige também
+  DSN, environment, organização e projeto válidos; uma limpeza pós-build verificada impede publicar
+  mapas externos ou inline mesmo se o provider falhar. A CSP permite apenas o origin HTTPS validado
+  do DSN, nunca o DSN completo ou uma origem ampla.
+- No backend, a inicialização do SDK precede Express, Prisma e demais integrações instrumentadas;
+  o middleware de erro fica depois das rotas e antes do handler público existente. Source maps
+  locais são consumidos com `--enable-source-maps`, sem expô-los por rota pública. Handlers fatais
+  próprios imprimem somente mensagem genérica mesmo quando a DSN estiver ausente ou inválida.
+- Falha no upload de source maps não bloqueia o build. O rollback completo remove/desativa DSN,
+  environment e credenciais de upload da aplicação afetada; nenhuma alteração de banco, contrato
+  de API ou dado persistido depende da integração.
+
 ## Escopo profissional V1
 
 Ver `adrs/0187-escopo-v1-psicologia-expansao-multiprofissional.md`.

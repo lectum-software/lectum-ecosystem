@@ -1,7 +1,8 @@
 # Packages e Política de Dependências
 
-Última auditoria dos manifests/lockfiles: **2026-08-07**, com `pnpm audit --prod` separado na raiz, backend, frontend e admin.
-Resultado: **zero vulnerabilidades conhecidas** nos quatro escopos no momento da auditoria. React Hook Form permanece como padrão de formulários; TanStack Query permanece como padrão de server state.
+Última auditoria dos manifests/lockfiles: **2026-08-21**, com `pnpm audit --prod` separado na raiz, backend, frontend e admin.
+Resultado: **zero vulnerabilidades conhecidas** nos quatro escopos. React Hook Form permanece como
+padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
 
@@ -40,6 +41,7 @@ Resultado: **zero vulnerabilidades conhecidas** nos quatro escopos no momento da
 | `next-themes` | `^0.4.6` | `0.4.6` | Tema claro/escuro |
 | `nprogress` | `^0.2.0` | `0.2.0` | Loading route progress |
 | `@fingerprintjs/fingerprintjs` | `^5.2.0` | `5.2.0` | Device id |
+| `@sentry/nextjs` | `10.70.0` | `10.70.0` | Captura de erros client/server/edge e upload condicional de source maps |
 | `class-variance-authority` | `^0.7.1` | `0.7.1` | Variants de UI |
 | `clsx` | `^2.1.1` | `2.1.1` | Class composition |
 | `tailwind-merge` | `^3.6.0` | `3.6.0` | Merge Tailwind |
@@ -141,6 +143,7 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `libphonenumber-js` | `^1.13.4` | `1.13.4` | Telefone |
 | `dotenv` | `^17.4.2` | `17.4.2` | Carregamento de env no processo backend |
 | `uuid` | `^14.0.0` | `14.0.0` | Identificadores de correlação |
+| `@sentry/node` | `10.70.0` | `10.70.0` | Captura sanitizada de falhas operacionais e Express 5 |
 
 O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnly`; `express-session` foi removido por não ser necessário para esse fluxo. O verificador mantém transição temporária para states assinados pela versão anterior durante o rollout.
 
@@ -157,6 +160,7 @@ O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnl
 | `zod` | `^4.4.3` | `4.4.3` | Validação |
 | `sonner` | `^2.0.7` | `2.0.7` | Feedback não técnico |
 | `@fingerprintjs/fingerprintjs` | `^5.2.0` | `5.2.0` | Identificação do dispositivo admin |
+| `@sentry/nextjs` | `10.70.0` | `10.70.0` | Captura de erros client/server/edge e upload condicional de source maps |
 | `lucide-react` | `^1.17.0` | `1.17.0` | Ícones |
 
 ## Candidatos condicionais
@@ -166,24 +170,29 @@ O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnl
 | `stripe` | `22.2.0` | Não escolhido. Manter como referência caso troque de gateway (novo adapter). |
 | `asaas` | `1.1.0` | Não escolhido. |
 | `@aws-sdk/s3-request-presigner` | `3.1060.0` | URLs assinadas S3 |
-| `@sentry/nextjs` | `10.56.0` | Observabilidade frontend — decidido, instalar em task dedicada |
-| `@sentry/node` | `10.56.0` | Observabilidade backend — decidido, instalar em task dedicada |
 
 ## Overrides transitivos de segurança
 
 Aplicados no manifest de cada aplicação porque raiz, frontend, backend e admin têm instalações separadas. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo operacional nem invalidar overrides por aplicação.
 
+O postinstall oficial de `@sentry/cli` é permitido apenas nos manifests Next (`frontend/` e
+`admin/`) por `pnpm.onlyBuiltDependencies`. A lista preserva também `sharp` e `unrs-resolver`, já
+autorizados pelo `pnpm-workspace.yaml` de cada app. O binário Sentry é usado no build para publicar
+source maps quando as credenciais de CI estiverem presentes; não roda como serviço da aplicação e
+não recebe credenciais no bundle.
+
 | Aplicação | Override | Motivo |
 |---|---:|---|
 | Frontend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io-client > engine.io-client > ws`. |
-| Frontend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `axios > form-data`. |
+| Frontend | `form-data@4.0.6`, `brace-expansion@5.0.9` | Corrige advisories transitivos em `axios > form-data` e no tooling Sentry. |
 | Frontend | `postcss@8.5.26` | Mantém a correção de advisories transitivos do pipeline CSS/Next. |
 | Frontend | `sharp@0.35.3`, `socket.io-parser@4.2.7`, `nanoid@3.3.17` | Correções transitivas preservando as majors exigidas pela aplicação. |
 | Backend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io > engine.io > ws`. |
 | Backend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `twilio > axios > form-data`. |
 | Backend | `hono@4.12.34`, `@hono/node-server@2.0.5` | Corrige advisories transitivos do tooling Prisma. |
+| Backend | `deepmerge-ts@8.0.0` | Corrige CVE-2026-40345 em `prisma > @prisma/config`; o CLI/config foi revalidado sem alterar banco. |
 | Backend | `axios@1.19.0`, `body-parser@2.3.0`, `brace-expansion@5.0.9`, `fast-uri@3.1.5`, `nanoid@5.1.16`, `socket.io-parser@4.2.7`, `valibot@1.4.2` | Patches transitivos fixados após auditoria. |
-| Admin | `form-data@4.0.6`, `postcss@8.5.26`, `sharp@0.35.3`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
+| Admin | `form-data@4.0.6`, `brace-expansion@5.0.9`, `postcss@8.5.26`, `sharp@0.35.3`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
 | Raiz | `fast-uri@3.1.5`, `js-yaml@4.3.1` | Correções transitivas das ferramentas de commit/hook. |
 
 Validação obrigatória após alteração de dependências de produção: `pnpm audit --prod`, `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`, `pnpm --dir admin audit --prod`, `pnpm check` e os três builds.

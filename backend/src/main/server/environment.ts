@@ -17,6 +17,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   TRUST_PROXY: z.string().optional(),
   JWT_SECRET_KEY: z.string().min(32),
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_ENVIRONMENT: z.string().optional(),
 });
 
 const parsedEnv = envSchema.parse(process.env);

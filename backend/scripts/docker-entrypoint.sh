@@ -46,4 +46,4 @@ else
   echo "Skipping Prisma migrations because RUN_DB_MIGRATIONS=${RUN_DB_MIGRATIONS:-false}."
 fi
 
-exec node dist/index.js
+exec node --enable-source-maps dist/index.js

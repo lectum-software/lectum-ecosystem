@@ -9,6 +9,7 @@ import * as i18nextMiddleware from "i18next-http-middleware";
 import { filesRoute } from "@/config/multer/filesRoute";
 import { getLimiter } from "@/external/limiter";
 import prisma from "@/infra/database/prisma";
+import { setupSentryExpressErrorHandler } from "@/infra/observability/sentry";
 import { errorHandler, errorRoute } from "@/main/server/error";
 import { socket } from "@/main/socket";
 import { getPublicWebOrigins } from "@/utils/public-origin";
@@ -116,6 +117,7 @@ server.use((req, _res, next) => {
 server.use(routes);
 filesRoute(server);
 server.use(errorRoute);
+setupSentryExpressErrorHandler(server);
 server.use(errorHandler);
 
 export default httpServer;

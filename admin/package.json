@@ -1,13 +1,13 @@
 {
   "name": "admin",
-  "version": "0.1.159",
+  "version": "0.1.160",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack --port 3002",
-    "build": "next build --webpack && node scripts/sync-route-group-manifests.mjs",
+    "build": "next build --webpack && node scripts/remove-production-source-maps.mjs && node scripts/sync-route-group-manifests.mjs",
     "start": "next start -p 3002",
     "lint": "eslint --max-warnings=0",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/http-origin-policy.test.mjs src/lib/shared-helpers.test.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/http-origin-policy.test.mjs src/lib/sentry-policy.test.mjs src/lib/shared-helpers.test.mjs",
     "typecheck": "tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings .",
     "biome:fix": "biome check --write .",
@@ -16,6 +16,7 @@
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.2.0",
     "@hookform/resolvers": "^5.4.0",
+    "@sentry/nextjs": "10.70.0",
     "@tanstack/react-query": "^5.101.0",
     "axios": "^1.19.0",
     "clsx": "^2.1.1",
@@ -40,7 +41,13 @@
     "typescript": "^5"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "sharp",
+      "unrs-resolver"
+    ],
     "overrides": {
+      "brace-expansion@>=3.0.0 <5.0.9": "5.0.9",
       "form-data": "4.0.6",
       "nanoid@<3.3.17": "3.3.17",
       "postcss": "8.5.26",

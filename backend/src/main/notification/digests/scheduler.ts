@@ -1,4 +1,5 @@
 import { isWebPushConfigured } from "@/config/webPush";
+import { captureOperationalError } from "@/infra/observability/sentry";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { processEveningDigest, processLunchDigest } from "./community";
 import { processProfessionalDailyDigest } from "./professional";
@@ -56,6 +57,11 @@ export const runDigestSafely = async () => {
   try {
     await runNotificationDigestScheduler();
   } catch (error) {
+    captureOperationalError(error, {
+      boundary: "scheduler",
+      classification: "DigestSchedulerError",
+      operation: "notification_digest",
+    });
     console.error(
       "[WEB NOTIFICATION] erro no scheduler de digests:",
       toSafeErrorLog(error, "DigestSchedulerError"),

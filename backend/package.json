@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.159",
+  "version": "0.1.160",
   "private": true,
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -11,7 +11,7 @@
     "dev": "prisma generate && tsx watch --clear-screen=false --exclude 'src/external/generated/prisma/**' src/index.ts",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "pnpm clean && prisma generate && tsc && tsc-alias",
-    "start": "node dist/index.js",
+    "start": "node --enable-source-maps dist/index.js",
     "typecheck": "prisma generate && tsc --noEmit --pretty false",
     "biome:check": "biome check --error-on-warnings package.json tsconfig.json prisma.config.ts prisma scripts src/@types src/config src/doc.ts src/external/limiter.ts src/external/prisma src/helpers src/index.ts src/infra src/interfaces src/main/notification src/main/server src/main/socket src/modules src/operations src/packages src/query src/utils",
     "biome:fix": "biome check --write package.json tsconfig.json prisma.config.ts prisma scripts src/@types src/config src/doc.ts src/external/limiter.ts src/external/prisma src/helpers src/index.ts src/infra src/interfaces src/main/notification src/main/server src/main/socket src/modules src/operations src/packages src/query src/utils",
@@ -39,6 +39,7 @@
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@scalar/express-api-reference": "^0.9.20",
+    "@sentry/node": "10.70.0",
     "@types/passport": "^1.0.17",
     "argon2": "^0.44.0",
     "bcrypt": "^6.0.0",
@@ -97,6 +98,7 @@
       "axios": "1.19.0",
       "body-parser": "2.3.0",
       "brace-expansion": "5.0.9",
+      "deepmerge-ts": "8.0.0",
       "fast-uri": "3.1.5",
       "form-data": "4.0.6",
       "hono": "4.12.34",

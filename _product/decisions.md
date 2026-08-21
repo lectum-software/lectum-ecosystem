@@ -216,21 +216,23 @@ Impacto nas tasks: TASK-22, TASK-24, TASK-26, TASK-28, TASK-34.
 
 ## Observabilidade
 
-Status: Decidido para task dedicada.
+Status: Implementado como complemento da TASK-34 em 2026-08-20.
 
 Provedor: Sentry.
 
 Decisão:
 
-- Usar Sentry no projeto.
-- Não instalar agora; implementar em task dedicada de observabilidade/hardening, preferencialmente na TASK-34 ou em uma task específica antes dela se o time precisar.
+- Usar projetos Sentry separados para frontend Next, admin Next e backend Node.
+- Capturar somente erros no rollout inicial, com coleta sanitizada, DSN ausente como no-op e source
+  maps Next condicionais às credenciais de build.
+- Manter tracing, Replay, Logs, User Feedback e profiling fora do escopo até decisão posterior.
 
-Pacotes candidatos:
+Pacotes instalados:
 
-- Frontend: `@sentry/nextjs`.
-- Backend: `@sentry/node`.
+- Frontend e Admin: `@sentry/nextjs@10.70.0`.
+- Backend: `@sentry/node@10.70.0`.
 
-Impacto nas tasks: TASK-34 ou task dedicada de observabilidade.
+Impacto: TASK-34 e ADR-0465.
 
 ## Fluxo de cadastro do psicólogo
 

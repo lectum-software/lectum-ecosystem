@@ -657,6 +657,20 @@ Uma task só pode ser marcada como concluída quando:
   exclusivo do cookie HttpOnly. A mesma fronteira preserva o `link_token` curto do vínculo Google
   sem alterar frontend, banco, packages ou envs.
 
+## Atualização operacional em 2026-08-20: observabilidade Sentry separada
+
+- Complemento da TASK-34: frontend, backend e admin passam a capturar falhas em três projetos
+  Sentry independentes, preservando os ciclos de deploy separados.
+- O primeiro rollout é error-only e fail-open: sem DSN ou environment explícito cada aplicação
+  continua operacional; sem o conjunto completo de credenciais de build os apps Next apenas deixam
+  de publicar source maps.
+- A política de coleta remove PII, requests, cookies, headers, corpos, query strings, tokens, SQL,
+  breadcrumbs, variáveis locais e mensagens cruas de provider. Tracing, Replay, Logs, User Feedback
+  e profiling permanecem fora do escopo.
+- Decisão e rollout registrados no ADR-0465, sem banco, migration ou mudança de contrato de API.
+- A adoção ocorre em duas etapas: primeiro o código desativado por fallback seguro; depois o
+  cadastro das envs e novo deploy em homolog, validação no provider e somente então produção.
+
 ## Atualizacao visual em 2026-08-17: chips selecionadas no perfil profissional
 
 - Ajuste pos-feedback da TASK-18A: chips selecionadas dos catalogos em `/app/profissional/perfil/configurar` passam a usar `text-sm`, igual ao select `Idiomas`, para aproximar `Adultos`, `Terapia Online`, `Psicanalise` e equivalentes do tamanho visual de `Portugues`.

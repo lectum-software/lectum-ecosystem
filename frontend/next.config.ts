@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import packageMetadata from "./package.json";
 import {
@@ -7,6 +8,11 @@ import {
   isLocalAssetHostname,
   parsePublicAssetSource,
 } from "./src/utils/public-asset-sources";
+import {
+  getSentryIngestOrigin,
+  resolveSentryBuildConfiguration,
+  resolveSentryRelease,
+} from "./src/utils/sentry-policy";
 
 type RemotePattern = NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]>[number];
 
@@ -29,6 +35,10 @@ const mercadoPagoStaticCspSources = [
   "https://api-static.mercadopago.com",
 ];
 const cepLookupCspSources = ["https://viacep.com.br"];
+const sentryIngestOrigin = getSentryIngestOrigin(
+  process.env.NEXT_PUBLIC_SENTRY_DSN,
+  process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT,
+);
 const mercadoPagoScriptCspSources = [
   "https://sdk.mercadopago.com",
   "https://www.mercadopago.com",
@@ -55,7 +65,7 @@ const contentSecurityPolicy = [
   `font-src 'self' data: ${mercadoPagoStaticCspSources.join(" ")}`,
   `img-src 'self' data: blob: ${assetCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${mercadoPagoCoreCspSources.join(" ")}`,
   `media-src 'self' blob: ${assetCspSources.join(" ")}`,
-  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} https://*.mercadolibre.com`,
+  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} ${sentryIngestOrigin ?? ""} https://*.mercadolibre.com`,
   `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
@@ -421,6 +431,43 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   poweredByHeader: false,
+  productionBrowserSourceMaps: false,
 };
 
-export default nextConfig;
+const sentryBuildConfiguration = resolveSentryBuildConfiguration(process.env);
+const canUploadSentrySourceMaps = Boolean(sentryIngestOrigin && sentryBuildConfiguration);
+const sentryRelease = resolveSentryRelease(packageMetadata.version);
+let didWarnAboutSentryUploadFailure = false;
+
+export default withSentryConfig(nextConfig, {
+  authToken: canUploadSentrySourceMaps ? sentryBuildConfiguration?.authToken : undefined,
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+    excludeReplayWorker: true,
+    excludeTracing: true,
+  },
+  errorHandler: () => {
+    if (didWarnAboutSentryUploadFailure) return;
+    didWarnAboutSentryUploadFailure = true;
+    console.warn("[observability] Não foi possível publicar os mapas de origem.");
+  },
+  org: canUploadSentrySourceMaps ? sentryBuildConfiguration?.org : undefined,
+  project: canUploadSentrySourceMaps ? sentryBuildConfiguration?.project : undefined,
+  release: {
+    create: canUploadSentrySourceMaps,
+    finalize: canUploadSentrySourceMaps,
+    name: canUploadSentrySourceMaps ? sentryRelease : undefined,
+  },
+  routeManifestInjection: false,
+  silent: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+    disable: !canUploadSentrySourceMaps,
+    filesToDeleteAfterUpload: [".next/static/**/*.map"],
+  },
+  suppressOnRouterTransitionStartWarning: true,
+  telemetry: false,
+  widenClientFileUpload: false,
+});
