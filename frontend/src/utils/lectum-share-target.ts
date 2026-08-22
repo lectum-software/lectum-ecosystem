@@ -200,8 +200,9 @@ export const createLectumShareVideoTarget = (
 
   const parentContent =
     options.parentContent ?? ("parent_content" in reply ? reply.parent_content : null);
+  const postTitle = post.title.trim() || "Pergunta na Lectum";
   const hasCommentContext = Boolean(parentContent?.trim() || reply.parent_reply_id);
-  const sourceText = (hasCommentContext ? parentContent : post.title)?.trim() || post.title;
+  const sourceText = (hasCommentContext ? parentContent : postTitle)?.trim() || postTitle;
   const responseText = reply.content?.trim() || null;
   const relativeUrl =
     options.relativeUrl ?? publicCommunityReplyThreadHref(post.community.slug, post.id, reply.id);
@@ -225,11 +226,7 @@ export const createLectumShareVideoTarget = (
     },
     responseText,
     replyId: reply.id,
-    shareText:
-      responseText ||
-      (hasCommentContext
-        ? "Responderam a um comentário na Lectum."
-        : "Responderam a uma pergunta na Lectum."),
+    shareText: postTitle,
     shareTitle: createLectumSocialShareTitle(professionalName, cardLabel),
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: hasCommentContext ? "comment" : "post",

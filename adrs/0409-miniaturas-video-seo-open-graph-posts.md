@@ -88,3 +88,23 @@ Novo feedback mostrou que, ao compartilhar um video da Lectum pelo WhatsApp, a e
 - Instagram/TikTok podem receber link quando escolhidos pela mesma folha nativa; compartilhamento de arquivo continua apenas como fallback porque a Web nao informa previamente qual app sera escolhido.
 - Rollback: voltar a priorizar arquivo restaura o envio do MP4 social, mas o WhatsApp deixa de ter card Open Graph como caminho principal.
 - Deploy: mudanca aditiva de frontend/backend, sem banco, migration, env obrigatoria, package, provider, seed, mock ou alteracao de dados publicados.
+
+## Complemento 2026-08-22 - titulo do post no OG e arquivo social como caminho principal
+
+### Contexto
+
+Feedback imediatamente posterior mostrou um trade-off da decisao link-first: a folha nativa deixou de oferecer destinos de arquivo, como Instagram Reels/Stories, e o compartilhamento perdeu a arte social da caixinha de pergunta. O mesmo print mostrou que, quando o WhatsApp monta card de link, a descricao estava vindo do corpo da resposta em vez do titulo/pergunta do post.
+
+### Decisao
+
+- Reverter o caminho principal de videos para arquivo social 9:16 com arte, mantendo o link publico no payload quando o destino aceitar e como fallback quando o arquivo nao puder ser compartilhado.
+- Preservar a rota canonica de resposta e `og_title` `[Nome] na Lectum`.
+- Alterar `og_description` de posts/respostas com video profissional para o titulo do post, evitando expor o texto da resposta como descricao principal do card WhatsApp.
+- Reconhecer explicitamente a limitacao da Web Share API: a Web nao sabe se o usuario escolhera WhatsApp ou Instagram antes da folha nativa; por isso, nao ha como otimizar simultaneamente todos os destinos por canal sem uma escolha manual previa no produto.
+
+### Consequencias
+
+- Reels/Stories e outros destinos que dependem de arquivo voltam a aparecer porque o payload principal inclui o MP4 social.
+- WhatsApp pode receber arquivo com arte e, quando aceitar URL/metadados no mesmo payload ou quando cair no fallback de link, usara titulo do post como descricao Open Graph.
+- Cards ja cacheados pelo WhatsApp podem demorar a refletir a nova descricao ate expirar/serem recarregados pelo crawler.
+- Deploy: mudanca aditiva de frontend/backend, sem banco, migration, env obrigatoria, package, provider, seed, mock ou alteracao de dados publicados.

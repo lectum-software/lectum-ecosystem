@@ -833,3 +833,11 @@ Uma task só pode ser marcada como concluída quando:
 - Links de video-resposta agora apontam para `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, abrindo a arvore do video dentro da Lectum e ativando metadados especificos da resposta.
 - O SEO publico de posts/respostas com video profissional usa `og:title` no formato `[Nome do psicologo] na Lectum`, com miniatura vertical ja persistida em `og:image` e link canonico para abrir o conteudo.
 - O fallback por arquivo continua disponivel se o link nativo/copia falhar e inclui a URL da Lectum quando o destino aceitar; sem migration, package, env obrigatoria, provider ou dados fake.
+
+## Correcao em 2026-08-22: arquivo social primeiro e titulo do post no WhatsApp
+
+- Ajuste pos-feedback da TASK-42/TASK-143: o compartilhamento de videos volta a priorizar o arquivo social 9:16 com caixinha de pergunta, para restaurar opcoes como Instagram Reels/Stories na folha nativa.
+- O link publico da Lectum continua no payload quando o destino aceitar e fica como fallback se a geracao/compartilhamento de arquivo falhar; como a Web nao informa o app escolhido antes da folha nativa, nao ha roteamento exclusivo por WhatsApp/Instagram.
+- O texto compartilhado e o `og:description` de videos profissionais passam a usar o titulo do post, evitando que o WhatsApp exiba o corpo da resposta como descricao do card.
+- O timeout de upload do artefato temporario foi ampliado, o cache visual foi invalidado para `lectum-share-v5-2026-08-22-file-first-complete-video` e a exportacao client-side ganhou margem/controle de stall para nao cortar videos saudaveis durante o preparo.
+- Sem migration, env obrigatoria, package novo, provider, seed, mock ou reset de dados publicados.

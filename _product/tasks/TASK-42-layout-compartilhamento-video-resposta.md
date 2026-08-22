@@ -707,3 +707,39 @@ Regras de UI obrigatórias:
 - [x] `pnpm check` (uma tentativa inicial falhou no mesmo timeout transitorio de boot-safety dentro do backend; repeticao completa passou)
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3193`: `/version` respondeu `0.1.182` e `/comunidades` respondeu `200`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - arquivo social primeiro apos preview de link
+
+- Pedido do usuario: o ajuste que priorizou link puro para o WhatsApp removeu opcoes de Instagram Reels/Stories da folha nativa, deixou de compartilhar a arte com caixinha de pergunta e voltou a expor descricao textual indesejada no card do WhatsApp.
+- Diagnostico: a Web Share API nao informa antes da abertura qual app sera escolhido; quando o payload principal e apenas link, o sistema tende a mostrar apps de mensagem/link e pode ocultar destinos que exigem arquivo de video, como Reels/Stories.
+- Decisao: o fluxo principal de videos volta a preparar e compartilhar primeiro o arquivo social 9:16 com arte/canvas; o link publico da Lectum permanece no payload de arquivo quando suportado e como fallback se o arquivo falhar.
+- Decisao: o texto compartilhado para video-resposta passa a ser o titulo do post, preservando a caixinha de pergunta no canvas via `sourceText`.
+- Decisao: a exportacao de video ganhou timeout defensivo mais conservador, controle de stall por progresso do `currentTime`, `requestData()` antes de parar o `MediaRecorder`, timeout de upload temporario ampliado para 300s e nova `layout_version` `lectum-share-v5-2026-08-22-file-first-complete-video` para invalidar artefatos anteriores potencialmente incompletos/sem o fluxo correto.
+- Escopo: frontend e constante backend de layout/cache; sem migration, endpoint novo, env obrigatoria, package, provider, mock, seed, reset ou dado fake novo.
+- Fonte visual auditavel: `_product/proto/WhatsApp preview link sem arte social referencia.jpeg`; textos dentro da imagem foram tratados apenas como evidencia visual do WhatsApp.
+- ADRs atualizados: `adrs/0191-layout-compartilhamento-social-video-resposta.md` e `adrs/0409-miniaturas-video-seo-open-graph-posts.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Videos voltam a usar arquivo social 9:16 como caminho principal para restaurar destinos de arquivo, incluindo Reels/Stories, na folha nativa.
+- [x] A arte da caixinha de pergunta continua no arquivo enviado para redes sociais.
+- [x] O link da Lectum continua disponivel no payload/fallback sem remover as opcoes de arquivo.
+- [x] O texto compartilhado para video-resposta usa o titulo do post em vez do corpo da resposta.
+- [x] A exportacao evita cortes por metadata ausente/lentidao saudavel e invalida cache visual anterior por `layout_version`.
+- [x] Nenhum backend destrutivo, migration, env obrigatoria, package novo, provider, mock ou dado fake foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/api/req/posts/index.ts src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-media.test.mjs src/utils/lectum-share-media/duration.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-target.ts`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts src/modules/api/public/seo/community-post/use-cases/services.ts`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm check`
+- [x] Smoke local do backend buildado: `/health`, `/ready`, `/ping` e `/api/public/seo/metadata` responderam 200.
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.184`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

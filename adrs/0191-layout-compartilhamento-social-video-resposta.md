@@ -398,3 +398,26 @@ Novo feedback analisou a arte depois de postada no Instagram/Reels. A caixinha d
 
 - Teste unitario estatico cobre `x: 110`, `y: 250`, `width: 860`, `paddingX: 50` e `layout_version` v4.
 - Validacoes finais, build, versionamento e smoke constam na TASK-42, com versao `0.1.182`.
+
+## Complemento 2026-08-22 - arquivo social primeiro e video completo
+
+### Contexto
+
+Depois do experimento de priorizar link puro para melhorar o card do WhatsApp, o usuario reportou que a folha nativa perdeu opcoes de compartilhamento para Instagram Reels/Stories, que a arte da caixinha de pergunta deixou de seguir para redes sociais e que videos voltaram a chegar incompletos.
+
+### Decisao
+
+- O caminho principal para videos volta a ser o compartilhamento do arquivo social gerado por canvas/MediaRecorder, preservando a arte da pergunta e restaurando destinos que exigem arquivo.
+- O link da Lectum permanece junto do payload quando o navegador/destino aceitar e como fallback de link se o arquivo nao puder ser preparado/compartilhado.
+- Para video-resposta, `shareText` passa a ser o titulo do post; a arte continua usando `sourceText` para mostrar a pergunta/comentario no card.
+- A exportacao deixa de depender de timeout curto quando a metadata nao e confiavel: videos sem duracao conhecida aguardam `ended` com hard cap alto, videos conhecidos recebem margem maior, e um controle de stall interrompe apenas quando `currentTime` para de progredir.
+- Antes de parar o `MediaRecorder`, a exportacao chama `requestData()` best-effort para flush dos chunks finais.
+- O upload do artefato temporario em background passa a ter timeout de 300s e a versao de cache muda para `lectum-share-v5-2026-08-22-file-first-complete-video`, evitando reutilizar arquivos anteriores potencialmente incompletos ou gerados sob decisao link-first.
+
+### Consequencias
+
+- A primeira tentativa pode voltar a exibir o preparo do arquivo, mas a folha nativa recebe um MP4 real e tende a oferecer Reels/Stories/Instagram alem de mensageiros.
+- O fallback de link continua preservando abertura dentro da Lectum, mas nao e mais o caminho principal porque prejudica destinos de video.
+- Arquivos longos podem demorar mais para preparar/uploadar em background; o cache temporario reduz essa espera nos compartilhamentos seguintes.
+- Apps de destino ainda podem aplicar seus proprios cortes ou limites depois que recebem o arquivo completo; isso permanece fora do controle da Web.
+- Deploy: frontend e constante backend de layout/cache, sem migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.

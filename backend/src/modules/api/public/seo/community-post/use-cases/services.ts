@@ -67,6 +67,12 @@ const resolveVideoOpenGraphTitle = (
   fallbackTitle: string,
 ) => (mediaType === "video" ? (professionalVideoTitle(author) ?? fallbackTitle) : fallbackTitle);
 
+const resolveVideoOpenGraphDescription = (
+  mediaType: string | null,
+  postTitle: string,
+  fallbackDescription: string,
+) => (mediaType === "video" ? postTitle || fallbackDescription : fallbackDescription);
+
 const resolveMediaPreview = (media?: MediaCandidate | null) => {
   if (!media?.media_url) {
     return {
@@ -194,12 +200,17 @@ export const showPost = async ({ id, slug }: PostSeoParams): Promise<Resolve> =>
   const description = compactDescription(post.content) || "Discussão pública na comunidade Lectum.";
   const mediaPreview = resolveMediaPreview(firstPostMedia(post));
   const ogTitle = resolveVideoOpenGraphTitle(mediaPreview.mediaType, post.author, title);
+  const ogDescription = resolveVideoOpenGraphDescription(
+    mediaPreview.mediaType,
+    title,
+    description,
+  );
   const data: PublicCommunityPostSeoDTO = {
     canonical_url: `/comunidades/${post.community.slug}/publicacao/${id}`,
     community: post.community,
     description,
     media_type: mediaPreview.mediaType,
-    og_description: description,
+    og_description: ogDescription,
     og_image_height: mediaPreview.ogImageHeight,
     og_image_url: mediaPreview.ogImageUrl,
     og_image_width: mediaPreview.ogImageWidth,
@@ -321,12 +332,13 @@ export const showReply = async ({ id, replyId, slug }: ReplySeoParams): Promise<
         ? reply.post.author
         : null;
   const ogTitle = resolveVideoOpenGraphTitle(mediaType, mediaAuthor, title);
+  const ogDescription = resolveVideoOpenGraphDescription(mediaType, postTitle, description);
   const data: PublicCommunityPostSeoDTO = {
     canonical_url: `/comunidades/${reply.post.community.slug}/publicacao/${id}/resposta/${replyId}`,
     community: reply.post.community,
     description,
     media_type: mediaType,
-    og_description: description,
+    og_description: ogDescription,
     og_image_height: replyMedia.ogImageHeight ?? postMedia.ogImageHeight,
     og_image_url: replyMedia.ogImageUrl ?? postMedia.ogImageUrl,
     og_image_width: replyMedia.ogImageWidth ?? postMedia.ogImageWidth,

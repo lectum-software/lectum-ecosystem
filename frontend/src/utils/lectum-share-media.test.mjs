@@ -8,7 +8,11 @@ const {
   resolveLectumFileShareData,
   resolveLectumLinkShareData,
 } = await import("./lectum-share-media/native-share.ts");
-const { resolveVideoExportDurationSeconds } = await import("./lectum-share-media/duration.ts");
+const {
+  resolveVideoExportDurationSeconds,
+  resolveVideoExportSafetyTimeoutMs,
+  resolveVideoExportStallTimeoutMs,
+} = await import("./lectum-share-media/duration.ts");
 const { safeFileName, shareFileTitle } = await import("./lectum-share-media/file-name.ts");
 
 const createShareFile = () =>
@@ -94,11 +98,15 @@ test("compartilhamento de link fica indisponivel sem share nativo", () => {
   );
 });
 
-test("videos compartilhados priorizam link publico com preview do WhatsApp", () => {
+test("videos compartilhados priorizam arquivo social e mantem link publico como fallback", () => {
   const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
   const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const hookSource = readFileSync(
     new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
+    "utf8",
+  );
+  const postsRequestSource = readFileSync(
+    new URL("../api/req/posts/index.ts", import.meta.url),
     "utf8",
   );
   const seoSource = readFileSync(
@@ -108,20 +116,36 @@ test("videos compartilhados priorizam link publico com preview do WhatsApp", () 
     ),
     "utf8",
   );
+  const repositorySource = readFileSync(
+    new URL(
+      "../../../backend/src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   assert.match(
     targetSource,
     /publicCommunityReplyThreadHref\(post\.community\.slug, post\.id, reply\.id\)/,
   );
+  assert.match(targetSource, /shareText: postTitle/);
   assert.match(mediaSource, /shareLectumSocialLinkPreviewTarget/);
   assert.match(mediaSource, /text: null/);
   assert.match(mediaSource, /url: target\.shareUrl/);
+  assert.match(mediaSource, /files: \[file\][\s\S]*url: target\.shareUrl/);
   assert.match(
     hookSource,
-    /target\.mediaType === "video"[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)/,
+    /shareSocialFileTarget\(target\)[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)/,
+  );
+  assert.doesNotMatch(
+    hookSource,
+    /target\.mediaType === "video"[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)[\s\S]*shareSocialFileTarget\(target\)/,
   );
   assert.match(seoSource, /professionalVideoTitle/);
+  assert.match(seoSource, /resolveVideoOpenGraphDescription/);
   assert.match(seoSource, /\$\{name\} na Lectum/);
+  assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
+  assert.match(repositorySource, /lectum-share-v5-2026-08-22-file-first-complete-video/);
 });
 
 test("cancelamento nativo da share sheet e reconhecido sem virar erro tecnico", () => {
@@ -184,10 +208,16 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.equal(resolveVideoExportDurationSeconds(127), 127);
   assert.equal(resolveVideoExportDurationSeconds(60.5), 60.5);
   assert.equal(resolveVideoExportDurationSeconds(Number.NaN), 15);
+  assert.equal(resolveVideoExportSafetyTimeoutMs(15, false), 600_000);
+  assert.equal(resolveVideoExportSafetyTimeoutMs(127, true), 441_000);
+  assert.equal(resolveVideoExportStallTimeoutMs(), 45_000);
 
   const source = readFileSync(new URL("./lectum-share-media/export.ts", import.meta.url), "utf8");
 
   assert.doesNotMatch(source, /MAX_VIDEO_EXPORT_SECONDS/);
+  assert.match(source, /recorder\.requestData\(\)/);
+  assert.match(source, /lastProgressAt/);
+  assert.match(source, /stalled/);
 });
 
 test("layout social usa card parecido com instagram e respeita safe area de reels", () => {
@@ -225,5 +255,5 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v4-2026-08-22-instagram-safe-card/);
+  assert.match(repositorySource, /lectum-share-v5-2026-08-22-file-first-complete-video/);
 });

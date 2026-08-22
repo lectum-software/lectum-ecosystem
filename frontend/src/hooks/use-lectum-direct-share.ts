@@ -139,16 +139,14 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
 
         if (target.kind === "link") {
           result = await shareLectumLinkTarget(target);
-        } else if (target.mediaType === "video") {
-          try {
-            result = await shareLectumSocialLinkPreviewTarget(target);
-          } catch (error) {
-            if (isNativeShareAbortError(error)) throw error;
-
-            result = await shareSocialFileTarget(target);
-          }
         } else {
-          result = await shareSocialFileTarget(target);
+          try {
+            result = await shareSocialFileTarget(target);
+          } catch (error) {
+            if (isNativeShareAbortError(error) || target.mediaType !== "video") throw error;
+
+            result = await shareLectumSocialLinkPreviewTarget(target);
+          }
         }
 
         if (loadingToastId !== null) {

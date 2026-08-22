@@ -437,7 +437,7 @@ export const shareReply = async (
   });
 };
 
-const SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 120_000;
+const SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000;
 const SHARE_ARTIFACT_MIME_BY_EXTENSION: Record<string, string> = {
   mp4: "video/mp4",
   webm: "video/webm",

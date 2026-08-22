@@ -3,7 +3,8 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 
-export const POST_SHARE_ARTIFACT_LAYOUT_VERSION = "lectum-share-v4-2026-08-22-instagram-safe-card";
+export const POST_SHARE_ARTIFACT_LAYOUT_VERSION =
+  "lectum-share-v5-2026-08-22-file-first-complete-video";
 export const POST_SHARE_ARTIFACT_TTL_DAYS = 15;
 
 const shareAuthorSelect = {

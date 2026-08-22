@@ -1,6 +1,10 @@
 import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
 
-import { resolveVideoExportDurationSeconds, resolveVideoExportSafetyTimeoutMs } from "./duration";
+import {
+  resolveVideoExportDurationSeconds,
+  resolveVideoExportSafetyTimeoutMs,
+  resolveVideoExportStallTimeoutMs,
+} from "./duration";
 import { safeFileName } from "./file-name";
 import {
   type CanvasWithCaptureStream,
@@ -192,10 +196,13 @@ export const createVideoShareFile = async (
   const durationSeconds = resolveVideoExportDurationSeconds(video.duration);
   const endTimeToleranceSeconds = Math.min(0.25, Math.max(0.05, durationSeconds * 0.005));
   const safetyTimeoutMs = resolveVideoExportSafetyTimeoutMs(durationSeconds, hasKnownDuration);
+  const stallTimeoutMs = resolveVideoExportStallTimeoutMs();
 
   return new Promise<File>((resolve, reject) => {
     let animationFrame = 0;
     let cleaned = false;
+    let lastProgressAt = 0;
+    let lastVideoTime = 0;
     let stopped = false;
     let startedAt = 0;
 
@@ -220,18 +227,31 @@ export const createVideoShareFile = async (
 
       stopped = true;
       if (recorder.state !== "inactive") {
+        try {
+          recorder.requestData();
+        } catch {
+          // best effort before stopping the recorder
+        }
+
         recorder.stop();
       }
     };
 
     const draw = () => {
       drawLectumShareFrame(ctx, video, layout, target, palette, assets);
-      const elapsed = performance.now() - startedAt;
+      const now = performance.now();
+      const elapsed = now - startedAt;
       const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      if (currentTime > lastVideoTime + 0.05) {
+        lastVideoTime = currentTime;
+        lastProgressAt = now;
+      }
+
       const reachedKnownEnd =
         hasKnownDuration && currentTime >= durationSeconds - endTimeToleranceSeconds;
+      const stalled = now - lastProgressAt >= stallTimeoutMs;
 
-      if (video.ended || reachedKnownEnd || elapsed >= safetyTimeoutMs) {
+      if (video.ended || reachedKnownEnd || stalled || elapsed >= safetyTimeoutMs) {
         stopRecorder();
         return;
       }
@@ -275,6 +295,8 @@ export const createVideoShareFile = async (
         drawLectumShareFrame(ctx, video, layout, target, palette, assets);
         recorder.start(1000);
         startedAt = performance.now();
+        lastProgressAt = startedAt;
+        lastVideoTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
         await video.play();
         draw();
       } catch (error) {

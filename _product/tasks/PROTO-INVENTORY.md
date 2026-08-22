@@ -138,6 +138,7 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Posts | Compartilhamento Lectum - vídeo-resposta stories referência | `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png` | 941x1672 | TASK-42 |
 | Posts | Preview WhatsApp para vídeo vertical Open Graph | `_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg` | 941x1280 | TASK-143 |
 | Posts | Preview WhatsApp de link de vídeo estilo Instagram | `_product/proto/WhatsApp preview video link Instagram referencia.jpeg` | 590x1280 | TASK-143 |
+| Posts | Preview WhatsApp de link sem arte social/reels | `_product/proto/WhatsApp preview link sem arte social referencia.jpeg` | 590x1280 | TASK-42, TASK-143 |
 | Conta | Notificações | `_product/proto/Notificações.jpg` | 414x1317 | TASK-29A |
 | Conta | Configurações de Notificações | `_product/proto/Configurações de Notificações.jpg` | 390x1099 | TASK-29A |
 | Conta | Configurações de Conta - Login Google | `_product/proto/Configurações de Conta - Login Google.jpg` | 390x884 | TASK-30 |

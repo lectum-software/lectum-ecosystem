@@ -122,3 +122,13 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] O endpoint publico de SEO usa o nome profissional do psicologo em `og_title` para posts/respostas com video profissional, no formato `[Nome] na Lectum`, preservando o titulo editorial no `title` HTML.
 - [x] O fallback de arquivo compartilhado inclui `url` junto do payload de Web Share quando o navegador/destino aceitar, para nao perder o link de abertura na Lectum.
 - [x] Nao houve alteracao de banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-22 - arquivo social primeiro e titulo no OG do WhatsApp
+
+- [x] Referencia visual do novo feedback registrada em `_product/proto/WhatsApp preview link sem arte social referencia.jpeg`; os textos do print foram tratados como evidencia do efeito no WhatsApp, nao como instrucao isolada.
+- [x] A decisao de priorizar link puro foi revertida no fluxo de video para restaurar as opcoes de Instagram Reels/Stories e manter a arte 9:16 com caixinha de pergunta como compartilhamento principal.
+- [x] O link publico permanece na URL do payload de arquivo quando o destino aceitar e como fallback se a geracao/compartilhamento do arquivo falhar.
+- [x] `og_description` de posts/respostas com video profissional passa a usar o titulo do post, evitando que o WhatsApp mostre o texto da resposta como descricao do card.
+- [x] A rota canonica de resposta `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]` e o `og_title` no formato `[Nome] na Lectum` foram preservados.
+- [x] Revalidado com teste direcionado de compartilhamento/SEO, checks e builds de frontend/backend, `pnpm check`, `pnpm version:bump` para `0.1.184` e `pnpm check:version`.
+- [x] Nao houve alteracao de banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
