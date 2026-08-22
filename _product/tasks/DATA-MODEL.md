@@ -650,6 +650,7 @@ Contratos da tela interna do post (TASK-26):
 - `POST /api/private/posts/:id/vote` recebe `{ value: 1|-1, replyId? }`; repetir o mesmo voto remove o voto. Downvotes atualizam contadores denormalizados de posts e comentarios para ranking interno, mas não devem ser exibidos como número público nem gerar item na central de notificações.
 - `POST /api/private/posts/:id/save` e `DELETE /api/private/posts/:id/save` persistem salvos via `post_save` e mantêm `saves_count`.
 - `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share` persistem compartilhamentos reais via `post_share` apos sucesso de `navigator.share` ou clipboard no frontend. A rota usa `optionalAuth`, aceita `{ channel?: "clipboard"|"web_share", replyId? }`, deduplica por 1 hora por usuario/dispositivo e nao notifica o proprio autor. Na TASK-42, vídeo-respostas profissionais continuam usando essa mesma rota de reply share após Web Share API ou fallback de download/cópia de link; não há novo alvo de métrica.
+- Complemento TASK-42 (2026-08-22): `GET /api/private/posts/:id/share-artifact`, `POST /api/private/posts/:id/share-artifact`, `GET /api/private/posts/:id/replies/:replyId/share-artifact` e `POST /api/private/posts/:id/replies/:replyId/share-artifact` controlam cache temporario do arquivo social com arte. A leitura e publica para reaproveitar arte ja preparada; o upload exige usuario autenticado e aceita somente arquivo de video gerado no fluxo real de compartilhamento. O cache e criado sob demanda, nunca no upload original de midia, e expira em 15 dias.
 - `POST /api/private/posts/:id/report` e `POST /api/private/posts/:id/replies/:replyId/report` registram denuncia reativa com motivo e descricao opcional, sem remocao automatica do conteudo; o alvo fica normalizado em `post_report.target_type`/`target_id` para triagem/admin futuro.
 
 Complemento 2026-07-01: autoações autenticadas do autor sobre o próprio `community_post` ou
@@ -733,6 +734,27 @@ Contratos TASK-74: `POST /api/private/community/:slug/posts` e `POST /api/privat
 Regras: criar evento somente no fluxo real de compartilhamento da interface; deduplicar por 1 hora para o mesmo
 usuario/dispositivo/alvo; emitir `compartilhamento` para o autor do post ou comentario, respeitando preferencias e
 silenciamento do post. A identidade de quem compartilhou nao e exposta na central.
+
+`post_share_artifact` / `post_share_artifacts` (TASK-42, cache temporario do video com arte):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `cache_key` | `String @unique` | hash do alvo, midia, fingerprint do conteudo e versao do layout |
+| `post_id` | `String` | post compartilhado ou post pai da resposta |
+| `reply_id` | `String?` | resposta compartilhada, quando aplicavel |
+| `target_type` | `String` | `"post" \| "reply"` |
+| `source_media_url` | `String` | URL publica da midia original usada como fonte |
+| `source_fingerprint` | `String` | hash de titulo/texto/autoria/metadados que invalidam a arte |
+| `layout_version` | `String` | versao logica do canvas social |
+| `storage_key` | `String` | objeto publico em R2 sob `posts/share-artifacts/` |
+| `file_name` | `String?` | nome seguro do arquivo gerado no navegador |
+| `content_type` | `String` | `video/mp4` ou `video/webm` normalizado |
+| `size_bytes` | `Int` | tamanho do arquivo com arte |
+| `expires_at` | `DateTime` | expira 15 dias apos preparo/upload do artefato |
+| `last_accessed_at` | `DateTime @default(now())` | reservado para auditoria/telemetria futura |
+| `@@index([post_id, expires_at])`, `@@index([reply_id, expires_at])`, `@@index([expires_at])`, `@@index([storage_key])` | | limpeza e consulta por alvo |
+
+Regras: o frontend primeiro consulta o cache; se nao houver arte valida, gera a composicao no navegador, compartilha pelo fluxo nativo e tenta persistir o arquivo em background para os proximos compartilhamentos. O backend nao pre-renderiza todos os videos e nao armazena arte para conteudos nunca compartilhados. Quando um novo artefato substitui o mesmo `cache_key`, o objeto anterior e removido best-effort para evitar duas versoes ativas do mesmo alvo. O scheduler de limpeza remove objetos expirados e marca os registros como `deleted`, sem depender de nova env obrigatoria.
 
 ### Ranking de mentores (TASK-27 - derivado)
 

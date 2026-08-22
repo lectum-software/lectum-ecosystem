@@ -4,6 +4,7 @@ import { PostEngagementRepository } from "./queries/PostEngagementRepository";
 import { PostListRepository } from "./queries/PostListRepository";
 import { PostReplyRepository } from "./queries/PostReplyRepository";
 import { PostReplyStateRepository } from "./queries/PostReplyStateRepository";
+import { PostShareArtifactRepository } from "./queries/PostShareArtifactRepository";
 import { PostStateRepository } from "./queries/PostStateRepository";
 import { PostUpdateRepository } from "./queries/PostUpdateRepository";
 
@@ -21,6 +22,8 @@ export class PostRepository implements IPostRepository {
   private readonly stateRepository = new PostStateRepository();
 
   private readonly replyStateRepository = new PostReplyStateRepository();
+
+  private readonly shareArtifactRepository = new PostShareArtifactRepository();
 
   exists(
     ...args: Parameters<PostCoreRepository["exists"]>
@@ -136,5 +139,41 @@ export class PostRepository implements IPostRepository {
     ...args: Parameters<PostReplyStateRepository["deleteReply"]>
   ): ReturnType<PostReplyStateRepository["deleteReply"]> {
     return this.replyStateRepository.deleteReply(...args);
+  }
+
+  getShareArtifactTarget(
+    ...args: Parameters<PostShareArtifactRepository["getTarget"]>
+  ): ReturnType<PostShareArtifactRepository["getTarget"]> {
+    return this.shareArtifactRepository.getTarget(...args);
+  }
+
+  findValidShareArtifact(
+    ...args: Parameters<PostShareArtifactRepository["findValidByCacheKey"]>
+  ): ReturnType<PostShareArtifactRepository["findValidByCacheKey"]> {
+    return this.shareArtifactRepository.findValidByCacheKey(...args);
+  }
+
+  findShareArtifactStorageKey(
+    ...args: Parameters<PostShareArtifactRepository["findStorageKeyByCacheKey"]>
+  ): ReturnType<PostShareArtifactRepository["findStorageKeyByCacheKey"]> {
+    return this.shareArtifactRepository.findStorageKeyByCacheKey(...args);
+  }
+
+  upsertShareArtifact(
+    ...args: Parameters<PostShareArtifactRepository["upsertArtifact"]>
+  ): ReturnType<PostShareArtifactRepository["upsertArtifact"]> {
+    return this.shareArtifactRepository.upsertArtifact(...args);
+  }
+
+  listExpiredShareArtifacts(
+    ...args: Parameters<PostShareArtifactRepository["listExpired"]>
+  ): ReturnType<PostShareArtifactRepository["listExpired"]> {
+    return this.shareArtifactRepository.listExpired(...args);
+  }
+
+  markShareArtifactDeleted(
+    ...args: Parameters<PostShareArtifactRepository["markDeleted"]>
+  ): ReturnType<PostShareArtifactRepository["markDeleted"]> {
+    return this.shareArtifactRepository.markDeleted(...args);
   }
 }

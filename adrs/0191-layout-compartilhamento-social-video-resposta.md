@@ -308,3 +308,36 @@ Novo feedback mostrou que videos-resposta mais longos eram enviados incompletos 
 - Teste unitario cobre video de 127 segundos e 60,5 segundos mantendo a duracao real, alem do fallback de metadata invalida.
 - Teste estatico confirma ausencia de `MAX_VIDEO_EXPORT_SECONDS` na exportacao.
 - Validacoes finais, build, versionamento e smoke constam na TASK-42.
+
+## Complemento 2026-08-22 - cache temporario do video com arte
+
+### Contexto
+
+Depois da remocao do corte fixo, videos longos passaram a ser preparados por toda a duracao real. Isso corrige o arquivo incompleto, mas aumenta o tempo de preparo no navegador. O usuario confirmou que nem todo video sera compartilhado e que pre-renderizar tudo no backend/upload aumentaria custo/armazenamento sem necessidade. Tambem ficou claro que manter duas versoes permanentes do mesmo video nao e desejavel.
+
+### Decisao
+
+- Criar cache temporario sob demanda do arquivo social com arte por 15 dias, usando a geracao real do frontend como origem.
+- Nao pre-renderizar videos no upload original e nao criar arte para conteudo que nunca foi compartilhado.
+- Persistir metadados em `post_share_artifacts`, com `cache_key` derivado do alvo, URL da midia fonte, fingerprint de conteudo/autoria e `layout_version`.
+- Armazenar o objeto publico em R2 sob `posts/share-artifacts/`, com `Cache-Control: public, max-age=3600` para evitar cache longo alem da TTL de negocio.
+- Expor leitura publica de cache para que compartilhamentos futuros possam reutilizar a arte sem autenticar; manter o upload autenticado para evitar abuso do bucket publico.
+- No frontend, consultar o cache antes de chamar `prepareLectumShareFile`; se o artefato existir e estiver valido, baixar o arquivo publico, salvar no cache em memoria e abrir a folha nativa.
+- Quando nao houver arte valida, manter a exportacao client-side por canvas/MediaRecorder e persistir o arquivo em background apos a geracao, sem bloquear o compartilhamento atual.
+- Limpar artefatos expirados por scheduler no backend. As envs `POST_SHARE_ARTIFACT_CLEANUP_ENABLED`, `POST_SHARE_ARTIFACT_CLEANUP_INTERVAL_MS` e `POST_SHARE_ARTIFACT_CLEANUP_BATCH_SIZE` sao opcionais; sem configuracao, a limpeza roda com defaults seguros.
+- Se outro upload substituir o mesmo `cache_key`, remover best-effort o objeto antigo para evitar duas versoes ativas do mesmo alvo.
+
+### Consequencias
+
+- O primeiro compartilhamento de um video ainda pode exibir preparo, porque a arte precisa ser gerada pelo navegador ao menos uma vez.
+- Compartilhamentos posteriores, inclusive apos reload/outro dispositivo, podem reutilizar o arquivo com arte enquanto ele nao expirar, reduzindo espera e chance de perder a ativacao da Web Share API.
+- O armazenamento cresce apenas para videos efetivamente compartilhados e por tempo limitado; nao ha fila de renderizacao, worker de video nem custo de CPU backend para todos os uploads.
+- A midia original continua sendo a fonte canonica do post/resposta. A arte e derivada, temporaria e pode ser regenerada se expirar ou se o layout/fingerprint mudar.
+- Visitantes anonimos podem reutilizar arte ja existente, mas nao podem criar novos arquivos no bucket; se nao houver cache, geram localmente sem persistir.
+- Rollback: remover as chamadas frontend de cache e desabilitar as rotas/scheduler volta ao comportamento anterior de cache apenas em memoria. A tabela/objetos temporarios podem expirar naturalmente ou ser limpos pelo scheduler antes de uma contracao futura.
+- Deploy: backend deve subir antes ou junto do frontend. O frontend tolera ausencia/falha do cache porque cai para geracao client-side; o backend tolera frontend antigo porque as rotas sao aditivas. Nao ha env obrigatoria nova.
+
+### Validacao
+
+- `pnpm --dir backend db:migrate --name add-post-share-artifacts` aplicado com sucesso, criando `20260822183235_add_post_share_artifacts`.
+- Validacoes finais de backend, frontend, root, versionamento e smoke constam na TASK-42.

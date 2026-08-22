@@ -299,6 +299,15 @@ export type PostShareResponse = {
   shared: boolean;
 };
 
+export type PostShareArtifactResponse = {
+  available: boolean;
+  artifact_url: string | null;
+  content_type: string | null;
+  expires_at: Date | null;
+  file_name: string | null;
+  size_bytes: number | null;
+};
+
 export type PostReplyDeleteResponse = {
   post_id: string;
   reply_ids: string[];
@@ -374,6 +383,17 @@ export type IPostUpdateReplyDTO = {
 
 export type IPostUploadReplyMediaDTO = {
   p: PostParams;
+  auth: user;
+  file?: Express.Multer.File & { key?: string; path?: string };
+};
+
+export type IPostShareArtifactDTO = {
+  p: PostParams & { replyId?: string };
+  auth?: user;
+};
+
+export type IPostUploadShareArtifactDTO = {
+  p: PostParams & { replyId?: string };
   auth: user;
   file?: Express.Multer.File & { key?: string; path?: string };
 };

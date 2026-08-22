@@ -7,6 +7,7 @@ import {
   createReply as createReplyService,
   deletePost as deletePostService,
   deleteReply as deleteReplyService,
+  getShareArtifact as getShareArtifactService,
   initiateReplyMediaMultipartUpload as initiateReplyMediaMultipartUploadService,
   mine as mineService,
   mute as muteService,
@@ -25,6 +26,7 @@ import {
   updateReply as updateReplyService,
   uploadReplyMediaMultipartPart as uploadReplyMediaMultipartPartService,
   uploadReplyMedia as uploadReplyMediaService,
+  uploadShareArtifact as uploadShareArtifactService,
   vote as voteService,
 } from "./services";
 
@@ -219,6 +221,33 @@ export const share = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_share", err);
+  }
+};
+
+export const getShareArtifact = async (req: Request, res: Response) => {
+  try {
+    const resolve = await getShareArtifactService(
+      req as unknown as Parameters<typeof getShareArtifactService>[0],
+    );
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact", err);
+  }
+};
+
+export const uploadShareArtifact = async (req: Request, res: Response) => {
+  try {
+    const file = req.file as (Express.Multer.File & { key?: string; path?: string }) | undefined;
+    const resolve = await uploadShareArtifactService({
+      auth: req.auth,
+      file,
+      p: req.params as unknown as Parameters<typeof uploadShareArtifactService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_upload", err);
   }
 };
 

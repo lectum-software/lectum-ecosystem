@@ -265,6 +265,15 @@ export type PostShareResponse = {
   shared: boolean;
 };
 
+export type PostShareArtifactResponse = {
+  available: boolean;
+  artifact_url: string | null;
+  content_type: string | null;
+  expires_at: string | null;
+  file_name: string | null;
+  size_bytes: number | null;
+};
+
 export type PostSaveResponse = {
   target_type: "post" | "reply";
   post_id: string;

@@ -129,7 +129,7 @@ export const createPublicUploadStorage = ({
         Bucket: bucketName,
         Key: key,
         Body: bodyToSend,
-        CacheControl: "public, max-age=31536000, immutable",
+        CacheControl: req.uploadCacheControl ?? "public, max-age=31536000, immutable",
         ContentType: file.mimetype,
         ContentLength: contentLength,
       });

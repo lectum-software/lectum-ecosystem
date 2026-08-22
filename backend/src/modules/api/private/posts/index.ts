@@ -11,6 +11,7 @@ import {
   createReply,
   deletePost,
   deleteReply,
+  getShareArtifact,
   initiateReplyMediaMultipartUpload,
   mine,
   mute,
@@ -29,8 +30,10 @@ import {
   updateReply,
   uploadReplyMedia,
   uploadReplyMediaMultipartPart,
+  uploadShareArtifact,
   vote,
 } from "./use-cases/controller";
+import { POST_SHARE_ARTIFACT_UPLOAD_CACHE_CONTROL } from "./use-cases/services/share-artifact";
 import {
   createReplyValidator,
   listValidator,
@@ -107,6 +110,34 @@ routes.delete(
   abortReplyMediaMultipartUpload,
 );
 routes.post("/:id/replies", privateAuth, createReplyValidator, createReply);
+routes.get("/:id/share-artifact", showValidator, getShareArtifact);
+routes.post(
+  "/:id/share-artifact",
+  privateAuth,
+  showValidator,
+  publicMulter({
+    allowed: ["video/mp4", "video/webm"],
+    cacheControl: POST_SHARE_ARTIFACT_UPLOAD_CACHE_CONTROL,
+    feature: "posts",
+    single: "share-artifacts",
+    size: UPLOAD_LIMITS.postReply.simpleMb,
+  }),
+  uploadShareArtifact,
+);
+routes.get("/:id/replies/:replyId/share-artifact", replySaveValidator, getShareArtifact);
+routes.post(
+  "/:id/replies/:replyId/share-artifact",
+  privateAuth,
+  replySaveValidator,
+  publicMulter({
+    allowed: ["video/mp4", "video/webm"],
+    cacheControl: POST_SHARE_ARTIFACT_UPLOAD_CACHE_CONTROL,
+    feature: "posts",
+    single: "share-artifacts",
+    size: UPLOAD_LIMITS.postReply.simpleMb,
+  }),
+  uploadShareArtifact,
+);
 routes.post("/:id/replies/:replyId/save", privateAuth, replySaveValidator, saveReply);
 routes.delete("/:id/replies/:replyId/save", privateAuth, replySaveValidator, unsaveReply);
 routes.post("/:id/replies/:replyId/share", replyShareValidator, share);

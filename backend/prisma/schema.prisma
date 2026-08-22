@@ -993,6 +993,7 @@ model community_post {
   shares               post_share[]                  @relation("post_share_post")
   notification_mutes   post_notification_mute[]      @relation("post_notification_mute_post")
   reports              post_report[]                 @relation("post_report_post")
+  share_artifacts      post_share_artifact[]         @relation("post_share_artifact_post")
   video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_post")
   attention_sessions   content_attention_session[]   @relation("content_attention_session_post")
 
@@ -1044,6 +1045,7 @@ model post_reply {
   shares               post_share[]                  @relation("post_share_reply")
   saves                post_reply_save[]             @relation("post_reply_save_reply")
   reports              post_report[]                 @relation("post_report_reply")
+  share_artifacts      post_share_artifact[]         @relation("post_share_artifact_reply")
   video_watch_sessions content_video_watch_session[] @relation("content_video_watch_session_reply")
   attention_sessions   content_attention_session[]   @relation("content_attention_session_reply")
 
@@ -1189,6 +1191,35 @@ model post_share {
   @@index([user_id, createdAt])
   @@index([device_id, createdAt])
   @@map("post_shares")
+}
+
+model post_share_artifact {
+  id                 String         @id @default(cuid())
+  deleted            Boolean        @default(false)
+  deletedAt          DateTime?      @map("deleted_at")
+  updatedAt          DateTime       @default(now()) @updatedAt @map("updated_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  cache_key          String         @unique @map("cache_key")
+  post_id            String         @map("post_id")
+  reply_id           String?        @map("reply_id")
+  target_type        String         @map("target_type")
+  source_media_url   String         @map("source_media_url")
+  source_fingerprint String         @map("source_fingerprint")
+  layout_version     String         @map("layout_version")
+  storage_key        String         @map("storage_key")
+  file_name          String?        @map("file_name")
+  content_type       String         @map("content_type")
+  size_bytes         Int            @map("size_bytes")
+  expires_at         DateTime       @map("expires_at")
+  last_accessed_at   DateTime       @default(now()) @map("last_accessed_at")
+  post               community_post @relation("post_share_artifact_post", fields: [post_id], references: [id], onDelete: Cascade)
+  reply              post_reply?    @relation("post_share_artifact_reply", fields: [reply_id], references: [id], onDelete: Cascade)
+
+  @@index([post_id, expires_at])
+  @@index([reply_id, expires_at])
+  @@index([expires_at])
+  @@index([storage_key])
+  @@map("post_share_artifacts")
 }
 
 model post_reply_save {

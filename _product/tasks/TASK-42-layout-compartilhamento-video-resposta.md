@@ -408,6 +408,38 @@ Regras de UI obrigatórias:
 - [x] `pnpm check:source-size`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
 
+## Complemento 2026-08-22 - caixinha com logo Lectum e autoria mais legivel
+
+- Pedido do usuario: aproximar a proporcao da caixinha de pergunta da referencia Instagram, manter o texto `Respondido na Lectum`, adicionar a logo SVG da plataforma ao lado do texto para reconhecimento de marca e aumentar o bloco de autoria porque o nome estava pequeno e `Psicologo` muito junto ao nome.
+- Decisao visual: o canvas 9:16 do compartilhamento passa a usar card superior mais largo e mais alto, com corpo minimo maior, ate 3 linhas para a pergunta/comentario e header com icone `frontend/public/logo-icon.svg` em chip claro ao lado de `Respondido na Lectum`/`Postado na Lectum`.
+- Decisao visual: a tag de autoria profissional fica mais legivel no video exportado, com nome maior, selo alinhado ao nome, cargo centralizado em linha propria e espaco vertical explicito entre nome e cargo.
+- Decisao operacional: como a arte cacheada depende da composicao visual, `POST_SHARE_ARTIFACT_LAYOUT_VERSION` foi atualizado para `lectum-share-v2-2026-08-22-brand-card`, invalidando naturalmente artefatos antigos sem apagar dados nem objetos.
+- Escopo: ajuste mobile-first no layout exportado por canvas e versionamento interno do cache; sem package novo, env nova obrigatoria, contrato publico novo, provider novo, seed/mock ou dados artificiais.
+- Fonte visual auditavel: screenshots do usuario `WhatsApp Image 2026-08-22 at 14.10.08.jpeg` e `WhatsApp Image 2026-08-22 at 14.01.46.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A caixinha de pergunta/resposta do arquivo social fica mais proxima da proporcao Instagram, com largura maior, altura minima maior e leitura de ate 3 linhas.
+- [x] O header preserva `Respondido na Lectum`/`Postado na Lectum` e adiciona a logo SVG da Lectum ao lado do texto, com fallback seguro se o asset nao carregar.
+- [x] O nome do profissional fica maior no arquivo exportado e o cargo `Psicologo`/`Psicologa` ganha respiro vertical em linha propria.
+- [x] Artefatos cacheados antigos deixam de ser reaproveitados porque a versao interna do layout foi incrementada.
+- [x] Nenhum package novo ou env obrigatoria nova foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media/layout.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media.test.mjs src/hooks/use-lectum-direct-share.ts src/api/req/posts/index.ts`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir backend db:migrate --name add-post-share-artifacts` concluiu com `Already in sync, no schema change or pending migration was found.`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir backend build`
+- [x] Manifests sincronizados em `0.1.179`.
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
 ## Complemento 2026-08-22 - compartilhamento direto pela folha nativa
 
 - Pedido do usuario: a modal da Lectum com previa/opcoes ficava redundante, porque tocar em WhatsApp, Instagram ou TikTok abria em seguida a propria folha nativa de compartilhamento do celular.
@@ -554,6 +586,51 @@ Regras de UI obrigatórias:
 - [x] `pnpm version:bump` para `0.1.178`
 - [x] `pnpm check:version`
 - [x] `pnpm check` (primeira tentativa falhou pelo timeout transitorio ja conhecido em `backend/scripts/boot-safety.test.mjs`; `pnpm --dir backend check` isolado passou e a repeticao completa de `pnpm check` passou).
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check:source-size`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - cache temporario do video com arte por 15 dias
+
+- Pedido do usuario: evitar que o proprio video precise ser preparado novamente em todo compartilhamento, sem pre-renderizar todos os videos e sem manter duas versoes permanentes pesando storage.
+- Decisao: armazenar sob demanda apenas o arquivo social com arte, gerado no fluxo real de compartilhamento, por 15 dias.
+- Backend: adicionada a tabela `post_share_artifacts` com `cache_key`, `source_fingerprint`, `layout_version`, `storage_key`, metadados do arquivo e `expires_at`.
+- Backend: novas rotas `GET/POST /api/private/posts/:id/share-artifact` e `GET/POST /api/private/posts/:id/replies/:replyId/share-artifact`; leitura publica reaproveita arte valida, upload exige usuario autenticado para evitar abuso de bucket publico.
+- Backend: o upload usa o storage publico existente em `posts/share-artifacts/`, com `Cache-Control` curto, sem package novo e sem env obrigatoria nova.
+- Backend: scheduler periodico remove objetos expirados do R2 e marca registros como deletados; as envs `POST_SHARE_ARTIFACT_CLEANUP_ENABLED`, `POST_SHARE_ARTIFACT_CLEANUP_INTERVAL_MS` e `POST_SHARE_ARTIFACT_CLEANUP_BATCH_SIZE` sao opcionais e possuem defaults seguros.
+- Backend: quando um novo arquivo substitui o mesmo `cache_key`, o objeto anterior e removido best-effort para evitar duas versoes ativas do mesmo video/arte.
+- Frontend: antes de renderizar localmente, o compartilhamento direto consulta o cache; quando encontra arte valida, baixa o arquivo publico e compartilha sem reprocessar canvas/MediaRecorder.
+- Frontend: quando nao existe cache, mantem a geracao client-side real e tenta persistir o arquivo preparado em background para os proximos compartilhamentos.
+- Escopo: nao ha pre-render no upload original de midia e videos nunca compartilhados nao criam arte temporaria. A midia original do post/resposta continua existindo como fonte canonica; a arte e derivada, temporaria e expira em 15 dias.
+- Migration criada/aplicada: `backend/prisma/migrations/20260822183235_add_post_share_artifacts/migration.sql`.
+- Fonte visual auditavel: referencia local `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O primeiro compartilhamento de um video sem arte cacheada continua gerando o arquivo real no navegador.
+- [x] Depois da geracao, o frontend tenta persistir o arquivo com arte em background para reutilizacao.
+- [x] Compartilhamentos seguintes consultam o backend e reutilizam o arquivo com arte quando ele ainda nao expirou.
+- [x] O cache de arte expira em 15 dias e possui limpeza periodica de objeto R2 + registro logico.
+- [x] O backend nao pre-renderiza todos os videos no upload original e nao cria arte para video nunca compartilhado.
+- [x] O upload de arte temporaria exige usuario autenticado e aceita somente video sob `posts/share-artifacts/`.
+- [x] Reenvio para o mesmo `cache_key` remove a versao anterior best-effort, evitando duas versoes ativas do mesmo alvo.
+- [x] Nenhum package novo ou env obrigatoria nova foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir backend db:migrate --name add-post-share-artifacts`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
 - [x] `git diff --check`
 - [x] `pnpm check:encoding`
 - [x] `pnpm check:adrs`

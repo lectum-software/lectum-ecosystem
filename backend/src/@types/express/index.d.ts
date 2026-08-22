@@ -11,6 +11,7 @@ declare global {
       select: any;
       include: any;
       allowed: string[];
+      uploadCacheControl?: string;
       uploadFeature?: string;
       feature: string;
       cookies: Record<string, string | undefined>;

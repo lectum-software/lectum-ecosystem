@@ -11,6 +11,7 @@ import type { PublicUploadOption } from "./types";
 
 export default (mode: PublicUploadOption) => (req: Request, res: Response, next: NextFunction) => {
   req.allowed = mode.allowed || [];
+  req.uploadCacheControl = mode.cacheControl;
   req.uploadFeature = mode.feature;
   let middleware: RequestHandler;
   const max = mode.size ? toMulterExclusiveThreshold(mode.size * 1024 * 1024) : undefined;

@@ -37,6 +37,7 @@ const isAllowedPublicFile = (file: string | undefined) =>
         file?.startsWith("psychologist/video-cover/") ||
         file?.startsWith("patient/avatar/") ||
         file?.startsWith("posts/media/") ||
+        file?.startsWith("posts/share-artifacts/") ||
         file?.startsWith("seo/og-image/")),
   );
 

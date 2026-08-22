@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.178",
+  "version": "0.1.179",
   "private": true,
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -13,8 +13,8 @@
     "build": "pnpm clean && prisma generate && tsc && tsc-alias",
     "start": "node --enable-source-maps dist/index.js",
     "typecheck": "prisma generate && tsc --noEmit --pretty false",
-    "biome:check": "biome check --error-on-warnings package.json tsconfig.json prisma.config.ts prisma scripts src/@types src/config src/doc.ts src/external/limiter.ts src/external/prisma src/helpers src/index.ts src/infra src/interfaces src/main/notification src/main/server src/main/socket src/modules src/operations src/packages src/query src/utils",
-    "biome:fix": "biome check --write package.json tsconfig.json prisma.config.ts prisma scripts src/@types src/config src/doc.ts src/external/limiter.ts src/external/prisma src/helpers src/index.ts src/infra src/interfaces src/main/notification src/main/server src/main/socket src/modules src/operations src/packages src/query src/utils",
+    "biome:check": "biome check --error-on-warnings package.json tsconfig.json prisma.config.ts prisma scripts src/@types src/config src/doc.ts src/external/limiter.ts src/external/prisma src/helpers src/index.ts src/infra src/interfaces src/main/notification src/main/post-share-artifacts src/main/server src/main/socket src/modules src/operations src/packages src/query src/utils",
+    "biome:fix": "biome check --write package.json tsconfig.json prisma.config.ts prisma scripts src/@types src/config src/doc.ts src/external/limiter.ts src/external/prisma src/helpers src/index.ts src/infra src/interfaces src/main/notification src/main/post-share-artifacts src/main/server src/main/socket src/modules src/operations src/packages src/query src/utils",
     "check": "pnpm biome:check && pnpm check:runtime-deps && pnpm typecheck && pnpm test",
     "check:runtime-deps": "node scripts/check-runtime-dependencies.mjs",
     "db:generate": "prisma generate",

@@ -6,4 +6,4 @@ export type PublicUploadOption = (
   | { fields?: { name: string; maxCount: number }[] }
   | { array?: string }
   | { single?: string }
-) & { allowed: string[]; feature?: string; size: number };
+) & { allowed: string[]; cacheControl?: string; feature?: string; size: number };

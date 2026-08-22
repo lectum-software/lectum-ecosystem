@@ -9,6 +9,10 @@ import {
   startNotificationDigestScheduler,
   stopNotificationDigestScheduler,
 } from "@/main/notification/digests";
+import {
+  startPostShareArtifactCleanupScheduler,
+  stopPostShareArtifactCleanupScheduler,
+} from "@/main/post-share-artifacts/cleanup";
 import { soc } from "@/main/socket/state";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import app from "./app";
@@ -19,6 +23,7 @@ const server = app.listen(env.PORT, () => {
   startNotificationDigestScheduler();
   startNotificationCampaignScheduler();
   startBillingDunningScheduler();
+  startPostShareArtifactCleanupScheduler();
 });
 
 let shuttingDown = false;
@@ -30,6 +35,7 @@ const shutdown = async () => {
   stopNotificationCampaignScheduler();
   stopNotificationDigestScheduler();
   stopBillingDunningScheduler();
+  stopPostShareArtifactCleanupScheduler();
   soc?.disconnectSockets(true);
 
   const forceCloseTimer = setTimeout(() => {

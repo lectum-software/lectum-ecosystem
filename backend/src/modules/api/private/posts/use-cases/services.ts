@@ -16,6 +16,7 @@ export {
   initiateReplyMediaMultipartUpload,
   uploadReplyMediaMultipartPart,
 } from "./services/reply-media-multipart";
+export { getShareArtifact, uploadShareArtifact } from "./services/share-artifact";
 export {
   deletePost,
   deleteReply,
