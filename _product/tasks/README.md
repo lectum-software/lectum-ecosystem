@@ -805,3 +805,18 @@ Uma task só pode ser marcada como concluída quando:
 - O fluxo mantem apenas um timeout defensivo proporcional para evitar travamento caso o navegador nao dispare o fim do video ou informe metadata inconsistente.
 - Se a duracao real nao estiver disponivel, a exportacao usa fallback curto de 15 segundos; depois da entrega do arquivo completo, apps de destino ainda podem aplicar cortes proprios fora do controle da Web.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+
+## Atualizacao operacional em 2026-08-22: cache temporario de video com arte
+
+- Ajuste da TASK-42: videos sociais com arte agora podem ser armazenados sob demanda por 15 dias, apenas depois de um compartilhamento real, evitando pre-renderizar todos os uploads.
+- O backend adiciona `post_share_artifacts`, rotas aditivas de consulta/upload para posts e respostas, storage publico em `posts/share-artifacts/` e limpeza periodica de expirados com envs opcionais e defaults seguros.
+- O frontend consulta o artefato antes de reprocessar canvas/MediaRecorder e persiste em background quando gerar a arte pela primeira vez.
+- Deploy aditivo: backend antes ou junto do frontend; sem env obrigatoria nova, package novo ou reset de dados.
+
+## Atualizacao visual em 2026-08-22: caixinha de pergunta com logo Lectum
+
+- Ajuste pos-feedback da TASK-42: o canvas social passa a usar card superior mais largo e com proporcao mais semelhante a caixinha de perguntas de stories/Instagram.
+- O header preserva `Respondido na Lectum`/`Postado na Lectum` e adiciona a logo SVG `/logo-icon.svg` em um chip claro ao lado do texto para reforcar reconhecimento de marca.
+- A tag do profissional ganhou nome maior e mais espaco entre o nome e `Psicologo`, mantendo selo verificado, alinhamento central e ausencia de avatar/CRP/wordmark de rodape.
+- A versao de layout dos artefatos temporarios permanece `lectum-share-v2-2026-08-22-brand-card`; sem package, env obrigatoria, migration ou endpoint novo neste complemento visual.

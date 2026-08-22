@@ -38,12 +38,20 @@ export type ShareCanvasPalette = {
   surface: string;
 };
 
+export type ShareCanvasAssets = {
+  brandLogo?: HTMLImageElement;
+};
+
 export type ShareCanvasLayout = {
   card: {
+    brandGap: number;
+    brandIconPadding: number;
+    brandIconSize: number;
     bodyFontSize: number;
     headerFontSize: number;
     headerHeight: number;
     lineHeight: number;
+    minBodyHeight: number;
     paddingX: number;
     paddingY: number;
     radius: number;
@@ -60,6 +68,7 @@ export type ShareCanvasLayout = {
     maxWidth: number;
     nameFontSize: number;
     paddingX: number;
+    roleGap: number;
     roleFontSize: number;
     verifiedSize: number;
   };
@@ -68,30 +77,37 @@ export type ShareCanvasLayout = {
 
 export const VIDEO_EXPORT_FRAME_RATE = 30;
 
+const brandLogoSrc = "/logo-icon.svg";
+
 export const storyCanvasLayout: ShareCanvasLayout = {
   card: {
-    bodyFontSize: 36,
+    bodyFontSize: 40,
+    brandGap: 16,
+    brandIconPadding: 4,
+    brandIconSize: 28,
     headerFontSize: 24,
-    headerHeight: 72,
-    lineHeight: 42,
-    paddingX: 56,
-    paddingY: 28,
-    radius: 16,
-    width: 780,
-    x: 150,
-    y: 112,
+    headerHeight: 76,
+    lineHeight: 50,
+    minBodyHeight: 248,
+    paddingX: 58,
+    paddingY: 40,
+    radius: 24,
+    width: 930,
+    x: 75,
+    y: 104,
   },
   height: 1920,
-  maxQuestionLines: 2,
+  maxQuestionLines: 3,
   professionalTag: {
-    bottom: 448,
+    bottom: 430,
     gap: 14,
-    height: 78,
-    maxWidth: 620,
-    nameFontSize: 27,
+    height: 112,
+    maxWidth: 720,
+    nameFontSize: 34,
     paddingX: 34,
-    roleFontSize: 19,
-    verifiedSize: 24,
+    roleGap: 16,
+    roleFontSize: 22,
+    verifiedSize: 27,
   },
   width: 1080,
 };
@@ -193,6 +209,18 @@ export const loadImageElement = async (src: string) =>
     image.onerror = () => reject(new Error("Não foi possível carregar a imagem."));
     image.src = src;
   });
+
+let shareCanvasAssetsPromise: Promise<ShareCanvasAssets> | null = null;
+
+export const loadShareCanvasAssets = () => {
+  if (!shareCanvasAssetsPromise) {
+    shareCanvasAssetsPromise = loadImageElement(brandLogoSrc)
+      .then((brandLogo) => ({ brandLogo }))
+      .catch(() => ({}));
+  }
+
+  return shareCanvasAssetsPromise;
+};
 
 export const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
   new Promise<Blob>((resolve, reject) => {
@@ -426,13 +454,16 @@ export const drawQuestionCard = (
   layout: ShareCanvasLayout,
   target: LectumShareFrameTarget,
   palette: ShareCanvasPalette,
+  assets?: ShareCanvasAssets,
 ) => {
   const { card } = layout;
   const textMaxWidth = card.width - card.paddingX * 2;
 
   ctx.font = `700 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
   const lines = wrapText(ctx, target.sourceText, textMaxWidth, layout.maxQuestionLines);
-  const cardHeight = card.headerHeight + card.paddingY * 2 + lines.length * card.lineHeight;
+  const bodyContentHeight = card.paddingY * 2 + lines.length * card.lineHeight;
+  const bodyHeight = Math.max(card.minBodyHeight, bodyContentHeight);
+  const cardHeight = card.headerHeight + bodyHeight;
 
   ctx.save();
   ctx.shadowBlur = 28;
@@ -468,15 +499,48 @@ export const drawQuestionCard = (
 
   ctx.fillStyle = palette.surface;
   ctx.font = `800 ${card.headerFontSize}px Manrope, Arial, sans-serif`;
-  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(target.cardLabel, card.x + card.width / 2, card.y + card.headerHeight / 2);
+  const headerCenterY = card.y + card.headerHeight / 2;
+  const headerLabelWidth = ctx.measureText(target.cardLabel).width;
+  const iconBoxSize = card.brandIconSize + card.brandIconPadding * 2;
+  const canDrawBrandLogo = Boolean(assets?.brandLogo);
+  const headerGroupWidth = canDrawBrandLogo
+    ? iconBoxSize + card.brandGap + headerLabelWidth
+    : headerLabelWidth;
+  const headerGroupX = card.x + (card.width - headerGroupWidth) / 2;
+
+  if (assets?.brandLogo) {
+    const iconBoxX = headerGroupX;
+    const iconBoxY = headerCenterY - iconBoxSize / 2;
+
+    ctx.save();
+    ctx.fillStyle = palette.surface;
+    ctx.beginPath();
+    ctx.arc(iconBoxX + iconBoxSize / 2, headerCenterY, iconBoxSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.drawImage(
+      assets.brandLogo,
+      iconBoxX + card.brandIconPadding,
+      iconBoxY + card.brandIconPadding,
+      card.brandIconSize,
+      card.brandIconSize,
+    );
+    ctx.restore();
+
+    ctx.textAlign = "start";
+    ctx.fillStyle = palette.surface;
+    ctx.fillText(target.cardLabel, iconBoxX + iconBoxSize + card.brandGap, headerCenterY);
+  } else {
+    ctx.textAlign = "center";
+    ctx.fillText(target.cardLabel, card.x + card.width / 2, headerCenterY);
+  }
 
   ctx.fillStyle = palette.foreground;
   ctx.font = `700 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;
   ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  let lineY = card.y + card.headerHeight + card.paddingY + card.bodyFontSize;
+  ctx.textBaseline = "middle";
+  let lineY =
+    card.y + card.headerHeight + bodyHeight / 2 - ((lines.length - 1) * card.lineHeight) / 2;
   for (const line of lines) {
     ctx.fillText(line, card.x + card.width / 2, lineY);
     lineY += card.lineHeight;
@@ -500,14 +564,14 @@ export const drawProfessionalTag = (
   ctx.font = `700 ${tag.nameFontSize}px Manrope, Arial, sans-serif`;
   const displayName = truncateTextToWidth(ctx, name, maxTextWidth);
   const nameWidth = ctx.measureText(displayName).width;
-  ctx.font = `500 ${tag.roleFontSize}px Manrope, Arial, sans-serif`;
-  const roleWidth = ctx.measureText(roleLabel).width;
-  const textBlockWidth = Math.max(nameWidth + badgeSpace, roleWidth);
-  const tagWidth = Math.min(tag.maxWidth, tag.paddingX * 2 + textBlockWidth);
-  const tagX = (layout.width - tagWidth) / 2;
-  const textStartX = tagX + tag.paddingX;
-  const nameY = y + tag.height / 2 - tag.roleFontSize * 0.48;
-  const roleY = y + tag.height / 2 + tag.nameFontSize * 0.56;
+  const nameGroupWidth = nameWidth + badgeSpace;
+  const nameStartX = layout.width / 2 - nameGroupWidth / 2;
+  const nameY =
+    y +
+    tag.height / 2 -
+    (tag.nameFontSize + tag.roleGap + tag.roleFontSize) / 2 +
+    tag.nameFontSize / 2;
+  const roleY = nameY + tag.nameFontSize / 2 + tag.roleGap + tag.roleFontSize / 2;
   ctx.restore();
 
   ctx.save();
@@ -518,16 +582,17 @@ export const drawProfessionalTag = (
   ctx.font = `700 ${tag.nameFontSize}px Manrope, Arial, sans-serif`;
   ctx.textAlign = "start";
   ctx.textBaseline = "middle";
-  ctx.fillText(displayName, textStartX, nameY);
+  ctx.fillText(displayName, nameStartX, nameY);
   ctx.fillStyle = canvasColorWithAlpha(palette.surface, 0.76);
   ctx.font = `500 ${tag.roleFontSize}px Manrope, Arial, sans-serif`;
-  ctx.fillText(roleLabel, textStartX, roleY);
+  ctx.textAlign = "center";
+  ctx.fillText(roleLabel, layout.width / 2, roleY);
   ctx.restore();
 
   if (target.professional.verified) {
     drawVerifiedBadge(
       ctx,
-      textStartX + nameWidth + tag.gap * 0.55 + tag.verifiedSize / 2,
+      nameStartX + nameWidth + tag.gap * 0.55 + tag.verifiedSize / 2,
       nameY,
       tag.verifiedSize,
       palette,
@@ -541,6 +606,7 @@ export const drawLectumShareFrame = (
   layout: ShareCanvasLayout,
   target: LectumShareFrameTarget,
   palette: ShareCanvasPalette,
+  assets?: ShareCanvasAssets,
 ) => {
   ctx.fillStyle = palette.mediaBackground;
   ctx.fillRect(0, 0, layout.width, layout.height);
@@ -556,6 +622,6 @@ export const drawLectumShareFrame = (
   }
 
   drawMediaContain(ctx, media, layout.width, layout.height);
-  drawQuestionCard(ctx, layout, target, palette);
+  drawQuestionCard(ctx, layout, target, palette, assets);
   drawProfessionalTag(ctx, layout, target, palette);
 };

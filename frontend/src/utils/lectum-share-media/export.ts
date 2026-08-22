@@ -9,6 +9,7 @@ import {
   drawLectumShareFrame,
   getCanvasPalette,
   type LectumShareFrameTarget,
+  loadShareCanvasAssets,
   type ShareMediaElement,
   storyCanvasLayout,
   VIDEO_EXPORT_FRAME_RATE,
@@ -134,7 +135,8 @@ export const createLectumShareFrameImageFile = async ({
     throw new Error("Canvas indisponível para gerar o compartilhamento.");
   }
 
-  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette());
+  const assets = await loadShareCanvasAssets();
+  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette(), assets);
   const blob = await canvasToBlob(canvas, type, quality);
 
   return new File([blob], fileName, {
@@ -185,6 +187,7 @@ export const createVideoShareFile = async (
   }
 
   const palette = getCanvasPalette();
+  const assets = await loadShareCanvasAssets();
   const hasKnownDuration = Number.isFinite(video.duration) && video.duration > 0;
   const durationSeconds = resolveVideoExportDurationSeconds(video.duration);
   const endTimeToleranceSeconds = Math.min(0.25, Math.max(0.05, durationSeconds * 0.005));
@@ -222,7 +225,7 @@ export const createVideoShareFile = async (
     };
 
     const draw = () => {
-      drawLectumShareFrame(ctx, video, layout, target, palette);
+      drawLectumShareFrame(ctx, video, layout, target, palette, assets);
       const elapsed = performance.now() - startedAt;
       const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
       const reachedKnownEnd =
@@ -269,7 +272,7 @@ export const createVideoShareFile = async (
           await waitForEvent(video, "seeked", 4000).catch(() => undefined);
         }
 
-        drawLectumShareFrame(ctx, video, layout, target, palette);
+        drawLectumShareFrame(ctx, video, layout, target, palette, assets);
         recorder.start(1000);
         startedAt = performance.now();
         await video.play();

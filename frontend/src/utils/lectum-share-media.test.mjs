@@ -159,3 +159,23 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
 
   assert.doesNotMatch(source, /MAX_VIDEO_EXPORT_SECONDS/);
 });
+
+test("layout social usa card mais proximo do instagram, logo lectum e autoria mais legivel", () => {
+  const layoutSource = readFileSync(
+    new URL("./lectum-share-media/layout.ts", import.meta.url),
+    "utf8",
+  );
+  const exportSource = readFileSync(
+    new URL("./lectum-share-media/export.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(layoutSource, /const brandLogoSrc = "\/logo-icon\.svg"/);
+  assert.match(layoutSource, /ctx\.drawImage\(\s*assets\.brandLogo/);
+  assert.match(layoutSource, /width: 930/);
+  assert.match(layoutSource, /minBodyHeight: 248/);
+  assert.match(layoutSource, /maxQuestionLines: 3/);
+  assert.match(layoutSource, /nameFontSize: 34/);
+  assert.match(layoutSource, /roleGap: 16/);
+  assert.match(exportSource, /loadShareCanvasAssets/);
+});
