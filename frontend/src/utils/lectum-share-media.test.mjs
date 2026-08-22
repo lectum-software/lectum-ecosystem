@@ -169,13 +169,28 @@ test("layout social usa card mais proximo do instagram, logo lectum e autoria ma
     new URL("./lectum-share-media/export.ts", import.meta.url),
     "utf8",
   );
+  const repositorySource = readFileSync(
+    new URL(
+      "../../../backend/src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
 
   assert.match(layoutSource, /const brandLogoSrc = "\/logo-icon\.svg"/);
-  assert.match(layoutSource, /ctx\.drawImage\(\s*assets\.brandLogo/);
+  assert.match(layoutSource, /brandLogoWhite/);
+  assert.match(layoutSource, /globalCompositeOperation = "source-in"/);
+  assert.match(layoutSource, /ctx\.drawImage\(\s*assets\.brandLogoWhite/);
+  assert.doesNotMatch(layoutSource, /arc\(iconBoxX/);
   assert.match(layoutSource, /width: 930/);
-  assert.match(layoutSource, /minBodyHeight: 248/);
+  assert.match(layoutSource, /bodyFontSize: 48/);
+  assert.match(layoutSource, /headerFontSize: 36/);
+  assert.match(layoutSource, /minBodyHeight: 268/);
   assert.match(layoutSource, /maxQuestionLines: 3/);
   assert.match(layoutSource, /nameFontSize: 34/);
   assert.match(layoutSource, /roleGap: 16/);
+  assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
+  assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
+  assert.match(repositorySource, /lectum-share-v3-2026-08-22-white-logo-large-card/);
 });

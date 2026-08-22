@@ -817,6 +817,6 @@ Uma task só pode ser marcada como concluída quando:
 ## Atualizacao visual em 2026-08-22: caixinha de pergunta com logo Lectum
 
 - Ajuste pos-feedback da TASK-42: o canvas social passa a usar card superior mais largo e com proporcao mais semelhante a caixinha de perguntas de stories/Instagram.
-- O header preserva `Respondido na Lectum`/`Postado na Lectum` e adiciona a logo SVG `/logo-icon.svg` em um chip claro ao lado do texto para reforcar reconhecimento de marca.
-- A tag do profissional ganhou nome maior e mais espaco entre o nome e `Psicologo`, mantendo selo verificado, alinhamento central e ausencia de avatar/CRP/wordmark de rodape.
-- A versao de layout dos artefatos temporarios permanece `lectum-share-v2-2026-08-22-brand-card`; sem package, env obrigatoria, migration ou endpoint novo neste complemento visual.
+- O header preserva `Respondido na Lectum`/`Postado na Lectum`, ganha tipografia maior e adiciona somente o desenho branco da logo SVG `/logo-icon.svg`, sem chip/fundo branco, para reforcar reconhecimento de marca.
+- A tag do profissional ganhou nome maior e mais espaco entre o nome e `Psicologo`; o cargo fica alinhado pela esquerda com o nome, mantendo selo verificado e ausencia de avatar/CRP/wordmark de rodape.
+- O texto da pergunta tambem ganha escala maior, e a versao de layout dos artefatos temporarios passa para `lectum-share-v3-2026-08-22-white-logo-large-card`; sem package, env obrigatoria, migration ou endpoint novo neste complemento visual.

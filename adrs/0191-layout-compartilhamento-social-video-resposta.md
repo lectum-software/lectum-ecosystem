@@ -347,28 +347,28 @@ Depois da remocao do corte fixo, videos longos passaram a ser preparados por tod
 
 ### Contexto
 
-Novo feedback comparou a caixinha de pergunta da Lectum com a referencia visual do Instagram. A decisao de usar header compacto com copies genericas como `Pergunta recebida` ou `Pergunta anonima` foi descartada pelo usuario; a intencao e manter `Respondido na Lectum` e reforcar reconhecimento de marca com a logo da plataforma. O usuario tambem sinalizou que o nome do profissional estava pequeno e que `Psicologo` estava visualmente colado ao nome.
+Novo feedback comparou a caixinha de pergunta da Lectum com a referencia visual do Instagram. A decisao de usar header compacto com copies genericas como `Pergunta recebida` ou `Pergunta anonima` foi descartada pelo usuario; a intencao e manter `Respondido na Lectum` e reforcar reconhecimento de marca com a logo da plataforma. O usuario tambem sinalizou que o header e o corpo da pergunta estavam menores que a referencia, que o icone nao deveria ter fundo branco/azul e que `Psicologo` deveria alinhar pela esquerda com o nome.
 
 ### Decisao
 
 - Manter a copy de contexto do compartilhamento (`Respondido na Lectum`/`Postado na Lectum`) no header do card.
-- Carregar o SVG publico `/logo-icon.svg` como asset opcional do canvas e desenhar a marca em um chip claro ao lado do texto do header.
-- Tornar o card superior mais proximo do formato de stories: largura maior, cantos mais arredondados, corpo minimo mais alto e limite de ate 3 linhas da pergunta antes de reticencias.
-- Aumentar a tipografia do nome do profissional, centralizar o conjunto nome+selo e separar `Psicologo` por um gap vertical explicito.
+- Carregar o SVG publico `/logo-icon.svg` como asset opcional do canvas, converter o asset carregado em mascara branca e desenhar somente o simbolo branco ao lado do texto do header, sem chip/fundo branco.
+- Tornar o card superior mais proximo do formato de stories: largura maior, cantos mais arredondados, header maior, corpo de pergunta maior e limite de ate 3 linhas antes de reticencias.
+- Aumentar a tipografia do nome do profissional, centralizar o conjunto nome+selo e separar `Psicologo` por um gap vertical explicito, mas mantendo o cargo alinhado pela esquerda com o inicio do nome.
 - Preservar fallback seguro: falha no SVG nao impede a geracao do arquivo; o header volta para texto centralizado.
-- Nao alterar APIs, banco, storage, envs, providers, packages, tracking ou dados persistidos neste complemento.
+- Atualizar `POST_SHARE_ARTIFACT_LAYOUT_VERSION` para `lectum-share-v3-2026-08-22-white-logo-large-card`, evitando reaproveitar arte temporaria antiga com escala/logo anteriores; nao alterar APIs, banco, storage, envs, providers, packages, tracking ou dados persistidos neste complemento.
 
 ### Consequencias
 
 - O arquivo social fica mais reconhecivel como Lectum sem adicionar wordmark de rodape nem competir com a UI nativa do Instagram/TikTok/Reels.
-- A pergunta ganha semelhanca visual com a caixinha de stories, reduzindo friccao cognitiva para quem ja conhece esse padrao.
-- A autoria do profissional fica mais legivel em video mobile, mantendo o cargo discreto e separado.
-- A renderizacao passa a aguardar um asset leve de marca antes do canvas; se o carregamento falhar, a experiencia continua operacional.
-- Rollback: reverter este complemento retorna ao card mais estreito, sem logo no header, com nome menor e cargo mais proximo.
+- Header e pergunta ganham escala mais proxima da caixinha de stories, reduzindo friccao cognitiva para quem ja conhece esse padrao.
+- A autoria do profissional fica mais legivel em video mobile, mantendo o cargo discreto, separado e alinhado ao inicio do nome.
+- A renderizacao passa a aguardar um asset leve de marca e a gerar uma mascara branca antes do canvas; se o carregamento falhar, a experiencia continua operacional.
+- Rollback: reverter este complemento retorna ao card com header/corpo menores, logo azul com chip, nome menor e cargo centralizado/proximo.
 
 ### Validacao
 
-- Teste unitario estatico cobre uso de `/logo-icon.svg`, desenho da logo no canvas, largura/min-height do card, limite de 3 linhas, nome maior e gap do cargo.
+- Teste unitario estatico cobre uso de `/logo-icon.svg`, mascara branca da logo, ausencia do chip por arco no icone, largura/min-height do card, header/corpo maiores, limite de 3 linhas, nome maior, gap do cargo, alinhamento do cargo ao nome e layout_version v3.
 - `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`: sucesso.
-- `pnpm check:version`: sucesso em `0.1.180`.
+- `pnpm check:version`: sucesso em `0.1.181`.
 - Validacoes finais, build, versionamento e smoke constam na TASK-42.

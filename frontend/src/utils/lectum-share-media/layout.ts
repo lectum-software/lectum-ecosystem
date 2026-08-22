@@ -40,12 +40,12 @@ export type ShareCanvasPalette = {
 
 export type ShareCanvasAssets = {
   brandLogo?: HTMLImageElement;
+  brandLogoWhite?: HTMLCanvasElement;
 };
 
 export type ShareCanvasLayout = {
   card: {
     brandGap: number;
-    brandIconPadding: number;
     brandIconSize: number;
     bodyFontSize: number;
     headerFontSize: number;
@@ -81,14 +81,13 @@ const brandLogoSrc = "/logo-icon.svg";
 
 export const storyCanvasLayout: ShareCanvasLayout = {
   card: {
-    bodyFontSize: 40,
-    brandGap: 16,
-    brandIconPadding: 4,
-    brandIconSize: 28,
-    headerFontSize: 24,
-    headerHeight: 76,
-    lineHeight: 50,
-    minBodyHeight: 248,
+    bodyFontSize: 48,
+    brandGap: 14,
+    brandIconSize: 36,
+    headerFontSize: 36,
+    headerHeight: 88,
+    lineHeight: 60,
+    minBodyHeight: 268,
     paddingX: 58,
     paddingY: 40,
     radius: 24,
@@ -212,10 +211,33 @@ export const loadImageElement = async (src: string) =>
 
 let shareCanvasAssetsPromise: Promise<ShareCanvasAssets> | null = null;
 
+const createMonochromeImageCanvas = (image: HTMLImageElement, size: number, color: string) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+
+  context.clearRect(0, 0, size, size);
+  context.drawImage(image, 0, 0, size, size);
+  context.globalCompositeOperation = "source-in";
+  context.fillStyle = color;
+  context.fillRect(0, 0, size, size);
+  context.globalCompositeOperation = "source-over";
+
+  return canvas;
+};
+
 export const loadShareCanvasAssets = () => {
   if (!shareCanvasAssetsPromise) {
     shareCanvasAssetsPromise = loadImageElement(brandLogoSrc)
-      .then((brandLogo) => ({ brandLogo }))
+      .then((brandLogo) => ({
+        brandLogo,
+        brandLogoWhite:
+          createMonochromeImageCanvas(brandLogo, storyCanvasLayout.card.brandIconSize, "#ffffff") ??
+          undefined,
+      }))
       .catch(() => ({}));
   }
 
@@ -502,26 +524,22 @@ export const drawQuestionCard = (
   ctx.textBaseline = "middle";
   const headerCenterY = card.y + card.headerHeight / 2;
   const headerLabelWidth = ctx.measureText(target.cardLabel).width;
-  const iconBoxSize = card.brandIconSize + card.brandIconPadding * 2;
-  const canDrawBrandLogo = Boolean(assets?.brandLogo);
+  const iconBoxSize = card.brandIconSize;
+  const canDrawBrandLogo = Boolean(assets?.brandLogoWhite);
   const headerGroupWidth = canDrawBrandLogo
     ? iconBoxSize + card.brandGap + headerLabelWidth
     : headerLabelWidth;
   const headerGroupX = card.x + (card.width - headerGroupWidth) / 2;
 
-  if (assets?.brandLogo) {
+  if (assets?.brandLogoWhite) {
     const iconBoxX = headerGroupX;
     const iconBoxY = headerCenterY - iconBoxSize / 2;
 
     ctx.save();
-    ctx.fillStyle = palette.surface;
-    ctx.beginPath();
-    ctx.arc(iconBoxX + iconBoxSize / 2, headerCenterY, iconBoxSize / 2, 0, Math.PI * 2);
-    ctx.fill();
     ctx.drawImage(
-      assets.brandLogo,
-      iconBoxX + card.brandIconPadding,
-      iconBoxY + card.brandIconPadding,
+      assets.brandLogoWhite,
+      iconBoxX,
+      iconBoxY,
       card.brandIconSize,
       card.brandIconSize,
     );
@@ -585,8 +603,8 @@ export const drawProfessionalTag = (
   ctx.fillText(displayName, nameStartX, nameY);
   ctx.fillStyle = canvasColorWithAlpha(palette.surface, 0.76);
   ctx.font = `500 ${tag.roleFontSize}px Manrope, Arial, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(roleLabel, layout.width / 2, roleY);
+  ctx.textAlign = "start";
+  ctx.fillText(roleLabel, nameStartX, roleY);
   ctx.restore();
 
   if (target.professional.verified) {

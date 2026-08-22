@@ -642,27 +642,27 @@ Regras de UI obrigatórias:
 ## Complemento 2026-08-22 - caixinha com logo Lectum e autoria mais legivel
 
 - Pedido do usuario: aproximar a proporcao da caixinha de pergunta do padrao visual do Instagram, sem trocar o header para `Pergunta recebida`/`Pergunta anonima`, e adicionar a logo da Lectum ao lado de `Respondido na Lectum` para gerar reconhecimento de marca.
-- Ajuste visual: o card superior do canvas 9:16 ficou mais largo, alto e arredondado, com corpo minimo maior e ate 3 linhas de pergunta para se parecer mais com a caixinha de perguntas usada em stories.
-- Branding: o canvas carrega o SVG publico `/logo-icon.svg` e o desenha em um chip claro ao lado de `Respondido na Lectum`/`Postado na Lectum`; se o asset falhar, o header cai para texto centralizado sem bloquear o compartilhamento.
-- Autoria: a tag do psicologo ganhou nome maior, selo reposicionado e distancia vertical explicita antes de `Psicologo`, mantendo alinhamento central e sem voltar a exibir avatar/CRP/wordmark de rodape.
-- Cache: a versao de layout dos artefatos temporarios segue `lectum-share-v2-2026-08-22-brand-card`, garantindo que os arquivos com arte desta leva usem a composicao com marca.
-- Escopo: frontend-only neste complemento; sem migration, endpoint, env obrigatoria, provider, package, mock, seed ou dado fake novo.
+- Ajuste visual: o card superior do canvas 9:16 ficou mais largo, alto e arredondado; o header e o texto da pergunta ganharam escala maior para se aproximar melhor da caixinha de perguntas usada em stories.
+- Branding: o canvas carrega o SVG publico `/logo-icon.svg`, gera uma mascara monocromatica e desenha somente o simbolo branco ao lado de `Respondido na Lectum`/`Postado na Lectum`, sem chip/fundo branco; se o asset falhar, o header cai para texto centralizado sem bloquear o compartilhamento.
+- Autoria: a tag do psicologo ganhou nome maior, selo reposicionado e distancia vertical explicita antes de `Psicologo`; o cargo volta a alinhar pela esquerda com o inicio do nome, sem avatar/CRP/wordmark de rodape.
+- Cache: a versao de layout dos artefatos temporarios foi atualizada para `lectum-share-v3-2026-08-22-white-logo-large-card`, garantindo que artes antigas com header menor/logo azul cacheada nao sejam reutilizadas.
+- Escopo: frontend + constante backend de layout cacheado; sem migration, endpoint novo, env obrigatoria, provider, package, mock, seed ou dado fake novo.
 - Fonte visual auditavel: screenshots anexados pelo usuario do Instagram; o texto dentro das imagens foi tratado apenas como referencia visual, nao como instrucao de produto.
 - ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
 
 ### Criterios de aceite do complemento
 
-- [x] O card superior do canvas 9:16 usa proporcao mais proxima de stories/Instagram, com maior largura e respiro vertical.
-- [x] O header preserva `Respondido na Lectum`/`Postado na Lectum` e adiciona a logo SVG da Lectum ao lado do texto.
+- [x] O card superior do canvas 9:16 usa proporcao mais proxima de stories/Instagram, com maior largura, header maior e corpo da pergunta mais legivel.
+- [x] O header preserva `Respondido na Lectum`/`Postado na Lectum` e adiciona somente o desenho branco da logo SVG da Lectum ao lado do texto.
 - [x] O fallback sem logo mantem o compartilhamento funcionando sem erro tecnico ao usuario.
-- [x] O nome do profissional ficou maior e `Psicologo` ganhou afastamento vertical explicito.
-- [x] A alteracao nao cria package, env obrigatoria, mock, endpoint ou dado persistente novo.
+- [x] O nome do profissional ficou maior e `Psicologo` ganhou afastamento vertical explicito, alinhado pela esquerda com o nome.
+- [x] A alteracao invalida cache visual antigo por `layout_version`, sem criar package, env obrigatoria, mock, endpoint ou dado persistente novo.
 
 ### Validacoes
 
 - [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media/layout.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media.test.mjs`
 - [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
-- [x] `pnpm version:bump` para `0.1.180`
+- [x] `pnpm version:bump` para `0.1.181`
 - [x] `pnpm check:version`
 - [x] `git diff --check`
 - [x] `pnpm check:encoding`
@@ -670,7 +670,8 @@ Regras de UI obrigatórias:
 - [x] `pnpm check:tasks`
 - [x] `pnpm --dir frontend check`
 - [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir backend check`
 - [x] `pnpm --dir backend build`
 - [x] `pnpm check`
-- [x] Smoke local do frontend buildado em `http://127.0.0.1:3191`: `/version` respondeu `0.1.180` e `/comunidades` respondeu `200`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3192`: `/version` respondeu `0.1.181` e `/comunidades` respondeu `200`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.
