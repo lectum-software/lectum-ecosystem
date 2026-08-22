@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const {
@@ -136,4 +137,14 @@ test("nome do arquivo compartilhavel usa profissional e contexto", () => {
     ),
     "Dra. ABC Psicologa - Respondido na Lectum.mp4",
   );
+});
+
+test("exportacao de video preserva audio sem conectar saida audivel", () => {
+  const source = readFileSync(new URL("./lectum-share-media/export.ts", import.meta.url), "utf8");
+
+  assert.match(source, /createMediaElementSource\(video\)/);
+  assert.match(source, /createMediaStreamDestination\(\)/);
+  assert.match(source, /source\.connect\(destination\)/);
+  assert.match(source, /stream\.addTrack\(track\)/);
+  assert.doesNotMatch(source, /audioContext\.destination/);
 });

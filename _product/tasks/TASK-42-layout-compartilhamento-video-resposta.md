@@ -485,3 +485,40 @@ Regras de UI obrigatórias:
 - [x] `pnpm check:tasks`
 - [x] `pnpm check:source-size`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+
+## Complemento 2026-08-22 - audio preservado no arquivo exportado
+
+- Pedido do usuario: o video compartilhado/exportado chegava sem audio nas redes sociais depois do ajuste que silenciou o preparo em segundo plano.
+- Diagnostico: manter o video invisivel de exportacao com `muted=true` e `volume=0` impede audio audivel durante o preparo, mas tambem pode fazer a trilha capturada pelo `MediaRecorder` sair silenciosa; em Safari/iOS, `video.captureStream()` tambem nao e uma base confiavel para audio.
+- Decisao: a exportacao passa a capturar a trilha de audio do elemento de video por Web Audio, conectando `createMediaElementSource(video)` a um `MediaStreamDestination` e adicionando essas tracks ao stream gravado pelo `MediaRecorder`.
+- Decisao: o grafo de audio nao e conectado a `audioContext.destination`, entao o arquivo preserva audio quando o navegador suporta Web Audio sem voltar a tocar som em segundo plano durante o toast de preparo.
+- Fallback seguro: se Web Audio/track de audio nao estiver disponivel no navegador, o preparo continua silencioso e exporta video sem audio em vez de tocar audio invisivel para o usuario.
+- Escopo: frontend-only, mobile-first; sem mudanca de backend, banco, Prisma, migrations, endpoints, payloads, storage/R2, envs, providers, jobs, dados publicados ou packages.
+- Fonte visual auditavel: screenshot do usuario `WhatsApp Image 2026-08-22 at 14.01.46.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O arquivo de video compartilhavel volta a preservar audio quando o navegador suporta captura por Web Audio.
+- [x] A exportacao nao conecta o audio ao alto-falante/saida audivel durante o preparo invisivel.
+- [x] O fallback de navegador sem Web Audio permanece silencioso e honesto, sem tocar audio em segundo plano.
+- [x] A alteracao reaproveita a exportacao real por canvas/MediaRecorder, sem mock ou endpoint simulado.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media/export.ts src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` antes e depois do bump para `0.1.177`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3188`: `/version` respondeu `0.1.177` e `/comunidades` respondeu `200`.
+- [x] `pnpm version:bump` para `0.1.177`
+- [x] `pnpm check:version`
+- [x] `pnpm check` (primeira tentativa falhou pelo timeout transitorio ja conhecido em `backend/scripts/boot-safety.test.mjs`; `pnpm --dir backend check` isolado passou e a repeticao completa de `pnpm check` passou).
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check:source-size`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

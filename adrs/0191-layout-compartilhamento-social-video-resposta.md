@@ -252,3 +252,32 @@ Novo feedback mostrou tres problemas no compartilhamento direto: durante o toast
 - Testes unitarios cobrem reconhecimento de perda de ativacao e nome do arquivo com profissional/contexto.
 - `pnpm --dir frontend check`: sucesso.
 - Validacoes finais, build, versionamento e smoke constam na TASK-42.
+
+
+## Complemento 2026-08-22 - audio preservado sem saida audivel
+
+### Contexto
+
+A correcao anterior silenciou o elemento de video invisivel usado para gerar o arquivo compartilhavel, evitando audio de fundo durante o toast de preparo. Novo feedback mostrou que o arquivo exportado passou a chegar sem audio nas redes sociais, indicando que a mesma decisao de `muted/volume=0` tambem silenciava a trilha capturada para gravacao em alguns navegadores.
+
+### Decisao
+
+- Capturar a trilha de audio do video por Web Audio durante a exportacao por canvas/MediaRecorder.
+- Conectar `MediaElementAudioSourceNode` a `MediaStreamAudioDestinationNode` e adicionar as tracks do destination ao stream do `MediaRecorder`.
+- Nao conectar o grafo a `audioContext.destination`, mantendo o preparo sem saida audivel para o usuario.
+- Se Web Audio nao estiver disponivel ou nao produzir track, manter o video invisivel em silencio e exportar sem audio como fallback seguro, em vez de reproduzir audio em segundo plano.
+- Nao alterar backend, storage, contratos, banco, envs, providers, packages ou dados persistidos.
+
+### Consequencias
+
+- Browsers com Web Audio e permissao de reproducao no gesto de compartilhamento passam a gerar arquivo com audio novamente.
+- O preparo continua imersivo e silencioso na tela atual, sem regressao do problema de audio de fundo.
+- O suporte segue dependente de APIs nativas do navegador; onde a captura de audio nao existir, o fallback e video silencioso, nao erro tecnico nem som invisivel.
+- Rollback: reverter este complemento volta ao preparo sempre mudo, com risco de arquivo compartilhado sem audio.
+
+### Validacao
+
+- Teste unitario estatico cobre uso de `createMediaElementSource(video)`, `createMediaStreamDestination()`, adicao de tracks ao stream do recorder e ausencia de conexao com `audioContext.destination`.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- Validacoes finais, build, versionamento e smoke constam na TASK-42.

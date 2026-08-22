@@ -32,6 +32,87 @@ export const supportedVideoMimeType = () => {
 export const extensionFromMimeType = (mimeType: string) =>
   mimeType.includes("mp4") ? "mp4" : "webm";
 
+type VideoAudioCapture = {
+  cleanup: () => void;
+  resume: () => Promise<void>;
+  tracks: MediaStreamTrack[];
+};
+
+const emptyVideoAudioCapture = (): VideoAudioCapture => ({
+  cleanup: () => undefined,
+  resume: async () => undefined,
+  tracks: [],
+});
+
+const resolveAudioContextConstructor = () => {
+  if (typeof window === "undefined") return null;
+
+  return (
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext ??
+    null
+  );
+};
+
+const createSilentVideoAudioCapture = (video: HTMLVideoElement): VideoAudioCapture => {
+  const AudioContextConstructor = resolveAudioContextConstructor();
+
+  if (!AudioContextConstructor) return emptyVideoAudioCapture();
+
+  let audioContext: AudioContext | null = null;
+  let source: MediaElementAudioSourceNode | null = null;
+  let destination: MediaStreamAudioDestinationNode | null = null;
+
+  const cleanup = () => {
+    try {
+      source?.disconnect();
+      destination?.disconnect();
+    } catch {
+      // best effort cleanup
+    }
+
+    for (const track of destination?.stream.getTracks() ?? []) {
+      track.stop();
+    }
+
+    if (audioContext && audioContext.state !== "closed") {
+      void audioContext.close().catch(() => undefined);
+    }
+  };
+
+  try {
+    audioContext = new AudioContextConstructor();
+    source = audioContext.createMediaElementSource(video);
+    destination = audioContext.createMediaStreamDestination();
+    source.connect(destination);
+
+    const tracks = destination.stream.getAudioTracks();
+
+    if (tracks.length === 0) {
+      throw new Error("Trilha de audio indisponivel.");
+    }
+
+    video.muted = false;
+    video.volume = 1;
+
+    return {
+      cleanup,
+      resume: async () => {
+        if (audioContext?.state === "suspended") {
+          await audioContext.resume().catch(() => undefined);
+        }
+      },
+      tracks,
+    };
+  } catch {
+    cleanup();
+    video.muted = true;
+    video.volume = 0;
+
+    return emptyVideoAudioCapture();
+  }
+};
+
 export const createLectumShareFrameImageFile = async ({
   fileName,
   media,
@@ -85,14 +166,24 @@ export const createVideoShareFile = async (
   }
 
   const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
-  const sourceCaptureStream = video.captureStream?.() ?? video.mozCaptureStream?.();
-  const audioTracks = sourceCaptureStream?.getAudioTracks() ?? [];
-  for (const track of audioTracks) {
+  const audioCapture = createSilentVideoAudioCapture(video);
+  for (const track of audioCapture.tracks) {
     stream.addTrack(track);
   }
 
   const chunks: Blob[] = [];
-  const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+  let recorder: MediaRecorder;
+
+  try {
+    recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+  } catch (error) {
+    for (const track of stream.getTracks()) {
+      track.stop();
+    }
+    audioCapture.cleanup();
+    throw error;
+  }
+
   const palette = getCanvasPalette();
   const durationSeconds = Math.min(
     Math.max(Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 15, 1),
@@ -102,14 +193,21 @@ export const createVideoShareFile = async (
 
   return new Promise<File>((resolve, reject) => {
     let animationFrame = 0;
+    let cleaned = false;
     let stopped = false;
     let startedAt = 0;
 
     const cleanup = () => {
+      if (cleaned) return;
+
+      cleaned = true;
       window.cancelAnimationFrame(animationFrame);
       for (const track of stream.getTracks()) {
         track.stop();
       }
+      audioCapture.cleanup();
+      video.muted = true;
+      video.volume = 0;
       video.pause();
       video.removeAttribute("src");
       video.load();
@@ -157,8 +255,12 @@ export const createVideoShareFile = async (
 
     const start = async () => {
       try {
-        video.muted = true;
-        video.volume = 0;
+        await audioCapture.resume();
+
+        if (audioCapture.tracks.length === 0) {
+          video.muted = true;
+          video.volume = 0;
+        }
 
         if (video.currentTime > 0.05) {
           video.currentTime = 0;

@@ -790,3 +790,11 @@ Uma task só pode ser marcada como concluída quando:
 - O nome do arquivo/titulo compartilhavel passa a seguir `[Nome do psicologo] - Respondido na Lectum` ou `[Nome do psicologo] - Postado na Lectum`, com sanitizacao segura para nome de arquivo.
 - Limite tecnico registrado: a Web nao consegue forcar a folha nativa se o arquivo ainda nao estava pronto e a ativacao transiente do gesto expirou; o retry cacheado e a alternativa segura.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+
+## Correcao em 2026-08-22: audio no video exportado para compartilhamento
+
+- Ajuste pos-feedback da TASK-42: o arquivo social de video-resposta volta a preservar audio quando o navegador oferece captura por Web Audio.
+- A trilha sonora e enviada ao `MediaRecorder` por `MediaStreamDestination`, sem conectar o grafo ao alto-falante; assim o preparo invisivel continua sem som de fundo.
+- Em navegadores sem suporte suficiente, o fallback permanece silencioso e honesto, exportando video sem audio em vez de tocar um video invisivel para o usuario.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
