@@ -297,3 +297,37 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - [x] Commit proprio criado e push em `homolog` executado.
+
+## Complemento 2026-08-22 - selo e aneis compactos na classificacao geral
+
+- Pedido do usuario: na tela Top Mentores, o selo verificado tambem esta muito grande; na lista de `Classificacao geral`, os circulos dourado e prata ao redor da foto estao com espessura muito grande.
+- Referencia visual ativa: screenshot do usuario `WhatsApp Image 2026-08-21 at 22.44.39.jpeg` e `_product/proto/Top 5 Mentores da comunidade.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao, mantendo fallback auditavel por imagem local.
+- Frontend: o selo verificado dos cards da `Classificacao geral` agora usa `VerifiedBadgeIcon` em `h-3 w-3`, com `gap-1.5` entre nome e selo, em paridade com o ajuste de publicacoes.
+- Frontend: o `Avatar` da tela Top Mentores ganhou variante `ringVariant="list"`; apenas a lista inferior usa anel metalico compacto (`p-[2px]` + borda interna `border-2`), enquanto o podio superior preserva a expressao premium ja aprovada.
+- Escopo: sem mudanca de formula, ordenacao, score, elegibilidade, schema, migrations, endpoints, payloads, envs, packages, seeds, snapshots, analytics ou mocks.
+- ADR atualizado: `adrs/0105-top-mentores-identidade-metalica.md`.
+
+### Criterios especificos deste complemento
+
+- [x] O selo verificado na `Classificacao geral` fica visualmente menor.
+- [x] O selo deixa de ficar colado ao nome do psicologo nos cards da lista.
+- [x] Os aneis metalicos dos avatares da lista inferior ficam mais finos.
+- [x] O podio superior continua usando a variante premium anterior.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes deste complemento
+
+- [x] Validacao estatica confirmou selo `h-3 w-3`, `gap-1.5`, `ringVariant="list"` e podio preservado sem variante de lista.
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/community/top-mentors/logic.tsx`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.171`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3173`: `/version` respondeu `0.1.171` e `/comunidades/top-mentores?community=ansiedade-em-equilibrio` carregou em viewport 390x844 com estado restrito seguro por falta de sessao/API local; a validacao visual final fica para homologacao apos push.
+- [x] `pnpm check` (primeira tentativa falhou por timeout transitorio no teste backend `boot-safety`; o teste isolado passou e o comando raiz foi repetido com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.171`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

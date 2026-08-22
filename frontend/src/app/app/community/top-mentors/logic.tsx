@@ -118,11 +118,13 @@ const Avatar = ({
   className,
   mentor,
   ringed = false,
+  ringVariant = "podium",
   size = 56,
 }: {
   className?: string;
   mentor: CommunityTopMentor;
   ringed?: boolean;
+  ringVariant?: "podium" | "list";
   size?: number;
 }) => {
   const avatarSrc = resolvePublicMediaUrl(mentor.professional.avatar);
@@ -144,13 +146,19 @@ const Avatar = ({
     return (
       <span
         className={cn(
-          "top-mentor-metal-ring grid shrink-0 place-items-center p-[5px]",
+          "top-mentor-metal-ring grid shrink-0 place-items-center",
+          ringVariant === "list" ? "p-[2px]" : "p-[5px]",
           tone.metal,
           className,
         )}
         style={{ height: size, width: size }}
       >
-        <span className="relative z-10 grid h-full w-full place-items-center overflow-hidden rounded-full border-[3px] border-media-foreground bg-primary-soft text-sm font-black text-primary">
+        <span
+          className={cn(
+            "relative z-10 grid h-full w-full place-items-center overflow-hidden rounded-full border-media-foreground bg-primary-soft text-sm font-black text-primary",
+            ringVariant === "list" ? "border-2" : "border-[3px]",
+          )}
+        >
           {avatarContent}
         </span>
       </span>
@@ -290,16 +298,13 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         className="group/profile flex min-w-0 flex-1 items-center gap-3"
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
-        <Avatar mentor={mentor} ringed={isTopThree} size={62} />
+        <Avatar mentor={mentor} ringed={isTopThree} ringVariant="list" size={62} />
         <span className="min-w-0 flex-1">
-          <span className="flex min-w-0 items-center gap-0.5">
+          <span className="flex min-w-0 items-center gap-1.5">
             <strong className="truncate text-base font-black tracking-[-0.02em] text-foreground transition group-hover/profile:text-primary dark:text-foreground">
               {mentor.professional.name}
             </strong>
-            <VerifiedBadgeIcon
-              className="h-[18px] w-[18px] shrink-0"
-              aria-label="Perfil verificado"
-            />
+            <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
           </span>
           <span className="mt-0.5 block truncate font-sans text-[0.82rem] font-semibold leading-5 tracking-[-0.01em] text-muted dark:text-muted">
             {professionalType}

@@ -114,3 +114,26 @@ Produto pediu um refinamento especifico na `Classificacao geral` da tela Top Men
 - `pnpm --dir backend build`
 - `pnpm check`
 - Browser local nas rotas publica e privada de Top Mentores.
+
+## Complemento 2026-08-22 - selo e aneis compactos na lista geral
+
+### Contexto
+
+O reteste visual em homologacao indicou que a `Classificacao geral` ainda estava pesada em dois pontos: o selo verificado competia com o nome do profissional e os aneis metalicos de ouro/prata/bronze ao redor dos avatares da lista inferior tinham espessura excessiva para cards de 62px.
+
+### Decisao
+
+- Reduzir o `VerifiedBadgeIcon` dos cards da `Classificacao geral` para `h-3 w-3`, com `gap-1.5` entre nome e selo.
+- Introduzir uma variante visual de avatar apenas para a lista (`ringVariant="list"`), com padding metalico `p-[2px]` e borda interna `border-2`.
+- Manter o podio superior com a variante premium anterior (`p-[5px]` e borda interna maior), pois ali o anel metalico e parte do reconhecimento principal.
+- Nao alterar API, formula de score, ordenacao, elegibilidade, analytics, schema, migrations, envs ou packages.
+
+### Consequencias
+
+- A lista inferior ganha leitura mais leve e proporcional ao tamanho dos cards, preservando o significado de Top 1/2/3.
+- O tratamento premium do podio nao regressa e continua visualmente distinto da lista.
+- Rollback direto: reverter o commit restaura o tamanho anterior do selo e a espessura anterior dos aneis da lista, sem impacto em dados ou contratos.
+
+### Validacao
+
+- Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-27.

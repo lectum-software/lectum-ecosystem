@@ -747,3 +747,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-26: nos headers de autores profissionais em publicacoes, respostas destacadas e comentarios de comunidade, o selo de verificado foi reduzido e ganhou respiro em relacao ao nome.
 - O ajuste cobre card/feed, preview de resposta profissional, detalhe do post e arvore de comentarios sem alterar regra de verificacao, payloads, links ou CTA do psicologo.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Atualizacao visual em 2026-08-22: Top Mentores mais leve
+
+- Ajuste pos-feedback da TASK-27: na tela Top Mentores, o selo verificado da `Classificacao geral` foi reduzido e ganhou respiro em relacao ao nome.
+- Os avatares ranqueados da lista inferior passam a usar anel metalico compacto, reduzindo a espessura visual de ouro/prata/bronze sem mudar o podio superior.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, formula do ranking, ordenacao, packages, envs, analytics, providers, jobs ou dados publicados.
