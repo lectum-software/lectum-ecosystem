@@ -407,7 +407,7 @@ export const CommunityPostCard = ({
                 profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
               )}
             >
-              <div className="flex min-w-0 items-center gap-1">
+              <div className="flex min-w-0 items-center gap-1.5">
                 {psychologistProfileHref ? (
                   <Link
                     className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
@@ -421,10 +421,7 @@ export const CommunityPostCard = ({
                   </h2>
                 )}
                 {displayAuthor.verified ? (
-                  <VerifiedBadgeIcon
-                    className="h-3.5 w-3.5 shrink-0"
-                    aria-label="Perfil verificado"
-                  />
+                  <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
                 ) : null}
               </div>
               <MentorBadge

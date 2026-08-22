@@ -741,3 +741,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-07: no cadastro de paciente por e-mail em `/auth/register/patient`, o campo antes rotulado como `Nome completo` passa a se chamar `Nome de exibicao`.
 - A mensagem de obrigatoriedade do schema Zod acompanha a nova nomenclatura; o payload continua usando `name` no endpoint real `POST /api/public/user/store`.
 - Alteracao frontend-only de copy/formulario, mobile-first; sem mudanca de backend, banco, contrato de API, packages, envs, OAuth Google, providers, jobs ou dados publicados.
+
+## Atualizacao visual em 2026-08-22: selo verificado em publicacoes
+
+- Ajuste pos-feedback da TASK-26: nos headers de autores profissionais em publicacoes, respostas destacadas e comentarios de comunidade, o selo de verificado foi reduzido e ganhou respiro em relacao ao nome.
+- O ajuste cobre card/feed, preview de resposta profissional, detalhe do post e arvore de comentarios sem alterar regra de verificacao, payloads, links ou CTA do psicologo.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.

@@ -2318,3 +2318,37 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.165`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - selo verificado menor e com respiro em publicacoes
+
+- Pedido do usuario: nas publicacoes, o selo de verificado continua muito grande e muito junto ao nome do profissional.
+- Fonte visual auditavel: screenshot enviada pelo usuario em homologacao (`homolog.lectum.com.br`) e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Diagnostico: os headers de autores profissionais em cards de comunidade e no detalhe do post usavam tamanhos `h-3.5/w-3.5` ou `h-4/w-4` e gaps muito curtos (`gap-0.5`/`gap-1`), fazendo o selo competir com o nome no mobile.
+- Frontend: `CommunityPostCard`, `ProfessionalReplyPreview`, `AuthorIdentityLine`, `PostHeader`, `ThreadOriginalPostCard` e `ReplyCard` agora renderizam o selo em `h-3 w-3` com `gap-1.5` entre nome e selo.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, upload/storage, votos, salvos, analytics, verificacao profissional ou dados publicados.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O selo verificado nos cards de publicacao e na resposta profissional destacada fica visualmente menor.
+- [x] O selo deixa de ficar colado ao nome do profissional nos headers de publicacoes/respostas.
+- [x] O detalhe do post e a arvore de comentarios usam a mesma proporcao compacta.
+- [x] A regra de exibicao do selo permanece baseada no mesmo booleano `verified`.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou `VerifiedBadgeIcon` em `h-3 w-3` e espacamento `gap-1.5` nos pontos afetados.
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/community-post-card.tsx src/components/community/community-post-card-reply-preview.tsx "src/app/app/community/[slug]/components/feed-controls.tsx" "src/app/app/community/[slug]/post/[id]/components/post-content.tsx" "src/app/app/community/[slug]/post/[id]/components/reply-card.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.170`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3171`: `/version` respondeu `0.1.170` e a rota `/comunidades/ansiedade-em-equilibrio/publicacao/demo-post-ansiedade-apresentacao-video` carregou em viewport 390x844; sem API local autenticada, a validacao visual final fica para smoke de homologacao apos push.
+- [x] `pnpm check` (primeira tentativa falhou por timeout transitorio no teste backend `boot-safety`; teste isolado passou e o comando raiz foi repetido com sucesso)
+- [x] `git diff --check` (sem erro; apenas aviso local de normalizacao CRLF/LF nesta task)
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.170`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

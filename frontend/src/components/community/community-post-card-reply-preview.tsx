@@ -89,7 +89,7 @@ export const ProfessionalReplyPreview = ({
             />
             <div className="grid min-w-0 flex-1 gap-0.5">
               <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
-                <span className="inline-flex min-w-0 items-center gap-1">
+                <span className="inline-flex min-w-0 items-center gap-1.5">
                   <Link
                     className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                     href={profileHref}
@@ -98,7 +98,7 @@ export const ProfessionalReplyPreview = ({
                   </Link>
                   {reply.author.verified ? (
                     <VerifiedBadgeIcon
-                      className="h-3.5 w-3.5 shrink-0"
+                      className="h-3 w-3 shrink-0"
                       aria-label="Perfil verificado"
                     />
                   ) : null}
@@ -174,7 +174,7 @@ export const ProfessionalReplyPreview = ({
               profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
             )}
           >
-            <span className="inline-flex min-w-0 items-center gap-1">
+            <span className="inline-flex min-w-0 items-center gap-1.5">
               <Link
                 className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
                 href={profileHref}
@@ -182,10 +182,7 @@ export const ProfessionalReplyPreview = ({
                 {authorDisplayName}
               </Link>
               {reply.author.verified ? (
-                <VerifiedBadgeIcon
-                  className="h-3.5 w-3.5 shrink-0"
-                  aria-label="Perfil verificado"
-                />
+                <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
             </span>
             <MentorBadge

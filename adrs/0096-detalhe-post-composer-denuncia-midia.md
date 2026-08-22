@@ -419,3 +419,24 @@ Validacao adicional:
 - `git diff --check`: sucesso, com aviso local de normalizacao CRLF/LF neste ADR.
 - `pnpm version:bump` para `0.1.78`: sucesso.
 - `pnpm check:version`: sucesso.
+
+## Atualizacao 2026-08-22 - selo verificado compacto em publicacoes
+
+O feedback visual em homologacao mostrou que o selo de verificado nos headers de publicacoes e respostas profissionais ainda competia com o nome do psicologo: em mobile ele parecia grande e colado ao texto, especialmente dentro da resposta destacada.
+
+Decisao complementar:
+
+- Padronizar o `VerifiedBadgeIcon` dos contextos de comunidade/publicacao em `h-3 w-3`, menor que o uso global padrao do componente e adequado a linhas de autor com texto `text-sm`.
+- Aumentar o respiro entre nome e selo para `gap-1.5` nos cards de feed, preview de resposta profissional, detalhe do post, post original de thread e arvore de comentarios.
+- Manter o componente, `aria-label="Perfil verificado"` e a regra de exibicao existentes, sem criar asset paralelo nem alterar o significado de verificacao profissional.
+- Nao alterar backend, Prisma, endpoints, payloads, links, votos, salvos, analytics, storage, envs ou packages.
+
+Consequencias:
+
+- O selo permanece reconhecivel, mas deixa de dominar a linha do nome e ganha separacao visual suficiente em telas estreitas.
+- A mudanca e puramente frontend e pode ser revertida por rollback do commit sem impacto em dados ou contratos.
+
+Validacao adicional:
+
+- Validacao estatica confirmou `h-3 w-3` e `gap-1.5` nos pontos afetados.
+- Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-26.

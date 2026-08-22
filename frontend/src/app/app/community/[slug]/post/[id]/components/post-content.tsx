@@ -200,7 +200,7 @@ export const PostHeader = ({
         />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <div className="flex min-w-0 items-center gap-x-2">
-            <div className="flex min-w-0 items-center gap-0.5">
+            <div className="flex min-w-0 items-center gap-1.5">
               {psychologistProfileHref ? (
                 <Link
                   className="truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
@@ -214,7 +214,7 @@ export const PostHeader = ({
                 </h2>
               )}
               {post.author.verified ? (
-                <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
+                <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
               ) : null}
             </div>
             <MentorBadge
@@ -374,7 +374,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
             <div className="flex min-w-0 items-center gap-x-2">
-              <div className="flex min-w-0 items-center gap-0.5">
+              <div className="flex min-w-0 items-center gap-1.5">
                 {psychologistProfileHref ? (
                   <Link
                     className="truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"
@@ -388,7 +388,7 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
                   </h2>
                 )}
                 {post.author.verified ? (
-                  <VerifiedBadgeIcon className="h-4 w-4 shrink-0" aria-label="Perfil verificado" />
+                  <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
                 ) : null}
               </div>
               <MentorBadge
