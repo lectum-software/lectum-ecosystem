@@ -826,3 +826,10 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-42: o card superior do canvas social foi deslocado para baixo para ficar abaixo da linha nativa do Instagram/Reels (`voltar` + `Reels` + camera), evitando competir com o chrome do app.
 - A largura do card foi reduzida levemente e o padding horizontal ajustado para respeitar melhor o crop lateral de telas altas, sem reduzir a escala aprovada do header e da pergunta.
 - A versao de layout dos artefatos temporarios passa para `lectum-share-v4-2026-08-22-instagram-safe-card`; sem package, env obrigatoria, migration, endpoint novo ou dado persistente novo.
+
+## Correcao em 2026-08-22: preview WhatsApp de links de video
+
+- Ajuste pos-feedback da TASK-143: videos profissionais compartilhados pela folha nativa passam a priorizar o link publico da Lectum, permitindo que o WhatsApp monte um card Open Graph no estilo do preview do Instagram.
+- Links de video-resposta agora apontam para `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, abrindo a arvore do video dentro da Lectum e ativando metadados especificos da resposta.
+- O SEO publico de posts/respostas com video profissional usa `og:title` no formato `[Nome do psicologo] na Lectum`, com miniatura vertical ja persistida em `og:image` e link canonico para abrir o conteudo.
+- O fallback por arquivo continua disponivel se o link nativo/copia falhar e inclui a URL da Lectum quando o destino aceitar; sem migration, package, env obrigatoria, provider ou dados fake.

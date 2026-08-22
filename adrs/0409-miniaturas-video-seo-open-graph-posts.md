@@ -66,3 +66,25 @@ Essa decisao aproxima o preview de links no WhatsApp do comportamento de Instagr
 Decisao complementar: o `thumbnail_url` persistido para videos de posts e respostas de comunidade tambem passa a ser a fonte do `poster` do player inline. A regra evita uma segunda origem de capa, nao cria upload manual para o psicologo e garante que feed, detalhe, thread, perfil profissional, posts do usuario e salvos reaproveitem a miniatura gerada no envio/edicao. Quando um video legado ainda nao tiver `thumbnail_url`, o frontend tenta gerar uma capa transitoria com `video` + `canvas` a partir do proprio arquivo, sem persistir backfill nem alterar dados publicados.
 
 A extracao no navegador tambem deixa de capturar apenas `0.5s`: o utilitario tenta tempos diferentes do proprio arquivo e usa uma heuristica simples de luminosidade/contraste para pular frames provavelmente pretos. Se todos os candidatos forem escuros, preserva o melhor frame encontrado em vez de bloquear a publicacao. Videos antigos sem `thumbnail_url` continuam sem backfill automatico nesta mudanca; eles podem ganhar capa ao serem editados ou em uma task futura de backfill real.
+
+## Complemento 2026-08-22 - preview WhatsApp de link de video
+
+### Contexto
+
+Novo feedback mostrou que, ao compartilhar um video da Lectum pelo WhatsApp, a experiencia desejada e um card de link semelhante ao preview do Instagram: miniatura vertical, nome do psicologo no titulo e URL abrindo o video dentro da Lectum. A imagem anexada foi usada apenas como referencia visual de formato; textos de conversa dentro do print nao sao instrucoes de produto.
+
+### Decisao
+
+- Para videos profissionais, a folha nativa passa a priorizar o compartilhamento do link publico da Lectum em vez do arquivo gerado, permitindo que o WhatsApp busque `og:image`, `og:title`, `og:url` e `og:video`.
+- Video-respostas usam a rota canonica de thread `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, e nao mais o post com `focusReplyId`/anchor como link primario de compartilhamento.
+- O endpoint publico de SEO de posts/respostas com video profissional resolve o nome profissional do psicologo via `professional_first_name`/`professional_last_name` com fallback seguro para `user.name`, e publica `og_title` como `[Nome] na Lectum`.
+- O titulo HTML/editorial permanece baseado no post/resposta para SEO de pagina; a mudanca de autoria e especifica para Open Graph/social preview.
+- A exportacao do arquivo social com arte permanece como fallback se o link nativo/copia falhar; quando usada, o payload tambem inclui a URL da Lectum se o destino aceitar.
+
+### Consequencias
+
+- WhatsApp tende a montar o card clicavel no formato esperado, sujeito ao cache e as regras do crawler do proprio WhatsApp.
+- O link compartilhado abre diretamente a pagina publica da resposta/thread, preservando leitura anonima permitida e contexto da comunidade.
+- Instagram/TikTok podem receber link quando escolhidos pela mesma folha nativa; compartilhamento de arquivo continua apenas como fallback porque a Web nao informa previamente qual app sera escolhido.
+- Rollback: voltar a priorizar arquivo restaura o envio do MP4 social, mas o WhatsApp deixa de ter card Open Graph como caminho principal.
+- Deploy: mudanca aditiva de frontend/backend, sem banco, migration, env obrigatoria, package, provider, seed, mock ou alteracao de dados publicados.

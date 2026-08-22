@@ -128,6 +128,7 @@ export const sharePreparedLectumVideoResponse = async (
     files: [file],
     text: target.shareText,
     title: target.shareTitle,
+    url: target.shareUrl,
   };
   const nativeShareData = resolveLectumFileShareData(nav, shareData);
 
@@ -188,6 +189,18 @@ export const shareLectumLinkTarget = async (
 
   return { channel: "clipboard", mode: "clipboard" };
 };
+
+export const shareLectumSocialLinkPreviewTarget = async (
+  target: LectumShareSocialTarget,
+): Promise<ShareExportResult> =>
+  shareLectumLinkTarget({
+    kind: "link",
+    postId: target.postId,
+    replyId: target.replyId,
+    shareUrl: target.shareUrl,
+    text: null,
+    title: target.shareTitle,
+  });
 
 export { createLectumShareFrameImageFile } from "./lectum-share-media/export";
 export type { LectumShareFrameTarget } from "./lectum-share-media/layout";

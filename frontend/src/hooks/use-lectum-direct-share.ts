@@ -16,6 +16,7 @@ import {
   isNativeShareAbortError,
   prepareLectumShareFile,
   shareLectumLinkTarget,
+  shareLectumSocialLinkPreviewTarget,
   sharePreparedLectumVideoResponse,
 } from "@/utils/lectum-share-media";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
@@ -109,24 +110,21 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
 
       try {
         let result: ShareExportResult;
-
-        if (target.kind === "link") {
-          result = await shareLectumLinkTarget(target);
-        } else {
-          let cachedFile = getPreparedLectumShareFile(target);
+        const shareSocialFileTarget = async (socialTarget: LectumShareSocialTarget) => {
+          let cachedFile = getPreparedLectumShareFile(socialTarget);
 
           if (!cachedFile) {
             loadingToastId = toast.loading(SHARING_TOAST_MESSAGE);
           }
 
           if (!cachedFile) {
-            cachedFile = await fileFromShareArtifact(target).catch(() => null);
+            cachedFile = await fileFromShareArtifact(socialTarget).catch(() => null);
           }
 
-          const file = cachedFile ?? (await prepareLectumShareFile(target));
+          const file = cachedFile ?? (await prepareLectumShareFile(socialTarget));
 
           if (!cachedFile && currentUserId) {
-            void persistShareArtifact(target, file).catch(() => undefined);
+            void persistShareArtifact(socialTarget, file).catch(() => undefined);
           }
 
           if (loadingToastId !== null) {
@@ -134,9 +132,23 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
             loadingToastId = null;
           }
 
-          result = await sharePreparedLectumVideoResponse(target, file, {
+          return sharePreparedLectumVideoResponse(socialTarget, file, {
             skipDownloadOnActivationLoss: true,
           });
+        };
+
+        if (target.kind === "link") {
+          result = await shareLectumLinkTarget(target);
+        } else if (target.mediaType === "video") {
+          try {
+            result = await shareLectumSocialLinkPreviewTarget(target);
+          } catch (error) {
+            if (isNativeShareAbortError(error)) throw error;
+
+            result = await shareSocialFileTarget(target);
+          }
+        } else {
+          result = await shareSocialFileTarget(target);
         }
 
         if (loadingToastId !== null) {

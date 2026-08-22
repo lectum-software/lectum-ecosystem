@@ -1073,6 +1073,8 @@ Complemento TASK-145: `route_path` e `canonical_url` gerenciados passam a usar U
 
 Complemento 2026-08-03: o link publico de compartilhamento de respostas/comentarios usa `page_key="community_post_reply"` e `route_path="/comunidades/[slug]/publicacao/[id]/resposta/[replyId]"`, separado de `community_post` para aparecer explicitamente no Admin SEO/Metadados e permitir fallback/robots/OG especificos quando o SEO dinamico da resposta nao estiver disponivel.
 
+Complemento 2026-08-22: em posts/respostas com video profissional, `og_title` dos endpoints publicos de SEO usa o nome publico do psicologo no formato `[Nome] na Lectum`, enquanto `title` preserva o titulo editorial da pagina. Links de compartilhamento de video-resposta devem usar a rota canonica de resposta `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]` para que crawlers como WhatsApp coletem metadados da resposta e abram o video dentro da Lectum.
+
 
 ## Convencao de rotas (frontend e backend)
 

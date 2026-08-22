@@ -94,6 +94,36 @@ test("compartilhamento de link fica indisponivel sem share nativo", () => {
   );
 });
 
+test("videos compartilhados priorizam link publico com preview do WhatsApp", () => {
+  const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
+  const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
+  const hookSource = readFileSync(
+    new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
+    "utf8",
+  );
+  const seoSource = readFileSync(
+    new URL(
+      "../../../backend/src/modules/api/public/seo/community-post/use-cases/services.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(
+    targetSource,
+    /publicCommunityReplyThreadHref\(post\.community\.slug, post\.id, reply\.id\)/,
+  );
+  assert.match(mediaSource, /shareLectumSocialLinkPreviewTarget/);
+  assert.match(mediaSource, /text: null/);
+  assert.match(mediaSource, /url: target\.shareUrl/);
+  assert.match(
+    hookSource,
+    /target\.mediaType === "video"[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)/,
+  );
+  assert.match(seoSource, /professionalVideoTitle/);
+  assert.match(seoSource, /\$\{name\} na Lectum/);
+});
+
 test("cancelamento nativo da share sheet e reconhecido sem virar erro tecnico", () => {
   assert.equal(isNativeShareAbortError(new DOMException("Cancelado", "AbortError")), true);
   assert.equal(isNativeShareAbortError(new DOMException("Bloqueado", "NotAllowedError")), false);

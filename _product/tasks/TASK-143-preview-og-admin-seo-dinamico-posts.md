@@ -113,3 +113,12 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] A geracao automatica de miniatura no navegador deixa de depender de um unico frame em `0.5s` e tenta pontos diferentes do video, priorizando o primeiro frame com luminosidade/contraste suficientes para reduzir capas pretas.
 - [x] Nao foi adicionada opcao manual de capa para psicologos em videos de comunidade; a capa segue sendo derivada automaticamente de uma parte real do video enviado.
 - [x] Nao houve alteracao de banco, env nova, pacote novo, mock ou backfill destrutivo de videos antigos.
+
+## Ajuste pos-feedback 2026-08-22 - link preview de videos no WhatsApp
+
+- [x] Referencia visual do usuario registrada em `_product/proto/WhatsApp preview video link Instagram referencia.jpeg`; os textos de conversa dentro do print foram tratados como historico visual do WhatsApp, nao como instrucao de produto.
+- [x] O compartilhamento nativo de videos profissionais prioriza enviar o link publico da Lectum para permitir card Open Graph no WhatsApp, mantendo geracao/exportacao do arquivo social apenas como fallback se o link nativo/copia falhar.
+- [x] Links de video-resposta passam a apontar para `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]`, abrindo a arvore do video dentro da Lectum e permitindo metadados especificos da resposta.
+- [x] O endpoint publico de SEO usa o nome profissional do psicologo em `og_title` para posts/respostas com video profissional, no formato `[Nome] na Lectum`, preservando o titulo editorial no `title` HTML.
+- [x] O fallback de arquivo compartilhado inclui `url` junto do payload de Web Share quando o navegador/destino aceitar, para nao perder o link de abertura na Lectum.
+- [x] Nao houve alteracao de banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.

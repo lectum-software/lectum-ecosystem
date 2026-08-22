@@ -6,6 +6,7 @@ import type {
   UserPostReply,
 } from "@/api/generator/types/posts";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
+import { publicCommunityPostHref, publicCommunityReplyThreadHref } from "@/utils/public-routes";
 
 export type LectumShareChannel = "clipboard" | "web_share";
 
@@ -100,7 +101,7 @@ const toAbsoluteShareUrl = (relativeUrl: string) =>
   typeof window === "undefined" ? relativeUrl : `${window.location.origin}${relativeUrl}`;
 
 const postRelativeUrl = (post: Pick<PostListPost, "community" | "id">) =>
-  `/comunidades/${post.community.slug}/publicacao/${post.id}`;
+  publicCommunityPostHref(post.community.slug, post.id);
 
 const normalizePostMediaItem = (
   mediaUrl: string | null | undefined,
@@ -203,10 +204,7 @@ export const createLectumShareVideoTarget = (
   const sourceText = (hasCommentContext ? parentContent : post.title)?.trim() || post.title;
   const responseText = reply.content?.trim() || null;
   const relativeUrl =
-    options.relativeUrl ??
-    `/comunidades/${post.community.slug}/publicacao/${post.id}?focusReplyId=${encodeURIComponent(
-      reply.id,
-    )}#reply-${reply.id}`;
+    options.relativeUrl ?? publicCommunityReplyThreadHref(post.community.slug, post.id, reply.id);
   const cardLabel = "Respondido na Lectum";
   const professionalName =
     normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;

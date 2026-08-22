@@ -9,7 +9,7 @@ Este documento substitui o inventário Figma como referência visual ativa.
 - Total de arquivos JPEG: 63
 - Total de telas de produto: 61
 - Asset isolado: 1 ícone `post_add_24dp_64748B_FILL0_wght400_GRAD0_opsz24 1.jpg`
-- Referências complementares de produto: 1 PNG gerado/aprovado em conversa para compartilhamento social (`_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`) e 1 JPEG de referência de preview WhatsApp para vídeo vertical (`_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg`).
+- Referências complementares de produto: 1 PNG gerado/aprovado em conversa para compartilhamento social (`_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`) e 2 JPEGs de referência de preview WhatsApp para vídeo vertical (`_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg` e `_product/proto/WhatsApp preview video link Instagram referencia.jpeg`).
 - Referência complementar do painel Admin: 19 PNGs enviados em conversa e salvos em `_product/proto/admin` (Dashboard, Tráfego, Comunidades, Psicólogos, Pacientes, Financeiro, Notificações e Configurações).
 
 As imagens e o Builder MCP são referência de produto, layout, estados, hierarquia visual e nomenclatura. Elas não definem a arquitetura final, qualidade final de código, contratos de API nem componentes finais.
@@ -137,6 +137,7 @@ O comando acima não deve ser usado como geração final automática. Quando usa
 | Posts | Posts Salvos | `_product/proto/Posts Salvos.jpg` | 390x1784 | TASK-28 |
 | Posts | Compartilhamento Lectum - vídeo-resposta stories referência | `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png` | 941x1672 | TASK-42 |
 | Posts | Preview WhatsApp para vídeo vertical Open Graph | `_product/proto/WhatsApp preview video vertical Open Graph referencia.jpeg` | 941x1280 | TASK-143 |
+| Posts | Preview WhatsApp de link de vídeo estilo Instagram | `_product/proto/WhatsApp preview video link Instagram referencia.jpeg` | 590x1280 | TASK-143 |
 | Conta | Notificações | `_product/proto/Notificações.jpg` | 414x1317 | TASK-29A |
 | Conta | Configurações de Notificações | `_product/proto/Configurações de Notificações.jpg` | 390x1099 | TASK-29A |
 | Conta | Configurações de Conta - Login Google | `_product/proto/Configurações de Conta - Login Google.jpg` | 390x884 | TASK-30 |
