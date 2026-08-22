@@ -6,12 +6,11 @@ import { useMemo, useState } from "react";
 import { useSavedPosts, useUnsavePostFromList, useUnsaveReplyFromList } from "@/api/callers/posts";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
-import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
+import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -19,8 +18,6 @@ import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
   createLectumShareVideoTarget,
-  type LectumShareChannel,
-  type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { Pagination } from "./components/pagination";
 
@@ -30,11 +27,15 @@ import { PAGE_LIMIT, resolvePostsError, savedReplyHref } from "./modules/support
 export const SavedPostsLogic = () => {
   const [page, setPage] = useState(1);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
-  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const [removedFeedback, setRemovedFeedback] = useState<string | null>(null);
   const query = useMemo(() => ({ page, limit: PAGE_LIMIT }), [page]);
   const postsQuery = useSavedPosts(query);
-  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
+  const { shareLectumTarget } = useLectumDirectShare({
+    onShared: (target) => {
+      setShareFeedback(target.postId);
+      window.setTimeout(() => setShareFeedback(null), 2400);
+    },
+  });
   const unsavePostMutation = useUnsavePostFromList({
     onSuccess: () => {
       setRemovedFeedback("Post removido dos salvos.");
@@ -63,28 +64,20 @@ export const SavedPostsLogic = () => {
       : createLectumSharePostMediaTarget(post);
 
     if (socialTarget) {
-      setShareVideoTarget(socialTarget);
+      await shareLectumTarget(socialTarget);
       return;
     }
 
     const relativeUrl = replyId
       ? savedReplyHref(post, replyId)
       : `/comunidades/${post.community.slug}/publicacao/${post.id}`;
-    setShareVideoTarget(
+    await shareLectumTarget(
       createLectumShareLinkTarget(post, {
         relativeUrl,
         replyId: replyId ?? null,
         title: replyId ? "Resposta salva na Lectum" : post.title,
       }),
     );
-  };
-
-  const handleShareVideoShared = (channel: LectumShareChannel) => {
-    if (!shareVideoTarget) return;
-
-    trackLectumShare(channel);
-    setShareFeedback(shareVideoTarget.postId);
-    window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
   return (
@@ -192,11 +185,6 @@ export const SavedPostsLogic = () => {
           />
         </div>
       </section>
-      <LectumShareVideoModal
-        onClose={() => setShareVideoTarget(null)}
-        onShared={handleShareVideoShared}
-        target={shareVideoTarget}
-      />
     </PrivateTemplate>
   );
 };

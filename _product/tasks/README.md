@@ -775,3 +775,10 @@ Uma task só pode ser marcada como concluída quando:
 - A verificacao de e-mail e redirects de sessao pendente preservam o retorno seguro para a rota original; se nao houver retorno explicito, pacientes caem no destino padrao `/psicologos`.
 - `/paciente/boas-vindas` e `/patient/welcome` ficam como rotas legadas que redirecionam para o retorno seguro ou `/psicologos`, sem apagar codigo/asset historico neste deploy; `/patient/welcome` deixa de usar redirect estatico para nao criar salto intermediario.
 - Alteracao frontend-only, mobile-first e aditiva; sem mudanca de backend, banco, contratos, packages, envs, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: compartilhamento direto na folha nativa
+
+- Ajuste pos-feedback da TASK-42: a modal Lectum de previa/opcoes de compartilhamento foi suprimida no caminho principal, evitando a duplicidade modal Lectum -> folha nativa do celular.
+- O clique em compartilhar passa a tentar abrir diretamente `navigator.share()` com arquivo social real quando houver midia/video, ou com link/texto em posts textuais; se o navegador bloquear/nao suportar, o fallback baixa o arquivo e/ou copia o link quando possivel.
+- A Web continua sem garantia de abrir WhatsApp/Instagram/TikTok especificos com arquivo anexado; a escolha do app fica a cargo da folha nativa do sistema operacional.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.

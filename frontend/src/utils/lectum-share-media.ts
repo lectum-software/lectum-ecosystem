@@ -1,4 +1,4 @@
-import type { LectumShareSocialTarget, LectumShareVideoTarget } from "@/utils/lectum-share-target";
+import type { LectumShareLinkTarget, LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import { createImageShareFile, createVideoShareFile } from "./lectum-share-media/export";
 import {
@@ -10,6 +10,7 @@ import {
 import {
   isNativeShareAbortError,
   resolveLectumFileShareData,
+  resolveLectumLinkShareData,
 } from "./lectum-share-media/native-share";
 
 const createLectumShareFile = async (target: LectumShareSocialTarget) => {
@@ -97,24 +98,33 @@ export const shareLectumVideoResponse = async (
   return sharePreparedLectumVideoResponse(target, file);
 };
 
-export const copyLectumShareUrl = async (target: LectumShareVideoTarget) => {
-  const copied = await copyShareUrl(target.shareUrl);
+export const shareLectumLinkTarget = async (
+  target: LectumShareLinkTarget,
+): Promise<ShareExportResult> => {
+  const nav = navigator as ShareNavigator;
+  const shareData: ShareData = {
+    text: target.text ?? undefined,
+    title: target.title,
+    url: target.shareUrl,
+  };
+  const nativeShareData = resolveLectumLinkShareData(nav, shareData);
+
+  if (nativeShareData) {
+    try {
+      await nav.share(nativeShareData);
+      return { channel: "web_share", mode: "link" };
+    } catch (error) {
+      if (isNativeShareAbortError(error)) throw error;
+    }
+  }
+
+  const copied = await copyShareUrl(target.shareUrl).catch(() => false);
 
   if (!copied) {
-    throw new Error("Clipboard indisponível.");
-  }
-};
-
-export const copyLectumShareText = async (target: LectumShareSocialTarget) => {
-  if (!target.responseText) {
-    throw new Error("Texto indisponível.");
+    throw new Error("Compartilhamento indisponível.");
   }
 
-  const copied = await copyShareUrl(target.responseText);
-
-  if (!copied) {
-    throw new Error("Clipboard indisponível.");
-  }
+  return { channel: "clipboard", mode: "clipboard" };
 };
 
 export { createLectumShareFrameImageFile } from "./lectum-share-media/export";
@@ -122,4 +132,5 @@ export type { LectumShareFrameTarget } from "./lectum-share-media/layout";
 export {
   isNativeShareAbortError,
   resolveLectumFileShareData,
+  resolveLectumLinkShareData,
 } from "./lectum-share-media/native-share";

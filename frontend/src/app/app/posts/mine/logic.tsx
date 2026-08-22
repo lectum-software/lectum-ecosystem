@@ -7,12 +7,11 @@ import { useInfiniteMyPosts, useMyPosts } from "@/api/callers/posts";
 import type { PostListPost, UserPostsType } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
-import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
-import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
+import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -20,8 +19,6 @@ import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
   createLectumShareVideoTarget,
-  type LectumShareChannel,
-  type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { FilterTabs, MyPostsHeader, ProfessionalAnsweredBadge } from "./components/header";
 import { InfiniteMyPostsLoader } from "./components/infinite-loader";
@@ -40,7 +37,6 @@ export const MyPostsLogic = () => {
   const sessionUser = useAppSelector((state) => state.user);
   const [type, setType] = useState<UserPostsType>("posts");
   const [shareFeedback, setShareFeedback] = useState<"interaction" | "post" | null>(null);
-  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const query = useMemo(() => ({ limit: PAGE_LIMIT, type }), [type]);
   const postsCountQueryParams = useMemo(() => ({ limit: 1, page: 1, type: "posts" as const }), []);
   const repliesCountQueryParams = useMemo(
@@ -48,7 +44,12 @@ export const MyPostsLogic = () => {
     [],
   );
   const postsQuery = useInfiniteMyPosts(query);
-  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
+  const { shareLectumTarget } = useLectumDirectShare({
+    onShared: (target) => {
+      setShareFeedback(target.replyId ? "interaction" : "post");
+      window.setTimeout(() => setShareFeedback(null), 2400);
+    },
+  });
   const { fetchNextPage } = postsQuery;
   const postsCountQuery = useMyPosts(postsCountQueryParams, type !== "posts");
   const repliesCountQuery = useMyPosts(repliesCountQueryParams, type !== "replies");
@@ -87,28 +88,20 @@ export const MyPostsLogic = () => {
       : createLectumSharePostMediaTarget(post);
 
     if (socialTarget) {
-      setShareVideoTarget(socialTarget);
+      await shareLectumTarget(socialTarget);
       return;
     }
 
     const relativeUrl = replyId
       ? focusedReplyHref(post, replyId)
       : `/comunidades/${post.community.slug}/publicacao/${post.id}`;
-    setShareVideoTarget(
+    await shareLectumTarget(
       createLectumShareLinkTarget(post, {
         relativeUrl,
         replyId: replyId ?? null,
         title: replyId ? `${interactionCopy.singularTitle} na Lectum` : post.title,
       }),
     );
-  };
-
-  const handleShareVideoShared = (channel: LectumShareChannel) => {
-    if (!shareVideoTarget) return;
-
-    trackLectumShare(channel);
-    setShareFeedback(shareVideoTarget.replyId ? "interaction" : "post");
-    window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
   const handleFilterChange = (value: UserPostsType) => {
@@ -253,11 +246,6 @@ export const MyPostsLogic = () => {
           />
         </div>
       </section>
-      <LectumShareVideoModal
-        onClose={() => setShareVideoTarget(null)}
-        onShared={handleShareVideoShared}
-        target={shareVideoTarget}
-      />
     </PrivateTemplate>
   );
 };

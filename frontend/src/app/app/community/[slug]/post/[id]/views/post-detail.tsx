@@ -13,7 +13,6 @@ import {
 import type { PostDetail } from "@/api/generator/types/posts";
 import { PostActionButton } from "@/components/community/post-action-button";
 import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
-import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -202,7 +201,6 @@ export const PostDetailLogic = () => {
     deleteReplyMutation,
     focusMainComposer,
     handleReplyTarget,
-    handleShareVideoShared,
     handleTogglePostSave,
     handleVotePost,
     handleVoteReply,
@@ -231,12 +229,10 @@ export const PostDetailLogic = () => {
     setReportError,
     setReportTarget,
     setReplyError,
-    setShareVideoTarget,
     setShowPsychologistReplyTip,
     shareFeedback,
     sharePost,
     shareReply,
-    shareVideoTarget,
     shouldExposePsychologistReplyTipTarget,
     showPsychologistReplyTip,
     submitReply,
@@ -495,11 +491,6 @@ export const PostDetailLogic = () => {
           </>
         ) : null}
       </section>
-      <LectumShareVideoModal
-        onClose={() => setShareVideoTarget(null)}
-        onShared={handleShareVideoShared}
-        target={shareVideoTarget}
-      />
     </PrivateTemplate>
   );
 };

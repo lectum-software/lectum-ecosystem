@@ -191,3 +191,35 @@ A captura do usuario mostrou erro ao tentar compartilhar/uploadar a arte de vide
 - Smoke local do frontend buildado em `http://127.0.0.1:3185`: `/version` respondeu `0.1.173`.
 - `pnpm version:bump` para `0.1.173` e `pnpm check:version`: sucesso.
 - `pnpm check`: sucesso.
+## Complemento 2026-08-22 - supressao da modal Lectum no caminho principal
+
+### Contexto
+
+Novo feedback do usuario mostrou que a share sheet da Lectum estava duplicando a experiencia nativa: a aplicacao exibia uma modal propria com previa e botoes de WhatsApp/Instagram/TikTok/Mais, e cada botao abria outra folha de compartilhamento do celular. A etapa intermediaria aumentava atrito e confundia a hierarquia de acoes.
+
+### Decisao
+
+- Remover a `LectumShareVideoModal` e o preview HTML proprio do caminho principal de compartilhamento.
+- Criar `useLectumDirectShare` para centralizar preparo real de arquivo, chamada a `navigator.share()`, fallback e tracking.
+- Em targets com midia/video, continuar usando a exportacao real por canvas/MediaRecorder e o fallback `files`-only quando metadata junto com arquivo nao for aceita.
+- Em targets textuais, tentar Web Share de `title/text/url` diretamente e copiar o link apenas quando o share nativo nao estiver disponivel.
+- Manter a limitacao explicita: navegadores web nao garantem abertura direta de app especifico com arquivo anexado; a folha nativa do sistema e a responsavel por listar WhatsApp, Instagram, TikTok, Salvar etc.
+- Nao alterar backend, storage, contratos, banco, envs, providers, packages ou eventos persistentes.
+
+### Consequencias
+
+- O usuario nao ve mais uma modal Lectum antes da folha nativa do dispositivo.
+- O fluxo fica mais alinhado ao comportamento de iOS/Android: uma unica folha nativa decide destino e acoes.
+- A geracao de video continua podendo exigir tempo de preparo; se o navegador perder permissao/ativacao ou nao suportar arquivo, o fallback baixa o arquivo e copia o link quando permitido.
+- O tracking deixa de depender de estado de modal e passa a ser executado pelo hook compartilhado quando ha canal conhecido (`web_share` ou `clipboard`).
+- Rollback: reintroduzir a modal removida e voltar a setar `shareVideoTarget` nas superficies de feed/detalhe/perfil/salvos/minhas publicacoes.
+
+### Validacao
+
+- Teste unitario do resolvedor de payload de link alem dos testes existentes de arquivo, `files`-only e cancelamento nativo: sucesso.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso em `0.1.175`.
+- Smoke local do frontend buildado em `http://127.0.0.1:3186`: `/version` respondeu `0.1.175` e `/comunidades` respondeu `200`.
+- `pnpm check`: primeira tentativa teve timeout transitorio em testes de boot safety do backend; repeticao isolada de `pnpm --dir backend check` e segunda execucao completa de `pnpm check` passaram.
+- Smoke de homologacao apos push automatico de `homolog` sera reportado ao usuario.

@@ -19,19 +19,16 @@ import type { PostListPost } from "@/api/generator/types/posts";
 import type { ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
-import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
+import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
   createLectumShareTargetFromHighlightedReply,
-  type LectumShareChannel,
-  type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { AboutTab } from "./components/about";
 import { ProfileHero, ProfileMobileStickyHeader } from "./components/hero";
@@ -62,7 +59,6 @@ export const PsychologistProfileLogic = () => {
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [shareFeedback, setShareFeedback] = useState(false);
-  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const [pendingScrollTab, setPendingScrollTab] = useState<ProfileTab | null>(null);
   const trackedProfileViewRef = useRef<string | null>(null);
   const trackedTabOpenRef = useRef<string | null>(null);
@@ -82,7 +78,12 @@ export const PsychologistProfileLogic = () => {
   const profileQuery = useDirectoryPsychologist(id);
   const { mutate: trackProfileView } = useDirectoryPsychologistProfileView(id);
   const importantActionTracking = useImportantActionTracking();
-  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
+  const { shareLectumTarget } = useLectumDirectShare({
+    onShared: () => {
+      setShareFeedback(true);
+      window.setTimeout(() => setShareFeedback(false), 2500);
+    },
+  });
   const profile = profileQuery.data;
   const loadedProfileId = profile?.id;
   const postsPreview = useDirectoryPsychologistPosts(
@@ -347,26 +348,18 @@ export const PsychologistProfileLogic = () => {
       createLectumSharePostMediaTarget(post, { relativeUrl }) ??
       createLectumShareTargetFromHighlightedReply(post);
     if (socialTarget) {
-      setShareVideoTarget(socialTarget);
+      await shareLectumTarget(socialTarget);
       return;
     }
 
     const replyId = getProfilePublicationReplyId(post);
-    setShareVideoTarget(
+    await shareLectumTarget(
       createLectumShareLinkTarget(post, {
         relativeUrl,
         replyId,
         title: post.title,
       }),
     );
-  };
-
-  const handleShareVideoShared = (channel: LectumShareChannel) => {
-    if (!shareVideoTarget) return;
-
-    trackLectumShare(channel);
-    setShareFeedback(true);
-    window.setTimeout(() => setShareFeedback(false), 2500);
   };
 
   const goBack = () => {
@@ -558,11 +551,6 @@ export const PsychologistProfileLogic = () => {
           </div>
         </section>
       </div>
-      <LectumShareVideoModal
-        onClose={() => setShareVideoTarget(null)}
-        onShared={handleShareVideoShared}
-        target={shareVideoTarget}
-      />
     </PrivateTemplate>
   );
 };

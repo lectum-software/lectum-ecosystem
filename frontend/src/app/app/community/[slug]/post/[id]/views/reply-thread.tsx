@@ -15,13 +15,12 @@ import {
 } from "@/api/callers/posts";
 import type { PostReply } from "@/api/generator/types/posts";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
-import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
+import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -30,8 +29,6 @@ import {
   createLectumShareLinkTarget,
   createLectumShareVideoTarget,
   findPostReplyInTree,
-  type LectumShareChannel,
-  type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { ThreadOriginalPostCard } from "../components/post-content";
@@ -77,7 +74,6 @@ export const PostReplyThreadLogic = () => {
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
-  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
   const composerRef = useRef<HTMLElement | null>(null);
   const inlineReplyFormRef = useRef<HTMLElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
@@ -85,7 +81,14 @@ export const PostReplyThreadLogic = () => {
   const postQuery = usePostDetail(postId);
   const threadQuery = usePostReplyThread(postId, replyId, Boolean(postId && replyId));
   const voteMutation = useVotePost(postId);
-  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
+  const { shareLectumTarget } = useLectumDirectShare({
+    onShared: (target) => {
+      if (!target.replyId) return;
+
+      setShareFeedback(target.replyId);
+      window.setTimeout(() => setShareFeedback(null), 2400);
+    },
+  });
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyPublishError(error)),
@@ -132,12 +135,12 @@ export const PostReplyThreadLogic = () => {
     });
 
     if (videoTarget) {
-      setShareVideoTarget(videoTarget);
+      await shareLectumTarget(videoTarget);
       return;
     }
 
     const threadRootId = rootReply?.id ?? reply.id;
-    setShareVideoTarget(
+    await shareLectumTarget(
       createLectumShareLinkTarget(post, {
         relativeUrl: `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${threadRootId}#reply-${reply.id}`,
         replyId: reply.id,
@@ -145,14 +148,6 @@ export const PostReplyThreadLogic = () => {
         title: "Resposta na Lectum",
       }),
     );
-  };
-
-  const handleShareVideoShared = (channel: LectumShareChannel) => {
-    if (!shareVideoTarget?.replyId) return;
-
-    trackLectumShare(channel);
-    setShareFeedback(shareVideoTarget.replyId);
-    window.setTimeout(() => setShareFeedback(null), 2400);
   };
 
   const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
@@ -506,11 +501,6 @@ export const PostReplyThreadLogic = () => {
           </div>
         ) : null}
       </section>
-      <LectumShareVideoModal
-        onClose={() => setShareVideoTarget(null)}
-        onShared={handleShareVideoShared}
-        target={shareVideoTarget}
-      />
     </PrivateTemplate>
   );
 };

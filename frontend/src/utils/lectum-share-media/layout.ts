@@ -22,8 +22,8 @@ export type CanvasWithCaptureStream = HTMLCanvasElement & {
 
 export type ShareExportResult = {
   channel: LectumShareChannel | null;
-  file: File;
-  mode: "download" | "file";
+  file?: File;
+  mode: "clipboard" | "download" | "file" | "link";
 };
 
 export type LectumShareFrameTarget = Pick<

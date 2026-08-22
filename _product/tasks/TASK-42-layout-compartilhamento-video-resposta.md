@@ -407,3 +407,41 @@ Regras de UI obrigatórias:
 - [x] `pnpm check:tasks`
 - [x] `pnpm check:source-size`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - compartilhamento direto pela folha nativa
+
+- Pedido do usuario: a modal da Lectum com previa/opcoes ficava redundante, porque tocar em WhatsApp, Instagram ou TikTok abria em seguida a propria folha nativa de compartilhamento do celular.
+- Decisao: suprimir a modal intermediaria da Lectum no caminho principal de compartilhamento de posts, respostas, salvos, minhas publicacoes e publicacoes no perfil do psicologo.
+- Frontend: o clique em compartilhar agora chama `useLectumDirectShare`, que prepara o arquivo social real quando houver midia/video e aciona `navigator.share()` diretamente; posts textuais usam Web Share de link/texto direto.
+- Frontend: a geracao de arquivo e o fallback de `files`-only da correcao anterior foram preservados. Se o navegador/app nao aceitar o arquivo ou bloquear a chamada nativa, o fallback baixa o arquivo e copia o link quando possivel; para link sem suporte nativo, copia o link.
+- Frontend: a antiga `LectumShareVideoModal`, o preview HTML interno e o hook de tracking dependente de estado de modal foram removidos; o tracking de post/resposta passou para o hook direto.
+- Limite tecnico mantido: a Web nao consegue abrir WhatsApp/Instagram/TikTok especificos com arquivo anexado de forma confiavel; o sistema operacional continua decidindo os destinos exibidos na folha nativa.
+- Escopo: sem mudanca de backend, Prisma, migrations, endpoints, payloads, storage/R2, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: screenshots do usuario `WhatsApp Image 2026-08-22 at 11.07.38.jpeg`, `WhatsApp Image 2026-08-22 at 11.06.46.jpeg` e `WhatsApp Image 2026-08-22 at 11.20.14.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Tocar em compartilhar em publicacoes com midia/video nao renderiza mais a modal de previa/opcoes da Lectum.
+- [x] O compartilhamento de midia/video tenta preparar o arquivo social real e abrir a folha nativa do dispositivo diretamente.
+- [x] O compartilhamento de posts textuais abre Web Share de link/texto diretamente quando suportado.
+- [x] O tracking real de compartilhamento de post/resposta continua sendo enviado apos resultado com canal conhecido.
+- [x] Falhas tecnicas do share nativo continuam com fallback seguro para download/copia, sem expor detalhe tecnico ao usuario.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3186`: `/version` respondeu `0.1.175` e `/comunidades` respondeu `200`.
+- [x] `pnpm version:bump` para `0.1.175`
+- [x] `pnpm check:version`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check:source-size`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

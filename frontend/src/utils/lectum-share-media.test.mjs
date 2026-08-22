@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-const { isNativeShareAbortError, resolveLectumFileShareData } = await import(
-  "./lectum-share-media/native-share.ts"
-);
+const { isNativeShareAbortError, resolveLectumFileShareData, resolveLectumLinkShareData } =
+  await import("./lectum-share-media/native-share.ts");
 
 const createShareFile = () =>
   new File(["lectum"], "lectum-respondido-vertical-9x16.mp4", {
@@ -54,6 +53,34 @@ test("compartilhamento de arquivo fica indisponivel sem share nativo", () => {
         files: [createShareFile()],
         text: "Legenda Lectum",
         title: "Respondido na Lectum",
+      },
+    ),
+    null,
+  );
+});
+
+test("compartilhamento de link usa payload nativo quando suportado", () => {
+  const shareData = {
+    text: "Leia na Lectum",
+    title: "Post na Lectum",
+    url: "https://lectum.com.br/app/comunidades/feed/publicacao/post-1",
+  };
+  const nav = {
+    canShare: (data) => data === shareData,
+    share: async () => undefined,
+  };
+
+  assert.equal(resolveLectumLinkShareData(nav, shareData), shareData);
+});
+
+test("compartilhamento de link fica indisponivel sem share nativo", () => {
+  assert.equal(
+    resolveLectumLinkShareData(
+      { canShare: () => true },
+      {
+        text: "Leia na Lectum",
+        title: "Post na Lectum",
+        url: "https://lectum.com.br/app/comunidades/feed/publicacao/post-1",
       },
     ),
     null,

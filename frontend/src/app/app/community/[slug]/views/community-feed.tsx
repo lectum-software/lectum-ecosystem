@@ -15,11 +15,10 @@ import {
 import { useInfiniteCommunityFeedPosts } from "@/api/callers/community";
 import type { CommunityFeedScope, CommunityPost } from "@/api/generator/types/community";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { LectumShareVideoModal } from "@/components/share/lectum-share-video-modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useLectumShareTracking } from "@/hooks/use-lectum-share-tracking";
+import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -32,8 +31,6 @@ import {
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
-  type LectumShareChannel,
-  type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { FeedCommunitySelect, FeedSearchMenu, FilterMenu } from "../components/feed-controls";
 import { InfinitePostLoader, PostCard } from "../components/post-card";
@@ -79,8 +76,12 @@ export const CommunityFeedLogic = ({
     [deferredSearch, scope, selectedCommunitySlug],
   );
   const feed = useInfiniteCommunityFeedPosts(query);
-  const [shareVideoTarget, setShareVideoTarget] = useState<LectumShareVideoTarget | null>(null);
-  const trackLectumShare = useLectumShareTracking(shareVideoTarget);
+  const { shareLectumTarget } = useLectumDirectShare({
+    onShared: (target) => {
+      setShareFeedback(target.replyId ?? target.postId);
+      window.setTimeout(() => setShareFeedback(null), 2400);
+    },
+  });
   const posts = useMemo(() => flattenCommunityPostPages(feed.data?.pages), [feed.data?.pages]);
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
   const firstFeedPage = feed.data?.pages[0];
@@ -163,15 +164,7 @@ export const CommunityFeedLogic = ({
     if (typeof window === "undefined") return;
 
     const socialTarget = createLectumSharePostMediaTarget(post);
-    setShareVideoTarget(socialTarget ?? createLectumShareLinkTarget(post));
-  };
-
-  const handleShareVideoShared = (channel: LectumShareChannel) => {
-    if (!shareVideoTarget) return;
-
-    trackLectumShare(channel);
-    setShareFeedback(shareVideoTarget.replyId ?? shareVideoTarget.postId);
-    window.setTimeout(() => setShareFeedback(null), 2400);
+    await shareLectumTarget(socialTarget ?? createLectumShareLinkTarget(post));
   };
 
   return (
@@ -305,12 +298,6 @@ export const CommunityFeedLogic = ({
           variant="floating"
         />
       ) : null}
-
-      <LectumShareVideoModal
-        onClose={() => setShareVideoTarget(null)}
-        onShared={handleShareVideoShared}
-        target={shareVideoTarget}
-      />
 
       {createPostModalOpen ? (
         <CreateCommunityPostLogic
