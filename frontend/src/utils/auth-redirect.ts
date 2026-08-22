@@ -19,10 +19,6 @@ export function getUserHomePath(
   data: Partial<Pick<user, "role" | "patient_profile" | "psychologist_profile">> | null | undefined,
   fallback: string,
 ) {
-  if (data?.role === "paciente" && !data.patient_profile?.onboarding_completed_at) {
-    return "/paciente/boas-vindas";
-  }
-
   if (data?.role && data.role in USER_HOME_PATHS) {
     return getPsychologistRegistrationEntryPath(data, USER_HOME_PATHS[data.role]);
   }
@@ -41,7 +37,9 @@ export function resolveAuthRedirect(
   options: ResolveAuthRedirectOptions = {},
 ) {
   if (data && "confirmed" in data && data.confirmed === false) {
-    const pendingRedirect = normalizeSafeInternalRedirect(explicitRedirect ?? legacyCallbackUrl);
+    const pendingRedirect =
+      normalizeSafeInternalRedirect(explicitRedirect) ??
+      normalizeSafeInternalRedirect(legacyCallbackUrl);
 
     if (pendingRedirect) {
       return `/auth/verify-email?redirectTo=${encodeURIComponent(pendingRedirect)}`;
@@ -68,3 +66,19 @@ export function resolveAuthRedirect(
 
   return normalizeSafeInternalRedirect(fallbackTarget, "/psicologos");
 }
+
+export const resolveAuthReturnTo = (
+  redirectTo: string | null | undefined,
+  callbackUrl?: string | null,
+) => normalizeSafeInternalRedirect(redirectTo) ?? normalizeSafeInternalRedirect(callbackUrl);
+
+export const buildAuthRouteWithRedirect = (href: string, redirectTo: string | null | undefined) => {
+  const safeRedirectTo = normalizeSafeInternalRedirect(redirectTo);
+  if (!safeRedirectTo) return href;
+
+  const params = new URLSearchParams({
+    redirectTo: safeRedirectTo,
+  });
+
+  return `${href}${href.includes("?") ? "&" : "?"}${params.toString()}`;
+};

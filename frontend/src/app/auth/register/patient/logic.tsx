@@ -15,8 +15,8 @@ import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
+import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { fingerprint } from "@/utils/fingerprint";
-import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
 import { type RegisterPatientForm, TERMS_VERSION, useForm } from "./use-form";
 
@@ -25,9 +25,11 @@ const PATIENT_EMAIL_FORM_ID = "patient-email-register-form";
 export const RegisterPatientLogic = () => {
   const { setter } = useUserSet("/auth/verify-email");
   const searchParams = useSearchParams();
-  const redirectTo = normalizeSafeInternalRedirect(
-    searchParams.get("redirectTo") ?? searchParams.get("callbackUrl"),
+  const redirectTo = resolveAuthReturnTo(
+    searchParams.get("redirectTo"),
+    searchParams.get("callbackUrl"),
   );
+  const loginHref = buildAuthRouteWithRedirect("/auth/login", redirectTo);
   const { Form, formProps, hook } = useForm();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
@@ -192,14 +194,7 @@ export const RegisterPatientLogic = () => {
 
           <div className="border-t border-border bg-surface-muted px-5 py-4 text-center text-[13px] leading-5 text-muted sm:px-6 sm:text-sm">
             Já possui uma conta?{" "}
-            <Link
-              className="font-semibold text-primary hover:text-primary-hover"
-              href={
-                redirectTo
-                  ? `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`
-                  : "/auth/login"
-              }
-            >
+            <Link className="font-semibold text-primary hover:text-primary-hover" href={loginHref}>
               Fazer login
             </Link>
           </div>

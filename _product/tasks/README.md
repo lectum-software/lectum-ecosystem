@@ -767,3 +767,11 @@ Uma task só pode ser marcada como concluída quando:
 - O objetivo e evitar que a geracao longa do arquivo faca `navigator.share()` perder a ativacao do gesto do usuario em navegadores moveis, que era a causa provavel do erro mostrado ao tentar enviar o video para redes sociais/WhatsApp.
 - O Web Share passa a cair para `files`-only quando o destino nao aceita texto/titulo junto com arquivo, e falhas tecnicas do share nativo caem para download/copia de link quando possivel.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: cadastro retoma aba ou modal de origem
+
+- Ajuste pos-feedback da TASK-08: a tela de boas-vindas do paciente deixa de ser gate automatico depois de cadastro/login; a jornada autenticada prioriza retornar para a aba/modal que originou o cadastro.
+- O link `Cadastre-se` dentro do login preserva `redirectTo`/`callbackUrl` ao enviar para a selecao de perfil, evitando perder a intencao quando o visitante abriu login a partir de uma rota privada.
+- A verificacao de e-mail e redirects de sessao pendente preservam o retorno seguro para a rota original; se nao houver retorno explicito, pacientes caem no destino padrao `/psicologos`.
+- `/paciente/boas-vindas` e `/patient/welcome` ficam como rotas legadas que redirecionam para o retorno seguro ou `/psicologos`, sem apagar codigo/asset historico neste deploy; `/patient/welcome` deixa de usar redirect estatico para nao criar salto intermediario.
+- Alteracao frontend-only, mobile-first e aditiva; sem mudanca de backend, banco, contratos, packages, envs, providers, jobs ou dados publicados.

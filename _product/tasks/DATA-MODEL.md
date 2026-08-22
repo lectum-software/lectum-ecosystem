@@ -188,6 +188,8 @@ Quando construído: módulo de audiência próprio (ex.: `backend/src/modules/ma
 | `onboarding_completed_at` | `DateTime?` | null = onboarding pendente (TASK-08) |
 | `@@index([user_id])` | | |
 
+Complemento 2026-08-22: `onboarding_completed_at`, `goal` e `gender` permanecem historicos/opcionais. O frontend nao usa mais `onboarding_completed_at=null` como gate automatico de pos-cadastro/login; retornos autenticados priorizam `redirectTo`/`callbackUrl` seguro e, sem retorno explicito, pacientes seguem para `/psicologos`. Nao ha migration nem backfill nesta mudanca.
+
 Complemento 2026-07-23: o nome de exibicao do paciente permanece em `user.name`, nao em
 `patient_profile`. O Admin pode corrigir esse nome pelo endpoint auditado
 `PUT /api/admin/private/patients/:id/personal-data`, junto ao campo opcional `patient_profile.gender`.

@@ -1,5 +1,15 @@
-import { WelcomePatientLogic } from "@/app/patient/welcome/logic";
+import { redirect } from "next/navigation";
+import { resolveAuthReturnTo } from "@/utils/auth-redirect";
 
-export default function WelcomePatientPage() {
-  return <WelcomePatientLogic />;
+type PageProps = {
+  searchParams: Promise<{
+    callbackUrl?: string;
+    redirectTo?: string;
+  }>;
+};
+
+export default async function WelcomePatientPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+
+  redirect(resolveAuthReturnTo(params.redirectTo, params.callbackUrl) ?? "/psicologos");
 }

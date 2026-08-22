@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
@@ -20,7 +21,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { getUserHomePath } from "@/utils/auth-redirect";
+import { getUserHomePath, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { useForm, type VerifyEmailForm } from "./use-form";
 
 type ApiErrorData = {
@@ -109,6 +110,7 @@ const formatCooldown = (seconds: number) => {
 
 export const VerifyEmailLogic = () => {
   const { setter } = useUserSet("/app");
+  const searchParams = useSearchParams();
   const { Form, formProps, hook } = useForm();
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -163,7 +165,11 @@ export const VerifyEmailLogic = () => {
     () => hydratedUser || storedUser || null,
     [hydratedUser, storedUser],
   );
-  const continueHref = getUserHomePath(currentUser, "/app");
+  const explicitContinueHref = resolveAuthReturnTo(
+    searchParams.get("redirectTo"),
+    searchParams.get("callbackUrl"),
+  );
+  const continueHref = explicitContinueHref ?? getUserHomePath(currentUser, "/app");
   const currentEmail = maskEmail(currentUser?.email);
   const isConfirmed = Boolean(currentUser?.confirmed) || alreadyConfirmed;
   const isHydrating = hidrate.isLoading || hidrate.isPending;

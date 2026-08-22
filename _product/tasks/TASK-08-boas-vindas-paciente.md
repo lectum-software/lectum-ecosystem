@@ -402,3 +402,36 @@ O onboarding só termina quando o backend confirma. Se o shell privado (TASK-12)
   `/patient/welcome` manteve 308 para a rota canonica.
 - Browser local/headless renderizando `frontend/public/logo-icon.svg` sobre fundo xadrez e
   comparando com `frontend/public/icon.png`, confirmando que o SVG nao possui o quadrado branco.
+
+## Complemento 2026-08-22 - cadastro retoma aba ou modal de origem
+
+- Pedido do usuario: reavaliar a utilidade da tela de boas-vindas, pois o usuario passa a se cadastrar a partir do acesso a alguma aba ou modal e, apos o cadastro, precisa voltar para essa intencao original.
+- Decisao de produto: sim, a tela de boas-vindas nao deve mais ser gate automatico no fluxo de cadastro/login de paciente. O retorno autenticado deve priorizar `redirectTo`/`callbackUrl` seguro e abrir a rota/modal de origem.
+- Frontend: `getUserHomePath` deixa de redirecionar pacientes com `patient_profile.onboarding_completed_at=null` para `/paciente/boas-vindas`; sem retorno explicito, o destino padrao continua `/psicologos`.
+- Frontend: o link `Cadastre-se` dentro de `/auth/login` preserva a rota de retorno ao navegar para `/auth/profile-selection`, cobrindo o caso em que o visitante abriu login a partir de rota privada.
+- Frontend: a verificacao de e-mail usa o retorno explicito tambem no estado "ja confirmado" e o proxy preserva o retorno quando uma sessao com e-mail pendente tenta acessar rota privada.
+- Frontend: `/paciente/boas-vindas` e `/patient/welcome` ficam como rotas legadas que redirecionam para `redirectTo`/`callbackUrl` seguro ou `/psicologos`; o redirect estatico de `/patient/welcome` no `next.config.ts` foi removido para nao criar salto intermediario nem perder query.
+- Escopo: sem mudanca de backend, Prisma, migrations, endpoints, payloads, banco, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: screenshot do usuario em `/paciente/boas-vindas`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0013-onboarding-boas-vindas-paciente.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Cadastro/login com retorno explicito para aba/modal preserva a rota segura ate o pos-login ou pos-verificacao de e-mail.
+- [x] O link `Cadastre-se` na tela de login nao perde `redirectTo`/`callbackUrl`.
+- [x] Paciente sem onboarding concluido nao e mais enviado automaticamente para `/paciente/boas-vindas`.
+- [x] A rota legada de boas-vindas redireciona para retorno seguro ou `/psicologos`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/auth-redirect.ts src/app/auth/login/logic.tsx src/app/auth/profile-selection/logic.tsx src/app/auth/register/patient/logic.tsx src/app/auth/register/psychologist/logic.tsx src/app/auth/verify-email/logic.tsx src/app/paciente/boas-vindas/page.tsx src/app/patient/welcome/page.tsx src/proxy.ts src/utils/auth-redirect.test.mjs src/utils/session-policy.test.mjs`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/auth-redirect.test.mjs src/utils/session-policy.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Smoke local do frontend buildado em `/version` (`0.1.174`), `/paciente/boas-vindas` -> `/psicologos`, `/paciente/boas-vindas?redirectTo=...` -> rota original, `/patient/welcome?redirectTo=...` -> rota original e rota privada sem token -> `/auth/login?callbackUrl=...`.
+- [x] `pnpm version:bump`
+- [x] `pnpm check:version`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

@@ -150,11 +150,6 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/patient/welcome",
-        destination: "/paciente/boas-vindas",
-        permanent: true,
-      },
-      {
         source: "/app/account/need-reset",
         destination: "/app/conta/redefinir-senha",
         permanent: true,

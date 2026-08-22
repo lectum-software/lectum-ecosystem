@@ -14,8 +14,8 @@ import { Logo } from "@/components/ui/logo";
 import { useUserSet } from "@/hooks/user-set";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { AuthTemplate } from "@/templates/auth";
+import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { fingerprint } from "@/utils/fingerprint";
-import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
 import { type LoginForm, useForm } from "./use-form";
 
@@ -32,6 +32,11 @@ export const AuthLogic = () => {
   const searchParams = useSearchParams();
   const [apiError, setApiError] = useState<string | null>(null);
   const [googlePending, setGooglePending] = useState(false);
+  const authReturnTo = resolveAuthReturnTo(
+    searchParams.get("redirectTo"),
+    searchParams.get("callbackUrl"),
+  );
+  const signupHref = buildAuthRouteWithRedirect("/auth/profile-selection", authReturnTo);
 
   const { login } = useAuth({
     callbacks: {
@@ -60,18 +65,14 @@ export const AuthLogic = () => {
 
       const currentDeviceId = await fingerprint();
       const role = searchParams.get("role");
-      const redirectTo = normalizeSafeInternalRedirect(searchParams.get("redirectTo"));
-      const callbackUrl = normalizeSafeInternalRedirect(searchParams.get("callbackUrl"));
       const query = new URLSearchParams();
 
       if (role && allowedRoles.includes(role as (typeof allowedRoles)[number])) {
         query.set("role", role);
       }
 
-      if (redirectTo) {
-        query.set("redirectTo", redirectTo);
-      } else if (callbackUrl) {
-        query.set("callbackUrl", callbackUrl);
+      if (authReturnTo) {
+        query.set("redirectTo", authReturnTo);
       }
 
       window.location.href = buildTrustedGoogleLoginUrl(currentDeviceId, query);
@@ -91,10 +92,7 @@ export const AuthLogic = () => {
           footer={
             <span>
               Não tem uma conta?{" "}
-              <a
-                className="font-semibold text-primary hover:text-primary-hover"
-                href="/auth/profile-selection"
-              >
+              <a className="font-semibold text-primary hover:text-primary-hover" href={signupHref}>
                 Cadastre-se
               </a>
             </span>

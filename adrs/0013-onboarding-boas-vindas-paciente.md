@@ -137,3 +137,34 @@ telas fosse removida.
 - Browser local mobile em `/patient/welcome` com usuário temporário real validou saudação
   nominal, remoção de "Conte-nos sobre você"/nome/gênero/privacidade e etapa final direta
   de objetivo. O usuário temporário foi removido do banco ao final.
+
+## Complemento 2026-08-22 - boas-vindas deixa de ser gate do cadastro
+
+### Contexto
+
+O produto revisou a jornada de cadastro de paciente: o visitante normalmente chega ao cadastro depois de tentar acessar uma aba, acao privada ou modal (por exemplo, criar publicacao). Nesse contexto, inserir uma tela de boas-vindas entre a verificacao/login e a intencao original quebra a continuidade da tarefa.
+
+### Decisao
+
+- Remover `/paciente/boas-vindas` do redirecionamento automatico de pacientes sem `onboarding_completed_at`.
+- Priorizar sempre `redirectTo`/`callbackUrl` seguro no pos-cadastro, pos-login e pos-verificacao de e-mail.
+- Preservar a intencao ao sair da tela de login para `Cadastre-se`/selecao de perfil.
+- Manter `/paciente/boas-vindas` e `/patient/welcome` como rotas legadas que redirecionam para o retorno seguro ou `/psicologos`, sem redirect estatico intermediario no `next.config.ts`.
+- Nao alterar o schema nem fazer backfill: `patient_profile.onboarding_completed_at`, `goal` e `gender` permanecem historicos/opcionais ate uma futura decisao de produto sobre onboarding progressivo.
+
+### Consequencias
+
+- Novos pacientes retornam para a aba/modal de origem apos autenticar, sem passar por boas-vindas.
+- Pacientes sem retorno explicito caem no destino padrao `/psicologos`, coerente com `USER_HOME_PATHS`.
+- Dados legados de onboarding continuam legiveis e reversiveis; rollback pode restaurar o gate visual sem migration.
+- O fluxo fica frontend-only e compativel com backend antigo/novo.
+
+### Validacao
+
+- Teste unitario dedicado de auth redirect cobre paciente sem onboarding nao indo para boas-vindas, preservacao de retorno ao migrar de login para cadastro e retorno explicito apos verificacao.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/auth-redirect.test.mjs src/utils/session-policy.test.mjs`: sucesso.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso.
+- Smoke local do frontend buildado: `/version` retornou `0.1.174`; `/paciente/boas-vindas` redirecionou para `/psicologos`; `/paciente/boas-vindas?redirectTo=...` e `/patient/welcome?redirectTo=...` redirecionaram direto para a rota original; rota privada sem token redirecionou para login com `callbackUrl`.
+- `pnpm version:bump` e `pnpm check:version`: sucesso, manifests sincronizados em `0.1.174`.
+- `pnpm check`: sucesso.
