@@ -153,3 +153,34 @@ Regras anti-recriação específicas:
 ## Notas para executor
 
 A inversão de nomes no backend é real: `confirm` envia o código, `code/:code` valida. Não confie no nome do diretório — confira o controller. Concluir em commit próprio.
+
+
+## Ajuste complementar em 2026-08-21 - logo atual nos e-mails transacionais
+
+- Pedido do usuario: atualizar a logo da Lectum exibida no e-mail, evidenciado pelo print de 2026-08-21 em que o e-mail de `Codigo de confirmacao` ainda mostrava a marca antiga.
+- O asset publico do backend `backend/public/logo.png`, servido tambem em homologacao por `/logo.png`, foi substituido pela logo atual usada no app (`frontend/public/logo-light.png`), mantendo o mesmo caminho esperado por `SYSTEM_LOGO`.
+- O template transacional `backend/templates/transactional.hbs` foi ajustado para exibir a imagem com largura fixa e altura automatica, sem a altura forcada de `160px` que distorcia a proporcao no e-mail.
+- O cabecalho do template passou a usar fundo claro para manter contraste com a marca azul atual em clientes de e-mail.
+- A montagem da URL da logo em `backend/src/modules/api/config/nodemailer/send.ts` adiciona `?v=<versao>` de forma segura para URLs absolutas HTTP/HTTPS, reduzindo cache de imagens antigas em novos e-mails sem exigir env nova.
+- Nao houve alteracao de endpoint, envio SMTP, banco, dados persistidos, envs, packages, seed, mock ou provider.
+- ADR atualizado: `adrs/0011-verificacao-email-codigo.md`.
+
+Criterios complementares:
+
+- [x] `/logo.png` do backend usa a marca atual da Lectum.
+- [x] Template de e-mail preserva a proporcao da logo com altura automatica.
+- [x] Novos e-mails versionam a URL da logo para evitar cache da arte antiga.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir backend exec biome check --write src/modules/api/config/nodemailer/send.ts src/modules/api/config/nodemailer/send.test.ts`
+- `pnpm --dir backend exec node --import tsx --test src/modules/api/config/nodemailer/send.test.ts`
+- Render estatico local de `backend/templates/transactional.hbs` confirmou `src` versionado, `width='280'`, `height:auto`, fundo claro do cabecalho e fallback textual legivel.
+- `pnpm --dir backend check` (primeira tentativa antes do bump falhou por timeout no teste backend `boot-safety.test.mjs`, fora do escopo alterado; o teste isolado passou; reexecucao apos o bump concluiu sem erros)
+- `pnpm --dir backend exec node --import tsx --test scripts/boot-safety.test.mjs`
+- `pnpm --dir backend build`
+- `pnpm version:bump` (`0.1.166` -> `0.1.167`)
+- `pnpm check:version`
+- `pnpm check`
+- Smoke local do backend buildado em `http://127.0.0.1:3001`: `/ping` respondeu `0.1.167`, `/health` OK, `/ready` ready e `/logo.png` retornou o mesmo SHA-256 do asset novo versionado no repo.

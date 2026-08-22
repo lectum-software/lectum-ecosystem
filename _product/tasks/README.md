@@ -729,3 +729,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-18A: `Especialidades` e `Servicos` em `/app/profissional/perfil/configurar` agora tambem exigem ao menos uma selecao no schema Zod, alinhando a validacao ao asterisco visual desses campos.
 - O erro inline fica em portugues e indica obrigatoriedade, enquanto a rolagem para o primeiro campo pendente reutiliza a ordem mobile-first ja existente.
 - Alteracao frontend-only; sem mudanca de backend, banco, contratos, packages, envs, providers ou dados publicados.
+
+## Atualizacao visual em 2026-08-21: logo atual nos e-mails transacionais
+
+- Ajuste pos-feedback da TASK-06: `backend/public/logo.png`, usado por `SYSTEM_LOGO` nos e-mails transacionais, foi atualizado da marca antiga para a logo atual da Lectum.
+- O template `transactional.hbs` deixa de forcar altura fixa na imagem, preserva proporcao com `height:auto`, usa cabecalho claro e adiciona versionamento seguro na URL da logo para novos e-mails nao ficarem presos em cache de cliente/proxy.
+- Alteracao backend-only de asset/template; sem mudanca de banco, contrato de API, packages, env nova, provider SMTP ou dados publicados.

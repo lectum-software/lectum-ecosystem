@@ -4,6 +4,7 @@ import path from "node:path";
 import nodemailer from "nodemailer";
 import hbs from "nodemailer-express-handlebars";
 
+import packageMetadata from "../../../../../package.json";
 import type { MessageProps } from "./types";
 
 type Send = {
@@ -85,6 +86,21 @@ const renderTemplate = (template: string, context: TemplateContext) => {
   );
 };
 
+export const resolveEmailLogoUrl = (logoUrl: string | undefined) => {
+  const value = logoUrl?.trim();
+  if (!value) return undefined;
+
+  try {
+    const parsed = new URL(value);
+    if (!["http:", "https:"].includes(parsed.protocol)) return value;
+
+    parsed.searchParams.set("v", packageMetadata.version);
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+};
+
 const send = async ({
   to,
   subject,
@@ -156,7 +172,7 @@ const send = async ({
         context: {
           ...messageProps,
           system: process.env.SYSTEM_NAME!,
-          logo: process.env.SYSTEM_LOGO!,
+          logo: resolveEmailLogoUrl(process.env.SYSTEM_LOGO),
         },
         tls: {
           minVersion: "TLSv1.2",
