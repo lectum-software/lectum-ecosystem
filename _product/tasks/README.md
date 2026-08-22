@@ -735,3 +735,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-06: `backend/public/logo.png`, usado por `SYSTEM_LOGO` nos e-mails transacionais, foi atualizado da marca antiga para a logo atual da Lectum.
 - O template `transactional.hbs` deixa de forcar altura fixa na imagem, preserva proporcao com `height:auto`, usa cabecalho claro e adiciona versionamento seguro na URL da logo para novos e-mails nao ficarem presos em cache de cliente/proxy.
 - Alteracao backend-only de asset/template; sem mudanca de banco, contrato de API, packages, env nova, provider SMTP ou dados publicados.
+
+## Atualizacao visual em 2026-08-22: nome de exibicao no cadastro de paciente
+
+- Ajuste pos-feedback da TASK-07: no cadastro de paciente por e-mail em `/auth/register/patient`, o campo antes rotulado como `Nome completo` passa a se chamar `Nome de exibicao`.
+- A mensagem de obrigatoriedade do schema Zod acompanha a nova nomenclatura; o payload continua usando `name` no endpoint real `POST /api/public/user/store`.
+- Alteracao frontend-only de copy/formulario, mobile-first; sem mudanca de backend, banco, contrato de API, packages, envs, OAuth Google, providers, jobs ou dados publicados.

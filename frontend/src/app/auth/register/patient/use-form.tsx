@@ -8,7 +8,7 @@ export const registerPatientSchema = z
     name: z
       .string()
       .trim()
-      .min(2, "Informe seu nome completo")
+      .min(2, "Informe seu nome de exibição")
       .max(120, "Use no máximo 120 caracteres"),
     email: z.email("Informe um e-mail válido"),
     password: z
@@ -36,7 +36,7 @@ const fields = [
   {
     name: "name",
     field: "input",
-    label: "Nome completo",
+    label: "Nome de exibição",
     placeholder: "Seu nome",
     autoComplete: "name",
     required: true,

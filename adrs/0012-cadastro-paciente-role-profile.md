@@ -120,3 +120,35 @@ foto de perfil tambem precisa ser persistida quando disponivel.
 - Cadastro real por `POST /api/public/user/store` validou persistencia do nome informado,
   `role="paciente"`, `patient_profile` e aceite de termos; o usuario temporario foi
   removido ao final.
+
+## Atualizacao em 2026-08-22: nome de exibicao no cadastro por e-mail
+
+### Contexto
+
+Pedido direto de produto identificou que, no cadastro por e-mail de paciente, o rotulo
+`Nome completo` comunica uma exigencia maior do que o uso real do campo. Para pacientes,
+o mesmo dado alimenta `user.name` como identidade exibida em areas privadas e comunidade,
+alinhado a outros pontos do produto que usam `Nome de exibicao`.
+
+### Decisao
+
+- `/auth/register/patient` passa a rotular o campo `name` como `Nome de exibicao`.
+- O schema Zod acompanha a nomenclatura no erro de obrigatoriedade: `Informe seu nome de
+  exibicao`.
+- O contrato com `POST /api/public/user/store` permanece inalterado, enviando `name` com
+  o valor informado.
+
+### Consequencias
+
+- Pacientes entendem que o dado e o nome que aparecera no produto, nao necessariamente
+  nome civil completo.
+- O backend, o fluxo Google, os registros existentes e as telas que ja consomem `user.name`
+  continuam compativeis.
+- Nao ha schema, migration, package, env, provider ou job novo.
+
+### Validacao
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local/headless em `http://localhost:3000/auth/register/patient`, viewport mobile,
+  confirmou a copy `Nome de exibicao` no formulario de e-mail.

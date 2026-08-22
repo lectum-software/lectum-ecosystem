@@ -203,3 +203,25 @@ A adição de `user.role` afeta o redirecionamento por perfil da TASK-04 e a nav
 - Cadastro real por `POST /api/public/user/store` com nome informado retornou
   `name="Maria Teste Codex"`, `role="paciente"`, `patient_profile` e aceite de termos;
   o usuario temporario foi removido ao final.
+
+## Ajuste posterior em 2026-08-22: nome de exibicao no cadastro por e-mail
+
+- Pedido direto de produto: no cadastro de paciente por e-mail em `/auth/register/patient`,
+  trocar o rotulo do campo `Nome completo` para `Nome de exibicao`.
+- A semantica do payload permanece `name`, porque o backend e demais telas ja usam esse campo
+  como nome exibido do paciente; nao ha nova coluna, contrato ou migracao.
+- O schema Zod foi alinhado para que o erro de obrigatoriedade cite `nome de exibicao`, sem
+  alterar limites de tamanho, envio real para `POST /api/public/user/store`, fluxo Google ou
+  aceite de termos.
+- Builder/Quick Copy nao estava disponivel como ferramenta direta nesta sessao; foram usados o
+  anexo visual do feedback e a referencia local `_product/proto/Cadastro de Paciente.jpg`.
+- Impacto de deploy: frontend-only, compativel com frontend/backend/admin em versoes diferentes,
+  sem banco, env, packages, jobs/providers ou dados publicados. Rollback: reverter este ajuste
+  de copy.
+
+### Validacao do ajuste
+
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- Browser local/headless em `http://localhost:3000/auth/register/patient`, viewport mobile,
+  validando que o accordion de e-mail exibe `Nome de exibicao` e nao exibe `Nome completo`.
