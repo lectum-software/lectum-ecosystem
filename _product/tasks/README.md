@@ -820,3 +820,9 @@ Uma task só pode ser marcada como concluída quando:
 - O header preserva `Respondido na Lectum`/`Postado na Lectum`, ganha tipografia maior e adiciona somente o desenho branco da logo SVG `/logo-icon.svg`, sem chip/fundo branco, para reforcar reconhecimento de marca.
 - A tag do profissional ganhou nome maior e mais espaco entre o nome e `Psicologo`; o cargo fica alinhado pela esquerda com o nome, mantendo selo verificado e ausencia de avatar/CRP/wordmark de rodape.
 - O texto da pergunta tambem ganha escala maior, e a versao de layout dos artefatos temporarios passa para `lectum-share-v3-2026-08-22-white-logo-large-card`; sem package, env obrigatoria, migration ou endpoint novo neste complemento visual.
+
+## Atualizacao visual em 2026-08-22: caixinha abaixo da UI nativa do Reels
+
+- Ajuste pos-feedback da TASK-42: o card superior do canvas social foi deslocado para baixo para ficar abaixo da linha nativa do Instagram/Reels (`voltar` + `Reels` + camera), evitando competir com o chrome do app.
+- A largura do card foi reduzida levemente e o padding horizontal ajustado para respeitar melhor o crop lateral de telas altas, sem reduzir a escala aprovada do header e da pergunta.
+- A versao de layout dos artefatos temporarios passa para `lectum-share-v4-2026-08-22-instagram-safe-card`; sem package, env obrigatoria, migration, endpoint novo ou dado persistente novo.

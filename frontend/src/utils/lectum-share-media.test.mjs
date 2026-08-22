@@ -160,7 +160,7 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.doesNotMatch(source, /MAX_VIDEO_EXPORT_SECONDS/);
 });
 
-test("layout social usa card mais proximo do instagram, logo lectum e autoria mais legivel", () => {
+test("layout social usa card parecido com instagram e respeita safe area de reels", () => {
   const layoutSource = readFileSync(
     new URL("./lectum-share-media/layout.ts", import.meta.url),
     "utf8",
@@ -182,7 +182,10 @@ test("layout social usa card mais proximo do instagram, logo lectum e autoria ma
   assert.match(layoutSource, /globalCompositeOperation = "source-in"/);
   assert.match(layoutSource, /ctx\.drawImage\(\s*assets\.brandLogoWhite/);
   assert.doesNotMatch(layoutSource, /arc\(iconBoxX/);
-  assert.match(layoutSource, /width: 930/);
+  assert.match(layoutSource, /paddingX: 50/);
+  assert.match(layoutSource, /width: 860/);
+  assert.match(layoutSource, /x: 110/);
+  assert.match(layoutSource, /y: 250/);
   assert.match(layoutSource, /bodyFontSize: 48/);
   assert.match(layoutSource, /headerFontSize: 36/);
   assert.match(layoutSource, /minBodyHeight: 268/);
@@ -192,5 +195,5 @@ test("layout social usa card mais proximo do instagram, logo lectum e autoria ma
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v3-2026-08-22-white-logo-large-card/);
+  assert.match(repositorySource, /lectum-share-v4-2026-08-22-instagram-safe-card/);
 });

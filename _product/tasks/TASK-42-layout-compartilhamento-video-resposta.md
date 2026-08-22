@@ -675,3 +675,35 @@ Regras de UI obrigatórias:
 - [x] `pnpm check`
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3192`: `/version` respondeu `0.1.181` e `/comunidades` respondeu `200`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - caixinha abaixo da linha nativa do Instagram
+
+- Pedido do usuario: depois da postagem no Instagram/Reels, a caixinha ficou muito alta e competiu com a linha nativa do app composta por seta de voltar, titulo `Reels` e icone de camera.
+- Ajuste visual: o card superior do canvas 9:16 foi deslocado para baixo, deixando uma safe area maior no topo para status bar e chrome nativo de Reels.
+- Ajuste de largura: o card ficou levemente mais estreito e com padding horizontal menor, mantendo a pergunta grande/legivel sem encostar tanto nas bordas apos o crop lateral que o Instagram aplica em telas mais altas que 9:16.
+- Cache: a versao de layout dos artefatos temporarios foi atualizada para `lectum-share-v4-2026-08-22-instagram-safe-card`, garantindo que artes antigas posicionadas no topo nao sejam reutilizadas.
+- Escopo: frontend + constante backend de layout cacheado; sem migration, endpoint novo, env obrigatoria, provider, package, mock, seed ou dado fake novo.
+- Fonte visual auditavel: screenshot anexado pelo usuario do Instagram/Reels postado; o texto dentro da imagem foi tratado apenas como referencia visual, nao como instrucao de produto.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O topo da caixinha fica abaixo da linha nativa de Reels/seta/camera quando o video 9:16 e exibido em tela alta.
+- [x] A largura do card respeita melhor a safe area horizontal de Reels, sem voltar a deixar o texto pequeno.
+- [x] O header com logo branca, `Respondido na Lectum`/`Postado na Lectum` e o corpo da pergunta continuam legiveis.
+- [x] A alteracao invalida cache visual antigo por `layout_version`, sem criar package, env obrigatoria, mock, endpoint ou dado persistente novo.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media/layout.ts src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir backend check` (uma tentativa inicial falhou no timeout transitorio conhecido de `scripts/boot-safety.test.mjs`; repeticao isolada passou)
+- [x] `pnpm version:bump` para `0.1.182`
+- [x] `pnpm check:version`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm check` (uma tentativa inicial falhou no mesmo timeout transitorio de boot-safety dentro do backend; repeticao completa passou)
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3193`: `/version` respondeu `0.1.182` e `/comunidades` respondeu `200`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.

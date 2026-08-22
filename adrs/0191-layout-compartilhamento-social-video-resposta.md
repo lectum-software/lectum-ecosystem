@@ -372,3 +372,29 @@ Novo feedback comparou a caixinha de pergunta da Lectum com a referencia visual 
 - `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`: sucesso.
 - `pnpm check:version`: sucesso em `0.1.181`.
 - Validacoes finais, build, versionamento e smoke constam na TASK-42.
+
+## Complemento 2026-08-22 - safe area da caixinha no Instagram/Reels
+
+### Contexto
+
+Novo feedback analisou a arte depois de postada no Instagram/Reels. A caixinha de pergunta estava grande e legivel, mas posicionada alta demais, competindo com a linha nativa do app composta por seta de voltar, titulo `Reels` e icone de camera. Em telas altas, o Instagram tambem pode preencher a altura e recortar laterais do video 9:16, fazendo cards muito largos parecerem colados nas bordas.
+
+### Decisao
+
+- Manter a escala do texto da pergunta e do header aprovada no complemento anterior.
+- Deslocar o card superior para baixo no canvas 1080x1920, criando safe area para a UI nativa de Reels/status bar antes da caixinha.
+- Reduzir levemente a largura do card e seu padding horizontal para ficar dentro da area central segura quando o Instagram exibe o video 9:16 em telas mais altas.
+- Atualizar `POST_SHARE_ARTIFACT_LAYOUT_VERSION` para `lectum-share-v4-2026-08-22-instagram-safe-card`, evitando reutilizar arte temporaria antiga com card alto demais.
+- Nao alterar backend de dados, storage, banco, rotas, payloads, envs, providers, packages ou tracking; a mudanca backend e somente a constante de versao do cache visual.
+
+### Consequencias
+
+- O arquivo social fica menos colado ao topo e se comporta mais como sticker do video, nao como uma barra sobreposta ao chrome do Instagram.
+- A pergunta continua grande e legivel, mas o card ganha mais respiro e reduz risco de crop lateral em Reels.
+- Arte ja cacheada com a versao visual anterior sera naturalmente ignorada por `layout_version`/`cache_key` e regenerada sob demanda.
+- Rollback: reverter este complemento volta ao card v3 mais alto e largo; artefatos v4 temporarios podem expirar naturalmente pelo TTL existente.
+
+### Validacao
+
+- Teste unitario estatico cobre `x: 110`, `y: 250`, `width: 860`, `paddingX: 50` e `layout_version` v4.
+- Validacoes finais, build, versionamento e smoke constam na TASK-42, com versao `0.1.182`.
