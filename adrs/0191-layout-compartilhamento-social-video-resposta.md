@@ -223,3 +223,32 @@ Novo feedback do usuario mostrou que a share sheet da Lectum estava duplicando a
 - Smoke local do frontend buildado em `http://127.0.0.1:3186`: `/version` respondeu `0.1.175` e `/comunidades` respondeu `200`.
 - `pnpm check`: primeira tentativa teve timeout transitorio em testes de boot safety do backend; repeticao isolada de `pnpm --dir backend check` e segunda execucao completa de `pnpm check` passaram.
 - Smoke de homologacao apos push automatico de `homolog` sera reportado ao usuario.
+
+## Complemento 2026-08-22 - preparo silencioso e ativacao nativa
+
+### Contexto
+
+Novo feedback mostrou tres problemas no compartilhamento direto: durante o toast de preparo o audio do video tocava em segundo plano; no iOS, apos a geracao, a aplicacao podia cair em uma tela cinza de arquivo antes da folha nativa; e o arquivo ainda aparecia com nome tecnico `lectum-respondido-vertical-9x16`.
+
+### Decisao
+
+- O elemento `<video>` criado apenas para exportacao por canvas/MediaRecorder deve ser sempre silencioso (`muted=true` e `volume=0`) antes de qualquer `play()`, pois ele nao e um player visivel ao usuario.
+- Perdas de ativacao do Web Share (`NotAllowedError`/`SecurityError`) nao devem acionar fallback de download automatico. O arquivo preparado fica em cache e a UI instrui o usuario a tocar novamente em compartilhar para reutilizar o arquivo dentro de um novo gesto.
+- Quando o arquivo ja esta cacheado, o hook de compartilhamento chama `navigator.share()` de forma imediata no toque, preservando a ativacao transiente sempre que o navegador permitir.
+- O fallback de download/copia de link permanece apenas para cenarios em que compartilhamento de arquivo nativo nao existe ou nao e suportado pelo navegador.
+- O nome do arquivo e o `shareTitle` de midia passam a usar o nome do profissional e o contexto de origem: `[Nome do psicologo] - Respondido na Lectum` ou `[Nome do psicologo] - Postado na Lectum`.
+
+### Consequencias
+
+- O preparo do arquivo deixa de emitir audio de fundo, mantendo a tela atual limpa enquanto o usuario aguarda.
+- Em iOS/Safari, a experiencia evita abrir automaticamente a tela cinza de download quando o problema e apenas perda de gesto; o usuario faz um segundo toque com o arquivo ja pronto.
+- A Web Share API continua limitada pelo sistema operacional e pelo navegador: nao ha API web confiavel para forcar a folha nativa depois de uma renderizacao longa se a ativacao do usuario ja expirou.
+- Arquivos compartilhados deixam de expor um nome tecnico e passam a aparecer com autoria/contexto claros.
+- Nao ha alteracao de backend, banco, storage, envs, providers, packages ou dados persistidos.
+- Rollback: reverter este complemento volta ao comportamento anterior de preparo audivel, download automatico em perda de ativacao e nome tecnico de arquivo.
+
+### Validacao
+
+- Testes unitarios cobrem reconhecimento de perda de ativacao e nome do arquivo com profissional/contexto.
+- `pnpm --dir frontend check`: sucesso.
+- Validacoes finais, build, versionamento e smoke constam na TASK-42.

@@ -1,5 +1,6 @@
 import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
 
+import { safeFileName } from "./file-name";
 import {
   type CanvasWithCaptureStream,
   canvasToBlob,
@@ -30,9 +31,6 @@ export const supportedVideoMimeType = () => {
 
 export const extensionFromMimeType = (mimeType: string) =>
   mimeType.includes("mp4") ? "mp4" : "webm";
-
-export const safeFileName = (target: LectumShareSocialTarget, extension: string) =>
-  `${target.kind === "post_media" ? "lectum-postado" : "lectum-respondido"}-vertical-9x16.${extension}`;
 
 export const createLectumShareFrameImageFile = async ({
   fileName,
@@ -159,6 +157,9 @@ export const createVideoShareFile = async (
 
     const start = async () => {
       try {
+        video.muted = true;
+        video.volume = 0;
+
         if (video.currentTime > 0.05) {
           video.currentTime = 0;
           await waitForEvent(video, "seeked", 4000).catch(() => undefined);

@@ -1,7 +1,18 @@
 import type { ShareNavigator } from "./layout";
 
+const nativeShareErrorName = (error: unknown) =>
+  typeof error === "object" && error !== null && "name" in error
+    ? String((error as { name?: unknown }).name ?? "")
+    : "";
+
 export const isNativeShareAbortError = (error: unknown) =>
-  error instanceof DOMException && error.name === "AbortError";
+  nativeShareErrorName(error) === "AbortError";
+
+export const isNativeShareActivationError = (error: unknown) => {
+  const errorName = nativeShareErrorName(error);
+
+  return errorName === "NotAllowedError" || errorName === "SecurityError";
+};
 
 const canUseNativeShareData = (nav: ShareNavigator, shareData: ShareData) => {
   if (!nav.share) return false;

@@ -117,6 +117,11 @@ const normalizePostMediaItem = (
 const sortMediaItems = (items: CommunityPostMediaItem[]) =>
   [...items].sort((left, right) => left.position - right.position);
 
+const createLectumSocialShareTitle = (
+  professionalName: string,
+  cardLabel: LectumShareSocialTarget["cardLabel"],
+) => `${professionalName.replace(/\s+/g, " ").trim() || "Lectum"} - ${cardLabel}`;
+
 export const createLectumShareLinkTarget = (
   post: Pick<PostListPost, "community" | "id" | "title">,
   options: {
@@ -155,9 +160,12 @@ export const createLectumSharePostMediaTarget = (
 
   const relativeUrl = options.relativeUrl ?? postRelativeUrl(post);
   const responseText = post.content?.trim() || null;
+  const cardLabel = "Postado na Lectum";
+  const professionalName =
+    normalizeLectumShareProfessionalName(post.author.name) || post.author.name;
 
   return {
-    cardLabel: "Postado na Lectum",
+    cardLabel,
     carouselCount: mediaItems.length,
     kind: "post_media",
     mediaItems,
@@ -166,14 +174,14 @@ export const createLectumSharePostMediaTarget = (
     postId: post.id,
     professional: {
       avatar: post.author.avatar,
-      name: normalizeLectumShareProfessionalName(post.author.name) || post.author.name,
+      name: professionalName,
       roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
       verified: post.author.verified,
     },
     replyId: null,
     responseText,
     shareText: post.title,
-    shareTitle: "Postado na Lectum",
+    shareTitle: createLectumSocialShareTitle(professionalName, cardLabel),
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: "post",
     sourceText: post.title,
@@ -199,9 +207,12 @@ export const createLectumShareVideoTarget = (
     `/comunidades/${post.community.slug}/publicacao/${post.id}?focusReplyId=${encodeURIComponent(
       reply.id,
     )}#reply-${reply.id}`;
+  const cardLabel = "Respondido na Lectum";
+  const professionalName =
+    normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;
 
   return {
-    cardLabel: "Respondido na Lectum",
+    cardLabel,
     carouselCount: 1,
     kind: "video_response",
     mediaItems: [{ mediaType: "video", mediaUrl: reply.media_url }],
@@ -210,7 +221,7 @@ export const createLectumShareVideoTarget = (
     postId: post.id,
     professional: {
       avatar: reply.author.avatar,
-      name: normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name,
+      name: professionalName,
       roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
       verified: reply.author.verified,
     },
@@ -221,7 +232,7 @@ export const createLectumShareVideoTarget = (
       (hasCommentContext
         ? "Responderam a um comentário na Lectum."
         : "Responderam a uma pergunta na Lectum."),
-    shareTitle: "Respondido na Lectum",
+    shareTitle: createLectumSocialShareTitle(professionalName, cardLabel),
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: hasCommentContext ? "comment" : "post",
     sourceText,

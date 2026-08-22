@@ -445,3 +445,43 @@ Regras de UI obrigatórias:
 - [x] `pnpm check:tasks`
 - [x] `pnpm check:source-size`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - preparo silencioso e retry nativo cacheado
+
+- Pedido do usuario: ao tocar em compartilhar, o toast de preparo aparecia e o audio do video comecava a tocar em segundo plano; depois do preparo, o iOS abria uma tela cinza de arquivo e exigia tocar em `Mais...`; alem disso, o arquivo aparecia como `lectum-respondido-vertical-9x16`.
+- Diagnostico: a exportacao client-side usava um `<video>` invisivel para redesenhar a midia no canvas e chamava `play()` com `muted=false`, tornando audivel o elemento de preparo. Em navegadores moveis, quando a geracao termina fora da ativacao transiente do toque, `navigator.share()` pode ser bloqueado e o fallback de download abre a tela cinza de arquivo no iOS.
+- Decisao: o elemento de video usado apenas para exportacao passa a ser sempre silencioso (`muted` e `volume=0`) antes de tocar para captura, sem afetar controles dos videos visiveis no feed.
+- Decisao: quando a Web Share API sinaliza perda de ativacao do gesto (`NotAllowedError`/`SecurityError`), o frontend nao dispara mais download automatico do arquivo; ele mantem o arquivo preparado em cache e orienta o usuario a tocar em compartilhar novamente para abrir a folha nativa com o arquivo ja pronto.
+- Decisao: quando o arquivo ja esta em cache, o proximo toque chama `navigator.share()` imediatamente, aumentando a chance de abrir diretamente a folha nativa do celular. Limite tecnico mantido: a Web nao consegue forcar a folha nativa apos uma geracao longa quando a ativacao do gesto ja expirou.
+- Frontend: o nome/titulo compartilhado para midia agora usa `[Nome do psicologo] - Respondido na Lectum` ou `[Nome do psicologo] - Postado na Lectum`, com sanitizacao segura para nome de arquivo.
+- Escopo: frontend-only, mobile-first; sem mudanca de backend, banco, Prisma, migrations, endpoints, payloads, storage/R2, envs, providers, jobs, dados publicados ou packages.
+- Fonte visual auditavel: screenshots do usuario `WhatsApp Image 2026-08-22 at 12.46.45.jpeg`, `WhatsApp Image 2026-08-22 at 12.47.23.jpeg` e `WhatsApp Image 2026-08-22 at 12.47.48.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O preparo/exportacao do video compartilhavel nao toca audio em segundo plano.
+- [x] Perda de ativacao do Web Share nao abre automaticamente a tela cinza de arquivo/download no iOS.
+- [x] O arquivo preparado fica cacheado para o proximo toque abrir a folha nativa diretamente quando o navegador permitir.
+- [x] O usuario recebe uma mensagem publica e nao tecnica quando precisa tocar de novo apos o preparo.
+- [x] O arquivo compartilhado usa o nome do psicologo e o contexto `Respondido na Lectum` ou `Postado na Lectum`.
+- [x] O fallback de download/copia permanece para navegadores sem Web Share de arquivo.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-media.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media/file-name.ts src/utils/lectum-share-media/layout.ts src/utils/lectum-share-media/native-share.ts src/utils/lectum-share-target.ts src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` antes e depois do bump para `0.1.176`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3187`: `/version` respondeu `0.1.176` e `/comunidades` respondeu `200`.
+- [x] `pnpm version:bump` para `0.1.176`
+- [x] `pnpm check:version`
+- [x] `pnpm check` (primeira tentativa falhou pelo timeout transitorio ja conhecido em `backend/scripts/boot-safety.test.mjs`; `pnpm --dir backend check` isolado passou e a repeticao completa de `pnpm check` passou).
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check:source-size`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

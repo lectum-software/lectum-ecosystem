@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-const { isNativeShareAbortError, resolveLectumFileShareData, resolveLectumLinkShareData } =
-  await import("./lectum-share-media/native-share.ts");
+const {
+  isNativeShareAbortError,
+  isNativeShareActivationError,
+  resolveLectumFileShareData,
+  resolveLectumLinkShareData,
+} = await import("./lectum-share-media/native-share.ts");
+const { safeFileName, shareFileTitle } = await import("./lectum-share-media/file-name.ts");
 
 const createShareFile = () =>
   new File(["lectum"], "lectum-respondido-vertical-9x16.mp4", {
@@ -90,4 +95,45 @@ test("compartilhamento de link fica indisponivel sem share nativo", () => {
 test("cancelamento nativo da share sheet e reconhecido sem virar erro tecnico", () => {
   assert.equal(isNativeShareAbortError(new DOMException("Cancelado", "AbortError")), true);
   assert.equal(isNativeShareAbortError(new DOMException("Bloqueado", "NotAllowedError")), false);
+});
+
+test("perda de ativacao nativa e reconhecida sem acionar download automatico", () => {
+  assert.equal(
+    isNativeShareActivationError(new DOMException("Bloqueado", "NotAllowedError")),
+    true,
+  );
+  assert.equal(isNativeShareActivationError(new DOMException("Bloqueado", "SecurityError")), true);
+  assert.equal(isNativeShareActivationError(new DOMException("Cancelado", "AbortError")), false);
+});
+
+test("nome do arquivo compartilhavel usa profissional e contexto", () => {
+  const target = {
+    cardLabel: "Respondido na Lectum",
+    kind: "video_response",
+    professional: { name: "Ana Rubia Papi" },
+  };
+
+  assert.equal(shareFileTitle(target), "Ana Rubia Papi - Respondido na Lectum");
+  assert.equal(safeFileName(target, "mp4"), "Ana Rubia Papi - Respondido na Lectum.mp4");
+  assert.equal(
+    safeFileName(
+      {
+        ...target,
+        cardLabel: "Postado na Lectum",
+        kind: "post_media",
+      },
+      "mp4",
+    ),
+    "Ana Rubia Papi - Postado na Lectum.mp4",
+  );
+  assert.equal(
+    safeFileName(
+      {
+        ...target,
+        professional: { name: "Dra. A/B:C* Psicologa" },
+      },
+      "mp4",
+    ),
+    "Dra. ABC Psicologa - Respondido na Lectum.mp4",
+  );
 });

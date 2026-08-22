@@ -23,7 +23,7 @@ export type CanvasWithCaptureStream = HTMLCanvasElement & {
 export type ShareExportResult = {
   channel: LectumShareChannel | null;
   file?: File;
-  mode: "clipboard" | "download" | "file" | "link";
+  mode: "clipboard" | "download" | "file" | "link" | "prepared";
 };
 
 export type LectumShareFrameTarget = Pick<
@@ -168,9 +168,10 @@ export const waitForEvent = <K extends keyof HTMLMediaElementEventMap>(
 export const loadVideoElement = async (src: string) => {
   const video = document.createElement("video") as VideoWithCaptureStream;
   video.crossOrigin = "anonymous";
-  video.muted = false;
+  video.muted = true;
   video.playsInline = true;
   video.preload = "auto";
+  video.volume = 0;
   video.src = src;
   video.load();
 

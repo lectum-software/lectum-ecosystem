@@ -4,9 +4,11 @@ import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSharePost, useShareReply } from "@/api/callers/posts";
 import {
+  getPreparedLectumShareFile,
   isNativeShareAbortError,
+  prepareLectumShareFile,
   shareLectumLinkTarget,
-  shareLectumVideoResponse,
+  sharePreparedLectumVideoResponse,
 } from "@/utils/lectum-share-media";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
 import type { LectumShareChannel, LectumShareVideoTarget } from "@/utils/lectum-share-target";
@@ -15,7 +17,9 @@ type UseLectumDirectShareOptions = {
   onShared?: (target: LectumShareVideoTarget, result: ShareExportResult) => void;
 };
 
-const SHARING_TOAST_MESSAGE = "Preparando mídia para compartilhar...";
+const SHARING_TOAST_MESSAGE = "Preparando vídeo para compartilhar...";
+const SHARE_READY_RETRY_MESSAGE =
+  "Vídeo preparado. Toque em compartilhar novamente para abrir as opções do celular.";
 
 export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) => {
   const { onShared } = options;
@@ -49,25 +53,47 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
       sharingRef.current = true;
       setIsSharing(true);
 
-      const loadingToastId = target.kind === "link" ? null : toast.loading(SHARING_TOAST_MESSAGE);
+      let loadingToastId: string | number | null = null;
 
       try {
-        const result =
-          target.kind === "link"
-            ? await shareLectumLinkTarget(target)
-            : await shareLectumVideoResponse(target);
+        let result: ShareExportResult;
+
+        if (target.kind === "link") {
+          result = await shareLectumLinkTarget(target);
+        } else {
+          const cachedFile = getPreparedLectumShareFile(target);
+
+          if (!cachedFile) {
+            loadingToastId = toast.loading(SHARING_TOAST_MESSAGE);
+          }
+
+          const file = cachedFile ?? (await prepareLectumShareFile(target));
+
+          if (loadingToastId !== null) {
+            toast.dismiss(loadingToastId);
+            loadingToastId = null;
+          }
+
+          result = await sharePreparedLectumVideoResponse(target, file, {
+            skipDownloadOnActivationLoss: true,
+          });
+        }
 
         if (loadingToastId !== null) {
           toast.dismiss(loadingToastId);
         }
 
-        trackShare(target, result.channel);
-        onShared?.(target, result);
+        if (result.mode !== "prepared") {
+          trackShare(target, result.channel);
+          onShared?.(target, result);
+        }
 
         if (result.mode === "download") {
           toast.success("Arquivo baixado. Escolha o app desejado no dispositivo.");
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
+        } else if (result.mode === "prepared") {
+          toast.info(SHARE_READY_RETRY_MESSAGE);
         }
       } catch (error) {
         if (loadingToastId !== null) {

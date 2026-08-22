@@ -782,3 +782,11 @@ Uma task só pode ser marcada como concluída quando:
 - O clique em compartilhar passa a tentar abrir diretamente `navigator.share()` com arquivo social real quando houver midia/video, ou com link/texto em posts textuais; se o navegador bloquear/nao suportar, o fallback baixa o arquivo e/ou copia o link quando possivel.
 - A Web continua sem garantia de abrir WhatsApp/Instagram/TikTok especificos com arquivo anexado; a escolha do app fica a cargo da folha nativa do sistema operacional.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: preparo silencioso do compartilhamento nativo
+
+- Ajuste pos-feedback da TASK-42: o video invisivel usado para gerar o arquivo compartilhavel agora e sempre preparado em silencio, impedindo audio de fundo enquanto o toast de preparo aparece.
+- Quando o navegador movel perde a ativacao do toque durante uma geracao longa, a aplicacao nao aciona mais download automatico que abre a tela cinza de arquivo no iOS; o arquivo fica cacheado e o usuario toca novamente para abrir a folha nativa com a midia ja pronta.
+- O nome do arquivo/titulo compartilhavel passa a seguir `[Nome do psicologo] - Respondido na Lectum` ou `[Nome do psicologo] - Postado na Lectum`, com sanitizacao segura para nome de arquivo.
+- Limite tecnico registrado: a Web nao consegue forcar a folha nativa se o arquivo ainda nao estava pronto e a ativacao transiente do gesto expirou; o retry cacheado e a alternativa segura.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
