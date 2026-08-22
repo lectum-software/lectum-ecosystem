@@ -151,6 +151,15 @@ export const sharePreparedLectumVideoResponse = async (
   return { channel: copied ? "clipboard" : null, file, mode: "download" };
 };
 
+export const downloadPreparedLectumShareFile = async (
+  _target: LectumShareSocialTarget,
+  file: File,
+): Promise<ShareExportResult> => {
+  downloadFile(file);
+
+  return { channel: null, file, mode: "download" };
+};
+
 export const shareLectumVideoResponse = async (
   target: LectumShareSocialTarget,
 ): Promise<ShareExportResult> => {
@@ -192,15 +201,35 @@ export const shareLectumLinkTarget = async (
 
 export const shareLectumSocialLinkPreviewTarget = async (
   target: LectumShareSocialTarget,
+  options: { whatsappPreview?: boolean } = {},
 ): Promise<ShareExportResult> =>
   shareLectumLinkTarget({
     kind: "link",
     postId: target.postId,
     replyId: target.replyId,
-    shareUrl: target.shareUrl,
+    shareUrl: options.whatsappPreview ? target.whatsappShareUrl : target.shareUrl,
     text: null,
-    title: target.shareTitle,
+    title: `${target.professional.name} na Lectum`,
   });
+
+export const shareLectumWhatsAppPreviewTarget = async (
+  target: LectumShareSocialTarget,
+): Promise<ShareExportResult> => {
+  const whatsappShareUrl = target.whatsappShareUrl || target.shareUrl;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappShareUrl)}`;
+  const opened = window.open(whatsappUrl, "_blank");
+
+  if (opened) {
+    try {
+      opened.opener = null;
+    } catch {
+      // A navegação externa para o WhatsApp não deve falhar se o navegador bloquear opener.
+    }
+    return { channel: "web_share", mode: "link" };
+  }
+
+  return shareLectumSocialLinkPreviewTarget(target, { whatsappPreview: true });
+};
 
 export { createLectumShareFrameImageFile } from "./lectum-share-media/export";
 export type { LectumShareFrameTarget } from "./lectum-share-media/layout";

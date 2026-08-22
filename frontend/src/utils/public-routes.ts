@@ -12,8 +12,14 @@ export const publicCommunityHref = (slug: string) => `${PUBLIC_COMMUNITIES_HREF}
 export const publicCommunityPostHref = (slug: string, id: string) =>
   `${publicCommunityHref(slug)}/publicacao/${id}`;
 
+export const publicCommunityPostWhatsappShareHref = (slug: string, id: string) =>
+  `${publicCommunityPostHref(slug, id)}/whatsapp`;
+
 export const publicCommunityReplyThreadHref = (slug: string, id: string, replyId: string) =>
   `${publicCommunityPostHref(slug, id)}/resposta/${replyId}`;
+
+export const publicCommunityReplyWhatsappShareHref = (slug: string, id: string, replyId: string) =>
+  `${publicCommunityReplyThreadHref(slug, id, replyId)}/whatsapp`;
 
 export const legacyPublicPsychologistHref = (id: string) => `/psychologists/${id}`;
 export const legacyPublicCommunityHref = (slug: string) => `/community/${slug}`;

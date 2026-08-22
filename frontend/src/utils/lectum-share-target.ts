@@ -6,7 +6,12 @@ import type {
   UserPostReply,
 } from "@/api/generator/types/posts";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
-import { publicCommunityPostHref, publicCommunityReplyThreadHref } from "@/utils/public-routes";
+import {
+  publicCommunityPostHref,
+  publicCommunityPostWhatsappShareHref,
+  publicCommunityReplyThreadHref,
+  publicCommunityReplyWhatsappShareHref,
+} from "@/utils/public-routes";
 
 export type LectumShareChannel = "clipboard" | "web_share";
 
@@ -45,6 +50,7 @@ export type LectumShareSocialTarget = LectumShareBaseTarget & {
   shareTitle: string;
   sourceKind: "comment" | "post";
   sourceText: string;
+  whatsappShareUrl: string;
 };
 
 export type LectumShareVideoTarget = LectumShareLinkTarget | LectumShareSocialTarget;
@@ -186,6 +192,9 @@ export const createLectumSharePostMediaTarget = (
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: "post",
     sourceText: post.title,
+    whatsappShareUrl: toAbsoluteShareUrl(
+      publicCommunityPostWhatsappShareHref(post.community.slug, post.id),
+    ),
   };
 };
 
@@ -231,6 +240,9 @@ export const createLectumShareVideoTarget = (
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: hasCommentContext ? "comment" : "post",
     sourceText,
+    whatsappShareUrl: toAbsoluteShareUrl(
+      publicCommunityReplyWhatsappShareHref(post.community.slug, post.id, reply.id),
+    ),
   };
 };
 

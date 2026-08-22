@@ -19,7 +19,7 @@ import type { PostReply } from "@/api/generator/types/posts";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
-import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
+import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import {
   createLectumShareLinkTarget,
@@ -98,7 +98,7 @@ export const usePostDetailController = () => {
   );
   const voteMutation = useVotePost(postId);
   const saveMutation = useSavePost(postId);
-  const { shareLectumTarget } = useLectumDirectShare({
+  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ?? "post");
       window.setTimeout(() => setShareFeedback(null), 2400);
@@ -656,6 +656,7 @@ export const usePostDetailController = () => {
     setReportTarget,
     setReplyError,
     setShowPsychologistReplyTip,
+    shareDestinationDialog,
     shareFeedback,
     sharePost,
     shareReply,

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { absoluteUrl, getSiteUrl } from "@/lib/seo";
 import { getPublicApiSource, isTrustedPublicAssetUrl } from "@/utils/public-asset-sources";
+import {
+  publicCommunityPostWhatsappShareHref,
+  publicCommunityReplyWhatsappShareHref,
+} from "@/utils/public-routes";
 
 const COMMUNITY_ICON_MEDIA_PATH_PREFIX = "/community/icons/";
 const COMMUNITY_ICON_FRONTEND_PATH_PREFIX = "/images/community/explore/";
@@ -68,6 +72,7 @@ type SeoMetadataOverrides = {
   imageWidth?: number | null;
   ogDescription?: string | null;
   ogTitle?: string | null;
+  openGraphUrl?: string | null;
   title?: string | null;
   type?: SeoOpenGraphType;
   video?: string | null;
@@ -75,6 +80,8 @@ type SeoMetadataOverrides = {
   videoType?: string | null;
   videoWidth?: number | null;
 };
+
+type CommunityPostSeoShareTarget = "default" | "whatsapp";
 
 type PublicCommunityPostSeo = {
   canonical_url: string;
@@ -252,14 +259,14 @@ export const resolveSeoMetadata = async (
   const description = overrides.description || setting?.description || fallback.description;
   const canonical = overrides.canonical || setting?.canonical_url || fallback.canonical;
   const image = overrides.image || setting?.og_image_url || fallback.image || "/logo-light.png";
-  const video = overrides.video || fallback.video;
+  const video = overrides.video === null ? null : overrides.video || fallback.video;
   const ogTitle = overrides.ogTitle || setting?.og_title || fallback.ogTitle || title;
   const ogDescription =
     overrides.ogDescription || setting?.og_description || fallback.ogDescription || description;
   const robotsIndex = setting?.robots_index ?? fallback.robotsIndex ?? true;
   const robotsFollow = setting?.robots_follow ?? fallback.robotsFollow ?? true;
   const resolvedImage = resolveMediaUrl(image);
-  const resolvedVideo = resolveMediaUrl(video);
+  const resolvedVideo = video === null ? undefined : resolveMediaUrl(video);
   const imageWidth = overrides.imageWidth ?? fallback.imageWidth ?? undefined;
   const imageHeight = overrides.imageHeight ?? fallback.imageHeight ?? undefined;
   const videoWidth = overrides.videoWidth ?? fallback.videoWidth ?? undefined;
@@ -267,6 +274,7 @@ export const resolveSeoMetadata = async (
   const videoType = overrides.videoType ?? fallback.videoType ?? resolveVideoType(resolvedVideo);
   const routePath = setting?.route_path?.includes("[") ? undefined : setting?.route_path;
   const resolvedCanonical = resolveCanonicalUrl(canonical || routePath);
+  const resolvedOpenGraphUrl = resolveCanonicalUrl(overrides.openGraphUrl) ?? resolvedCanonical;
 
   return {
     title: { absolute: title },
@@ -291,7 +299,7 @@ export const resolveSeoMetadata = async (
         : undefined,
       type: overrides.type ?? fallback.type ?? "website",
       title: ogTitle,
-      url: resolvedCanonical,
+      url: resolvedOpenGraphUrl,
       videos: resolvedVideo
         ? [
             {
@@ -463,17 +471,32 @@ export const resolveCommunityPostSeoMetadata = async ({
   fallback,
   id,
   replyId,
+  shareTarget = "default",
   slug,
 }: {
   fallback: SeoMetadataFallback;
   id: string;
   replyId?: string;
+  shareTarget?: CommunityPostSeoShareTarget;
   slug: string;
 }): Promise<Metadata> => {
   const seo = await getPublicCommunityPostSeo({ id, replyId, slug });
   const pageKey: SeoMetadataPageKey = replyId ? "community_post_reply" : "community_post";
+  const suppressVideoPreview = shareTarget === "whatsapp";
+  const whatsappSharePath =
+    suppressVideoPreview && replyId
+      ? publicCommunityReplyWhatsappShareHref(slug, id, replyId)
+      : suppressVideoPreview
+        ? publicCommunityPostWhatsappShareHref(slug, id)
+        : undefined;
 
-  if (!seo) return resolveSeoMetadata(pageKey, fallback);
+  if (!seo) {
+    return resolveSeoMetadata(
+      pageKey,
+      fallback,
+      suppressVideoPreview ? { openGraphUrl: whatsappSharePath, type: "article", video: null } : {},
+    );
+  }
 
   return resolveSeoMetadata(pageKey, fallback, {
     canonical: seo.canonical_url,
@@ -483,10 +506,11 @@ export const resolveCommunityPostSeoMetadata = async ({
     imageWidth: seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
+    openGraphUrl: whatsappSharePath,
     title: seo.title,
-    type: seo.media_type === "video" ? "video.other" : "article",
-    video: seo.og_video_url,
-    videoHeight: seo.media_type === "video" ? 1920 : undefined,
-    videoWidth: seo.media_type === "video" ? 1080 : undefined,
+    type: !suppressVideoPreview && seo.media_type === "video" ? "video.other" : "article",
+    video: suppressVideoPreview ? null : seo.og_video_url,
+    videoHeight: !suppressVideoPreview && seo.media_type === "video" ? 1920 : undefined,
+    videoWidth: !suppressVideoPreview && seo.media_type === "video" ? 1080 : undefined,
   });
 };

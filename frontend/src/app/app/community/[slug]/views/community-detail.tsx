@@ -23,7 +23,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
+import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -93,7 +93,7 @@ export const CommunityDetailLogic = ({
   const postsQuery = useInfiniteCommunityPosts(slug, postsQueryParams, Boolean(detail.data));
   const followMutation = useFollowCommunity();
   const unfollowMutation = useUnfollowCommunity();
-  const { shareLectumTarget } = useLectumDirectShare({
+  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ?? target.postId);
       window.setTimeout(() => setShareFeedback(null), 2400);
@@ -434,6 +434,8 @@ export const CommunityDetailLogic = ({
           onCloseComplete={() => setCreatePostModalOpen(false)}
         />
       ) : null}
+
+      {shareDestinationDialog}
     </PrivateTemplate>
   );
 };

@@ -1,0 +1,117 @@
+"use client";
+
+import { Download, MessageCircle, Share2, X } from "lucide-react";
+import type { LectumShareDestination } from "@/hooks/use-lectum-direct-share";
+import { cn } from "@/lib/utils";
+
+type LectumShareDestinationDialogProps = {
+  disabled?: boolean;
+  onClose: () => void;
+  onSelect: (destination: LectumShareDestination) => void;
+  open: boolean;
+};
+
+type ShareDestinationOption = {
+  description: string;
+  destination: LectumShareDestination;
+  icon: typeof MessageCircle;
+  label: string;
+};
+
+const SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
+  {
+    description: "Envia um link com prévia estilo Instagram. O vídeo abre na Lectum.",
+    destination: "whatsapp",
+    icon: MessageCircle,
+    label: "WhatsApp",
+  },
+  {
+    description: "Gera o vídeo completo com a arte da caixinha de pergunta.",
+    destination: "social",
+    icon: Share2,
+    label: "Redes sociais",
+  },
+  {
+    description: "Salva no dispositivo o vídeo completo já formatado com a arte.",
+    destination: "download",
+    icon: Download,
+    label: "Baixar",
+  },
+];
+
+export const LectumShareDestinationDialog = ({
+  disabled = false,
+  onClose,
+  onSelect,
+  open,
+}: LectumShareDestinationDialogProps) => {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[120] grid items-end bg-foreground/35 px-3 pb-3 backdrop-blur-[2px] sm:items-center sm:px-4 sm:pb-0">
+      <button
+        aria-label="Fechar opções de compartilhamento"
+        className="absolute inset-0 cursor-default"
+        onClick={disabled ? undefined : onClose}
+        type="button"
+      />
+
+      <section
+        aria-labelledby="lectum-share-destination-title"
+        aria-modal="true"
+        className="relative mx-auto w-full max-w-[390px] rounded-[28px] border border-border bg-surface p-4 text-foreground shadow-[var(--lectum-shadow)] sm:max-w-md"
+        role="dialog"
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="grid gap-1">
+            <p className="font-semibold text-[1.05rem]" id="lectum-share-destination-title">
+              Compartilhar vídeo
+            </p>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Escolha o formato antes de abrir o app de destino.
+            </p>
+          </div>
+          <button
+            aria-label="Fechar"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-background text-muted-foreground transition hover:text-foreground disabled:opacity-60"
+            disabled={disabled}
+            onClick={onClose}
+            type="button"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="grid gap-2">
+          {SHARE_DESTINATION_OPTIONS.map((option) => {
+            const Icon = option.icon;
+
+            return (
+              <button
+                className={cn(
+                  "group flex w-full items-center gap-3 rounded-[20px] border border-border bg-background p-3 text-left transition",
+                  "hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-[var(--lectum-shadow-soft)]",
+                  "disabled:pointer-events-none disabled:opacity-60",
+                )}
+                disabled={disabled}
+                key={option.destination}
+                onClick={() => onSelect(option.destination)}
+                type="button"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="grid gap-0.5">
+                  <span className="font-semibold text-sm">{option.label}</span>
+                  <span className="text-muted-foreground text-xs leading-relaxed">
+                    {option.description}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+};

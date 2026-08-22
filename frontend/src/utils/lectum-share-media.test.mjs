@@ -105,6 +105,30 @@ test("videos compartilhados priorizam arquivo social e mantem link publico como 
     new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
     "utf8",
   );
+  const shareDialogHookSource = readFileSync(
+    new URL("../hooks/use-lectum-share-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const shareDialogSource = readFileSync(
+    new URL("../components/community/lectum-share-destination-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const publicRoutesSource = readFileSync(new URL("./public-routes.ts", import.meta.url), "utf8");
+  const seoMetadataSource = readFileSync(
+    new URL("../lib/seo-metadata.ts", import.meta.url),
+    "utf8",
+  );
+  const postWhatsappPageSource = readFileSync(
+    new URL("../app/comunidades/[slug]/publicacao/[id]/whatsapp/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const replyWhatsappPageSource = readFileSync(
+    new URL(
+      "../app/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp/page.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
   const postsRequestSource = readFileSync(
     new URL("../api/req/posts/index.ts", import.meta.url),
     "utf8",
@@ -129,18 +153,61 @@ test("videos compartilhados priorizam arquivo social e mantem link publico como 
     /publicCommunityReplyThreadHref\(post\.community\.slug, post\.id, reply\.id\)/,
   );
   assert.match(targetSource, /shareText: postTitle/);
+  assert.match(targetSource, /whatsappShareUrl/);
+  assert.match(
+    targetSource,
+    /publicCommunityPostWhatsappShareHref\(post\.community\.slug, post\.id\)/,
+  );
+  assert.match(
+    targetSource,
+    /publicCommunityReplyWhatsappShareHref\(post\.community\.slug, post\.id, reply\.id\)/,
+  );
+  assert.match(publicRoutesSource, /publicCommunityPostWhatsappShareHref/);
+  assert.match(publicRoutesSource, /publicCommunityReplyWhatsappShareHref/);
   assert.match(mediaSource, /shareLectumSocialLinkPreviewTarget/);
+  assert.match(mediaSource, /shareLectumWhatsAppPreviewTarget/);
+  assert.match(mediaSource, /https:\/\/wa\.me\/\?text=/);
   assert.match(mediaSource, /text: null/);
-  assert.match(mediaSource, /url: target\.shareUrl/);
+  assert.match(
+    mediaSource,
+    /shareUrl: options\.whatsappPreview \? target\.whatsappShareUrl : target\.shareUrl/,
+  );
   assert.match(mediaSource, /files: \[file\][\s\S]*url: target\.shareUrl/);
   assert.match(
     hookSource,
-    /shareSocialFileTarget\(target\)[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)/,
+    /destination === "whatsapp"[\s\S]*shareLectumWhatsAppPreviewTarget\(target\)/,
   );
+  assert.match(
+    hookSource,
+    /prepareSocialFileTarget\(target\)[\s\S]*sharePreparedLectumVideoResponse\(target, file/,
+  );
+  assert.match(
+    hookSource,
+    /destination === "download"[\s\S]*downloadPreparedLectumShareFile\(target, file\)/,
+  );
+  assert.match(hookSource, /shareLectumSocialLinkPreviewTarget\(target\)/);
   assert.doesNotMatch(
     hookSource,
     /target\.mediaType === "video"[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)[\s\S]*shareSocialFileTarget\(target\)/,
   );
+  assert.match(shareDialogHookSource, /setPendingTarget\(target\)/);
+  assert.match(shareDialogSource, /WhatsApp/);
+  assert.match(shareDialogSource, /Redes sociais/);
+  assert.match(shareDialogSource, /Baixar/);
+  assert.match(seoMetadataSource, /shareTarget = "default"/);
+  assert.match(seoMetadataSource, /openGraphUrl/);
+  assert.match(
+    seoMetadataSource,
+    /const resolvedOpenGraphUrl = resolveCanonicalUrl\(overrides\.openGraphUrl\) \?\? resolvedCanonical/,
+  );
+  assert.match(seoMetadataSource, /url: resolvedOpenGraphUrl/);
+  assert.match(seoMetadataSource, /const suppressVideoPreview = shareTarget === "whatsapp"/);
+  assert.match(seoMetadataSource, /whatsappSharePath/);
+  assert.match(seoMetadataSource, /openGraphUrl: whatsappSharePath/);
+  assert.match(seoMetadataSource, /video: suppressVideoPreview \? null : seo\.og_video_url/);
+  assert.match(postWhatsappPageSource, /shareTarget: "whatsapp"/);
+  assert.match(replyWhatsappPageSource, /shareTarget: "whatsapp"/);
+  assert.match(shareDialogHookSource, /target\.kind === "link" \|\| target\.mediaType !== "video"/);
   assert.match(seoSource, /professionalVideoTitle/);
   assert.match(seoSource, /resolveVideoOpenGraphDescription/);
   assert.match(seoSource, /\$\{name\} na Lectum/);

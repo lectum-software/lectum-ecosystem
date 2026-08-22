@@ -108,3 +108,23 @@ Feedback imediatamente posterior mostrou um trade-off da decisao link-first: a f
 - WhatsApp pode receber arquivo com arte e, quando aceitar URL/metadados no mesmo payload ou quando cair no fallback de link, usara titulo do post como descricao Open Graph.
 - Cards ja cacheados pelo WhatsApp podem demorar a refletir a nova descricao ate expirar/serem recarregados pelo crawler.
 - Deploy: mudanca aditiva de frontend/backend, sem banco, migration, env obrigatoria, package, provider, seed, mock ou alteracao de dados publicados.
+
+## Complemento 2026-08-22 - preview WhatsApp sem `og:video`
+
+### Contexto
+
+Com a escolha explicita de destino, o WhatsApp deixa de precisar receber o arquivo social. O requisito passa a ser um card de link com capa vertical, nome do psicologo e descricao pelo titulo do post, levando o clique para a Lectum e sem reproduzir o video dentro da conversa.
+
+### Decisao
+
+- Criar rotas publicas especificas para preview do WhatsApp: `/comunidades/[slug]/publicacao/[id]/whatsapp` e `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp`.
+- Essas rotas renderizam o mesmo conteudo publico do post/thread, mas chamam `resolveCommunityPostSeoMetadata` com `shareTarget="whatsapp"`.
+- O modo WhatsApp suprime `og:video`, força `openGraph.type="article"`, preserva `og:image`/`og:title`/`og:description` e define `og:url` para a propria rota `/whatsapp`, enquanto o canonical permanece na rota publica original.
+- O helper de metadata passa a respeitar `video: null` como override explicito, impedindo fallback acidental para video.
+
+### Consequencias
+
+- WhatsApp deve montar um card clicavel em vez de tentar reproduzir o arquivo de video, sujeito ao cache do crawler do proprio WhatsApp.
+- A rota canonica continua sendo a pagina publica normal, mas o card compartilhado se declara pela rota `/whatsapp`; essa rota existe para metadados por canal e pode ser aberta por usuarios sem perder contexto.
+- O backend de SEO permanece aditivo e inalterado; a diferenca de canal e aplicada no frontend/Next metadata.
+- Rollback: remover as rotas `/whatsapp` e voltar a usar a rota canonica no destino WhatsApp reintroduz `og:video` nos previews.

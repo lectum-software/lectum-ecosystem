@@ -421,3 +421,24 @@ Depois do experimento de priorizar link puro para melhorar o card do WhatsApp, o
 - Arquivos longos podem demorar mais para preparar/uploadar em background; o cache temporario reduz essa espera nos compartilhamentos seguintes.
 - Apps de destino ainda podem aplicar seus proprios cortes ou limites depois que recebem o arquivo completo; isso permanece fora do controle da Web.
 - Deploy: frontend e constante backend de layout/cache, sem migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Complemento 2026-08-22 - escolha explicita de destino para videos
+
+### Contexto
+
+A tentativa de resolver WhatsApp e Instagram pela mesma folha nativa mostrou uma limitacao estrutural: a Web Share API nao informa qual app sera escolhido antes do envio. O usuario aceitou o caminho de perguntar antes, desde que WhatsApp gere link estilo Instagram e Redes Sociais/Baixar mantenham o video com arte.
+
+### Decisao
+
+- Adicionar uma sheet mobile-first da Lectum somente para alvos de video profissional, com opcoes WhatsApp, Redes Sociais e Baixar.
+- WhatsApp nao prepara nem envia arquivo; abre o deep link do WhatsApp com a URL publica especifica de preview, evitando reproducao de video dentro da conversa.
+- Redes Sociais usa o fluxo existente de arquivo social 9:16 com canvas, cache temporario e Web Share API.
+- Baixar reutiliza o mesmo arquivo social preparado/cacheado e dispara download local, sem abrir a folha nativa.
+- Posts sem video seguem no fluxo direto anterior para nao apresentar uma modal com linguagem de video em compartilhamentos de imagem/texto.
+
+### Consequencias
+
+- A decisao transfere a escolha de canal para uma UI explicita do produto, removendo a ambiguidade impossivel de resolver depois que a folha nativa abre.
+- WhatsApp ganha link clicavel e preview de pagina; Instagram/Reels/Stories continuam recebendo arquivo de video com a arte da caixinha de pergunta.
+- O usuario passa por uma etapa a mais antes do compartilhamento de video, mas ela e necessaria para preparar payloads diferentes por canal.
+- Rollback: voltar ao `useLectumDirectShare` direto nos pontos de chamada remove a sheet e retorna ao comportamento file-first unico.

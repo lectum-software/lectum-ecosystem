@@ -132,3 +132,11 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] A rota canonica de resposta `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]` e o `og_title` no formato `[Nome] na Lectum` foram preservados.
 - [x] Revalidado com teste direcionado de compartilhamento/SEO, checks e builds de frontend/backend, `pnpm check`, `pnpm version:bump` para `0.1.184` e `pnpm check:version`.
 - [x] Nao houve alteracao de banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-22 - rota WhatsApp sem `og:video`
+
+- [x] Criadas rotas publicas `/comunidades/[slug]/publicacao/[id]/whatsapp` e `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp` para previews de link no WhatsApp.
+- [x] As rotas reutilizam a pagina publica canonica, mas geram metadata com `shareTarget="whatsapp"`, suprimindo `og:video` e mantendo `og:image`/`og:title`/`og:description` para card clicavel.
+- [x] O `og:url` aponta para a propria rota `/whatsapp`, enquanto o canonical permanece na rota publica original de post/thread; o clique no card continua abrindo o conteudo dentro da Lectum.
+- [x] A descricao do card de videos profissionais continua sendo o titulo do post, conforme ajuste anterior.
+- [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.

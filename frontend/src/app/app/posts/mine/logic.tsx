@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
-import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
+import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -44,7 +44,7 @@ export const MyPostsLogic = () => {
     [],
   );
   const postsQuery = useInfiniteMyPosts(query);
-  const { shareLectumTarget } = useLectumDirectShare({
+  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ? "interaction" : "post");
       window.setTimeout(() => setShareFeedback(null), 2400);
@@ -246,6 +246,8 @@ export const MyPostsLogic = () => {
           />
         </div>
       </section>
+
+      {shareDestinationDialog}
     </PrivateTemplate>
   );
 };

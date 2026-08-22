@@ -20,7 +20,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
-import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
+import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
@@ -81,7 +81,7 @@ export const PostReplyThreadLogic = () => {
   const postQuery = usePostDetail(postId);
   const threadQuery = usePostReplyThread(postId, replyId, Boolean(postId && replyId));
   const voteMutation = useVotePost(postId);
-  const { shareLectumTarget } = useLectumDirectShare({
+  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       if (!target.replyId) return;
 
@@ -501,6 +501,8 @@ export const PostReplyThreadLogic = () => {
           </div>
         ) : null}
       </section>
+
+      {shareDestinationDialog}
     </PrivateTemplate>
   );
 };

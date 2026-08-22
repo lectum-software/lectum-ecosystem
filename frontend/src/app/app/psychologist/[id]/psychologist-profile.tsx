@@ -22,7 +22,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
-import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
+import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
@@ -78,7 +78,7 @@ export const PsychologistProfileLogic = () => {
   const profileQuery = useDirectoryPsychologist(id);
   const { mutate: trackProfileView } = useDirectoryPsychologistProfileView(id);
   const importantActionTracking = useImportantActionTracking();
-  const { shareLectumTarget } = useLectumDirectShare({
+  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
     onShared: () => {
       setShareFeedback(true);
       window.setTimeout(() => setShareFeedback(false), 2500);
@@ -551,6 +551,8 @@ export const PsychologistProfileLogic = () => {
           </div>
         </section>
       </div>
+
+      {shareDestinationDialog}
     </PrivateTemplate>
   );
 };

@@ -18,7 +18,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
+import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -76,7 +76,7 @@ export const CommunityFeedLogic = ({
     [deferredSearch, scope, selectedCommunitySlug],
   );
   const feed = useInfiniteCommunityFeedPosts(query);
-  const { shareLectumTarget } = useLectumDirectShare({
+  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ?? target.postId);
       window.setTimeout(() => setShareFeedback(null), 2400);
@@ -305,6 +305,8 @@ export const CommunityFeedLogic = ({
           onCloseComplete={() => setCreatePostModalOpen(false)}
         />
       ) : null}
+
+      {shareDestinationDialog}
 
       <style>{`
         @keyframes lectum-desktop-create-float {

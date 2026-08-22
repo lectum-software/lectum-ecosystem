@@ -841,3 +841,10 @@ Uma task só pode ser marcada como concluída quando:
 - O texto compartilhado e o `og:description` de videos profissionais passam a usar o titulo do post, evitando que o WhatsApp exiba o corpo da resposta como descricao do card.
 - O timeout de upload do artefato temporario foi ampliado, o cache visual foi invalidado para `lectum-share-v5-2026-08-22-file-first-complete-video` e a exportacao client-side ganhou margem/controle de stall para nao cortar videos saudaveis durante o preparo.
 - Sem migration, env obrigatoria, package novo, provider, seed, mock ou reset de dados publicados.
+
+## Correcao em 2026-08-22: seletor de destino no compartilhamento de videos
+
+- Ajuste pos-feedback da TASK-42/TASK-143: ao compartilhar video profissional, a Lectum pergunta antes se o destino e WhatsApp, Redes Sociais ou Baixar.
+- WhatsApp usa link publico especifico `/whatsapp`, sem `og:video`, para gerar preview clicavel estilo Instagram e abrir o conteudo na Lectum em vez de reproduzir o arquivo no WhatsApp.
+- Redes Sociais e Baixar continuam usando o arquivo social 9:16 com a arte da caixinha de pergunta, preservando cache temporario e exportacao completa do video.
+- Posts sem video continuam no fluxo direto anterior; alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.

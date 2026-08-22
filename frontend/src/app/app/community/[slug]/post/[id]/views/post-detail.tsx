@@ -230,6 +230,7 @@ export const PostDetailLogic = () => {
     setReportTarget,
     setReplyError,
     setShowPsychologistReplyTip,
+    shareDestinationDialog,
     shareFeedback,
     sharePost,
     shareReply,
@@ -491,6 +492,8 @@ export const PostDetailLogic = () => {
           </>
         ) : null}
       </section>
+
+      {shareDestinationDialog}
     </PrivateTemplate>
   );
 };

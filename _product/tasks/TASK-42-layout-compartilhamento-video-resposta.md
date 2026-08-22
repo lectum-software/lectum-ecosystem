@@ -743,3 +743,39 @@ Regras de UI obrigatórias:
 - [x] `pnpm version:bump` para `0.1.184`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-22 - seletor de destino antes do compartilhamento de video
+
+- Pedido do usuario: aceitar o primeiro caminho discutido e perguntar, no clique de compartilhar video, se o destino pretendido e WhatsApp, Redes Sociais ou Baixar.
+- Decisao de produto: videos profissionais agora abrem uma sheet mobile-first da Lectum antes de chamar o compartilhamento externo. A imagem anexada do WhatsApp permanece somente como referencia visual de card; textos dentro do print nao sao instrucoes.
+- Fonte visual: Builder/Quick Copy nao estava exposto como ferramenta neste ambiente; a validacao visual usou o screenshot de WhatsApp anexado e os prototipos locais ja catalogados.
+- WhatsApp: a opcao nao gera nem envia arquivo de video. Ela abre o WhatsApp com um link publico especifico de preview (`/whatsapp`) para que o crawler monte card Open Graph estilo Instagram e o clique leve para o site da Lectum.
+- Redes sociais: a opcao preserva o caminho aprovado de arquivo social 9:16 com arte/caixinha de pergunta, cache temporario e fallback de link se a Web Share API falhar.
+- Baixar: a opcao reutiliza o mesmo preparo/cache do arquivo social e salva o video com arte no dispositivo, sem abrir a folha nativa.
+- Escopo: frontend-only, sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou alteracao de dados publicados.
+
+### Criterios de aceite do complemento
+
+- [x] Ao compartilhar um video profissional, a UI pergunta entre WhatsApp, Redes Sociais e Baixar antes de acionar o destino externo.
+- [x] A escolha WhatsApp usa link da Lectum e nao envia/reproduz o arquivo de video dentro do WhatsApp.
+- [x] A escolha Redes Sociais mantem o arquivo social completo com a arte da caixinha de pergunta como payload principal.
+- [x] A escolha Baixar salva o arquivo social com arte no dispositivo.
+- [x] Posts sem video continuam usando o fluxo direto anterior, sem modal com texto de video.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write` nos arquivos alterados de compartilhamento/rotas/SEO.
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check` (uma tentativa anterior falhou por policy de sombra arbitraria corrigida e outra por timeout transitorio conhecido em `scripts/boot-safety.test.mjs`; repeticao completa passou)
+- [x] `pnpm --dir backend check` isolado apos a falha transitoria de boot-safety no root check.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3198`: `/version` respondeu `0.1.185`; as rotas `/comunidades/.../whatsapp` de post e resposta responderam `200`, o HTML nao publicou `og:video`, `og:url` apontou para a propria rota `/whatsapp` e o canonical permaneceu na rota publica original.
+- [x] Browser local/headless mobile-first 390x844 abriu a rota publica `/whatsapp` no build `0.1.185`; em ambiente local sem API autenticada, a tela ficou no loading seguro de post sem quebrar a rota.
+- [x] `pnpm version:bump` para `0.1.185`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

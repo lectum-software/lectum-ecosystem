@@ -12,11 +12,13 @@ import {
 import { useAppSelector } from "@/hooks/redux";
 import {
   cachePreparedLectumShareFile,
+  downloadPreparedLectumShareFile,
   getPreparedLectumShareFile,
   isNativeShareAbortError,
   prepareLectumShareFile,
   shareLectumLinkTarget,
   shareLectumSocialLinkPreviewTarget,
+  shareLectumWhatsAppPreviewTarget,
   sharePreparedLectumVideoResponse,
 } from "@/utils/lectum-share-media";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
@@ -31,9 +33,15 @@ type UseLectumDirectShareOptions = {
   onShared?: (target: LectumShareVideoTarget, result: ShareExportResult) => void;
 };
 
+export type LectumShareDestination = "download" | "social" | "whatsapp";
+
+type ShareLectumTargetOptions = {
+  destination?: LectumShareDestination;
+};
+
 const SHARING_TOAST_MESSAGE = "Preparando vídeo para compartilhar...";
 const SHARE_READY_RETRY_MESSAGE =
-  "Vídeo preparado. Toque em compartilhar novamente para abrir as opções do celular.";
+  "Vídeo preparado. Toque em compartilhar novamente e escolha Redes Sociais.";
 
 const isVideoShareTarget = (target: LectumShareVideoTarget): target is LectumShareSocialTarget =>
   target.kind !== "link" && target.mediaType === "video";
@@ -100,17 +108,18 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
   );
 
   const shareLectumTarget = useCallback(
-    async (target: LectumShareVideoTarget) => {
+    async (target: LectumShareVideoTarget, shareOptions: ShareLectumTargetOptions = {}) => {
       if (sharingRef.current || typeof window === "undefined") return;
 
       sharingRef.current = true;
       setIsSharing(true);
+      const destination = shareOptions.destination ?? "social";
 
       let loadingToastId: string | number | null = null;
 
       try {
         let result: ShareExportResult;
-        const shareSocialFileTarget = async (socialTarget: LectumShareSocialTarget) => {
+        const prepareSocialFileTarget = async (socialTarget: LectumShareSocialTarget) => {
           let cachedFile = getPreparedLectumShareFile(socialTarget);
 
           if (!cachedFile) {
@@ -132,18 +141,30 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
             loadingToastId = null;
           }
 
-          return sharePreparedLectumVideoResponse(socialTarget, file, {
-            skipDownloadOnActivationLoss: true,
-          });
+          return file;
         };
 
         if (target.kind === "link") {
           result = await shareLectumLinkTarget(target);
+        } else if (destination === "whatsapp") {
+          result = await shareLectumWhatsAppPreviewTarget(target);
         } else {
           try {
-            result = await shareSocialFileTarget(target);
+            const file = await prepareSocialFileTarget(target);
+            result =
+              destination === "download"
+                ? await downloadPreparedLectumShareFile(target, file)
+                : await sharePreparedLectumVideoResponse(target, file, {
+                    skipDownloadOnActivationLoss: true,
+                  });
           } catch (error) {
-            if (isNativeShareAbortError(error) || target.mediaType !== "video") throw error;
+            if (
+              destination === "download" ||
+              isNativeShareAbortError(error) ||
+              target.mediaType !== "video"
+            ) {
+              throw error;
+            }
 
             result = await shareLectumSocialLinkPreviewTarget(target);
           }
@@ -159,7 +180,11 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         }
 
         if (result.mode === "download") {
-          toast.success("Arquivo baixado. Escolha o app desejado no dispositivo.");
+          toast.success(
+            destination === "download"
+              ? "Vídeo com arte baixado."
+              : "Arquivo baixado. Escolha o app desejado no dispositivo.",
+          );
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
         } else if (result.mode === "prepared") {
