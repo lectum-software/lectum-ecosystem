@@ -156,3 +156,38 @@ Extrair o preview social para `SharePreview` e alterar o comportamento de videos
 - Validacao estatica via Node para confirmar som habilitado no preview, fallback com botao de audio e preservacao de trilhas de audio na exportacao.
 - Browser local/headless mobile em 390x844 na rota do detalhe de post com video, antes e apos o bump para `0.1.80`.
 - `pnpm version:bump` para `0.1.80` e `pnpm check:version`.
+
+## Complemento 2026-08-22 - preparo antecipado e payload movel do Web Share
+
+### Contexto
+
+A captura do usuario mostrou erro ao tentar compartilhar/uploadar a arte de video-resposta para WhatsApp e redes sociais. A investigacao usou a midia real em homologacao (`/public/files/posts/media/ocjjmug8tro0hls869qoddta.mp4`) e confirmou que a rota publica retornava CORS adequado e que Chrome conseguia carregar a midia, desenhar canvas e gerar arquivo. A causa provavel estava na ordem do fluxo: o arquivo era gerado depois do toque no app social; em videos longos, a chamada `navigator.share()` acontecia apenas apos a renderizacao client-side, fora da ativacao transiente exigida por navegadores moveis para abrir a share sheet nativa.
+
+### Decisao
+
+- Iniciar a preparacao do arquivo social quando a modal abre, usando a mesma geracao real por canvas/MediaRecorder ja aprovada na TASK-42.
+- Manter WhatsApp, Instagram, TikTok e Mais desabilitados ate o arquivo estar pronto, com copy curta de preparo.
+- No clique do usuario, chamar o compartilhamento com o arquivo ja preparado, reduzindo o risco de bloqueio por perda do gesto.
+- Separar a preparacao (`prepareLectumShareFile`) do compartilhamento (`sharePreparedLectumVideoResponse`) para evitar regerar o arquivo por destino.
+- Tentar Web Share com `files + text + title`; se `navigator.canShare` recusar, tentar `files`-only antes de cair para download/copia.
+- Se `navigator.share()` falhar por motivo tecnico diferente de cancelamento do usuario, usar fallback honesto de download/copia de link.
+- Nao alterar backend, storage, contratos, schema, envs, providers, eventos de compartilhamento ou packages.
+
+### Consequencias
+
+- O clique no destino social passa a ser leve e imediato quando o arquivo ja esta pronto, mais compativel com iOS/Android.
+- O usuario ve que o arquivo esta sendo preparado, em vez de tocar imediatamente e receber erro generico.
+- Destinos moveis que nao aceitam texto/titulo com arquivo ainda podem receber o arquivo por `files`-only.
+- O fallback continua honesto: quando o compartilhamento nativo nao aceita arquivo, baixa o arquivo gerado e copia o link quando o navegador permite.
+- Rollback: reverter este complemento volta a gerar o arquivo apenas no clique e a usar o payload anterior do Web Share; nao ha impacto persistente em dados ou integracoes.
+
+### Validacao
+
+- HEAD/GET da midia real de homologacao com origem do frontend confirmou CORS, tipo MP4, tamanho e range.
+- Chrome/CDP validou canvas/toBlob/MediaRecorder com a midia real, descartando CORS/canvas como causa no Chrome.
+- Teste unitario novo cobre payload completo, fallback `files`-only, ausencia de share nativo e cancelamento `AbortError`.
+- `pnpm --dir frontend check`: sucesso.
+- `pnpm --dir frontend build`: sucesso apos o bump para `0.1.173`.
+- Smoke local do frontend buildado em `http://127.0.0.1:3185`: `/version` respondeu `0.1.173`.
+- `pnpm version:bump` para `0.1.173` e `pnpm check:version`: sucesso.
+- `pnpm check`: sucesso.

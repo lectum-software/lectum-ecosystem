@@ -760,3 +760,10 @@ Uma task só pode ser marcada como concluída quando:
 - O login agora registra somente redirects autenticados para rotas reais de criacao de post, e a modal consome esse marcador no fechamento para voltar para a home (`/`) via `replace`.
 - O marcador e de sessao, expira, e e limpo ao publicar, ao fechar, ou quando a rota atual nao corresponde ao redirect salvo.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: compartilhamento de video para redes sociais
+
+- Ajuste pos-feedback da TASK-42: a share sheet de video-resposta agora prepara o arquivo social assim que a modal abre, antes do toque em WhatsApp, Instagram, TikTok ou Mais.
+- O objetivo e evitar que a geracao longa do arquivo faca `navigator.share()` perder a ativacao do gesto do usuario em navegadores moveis, que era a causa provavel do erro mostrado ao tentar enviar o video para redes sociais/WhatsApp.
+- O Web Share passa a cair para `files`-only quando o destino nao aceita texto/titulo junto com arquivo, e falhas tecnicas do share nativo caem para download/copia de link quando possivel.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.

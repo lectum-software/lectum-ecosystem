@@ -364,3 +364,46 @@ Regras de UI obrigatórias:
 - [x] `pnpm version:bump` para `0.1.80`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - preparo antecipado do arquivo de compartilhamento
+
+- Pedido do usuario: verificar por que o upload/compartilhamento do video para WhatsApp, Instagram, TikTok e redes sociais estava falhando na share sheet de video-resposta.
+- Diagnostico: a midia real da captura em homologacao (`/public/files/posts/media/ocjjmug8tro0hls869qoddta.mp4`) responde com CORS correto e pode ser desenhada em canvas no Chrome; a falha provavel estava no momento da chamada nativa de compartilhamento. O fluxo anterior gerava o arquivo somente depois do toque no app social e, em videos longos, a chamada `navigator.share()` acontecia fora da ativacao transiente do gesto do usuario, comportamento bloqueado em navegadores moveis.
+- Frontend: a share sheet social agora inicia `prepareLectumShareFile` assim que a modal abre, mantendo os botoes de WhatsApp, Instagram, TikTok e Mais desabilitados enquanto o arquivo esta sendo preparado.
+- Frontend: ao tocar em uma rede social, o fluxo usa o arquivo ja preparado com `sharePreparedLectumVideoResponse`, reduzindo o risco de perder o gesto do usuario antes de abrir a folha nativa de compartilhamento.
+- Frontend: o payload do Web Share agora tenta primeiro arquivo + texto/titulo e cai para `files`-only quando o navegador/app nao aceita metadata junto com arquivo, caso comum em destinos moveis.
+- Frontend: se `navigator.share()` falhar por motivo tecnico diferente de cancelamento do usuario, o fluxo cai para download do arquivo e copia do link quando possivel, em vez de exibir erro de geracao indevido.
+- Escopo: sem mudanca de backend, Prisma, migrations, endpoints, payloads, storage/R2, envs, providers, dados publicados ou packages.
+- Fonte visual auditavel: screenshot do usuario `WhatsApp Image 2026-08-22 at 00.36.53.jpeg` e referencia local `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A midia publica real usada no relato continua carregando com CORS adequado para canvas.
+- [x] A share sheet social prepara o arquivo assim que a modal abre, antes do toque em WhatsApp/Instagram/TikTok/Mais.
+- [x] Os botoes de destino com arquivo ficam desabilitados e informam preparo enquanto o arquivo ainda nao esta pronto.
+- [x] O toque nos destinos sociais usa o arquivo preparado, preservando a ativacao do usuario para `navigator.share()`.
+- [x] O Web Share cai para payload `files`-only quando texto/titulo junto com arquivo nao sao suportados.
+- [x] Falha tecnica do share nativo diferente de cancelamento cai para download/copia de link, sem mensagem falsa de erro de geracao.
+- [x] Cancelamento da folha nativa pelo usuario nao vira erro visual.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] HEAD/GET com `Origin: https://homolog.lectum.com.br` na midia real de homologacao confirmou `Access-Control-Allow-Origin`, `Content-Type: video/mp4`, `Content-Length: 28427310` e suporte a range.
+- [x] Chrome/CDP em `https://homolog.lectum.com.br` carregou a midia real, desenhou frame em canvas 1080x1920, gerou PNG via `toBlob` e gravou amostra MP4 via `MediaRecorder`, confirmando que CORS/canvas nao eram a causa no Chrome.
+- [x] `pnpm --dir frontend exec biome check --write src/components/share/lectum-share-video-modal.tsx src/utils/lectum-share-media.ts src/utils/lectum-share-media/native-share.ts src/utils/lectum-share-media.test.mjs package.json`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3185`: `/version` respondeu `0.1.173`.
+- [x] `pnpm version:bump` para `0.1.173`
+- [x] `pnpm check:version`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check:source-size`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

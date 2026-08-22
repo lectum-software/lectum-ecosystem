@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import {
   copyLectumShareText,
   copyLectumShareUrl,
-  shareLectumVideoResponse,
+  prepareLectumShareFile,
+  sharePreparedLectumVideoResponse,
 } from "@/utils/lectum-share-media";
 import type {
   LectumShareChannel,
@@ -203,6 +204,10 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   const [isClosing, setIsClosing] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
   const [pendingAction, setPendingAction] = useState<ShareActionId | null>(null);
+  const [preparedShareFile, setPreparedShareFile] = useState<File | null>(null);
+  const [shareFileIsPreparing, setShareFileIsPreparing] = useState(() =>
+    isSocialShareTarget(target),
+  );
   const [error, setError] = useState<string | null>(null);
   const exporting = pendingAction !== null;
   const sourceLabel = useMemo(() => {
@@ -210,6 +215,7 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
 
     return target.sourceKind === "comment" ? "prévia do comentário" : "pergunta do post";
   }, [target]);
+  const socialTarget = isSocialShareTarget(target) ? target : null;
 
   const requestClose = useCallback(() => {
     if (closeRequestedRef.current) return;
@@ -256,6 +262,33 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!socialTarget) return;
+
+    let canceled = false;
+
+    prepareLectumShareFile(socialTarget)
+      .then((file) => {
+        if (canceled) return;
+
+        setPreparedShareFile(file);
+      })
+      .catch(() => {
+        if (canceled) return;
+
+        setError(
+          "N\u00e3o foi poss\u00edvel gerar o arquivo agora. Voc\u00ea ainda pode copiar o link direto da resposta.",
+        );
+      })
+      .finally(() => {
+        if (!canceled) setShareFileIsPreparing(false);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [socialTarget]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -329,13 +362,22 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
   };
 
   const handleShareToDevice = async (actionId: ShareActionId) => {
-    if (!isSocialShareTarget(target)) return;
+    if (!socialTarget) return;
+
+    if (!preparedShareFile) {
+      setError(
+        shareFileIsPreparing
+          ? "O arquivo ainda est\u00e1 sendo preparado. Tente novamente em instantes."
+          : "N\u00e3o foi poss\u00edvel gerar o arquivo agora. Voc\u00ea ainda pode copiar o link direto da resposta.",
+      );
+      return;
+    }
 
     setPendingAction(actionId);
     setError(null);
 
     try {
-      const result = await shareLectumVideoResponse(target);
+      const result = await sharePreparedLectumVideoResponse(socialTarget, preparedShareFile);
       if (result.channel) {
         onShared(result.channel);
       }
@@ -344,9 +386,11 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
           ? "Arquivo baixado para escolher no app desejado."
           : "Compartilhamento aberto no dispositivo.",
       );
-    } catch {
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === "AbortError") return;
+
       setError(
-        "Não foi possível gerar o arquivo agora. Você ainda pode copiar o link direto da resposta.",
+        "N\u00e3o foi poss\u00edvel abrir o compartilhamento agora. Tente copiar o link direto.",
       );
     } finally {
       setPendingAction(null);
@@ -409,7 +453,6 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
       : modalIsVisible
         ? "translate3d(0, 0, 0)"
         : "translate3d(0, 100%, 0)";
-  const socialTarget = isSocialShareTarget(target) ? target : null;
 
   return (
     <div
@@ -482,6 +525,12 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
             </p>
           ) : null}
 
+          {socialTarget && shareFileIsPreparing ? (
+            <p className="mt-3 px-1 text-xs font-semibold leading-4 text-muted">
+              Preparando o arquivo para WhatsApp, Instagram, TikTok e Mais...
+            </p>
+          ) : null}
+
           <div
             className={cn(
               socialTarget ? "mt-4 border-border border-t pt-3 sm:mt-3 sm:pt-3" : "pt-1 sm:pt-2",
@@ -490,14 +539,21 @@ const LectumShareVideoDialog = ({ onClose, onShared, target }: LectumShareVideoD
             <div className="-mx-1 flex justify-between gap-2 overflow-hidden px-1 pb-2 sm:gap-3">
               {shareSheetActions.map((action) => {
                 const linkActionDisabled = !socialTarget && !isLinkOnlyAction(action.id);
+                const deviceShareActionDisabled = Boolean(
+                  socialTarget &&
+                    action.id !== "copy" &&
+                    (shareFileIsPreparing || !preparedShareFile),
+                );
 
                 return (
                   <ShareSheetOption
-                    disabled={exporting || linkActionDisabled}
+                    disabled={exporting || linkActionDisabled || deviceShareActionDisabled}
                     disabledReason={
                       linkActionDisabled
-                        ? "Disponível para vídeos e imagens de psicólogos."
-                        : undefined
+                        ? "Dispon\u00edvel para v\u00eddeos e imagens de psic\u00f3logos."
+                        : deviceShareActionDisabled
+                          ? "Preparando arquivo para compartilhamento."
+                          : undefined
                     }
                     icon={"icon" in action ? action.icon : undefined}
                     iconClassName={action.iconClassName}

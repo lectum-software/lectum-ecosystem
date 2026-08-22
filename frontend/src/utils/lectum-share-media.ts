@@ -7,6 +7,10 @@ import {
   type ShareExportResult,
   type ShareNavigator,
 } from "./lectum-share-media/layout";
+import {
+  isNativeShareAbortError,
+  resolveLectumFileShareData,
+} from "./lectum-share-media/native-share";
 
 const createLectumShareFile = async (target: LectumShareSocialTarget) => {
   const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
@@ -36,6 +40,9 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
   }
 };
 
+export const prepareLectumShareFile = (target: LectumShareSocialTarget) =>
+  createLectumShareFile(target);
+
 const downloadFile = (file: File) => {
   const url = URL.createObjectURL(file);
   const anchor = document.createElement("a");
@@ -55,26 +62,39 @@ const copyShareUrl = async (url: string) => {
   return true;
 };
 
-export const shareLectumVideoResponse = async (
+export const sharePreparedLectumVideoResponse = async (
   target: LectumShareSocialTarget,
+  file: File,
 ): Promise<ShareExportResult> => {
-  const file = await createLectumShareFile(target);
   const nav = navigator as ShareNavigator;
   const shareData: ShareData = {
     files: [file],
     text: target.shareText,
     title: target.shareTitle,
   };
+  const nativeShareData = resolveLectumFileShareData(nav, shareData);
 
-  if (nav.share && (!nav.canShare || nav.canShare(shareData))) {
-    await nav.share(shareData);
-    return { channel: "web_share", file, mode: "file" };
+  if (nativeShareData) {
+    try {
+      await nav.share(nativeShareData);
+      return { channel: "web_share", file, mode: "file" };
+    } catch (error) {
+      if (isNativeShareAbortError(error)) throw error;
+    }
   }
 
   downloadFile(file);
   const copied = await copyShareUrl(target.shareUrl).catch(() => false);
 
   return { channel: copied ? "clipboard" : null, file, mode: "download" };
+};
+
+export const shareLectumVideoResponse = async (
+  target: LectumShareSocialTarget,
+): Promise<ShareExportResult> => {
+  const file = await prepareLectumShareFile(target);
+
+  return sharePreparedLectumVideoResponse(target, file);
 };
 
 export const copyLectumShareUrl = async (target: LectumShareVideoTarget) => {
@@ -99,3 +119,7 @@ export const copyLectumShareText = async (target: LectumShareSocialTarget) => {
 
 export { createLectumShareFrameImageFile } from "./lectum-share-media/export";
 export type { LectumShareFrameTarget } from "./lectum-share-media/layout";
+export {
+  isNativeShareAbortError,
+  resolveLectumFileShareData,
+} from "./lectum-share-media/native-share";
