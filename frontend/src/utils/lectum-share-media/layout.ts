@@ -66,8 +66,6 @@ export type ShareCanvasLayout = {
   width: number;
 };
 
-export const MAX_VIDEO_EXPORT_SECONDS = 60;
-
 export const VIDEO_EXPORT_FRAME_RATE = 30;
 
 export const storyCanvasLayout: ShareCanvasLayout = {

@@ -8,6 +8,7 @@ const {
   resolveLectumFileShareData,
   resolveLectumLinkShareData,
 } = await import("./lectum-share-media/native-share.ts");
+const { resolveVideoExportDurationSeconds } = await import("./lectum-share-media/duration.ts");
 const { safeFileName, shareFileTitle } = await import("./lectum-share-media/file-name.ts");
 
 const createShareFile = () =>
@@ -147,4 +148,14 @@ test("exportacao de video preserva audio sem conectar saida audivel", () => {
   assert.match(source, /source\.connect\(destination\)/);
   assert.match(source, /stream\.addTrack\(track\)/);
   assert.doesNotMatch(source, /audioContext\.destination/);
+});
+
+test("exportacao de video usa a duracao real em vez de limitar a um minuto", () => {
+  assert.equal(resolveVideoExportDurationSeconds(127), 127);
+  assert.equal(resolveVideoExportDurationSeconds(60.5), 60.5);
+  assert.equal(resolveVideoExportDurationSeconds(Number.NaN), 15);
+
+  const source = readFileSync(new URL("./lectum-share-media/export.ts", import.meta.url), "utf8");
+
+  assert.doesNotMatch(source, /MAX_VIDEO_EXPORT_SECONDS/);
 });

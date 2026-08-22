@@ -1,5 +1,6 @@
 import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
 
+import { resolveVideoExportDurationSeconds, resolveVideoExportSafetyTimeoutMs } from "./duration";
 import { safeFileName } from "./file-name";
 import {
   type CanvasWithCaptureStream,
@@ -8,7 +9,6 @@ import {
   drawLectumShareFrame,
   getCanvasPalette,
   type LectumShareFrameTarget,
-  MAX_VIDEO_EXPORT_SECONDS,
   type ShareMediaElement,
   storyCanvasLayout,
   VIDEO_EXPORT_FRAME_RATE,
@@ -185,11 +185,10 @@ export const createVideoShareFile = async (
   }
 
   const palette = getCanvasPalette();
-  const durationSeconds = Math.min(
-    Math.max(Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 15, 1),
-    MAX_VIDEO_EXPORT_SECONDS,
-  );
-  const durationMs = durationSeconds * 1000;
+  const hasKnownDuration = Number.isFinite(video.duration) && video.duration > 0;
+  const durationSeconds = resolveVideoExportDurationSeconds(video.duration);
+  const endTimeToleranceSeconds = Math.min(0.25, Math.max(0.05, durationSeconds * 0.005));
+  const safetyTimeoutMs = resolveVideoExportSafetyTimeoutMs(durationSeconds, hasKnownDuration);
 
   return new Promise<File>((resolve, reject) => {
     let animationFrame = 0;
@@ -225,8 +224,11 @@ export const createVideoShareFile = async (
     const draw = () => {
       drawLectumShareFrame(ctx, video, layout, target, palette);
       const elapsed = performance.now() - startedAt;
+      const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      const reachedKnownEnd =
+        hasKnownDuration && currentTime >= durationSeconds - endTimeToleranceSeconds;
 
-      if (elapsed >= durationMs || video.ended) {
+      if (video.ended || reachedKnownEnd || elapsed >= safetyTimeoutMs) {
         stopRecorder();
         return;
       }

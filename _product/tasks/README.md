@@ -798,3 +798,10 @@ Uma task só pode ser marcada como concluída quando:
 - A trilha sonora e enviada ao `MediaRecorder` por `MediaStreamDestination`, sem conectar o grafo ao alto-falante; assim o preparo invisivel continua sem som de fundo.
 - Em navegadores sem suporte suficiente, o fallback permanece silencioso e honesto, exportando video sem audio em vez de tocar um video invisivel para o usuario.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: videos completos no compartilhamento social
+
+- Ajuste pos-feedback da TASK-42: o arquivo social de video-resposta nao usa mais teto fixo de 60 segundos e passa a exportar a duracao real conhecida da midia.
+- O fluxo mantem apenas um timeout defensivo proporcional para evitar travamento caso o navegador nao dispare o fim do video ou informe metadata inconsistente.
+- Se a duracao real nao estiver disponivel, a exportacao usa fallback curto de 15 segundos; depois da entrega do arquivo completo, apps de destino ainda podem aplicar cortes proprios fora do controle da Web.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.

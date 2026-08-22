@@ -31,7 +31,7 @@ As decisoes de produto definidas em 2026-06-30 foram: usar o mesmo botao Share, 
 - A linha de acoes deixa de usar rolagem horizontal visivel quando as cinco opcoes cabem na modal.
 - O backend apenas enriquece os DTOs de `highlighted_professional_reply` com `parent_reply_id` e `parent_content`, permitindo usar a previa do comentario em cards/listagens sem novo endpoint e sem migration.
 - O evento real continua sendo persistido via `POST /api/private/posts/:id/replies/:replyId/share` quando houver Web Share API ou fallback com copia de link.
-- A duracao exportada e limitada a 60 segundos para reduzir risco de travamento e arquivos excessivos no browser.
+- A exportacao usa a duracao real conhecida da midia; apenas quando a metadata de duracao esta ausente ou invalida aplica fallback curto para evitar travamento no browser.
 
 ## Consequencias
 
@@ -280,4 +280,31 @@ A correcao anterior silenciou o elemento de video invisivel usado para gerar o a
 - Teste unitario estatico cobre uso de `createMediaElementSource(video)`, `createMediaStreamDestination()`, adicao de tracks ao stream do recorder e ausencia de conexao com `audioContext.destination`.
 - `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`: sucesso.
 - `pnpm --dir frontend check`: sucesso.
+- Validacoes finais, build, versionamento e smoke constam na TASK-42.
+
+## Complemento 2026-08-22 - remocao do corte fixo de 60 segundos
+
+### Contexto
+
+Novo feedback mostrou que videos-resposta mais longos eram enviados incompletos para a rede social. O exemplo tinha duracao original de 2:07, mas o arquivo gerado pela Lectum chegava com aproximadamente 1 minuto. A causa era o limite defensivo original de 60 segundos na exportacao por canvas/MediaRecorder.
+
+### Decisao
+
+- Remover o teto fixo de 60 segundos da exportacao de videos compartilhaveis.
+- Centralizar a resolucao de duracao em `lectum-share-media/duration.ts`: videos com metadata valida usam a duracao real; videos sem metadata usam fallback de 15 segundos.
+- Manter timeout defensivo proporcional (`duracao * 1.25 + 15s`) para impedir loop infinito quando o browser nao dispara `ended`, mas sem cortar videos longos saudaveis.
+- Preservar a captura de audio por Web Audio e a ausencia de conexao com saida audivel decididas no complemento anterior.
+- Nao alterar backend, storage, contratos, banco, envs, providers, packages ou dados persistidos.
+
+### Consequencias
+
+- Arquivos compartilhados pela Lectum podem ter a duracao completa do video original quando o navegador informa metadata valida.
+- Videos longos demoram proporcionalmente mais para preparar; o retry cacheado da folha nativa continua sendo o caminho seguro quando o preparo excede a ativacao transiente do gesto.
+- O arquivo gerado pode ficar maior; o limite final de aceitacao do app de destino continua fora do controle da Web.
+- Rollback: restaurar um teto fixo volta a reduzir tempo/tamanho de preparo, mas reintroduz corte de videos acima desse teto.
+
+### Validacao
+
+- Teste unitario cobre video de 127 segundos e 60,5 segundos mantendo a duracao real, alem do fallback de metadata invalida.
+- Teste estatico confirma ausencia de `MAX_VIDEO_EXPORT_SECONDS` na exportacao.
 - Validacoes finais, build, versionamento e smoke constam na TASK-42.

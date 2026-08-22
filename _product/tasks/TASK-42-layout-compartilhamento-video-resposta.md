@@ -522,3 +522,41 @@ Regras de UI obrigatórias:
 - [x] `pnpm check:tasks`
 - [x] `pnpm check:source-size`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-22 - videos completos no compartilhamento social
+
+- Pedido do usuario: videos com mais de 2 minutos estavam chegando incompletos nas redes sociais; no exemplo, a resposta original tinha 2:07 e o arquivo enviado ao Instagram ficava com cerca de 1 minuto.
+- Diagnostico: a exportacao client-side por canvas/MediaRecorder ainda mantinha o limite defensivo original de 60 segundos (MAX_VIDEO_EXPORT_SECONDS), criado para reduzir risco de travamento, mas agora incompativel com o requisito de compartilhar a resposta completa.
+- Decisao: remover o teto fixo de 60 segundos e usar a duracao real conhecida do video como duracao de exportacao.
+- Decisao: manter apenas um timeout defensivo proporcional (duracao * 1.25 + 15s) para evitar loop infinito quando o navegador trava, a metadata fica inconsistente ou o evento ended nao chega.
+- Fallback seguro: quando a duracao real nao estiver disponivel, a exportacao usa fallback curto de 15 segundos, porque nao ha como saber o final do arquivo sem metadata confiavel.
+- Limite tecnico: depois que a Lectum entrega o arquivo completo para a folha nativa, cada app de destino ainda pode aplicar suas proprias regras de corte/edicao; a Web nao consegue forcar o modo especifico do Instagram/WhatsApp/TikTok.
+- Escopo: frontend-only, mobile-first; sem mudanca de backend, banco, Prisma, migrations, endpoints, payloads, storage/R2, envs, providers, jobs, dados publicados ou packages.
+- Fonte visual auditavel: screenshots do usuario `WhatsApp Image 2026-08-22 at 14.39.17.jpeg` e `WhatsApp Image 2026-08-22 at 14.38.02.jpeg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A exportacao de video nao possui mais teto fixo de 60 segundos.
+- [x] Videos com duracao real conhecida usam a duracao completa da propria midia.
+- [x] O fluxo mantem timeout defensivo proporcional para nao travar em caso de stall/metadata inconsistente.
+- [x] Videos sem duracao real conhecida usam fallback seguro e documentado.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media/duration.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media/layout.ts src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` antes e depois do bump para `0.1.178`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3189`: `/version` respondeu `0.1.178` e `/comunidades` respondeu `200`.
+- [x] `pnpm version:bump` para `0.1.178`
+- [x] `pnpm check:version`
+- [x] `pnpm check` (primeira tentativa falhou pelo timeout transitorio ja conhecido em `backend/scripts/boot-safety.test.mjs`; `pnpm --dir backend check` isolado passou e a repeticao completa de `pnpm check` passou).
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check:source-size`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
