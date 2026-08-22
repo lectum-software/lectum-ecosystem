@@ -6,6 +6,7 @@ import type { user } from "@/api/generator/types";
 import { useAppDispatch } from "@/hooks/redux";
 import * as userActions from "@/store/modules/user/actions";
 import { resolveAuthRedirect } from "@/utils/auth-redirect";
+import { rememberCreatePostAuthReturnTarget } from "@/utils/community-post-auth-return";
 
 type RedirectTarget = string | null | ((data: user) => string | null);
 type UserSetOptions = {
@@ -39,6 +40,7 @@ export const useUserSet = (
       });
 
       if (target) {
+        rememberCreatePostAuthReturnTarget(target);
         router.replace(target);
       }
     },

@@ -75,6 +75,11 @@ const {
 const { isConfirmedUserSessionRejection } = await import("./session-rejection.ts");
 const { buildTrustedGoogleLoginUrlFromIntent } = await import("./trusted-navigation.ts");
 const { resolveAuthRedirect } = await import("./auth-redirect.ts");
+const {
+  consumeCreatePostAuthReturnHomeOverride,
+  isCreateCommunityPostRedirect,
+  rememberCreatePostAuthReturnTarget,
+} = await import("./community-post-auth-return.ts");
 const { applyStoredBearerFallback } = await import("../api/auth-cookie.ts");
 const { getSafePublicErrorMessage } = await import("../api/errors.ts");
 
@@ -419,6 +424,56 @@ test("mantém retorno ao modal de exclusão Google mesmo quando onboarding do ps
     resolveAuthRedirect(user, null, "/app/configuracoes/conta?deleteReauth=ok"),
     "/app/profissional/assinatura/planos",
   );
+});
+
+test("marca retorno autenticado para criar post e consome fechamento para home", async () => {
+  const fixedNow = Date.parse("2026-08-22T12:00:00.000Z");
+  const previousNow = Date.now;
+  Date.now = () => fixedNow;
+
+  try {
+    await withBrowserStorage(({ sessionStorage }) => {
+      const target = "/app/comunidades/feed/publicacao/nova";
+
+      assert.equal(isCreateCommunityPostRedirect(target), true);
+      assert.equal(
+        isCreateCommunityPostRedirect("/app/community/ansiedade-em-equilibrio/post/new"),
+        true,
+      );
+      assert.equal(isCreateCommunityPostRedirect("/auth/login"), false);
+      assert.equal(isCreateCommunityPostRedirect("https://evil.example/app/comunidades/x"), false);
+
+      rememberCreatePostAuthReturnTarget(target);
+      assert.ok(sessionStorage.getItem("lectum.communityPost.authReturn"));
+      assert.equal(consumeCreatePostAuthReturnHomeOverride(target), true);
+      assert.equal(sessionStorage.getItem("lectum.communityPost.authReturn"), null);
+      assert.equal(consumeCreatePostAuthReturnHomeOverride(target), false);
+    });
+  } finally {
+    Date.now = previousNow;
+  }
+});
+
+test("descarta retorno autenticado de criar post quando a rota atual não corresponde", async () => {
+  const fixedNow = Date.parse("2026-08-22T12:00:00.000Z");
+  const previousNow = Date.now;
+  Date.now = () => fixedNow;
+
+  try {
+    await withBrowserStorage(({ sessionStorage }) => {
+      rememberCreatePostAuthReturnTarget("/app/comunidades/feed/publicacao/nova");
+
+      assert.equal(
+        consumeCreatePostAuthReturnHomeOverride(
+          "/app/comunidades/ansiedade-em-equilibrio/publicacao/nova",
+        ),
+        false,
+      );
+      assert.equal(sessionStorage.getItem("lectum.communityPost.authReturn"), null);
+    });
+  } finally {
+    Date.now = previousNow;
+  }
 });
 
 test("fecha retorno administrativo quando a origem publicada é inválida", async () => {

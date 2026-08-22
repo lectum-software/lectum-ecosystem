@@ -788,3 +788,41 @@ Validacoes finais deste complemento:
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] Browser local/headless mobile em `http://127.0.0.1:3073/version` confirmou frontend `0.1.154`; a rota privada `/app/comunidades/feed/publicacao/nova` redirecionou para login sem cookie autenticado, entao nao foi usado mock para forcar sessao.
+
+## Complemento 2026-08-22 - fechamento pos-login da modal Criar Post
+
+- Pedido do usuario: quando um visitante nao autenticado tenta criar um post, o site leva ao login e, apos autenticar, abre corretamente a modal `Criar Post`; ao fechar essa modal nesse fluxo, ela nao deve voltar para a tela de login, e sim para a home.
+- Frontend: `useUserSet` passou a registrar em `sessionStorage` apenas redirects autenticados que apontam para rotas reais de criacao de post (`/app/comunidades/.../publicacao/nova` e aliases em ingles/legados).
+- Frontend: a modal `Criar Post` consome esse marcador no fechamento e usa `router.replace("/")`, evitando `router.back()` para uma entrada de historico de `/auth/login`.
+- Frontend: o marcador e removido quando o post e publicado, quando o fechamento pos-login e consumido, quando a rota atual nao corresponde ao redirect salvo ou quando a janela expira; aberturas autenticadas normais continuam usando o historico/fallback existente.
+- Fonte visual auditavel: screenshots anexados pelo usuario em 2026-08-22 mostrando `/app/comunidades/feed/publicacao/nova` e `/auth/login?redirectTo=%2Fapp%2Fcomunidades%2Ffeed%2Fpublicacao%2Fnova`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao, mantendo fallback auditavel por imagem local.
+- Escopo: sem mudanca de backend, Prisma, migrations, endpoints, payloads, upload/storage, regras de publicacao, envs, providers, dados publicados ou packages.
+- ADR atualizado: `adrs/0065-criacao-posts-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Login com `redirectTo` para criacao de post registra um marcador de retorno somente para rotas internas seguras de `Criar Post`.
+- [x] Fechar a modal `Criar Post` logo apos esse login envia o usuario autenticado para a home (`/`) sem retornar a `/auth/login`.
+- [x] Publicar o post limpa o marcador para nao afetar navegacoes futuras.
+- [x] Fechamentos normais da modal, sem fluxo de login anterior, preservam o comportamento de historico/fallback ja existente.
+- [x] Marcadores obsoletos, expirados ou de outra rota sao descartados em vez de redirecionar indevidamente.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+
+### Validacoes
+
+- [x] Validacao estatica via Node confirmou registro do target autenticado, consumo no fechamento, `router.replace("/")`, limpeza apos publicacao e teste unitario novo.
+- [x] `pnpm --dir frontend exec biome check --write src/utils/community-post-auth-return.ts src/hooks/user-set/index.tsx 'src/app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts' 'src/app/app/community/[slug]/post/new/hooks/use-create-post-discard-confirmation.ts' 'src/app/app/community/[slug]/post/new/modules/create-post-support.ts' src/utils/session-policy.test.mjs`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (executado antes do bump em `0.1.171` e reexecutado apos o bump em `0.1.172`)
+- [x] `pnpm version:bump` para `0.1.172`
+- [x] `pnpm check:version`
+- [x] Browser/local smoke no frontend buildado em `http://127.0.0.1:3183`: `/version` respondeu `0.1.172`, `/auth/login?redirectTo=%2Fapp%2Fcomunidades%2Ffeed%2Fpublicacao%2Fnova` carregou `Bem-vindo de volta`, e a rota privada sem cookie redirecionou de forma segura para login, sem criar sessao artificial.
+- [x] Browser/local smoke final no frontend buildado em `http://127.0.0.1:3184`: `/version` respondeu `0.1.172`, a rota de login com `redirectTo` entregou HTML 200 e a rota privada sem cookie respondeu `307` para login seguro, sem criar sessao artificial.
+- [x] `pnpm check` (primeira tentativa bloqueou em `check:source-size`; o controller foi reduzido para o limite legado. Tentativas intermediarias encontraram timeout transitorio no teste backend `boot-safety`; o teste isolado passou e o comando raiz foi repetido com sucesso)
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.

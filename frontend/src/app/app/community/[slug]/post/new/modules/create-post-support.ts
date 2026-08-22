@@ -1,4 +1,5 @@
 import { getSafeApiErrorMessage } from "@/api/errors";
+import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import type { CreateCommunityPostForm } from "../use-form";
 
 export type ApiErrorData = {
@@ -43,6 +44,30 @@ export const normalizeParam = (value: string | string[] | undefined) => {
 
   return value;
 };
+
+export const resolveCreatePostCloseFallbackHref = ({
+  communitySlugFromQuery,
+  routeSlug,
+}: {
+  communitySlugFromQuery?: string | null;
+  routeSlug?: string | null;
+}) => {
+  if (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG) return `/comunidades/${routeSlug}`;
+
+  if (communitySlugFromQuery) {
+    return `${DEFAULT_COMMUNITY_FEED_HREF}?community=${encodeURIComponent(communitySlugFromQuery)}`;
+  }
+
+  return DEFAULT_COMMUNITY_FEED_HREF;
+};
+
+export const resolveCreatePostDefaultSlug = ({
+  communitySlugFromQuery,
+  routeSlug,
+}: {
+  communitySlugFromQuery?: string | null;
+  routeSlug?: string | null;
+}) => (routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : communitySlugFromQuery);
 
 export const resolveCreatePostError = (error: unknown): CreatePostErrorResolution => {
   const apiError = error as ApiError;

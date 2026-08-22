@@ -926,3 +926,37 @@ Validacao complementar 2026-08-21:
 - Browser/CDP mobile em `http://127.0.0.1:3073/app/comunidades/feed/publicacao/nova`: redirecionou para
   login por ausencia de cookie autenticado local; nao foi criado mock de sessao.
 - Chrome headless local em `http://localhost:3000/app/community/feed/post/new`, com sessao real recente de paciente, validou: titulo renderizado como `TEXTAREA`, placeholder claro e responsivo, texto real do titulo em 24.32px/900, switch sem interrogacao, `content` com `overflow-y: auto`, area externa sem scroll inicial (`scrollHeight == clientHeight`) e backdrop em opacidade baixa.
+
+## Atualizacao 2026-08-22 - fechamento da modal apos login por redirect
+
+O fluxo de visitantes para `Criar Post` passa por uma rota privada: o usuario clica para publicar, vai
+para `/auth/login?redirectTo=...` e, depois de autenticar, retorna para a modal. O fechamento anterior
+dependia de `router.back()` quando o historico do navegador indicava que havia uma entrada anterior.
+Nesse cenario, a entrada anterior podia ser a propria tela de login, criando a regressao de voltar para
+`/auth/login` mesmo com sessao ja ativa.
+
+Decisoes complementares:
+
+- Registrar no `sessionStorage` um marcador curto apenas quando o redirect autenticado resolvido aponta
+  para uma rota interna segura de criacao de post.
+- Consumir esse marcador somente dentro da modal `Criar Post` e somente se a rota atual corresponder ao
+  redirect salvo, usando `router.replace("/")` para fechar na home sem empilhar uma volta para login.
+- Limpar o marcador ao publicar com sucesso, ao consumir o fechamento pos-login, ao encontrar rota
+  divergente ou ao expirar a janela de validade.
+- Preservar o comportamento anterior de historico/fallback para aberturas autenticadas normais da modal,
+  como feed -> criar post -> fechar.
+- Nao alterar backend, API, payload, schema, persistencia, upload/storage, envs, providers ou packages.
+
+Consequencias:
+
+- O fluxo visitante -> login -> modal deixa de retornar para uma tela de login obsoleta ao fechar.
+- A home canonica usada no fechamento pos-login e `/`, que tambem e o destino do item `Inicio`/feed.
+- O marcador fica restrito ao navegador e a sessao atual; nao ha efeito persistente em dados reais.
+- Rollback: reverter este complemento devolve o fechamento anterior por historico/fallback, sem impacto
+  em contratos, dados ou ambientes publicados.
+
+Validacao complementar 2026-08-22:
+
+- Testes unitarios em `frontend/src/utils/session-policy.test.mjs` cobrem marcacao, consumo e descarte do
+  marcador de retorno autenticado para `Criar Post`.
+- Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-24.

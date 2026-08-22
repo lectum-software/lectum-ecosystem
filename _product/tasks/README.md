@@ -753,3 +753,10 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-27: na tela Top Mentores, o selo verificado da `Classificacao geral` foi reduzido e ganhou respiro em relacao ao nome.
 - Os avatares ranqueados da lista inferior passam a usar anel metalico compacto, reduzindo a espessura visual de ouro/prata/bronze sem mudar o podio superior.
 - Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, formula do ranking, ordenacao, packages, envs, analytics, providers, jobs ou dados publicados.
+
+## Correcao em 2026-08-22: fechamento pos-login da modal Criar Post
+
+- Ajuste pos-feedback da TASK-24: quando um visitante tenta criar post, faz login pelo `redirectTo` e cai na modal `Criar Post`, fechar a modal nao deve voltar para `/auth/login`.
+- O login agora registra somente redirects autenticados para rotas reais de criacao de post, e a modal consome esse marcador no fechamento para voltar para a home (`/`) via `replace`.
+- O marcador e de sessao, expira, e e limpo ao publicar, ao fechar, ou quando a rota atual nao corresponde ao redirect salvo.
+- Alteracao frontend-only, mobile-first; sem mudanca de backend, banco, contratos, packages, envs, upload/storage, providers, jobs ou dados publicados.

@@ -16,6 +16,8 @@ export const useCreatePostDiscardConfirmation = ({
   const [discardConfirmationOpen, setDiscardConfirmationOpen] = useState(false);
   const discardConfirmationOpenRef = useRef(false);
   const hasDraftContentRef = useRef(false);
+  const onCancelRef = useRef(onCancel);
+  const onCloseRef = useRef(onClose);
 
   const setDiscardConfirmationOpenState = useCallback((open: boolean) => {
     discardConfirmationOpenRef.current = open;
@@ -25,6 +27,14 @@ export const useCreatePostDiscardConfirmation = ({
   useEffect(() => {
     hasDraftContentRef.current = hasDraftContent;
   }, [hasDraftContent]);
+
+  useEffect(() => {
+    onCancelRef.current = onCancel;
+  }, [onCancel]);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   const requestClose = useCallback(() => {
     if (discardConfirmationOpenRef.current) {
@@ -37,18 +47,18 @@ export const useCreatePostDiscardConfirmation = ({
       return;
     }
 
-    onClose();
-  }, [onClose, setDiscardConfirmationOpenState]);
+    onCloseRef.current();
+  }, [setDiscardConfirmationOpenState]);
 
   const cancelDiscardConfirmation = useCallback(() => {
     setDiscardConfirmationOpenState(false);
-    onCancel();
-  }, [onCancel, setDiscardConfirmationOpenState]);
+    onCancelRef.current();
+  }, [setDiscardConfirmationOpenState]);
 
   const confirmDiscardAndClose = useCallback(() => {
     setDiscardConfirmationOpenState(false);
-    onClose();
-  }, [onClose, setDiscardConfirmationOpenState]);
+    onCloseRef.current();
+  }, [setDiscardConfirmationOpenState]);
 
   return {
     cancelDiscardConfirmation,

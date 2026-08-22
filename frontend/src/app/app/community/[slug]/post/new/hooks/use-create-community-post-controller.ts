@@ -18,8 +18,8 @@ import {
 } from "@/api/callers/community";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
-import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
+import * as createPostAuthReturn from "@/utils/community-post-auth-return";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
 import { isUploadPreparationCanceled, resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
@@ -41,6 +41,8 @@ import {
   moveContenteditableCaretToEnd,
   normalizeParam,
   resolveCommunityOptions,
+  resolveCreatePostCloseFallbackHref,
+  resolveCreatePostDefaultSlug,
   resolveCreatePostError,
   resolveKeyboardViewportOffset,
   type SelectedPostMedia,
@@ -78,8 +80,7 @@ export const useCreateCommunityPostController = ({
     () => resolveCommunityOptions(communitiesQuery.data?.data ?? []),
     [communitiesQuery.data?.data],
   );
-  const defaultCommunitySlug =
-    routeSlug && routeSlug !== COMMUNITY_FEED_SLUG ? routeSlug : communitySlugFromQuery;
+  const defaultCommunitySlug = resolveCreatePostDefaultSlug({ communitySlugFromQuery, routeSlug });
 
   const form = useCreateCommunityPostForm({
     communityOptions,
@@ -101,6 +102,7 @@ export const useCreateCommunityPostController = ({
         // A rota de sucesso também recebe o destino por URL e não depende do storage.
       }
       setIsSheetOpen(false);
+      createPostAuthReturn.clearCreatePostAuthReturnTarget();
       toast.success("Post publicado!");
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = window.setTimeout(() => {
@@ -274,12 +276,12 @@ export const useCreateCommunityPostController = ({
     selectedMediaPreviewUrlsRef.current = [];
   }, []);
 
-  const clearSelectedMedia = useCallback(() => {
+  const clearSelectedMedia = () => {
     revokeSelectedMediaPreview();
     setSelectedMediaItems([]);
-  }, [revokeSelectedMediaPreview]);
+  };
 
-  const removeSelectedMediaAt = useCallback((index: number) => {
+  const removeSelectedMediaAt = (index: number) => {
     setSelectedMediaItems((currentItems) => {
       const removedItem = currentItems[index];
       if (!removedItem) return currentItems;
@@ -291,18 +293,15 @@ export const useCreateCommunityPostController = ({
 
       return currentItems.filter((_, currentIndex) => currentIndex !== index);
     });
-  }, []);
+  };
 
-  const updateSelectedMediaOrientation = useCallback(
-    (id: string, orientation: SelectedPostMedia["orientation"]) => {
-      setSelectedMediaItems((currentItems) =>
-        currentItems.map((item) => (item.id === id ? { ...item, orientation } : item)),
-      );
-    },
-    [],
-  );
+  const updateSelectedMediaOrientation = (id: string, orientation: "landscape" | "portrait") => {
+    setSelectedMediaItems((currentItems) =>
+      currentItems.map((item) => (item.id === id ? { ...item, orientation } : item)),
+    );
+  };
 
-  const performClose = useCallback(() => {
+  const performClose = () => {
     abortActiveVideoUpload();
     setIsSheetOpen(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
@@ -313,16 +312,15 @@ export const useCreateCommunityPostController = ({
         return;
       }
 
-      const fallbackHref =
-        routeSlug && routeSlug !== COMMUNITY_FEED_SLUG
-          ? `/comunidades/${routeSlug}`
-          : communitySlugFromQuery
-            ? `${DEFAULT_COMMUNITY_FEED_HREF}?community=${encodeURIComponent(communitySlugFromQuery)}`
-            : DEFAULT_COMMUNITY_FEED_HREF;
+      const fallbackHref = resolveCreatePostCloseFallbackHref({
+        communitySlugFromQuery,
+        routeSlug,
+      });
 
+      if (createPostAuthReturn.replaceCreatePostAuthReturnWithHome(router)) return;
       navigateBackWithFallback(router, fallbackHref);
     }, SHEET_CLOSE_DELAY_MS);
-  }, [abortActiveVideoUpload, communitySlugFromQuery, onCloseComplete, routeSlug, router]);
+  };
 
   const {
     cancelDiscardConfirmation,
