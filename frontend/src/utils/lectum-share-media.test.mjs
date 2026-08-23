@@ -102,6 +102,10 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
     "utf8",
   );
+  const artifactCacheSource = readFileSync(
+    new URL("./lectum-share-artifact-cache.ts", import.meta.url),
+    "utf8",
+  );
   const shareDialogHookSource = readFileSync(
     new URL("../hooks/use-lectum-share-dialog.tsx", import.meta.url),
     "utf8",
@@ -148,6 +152,35 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     ),
     "utf8",
   );
+  const mediaActionsSource = readFileSync(
+    new URL(
+      "../../../backend/src/modules/api/private/posts/use-cases/services/media-actions.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const createPostControllerSource = readFileSync(
+    new URL(
+      "../app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const postDetailControllerSource = readFileSync(
+    new URL(
+      "../app/app/community/[slug]/post/[id]/views/post-detail-controller.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const replyThreadSource = readFileSync(
+    new URL("../app/app/community/[slug]/post/[id]/views/reply-thread.tsx", import.meta.url),
+    "utf8",
+  );
+  const postEditSource = readFileSync(
+    new URL("../components/community/post-edit-modal.tsx", import.meta.url),
+    "utf8",
+  );
   const preparedShareSource = mediaSource.slice(
     mediaSource.indexOf("export const sharePreparedLectumVideoResponse"),
     mediaSource.indexOf("export const downloadPreparedLectumShareFile"),
@@ -188,6 +221,12 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(
     hookSource,
     /prepareSocialFileTarget\(target\)[\s\S]*sharePreparedLectumVideoResponse\(target, file/,
+  );
+  assert.match(hookSource, /getLectumShareArtifactFile\(socialTarget\)/);
+  assert.match(hookSource, /persistLectumShareArtifact\(socialTarget, file\)/);
+  assert.match(
+    hookSource,
+    /if \(result\.mode !== "prepared"\) \{[\s\S]*trackShare\(target, result\.channel\)/,
   );
   assert.match(
     hookSource,
@@ -234,6 +273,27 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(seoSource, /\$\{name\} na Lectum/);
   assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
   assert.match(repositorySource, /lectum-share-v5-2026-08-22-file-first-complete-video/);
+  assert.match(repositorySource, /POST_SHARE_ARTIFACT_TTL_DAYS = 7/);
+  assert.match(repositorySource, /renewArtifact/);
+  assert.match(repositorySource, /last_accessed_at: accessedAt/);
+  assert.match(artifactCacheSource, /prewarmLectumShareArtifact/);
+  assert.match(artifactCacheSource, /scheduleLectumShareArtifactPrewarm/);
+  assert.match(artifactCacheSource, /requestIdleCallback/);
+  assert.match(artifactCacheSource, /uploadPostShareArtifact/);
+  assert.match(artifactCacheSource, /uploadReplyShareArtifact/);
+  assert.match(mediaActionsSource, /if \(res\.data\.shared\)/);
+  assert.match(mediaActionsSource, /renewShareArtifactAfterConfirmedShare/);
+  assert.match(createPostControllerSource, /scheduleLectumSharePostArtifactPrewarm\(post/);
+  assert.match(createPostControllerSource, /authenticated: Boolean\(storedUser\?\.id\)/);
+  assert.match(postEditSource, /scheduleLectumSharePostArtifactPrewarm\(updatedPost/);
+  assert.match(
+    postDetailControllerSource,
+    /scheduleLectumShareArtifactPrewarm\([\s\S]*createLectumShareVideoTarget\(post, createdReply/,
+  );
+  assert.match(
+    replyThreadSource,
+    /scheduleLectumShareArtifactPrewarm\([\s\S]*createLectumShareVideoTarget\(post, createdReply/,
+  );
 });
 
 test("cancelamento nativo da share sheet e reconhecido sem virar erro tecnico", () => {

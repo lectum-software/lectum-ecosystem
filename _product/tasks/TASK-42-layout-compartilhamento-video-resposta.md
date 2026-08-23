@@ -908,3 +908,38 @@ Regras de UI obrigatórias:
 - [x] `pnpm version:bump` para `0.1.188`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - cache 7 dias com renovacao por share real
+
+- Pedido do usuario: armazenar o video com arte por 7 dias ja no upload/publicacao para reduzir a latencia da primeira tentativa de compartilhamento e manter em cache videos que continuarem sendo bastante compartilhados depois desse prazo.
+- Decisao: manter o artefato social 9:16 no storage temporario por 7 dias, aquecendo em background apos publicacao/edicao de post com video profissional e apos criacao de resposta profissional com video.
+- Renovacao: somente `post_share.shared=true` aceito pelo backend renova `expires_at` por mais 7 dias e atualiza `last_accessed_at`. Leitura do artefato, crawler, abertura da sheet da Lectum ou share abortado nao renovam.
+- Contagem real: clicar em `Redes sociais` nao conta por si so; a Lectum conta depois do retorno aceito da Web Share API/fallback. A Web nao informa se o usuario clicou no Instagram dentro da folha nativa do celular.
+- Escopo: frontend + backend, sem package novo, migration, env obrigatoria, provider novo, mock, seed, reset ou limpeza destrutiva de buckets/dados publicados.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Novos artefatos de compartilhamento social com arte expiram em 7 dias.
+- [x] Publicacao/edicao de post profissional com video agenda prewarm best-effort do artefato.
+- [x] Criacao de resposta profissional com video agenda prewarm best-effort do artefato.
+- [x] O botao `Redes sociais` nao incrementa contagem antes da conclusao aceita do compartilhamento nativo/fallback.
+- [x] `post_share.shared=true` renova o artefato vigente por mais 7 dias; shares deduplicados/abortados nao renovam.
+- [x] O cache continua reaproveitando artefato existente antes de reprocessar canvas/MediaRecorder.
+- [x] Nenhum banco, package, env, provider, mock, seed, reset ou limpeza destrutiva foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-artifact-cache.ts src/app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts src/app/app/community/[slug]/post/[id]/views/post-detail-controller.ts src/app/app/community/[slug]/post/[id]/views/reply-thread.tsx src/components/community/post-edit-modal.tsx src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts src/modules/api/private/posts/repositories/PostRepository.ts src/modules/api/private/posts/use-cases/services/media-actions.ts`
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir backend build`
+- [x] `pnpm check:source-size`
+- [x] `pnpm version:bump` para `0.1.189`
+- [x] `pnpm check:version`
+- [x] `pnpm check` (uma primeira tentativa falhou por encoding corrompido em `_product/tasks/DATA-MODEL.md` durante a edicao local; o arquivo foi restaurado/reaplicado em UTF-8 e a repeticao completa passou).
+- [x] `git diff --check`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

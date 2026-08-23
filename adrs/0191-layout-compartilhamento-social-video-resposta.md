@@ -522,3 +522,25 @@ O usuario enviou novo screenshot da sheet `Compartilhar video` e pediu dois ajus
 - O icone de redes sociais passa a comunicar melhor o destino principal esperado, mas continua usando tokens de cor do botao para manter contraste nos temas claro/escuro.
 - Nao ha impacto em backend, banco, envs, providers, jobs, storage, contratos de API, packages ou dados publicados.
 - Rollback: restaurar a copy anterior e trocar `InstagramIcon` por `Share2` no array da sheet volta ao visual anterior sem migration.
+
+## Complemento 2026-08-23 - cache aquecido de 7 dias e renovacao por compartilhamento
+
+### Contexto
+
+A geracao client-side do video social 9:16 com arte continua sendo o ponto lento da experiencia de compartilhamento. O usuario validou armazenar o artefato por 7 dias ja apos upload/publicacao, mas pediu que videos ainda muito compartilhados nao perdessem cache exatamente no setimo dia. Tambem foi confirmado que a Web Share API nao informa qual app foi escolhido dentro da folha nativa do celular; portanto nao e possivel medir clique especifico no Instagram.
+
+### Decisao
+
+- Reduzir a TTL de novos `post_share_artifacts` para 7 dias.
+- Mover a logica de leitura/upload do artefato para `frontend/src/utils/lectum-share-artifact-cache.ts` e reutiliza-la tanto no share direto quanto no prewarm best-effort.
+- Agendar prewarm em idle/fallback timer apos publicacao/edicao de post profissional com video e apos criacao de resposta profissional com video, sem bloquear navegacao, toast ou fluxo de upload.
+- Renovar `expires_at` e `last_accessed_at` por mais 7 dias somente quando o backend aceita um novo `post_share` com `shared=true`. Leituras do artefato e cliques abortados/deduplicados nao renovam.
+- Manter a contagem em nivel de canal `web_share`/`clipboard`; a escolha Instagram/Reels/Stories dentro da folha nativa permanece nao rastreavel pela Web.
+
+### Consequencias
+
+- A primeira tentativa de compartilhar videos recem-publicados tende a ser mais rapida, pois o arquivo com arte ja pode estar no storage ou em cache do navegador.
+- Videos que continuarem sendo compartilhados ao menos uma vez dentro da janela mantem o artefato vivo por expiracao deslizante de 7 dias.
+- Artefatos existentes com vencimento antigo nao sao destruidos nem backfilled; expiram naturalmente pelo scheduler ja existente.
+- Nao ha migration, package novo, env obrigatoria, provider novo ou limpeza destrutiva.
+- Rollback: voltar `POST_SHARE_ARTIFACT_TTL_DAYS` para o valor anterior, remover os agendamentos de prewarm no frontend e remover a chamada de renovacao no service de share; registros existentes permanecem seguros e expiram pelo campo `expires_at`.

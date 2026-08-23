@@ -165,6 +165,12 @@ export class PostRepository implements IPostRepository {
     return this.shareArtifactRepository.upsertArtifact(...args);
   }
 
+  renewShareArtifact(
+    ...args: Parameters<PostShareArtifactRepository["renewArtifact"]>
+  ): ReturnType<PostShareArtifactRepository["renewArtifact"]> {
+    return this.shareArtifactRepository.renewArtifact(...args);
+  }
+
   listExpiredShareArtifacts(
     ...args: Parameters<PostShareArtifactRepository["listExpired"]>
   ): ReturnType<PostShareArtifactRepository["listExpired"]> {

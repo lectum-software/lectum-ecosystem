@@ -809,7 +809,7 @@ Uma task só pode ser marcada como concluída quando:
 
 ## Atualizacao operacional em 2026-08-22: cache temporario de video com arte
 
-- Ajuste da TASK-42: videos sociais com arte agora podem ser armazenados sob demanda por 15 dias, apenas depois de um compartilhamento real, evitando pre-renderizar todos os uploads.
+- Ajuste da TASK-42: videos sociais com arte agora podem ser armazenados temporariamente; a politica atual usa 7 dias, com aquecimento apos publicacao/edicao de post com video profissional e renovacao por compartilhamento aceito, evitando pre-renderizar conteudo fora do fluxo real.
 - O backend adiciona `post_share_artifacts`, rotas aditivas de consulta/upload para posts e respostas, storage publico em `posts/share-artifacts/` e limpeza periodica de expirados com envs opcionais e defaults seguros.
 - O frontend consulta o artefato antes de reprocessar canvas/MediaRecorder e persiste em background quando gerar a arte pela primeira vez.
 - Deploy aditivo: backend antes ou junto do frontend; sem env obrigatoria nova, package novo ou reset de dados.
@@ -876,3 +876,10 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-42: a sheet `Compartilhar video` troca a frase auxiliar para `Onde deseja compartilhar?`, deixando a pergunta mais direta para o usuario antes da escolha do destino.
 - A opcao `Redes sociais` passa a usar um icone de marca do Instagram em SVG inline reutilizavel, mantendo `WhatsApp` com o icone proprio ja adotado na Lectum.
 - A alteracao e frontend-only, mobile-first, sem mudanca de payloads, link WhatsApp, arquivo social, backend, banco, contratos, packages, envs, providers ou dados publicados.
+
+## Atualizacao operacional em 2026-08-23: cache aquecido e renovacao por compartilhamento real
+
+- Ajuste pos-feedback da TASK-42: posts e respostas profissionais com video passam a aquecer em background o arquivo social 9:16 com arte logo apos publicacao/edicao de post ou criacao de resposta bem-sucedida, sem bloquear a UI.
+- A retencao de novos artefatos passa para 7 dias. Cada `post_share.shared=true` aceito pelo backend renova `expires_at` por mais 7 dias e atualiza `last_accessed_at`, permitindo que videos ainda compartilhados continuem em cache.
+- Clicar em `Redes sociais` apenas abre o fluxo: a contagem/renovacao so ocorre depois de retorno aceito do compartilhamento nativo ou fallback de link; a Web Share API nao informa se o usuario escolheu Instagram/Reels/Stories dentro da folha do celular.
+- Sem package novo, migration, env obrigatoria, mock, seed, reset ou limpeza destrutiva de storage/dados publicados.

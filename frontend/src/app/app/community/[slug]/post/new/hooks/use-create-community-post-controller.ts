@@ -20,6 +20,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import * as createPostAuthReturn from "@/utils/community-post-auth-return";
+import { scheduleLectumSharePostArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
 import { isUploadPreparationCanceled, resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
@@ -95,6 +96,7 @@ export const useCreateCommunityPostController = ({
   const mutation = useCreateCommunityPost({
     onSuccess: (post) => {
       const publicationHref = `/comunidades/${encodeURIComponent(post.community.slug)}/publicacao/${encodeURIComponent(post.id)}`;
+      scheduleLectumSharePostArtifactPrewarm(post, { authenticated: Boolean(storedUser?.id) });
 
       try {
         window.sessionStorage.setItem(LAST_CREATED_POST_HREF_KEY, publicationHref);

@@ -21,6 +21,7 @@ import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
+import { scheduleLectumShareArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
@@ -472,6 +473,13 @@ export const usePostDetailController = () => {
       values,
       videoUploadOperation,
     });
+    const parentReply = findPostReplyInTree(replies, createdReply.parent_reply_id);
+    scheduleLectumShareArtifactPrewarm(
+      createLectumShareVideoTarget(post, createdReply, {
+        parentContent: parentReply?.content ?? null,
+      }),
+      { authenticated: Boolean(currentUserId && mediaFile) },
+    );
 
     resetReplyFocusHighlight();
     setActiveFocusReplyId(createdReply.id);

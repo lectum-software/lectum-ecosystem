@@ -5,7 +5,7 @@ import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitle
 
 export const POST_SHARE_ARTIFACT_LAYOUT_VERSION =
   "lectum-share-v5-2026-08-22-file-first-complete-video";
-export const POST_SHARE_ARTIFACT_TTL_DAYS = 15;
+export const POST_SHARE_ARTIFACT_TTL_DAYS = 7;
 
 const shareAuthorSelect = {
   id: true,
@@ -325,6 +325,7 @@ export class PostShareArtifactRepository {
       storageKey: string;
     },
   ): Promise<ShareArtifactRecord> {
+    const accessedAt = new Date();
     const artifact = await prisma.post_share_artifact.upsert({
       where: {
         cache_key: input.cacheKey,
@@ -335,6 +336,7 @@ export class PostShareArtifactRepository {
         expires_at: input.expiresAt,
         file_name: input.fileName ?? null,
         layout_version: input.layoutVersion,
+        last_accessed_at: accessedAt,
         post_id: input.postId,
         reply_id: input.replyId,
         size_bytes: input.sizeBytes,
@@ -350,6 +352,7 @@ export class PostShareArtifactRepository {
         expires_at: input.expiresAt,
         file_name: input.fileName ?? null,
         layout_version: input.layoutVersion,
+        last_accessed_at: accessedAt,
         post_id: input.postId,
         reply_id: input.replyId,
         size_bytes: input.sizeBytes,
@@ -375,6 +378,27 @@ export class PostShareArtifactRepository {
       size_bytes: artifact.size_bytes,
       storage_key: artifact.storage_key,
     };
+  }
+
+  async renewArtifact(
+    input: ShareArtifactTarget & {
+      accessedAt: Date;
+      expiresAt: Date;
+    },
+  ) {
+    await prisma.post_share_artifact.updateMany({
+      where: {
+        cache_key: input.cacheKey,
+        deleted: false,
+        layout_version: input.layoutVersion,
+        source_fingerprint: input.sourceFingerprint,
+        source_media_url: input.sourceMediaUrl,
+      },
+      data: {
+        expires_at: input.expiresAt,
+        last_accessed_at: input.accessedAt,
+      },
+    });
   }
 
   async listExpired(now: Date, limit: number) {

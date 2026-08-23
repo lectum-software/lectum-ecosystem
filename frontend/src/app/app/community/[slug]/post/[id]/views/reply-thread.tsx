@@ -25,6 +25,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
+import { scheduleLectumShareArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
 import {
   createLectumShareLinkTarget,
   createLectumShareVideoTarget,
@@ -268,6 +269,15 @@ export const PostReplyThreadLogic = () => {
       values,
       videoUploadOperation,
     });
+    const parentReply = rootReply
+      ? findPostReplyInTree([rootReply], createdReply.parent_reply_id)
+      : null;
+    scheduleLectumShareArtifactPrewarm(
+      createLectumShareVideoTarget(post, createdReply, {
+        parentContent: parentReply?.content ?? null,
+      }),
+      { authenticated: Boolean(currentUserId && mediaFile) },
+    );
 
     resetReplyFocusHighlight();
     setActiveFocusReplyId(createdReply.id);
