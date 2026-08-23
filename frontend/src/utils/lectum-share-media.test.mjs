@@ -297,6 +297,12 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(shareDialogHookSource, /DESKTOP_SHARE_DESTINATION_QUERY/);
   assert.match(shareDialogHookSource, /resolveLectumShareDestinationMode/);
   assert.match(shareDialogHookSource, /target\.kind === "link" \|\| target\.mediaType !== "video"/);
+  assert.match(shareDialogHookSource, /prewarmAndroidSocialFile\(target, mode\)/);
+  assert.match(shareDialogHookSource, /prepareLectumSourceVideoFallbackFile\(target\)/);
+  assert.match(shareDialogHookSource, /preparingSocial=\{isPreparingAndroidSocialFile\}/);
+  assert.match(shareDialogSource, /preparingSocial/);
+  assert.match(shareDialogSource, /option\.destination === "social"/);
+  assert.match(shareDialogSource, /Preparando v[\s\S]*deo\.\.\./);
   assert.match(seoSource, /professionalVideoTitle/);
   assert.match(seoSource, /resolveVideoOpenGraphDescription/);
   assert.match(seoSource, /\$\{name\} na Lectum/);
@@ -345,6 +351,8 @@ test("fallback Android compartilha video original sem gravar como artefato socia
   );
 
   assert.match(mediaSource, /prepareLectumSourceVideoFallbackFile/);
+  assert.match(mediaSource, /shouldPreferLectumSourceVideoFallbackForSocialShare/);
+  assert.match(mediaSource, /\\bAndroid\\b/);
   assert.match(mediaSource, /sourceVideoFallbackFileCache/);
   assert.match(mediaSource, /sourceVideoFallbackFiles = new WeakSet<File>\(\)/);
   assert.match(mediaSource, /fetch\(mediaUrl\)/);
@@ -358,11 +366,23 @@ test("fallback Android compartilha video original sem gravar como artefato socia
   );
   assert.match(
     hookSource,
-    /prepareLectumShareFile\(socialTarget\)\.catch\(\(error\) => \{[\s\S]*destination === "social"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
+    /shouldBypassSocialVideoExport[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)[\s\S]*prepareLectumShareFile\(socialTarget\)\.catch/,
+  );
+  assert.match(
+    hookSource,
+    /if \(!cachedFile && !shouldBypassSocialVideoExport\) \{[\s\S]*getLectumShareArtifactFile\(socialTarget\)/,
+  );
+  assert.match(
+    hookSource,
+    /shouldUseSourceVideoFallback[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
   );
   assert.match(
     hookSource,
     /!isLectumSourceVideoFallbackFile\(file\)[\s\S]*persistLectumShareArtifact\(socialTarget, file\)/,
+  );
+  assert.match(
+    artifactCacheSource,
+    /shouldPreferLectumSourceVideoFallbackForSocialShare\(\)[\s\S]*return null[\s\S]*prepareLectumShareFile\(target\)/,
   );
   assert.doesNotMatch(artifactCacheSource, /video\/quicktime/);
 });

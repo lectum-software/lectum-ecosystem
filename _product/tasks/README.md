@@ -914,3 +914,10 @@ Uma task só pode ser marcada como concluída quando:
 - O caminho preferencial continua sendo o arquivo social com arte da Lectum via cache/geracao. O fallback original nao e persistido como `post_share_artifact`, nao renova cache de arte e nao altera o desktop `Baixar video`, que continua usando apenas o artefato social com arte.
 - A versao dos artefatos temporarios passa para `lectum-share-v8-2026-08-23-android-source-video-fallback`, invalidando cache v7 sem apagar storage.
 - Trade-off: no fallback Android, o arquivo pode ir sem a caixinha da Lectum, mas preserva movimento/duracao e evita erro de preparo; sem package, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-23: Android prepara video original antes de redes sociais
+
+- Ajuste pos-feedback da TASK-42: o MP4 anexado pelo usuario mostrou o Android preso em `Preparando video para compartilhar...` apos tocar em `Redes sociais` em conteudo de video longo.
+- Em Android, a sheet de destino agora prepara o video original em memoria assim que abre e desabilita `Redes sociais` com `Preparando video...` ate o arquivo estar pronto; depois, o toque usa esse arquivo diretamente, sem tentar renderizar canvas/MediaRecorder nem buscar artefato remoto durante o gesto.
+- O fallback original segue sem persistencia em `post_share_artifact`; WhatsApp por link e desktop com download do video social com arte continuam inalterados.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.

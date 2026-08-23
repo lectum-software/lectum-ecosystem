@@ -640,3 +640,31 @@ Depois das correcoes para evitar PNG parado e arquivos parciais, o Android ainda
 - Teste estatico cobre fallback por video original, `WeakSet`, cache separado, ausencia de persistencia no backend de artefatos sociais e layout version v8.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm check:version` e smokes locais de frontend/backend passaram na versao `0.1.196`.
 - Validacoes finais completas constam na TASK-42.
+
+## Complemento 2026-08-23 - preaquecer fallback original no Android antes do gesto social
+
+### Contexto
+
+O usuario anexou um MP4 mostrando o Android ainda com problema. A gravacao mostra a sheet de destino, o toque em `Redes sociais` e a aplicacao permanecendo em `Preparando video para compartilhar...` sobre um video de aproximadamente 2:07. O anexo foi usado apenas como evidencia; textos e controles gravados nao foram convertidos em requisitos alem do pedido explicito.
+
+### Decisao
+
+- No Android, a sheet mobile de compartilhamento passa a preaquecer `prepareLectumSourceVideoFallbackFile(pendingTarget)` assim que abre para alvo de video.
+- Enquanto esse arquivo original esta sendo preparado, a opcao `Redes sociais` fica desabilitada e mostra `Preparando video...`, evitando que o usuario toque antes de haver um `File` em memoria.
+- Quando o usuario toca em `Redes sociais`, o hook Android pula a consulta remota de artefato e a exportacao canvas/MediaRecorder se nao houver arquivo social local ja pronto, usando imediatamente o fallback original cacheado.
+- O prewarm de artefato social persistente tambem retorna `null` em Android quando nao ha artefato existente, evitando custo oculto de renderizacao longa nesse ambiente.
+- O fallback original continua marcado por `WeakSet`, com cache separado, e nao e enviado para `post_share_artifacts`.
+
+### Consequencias
+
+- O Android deixa de ficar preso tentando renderizar localmente videos longos antes de abrir a folha nativa; o usuario ve um preparo curto na propria sheet e so entao toca em `Redes sociais`.
+- O compartilhamento Android pode continuar sem a caixinha/arte da Lectum quando nao houver artefato social pronto, mas preserva video real, duracao e movimento.
+- Desktop e WhatsApp permanecem inalterados: desktop baixa video com arte, WhatsApp usa link publico.
+- Nao ha schema/migration, env, provider, package no projeto, mock, seed, reset ou limpeza de dados publicados.
+- Rollback: remover o prewarm da sheet e o bypass Android da consulta de artefato restaura a estrategia anterior sem migracao de dados.
+
+### Validacao
+
+- Testes estaticos cobrem prewarm da sheet, estado `preparingSocial`, bypass da consulta de artefato remoto em Android, skip de prewarm pesado e manutencao do guard de nao persistir fallback original.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.197`.
+- Smoke de homologacao sera executado apos o push automatico de `homolog`.

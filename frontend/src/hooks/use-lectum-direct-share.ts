@@ -19,6 +19,7 @@ import {
   shareLectumLinkTarget,
   shareLectumWhatsAppPreviewTarget,
   sharePreparedLectumVideoResponse,
+  shouldPreferLectumSourceVideoFallbackForSocialShare,
 } from "@/utils/lectum-share-media";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
 import type {
@@ -81,24 +82,30 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         let result: ShareExportResult;
         const prepareSocialFileTarget = async (socialTarget: LectumShareSocialTarget) => {
           let cachedFile = getPreparedLectumShareFile(socialTarget);
+          const shouldUseSourceVideoFallback =
+            destination === "social" && socialTarget.mediaType === "video";
+          const shouldBypassSocialVideoExport =
+            shouldUseSourceVideoFallback && shouldPreferLectumSourceVideoFallbackForSocialShare();
 
           if (!cachedFile) {
             loadingToastId = toast.loading(SHARING_TOAST_MESSAGE);
           }
 
-          if (!cachedFile) {
+          if (!cachedFile && !shouldBypassSocialVideoExport) {
             cachedFile = await getLectumShareArtifactFile(socialTarget).catch(() => null);
           }
 
           const file =
             cachedFile ??
-            (await prepareLectumShareFile(socialTarget).catch((error) => {
-              if (destination === "social" && socialTarget.mediaType === "video") {
-                return prepareLectumSourceVideoFallbackFile(socialTarget);
-              }
+            (shouldBypassSocialVideoExport
+              ? await prepareLectumSourceVideoFallbackFile(socialTarget)
+              : await prepareLectumShareFile(socialTarget).catch((error) => {
+                  if (shouldUseSourceVideoFallback) {
+                    return prepareLectumSourceVideoFallbackFile(socialTarget);
+                  }
 
-              throw error;
-            }));
+                  throw error;
+                }));
 
           if (!cachedFile && currentUserId && !isLectumSourceVideoFallbackFile(file)) {
             void persistLectumShareArtifact(socialTarget, file).catch(() => undefined);
