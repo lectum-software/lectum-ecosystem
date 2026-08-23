@@ -33,13 +33,7 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
 
   const video = await loadVideoElement(mediaUrl);
 
-  try {
-    return await createVideoShareFile(target, video);
-  } catch {
-    const fallbackVideo = await loadVideoElement(mediaUrl);
-
-    return createImageShareFile(target, fallbackVideo);
-  }
+  return createVideoShareFile(target, video);
 };
 
 type PreparedShareFileCacheValue = File | Promise<File>;

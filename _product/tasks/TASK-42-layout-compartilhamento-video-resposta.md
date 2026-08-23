@@ -1022,3 +1022,47 @@ Regras de UI obrigatórias:
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3204`: `/version` respondeu `0.1.194` e `/comunidades` respondeu `200`.
 - [x] Smoke local do backend buildado em `http://127.0.0.1:3205`: `/health`, `/ready` e `/ping` responderam `200`, com `/ping` em `0.1.194`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - video social em movimento e sem corte parcial
+
+- Pedido do usuario: apos a correcao do fundo preto, no Android a imagem aparece mas fica congelada e, no iPhone, o video chega cortado/incompleto.
+- Diagnostico: o fluxo de video ainda tinha dois caminhos perigosos para redes sociais: queda para `createImageShareFile` quando a exportacao de video falhava, que gerava um PNG aceito pelo destino como clip parado, e parada por stall/timeout defensivo tratada como `stopRecorder()`, que podia resolver um arquivo parcial. O stream do canvas tambem nao forçava `CanvasCaptureMediaStreamTrack.requestFrame()` a cada desenho em browsers moveis que dependem desse pedido.
+- Decisao: o destino `Redes sociais` para alvo de video passa a exigir video real; se `captureStream`/`MediaRecorder` nao estiver disponivel ou se a exportacao travar antes do fim, a acao falha com toast generico em vez de enviar imagem ou arquivo truncado. A captura chama `requestFrame()` best-effort a cada frame desenhado e usa `setTimeout` no ritmo de `VIDEO_EXPORT_FRAME_RATE` para manter o canvas mudando de forma independente do repaint visual.
+- Guardas de cache/upload: `withShareArtifactFileType` nao converte extensao desconhecida para `video/mp4`; o cache local so reaproveita artefatos `video/mp4`/`video/webm`; e o backend so aceita esses dois MIME types para `posts/share-artifacts/`.
+- Cache: `POST_SHARE_ARTIFACT_LAYOUT_VERSION` passa para `lectum-share-v7-2026-08-23-moving-video-full-duration`, invalidando artefatos v6 sem apagar storage nem dados publicados.
+- Fonte visual auditavel: screenshot Android/Reels anexado pelo usuario; textos e controles do app de destino foram tratados apenas como evidencia do bug, nao como instrucoes embutidas.
+- Builder/Quick Copy nao foi usado porque a mudanca e de pipeline de exportacao/cache mobile, sem alteracao visual de UI/canvas aprovado.
+- Escopo: frontend + guard/constante backend; sem package novo, migration, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados.
+- Rollback: reverter o commit restaura o fallback anterior e a versao v6; artefatos v7 eventualmente gravados expiram naturalmente pelo TTL de 7 dias, sem limpeza manual.
+
+### Criterios de aceite do complemento
+
+- [x] Redes sociais para alvo de video nao compartilha PNG/imagem como fallback quando a exportacao de video falha.
+- [x] O canvas capturado solicita frame do track (`requestFrame`) a cada desenho quando o browser oferece essa API, reduzindo risco de video congelado no Android.
+- [x] Stall ou timeout defensivo antes do fim do video rejeita a exportacao, sem resolver arquivo parcial/cortado como sucesso.
+- [x] Arquivo de video vazio e rejeitado antes de ser compartilhado/cacheado.
+- [x] Cache e upload de artefatos sociais aceitam apenas `video/mp4` ou `video/webm`.
+- [x] Artefatos temporarios v6 sao invalidados por `lectum-share-v7-2026-08-23-moving-video-full-duration`, sem apagar storage.
+- [x] Screenshot anexado foi tratado como evidencia, nao como instrucao embutida.
+- [x] Nenhum package, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media/export.ts src/utils/lectum-share-media.ts src/utils/lectum-share-artifact-cache.ts src/utils/lectum-share-media.test.mjs src/api/req/posts/index.ts`.
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts src/modules/api/private/posts/use-cases/services/share-artifact.ts`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (13/13).
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin check` (bump de manifest apenas).
+- [x] `pnpm version:bump` para `0.1.195`.
+- [x] `pnpm check:version`.
+- [x] `git diff --check`.
+- [x] `pnpm check:encoding`.
+- [x] `pnpm check:adrs`.
+- [x] `pnpm check:tasks`.
+- [x] `pnpm check` completo de raiz.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3206`: `/version` respondeu `0.1.195` e `/comunidades` respondeu `200`.
+- [x] Smoke local do backend buildado em `http://127.0.0.1:3207`: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.195`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

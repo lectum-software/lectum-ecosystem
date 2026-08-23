@@ -55,7 +55,10 @@ const toPublicResponse = (artifact: {
   size_bytes: artifact.size_bytes,
 });
 
-const isVideoFile = (file?: Express.Multer.File | null) => file?.mimetype?.startsWith("video/");
+const SHARE_ARTIFACT_ALLOWED_MIME_TYPES = new Set(["video/mp4", "video/webm"]);
+
+const isVideoFile = (file?: Express.Multer.File | null) =>
+  Boolean(file?.mimetype && SHARE_ARTIFACT_ALLOWED_MIME_TYPES.has(file.mimetype));
 
 const sanitizeFileName = (value?: string | null) => {
   const normalized = Array.from(String(value ?? "").normalize("NFC"))

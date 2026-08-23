@@ -3,7 +3,8 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 
-export const POST_SHARE_ARTIFACT_LAYOUT_VERSION = "lectum-share-v6-2026-08-23-android-video-frame";
+export const POST_SHARE_ARTIFACT_LAYOUT_VERSION =
+  "lectum-share-v7-2026-08-23-moving-video-full-duration";
 export const POST_SHARE_ARTIFACT_TTL_DAYS = 7;
 
 const shareAuthorSelect = {

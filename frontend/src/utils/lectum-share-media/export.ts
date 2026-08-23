@@ -48,6 +48,10 @@ type VideoFrameReadyElement = HTMLVideoElement & {
   requestVideoFrameCallback?: (callback: () => void) => number;
 };
 
+type CanvasCaptureStreamTrack = MediaStreamTrack & {
+  requestFrame?: () => void;
+};
+
 const emptyVideoAudioCapture = (): VideoAudioCapture => ({
   cleanup: () => undefined,
   resume: async () => undefined,
@@ -149,6 +153,18 @@ const waitForVideoRenderFrame = (video: HTMLVideoElement, timeoutMs = 1800) =>
 
     requestFrameWhenReady();
   });
+
+const createCanvasCaptureFrameRequester = (stream: MediaStream) => {
+  const videoTrack = stream.getVideoTracks()[0] as CanvasCaptureStreamTrack | undefined;
+
+  return () => {
+    try {
+      videoTrack?.requestFrame?.();
+    } catch {
+      // Alguns browsers expõem requestFrame, mas podem recusar se o track já encerrou.
+    }
+  };
+};
 
 const resolveAudioContextConstructor = () => {
   if (typeof window === "undefined") return null;
@@ -301,11 +317,12 @@ export const createVideoShareFile = async (
   const ctx = canvas.getContext("2d");
 
   if (!ctx || !canvas.captureStream || mimeType === null) {
-    return createImageShareFile(target, video);
+    throw new Error("Exportacao de video indisponivel para compartilhamento.");
   }
 
   const detachVideoElement = attachVideoElementForCanvas(video);
   const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
+  const requestCanvasCaptureFrame = createCanvasCaptureFrameRequester(stream);
   const audioCapture = createSilentVideoAudioCapture(video);
   for (const track of audioCapture.tracks) {
     stream.addTrack(track);
@@ -334,10 +351,11 @@ export const createVideoShareFile = async (
   const stallTimeoutMs = resolveVideoExportStallTimeoutMs();
 
   return new Promise<File>((resolve, reject) => {
-    let animationFrame = 0;
     let cleaned = false;
+    let drawTimer: number | null = null;
     let lastProgressAt = 0;
     let lastVideoTime = 0;
+    let settled = false;
     let stopped = false;
     let startedAt = 0;
 
@@ -345,7 +363,10 @@ export const createVideoShareFile = async (
       if (cleaned) return;
 
       cleaned = true;
-      window.cancelAnimationFrame(animationFrame);
+      if (drawTimer) {
+        window.clearTimeout(drawTimer);
+        drawTimer = null;
+      }
       for (const track of stream.getTracks()) {
         track.stop();
       }
@@ -358,8 +379,16 @@ export const createVideoShareFile = async (
       video.load();
     };
 
+    const failExport = (error: Error) => {
+      if (settled) return;
+
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+
     const stopRecorder = () => {
-      if (stopped) return;
+      if (settled || stopped) return;
 
       stopped = true;
       if (recorder.state !== "inactive") {
@@ -373,8 +402,13 @@ export const createVideoShareFile = async (
       }
     };
 
+    const scheduleDraw = () => {
+      drawTimer = window.setTimeout(draw, 1000 / VIDEO_EXPORT_FRAME_RATE);
+    };
+
     const draw = () => {
       drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+      requestCanvasCaptureFrame();
       const now = performance.now();
       const elapsed = now - startedAt;
       const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
@@ -387,12 +421,17 @@ export const createVideoShareFile = async (
         hasKnownDuration && currentTime >= durationSeconds - endTimeToleranceSeconds;
       const stalled = now - lastProgressAt >= stallTimeoutMs;
 
-      if (video.ended || reachedKnownEnd || stalled || elapsed >= safetyTimeoutMs) {
+      if (video.ended || reachedKnownEnd) {
         stopRecorder();
         return;
       }
 
-      animationFrame = window.requestAnimationFrame(draw);
+      if (stalled || elapsed >= safetyTimeoutMs) {
+        failExport(new Error("Nao foi possivel gravar o video inteiro para compartilhamento."));
+        return;
+      }
+
+      scheduleDraw();
     };
 
     recorder.ondataavailable = (event) => {
@@ -402,15 +441,23 @@ export const createVideoShareFile = async (
     };
 
     recorder.onerror = () => {
-      cleanup();
-      reject(new Error("Não foi possível gravar o vídeo de compartilhamento."));
+      failExport(new Error("Nao foi possivel gravar o video de compartilhamento."));
     };
 
     recorder.onstop = () => {
+      if (settled) return;
+
       cleanup();
       const outputType = recorder.mimeType || mimeType || "video/webm";
       const blob = new Blob(chunks, { type: outputType });
+      if (blob.size === 0) {
+        settled = true;
+        reject(new Error("Nao foi possivel gerar um video valido para compartilhamento."));
+        return;
+      }
+
       const extension = extensionFromMimeType(outputType);
+      settled = true;
       resolve(new File([blob], safeFileName(target, extension), { type: outputType }));
     };
 
@@ -431,6 +478,7 @@ export const createVideoShareFile = async (
         await video.play();
         await waitForVideoRenderFrame(video);
         drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+        requestCanvasCaptureFrame();
         recorder.start(1000);
         startedAt = performance.now();
         lastProgressAt = startedAt;
@@ -443,6 +491,7 @@ export const createVideoShareFile = async (
             await video.play();
             await waitForVideoRenderFrame(video);
             drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+            requestCanvasCaptureFrame();
             recorder.start(1000);
             startedAt = performance.now();
             lastProgressAt = startedAt;
@@ -454,8 +503,7 @@ export const createVideoShareFile = async (
           }
         }
 
-        cleanup();
-        reject(error instanceof Error ? error : new Error("Falha ao iniciar o vídeo."));
+        failExport(error instanceof Error ? error : new Error("Falha ao iniciar o video."));
       }
     };
 

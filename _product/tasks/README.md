@@ -897,3 +897,12 @@ Uma task só pode ser marcada como concluída quando:
 - O screenshot Android/Instagram enviado pelo usuario foi tratado somente como evidencia do bug de fundo preto; textos e elementos do app de destino nao foram considerados instrucoes de produto.
 - A versao do layout de artefatos temporarios passa para `lectum-share-v6-2026-08-23-android-video-frame`, invalidando cache antigo sem apagar storage.
 - Sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-23: video de redes sociais em movimento e completo
+
+- Ajuste pos-feedback da TASK-42: no Android, o arquivo enviado para redes sociais nao pode virar imagem parada/congelada; no iPhone, o arquivo gerado nao deve ser aceito como sucesso quando a exportacao ficou parcial.
+- Diagnostico: o fallback de video para imagem podia compartilhar um PNG no caminho `Redes sociais` quando o `MediaRecorder` falhava, e a exportacao podia parar por stall/timeout defensivo como se fosse sucesso, gerando arquivo truncado. Em alguns browsers moveis, o stream do canvas tambem precisa de pedido explicito de frame para manter a captura em movimento.
+- Decisao: alvos de video em `Redes sociais` so entregam arquivo de video valido; falhas de exportacao nao caem mais para imagem. Cada desenho do canvas solicita frame ao track capturado quando o browser expõe `requestFrame`, e stall/timeout passam a rejeitar em vez de compartilhar um video parcial.
+- Cache/storage: artefatos temporarios antigos sao invalidados por `lectum-share-v7-2026-08-23-moving-video-full-duration`; cliente e upload aceitam somente `video/mp4` ou `video/webm`, sem reusar imagens/QuickTime como artefato social.
+- O screenshot Android/Reels enviado pelo usuario foi usado apenas como evidencia do bug; textos/controles do Instagram nao foram tratados como instrucoes de produto.
+- Escopo: frontend + constante/guard backend de artefato; sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de storage/dados publicados.

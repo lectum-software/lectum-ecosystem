@@ -587,3 +587,27 @@ O usuario reportou problema no compartilhamento em redes sociais no Android e an
 - O ajuste preserva o fluxo aprovado: WhatsApp por link `/whatsapp`, redes sociais por arquivo 9:16 sem URL/texto e desktop por link/download.
 - Nao ha package novo, migration, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao destrutiva de dados publicados.
 - Rollback: remover o preparo offscreen/espera de frame e voltar a constante de layout para v5. Artefatos v6 expiram naturalmente pelo TTL de 7 dias.
+
+## Complemento 2026-08-23 - video social sem fallback parado nem arquivo parcial
+
+### Contexto
+
+Apos a correcao do frame preto no Android, o usuario reportou que o Android passou a mostrar a imagem, mas ela ficava congelada no destino social, e que no iPhone o video era enviado cortado/incompleto. O screenshot Android/Reels foi tratado somente como evidencia do defeito; elementos textuais e controles do app de destino nao foram considerados instrucoes de produto.
+
+### Decisao
+
+- Remover o fallback de video para imagem no caminho de `Redes sociais`: se o navegador nao conseguir produzir video com `captureStream`/`MediaRecorder`, a acao falha de forma honesta com toast generico em vez de enviar PNG como clip parado.
+- Solicitar `CanvasCaptureMediaStreamTrack.requestFrame()` de forma best-effort apos cada `drawLectumShareFrame`, mantendo a captura do canvas em movimento em browsers moveis que nao empurram frames automaticamente.
+- Trocar o loop de exportacao para agendamento por tempo no frame rate alvo e tratar stall/timeout defensivo como falha, nao como encerramento bem-sucedido do `MediaRecorder`.
+- Rejeitar blobs vazios antes de criar `File`, evitando cachear/compartilhar artefato invalido.
+- Restringir artefatos sociais cacheados/uploadados a `video/mp4` e `video/webm`; extensoes/MIME desconhecidos nao sao mais coeridos para `video/mp4`.
+- Invalidar o cache temporario com `lectum-share-v7-2026-08-23-moving-video-full-duration` sem apagar objetos antigos do storage.
+
+### Consequencias
+
+- Android tende a receber um arquivo social com frames atualizados em vez de imagem parada quando o app de destino abre Reels/Stories.
+- iPhone deixa de receber como sucesso um arquivo parcial quando a exportacao nao percorreu o video inteiro; nesses casos o usuario recebe falha generica e pode tentar novamente.
+- Navegadores sem suporte suficiente para exportar video nao recebem mais fallback visual enganoso por imagem no destino de redes sociais.
+- A mudanca e compativel com rollout entre frontend/backend: novos clientes evitam imagem e novo backend invalida por layout version; dados antigos permanecem e expiram pelo TTL.
+- Nao ha migration, package novo, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao destrutiva de dados publicados.
+- Rollback: reverter o commit e a constante para v6 restaura o comportamento anterior; artefatos v7 expiram naturalmente em ate 7 dias.

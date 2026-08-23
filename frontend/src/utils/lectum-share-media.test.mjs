@@ -189,6 +189,10 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     mediaSource.indexOf("export const copyLectumShareTargetUrl"),
     mediaSource.indexOf("export const sharePreparedLectumVideoResponse"),
   );
+  const shareArtifactUploadTypeSource = postsRequestSource.slice(
+    postsRequestSource.indexOf("const withShareArtifactFileType"),
+    postsRequestSource.indexOf("export const getPostShareArtifact"),
+  );
 
   assert.match(
     targetSource,
@@ -289,10 +293,18 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(seoSource, /resolveVideoOpenGraphDescription/);
   assert.match(seoSource, /\$\{name\} na Lectum/);
   assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
-  assert.match(repositorySource, /lectum-share-v6-2026-08-23-android-video-frame/);
+  assert.match(
+    shareArtifactUploadTypeSource,
+    /throw new Error\("Arquivo de compartilhamento invalido\."\)/,
+  );
+  assert.doesNotMatch(shareArtifactUploadTypeSource, /\|\|\s*"video\/mp4"/);
+  assert.match(repositorySource, /lectum-share-v7-2026-08-23-moving-video-full-duration/);
   assert.match(repositorySource, /POST_SHARE_ARTIFACT_TTL_DAYS = 7/);
   assert.match(repositorySource, /renewArtifact/);
   assert.match(repositorySource, /last_accessed_at: accessedAt/);
+  assert.match(artifactCacheSource, /SHARE_ARTIFACT_VIDEO_FILE_EXTENSIONS/);
+  assert.doesNotMatch(artifactCacheSource, /quicktime/);
+  assert.doesNotMatch(artifactCacheSource, /png"\)/);
   assert.match(artifactCacheSource, /prewarmLectumShareArtifact/);
   assert.match(artifactCacheSource, /scheduleLectumShareArtifactPrewarm/);
   assert.match(artifactCacheSource, /requestIdleCallback/);
@@ -378,14 +390,23 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.equal(resolveVideoExportStallTimeoutMs(), 45_000);
 
   const source = readFileSync(new URL("./lectum-share-media/export.ts", import.meta.url), "utf8");
+  const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
+  const videoPreparationSource = mediaSource.slice(
+    mediaSource.indexOf("const createLectumShareFile"),
+    mediaSource.indexOf("type PreparedShareFileCacheValue"),
+  );
 
   assert.doesNotMatch(source, /MAX_VIDEO_EXPORT_SECONDS/);
   assert.match(source, /recorder\.requestData\(\)/);
   assert.match(source, /lastProgressAt/);
   assert.match(source, /stalled/);
+  assert.match(source, /blob\.size === 0/);
+  assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\);/);
+  assert.doesNotMatch(videoPreparationSource, /fallbackVideo/);
+  assert.doesNotMatch(videoPreparationSource, /createImageShareFile\(target, fallbackVideo\)/);
 });
 
-test("exportacao de video aguarda frame renderizavel no Android", () => {
+test("exportacao de video aguarda frame renderizavel e frames do canvas no Android", () => {
   const layoutSource = readFileSync(
     new URL("./lectum-share-media/layout.ts", import.meta.url),
     "utf8",
@@ -401,11 +422,25 @@ test("exportacao de video aguarda frame renderizavel no Android", () => {
   assert.match(exportSource, /waitForVideoRenderFrame/);
   assert.match(exportSource, /requestVideoFrameCallback/);
   assert.match(exportSource, /attachVideoElementForCanvas\(video\)/);
+  assert.match(exportSource, /CanvasCaptureStreamTrack/);
+  assert.match(exportSource, /createCanvasCaptureFrameRequester/);
+  assert.match(exportSource, /videoTrack\?\.requestFrame\?\.\(\)/);
+  assert.match(exportSource, /requestCanvasCaptureFrame\(\)/);
+  assert.match(exportSource, /window\.setTimeout\(draw, 1000 \/ VIDEO_EXPORT_FRAME_RATE\)/);
   assert.match(exportSource, /await video\.play\(\);\s*await waitForVideoRenderFrame\(video\);/);
   assert.match(
     exportSource,
     /await waitForVideoRenderFrame\(video\);[\s\S]*drawLectumShareFrame\(ctx, video[\s\S]*recorder\.start\(1000\)/,
   );
+  assert.match(
+    exportSource,
+    /failExport\(new Error\("Nao foi possivel gravar o video inteiro para compartilhamento\."\)\)/,
+  );
+  assert.doesNotMatch(
+    exportSource,
+    /video\.ended \|\| reachedKnownEnd \|\| stalled \|\| elapsed >= safetyTimeoutMs/,
+  );
+  assert.doesNotMatch(exportSource, /return createImageShareFile\(target, video\)/);
 });
 
 test("layout social usa card parecido com instagram e respeita safe area de reels", () => {
@@ -443,5 +478,5 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v6-2026-08-23-android-video-frame/);
+  assert.match(repositorySource, /lectum-share-v7-2026-08-23-moving-video-full-duration/);
 });

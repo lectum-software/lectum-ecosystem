@@ -30,7 +30,7 @@ type WindowWithIdleCallback = Window &
     requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
   };
 
-const SHARE_ARTIFACT_FILE_EXTENSIONS = new Set(["jpeg", "jpg", "mov", "mp4", "png", "webm"]);
+const SHARE_ARTIFACT_VIDEO_FILE_EXTENSIONS = new Set(["mp4", "webm"]);
 
 const resolveShareArtifactFileExtension = (
   contentType?: string | null,
@@ -39,14 +39,11 @@ const resolveShareArtifactFileExtension = (
   const normalizedContentType = contentType?.toLowerCase() ?? "";
 
   if (normalizedContentType.includes("webm")) return "webm";
-  if (normalizedContentType.includes("quicktime")) return "mov";
-  if (normalizedContentType.includes("png")) return "png";
-  if (normalizedContentType.includes("jpeg")) return "jpg";
   if (normalizedContentType.includes("mp4")) return "mp4";
 
   const extension = fileName?.match(/\.([a-z0-9]{1,8})$/iu)?.[1]?.toLowerCase();
 
-  return extension && SHARE_ARTIFACT_FILE_EXTENSIONS.has(extension) ? extension : "mp4";
+  return extension && SHARE_ARTIFACT_VIDEO_FILE_EXTENSIONS.has(extension) ? extension : null;
 };
 
 export const isLectumShareArtifactTarget = (
@@ -70,16 +67,16 @@ export const getLectumShareArtifactFile = async (target: LectumShareVideoTarget)
   if (!response.ok) return null;
 
   const blob = await response.blob();
-  const file = new File(
-    [blob],
-    safeFileName(
-      target,
-      resolveShareArtifactFileExtension(artifact.content_type || blob.type, artifact.file_name),
-    ),
-    {
-      type: artifact.content_type || blob.type || "video/mp4",
-    },
-  );
+  const contentType = (artifact.content_type || blob.type || "").toLowerCase().split(";", 1)[0];
+  const extension = resolveShareArtifactFileExtension(contentType, artifact.file_name);
+
+  if (!extension || (contentType !== "video/mp4" && contentType !== "video/webm")) {
+    return null;
+  }
+
+  const file = new File([blob], safeFileName(target, extension), {
+    type: contentType,
+  });
 
   cachePreparedLectumShareFile(target, file);
   return file;

@@ -448,8 +448,11 @@ const withShareArtifactFileType = (file: File) => {
   const extension = file.name.toLowerCase().split(".").pop() ?? "";
   const supportedDeclaredMimeType =
     declaredMimeType === "video/mp4" || declaredMimeType === "video/webm" ? declaredMimeType : null;
-  const mimeType =
-    supportedDeclaredMimeType || SHARE_ARTIFACT_MIME_BY_EXTENSION[extension] || "video/mp4";
+  const mimeType = supportedDeclaredMimeType || SHARE_ARTIFACT_MIME_BY_EXTENSION[extension];
+
+  if (!mimeType) {
+    throw new Error("Arquivo de compartilhamento invalido.");
+  }
 
   if (file.type.trim().toLowerCase() === mimeType) return file;
 
