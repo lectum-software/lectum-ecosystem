@@ -565,3 +565,25 @@ O usuario confirmou que, no computador, nao e realista prometer envio direto do 
 - Psicologos podem copiar o link para compartilhar em qualquer canal ou baixar o video com identidade visual e postar manualmente no Instagram Web/outros destinos.
 - A mudanca de produto e frontend-only e nao altera backend de runtime, banco, storage, contratos, envs, providers, jobs, packages ou dados publicados; houve apenas ajuste de timeout defensivo de 60s no teste local `boot-safety` para evitar falso negativo no hook.
 - Rollback: remover a diferenciacao por `LectumShareDestinationMode` e voltar a renderizar sempre as opcoes mobile restaura a sheet anterior sem migration.
+
+
+## Complemento 2026-08-23 - frame de video no Android antes do canvas
+
+### Contexto
+
+O usuario reportou problema no compartilhamento em redes sociais no Android e anexou screenshot do editor do Instagram mostrando a arte Lectum sobre fundo preto. O anexo foi tratado apenas como evidencia do comportamento; nenhuma instrucao foi inferida a partir de textos ou controles do app de destino.
+
+### Decisao
+
+- No carregamento do video de compartilhamento, manter o elemento sem controles, com PiP desativado e atributos `playsinline`/`webkit-playsinline` para reduzir intervencoes nativas do Android.
+- Durante exportacao, anexar temporariamente o video ao DOM em posicao offscreen e aguardar um frame renderizavel por `requestVideoFrameCallback` quando disponivel, caindo para `requestAnimationFrame` com timeout defensivo.
+- Iniciar o `MediaRecorder` somente depois de `video.play()`, frame pronto e primeiro desenho do canvas. O fallback de imagem reutiliza a mesma espera antes de desenhar video no canvas.
+- Invalidar o cache temporario de artefatos sociais com `lectum-share-v6-2026-08-23-android-video-frame`, sem apagar objetos antigos do storage.
+- Manter a validacao local sobre o timeout defensivo de 60s ja presente no teste `boot-safety`, sem mudar runtime backend nesta correcao.
+
+### Consequencias
+
+- Android/Chrome e apps de destino que consomem arquivo pela Web Share API recebem o video social depois de haver um frame decodificado, reduzindo o risco de exportar fundo preto.
+- O ajuste preserva o fluxo aprovado: WhatsApp por link `/whatsapp`, redes sociais por arquivo 9:16 sem URL/texto e desktop por link/download.
+- Nao ha package novo, migration, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao destrutiva de dados publicados.
+- Rollback: remover o preparo offscreen/espera de frame e voltar a constante de layout para v5. Artefatos v6 expiram naturalmente pelo TTL de 7 dias.

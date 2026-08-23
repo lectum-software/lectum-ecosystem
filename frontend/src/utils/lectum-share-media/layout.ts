@@ -181,9 +181,18 @@ export const waitForEvent = <K extends keyof HTMLMediaElementEventMap>(
 export const loadVideoElement = async (src: string) => {
   const video = document.createElement("video") as VideoWithCaptureStream;
   video.crossOrigin = "anonymous";
+  video.controls = false;
+  (
+    video as HTMLVideoElement & {
+      disablePictureInPicture?: boolean;
+    }
+  ).disablePictureInPicture = true;
   video.muted = true;
   video.playsInline = true;
   video.preload = "auto";
+  video.setAttribute("aria-hidden", "true");
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
   video.volume = 0;
   video.src = src;
   video.load();

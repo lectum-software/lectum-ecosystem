@@ -43,11 +43,112 @@ type VideoAudioCapture = {
   tracks: MediaStreamTrack[];
 };
 
+type VideoFrameReadyElement = HTMLVideoElement & {
+  cancelVideoFrameCallback?: (handle: number) => void;
+  requestVideoFrameCallback?: (callback: () => void) => number;
+};
+
 const emptyVideoAudioCapture = (): VideoAudioCapture => ({
   cleanup: () => undefined,
   resume: async () => undefined,
   tracks: [],
 });
+
+const attachVideoElementForCanvas = (video: HTMLVideoElement) => {
+  if (typeof document === "undefined" || video.isConnected || !document.body) {
+    return () => undefined;
+  }
+
+  video.style.height = "1px";
+  video.style.left = "0";
+  video.style.opacity = "0.001";
+  video.style.pointerEvents = "none";
+  video.style.position = "fixed";
+  video.style.top = "0";
+  video.style.width = "1px";
+  video.style.zIndex = "-1";
+  video.setAttribute("aria-hidden", "true");
+  document.body.appendChild(video);
+
+  return () => {
+    if (video.parentNode) {
+      video.parentNode.removeChild(video);
+    }
+  };
+};
+
+const waitForVideoRenderFrame = (video: HTMLVideoElement, timeoutMs = 1800) =>
+  new Promise<void>((resolve, reject) => {
+    const videoWithFrameCallback = video as VideoFrameReadyElement;
+    let done = false;
+    let frameCallbackHandle: number | null = null;
+    let firstAnimationFrame = 0;
+    let secondAnimationFrame = 0;
+
+    const timeout = window.setTimeout(() => {
+      complete();
+    }, timeoutMs);
+
+    const cleanup = () => {
+      window.clearTimeout(timeout);
+      video.removeEventListener("loadeddata", requestFrameWhenReady);
+      video.removeEventListener("playing", requestFrameWhenReady);
+      video.removeEventListener("timeupdate", requestFrameWhenReady);
+      video.removeEventListener("error", handleError);
+
+      if (frameCallbackHandle !== null) {
+        videoWithFrameCallback.cancelVideoFrameCallback?.(frameCallbackHandle);
+      }
+
+      window.cancelAnimationFrame(firstAnimationFrame);
+      window.cancelAnimationFrame(secondAnimationFrame);
+    };
+
+    function complete() {
+      if (done) return;
+
+      done = true;
+      cleanup();
+      resolve();
+    }
+
+    function fail(error: Error) {
+      if (done) return;
+
+      done = true;
+      cleanup();
+      reject(error);
+    }
+
+    function requestFallbackAnimationFrame() {
+      firstAnimationFrame = window.requestAnimationFrame(() => {
+        secondAnimationFrame = window.requestAnimationFrame(complete);
+      });
+    }
+
+    function requestFrameWhenReady() {
+      if (done || frameCallbackHandle !== null || firstAnimationFrame !== 0) return;
+      if (video.readyState < 2) return;
+
+      if (videoWithFrameCallback.requestVideoFrameCallback) {
+        frameCallbackHandle = videoWithFrameCallback.requestVideoFrameCallback(complete);
+        return;
+      }
+
+      requestFallbackAnimationFrame();
+    }
+
+    function handleError() {
+      fail(new Error("Nao foi possivel renderizar o video para compartilhamento."));
+    }
+
+    video.addEventListener("loadeddata", requestFrameWhenReady);
+    video.addEventListener("playing", requestFrameWhenReady);
+    video.addEventListener("timeupdate", requestFrameWhenReady);
+    video.addEventListener("error", handleError, { once: true });
+
+    requestFrameWhenReady();
+  });
 
 const resolveAudioContextConstructor = () => {
   if (typeof window === "undefined") return null;
@@ -140,12 +241,44 @@ export const createLectumShareFrameImageFile = async ({
   }
 
   const assets = await loadShareCanvasAssets();
-  drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette(), assets);
-  const blob = await canvasToBlob(canvas, type, quality);
+  const detachVideoElement =
+    media instanceof HTMLVideoElement ? attachVideoElementForCanvas(media) : () => undefined;
+  const previousMuted = media instanceof HTMLVideoElement ? media.muted : true;
+  const previousVolume = media instanceof HTMLVideoElement ? media.volume : 0;
 
-  return new File([blob], fileName, {
-    type,
-  });
+  try {
+    if (media instanceof HTMLVideoElement) {
+      media.muted = true;
+      media.volume = 0;
+
+      if (media.currentTime > 0.05) {
+        media.currentTime = 0;
+        await waitForEvent(media, "seeked", 4000).catch(() => undefined);
+      }
+
+      await media.play().catch((error) => {
+        if (media.readyState >= 2) return undefined;
+        throw error;
+      });
+      await waitForVideoRenderFrame(media);
+      media.pause();
+    }
+
+    drawLectumShareFrame(ctx, media, layout, target, getCanvasPalette(), assets);
+    const blob = await canvasToBlob(canvas, type, quality);
+
+    return new File([blob], fileName, {
+      type,
+    });
+  } finally {
+    if (media instanceof HTMLVideoElement) {
+      media.pause();
+      media.muted = previousMuted;
+      media.volume = previousVolume;
+    }
+
+    detachVideoElement();
+  }
 };
 
 export const createImageShareFile = async (
@@ -171,6 +304,7 @@ export const createVideoShareFile = async (
     return createImageShareFile(target, video);
   }
 
+  const detachVideoElement = attachVideoElementForCanvas(video);
   const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
   const audioCapture = createSilentVideoAudioCapture(video);
   for (const track of audioCapture.tracks) {
@@ -187,6 +321,7 @@ export const createVideoShareFile = async (
       track.stop();
     }
     audioCapture.cleanup();
+    detachVideoElement();
     throw error;
   }
 
@@ -215,6 +350,7 @@ export const createVideoShareFile = async (
         track.stop();
       }
       audioCapture.cleanup();
+      detachVideoElement();
       video.muted = true;
       video.volume = 0;
       video.pause();
@@ -292,18 +428,25 @@ export const createVideoShareFile = async (
           await waitForEvent(video, "seeked", 4000).catch(() => undefined);
         }
 
+        await video.play();
+        await waitForVideoRenderFrame(video);
         drawLectumShareFrame(ctx, video, layout, target, palette, assets);
         recorder.start(1000);
         startedAt = performance.now();
         lastProgressAt = startedAt;
         lastVideoTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
-        await video.play();
         draw();
       } catch (error) {
         if (!video.muted) {
           try {
             video.muted = true;
             await video.play();
+            await waitForVideoRenderFrame(video);
+            drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+            recorder.start(1000);
+            startedAt = performance.now();
+            lastProgressAt = startedAt;
+            lastVideoTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
             draw();
             return;
           } catch {

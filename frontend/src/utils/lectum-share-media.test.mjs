@@ -185,6 +185,10 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     mediaSource.indexOf("export const sharePreparedLectumVideoResponse"),
     mediaSource.indexOf("export const downloadPreparedLectumShareFile"),
   );
+  const copyTargetSource = mediaSource.slice(
+    mediaSource.indexOf("export const copyLectumShareTargetUrl"),
+    mediaSource.indexOf("export const sharePreparedLectumVideoResponse"),
+  );
 
   assert.match(
     targetSource,
@@ -207,6 +211,8 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(mediaSource, /https:\/\/wa\.me\/\?text=/);
   assert.match(mediaSource, /copyLectumShareTargetUrl/);
   assert.match(mediaSource, /return copyLectumShareTargetUrl\(target\)/);
+  assert.match(copyTargetSource, /copyShareUrl\(target\.shareUrl\)/);
+  assert.doesNotMatch(copyTargetSource, /copyLectumShareTargetUrl\(target\)/);
   assert.match(mediaSource, /text: null/);
   assert.match(
     mediaSource,
@@ -283,7 +289,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(seoSource, /resolveVideoOpenGraphDescription/);
   assert.match(seoSource, /\$\{name\} na Lectum/);
   assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
-  assert.match(repositorySource, /lectum-share-v5-2026-08-22-file-first-complete-video/);
+  assert.match(repositorySource, /lectum-share-v6-2026-08-23-android-video-frame/);
   assert.match(repositorySource, /POST_SHARE_ARTIFACT_TTL_DAYS = 7/);
   assert.match(repositorySource, /renewArtifact/);
   assert.match(repositorySource, /last_accessed_at: accessedAt/);
@@ -379,6 +385,29 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(source, /stalled/);
 });
 
+test("exportacao de video aguarda frame renderizavel no Android", () => {
+  const layoutSource = readFileSync(
+    new URL("./lectum-share-media/layout.ts", import.meta.url),
+    "utf8",
+  );
+  const exportSource = readFileSync(
+    new URL("./lectum-share-media/export.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(layoutSource, /disablePictureInPicture/);
+  assert.match(layoutSource, /webkit-playsinline/);
+  assert.match(exportSource, /attachVideoElementForCanvas/);
+  assert.match(exportSource, /waitForVideoRenderFrame/);
+  assert.match(exportSource, /requestVideoFrameCallback/);
+  assert.match(exportSource, /attachVideoElementForCanvas\(video\)/);
+  assert.match(exportSource, /await video\.play\(\);\s*await waitForVideoRenderFrame\(video\);/);
+  assert.match(
+    exportSource,
+    /await waitForVideoRenderFrame\(video\);[\s\S]*drawLectumShareFrame\(ctx, video[\s\S]*recorder\.start\(1000\)/,
+  );
+});
+
 test("layout social usa card parecido com instagram e respeita safe area de reels", () => {
   const layoutSource = readFileSync(
     new URL("./lectum-share-media/layout.ts", import.meta.url),
@@ -414,5 +443,5 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v5-2026-08-22-file-first-complete-video/);
+  assert.match(repositorySource, /lectum-share-v6-2026-08-23-android-video-frame/);
 });

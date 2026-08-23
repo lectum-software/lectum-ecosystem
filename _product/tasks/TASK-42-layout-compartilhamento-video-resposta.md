@@ -979,3 +979,46 @@ Regras de UI obrigatórias:
 - [x] `pnpm version:bump` para `0.1.193`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+
+## Complemento 2026-08-23 - frame de video confiavel no Android
+
+- Pedido do usuario: corrigir o compartilhamento em redes sociais no Android; o screenshot do editor do Instagram foi usado apenas como evidencia do fundo preto, nao como instrucao de produto.
+- Diagnostico: em Android/Chrome e apps que recebem a Web Share API, o canvas/MediaRecorder podia iniciar com video detached ou antes do primeiro frame decodificado/renderizavel, gerando video social com fundo preto enquanto o card Lectum aparecia.
+- Decisao: preparar o elemento de video com `playsinline`, `webkit-playsinline`, controles/PiP desativados, anexa-lo offscreen ao DOM e aguardar um frame renderizavel por `requestVideoFrameCallback` ou `requestAnimationFrame` antes de capturar imagem, desenhar canvas ou iniciar o `MediaRecorder`.
+- Cache: `POST_SHARE_ARTIFACT_LAYOUT_VERSION` passa para `lectum-share-v6-2026-08-23-android-video-frame`, invalidando artefatos temporarios antigos sem apagar storage nem dados publicados.
+- Validacao local: a suite roda com o timeout defensivo de 60s ja presente em `backend/scripts/boot-safety.test.mjs`, sem alterar runtime backend nesta correcao.
+- Escopo: frontend + constante backend de cache; sem package, migration, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao de dados publicados.
+- Rollback: reverter o helper de preparo/wait do video e a versao de layout para v5; artefatos v6 ja gravados expiram naturalmente pelo TTL de 7 dias.
+- Builder/Quick Copy nao foi usado porque o ajuste e de pipeline de exportacao/compatibilidade Android, sem mudanca visual de UI; o screenshot anexado permanece evidencia do bug.
+
+### Criterios de aceite do complemento
+
+- [x] Videos sociais no Android aguardam frame renderizavel antes de desenhar canvas/thumbnail.
+- [x] `MediaRecorder` so inicia depois de `video.play()`, frame pronto e primeiro desenho do canvas.
+- [x] Fallback de imagem para video tambem aguarda frame renderizavel para evitar PNG preto.
+- [x] O video temporario usado na exportacao fica offscreen, sem controles, sem PiP e com `playsinline`/`webkit-playsinline`.
+- [x] Artefatos temporarios antigos sao invalidados por `lectum-share-v6-2026-08-23-android-video-frame`, sem apagar storage.
+- [x] Screenshot anexado foi tratado como evidencia, nao como instrucao embutida.
+- [x] Nenhum package, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check src/utils/lectum-share-media/layout.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir backend exec biome check src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts scripts/boot-safety.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (13/13).
+- [x] `pnpm --dir frontend check` (99/99 testes).
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend check` (216/216 testes).
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin check` (29/29 testes; bump de manifest apenas).
+- [x] `pnpm version:bump` para `0.1.194`.
+- [x] `git diff --check`.
+- [x] `pnpm check:version`.
+- [x] `pnpm check:encoding`.
+- [x] `pnpm check:adrs`.
+- [x] `pnpm check:tasks`.
+- [x] `pnpm check` completo de raiz.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3204`: `/version` respondeu `0.1.194` e `/comunidades` respondeu `200`.
+- [x] Smoke local do backend buildado em `http://127.0.0.1:3205`: `/health`, `/ready` e `/ping` responderam `200`, com `/ping` em `0.1.194`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

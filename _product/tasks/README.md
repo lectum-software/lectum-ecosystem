@@ -890,3 +890,10 @@ Uma task só pode ser marcada como concluída quando:
 - `Baixar video` sempre usa o arquivo social 9:16 com arte/identidade da Lectum ja gerado pelo fluxo de compartilhamento; nao ha opcao de baixar o video cru/original.
 - Em mobile, o fluxo aprovado permanece com `WhatsApp` via link `/whatsapp` e `Redes sociais` via arquivo social sem link/texto no payload principal.
 - Alteracao de produto frontend-only, sem package, env, migration, provider, seed, mock, reset ou dados publicados; ajuste complementar apenas no timeout defensivo de 60s do teste local `boot-safety` para estabilizar o hook de push.
+
+## Correcao operacional em 2026-08-23: redes sociais no Android sem frame preto
+
+- Ajuste pos-feedback da TASK-42: a exportacao do video social para Android agora anexa o video ao DOM de forma offscreen e aguarda um frame renderizavel antes de desenhar no canvas ou iniciar o MediaRecorder.
+- O screenshot Android/Instagram enviado pelo usuario foi tratado somente como evidencia do bug de fundo preto; textos e elementos do app de destino nao foram considerados instrucoes de produto.
+- A versao do layout de artefatos temporarios passa para `lectum-share-v6-2026-08-23-android-video-frame`, invalidando cache antigo sem apagar storage.
+- Sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
