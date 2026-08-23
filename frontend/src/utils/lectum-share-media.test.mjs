@@ -197,6 +197,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(shareDialogHookSource, /setPendingTarget\(target\)/);
   assert.match(shareDialogSource, /WhatsAppIcon/);
   assert.doesNotMatch(shareDialogSource, /MessageCircle/);
+  assert.doesNotMatch(shareDialogSource, /Download/);
   assert.match(shareDialogSource, /Escolha o formato de compartilhamento\./);
   assert.doesNotMatch(shareDialogSource, /Escolha o formato antes de abrir o app de destino\./);
   assert.doesNotMatch(shareDialogSource, /Envia um link com/);
@@ -204,7 +205,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.doesNotMatch(shareDialogSource, /Salva no dispositivo/);
   assert.match(shareDialogSource, /WhatsApp/);
   assert.match(shareDialogSource, /Redes sociais/);
-  assert.match(shareDialogSource, /Baixar/);
+  assert.doesNotMatch(shareDialogSource, /Baixar/);
   assert.match(seoMetadataSource, /shareTarget = "default"/);
   assert.match(seoMetadataSource, /openGraphUrl/);
   assert.match(

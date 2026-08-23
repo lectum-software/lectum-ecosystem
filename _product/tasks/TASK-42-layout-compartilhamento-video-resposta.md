@@ -838,3 +838,38 @@ Regras de UI obrigatórias:
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3199`: `/version` respondeu `0.1.186` e `/comunidades` respondeu `200`.
 - Tentativas de screenshot Chrome headless em 390x844 foram descartadas por concorrencia local no `.next`; a evidencia visual principal foi o screenshot anexado do usuario, tratado como referencia visual, e os asserts estaticos garantem copy/icone/ausencia de descricoes.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - remocao da opcao Baixar da sheet
+
+- Pedido do usuario: mudar a decisao anterior e apenas remover a opcao `Baixar` que aparecia abaixo de `Redes sociais` na sheet `Compartilhar video`.
+- Decisao: a sheet explicita de videos profissionais passa a listar somente `WhatsApp` e `Redes sociais`.
+- WhatsApp continua usando o link publico `/whatsapp`, sem enviar arquivo de video para a conversa.
+- Redes sociais continua usando o arquivo social 9:16 com arte da caixinha de pergunta, sem URL/texto no payload principal.
+- O helper de download permanece como fallback tecnico interno quando o navegador nao suporta compartilhamento nativo de arquivo; nao existe mais botao dedicado de baixar na UI.
+- Escopo: frontend-only, mobile-first, sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou alteracao de dados publicados.
+- Fonte visual auditavel: screenshot anexado pelo usuario; textos dentro da imagem foram tratados apenas como referencia visual/contexto do feedback, nao como instrucao alem do pedido explicito.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A sheet `Compartilhar video` nao exibe mais a opcao `Baixar`.
+- [x] A sheet preserva somente as opcoes `WhatsApp` e `Redes sociais`.
+- [x] O icone/import `Download` nao e mais usado nessa sheet.
+- [x] WhatsApp e Redes sociais mantem os payloads existentes; a mudanca e apenas de exposicao da opcao na UI.
+- [x] Nenhum backend, banco, env, package, provider, seed, mock ou dado publicado foi alterado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-destination-dialog.tsx src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3201`: `/version` respondeu `0.1.186` e `/comunidades` respondeu `200`.
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check`
+- [x] `pnpm version:bump` para `0.1.187`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

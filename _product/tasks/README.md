@@ -863,3 +863,10 @@ Uma task só pode ser marcada como concluída quando:
 - As descricoes longas das opcoes WhatsApp, Redes sociais e Baixar foram removidas, mantendo somente titulo e icone para reduzir densidade no mobile.
 - A opcao WhatsApp passa a usar o `WhatsAppIcon` compartilhado da Lectum em vez do icone generico de mensagem.
 - Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Correcao visual em 2026-08-23: remover baixar da sheet de compartilhamento
+
+- Ajuste pos-feedback da TASK-42: a sheet `Compartilhar video` deixa de exibir a opcao `Baixar` abaixo de `Redes sociais`.
+- Videos profissionais passam a oferecer apenas `WhatsApp` e `Redes sociais` na escolha explicita de destino; `WhatsApp` continua usando link `/whatsapp` e `Redes sociais` continua usando o arquivo social 9:16 com arte.
+- O fallback tecnico de download do arquivo permanece apenas para navegadores sem suporte ao compartilhamento nativo de arquivos, sem botao dedicado na UI.
+- Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.

@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Share2, X } from "lucide-react";
+import { Share2, X } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { LectumShareDestination } from "@/hooks/use-lectum-direct-share";
@@ -29,11 +29,6 @@ const SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
     destination: "social",
     icon: Share2,
     label: "Redes sociais",
-  },
-  {
-    destination: "download",
-    icon: Download,
-    label: "Baixar",
   },
 ];
 

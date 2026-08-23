@@ -482,3 +482,23 @@ O usuario enviou screenshot da sheet mobile `Compartilhar video` e pediu para re
 - A opcao WhatsApp usa a identidade visual ja recorrente no produto, evitando o icone generico de balao de mensagem.
 - Nao ha impacto em backend, banco, envs, providers, jobs, storage, contratos de API ou dados publicados.
 - Rollback: restaurar a copy anterior, as descricoes no array de opcoes e o icone `MessageCircle` volta ao comportamento visual anterior sem migration.
+
+## Complemento 2026-08-23 - remover Baixar da escolha explicita
+
+### Contexto
+
+Apos validar a sheet compacta, o usuario mudou a decisao de produto e pediu apenas remover a opcao `Baixar` exibida abaixo de `Redes sociais`. O objetivo e reduzir a escolha explicita a destinos reais de compartilhamento, evitando a tela de preview/arquivo do iOS no caminho principal.
+
+### Decisao
+
+- A sheet `Compartilhar video` de alvos profissionais com video lista somente `WhatsApp` e `Redes sociais`.
+- A opcao `WhatsApp` continua abrindo o link publico `/whatsapp`, sem enviar arquivo de video para a conversa.
+- A opcao `Redes sociais` continua preparando e compartilhando o arquivo social 9:16 com arte, sem URL/texto no payload principal.
+- O helper de download permanece no codigo apenas como fallback tecnico interno para navegadores que nao suportam compartilhamento nativo de arquivo, mas nao ha botao dedicado de baixar na UI.
+- Nao ha alteracao de backend, banco, storage, contratos, envs, providers, jobs, packages ou dados publicados.
+
+### Consequencias
+
+- A sheet fica ainda mais simples e alinhada ao fluxo desejado: WhatsApp como link clicavel para a Lectum e redes sociais como arquivo com arte.
+- Usuarios deixam de ter uma acao primaria que podia abrir a tela de arquivo do iOS em vez de salvar diretamente na galeria.
+- Rollback: reintroduzir a opcao `download` no array da sheet e o icone `Download` restaura o botao, pois o fallback/helper de download nao foi removido.
