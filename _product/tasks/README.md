@@ -928,3 +928,10 @@ Uma task só pode ser marcada como concluída quando:
 - A sheet mobile nao exibe mais `Preparando video...` no botao `Redes sociais`; ao abrir, ela volta a preaquecer o artefato social 9:16 com arte.
 - No clique em `Redes sociais`, a Lectum consulta cache local/artefato remoto com arte antes de gerar novo arquivo; o video original permanece apenas como fallback se a geracao social falhar.
 - Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-23: Android nao bloqueia em clique precoce
+
+- O MP4 de 16:11 voltou a reproduzir o problema: tocar em `Redes sociais` antes da arte estar pronta fechava a sheet e deixava o usuario preso no toast `Preparando video para compartilhar...`.
+- A sheet agora acompanha o estado do artefato social com arte. Enquanto ele ainda estiver preparando, o clique em `Redes sociais` nao fecha a sheet, nao abre a folha nativa e nao dispara exportacao longa em foreground.
+- Quando o prewarm conclui, o proximo toque usa o arquivo com arte ja cacheado; a persistencia remota continua restrita a usuario autenticado.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.

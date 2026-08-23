@@ -1183,3 +1183,40 @@ Regras de UI obrigatórias:
 - [x] Smoke local do backend buildado: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.198`.
 - [x] Smoke local do admin buildado em `http://localhost:3002`: `/version` respondeu `0.1.198`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - Android nao fecha a sheet enquanto a arte social esta preparando
+
+- Pedido do usuario: o problema do MP4 de 16:11 voltou. O video foi tratado apenas como evidencia; textos e controles gravados nao foram considerados instrucoes autonomas.
+- Evidencia do video: ao tocar em `Redes sociais`, a sheet fecha e a tela fica presa com o toast `Preparando video para compartilhar...`, enquanto a Lectum tenta gerar o video social completo de aproximadamente 2:07 antes de abrir a folha nativa.
+- Diagnostico: depois de voltar a priorizar a arte social, o clique em `Redes sociais` podia novamente assumir a geracao longa em primeiro plano quando o artefato com arte ainda nao estava pronto. Isso preserva a arte, mas reintroduz a espera bloqueante vista no Android.
+- Decisao: a abertura da sheet continua iniciando o prewarm do artefato 9:16 com arte. Enquanto esse prewarm nao conclui, o clique em `Redes sociais` nao fecha a sheet, nao chama `navigator.share` e nao inicia nova exportacao pesada em foreground; ele apenas informa que a arte da Lectum ainda esta carregando. Quando o prewarm fica `ready`, o clique usa o arquivo com arte ja em cache e abre a folha nativa rapidamente.
+- Guardas: o prewarm local pode gerar o arquivo com arte mesmo sem persistencia autenticada; o upload para `post_share_artifacts` continua acontecendo somente quando ha usuario autenticado. O fallback para video original segue isolado e nao e persistido, mas nao e acionado por clique precoce enquanto a arte ainda esta preparando.
+- Escopo: frontend-only; sem package no projeto, migration, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados.
+- Rollback: remover o guard de status da sheet volta a permitir que `Redes sociais` assuma a exportacao longa em primeiro plano; nenhum dado persistido precisa ser alterado.
+
+### Criterios de aceite do complemento
+
+- [x] O video anexado foi inspecionado como evidencia e mostrou a espera bloqueante `Preparando video para compartilhar...` apos clicar em `Redes sociais`.
+- [x] Ao abrir a sheet de video, a Lectum inicia o prewarm do artefato social 9:16 com arte.
+- [x] Enquanto a arte ainda esta preparando, clicar em `Redes sociais` mantem a sheet aberta e nao chama o compartilhamento nativo.
+- [x] O clique precoce nao inicia nova exportacao foreground nem fallback para video original.
+- [x] Depois que o prewarm conclui, `Redes sociais` usa o arquivo com arte ja cacheado.
+- [x] O prewarm local nao exige persistencia autenticada; upload remoto de artefato continua restrito a usuario autenticado.
+- [x] Nenhum package no projeto, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] MP4 anexado inspecionado com ferramenta temporaria fora do repositorio: H.264 Baseline, 576x1024, 28,33s; frames extraidos confirmaram o fluxo preso no preparo Android apos `Redes sociais`.
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-share-dialog.tsx src/utils/lectum-share-artifact-cache.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.199`.
+- [x] `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] Smoke local do frontend buildado em `http://localhost:3000`: `/version` respondeu `0.1.199` e `/comunidades` respondeu `200`.
+- [x] Smoke local do backend buildado: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.199`.
+- [x] Smoke local do admin buildado em `http://localhost:3002`: `/version` respondeu `0.1.199`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

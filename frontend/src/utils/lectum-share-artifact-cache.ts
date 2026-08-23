@@ -97,7 +97,7 @@ export const prewarmLectumShareArtifact = async (
   target?: LectumShareVideoTarget | null,
   options: ShareArtifactPrewarmOptions = {},
 ) => {
-  if (!options.authenticated || !isLectumShareArtifactTarget(target)) return null;
+  if (!isLectumShareArtifactTarget(target)) return null;
 
   const cachedFile = getPreparedLectumShareFile(target);
   if (cachedFile) return cachedFile;
@@ -106,7 +106,9 @@ export const prewarmLectumShareArtifact = async (
   if (storedFile) return storedFile;
 
   const file = await prepareLectumShareFile(target);
-  await persistLectumShareArtifact(target, file).catch(() => undefined);
+  if (options.authenticated) {
+    await persistLectumShareArtifact(target, file).catch(() => undefined);
+  }
 
   return file;
 };

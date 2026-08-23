@@ -696,3 +696,31 @@ O usuario anexou novo MP4 mostrando que o Android ja abria a folha nativa, mas o
 - Testes estaticos cobrem ausencia do estado `preparingSocial`, prewarm do artefato com arte ao abrir a sheet, consulta de artefato remoto antes do fallback e manutencao do guard de nao persistir fallback original.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.198`.
 - Smoke de homologacao sera executado apos o push automatico de `homolog`.
+
+## Complemento 2026-08-23 - evitar exportacao foreground por clique precoce no Android
+
+### Contexto
+
+O usuario informou que voltou o problema demonstrado no MP4 de 16:11. A gravacao mostra o toque em `Redes sociais`, a sheet fechando e a tela permanecendo com `Preparando video para compartilhar...` enquanto a aplicacao tenta gerar em primeiro plano um video social longo. O anexo foi usado apenas como evidencia do comportamento.
+
+### Decisao
+
+- A sheet de destino passa a rastrear o estado do artefato social: `idle`, `preparing`, `ready` ou `failed`.
+- Ao abrir a sheet, a Lectum inicia `prewarmLectumShareArtifact` para gerar/buscar o arquivo 9:16 com arte.
+- Se o usuario tocar em `Redes sociais` antes do status `ready`, a sheet permanece aberta e mostra uma mensagem curta para aguardar a arte carregar; nao ha chamada de `navigator.share` nem nova exportacao foreground nesse gesto.
+- Quando o prewarm conclui, o arquivo fica no cache local existente e o proximo toque em `Redes sociais` usa esse `File` ja pronto.
+- `prewarmLectumShareArtifact` pode gerar arquivo local sem usuario autenticado, mas so persiste em `post_share_artifacts` quando `authenticated` e verdadeiro.
+
+### Consequencias
+
+- O Android nao volta ao estado bloqueante de fechar a sheet e esperar a duracao do video com toast global.
+- A arte social continua sendo o caminho preferencial; o video original nao vira caminho principal por clique precoce.
+- Ha um trade-off explicito: se o usuario tocar antes do arquivo estar pronto, precisa aguardar o prewarm terminar e tocar novamente, preservando a arte em vez de enviar video sem caixinha.
+- Nao ha schema/migration, env, provider, package no projeto, mock, seed, reset ou limpeza de dados publicados.
+- Rollback: remover o guard de status da sheet restaura o comportamento anterior sem migracao de dados.
+
+### Validacao
+
+- Testes estaticos cobrem o status do artefato social, a mensagem de espera sem fechar a sheet antes de `setPendingTarget(null)`, e a persistencia remota condicionada a autenticacao.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.199`.
+- Smoke de homologacao sera executado apos o push automatico de `homolog`.
