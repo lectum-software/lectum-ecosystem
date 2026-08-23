@@ -236,6 +236,14 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     /prepareSocialFileTarget\(target\)[\s\S]*sharePreparedLectumVideoResponse\(target, file/,
   );
   assert.match(hookSource, /getLectumShareArtifactFile\(socialTarget\)/);
+  assert.match(
+    hookSource,
+    /destination === "social"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
+  );
+  assert.match(
+    hookSource,
+    /!isLectumSourceVideoFallbackFile\(file\)[\s\S]*persistLectumShareArtifact\(socialTarget, file\)/,
+  );
   assert.match(hookSource, /persistLectumShareArtifact\(socialTarget, file\)/);
   assert.match(
     hookSource,
@@ -298,7 +306,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     /throw new Error\("Arquivo de compartilhamento invalido\."\)/,
   );
   assert.doesNotMatch(shareArtifactUploadTypeSource, /\|\|\s*"video\/mp4"/);
-  assert.match(repositorySource, /lectum-share-v7-2026-08-23-moving-video-full-duration/);
+  assert.match(repositorySource, /lectum-share-v8-2026-08-23-android-source-video-fallback/);
   assert.match(repositorySource, /POST_SHARE_ARTIFACT_TTL_DAYS = 7/);
   assert.match(repositorySource, /renewArtifact/);
   assert.match(repositorySource, /last_accessed_at: accessedAt/);
@@ -323,6 +331,40 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     replyThreadSource,
     /scheduleLectumShareArtifactPrewarm\([\s\S]*createLectumShareVideoTarget\(post, createdReply/,
   );
+});
+
+test("fallback Android compartilha video original sem gravar como artefato social", () => {
+  const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
+  const hookSource = readFileSync(
+    new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
+    "utf8",
+  );
+  const artifactCacheSource = readFileSync(
+    new URL("./lectum-share-artifact-cache.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(mediaSource, /prepareLectumSourceVideoFallbackFile/);
+  assert.match(mediaSource, /sourceVideoFallbackFileCache/);
+  assert.match(mediaSource, /sourceVideoFallbackFiles = new WeakSet<File>\(\)/);
+  assert.match(mediaSource, /fetch\(mediaUrl\)/);
+  assert.match(mediaSource, /contentType\.startsWith\("video\/"\)/);
+  assert.match(mediaSource, /SOURCE_VIDEO_FALLBACK_MIME_BY_EXTENSION/);
+  assert.match(mediaSource, /"video\/quicktime"/);
+  assert.match(mediaSource, /safeFileName\(target, fallbackType\.extension\)/);
+  assert.doesNotMatch(
+    mediaSource,
+    /prepareLectumSourceVideoFallbackFile[\s\S]*preparedShareFileCache\.set/,
+  );
+  assert.match(
+    hookSource,
+    /prepareLectumShareFile\(socialTarget\)\.catch\(\(error\) => \{[\s\S]*destination === "social"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
+  );
+  assert.match(
+    hookSource,
+    /!isLectumSourceVideoFallbackFile\(file\)[\s\S]*persistLectumShareArtifact\(socialTarget, file\)/,
+  );
+  assert.doesNotMatch(artifactCacheSource, /video\/quicktime/);
 });
 
 test("cancelamento nativo da share sheet e reconhecido sem virar erro tecnico", () => {
@@ -478,5 +520,5 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v7-2026-08-23-moving-video-full-duration/);
+  assert.match(repositorySource, /lectum-share-v8-2026-08-23-android-source-video-fallback/);
 });

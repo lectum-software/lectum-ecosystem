@@ -1,6 +1,7 @@
 import type { LectumShareLinkTarget, LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import { createImageShareFile, createVideoShareFile } from "./lectum-share-media/export";
+import { safeFileName } from "./lectum-share-media/file-name";
 import {
   loadImageElement,
   loadVideoElement,
@@ -54,8 +55,97 @@ const createPreparedShareFileCacheKey = (target: LectumShareSocialTarget) =>
     target.cardLabel,
   ]);
 
+const SOURCE_VIDEO_FALLBACK_MIME_BY_EXTENSION: Record<string, string> = {
+  m4v: "video/mp4",
+  mov: "video/quicktime",
+  mp4: "video/mp4",
+  webm: "video/webm",
+};
+
+const SOURCE_VIDEO_FALLBACK_EXTENSION_BY_MIME: Record<string, string> = {
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
+};
+
+const sourceVideoFallbackFileCache = new Map<string, PreparedShareFileCacheValue>();
+const sourceVideoFallbackFiles = new WeakSet<File>();
+
 const isPreparedShareFile = (value: PreparedShareFileCacheValue): value is File =>
   typeof File !== "undefined" && value instanceof File;
+
+const normalizeMimeType = (value?: string | null) =>
+  value?.trim().toLowerCase().split(";", 1)[0] ?? "";
+
+const sourceVideoExtensionFromUrl = (mediaUrl: string) => {
+  try {
+    const pathname = new URL(mediaUrl, window.location.href).pathname;
+    return pathname.match(/\.([a-z0-9]{1,8})$/iu)?.[1]?.toLowerCase() ?? null;
+  } catch {
+    return mediaUrl.match(/\.([a-z0-9]{1,8})(?:[?#]|$)/iu)?.[1]?.toLowerCase() ?? null;
+  }
+};
+
+const resolveSourceVideoFallbackType = (input: {
+  contentType?: string | null;
+  mediaUrl: string;
+}) => {
+  const contentType = normalizeMimeType(input.contentType);
+  const urlExtension = sourceVideoExtensionFromUrl(input.mediaUrl);
+
+  if (contentType.startsWith("video/")) {
+    return {
+      extension: SOURCE_VIDEO_FALLBACK_EXTENSION_BY_MIME[contentType] ?? urlExtension ?? "mp4",
+      mimeType: contentType,
+    };
+  }
+
+  if (!urlExtension) return null;
+
+  const mimeType = SOURCE_VIDEO_FALLBACK_MIME_BY_EXTENSION[urlExtension];
+
+  return mimeType
+    ? {
+        extension: urlExtension === "m4v" ? "mp4" : urlExtension,
+        mimeType,
+      }
+    : null;
+};
+
+const createSourceVideoFallbackFile = async (target: LectumShareSocialTarget) => {
+  if (target.mediaType !== "video") {
+    throw new Error("Video indisponivel para compartilhamento.");
+  }
+
+  const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
+
+  if (!mediaUrl) {
+    throw new Error("Video indisponivel para compartilhamento.");
+  }
+
+  const response = await fetch(mediaUrl);
+
+  if (!response.ok) {
+    throw new Error("Video indisponivel para compartilhamento.");
+  }
+
+  const blob = await response.blob();
+  const fallbackType = resolveSourceVideoFallbackType({
+    contentType: response.headers.get("content-type") || blob.type,
+    mediaUrl,
+  });
+
+  if (!fallbackType || blob.size === 0) {
+    throw new Error("Video indisponivel para compartilhamento.");
+  }
+
+  const file = new File([blob], safeFileName(target, fallbackType.extension), {
+    type: fallbackType.mimeType,
+  });
+  sourceVideoFallbackFiles.add(file);
+
+  return file;
+};
 
 export const getPreparedLectumShareFile = (target: LectumShareSocialTarget) => {
   const cached = preparedShareFileCache.get(createPreparedShareFileCacheKey(target));
@@ -90,6 +180,34 @@ export const prepareLectumShareFile = (target: LectumShareSocialTarget) => {
   );
 
   preparedShareFileCache.set(cacheKey, pendingFile);
+  return pendingFile;
+};
+
+export const isLectumSourceVideoFallbackFile = (file: File) => sourceVideoFallbackFiles.has(file);
+
+export const prepareLectumSourceVideoFallbackFile = (target: LectumShareSocialTarget) => {
+  const cacheKey = `source-video:${createPreparedShareFileCacheKey(target)}`;
+  const cached = sourceVideoFallbackFileCache.get(cacheKey);
+
+  if (cached) {
+    return Promise.resolve(cached).catch((error) => {
+      sourceVideoFallbackFileCache.delete(cacheKey);
+      throw error;
+    });
+  }
+
+  const pendingFile = createSourceVideoFallbackFile(target).then(
+    (file) => {
+      sourceVideoFallbackFileCache.set(cacheKey, file);
+      return file;
+    },
+    (error) => {
+      sourceVideoFallbackFileCache.delete(cacheKey);
+      throw error;
+    },
+  );
+
+  sourceVideoFallbackFileCache.set(cacheKey, pendingFile);
   return pendingFile;
 };
 

@@ -906,3 +906,11 @@ Uma task só pode ser marcada como concluída quando:
 - Cache/storage: artefatos temporarios antigos sao invalidados por `lectum-share-v7-2026-08-23-moving-video-full-duration`; cliente e upload aceitam somente `video/mp4` ou `video/webm`, sem reusar imagens/QuickTime como artefato social.
 - O screenshot Android/Reels enviado pelo usuario foi usado apenas como evidencia do bug; textos/controles do Instagram nao foram tratados como instrucoes de produto.
 - Escopo: frontend + constante/guard backend de artefato; sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de storage/dados publicados.
+
+
+## Correcao operacional em 2026-08-23: fallback Android para video original nas redes sociais
+
+- Ajuste pos-feedback da TASK-42: se o Android falhar ao preparar o video social 9:16 por `canvas.captureStream`/`MediaRecorder`, o destino mobile `Redes sociais` tenta compartilhar o video original publico como arquivo de video real, evitando bloquear o usuario apenas com toast.
+- O caminho preferencial continua sendo o arquivo social com arte da Lectum via cache/geracao. O fallback original nao e persistido como `post_share_artifact`, nao renova cache de arte e nao altera o desktop `Baixar video`, que continua usando apenas o artefato social com arte.
+- A versao dos artefatos temporarios passa para `lectum-share-v8-2026-08-23-android-source-video-fallback`, invalidando cache v7 sem apagar storage.
+- Trade-off: no fallback Android, o arquivo pode ir sem a caixinha da Lectum, mas preserva movimento/duracao e evita erro de preparo; sem package, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.

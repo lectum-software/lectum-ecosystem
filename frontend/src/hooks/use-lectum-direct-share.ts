@@ -12,8 +12,10 @@ import {
   copyLectumShareTargetUrl,
   downloadPreparedLectumShareFile,
   getPreparedLectumShareFile,
+  isLectumSourceVideoFallbackFile,
   isNativeShareAbortError,
   prepareLectumShareFile,
+  prepareLectumSourceVideoFallbackFile,
   shareLectumLinkTarget,
   shareLectumWhatsAppPreviewTarget,
   sharePreparedLectumVideoResponse,
@@ -88,9 +90,17 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
             cachedFile = await getLectumShareArtifactFile(socialTarget).catch(() => null);
           }
 
-          const file = cachedFile ?? (await prepareLectumShareFile(socialTarget));
+          const file =
+            cachedFile ??
+            (await prepareLectumShareFile(socialTarget).catch((error) => {
+              if (destination === "social" && socialTarget.mediaType === "video") {
+                return prepareLectumSourceVideoFallbackFile(socialTarget);
+              }
 
-          if (!cachedFile && currentUserId) {
+              throw error;
+            }));
+
+          if (!cachedFile && currentUserId && !isLectumSourceVideoFallbackFile(file)) {
             void persistLectumShareArtifact(socialTarget, file).catch(() => undefined);
           }
 

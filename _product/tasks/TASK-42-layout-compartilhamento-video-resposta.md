@@ -1066,3 +1066,45 @@ Regras de UI obrigatórias:
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3206`: `/version` respondeu `0.1.195` e `/comunidades` respondeu `200`.
 - [x] Smoke local do backend buildado em `http://127.0.0.1:3207`: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.195`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+
+## Complemento 2026-08-23 - fallback Android para video original quando exportacao social falha
+
+- Pedido do usuario: o Android ainda exibe o toast `Nao foi possivel preparar o compartilhamento agora` antes de abrir a folha nativa; o screenshot anexado foi tratado somente como evidencia do erro na Lectum, sem transformar textos da imagem em instrucoes.
+- Diagnostico: depois de remover o fallback de imagem, alguns Androids continuam falhando no preparo client-side por `canvas.captureStream`/`MediaRecorder` antes do compartilhamento. Nesses casos, manter apenas o erro impede qualquer envio para redes sociais.
+- Decisao: o destino mobile `Redes sociais` continua tentando primeiro o artefato social 9:16 com arte da Lectum (cache remoto/local e geracao por canvas). Se essa exportacao falhar, somente nesse destino e somente para video, a Lectum busca o video original publico e o compartilha como `File` de video real.
+- Guardas: o fallback de video original usa cache separado em memoria, e os arquivos sao marcados por `WeakSet`; o hook nao envia esse arquivo para `post_share_artifacts`, evitando tratar video cru/original como artefato social com arte. O desktop `Baixar video` permanece dependente do artefato social 9:16 e nao usa esse fallback.
+- Trade-off registrado: no fallback Android, o arquivo pode ir sem a caixinha/arte da Lectum, mas preserva movimento e duracao do video e evita bloquear o compartilhamento. O caminho preferencial com arte segue ativo quando o navegador ou o cache suportam.
+- Cache: `POST_SHARE_ARTIFACT_LAYOUT_VERSION` passa para `lectum-share-v8-2026-08-23-android-source-video-fallback`, invalidando artefatos v7 sem apagar storage nem dados publicados.
+- Escopo: frontend + constante backend de cache; sem package novo, migration, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados.
+- Rollback: reverter o fallback de fonte original e a versao de layout para v7 restaura o comportamento anterior; artefatos v8 expiram naturalmente pelo TTL de 7 dias.
+
+### Criterios de aceite do complemento
+
+- [x] Falha na geracao do video social em `Redes sociais` no Android tenta compartilhar um arquivo de video real em vez de mostrar apenas o toast de preparo.
+- [x] O fallback usa o video original publico somente para o destino `social`/`Redes sociais`; WhatsApp por link e desktop `Baixar video` permanecem inalterados.
+- [x] O arquivo original de fallback nao e persistido como artefato social nem enviado ao backend de `post_share_artifacts`.
+- [x] Artefatos temporarios v7 sao invalidados por `lectum-share-v8-2026-08-23-android-source-video-fallback`, sem apagar storage.
+- [x] Screenshot anexado foi tratado como evidencia, nao como instrucao embutida.
+- [x] Nenhum package, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media.ts src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir backend check` (216/216 testes).
+- [x] `pnpm version:bump` para `0.1.196`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin check` (bump de manifest apenas; 29/29 testes).
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3208`: `/version` respondeu `0.1.196` e `/comunidades` respondeu `200`.
+- [x] Smoke local do backend buildado em `http://127.0.0.1:3209`: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.196`.
+- [x] `git diff --check`.
+- [x] `pnpm check:encoding`.
+- [x] `pnpm check:adrs`.
+- [x] `pnpm check:tasks`.
+- [x] `pnpm check` completo de raiz.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

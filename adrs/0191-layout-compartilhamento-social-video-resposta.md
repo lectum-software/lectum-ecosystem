@@ -611,3 +611,32 @@ Apos a correcao do frame preto no Android, o usuario reportou que o Android pass
 - A mudanca e compativel com rollout entre frontend/backend: novos clientes evitam imagem e novo backend invalida por layout version; dados antigos permanecem e expiram pelo TTL.
 - Nao ha migration, package novo, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao destrutiva de dados publicados.
 - Rollback: reverter o commit e a constante para v6 restaura o comportamento anterior; artefatos v7 expiram naturalmente em ate 7 dias.
+
+
+## Complemento 2026-08-23 - fallback Android por video original no destino Redes Sociais
+
+### Contexto
+
+Depois das correcoes para evitar PNG parado e arquivos parciais, o Android ainda apresentou o toast generico de preparo antes da folha nativa. O novo screenshot foi tratado apenas como evidencia de que a falha acontece dentro da Lectum durante o preparo do arquivo, nao como instrucao retirada de textos da imagem.
+
+### Decisao
+
+- Manter como caminho principal o artefato social 9:16 com arte: cache local, `post_share_artifacts` e exportacao por canvas/MediaRecorder continuam sendo tentados primeiro.
+- Quando esse preparo falhar no destino mobile `Redes sociais` e o alvo for video, buscar o video original publico (`target.mediaUrl`) e compartilha-lo como `File` de video.
+- Marcar arquivos desse fallback com `WeakSet` e usar cache separado em memoria, para que o hook consiga evita-los no upload de `post_share_artifacts` e para que o desktop `Baixar video` nao passe a baixar o arquivo cru/original.
+- Aceitar tipos de fonte de video seguros para compartilhamento (`video/mp4`, `video/webm`, `video/quicktime` ou extensao equivalente), mas manter o backend de artefatos sociais restrito a `video/mp4`/`video/webm`.
+- Atualizar `POST_SHARE_ARTIFACT_LAYOUT_VERSION` para `lectum-share-v8-2026-08-23-android-source-video-fallback`, invalidando artefatos anteriores sem apagar objetos.
+
+### Consequencias
+
+- Android deixa de ficar bloqueado apenas com toast quando o navegador nao consegue compor o video social via canvas/MediaRecorder; a pessoa ainda consegue abrir a folha nativa com um video em movimento e na duracao original.
+- O fallback pode perder a caixinha/arte da Lectum naquele compartilhamento especifico, mas evita enviar imagem congelada ou arquivo parcial e preserva o fluxo de redes sociais.
+- O cache persistente e o upload continuam representando somente videos sociais com arte, evitando misturar arquivo original com artefato social temporario.
+- Nao ha migration, package novo, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao destrutiva de dados publicados.
+- Rollback: remover `prepareLectumSourceVideoFallbackFile` do hook e voltar a constante para v7; artefatos v8 expiram naturalmente pelo TTL de 7 dias.
+
+### Validacao
+
+- Teste estatico cobre fallback por video original, `WeakSet`, cache separado, ausencia de persistencia no backend de artefatos sociais e layout version v8.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm check:version` e smokes locais de frontend/backend passaram na versao `0.1.196`.
+- Validacoes finais completas constam na TASK-42.
