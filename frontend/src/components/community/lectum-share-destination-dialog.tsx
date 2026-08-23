@@ -15,7 +15,6 @@ type LectumShareDestinationDialogProps = {
   onClose: () => void;
   onSelect: (destination: LectumShareDestination) => void;
   open: boolean;
-  preparingSocial?: boolean;
 };
 
 type ShareDestinationOption = {
@@ -61,7 +60,6 @@ export const LectumShareDestinationDialog = ({
   onClose,
   onSelect,
   open,
-  preparingSocial = false,
 }: LectumShareDestinationDialogProps) => {
   if (!open) return null;
 
@@ -106,17 +104,15 @@ export const LectumShareDestinationDialog = ({
         <div className="grid gap-2">
           {options.map((option) => {
             const Icon = option.icon;
-            const optionPreparing = preparingSocial && option.destination === "social";
 
             return (
               <button
-                aria-busy={optionPreparing || undefined}
                 className={cn(
                   "group flex w-full items-center gap-3 rounded-[20px] border border-border bg-background p-3 text-left transition",
                   "hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-[var(--lectum-shadow-soft)]",
                   "disabled:pointer-events-none disabled:opacity-60",
                 )}
-                disabled={disabled || optionPreparing}
+                disabled={disabled}
                 key={option.destination}
                 onClick={() => onSelect(option.destination)}
                 type="button"
@@ -125,9 +121,7 @@ export const LectumShareDestinationDialog = ({
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <span className="grid">
-                  <span className="font-semibold text-sm">
-                    {optionPreparing ? "Preparando vídeo..." : option.label}
-                  </span>
+                  <span className="font-semibold text-sm">{option.label}</span>
                 </span>
               </button>
             );

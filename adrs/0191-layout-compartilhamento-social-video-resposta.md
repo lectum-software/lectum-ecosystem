@@ -668,3 +668,31 @@ O usuario anexou um MP4 mostrando o Android ainda com problema. A gravacao mostr
 - Testes estaticos cobrem prewarm da sheet, estado `preparingSocial`, bypass da consulta de artefato remoto em Android, skip de prewarm pesado e manutencao do guard de nao persistir fallback original.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.197`.
 - Smoke de homologacao sera executado apos o push automatico de `homolog`.
+
+## Complemento 2026-08-23 - arte social volta a ser caminho preferencial no Android
+
+### Contexto
+
+O usuario anexou novo MP4 mostrando que o Android ja abria a folha nativa, mas o arquivo enviado ao Instagram era o video original sem a arte da Lectum. A gravacao tambem evidenciou o estado `Preparando video` no fluxo. O anexo foi usado somente como evidencia visual/operacional.
+
+### Decisao
+
+- Remover o prewarm do video original acionado ao abrir a sheet mobile.
+- Remover o estado/label `Preparando video...` da opcao `Redes sociais`.
+- Ao abrir a sheet, preaquecer novamente o artefato social 9:16 com arte, usando cache local, artefato remoto e, quando necessario, geracao por canvas/MediaRecorder.
+- No clique em `Redes sociais`, tentar cache local e artefato remoto antes de gerar novo arquivo; o fallback para video original so ocorre se a geracao do arquivo social falhar.
+- Manter o fallback original marcado por `WeakSet` e cache separado para impedir persistencia em `post_share_artifacts`.
+
+### Consequencias
+
+- Android volta a priorizar o arquivo social com caixinha/arte da Lectum quando houver artefato existente ou quando a geracao local concluir.
+- A sheet nao exibe mais a tag de preparo no proprio botao `Redes sociais`.
+- Se nao houver artefato pronto e a geracao local falhar, o Android ainda consegue compartilhar o video original como fallback operacional, sem misturar esse arquivo com o cache de arte.
+- Nao ha schema/migration, env, provider, package no projeto, mock, seed, reset ou limpeza de dados publicados.
+- Rollback: restaurar o bypass/prewarm do video original volta ao comportamento da versao anterior sem migracao de dados.
+
+### Validacao
+
+- Testes estaticos cobrem ausencia do estado `preparingSocial`, prewarm do artefato com arte ao abrir a sheet, consulta de artefato remoto antes do fallback e manutencao do guard de nao persistir fallback original.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.198`.
+- Smoke de homologacao sera executado apos o push automatico de `homolog`.

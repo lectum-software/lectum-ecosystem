@@ -185,9 +185,6 @@ export const prepareLectumShareFile = (target: LectumShareSocialTarget) => {
 
 export const isLectumSourceVideoFallbackFile = (file: File) => sourceVideoFallbackFiles.has(file);
 
-export const shouldPreferLectumSourceVideoFallbackForSocialShare = () =>
-  typeof navigator !== "undefined" && /\bAndroid\b/iu.test(navigator.userAgent);
-
 export const prepareLectumSourceVideoFallbackFile = (target: LectumShareSocialTarget) => {
   const cacheKey = `source-video:${createPreparedShareFileCacheKey(target)}`;
   const cached = sourceVideoFallbackFileCache.get(cacheKey);

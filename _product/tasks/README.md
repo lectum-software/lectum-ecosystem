@@ -921,3 +921,10 @@ Uma task só pode ser marcada como concluída quando:
 - Em Android, a sheet de destino agora prepara o video original em memoria assim que abre e desabilita `Redes sociais` com `Preparando video...` ate o arquivo estar pronto; depois, o toque usa esse arquivo diretamente, sem tentar renderizar canvas/MediaRecorder nem buscar artefato remoto durante o gesto.
 - O fallback original segue sem persistencia em `post_share_artifact`; WhatsApp por link e desktop com download do video social com arte continuam inalterados.
 - Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-23: Android volta a priorizar arte social
+
+- Novo MP4 anexado pelo usuario mostrou que o fallback original tinha virado caminho principal no Android: a folha nativa abria, mas o Instagram recebia o video sem a caixinha/arte da Lectum e a sheet podia exibir `Preparando video...`.
+- A sheet mobile nao exibe mais `Preparando video...` no botao `Redes sociais`; ao abrir, ela volta a preaquecer o artefato social 9:16 com arte.
+- No clique em `Redes sociais`, a Lectum consulta cache local/artefato remoto com arte antes de gerar novo arquivo; o video original permanece apenas como fallback se a geracao social falhar.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.

@@ -1147,3 +1147,39 @@ Regras de UI obrigatórias:
 - [x] Smoke local do backend buildado: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.197`.
 - [x] Smoke local do admin buildado em `http://localhost:3002`: `/version` respondeu `0.1.197`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - Android volta a priorizar arte social antes do fallback original
+
+- Pedido do usuario: analisar o novo MP4 anexado porque o fluxo Android ainda estava com problema, sem carregar a arte da Lectum e exibindo o estado `Preparando video`.
+- Evidencia do video: a gravacao de 59,94s, 576x1280, H.264 High com AAC, mostra a folha nativa Android recebendo `Igor Rezende na Lectum.mp4` sem a caixinha/arte da Lectum e o editor do Instagram abrindo o video original em tela cheia.
+- Diagnostico: a correcao anterior passou a preaquecer o video original ao abrir a sheet e, no clique de `Redes sociais`, pulava a consulta ao artefato social remoto e a geracao com canvas/MediaRecorder. Isso resolvia a demora, mas transformava o fallback original em caminho principal no Android e tambem expunha a label `Preparando video...` na sheet.
+- Decisao: remover o prewarm do video original e a label `Preparando video...` da sheet. Ao abrir a sheet, a Lectum volta a preaquecer o artefato social 9:16 com arte. No clique em `Redes sociais`, o fluxo tenta cache local/artefato remoto com arte antes de gerar novo arquivo; o video original volta a ser apenas fallback quando a geracao do arquivo social falhar.
+- Guardas preservadas: WhatsApp continua por link, desktop `Baixar video` continua usando arquivo social com arte, fallback original nao e persistido em `post_share_artifacts` e o cache de arte continua reaproveitando artefato existente antes de reprocessar.
+- Escopo: frontend-only sobre a versao v8; sem package no projeto, migration, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados.
+- Rollback: restaurar o prewarm/bypass Android do video original volta ao comportamento anterior; nenhum dado persistido precisa ser alterado.
+
+### Criterios de aceite do complemento
+
+- [x] O video anexado foi inspecionado como evidencia e mostrou o Android compartilhando o video original sem arte.
+- [x] A sheet mobile nao troca mais `Redes sociais` por `Preparando video...`.
+- [x] Ao abrir a sheet, a Lectum tenta preaquecer o artefato social com arte em vez do video original.
+- [x] `Redes sociais` consulta cache local e artefato remoto com arte antes de qualquer fallback para video original.
+- [x] O fallback de video original continua existindo apenas quando a geracao do arquivo social falha e continua sem persistencia em `post_share_artifacts`.
+- [x] Nenhum package no projeto, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] MP4 anexado inspecionado com ferramenta temporaria fora do repositorio: H.264 High, 576x1280, 59,94s; frames extraidos confirmaram envio do video original sem arte no Android/Instagram.
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-destination-dialog.tsx src/hooks/use-lectum-share-dialog.tsx src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-artifact-cache.ts src/utils/lectum-share-media.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.198`.
+- [x] `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] Smoke local do frontend buildado em `http://localhost:3000`: `/version` respondeu `0.1.198` e `/comunidades` respondeu `200`.
+- [x] Smoke local do backend buildado: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.198`.
+- [x] Smoke local do admin buildado em `http://localhost:3002`: `/version` respondeu `0.1.198`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

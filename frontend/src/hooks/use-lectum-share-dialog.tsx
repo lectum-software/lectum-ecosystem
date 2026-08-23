@@ -1,15 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   LectumShareDestinationDialog,
   type LectumShareDestinationMode,
 } from "@/components/community/lectum-share-destination-dialog";
+import { useAppSelector } from "@/hooks/redux";
 import { type LectumShareDestination, useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
-import {
-  prepareLectumSourceVideoFallbackFile,
-  shouldPreferLectumSourceVideoFallbackForSocialShare,
-} from "@/utils/lectum-share-media";
+import { prewarmLectumShareArtifact } from "@/utils/lectum-share-artifact-cache";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
 import type { LectumShareSocialTarget, LectumShareVideoTarget } from "@/utils/lectum-share-target";
 
@@ -28,40 +26,14 @@ const resolveLectumShareDestinationMode = (): LectumShareDestinationMode => {
 export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) => {
   const [pendingTarget, setPendingTarget] = useState<LectumShareSocialTarget | null>(null);
   const [destinationMode, setDestinationMode] = useState<LectumShareDestinationMode>("mobile");
-  const [isPreparingAndroidSocialFile, setIsPreparingAndroidSocialFile] = useState(false);
-  const androidPreparationRunRef = useRef(0);
   const { isSharing, shareLectumTarget: shareDirectTarget } = useLectumDirectShare(options);
+  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
 
   const closeShareDestinationDialog = useCallback(() => {
     if (isSharing) return;
 
-    androidPreparationRunRef.current += 1;
-    setIsPreparingAndroidSocialFile(false);
     setPendingTarget(null);
   }, [isSharing]);
-
-  const prewarmAndroidSocialFile = useCallback(
-    (target: LectumShareSocialTarget, mode: LectumShareDestinationMode) => {
-      const runId = androidPreparationRunRef.current + 1;
-      androidPreparationRunRef.current = runId;
-
-      if (mode !== "mobile" || !shouldPreferLectumSourceVideoFallbackForSocialShare()) {
-        setIsPreparingAndroidSocialFile(false);
-        return;
-      }
-
-      setIsPreparingAndroidSocialFile(true);
-
-      void prepareLectumSourceVideoFallbackFile(target)
-        .finally(() => {
-          if (androidPreparationRunRef.current === runId) {
-            setIsPreparingAndroidSocialFile(false);
-          }
-        })
-        .catch(() => undefined);
-    },
-    [],
-  );
 
   const shareLectumTarget = useCallback(
     async (target: LectumShareVideoTarget) => {
@@ -73,9 +45,11 @@ export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) 
       const mode = resolveLectumShareDestinationMode();
       setDestinationMode(mode);
       setPendingTarget(target);
-      prewarmAndroidSocialFile(target, mode);
+      void prewarmLectumShareArtifact(target, { authenticated: Boolean(currentUserId) }).catch(
+        () => undefined,
+      );
     },
-    [prewarmAndroidSocialFile, shareDirectTarget],
+    [currentUserId, shareDirectTarget],
   );
 
   const selectShareDestination = useCallback(
@@ -83,8 +57,6 @@ export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) 
       if (!pendingTarget) return;
 
       const target = pendingTarget;
-      androidPreparationRunRef.current += 1;
-      setIsPreparingAndroidSocialFile(false);
       setPendingTarget(null);
       void shareDirectTarget(target, { destination });
     },
@@ -99,13 +71,11 @@ export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) 
         onClose={closeShareDestinationDialog}
         onSelect={selectShareDestination}
         open={Boolean(pendingTarget)}
-        preparingSocial={isPreparingAndroidSocialFile}
       />
     ),
     [
       closeShareDestinationDialog,
       destinationMode,
-      isPreparingAndroidSocialFile,
       isSharing,
       pendingTarget,
       selectShareDestination,

@@ -10,7 +10,6 @@ import {
   cachePreparedLectumShareFile,
   getPreparedLectumShareFile,
   prepareLectumShareFile,
-  shouldPreferLectumSourceVideoFallbackForSocialShare,
 } from "@/utils/lectum-share-media";
 import { safeFileName } from "@/utils/lectum-share-media/file-name";
 import {
@@ -105,8 +104,6 @@ export const prewarmLectumShareArtifact = async (
 
   const storedFile = await getLectumShareArtifactFile(target).catch(() => null);
   if (storedFile) return storedFile;
-
-  if (shouldPreferLectumSourceVideoFallbackForSocialShare()) return null;
 
   const file = await prepareLectumShareFile(target);
   await persistLectumShareArtifact(target, file).catch(() => undefined);
