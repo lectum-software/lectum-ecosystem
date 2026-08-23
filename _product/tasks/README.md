@@ -883,3 +883,10 @@ Uma task só pode ser marcada como concluída quando:
 - A retencao de novos artefatos passa para 7 dias. Cada `post_share.shared=true` aceito pelo backend renova `expires_at` por mais 7 dias e atualiza `last_accessed_at`, permitindo que videos ainda compartilhados continuem em cache.
 - Clicar em `Redes sociais` apenas abre o fluxo: a contagem/renovacao so ocorre depois de retorno aceito do compartilhamento nativo ou fallback de link; a Web Share API nao informa se o usuario escolheu Instagram/Reels/Stories dentro da folha do celular.
 - Sem package novo, migration, env obrigatoria, mock, seed, reset ou limpeza destrutiva de storage/dados publicados.
+
+## Atualizacao operacional em 2026-08-23: compartilhamento de video no desktop
+
+- Ajuste pos-feedback da TASK-42: em computadores, a sheet `Compartilhar video` passa a oferecer apenas `Copiar link` e `Baixar video`, evitando prometer envio direto de arquivo para Instagram pelo navegador desktop.
+- `Baixar video` sempre usa o arquivo social 9:16 com arte/identidade da Lectum ja gerado pelo fluxo de compartilhamento; nao ha opcao de baixar o video cru/original.
+- Em mobile, o fluxo aprovado permanece com `WhatsApp` via link `/whatsapp` e `Redes sociais` via arquivo social sem link/texto no payload principal.
+- Alteracao de produto frontend-only, sem package, env, migration, provider, seed, mock, reset ou dados publicados; ajuste complementar apenas no timeout defensivo de 60s do teste local `boot-safety` para estabilizar o hook de push.

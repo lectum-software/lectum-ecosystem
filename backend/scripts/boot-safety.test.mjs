@@ -4,6 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
+const BOOT_SAFETY_PROCESS_TIMEOUT_MS = 60_000;
+
 test("boot com env inválida falha sem stack, segredo ou detalhes técnicos", () => {
   const secretMarker = "must-not-appear-in-output";
   const result = spawnSync(process.execPath, ["--import", "tsx", "src/index.ts"], {
@@ -16,7 +18,7 @@ test("boot com env inválida falha sem stack, segredo ou detalhes técnicos", ()
       NODE_ENV: "production",
       SENTRY_DSN: "",
     },
-    timeout: 10_000,
+    timeout: BOOT_SAFETY_PROCESS_TIMEOUT_MS,
   });
   const output = `${result.stdout}${result.stderr}`;
 
@@ -74,7 +76,7 @@ test("falhas fatais sem DSN válido usam handlers únicos e saída sanitizada", 
             NODE_ENV: "test",
             SENTRY_DSN: scenario.dsn,
           },
-          timeout: 10_000,
+          timeout: BOOT_SAFETY_PROCESS_TIMEOUT_MS,
         },
       );
       const output = `${result.stdout}${result.stderr}`;

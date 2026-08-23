@@ -544,3 +544,24 @@ A geracao client-side do video social 9:16 com arte continua sendo o ponto lento
 - Artefatos existentes com vencimento antigo nao sao destruidos nem backfilled; expiram naturalmente pelo scheduler ja existente.
 - Nao ha migration, package novo, env obrigatoria, provider novo ou limpeza destrutiva.
 - Rollback: voltar `POST_SHARE_ARTIFACT_TTL_DAYS` para o valor anterior, remover os agendamentos de prewarm no frontend e remover a chamada de renovacao no service de share; registros existentes permanecem seguros e expiram pelo campo `expires_at`.
+
+## Complemento 2026-08-23 - compartilhamento desktop por link ou download
+
+### Contexto
+
+O usuario confirmou que, no computador, nao e realista prometer envio direto do video para Instagram/Reels pelo navegador. A experiencia desejada para desktop e oferecer uma acao util e honesta: copiar o link da publicacao/thread ou baixar o video social pronto para postagem manual. Tambem ficou decidido que nao deve existir opcao para baixar o video cru/original; todo download deve preservar a arte/identidade da Lectum, sem precisar escrever "com arte para redes sociais" no label.
+
+### Decisao
+
+- A sheet de alvos profissionais com video passa a detectar contexto desktop por media query de ponteiro fino (`(hover: hover) and (pointer: fine)`).
+- Em desktop, a sheet mostra somente `Copiar link` e `Baixar video`.
+- `Copiar link` usa clipboard direto do link publico canonico (`target.shareUrl`) e registra `post_share` com canal `clipboard` somente apos sucesso.
+- `Baixar video` reutiliza o mesmo artefato social 9:16 com arte/cache/preparo do fluxo de redes sociais e aciona download local; a UI nao oferece download do arquivo original.
+- Em mobile, a sheet preserva `WhatsApp` e `Redes sociais`, mantendo os payloads ja aprovados: WhatsApp por link `/whatsapp` e redes sociais por arquivo social sem URL/texto.
+
+### Consequencias
+
+- Desktop deixa de exibir opcoes que dependem da folha nativa/mobile para anexar video em apps sociais, reduzindo confusao e toasts inadequados.
+- Psicologos podem copiar o link para compartilhar em qualquer canal ou baixar o video com identidade visual e postar manualmente no Instagram Web/outros destinos.
+- A mudanca de produto e frontend-only e nao altera backend de runtime, banco, storage, contratos, envs, providers, jobs, packages ou dados publicados; houve apenas ajuste de timeout defensivo de 60s no teste local `boot-safety` para evitar falso negativo no hook.
+- Rollback: remover a diferenciacao por `LectumShareDestinationMode` e voltar a renderizar sempre as opcoes mobile restaura a sheet anterior sem migration.

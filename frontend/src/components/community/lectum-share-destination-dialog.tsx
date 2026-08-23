@@ -1,14 +1,17 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Download, Link2, X } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { LectumShareDestination } from "@/hooks/use-lectum-direct-share";
 import { cn } from "@/lib/utils";
 
+export type LectumShareDestinationMode = "desktop" | "mobile";
+
 type LectumShareDestinationDialogProps = {
   disabled?: boolean;
+  mode: LectumShareDestinationMode;
   onClose: () => void;
   onSelect: (destination: LectumShareDestination) => void;
   open: boolean;
@@ -20,7 +23,7 @@ type ShareDestinationOption = {
   label: string;
 };
 
-const SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
+const MOBILE_SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
   {
     destination: "whatsapp",
     icon: WhatsAppIcon,
@@ -33,13 +36,35 @@ const SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
   },
 ];
 
+const DESKTOP_SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
+  {
+    destination: "copy_link",
+    icon: Link2,
+    label: "Copiar link",
+  },
+  {
+    destination: "download",
+    icon: Download,
+    label: "Baixar vídeo",
+  },
+];
+
+const SHARE_DESTINATION_CONTENT: Record<LectumShareDestinationMode, string> = {
+  desktop: "Copie o link ou baixe o vídeo.",
+  mobile: "Onde deseja compartilhar?",
+};
+
 export const LectumShareDestinationDialog = ({
   disabled = false,
+  mode,
   onClose,
   onSelect,
   open,
 }: LectumShareDestinationDialogProps) => {
   if (!open) return null;
+
+  const options =
+    mode === "desktop" ? DESKTOP_SHARE_DESTINATION_OPTIONS : MOBILE_SHARE_DESTINATION_OPTIONS;
 
   return (
     <div className="fixed inset-0 z-[120] grid items-end bg-foreground/35 px-3 pb-3 backdrop-blur-[2px] sm:items-center sm:px-4 sm:pb-0">
@@ -62,7 +87,7 @@ export const LectumShareDestinationDialog = ({
               Compartilhar vídeo
             </p>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Onde deseja compartilhar?
+              {SHARE_DESTINATION_CONTENT[mode]}
             </p>
           </div>
           <button
@@ -77,7 +102,7 @@ export const LectumShareDestinationDialog = ({
         </div>
 
         <div className="grid gap-2">
-          {SHARE_DESTINATION_OPTIONS.map((option) => {
+          {options.map((option) => {
             const Icon = option.icon;
 
             return (

@@ -943,3 +943,39 @@ Regras de UI obrigatórias:
 - [x] `pnpm check` (uma primeira tentativa falhou por encoding corrompido em `_product/tasks/DATA-MODEL.md` durante a edicao local; o arquivo foi restaurado/reaplicado em UTF-8 e a repeticao completa passou).
 - [x] `git diff --check`
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - opcoes de compartilhamento no desktop
+
+- Pedido do usuario: no computador, o compartilhamento de video deve oferecer `Copiar link` ou `Baixar video`; o download sempre deve baixar o video social com arte, sem opcao de baixar o arquivo cru/original e sem copy explicita "com arte para redes sociais".
+- Decisao: alvos profissionais com video continuam abrindo a sheet explicita, mas a UI diferencia contexto por dispositivo. Em desktop com ponteiro fino, a sheet mostra somente `Copiar link` e `Baixar video`; em mobile, preserva `WhatsApp` e `Redes sociais`.
+- `Copiar link` usa clipboard diretamente e registra o canal `clipboard` apenas apos copia aceita. `Baixar video` reutiliza o mesmo preparo/cache do arquivo social 9:16 com arte ja existente e mostra feedback simples `Video baixado.`
+- O fluxo de mobile, WhatsApp `/whatsapp`, Redes sociais com arquivo social sem link, cache temporario, prewarm e renovacao por share real permanecem inalterados.
+- Escopo de produto: frontend-only, mobile-first/desktop-aware, sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou alteracao de dados publicados; ajuste complementar apenas no timeout defensivo do teste local `boot-safety` para estabilizar o hook de push.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] No desktop, a sheet `Compartilhar video` exibe somente `Copiar link` e `Baixar video`.
+- [x] No mobile, a sheet preserva somente `WhatsApp` e `Redes sociais`.
+- [x] `Baixar video` salva o arquivo social 9:16 com arte, sem expor opcao de baixar o video cru/original.
+- [x] A UI e os toasts nao usam a copy `com arte para redes sociais`.
+- [x] `Copiar link` copia o link publico canonico da publicacao/thread e registra compartilhamento `clipboard` apos sucesso.
+- [x] Nenhum backend de runtime, banco, env, package, provider, seed, mock ou dado publicado foi alterado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-destination-dialog.tsx src/hooks/use-lectum-share-dialog.tsx src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-media.ts src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3203`: `/version` respondeu `0.1.191` antes do bump final; a versao final `0.1.193` foi validada por `pnpm check:version`, `/comunidades` respondeu `200` e Chrome headless abriu `/comunidades` com exit code `0`.
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm --dir backend check`
+- [x] `pnpm --dir admin check`
+- [x] `pnpm check` executado; uma tentativa anterior oscilou no timeout local de 10s do `backend/scripts/boot-safety.test.mjs`, que foi ampliado para 60s para suportar a carga do hook. `pnpm --dir backend check` isolado passou depois do ajuste.
+- [x] `pnpm version:bump` para `0.1.193`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

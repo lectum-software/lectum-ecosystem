@@ -9,6 +9,7 @@ import {
   persistLectumShareArtifact,
 } from "@/utils/lectum-share-artifact-cache";
 import {
+  copyLectumShareTargetUrl,
   downloadPreparedLectumShareFile,
   getPreparedLectumShareFile,
   isNativeShareAbortError,
@@ -28,7 +29,7 @@ type UseLectumDirectShareOptions = {
   onShared?: (target: LectumShareVideoTarget, result: ShareExportResult) => void;
 };
 
-export type LectumShareDestination = "download" | "social" | "whatsapp";
+export type LectumShareDestination = "copy_link" | "download" | "social" | "whatsapp";
 
 type ShareLectumTargetOptions = {
   destination?: LectumShareDestination;
@@ -101,7 +102,9 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           return file;
         };
 
-        if (target.kind === "link") {
+        if (destination === "copy_link") {
+          result = await copyLectumShareTargetUrl(target);
+        } else if (target.kind === "link") {
           result = await shareLectumLinkTarget(target);
         } else if (destination === "whatsapp") {
           result = await shareLectumWhatsAppPreviewTarget(target);
@@ -127,7 +130,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         if (result.mode === "download") {
           toast.success(
             destination === "download"
-              ? "Vídeo com arte baixado."
+              ? "Vídeo baixado."
               : "Arquivo baixado. Escolha o app desejado no dispositivo.",
           );
         } else if (result.mode === "clipboard") {

@@ -118,6 +118,18 @@ const copyShareUrl = async (url: string) => {
   return true;
 };
 
+export const copyLectumShareTargetUrl = async (
+  target: Pick<LectumShareLinkTarget | LectumShareSocialTarget, "shareUrl">,
+): Promise<ShareExportResult> => {
+  const copied = await copyShareUrl(target.shareUrl).catch(() => false);
+
+  if (!copied) {
+    throw new Error("Compartilhamento indisponível.");
+  }
+
+  return { channel: "clipboard", mode: "clipboard" };
+};
+
 export const sharePreparedLectumVideoResponse = async (
   target: LectumShareSocialTarget,
   file: File,
@@ -187,13 +199,7 @@ export const shareLectumLinkTarget = async (
     }
   }
 
-  const copied = await copyShareUrl(target.shareUrl).catch(() => false);
-
-  if (!copied) {
-    throw new Error("Compartilhamento indisponível.");
-  }
-
-  return { channel: "clipboard", mode: "clipboard" };
+  return copyLectumShareTargetUrl(target);
 };
 
 export const shareLectumSocialLinkPreviewTarget = async (
