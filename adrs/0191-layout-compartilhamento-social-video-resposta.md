@@ -442,3 +442,43 @@ A tentativa de resolver WhatsApp e Instagram pela mesma folha nativa mostrou uma
 - WhatsApp ganha link clicavel e preview de pagina; Instagram/Reels/Stories continuam recebendo arquivo de video com a arte da caixinha de pergunta.
 - O usuario passa por uma etapa a mais antes do compartilhamento de video, mas ela e necessaria para preparar payloads diferentes por canal.
 - Rollback: voltar ao `useLectumDirectShare` direto nos pontos de chamada remove a sheet e retorna ao comportamento file-first unico.
+
+## Complemento 2026-08-22 - arquivo social sem link para redes sociais
+
+### Contexto
+
+A folha nativa do iOS mostrou `1 Link e 1 Documento` quando a opcao Redes Sociais recebia arquivo de video e URL da Lectum no mesmo payload. O usuario confirmou que, para redes sociais, o link e inutil: Instagram/Reels/Stories precisam do arquivo com arte, enquanto a navegacao para a Lectum fica restrita ao caminho WhatsApp.
+
+### Decisao
+
+- Remover `url` e `text` do payload de arquivo usado por Redes Sociais, mantendo somente `files` e `title`.
+- Usar o titulo `[Nome do psicologo] na Lectum` para o payload nativo e para o nome do arquivo compartilhavel/baixado.
+- Reembrulhar artefatos temporarios recuperados do cache com o novo nome de arquivo, evitando reaproveitar nomes antigos como `Respondido na Lectum` quando o iOS decidir mostrar o nome do documento.
+- Remover o fallback de link no destino Redes Sociais; se o share nativo por arquivo nao estiver disponivel, a Lectum baixa apenas o arquivo com arte.
+
+### Consequencias
+
+- A folha nativa deixa de receber `1 Link e 1 Documento` no destino Redes Sociais; o unico item semantico enviado e o arquivo social.
+- O WhatsApp permanece como destino separado com link `/whatsapp`, preview Open Graph e abertura na Lectum.
+- A Lectum nao controla totalmente o texto `1 Documento`, pois ele e gerado pelo iOS; o app apenas fornece `title` e nome de arquivo para aumentar a chance de exibir `[Nome do psicologo] na Lectum`.
+- Rollback: restaurar `url`/`text` no payload de arquivo e o fallback de link volta a exibir `1 Link e 1 Documento` quando o iOS aceitar ambos.
+
+## Complemento 2026-08-23 - sheet de destino compacta
+
+### Contexto
+
+O usuario enviou screenshot da sheet mobile `Compartilhar video` e pediu para reduzir a copy exibida antes de abrir o app de destino, removendo descricoes como `Envia um link com previa...` e substituindo o icone generico do WhatsApp pelo icone ja usado na Lectum. O print foi tratado como referencia visual; textos dentro da imagem nao foram considerados instrucoes autonomas alem do pedido explicito do usuario.
+
+### Decisao
+
+- Alterar a copy auxiliar para `Escolha o formato de compartilhamento.`
+- Remover descricoes longas das tres opcoes e manter apenas label + icone em cada botao.
+- Reutilizar `frontend/src/components/ui/whatsapp-icon.tsx` na opcao WhatsApp, preservando `Download` e `Share2` do `lucide-react` para Baixar e Redes sociais.
+- Manter a sheet mobile-first, sem alterar payloads de compartilhamento, endpoints, cache temporario, rotas `/whatsapp` ou regras de fallback.
+
+### Consequencias
+
+- A sheet fica mais curta e direta no mobile, reduzindo leitura antes de escolher destino.
+- A opcao WhatsApp usa a identidade visual ja recorrente no produto, evitando o icone generico de balao de mensagem.
+- Nao ha impacto em backend, banco, envs, providers, jobs, storage, contratos de API ou dados publicados.
+- Rollback: restaurar a copy anterior, as descricoes no array de opcoes e o icone `MessageCircle` volta ao comportamento visual anterior sem migration.

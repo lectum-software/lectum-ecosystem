@@ -1,6 +1,8 @@
 "use client";
 
-import { Download, MessageCircle, Share2, X } from "lucide-react";
+import { Download, Share2, X } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { LectumShareDestination } from "@/hooks/use-lectum-direct-share";
 import { cn } from "@/lib/utils";
 
@@ -12,27 +14,23 @@ type LectumShareDestinationDialogProps = {
 };
 
 type ShareDestinationOption = {
-  description: string;
   destination: LectumShareDestination;
-  icon: typeof MessageCircle;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   label: string;
 };
 
 const SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
   {
-    description: "Envia um link com prévia estilo Instagram. O vídeo abre na Lectum.",
     destination: "whatsapp",
-    icon: MessageCircle,
+    icon: WhatsAppIcon,
     label: "WhatsApp",
   },
   {
-    description: "Gera o vídeo completo com a arte da caixinha de pergunta.",
     destination: "social",
     icon: Share2,
     label: "Redes sociais",
   },
   {
-    description: "Salva no dispositivo o vídeo completo já formatado com a arte.",
     destination: "download",
     icon: Download,
     label: "Baixar",
@@ -68,7 +66,7 @@ export const LectumShareDestinationDialog = ({
               Compartilhar vídeo
             </p>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Escolha o formato antes de abrir o app de destino.
+              Escolha o formato de compartilhamento.
             </p>
           </div>
           <button
@@ -101,11 +99,8 @@ export const LectumShareDestinationDialog = ({
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <span className="grid gap-0.5">
+                <span className="grid">
                   <span className="font-semibold text-sm">{option.label}</span>
-                  <span className="text-muted-foreground text-xs leading-relaxed">
-                    {option.description}
-                  </span>
                 </span>
               </button>
             );

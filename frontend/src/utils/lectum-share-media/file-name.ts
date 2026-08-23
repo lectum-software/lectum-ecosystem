@@ -15,7 +15,7 @@ const INVALID_FILE_NAME_CHARACTERS = /[<>:"/\\|?*]+/gu;
 export const shareFileTitle = (target: LectumShareFileNameTarget) => {
   const professionalName = target.professional.name.replace(/\s+/g, " ").trim() || "Lectum";
 
-  return `${professionalName} - ${target.cardLabel}`;
+  return `${professionalName} na Lectum`;
 };
 
 const sanitizeFileName = (value: string) => {

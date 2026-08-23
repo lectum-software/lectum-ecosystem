@@ -848,3 +848,18 @@ Uma task só pode ser marcada como concluída quando:
 - WhatsApp usa link publico especifico `/whatsapp`, sem `og:video`, para gerar preview clicavel estilo Instagram e abrir o conteudo na Lectum em vez de reproduzir o arquivo no WhatsApp.
 - Redes Sociais e Baixar continuam usando o arquivo social 9:16 com a arte da caixinha de pergunta, preservando cache temporario e exportacao completa do video.
 - Posts sem video continuam no fluxo direto anterior; alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Correcao em 2026-08-22: redes sociais sem link no payload
+
+- Ajuste pos-feedback da TASK-42: a opcao Redes Sociais passa a enviar somente o arquivo social 9:16 com arte, sem URL e sem texto junto ao video.
+- O nome/titulo do arquivo compartilhavel passa a ser `[Nome do psicologo] na Lectum`; artefatos temporarios recuperados do cache sao reembrulhados com esse nome antes de abrir a folha nativa.
+- WhatsApp continua sendo o destino de link `/whatsapp`; Baixar continua salvando apenas o arquivo com arte.
+- Limite tecnico registrado: o iOS pode continuar usando rotulos proprios como `1 Documento`, mas a Lectum deixa de causar `1 Link e 1 Documento` no destino Redes Sociais.
+- Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Atualizacao visual em 2026-08-23: sheet de compartilhamento mais enxuta
+
+- Ajuste pos-feedback da TASK-42: a sheet `Compartilhar video` troca a copy auxiliar para `Escolha o formato de compartilhamento.`
+- As descricoes longas das opcoes WhatsApp, Redes sociais e Baixar foram removidas, mantendo somente titulo e icone para reduzir densidade no mobile.
+- A opcao WhatsApp passa a usar o `WhatsAppIcon` compartilhado da Lectum em vez do icone generico de mensagem.
+- Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.

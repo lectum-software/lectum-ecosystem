@@ -17,10 +17,10 @@ import {
   isNativeShareAbortError,
   prepareLectumShareFile,
   shareLectumLinkTarget,
-  shareLectumSocialLinkPreviewTarget,
   shareLectumWhatsAppPreviewTarget,
   sharePreparedLectumVideoResponse,
 } from "@/utils/lectum-share-media";
+import { safeFileName } from "@/utils/lectum-share-media/file-name";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
 import type {
   LectumShareChannel,
@@ -46,6 +46,25 @@ const SHARE_READY_RETRY_MESSAGE =
 const isVideoShareTarget = (target: LectumShareVideoTarget): target is LectumShareSocialTarget =>
   target.kind !== "link" && target.mediaType === "video";
 
+const SHARE_ARTIFACT_FILE_EXTENSIONS = new Set(["jpeg", "jpg", "mov", "mp4", "png", "webm"]);
+
+const resolveShareArtifactFileExtension = (
+  contentType?: string | null,
+  fileName?: string | null,
+) => {
+  const normalizedContentType = contentType?.toLowerCase() ?? "";
+
+  if (normalizedContentType.includes("webm")) return "webm";
+  if (normalizedContentType.includes("quicktime")) return "mov";
+  if (normalizedContentType.includes("png")) return "png";
+  if (normalizedContentType.includes("jpeg")) return "jpg";
+  if (normalizedContentType.includes("mp4")) return "mp4";
+
+  const extension = fileName?.match(/\.([a-z0-9]{1,8})$/iu)?.[1]?.toLowerCase();
+
+  return extension && SHARE_ARTIFACT_FILE_EXTENSIONS.has(extension) ? extension : "mp4";
+};
+
 const fileFromShareArtifact = async (target: LectumShareVideoTarget) => {
   if (!isVideoShareTarget(target)) return null;
 
@@ -62,9 +81,16 @@ const fileFromShareArtifact = async (target: LectumShareVideoTarget) => {
   if (!response.ok) return null;
 
   const blob = await response.blob();
-  const file = new File([blob], artifact.file_name || "video-lectum.mp4", {
-    type: artifact.content_type || blob.type || "video/mp4",
-  });
+  const file = new File(
+    [blob],
+    safeFileName(
+      target,
+      resolveShareArtifactFileExtension(artifact.content_type || blob.type, artifact.file_name),
+    ),
+    {
+      type: artifact.content_type || blob.type || "video/mp4",
+    },
+  );
 
   cachePreparedLectumShareFile(target, file);
   return file;
@@ -149,25 +175,13 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         } else if (destination === "whatsapp") {
           result = await shareLectumWhatsAppPreviewTarget(target);
         } else {
-          try {
-            const file = await prepareSocialFileTarget(target);
-            result =
-              destination === "download"
-                ? await downloadPreparedLectumShareFile(target, file)
-                : await sharePreparedLectumVideoResponse(target, file, {
-                    skipDownloadOnActivationLoss: true,
-                  });
-          } catch (error) {
-            if (
-              destination === "download" ||
-              isNativeShareAbortError(error) ||
-              target.mediaType !== "video"
-            ) {
-              throw error;
-            }
-
-            result = await shareLectumSocialLinkPreviewTarget(target);
-          }
+          const file = await prepareSocialFileTarget(target);
+          result =
+            destination === "download"
+              ? await downloadPreparedLectumShareFile(target, file)
+              : await sharePreparedLectumVideoResponse(target, file, {
+                  skipDownloadOnActivationLoss: true,
+                });
         }
 
         if (loadingToastId !== null) {

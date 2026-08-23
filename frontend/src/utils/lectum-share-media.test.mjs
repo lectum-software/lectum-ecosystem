@@ -24,8 +24,7 @@ test("compartilhamento de arquivo usa payload completo quando suportado", () => 
   const file = createShareFile();
   const fullShareData = {
     files: [file],
-    text: "Legenda Lectum",
-    title: "Respondido na Lectum",
+    title: "Ana Rubia na Lectum",
   };
   const nav = {
     canShare: (data) => data === fullShareData,
@@ -35,21 +34,20 @@ test("compartilhamento de arquivo usa payload completo quando suportado", () => 
   assert.equal(resolveLectumFileShareData(nav, fullShareData), fullShareData);
 });
 
-test("compartilhamento de arquivo cai para files-only quando texto/titulo nao sao aceitos", () => {
+test("compartilhamento de arquivo cai para files-only quando titulo nao e aceito", () => {
   const file = createShareFile();
   const checkedPayloads = [];
   const nav = {
     canShare: (data) => {
       checkedPayloads.push(data);
-      return Boolean(data.files?.length) && !data.text && !data.title;
+      return Boolean(data.files?.length) && !data.title;
     },
     share: async () => undefined,
   };
 
   const result = resolveLectumFileShareData(nav, {
     files: [file],
-    text: "Legenda Lectum",
-    title: "Respondido na Lectum",
+    title: "Ana Rubia na Lectum",
   });
 
   assert.deepEqual(result, { files: [file] });
@@ -62,8 +60,7 @@ test("compartilhamento de arquivo fica indisponivel sem share nativo", () => {
       { canShare: () => true },
       {
         files: [createShareFile()],
-        text: "Legenda Lectum",
-        title: "Respondido na Lectum",
+        title: "Ana Rubia na Lectum",
       },
     ),
     null,
@@ -98,7 +95,7 @@ test("compartilhamento de link fica indisponivel sem share nativo", () => {
   );
 });
 
-test("videos compartilhados priorizam arquivo social e mantem link publico como fallback", () => {
+test("videos compartilhados separam link de whatsapp e arquivo social sem link", () => {
   const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
   const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const hookSource = readFileSync(
@@ -147,6 +144,10 @@ test("videos compartilhados priorizam arquivo social e mantem link publico como 
     ),
     "utf8",
   );
+  const preparedShareSource = mediaSource.slice(
+    mediaSource.indexOf("export const sharePreparedLectumVideoResponse"),
+    mediaSource.indexOf("export const downloadPreparedLectumShareFile"),
+  );
 
   assert.match(
     targetSource,
@@ -172,7 +173,10 @@ test("videos compartilhados priorizam arquivo social e mantem link publico como 
     mediaSource,
     /shareUrl: options\.whatsappPreview \? target\.whatsappShareUrl : target\.shareUrl/,
   );
-  assert.match(mediaSource, /files: \[file\][\s\S]*url: target\.shareUrl/);
+  assert.match(preparedShareSource, /files: \[file\][\s\S]*title: target\.shareTitle/);
+  assert.doesNotMatch(preparedShareSource, /url: target\.shareUrl/);
+  assert.doesNotMatch(preparedShareSource, /text: target\.shareText/);
+  assert.doesNotMatch(preparedShareSource, /copyShareUrl\(target\.shareUrl\)/);
   assert.match(
     hookSource,
     /destination === "whatsapp"[\s\S]*shareLectumWhatsAppPreviewTarget\(target\)/,
@@ -185,12 +189,19 @@ test("videos compartilhados priorizam arquivo social e mantem link publico como 
     hookSource,
     /destination === "download"[\s\S]*downloadPreparedLectumShareFile\(target, file\)/,
   );
-  assert.match(hookSource, /shareLectumSocialLinkPreviewTarget\(target\)/);
+  assert.doesNotMatch(hookSource, /shareLectumSocialLinkPreviewTarget/);
   assert.doesNotMatch(
     hookSource,
     /target\.mediaType === "video"[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)[\s\S]*shareSocialFileTarget\(target\)/,
   );
   assert.match(shareDialogHookSource, /setPendingTarget\(target\)/);
+  assert.match(shareDialogSource, /WhatsAppIcon/);
+  assert.doesNotMatch(shareDialogSource, /MessageCircle/);
+  assert.match(shareDialogSource, /Escolha o formato de compartilhamento\./);
+  assert.doesNotMatch(shareDialogSource, /Escolha o formato antes de abrir o app de destino\./);
+  assert.doesNotMatch(shareDialogSource, /Envia um link com/);
+  assert.doesNotMatch(shareDialogSource, /Gera o v[ií]deo completo/);
+  assert.doesNotMatch(shareDialogSource, /Salva no dispositivo/);
   assert.match(shareDialogSource, /WhatsApp/);
   assert.match(shareDialogSource, /Redes sociais/);
   assert.match(shareDialogSource, /Baixar/);
@@ -236,8 +247,8 @@ test("nome do arquivo compartilhavel usa profissional e contexto", () => {
     professional: { name: "Ana Rubia Papi" },
   };
 
-  assert.equal(shareFileTitle(target), "Ana Rubia Papi - Respondido na Lectum");
-  assert.equal(safeFileName(target, "mp4"), "Ana Rubia Papi - Respondido na Lectum.mp4");
+  assert.equal(shareFileTitle(target), "Ana Rubia Papi na Lectum");
+  assert.equal(safeFileName(target, "mp4"), "Ana Rubia Papi na Lectum.mp4");
   assert.equal(
     safeFileName(
       {
@@ -247,7 +258,7 @@ test("nome do arquivo compartilhavel usa profissional e contexto", () => {
       },
       "mp4",
     ),
-    "Ana Rubia Papi - Postado na Lectum.mp4",
+    "Ana Rubia Papi na Lectum.mp4",
   );
   assert.equal(
     safeFileName(
@@ -257,7 +268,7 @@ test("nome do arquivo compartilhavel usa profissional e contexto", () => {
       },
       "mp4",
     ),
-    "Dra. ABC Psicologa - Respondido na Lectum.mp4",
+    "Dra. ABC Psicologa na Lectum.mp4",
   );
 });
 

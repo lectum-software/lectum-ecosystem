@@ -126,9 +126,7 @@ export const sharePreparedLectumVideoResponse = async (
   const nav = navigator as ShareNavigator;
   const shareData: ShareData = {
     files: [file],
-    text: target.shareText,
     title: target.shareTitle,
-    url: target.shareUrl,
   };
   const nativeShareData = resolveLectumFileShareData(nav, shareData);
 
@@ -146,9 +144,8 @@ export const sharePreparedLectumVideoResponse = async (
   }
 
   downloadFile(file);
-  const copied = await copyShareUrl(target.shareUrl).catch(() => false);
 
-  return { channel: copied ? "clipboard" : null, file, mode: "download" };
+  return { channel: null, file, mode: "download" };
 };
 
 export const downloadPreparedLectumShareFile = async (

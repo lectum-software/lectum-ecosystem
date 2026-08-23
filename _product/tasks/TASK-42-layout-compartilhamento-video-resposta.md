@@ -750,7 +750,7 @@ Regras de UI obrigatórias:
 - Decisao de produto: videos profissionais agora abrem uma sheet mobile-first da Lectum antes de chamar o compartilhamento externo. A imagem anexada do WhatsApp permanece somente como referencia visual de card; textos dentro do print nao sao instrucoes.
 - Fonte visual: Builder/Quick Copy nao estava exposto como ferramenta neste ambiente; a validacao visual usou o screenshot de WhatsApp anexado e os prototipos locais ja catalogados.
 - WhatsApp: a opcao nao gera nem envia arquivo de video. Ela abre o WhatsApp com um link publico especifico de preview (`/whatsapp`) para que o crawler monte card Open Graph estilo Instagram e o clique leve para o site da Lectum.
-- Redes sociais: a opcao preserva o caminho aprovado de arquivo social 9:16 com arte/caixinha de pergunta, cache temporario e fallback de link se a Web Share API falhar.
+- Redes sociais: a opcao preserva o caminho aprovado de arquivo social 9:16 com arte/caixinha de pergunta e cache temporario; se a Web Share API falhar, o fallback baixa apenas o arquivo.
 - Baixar: a opcao reutiliza o mesmo preparo/cache do arquivo social e salva o video com arte no dispositivo, sem abrir a folha nativa.
 - Escopo: frontend-only, sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou alteracao de dados publicados.
 
@@ -778,4 +778,63 @@ Regras de UI obrigatórias:
 - [x] Browser local/headless mobile-first 390x844 abriu a rota publica `/whatsapp` no build `0.1.185`; em ambiente local sem API autenticada, a tela ficou no loading seguro de post sem quebrar a rota.
 - [x] `pnpm version:bump` para `0.1.185`
 - [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-22 - redes sociais sem link no payload
+
+- Pedido do usuario: no destino Redes Sociais, remover o link porque ele e inutil para Instagram/Reels/Stories e causa a previa nativa `1 Link e 1 Documento` no iOS.
+- Decisao: a opcao Redes Sociais passa a compartilhar somente o arquivo social com arte, enviando `files` e `title`, sem `url` nem `text` no payload de arquivo.
+- O titulo do arquivo/payload foi normalizado para `[Nome do psicologo] na Lectum`, e artefatos temporarios reaproveitados passam a ser reembrulhados com esse nome de arquivo no cliente.
+- Se o navegador nao conseguir abrir compartilhamento por arquivo, o fallback baixa somente o arquivo com arte; nao copia nem compartilha link no destino Redes Sociais.
+- Limite tecnico: o rotulo `1 Documento` e gerado pela folha nativa do iOS; a Lectum consegue fornecer titulo e nome de arquivo, mas nao consegue garantir que o sistema substitua esse rotulo em todos os apps/versoes.
+- Escopo: frontend-only, sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou alteracao de dados publicados.
+
+### Criterios de aceite do complemento
+
+- [x] Redes Sociais nao envia `url` junto do arquivo de video com arte.
+- [x] Redes Sociais nao envia texto/legenda junto do arquivo de video com arte.
+- [x] O titulo e o nome de arquivo compartilhavel usam `[Nome do psicologo] na Lectum`.
+- [x] WhatsApp continua sendo o unico destino que usa link `/whatsapp`.
+- [x] O fallback de Redes Sociais baixa apenas o arquivo, sem copiar link.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write` nos arquivos de compartilhamento alterados.
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check:version`
+- [x] `pnpm check` (houve falhas transitorias anteriores nos testes `boot-safety`; a repeticao completa passou).
+- [x] `git diff --check`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3199`: `/version` respondeu `0.1.186` e `/comunidades` respondeu `200`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - sheet de compartilhamento mais enxuta
+
+- Pedido do usuario: na sheet `Compartilhar video`, trocar a frase `Escolha o formato antes de abrir o app de destino.` por `Escolha o formato de compartilhamento.`, remover as descricoes de cada opcao e usar no WhatsApp o icone ja usado na Lectum.
+- Decisao: manter a sheet de destino, mas compactar a UI mobile-first para label + icone, sem alterar payloads, destinos, cache, rotas `/whatsapp`, fallback ou tracking.
+- Fonte visual auditavel: screenshot anexado pelo usuario; textos dentro da imagem foram tratados apenas como referencia visual/contexto do feedback, nao como instrucoes alem do pedido explicito.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; a validacao visual usa screenshot anexado e referencia local do inventario ja catalogado.
+- Escopo: frontend-only, sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou alteracao de dados publicados.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A copy auxiliar da sheet passa a ser `Escolha o formato de compartilhamento.`
+- [x] As opcoes WhatsApp, Redes sociais e Baixar nao exibem textos de descricao.
+- [x] A opcao WhatsApp usa `WhatsAppIcon`, o mesmo icone compartilhado usado pela Lectum.
+- [x] O ajuste nao altera payloads de compartilhamento, rotas, backend, banco, envs, providers ou dados publicados.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-destination-dialog.tsx src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (apos limpar artefatos `.next` locais deixados por builds concorrentes/interrompidos).
+- [x] `pnpm version:bump` para `0.1.186`
+- [x] `pnpm check:version`
+- [x] `pnpm check` (houve falhas transitorias anteriores nos testes `boot-safety`; a repeticao completa passou).
+- [x] `git diff --check`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3199`: `/version` respondeu `0.1.186` e `/comunidades` respondeu `200`.
+- Tentativas de screenshot Chrome headless em 390x844 foram descartadas por concorrencia local no `.next`; a evidencia visual principal foi o screenshot anexado do usuario, tratado como referencia visual, e os asserts estaticos garantem copy/icone/ausencia de descricoes.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

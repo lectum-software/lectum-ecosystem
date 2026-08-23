@@ -124,10 +124,8 @@ const normalizePostMediaItem = (
 const sortMediaItems = (items: CommunityPostMediaItem[]) =>
   [...items].sort((left, right) => left.position - right.position);
 
-const createLectumSocialShareTitle = (
-  professionalName: string,
-  cardLabel: LectumShareSocialTarget["cardLabel"],
-) => `${professionalName.replace(/\s+/g, " ").trim() || "Lectum"} - ${cardLabel}`;
+const createLectumSocialShareTitle = (professionalName: string) =>
+  `${professionalName.replace(/\s+/g, " ").trim() || "Lectum"} na Lectum`;
 
 export const createLectumShareLinkTarget = (
   post: Pick<PostListPost, "community" | "id" | "title">,
@@ -188,7 +186,7 @@ export const createLectumSharePostMediaTarget = (
     replyId: null,
     responseText,
     shareText: post.title,
-    shareTitle: createLectumSocialShareTitle(professionalName, cardLabel),
+    shareTitle: createLectumSocialShareTitle(professionalName),
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: "post",
     sourceText: post.title,
@@ -236,7 +234,7 @@ export const createLectumShareVideoTarget = (
     responseText,
     replyId: reply.id,
     shareText: postTitle,
-    shareTitle: createLectumSocialShareTitle(professionalName, cardLabel),
+    shareTitle: createLectumSocialShareTitle(professionalName),
     shareUrl: toAbsoluteShareUrl(relativeUrl),
     sourceKind: hasCommentContext ? "comment" : "post",
     sourceText,
