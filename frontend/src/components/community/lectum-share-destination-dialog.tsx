@@ -1,7 +1,8 @@
 "use client";
 
-import { Share2, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { LectumShareDestination } from "@/hooks/use-lectum-direct-share";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ const SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
   },
   {
     destination: "social",
-    icon: Share2,
+    icon: InstagramIcon,
     label: "Redes sociais",
   },
 ];
@@ -61,7 +62,7 @@ export const LectumShareDestinationDialog = ({
               Compartilhar vídeo
             </p>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Escolha o formato de compartilhamento.
+              Onde deseja compartilhar?
             </p>
           </div>
           <button

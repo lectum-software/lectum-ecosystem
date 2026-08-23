@@ -502,3 +502,23 @@ Apos validar a sheet compacta, o usuario mudou a decisao de produto e pediu apen
 - A sheet fica ainda mais simples e alinhada ao fluxo desejado: WhatsApp como link clicavel para a Lectum e redes sociais como arquivo com arte.
 - Usuarios deixam de ter uma acao primaria que podia abrir a tela de arquivo do iOS em vez de salvar diretamente na galeria.
 - Rollback: reintroduzir a opcao `download` no array da sheet e o icone `Download` restaura o botao, pois o fallback/helper de download nao foi removido.
+
+## Complemento 2026-08-23 - copy de destino e icone Instagram
+
+### Contexto
+
+O usuario enviou novo screenshot da sheet `Compartilhar video` e pediu dois ajustes pontuais: trocar `Escolha o formato de compartilhamento.` por `Onde deseja compartilhar?` e substituir o icone generico de `Redes sociais` pelo icone do Instagram. O print foi tratado como referencia visual; textos dentro da imagem nao foram considerados instrucoes autonomas.
+
+### Decisao
+
+- Manter a sheet explicita de destino com apenas `WhatsApp` e `Redes sociais`, sem reintroduzir `Baixar`.
+- Alterar a copy auxiliar para `Onde deseja compartilhar?`.
+- Criar `frontend/src/components/ui/instagram-icon.tsx` como SVG inline com `currentColor`, baseado no asset de marca ja existente em `frontend/public/svg/brand-instagram.svg`, evitando `<img>` cru e sem adicionar package.
+- Usar `InstagramIcon` somente na opcao `Redes sociais`, preservando os payloads: WhatsApp segue como link `/whatsapp`; redes sociais seguem com arquivo social 9:16 com arte e sem URL/texto.
+
+### Consequencias
+
+- A UI fica mais alinhada ao pedido mobile-first sem alterar o comportamento tecnico de compartilhamento aprovado anteriormente.
+- O icone de redes sociais passa a comunicar melhor o destino principal esperado, mas continua usando tokens de cor do botao para manter contraste nos temas claro/escuro.
+- Nao ha impacto em backend, banco, envs, providers, jobs, storage, contratos de API, packages ou dados publicados.
+- Rollback: restaurar a copy anterior e trocar `InstagramIcon` por `Share2` no array da sheet volta ao visual anterior sem migration.

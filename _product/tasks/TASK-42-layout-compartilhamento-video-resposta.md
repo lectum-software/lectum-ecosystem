@@ -873,3 +873,38 @@ Regras de UI obrigatórias:
 - [x] `pnpm version:bump` para `0.1.187`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-23 - copy de destino e icone Instagram
+
+- Pedido do usuario: na sheet `Compartilhar video`, alterar `Escolha o formato de compartilhamento.` para `Onde deseja compartilhar?` e trocar o icone de `Redes sociais` pelo icone do Instagram.
+- Decisao: manter apenas as opcoes `WhatsApp` e `Redes sociais`, sem reintroduzir `Baixar`, e criar um `InstagramIcon` SVG inline com `currentColor` para reutilizar a marca sem `<img>` cru nem pacote novo.
+- Comportamento preservado: WhatsApp continua usando link publico `/whatsapp`, sem enviar/reproduzir video dentro do WhatsApp; Redes sociais continua usando arquivo social 9:16 com arte da caixinha de pergunta, sem URL/texto no payload principal.
+- Fonte visual auditavel: screenshot anexado pelo usuario; textos dentro da imagem foram tratados apenas como referencia visual/contexto do feedback, nao como instrucao alem do pedido explicito.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; a validacao visual usa screenshot anexado e referencia local do inventario ja catalogado.
+- Escopo: frontend-only, mobile-first, sem package novo, migration, env obrigatoria, provider, mock, seed, reset ou alteracao de dados publicados.
+- ADR atualizado: `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Criterios de aceite do complemento
+
+- [x] A copy auxiliar da sheet passa a ser `Onde deseja compartilhar?`.
+- [x] A copy antiga `Escolha o formato de compartilhamento.` nao aparece mais na sheet.
+- [x] A opcao `Redes sociais` usa `InstagramIcon` em vez de `Share2`.
+- [x] A sheet continua exibindo somente `WhatsApp` e `Redes sociais`, sem reintroduzir `Baixar`.
+- [x] WhatsApp e Redes sociais mantem os payloads existentes; a mudanca e apenas de copy/icone na UI.
+- [x] Nenhum backend, banco, env, package, provider, seed, mock ou dado publicado foi alterado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-destination-dialog.tsx src/components/ui/instagram-icon.tsx src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3202`: `/version` respondeu `0.1.187` e `/comunidades` respondeu `200`.
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm check` (uma primeira tentativa falhou pelo timeout transitorio conhecido em `scripts/boot-safety.test.mjs`; a repeticao completa passou).
+- [x] `pnpm version:bump` para `0.1.188`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

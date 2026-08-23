@@ -870,3 +870,9 @@ Uma task só pode ser marcada como concluída quando:
 - Videos profissionais passam a oferecer apenas `WhatsApp` e `Redes sociais` na escolha explicita de destino; `WhatsApp` continua usando link `/whatsapp` e `Redes sociais` continua usando o arquivo social 9:16 com arte.
 - O fallback tecnico de download do arquivo permanece apenas para navegadores sem suporte ao compartilhamento nativo de arquivos, sem botao dedicado na UI.
 - Alteracao frontend-only, mobile-first, sem package, env, migration, provider, seed, mock ou reset de dados publicados.
+
+## Atualizacao visual em 2026-08-23: copy e icone Instagram na sheet de compartilhamento
+
+- Ajuste pos-feedback da TASK-42: a sheet `Compartilhar video` troca a frase auxiliar para `Onde deseja compartilhar?`, deixando a pergunta mais direta para o usuario antes da escolha do destino.
+- A opcao `Redes sociais` passa a usar um icone de marca do Instagram em SVG inline reutilizavel, mantendo `WhatsApp` com o icone proprio ja adotado na Lectum.
+- A alteracao e frontend-only, mobile-first, sem mudanca de payloads, link WhatsApp, arquivo social, backend, banco, contratos, packages, envs, providers ou dados publicados.
