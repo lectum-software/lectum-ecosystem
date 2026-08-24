@@ -299,8 +299,11 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(shareDialogHookSource, /target\.kind === "link" \|\| target\.mediaType !== "video"/);
   assert.match(shareDialogHookSource, /prewarmLectumShareArtifact\(target/);
   assert.match(shareDialogHookSource, /SocialArtifactStatus/);
+  assert.match(shareDialogHookSource, /SOCIAL_ARTIFACT_STUCK_TIMEOUT_MS/);
+  assert.match(shareDialogHookSource, /clearPreparedLectumShareFile\(target\)/);
   assert.match(shareDialogHookSource, /socialArtifactStatus === "preparing"/);
   assert.match(shareDialogHookSource, /SOCIAL_ARTIFACT_PENDING_MESSAGE/);
+  assert.match(shareDialogHookSource, /socialArtifactStatus === "failed"[\s\S]*toast\.info/);
   assert.match(shareDialogHookSource, /return;[\s\S]*setPendingTarget\(null\)/);
   assert.doesNotMatch(shareDialogHookSource, /prewarmAndroidSocialFile/);
   assert.doesNotMatch(shareDialogHookSource, /prepareLectumSourceVideoFallbackFile\(target\)/);
@@ -491,6 +494,8 @@ test("exportacao de video aguarda frame renderizavel e frames do canvas no Andro
   assert.match(layoutSource, /webkit-playsinline/);
   assert.match(exportSource, /attachVideoElementForCanvas/);
   assert.match(exportSource, /waitForVideoRenderFrame/);
+  assert.match(exportSource, /VIDEO_PLAY_TIMEOUT_MS = 8000/);
+  assert.match(exportSource, /playVideoForShare/);
   assert.match(exportSource, /requestVideoFrameCallback/);
   assert.match(exportSource, /attachVideoElementForCanvas\(video\)/);
   assert.match(exportSource, /CanvasCaptureStreamTrack/);
@@ -498,7 +503,10 @@ test("exportacao de video aguarda frame renderizavel e frames do canvas no Andro
   assert.match(exportSource, /videoTrack\?\.requestFrame\?\.\(\)/);
   assert.match(exportSource, /requestCanvasCaptureFrame\(\)/);
   assert.match(exportSource, /window\.setTimeout\(draw, 1000 \/ VIDEO_EXPORT_FRAME_RATE\)/);
-  assert.match(exportSource, /await video\.play\(\);\s*await waitForVideoRenderFrame\(video\);/);
+  assert.match(
+    exportSource,
+    /await playVideoForShare\(video\);\s*await waitForVideoRenderFrame\(video\);/,
+  );
   assert.match(
     exportSource,
     /await waitForVideoRenderFrame\(video\);[\s\S]*drawLectumShareFrame\(ctx, video[\s\S]*recorder\.start\(1000\)/,

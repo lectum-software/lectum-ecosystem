@@ -157,6 +157,10 @@ export const cachePreparedLectumShareFile = (target: LectumShareSocialTarget, fi
   preparedShareFileCache.set(createPreparedShareFileCacheKey(target), file);
 };
 
+export const clearPreparedLectumShareFile = (target: LectumShareSocialTarget) => {
+  preparedShareFileCache.delete(createPreparedShareFileCacheKey(target));
+};
+
 export const prepareLectumShareFile = (target: LectumShareSocialTarget) => {
   const cacheKey = createPreparedShareFileCacheKey(target);
   const cached = preparedShareFileCache.get(cacheKey);

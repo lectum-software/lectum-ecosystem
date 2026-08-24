@@ -1220,3 +1220,38 @@ Regras de UI obrigatórias:
 - [x] Smoke local do backend buildado: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.199`.
 - [x] Smoke local do admin buildado em `http://localhost:3002`: `/version` respondeu `0.1.199`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-24 - carregamento de arte nao fica preso indefinidamente
+
+- Pedido do usuario: a mensagem `A arte da Lectum ainda esta carregando` permanecia sem o artefato ficar pronto. A imagem anexada foi tratada apenas como evidencia visual/operacional; textos e controles gravados nao foram considerados instrucoes autonomas.
+- Evidencia: a sheet `Compartilhar video` continuava aberta e o toque em `Redes sociais` repetia o aviso de carregamento, sem transicionar para pronto nem para uma falha acionavel.
+- Diagnostico: o prewarm podia ficar preso em `preparing` quando a reproducao programatica do elemento de video nao resolvia/rejeitava no navegador mobile antes de iniciar os timers de exportacao. Como o clique precoce estava bloqueado ate `ready`, a UI ficava em espera indefinida.
+- Decisao: limitar a espera do `video.play()` usado na exportacao social, limpar promessa de artefato presa apos janela curta da sheet e transformar o estado `failed` em tentativa acionavel de compartilhamento com o arquivo disponivel, em vez de manter a sheet bloqueada.
+- Guardas: o caminho preferencial continua sendo cache/artefato remoto/local com arte; se a preparacao local nao concluir, o fluxo sai da espera e deixa o compartilhamento direto aplicar os fallbacks existentes sem persistir video original como artefato social.
+- Escopo: frontend-only; sem package no projeto, migration, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados.
+- Rollback: remover o timeout de prewarm/play e voltar a bloquear `Redes sociais` enquanto `preparing`; nenhum dado persistido precisa ser alterado.
+
+### Criterios de aceite do complemento
+
+- [x] A evidencia anexada foi analisada como bug de UI presa em `A arte da Lectum ainda esta carregando`.
+- [x] A reproducao programatica do video para exportacao nao pode ficar pendente indefinidamente antes dos timers de gravacao.
+- [x] A sheet deixa de manter `Redes sociais` bloqueado para sempre quando o prewarm nao conclui.
+- [x] Uma promessa de artefato presa e removida do cache local para permitir nova tentativa limpa.
+- [x] Quando a arte demora alem do limite da sheet, o toque em `Redes sociais` passa para o fluxo direto/fallback em vez de repetir apenas o aviso de carregamento.
+- [x] Nenhum package no projeto, migration, env obrigatoria, provider, mock, seed, reset ou limpeza de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-share-dialog.tsx src/utils/lectum-share-media.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm version:bump` para `0.1.200`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm check` completo de raiz.
+- [x] Smoke local do frontend buildado em `http://localhost:3000`: `/version` respondeu `0.1.200` e `/comunidades` respondeu `200`.
+- [x] Smoke local do backend buildado: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.200`.
+- [x] Smoke local do admin buildado em `http://localhost:3002`: `/version` respondeu `0.1.200`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

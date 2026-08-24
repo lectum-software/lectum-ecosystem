@@ -724,3 +724,29 @@ O usuario informou que voltou o problema demonstrado no MP4 de 16:11. A gravacao
 - Testes estaticos cobrem o status do artefato social, a mensagem de espera sem fechar a sheet antes de `setPendingTarget(null)`, e a persistencia remota condicionada a autenticacao.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.199`.
 - Smoke de homologacao sera executado apos o push automatico de `homolog`.
+
+## Complemento 2026-08-24 - prewarm social nao permanece preso
+
+### Contexto
+
+O usuario anexou imagem mostrando a sheet mobile ainda aberta e o aviso `A arte da Lectum ainda esta carregando`, relatando que o artefato nunca ficava pronto. A imagem foi usada apenas como evidencia do estado de UI.
+
+### Decisao
+
+- Adicionar timeout para a chamada programatica de `video.play()` antes da exportacao social, cobrindo navegadores moveis que deixam a promise pendente antes de iniciar os timers de gravacao.
+- Adicionar janela maxima para o estado `preparing` da sheet; se ela estourar, a promessa local de artefato e removida do cache para permitir nova tentativa limpa.
+- O estado `failed` deixa de bloquear a sheet com erro permanente: o toque em `Redes sociais` informa que a arte demorou e segue para o compartilhamento direto/fallback existente.
+- O caminho preferencial continua consultando cache/artefato remoto/local com arte antes dos fallbacks.
+
+### Consequencias
+
+- A UI nao deve mais repetir indefinidamente a mensagem de carregamento quando o browser mobile nao inicia a reproducao/exportacao.
+- Em devices onde a arte local nao consegue ser gerada, o usuario deixa de ficar preso e o fluxo pode recorrer ao arquivo disponivel conforme fallback ja existente.
+- O trade-off permanece: fallback operacional pode nao ter a arte social, mas evita deadlock de compartilhamento enquanto a geracao server-side definitiva nao existir.
+- Nao ha schema/migration, env, provider, package no projeto, mock, seed, reset ou limpeza de dados publicados.
+
+### Validacao
+
+- Testes estaticos cobrem timeout de `video.play()`, limpeza de cache preso, saida do estado failed para compartilhamento direto e preservacao do caminho preferencial com arte.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.200`.
+- Smoke de homologacao sera executado apos o push automatico de `homolog`.

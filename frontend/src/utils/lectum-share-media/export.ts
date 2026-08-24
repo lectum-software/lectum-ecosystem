@@ -52,6 +52,8 @@ type CanvasCaptureStreamTrack = MediaStreamTrack & {
   requestFrame?: () => void;
 };
 
+const VIDEO_PLAY_TIMEOUT_MS = 8000;
+
 const emptyVideoAudioCapture = (): VideoAudioCapture => ({
   cleanup: () => undefined,
   resume: async () => undefined,
@@ -152,6 +154,42 @@ const waitForVideoRenderFrame = (video: HTMLVideoElement, timeoutMs = 1800) =>
     video.addEventListener("error", handleError, { once: true });
 
     requestFrameWhenReady();
+  });
+
+const playVideoForShare = (video: HTMLVideoElement) =>
+  new Promise<void>((resolve, reject) => {
+    let done = false;
+    let timeout = 0;
+
+    const complete = () => {
+      if (done) return;
+
+      done = true;
+      window.clearTimeout(timeout);
+      resolve();
+    };
+
+    const fail = (error: Error) => {
+      if (done) return;
+
+      done = true;
+      window.clearTimeout(timeout);
+      reject(error);
+    };
+
+    timeout = window.setTimeout(() => {
+      fail(new Error("Nao foi possivel iniciar o video para compartilhamento."));
+    }, VIDEO_PLAY_TIMEOUT_MS);
+
+    void video
+      .play()
+      .then(complete, (error) =>
+        fail(
+          error instanceof Error
+            ? error
+            : new Error("Nao foi possivel iniciar o video para compartilhamento."),
+        ),
+      );
   });
 
 const createCanvasCaptureFrameRequester = (stream: MediaStream) => {
@@ -272,7 +310,7 @@ export const createLectumShareFrameImageFile = async ({
         await waitForEvent(media, "seeked", 4000).catch(() => undefined);
       }
 
-      await media.play().catch((error) => {
+      await playVideoForShare(media).catch((error) => {
         if (media.readyState >= 2) return undefined;
         throw error;
       });
@@ -475,7 +513,7 @@ export const createVideoShareFile = async (
           await waitForEvent(video, "seeked", 4000).catch(() => undefined);
         }
 
-        await video.play();
+        await playVideoForShare(video);
         await waitForVideoRenderFrame(video);
         drawLectumShareFrame(ctx, video, layout, target, palette, assets);
         requestCanvasCaptureFrame();
@@ -488,7 +526,7 @@ export const createVideoShareFile = async (
         if (!video.muted) {
           try {
             video.muted = true;
-            await video.play();
+            await playVideoForShare(video);
             await waitForVideoRenderFrame(video);
             drawLectumShareFrame(ctx, video, layout, target, palette, assets);
             requestCanvasCaptureFrame();

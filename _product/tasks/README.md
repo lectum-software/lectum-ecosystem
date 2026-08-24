@@ -935,3 +935,10 @@ Uma task só pode ser marcada como concluída quando:
 - A sheet agora acompanha o estado do artefato social com arte. Enquanto ele ainda estiver preparando, o clique em `Redes sociais` nao fecha a sheet, nao abre a folha nativa e nao dispara exportacao longa em foreground.
 - Quando o prewarm conclui, o proximo toque usa o arquivo com arte ja cacheado; a persistencia remota continua restrita a usuario autenticado.
 - Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-24: arte social nao fica em carregamento infinito
+
+- Nova evidencia mostrou a sheet presa repetindo `A arte da Lectum ainda esta carregando`, sem o artefato ficar pronto.
+- A exportacao social agora limita a espera de `video.play()` antes dos timers de gravacao e a sheet troca o estado preso por uma tentativa acionavel quando o prewarm estoura a janela.
+- Promessas locais presas de artefato sao removidas do cache para permitir nova tentativa limpa; o caminho preferencial continua sendo cache/artefato com arte antes dos fallbacks.
+- Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.

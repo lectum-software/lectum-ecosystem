@@ -9,6 +9,7 @@ import {
 import { useAppSelector } from "@/hooks/redux";
 import { type LectumShareDestination, useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import { prewarmLectumShareArtifact } from "@/utils/lectum-share-artifact-cache";
+import { clearPreparedLectumShareFile } from "@/utils/lectum-share-media";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
 import type { LectumShareSocialTarget, LectumShareVideoTarget } from "@/utils/lectum-share-target";
 
@@ -19,10 +20,11 @@ type UseLectumShareDialogOptions = {
 type SocialArtifactStatus = "failed" | "idle" | "preparing" | "ready";
 
 const DESKTOP_SHARE_DESTINATION_QUERY = "(hover: hover) and (pointer: fine)";
+const SOCIAL_ARTIFACT_STUCK_TIMEOUT_MS = 20_000;
 const SOCIAL_ARTIFACT_PENDING_MESSAGE =
   "A arte da Lectum ainda está carregando. Tente novamente em instantes.";
 const SOCIAL_ARTIFACT_FAILED_MESSAGE =
-  "Não foi possível preparar a arte agora. Tente novamente em instantes.";
+  "A arte demorou mais que o esperado. Vamos tentar compartilhar com o arquivo disponível.";
 
 const resolveLectumShareDestinationMode = (): LectumShareDestinationMode => {
   if (typeof window === "undefined" || !window.matchMedia) return "mobile";
@@ -51,14 +53,22 @@ export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) 
       const runId = socialArtifactRunRef.current + 1;
       socialArtifactRunRef.current = runId;
       setSocialArtifactStatus("preparing");
+      const stuckTimeout = window.setTimeout(() => {
+        if (socialArtifactRunRef.current !== runId) return;
+
+        clearPreparedLectumShareFile(target);
+        setSocialArtifactStatus("failed");
+      }, SOCIAL_ARTIFACT_STUCK_TIMEOUT_MS);
 
       void prewarmLectumShareArtifact(target, { authenticated: Boolean(currentUserId) }).then(
         (file) => {
+          window.clearTimeout(stuckTimeout);
           if (socialArtifactRunRef.current !== runId) return;
 
           setSocialArtifactStatus(file ? "ready" : "failed");
         },
         () => {
+          window.clearTimeout(stuckTimeout);
           if (socialArtifactRunRef.current === runId) {
             setSocialArtifactStatus("failed");
           }
@@ -95,8 +105,7 @@ export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) 
         }
 
         if (socialArtifactStatus === "failed") {
-          toast.error(SOCIAL_ARTIFACT_FAILED_MESSAGE);
-          return;
+          toast.info(SOCIAL_ARTIFACT_FAILED_MESSAGE);
         }
       }
 
