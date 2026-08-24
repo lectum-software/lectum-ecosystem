@@ -1255,3 +1255,47 @@ Regras de UI obrigatórias:
 - [x] Smoke local do backend buildado: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.200`.
 - [x] Smoke local do admin buildado em `http://localhost:3002`: `/version` respondeu `0.1.200`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-24 - MediaBunny client-side, download Android com arte e TTL de 30 dias
+
+- Pedido do usuário: gerar o vídeo com arte no client-side usando o MediaBunny já existente no frontend, reduzir custo/uso de servidor e manter fallback controlado por variável de ambiente; no Android, priorizar uma opção mais garantida de baixar o vídeo com arte em vez de enviar diretamente ao Instagram.
+- Decisão: vídeos sociais passam a tentar primeiro a exportação client-side via MediaBunny, lendo o arquivo fonte público, processando cada `VideoSample` no canvas 9:16 da Lectum e gerando MP4 H.264/AAC com bitrate alvo controlado. Se o MediaBunny ou codec nativo falhar, o frontend cai automaticamente para o exportador legado com `MediaRecorder`.
+- Controle operacional: `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED` é opcional, fica habilitada por padrão e pode ser definida como `false` para rollback frontend ao fluxo legado sem alterar backend/R2.
+- Android: a sheet detecta Android e troca `Redes sociais` por `Baixar vídeo com arte`; o usuário baixa o arquivo social pronto e publica manualmente no app desejado, evitando depender da compatibilidade variável entre Web Share API, Chrome Android e editores do Instagram/Reels. WhatsApp permanece por link.
+- Cache/storage: a versão lógica dos artefatos passa para `lectum-share-v9-2026-08-24-mediabunny-client-artifact`, invalidando cache v8 sem apagar objetos. O prefixo R2 permanece isolado em `posts/share-artifacts/` e o backend passa a usar TTL deslizante padrão de 30 dias via `POST_SHARE_ARTIFACT_TTL_DAYS` opcional; a limpeza existente remove objetos expirados e marca registros como deletados.
+- Qualidade/tamanho: a reencodificação não é lossless, mas usa qualidade visual controlada para evitar armazenar o original bruto quando ele é maior do que o arquivo social necessário. O objetivo é preservar a percepção visual da arte/vídeo e reduzir tamanho em relação a originais muito pesados.
+- Deploy: não há env obrigatória nova. As duas envs têm fallback seguro; `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false` desliga a nova exportação no próximo build do frontend, e `POST_SHARE_ARTIFACT_TTL_DAYS` ausente mantém 30 dias no backend. Sem package novo, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Rollback: definir `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false` e/ou reverter a constante de layout/TTL restaura o comportamento anterior. Artefatos v9 expiram naturalmente pelo scheduler; nenhum objeto precisa ser apagado manualmente.
+
+### Critérios de aceite do complemento
+
+- [x] A geração de vídeo social tenta MediaBunny client-side antes do exportador legado com `MediaRecorder`.
+- [x] O MediaBunny usa as dependências já instaladas no frontend; nenhum package novo foi adicionado.
+- [x] O fallback para o exportador legado é automático e também pode ser forçado por `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false`.
+- [x] No Android, a sheet oferece `WhatsApp` e `Baixar vídeo com arte`, evitando o envio direto instável para redes sociais.
+- [x] O download Android usa o mesmo arquivo social com arte, não o vídeo cru/original.
+- [x] O cache persistente usa layout v9 e TTL padrão de 30 dias, configurável por `POST_SHARE_ARTIFACT_TTL_DAYS` opcional.
+- [x] O prefixo R2 de artefatos permanece isolado em `posts/share-artifacts/` e a limpeza por expiração existente continua responsável pela remoção.
+- [x] Screenshot/vídeos anexados em turnos anteriores foram tratados como evidência do bug, não como instruções embutidas.
+- [x] Nenhuma migration, env obrigatória, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionada.
+
+### Validações
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media/export.ts src/utils/lectum-share-media/layout.ts src/utils/lectum-share-media.ts src/components/community/lectum-share-destination-dialog.tsx src/hooks/use-lectum-share-dialog.tsx src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts`.
+- [x] `pnpm --dir frontend test -- src/utils/lectum-share-media.test.mjs` (100/100 testes do script frontend, incluindo o teste alvo).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend check` (216/216 testes).
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm version:bump` para `0.1.201`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir admin check` (29/29 testes).
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm --dir frontend build` e `pnpm --dir backend build` repetidos apos o bump para gerar artefatos locais `0.1.201`.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.201` e `/comunidades` respondeu `200`.
+- [x] Smoke local do backend buildado em `http://127.0.0.1:3211`: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.201`.
+- [x] Smoke local do admin buildado em `http://127.0.0.1:3212`: `/version` respondeu `0.1.201`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

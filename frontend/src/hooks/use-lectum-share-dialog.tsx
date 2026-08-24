@@ -27,9 +27,11 @@ const SOCIAL_ARTIFACT_FAILED_MESSAGE =
   "A arte demorou mais que o esperado. Vamos tentar compartilhar com o arquivo disponível.";
 
 const resolveLectumShareDestinationMode = (): LectumShareDestinationMode => {
-  if (typeof window === "undefined" || !window.matchMedia) return "mobile";
+  if (typeof window === "undefined") return "mobile";
 
-  return window.matchMedia(DESKTOP_SHARE_DESTINATION_QUERY).matches ? "desktop" : "mobile";
+  if (window.matchMedia?.(DESKTOP_SHARE_DESTINATION_QUERY).matches) return "desktop";
+
+  return /Android/i.test(window.navigator.userAgent) ? "android" : "mobile";
 };
 
 export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) => {
@@ -88,7 +90,12 @@ export const useLectumShareDialog = (options: UseLectumShareDialogOptions = {}) 
       const mode = resolveLectumShareDestinationMode();
       setDestinationMode(mode);
       setPendingTarget(target);
-      prewarmSocialArtifact(target);
+      if (mode === "mobile") {
+        prewarmSocialArtifact(target);
+      } else {
+        socialArtifactRunRef.current += 1;
+        setSocialArtifactStatus("idle");
+      }
     },
     [prewarmSocialArtifact, shareDirectTarget],
   );

@@ -152,6 +152,14 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     ),
     "utf8",
   );
+  const backendEnvExampleSource = readFileSync(
+    new URL("../../../backend/.env.example", import.meta.url),
+    "utf8",
+  );
+  const frontendEnvExampleSource = readFileSync(
+    new URL("../../.env.example", import.meta.url),
+    "utf8",
+  );
   const mediaActionsSource = readFileSync(
     new URL(
       "../../../backend/src/modules/api/private/posts/use-cases/services/media-actions.ts",
@@ -262,6 +270,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(shareDialogSource, /WhatsAppIcon/);
   assert.match(shareDialogSource, /InstagramIcon/);
   assert.match(shareDialogSource, /MOBILE_SHARE_DESTINATION_OPTIONS/);
+  assert.match(shareDialogSource, /ANDROID_SHARE_DESTINATION_OPTIONS/);
   assert.match(shareDialogSource, /DESKTOP_SHARE_DESTINATION_OPTIONS/);
   assert.doesNotMatch(shareDialogSource, /MessageCircle/);
   assert.doesNotMatch(shareDialogSource, /Share2/);
@@ -279,6 +288,8 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(shareDialogSource, /Redes sociais/);
   assert.match(shareDialogSource, /Copiar link/);
   assert.match(shareDialogSource, /Baixar/);
+  assert.match(shareDialogSource, /Baixar v[ií]deo com arte/);
+  assert.match(shareDialogSource, /publique no app desejado/);
   assert.match(instagramIconSource, /<title>Instagram<\/title>/);
   assert.match(instagramIconSource, /fill="currentColor"/);
   assert.match(seoMetadataSource, /shareTarget = "default"/);
@@ -296,6 +307,11 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(replyWhatsappPageSource, /shareTarget: "whatsapp"/);
   assert.match(shareDialogHookSource, /DESKTOP_SHARE_DESTINATION_QUERY/);
   assert.match(shareDialogHookSource, /resolveLectumShareDestinationMode/);
+  assert.match(shareDialogHookSource, /\/Android\/i\.test\(window\.navigator\.userAgent\)/);
+  assert.match(
+    shareDialogHookSource,
+    /if \(mode === "mobile"\) \{[\s\S]*prewarmSocialArtifact\(target\)/,
+  );
   assert.match(shareDialogHookSource, /target\.kind === "link" \|\| target\.mediaType !== "video"/);
   assert.match(shareDialogHookSource, /prewarmLectumShareArtifact\(target/);
   assert.match(shareDialogHookSource, /SocialArtifactStatus/);
@@ -319,8 +335,11 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     /throw new Error\("Arquivo de compartilhamento invalido\."\)/,
   );
   assert.doesNotMatch(shareArtifactUploadTypeSource, /\|\|\s*"video\/mp4"/);
-  assert.match(repositorySource, /lectum-share-v8-2026-08-23-android-source-video-fallback/);
-  assert.match(repositorySource, /POST_SHARE_ARTIFACT_TTL_DAYS = 7/);
+  assert.match(repositorySource, /lectum-share-v9-2026-08-24-mediabunny-client-artifact/);
+  assert.match(repositorySource, /process\.env\.POST_SHARE_ARTIFACT_TTL_DAYS/);
+  assert.match(repositorySource, /parsePositiveInteger\([\s\S]*30,/);
+  assert.match(backendEnvExampleSource, /POST_SHARE_ARTIFACT_TTL_DAYS=30/);
+  assert.match(frontendEnvExampleSource, /NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=true/);
   assert.match(repositorySource, /renewArtifact/);
   assert.match(repositorySource, /last_accessed_at: accessedAt/);
   assert.match(artifactCacheSource, /SHARE_ARTIFACT_VIDEO_FILE_EXTENSIONS/);
@@ -475,7 +494,17 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(source, /lastProgressAt/);
   assert.match(source, /stalled/);
   assert.match(source, /blob\.size === 0/);
+  assert.match(source, /createMediabunnyVideoShareFile/);
+  assert.match(source, /await import\("mediabunny"\)/);
+  assert.match(source, /Conversion\.init/);
+  assert.match(source, /new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)/);
+  assert.match(source, /MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000/);
+  assert.match(source, /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000/);
+  assert.match(source, /@mediabunny\/aac-encoder/);
+  assert.match(source, /drawLectumShareFrame\(ctx, sourceCanvas/);
   assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\);/);
+  assert.match(videoPreparationSource, /shouldUseMediabunnyVideoShareExport\(\)/);
+  assert.match(videoPreparationSource, /createMediabunnyVideoShareFile\(target, mediaUrl\)\.catch/);
   assert.doesNotMatch(videoPreparationSource, /fallbackVideo/);
   assert.doesNotMatch(videoPreparationSource, /createImageShareFile\(target, fallbackVideo\)/);
 });
@@ -557,5 +586,5 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v8-2026-08-23-android-source-video-fallback/);
+  assert.match(repositorySource, /lectum-share-v9-2026-08-24-mediabunny-client-artifact/);
 });

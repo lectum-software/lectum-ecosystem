@@ -1,6 +1,11 @@
 import type { LectumShareLinkTarget, LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
-import { createImageShareFile, createVideoShareFile } from "./lectum-share-media/export";
+import {
+  createImageShareFile,
+  createMediabunnyVideoShareFile,
+  createVideoShareFile,
+  shouldUseMediabunnyVideoShareExport,
+} from "./lectum-share-media/export";
 import { safeFileName } from "./lectum-share-media/file-name";
 import {
   loadImageElement,
@@ -30,6 +35,12 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
     const image = await loadImageElement(mediaUrl);
 
     return createImageShareFile(target, image);
+  }
+
+  if (shouldUseMediabunnyVideoShareExport()) {
+    const mediabunnyFile = await createMediabunnyVideoShareFile(target, mediaUrl).catch(() => null);
+
+    if (mediabunnyFile) return mediabunnyFile;
   }
 
   const video = await loadVideoElement(mediaUrl);

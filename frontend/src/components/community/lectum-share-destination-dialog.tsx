@@ -7,7 +7,7 @@ import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import type { LectumShareDestination } from "@/hooks/use-lectum-direct-share";
 import { cn } from "@/lib/utils";
 
-export type LectumShareDestinationMode = "desktop" | "mobile";
+export type LectumShareDestinationMode = "android" | "desktop" | "mobile";
 
 type LectumShareDestinationDialogProps = {
   disabled?: boolean;
@@ -36,6 +36,19 @@ const MOBILE_SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
   },
 ];
 
+const ANDROID_SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
+  {
+    destination: "whatsapp",
+    icon: WhatsAppIcon,
+    label: "WhatsApp",
+  },
+  {
+    destination: "download",
+    icon: Download,
+    label: "Baixar vídeo com arte",
+  },
+];
+
 const DESKTOP_SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
   {
     destination: "copy_link",
@@ -50,6 +63,7 @@ const DESKTOP_SHARE_DESTINATION_OPTIONS: ShareDestinationOption[] = [
 ];
 
 const SHARE_DESTINATION_CONTENT: Record<LectumShareDestinationMode, string> = {
+  android: "Baixe o vídeo com arte e publique no app desejado.",
   desktop: "Copie o link ou baixe o vídeo.",
   mobile: "Onde deseja compartilhar?",
 };
@@ -64,7 +78,11 @@ export const LectumShareDestinationDialog = ({
   if (!open) return null;
 
   const options =
-    mode === "desktop" ? DESKTOP_SHARE_DESTINATION_OPTIONS : MOBILE_SHARE_DESTINATION_OPTIONS;
+    mode === "desktop"
+      ? DESKTOP_SHARE_DESTINATION_OPTIONS
+      : mode === "android"
+        ? ANDROID_SHARE_DESTINATION_OPTIONS
+        : MOBILE_SHARE_DESTINATION_OPTIONS;
 
   return (
     <div className="fixed inset-0 z-[120] grid items-end bg-foreground/35 px-3 pb-3 backdrop-blur-[2px] sm:items-center sm:px-4 sm:pb-0">

@@ -1,11 +1,16 @@
 import { createHash } from "node:crypto";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { parsePositiveInteger } from "@/utils/runtime-config";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 
 export const POST_SHARE_ARTIFACT_LAYOUT_VERSION =
-  "lectum-share-v8-2026-08-23-android-source-video-fallback";
-export const POST_SHARE_ARTIFACT_TTL_DAYS = 7;
+  "lectum-share-v9-2026-08-24-mediabunny-client-artifact";
+export const POST_SHARE_ARTIFACT_TTL_DAYS = parsePositiveInteger(
+  process.env.POST_SHARE_ARTIFACT_TTL_DAYS,
+  30,
+  { max: 365 },
+);
 
 const shareAuthorSelect = {
   id: true,

@@ -750,3 +750,34 @@ O usuario anexou imagem mostrando a sheet mobile ainda aberta e o aviso `A arte 
 - Testes estaticos cobrem timeout de `video.play()`, limpeza de cache preso, saida do estado failed para compartilhamento direto e preservacao do caminho preferencial com arte.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.200`.
 - Smoke de homologacao sera executado apos o push automatico de `homolog`.
+
+## Complemento 2026-08-24 - MediaBunny client-side, download Android com arte e TTL configuravel
+
+### Contexto
+
+O usuário avaliou que, no Android, seria mais garantido baixar o vídeo com a arte da Lectum do que tentar enviar diretamente ao Instagram. Também propôs aproveitar o MediaBunny já usado pelo frontend para comprimir vídeos, reduzindo custo de servidor/storage, e manter um prefixo temporário no R2 com TTL de 30 dias após utilização e fallback controlado por env.
+
+### Decisão
+
+- Usar o MediaBunny já instalado no frontend como caminho preferencial da exportação social de vídeos, sem adicionar package novo e sem voltar ao FFmpeg.
+- O exportador MediaBunny lê o vídeo público como `BlobSource`, processa a trilha primária, desenha cada `VideoSample` no canvas 9:16 com o card/autoria da Lectum e gera MP4 `avc`/`aac` com bitrate alvo controlado.
+- `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED` é opcional e fica habilitada por padrão. Definir `false` força rollback frontend para o exportador legado com `MediaRecorder` no próximo build.
+- Se o MediaBunny, WebCodecs/codec ou encoder AAC indisponível falhar, o fluxo cai automaticamente para o exportador legado; o fallback por vídeo original continua restrito ao caminho operacional já existente e não vira artefato social persistido.
+- Em Android, a sheet de vídeos profissionais passa a oferecer `WhatsApp` e `Baixar vídeo com arte`. A opção de redes sociais direta continua disponível em iOS/mobile não Android, mas no Android o caminho recomendado é baixar o arquivo social pronto e publicar manualmente no app desejado.
+- O prefixo persistente continua `posts/share-artifacts/`; a versão lógica do layout passa para `lectum-share-v9-2026-08-24-mediabunny-client-artifact` para invalidar artefatos antigos sem apagar objetos.
+- O TTL padrão de `post_share_artifacts` passa para 30 dias via `POST_SHARE_ARTIFACT_TTL_DAYS` opcional, com renovação por compartilhamento aceito e limpeza pelo scheduler existente. Não há dependência de lifecycle destrutivo manual no bucket.
+
+### Consequências
+
+- A geração continua client-side e evita fila/renderização server-side, mas passa a usar um pipeline de transcodificação mais adequado que `canvas.captureStream`/`MediaRecorder` em Android.
+- A reencodificação H.264/AAC não é lossless; o compromisso adotado é qualidade visual controlada com tamanho previsível para a arte social, reduzindo a chance de armazenar/enviar originais muito pesados.
+- Android recebe uma experiência mais honesta e controlável: baixar o vídeo com arte e postar manualmente, em vez de depender da folha nativa e do editor de destino aceitarem o arquivo corretamente.
+- A mudança é compatível com rollout entre frontend/backend: envs são opcionais com defaults seguros, o contrato de artefato é aditivo e artefatos v8 expiram naturalmente.
+- Rollback: `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false` restaura a exportação legada no frontend; reverter a constante de layout/TTL volta ao cache anterior sem reset, seed ou limpeza de bucket.
+- Não há migration, provider novo, env obrigatória, mock, seed, reset, pacote novo ou operação destrutiva em dados publicados.
+
+### Validação
+
+- Testes estáticos cobrem MediaBunny, fallback por env, opções Android, envs opcionais e TTL v9 de 30 dias.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.201`.
+- Smoke de homologacao sera executado apos o push automatico de `homolog`.

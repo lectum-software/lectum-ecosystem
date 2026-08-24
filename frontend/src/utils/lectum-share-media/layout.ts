@@ -14,7 +14,11 @@ export type VideoWithCaptureStream = HTMLVideoElement & {
   mozCaptureStream?: () => MediaStream;
 };
 
-export type ShareMediaElement = HTMLImageElement | HTMLVideoElement;
+export type ShareMediaElement =
+  | HTMLCanvasElement
+  | HTMLImageElement
+  | HTMLVideoElement
+  | OffscreenCanvas;
 
 export type CanvasWithCaptureStream = HTMLCanvasElement & {
   captureStream?: (frameRate?: number) => MediaStream;
@@ -308,9 +312,16 @@ export const mediaDimensions = (
     };
   }
 
+  if (media instanceof HTMLImageElement) {
+    return {
+      height: media.naturalHeight || fallbackHeight,
+      width: media.naturalWidth || fallbackWidth,
+    };
+  }
+
   return {
-    height: media.naturalHeight || fallbackHeight,
-    width: media.naturalWidth || fallbackWidth,
+    height: media.height || fallbackHeight,
+    width: media.width || fallbackWidth,
   };
 };
 

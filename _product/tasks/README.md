@@ -942,3 +942,11 @@ Uma task só pode ser marcada como concluída quando:
 - A exportacao social agora limita a espera de `video.play()` antes dos timers de gravacao e a sheet troca o estado preso por uma tentativa acionavel quando o prewarm estoura a janela.
 - Promessas locais presas de artefato sao removidas do cache para permitir nova tentativa limpa; o caminho preferencial continua sendo cache/artefato com arte antes dos fallbacks.
 - Sem package no projeto, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+
+## Atualizacao operacional em 2026-08-24: MediaBunny client-side e download Android com arte
+
+- Ajuste pos-feedback da TASK-42: o arquivo social com arte passa a ser gerado preferencialmente no frontend via MediaBunny ja instalado, com fallback automatico para o exportador legado por `MediaRecorder`.
+- O Android deixa de prometer envio direto para redes sociais: a sheet mostra `WhatsApp` e `Baixar video com arte`, permitindo postar manualmente no Instagram/Reels sem depender da combinacao instavel Web Share API + Chrome Android + editor de destino.
+- O cache temporario continua no prefixo R2 `posts/share-artifacts/`, agora com versao `lectum-share-v9-2026-08-24-mediabunny-client-artifact` e TTL padrao de 30 dias por `POST_SHARE_ARTIFACT_TTL_DAYS` opcional; compartilhamento aceito renova a expiracao pela janela configurada.
+- `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false` permite rollback frontend para o exportador legado no proximo build. Sem package novo, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
