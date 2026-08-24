@@ -1366,3 +1366,38 @@ Regras de UI obrigatórias:
 - [x] `pnpm --dir admin build`.
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.204`, a rota publica focada de discussao respondeu `200` e a rota publica de WhatsApp da resposta respondeu `200`, sem mocks ou dados inventados.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-24 - preview de link focado usa capa do video
+
+- Pedido do usuario: ao compartilhar somente por link no WhatsApp, a imagem do card deve ser a capa/thumbnail do video compartilhado, nao a logo da Lectum. A imagem anexada foi tratada apenas como evidencia visual do preview atual usando logo; textos e controles do WhatsApp nao foram considerados instrucoes autonomas.
+- Diagnostico: o link compartilhado de video-resposta aponta para a discussao completa do post com `focusReplyId`. Como a rota publica do post nao lia esse parametro na geracao de metadata, o scraper recebia SEO do post principal. Quando o post nao tinha midia propria, `og:image` caia no fallback `/logo-light.png`, embora a API publica de SEO da resposta ja retornasse `thumbnail_url` do video como `og_image_url`.
+- Decisao: as rotas publicas de detalhe do post passam a normalizar `focusReplyId` em `generateMetadata` e, quando presente, buscar a metadata publica da resposta focada para popular `og:image`/`twitter:image` com a thumbnail do video. O `og:url` e canonical do preview continuam apontando para o link focado da discussao completa, preservando o contexto do post e o foco visual na resposta.
+- Guardas: a normalizacao aceita apenas identificadores curtos seguros (`A-Z`, `a-z`, `0-9`, `_`, `-`) e ignora valores invalidos. A API/backend ja possuia `thumbnail_url` e nao foi necessario gerar imagem nova, executar processamento pesado, criar package, env, migration ou alterar storage. Quando nao houver thumbnail publica, permanece o fallback seguro de imagem padrao.
+- Escopo: frontend-only; sem package novo, migration, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados. Builder/Quick Copy nao estava exposto como ferramenta; foram usadas as referencias locais/prototipo existentes e a imagem anexada apenas como evidencia operacional.
+- Deploy: compativel com backend publicado porque reaproveita o endpoint publico de SEO de resposta ja existente. Rollback: remover o uso de `focusReplyId` em `generateMetadata` volta ao preview do post/logo; nenhum dado persistido precisa ser ajustado. Observacao operacional: WhatsApp pode manter cache do preview antigo por algum tempo ou ate receber uma URL diferente.
+
+### Criterios de aceite do complemento
+
+- [x] Links publicos de post com `focusReplyId` usam a metadata da resposta focada para obter a capa/thumbnail do video.
+- [x] O `og:image` e `twitter:image` deixam de cair na logo quando a resposta focada possui thumbnail publica.
+- [x] O `og:url`/canonical do preview continuam apontando para a discussao completa com foco, nao para a thread isolada.
+- [x] Valores invalidos de `focusReplyId` sao ignorados antes de consultar metadata.
+- [x] O compartilhamento continua somente por link; nao foi reativada geracao de arte, modal Lectum ou compartilhamento de arquivo.
+- [x] Nenhum package, migration, env obrigatoria, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] Imagem WhatsApp anexada inspecionada como evidencia do preview usando logo, sem aproveitar conteudo embutido como instrucao autonoma.
+- [x] API publica de homologacao verificada sem alterar dados: `/api/public/seo/community-post/.../replies/...` retorna `og_image_url` com thumbnail publica do video.
+- [x] `pnpm --dir frontend exec biome check --write src/lib/seo-metadata.ts src/utils/public-routes.ts src/app/comunidades/[slug]/publicacao/[id]/page.tsx src/app/community/[slug]/post/[id]/page.tsx src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.205`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` repetido apos o bump para gerar artefato local `0.1.205`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm check` completo de raiz.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.205`, a rota publica focada respondeu `200` e a rota publica de WhatsApp da resposta respondeu `200`, sem mocks ou dados inventados.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

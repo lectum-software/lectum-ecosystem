@@ -468,14 +468,18 @@ export const resolvePsychologistSeoMetadata = async ({
 };
 
 export const resolveCommunityPostSeoMetadata = async ({
+  canonicalOverride,
   fallback,
   id,
+  openGraphUrlOverride,
   replyId,
   shareTarget = "default",
   slug,
 }: {
+  canonicalOverride?: string;
   fallback: SeoMetadataFallback;
   id: string;
+  openGraphUrlOverride?: string;
   replyId?: string;
   shareTarget?: CommunityPostSeoShareTarget;
   slug: string;
@@ -490,23 +494,25 @@ export const resolveCommunityPostSeoMetadata = async ({
         ? publicCommunityPostWhatsappShareHref(slug, id)
         : undefined;
 
+  const shareOpenGraphUrl = openGraphUrlOverride ?? whatsappSharePath;
+
   if (!seo) {
-    return resolveSeoMetadata(
-      pageKey,
-      fallback,
-      suppressVideoPreview ? { openGraphUrl: whatsappSharePath, type: "article", video: null } : {},
-    );
+    return resolveSeoMetadata(pageKey, fallback, {
+      canonical: canonicalOverride,
+      openGraphUrl: shareOpenGraphUrl,
+      ...(suppressVideoPreview ? { type: "article" as const, video: null } : {}),
+    });
   }
 
   return resolveSeoMetadata(pageKey, fallback, {
-    canonical: seo.canonical_url,
+    canonical: canonicalOverride ?? seo.canonical_url,
     description: seo.description,
     image: seo.og_image_url,
     imageHeight: seo.og_image_height,
     imageWidth: seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
-    openGraphUrl: whatsappSharePath,
+    openGraphUrl: shareOpenGraphUrl,
     title: seo.title,
     type: !suppressVideoPreview && seo.media_type === "video" ? "video.other" : "article",
     video: suppressVideoPreview ? null : seo.og_video_url,

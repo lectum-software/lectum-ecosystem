@@ -15,6 +15,15 @@ export const publicCommunityPostHref = (slug: string, id: string) =>
 export const publicCommunityPostFocusedReplyHref = (slug: string, id: string, replyId: string) =>
   `${publicCommunityPostHref(slug, id)}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
 
+const PUBLIC_REPLY_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+export const normalizePublicCommunityFocusReplyId = (value?: string | string[]) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const replyId = raw?.trim();
+
+  return replyId && PUBLIC_REPLY_ID_PATTERN.test(replyId) ? replyId : undefined;
+};
+
 export const publicCommunityPostWhatsappShareHref = (slug: string, id: string) =>
   `${publicCommunityPostHref(slug, id)}/whatsapp`;
 

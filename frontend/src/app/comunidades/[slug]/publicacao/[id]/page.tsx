@@ -2,26 +2,44 @@ import type { Metadata } from "next";
 import { PostDetailLogic } from "@/app/app/community/[slug]/post/[id]/logic";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
-import { publicCommunityPostHref } from "@/utils/public-routes";
+import {
+  normalizePublicCommunityFocusReplyId,
+  publicCommunityPostFocusedReplyHref,
+  publicCommunityPostHref,
+} from "@/utils/public-routes";
 
 type PostDetailPageProps = {
   params: Promise<{
     id: string;
     slug: string;
   }>;
+  searchParams: Promise<{
+    focusReplyId?: string | string[];
+  }>;
 };
 
-export const generateMetadata = async ({ params }: PostDetailPageProps): Promise<Metadata> => {
+export const generateMetadata = async ({
+  params,
+  searchParams,
+}: PostDetailPageProps): Promise<Metadata> => {
   const { id, slug } = await params;
+  const query = await searchParams;
+  const focusReplyId = normalizePublicCommunityFocusReplyId(query.focusReplyId);
+  const focusedSharePath = focusReplyId
+    ? publicCommunityPostFocusedReplyHref(slug, id, focusReplyId)
+    : undefined;
 
   return resolveCommunityPostSeoMetadata({
     fallback: {
-      canonical: publicCommunityPostHref(slug, id),
+      canonical: focusedSharePath ?? publicCommunityPostHref(slug, id),
       description:
         "Pergunta ou relato público de comunidade na Lectum, com respostas e contexto responsável.",
       title: `Pergunta da comunidade | ${SITE_NAME}`,
     },
+    canonicalOverride: focusedSharePath,
     id,
+    openGraphUrlOverride: focusedSharePath,
+    replyId: focusReplyId,
     slug,
   });
 };

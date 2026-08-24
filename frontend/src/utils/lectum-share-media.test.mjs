@@ -127,6 +127,14 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
     new URL("../app/comunidades/[slug]/publicacao/[id]/whatsapp/page.tsx", import.meta.url),
     "utf8",
   );
+  const publicPostPageSource = readFileSync(
+    new URL("../app/comunidades/[slug]/publicacao/[id]/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const legacyPublicPostPageSource = readFileSync(
+    new URL("../app/community/[slug]/post/[id]/page.tsx", import.meta.url),
+    "utf8",
+  );
   const replyWhatsappPageSource = readFileSync(
     new URL(
       "../app/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp/page.tsx",
@@ -317,8 +325,21 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   assert.match(seoMetadataSource, /url: resolvedOpenGraphUrl/);
   assert.match(seoMetadataSource, /const suppressVideoPreview = shareTarget === "whatsapp"/);
   assert.match(seoMetadataSource, /whatsappSharePath/);
-  assert.match(seoMetadataSource, /openGraphUrl: whatsappSharePath/);
+  assert.match(seoMetadataSource, /openGraphUrl: shareOpenGraphUrl/);
+  assert.match(seoMetadataSource, /canonicalOverride/);
+  assert.match(seoMetadataSource, /openGraphUrlOverride/);
+  assert.match(seoMetadataSource, /canonical: canonicalOverride \?\? seo\.canonical_url/);
   assert.match(seoMetadataSource, /video: suppressVideoPreview \? null : seo\.og_video_url/);
+  assert.match(publicRoutesSource, /normalizePublicCommunityFocusReplyId/);
+  assert.match(publicRoutesSource, /PUBLIC_REPLY_ID_PATTERN/);
+  assert.match(publicPostPageSource, /searchParams/);
+  assert.match(publicPostPageSource, /normalizePublicCommunityFocusReplyId\(query\.focusReplyId\)/);
+  assert.match(publicPostPageSource, /replyId: focusReplyId/);
+  assert.match(publicPostPageSource, /canonicalOverride: focusedSharePath/);
+  assert.match(publicPostPageSource, /openGraphUrlOverride: focusedSharePath/);
+  assert.match(legacyPublicPostPageSource, /normalizePublicCommunityFocusReplyId/);
+  assert.match(legacyPublicPostPageSource, /replyId: focusReplyId/);
+  assert.match(legacyPublicPostPageSource, /canonicalOverride: focusedSharePath/);
   assert.match(postWhatsappPageSource, /shareTarget: "whatsapp"/);
   assert.match(replyWhatsappPageSource, /shareTarget: "whatsapp"/);
   assert.match(replyWhatsappPageSource, /PostDetailLogic/);
@@ -339,6 +360,8 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   assert.match(seoSource, /professionalVideoTitle/);
   assert.match(seoSource, /resolveVideoOpenGraphDescription/);
   assert.match(seoSource, /\$\{name\} na Lectum/);
+  assert.match(seoSource, /thumbnail_url/);
+  assert.match(seoSource, /ogImageUrl: media\.thumbnail_url \|\| null/);
   assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
   assert.match(
     shareArtifactUploadTypeSource,

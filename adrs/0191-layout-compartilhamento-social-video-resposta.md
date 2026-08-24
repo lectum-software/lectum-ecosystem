@@ -836,3 +836,29 @@ O usuario decidiu adiar/remover a geracao de arte social por receio de custo e c
 
 - Testes estaticos cobrem targets link-only, ausencia do modal/prewarm no hook, uso de `navigator.share` por URL, fallback de copia e preservacao do link focado da discussao completa.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, novo build frontend em `0.1.204`, `pnpm check` completo de raiz, `pnpm --dir backend build`, `pnpm --dir admin build` e smoke local HTTP do frontend passaram. Validacoes finais e smokes constam na TASK-42.
+
+## Complemento 2026-08-24 - og:image do link focado usa thumbnail do video
+
+### Contexto
+
+Depois de trocar o compartilhamento para link-only, o WhatsApp passou a exibir o card do link focado da discussao completa. A imagem anexada pelo usuario mostrou que esse card usava a logo da Lectum em vez da capa do video compartilhado. A imagem foi usada apenas como evidencia visual do bug; textos e controles do WhatsApp nao foram tratados como requisitos independentes.
+
+### Decisao
+
+- Ler `focusReplyId` em `generateMetadata` das rotas publicas de post (`/comunidades/[slug]/publicacao/[id]` e legado `/community/[slug]/post/[id]`).
+- Normalizar o parametro com uma allowlist curta de caracteres seguros antes de qualquer chamada de metadata.
+- Quando o parametro estiver presente e valido, chamar a metadata publica da resposta focada para reaproveitar `thumbnail_url` como `og:image`/`twitter:image`.
+- Permitir `canonicalOverride` e `openGraphUrlOverride` em `resolveCommunityPostSeoMetadata`, para que a imagem/titulo do alvo focado venham da resposta sem trocar o URL social/canonical para a thread isolada.
+- Preservar fallback para metadata do post/logo quando a resposta nao existir, a API falhar ou a resposta nao tiver thumbnail publica.
+
+### Consequencias
+
+- O card do WhatsApp para video-resposta compartilhada por link deve exibir a capa gerada no upload do video, reduzindo a aparencia de link generico com logo.
+- Nao ha reintroducao de renderizacao de arte, transcodificacao, upload de artefato ou custo pesado de servidor/navegador no clique de compartilhamento.
+- A mudanca e frontend-only e compativel com backend/admin publicados, pois usa contrato publico de SEO ja existente. Nao ha migration, package novo, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados.
+- Rollback: remover o uso de `focusReplyId` na metadata e os overrides de SEO restaura o card anterior. O WhatsApp pode cachear previews antigos temporariamente.
+
+### Validacao
+
+- Testes estaticos cobrem normalizacao de `focusReplyId`, uso da metadata de resposta focada, overrides de canonical/og:url e preservacao do link completo da discussao.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` completo de raiz e smoke local HTTP do frontend passaram em `0.1.205`. Validacoes finais e smokes constam na TASK-42.
