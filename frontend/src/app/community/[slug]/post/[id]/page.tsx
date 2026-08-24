@@ -26,5 +26,5 @@ export const generateMetadata = async ({ params }: PostDetailPageProps): Promise
 };
 
 export default function PostDetailPage() {
-  return <PostDetailLogic />;
+  return <PostDetailLogic forceBackToFeed />;
 }

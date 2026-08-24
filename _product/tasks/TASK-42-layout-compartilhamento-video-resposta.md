@@ -1303,17 +1303,17 @@ Regras de UI obrigatórias:
 
 ## Complemento 2026-08-24 - link de video-resposta com foco na discussao completa
 
-- Pedido do usuario: o compartilhamento por link nao deve abrir uma pagina isolada somente com o video/resposta compartilhada; deve abrir a discussao completa do post e apenas focar a resposta de video compartilhada. Nao deve haver badge do tipo "Video compartilhado". Ao tocar na seta de voltar em entrada direta por link, a navegacao deve voltar ao feed, nao ao detalhe da comunidade.
+- Pedido do usuario: o compartilhamento por link nao deve abrir uma pagina isolada somente com o video/resposta compartilhada; deve abrir a discussao completa do post e apenas focar a resposta de video compartilhada. Nao deve haver badge do tipo "Video compartilhado". Ao tocar na seta de voltar em rotas publicas de compartilhamento, a navegacao deve voltar ao feed, nao ao detalhe da comunidade.
 - Decisao: o link canonico gerado para video-respostas profissionais passa a ser a pagina publica do post com `focusReplyId` e ancora `#reply-...`, reutilizando a tela de discussao completa e o destaque temporario ja existente. A rota especial de WhatsApp para resposta continua fornecendo metadata de preview, mas renderiza a discussao completa com foco inicial na resposta quando aberta por usuario.
 - Guardas: a rota de thread/resposta permanece disponivel para o fluxo interno `Ver mais respostas`, onde a arvore isolada ainda e util para continuidade de conversas profundas. `PROTO-INVENTORY.md` foi consultado; nao havia nova referencia visual alem das telas de comunidades/compartilhamento ja registradas, e Builder/Quick Copy nao estava exposto como ferramenta neste ambiente. Nao foi adicionado badge, package, migration, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao destrutiva de dados publicados.
-- Deploy: mudanca frontend-only, compativel com backend atual. Links antigos de thread continuam funcionando; links novos de compartilhamento passam a apontar para a discussao completa. Rollback: reverter o helper de link focado para `publicCommunityReplyThreadHref` e o fallback de voltar para comunidade; nao ha dado persistido a ajustar.
+- Deploy: mudanca frontend-only, compativel com backend atual. Links antigos de thread continuam funcionando; links novos de compartilhamento passam a apontar para a discussao completa. Rollback: reverter o helper de link focado para `publicCommunityReplyThreadHref` e a regra de voltar das rotas publicas para comunidade; nao ha dado persistido a ajustar.
 
 ### Criterios de aceite do complemento
 
 - [x] O link de video-resposta profissional compartilhado abre a pagina completa do post com `focusReplyId` e `#reply-...`.
 - [x] O foco visual usa o destaque temporario existente na resposta, sem badge "Video compartilhado".
 - [x] A rota de WhatsApp de resposta renderiza a discussao completa com foco inicial na resposta compartilhada quando aberta no navegador.
-- [x] A seta de voltar em entrada direta de post/thread usa o feed como fallback, nao a comunidade especifica.
+- [x] A seta de voltar nas rotas publicas de post/thread usa o feed como destino, nao a comunidade especifica.
 - [x] A rota de thread/resposta continua preservada para `Ver mais respostas` e compatibilidade de links antigos.
 - [x] Nenhum package, migration, env obrigatoria, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
 
@@ -1323,10 +1323,11 @@ Regras de UI obrigatórias:
 - [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
 - [x] `pnpm --dir frontend check` (100/100 testes).
 - [x] `pnpm --dir frontend build`.
-- [x] `pnpm version:bump` para `0.1.202`.
-- [x] `pnpm check:version`.
-- [x] `pnpm --dir frontend build` repetido apos o bump para gerar artefato local `0.1.202`.
+- [x] Ajuste final da seta publica: `PostDetailLogic`/`PostReplyThreadLogic` receberam `forceBackToFeed`, aplicado nas rotas publicas PT-BR/legadas para direcionar a seta ao feed mesmo com historico interno.
+- [x] `pnpm version:bump` para `0.1.202` na primeira entrega e para `0.1.203` no ajuste final da seta publica.
+- [x] `pnpm check:version` em `0.1.203`.
+- [x] `pnpm --dir frontend build` repetido apos o bump final para gerar artefato local `0.1.203`.
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
-- [x] Browser local/headless mobile 390px no frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.202` e as rotas focadas `/comunidades/.../publicacao/...?...#reply-...` e `/comunidades/.../publicacao/.../resposta/.../whatsapp` responderam 200; a tela renderizou o estado real de carregamento sem mock porque a API local/tunel nao disponibilizou conteudo real para exercitar comentarios.
+- [x] Browser/HTTP local no frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.203` e as rotas focadas `/comunidades/.../publicacao/...?...#reply-...` e `/comunidades/.../publicacao/.../resposta/.../whatsapp` responderam 200; a tela renderizou o estado real de carregamento sem mock porque a API local/tunel nao disponibilizou conteudo real para exercitar comentarios.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

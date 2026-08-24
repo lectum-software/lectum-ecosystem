@@ -307,6 +307,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(postWhatsappPageSource, /shareTarget: "whatsapp"/);
   assert.match(replyWhatsappPageSource, /shareTarget: "whatsapp"/);
   assert.match(replyWhatsappPageSource, /PostDetailLogic/);
+  assert.match(replyWhatsappPageSource, /forceBackToFeed/);
   assert.match(replyWhatsappPageSource, /initialFocusReplyId=\{replyId\}/);
   assert.match(shareDialogHookSource, /DESKTOP_SHARE_DESTINATION_QUERY/);
   assert.match(shareDialogHookSource, /resolveLectumShareDestinationMode/);

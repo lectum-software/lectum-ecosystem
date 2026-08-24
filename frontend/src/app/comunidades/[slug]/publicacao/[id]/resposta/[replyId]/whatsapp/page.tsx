@@ -33,5 +33,5 @@ export const generateMetadata = async ({
 export default async function ReplyWhatsappSharePage({ params }: ReplyWhatsappSharePageProps) {
   const { replyId } = await params;
 
-  return <PostDetailLogic initialFocusReplyId={replyId} />;
+  return <PostDetailLogic forceBackToFeed initialFocusReplyId={replyId} />;
 }

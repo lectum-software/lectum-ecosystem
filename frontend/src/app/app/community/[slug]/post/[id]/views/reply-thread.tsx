@@ -55,7 +55,11 @@ import {
 } from "../modules/reply-support";
 import { type ReplyComposerForm, toPostReportPayload } from "../use-form";
 
-export const PostReplyThreadLogic = () => {
+export const PostReplyThreadLogic = ({
+  forceBackToFeed = false,
+}: {
+  forceBackToFeed?: boolean;
+} = {}) => {
   const router = useRouter();
   const params = useParams<{ id: string; replyId: string; slug: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
@@ -117,6 +121,15 @@ export const PostReplyThreadLogic = () => {
     activeFocusReplyId,
     threadQuery.isFetching,
   );
+
+  const handleThreadBack = () => {
+    if (forceBackToFeed) {
+      router.push(threadBackFallbackHref);
+      return;
+    }
+
+    navigateBackWithFallback(router, threadBackFallbackHref);
+  };
   const resetReplyComposerFocusHighlight = useReplyFocusHighlight(composerFocusReplyId, false, {
     focusKey: composerFocusRequestKey,
     scrollMode: "composer-start",
@@ -358,7 +371,7 @@ export const PostReplyThreadLogic = () => {
             <Button
               aria-label="Voltar"
               className="h-10 w-10 rounded-full border border-border bg-surface/70 p-0 text-muted shadow-lectum-soft transition hover:border-primary/30 hover:bg-surface hover:text-foreground dark:border-border dark:bg-surface-muted/60 dark:text-muted dark:hover:text-foreground"
-              onClick={() => navigateBackWithFallback(router, threadBackFallbackHref)}
+              onClick={handleThreadBack}
               type="button"
               variant="ghost"
             >

@@ -27,5 +27,5 @@ export const generateMetadata = async ({ params }: PostReplyThreadPageProps): Pr
 };
 
 export default function PostReplyThreadPage() {
-  return <PostReplyThreadLogic />;
+  return <PostReplyThreadLogic forceBackToFeed />;
 }

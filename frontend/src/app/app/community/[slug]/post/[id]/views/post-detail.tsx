@@ -185,8 +185,10 @@ const PostDetailFloatingHeader = ({
 };
 
 export const PostDetailLogic = ({
+  forceBackToFeed = false,
   initialFocusReplyId = null,
 }: {
+  forceBackToFeed?: boolean;
   initialFocusReplyId?: string | null;
 } = {}) => {
   const [floatingHeaderVisible, setFloatingHeaderVisible] = useState(false);
@@ -286,6 +288,11 @@ export const PostDetailLogic = ({
   }, []);
 
   const handlePostBack = () => {
+    if (forceBackToFeed) {
+      router.push(DEFAULT_COMMUNITY_FEED_HREF);
+      return;
+    }
+
     navigateBackWithFallback(router, DEFAULT_COMMUNITY_FEED_HREF);
   };
 
