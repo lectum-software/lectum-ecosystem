@@ -1,4 +1,4 @@
-import type { CommunityAuthor, CommunityPostMediaItem } from "@/api/generator/types/community";
+import type { CommunityAuthor } from "@/api/generator/types/community";
 import type {
   PostListPost,
   PostProfessionalReply,
@@ -9,8 +9,6 @@ import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   publicCommunityPostFocusedReplyHref,
   publicCommunityPostHref,
-  publicCommunityPostWhatsappShareHref,
-  publicCommunityReplyWhatsappShareHref,
 } from "@/utils/public-routes";
 
 export type LectumShareChannel = "clipboard" | "web_share";
@@ -109,20 +107,15 @@ const toAbsoluteShareUrl = (relativeUrl: string) =>
 const postRelativeUrl = (post: Pick<PostListPost, "community" | "id">) =>
   publicCommunityPostHref(post.community.slug, post.id);
 
-const normalizePostMediaItem = (
+const isShareableMedia = (
   mediaUrl: string | null | undefined,
   mediaType: string | null | undefined,
-): LectumShareMediaItem | null => {
-  if (!mediaUrl || (mediaType !== "image" && mediaType !== "video")) return null;
+): mediaType is "image" | "video" =>
+  Boolean(mediaUrl && (mediaType === "image" || mediaType === "video"));
 
-  return {
-    mediaType,
-    mediaUrl,
-  };
-};
-
-const sortMediaItems = (items: CommunityPostMediaItem[]) =>
-  [...items].sort((left, right) => left.position - right.position);
+const hasShareablePostMedia = (post: ShareablePostWithMedia) =>
+  (post.media_items ?? []).some((item) => isShareableMedia(item.media_url, item.media_type)) ||
+  isShareableMedia(post.media_url, post.media_type);
 
 const createLectumSocialShareTitle = (professionalName: string) =>
   `${professionalName.replace(/\s+/g, " ").trim() || "Lectum"} na Lectum`;
@@ -151,98 +144,41 @@ export const createLectumShareLinkTarget = (
 export const createLectumSharePostMediaTarget = (
   post: ShareablePostWithMedia,
   options: ShareTargetOptions = {},
-): LectumShareSocialTarget | null => {
+): LectumShareLinkTarget | null => {
   if (!isProfessionalAuthor(post.author)) return null;
 
-  const carouselItems = sortMediaItems(post.media_items ?? [])
-    .map((item) => normalizePostMediaItem(item.media_url, item.media_type))
-    .filter((item): item is LectumShareMediaItem => Boolean(item));
-  const singleItem = normalizePostMediaItem(post.media_url, post.media_type);
-  const mediaItems = carouselItems.length > 0 ? carouselItems : singleItem ? [singleItem] : [];
-  const firstMedia = mediaItems[0];
-
-  if (!firstMedia) return null;
+  if (!hasShareablePostMedia(post)) return null;
 
   const relativeUrl = options.relativeUrl ?? postRelativeUrl(post);
-  const responseText = post.content?.trim() || null;
-  const cardLabel = "Postado na Lectum";
   const professionalName =
     normalizeLectumShareProfessionalName(post.author.name) || post.author.name;
 
-  return {
-    cardLabel,
-    carouselCount: mediaItems.length,
-    kind: "post_media",
-    mediaItems,
-    mediaType: firstMedia.mediaType,
-    mediaUrl: firstMedia.mediaUrl,
-    postId: post.id,
-    professional: {
-      avatar: post.author.avatar,
-      name: professionalName,
-      roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
-      verified: post.author.verified,
-    },
-    replyId: null,
-    responseText,
-    shareText: post.title,
-    shareTitle: createLectumSocialShareTitle(professionalName),
-    shareUrl: toAbsoluteShareUrl(relativeUrl),
-    sourceKind: "post",
-    sourceText: post.title,
-    whatsappShareUrl: toAbsoluteShareUrl(
-      publicCommunityPostWhatsappShareHref(post.community.slug, post.id),
-    ),
-  };
+  return createLectumShareLinkTarget(post, {
+    relativeUrl,
+    title: createLectumSocialShareTitle(professionalName),
+  });
 };
 
 export const createLectumShareVideoTarget = (
   post: Pick<PostListPost, "community" | "id" | "title">,
   reply: ShareableProfessionalReply,
   options: ShareTargetOptions = {},
-): LectumShareSocialTarget | null => {
+): LectumShareLinkTarget | null => {
   if (!isProfessionalAuthor(reply.author) || !isVideoReply(reply) || !reply.media_url) {
     return null;
   }
 
-  const parentContent =
-    options.parentContent ?? ("parent_content" in reply ? reply.parent_content : null);
-  const postTitle = post.title.trim() || "Pergunta na Lectum";
-  const hasCommentContext = Boolean(parentContent?.trim() || reply.parent_reply_id);
-  const sourceText = (hasCommentContext ? parentContent : postTitle)?.trim() || postTitle;
-  const responseText = reply.content?.trim() || null;
   const relativeUrl =
     options.relativeUrl ??
     publicCommunityPostFocusedReplyHref(post.community.slug, post.id, reply.id);
-  const cardLabel = "Respondido na Lectum";
   const professionalName =
     normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;
 
-  return {
-    cardLabel,
-    carouselCount: 1,
-    kind: "video_response",
-    mediaItems: [{ mediaType: "video", mediaUrl: reply.media_url }],
-    mediaType: "video",
-    mediaUrl: reply.media_url,
-    postId: post.id,
-    professional: {
-      avatar: reply.author.avatar,
-      name: professionalName,
-      roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
-      verified: reply.author.verified,
-    },
-    responseText,
+  return createLectumShareLinkTarget(post, {
+    relativeUrl,
     replyId: reply.id,
-    shareText: postTitle,
-    shareTitle: createLectumSocialShareTitle(professionalName),
-    shareUrl: toAbsoluteShareUrl(relativeUrl),
-    sourceKind: hasCommentContext ? "comment" : "post",
-    sourceText,
-    whatsappShareUrl: toAbsoluteShareUrl(
-      publicCommunityReplyWhatsappShareHref(post.community.slug, post.id, reply.id),
-    ),
-  };
+    title: createLectumSocialShareTitle(professionalName),
+  });
 };
 
 export const createLectumShareTargetFromHighlightedReply = (

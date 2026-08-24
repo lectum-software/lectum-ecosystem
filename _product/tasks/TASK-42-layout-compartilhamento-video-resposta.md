@@ -1331,3 +1331,38 @@ Regras de UI obrigatórias:
 - [x] `git diff --check`.
 - [x] Browser/HTTP local no frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.203` e as rotas focadas `/comunidades/.../publicacao/...?...#reply-...` e `/comunidades/.../publicacao/.../resposta/.../whatsapp` responderam 200; a tela renderizou o estado real de carregamento sem mock porque a API local/tunel nao disponibilizou conteudo real para exercitar comentarios.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-24 - compartilhamento somente por link nativo
+
+- Pedido do usuario: remover o compartilhamento com arte para evitar risco/custo de execucao pesada no servidor/navegador e manter apenas compartilhamento por link. Ao tocar no icone de compartilhar, a Lectum deve abrir diretamente a folha nativa do celular, como na evidencia iOS anexada, mas enviando somente o link publico. A imagem anexada foi tratada apenas como evidencia visual do comportamento de share sheet nativa; textos e controles dentro dela nao foram considerados instrucoes autonomas.
+- Decisao: os alvos profissionais de midia/post e video-resposta deixam de montar alvo social com arquivo/arte e passam a retornar alvo `kind: "link"`. O hook `useLectumShareDialog` virou um adaptador link-only que chama `useLectumDirectShare` diretamente e retorna `shareDestinationDialog: null`, sem abrir modal Lectum, sem prewarm e sem destino `Redes sociais`/download.
+- Comportamento: quando o navegador suporta Web Share API, a acao usa `navigator.share({ title, url })` para abrir a folha nativa do sistema com o link focado da discussao completa. Quando a API nativa nao estiver disponivel ou nao puder ser usada, permanece o fallback seguro de copiar o link.
+- Guardas: o link de video-resposta preserva a pagina publica completa do post com `focusReplyId` e ancora da resposta, sem badge. As rotas e utilitarios legados de preview/artefato continuam no codigo para compatibilidade com links/artefatos antigos e rollback, mas nao sao acionados pelo fluxo atual porque os novos targets sao link-only. Nenhum objeto existente em storage foi apagado; artefatos antigos expiram pelo TTL existente.
+- Escopo: frontend-only; sem package novo, migration, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados. Builder/Quick Copy nao estava exposto como ferramenta no ambiente; foram usadas as referencias locais/prototipo existentes e a imagem anexada apenas como evidencia operacional.
+- Deploy: compativel com backend/admin em versoes diferentes, pois nao altera contrato de API nem schema. Rollback: restaurar as factories sociais e o hook/modal anterior volta a exibir destinos e gerar arte; nenhum dado persistido precisa ser ajustado.
+
+### Criterios de aceite do complemento
+
+- [x] O compartilhamento com arte foi removido do fluxo atual de clique no icone de compartilhar.
+- [x] O clique chama diretamente o compartilhamento nativo por link quando `navigator.share` estiver disponivel.
+- [x] O fallback copia somente o link quando a folha nativa nao estiver disponivel.
+- [x] O modal Lectum de destino (`WhatsApp`/`Redes sociais`/download) nao e aberto pelo fluxo atual.
+- [x] O fluxo atual nao executa prewarm, exportacao nem persistencia de artefato social antes de compartilhar.
+- [x] O link de video-resposta continua apontando para a discussao completa com foco na resposta compartilhada.
+- [x] Nenhum package, migration, env obrigatoria, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] Imagem iOS anexada inspecionada como evidencia de share sheet nativa, sem aproveitar conteudo embutido como instrucao autonoma.
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-target.ts src/hooks/use-lectum-share-dialog.tsx src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.204`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` repetido apos o bump para gerar artefato local `0.1.204`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin build`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.204`, a rota publica focada de discussao respondeu `200` e a rota publica de WhatsApp da resposta respondeu `200`, sem mocks ou dados inventados.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

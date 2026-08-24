@@ -810,3 +810,29 @@ O compartilhamento por link de video-resposta levava o destinatario para a rota 
 - `pnpm --dir frontend check` e `pnpm --dir frontend build` passaram; apos os bumps da task, `pnpm check:version` confirmou manifests em 0.1.203 e `pnpm --dir frontend build` foi repetido.
 - `pnpm check` completo de raiz e `git diff --check` passaram.
 - Browser/HTTP local no frontend buildado confirmou `/version` em 0.1.203, HTTP 200 nas rotas focadas e render da rota sem mock; a API/tunel local nao retornou conteudo real para validar visualmente uma discussao carregada.
+
+## Complemento 2026-08-24 - compartilhamento link-only com share sheet nativa
+
+### Contexto
+
+O usuario decidiu adiar/remover a geracao de arte social por receio de custo e capacidade da execucao pesada, e pediu que o clique no icone de compartilhar abrisse diretamente a folha nativa do celular com compartilhamento somente por link. A imagem iOS anexada foi usada apenas como evidencia do comportamento esperado da share sheet nativa; seus textos/controles nao foram tratados como instrucoes independentes.
+
+### Decisao
+
+- Converter os factories de compartilhamento de midia/post e video-resposta profissional para retornarem `LectumShareLinkTarget` em vez de alvo social com arquivo/arte.
+- Manter o link canonico de video-resposta como discussao completa do post com `focusReplyId` e ancora da resposta, preservando contexto e foco sem badge.
+- Transformar `useLectumShareDialog` em wrapper link-only: qualquer alvo social legado recebido e normalizado para link antes de chamar `useLectumDirectShare`.
+- Retornar `shareDestinationDialog: null`, removendo o modal Lectum do fluxo atual e impedindo prewarm/exportacao/persistencia de artefato durante o clique.
+- Preservar componentes, rotas e utilitarios de artefato/preview existentes como codigo compatibilidade/rollback e para artefatos antigos ate expirarem naturalmente; nenhuma limpeza destrutiva em storage ou banco foi feita.
+
+### Consequencias
+
+- O compartilhamento mobile fica leve: usa `navigator.share` com `title`/`url` quando suportado e fallback de copiar link quando nao suportado.
+- Nao ha mais geracao client-side/server-side de video com arte no caminho atual de usuario, reduzindo risco operacional imediato.
+- A experiencia deixa de oferecer arquivo social com caixinha/arte neste fluxo; o trade-off foi aceito para priorizar estabilidade e link publico com contexto completo.
+- Rollout e rollback sao frontend-only e compativeis com backend/admin publicados. Nao ha migration, package novo, env obrigatoria, provider, mock, seed, reset, limpeza de bucket/storage ou alteracao destrutiva de dados publicados.
+
+### Validacao
+
+- Testes estaticos cobrem targets link-only, ausencia do modal/prewarm no hook, uso de `navigator.share` por URL, fallback de copia e preservacao do link focado da discussao completa.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, novo build frontend em `0.1.204`, `pnpm check` completo de raiz, `pnpm --dir backend build`, `pnpm --dir admin build` e smoke local HTTP do frontend passaram. Validacoes finais e smokes constam na TASK-42.

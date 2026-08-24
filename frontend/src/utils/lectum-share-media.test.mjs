@@ -95,7 +95,7 @@ test("compartilhamento de link fica indisponivel sem share nativo", () => {
   );
 });
 
-test("videos compartilhados separam link de whatsapp e arquivo social sem link", () => {
+test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
   const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const hookSource = readFileSync(
@@ -201,27 +201,36 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     postsRequestSource.indexOf("const withShareArtifactFileType"),
     postsRequestSource.indexOf("export const getPostShareArtifact"),
   );
+  const videoTargetFactorySource = targetSource.slice(
+    targetSource.indexOf("export const createLectumShareVideoTarget"),
+    targetSource.indexOf("export const createLectumShareTargetFromHighlightedReply"),
+  );
+  const postMediaTargetFactorySource = targetSource.slice(
+    targetSource.indexOf("export const createLectumSharePostMediaTarget"),
+    targetSource.indexOf("export const createLectumShareVideoTarget"),
+  );
+  const linkShareSource = mediaSource.slice(
+    mediaSource.indexOf("export const shareLectumLinkTarget"),
+    mediaSource.indexOf("export const shareLectumSocialLinkPreviewTarget"),
+  );
 
   assert.match(
-    targetSource,
+    videoTargetFactorySource,
     /publicCommunityPostFocusedReplyHref\(post\.community\.slug, post\.id, reply\.id\)/,
   );
-  assert.match(targetSource, /shareText: postTitle/);
-  assert.match(targetSource, /whatsappShareUrl/);
-  assert.match(
-    targetSource,
-    /publicCommunityPostWhatsappShareHref\(post\.community\.slug, post\.id\)/,
-  );
-  assert.match(
-    targetSource,
-    /publicCommunityReplyWhatsappShareHref\(post\.community\.slug, post\.id, reply\.id\)/,
-  );
-  assert.match(publicRoutesSource, /publicCommunityPostWhatsappShareHref/);
+  assert.match(videoTargetFactorySource, /createLectumShareLinkTarget\(post/);
+  assert.match(videoTargetFactorySource, /replyId: reply\.id/);
+  assert.match(videoTargetFactorySource, /title: createLectumSocialShareTitle\(professionalName\)/);
+  assert.doesNotMatch(videoTargetFactorySource, /kind: "video_response"/);
+  assert.doesNotMatch(videoTargetFactorySource, /mediaItems:/);
+  assert.doesNotMatch(videoTargetFactorySource, /whatsappShareUrl/);
+  assert.match(postMediaTargetFactorySource, /createLectumShareLinkTarget\(post/);
+  assert.match(postMediaTargetFactorySource, /hasShareablePostMedia\(post\)/);
+  assert.doesNotMatch(postMediaTargetFactorySource, /kind: "post_media"/);
   assert.match(publicRoutesSource, /publicCommunityPostFocusedReplyHref/);
-  assert.match(publicRoutesSource, /publicCommunityReplyWhatsappShareHref/);
-  assert.match(mediaSource, /shareLectumSocialLinkPreviewTarget/);
-  assert.match(mediaSource, /shareLectumWhatsAppPreviewTarget/);
-  assert.match(mediaSource, /https:\/\/wa\.me\/\?text=/);
+  assert.match(linkShareSource, /url: target\.shareUrl/);
+  assert.match(linkShareSource, /await nav\.share\(nativeShareData\)/);
+  assert.match(linkShareSource, /return copyLectumShareTargetUrl\(target\)/);
   assert.match(mediaSource, /copyLectumShareTargetUrl/);
   assert.match(mediaSource, /return copyLectumShareTargetUrl\(target\)/);
   assert.match(copyTargetSource, /copyShareUrl\(target\.shareUrl\)/);
@@ -267,7 +276,13 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     hookSource,
     /target\.mediaType === "video"[\s\S]*shareLectumSocialLinkPreviewTarget\(target\)[\s\S]*shareSocialFileTarget\(target\)/,
   );
-  assert.match(shareDialogHookSource, /setPendingTarget\(target\)/);
+  assert.match(shareDialogHookSource, /toLectumLinkOnlyTarget/);
+  assert.match(shareDialogHookSource, /shareDirectTarget\(toLectumLinkOnlyTarget\(target\)\)/);
+  assert.match(shareDialogHookSource, /shareDestinationDialog: null/);
+  assert.doesNotMatch(shareDialogHookSource, /setPendingTarget/);
+  assert.doesNotMatch(shareDialogHookSource, /LectumShareDestinationDialog/);
+  assert.doesNotMatch(shareDialogHookSource, /prewarmLectumShareArtifact/);
+  assert.doesNotMatch(shareDialogHookSource, /SOCIAL_ARTIFACT/);
   assert.match(shareDialogSource, /WhatsAppIcon/);
   assert.match(shareDialogSource, /InstagramIcon/);
   assert.match(shareDialogSource, /MOBILE_SHARE_DESTINATION_OPTIONS/);
@@ -309,22 +324,13 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(replyWhatsappPageSource, /PostDetailLogic/);
   assert.match(replyWhatsappPageSource, /forceBackToFeed/);
   assert.match(replyWhatsappPageSource, /initialFocusReplyId=\{replyId\}/);
-  assert.match(shareDialogHookSource, /DESKTOP_SHARE_DESTINATION_QUERY/);
-  assert.match(shareDialogHookSource, /resolveLectumShareDestinationMode/);
-  assert.match(shareDialogHookSource, /\/Android\/i\.test\(window\.navigator\.userAgent\)/);
-  assert.match(
-    shareDialogHookSource,
-    /if \(mode === "mobile"\) \{[\s\S]*prewarmSocialArtifact\(target\)/,
-  );
-  assert.match(shareDialogHookSource, /target\.kind === "link" \|\| target\.mediaType !== "video"/);
-  assert.match(shareDialogHookSource, /prewarmLectumShareArtifact\(target/);
-  assert.match(shareDialogHookSource, /SocialArtifactStatus/);
-  assert.match(shareDialogHookSource, /SOCIAL_ARTIFACT_STUCK_TIMEOUT_MS/);
-  assert.match(shareDialogHookSource, /clearPreparedLectumShareFile\(target\)/);
-  assert.match(shareDialogHookSource, /socialArtifactStatus === "preparing"/);
-  assert.match(shareDialogHookSource, /SOCIAL_ARTIFACT_PENDING_MESSAGE/);
-  assert.match(shareDialogHookSource, /socialArtifactStatus === "failed"[\s\S]*toast\.info/);
-  assert.match(shareDialogHookSource, /return;[\s\S]*setPendingTarget\(null\)/);
+  assert.doesNotMatch(shareDialogHookSource, /DESKTOP_SHARE_DESTINATION_QUERY/);
+  assert.doesNotMatch(shareDialogHookSource, /resolveLectumShareDestinationMode/);
+  assert.doesNotMatch(shareDialogHookSource, /\/Android\/i\.test\(window\.navigator\.userAgent\)/);
+  assert.doesNotMatch(shareDialogHookSource, /prewarmSocialArtifact/);
+  assert.doesNotMatch(shareDialogHookSource, /SocialArtifactStatus/);
+  assert.doesNotMatch(shareDialogHookSource, /SOCIAL_ARTIFACT_STUCK_TIMEOUT_MS/);
+  assert.doesNotMatch(shareDialogHookSource, /clearPreparedLectumShareFile\(target\)/);
   assert.doesNotMatch(shareDialogHookSource, /prewarmAndroidSocialFile/);
   assert.doesNotMatch(shareDialogHookSource, /prepareLectumSourceVideoFallbackFile\(target\)/);
   assert.doesNotMatch(shareDialogHookSource, /preparingSocial/);
