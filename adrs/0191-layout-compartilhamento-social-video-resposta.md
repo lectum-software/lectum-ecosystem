@@ -781,3 +781,32 @@ O usuário avaliou que, no Android, seria mais garantido baixar o vídeo com a a
 - Testes estáticos cobrem MediaBunny, fallback por env, opções Android, envs opcionais e TTL v9 de 30 dias.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`, `pnpm --dir admin build`, `pnpm check:version`, `pnpm check` e smokes locais de frontend/backend/admin passaram na versao `0.1.201`.
 - Smoke de homologacao sera executado apos o push automatico de `homolog`.
+
+
+## Complemento 2026-08-24 - link de resposta focado na discussao completa
+
+### Contexto
+
+O compartilhamento por link de video-resposta levava o destinatario para a rota de thread da resposta, que carregava apenas a arvore isolada daquele comentario/resposta. O usuario pediu que o link abrisse a discussao completa do post, mostrando os demais comentarios, e apenas focasse visualmente o video compartilhado. Tambem confirmou que nao queria badge "Video compartilhado" e que a seta de voltar, em entrada direta pelo link, deveria retornar ao feed em vez de cair dentro da comunidade.
+
+### Decisao
+
+- O alvo padrao de `createLectumShareVideoTarget` passa a usar a pagina publica do post com `focusReplyId` e ancora `#reply-...`.
+- O foco visual reutiliza `useReplyFocusHighlight` e a classe existente de pulso temporario; nenhum badge ou novo marcador permanente e exibido.
+- A rota `/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp` continua existindo para metadata/preview do WhatsApp, mas renderiza `PostDetailLogic` com foco inicial na resposta quando aberta por uma pessoa.
+- A rota de thread/resposta permanece preservada para o fluxo interno `Ver mais respostas`, onde a arvore isolada ainda e necessaria para navegacao profunda.
+- A seta de voltar em post/thread passa a usar o feed como fallback seguro quando nao ha historico interno navegavel.
+
+### Consequencias
+
+- Novos links compartilhados mostram contexto da discussao completa e destacam a resposta compartilhada sem ocultar outros comentarios.
+- Links antigos de thread continuam validos e a experiencia interna de ver mais respostas nao e removida.
+- A mudanca e frontend-only e compativel com o backend publicado; nao ha schema, migration, env obrigatoria, package novo, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Rollback: voltar `createLectumShareVideoTarget` para `publicCommunityReplyThreadHref`, restaurar o render da rota WhatsApp de resposta para `PostReplyThreadLogic` e recolocar o fallback de voltar para a comunidade. Nenhum dado persistido precisa ser alterado.
+
+### Validacao
+
+- Teste estatico `lectum-share-media.test.mjs` cobre o helper de link focado, a rota WhatsApp de resposta renderizando `PostDetailLogic` com `initialFocusReplyId` e a separacao entre link/WhatsApp/arquivo social.
+- `pnpm --dir frontend check` e `pnpm --dir frontend build` passaram na versao base 0.1.201 antes do bump da task; apos `pnpm version:bump`, `pnpm check:version` confirmou manifests em 0.1.202 e `pnpm --dir frontend build` foi repetido.
+- `pnpm check` completo de raiz e `git diff --check` passaram.
+- Browser local/headless mobile 390px no frontend buildado confirmou `/version` em 0.1.202, HTTP 200 nas rotas focadas e render da rota sem mock; a API/tunel local nao retornou conteudo real para validar visualmente uma discussao carregada.

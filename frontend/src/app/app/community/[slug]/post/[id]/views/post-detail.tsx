@@ -184,7 +184,11 @@ const PostDetailFloatingHeader = ({
   );
 };
 
-export const PostDetailLogic = () => {
+export const PostDetailLogic = ({
+  initialFocusReplyId = null,
+}: {
+  initialFocusReplyId?: string | null;
+} = {}) => {
   const [floatingHeaderVisible, setFloatingHeaderVisible] = useState(false);
   const [replyComposerActive, setReplyComposerActive] = useState(false);
   const floatingHeaderInteractionUntilRef = useRef(0);
@@ -240,7 +244,7 @@ export const PostDetailLogic = () => {
     uploadReplyMediaMutation,
     visibleInlineReplyTargets,
     voteMutation,
-  } = usePostDetailController();
+  } = usePostDetailController({ initialFocusReplyId });
 
   const lockFloatingHeaderInteraction = useCallback(() => {
     floatingHeaderInteractionUntilRef.current = Date.now() + FLOATING_HEADER_INTERACTION_LOCK_MS;
@@ -282,9 +286,7 @@ export const PostDetailLogic = () => {
   }, []);
 
   const handlePostBack = () => {
-    if (!post) return;
-
-    navigateBackWithFallback(router, `/comunidades/${post.community.slug}`);
+    navigateBackWithFallback(router, DEFAULT_COMMUNITY_FEED_HREF);
   };
 
   return (

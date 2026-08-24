@@ -12,6 +12,9 @@ export const publicCommunityHref = (slug: string) => `${PUBLIC_COMMUNITIES_HREF}
 export const publicCommunityPostHref = (slug: string, id: string) =>
   `${publicCommunityHref(slug)}/publicacao/${id}`;
 
+export const publicCommunityPostFocusedReplyHref = (slug: string, id: string, replyId: string) =>
+  `${publicCommunityPostHref(slug, id)}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+
 export const publicCommunityPostWhatsappShareHref = (slug: string, id: string) =>
   `${publicCommunityPostHref(slug, id)}/whatsapp`;
 

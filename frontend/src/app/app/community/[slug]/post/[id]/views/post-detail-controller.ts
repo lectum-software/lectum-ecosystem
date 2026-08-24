@@ -28,6 +28,7 @@ import {
   createLectumShareVideoTarget,
   findPostReplyInTree,
 } from "@/utils/lectum-share-target";
+import { publicCommunityPostFocusedReplyHref } from "@/utils/public-routes";
 import { submitReplyWithOptionalMedia } from "../modules/reply-submit";
 import {
   confirmDiscardReplyDraft,
@@ -51,12 +52,17 @@ import {
 } from "../modules/reply-support";
 import type { ReplyComposerForm } from "../use-form";
 
-export const usePostDetailController = () => {
+export const usePostDetailController = ({
+  initialFocusReplyId = null,
+}: {
+  initialFocusReplyId?: string | null;
+} = {}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
-  const focusReplyIdFromUrl = searchParams.get("focusReplyId")?.trim() || null;
+  const focusReplyIdFromUrl =
+    searchParams.get("focusReplyId")?.trim() || initialFocusReplyId?.trim() || null;
   const isMobile = useIsPostDetailMobile();
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
@@ -298,7 +304,7 @@ export const usePostDetailController = () => {
 
     await shareLectumTarget(
       createLectumShareLinkTarget(post, {
-        relativeUrl: `/comunidades/${post.community.slug}/publicacao/${post.id}#reply-${reply.id}`,
+        relativeUrl: publicCommunityPostFocusedReplyHref(post.community.slug, post.id, reply.id),
         replyId: reply.id,
         text: reply.content,
         title: "Resposta na Lectum",

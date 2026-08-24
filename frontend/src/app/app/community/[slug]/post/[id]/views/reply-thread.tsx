@@ -32,6 +32,7 @@ import {
   findPostReplyInTree,
 } from "@/utils/lectum-share-target";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { publicCommunityPostFocusedReplyHref } from "@/utils/public-routes";
 import { ThreadOriginalPostCard } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
 import { PostReportModal, ReplyComposer } from "../components/reply-composer";
@@ -59,7 +60,6 @@ export const PostReplyThreadLogic = () => {
   const params = useParams<{ id: string; replyId: string; slug: string }>();
   const postId = typeof params.id === "string" ? params.id : "";
   const replyId = typeof params.replyId === "string" ? params.replyId : "";
-  const communitySlug = typeof params.slug === "string" ? params.slug : "";
   const isMobile = useIsPostDetailMobile();
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
@@ -108,11 +108,7 @@ export const PostReplyThreadLogic = () => {
   });
   const post = postQuery.data?.post;
   const rootReply = threadQuery.data?.reply;
-  const threadBackFallbackHref = post
-    ? `/comunidades/${post.community.slug}`
-    : communitySlug
-      ? `/comunidades/${communitySlug}`
-      : DEFAULT_COMMUNITY_FEED_HREF;
+  const threadBackFallbackHref = DEFAULT_COMMUNITY_FEED_HREF;
   const postError = postQuery.isError ? resolvePostError(postQuery.error) : null;
   const threadError = threadQuery.isError ? resolvePostError(threadQuery.error) : null;
   const activeMobileReplyTarget = isMobile ? mobileReplyTarget : null;
@@ -140,10 +136,9 @@ export const PostReplyThreadLogic = () => {
       return;
     }
 
-    const threadRootId = rootReply?.id ?? reply.id;
     await shareLectumTarget(
       createLectumShareLinkTarget(post, {
-        relativeUrl: `/comunidades/${post.community.slug}/publicacao/${post.id}/resposta/${threadRootId}#reply-${reply.id}`,
+        relativeUrl: publicCommunityPostFocusedReplyHref(post.community.slug, post.id, reply.id),
         replyId: reply.id,
         text: reply.content,
         title: "Resposta na Lectum",

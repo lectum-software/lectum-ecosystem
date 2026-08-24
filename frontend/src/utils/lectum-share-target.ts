@@ -7,9 +7,9 @@ import type {
 } from "@/api/generator/types/posts";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
+  publicCommunityPostFocusedReplyHref,
   publicCommunityPostHref,
   publicCommunityPostWhatsappShareHref,
-  publicCommunityReplyThreadHref,
   publicCommunityReplyWhatsappShareHref,
 } from "@/utils/public-routes";
 
@@ -212,7 +212,8 @@ export const createLectumShareVideoTarget = (
   const sourceText = (hasCommentContext ? parentContent : postTitle)?.trim() || postTitle;
   const responseText = reply.content?.trim() || null;
   const relativeUrl =
-    options.relativeUrl ?? publicCommunityReplyThreadHref(post.community.slug, post.id, reply.id);
+    options.relativeUrl ??
+    publicCommunityPostFocusedReplyHref(post.community.slug, post.id, reply.id);
   const cardLabel = "Respondido na Lectum";
   const professionalName =
     normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;

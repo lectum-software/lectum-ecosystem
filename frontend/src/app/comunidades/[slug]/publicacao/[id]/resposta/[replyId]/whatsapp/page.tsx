@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { PostReplyThreadLogic } from "@/app/app/community/[slug]/post/[id]/logic";
+import { PostDetailLogic } from "@/app/app/community/[slug]/post/[id]/logic";
 import { SITE_NAME } from "@/lib/seo";
 import { resolveCommunityPostSeoMetadata } from "@/lib/seo-metadata";
-import { publicCommunityReplyThreadHref } from "@/utils/public-routes";
+import { publicCommunityPostFocusedReplyHref } from "@/utils/public-routes";
 
 type ReplyWhatsappSharePageProps = {
   params: Promise<{
@@ -19,7 +19,7 @@ export const generateMetadata = async ({
 
   return resolveCommunityPostSeoMetadata({
     fallback: {
-      canonical: publicCommunityReplyThreadHref(slug, id, replyId),
+      canonical: publicCommunityPostFocusedReplyHref(slug, id, replyId),
       description: "Discussão pública de uma resposta em comunidade na Lectum.",
       title: `Discussão da comunidade | ${SITE_NAME}`,
     },
@@ -30,6 +30,8 @@ export const generateMetadata = async ({
   });
 };
 
-export default function ReplyWhatsappSharePage() {
-  return <PostReplyThreadLogic />;
+export default async function ReplyWhatsappSharePage({ params }: ReplyWhatsappSharePageProps) {
+  const { replyId } = await params;
+
+  return <PostDetailLogic initialFocusReplyId={replyId} />;
 }

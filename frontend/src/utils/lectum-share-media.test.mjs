@@ -204,7 +204,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
 
   assert.match(
     targetSource,
-    /publicCommunityReplyThreadHref\(post\.community\.slug, post\.id, reply\.id\)/,
+    /publicCommunityPostFocusedReplyHref\(post\.community\.slug, post\.id, reply\.id\)/,
   );
   assert.match(targetSource, /shareText: postTitle/);
   assert.match(targetSource, /whatsappShareUrl/);
@@ -217,6 +217,7 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
     /publicCommunityReplyWhatsappShareHref\(post\.community\.slug, post\.id, reply\.id\)/,
   );
   assert.match(publicRoutesSource, /publicCommunityPostWhatsappShareHref/);
+  assert.match(publicRoutesSource, /publicCommunityPostFocusedReplyHref/);
   assert.match(publicRoutesSource, /publicCommunityReplyWhatsappShareHref/);
   assert.match(mediaSource, /shareLectumSocialLinkPreviewTarget/);
   assert.match(mediaSource, /shareLectumWhatsAppPreviewTarget/);
@@ -305,6 +306,8 @@ test("videos compartilhados separam link de whatsapp e arquivo social sem link",
   assert.match(seoMetadataSource, /video: suppressVideoPreview \? null : seo\.og_video_url/);
   assert.match(postWhatsappPageSource, /shareTarget: "whatsapp"/);
   assert.match(replyWhatsappPageSource, /shareTarget: "whatsapp"/);
+  assert.match(replyWhatsappPageSource, /PostDetailLogic/);
+  assert.match(replyWhatsappPageSource, /initialFocusReplyId=\{replyId\}/);
   assert.match(shareDialogHookSource, /DESKTOP_SHARE_DESTINATION_QUERY/);
   assert.match(shareDialogHookSource, /resolveLectumShareDestinationMode/);
   assert.match(shareDialogHookSource, /\/Android\/i\.test\(window\.navigator\.userAgent\)/);

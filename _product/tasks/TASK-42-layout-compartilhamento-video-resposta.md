@@ -1299,3 +1299,34 @@ Regras de UI obrigatórias:
 - [x] Smoke local do backend buildado em `http://127.0.0.1:3211`: `/health` respondeu `ok`, `/ready` respondeu `ready` e `/ping` respondeu `0.1.201`.
 - [x] Smoke local do admin buildado em `http://127.0.0.1:3212`: `/version` respondeu `0.1.201`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+
+## Complemento 2026-08-24 - link de video-resposta com foco na discussao completa
+
+- Pedido do usuario: o compartilhamento por link nao deve abrir uma pagina isolada somente com o video/resposta compartilhada; deve abrir a discussao completa do post e apenas focar a resposta de video compartilhada. Nao deve haver badge do tipo "Video compartilhado". Ao tocar na seta de voltar em entrada direta por link, a navegacao deve voltar ao feed, nao ao detalhe da comunidade.
+- Decisao: o link canonico gerado para video-respostas profissionais passa a ser a pagina publica do post com `focusReplyId` e ancora `#reply-...`, reutilizando a tela de discussao completa e o destaque temporario ja existente. A rota especial de WhatsApp para resposta continua fornecendo metadata de preview, mas renderiza a discussao completa com foco inicial na resposta quando aberta por usuario.
+- Guardas: a rota de thread/resposta permanece disponivel para o fluxo interno `Ver mais respostas`, onde a arvore isolada ainda e util para continuidade de conversas profundas. `PROTO-INVENTORY.md` foi consultado; nao havia nova referencia visual alem das telas de comunidades/compartilhamento ja registradas, e Builder/Quick Copy nao estava exposto como ferramenta neste ambiente. Nao foi adicionado badge, package, migration, env obrigatoria, provider, mock, seed, reset, limpeza de storage/bucket ou alteracao destrutiva de dados publicados.
+- Deploy: mudanca frontend-only, compativel com backend atual. Links antigos de thread continuam funcionando; links novos de compartilhamento passam a apontar para a discussao completa. Rollback: reverter o helper de link focado para `publicCommunityReplyThreadHref` e o fallback de voltar para comunidade; nao ha dado persistido a ajustar.
+
+### Criterios de aceite do complemento
+
+- [x] O link de video-resposta profissional compartilhado abre a pagina completa do post com `focusReplyId` e `#reply-...`.
+- [x] O foco visual usa o destaque temporario existente na resposta, sem badge "Video compartilhado".
+- [x] A rota de WhatsApp de resposta renderiza a discussao completa com foco inicial na resposta compartilhada quando aberta no navegador.
+- [x] A seta de voltar em entrada direta de post/thread usa o feed como fallback, nao a comunidade especifica.
+- [x] A rota de thread/resposta continua preservada para `Ver mais respostas` e compatibilidade de links antigos.
+- [x] Nenhum package, migration, env obrigatoria, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/public-routes.ts src/utils/lectum-share-target.ts src/app/app/community/[slug]/post/[id]/views/post-detail.tsx src/app/app/community/[slug]/post/[id]/views/post-detail-controller.ts src/app/app/community/[slug]/post/[id]/views/reply-thread.tsx src/app/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp/page.tsx src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (14/14).
+- [x] `pnpm --dir frontend check` (100/100 testes).
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm version:bump` para `0.1.202`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` repetido apos o bump para gerar artefato local `0.1.202`.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- [x] Browser local/headless mobile 390px no frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.202` e as rotas focadas `/comunidades/.../publicacao/...?...#reply-...` e `/comunidades/.../publicacao/.../resposta/.../whatsapp` responderam 200; a tela renderizou o estado real de carregamento sem mock porque a API local/tunel nao disponibilizou conteudo real para exercitar comentarios.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
