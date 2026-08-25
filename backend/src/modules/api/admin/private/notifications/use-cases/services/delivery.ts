@@ -27,6 +27,12 @@ export type AudienceUser = Awaited<
   ReturnType<AdminNotificationsRepository["listAudienceUsers"]>
 >[number];
 
+const deliveryMetadata = (campaign: CampaignRecord, extra?: Record<string, unknown>) => ({
+  campaign_id: campaign.id,
+  notification_title: campaign.title,
+  ...extra,
+});
+
 export const sendCampaignEmail = async (campaign: CampaignRecord, user: AudienceUser) => {
   const redirectUrl = redirectUrlForEmail(campaign.redirect);
   const name = getFirstName(user.name);
@@ -73,7 +79,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
           campaignId: campaign.id,
           channel: "in_app",
           failureReason: "preference_disabled",
-          metadata: { campaign_id: campaign.id },
+          metadata: deliveryMetadata(campaign),
           source: "manual",
           status: "skipped",
           triggerKey: MESSAGE_KEY,
@@ -93,7 +99,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
           campaignId: campaign.id,
           channel: "in_app",
           deliveredAt: now,
-          metadata: { campaign_id: campaign.id },
+          metadata: deliveryMetadata(campaign),
           notificationId: notification.id,
           sentAt: now,
           source: "manual",
@@ -115,7 +121,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
           campaignId: campaign.id,
           channel: "push",
           failureReason: "preference_disabled",
-          metadata: { campaign_id: campaign.id },
+          metadata: deliveryMetadata(campaign),
           source: "manual",
           status: "skipped",
           triggerKey: MESSAGE_KEY,
@@ -139,12 +145,11 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
           campaignId: campaign.id,
           channel: "push",
           failureReason: result.failureReason ?? null,
-          metadata: {
-            campaign_id: campaign.id,
+          metadata: deliveryMetadata(campaign, {
             failed_count: result.failedCount,
             sent_count: result.sentCount,
             targeted_count: result.targetedCount,
-          },
+          }),
           sentAt: result.status === "sent" ? now : null,
           source: "manual",
           status: result.status,
@@ -165,7 +170,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
           campaignId: campaign.id,
           channel: "email",
           failureReason: "preference_disabled",
-          metadata: { campaign_id: campaign.id },
+          metadata: deliveryMetadata(campaign),
           source: "manual",
           status: "skipped",
           triggerKey: MESSAGE_KEY,
@@ -178,7 +183,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
           campaignId: campaign.id,
           channel: "email",
           failureReason: "email_missing",
-          metadata: { campaign_id: campaign.id },
+          metadata: deliveryMetadata(campaign),
           source: "manual",
           status: "skipped",
           triggerKey: MESSAGE_KEY,
@@ -193,7 +198,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
             await createNotificationDelivery({
               campaignId: campaign.id,
               channel: "email",
-              metadata: { campaign_id: campaign.id },
+              metadata: deliveryMetadata(campaign),
               sentAt: now,
               source: "manual",
               status: "sent",
@@ -206,7 +211,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
               campaignId: campaign.id,
               channel: "email",
               failureReason: "email_send_failed",
-              metadata: { campaign_id: campaign.id },
+              metadata: deliveryMetadata(campaign),
               source: "manual",
               status: "failed",
               triggerKey: MESSAGE_KEY,
@@ -224,7 +229,7 @@ export const materializeCampaignDeliveries = async (campaign: CampaignRecord) =>
             campaignId: campaign.id,
             channel: "email",
             failureReason: "email_send_failed",
-            metadata: { campaign_id: campaign.id },
+            metadata: deliveryMetadata(campaign),
             source: "manual",
             status: "failed",
             triggerKey: MESSAGE_KEY,

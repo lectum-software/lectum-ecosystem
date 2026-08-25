@@ -181,6 +181,7 @@ export type AdminNotificationAutomaticLog = {
     message_props: unknown;
     redirect: string | null;
   } | null;
+  notification_title?: string | null;
   read_at: string | null;
   sent_at: string | null;
   source: AdminPublicSource<"automatic" | "manual">;

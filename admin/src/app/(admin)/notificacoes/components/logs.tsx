@@ -16,6 +16,9 @@ import {
   RecipientCell,
 } from "./table";
 
+const notificationTitle = (log: AdminNotificationAutomaticLog) =>
+  log.notification_title?.trim() || "Título não disponível";
+
 export const AutomaticLogs = ({
   count,
   data,
@@ -75,9 +78,15 @@ export const AutomaticLogs = ({
           </thead>
           <tbody>
             {data.map((log) => {
+              const title = notificationTitle(log);
+
               return (
                 <tr className="border-t border-border align-top" key={log.id}>
-                  <td className="px-4 py-4 font-black text-foreground">Notificação automática</td>
+                  <td className="px-4 py-4">
+                    <p className="max-w-xs font-black text-foreground" title={title}>
+                      {title}
+                    </p>
+                  </td>
                   <td className="px-4 py-4 text-sm">
                     <RecipientCell user={log.user} />
                   </td>

@@ -409,3 +409,25 @@ UI:
 - `pnpm --dir admin build`
 
 - Servidor local `localhost:3002` reiniciado após build; chunk client de Notificações contém **Engajamento** e não contém **Alcance/Abertura/Cliques**.
+
+## Ajuste complementar 2026-08-24 - Título real nos logs de notificações
+
+- Pedido do usuário: nas tabelas de notificação, exibir o título da notificação enviada em vez de **Notificação automática** ou rótulo equivalente por origem.
+- A tabela **Notificações automáticas** passou a renderizar `notification_title` retornado pela API Admin, com fallback honesto **Título não disponível** apenas para registros legados sem dados suficientes.
+- O backend agora resolve `notification_title` a partir de metadados persistidos, `notification.message_props.title`, templates reais de `main/notification/constants` e `trigger_key` quando não há `notification_id`.
+- Novas entregas automáticas e manuais passam a gravar `metadata.notification_title`, preservando o título usado por push/e-mail/canais sem notificação in-app vinculada.
+- A mudança é aditiva e tolera rollout com Admin e backend em versões diferentes: o campo novo é opcional no cliente e não exige migração, package ou env nova.
+- Builder/Quick Copy não esteve disponível como ferramenta callable neste ambiente; as referências auditáveis foram `_product/proto/admin/Notificações.png` e a captura enviada pelo usuário.
+- ADR: `adrs/0468-titulo-real-logs-notificacoes-admin.md`.
+
+### Validação deste ajuste
+
+- `pnpm --dir backend exec biome check --write "src/main/notification/index.ts" "src/modules/api/admin/private/notifications/use-cases/services/delivery.ts" "src/modules/api/admin/private/notifications/use-cases/services/metrics.ts"`
+- `pnpm --dir admin exec biome check --write "src/api/req/notifications/index.ts" "src/app/(admin)/notificacoes/components/logs.tsx"`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm check`
+- Browser local/headless em Chrome abriu `http://localhost:3002/notificacoes` e confirmou a rota protegida até o login administrativo; a inspeção autenticada completa dos dados reais depende de sessão Admin interativa.
+- Build do Admin não contém mais o literal **Notificação automática** no chunk de `/notificacoes`.

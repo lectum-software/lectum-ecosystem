@@ -156,6 +156,18 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
     const propsRecord = meta.message_props ?? {};
     const props = propsRecord as Prisma.InputJsonValue;
     const emittedUserIds: string[] = [];
+    const build = messages[meta.message_key as keyof typeof messages] as
+      | ((data: Record<string, unknown>) => { body: string; title: string })
+      | undefined;
+    const pushMessageProps = build ? await resolvePushMessageProps(meta) : {};
+    const content = build
+      ? build(pushMessageProps)
+      : { body: "Voce tem uma nova notificacao", title: "Lectum" };
+    const deliveryMetadata = (extra?: Record<string, unknown>) => ({
+      message_key: meta.message_key,
+      notification_title: content.title,
+      ...extra,
+    });
 
     for (const user of users) {
       const now = new Date();
@@ -169,7 +181,7 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
         await createNotificationDelivery({
           channel: "in_app",
           failureReason: "preference_disabled",
-          metadata: { message_key: meta.message_key },
+          metadata: deliveryMetadata(),
           source: "automatic",
           status: "skipped",
           triggerKey: meta.message_key,
@@ -190,7 +202,7 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       await createNotificationDelivery({
         channel: "in_app",
         deliveredAt: now,
-        metadata: { message_key: meta.message_key },
+        metadata: deliveryMetadata(),
         notificationId: notification.id,
         sentAt: now,
         source: "automatic",
@@ -205,10 +217,6 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       await emitNotification(emittedUserIds);
     }
 
-    const build = messages[meta.message_key as keyof typeof messages] as
-      | ((data: Record<string, unknown>) => { body: string; title: string })
-      | undefined;
-    const pushMessageProps = build ? await resolvePushMessageProps(meta) : {};
     let targeted = 0;
     let sent = 0;
     let failed = 0;
@@ -227,7 +235,7 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
         await createNotificationDelivery({
           channel: "push",
           failureReason: "push_suppressed_by_policy",
-          metadata: { message_key: meta.message_key },
+          metadata: deliveryMetadata(),
           source: "automatic",
           status: "skipped",
           triggerKey: meta.message_key,
@@ -241,7 +249,7 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
         await createNotificationDelivery({
           channel: "push",
           failureReason: "preference_disabled",
-          metadata: { message_key: meta.message_key },
+          metadata: deliveryMetadata(),
           source: "automatic",
           status: "skipped",
           triggerKey: meta.message_key,
@@ -250,9 +258,6 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
         continue;
       }
 
-      const content = build
-        ? build(pushMessageProps)
-        : { body: "Voce tem uma nova notificacao", title: "Lectum" };
       const result = await sendWebPushToSubscriptions({
         body: content.body,
         redirect: meta.redirect,
@@ -269,12 +274,11 @@ export const notify = async (userIds: string[], meta: NotifyMeta) => {
       await createNotificationDelivery({
         channel: "push",
         failureReason: result.failureReason ?? null,
-        metadata: {
+        metadata: deliveryMetadata({
           failed_count: result.failedCount,
-          message_key: meta.message_key,
           sent_count: result.sentCount,
           targeted_count: result.targetedCount,
-        },
+        }),
         sentAt: result.status === "sent" ? now : null,
         source: "automatic",
         status: result.status,
