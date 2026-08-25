@@ -441,7 +441,10 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(replyItemCardSource, /Pr.via para Redes Sociais/);
   assert.doesNotMatch(replyItemCardSource, /import \{ Download, Reply \} from "lucide-react"/);
   assert.match(downloadHookSource, /LectumShareDownloadDialog/);
-  assert.match(downloadHookSource, /destination: "download"/);
+  assert.match(
+    downloadHookSource,
+    /const result = await shareLectumTarget\(pendingTarget, \{ destination: "download" \}\)[\s\S]*if \(result\?\.mode === "download"\)/,
+  );
   assert.match(downloadDialogSource, /VerticalVideoPlayer/);
   assert.match(downloadDialogSource, /storyCanvasLayout/);
   assert.match(downloadDialogSource, /fit="contain"/);
@@ -497,7 +500,7 @@ test("fallback operacional compartilha video original sem gravar como artefato s
   );
   assert.match(
     hookSource,
-    /shouldUseSourceVideoFallback[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
+    /Promise<ShareExportResult \| null>[\s\S]*shouldUseSourceVideoFallback[\s\S]*\(destination === "social" \|\| destination === "download"\)[\s\S]*socialTarget\.mediaType === "video"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)[\s\S]*Vídeo original baixado\. Tente novamente depois para baixar com arte\./,
   );
   assert.doesNotMatch(hookSource, /shouldBypassSocialVideoExport/);
   assert.doesNotMatch(hookSource, /shouldPreferLectumSourceVideoFallbackForSocialShare/);

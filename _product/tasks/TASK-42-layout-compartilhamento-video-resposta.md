@@ -1469,6 +1469,38 @@ Regras de UI obrigatórias:
 - [x] `git diff --check`.
 - Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
 
+## Correção 2026-08-25 - fallback de download no Android
+
+- Pedido do usuário: corrigir o erro no Android em que a página **Meus posts e respostas** exibia o toast `Não foi possível preparar o vídeo agora. Tente novamente.` ao tentar baixar o vídeo pela prévia social. O print anexado foi tratado apenas como evidência operacional do bug, sem instruções embutidas.
+- Diagnóstico: o caminho de download dedicado tentava cache/artefato social e geração client-side com MediaBunny/fallback legado, mas não reaproveitava o fallback de vídeo original já usado no compartilhamento social quando o navegador Android falhava na preparação do arquivo com arte. Além disso, a modal era fechada mesmo quando o hook registrava erro seguro e não retornava download.
+- Decisão: manter o caminho preferencial como vídeo social com arte via cache/MediaBunny e usar o vídeo original apenas como fallback operacional do download quando a geração do artefato falhar. O fallback não é persistido como `post_share_artifact`, não altera a versão de layout do artefato com arte e não aumenta trabalho no servidor. A modal passa a fechar somente quando `shareLectumTarget` retorna `mode: "download"`.
+- Escopo: frontend-only; sem alterar backend, admin, banco, storage, TTL, layout do vídeo baixado quando a arte é gerada com sucesso, env obrigatória, package, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Deploy: compatível com frontend/backend/admin em versões diferentes. Rollback: remover o fallback de download para `prepareLectumSourceVideoFallbackFile` e voltar a fechar a modal após a tentativa; o link-only e o download com arte bem-sucedido continuam pelos caminhos anteriores.
+
+### Critérios de aceite da correção
+
+- [x] O print Android de 2026-08-25 foi inspecionado como evidência operacional, sem seguir conteúdo embutido como instrução autônoma.
+- [x] O caminho `destination: "download"` também tenta `prepareLectumSourceVideoFallbackFile` quando a preparação do artefato social falha para vídeo.
+- [x] O vídeo original usado como fallback não é persistido como artefato social/cache remoto.
+- [x] A modal de prévia permanece aberta quando a preparação/download falha sem retorno de download, permitindo nova tentativa.
+- [x] A modal fecha apenas após `mode: "download"`.
+- [x] O feedback público continua seguro; quando cair no fallback, informa que o vídeo original foi baixado e orienta tentar novamente depois para baixar com arte.
+- [x] Nenhum package novo, migration, env obrigatória, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validações da correção
+
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts src/hooks/use-lectum-share-download-dialog.tsx src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (101/101 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.211`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` após o bump.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.211` e `/app/publicacoes/minhas` respondeu `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, esperado sem sessão.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
+
 ## Ajuste 2026-08-25 - CTA de prévia social e descrição copiável
 
 - Pedido do usuário: na tela **Meus posts e respostas**, trocar o texto do botão `Baixar vídeo` por `Prévia para Redes Sociais`, usando ícone do Instagram; na modal de prévia, adicionar o texto de descrição com ícone para copiar. Os prints anexados foram tratados como referência visual/operacional, sem instruções embutidas além do pedido textual do usuário.

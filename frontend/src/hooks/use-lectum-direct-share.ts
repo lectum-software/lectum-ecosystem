@@ -69,8 +69,11 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
   );
 
   const shareLectumTarget = useCallback(
-    async (target: LectumShareVideoTarget, shareOptions: ShareLectumTargetOptions = {}) => {
-      if (sharingRef.current || typeof window === "undefined") return;
+    async (
+      target: LectumShareVideoTarget,
+      shareOptions: ShareLectumTargetOptions = {},
+    ): Promise<ShareExportResult | null> => {
+      if (sharingRef.current || typeof window === "undefined") return null;
 
       sharingRef.current = true;
       setIsSharing(true);
@@ -83,7 +86,8 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         const prepareSocialFileTarget = async (socialTarget: LectumShareSocialTarget) => {
           let cachedFile = getPreparedLectumShareFile(socialTarget);
           const shouldUseSourceVideoFallback =
-            destination === "social" && socialTarget.mediaType === "video";
+            (destination === "social" || destination === "download") &&
+            socialTarget.mediaType === "video";
 
           if (!cachedFile) {
             cachedFile = await getLectumShareArtifactFile(socialTarget).catch(() => null);
@@ -143,22 +147,30 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         }
 
         if (result.mode === "download") {
+          const usedSourceVideoFallback = result.file
+            ? isLectumSourceVideoFallbackFile(result.file)
+            : false;
+
           toast.success(
-            destination === "download"
-              ? "Vídeo baixado."
-              : "Arquivo baixado. Escolha o app desejado no dispositivo.",
+            usedSourceVideoFallback && destination === "download"
+              ? "Vídeo original baixado. Tente novamente depois para baixar com arte."
+              : destination === "download"
+                ? "Vídeo baixado."
+                : "Arquivo baixado. Escolha o app desejado no dispositivo.",
           );
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
         } else if (result.mode === "prepared") {
           toast.info(SHARE_READY_RETRY_MESSAGE);
         }
+
+        return result;
       } catch (error) {
         if (loadingToastId !== null) {
           toast.dismiss(loadingToastId);
         }
 
-        if (isNativeShareAbortError(error)) return;
+        if (isNativeShareAbortError(error)) return null;
 
         toast.error(
           target.kind === "link"
@@ -167,6 +179,8 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
               ? "Não foi possível preparar o vídeo agora. Tente novamente."
               : "Não foi possível preparar o compartilhamento agora. Tente novamente.",
         );
+
+        return null;
       } finally {
         sharingRef.current = false;
         setIsSharing(false);

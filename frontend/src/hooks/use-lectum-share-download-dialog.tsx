@@ -27,8 +27,11 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
   const downloadPendingTarget = useCallback(async () => {
     if (!pendingTarget) return;
 
-    await shareLectumTarget(pendingTarget, { destination: "download" });
-    setPendingTarget(null);
+    const result = await shareLectumTarget(pendingTarget, { destination: "download" });
+
+    if (result?.mode === "download") {
+      setPendingTarget(null);
+    }
   }, [pendingTarget, shareLectumTarget]);
 
   return {

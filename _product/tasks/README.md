@@ -960,3 +960,4 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste de prévia: a superfície 9:16 da modal passou a escalar `storyCanvasLayout`, usar mídia `contain` e poster da thumbnail real para representar o vídeo baixado sem alterar a identidade/exportação do artefato.
 - Ajuste de copy da criação social: o CTA do card agora é `Prévia para Redes Sociais` com ícone do Instagram; a modal mantém `Baixar vídeo` como ação final e adiciona `Descrição` copiável para a legenda.
 - Ajuste visual iPhone: a logo da Lectum na prévia passou a usar máscara CSS do SVG sem filtro rasterizado, e a descrição da modal ficou sem título/fundo cinza, mantendo apenas texto e ícone de copiar com baixo peso visual.
+- Correção operacional Android: se a geração/download do artefato social com arte falhar no navegador, o fluxo tenta baixar o vídeo original como fallback seguro, sem persistir esse arquivo como artefato social; a modal só fecha quando há retorno de download bem-sucedido.

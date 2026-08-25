@@ -966,3 +966,28 @@ O usuário identificou no iPhone que a logo da Lectum na prévia parecia em baix
 
 - Teste estático cobre `maskImage`/`WebkitMaskImage`, ausência de `brightness-0 invert`, legenda sem card cinza e botão de cópia discreto.
 - Validações finais constam na TASK-42 em `0.1.210`.
+
+## Ajuste 2026-08-25 - fallback de download Android na prévia social
+
+### Contexto
+
+Um print Android mostrou o toast seguro `Não foi possível preparar o vídeo agora. Tente novamente.` após a tentativa de baixar o vídeo pela modal de prévia social em **Meus posts e respostas**. O caminho preferencial continuava correto para vídeo com arte, mas navegadores Android podem falhar no pipeline client-side de artefato por combinações de MediaBunny/WebCodecs, canvas e suporte nativo.
+
+### Decisão
+
+- Manter cache/MediaBunny/fallback legado como caminho preferencial de download do artefato social com arte.
+- Estender o fallback de vídeo original também para `destination: "download"` quando a preparação do artefato social falhar.
+- Não persistir o vídeo original como `post_share_artifact`, evitando contaminar o cache remoto de artefatos sociais.
+- Fazer `shareLectumTarget` retornar `ShareExportResult | null` para que a modal feche somente quando houver `mode: "download"`; em erro, ela permanece aberta para nova tentativa.
+
+### Consequências
+
+- O Android deixa de bloquear o psicólogo apenas com erro quando o navegador não consegue gerar o artefato com arte; no pior caso, baixa o vídeo original como fallback honesto.
+- O servidor segue sem renderizar ou transcodificar vídeo. O fallback baixa a mídia pública no navegador do usuário e não cria storage remoto novo.
+- Não há invalidação de layout/cache, pois o artefato social aprovado não mudou. A mudança é frontend-only, sem backend, admin, env obrigatória, package, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Rollback: restringir novamente `prepareLectumSourceVideoFallbackFile` ao destino social e voltar a fechar a modal após a tentativa de download.
+
+### Validação
+
+- Testes estáticos cobrem o fallback para `destination: "download"`, a não persistência do fallback original e o fechamento da modal apenas após retorno `mode: "download"`.
+- Validações finais constam na TASK-42 em `0.1.211`.
