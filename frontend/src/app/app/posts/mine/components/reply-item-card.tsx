@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Reply } from "lucide-react";
+import { Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -13,6 +13,7 @@ import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { cn } from "@/lib/utils";
 import { formatCommunityRelativeTime as formatRelativeTime } from "@/utils/community-display";
 
@@ -273,8 +274,8 @@ export const ReplyItemCard = ({
               }}
               type="button"
             >
-              <Download className="h-4 w-4" aria-hidden="true" />
-              Baixar vídeo
+              <InstagramIcon className="h-4 w-4" aria-hidden="true" />
+              Prévia para Redes Sociais
             </button>
           ) : null}
         </div>

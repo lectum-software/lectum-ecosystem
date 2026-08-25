@@ -1,9 +1,10 @@
 "use client";
 
-import { Download, X } from "lucide-react";
+import { Copy, Download, X } from "lucide-react";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { storyCanvasLayout } from "@/utils/lectum-share-media/layout";
@@ -150,6 +151,18 @@ export const LectumShareDownloadDialog = ({
   const resolvedMediaUrl = resolvePublicMediaUrl(target.mediaUrl);
   const resolvedPosterUrl = resolvePublicMediaUrl(target.posterUrl);
   const sourceText = target.sourceText.trim() || SOURCE_TEXT_FALLBACK;
+  const descriptionText = target.responseText?.trim() || target.shareText.trim();
+
+  const copyDescription = async () => {
+    if (!descriptionText) return;
+
+    try {
+      await navigator.clipboard.writeText(descriptionText);
+      toast.success("Descrição copiada.");
+    } catch {
+      toast.error("Não foi possível copiar a descrição agora.");
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[120] grid items-end bg-foreground/40 px-3 pb-3 backdrop-blur-[3px] sm:items-center sm:px-4 sm:pb-0">
@@ -258,6 +271,25 @@ export const LectumShareDownloadDialog = ({
             </div>
           )}
         </div>
+
+        {descriptionText ? (
+          <section className="grid gap-2 rounded-[22px] border border-border bg-surface-muted/70 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-muted text-xs font-black tracking-[0.12em] uppercase">Descrição</p>
+              <button
+                aria-label="Copiar descrição"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-primary/10 bg-surface text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                onClick={copyDescription}
+                type="button"
+              >
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <p className="max-h-28 overflow-y-auto whitespace-pre-line pr-1 text-sm leading-6 text-foreground">
+              {descriptionText}
+            </p>
+          </section>
+        ) : null}
 
         <button
           className={cn(

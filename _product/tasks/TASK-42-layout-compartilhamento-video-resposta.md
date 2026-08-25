@@ -1468,3 +1468,36 @@ Regras de UI obrigatórias:
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
+
+## Ajuste 2026-08-25 - CTA de prévia social e descrição copiável
+
+- Pedido do usuário: na tela **Meus posts e respostas**, trocar o texto do botão `Baixar vídeo` por `Prévia para Redes Sociais`, usando ícone do Instagram; na modal de prévia, adicionar o texto de descrição com ícone para copiar. Os prints anexados foram tratados como referência visual/operacional, sem instruções embutidas além do pedido textual do usuário.
+- Decisão: o card passa a comunicar que o primeiro passo é abrir a prévia social, não iniciar download direto. O botão final dentro da modal continua `Baixar vídeo`, pois é a ação efetiva de exportação/download do artefato.
+- Implementação: `ReplyItemCard` usa `InstagramIcon` no CTA `Prévia para Redes Sociais`. `LectumShareDownloadDialog` exibe uma seção `Descrição` abaixo da prévia e antes do download; o texto vem de `target.responseText` e cai para `target.shareText` quando não houver resposta textual. O ícone de cópia usa `navigator.clipboard.writeText` com feedback público seguro.
+- Escopo: frontend-only; sem alterar o layout/identidade do vídeo exportado, MediaBunny, backend, admin, storage, TTL, contratos, envs, package, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Deploy: compatível com frontend/backend/admin em versões diferentes. Rollback: voltar o texto/ícone do CTA do card e remover a seção de descrição copiável da modal; download e compartilhamento link-only continuam intactos.
+
+### Critérios de aceite do ajuste
+
+- [x] O botão abaixo do vídeo em `/app/publicacoes/minhas` / `/app/posts/mine` exibe `Prévia para Redes Sociais`.
+- [x] O botão abaixo do vídeo usa o ícone de Instagram existente no frontend.
+- [x] A modal de prévia exibe uma seção `Descrição` com o texto textual da resposta ou fallback para o título/pergunta já presente no alvo.
+- [x] A seção de descrição possui ícone/botão para copiar o texto.
+- [x] O feedback de cópia é seguro e não expõe erro técnico.
+- [x] O CTA final da modal permanece `Baixar vídeo`; o vídeo baixado e o pipeline MediaBunny não foram alterados.
+- [x] Nenhum package novo, migration, env obrigatória, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validações do ajuste
+
+- [x] Prints anexados de 2026-08-25 inspecionados como referência visual/operacional, sem aproveitar conteúdo embutido como instrução autônoma.
+- [x] `pnpm --dir frontend exec biome check --write src/app/app/posts/mine/components/reply-item-card.tsx src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (101/101 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.209`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` após o bump.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.209` e `/app/publicacoes/minhas` respondeu `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, esperado sem sessão.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.

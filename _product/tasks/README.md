@@ -958,3 +958,4 @@ Uma task só pode ser marcada como concluída quando:
 - O ícone de compartilhar permanece link-only; a geração do artefato com arte fica em um fluxo separado de download, usando MediaBunny client-side já instalado e fallback legado quando necessário.
 - O backend não renderiza/transcodifica vídeo; apenas as rotas/cache temporário de artefatos já existentes podem ser usados para reaproveitamento. Alteração frontend-only, sem package novo, env obrigatória, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
 - Ajuste de prévia: a superfície 9:16 da modal passou a escalar `storyCanvasLayout`, usar mídia `contain` e poster da thumbnail real para representar o vídeo baixado sem alterar a identidade/exportação do artefato.
+- Ajuste de copy da criação social: o CTA do card agora é `Prévia para Redes Sociais` com ícone do Instagram; a modal mantém `Baixar vídeo` como ação final e adiciona `Descrição` copiável para a legenda.

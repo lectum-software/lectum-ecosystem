@@ -915,3 +915,28 @@ Após a publicação do botão de download, o usuário comparou a modal com o ar
 
 - Teste estático cobre `storyCanvasLayout`, `fit="contain"`, `poster` da resposta e ausência de `cover` na prévia.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, `pnpm --dir frontend build` pós-bump, smoke local HTTP do frontend e validações finais da task passaram em `0.1.208`.
+
+## Ajuste 2026-08-25 - CTA de prévia social e descrição copiável
+
+### Contexto
+
+O usuário refinou a copy do card de resposta: o botão deve comunicar `Prévia para Redes Sociais` com ícone do Instagram, e a modal deve oferecer a descrição/caption para copiar junto do download do vídeo. Os prints anexados foram tratados somente como referência visual/operacional e não como instruções embutidas.
+
+### Decisão
+
+- Renomear somente o CTA do card e trocar o ícone para `InstagramIcon`.
+- Manter o CTA final da modal como `Baixar vídeo`, pois ele é a ação efetiva de exportação/download.
+- Exibir `Descrição` na modal a partir de `target.responseText`, com fallback para `target.shareText`.
+- Copiar a descrição via Clipboard API com toasts seguros.
+- Não alterar exportação, MediaBunny, canvas nem identidade do artefato baixado.
+
+### Consequências
+
+- O fluxo fica mais claro: o card abre a prévia social; a modal baixa o vídeo e oferece texto para legenda.
+- A mudança é frontend-only, sem backend, admin, env, package, migration, storage, provider, mock, seed, reset ou limpeza de dados publicados.
+- Rollback: reverter a copy/ícone do CTA do card e remover o bloco de descrição copiável da modal.
+
+### Validação
+
+- Teste estático cobre CTA, `InstagramIcon`, seção `Descrição`, `Copy`, clipboard e feedback seguro.
+- Validações finais constam na TASK-42 em `0.1.209`.

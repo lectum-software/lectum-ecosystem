@@ -437,7 +437,9 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(mineLogicSource, /openLectumDownloadDialog\(socialTarget\)/);
   assert.match(replyItemCardSource, /onDownloadVideo/);
   assert.match(replyItemCardSource, /canDownloadVideo/);
-  assert.match(replyItemCardSource, /Baixar v.deo/);
+  assert.match(replyItemCardSource, /InstagramIcon/);
+  assert.match(replyItemCardSource, /Pr.via para Redes Sociais/);
+  assert.doesNotMatch(replyItemCardSource, /import \{ Download, Reply \} from "lucide-react"/);
   assert.match(downloadHookSource, /LectumShareDownloadDialog/);
   assert.match(downloadHookSource, /destination: "download"/);
   assert.match(downloadDialogSource, /VerticalVideoPlayer/);
@@ -446,6 +448,11 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.doesNotMatch(downloadDialogSource, /fit="cover"/);
   assert.match(downloadDialogSource, /poster=\{resolvedPosterUrl\}/);
   assert.match(downloadDialogSource, /controls=\{false\}/);
+  assert.match(downloadDialogSource, /const descriptionText = target\.responseText\?\.trim\(\)/);
+  assert.match(downloadDialogSource, /navigator\.clipboard\.writeText\(descriptionText\)/);
+  assert.match(downloadDialogSource, /Descrição copiada\./);
+  assert.match(downloadDialogSource, /Copiar descrição/);
+  assert.match(downloadDialogSource, /<Copy className="h-4 w-4"/);
   assert.match(downloadDialogSource, /Baixar v.deo/);
   assert.doesNotMatch(downloadDialogSource, /WhatsApp|Instagram|TikTok|Copiar link|9:16/);
   assert.match(shareDialogHookSource, /shareDestinationDialog: null/);
