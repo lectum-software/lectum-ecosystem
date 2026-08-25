@@ -1,6 +1,6 @@
 "use client";
 
-import { Reply } from "lucide-react";
+import { Download, Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -28,12 +28,14 @@ export const ReplyItemCard = ({
   interactionCopy,
   item,
   onChanged,
+  onDownloadVideo,
   onShare,
   showProfessionalAnsweredBadge,
 }: {
   interactionCopy: InteractionCopy;
   item: UserPostListItem;
   onChanged?: () => void;
+  onDownloadVideo?: (post: PostListPost, replyId: string) => void;
   onShare: (post: PostListPost, replyId: string) => void;
   showProfessionalAnsweredBadge: boolean;
 }) => {
@@ -61,6 +63,11 @@ export const ReplyItemCard = ({
   const hasVerifiedProfessionalReply =
     showProfessionalAnsweredBadge && Boolean(reply.has_verified_professional_reply);
   const isPsychologistReply = reply.author.role === "psicologo";
+  const canDownloadVideo =
+    isPsychologistReply &&
+    reply.media_type === "video" &&
+    Boolean(reply.media_url) &&
+    Boolean(onDownloadVideo);
   const voteState =
     voteOverride?.replyId === reply.id
       ? voteOverride
@@ -254,6 +261,22 @@ export const ReplyItemCard = ({
             thumbnailUrl={reply.thumbnail_url}
             variant="reply"
           />
+          {canDownloadVideo ? (
+            <button
+              className={cn(
+                "mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-primary/15 bg-primary-soft px-4 text-primary text-sm font-black transition",
+                "hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+              )}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDownloadVideo?.(item.post, reply.id);
+              }}
+              type="button"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Baixar vídeo
+            </button>
+          ) : null}
         </div>
       ) : null}
 

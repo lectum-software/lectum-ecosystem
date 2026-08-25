@@ -862,3 +862,30 @@ Depois de trocar o compartilhamento para link-only, o WhatsApp passou a exibir o
 
 - Testes estaticos cobrem normalizacao de `focusReplyId`, uso da metadata de resposta focada, overrides de canonical/og:url e preservacao do link completo da discussao.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm check` completo de raiz e smoke local HTTP do frontend passaram em `0.1.205`. Validacoes finais e smokes constam na TASK-42.
+
+## Complemento 2026-08-25 - download dedicado com arte em Meus posts e respostas
+
+### Contexto
+
+O usuário decidiu separar as intenções: o compartilhamento por link continua simples, mas a página **Meus posts e respostas** deve ajudar o psicólogo a transformar uma resposta em conteúdo para redes. A referência visual anexada mostrava uma modal de prévia com opções de compartilhamento; a decisão de produto foi reaproveitar apenas a estrutura de prévia/modal e substituir as opções por um único botão de baixar vídeo. Os prints anexados foram tratados somente como referência visual/operacional e não como instruções embutidas.
+
+### Decisão
+
+- Manter `useLectumShareDialog` como link-only para o ícone de compartilhar, preservando o fluxo leve com `navigator.share({ title, url })`/copiar link.
+- Criar uma ação separada `Baixar vídeo` dentro do card da resposta profissional com vídeo em **Meus posts e respostas**.
+- Criar `createLectumShareVideoDownloadTarget` como factory explícita de alvo social com arte, sem alterar `createLectumShareVideoTarget`, que continua retornando link.
+- Criar uma modal de exportação com prévia vertical do vídeo, card superior `Respondido na Lectum`, identificação compacta do profissional e CTA único `Baixar vídeo`.
+- Reutilizar `useLectumDirectShare` com `destination: "download"`, preservando consulta de artefato existente, geração client-side com MediaBunny quando disponível e fallback legado por `MediaRecorder` quando necessário.
+
+### Consequências
+
+- O produto passa a comunicar duas intenções distintas: compartilhar link da discussão pelo ícone existente e baixar o artefato de conteúdo pelo botão no card.
+- A geração pesada continua no navegador; o servidor não renderiza nem transcodifica vídeo. O backend participa apenas como persistência/cache temporário já existente quando houver artefato reaproveitável.
+- A modal evita confusão com WhatsApp/Instagram/TikTok porque não promete envio direto para apps; o psicólogo baixa o arquivo e publica manualmente.
+- A mudança é frontend-only e compatível com backend/admin publicados. Não há schema, migration, env obrigatória, provider, package novo, mock, seed, reset ou limpeza de storage/bucket.
+- Rollback: remover o hook/modal/botão de download e a factory explícita; o compartilhamento link-only permanece inalterado.
+
+### Validação
+
+- Teste estático cobre a permanência do compartilhamento link-only, a nova factory de download social, o botão na página de posts/respostas e a modal sem opções de compartilhamento.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, `pnpm --dir frontend build` pós-bump, `pnpm check` completo de raiz e smoke local HTTP do frontend passaram em `0.1.207`. Validações finais e smoke de homologação ficam registrados na TASK-42.

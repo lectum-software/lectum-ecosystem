@@ -38,6 +38,7 @@ type ShareLectumTargetOptions = {
 };
 
 const SHARING_TOAST_MESSAGE = "Preparando vídeo para compartilhar...";
+const DOWNLOAD_TOAST_MESSAGE = "Preparando vídeo para baixar...";
 const SHARE_READY_RETRY_MESSAGE =
   "Vídeo preparado. Toque em compartilhar novamente e escolha Redes Sociais.";
 
@@ -89,7 +90,9 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           }
 
           if (!cachedFile) {
-            loadingToastId = toast.loading(SHARING_TOAST_MESSAGE);
+            loadingToastId = toast.loading(
+              destination === "download" ? DOWNLOAD_TOAST_MESSAGE : SHARING_TOAST_MESSAGE,
+            );
           }
 
           const file =
@@ -160,7 +163,9 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         toast.error(
           target.kind === "link"
             ? "Não foi possível abrir o compartilhamento. Tente copiar o link novamente."
-            : "Não foi possível preparar o compartilhamento agora. Tente novamente.",
+            : destination === "download"
+              ? "Não foi possível preparar o vídeo agora. Tente novamente."
+              : "Não foi possível preparar o compartilhamento agora. Tente novamente.",
         );
       } finally {
         sharingRef.current = false;

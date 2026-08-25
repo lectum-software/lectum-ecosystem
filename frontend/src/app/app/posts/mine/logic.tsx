@@ -12,12 +12,14 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
+  createLectumShareVideoDownloadTarget,
   createLectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { FilterTabs, MyPostsHeader, ProfessionalAnsweredBadge } from "./components/header";
@@ -50,6 +52,7 @@ export const MyPostsLogic = () => {
       window.setTimeout(() => setShareFeedback(null), 2400);
     },
   });
+  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const { fetchNextPage } = postsQuery;
   const postsCountQuery = useMyPosts(postsCountQueryParams, type !== "posts");
   const repliesCountQuery = useMyPosts(repliesCountQueryParams, type !== "replies");
@@ -103,6 +106,27 @@ export const MyPostsLogic = () => {
       }),
     );
   };
+
+  const downloadReplyVideo = useCallback(
+    (post: PostListPost, replyId: string) => {
+      if (typeof window === "undefined") return;
+
+      const replyTarget = items.find(
+        (item) => item.reply?.id === replyId && item.post.id === post.id,
+      )?.reply;
+
+      if (!replyTarget) return;
+
+      const socialTarget = createLectumShareVideoDownloadTarget(post, replyTarget, {
+        parentContent: replyTarget.parent_content ?? null,
+      });
+
+      if (!socialTarget) return;
+
+      openLectumDownloadDialog(socialTarget);
+    },
+    [items, openLectumDownloadDialog],
+  );
 
   const handleFilterChange = (value: UserPostsType) => {
     setType(value);
@@ -189,6 +213,7 @@ export const MyPostsLogic = () => {
                     item={item}
                     key={item.id}
                     onChanged={handleReplyChanged}
+                    onDownloadVideo={downloadReplyVideo}
                     onShare={sharePost}
                     showProfessionalAnsweredBadge={!isPsychologist}
                   />
@@ -248,6 +273,7 @@ export const MyPostsLogic = () => {
       </section>
 
       {shareDestinationDialog}
+      {lectumDownloadDialog}
     </PrivateTemplate>
   );
 };

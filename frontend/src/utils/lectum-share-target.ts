@@ -9,6 +9,7 @@ import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import {
   publicCommunityPostFocusedReplyHref,
   publicCommunityPostHref,
+  publicCommunityReplyWhatsappShareHref,
 } from "@/utils/public-routes";
 
 export type LectumShareChannel = "clipboard" | "web_share";
@@ -187,6 +188,55 @@ export const createLectumShareTargetFromHighlightedReply = (
   if (!post.highlighted_professional_reply) return null;
 
   return createLectumShareVideoTarget(post, post.highlighted_professional_reply);
+};
+
+export const createLectumShareVideoDownloadTarget = (
+  post: Pick<PostListPost, "community" | "id" | "title">,
+  reply: ShareableProfessionalReply,
+  options: ShareTargetOptions = {},
+): LectumShareSocialTarget | null => {
+  if (!isProfessionalAuthor(reply.author) || !isVideoReply(reply) || !reply.media_url) {
+    return null;
+  }
+
+  const parentContent =
+    options.parentContent ?? ("parent_content" in reply ? reply.parent_content : null);
+  const postTitle = post.title.trim() || "Pergunta na Lectum";
+  const hasCommentContext = Boolean(parentContent?.trim() || reply.parent_reply_id);
+  const sourceText = (hasCommentContext ? parentContent : postTitle)?.trim() || postTitle;
+  const responseText = reply.content?.trim() || null;
+  const relativeUrl =
+    options.relativeUrl ??
+    publicCommunityPostFocusedReplyHref(post.community.slug, post.id, reply.id);
+  const cardLabel = "Respondido na Lectum";
+  const professionalName =
+    normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;
+
+  return {
+    cardLabel,
+    carouselCount: 1,
+    kind: "video_response",
+    mediaItems: [{ mediaType: "video", mediaUrl: reply.media_url }],
+    mediaType: "video",
+    mediaUrl: reply.media_url,
+    postId: post.id,
+    professional: {
+      avatar: reply.author.avatar,
+      name: professionalName,
+      roleLabel: normalizeLectumShareProfessionalRole(reply.author.type_label),
+      verified: reply.author.verified,
+    },
+    replyId: reply.id,
+    responseText,
+    shareText: postTitle,
+    shareTitle: createLectumSocialShareTitle(professionalName),
+    shareUrl: toAbsoluteShareUrl(relativeUrl),
+    sourceKind: hasCommentContext ? "comment" : "post",
+    sourceText,
+    whatsappShareUrl: toAbsoluteShareUrl(
+      publicCommunityReplyWhatsappShareHref(post.community.slug, post.id, reply.id),
+    ),
+  };
 };
 
 export const findPostReplyInTree = (

@@ -1401,3 +1401,37 @@ Regras de UI obrigatórias:
 - [x] `pnpm check` completo de raiz.
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.205`, a rota publica focada respondeu `200` e a rota publica de WhatsApp da resposta respondeu `200`, sem mocks ou dados inventados.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Complemento 2026-08-25 - botão de baixar vídeo com arte em Meus posts e respostas
+
+- Pedido do usuário: na página **Meus posts e respostas**, exibir um botão logo abaixo do vídeo da resposta profissional; esse botão deve abrir uma modal de prévia semelhante à referência anexada e substituir as opções de compartilhamento por um CTA único de baixar o vídeo. Não exibir texto técnico como proporção/formato. O usuário também confirmou preferência por MediaBunny para evitar sobrecarga de servidor.
+- Decisão: manter o botão/ícone de **Compartilhar** no fluxo link-only aprovado anteriormente e criar um caminho separado de **Baixar vídeo** apenas para respostas profissionais com vídeo na lista de respostas do psicólogo. O novo caminho abre uma modal de exportação com prévia do vídeo e CTA único `Baixar vídeo`.
+- Implementação: `createLectumShareVideoTarget` continua retornando link; a nova factory `createLectumShareVideoDownloadTarget` cria explicitamente o alvo social com arte para download. `useLectumShareDownloadDialog` chama o download usando o utilitário existente com `destination: "download"`, que consulta cache/artefato existente e gera client-side com MediaBunny antes do fallback legado quando necessário.
+- MediaBunny/servidor: a renderização/transcodificação permanece client-side no frontend. O backend não renderiza vídeo; ele só pode ser usado pelas rotas já existentes de consulta/upload de artefato temporário em R2 quando o arquivo precisar ser reaproveitado.
+- UX: a modal não mostra WhatsApp, Instagram, TikTok, copiar link ou texto de formato; o compartilhamento por link permanece separado no ícone de compartilhar. O toast de preparo no caminho de download usa copy própria (`Preparando vídeo para baixar...`).
+- Referências visuais: `PROTO-INVENTORY.md` foi consultado. Builder/Quick Copy não estava exposto como ferramenta MCP neste ambiente; foram usadas as referências locais existentes da TASK-42 e os prints anexados pelo usuário apenas como referência visual/operacional. Textos e elementos embutidos nos prints não foram tratados como instruções autônomas, e as imagens não foram commitadas por conterem pessoa/identificação.
+- Escopo: frontend-only; sem package novo, migration, env obrigatória, contrato de API novo, provider, mock, seed, reset, limpeza de storage/bucket ou alteração destrutiva de dados publicados.
+- Deploy: compatível com backend/admin em versões diferentes. Rollback: remover o botão/hook/modal de download e a factory `createLectumShareVideoDownloadTarget`; o compartilhamento link-only existente permanece funcional.
+
+### Critérios de aceite do complemento
+
+- [x] Respostas profissionais com vídeo em `/app/publicacoes/minhas` / `/app/posts/mine` exibem botão `Baixar vídeo` logo abaixo do player, dentro do card.
+- [x] O botão abre uma modal de prévia com o vídeo e CTA único `Baixar vídeo`.
+- [x] A modal não exibe opções de copiar link, WhatsApp, Instagram, TikTok, Mais nem texto técnico de formato/proporção.
+- [x] O ícone/botão de compartilhar existente continua link-only e não reabre a modal de compartilhamento antiga.
+- [x] O download usa o alvo social com arte e o pipeline existente de MediaBunny client-side antes do fallback legado, sem renderização server-side.
+- [x] Nenhum package novo, migration, env obrigatória, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validações
+
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-target.ts src/components/community/lectum-share-download-dialog.tsx src/hooks/use-lectum-share-download-dialog.tsx src/app/app/posts/mine/logic.tsx src/app/app/posts/mine/components/reply-item-card.tsx src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (101/101 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.207`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` após o bump.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.207` e `/app/publicacoes/minhas` respondeu `200`, sem mocks ou dados inventados.
+- Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.

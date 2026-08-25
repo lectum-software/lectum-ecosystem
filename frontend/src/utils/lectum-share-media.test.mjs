@@ -262,6 +262,7 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
     /prepareSocialFileTarget\(target\)[\s\S]*sharePreparedLectumVideoResponse\(target, file/,
   );
   assert.match(hookSource, /getLectumShareArtifactFile\(socialTarget\)/);
+  assert.match(hookSource, /DOWNLOAD_TOAST_MESSAGE/);
   assert.match(
     hookSource,
     /destination === "social"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
@@ -398,6 +399,53 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   );
 });
 
+test("meus posts permite baixar video profissional com arte sem alterar compartilhar por link", () => {
+  const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
+  const mineLogicSource = readFileSync(
+    new URL("../app/app/posts/mine/logic.tsx", import.meta.url),
+    "utf8",
+  );
+  const replyItemCardSource = readFileSync(
+    new URL("../app/app/posts/mine/components/reply-item-card.tsx", import.meta.url),
+    "utf8",
+  );
+  const downloadHookSource = readFileSync(
+    new URL("../hooks/use-lectum-share-download-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const downloadDialogSource = readFileSync(
+    new URL("../components/community/lectum-share-download-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const shareDialogHookSource = readFileSync(
+    new URL("../hooks/use-lectum-share-dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const downloadFactorySource = targetSource.slice(
+    targetSource.indexOf("export const createLectumShareVideoDownloadTarget"),
+  );
+
+  assert.match(downloadFactorySource, /kind: "video_response"/);
+  assert.match(
+    downloadFactorySource,
+    /mediaItems: \[\{ mediaType: "video", mediaUrl: reply\.media_url \}\]/,
+  );
+  assert.match(downloadFactorySource, /publicCommunityReplyWhatsappShareHref/);
+  assert.match(mineLogicSource, /useLectumShareDownloadDialog/);
+  assert.match(mineLogicSource, /createLectumShareVideoDownloadTarget/);
+  assert.match(mineLogicSource, /openLectumDownloadDialog\(socialTarget\)/);
+  assert.match(replyItemCardSource, /onDownloadVideo/);
+  assert.match(replyItemCardSource, /canDownloadVideo/);
+  assert.match(replyItemCardSource, /Baixar v.deo/);
+  assert.match(downloadHookSource, /LectumShareDownloadDialog/);
+  assert.match(downloadHookSource, /destination: "download"/);
+  assert.match(downloadDialogSource, /VerticalVideoPlayer/);
+  assert.match(downloadDialogSource, /Baixar v.deo/);
+  assert.doesNotMatch(downloadDialogSource, /WhatsApp|Instagram|TikTok|Copiar link|9:16/);
+  assert.match(shareDialogHookSource, /shareDestinationDialog: null/);
+  assert.match(shareDialogHookSource, /toLectumLinkOnlyTarget/);
+});
+
 test("fallback operacional compartilha video original sem gravar como artefato social", () => {
   const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const hookSource = readFileSync(
@@ -423,7 +471,7 @@ test("fallback operacional compartilha video original sem gravar como artefato s
   );
   assert.match(
     hookSource,
-    /getLectumShareArtifactFile\(socialTarget\)[\s\S]*toast\.loading\(SHARING_TOAST_MESSAGE\)[\s\S]*prepareLectumShareFile\(socialTarget\)\.catch/,
+    /getLectumShareArtifactFile\(socialTarget\)[\s\S]*toast\.loading\([\s\S]*SHARING_TOAST_MESSAGE[\s\S]*prepareLectumShareFile\(socialTarget\)\.catch/,
   );
   assert.match(
     hookSource,

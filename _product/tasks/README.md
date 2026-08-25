@@ -950,3 +950,10 @@ Uma task só pode ser marcada como concluída quando:
 - O Android deixa de prometer envio direto para redes sociais: a sheet mostra `WhatsApp` e `Baixar video com arte`, permitindo postar manualmente no Instagram/Reels sem depender da combinacao instavel Web Share API + Chrome Android + editor de destino.
 - O cache temporario continua no prefixo R2 `posts/share-artifacts/`, agora com versao `lectum-share-v9-2026-08-24-mediabunny-client-artifact` e TTL padrao de 30 dias por `POST_SHARE_ARTIFACT_TTL_DAYS` opcional; compartilhamento aceito renova a expiracao pela janela configurada.
 - `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false` permite rollback frontend para o exportador legado no proximo build. Sem package novo, env obrigatoria, migration, provider, seed, mock, reset ou limpeza de dados publicados.
+
+## Atualizacao operacional em 2026-08-25: baixar vídeo com arte em Meus posts e respostas
+
+- Ajuste pós-feedback da TASK-42: respostas profissionais com vídeo em **Meus posts e respostas** agora exibem `Baixar vídeo` logo abaixo do player, dentro do card.
+- O botão abre uma modal de prévia com CTA único `Baixar vídeo`, sem opções de copiar link, WhatsApp, Instagram, TikTok, Mais ou texto técnico de formato/proporção.
+- O ícone de compartilhar permanece link-only; a geração do artefato com arte fica em um fluxo separado de download, usando MediaBunny client-side já instalado e fallback legado quando necessário.
+- O backend não renderiza/transcodifica vídeo; apenas as rotas/cache temporário de artefatos já existentes podem ser usados para reaproveitamento. Alteração frontend-only, sem package novo, env obrigatória, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
