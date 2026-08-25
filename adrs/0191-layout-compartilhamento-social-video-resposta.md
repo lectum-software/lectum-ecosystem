@@ -940,3 +940,29 @@ O usuário refinou a copy do card de resposta: o botão deve comunicar `Prévia 
 
 - Teste estático cobre CTA, `InstagramIcon`, seção `Descrição`, `Copy`, clipboard e feedback seguro.
 - Validações finais constam na TASK-42 em `0.1.209`.
+
+## Ajuste 2026-08-25 - nitidez da marca e descrição leve na modal
+
+### Contexto
+
+O usuário identificou no iPhone que a logo da Lectum na prévia parecia em baixa resolução e pediu para reduzir o peso visual da legenda, removendo o rótulo `Descrição` e o fundo cinza. O print foi usado apenas como evidência visual/operacional.
+
+### Decisão
+
+- Alterar somente a modal `LectumShareDownloadDialog`.
+- Renderizar a marca da prévia com `maskImage`/`WebkitMaskImage` sobre `/logo-icon.svg`, removendo o filtro `brightness-0 invert` que podia causar rasterização em Safari/iPhone.
+- Remover o card/rótulo visual da legenda e manter apenas texto + botão de cópia discreto.
+- Preservar `aria-label` e toasts seguros para cópia.
+- Não alterar MediaBunny, canvas/exportação, layout version nem cache de artefatos.
+
+### Consequências
+
+- A prévia fica mais limpa e a marca deve aparecer mais nítida no iPhone sem mexer no arquivo baixado.
+- Como o pipeline de exportação não muda, não é necessário invalidar artefatos já gerados.
+- A mudança é frontend-only, sem backend, admin, env, package, migration, storage, provider, mock, seed, reset ou limpeza de dados publicados.
+- Rollback: restaurar a renderização por `Image` com filtro e o card de legenda anterior.
+
+### Validação
+
+- Teste estático cobre `maskImage`/`WebkitMaskImage`, ausência de `brightness-0 invert`, legenda sem card cinza e botão de cópia discreto.
+- Validações finais constam na TASK-42 em `0.1.210`.

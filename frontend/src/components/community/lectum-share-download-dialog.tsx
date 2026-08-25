@@ -1,7 +1,6 @@
 "use client";
 
 import { Copy, Download, X } from "lucide-react";
-import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -42,7 +41,16 @@ const previewQuestionHeaderStyle: CSSProperties = {
 };
 
 const previewQuestionLogoStyle: CSSProperties = {
+  backgroundColor: "currentColor",
+  maskImage: 'url("/logo-icon.svg")',
+  maskPosition: "center",
+  maskRepeat: "no-repeat",
+  maskSize: "contain",
   height: previewLength(PREVIEW_CARD.brandIconSize),
+  WebkitMaskImage: 'url("/logo-icon.svg")',
+  WebkitMaskPosition: "center",
+  WebkitMaskRepeat: "no-repeat",
+  WebkitMaskSize: "contain",
   width: previewLength(PREVIEW_CARD.brandIconSize),
 };
 
@@ -228,15 +236,10 @@ export const LectumShareDownloadDialog = ({
                     className="inline-flex items-center justify-center"
                     style={previewQuestionHeaderContentStyle}
                   >
-                    <Image
-                      alt=""
+                    <span
                       aria-hidden="true"
-                      className="brightness-0 invert"
-                      height={PREVIEW_CARD.brandIconSize}
-                      priority={false}
-                      src="/logo-icon.svg"
+                      className="inline-block shrink-0"
                       style={previewQuestionLogoStyle}
-                      width={PREVIEW_CARD.brandIconSize}
                     />
                     <span>{target.cardLabel}</span>
                   </span>
@@ -273,21 +276,20 @@ export const LectumShareDownloadDialog = ({
         </div>
 
         {descriptionText ? (
-          <section className="grid gap-2 rounded-[22px] border border-border bg-surface-muted/70 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-muted text-xs font-black tracking-[0.12em] uppercase">Descrição</p>
+          <section className="flex items-start gap-3 px-1">
+            <p className="max-h-28 flex-1 overflow-y-auto whitespace-pre-line pr-1 text-muted-foreground text-sm leading-6">
+              {descriptionText}
+            </p>
+            <div className="pt-0.5">
               <button
                 aria-label="Copiar descrição"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-primary/10 bg-surface text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground/60 transition hover:bg-primary-soft/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
                 onClick={copyDescription}
                 type="button"
               >
                 <Copy className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <p className="max-h-28 overflow-y-auto whitespace-pre-line pr-1 text-sm leading-6 text-foreground">
-              {descriptionText}
-            </p>
           </section>
         ) : null}
 

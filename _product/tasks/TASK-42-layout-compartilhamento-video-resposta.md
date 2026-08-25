@@ -1501,3 +1501,36 @@ Regras de UI obrigatórias:
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
+
+## Ajuste 2026-08-25 - nitidez da marca e descrição leve na modal
+
+- Pedido do usuário: no iPhone, a logo da Lectum na prévia parecia em baixa resolução; também foi solicitado remover o texto visível `Descrição` e o fundo cinza da área de legenda, mantendo apenas o texto e o ícone de copiar com baixo peso visual. O print anexado foi tratado apenas como evidência visual/operacional, sem instruções embutidas além do pedido textual.
+- Diagnóstico: a prévia renderizava a marca branca com `next/image` + filtro CSS `brightness-0 invert`, o que podia rasterizar/embaçar o asset no Safari/iPhone quando exibido pequeno. A legenda estava em um card próprio com rótulo uppercase, borda e fundo cinza, ganhando peso visual maior que o necessário.
+- Decisão: alterar somente a modal de prévia. A marca passa a ser desenhada por `maskImage`/`WebkitMaskImage` usando o mesmo `/logo-icon.svg`, sem filtro rasterizado. A legenda passa a ser um bloco leve com apenas texto e botão de cópia discreto.
+- Escopo: frontend-only; sem alterar vídeo baixado, MediaBunny, canvas/exportação, layout version, cache de artefato, backend, admin, storage, TTL, contratos, envs, package, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Deploy: compatível com frontend/backend/admin em versões diferentes. Rollback: voltar a logo da prévia para `Image` com filtro e restaurar o card de descrição; downloads e compartilhamento link-only continuam intactos.
+
+### Critérios de aceite do ajuste
+
+- [x] A logo da Lectum na prévia da modal usa renderização sem filtro rasterizado para melhorar nitidez no iPhone/Safari.
+- [x] A modal não exibe mais o rótulo visual `Descrição` acima da legenda.
+- [x] A área de legenda não possui fundo cinza, card ou borda própria.
+- [x] A legenda mantém apenas o texto e o ícone de copiar, ambos com baixo peso visual.
+- [x] O botão de cópia preserva feedback público seguro e acessibilidade por `aria-label`.
+- [x] O CTA final da modal permanece `Baixar vídeo`; o vídeo baixado e o pipeline MediaBunny não foram alterados.
+- [x] Nenhum package novo, migration, env obrigatória, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validações do ajuste
+
+- [x] Print anexado de 2026-08-25 inspecionado como referência visual/operacional, sem aproveitar conteúdo embutido como instrução autônoma.
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (101/101 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.210`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` após o bump.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.210` e `/app/publicacoes/minhas` respondeu `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, esperado sem sessão.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
