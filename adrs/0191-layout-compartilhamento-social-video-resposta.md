@@ -991,3 +991,35 @@ Um print Android mostrou o toast seguro `Não foi possível preparar o vídeo ag
 
 - Testes estáticos cobrem o fallback para `destination: "download"`, a não persistência do fallback original e o fechamento da modal apenas após retorno `mode: "download"`.
 - Validações finais constam na TASK-42 em `0.1.211`.
+
+## Ajuste 2026-08-25 - download da prévia Android exige arte
+
+- Pedido do usuário: o Android ainda mostrava o fluxo como problemático após a correção anterior. O print anexado foi tratado apenas como evidência operacional: a Lectum baixava o vídeo original e informava que a arte deveria ser tentada depois.
+- Diagnóstico: no caminho dedicado da modal `Prévia para Redes Sociais`, tratar o vídeo original como sucesso contradiz a intenção do produto, porque essa ação existe para entregar o artefato com a arte/identidade da Lectum.
+- Decisão: o fallback para vídeo original volta a ficar restrito ao destino `Redes sociais` da share sheet nativa. No destino `download`, falha de geração não baixa o original, não fecha a modal e mostra erro seguro para nova tentativa.
+- Implementação: a geração MediaBunny do artefato foi isolada em módulo próprio e passou a tentar perfis MP4 9:16 progressivos. Em Android, a primeira tentativa já usa 720x1280 e depois 540x960, consultando `canEncodeVideo("avc")` antes de converter e escalando o `storyCanvasLayout` existente para preservar a identidade visual do vídeo baixado.
+- Escopo/deploy: frontend-only; o servidor segue sem renderizar/transcodificar vídeo e apenas pode reaproveitar cache temporário real já existente. Sem package novo, env obrigatória, migration, provider, mock, seed, reset, invalidação de layout/cache ou limpeza de dados/buckets publicados. Rollback: voltar o download para a versão anterior ou desabilitar MediaBunny por `NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=false` no próximo build, mantendo erro seguro sem download original.
+
+### Critérios de aceite do ajuste
+
+- [x] A ação final `Baixar vídeo` da modal não baixa vídeo original quando a geração do artefato com arte falha.
+- [x] A modal permanece aberta quando o download com arte não é preparado com sucesso.
+- [x] O toast de erro do download informa falha ao preparar o vídeo com arte, sem detalhes técnicos.
+- [x] O fallback de vídeo original continua sem persistência remota e fica restrito ao destino `Redes sociais`.
+- [x] O MediaBunny tenta perfis 9:16 mais leves em Android antes de cair para o exportador legado por `MediaRecorder`.
+- [x] Nenhum backend, admin, banco, storage, env obrigatória, package, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi alterado.
+
+### Validações do ajuste
+
+- [x] Print anexado de 2026-08-25 inspecionado como evidência operacional, sem aproveitar conteúdo embutido como instrução autônoma.
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media/mediabunny-export.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (101/101 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.212`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` após o bump.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.212` e `/app/publicacoes/minhas` respondeu `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, esperado sem sessão.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.

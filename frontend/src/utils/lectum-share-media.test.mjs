@@ -271,7 +271,6 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
     hookSource,
     /!isLectumSourceVideoFallbackFile\(file\)[\s\S]*persistLectumShareArtifact\(socialTarget, file\)/,
   );
-  assert.match(hookSource, /persistLectumShareArtifact\(socialTarget, file\)/);
   assert.match(
     hookSource,
     /if \(result\.mode !== "prepared"\) \{[\s\S]*trackShare\(target, result\.channel\)/,
@@ -471,7 +470,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(shareDialogHookSource, /toLectumLinkOnlyTarget/);
 });
 
-test("fallback operacional compartilha video original sem gravar como artefato social", () => {
+test("fallback operacional em redes sociais compartilha video original sem gravar artefato", () => {
   const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const hookSource = readFileSync(
     new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
@@ -500,7 +499,11 @@ test("fallback operacional compartilha video original sem gravar como artefato s
   );
   assert.match(
     hookSource,
-    /Promise<ShareExportResult \| null>[\s\S]*shouldUseSourceVideoFallback[\s\S]*\(destination === "social" \|\| destination === "download"\)[\s\S]*socialTarget\.mediaType === "video"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)[\s\S]*Vídeo original baixado\. Tente novamente depois para baixar com arte\./,
+    /Promise<ShareExportResult \| null>[\s\S]*shouldUseSourceVideoFallback[\s\S]*destination === "social" && socialTarget\.mediaType === "video"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
+  );
+  assert.doesNotMatch(
+    hookSource,
+    /destination === "social" \|\| destination === "download"|Vídeo original baixado/,
   );
   assert.doesNotMatch(hookSource, /shouldBypassSocialVideoExport/);
   assert.doesNotMatch(hookSource, /shouldPreferLectumSourceVideoFallbackForSocialShare/);
@@ -589,6 +592,10 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.equal(resolveVideoExportStallTimeoutMs(), 45_000);
 
   const source = readFileSync(new URL("./lectum-share-media/export.ts", import.meta.url), "utf8");
+  const mbSource = readFileSync(
+    new URL("./lectum-share-media/mediabunny-export.ts", import.meta.url),
+    "utf8",
+  );
   const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const videoPreparationSource = mediaSource.slice(
     mediaSource.indexOf("const createLectumShareFile"),
@@ -600,14 +607,10 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(source, /lastProgressAt/);
   assert.match(source, /stalled/);
   assert.match(source, /blob\.size === 0/);
-  assert.match(source, /createMediabunnyVideoShareFile/);
-  assert.match(source, /await import\("mediabunny"\)/);
-  assert.match(source, /Conversion\.init/);
-  assert.match(source, /new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)/);
-  assert.match(source, /MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000/);
-  assert.match(source, /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000/);
-  assert.match(source, /@mediabunny\/aac-encoder/);
-  assert.match(source, /drawLectumShareFrame\(ctx, sourceCanvas/);
+  assert.match(
+    mbSource,
+    /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000[\s\S]*MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000[\s\S]*MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280[\s\S]*@mediabunny\/aac-encoder[\s\S]*await import\("mediabunny"\)[\s\S]*canEncodeVideo[\s\S]*new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)[\s\S]*Conversion\.init[\s\S]*ctx\.scale\(scaleX, scaleY\)[\s\S]*drawLectumShareFrame\(ctx, sourceCanvas[\s\S]*processedWidth: profile\.width/,
+  );
   assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\);/);
   assert.match(videoPreparationSource, /shouldUseMediabunnyVideoShareExport\(\)/);
   assert.match(videoPreparationSource, /createMediabunnyVideoShareFile\(target, mediaUrl\)\.catch/);

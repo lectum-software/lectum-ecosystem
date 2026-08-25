@@ -86,8 +86,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         const prepareSocialFileTarget = async (socialTarget: LectumShareSocialTarget) => {
           let cachedFile = getPreparedLectumShareFile(socialTarget);
           const shouldUseSourceVideoFallback =
-            (destination === "social" || destination === "download") &&
-            socialTarget.mediaType === "video";
+            destination === "social" && socialTarget.mediaType === "video";
 
           if (!cachedFile) {
             cachedFile = await getLectumShareArtifactFile(socialTarget).catch(() => null);
@@ -147,16 +146,10 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         }
 
         if (result.mode === "download") {
-          const usedSourceVideoFallback = result.file
-            ? isLectumSourceVideoFallbackFile(result.file)
-            : false;
-
           toast.success(
-            usedSourceVideoFallback && destination === "download"
-              ? "Vídeo original baixado. Tente novamente depois para baixar com arte."
-              : destination === "download"
-                ? "Vídeo baixado."
-                : "Arquivo baixado. Escolha o app desejado no dispositivo.",
+            destination === "download"
+              ? "Vídeo baixado."
+              : "Arquivo baixado. Escolha o app desejado no dispositivo.",
           );
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
@@ -176,7 +169,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           target.kind === "link"
             ? "Não foi possível abrir o compartilhamento. Tente copiar o link novamente."
             : destination === "download"
-              ? "Não foi possível preparar o vídeo agora. Tente novamente."
+              ? "Não foi possível preparar o vídeo com arte agora. Tente novamente."
               : "Não foi possível preparar o compartilhamento agora. Tente novamente.",
         );
 
