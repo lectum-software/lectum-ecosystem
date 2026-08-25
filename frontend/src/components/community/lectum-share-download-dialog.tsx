@@ -1,10 +1,12 @@
 "use client";
 
 import { Download, X } from "lucide-react";
+import Image from "next/image";
+import type { CSSProperties } from "react";
 import { useEffect } from "react";
-import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
+import { storyCanvasLayout } from "@/utils/lectum-share-media/layout";
 import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 
@@ -17,6 +19,93 @@ type LectumShareDownloadDialogProps = {
 };
 
 const SOURCE_TEXT_FALLBACK = "Conteúdo na Lectum";
+const PREVIEW_LAYOUT = storyCanvasLayout;
+const PREVIEW_CARD = PREVIEW_LAYOUT.card;
+const PREVIEW_PROFESSIONAL_TAG = PREVIEW_LAYOUT.professionalTag;
+const PREVIEW_PROFESSIONAL_TAG_TOP =
+  PREVIEW_LAYOUT.height - PREVIEW_PROFESSIONAL_TAG.bottom - PREVIEW_PROFESSIONAL_TAG.height;
+
+const previewLength = (value: number) => `calc(${value} / ${PREVIEW_LAYOUT.width} * 100cqw)`;
+
+const previewQuestionCardStyle: CSSProperties = {
+  borderRadius: previewLength(PREVIEW_CARD.radius),
+  left: previewLength(PREVIEW_CARD.x),
+  top: previewLength(PREVIEW_CARD.y),
+  width: previewLength(PREVIEW_CARD.width),
+};
+
+const previewQuestionHeaderStyle: CSSProperties = {
+  fontSize: previewLength(PREVIEW_CARD.headerFontSize),
+  height: previewLength(PREVIEW_CARD.headerHeight),
+  lineHeight: "1",
+};
+
+const previewQuestionLogoStyle: CSSProperties = {
+  height: previewLength(PREVIEW_CARD.brandIconSize),
+  width: previewLength(PREVIEW_CARD.brandIconSize),
+};
+
+const previewQuestionHeaderContentStyle: CSSProperties = {
+  gap: previewLength(PREVIEW_CARD.brandGap),
+};
+
+const previewQuestionBodyStyle: CSSProperties = {
+  fontSize: previewLength(PREVIEW_CARD.bodyFontSize),
+  lineHeight: previewLength(PREVIEW_CARD.lineHeight),
+  minHeight: previewLength(PREVIEW_CARD.minBodyHeight),
+  padding: `${previewLength(PREVIEW_CARD.paddingY)} ${previewLength(PREVIEW_CARD.paddingX)}`,
+};
+
+const previewProfessionalTagStyle: CSSProperties = {
+  gap: previewLength(PREVIEW_PROFESSIONAL_TAG.roleGap),
+  left: "50%",
+  maxWidth: previewLength(PREVIEW_PROFESSIONAL_TAG.maxWidth),
+  top: previewLength(PREVIEW_PROFESSIONAL_TAG_TOP),
+  transform: "translateX(-50%)",
+};
+
+const previewProfessionalNameStyle: CSSProperties = {
+  fontSize: previewLength(PREVIEW_PROFESSIONAL_TAG.nameFontSize),
+  gap: previewLength(PREVIEW_PROFESSIONAL_TAG.gap * 0.55),
+  lineHeight: "1.1",
+  textShadow: "0 2px 8px var(--lectum-media-background)",
+};
+
+const previewProfessionalRoleStyle: CSSProperties = {
+  fontSize: previewLength(PREVIEW_PROFESSIONAL_TAG.roleFontSize),
+  lineHeight: "1.15",
+  textShadow: "0 2px 8px var(--lectum-media-background)",
+};
+
+const previewVerifiedBadgeStyle: CSSProperties = {
+  height: previewLength(PREVIEW_PROFESSIONAL_TAG.verifiedSize),
+  width: previewLength(PREVIEW_PROFESSIONAL_TAG.verifiedSize),
+};
+
+const PreviewVerifiedBadge = () => (
+  <span
+    aria-label="Perfil verificado"
+    className="grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"
+    role="img"
+    style={previewVerifiedBadgeStyle}
+  >
+    <svg
+      aria-hidden="true"
+      className="h-[62%] w-[62%]"
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M6.75 12.4 10.15 15.8 17.55 8.2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="3"
+      />
+    </svg>
+  </span>
+);
 
 export const LectumShareDownloadDialog = ({
   disabled = false,
@@ -59,6 +148,7 @@ export const LectumShareDownloadDialog = ({
   if (!open || !target) return null;
 
   const resolvedMediaUrl = resolvePublicMediaUrl(target.mediaUrl);
+  const resolvedPosterUrl = resolvePublicMediaUrl(target.posterUrl);
   const sourceText = target.sourceText.trim() || SOURCE_TEXT_FALLBACK;
 
   return (
@@ -96,41 +186,70 @@ export const LectumShareDownloadDialog = ({
 
         <div className="mx-auto w-[min(76vw,320px)] min-w-[220px]">
           {resolvedMediaUrl ? (
-            <div className="relative overflow-hidden rounded-[28px] border border-border bg-media-background">
+            <div className="relative aspect-[9/16] overflow-hidden rounded-[28px] border border-border bg-media-background [container-type:inline-size]">
               <VerticalVideoPlayer
-                className="border-0 shadow-none"
-                controlsVariant="minimal"
-                fit="cover"
+                className="absolute inset-0 h-full w-full rounded-none border-0 shadow-none"
+                controls={false}
+                fit="contain"
                 fullscreenVariant="content"
-                preload="metadata"
+                poster={resolvedPosterUrl}
+                preload="auto"
                 src={resolvedMediaUrl}
                 title={target.shareTitle}
+                videoProps={{
+                  autoPlay: true,
+                  loop: true,
+                  muted: true,
+                }}
               />
 
-              <div className="pointer-events-none absolute inset-x-5 top-5 z-[4] overflow-hidden rounded-[18px] border border-border/40 bg-surface/95 text-center shadow-[var(--lectum-shadow-soft)] backdrop-blur-sm">
-                <p className="bg-primary px-3 py-2 text-primary-foreground text-xs font-black">
-                  {target.cardLabel}
-                </p>
-                <p className="line-clamp-2 px-3 py-2 text-sm font-black leading-5 text-foreground">
-                  {sourceText}
-                </p>
-              </div>
-
-              <div className="pointer-events-none absolute inset-x-4 bottom-[4.5rem] z-[4] grid justify-center text-center">
-                <div className="inline-grid max-w-full gap-1 rounded-2xl bg-media-background/35 px-3 py-2 text-media-foreground backdrop-blur-sm">
-                  <span className="inline-flex max-w-full items-center justify-center gap-1.5 text-sm font-black">
-                    <span className="truncate">{target.professional.name}</span>
-                    {target.professional.verified ? (
-                      <VerifiedBadgeIcon
-                        aria-label="Perfil verificado"
-                        className="h-3.5 w-3.5 shrink-0"
-                      />
-                    ) : null}
-                  </span>
-                  <span className="text-xs font-semibold opacity-90">
-                    {target.professional.roleLabel}
+              <div
+                className="pointer-events-none absolute z-[4] overflow-hidden border border-surface/80 bg-surface/95 text-center shadow-[var(--lectum-shadow-soft)]"
+                style={previewQuestionCardStyle}
+              >
+                <div
+                  className="flex items-center justify-center bg-primary text-primary-foreground font-extrabold"
+                  style={previewQuestionHeaderStyle}
+                >
+                  <span
+                    className="inline-flex items-center justify-center"
+                    style={previewQuestionHeaderContentStyle}
+                  >
+                    <Image
+                      alt=""
+                      aria-hidden="true"
+                      className="brightness-0 invert"
+                      height={PREVIEW_CARD.brandIconSize}
+                      priority={false}
+                      src="/logo-icon.svg"
+                      style={previewQuestionLogoStyle}
+                      width={PREVIEW_CARD.brandIconSize}
+                    />
+                    <span>{target.cardLabel}</span>
                   </span>
                 </div>
+                <div
+                  className="grid place-items-center text-foreground font-bold"
+                  style={previewQuestionBodyStyle}
+                >
+                  <p className="line-clamp-3">{sourceText}</p>
+                </div>
+              </div>
+
+              <div
+                className="pointer-events-none absolute z-[4] grid justify-items-start text-media-foreground"
+                style={previewProfessionalTagStyle}
+              >
+                <div
+                  className="inline-flex max-w-full items-center font-bold"
+                  style={previewProfessionalNameStyle}
+                >
+                  <span className="truncate">{target.professional.name}</span>
+                  {target.professional.verified ? <PreviewVerifiedBadge /> : null}
+                </div>
+                <span className="font-medium opacity-80" style={previewProfessionalRoleStyle}>
+                  {target.professional.roleLabel}
+                </span>
               </div>
             </div>
           ) : (

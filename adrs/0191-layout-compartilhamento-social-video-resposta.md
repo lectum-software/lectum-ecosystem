@@ -889,3 +889,29 @@ O usuário decidiu separar as intenções: o compartilhamento por link continua 
 
 - Teste estático cobre a permanência do compartilhamento link-only, a nova factory de download social, o botão na página de posts/respostas e a modal sem opções de compartilhamento.
 - `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, `pnpm --dir frontend build` pós-bump, `pnpm check` completo de raiz e smoke local HTTP do frontend passaram em `0.1.207`. Validações finais e smoke de homologação ficam registrados na TASK-42.
+
+## Ajuste 2026-08-25 - prévia fiel ao vídeo baixado
+
+### Contexto
+
+Após a publicação do botão de download, o usuário comparou a modal com o arquivo baixado e apontou que a prévia precisa ser idêntica ao vídeo exportado. A evidência mostrou o arquivo baixado com a identidade correta, mas a modal com mídia cortada/escura, card deslocado para o topo e tag do profissional em um bloco que não existe no artefato.
+
+### Decisão
+
+- Preservar o layout/canvas de exportação do vídeo baixado e alterar somente a prévia da modal.
+- Reutilizar `storyCanvasLayout` como fonte única de proporções da prévia: card, safe area, texto, logo, tag do profissional e badge.
+- Renderizar a mídia da prévia com `contain`, não `cover`, para que barras e enquadramento coincidam com o arquivo exportado.
+- Usar a thumbnail real da resposta como poster quando disponível, reduzindo a chance de a prévia abrir com superfície preta antes de carregar o primeiro frame.
+- Manter o CTA de download fora da superfície 9:16, pois ele pertence à modal e não ao vídeo.
+
+### Consequências
+
+- A prévia passa a representar melhor o artefato final sem rodar MediaBunny nem gerar arquivo apenas para visualização.
+- O arquivo baixado e a identidade social permanecem inalterados; a mudança é visual/frontend-only.
+- Não há package, env, migration, provider, mock, seed, reset ou limpeza de storage/bucket.
+- Rollback: voltar a modal para o layout CSS anterior; artefatos gerados e download continuam operando pelo mesmo pipeline.
+
+### Validação
+
+- Teste estático cobre `storyCanvasLayout`, `fit="contain"`, `poster` da resposta e ausência de `cover` na prévia.
+- `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check:version`, `pnpm --dir frontend build` pós-bump, smoke local HTTP do frontend e validações finais da task passaram em `0.1.208`.

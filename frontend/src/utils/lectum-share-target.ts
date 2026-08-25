@@ -38,6 +38,7 @@ export type LectumShareSocialTarget = LectumShareBaseTarget & {
   mediaItems: LectumShareMediaItem[];
   mediaType: "image" | "video";
   mediaUrl: string;
+  posterUrl?: string | null;
   professional: {
     avatar: string | null;
     name: string;
@@ -56,7 +57,14 @@ export type LectumShareVideoTarget = LectumShareLinkTarget | LectumShareSocialTa
 
 type ShareableProfessionalReply = Pick<
   PostProfessionalReply | PostReply | UserPostReply,
-  "author" | "content" | "id" | "media_type" | "media_url" | "parent_reply_id" | "title"
+  | "author"
+  | "content"
+  | "id"
+  | "media_type"
+  | "media_url"
+  | "parent_reply_id"
+  | "thumbnail_url"
+  | "title"
 > & {
   parent_content?: string | null;
 };
@@ -219,6 +227,7 @@ export const createLectumShareVideoDownloadTarget = (
     mediaItems: [{ mediaType: "video", mediaUrl: reply.media_url }],
     mediaType: "video",
     mediaUrl: reply.media_url,
+    posterUrl: reply.thumbnail_url ?? null,
     postId: post.id,
     professional: {
       avatar: reply.author.avatar,

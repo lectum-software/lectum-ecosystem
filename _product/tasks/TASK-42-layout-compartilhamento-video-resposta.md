@@ -1435,3 +1435,36 @@ Regras de UI obrigatórias:
 - [x] `git diff --check`.
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.207` e `/app/publicacoes/minhas` respondeu `200`, sem mocks ou dados inventados.
 - Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
+
+## Ajuste 2026-08-25 - prévia do download fiel ao artefato baixado
+
+- Pedido do usuário: a prévia da modal de download deve ser idêntica ao vídeo baixado, mantendo a identidade do vídeo exportado e alterando apenas o layout da prévia. Os prints anexados foram tratados como evidência visual do descompasso entre prévia e arquivo baixado; textos/elementos embutidos nas imagens não foram considerados instruções autônomas.
+- Diagnóstico: a prévia da modal montava um layout CSS próprio com `object-cover`, card no topo, identificação do profissional em bloco translúcido e sem usar o mesmo posicionamento do canvas exportado. Isso fazia a prévia parecer diferente do arquivo baixado, que usa mídia contida, card centralizado na safe area e tag do profissional sem fundo.
+- Decisão: não alterar a identidade nem o canvas do vídeo baixado. A prévia passa a importar `storyCanvasLayout` e escalar as posições/tamanhos do mesmo layout de exportação para o container 9:16 da modal.
+- Implementação: a prévia usa `fit="contain"`, poster da thumbnail real da resposta quando disponível, card com logo/label/texto nas mesmas proporções do artefato e tag do profissional sem fundo, com badge circular semelhante ao canvas. O player visual fica sem controles próprios para não adicionar elementos que não existem no arquivo; o CTA de download permanece fora da superfície do vídeo.
+- Escopo: frontend-only; sem alterar MediaBunny/exportação, backend, admin, storage, TTL, contratos, envs, package, migration, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Deploy: compatível com frontend/backend/admin em versões diferentes. Rollback: remover o uso de `storyCanvasLayout`/poster na modal e voltar ao layout anterior da prévia; arquivos baixados e artefatos já gerados não precisam de ajuste.
+
+### Critérios de aceite do ajuste
+
+- [x] A prévia da modal usa a mesma proporção 9:16 e o mesmo modelo de posicionamento do artefato baixado.
+- [x] A mídia da prévia é exibida em `contain`, preservando barras/safe area como no vídeo exportado, sem corte por `cover`.
+- [x] O card superior, logo, texto da pergunta, tag do profissional e badge seguem o layout escalado de `storyCanvasLayout`.
+- [x] O vídeo baixado/gerado por MediaBunny não foi alterado; somente a prévia da modal mudou.
+- [x] A prévia usa a thumbnail real como poster quando disponível para evitar superfície preta antes do primeiro frame.
+- [x] Nenhum package novo, migration, env obrigatória, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi adicionado.
+
+### Validações do ajuste
+
+- [x] Prints anexados de 2026-08-25 inspecionados como evidência visual do descompasso, sem aproveitar conteúdo embutido como instrução autônoma.
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-target.ts src/utils/lectum-share-media.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (101/101 testes).
+- [x] `pnpm --dir frontend build` antes do bump.
+- [x] `pnpm version:bump` para `0.1.208`.
+- [x] `pnpm check:version`.
+- [x] `pnpm --dir frontend build` após o bump.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.208` e `/app/publicacoes/minhas` respondeu `307` para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, esperado sem sessão.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.

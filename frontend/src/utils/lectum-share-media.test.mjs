@@ -430,6 +430,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
     downloadFactorySource,
     /mediaItems: \[\{ mediaType: "video", mediaUrl: reply\.media_url \}\]/,
   );
+  assert.match(downloadFactorySource, /posterUrl: reply\.thumbnail_url \?\? null/);
   assert.match(downloadFactorySource, /publicCommunityReplyWhatsappShareHref/);
   assert.match(mineLogicSource, /useLectumShareDownloadDialog/);
   assert.match(mineLogicSource, /createLectumShareVideoDownloadTarget/);
@@ -440,6 +441,11 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(downloadHookSource, /LectumShareDownloadDialog/);
   assert.match(downloadHookSource, /destination: "download"/);
   assert.match(downloadDialogSource, /VerticalVideoPlayer/);
+  assert.match(downloadDialogSource, /storyCanvasLayout/);
+  assert.match(downloadDialogSource, /fit="contain"/);
+  assert.doesNotMatch(downloadDialogSource, /fit="cover"/);
+  assert.match(downloadDialogSource, /poster=\{resolvedPosterUrl\}/);
+  assert.match(downloadDialogSource, /controls=\{false\}/);
   assert.match(downloadDialogSource, /Baixar v.deo/);
   assert.doesNotMatch(downloadDialogSource, /WhatsApp|Instagram|TikTok|Copiar link|9:16/);
   assert.match(shareDialogHookSource, /shareDestinationDialog: null/);
