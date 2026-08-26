@@ -2352,3 +2352,33 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.170`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-26 - selo verificado mais proximo do nome
+
+- Pedido do usuario: aproximar so um pouco o selo de verificado do nome do psicologo na discussao do post, conforme screenshot enviada em `c:/Users/tulio/Downloads/WhatsApp Image 2026-08-26 at 15.41.39.jpeg`.
+- O texto contido no screenshot foi tratado apenas como conteudo visual da interface; a instrucao ativa foi exclusivamente o pedido do usuario nesta conversa.
+- Fonte visual auditavel: screenshot anexada pelo usuario e referencia local `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Frontend: os headers de autoria de posts/respostas de comunidade reduzem o espacamento entre nome e `VerifiedBadgeIcon` de `gap-1.5` para `gap-1`, preservando o selo em `h-3 w-3` e a legibilidade mobile-first.
+- Escopo: sem mudancas de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, upload/storage, votos, salvos, analytics, regra de verificacao profissional ou dados publicados.
+- ADR atualizado: `adrs/0096-detalhe-post-composer-denuncia-midia.md`.
+
+### Criterios de aceite do complemento
+
+- [x] O selo verificado fica ligeiramente mais proximo do nome do psicologo nos comentarios/respostas do detalhe do post.
+- [x] O mesmo ajuste permanece consistente nos headers de publicacoes e respostas profissionais de comunidade que usam o mesmo padrao visual.
+- [x] O tamanho, o icone, o `aria-label` e a regra `verified` permanecem inalterados.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/community-post-card.tsx src/components/community/community-post-card-reply-preview.tsx "src/app/app/community/[slug]/components/feed-controls.tsx" "src/app/app/community/[slug]/post/[id]/components/post-content.tsx" "src/app/app/community/[slug]/post/[id]/components/reply-card.tsx"`
+- [x] Validacao estatica confirmou `VerifiedBadgeIcon` em `h-3 w-3` e wrappers de nome com `gap-1` nos pontos afetados.
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido apos o bump em `0.1.214`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3214`: `/version` respondeu `0.1.214`, a rota publica do detalhe do post respondeu HTTP 200 e o Chrome headless abriu a tela em viewport 390x844; validacao autenticada final do comentario real fica para smoke de homologacao apos push.
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm version:bump` para `0.1.214`
+- [x] `pnpm check:version`
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.

@@ -407,7 +407,7 @@ export const CommunityPostCard = ({
                 profilePublicationMode ? "flex-nowrap overflow-hidden" : "flex-wrap",
               )}
             >
-              <div className="flex min-w-0 items-center gap-1.5">
+              <div className="flex min-w-0 items-center gap-1">
                 {psychologistProfileHref ? (
                   <Link
                     className="min-w-0 truncate text-sm font-black leading-tight text-foreground no-underline transition hover:text-foreground hover:no-underline"

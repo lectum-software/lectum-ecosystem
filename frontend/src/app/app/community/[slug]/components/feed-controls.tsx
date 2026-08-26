@@ -113,7 +113,7 @@ export const AuthorIdentityLine = ({
   const nameClassName = "min-w-0 truncate text-sm font-black leading-tight text-foreground";
 
   return (
-    <div className="flex min-w-0 max-w-full items-center gap-1.5">
+    <div className="flex min-w-0 max-w-full items-center gap-1">
       {href ? (
         <Link
           className={cn("pointer-events-auto cursor-pointer", nameClassName)}

@@ -440,3 +440,24 @@ Validacao adicional:
 
 - Validacao estatica confirmou `h-3 w-3` e `gap-1.5` nos pontos afetados.
 - Validacoes de build/check e smoke ficam registradas no complemento correspondente da TASK-26.
+
+## Atualizacao 2026-08-26 - selo verificado mais proximo do nome
+
+O feedback visual em homologacao indicou que, apos a reducao anterior do selo, o espaco `gap-1.5` ainda deixava o verificado um pouco distante do nome do psicologo em comentarios do detalhe do post.
+
+Decisao complementar:
+
+- Manter o `VerifiedBadgeIcon` em `h-3 w-3` nos contextos de comunidade/publicacao.
+- Reduzir apenas o espacamento horizontal do grupo nome+selo de `gap-1.5` para `gap-1` em `CommunityPostCard`, `ProfessionalReplyPreview`, `AuthorIdentityLine`, `PostHeader`, `ThreadOriginalPostCard` e `ReplyCard`.
+- Preservar o componente compartilhado, o `aria-label="Perfil verificado"`, a regra `verified`, os links de perfil e os badges de mentor existentes.
+- Nao alterar backend, Prisma, endpoints, payloads, links, votos, salvos, analytics, storage, envs ou packages.
+
+Consequencias:
+
+- O selo volta a parecer visualmente associado ao nome do psicologo sem ficar colado no texto.
+- A mudanca e puramente frontend, mobile-first e reversivel por rollback do commit, sem impacto em dados ou contratos.
+
+Validacao adicional:
+
+- Validacao estatica confirmou `VerifiedBadgeIcon` em `h-3 w-3` e wrappers de nome com `gap-1` nos pontos afetados.
+- Build/check e smoke ficam registrados no complemento correspondente da TASK-26.

@@ -381,7 +381,7 @@ export const ReplyCard = ({
           <div className="flex items-start justify-between gap-2">
             <div className="grid min-w-0 gap-0.5">
               <div className="flex min-w-0 items-center gap-x-2">
-                <div className="flex min-w-0 items-center gap-1.5">
+                <div className="flex min-w-0 items-center gap-1">
                   {isProfessional ? (
                     <Link
                       className="truncate text-sm font-black leading-tight text-inherit no-underline hover:text-inherit hover:no-underline"
