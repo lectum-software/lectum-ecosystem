@@ -500,6 +500,14 @@ test("reconstrói somente metadata técnica validada", () => {
     platform: "+5511999999999",
     release: "lectum-frontend@12345678900",
     sdk: { name: "patient@example.com", version: "sk_live_SUPERSECRET123" },
+    tags: {
+      "lectum.browser": "Chrome",
+      "lectum.destination": "download?token=secret",
+      "lectum.feature": "share-video-artifact",
+      "lectum.profile": "720x1280",
+      "lectum.stage": "mediabunny-can-encode",
+      user_id: "patient-id",
+    },
     timestamp: 12_345_678_900,
   });
 
@@ -520,12 +528,18 @@ test("reconstrói somente metadata técnica validada", () => {
     level: "error",
     platform: undefined,
     release: undefined,
+    tags: {
+      "lectum.browser": "chrome",
+      "lectum.feature": "share-video-artifact",
+      "lectum.profile": "720x1280",
+      "lectum.stage": "mediabunny-can-encode",
+    },
     timestamp: undefined,
     type: undefined,
   });
   assert.doesNotMatch(
     JSON.stringify(sanitized),
-    /123\.456\.789-00|sk_live_SUPERSECRET123|patient@example\.com|5511999999999|12345678900/,
+    /123\.456\.789-00|sk_live_SUPERSECRET123|patient@example\.com|5511999999999|12345678900|patient-id|download\?token/,
   );
 });
 

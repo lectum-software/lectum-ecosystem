@@ -1,6 +1,10 @@
 import type { LectumShareLinkTarget, LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import {
+  type LectumShareExportStage,
+  toLectumShareDiagnosticError,
+} from "./lectum-share-media/diagnostics";
+import {
   createImageShareFile,
   createMediabunnyVideoShareFile,
   createVideoShareFile,
@@ -37,15 +41,27 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
     return createImageShareFile(target, image);
   }
 
+  let mediabunnyFailureStage: LectumShareExportStage | undefined;
   if (shouldUseMediabunnyVideoShareExport()) {
-    const mediabunnyFile = await createMediabunnyVideoShareFile(target, mediaUrl).catch(() => null);
+    const mediabunnyFile = await createMediabunnyVideoShareFile(target, mediaUrl).catch((error) => {
+      mediabunnyFailureStage = toLectumShareDiagnosticError(error, "unknown").diagnostic.stage;
+      return null;
+    });
 
     if (mediabunnyFile) return mediabunnyFile;
   }
 
-  const video = await loadVideoElement(mediaUrl);
+  const video = await loadVideoElement(mediaUrl).catch((error) => {
+    throw toLectumShareDiagnosticError(error, "legacy-export", {
+      previousStage: mediabunnyFailureStage,
+    });
+  });
 
-  return createVideoShareFile(target, video);
+  return createVideoShareFile(target, video).catch((error) => {
+    throw toLectumShareDiagnosticError(error, "legacy-export", {
+      previousStage: mediabunnyFailureStage,
+    });
+  });
 };
 
 type PreparedShareFileCacheValue = File | Promise<File>;

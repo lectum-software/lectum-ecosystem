@@ -1,5 +1,5 @@
 import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
-
+import { LectumShareDiagnosticError } from "./diagnostics";
 import { safeFileName } from "./file-name";
 import {
   createCanvas,
@@ -45,12 +45,19 @@ export const createMediabunnyVideoShareFile = async (
   const response = await fetch(mediaUrl);
 
   if (!response.ok) {
-    throw new Error("Video indisponivel para compartilhamento.");
+    throw new LectumShareDiagnosticError("source-fetch");
   }
 
   const sourceBlob = await response.blob();
   if (sourceBlob.size === 0) {
-    throw new Error("Video indisponivel para compartilhamento.");
+    throw new LectumShareDiagnosticError("source-empty");
+  }
+
+  let mediabunny: Awaited<ReturnType<typeof importMediabunny>>;
+  try {
+    mediabunny = await importMediabunny();
+  } catch (error) {
+    throw new LectumShareDiagnosticError("mediabunny-import", error);
   }
 
   const {
@@ -63,7 +70,7 @@ export const createMediabunnyVideoShareFile = async (
     Output,
     Quality,
     canEncodeVideo,
-  } = await import("mediabunny");
+  } = mediabunny;
   await registerMediabunnyAacEncoder();
 
   const layout = storyCanvasLayout;
@@ -73,7 +80,7 @@ export const createMediabunnyVideoShareFile = async (
   const sourceCtx = sourceCanvas.getContext("2d");
 
   if (!ctx || !sourceCtx) {
-    throw new Error("Canvas indisponivel para gerar o compartilhamento.");
+    throw new LectumShareDiagnosticError("canvas-context");
   }
 
   const assets = await loadShareCanvasAssets();
@@ -96,7 +103,12 @@ export const createMediabunnyVideoShareFile = async (
       width: profile.width,
     }).catch(() => false);
 
-    if (!canEncodeProfile) continue;
+    if (!canEncodeProfile) {
+      lastError = new LectumShareDiagnosticError("mediabunny-can-encode", undefined, {
+        profile: `${profile.width}x${profile.height}`,
+      });
+      continue;
+    }
 
     const input = new Input({ formats: ALL_FORMATS, source: new BlobSource(sourceBlob) });
     const targetBuffer = new BufferTarget();
@@ -105,51 +117,70 @@ export const createMediabunnyVideoShareFile = async (
       target: targetBuffer,
     });
 
-    try {
-      const conversion = await Conversion.init({
-        audio: { codec: "aac", forceTranscode: false, quality: audioQuality },
-        input,
-        output,
-        showWarnings: false,
-        tags: {},
-        tracks: "primary",
-        video: {
-          allowRotationMetadata: false,
-          codec: "avc",
-          forceTranscode: true,
-          frameRate: VIDEO_EXPORT_FRAME_RATE,
-          hardwareAcceleration: "prefer-hardware",
-          height: profile.height,
-          keyFrameInterval: 2,
-          process: (sample) => {
-            if (sourceCanvas.width !== sample.displayWidth)
-              sourceCanvas.width = sample.displayWidth;
-            if (sourceCanvas.height !== sample.displayHeight)
-              sourceCanvas.height = sample.displayHeight;
-            sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
-            sample.draw(sourceCtx, 0, 0, sourceCanvas.width, sourceCanvas.height);
-            ctx.save();
-            ctx.scale(scaleX, scaleY);
-            drawLectumShareFrame(ctx, sourceCanvas, layout, target, palette, assets);
-            ctx.restore();
-            return canvas;
-          },
-          processedHeight: profile.height,
-          processedWidth: profile.width,
-          quality: videoQuality,
-          width: profile.width,
-        },
-      });
+    const profileDetails = { profile: `${profile.width}x${profile.height}` };
 
-      if (!conversion.isValid) {
-        throw new Error("Exportacao Mediabunny indisponivel para compartilhamento.");
+    try {
+      let conversion: Awaited<ReturnType<typeof Conversion.init>>;
+      try {
+        conversion = await Conversion.init({
+          audio: { codec: "aac", forceTranscode: false, quality: audioQuality },
+          input,
+          output,
+          showWarnings: false,
+          tags: {},
+          tracks: "primary",
+          video: {
+            allowRotationMetadata: false,
+            codec: "avc",
+            forceTranscode: true,
+            frameRate: VIDEO_EXPORT_FRAME_RATE,
+            hardwareAcceleration: "prefer-hardware",
+            height: profile.height,
+            keyFrameInterval: 2,
+            process: (sample) => {
+              if (sourceCanvas.width !== sample.displayWidth)
+                sourceCanvas.width = sample.displayWidth;
+              if (sourceCanvas.height !== sample.displayHeight)
+                sourceCanvas.height = sample.displayHeight;
+              sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+              sample.draw(sourceCtx, 0, 0, sourceCanvas.width, sourceCanvas.height);
+              ctx.save();
+              ctx.scale(scaleX, scaleY);
+              drawLectumShareFrame(ctx, sourceCanvas, layout, target, palette, assets);
+              ctx.restore();
+              return canvas;
+            },
+            processedHeight: profile.height,
+            processedWidth: profile.width,
+            quality: videoQuality,
+            width: profile.width,
+          },
+        });
+      } catch (error) {
+        throw new LectumShareDiagnosticError("mediabunny-conversion-init", error, profileDetails);
       }
 
-      await conversion.execute();
+      if (!conversion.isValid) {
+        throw new LectumShareDiagnosticError(
+          "mediabunny-conversion-invalid",
+          undefined,
+          profileDetails,
+        );
+      }
+
+      try {
+        await conversion.execute();
+      } catch (error) {
+        throw new LectumShareDiagnosticError(
+          "mediabunny-conversion-execute",
+          error,
+          profileDetails,
+        );
+      }
 
       const buffer = targetBuffer.buffer;
       if (!buffer || buffer.byteLength === 0) {
-        throw new Error("Nao foi possivel gerar um video valido para compartilhamento.");
+        throw new LectumShareDiagnosticError("mediabunny-output-empty", undefined, profileDetails);
       }
 
       return new File([buffer], safeFileName(target, "mp4"), { type: "video/mp4" });
@@ -162,3 +193,5 @@ export const createMediabunnyVideoShareFile = async (
 
   throw lastError;
 };
+
+const importMediabunny = () => import("mediabunny");

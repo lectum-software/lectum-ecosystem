@@ -961,3 +961,10 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste de copy da criação social: o CTA do card agora é `Prévia para Redes Sociais` com ícone do Instagram; a modal mantém `Baixar vídeo` como ação final e adiciona `Descrição` copiável para a legenda.
 - Ajuste visual iPhone: a logo da Lectum na prévia passou a usar máscara CSS do SVG sem filtro rasterizado, e a descrição da modal ficou sem título/fundo cinza, mantendo apenas texto e ícone de copiar com baixo peso visual.
 - Correção operacional Android revisada: o download pela prévia social não usa mais vídeo original como sucesso; ele tenta gerar o artefato com arte em perfis MediaBunny mais leves no Android e, se ainda falhar, mantém a modal aberta com erro seguro para nova tentativa.
+
+## Diagnostico operacional em 2026-08-26: trilha privada para falhas Android do video com arte
+
+- Ajuste pos-feedback da TASK-42: quando a modal **Previa para Redes Sociais** falhar ao preparar o video com arte no Android, a UI continua com erro publico generico, mas o frontend envia diagnostico privado seguro ao Sentry.
+- As tags permitidas indicam somente etapa tecnica controlada (source-fetch, mediabunny-can-encode, mediabunny-conversion-execute, legacy-export etc.), etapa anterior, runtime, categoria de navegador, suporte a WebCodecs/MediaRecorder/canvas capture, perfil, tipo de midia, destino e tipo de erro normalizado.
+- A politica do Sentry foi mantida fail-closed: sem user agent bruto, URLs, IDs de post/resposta, nome de profissional, stack/contexto livre, PII ou mensagens tecnicas na UI/API/logs publicos.
+- Escopo frontend-only; sem package novo, env obrigatoria, migration, backend, admin, provider, mock, seed, reset ou limpeza de dados/buckets publicados.

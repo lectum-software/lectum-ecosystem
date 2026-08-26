@@ -13,6 +13,7 @@ const SAFE_EVENT_ID_PATTERN = /^[a-f0-9]{32}$/i;
 const SAFE_DEBUG_ID_PATTERN = /^(?:[a-f0-9]{32}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i;
 const SAFE_EVENT_RELEASE_PATTERN = /^lectum-frontend@\d{1,6}\.\d{1,6}\.\d{1,6}$/;
 const SAFE_CODE_EXTENSION_PATTERN = /\.(?:cjs|js|jsx|map|mjs|ts|tsx)$/i;
+const SAFE_TAG_VALUE_PATTERN = /^[a-z0-9_.:-]{1,64}$/;
 const MAX_STACK_LOCATION_INPUT_LENGTH = 4_096;
 const MAX_STACK_POSITION = 10_000_000;
 const STACK_LOCATION_ABSOLUTE_URL_PATTERN = /^[a-z][a-z0-9+.-]*:\/\//i;
@@ -44,6 +45,21 @@ const SAFE_MECHANISM_TYPES = new Set([
   "instrument",
   "onerror",
   "onunhandledrejection",
+]);
+const SAFE_SENTRY_TAG_KEYS = new Set([
+  "lectum.browser",
+  "lectum.canvas_capture",
+  "lectum.destination",
+  "lectum.error_kind",
+  "lectum.feature",
+  "lectum.media_recorder",
+  "lectum.media_type",
+  "lectum.previous_stage",
+  "lectum.profile",
+  "lectum.runtime",
+  "lectum.stage",
+  "lectum.target_kind",
+  "lectum.webcodecs",
 ]);
 const DISABLED_SENTRY_INTEGRATIONS = new Set([
   "Breadcrumbs",
@@ -234,6 +250,22 @@ const sanitizeDebugMeta = (
   });
 
   return images?.length ? { images } : undefined;
+};
+
+const sanitizeSentryTags = (tags: ErrorEvent["tags"]) => {
+  if (!tags || typeof tags !== "object" || Array.isArray(tags)) return undefined;
+
+  const sanitizedTags: Record<string, string> = {};
+  for (const [key, value] of Object.entries(tags)) {
+    if (!SAFE_SENTRY_TAG_KEYS.has(key)) continue;
+
+    const normalizedValue = String(value).trim().toLowerCase();
+    if (!SAFE_TAG_VALUE_PATTERN.test(normalizedValue)) continue;
+
+    sanitizedTags[key] = normalizedValue;
+  }
+
+  return Object.keys(sanitizedTags).length ? sanitizedTags : undefined;
 };
 
 export const parseSentryPublicDsn = (value?: string | null): ParsedSentryDsn | null => {
@@ -429,6 +461,7 @@ const sanitizeSentryEventUnsafe = (event: ErrorEvent): ErrorEvent | null => {
       event.platform && SAFE_STACK_PLATFORMS.has(event.platform) ? event.platform : undefined,
     release:
       event.release && SAFE_EVENT_RELEASE_PATTERN.test(event.release) ? event.release : undefined,
+    tags: sanitizeSentryTags(event.tags),
     timestamp,
     type: undefined,
   };

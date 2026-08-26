@@ -20,6 +20,7 @@ import {
   shareLectumWhatsAppPreviewTarget,
   sharePreparedLectumVideoResponse,
 } from "@/utils/lectum-share-media";
+import { reportLectumShareExportFailure } from "@/utils/lectum-share-media/diagnostics";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
 import type {
   LectumShareChannel,
@@ -164,6 +165,10 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         }
 
         if (isNativeShareAbortError(error)) return null;
+
+        if (target.kind !== "link") {
+          void reportLectumShareExportFailure({ destination, error, target });
+        }
 
         toast.error(
           target.kind === "link"

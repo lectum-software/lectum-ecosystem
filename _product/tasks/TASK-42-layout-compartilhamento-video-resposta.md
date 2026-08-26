@@ -1598,3 +1598,36 @@ Regras de UI obrigatórias:
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
+
+## Ajuste 2026-08-26 - diagnostico privado de falhas do artefato social
+
+- Pedido do usuario: obter mais detalhes sobre o erro Android da modal **Previa para Redes Sociais** para saber se o problema vem de navegador, Android, MediaBunny/WebCodecs, canvas ou outro ponto do pipeline. O print anexado foi tratado apenas como evidencia operacional; nenhum texto da imagem foi usado como instrucao autonoma.
+- Diagnostico: o toast publico correto (Nao foi possivel preparar o video com arte agora. Tente novamente.) protegia o usuario, mas nao deixava rastreavel em producao qual etapa havia falhado: busca do arquivo fonte, canvas 2D, import/validacao MediaBunny, canEncodeVideo, inicializacao/execucao da conversao, saida vazia ou fallback legado por MediaRecorder.
+- Decisao: envolver as falhas do preparo do artefato em LectumShareDiagnosticError com etapas fechadas e reportar uma captura best-effort ao Sentry no hook de compartilhamento/download. A UI continua generica; os detalhes ficam somente em tags privadas permitidas pela politica do Sentry.
+- Tags permitidas: lectum.feature, lectum.stage, lectum.previous_stage, lectum.runtime, lectum.browser, lectum.webcodecs, lectum.media_recorder, lectum.canvas_capture, lectum.profile, lectum.media_type, lectum.target_kind, lectum.destination e lectum.error_kind.
+- Privacidade: nao ha user agent bruto, media URL, share URL, post/reply ID, nome do profissional, stack livre, mensagem tecnica, PII, segredo ou payload dinamico nos metadados preservados. A sanitizacao continua descartando tags fora da allowlist ou fora do formato seguro.
+- Escopo/deploy: frontend-only; sem package novo, env obrigatoria, migration, backend, admin, storage, TTL, provider, mock, seed, reset ou limpeza de dados/buckets publicados. Se o Sentry estiver ausente/desabilitado, o diagnostico falha aberto para o fluxo do usuario sem alterar o toast. Rollback: remover o modulo de diagnostico e a allowlist de tags, mantendo o erro publico generico e o pipeline MediaBunny anterior.
+
+### Criterios de aceite do ajuste
+
+- [x] O erro publico da modal de download com arte continua generico e nao mostra detalhes tecnicos ao usuario.
+- [x] Falhas do caminho MediaBunny diferenciam etapas fechadas como fonte, canvas, import, canEncodeVideo, init/execute da conversao e saida vazia.
+- [x] Se MediaBunny falhar e o fallback legado tambem falhar, a telemetria preserva a etapa anterior em lectum.previous_stage.
+- [x] A captura privada identifica runtime/categoria de navegador e disponibilidade de WebCodecs, MediaRecorder e canvas capture sem enviar user agent bruto.
+- [x] A politica do Sentry so preserva tags tecnicas em allowlist e descarta tags dinamicas/PII.
+- [x] Nenhum backend, admin, banco, storage, env obrigatoria, package, provider, mock, seed, reset ou limpeza destrutiva de dados publicados foi alterado.
+
+### Validacoes do ajuste
+
+- [x] Print anexado de 2026-08-25 inspecionado como evidencia operacional, sem aproveitar conteudo embutido como instrucao autonoma.
+- [x] pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-media.ts src/utils/lectum-share-media/mediabunny-export.ts src/utils/lectum-share-media/diagnostics.ts src/utils/lectum-share-diagnostics.test.mjs src/utils/sentry-policy.ts src/utils/sentry-policy.test.mjs package.json.
+- [x] pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/sentry-policy.test.mjs src/utils/lectum-share-diagnostics.test.mjs src/utils/lectum-share-media.test.mjs (31/31).
+- [x] pnpm --dir frontend check (102/102 testes).
+- [x] pnpm --dir frontend build antes do bump.
+- [x] pnpm version:bump para 0.1.213.
+- [x] pnpm check:version.
+- [x] pnpm --dir frontend build apos o bump.
+- [x] Smoke local do frontend buildado em http://127.0.0.1:3210: /version respondeu 0.1.213 e /app/publicacoes/minhas respondeu 307 para `/auth/login?callbackUrl=%2Fapp%2Fpublicacoes%2Fminhas`, esperado sem sessao.
+- [x] pnpm check completo de raiz.
+- [x] git diff --check.
+- Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.

@@ -1023,3 +1023,30 @@ Um print Android mostrou o toast seguro `Não foi possível preparar o vídeo ag
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologação será executado após o push de `homolog`, pois o push dispara deploy automático.
+
+## Ajuste 2026-08-26 - diagnostico privado do download social Android
+
+### Contexto
+
+O Android continuou exibindo o erro seguro ao tentar baixar o artefato da modal **Previa para Redes Sociais**. Como a UI nao deve expor stack, detalhes de provider, URLs ou PII, faltava uma forma privada e controlada de entender se a falha ocorre no navegador/Android, na disponibilidade de WebCodecs/MediaRecorder/canvas, no MediaBunny ou no fallback legado.
+
+### Decisao
+
+- Criar LectumShareDiagnosticError com etapas fechadas para o pipeline de artefato social.
+- Reportar falhas de alvos de midia por reportLectumShareExportFailure usando Sentry best-effort, sem bloquear a tentativa do usuario.
+- Preservar somente tags tecnicas de baixa cardinalidade: feature, stage, previous_stage, runtime, browser category, suporte a WebCodecs/MediaRecorder/canvas capture, profile, media_type, target_kind, destination e error_kind.
+- Manter a sanitizacao do Sentry fail-closed: tags fora da allowlist ou com valor fora do padrao seguro sao descartadas, assim como contexto livre, extra, user, breadcrumbs e request.
+- Nao alterar a mensagem publica nem baixar video original como sucesso no caminho dedicado de download com arte.
+
+### Consequencias
+
+- Na proxima ocorrencia, a investigacao consegue separar casos como source-fetch, mediabunny-can-encode, mediabunny-conversion-init, mediabunny-conversion-execute, mediabunny-output-empty e legacy-export com previous_stage.
+- A implementacao permanece client-side; o servidor nao transcodifica/renderiza video e nao ha package/env/migration/storage novo.
+- Se Sentry nao estiver habilitado no runtime, a captura e ignorada de forma segura e o usuario continua vendo apenas o toast generico.
+- Rollback: remover o modulo de diagnostico, a chamada no hook e a allowlist de tags; o pipeline MediaBunny e a UI de erro seguro continuam operando.
+
+### Validacao
+
+- Teste estatico cobre as etapas do MediaBunny, o encadeamento para fallback legado, a chamada de Sentry no hook e a ausencia de identificadores/URLs no modulo de diagnostico.
+- Teste da politica Sentry cobre allowlist de tags e descarte de valores dinamicos/PII.
+- Validacoes finais constam na TASK-42 em 0.1.213.

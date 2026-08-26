@@ -609,9 +609,9 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(source, /blob\.size === 0/);
   assert.match(
     mbSource,
-    /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000[\s\S]*MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000[\s\S]*MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280[\s\S]*@mediabunny\/aac-encoder[\s\S]*await import\("mediabunny"\)[\s\S]*canEncodeVideo[\s\S]*new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)[\s\S]*Conversion\.init[\s\S]*ctx\.scale\(scaleX, scaleY\)[\s\S]*drawLectumShareFrame\(ctx, sourceCanvas[\s\S]*processedWidth: profile\.width/,
+    /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000[\s\S]*MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000[\s\S]*MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280[\s\S]*@mediabunny\/aac-encoder[\s\S]*await importMediabunny\(\)[\s\S]*canEncodeVideo[\s\S]*new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)[\s\S]*Conversion\.init[\s\S]*ctx\.scale\(scaleX, scaleY\)[\s\S]*drawLectumShareFrame\(ctx, sourceCanvas[\s\S]*processedWidth: profile\.width/,
   );
-  assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\);/);
+  assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\)\.catch/);
   assert.match(videoPreparationSource, /shouldUseMediabunnyVideoShareExport\(\)/);
   assert.match(videoPreparationSource, /createMediabunnyVideoShareFile\(target, mediaUrl\)\.catch/);
   assert.doesNotMatch(videoPreparationSource, /fallbackVideo/);
