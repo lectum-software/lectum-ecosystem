@@ -968,3 +968,10 @@ Uma task só pode ser marcada como concluída quando:
 - As tags permitidas indicam somente etapa tecnica controlada (source-fetch, mediabunny-can-encode, mediabunny-conversion-execute, legacy-export etc.), etapa anterior, runtime, categoria de navegador, suporte a WebCodecs/MediaRecorder/canvas capture, perfil, tipo de midia, destino e tipo de erro normalizado.
 - A politica do Sentry foi mantida fail-closed: sem user agent bruto, URLs, IDs de post/resposta, nome de profissional, stack/contexto livre, PII ou mensagens tecnicas na UI/API/logs publicos.
 - Escopo frontend-only; sem package novo, env obrigatoria, migration, backend, admin, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-26: perfil oculto nao prende psicologo na edicao
+
+- Ajuste pos-feedback da TASK-18A: `psychologist_profile.published=false` deixa de ser requisito bloqueante de onboarding no frontend; o psicologo com perfil oculto pode voltar para `/app/perfil`, abrir `/psicologos` e navegar pela Lectum.
+- Plano/endereco, WhatsApp e verificacao profissional paga continuam como requisitos bloqueantes quando aplicaveis; a visibilidade publica permanece uma preferencia de publicacao que so controla exibicao para pacientes.
+- O alerta de perfil oculto e o indicador em `Editar perfil` continuam orientando a ativar a visibilidade, mas sem redirecionamento automatico que prenda o usuario.
+- A imagem anexada em 2026-08-26 foi usada somente como evidencia visual do bug; textos do print nao foram tratados como instrucoes de produto. Alteracao frontend-only, mobile-first, sem package, env, migration, provider, mock, seed, reset ou dados publicados.

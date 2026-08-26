@@ -40,6 +40,8 @@ registerHooks({
 
 const { buildAuthRouteWithRedirect, getUserHomePath, resolveAuthRedirect, resolveAuthReturnTo } =
   await import("./auth-redirect.ts");
+const { getPsychologistPaidOnboardingRequirementPath, getPsychologistRegistrationRequirementPath } =
+  await import("./psychologist-onboarding.ts");
 
 test("nao usa mais boas-vindas como gate automatico para paciente", () => {
   const patientWithoutOnboarding = {
@@ -52,6 +54,41 @@ test("nao usa mais boas-vindas como gate automatico para paciente", () => {
 
   assert.equal(getUserHomePath(patientWithoutOnboarding, "/app"), "/psicologos");
   assert.equal(resolveAuthRedirect(patientWithoutOnboarding, null, "/app"), "/psicologos");
+});
+
+test("nao prende psicologo com perfil oculto na edicao de perfil", () => {
+  const hiddenProfessionalPsychologist = {
+    confirmed: true,
+    role: "psicologo",
+    psychologist_profile: {
+      cfp_verified_at: "2026-08-26T00:00:00.000Z",
+      crp_status: "aprovado",
+      professional_address_city: "Sao Paulo",
+      professional_address_district: "Centro",
+      professional_address_number: "123",
+      professional_address_state: "SP",
+      professional_address_street: "Rua Lectum",
+      professional_address_zip: "01000-000",
+      published: false,
+      subscriptions: [
+        {
+          id: "subscription-test",
+          plan: {
+            active: true,
+            slug: "profissional",
+          },
+          source: "mercadopago",
+          status: "ativa",
+        },
+      ],
+      whatsapp: "+5511999999999",
+    },
+  };
+
+  assert.equal(getPsychologistPaidOnboardingRequirementPath(hiddenProfessionalPsychologist), null);
+  assert.equal(getPsychologistRegistrationRequirementPath(hiddenProfessionalPsychologist), null);
+  assert.equal(getUserHomePath(hiddenProfessionalPsychologist, "/app"), "/psicologos");
+  assert.equal(resolveAuthRedirect(hiddenProfessionalPsychologist, null, "/app"), "/psicologos");
 });
 
 test("preserva retorno de aba ou modal ao migrar do login para cadastro", () => {

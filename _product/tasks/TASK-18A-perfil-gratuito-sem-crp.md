@@ -828,3 +828,34 @@ Validacoes executadas:
 - `pnpm check` (primeira tentativa falhou por timeout no teste backend `boot-safety.test.mjs`, fora do escopo alterado; o teste isolado passou e a reexecucao completa concluiu sem erros)
 - `pnpm --dir backend exec node --import tsx --test scripts/boot-safety.test.mjs`
 - Smoke local sem sessao em `http://127.0.0.1:3166`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.166"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-26 - perfil oculto nao bloqueia navegacao
+
+- Pedido do usuario: o psicologo nao deve ficar preso em `/app/profissional/perfil/configurar` quando o proprio perfil nao estiver visivel para pacientes.
+- A causa era o redirecionamento global de onboarding profissional tratar `psychologist_profile.published=false` como requisito bloqueante, fazendo o botao voltar para `/app/perfil` retornar imediatamente para a tela de edicao.
+- O fluxo agora separa requisito operacional de onboarding de preferencia de publicacao: plano, endereco de cobranca, WhatsApp e verificacao profissional paga continuam podendo bloquear a navegacao quando pendentes; `published=false` apenas mantem o perfil fora da descoberta publica e sinaliza o estado em `/app/perfil` e na propria edicao.
+- O caminho inicial apos verificar WhatsApp continua levando para configurar o perfil, mas um psicologo que ocultou ou ainda nao publicou o perfil pode sair da tela, navegar pela Lectum e voltar pelo alerta de `Editar perfil`.
+- A imagem anexada pelo usuario em 2026-08-26 foi tratada somente como evidencia visual do bug; textos do print nao foram tratados como instrucoes de produto.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; as referencias auditaveis foram o print enviado pelo usuario e `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Alteracao frontend-only; sem mudanca de backend, banco, contratos persistidos, envs, providers, packages, mock, seed, reset ou manipulacao de dados publicados.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] `published=false` nao retorna mais `/app/profissional/perfil/configurar` em `getPsychologistPaidOnboardingRequirementPath`.
+- [x] Login/fallback de home de psicologo com perfil oculto retorna `/psicologos`, nao a tela de edicao.
+- [x] Requisitos reais de onboarding pago anteriores a publicacao continuam preservados.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/utils/psychologist-onboarding.ts src/utils/auth-redirect.test.mjs`
+- `pnpm --dir frontend test -- src/utils/auth-redirect.test.mjs` (o script executou a suite frontend configurada; 103 testes passaram)
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump` (`0.1.214` -> `0.1.215`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.215`.
+- `pnpm check`
+- Smoke local em `http://127.0.0.1:3168`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.215"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada.
+- O comportamento autenticado de perfil oculto foi validado por teste unitario do redirecionamento; validacao browser autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.

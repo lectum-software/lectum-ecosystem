@@ -378,3 +378,34 @@ Validacoes:
 - `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.166`.
 - `pnpm check` (primeira tentativa falhou por timeout no teste backend `boot-safety.test.mjs`; o teste isolado passou e a reexecucao completa concluiu sem erros)
 - Smoke local sem sessao em `http://127.0.0.1:3166`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.166"}` e a rota privada de edicao respondeu `307` para login.
+
+## Atualizacao em 2026-08-26 - perfil oculto sem bloqueio de navegacao
+
+O estado `psychologist_profile.published=false` representa a preferencia de publicacao/visibilidade do psicologo, nao uma pendencia operacional que deve prender o usuario na tela de edicao. A evidencia enviada pelo usuario mostrou que, com o perfil oculto, o botao de voltar para `/app/perfil` era seguido pelo redirecionamento global de onboarding de volta para `/app/profissional/perfil/configurar`.
+
+Decisao:
+
+- remover `published=false` dos requisitos bloqueantes de `getPsychologistPaidOnboardingRequirementPath` e `getPsychologistRegistrationRequirementPath`;
+- manter como bloqueantes apenas dependencias operacionais do fluxo pago que impedem uso seguro do produto: plano/endereco quando aplicavel, WhatsApp e verificacao profissional paga;
+- manter o caminho inicial apos verificacao de WhatsApp apontando para a configuracao do perfil, mas sem transformar ocultacao/publicacao em trava permanente;
+- preservar alertas e indicadores visuais existentes para orientar o psicologo a ativar a visibilidade quando desejar aparecer para pacientes;
+- tratar a imagem anexada em 2026-08-26 somente como evidencia visual do bug, nao como fonte de instrucoes de produto.
+
+Impacto de deploy:
+
+- Frontend-only, compativel com backend/admin em versoes atuais ou anteriores.
+- Sem migration, env, backfill, job, provider externo, package novo, mock ou manipulacao de dados persistidos.
+- Rollback por reversao simples do commit restaura o redirecionamento bloqueante anterior para perfis ocultos.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/utils/psychologist-onboarding.ts src/utils/auth-redirect.test.mjs`
+- `pnpm --dir frontend test -- src/utils/auth-redirect.test.mjs` (o script executou a suite frontend configurada; 103 testes passaram)
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump` (`0.1.214` -> `0.1.215`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.215`.
+- `pnpm check`
+- Smoke local em `http://127.0.0.1:3168`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.215"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao.
+- Comportamento autenticado de perfil oculto coberto por teste unitario; browser autenticado nao foi usado por falta de sessao real de psicologo sem criar mock.
