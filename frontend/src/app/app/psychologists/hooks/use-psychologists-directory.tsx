@@ -14,6 +14,7 @@ import type { ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import { currentAnalyticsPath, getDisplayMode } from "../modules/directory-url";
+import { getPsychologistFeedRealIndex } from "../modules/feed-loop";
 import {
   buildActiveFilterChips,
   buildBenefitChips,
@@ -115,10 +116,10 @@ export const usePsychologistsDirectory = () => {
 
   const psychologists = useMemo(() => response?.data ?? [], [response?.data]);
 
-  const featuredPsychologistListIndex =
-    activePsychologistIndex >= 0 && activePsychologistIndex < psychologists.length
-      ? activePsychologistIndex
-      : 0;
+  const featuredPsychologistListIndex = getPsychologistFeedRealIndex(
+    activePsychologistIndex,
+    psychologists.length,
+  );
 
   const featuredPsychologist = psychologists[featuredPsychologistListIndex];
 

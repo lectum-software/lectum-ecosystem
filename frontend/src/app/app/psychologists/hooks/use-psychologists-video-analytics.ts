@@ -34,6 +34,7 @@ export const usePsychologistsVideoAnalytics = ({
     accountTipsUserId,
     actionAnchorRef,
     actionColumnRef,
+    activePsychologistIndex,
     backgroundVideoRef,
     bioTextRef,
     feedVideoAnalyticsRef,
@@ -380,7 +381,8 @@ export const usePsychologistsVideoAnalytics = ({
     );
 
     for (const video of videos) {
-      const isActiveVideo = video.dataset.psychologistId === featuredPsychologistId;
+      const isActiveVideo =
+        video.dataset.psychologistsSlideIndex === String(activePsychologistIndex);
       video.muted = isVideoMuted;
       video.volume = nextVolume;
       video.playbackRate = nextPlaybackRate;
@@ -430,9 +432,9 @@ export const usePsychologistsVideoAnalytics = ({
   }, [
     activeVideoResetKey,
     activeVideoSource,
+    activePsychologistIndex,
     applyVideoProgressRatio,
     backgroundVideoRef,
-    featuredPsychologistId,
     feedVideoAnalyticsRef,
     isVideoMuted,
     isVideoPaused,

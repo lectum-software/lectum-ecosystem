@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import {
+  getAnchoredPsychologistFeedIndex,
+  normalizePsychologistFeedLoopIndex,
+} from "../modules/feed-loop";
 import { SWIPE_HINT_NUDGE_DURATION_MS } from "../modules/video-analytics";
 import { usePsychologistsSetupContext } from "./setup-context";
 import type { PsychologistsDirectory } from "./use-psychologists-directory";
@@ -362,11 +366,19 @@ export const usePsychologistsOnboarding = ({
 
     lastSearchParamsStringRef.current = searchParamsString;
     const frame = window.requestAnimationFrame(() => {
-      setActivePsychologistIndex(0);
+      const nextIndex = getAnchoredPsychologistFeedIndex(0, psychologists.length);
+
+      setActivePsychologistIndex(nextIndex);
       resetVideoInteractionState();
-      feedContainerRef.current?.scrollTo({
-        top: 0,
+
+      const container = feedContainerRef.current;
+      const targetSlide = container?.querySelector<HTMLElement>(
+        `[data-psychologists-slide-index="${nextIndex}"]`,
+      );
+
+      container?.scrollTo({
         behavior: "auto",
+        top: targetSlide?.offsetTop ?? nextIndex * (container?.clientHeight ?? 0),
       });
     });
 
@@ -376,6 +388,7 @@ export const usePsychologistsOnboarding = ({
   }, [
     feedContainerRef,
     lastSearchParamsStringRef,
+    psychologists.length,
     resetVideoInteractionState,
     searchParamsString,
     setActivePsychologistIndex,
@@ -388,15 +401,29 @@ export const usePsychologistsOnboarding = ({
         return;
       }
 
-      if (activePsychologistIndex >= psychologists.length) {
-        setActivePsychologistIndex(psychologists.length - 1);
+      const nextIndex = normalizePsychologistFeedLoopIndex(
+        activePsychologistIndex,
+        psychologists.length,
+      );
+      if (activePsychologistIndex !== nextIndex) {
+        setActivePsychologistIndex(nextIndex);
+
+        const container = feedContainerRef.current;
+        const targetSlide = container?.querySelector<HTMLElement>(
+          `[data-psychologists-slide-index="${nextIndex}"]`,
+        );
+
+        container?.scrollTo({
+          behavior: "auto",
+          top: targetSlide?.offsetTop ?? nextIndex * (container?.clientHeight ?? 0),
+        });
       }
     });
 
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [activePsychologistIndex, psychologists.length, setActivePsychologistIndex]);
+  }, [activePsychologistIndex, feedContainerRef, psychologists.length, setActivePsychologistIndex]);
 
   return {
     markSwipeHintSeen,

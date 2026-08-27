@@ -43,9 +43,11 @@ export const PsychologistSlide = ({
     videoProgress,
   } = model.setup;
   const { shouldRenderGlobalControls } = model.derived;
+  const { canSwipeBetweenPsychologists } = model.directory;
 
   const { stopInteractionPropagation } = model.navigation;
-  const { handleImmersiveExit, revealUiFromImmersiveVideo } = model.feed;
+  const { advanceToNextPsychologistVideo, handleImmersiveExit, revealUiFromImmersiveVideo } =
+    model.feed;
 
   const { flushFeedVideoAnalytics, syncActiveVideoProgress } = model.analytics;
 
@@ -88,7 +90,6 @@ export const PsychologistSlide = ({
         isActiveSlide && shouldNudgeSwipeCard ? "psychologists-swipe-nudge" : null,
       )}
       data-psychologists-slide-index={index}
-      key={psychologist.id}
     >
       <div className="absolute inset-0 overflow-hidden lg:inset-x-0 lg:top-[var(--psychologists-desktop-card-top)] lg:bottom-auto lg:h-[var(--psychologists-desktop-card-height)] lg:rounded-[22px] lg:bg-media-background">
         <div className="relative h-full w-full overflow-hidden">
@@ -110,12 +111,24 @@ export const PsychologistSlide = ({
               videoProps={{
                 "data-psychologist-id": psychologist.id,
                 "data-psychologists-background": "true",
+                "data-psychologists-slide-index": String(index),
                 autoPlay: isActiveSlide && !isVideoPaused,
                 controlsList: "nodownload",
-                loop: true,
+                loop: !canSwipeBetweenPsychologists,
                 muted: isVideoMuted,
                 onDurationChange: (event) => {
                   if (isActiveSlide) syncActiveVideoProgress(event.currentTarget);
+                },
+                onEnded: (event) => {
+                  if (!isActiveSlide) return;
+
+                  setIsVideoPaused(false);
+                  syncActiveVideoProgress(event.currentTarget);
+                  flushFeedVideoAnalytics(event.currentTarget, {
+                    completed: true,
+                    force: true,
+                  });
+                  advanceToNextPsychologistVideo();
                 },
                 onError: () => {
                   if (isActiveSlide) setIsVideoPlaybackFailed(true);
@@ -170,7 +183,7 @@ export const PsychologistSlide = ({
               alt={psychologist.name}
               className="h-full w-full object-cover"
               fill
-              priority={index === 0}
+              priority={isActiveSlide}
               sizes="(min-width: 768px) 430px, 100vw"
               src={slidePosterSrc}
               unoptimized={isPublicMediaUrl(psychologist.video_cover_url)}

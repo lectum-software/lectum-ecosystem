@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { buildPsychologistsFeedSlides } from "../../modules/feed-loop";
 import type { PsychologistsViewModel } from "../types";
 import { PsychologistSlide } from "./slide";
 
@@ -12,6 +13,8 @@ export const PsychologistsFeed = ({ model }: { model: PsychologistsViewModel }) 
   const { handleFeedScroll } = model.feed;
 
   const { psychologists } = model.directory;
+  const slides = buildPsychologistsFeedSlides(psychologists);
+
   return (
     <div
       className={cn(
@@ -23,10 +26,10 @@ export const PsychologistsFeed = ({ model }: { model: PsychologistsViewModel }) 
       onWheelCapture={isSearchFocused ? undefined : registerSwipeHintInteraction}
       ref={feedContainerRef}
     >
-      {psychologists.map((psychologist, index) => (
+      {slides.map(({ index, psychologist }) => (
         <PsychologistSlide
           index={index}
-          key={psychologist.id}
+          key={`${psychologist.id}:${index}`}
           model={model}
           psychologist={psychologist}
         />

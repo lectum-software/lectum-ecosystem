@@ -21,7 +21,6 @@ export const usePsychologistsDerivedView = ({
     accountTips,
     accountTipsUserId,
     activeOnboardingTip,
-    activePsychologistIndex,
     currentUserId,
     favoriteOverrides,
     hasLoadedSwipeHintPreference,
@@ -109,9 +108,9 @@ export const usePsychologistsDerivedView = ({
   const shouldRenderDesktopNavigationRail =
     metrics.isDesktopLayout && shouldRenderGlobalControls && psychologists.length > 1;
 
-  const canNavigateToPreviousPsychologist = activePsychologistIndex > 0;
+  const canNavigateToPreviousPsychologist = psychologists.length > 1;
 
-  const canNavigateToNextPsychologist = activePsychologistIndex < psychologists.length - 1;
+  const canNavigateToNextPsychologist = psychologists.length > 1;
 
   const isDesktopActionRailHidden = isFiltersOpen;
 

@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 167 tasks: `TASK-00` a `TASK-160`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 168 tasks: `TASK-00` a `TASK-161`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -258,6 +258,7 @@ ou cortesia manual.
 | 158 | [TASK-158 - Otimização client-side do vídeo de apresentação](TASK-158-otimizacao-video-apresentacao-mediabunny.md) | Completed | 18A, 146, 157 |
 | 159 | [TASK-159 - Preparação transversal de mídia antes dos uploads](TASK-159-preparacao-transversal-midia-uploads.md) | Completed | 26, 144, 157, 158 |
 | 160 | [TASK-160 - Limites em duas etapas para vídeos no Safari Photos](TASK-160-limites-video-safari-photos-opfs.md) | In Progress | 157, 158, 159 |
+| 161 | [TASK-161 - Loop circular dos videos da pagina de psicologos](TASK-161-loop-circular-videos-psicologos.md) | Completed | 13, 40, 75, 145 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -404,6 +405,8 @@ Esta secao e a fila pratica para continuar o MVP sem bater nas tasks bloqueadas 
 135. [TASK-158 - Otimização client-side do vídeo de apresentação](TASK-158-otimizacao-video-apresentacao-mediabunny.md) foi adicionada em 2026-08-20 para reduzir vídeos curtos antes do multipart atual com MediaBunny/WebCodecs, progresso, cancelamento e fallback original, sem antecipar Cloudflare Stream nem alterar backend, banco, R2 ou envs.
 136. [TASK-159 - Preparação transversal de mídia antes dos uploads](TASK-159-preparacao-transversal-midia-uploads.md) foi adicionada em 2026-08-21 para aplicar políticas explícitas de vídeo/imagem a todas as superfícies atuais de mídia pública, reservar passthrough apenas a thumbnails geradas, excluir documentos por allowlist fechada e tornar o post raiz compatível com multipart sem acoplar preparação ao transporte.
 137. [TASK-160 - Limites em duas etapas para vídeos no Safari Photos](TASK-160-limites-video-safari-photos-opfs.md) foi adicionada em 2026-08-21 para permitir que rendições transitórias maiores do Photos sejam preparadas antes do limite final, usar OPFS com `StreamTarget` no caminho principal e aplicar a mesma política a post, comentário e apresentação, mantendo validação backend e fallback seguro.
+
+138. [TASK-161 - Loop circular dos videos da pagina de psicologos](TASK-161-loop-circular-videos-psicologos.md) foi adicionada em 2026-08-27 para transformar a sequencia dos videos de apresentacao em ciclo silencioso, sem mensagem final e sem scroll para o topo ao voltar ao primeiro profissional.
 106. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste complementar em 2026-08-02 para adicionar tag de atividade por `posts + replies` no titulo da tabela por comunidade, trocar a copy das tags de engajamento para Alto/Padrao/Baixo/Sem engajamento e exibir taxas reais com/sem video nas colunas Posts e Respostas.
 107. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste pos-feedback em 2026-08-02 para remover o contador **Taxa de cobertura** do carrossel principal, manter as tags da coluna **Engajamento** como Alto/Padrao/Baixo/Sem engajamento e adicionar tags de atividade e engajamento ao titulo **Atividade e engajamento**.
 108. [TASK-111 - Cobertura e visibilidade no bloco Atividade e engajamento do psicologo Admin](TASK-111-cobertura-visibilidade-atividade-engajamento-psicologo-admin.md) recebeu ajuste visual em 2026-08-02 para remover os icones das tags **Muito ativo** e **Alto engajamento**, mantendo apenas o texto no titulo **Atividade e engajamento**.

@@ -6,8 +6,16 @@ import {
   type UIEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useRef,
 } from "react";
 import { playVideoWithSound } from "@/lib/video-playback";
+import {
+  clampPsychologistFeedSlideIndex,
+  getAnchoredPsychologistFeedIndex,
+  getPsychologistsFeedSlideCount,
+  normalizePsychologistFeedLoopIndex,
+} from "../modules/feed-loop";
 import {
   isPsychologistsScrollLockTarget,
   PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR,
@@ -26,6 +34,7 @@ export const usePsychologistsFeedNavigation = ({
   onboarding: PsychologistsOnboarding;
   navigation: PsychologistsNavigation;
 }) => {
+  const feedLoopNormalizationTimerRef = useRef<number | null>(null);
   const setup = usePsychologistsSetupContext();
   const {
     activePsychologistIndex,
@@ -49,10 +58,48 @@ export const usePsychologistsFeedNavigation = ({
   } = setup;
 
   const { psychologists, shouldShowVideo } = directory;
+  const feedSlideCount = getPsychologistsFeedSlideCount(psychologists.length);
 
   const { markSwipeHintSeen, registerSwipeHintInteraction } = onboarding;
 
   const { cancelPendingVideoGestureTimers, exitSearchMode, handleFiltersClose } = navigation;
+
+  const scrollFeedContainerToIndex = useCallback(
+    (index: number, behavior: ScrollBehavior) => {
+      const container = feedContainerRef.current;
+      if (!container) return;
+
+      const targetSlide = container.querySelector<HTMLElement>(
+        `[data-psychologists-slide-index="${index}"]`,
+      );
+
+      container.scrollTo({
+        behavior,
+        top: targetSlide?.offsetTop ?? index * container.clientHeight,
+      });
+    },
+    [feedContainerRef],
+  );
+
+  const scheduleLoopNormalization = useCallback(
+    (index: number) => {
+      if (typeof window === "undefined" || feedSlideCount <= 1) return;
+
+      const nextIndex = normalizePsychologistFeedLoopIndex(index, psychologists.length);
+      if (nextIndex === index) return;
+
+      if (feedLoopNormalizationTimerRef.current) {
+        window.clearTimeout(feedLoopNormalizationTimerRef.current);
+      }
+
+      feedLoopNormalizationTimerRef.current = window.setTimeout(() => {
+        setActivePsychologistIndex(nextIndex);
+        scrollFeedContainerToIndex(nextIndex, "auto");
+        feedLoopNormalizationTimerRef.current = null;
+      }, 120);
+    },
+    [feedSlideCount, psychologists.length, scrollFeedContainerToIndex, setActivePsychologistIndex],
+  );
 
   const pauseVideoPlayback = useCallback(() => {
     const currentVideo = backgroundVideoRef.current;
@@ -171,21 +218,22 @@ export const usePsychologistsFeedNavigation = ({
         const slideIndex = Number(nearestSlide?.dataset.psychologistsSlideIndex);
 
         if (Number.isFinite(slideIndex)) {
-          nextIndex = Math.max(0, Math.min(psychologists.length - 1, slideIndex));
+          nextIndex = clampPsychologistFeedSlideIndex(slideIndex, psychologists.length);
         }
       } else {
         const slideHeight = container.clientHeight;
         if (slideHeight <= 0) return;
 
-        nextIndex = Math.max(
-          0,
-          Math.min(psychologists.length - 1, Math.round(container.scrollTop / slideHeight)),
+        nextIndex = clampPsychologistFeedSlideIndex(
+          Math.round(container.scrollTop / slideHeight),
+          psychologists.length,
         );
       }
 
       if (nextIndex !== activePsychologistIndex) {
         markSwipeHintSeen();
         setActivePsychologistIndex(nextIndex);
+        scheduleLoopNormalization(nextIndex);
       }
     },
     [
@@ -194,6 +242,7 @@ export const usePsychologistsFeedNavigation = ({
       markSwipeHintSeen,
       metrics.isDesktopLayout,
       psychologists.length,
+      scheduleLoopNormalization,
       setActivePsychologistIndex,
     ],
   );
@@ -202,33 +251,60 @@ export const usePsychologistsFeedNavigation = ({
     (index: number, behavior: ScrollBehavior = "smooth") => {
       if (psychologists.length === 0) return;
 
-      const nextIndex = Math.max(0, Math.min(psychologists.length - 1, index));
-      const container = feedContainerRef.current;
+      const nextIndex = clampPsychologistFeedSlideIndex(index, psychologists.length);
 
       if (nextIndex !== activePsychologistIndex) {
         markSwipeHintSeen();
       }
-      setActivePsychologistIndex(nextIndex);
 
-      if (!container) return;
+      if (behavior === "auto") {
+        setActivePsychologistIndex(nextIndex);
+        scheduleLoopNormalization(nextIndex);
+      }
 
-      const targetSlide = container.querySelector<HTMLElement>(
-        `[data-psychologists-slide-index="${nextIndex}"]`,
-      );
-
-      container.scrollTo({
-        behavior,
-        top: targetSlide?.offsetTop ?? nextIndex * container.clientHeight,
-      });
+      scrollFeedContainerToIndex(nextIndex, behavior);
     },
     [
       activePsychologistIndex,
-      feedContainerRef,
       markSwipeHintSeen,
       psychologists.length,
+      scheduleLoopNormalization,
+      scrollFeedContainerToIndex,
       setActivePsychologistIndex,
     ],
   );
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || feedSlideCount <= 1) return;
+    if (activePsychologistIndex !== 0) return;
+
+    const nextIndex = getAnchoredPsychologistFeedIndex(0, psychologists.length);
+    if (nextIndex === activePsychologistIndex) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      setActivePsychologistIndex(nextIndex);
+      scrollFeedContainerToIndex(nextIndex, "auto");
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [
+    activePsychologistIndex,
+    feedSlideCount,
+    psychologists.length,
+    scrollFeedContainerToIndex,
+    setActivePsychologistIndex,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (feedLoopNormalizationTimerRef.current) {
+        window.clearTimeout(feedLoopNormalizationTimerRef.current);
+        feedLoopNormalizationTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const navigateToPreviousPsychologist = useCallback(
     (event: { preventDefault?: () => void; stopPropagation: () => void }) => {
@@ -247,6 +323,12 @@ export const usePsychologistsFeedNavigation = ({
     },
     [activePsychologistIndex, scrollToPsychologistIndex],
   );
+
+  const advanceToNextPsychologistVideo = useCallback(() => {
+    if (psychologists.length <= 1) return;
+
+    scrollToPsychologistIndex(activePsychologistIndex + 1);
+  }, [activePsychologistIndex, psychologists.length, scrollToPsychologistIndex]);
 
   const shouldForwardDesktopFeedScroll = useCallback(() => {
     return (
@@ -408,6 +490,7 @@ export const usePsychologistsFeedNavigation = ({
   ]);
 
   return {
+    advanceToNextPsychologistVideo,
     handleDesktopPageTouchEnd,
     handleDesktopPageTouchMove,
     handleDesktopPageTouchStart,
