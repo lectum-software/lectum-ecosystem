@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAccount } from "@/api/callers/account";
-import { getSafeApiErrorMessage } from "@/api/errors";
+import { getApiErrorCode, getSafeApiErrorMessage } from "@/api/errors";
 import { components } from "@/components/controllers";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -33,16 +33,35 @@ type AccountDeleteSectionProps = {
 
 const resolveDeleteAccountError = (error: unknown) => {
   const apiError = error as ApiError;
-  const code = apiError?.data?.code;
+  const code = getApiErrorCode(error) ?? apiError?.data?.code;
   const rawMessage = getSafeApiErrorMessage(error, "");
   const normalized = rawMessage.toLowerCase();
+
+  if (code === "account_delete_confirmation_invalid") {
+    return "Digite EXCLUIR para confirmar a exclusão.";
+  }
 
   if (code === "account_delete_google_reauth_required") {
     return "Confirme sua identidade com o Google antes de excluir a conta.";
   }
 
+  if (
+    code === "account_current_password_invalid" ||
+    code === "account_password_login_unavailable"
+  ) {
+    return "A senha atual não confere. Revise e tente novamente.";
+  }
+
   if (code === "account_delete_identity_unavailable") {
     return "Não há método de autenticação disponível para confirmar a exclusão desta conta.";
+  }
+
+  if (code === "device_not_found") {
+    return "Não foi possível confirmar este dispositivo. Atualize a página e tente novamente.";
+  }
+
+  if (code === "token_not_authorized") {
+    return "Sua sessão precisa estar ativa para excluir a conta.";
   }
 
   if (normalized.includes("assinatura") || normalized.includes("pagamento")) {
@@ -116,7 +135,8 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
     },
   });
 
-  const isSecurityLoading = account.security.isLoading || account.security.isPending;
+  const isSecurityLoading =
+    account.security.isLoading || account.security.isPending || account.security.isFetching;
   const hasSecurityData = Boolean(account.security.data);
   const hasPassword = account.security.data?.has_password ?? false;
   const provider = account.security.data?.provider;
@@ -162,9 +182,7 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
 
     account.deleteAccount.mutate({
       confirmation: values.confirmation.trim(),
-      ...(deleteRequiresPassword
-        ? { current_password: values.current_password?.trim() || "" }
-        : {}),
+      ...(deleteRequiresPassword ? { current_password: values.current_password || "" } : {}),
     });
   });
 

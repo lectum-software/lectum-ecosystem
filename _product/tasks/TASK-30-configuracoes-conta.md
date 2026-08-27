@@ -415,3 +415,37 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   homologação são concluídos sem expor tokens nem excluir conta real.
 - [x] ADR-0074, ADR-0461 e a regra de autenticação em `ARCHITECTURE.md` registram a fronteira de
   segurança.
+
+## Ajuste complementar em 2026-08-27 - exclusao de conta local com senha
+
+- Evidencia de produto: captura enviada pelo usuario em 2026-08-26 mostrou uma conta criada com
+  e-mail e senha tentando excluir a propria conta, mas recebendo **Exclusao bloqueada** com a
+  mensagem generica "Voce nao tem permissao para realizar esta acao.".
+- Diagnostico: o cache React Query de `account.security` era compartilhado por chave estatica.
+  Em trocas de sessao/conta dentro da mesma experiencia mobile/PWA, a modal podia reaproveitar um
+  contrato de seguranca antigo durante o refetch e esconder **Senha atual** para uma conta local que
+  possui senha. O submit entao chegava sem senha atual e o status `403` era apresentado pela camada
+  generica de erro antes de usar o `code` seguro retornado pelo backend.
+- Decisao: o cache de seguranca passa a ser escopado pelo `user.id` autenticado, a query so roda
+  depois de existir usuario autenticado no estado local e a modal aguarda tambem `isFetching`
+  antes de renderizar/permitir o formulario destrutivo.
+- Frontend: o formulario de exclusao agora exige **Senha atual** no Zod quando o contrato real
+  informa `has_password=true`, preserva a senha digitada sem `trim()` e mapeia `code` de falha de
+  exclusao para mensagens especificas em PT-BR, evitando o `403` generico no modal.
+- Backend: sem alteracao; a regra existente continua sendo `user.provider="google"` para
+  reautenticacao Google e conta nao Google com `user.password` para confirmacao por senha atual.
+- Sem migration, sem package novo, sem variavel de ambiente nova, sem mock, sem seed e sem exclusao
+  real de conta em ambiente publicado. Rollback e reverter o commit do frontend.
+
+### Criterios de aceite do complemento
+
+- [x] O cache de `account.security` e isolado por usuario autenticado e nao reaproveita dados de
+  outra conta ao abrir a modal de exclusao.
+- [x] A modal destrutiva aguarda carregamento/refetch do contrato de seguranca antes de mostrar o
+  formulario e antes de habilitar a exclusao.
+- [x] Contas com e-mail/senha continuam exigindo **Senha atual** e o campo e validado no cliente
+  antes do submit.
+- [x] Erros seguros de exclusao (`account_current_password_invalid`, `device_not_found`,
+  `token_not_authorized` e confirmacao invalida) nao aparecem mais como permissao generica.
+- [x] A correcao foi registrada em ADR, validada com TypeScript/check/build e preparada para
+  deploy independente do frontend.

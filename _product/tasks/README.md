@@ -663,6 +663,17 @@ Uma task só pode ser marcada como concluída quando:
   exclusivo do cookie HttpOnly. A mesma fronteira preserva o `link_token` curto do vínculo Google
   sem alterar frontend, banco, packages ou envs.
 
+## Atualizacao operacional em 2026-08-27: exclusão de conta local com senha
+
+- Ajuste pós-feedback da TASK-30: a consulta frontend de `account.security` passa a ser cacheada por
+  usuário autenticado e não por chave global, evitando que a modal de exclusão reaproveite estado de
+  outra sessão/conta durante refetch em mobile/PWA.
+- Para contas não Google com senha, a modal aguarda o contrato real de segurança, exibe e valida
+  **Senha atual**, preserva a senha digitada sem `trim()` e mapeia códigos seguros de domínio antes
+  do fallback genérico de `403`.
+- Sem alteração de backend, banco, migration, package, env, mock, seed ou exclusão real de conta em
+  ambientes publicados.
+
 ## Atualização operacional em 2026-08-20: observabilidade Sentry separada
 
 - Complemento da TASK-34: frontend, backend e admin passam a capturar falhas em três projetos

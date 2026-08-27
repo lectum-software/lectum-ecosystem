@@ -4,7 +4,8 @@ const keys = {
     hydrate: (cache?: unknown) => ["auth_hydrate", cache],
   },
   account: {
-    security: () => ["account_security"],
+    securityRoot: () => ["account_security"],
+    security: (userId?: string | null) => ["account_security", userId ?? "anonymous"],
     tips: (userId?: string | null) => ["account_onboarding_tips", userId ?? "anonymous"],
   },
   notification: {

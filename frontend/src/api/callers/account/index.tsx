@@ -69,17 +69,18 @@ export const useAccount = ({
   const queryClient = useQueryClient();
   const userId = useAppSelector((state) => state.user?.id);
   const hasAuthenticatedUser = Boolean(userId && getToken());
+  const securityQueryKey = keys.account.security(userId);
   const tipsQueryKey = keys.account.tips(userId);
 
   const invalidateAccount = () => {
-    queryClient.invalidateQueries({ queryKey: keys.account.security() });
+    queryClient.invalidateQueries({ queryKey: keys.account.securityRoot() });
     queryClient.invalidateQueries({ queryKey: keys.auth.root() });
   };
 
   const security = useQuery({
-    queryKey: keys.account.security(),
+    queryKey: securityQueryKey,
     queryFn: () => api.security(),
-    enabled: enableSecurity,
+    enabled: enableSecurity && Boolean(userId),
     refetchOnWindowFocus: false,
     retry: false,
   });

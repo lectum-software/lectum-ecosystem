@@ -1,20 +1,31 @@
 import { z } from "zod";
 import { type Field, useFormList } from "@/hooks/form";
 
-export const deleteAccountSchema = z
-  .object({
-    confirmation: z.string().trim(),
-    current_password: z.string().optional(),
-  })
-  .superRefine((values, ctx) => {
-    if (values.confirmation.toUpperCase() !== "EXCLUIR") {
-      ctx.addIssue({
-        code: "custom",
-        message: "Digite EXCLUIR para confirmar.",
-        path: ["confirmation"],
-      });
-    }
-  });
+const buildDeleteAccountSchema = (requiresPassword: boolean) =>
+  z
+    .object({
+      confirmation: z.string().trim(),
+      current_password: z.string().optional(),
+    })
+    .superRefine((values, ctx) => {
+      if (requiresPassword && !values.current_password) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Informe sua senha atual para excluir a conta.",
+          path: ["current_password"],
+        });
+      }
+
+      if (values.confirmation.toUpperCase() !== "EXCLUIR") {
+        ctx.addIssue({
+          code: "custom",
+          message: "Digite EXCLUIR para confirmar.",
+          path: ["confirmation"],
+        });
+      }
+    });
+
+export const deleteAccountSchema = buildDeleteAccountSchema(false);
 
 export type DeleteAccountForm = z.infer<typeof deleteAccountSchema>;
 
@@ -43,7 +54,7 @@ const buildFields = (hasPassword: boolean) =>
 export const useDeleteAccountForm = (hasPassword: boolean) => {
   return useFormList<DeleteAccountForm>({
     fields: buildFields(hasPassword),
-    schema: deleteAccountSchema,
+    schema: buildDeleteAccountSchema(hasPassword),
     values: {
       confirmation: "",
       current_password: "",
