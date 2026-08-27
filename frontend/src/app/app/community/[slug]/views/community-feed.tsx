@@ -38,6 +38,7 @@ import {
   COMMUNITY_FLOATING_CREATE_POST_CLASSNAME,
   CommunityPublishOnboarding,
 } from "../components/publish-onboarding";
+import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
 import { flattenCommunityPostPages, PAGE_LIMIT, resolveFeedError } from "../modules/feed-support";
 import { CreateCommunityPostLogic } from "../post/new/logic";
 import type { CommunityRouteLogicProps } from "./community-detail";
@@ -99,6 +100,13 @@ export const CommunityFeedLogic = ({
 
     void fetchNextFeedPage();
   }, [fetchNextFeedPage, hasNextFeedPage, isFetchingFeed, isFetchingNextFeedPage]);
+  useCommunityFeedScrollRestoration({
+    canLoadMore: Boolean(hasNextFeedPage),
+    isLoadingMore: isFetchingNextFeedPage,
+    itemCount: posts.length,
+    onLoadMore: loadMoreFeedPosts,
+    ready: !isInitialFeedLoading && !errorMessage,
+  });
 
   const handleCreatePostClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
     event.preventDefault();

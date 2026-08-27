@@ -33,6 +33,7 @@ import {
 } from "@/utils/lectum-share-target";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { publicCommunityPostFocusedReplyHref } from "@/utils/public-routes";
+import { getRememberedCommunityFeedHref } from "../../../hooks/use-community-feed-scroll-restoration";
 import { ThreadOriginalPostCard } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
 import { PostReportModal, ReplyComposer } from "../components/reply-composer";
@@ -123,12 +124,20 @@ export const PostReplyThreadLogic = ({
   );
 
   const handleThreadBack = () => {
+    const rememberedFeedHref = getRememberedCommunityFeedHref(post?.id ?? postId);
+    const fallbackHref = rememberedFeedHref ?? threadBackFallbackHref;
+
     if (forceBackToFeed) {
-      router.push(threadBackFallbackHref);
+      if (!rememberedFeedHref) {
+        router.push(threadBackFallbackHref);
+        return;
+      }
+
+      navigateBackWithFallback(router, fallbackHref);
       return;
     }
 
-    navigateBackWithFallback(router, threadBackFallbackHref);
+    navigateBackWithFallback(router, fallbackHref);
   };
   const resetReplyComposerFocusHighlight = useReplyFocusHighlight(composerFocusReplyId, false, {
     focusKey: composerFocusRequestKey,

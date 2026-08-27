@@ -568,3 +568,35 @@ Builder/Quick Copy nao estava autenticado neste ambiente (`npx "@builder.io/dev-
 - [x] `pnpm check`
 - [x] `git diff --check`
 - [x] Browser local mobile-first no frontend buildado em `http://127.0.0.1:3062`: `/version` respondeu `0.1.153`, `/app/comunidades/feed` respondeu HTTP 200, e Chrome headless mobile 390x844 abriu a rota.
+
+## Complemento 2026-08-27 - restauracao de scroll ao voltar do post
+
+- Pedido do usuario: ao rolar o feed/comunidade, abrir um post e sair dele, a tela deve voltar para o mesmo ponto da lista em vez de reiniciar no topo.
+- Fonte visual auditavel: `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg` e `_product/proto/Dentro do Post.jpg`; o Builder/Quick Copy foi tentado via CLI neste ambiente, mas nao gerou artefato consultavel, entao a execucao usou as imagens locais como fallback.
+- Frontend: cards reais do feed geral e da pagina interna da comunidade passam a salvar um snapshot efemero de origem em `sessionStorage` antes da navegacao para o detalhe do post.
+- Frontend: ao remontar o feed ou a comunidade, a lista restaura a posicao usando o card clicado como ancora quando disponivel e `scrollY` como fallback; se a rolagem salva exigir mais altura, reaproveita o `fetchNextPage` real da rolagem infinita antes de posicionar.
+- Frontend: rotas publicas de detalhe/thread que tinham retorno forcado para o feed agora preferem a origem salva quando ela existe; sem snapshot valido, permanecem no fallback canonico do feed publico.
+- Escopo: alteracao frontend-only, mobile-first, sem mudanca de backend, Prisma schema, migrations, endpoints, payloads, packages, envs, storage de arquivos, ranking, votos, salvos ou dados publicados.
+- ADR criado: `adrs/0473-restauracao-scroll-feed-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Abrir um post a partir do feed geral e voltar restaura a rolagem no mesmo ponto salvo da lista.
+- [x] Abrir um post a partir de uma comunidade especifica e voltar restaura a rolagem no mesmo ponto salvo daquela comunidade.
+- [x] A restauracao usa dados reais/cache da listagem e carrega proximas paginas reais quando a altura ainda nao e suficiente.
+- [x] O detalhe do post continua abrindo no topo; a restauracao acontece somente no retorno ao feed/comunidade.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova ou migration foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write -- "src/app/app/community/[slug]/hooks/use-community-feed-scroll-restoration.ts" "src/app/app/community/[slug]/views/community-feed.tsx" "src/app/app/community/[slug]/views/community-detail.tsx" "src/app/app/community/[slug]/components/post-card.tsx" "src/app/app/community/[slug]/post/[id]/views/post-detail.tsx" "src/app/app/community/[slug]/post/[id]/views/reply-thread.tsx"`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` antes do bump, ainda em `0.1.219`.
+- [x] `pnpm version:bump` para `0.1.220`.
+- [x] `pnpm check:version`
+- [x] `pnpm --dir frontend build` apos o bump em `0.1.220`.
+- [x] `pnpm check`
+- [x] Browser local mobile-first no frontend buildado em `http://127.0.0.1:3063`: `/version` respondeu `0.1.220`, `/app/comunidades/feed` respondeu HTTP 200 e Chrome headless 390x844 abriu a rota; a tentativa de clicar posts reais no local ficou bloqueada porque a API local/ngrok de desenvolvimento respondeu `Feed indisponivel`, entao nenhum mock ou seed foi usado.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check` apos a atualizacao final dos docs.
+- Smoke de homologacao sera executado e reportado apos o push de `homolog`, pois o push dispara o deploy automatico.

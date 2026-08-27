@@ -44,6 +44,7 @@ import {
   COMMUNITY_FLOATING_CREATE_POST_CLASSNAME,
   CommunityPublishOnboarding,
 } from "../components/publish-onboarding";
+import { useCommunityFeedScrollRestoration } from "../hooks/use-community-feed-scroll-restoration";
 import {
   type CommunityPostSelectedPeriods,
   type CommunityPostSort,
@@ -137,6 +138,13 @@ export const CommunityDetailLogic = ({
     isFetchingCommunityPosts,
     isFetchingNextCommunityPostsPage,
   ]);
+  useCommunityFeedScrollRestoration({
+    canLoadMore: Boolean(hasNextCommunityPostsPage),
+    isLoadingMore: isFetchingNextCommunityPostsPage,
+    itemCount: posts.length,
+    onLoadMore: loadMoreCommunityPosts,
+    ready: Boolean(community) && !isInitialPostsLoading && !postsError,
+  });
 
   useEffect(() => {
     if (!communitySearchOpen) return;

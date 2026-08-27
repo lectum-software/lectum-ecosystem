@@ -30,7 +30,10 @@ import {
   formatCommunityPostTime as formatPostTimeLabel,
   getCommunityAuthorDisplayName,
 } from "@/utils/community-display";
-
+import {
+  isCommunityPostDetailNavigationTarget,
+  rememberCommunityFeedScrollPosition,
+} from "../hooks/use-community-feed-scroll-restoration";
 import {
   communityDetailHref,
   communityPostDetailHref,
@@ -39,7 +42,6 @@ import {
   type SaveSnapshot,
   type VoteSnapshot,
 } from "../modules/feed-support";
-
 import { AuthorAvatar, AuthorIdentityLine } from "./feed-controls";
 
 export const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }) => {
@@ -228,6 +230,9 @@ export const PostCard = ({
         }}
       />
     ) : null;
+  const rememberPostNavigation = useCallback(() => {
+    rememberCommunityFeedScrollPosition(post.id);
+  }, [post.id]);
 
   const handleVote = (value: 1 | -1) => {
     if (!conversion.isAuthenticated) {
@@ -314,6 +319,21 @@ export const PostCard = ({
     window.setTimeout(handleToggleSave, 0);
   }, [conversion, handleToggleSave, post.id, saveSnapshot.saved]);
 
+  const handlePostNavigationCapture = (event: ReactMouseEvent<HTMLElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      !isCommunityPostDetailNavigationTarget(event.target, postDetailHref)
+    ) {
+      return;
+    }
+
+    rememberPostNavigation();
+  };
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (
       event.defaultPrevented ||
@@ -327,6 +347,7 @@ export const PostCard = ({
       return;
     }
 
+    rememberPostNavigation();
     router.push(postDetailHref);
   };
   const handleCardKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
@@ -334,13 +355,16 @@ export const PostCard = ({
     if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();
+    rememberPostNavigation();
     router.push(postDetailHref);
   };
 
   return (
     <article
       className="cursor-pointer overflow-hidden rounded-[22px] border border-border bg-surface p-4 shadow-lectum-soft transition hover:border-primary/20 hover:bg-primary-soft/20 dark:border-border dark:bg-surface"
+      data-community-feed-post-id={post.id}
       onClick={handleCardClick}
+      onClickCapture={handlePostNavigationCapture}
       onKeyDown={handleCardKeyDown}
     >
       {showCommunityHeader ? (

@@ -22,6 +22,7 @@ import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { getRememberedCommunityFeedHref } from "../../../hooks/use-community-feed-scroll-restoration";
 import { PostBody, PostHeader, PostVoteBar } from "../components/post-content";
 import { RepliesList } from "../components/replies-list";
 import { PostReportModal, ReplyComposer } from "../components/reply-composer";
@@ -288,12 +289,20 @@ export const PostDetailLogic = ({
   }, []);
 
   const handlePostBack = () => {
+    const rememberedFeedHref = getRememberedCommunityFeedHref(post?.id ?? null);
+    const fallbackHref = rememberedFeedHref ?? DEFAULT_COMMUNITY_FEED_HREF;
+
     if (forceBackToFeed) {
-      router.push(DEFAULT_COMMUNITY_FEED_HREF);
+      if (!rememberedFeedHref) {
+        router.push(DEFAULT_COMMUNITY_FEED_HREF);
+        return;
+      }
+
+      navigateBackWithFallback(router, fallbackHref);
       return;
     }
 
-    navigateBackWithFallback(router, DEFAULT_COMMUNITY_FEED_HREF);
+    navigateBackWithFallback(router, fallbackHref);
   };
 
   return (

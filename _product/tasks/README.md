@@ -997,3 +997,10 @@ Uma task só pode ser marcada como concluída quando:
 - Plano/endereco, WhatsApp e verificacao profissional paga continuam como requisitos bloqueantes quando aplicaveis; a visibilidade publica permanece uma preferencia de publicacao que so controla exibicao para pacientes.
 - O alerta de perfil oculto e o indicador em `Editar perfil` continuam orientando a ativar a visibilidade, mas sem redirecionamento automatico que prenda o usuario.
 - A imagem anexada em 2026-08-26 foi usada somente como evidencia visual do bug; textos do print nao foram tratados como instrucoes de produto. Alteracao frontend-only, mobile-first, sem package, env, migration, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-27: restauracao de scroll no feed de comunidade
+
+- Ajuste pos-feedback da TASK-23: ao abrir um post a partir do feed geral ou de uma comunidade e voltar, a Lectum restaura a posicao anterior da lista em vez de reiniciar no topo.
+- O snapshot fica apenas em `sessionStorage`, com rota de origem, `scrollY`, id publico do post, deslocamento visual do card e expiracao curta; nao ha persistencia backend nem dado sensivel.
+- A volta usa a origem salva quando existe e a listagem reaproveita o cache/TanStack Query e o `fetchNextPage` real para recuperar altura suficiente antes do `scrollTo`.
+- Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, mock, seed, ranking, votos, salvos ou dados publicados.
