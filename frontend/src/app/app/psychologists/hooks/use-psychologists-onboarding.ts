@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect } from "react";
 import {
-  getAnchoredPsychologistFeedIndex,
-  normalizePsychologistFeedLoopIndex,
+  getPsychologistsFeedSlideCount,
+  PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
 } from "../modules/feed-loop";
 import { SWIPE_HINT_NUDGE_DURATION_MS } from "../modules/video-analytics";
 import { usePsychologistsSetupContext } from "./setup-context";
@@ -23,6 +23,7 @@ export const usePsychologistsOnboarding = ({
     didMoveBeyondLongPressToleranceRef,
     didMoveDuringPressRef,
     feedContainerRef,
+    feedLoopCycleCount,
     hasLoadedSwipeHintPreference,
     hasPersistedMySearchTipSeenRef,
     hasPersistedSwipeHintSeenRef,
@@ -41,6 +42,7 @@ export const usePsychologistsOnboarding = ({
     searchParamsString,
     setActiveOnboardingTip,
     setActivePsychologistIndex,
+    setFeedLoopCycleCount,
     setHasLoadedSwipeHintPreference,
     setHasSeenSwipeHint,
     setIsLongPressing,
@@ -366,8 +368,9 @@ export const usePsychologistsOnboarding = ({
 
     lastSearchParamsStringRef.current = searchParamsString;
     const frame = window.requestAnimationFrame(() => {
-      const nextIndex = getAnchoredPsychologistFeedIndex(0, psychologists.length);
+      const nextIndex = 0;
 
+      setFeedLoopCycleCount(PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES);
       setActivePsychologistIndex(nextIndex);
       resetVideoInteractionState();
 
@@ -388,42 +391,50 @@ export const usePsychologistsOnboarding = ({
   }, [
     feedContainerRef,
     lastSearchParamsStringRef,
-    psychologists.length,
     resetVideoInteractionState,
     searchParamsString,
     setActivePsychologistIndex,
+    setFeedLoopCycleCount,
   ]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (psychologists.length === 0) {
+        setFeedLoopCycleCount(PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES);
         setActivePsychologistIndex(0);
         return;
       }
 
-      const nextIndex = normalizePsychologistFeedLoopIndex(
-        activePsychologistIndex,
-        psychologists.length,
+      const slideCount = getPsychologistsFeedSlideCount(psychologists.length, feedLoopCycleCount);
+
+      if (activePsychologistIndex < slideCount) return;
+
+      const nextIndex = 0;
+      setFeedLoopCycleCount(PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES);
+      setActivePsychologistIndex(nextIndex);
+
+      const container = feedContainerRef.current;
+      const targetSlide = container?.querySelector<HTMLElement>(
+        `[data-psychologists-slide-index="${nextIndex}"]`,
       );
-      if (activePsychologistIndex !== nextIndex) {
-        setActivePsychologistIndex(nextIndex);
 
-        const container = feedContainerRef.current;
-        const targetSlide = container?.querySelector<HTMLElement>(
-          `[data-psychologists-slide-index="${nextIndex}"]`,
-        );
-
-        container?.scrollTo({
-          behavior: "auto",
-          top: targetSlide?.offsetTop ?? nextIndex * (container?.clientHeight ?? 0),
-        });
-      }
+      container?.scrollTo({
+        behavior: "auto",
+        top: targetSlide?.offsetTop ?? nextIndex * (container?.clientHeight ?? 0),
+      });
     });
 
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [activePsychologistIndex, feedContainerRef, psychologists.length, setActivePsychologistIndex]);
+  }, [
+    activePsychologistIndex,
+    feedContainerRef,
+    feedLoopCycleCount,
+    psychologists.length,
+    setActivePsychologistIndex,
+    setFeedLoopCycleCount,
+  ]);
 
   return {
     markSwipeHintSeen,

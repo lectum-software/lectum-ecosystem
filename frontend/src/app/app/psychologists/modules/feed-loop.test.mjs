@@ -3,10 +3,10 @@ import test from "node:test";
 import {
   buildPsychologistsFeedSlides,
   clampPsychologistFeedSlideIndex,
-  getAnchoredPsychologistFeedIndex,
   getPsychologistFeedRealIndex,
+  getPsychologistsFeedCycleCountForIndex,
+  getPsychologistsFeedLoopCycleCount,
   getPsychologistsFeedSlideCount,
-  normalizePsychologistFeedLoopIndex,
 } from "./feed-loop.ts";
 
 const psychologists = [
@@ -18,6 +18,7 @@ const psychologists = [
 test("monta tres ciclos para a listagem circular de psicologos", () => {
   const slides = buildPsychologistsFeedSlides(psychologists);
 
+  assert.equal(getPsychologistsFeedLoopCycleCount(psychologists.length, 1), 3);
   assert.equal(getPsychologistsFeedSlideCount(psychologists.length), 9);
   assert.deepEqual(
     slides.map((slide) => slide.psychologist.id),
@@ -29,31 +30,53 @@ test("monta tres ciclos para a listagem circular de psicologos", () => {
   );
 });
 
-test("ancora indices reais no ciclo central para evitar retorno visual ao topo", () => {
-  assert.equal(getAnchoredPsychologistFeedIndex(0, psychologists.length), 3);
-  assert.equal(getAnchoredPsychologistFeedIndex(2, psychologists.length), 5);
-  assert.equal(getAnchoredPsychologistFeedIndex(6, psychologists.length), 3);
+test("mantem o inicio no primeiro slide real sem normalizar para ciclo central", () => {
+  const slides = buildPsychologistsFeedSlides(psychologists);
 
-  assert.equal(normalizePsychologistFeedLoopIndex(0, psychologists.length), 3);
-  assert.equal(normalizePsychologistFeedLoopIndex(5, psychologists.length), 5);
-  assert.equal(normalizePsychologistFeedLoopIndex(6, psychologists.length), 3);
-  assert.equal(normalizePsychologistFeedLoopIndex(9, psychologists.length), 3);
-  assert.equal(normalizePsychologistFeedLoopIndex(-1, psychologists.length), 5);
+  assert.equal(slides[0].index, 0);
+  assert.equal(slides[0].psychologist.id, "psi-a");
+  assert.equal(getPsychologistFeedRealIndex(0, psychologists.length), 0);
+  assert.equal(getPsychologistFeedRealIndex(3, psychologists.length), 0);
+  assert.equal(clampPsychologistFeedSlideIndex(0, psychologists.length), 0);
+  assert.equal(clampPsychologistFeedSlideIndex(6, psychologists.length), 6);
 });
 
-test("resolve o proximo video do ultimo psicologo como o primeiro psicologo", () => {
-  const lastMiddleSlideIndex = 5;
-  const nextVirtualSlideIndex = lastMiddleSlideIndex + 1;
+test("resolve o proximo video do ultimo psicologo como o primeiro abaixo dele", () => {
+  const lastFirstCycleSlideIndex = 2;
+  const nextVirtualSlideIndex = lastFirstCycleSlideIndex + 1;
 
-  assert.equal(getPsychologistFeedRealIndex(lastMiddleSlideIndex, psychologists.length), 2);
+  assert.equal(getPsychologistFeedRealIndex(lastFirstCycleSlideIndex, psychologists.length), 2);
   assert.equal(getPsychologistFeedRealIndex(nextVirtualSlideIndex, psychologists.length), 0);
-  assert.equal(normalizePsychologistFeedLoopIndex(nextVirtualSlideIndex, psychologists.length), 3);
+  assert.equal(
+    buildPsychologistsFeedSlides(psychologists)[nextVirtualSlideIndex].psychologist.id,
+    "psi-a",
+  );
+});
+
+test("expande ciclos para manter uma nova volta abaixo do indice alvo", () => {
+  assert.equal(
+    getPsychologistsFeedCycleCountForIndex({
+      currentCycleCount: 3,
+      index: 8,
+      psychologistsCount: psychologists.length,
+    }),
+    4,
+  );
+  assert.equal(
+    getPsychologistsFeedCycleCountForIndex({
+      currentCycleCount: 3,
+      index: 9,
+      psychologistsCount: psychologists.length,
+    }),
+    5,
+  );
+  assert.equal(getPsychologistsFeedSlideCount(psychologists.length, 4), 12);
+  assert.equal(buildPsychologistsFeedSlides(psychologists, 4).at(-1)?.psychologist.id, "psi-c");
 });
 
 test("preserva listagens vazias ou com um unico psicologo sem duplicar DOM", () => {
   assert.equal(getPsychologistsFeedSlideCount(0), 0);
   assert.equal(getPsychologistsFeedSlideCount(1), 1);
   assert.equal(clampPsychologistFeedSlideIndex(10, 1), 0);
-  assert.equal(normalizePsychologistFeedLoopIndex(10, 1), 0);
   assert.equal(buildPsychologistsFeedSlides([psychologists[0]]).length, 1);
 });

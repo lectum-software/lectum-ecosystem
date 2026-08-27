@@ -6,14 +6,15 @@ import type { PsychologistsViewModel } from "../types";
 import { PsychologistSlide } from "./slide";
 
 export const PsychologistsFeed = ({ model }: { model: PsychologistsViewModel }) => {
-  const { feedContainerRef, isSearchFocused, isVideoProgressSeeking } = model.setup;
+  const { feedContainerRef, feedLoopCycleCount, isSearchFocused, isVideoProgressSeeking } =
+    model.setup;
 
   const { registerSwipeHintInteraction } = model.onboarding;
 
   const { handleFeedScroll } = model.feed;
 
   const { psychologists } = model.directory;
-  const slides = buildPsychologistsFeedSlides(psychologists);
+  const slides = buildPsychologistsFeedSlides(psychologists, feedLoopCycleCount);
 
   return (
     <div

@@ -502,3 +502,4 @@ Formato recomendado:
 - [ADR-0469 — Segurança de conta escopada por usuário no frontend](0469-seguranca-conta-escopada-por-usuario-frontend.md)
 - [ADR-0470 — Indicador booleano de senha em respostas sanitizadas](0470-indicador-booleano-senha-sanitizado.md)
 - [ADR-0471 — Loop circular silencioso no feed de videos de psicologos](0471-loop-circular-videos-psicologos.md)
+- [ADR-0472 — Loop descendente expansivel no feed de videos de psicologos](0472-loop-descendente-videos-psicologos.md)

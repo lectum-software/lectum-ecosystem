@@ -8,6 +8,7 @@ import { usePatient } from "@/api/callers/patient";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { useAppSelector } from "@/hooks/redux";
 import { getPageFromParams, readFiltersFromParams } from "../modules/directory-url";
+import { PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES } from "../modules/feed-loop";
 import type { PsychologistsOnboardingTip } from "../modules/onboarding";
 import { DEFAULT_VIDEO_PLAYBACK_RATE } from "../modules/onboarding";
 import type { FeedVideoAnalyticsState, VideoProgressState } from "../modules/video-analytics";
@@ -91,6 +92,10 @@ export const usePsychologistsSetup = () => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
+
+  const [feedLoopCycleCount, setFeedLoopCycleCount] = useState(
+    PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
+  );
 
   const [desktopFilterChipScroll, setDesktopFilterChipScroll] = useState({
     canScrollLeft: false,
@@ -220,6 +225,7 @@ export const usePsychologistsSetup = () => {
     favoriteOverrides,
     favoritePsychologist,
     feedContainerRef,
+    feedLoopCycleCount,
     feedVideoAnalyticsRef,
     filterDialogCloseTimerRef,
     filterDialogOpenFrameRef,
@@ -267,6 +273,7 @@ export const usePsychologistsSetup = () => {
     setActivePsychologistIndex,
     setDesktopFilterChipScroll,
     setFavoriteOverrides,
+    setFeedLoopCycleCount,
     setFilterModalSearchDraft,
     setHasLoadedSwipeHintPreference,
     setHasSeenSwipeHint,
