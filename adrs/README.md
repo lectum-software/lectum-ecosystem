@@ -504,3 +504,4 @@ Formato recomendado:
 - [ADR-0471 — Loop circular silencioso no feed de videos de psicologos](0471-loop-circular-videos-psicologos.md)
 - [ADR-0472 — Loop descendente expansivel no feed de videos de psicologos](0472-loop-descendente-videos-psicologos.md)
 - [ADR-0473 — Restauracao de scroll no feed de comunidade](0473-restauracao-scroll-feed-comunidade.md)
+- [ADR-0474 — Imagens Open Graph quadradas por entidade](0474-imagens-open-graph-quadradas-entidades.md)

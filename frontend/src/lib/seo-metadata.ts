@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { absoluteUrl, getSiteUrl } from "@/lib/seo";
 import { getPublicApiSource, isTrustedPublicAssetUrl } from "@/utils/public-asset-sources";
 import {
+  publicCommunityOpenGraphImageHref,
   publicCommunityPostWhatsappShareHref,
   publicCommunityReplyWhatsappShareHref,
+  publicPsychologistOpenGraphImageHref,
 } from "@/utils/public-routes";
 
 const COMMUNITY_ICON_MEDIA_PATH_PREFIX = "/community/icons/";
@@ -107,6 +109,7 @@ type PublicCommunitySeo = {
   og_title: string;
   slug: string;
   title: string;
+  updated_at: string | null;
 };
 
 type PublicPsychologistSeo = {
@@ -119,6 +122,7 @@ type PublicPsychologistSeo = {
   og_image_width: number | null;
   og_title: string;
   title: string;
+  updated_at: string | null;
 };
 
 const apiBaseUrl = () => {
@@ -177,7 +181,7 @@ const resolveCanonicalUrl = (value?: string | null) => {
   }
 };
 
-const resolveMediaUrl = (value?: string | null) => {
+export const resolveSeoMediaUrl = (value?: string | null) => {
   const raw = normalizeMetadataUrl(value);
   if (!raw) return undefined;
 
@@ -265,8 +269,8 @@ export const resolveSeoMetadata = async (
     overrides.ogDescription || setting?.og_description || fallback.ogDescription || description;
   const robotsIndex = setting?.robots_index ?? fallback.robotsIndex ?? true;
   const robotsFollow = setting?.robots_follow ?? fallback.robotsFollow ?? true;
-  const resolvedImage = resolveMediaUrl(image);
-  const resolvedVideo = video === null ? undefined : resolveMediaUrl(video);
+  const resolvedImage = resolveSeoMediaUrl(image);
+  const resolvedVideo = video === null ? undefined : resolveSeoMediaUrl(video);
   const imageWidth = overrides.imageWidth ?? fallback.imageWidth ?? undefined;
   const imageHeight = overrides.imageHeight ?? fallback.imageHeight ?? undefined;
   const videoWidth = overrides.videoWidth ?? fallback.videoWidth ?? undefined;
@@ -369,7 +373,7 @@ const getPublicCommunityPostSeo = async ({
   }
 };
 
-const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
+export const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
   const encodedSlug = encodeURIComponent(slug);
 
   try {
@@ -395,7 +399,7 @@ const getPublicCommunitySeo = async ({ slug }: { slug: string }) => {
   }
 };
 
-const getPublicPsychologistSeo = async ({ id }: { id: string }) => {
+export const getPublicPsychologistSeo = async ({ id }: { id: string }) => {
   const encodedId = encodeURIComponent(id);
 
   try {
@@ -432,12 +436,16 @@ export const resolveCommunitySeoMetadata = async ({
 
   if (!seo) return resolveSeoMetadata("community_detail", fallback);
 
+  const squareImage = seo.og_image_url
+    ? publicCommunityOpenGraphImageHref(seo.slug, seo.updated_at)
+    : null;
+
   return resolveSeoMetadata("community_detail", fallback, {
     canonical: seo.canonical_url,
     description: seo.description,
-    image: seo.og_image_url,
-    imageHeight: seo.og_image_height,
-    imageWidth: seo.og_image_width,
+    image: squareImage ?? seo.og_image_url,
+    imageHeight: squareImage ? 1200 : seo.og_image_height,
+    imageWidth: squareImage ? 1200 : seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
     title: seo.title,
@@ -455,12 +463,16 @@ export const resolvePsychologistSeoMetadata = async ({
 
   if (!seo) return resolveSeoMetadata("psychologist_profile", fallback);
 
+  const squareImage = seo.og_image_url
+    ? publicPsychologistOpenGraphImageHref(id, seo.updated_at)
+    : null;
+
   return resolveSeoMetadata("psychologist_profile", fallback, {
     canonical: seo.canonical_url,
     description: seo.description,
-    image: seo.og_image_url,
-    imageHeight: seo.og_image_height,
-    imageWidth: seo.og_image_width,
+    image: squareImage ?? seo.og_image_url,
+    imageHeight: squareImage ? 1200 : seo.og_image_height,
+    imageWidth: squareImage ? 1200 : seo.og_image_width,
     ogDescription: seo.og_description,
     ogTitle: seo.og_title,
     title: seo.title,

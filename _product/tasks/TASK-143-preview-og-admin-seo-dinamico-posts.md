@@ -140,3 +140,11 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] O `og:url` aponta para a propria rota `/whatsapp`, enquanto o canonical permanece na rota publica original de post/thread; o clique no card continua abrindo o conteudo dentro da Lectum.
 - [x] A descricao do card de videos profissionais continua sendo o titulo do post, conforme ajuste anterior.
 - [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-27 - imagem Open Graph quadrada por entidade
+
+- [x] Perfis publicos de psicologo passam a publicar `og:image` para uma rota publica versionada que renderiza PNG quadrado `1200x1200` a partir de `user.avatar`.
+- [x] Comunidades especificas passam a publicar `og:image` para uma rota publica versionada que renderiza PNG quadrado `1200x1200` a partir de `community.avatar_url`.
+- [x] A imagem configurada no Admin SEO/Metadados permanece como fallback do template quando a entidade nao tem foto/avatar ou quando o SEO dinamico nao estiver disponivel.
+- [x] As rotas de imagem usam apenas fonte publica ja validada pelo SEO dinamico, sem aceitar URL arbitraria do cliente e sem usar elemento HTML cru de imagem.
+- [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.

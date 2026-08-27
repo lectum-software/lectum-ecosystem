@@ -9,6 +9,15 @@ export const publicPsychologistContactHref = (id: string) =>
 
 export const publicCommunityHref = (slug: string) => `${PUBLIC_COMMUNITIES_HREF}/${slug}`;
 
+const versionQuery = (version?: string | null) =>
+  version ? `?v=${encodeURIComponent(version)}` : "";
+
+export const publicPsychologistOpenGraphImageHref = (id: string, version?: string | null) =>
+  `/api/og/psicologos/${encodeURIComponent(id)}${versionQuery(version)}`;
+
+export const publicCommunityOpenGraphImageHref = (slug: string, version?: string | null) =>
+  `/api/og/comunidades/${encodeURIComponent(slug)}${versionQuery(version)}`;
+
 export const publicCommunityPostHref = (slug: string, id: string) =>
   `${publicCommunityHref(slug)}/publicacao/${id}`;
 

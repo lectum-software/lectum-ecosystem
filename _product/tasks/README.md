@@ -1004,3 +1004,10 @@ Uma task só pode ser marcada como concluída quando:
 - O snapshot fica apenas em `sessionStorage`, com rota de origem, `scrollY`, id publico do post, deslocamento visual do card e expiracao curta; nao ha persistencia backend nem dado sensivel.
 - A volta usa a origem salva quando existe e a listagem reaproveita o cache/TanStack Query e o `fetchNextPage` real para recuperar altura suficiente antes do `scrollTo`.
 - Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, mock, seed, ranking, votos, salvos ou dados publicados.
+
+## Correcao operacional em 2026-08-27: imagens Open Graph quadradas por entidade
+
+- Ajuste pos-feedback da TASK-143: o compartilhamento de `/psicologos/[id]` passa a usar uma rota publica versionada de imagem quadrada `1200x1200` renderizada a partir da foto de perfil do psicologo.
+- O compartilhamento de `/comunidades/[slug]` passa a usar uma rota publica versionada de imagem quadrada `1200x1200` renderizada a partir do avatar da comunidade.
+- A imagem configurada no Admin SEO/Metadados continua sendo fallback do template quando a entidade nao tem foto/avatar ou quando o SEO dinamico nao estiver disponivel; a UI do Admin nao precisa exibir uma foto especifica para a rota com placeholder.
+- Alteracao frontend-only, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.
