@@ -87,6 +87,27 @@ const resolveDeleteAccountError = (error: unknown) => {
   return rawMessage || "Não foi possível excluir sua conta agora.";
 };
 
+const normalizeAccountProvider = (provider?: string | null) =>
+  provider?.trim().toLowerCase() || null;
+
+const localPasswordProviders = new Set(["email", "local", "manual"]);
+
+const shouldRequirePasswordForDelete = ({
+  hasPassword,
+  provider,
+}: {
+  hasPassword: boolean;
+  provider?: string | null;
+}) => {
+  const normalizedProvider = normalizeAccountProvider(provider);
+
+  if (normalizedProvider === "google") return false;
+
+  return (
+    hasPassword || Boolean(normalizedProvider && localPasswordProviders.has(normalizedProvider))
+  );
+};
+
 export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -138,11 +159,11 @@ export function AccountDeleteSection({ className }: AccountDeleteSectionProps) {
   const isSecurityLoading =
     account.security.isLoading || account.security.isPending || account.security.isFetching;
   const hasSecurityData = Boolean(account.security.data);
-  const hasPassword = account.security.data?.has_password ?? false;
+  const hasPassword = account.security.data?.has_password === true;
   const provider = account.security.data?.provider;
-  const isGoogleAccount = provider === "google";
+  const isGoogleAccount = normalizeAccountProvider(provider) === "google";
   const deleteRequiresGoogleReauth = isGoogleAccount;
-  const deleteRequiresPassword = Boolean(hasPassword && !deleteRequiresGoogleReauth);
+  const deleteRequiresPassword = shouldRequirePasswordForDelete({ hasPassword, provider });
   const canUseGoogleReauth = Boolean(
     deleteRequiresGoogleReauth && account.security.data?.google.available,
   );

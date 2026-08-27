@@ -449,3 +449,31 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   `token_not_authorized` e confirmacao invalida) nao aparecem mais como permissao generica.
 - [x] A correcao foi registrada em ADR, validada com TypeScript/check/build e preparada para
   deploy independente do frontend.
+
+## Ajuste complementar em 2026-08-27 - preservar indicador has_password
+
+- Evidencia de produto: nova captura enviada em 2026-08-26 22:31 mostrou a mensagem correta de
+  senha invalida, mas ainda sem renderizar o campo **Senha atual** para uma conta informada como
+  cadastrada por e-mail e senha.
+- Diagnostico confirmado no codigo: o pipeline HTTP `send -> sanitizeSensitiveData` normalizava
+  `has_password` para `haspassword` e removia o campo porque ele termina com `password`. A UI
+  recebia `has_password` ausente e concluia incorretamente que a exclusao nao precisava pedir
+  senha, embora o backend destrutivo continuasse exigindo a senha atual em profundidade.
+- Decisao backend: preservar somente o metadado booleano `has_password` no sanitizador global;
+  qualquer valor nao booleano com a mesma chave e qualquer segredo real de senha continuam removidos.
+- Decisao frontend: alem do booleano, provedores locais `manual`, `email` e `local` passam a
+  exigir **Senha atual** como fallback de rollout caso um backend antigo ainda omita o indicador.
+- Sem migration, sem package novo, sem variavel de ambiente nova, sem mock, sem seed e sem exclusao
+  real de conta em ambiente publicado. Rollback e reverter este complemento; o backend segue
+  bloqueando exclusao sem senha atual.
+
+### Criterios de aceite do complemento
+
+- [x] O backend preserva `has_password: true/false` em respostas publicas autenticadas sem expor
+  `password`, hash ou valor textual relacionado.
+- [x] O modal de exclusao de conta local mostra **Senha atual** quando `provider=manual`/local/e-mail,
+  mesmo durante rollout com `has_password` ausente.
+- [x] O submit de conta local nao envia exclusao sem senha atual; a validacao Zod bloqueia antes da
+  chamada destrutiva.
+- [x] Checks backend/frontend, build relevante, versionamento, commit, push e smoke de homologacao
+  sao registrados sem excluir conta real.

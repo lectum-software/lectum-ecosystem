@@ -77,6 +77,8 @@ const sensitiveResponseSuffixes = [
 
 const sensitiveLogOnlySuffixes = ["token", "tokens"] as const;
 
+const safeCredentialMetadataKeys = new Set(["haspassword"]);
+
 const piiKeys = new Set([
   "cpf",
   "cpfmasked",
@@ -113,8 +115,12 @@ const PII_VALUE_PATTERNS = [
 const containsPattern = (value: string, patterns: readonly RegExp[]) =>
   patterns.some((pattern) => pattern.test(value));
 
-const shouldRemoveKey = (key: string, options: SanitizeOptions) => {
+const shouldRemoveKey = (key: string, value: unknown, options: SanitizeOptions) => {
   const normalizedKey = normalizeSensitiveKey(key);
+
+  if (safeCredentialMetadataKeys.has(normalizedKey) && typeof value === "boolean") {
+    return false;
+  }
 
   if (
     sensitiveResponseKeys.has(normalizedKey) ||
@@ -161,7 +167,7 @@ export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOp
 
       const sanitized: Record<string, unknown> = {};
       for (const [key, entryValue] of Object.entries(entry)) {
-        if (shouldRemoveKey(key, options)) continue;
+        if (shouldRemoveKey(key, entryValue, options)) continue;
         sanitized[key] = visit(entryValue);
       }
 

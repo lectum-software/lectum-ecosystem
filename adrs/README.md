@@ -500,3 +500,4 @@ Formato recomendado:
 - [ADR-0467 — Limites de vídeo após preparação e saída temporária em OPFS](0467-limites-video-safari-photos-opfs.md)
 - [ADR-0468 — Título real nos logs de notificações Admin](0468-titulo-real-logs-notificacoes-admin.md)
 - [ADR-0469 — Segurança de conta escopada por usuário no frontend](0469-seguranca-conta-escopada-por-usuario-frontend.md)
+- [ADR-0470 — Indicador booleano de senha em respostas sanitizadas](0470-indicador-booleano-senha-sanitizado.md)

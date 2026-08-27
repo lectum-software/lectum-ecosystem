@@ -80,3 +80,18 @@ test("mantém redação de token quando a resposta não possui autorização exp
     success: true,
   });
 });
+
+test("preserva indicador booleano has_password sem transportar segredo", async () => {
+  const result = await requestResolve({
+    data: { has_password: true, password: "secret" },
+    status: 200,
+    success: true,
+  });
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, {
+    data: { has_password: true },
+    status: 200,
+    success: true,
+  });
+});

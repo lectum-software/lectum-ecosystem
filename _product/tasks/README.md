@@ -671,8 +671,13 @@ Uma task só pode ser marcada como concluída quando:
 - Para contas não Google com senha, a modal aguarda o contrato real de segurança, exibe e valida
   **Senha atual**, preserva a senha digitada sem `trim()` e mapeia códigos seguros de domínio antes
   do fallback genérico de `403`.
-- Sem alteração de backend, banco, migration, package, env, mock, seed ou exclusão real de conta em
-  ambientes publicados.
+- A causa confirmada no segundo feedback foi a sanitização global removendo o booleano seguro
+  `has_password`; o backend agora preserva apenas esse indicador booleano e continua removendo
+  qualquer segredo real de senha.
+- O frontend também trata provedores locais (`manual`, `email`, `local`) como confirmação por
+  senha durante rollout misto, mesmo se um backend antigo ainda não entregar `has_password`.
+- Sem alteração de banco, migration, package, env, mock, seed ou exclusão real de conta em ambientes
+  publicados.
 
 ## Atualização operacional em 2026-08-20: observabilidade Sentry separada
 

@@ -36,6 +36,29 @@ describe("sanitizeSensitiveData", () => {
     assert.deepEqual(sanitizeSensitiveData({ token: "allowed" }), { token: "allowed" });
   });
 
+  it("preserva somente indicador booleano has_password sem expor segredos", () => {
+    assert.deepEqual(
+      sanitizeSensitiveData({
+        has_password: true,
+        hasPassword: false,
+        nested: {
+          has_password: "yes",
+          password: "secret",
+          password_hash: "secret",
+          safe: "ok",
+        },
+        password: "secret",
+      }),
+      {
+        has_password: true,
+        hasPassword: false,
+        nested: {
+          safe: "ok",
+        },
+      },
+    );
+  });
+
   it("remove PII de registros de auditoria quando solicitado", () => {
     assert.deepEqual(
       sanitizeSensitiveData(
