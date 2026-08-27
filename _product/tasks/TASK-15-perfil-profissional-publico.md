@@ -832,3 +832,29 @@ Validacoes executadas:
   - `history.back()` retorna para `/psychologists/cmrgztri7000tn0uh1q4n8vxf` sem `tab`;
   - acesso direto a `?tab=publicacoes` e clique em `Voltar para a tela anterior` no hero retorna para `Geral`;
   - não há `<img>` cru (`img:not([data-nimg])` ausente).
+
+## Registro de ajuste complementar em 2026-08-27 - poster do video no perfil publico
+
+- Pedido do usuario: o video dentro do perfil do psicologo aparecia com tela preta antes da reproducao; a UI deve exibir a imagem de capa do video ou um frame inicial para evitar esse fundo preto.
+- Fonte visual auditavel: print anexado pelo usuario em 2026-08-27 e `_product/proto/Perfil Profissional - Sobre.jpg`. O Builder/Quick Copy foi testado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas o `npx` falhou por cache local ENOENT antes de abrir a ferramenta; a validacao visual seguiu com a imagem local e a captura do usuario.
+- A secao `Sobre` do perfil publico continua priorizando `psychologist_profile.video_cover_url` quando a capa real existir.
+- Quando o video nao possui capa, o frontend primeiro tenta gerar um poster temporario client-side a partir do proprio `video_url` publico, reutilizando `createVideoPosterObjectUrl`, que procura um frame renderizavel/nao preto e devolve um `blob:` apenas em memoria da aba.
+- Se o navegador bloquear a captura do canvas/CORS, o proprio player e posicionado em um frame inicial curto antes da reproducao e volta para 0 ao tocar play, sem registrar essa preparacao como sessao assistida.
+- Nada e persistido no storage, nenhuma URL tecnica aparece na API/UI e a analitica de retencao do video permanece no mesmo `HTMLVideoElement`.
+- Nao houve alteracao de backend, banco, Prisma, contratos, endpoints, packages, uploads, R2, WhatsApp, avaliacoes, publicacoes ou regras de publicacao.
+- ADR atualizado: `adrs/0032-refinamento-perfil-profissional-publico.md`.
+
+### Criterios complementares
+
+- [x] O perfil publico usa a capa real do video quando `video_cover_url` estiver disponivel.
+- [x] Na ausencia de capa, o perfil exibe um poster temporario quando a captura for permitida ou posiciona o proprio player em frame inicial curto, sem mock ou dado fake.
+- [x] O fallback nao altera contrato/API, nao persiste arquivos e revoga o object URL ao desmontar/trocar video.
+- [x] A mudanca permanece mobile-first e restrita ao componente de video da aba `Sobre`.
+
+### Validacoes do complemento
+
+- `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/` falhou por cache local ENOENT do `npx`; Quick Copy nao ficou operacional nesta sessao.
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/components/presentation-video.tsx"`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- Browser local Chrome headless mobile 390x844 em `/psicologos/tmp-profile-video-poster-20260827`, com backend/frontend locais e perfil temporario removido ao final: video renderizado, `video_cover_url=null`, `currentSrc` real local, `poster=null` por bloqueio de captura/CORS local e `currentTime=0.8`, confirmando fallback de frame sem criar `profile_video_watch_session`.

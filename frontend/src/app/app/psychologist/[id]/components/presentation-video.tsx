@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDirectoryPsychologistVideoWatch } from "@/api/callers/directory";
 import type {
   DirectoryPsychologistProfile,
@@ -9,6 +9,7 @@ import { documentHasUserAttention } from "@/components/analytics/attention";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useAppSelector } from "@/hooks/redux";
 import { resolvePublicMediaUrl } from "@/utils/media";
+import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 
 import {
   createVideoSessionKey,
@@ -17,6 +18,7 @@ import {
 } from "../modules/support";
 
 const MAX_TRACKED_SECONDS = 24 * 60 * 60;
+const PRESENTATION_VIDEO_PREVIEW_FRAME_SECONDS = 0.8;
 
 export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistProfile }) => {
   const currentUser = useAppSelector((state) => state.user);
@@ -35,12 +37,81 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
   });
   const replayCountRef = useRef(0);
   const retentionBucketsRef = useRef<Set<number>>(new Set());
+  const primedPreviewFrameRef = useRef(false);
   const sessionKeyRef = useRef<string | null>(null);
   const watchedSecondsRef = useRef<Set<number>>(new Set());
   const videoSrc = resolvePublicMediaUrl(profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.video_cover_url);
+  const [generatedPoster, setGeneratedPoster] = useState<{ src: string; url: string } | null>(null);
   const shouldTrack = Boolean(videoSrc && currentUser?.id !== profile.id);
   const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
+  const generatedPosterUrl =
+    generatedPoster && generatedPoster.src === videoSrc ? generatedPoster.url : null;
+  const posterSrc = videoCoverSrc ?? generatedPosterUrl;
+
+  useEffect(() => {
+    if (!videoSrc || videoCoverSrc) {
+      return;
+    }
+
+    let active = true;
+    let objectUrl: string | null = null;
+
+    createVideoPosterObjectUrl(videoSrc).then((posterUrl) => {
+      if (!active) {
+        if (posterUrl) URL.revokeObjectURL(posterUrl);
+        return;
+      }
+
+      if (!posterUrl) {
+        setGeneratedPoster(null);
+        return;
+      }
+
+      objectUrl = posterUrl;
+      setGeneratedPoster({ src: videoSrc, url: posterUrl });
+    });
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [videoCoverSrc, videoSrc]);
+
+  const primePreviewFrame = useCallback(
+    (video: HTMLVideoElement) => {
+      if (posterSrc || primedPreviewFrameRef.current || hasStartedRef.current) return;
+      if (!Number.isFinite(video.duration) || video.duration <= 0.2) return;
+
+      const maxPreviewTime = Math.max(0, video.duration - 0.15);
+      const previewTime = Math.min(PRESENTATION_VIDEO_PREVIEW_FRAME_SECONDS, maxPreviewTime);
+      if (previewTime <= 0 || Math.abs((video.currentTime || 0) - previewTime) <= 0.05) return;
+
+      try {
+        primedPreviewFrameRef.current = true;
+        video.currentTime = previewTime;
+      } catch {
+        primedPreviewFrameRef.current = false;
+      }
+    },
+    [posterSrc],
+  );
+
+  const resetPreviewFrameBeforePlayback = useCallback((video: HTMLVideoElement) => {
+    if (!primedPreviewFrameRef.current || hasStartedRef.current) return;
+
+    primedPreviewFrameRef.current = false;
+
+    if (video.currentTime <= 0.05 || video.currentTime > 2) return;
+
+    try {
+      video.currentTime = 0;
+    } catch {
+      // Playback continua mesmo que o navegador recuse reposicionar o frame inicial.
+    }
+  }, []);
 
   const flushVideoAnalytics = useCallback(
     (video: HTMLVideoElement | null, completed = false, force = false) => {
@@ -88,7 +159,27 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
       cleanupTrackingRef.current?.();
       cleanupTrackingRef.current = null;
 
-      if (!video || !shouldTrack) return;
+      if (!video) return;
+
+      const handlePreviewFrameReady = () => primePreviewFrame(video);
+      const handlePreviewPlay = () => resetPreviewFrameBeforePlayback(video);
+      const cleanupPreviewFrameListeners = () => {
+        video.removeEventListener("loadedmetadata", handlePreviewFrameReady);
+        video.removeEventListener("loadeddata", handlePreviewFrameReady);
+        video.removeEventListener("canplay", handlePreviewFrameReady);
+        video.removeEventListener("play", handlePreviewPlay);
+      };
+
+      video.addEventListener("loadedmetadata", handlePreviewFrameReady);
+      video.addEventListener("loadeddata", handlePreviewFrameReady);
+      video.addEventListener("canplay", handlePreviewFrameReady);
+      video.addEventListener("play", handlePreviewPlay);
+      primePreviewFrame(video);
+
+      if (!shouldTrack) {
+        cleanupTrackingRef.current = cleanupPreviewFrameListeners;
+        return;
+      }
 
       const updateMilestones = () => {
         if (!Number.isFinite(video.duration) || video.duration <= 0) return false;
@@ -152,6 +243,11 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
       };
 
       const handleTimeUpdate = () => {
+        if (primedPreviewFrameRef.current && video.paused && !hasStartedRef.current) {
+          lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
+          return;
+        }
+
         if (!documentHasUserAttention()) {
           lastPlaybackPositionRef.current = video.currentTime || lastPlaybackPositionRef.current;
           return;
@@ -235,6 +331,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
       window.addEventListener("pagehide", handlePageHide);
 
       cleanupTrackingRef.current = () => {
+        cleanupPreviewFrameListeners();
         flushVideoAnalytics(video, false, true);
         video.removeEventListener("play", handlePlay);
         video.removeEventListener("timeupdate", handleTimeUpdate);
@@ -246,7 +343,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
         window.removeEventListener("pagehide", handlePageHide);
       };
     },
-    [flushVideoAnalytics, shouldTrack],
+    [flushVideoAnalytics, primePreviewFrame, resetPreviewFrameBeforePlayback, shouldTrack],
   );
 
   if (!videoSrc) return null;
@@ -261,7 +358,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
           <VerticalVideoPlayer
             className="rounded-[18px] border-0"
             onVideoElementReady={handleVideoReady}
-            poster={videoCoverSrc}
+            poster={posterSrc}
             src={videoSrc}
             title={`Vídeo de apresentação de ${displayName}`}
           />

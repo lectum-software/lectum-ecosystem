@@ -315,3 +315,19 @@ A decisão reduz exposição pública granular de dados cadastrais do conselho s
 Não houve alteração de backend, Prisma, migrations, packages, regras de publicação, WhatsApp, avaliações ou publicações.
 
 Validações executadas: `npx "@builder.io/dev-tools@latest" auth status` em `frontend/` retornou `Not Authenticated to Builder.io`; validação visual seguiu com a captura do usuário e a referência local `_product/proto/Perfil Profissional - Sobre.jpg`. Também foram executados `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/logic.tsx"`, `pnpm --dir frontend check`, `pnpm --dir frontend build` e Chrome headless/CDP mobile 390x844 em `/psychologists/cmrgztri7000tn0uh1q4n8vxf`, confirmando `Especialidades` presente e `Registro profissional`, `Regional CRP`, `Nº CRP` e `Data de inscrição` ausentes.
+
+
+## Ajuste complementar em 2026-08-27 - poster do video de apresentacao no perfil publico
+
+O print enviado pelo usuario mostrou o video de apresentacao da secao `Sobre` no perfil publico com a area inicial totalmente preta. A tela ja recebia `video_cover_url` no contrato publico e o componente ja repassava essa capa ao `VerticalVideoPlayer`, mas perfis sem capa customizada continuavam dependentes do comportamento nativo do navegador antes do primeiro frame decodificado.
+
+Decisao: manter a capa de video (`psychologist_profile.video_cover_url`) como primeira fonte visual e, quando ela estiver ausente, tentar gerar no cliente um poster temporario a partir do proprio `video_url` publico com `createVideoPosterObjectUrl`. Esse helper seleciona um frame renderizavel quando a politica de midia/CORS permite canvas. Se a captura nao estiver disponivel, o proprio player e preparado em um frame inicial curto antes da reproducao e volta para 0 ao tocar play.
+
+Consequencias:
+
+- O card de video do perfil publico deixa de depender de mock, imagem do perfil ou capa do perfil; foto, capa de perfil e capa/frame de video seguem midias independentes.
+- Nao ha novo campo, endpoint, env, migration, package, backfill ou persistencia em storage/R2.
+- Se o navegador bloquear a captura do frame por politica de midia/CORS, a UI ainda evita a tela preta posicionando o player em frame inicial curto; nao ha mensagem tecnica para o usuario nem exposicao de URL interna.
+- A analitica de retencao continua usando o mesmo `HTMLVideoElement`; a preparacao do frame inicial e ignorada enquanto o usuario ainda nao iniciou reproducao.
+
+Validacoes executadas: `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/` falhou por cache local ENOENT do `npx`, entao a leitura visual usou o print do usuario e `_product/proto/Perfil Profissional - Sobre.jpg`; `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/components/presentation-video.tsx"`; `pnpm --dir frontend check`; `pnpm --dir frontend build`; Chrome headless mobile 390x844 em `/psicologos/tmp-profile-video-poster-20260827`, com perfil temporario local removido ao final, confirmou `video_cover_url=null`, `currentTime=0.8` no player e `profile_video_watch_session=0` antes de qualquer play.
