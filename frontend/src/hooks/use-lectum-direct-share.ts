@@ -42,6 +42,8 @@ const SHARING_TOAST_MESSAGE = "Preparando vídeo para compartilhar...";
 const DOWNLOAD_TOAST_MESSAGE = "Preparando vídeo para baixar...";
 const SHARE_READY_RETRY_MESSAGE =
   "Vídeo preparado. Toque em compartilhar novamente e escolha Redes Sociais.";
+const DOWNLOAD_READY_RETRY_MESSAGE =
+  "Vídeo preparado. Toque em Baixar vídeo novamente para escolher onde salvar.";
 
 export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) => {
   const { onShared } = options;
@@ -155,7 +157,9 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
         } else if (result.mode === "prepared") {
-          toast.info(SHARE_READY_RETRY_MESSAGE);
+          toast.info(
+            destination === "download" ? DOWNLOAD_READY_RETRY_MESSAGE : SHARE_READY_RETRY_MESSAGE,
+          );
         }
 
         return result;

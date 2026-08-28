@@ -1151,3 +1151,27 @@ A versao anterior do download social passou a funcionar corretamente no iPhone, 
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.228`, incluindo checks frontend/backend, builds antes/depois do bump, teste estatico especifico, smoke local, `pnpm check` de raiz e smoke de homologacao apos push.
+
+
+## Ajuste 2026-08-28 - overlay Instagram sem corte e download iOS por folha nativa
+
+### Contexto
+
+O iPhone mostrou dois problemas no fluxo dedicado de previa social: o simbolo do Instagram no overlay do video podia cortar levemente a borda direita, e o download por Object URL podia levar o Safari/iOS a uma tela cinza nativa de visualizacao do MP4. Essa tela, uma vez aberta pelo navegador/sistema, nao e uma modal controlada pela Lectum e nao pode ser fechada de forma confiavel pela aplicacao web.
+
+### Decisao
+
+- Manter a acao overlay no mesmo lugar, mas ampliar tecnicamente o `viewBox` do `InstagramIcon` para evitar clipping de subpixel no path original do Simple Icons.
+- No fluxo `Baixar video` em iPhone/iPad, tentar compartilhar o arquivo pela Web Share API antes do fallback com `a[download]`. A folha nativa permite salvar/abrir o video sem navegar para o visualizador cinza do MP4.
+- Quando a preparacao do arquivo consome a ativacao do gesto e a Web Share API retorna `NotAllowedError`/`SecurityError`, a operacao retorna `prepared`: a modal permanece aberta e o usuario e orientado a tocar novamente, agora com arquivo em cache.
+- Preservar desktop/Android no caminho de download ja existente e manter `channel: null` para o destino dedicado de download, evitando contar esse fluxo como compartilhamento social real.
+
+### Consequencias
+
+- A UI fica mais polida no iPhone sem mudar tamanho, permissao owner-only ou descoberta da acao.
+- O iPhone deixa de depender primariamente da navegacao para Object URL, reduzindo a chance de exibir a tela cinza do MP4.
+- Nao ha mudanca de artefato/cache/layout exportado, backend, schema, env, package ou storage; rollback e uma reversao simples de frontend.
+
+### Validacao
+
+As validacoes finais do ajuste serao registradas na TASK-42 nesta execucao.

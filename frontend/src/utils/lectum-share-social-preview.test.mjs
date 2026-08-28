@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 test("meus posts permite baixar video profissional com arte sem alterar compartilhar por link", () => {
   const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
+  const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const mineLogicSource = readFileSync(
     new URL("../app/app/posts/mine/logic.tsx", import.meta.url),
     "utf8",
@@ -66,6 +67,14 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
     new URL("../hooks/use-lectum-share-dialog.tsx", import.meta.url),
     "utf8",
   );
+  const directShareHookSource = readFileSync(
+    new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
+    "utf8",
+  );
+  const instagramIconSource = readFileSync(
+    new URL("../components/ui/instagram-icon.tsx", import.meta.url),
+    "utf8",
+  );
   const downloadFactorySource = targetSource.slice(
     targetSource.indexOf("export const createLectumShareVideoDownloadTarget"),
   );
@@ -100,6 +109,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(communityMediaFrameSource, /absolute top-3 right-3 z-20/);
   assert.match(communityMediaFrameSource, /bg-media-background\/35/);
   assert.match(communityMediaFrameSource, /text-media-foreground/);
+  assert.match(instagramIconSource, /viewBox="-0\.125 -0\.125 24\.25 24\.25"/);
   assert.match(communityMediaFrameSource, /data-post-card-ignore-click="true"/);
   assert.match(
     communityMediaFrameSource,
@@ -177,6 +187,12 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(downloadDialogSource, /<Copy className="h-4 w-4"/);
   assert.match(downloadDialogSource, /Baixar v.deo/);
   assert.doesNotMatch(downloadDialogSource, /WhatsApp|Instagram|TikTok|Copiar link|9:16/);
+  assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
+  assert.match(mediaSource, /isAppleMobileShareDownloadRuntime/);
+  assert.match(mediaSource, /shareFileThroughAppleMobileSheet/);
+  assert.match(mediaSource, /resolveLectumFileShareData\(nav/);
+  assert.match(mediaSource, /isNativeShareActivationError\(error\)[\s\S]*mode: "prepared"/);
+  assert.match(directShareHookSource, /DOWNLOAD_READY_RETRY_MESSAGE/);
   assert.match(shareDialogHookSource, /shareDestinationDialog: null/);
   assert.match(shareDialogHookSource, /toLectumLinkOnlyTarget/);
 });

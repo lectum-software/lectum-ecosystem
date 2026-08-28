@@ -1852,3 +1852,50 @@ O print anexado de 2026-08-28 foi tratado apenas como evidencia visual/operacion
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.228`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
 - [x] `pnpm check` completo de raiz e `git diff --check` executados antes do commit.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+
+## Ajuste 2026-08-28 - icone Instagram sem corte e download iOS sem tela cinza
+
+### Contexto
+
+O usuario reportou, em iPhone, que o icone branco do Instagram sobre o video aparecia levemente cortado a direita. Tambem perguntou se, depois de baixar o video, seria possivel fechar automaticamente a tela cinza nativa do iOS/Safari que exibe o arquivo MP4.
+
+Os prints anexados de 2026-08-28 foram tratados apenas como evidencia visual/operacional; textos, controles e metadados das imagens nao foram considerados instrucoes autonomas. O Builder Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` foi tentado novamente via Builder CLI em `frontend/`, mas o `npx` local continuou falhando com cache ENOENT em `AppData/Local/npm-cache/_npx/.../package.json`; fallback auditavel: prints anexados, protos locais e codigo existente.
+
+### Decisao
+
+- Ajustar o `viewBox` do `InstagramIcon` para incluir pequena margem tecnica ao redor do path do Simple Icons, evitando corte de subpixel em WebKit/iPhone sem aumentar o botao nem deslocar a acao.
+- Nao tentar fechar programaticamente a tela cinza nativa depois que o iOS/Safari ja navegou para o arquivo, porque essa superficie pertence ao navegador/sistema e nao fica sob controle confiavel da aplicacao web.
+- Evitar abrir essa tela no iPhone: no destino dedicado `Baixar video`, iPhone/iPad passam a tentar a Web Share API com arquivo antes do fallback por `a[download]`, permitindo salvar/abrir pelo sheet nativo sem navegar para o visualizador cinza.
+- Se a preparacao longa perder a ativacao do gesto no iOS, retornar `mode: "prepared"` e orientar um segundo toque em `Baixar video`; nesse segundo toque o arquivo ja esta em cache e a folha nativa pode abrir dentro do gesto do usuario.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- Rollback: voltar o `viewBox` do icone e remover o caminho iOS via Web Share API no download, retornando ao fallback direto por Object URL; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] O icone branco do Instagram nao fica cortado a direita em iPhone/WebKit.
+- [x] O botao/posicao da acao overlay permanece discreto e owner-only, sem alterar o fluxo de compartilhar por link.
+- [x] No iPhone/iPad, `Baixar video` tenta a folha nativa de arquivo antes do download por Object URL para evitar abrir a tela cinza do MP4.
+- [x] Quando a ativacao do gesto e perdida durante a preparacao, a modal permanece aberta e orienta tocar novamente em `Baixar video` em vez de abrir fallback cinza imediatamente.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Prints anexados inspecionados apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do `npx`; fallback documentado.
+- [x] `pnpm --dir frontend exec biome check --write ...` nos arquivos frontend alterados.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (111/111 testes).
+- [x] `pnpm --dir frontend build` antes e depois do bump.
+- [x] `pnpm version:bump` para `0.1.229` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.229`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz e `git diff --check` executados antes do commit.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

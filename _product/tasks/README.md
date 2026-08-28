@@ -1055,3 +1055,11 @@ Uma task só pode ser marcada como concluída quando:
 - O fallback legado por `MediaRecorder` tambem usa perfil Android reduzido (540x960, 24fps, video 900kbps, audio 96kbps) e tenta MP4 H.264/AAC nivel 3.1 antes dos WebM suportados.
 - O cache de artefatos sociais foi invalidado para `lectum-share-v11-2026-08-28-android-stable-logo`, sem apagar objetos publicados; uploads de cliente antigo continuam sendo descartados pelo guard de layout.
 - Alteracao frontend+backend, admin apenas manifest de versao; sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+
+## Correcao operacional em 2026-08-28: icone Instagram e download iOS sem tela cinza
+
+- Ajuste pos-feedback da TASK-42: o `InstagramIcon` usado como overlay branco sobre videos proprios do psicologo recebeu margem tecnica no `viewBox`, evitando corte de subpixel no lado direito em iPhone/WebKit sem aumentar ou deslocar o botao.
+- O download dedicado da previa social passa a tratar iPhone/iPad de forma especifica: antes de cair no download por Object URL, tenta a Web Share API com arquivo para abrir a folha nativa de salvar/abrir, evitando navegar para a tela cinza do MP4.
+- A tela cinza nativa do iOS/Safari, quando ja aberta, nao e fechada de forma confiavel por JavaScript; por isso o produto passa a evitar essa navegacao. Se a geracao demorar e perder a ativacao do gesto, a modal segue aberta e orienta tocar novamente em `Baixar video` com o arquivo ja preparado.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.

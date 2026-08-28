@@ -25,6 +25,7 @@ import {
 } from "./lectum-share-media/native-share";
 
 const DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000;
+const APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN = /iPhone|iPad|iPod/u;
 
 const createLectumShareFile = async (target: LectumShareSocialTarget) => {
   const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
@@ -256,6 +257,43 @@ const downloadFile = (file: File) => {
   window.setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS);
 };
 
+const isAppleMobileShareDownloadRuntime = () => {
+  if (typeof navigator === "undefined") return false;
+
+  const userAgent = navigator.userAgent ?? "";
+  if (APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN.test(userAgent)) return true;
+
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+};
+
+const shareFileThroughAppleMobileSheet = async (
+  target: LectumShareSocialTarget,
+  file: File,
+): Promise<ShareExportResult | null> => {
+  if (!isAppleMobileShareDownloadRuntime()) return null;
+
+  const nav = navigator as ShareNavigator;
+  const nativeShareData = resolveLectumFileShareData(nav, {
+    files: [file],
+    title: target.shareTitle,
+  });
+
+  if (!nativeShareData) return null;
+
+  try {
+    await nav.share?.(nativeShareData);
+    return { channel: null, file, mode: "download" };
+  } catch (error) {
+    if (isNativeShareAbortError(error)) throw error;
+
+    if (isNativeShareActivationError(error)) {
+      return { channel: null, file, mode: "prepared" };
+    }
+
+    throw error;
+  }
+};
+
 const copyShareUrl = async (url: string) => {
   if (!navigator.clipboard?.writeText) return false;
 
@@ -306,9 +344,13 @@ export const sharePreparedLectumVideoResponse = async (
 };
 
 export const downloadPreparedLectumShareFile = async (
-  _target: LectumShareSocialTarget,
+  target: LectumShareSocialTarget,
   file: File,
 ): Promise<ShareExportResult> => {
+  const appleMobileShareResult = await shareFileThroughAppleMobileSheet(target, file);
+
+  if (appleMobileShareResult) return appleMobileShareResult;
+
   downloadFile(file);
 
   return { channel: null, file, mode: "download" };
