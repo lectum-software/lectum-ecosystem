@@ -1018,3 +1018,10 @@ Uma task só pode ser marcada como concluída quando:
 - O campo de imagem permanece editavel como fallback do template, para entidades sem foto/avatar publico ou quando o SEO dinamico nao estiver disponivel.
 - A previa Open Graph passa a indicar que mostra o fallback do template para esses casos dinamicos, evitando interpretacao de que o logo configurado substitui a imagem personalizada.
 - Alteracao admin-only, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-28: background uniforme no perfil publico
+
+- Ajuste pos-feedback da TASK-15: o perfil publico `/psicologos/[id]` deixa de usar `bg-surface-muted` como base da pagina e passa a usar o mesmo `bg-background` da home/feed.
+- A mudanca remove a percepcao de duas faixas de background em desktop, especialmente ao expandir/recolher a sidebar, sem alterar cards, conteudo, tabs, WhatsApp, SEO ou dados do psicologo.
+- Builder Quick Copy foi tentado apenas para inspecao, mas o `npx` local falhou no cache; a referencia visual auditavel usada foi o print do usuario e `_product/proto/Feed Comunidade.jpg` / `_product/proto/Perfil Profissional - Sobre.jpg`.
+- Alteracao frontend-only, mobile-first, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.

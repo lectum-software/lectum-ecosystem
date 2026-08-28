@@ -424,13 +424,13 @@ export const PsychologistProfileLogic = () => {
   return (
     <PrivateTemplate
       allowAnonymous
-      contentClassName="!pt-0 bg-surface-muted dark:bg-background sm:!pt-0"
+      contentClassName="!pt-0 bg-background sm:!pt-0"
       desktopSidebarDefaultCollapsed
       showNavigation
       showMobileNavigation={false}
     >
-      <div className="-mx-5 overflow-x-hidden bg-surface-muted dark:bg-background">
-        <section className="mx-auto grid w-screen max-w-[430px] bg-surface-muted dark:bg-background sm:max-w-[430px] lg:max-w-[760px]">
+      <div className="-mx-5 overflow-x-hidden bg-background">
+        <section className="mx-auto grid w-screen max-w-[430px] bg-background sm:max-w-[430px] lg:max-w-[760px]">
           <div className="grid gap-0 pb-[calc(var(--lectum-mobile-nav-aware-fab-bottom)+4rem)] lg:pb-10">
             {shareFeedback ? (
               <div className="mx-3 pt-3">

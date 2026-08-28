@@ -505,3 +505,4 @@ Formato recomendado:
 - [ADR-0472 — Loop descendente expansivel no feed de videos de psicologos](0472-loop-descendente-videos-psicologos.md)
 - [ADR-0473 — Restauracao de scroll no feed de comunidade](0473-restauracao-scroll-feed-comunidade.md)
 - [ADR-0474 — Imagens Open Graph quadradas por entidade](0474-imagens-open-graph-quadradas-entidades.md)
+- [ADR-0475 — Background uniforme no perfil público](0475-background-uniforme-perfil-publico.md)
