@@ -1011,3 +1011,10 @@ Uma task só pode ser marcada como concluída quando:
 - O compartilhamento de `/comunidades/[slug]` passa a usar uma rota publica versionada de imagem quadrada `1200x1200` renderizada a partir do avatar da comunidade.
 - A imagem configurada no Admin SEO/Metadados continua sendo fallback do template quando a entidade nao tem foto/avatar ou quando o SEO dinamico nao estiver disponivel; a UI do Admin nao precisa exibir uma foto especifica para a rota com placeholder.
 - Alteracao frontend-only, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-28: aviso de imagem Open Graph personalizada no Admin
+
+- Ajuste pos-feedback da TASK-143: nos templates `psychologist_profile` e `community_detail`, o Admin passa a explicar que perfis reais usam foto do psicologo e comunidades reais usam avatar da comunidade como imagem principal do compartilhamento.
+- O campo de imagem permanece editavel como fallback do template, para entidades sem foto/avatar publico ou quando o SEO dinamico nao estiver disponivel.
+- A previa Open Graph passa a indicar que mostra o fallback do template para esses casos dinamicos, evitando interpretacao de que o logo configurado substitui a imagem personalizada.
+- Alteracao admin-only, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.

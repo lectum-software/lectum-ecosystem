@@ -148,3 +148,10 @@ Videos antigos podem continuar sem `thumbnail_url` ate serem editados ou ate uma
 - [x] A imagem configurada no Admin SEO/Metadados permanece como fallback do template quando a entidade nao tem foto/avatar ou quando o SEO dinamico nao estiver disponivel.
 - [x] As rotas de imagem usam apenas fonte publica ja validada pelo SEO dinamico, sem aceitar URL arbitraria do cliente e sem usar elemento HTML cru de imagem.
 - [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.
+
+## Ajuste pos-feedback 2026-08-28 - aviso de imagem personalizada no Admin
+
+- [x] O campo **Imagem Open Graph** dos templates `psychologist_profile` e `community_detail` passa a informar que a imagem principal do compartilhamento real e personalizada automaticamente pela entidade.
+- [x] O upload permanece disponivel nesses templates apenas como fallback, evitando retirar a configuracao sem explicar sua utilidade residual.
+- [x] A previa Open Graph do Admin explicita que perfis reais usam foto do psicologo e comunidades reais usam avatar da comunidade, enquanto a tela mostra o fallback do template.
+- [x] Nao houve alteracao de backend, banco, migration, env obrigatoria, package novo, provider, mock, seed ou dado publicado.

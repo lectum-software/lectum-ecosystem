@@ -3,6 +3,7 @@
 import { Eye, ImagePlus, Search, ShieldCheck, Tags } from "lucide-react";
 import Image from "next/image";
 import type { AdminSeoMetadataSetting } from "@/api/req/settings";
+import type { DynamicOpenGraphImageNotice } from "@/lib/seo-dynamic-og-image";
 import { cn } from "@/lib/utils";
 import {
   canRenderOpenGraphPreview,
@@ -91,9 +92,11 @@ export const OpenGraphCardImage = ({ value }: { value?: string | null }) => {
 };
 
 export const OpenGraphPreview = ({
+  dynamicImageNotice,
   setting,
   values,
 }: {
+  dynamicImageNotice?: DynamicOpenGraphImageNotice | null;
   setting?: AdminSeoMetadataSetting;
   values: SeoMetadataForm;
 }) => {
@@ -115,7 +118,9 @@ export const OpenGraphPreview = ({
         </span>
         <div className="min-w-0">
           <h2 className="text-lg font-bold text-foreground">Prévia Open Graph</h2>
-          <p className="text-sm text-muted">Simulação do card de compartilhamento.</p>
+          <p className="text-sm text-muted">
+            {dynamicImageNotice?.previewDescription || "Simulação do card de compartilhamento."}
+          </p>
         </div>
       </div>
       <div className="overflow-hidden rounded-[1.35rem] border border-border bg-surface">

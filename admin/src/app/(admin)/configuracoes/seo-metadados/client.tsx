@@ -13,6 +13,7 @@ import { resolveApiError } from "@/api/handle";
 import type { AdminSeoMetadataPageKey } from "@/api/req/settings";
 import { InputController, SelectController, TextareaController } from "@/components/controllers";
 import { Form } from "@/hooks/form";
+import { getDynamicEntityOpenGraphImageNotice } from "@/lib/seo-dynamic-og-image";
 import { cn } from "@/lib/utils";
 import { OpenGraphImageField } from "./components/open-graph-image-field";
 import { OpenGraphPreview, SearchPreview } from "./components/preview";
@@ -40,6 +41,7 @@ export const AdminSeoMetadataClient = () => {
     () => settings.find((setting) => setting.page_key === selectedKey) ?? settings[0],
     [selectedKey, settings],
   );
+  const dynamicImageNotice = getDynamicEntityOpenGraphImageNotice(selectedSetting);
 
   useEffect(() => {
     if (!selectedSetting) return;
@@ -173,6 +175,7 @@ export const AdminSeoMetadataClient = () => {
                 onUpload={handleOpenGraphImageUpload}
                 value={watchedValues.og_image_url}
                 error={form.formState.errors.og_image_url?.message}
+                notice={dynamicImageNotice}
               />
             </div>
 
@@ -232,7 +235,11 @@ export const AdminSeoMetadataClient = () => {
 
       <div className="grid min-w-0 gap-6 md:grid-cols-2 2xl:grid-cols-3">
         <SearchPreview setting={selectedSetting} values={watchedValues} />
-        <OpenGraphPreview setting={selectedSetting} values={watchedValues} />
+        <OpenGraphPreview
+          dynamicImageNotice={dynamicImageNotice}
+          setting={selectedSetting}
+          values={watchedValues}
+        />
         <TechnicalNotes setting={selectedSetting} />
       </div>
     </div>

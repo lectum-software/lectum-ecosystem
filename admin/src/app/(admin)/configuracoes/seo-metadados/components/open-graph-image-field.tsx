@@ -1,9 +1,10 @@
 "use client";
 
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { ImagePlus, Info, Loader2, Trash2 } from "lucide-react";
 import { type ChangeEvent, useId, useRef } from "react";
 import { toast } from "sonner";
 import { resolveImageFileMimeType } from "@/lib/image-preparation";
+import type { DynamicOpenGraphImageNotice } from "@/lib/seo-dynamic-og-image";
 import { cn } from "@/lib/utils";
 import {
   canRenderOpenGraphPreview,
@@ -19,6 +20,7 @@ export const OpenGraphImageField = ({
   disabled,
   error,
   isUploading,
+  notice,
   onRemove,
   onUpload,
   value,
@@ -26,6 +28,7 @@ export const OpenGraphImageField = ({
   disabled?: boolean;
   error?: string;
   isUploading?: boolean;
+  notice?: DynamicOpenGraphImageNotice | null;
   onRemove: () => void;
   onUpload: (file: File) => Promise<void>;
   value?: string | null;
@@ -63,10 +66,26 @@ export const OpenGraphImageField = ({
         </label>
       </div>
       <div className="rounded-[1.35rem] border border-border bg-surface-muted/45 p-3">
+        {notice ? (
+          <div className="mb-3 flex gap-3 rounded-2xl border border-primary/20 bg-primary-soft/50 p-3 text-sm">
+            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-surface text-primary">
+              <Info className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-bold text-foreground">{notice.title}</p>
+              <p className="mt-1 leading-5 text-muted">{notice.description}</p>
+              <p className="mt-2 text-xs font-semibold leading-5 text-primary">
+                {notice.fallbackDescription}
+              </p>
+            </div>
+          </div>
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] sm:items-start">
           <OpenGraphImagePreview value={value} />
           <div className="min-w-0">
-            <p className="text-xs leading-5 text-muted">Envie uma imagem JPG, PNG ou WebP.</p>
+            <p className="text-xs leading-5 text-muted">
+              Envie uma imagem JPG, PNG ou WebP para este template.
+            </p>
             {src ? (
               <a
                 className="mt-2 block truncate text-xs font-bold text-primary hover:underline"
