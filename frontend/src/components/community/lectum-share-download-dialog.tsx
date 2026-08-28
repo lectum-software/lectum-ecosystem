@@ -19,6 +19,7 @@ type LectumShareDownloadDialogProps = {
 };
 
 const SOURCE_TEXT_FALLBACK = "Conteúdo na Lectum";
+export const LECTUM_SHARE_PREVIEW_SHEET_EXIT_MS = 300;
 const PREVIEW_LAYOUT = storyCanvasLayout;
 const PREVIEW_CARD = PREVIEW_LAYOUT.card;
 const PREVIEW_PROFESSIONAL_TAG = PREVIEW_LAYOUT.professionalTag;
@@ -124,7 +125,7 @@ export const LectumShareDownloadDialog = ({
   target,
 }: LectumShareDownloadDialogProps) => {
   useEffect(() => {
-    if (!open || typeof document === "undefined") return;
+    if (!target || typeof document === "undefined") return;
 
     const previousHtmlOverflow = document.documentElement.style.overflow;
     const previousBodyOverflow = document.body.style.overflow;
@@ -136,7 +137,7 @@ export const LectumShareDownloadDialog = ({
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overflow = previousBodyOverflow;
     };
-  }, [open]);
+  }, [target]);
 
   useEffect(() => {
     if (!open || disabled || typeof window === "undefined") return;
@@ -154,8 +155,9 @@ export const LectumShareDownloadDialog = ({
     };
   }, [disabled, onClose, open]);
 
-  if (!open || !target) return null;
+  if (!target) return null;
 
+  const sheetMotionState = open ? "enter" : "exit";
   const resolvedMediaUrl = resolvePublicMediaUrl(target.mediaUrl);
   const resolvedPosterUrl = resolvePublicMediaUrl(target.posterUrl);
   const sourceText = target.sourceText.trim() || SOURCE_TEXT_FALLBACK;
@@ -173,11 +175,16 @@ export const LectumShareDownloadDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[120] grid items-end bg-foreground/40 px-3 pb-3 backdrop-blur-[3px] sm:items-center sm:px-4 sm:pb-0">
+    <div
+      className={cn(
+        "fixed inset-0 z-[120] flex items-end justify-center overflow-hidden overscroll-none bg-foreground/32 transition-opacity duration-200 ease-out dark:bg-background/72 sm:items-center sm:bg-foreground/45 sm:backdrop-blur-[8px] sm:dark:bg-background/75",
+        open ? "opacity-100" : "pointer-events-none opacity-0",
+      )}
+    >
       <button
         aria-label="Fechar prévia do vídeo"
         className="absolute inset-0 cursor-default"
-        disabled={disabled}
+        disabled={disabled || !open}
         onClick={disabled ? undefined : onClose}
         type="button"
       />
@@ -185,7 +192,15 @@ export const LectumShareDownloadDialog = ({
       <section
         aria-labelledby="lectum-share-download-title"
         aria-modal="true"
-        className="relative mx-auto grid max-h-[calc(100dvh-1.5rem)] w-full max-w-[430px] gap-4 overflow-y-auto rounded-t-[34px] border border-border bg-surface px-5 pt-5 pb-[calc(var(--lectum-bottom-fixed-padding)+1rem)] text-foreground shadow-[var(--lectum-shadow)] sm:max-h-[min(760px,calc(100dvh-3rem))] sm:max-w-md sm:rounded-[34px] sm:pb-5"
+        className={cn(
+          "relative z-10 grid max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] transform-gpu gap-4 overflow-y-auto overscroll-contain rounded-t-[2rem] border border-border bg-surface px-5 pt-5 pb-[calc(var(--lectum-bottom-fixed-padding)+1rem)] text-foreground shadow-[var(--lectum-shadow)] transition-transform will-change-transform sm:max-h-[min(760px,calc(100dvh-3rem))] sm:max-w-md sm:rounded-[2rem] sm:pb-5",
+          sheetMotionState === "enter"
+            ? "translate-y-0 duration-[340ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+            : "translate-y-[calc(100%+2rem)] duration-[300ms] ease-[cubic-bezier(0.4,0,1,1)]",
+        )}
+        data-lectum-share-download-sheet="true"
+        data-lectum-share-download-sheet-motion={sheetMotionState}
+        data-lectum-share-download-sheet-state={open ? "open" : "closed"}
         data-post-card-ignore-click="true"
         role="dialog"
       >
@@ -193,8 +208,8 @@ export const LectumShareDownloadDialog = ({
           <button
             aria-label="Fechar"
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-background text-muted-foreground transition hover:text-foreground disabled:opacity-60"
-            disabled={disabled}
-            onClick={onClose}
+            disabled={disabled || !open}
+            onClick={open ? onClose : undefined}
             type="button"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -307,6 +322,58 @@ export const LectumShareDownloadDialog = ({
           {disabled ? "Preparando..." : "Baixar vídeo"}
         </button>
       </section>
+      <style>{`
+        [data-lectum-share-download-sheet] {
+          backface-visibility: hidden;
+          contain: layout paint style;
+          translate: 0 0;
+        }
+
+        [data-lectum-share-download-sheet][data-lectum-share-download-sheet-motion="initial"] {
+          transform: translate3d(0, calc(100% + 2rem), 0);
+        }
+
+        [data-lectum-share-download-sheet][data-lectum-share-download-sheet-motion="enter"] {
+          animation: lectum-share-download-sheet-enter 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        [data-lectum-share-download-sheet][data-lectum-share-download-sheet-motion="exit"] {
+          animation: lectum-share-download-sheet-exit 300ms cubic-bezier(0.4, 0, 1, 1) both;
+        }
+
+        @keyframes lectum-share-download-sheet-enter {
+          from {
+            transform: translate3d(0, calc(100% + 2rem), 0);
+          }
+
+          to {
+            transform: translate3d(0, 0, 0);
+          }
+        }
+
+        @keyframes lectum-share-download-sheet-exit {
+          from {
+            transform: translate3d(0, 0, 0);
+          }
+
+          to {
+            transform: translate3d(0, calc(100% + 2rem), 0);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          [data-lectum-share-download-sheet][data-lectum-share-download-sheet-motion="enter"] {
+            animation: none;
+            transform: translate3d(0, 0, 0);
+          }
+
+          [data-lectum-share-download-sheet][data-lectum-share-download-sheet-motion="initial"],
+          [data-lectum-share-download-sheet][data-lectum-share-download-sheet-motion="exit"] {
+            animation: none;
+            transform: translate3d(0, calc(100% + 2rem), 0);
+          }
+        }
+      `}</style>
     </div>
   );
 };

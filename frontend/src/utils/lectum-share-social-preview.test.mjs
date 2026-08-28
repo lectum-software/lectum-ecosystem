@@ -135,7 +135,21 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
     downloadHookSource,
     /const result = await shareLectumTarget\(pendingTarget, \{ destination: "download" \}\)[\s\S]*if \(result\?\.mode === "download"\)/,
   );
+  assert.match(downloadHookSource, /LECTUM_SHARE_PREVIEW_SHEET_EXIT_MS/);
+  assert.match(downloadHookSource, /setIsDownloadDialogOpen\(false\)/);
+  assert.match(downloadHookSource, /setTimeout\([\s\S]*setPendingTarget\(null\)/);
+  assert.match(downloadHookSource, /setIsDownloadDialogOpen\(true\)/);
+  assert.match(downloadHookSource, /open=\{isDownloadDialogOpen\}/);
   assert.match(downloadDialogSource, /VerticalVideoPlayer/);
+  assert.match(downloadDialogSource, /LECTUM_SHARE_PREVIEW_SHEET_EXIT_MS = 300/);
+  assert.match(downloadDialogSource, /const sheetMotionState = open \? "enter" : "exit"/);
+  assert.match(downloadDialogSource, /data-lectum-share-download-sheet="true"/);
+  assert.match(downloadDialogSource, /lectum-share-download-sheet-enter/);
+  assert.match(downloadDialogSource, /lectum-share-download-sheet-exit/);
+  assert.match(downloadDialogSource, /max-w-\[min\(100vw,44rem\)\]/);
+  assert.match(downloadDialogSource, /pb-\[calc\(var\(--lectum-bottom-fixed-padding\)\+1rem\)\]/);
+  assert.doesNotMatch(downloadDialogSource, /px-3 pb-3/);
+  assert.doesNotMatch(downloadDialogSource, /max-w-\[430px\]/);
   assert.match(downloadDialogSource, /storyCanvasLayout/);
   assert.match(downloadDialogSource, /fit="contain"/);
   assert.doesNotMatch(downloadDialogSource, /fit="cover"/);

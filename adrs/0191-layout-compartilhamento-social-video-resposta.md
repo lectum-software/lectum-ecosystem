@@ -1076,3 +1076,28 @@ Apos a entrega da acao `Previa para Redes Sociais` abaixo do video, o usuario pr
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.225`, incluindo checks frontend/backend, builds, teste estatico especifico, smoke local e validacao final de raiz.
+
+## Ajuste 2026-08-28 - sheet da previa social alinhada a criacao de post
+
+### Contexto
+
+A modal de previa social ainda parecia uma caixa flutuante no mobile por manter padding externo nas laterais e no rodape. O usuario pediu compara-la com a modal de criacao de post e adicionar move-in/move-out, sem alterar a criacao de post.
+
+### Decisao
+
+- Ajustar somente `LectumShareDownloadDialog` e `useLectumShareDownloadDialog`.
+- Remover margens externas laterais/inferiores da previa no mobile e trata-la como bottom sheet full-width, preservando padding interno.
+- Controlar o fechamento pelo hook para manter o target por 300ms e permitir animacao de saida antes da desmontagem.
+- Usar keyframes escopados por `data-lectum-share-download-sheet`, com curvas equivalentes ao padrao visual da criacao de post e suporte a `prefers-reduced-motion`.
+- Nao editar a modal de criacao de post; ela foi apenas fonte comparativa.
+
+### Consequencias
+
+- A previa fica visualmente mais consistente com a sheet de criacao de post em mobile, colando laterais e rodape nas bordas.
+- O fechamento deixa de ser abrupto e passa a comunicar saida por movimento vertical.
+- A mudanca e frontend-only, sem contrato de API, backend, admin UI, env, package, migration, storage, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Rollback simples: reverter a sheet/motion da previa e o timeout de fechamento do hook.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.226`, incluindo teste estatico especifico, `frontend check`, build, smoke local, `pnpm check` de raiz e smoke de homologacao apos push.

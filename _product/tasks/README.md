@@ -1032,3 +1032,10 @@ Uma task só pode ser marcada como concluída quando:
 - A acao aparece em todos os videos proprios do psicologo, inclusive nas comunidades, detalhes, threads, salvos, Meus posts e perfil publico; outros usuarios nao veem a entrada.
 - O backend agora valida que somente o psicologo autor do post/resposta pode ler ou enviar artefato de previa social, retornando erro seguro quando nao autorizado.
 - O compartilhamento link-only existente segue separado. Alteracao frontend+backend, sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados publicados.
+
+## Correcao visual em 2026-08-28: sheet da previa social sem margens externas
+
+- Ajuste pos-feedback da TASK-42: a modal `Previa para Redes Sociais` passou a se comportar como bottom sheet mobile, ocupando as bordas laterais e inferior, com padding apenas interno.
+- A previa ganhou move-in ao abrir e move-out ao fechar; o target permanece montado por 300ms para a saida animada, com `prefers-reduced-motion` respeitado.
+- A modal de criar post nao foi alterada; ela foi apenas referencia visual/comportamental para a sheet.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, env, package, provider, mock, seed, reset ou limpeza de dados publicados.

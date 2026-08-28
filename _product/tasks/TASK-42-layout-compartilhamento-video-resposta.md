@@ -1695,3 +1695,52 @@ O print anexado de 2026-08-28 foi tratado apenas como evidencia visual/operacion
 - [x] O primeiro `pnpm check` apontou arquivos legados acima do limite de linhas; o ajuste foi corrigido com extracao de hook/teste antes da validacao final.
 - [x] `pnpm check` de raiz e `git diff --check` executados antes do commit.
 - Smoke de homologacao sera executado apos o push em `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-28 - sheet da previa social alinhada a criacao de post
+
+### Contexto
+
+O usuario comparou a modal `Previa para Redes Sociais` com a modal de criacao de post e apontou que a previa parecia estranha principalmente porque a parte inferior e as laterais nao ocupavam as bordas no mobile. Tambem pediu animacao de move-in e move-out para a modal de previa, sem alterar nada na modal de criar post.
+
+Os prints anexados de 2026-08-28 foram tratados apenas como evidencia visual/operacional. O print da criacao de post foi usado como referencia de comportamento de sheet mobile: largura colada nas bordas, base colada no rodape e topo arredondado. O print da previa mostrou a margem externa lateral/inferior que deveria sair. O Builder Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` foi tentado novamente via Builder CLI em `frontend/`, mas o `npx` local voltou a falhar com cache ENOENT em `AppData/Local/npm-cache/_npx/.../package.json`; fallback auditavel: prints anexados, proto local e codigo existente da modal de criacao.
+
+### Decisao
+
+- Alterar somente `LectumShareDownloadDialog` e seu hook de abertura/fechamento; a modal de criar post nao foi editada.
+- No mobile, transformar a previa em uma sheet bottom-flush e full-width, removendo padding externo lateral/inferior do overlay e mantendo padding apenas dentro da sheet.
+- Preservar o limite de altura e o conteudo atual da previa: botao `X`, video 9:16, descricao copiavel e CTA `Baixar video`.
+- Reaproveitar a linguagem de movimento da criacao de post: entrada de baixo para cima com `cubic-bezier(0.16, 1, 0.3, 1)` e saida para baixo com `cubic-bezier(0.4, 0, 1, 1)`, com fallback para `prefers-reduced-motion`.
+- Manter o target renderizado por 300ms apos fechar para permitir o move-out antes de desmontar.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; sem backend, admin UI, schema Prisma, migration, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- A modal de criar post foi apenas lida/comparada e nao teve arquivo alterado.
+- Rollback: reverter as mudancas em `LectumShareDownloadDialog` e `useLectumShareDownloadDialog`, voltando ao overlay com margens externas e desmontagem imediata; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] A modal de previa ocupa as bordas laterais e inferior no mobile, como bottom sheet, sem padding externo do overlay.
+- [x] A modal de previa tem move-in ao abrir e move-out ao fechar.
+- [x] O target permanece montado durante a animacao de saida e so e removido depois de 300ms.
+- [x] `prefers-reduced-motion` evita animacao para usuarios que reduzem movimento.
+- [x] A modal de criar post nao foi alterada.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, PACKAGES, DATA-MODEL, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Prints anexados inspecionados apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do `npx`; fallback documentado.
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-download-dialog.tsx src/hooks/use-lectum-share-download-dialog.tsx src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs` (1/1).
+- [x] `pnpm --dir frontend check` (111/111 testes).
+- [x] `pnpm version:bump` para `0.1.226` e `pnpm check:version`.
+- [x] `pnpm --dir frontend build`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.226`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

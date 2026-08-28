@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { LectumShareDownloadDialog } from "@/components/community/lectum-share-download-dialog";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  LECTUM_SHARE_PREVIEW_SHEET_EXIT_MS,
+  LectumShareDownloadDialog,
+} from "@/components/community/lectum-share-download-dialog";
 import { useLectumDirectShare } from "@/hooks/use-lectum-direct-share";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
 import type { LectumShareSocialTarget, LectumShareVideoTarget } from "@/utils/lectum-share-target";
@@ -12,17 +15,41 @@ type UseLectumShareDownloadDialogOptions = {
 
 export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDialogOptions = {}) => {
   const [pendingTarget, setPendingTarget] = useState<LectumShareSocialTarget | null>(null);
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const closeAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { isSharing, shareLectumTarget } = useLectumDirectShare(options);
+
+  const clearCloseAnimationTimeout = useCallback(() => {
+    if (closeAnimationTimeoutRef.current === null) return;
+
+    clearTimeout(closeAnimationTimeoutRef.current);
+    closeAnimationTimeoutRef.current = null;
+  }, []);
+
+  const closeAfterAnimation = useCallback(() => {
+    setIsDownloadDialogOpen(false);
+    clearCloseAnimationTimeout();
+
+    closeAnimationTimeoutRef.current = setTimeout(() => {
+      closeAnimationTimeoutRef.current = null;
+      setPendingTarget(null);
+    }, LECTUM_SHARE_PREVIEW_SHEET_EXIT_MS);
+  }, [clearCloseAnimationTimeout]);
 
   const closeLectumDownloadDialog = useCallback(() => {
     if (isSharing) return;
 
-    setPendingTarget(null);
-  }, [isSharing]);
+    closeAfterAnimation();
+  }, [closeAfterAnimation, isSharing]);
 
-  const openLectumDownloadDialog = useCallback((target: LectumShareSocialTarget) => {
-    setPendingTarget(target);
-  }, []);
+  const openLectumDownloadDialog = useCallback(
+    (target: LectumShareSocialTarget) => {
+      clearCloseAnimationTimeout();
+      setPendingTarget(target);
+      setIsDownloadDialogOpen(true);
+    },
+    [clearCloseAnimationTimeout],
+  );
 
   const downloadPendingTarget = useCallback(async () => {
     if (!pendingTarget) return;
@@ -30,9 +57,16 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
     const result = await shareLectumTarget(pendingTarget, { destination: "download" });
 
     if (result?.mode === "download") {
-      setPendingTarget(null);
+      closeAfterAnimation();
     }
-  }, [pendingTarget, shareLectumTarget]);
+  }, [closeAfterAnimation, pendingTarget, shareLectumTarget]);
+
+  useEffect(
+    () => () => {
+      clearCloseAnimationTimeout();
+    },
+    [clearCloseAnimationTimeout],
+  );
 
   return {
     isDownloadingShareVideo: isSharing,
@@ -41,7 +75,7 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
         disabled={isSharing}
         onClose={closeLectumDownloadDialog}
         onDownload={downloadPendingTarget}
-        open={Boolean(pendingTarget)}
+        open={isDownloadDialogOpen}
         target={pendingTarget}
       />
     ),
