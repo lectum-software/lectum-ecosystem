@@ -1101,3 +1101,29 @@ A modal de previa social ainda parecia uma caixa flutuante no mobile por manter 
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.226`, incluindo teste estatico especifico, `frontend check`, build, smoke local, `pnpm check` de raiz e smoke de homologacao apos push.
+
+## Ajuste 2026-08-28 - legenda real, logo no artefato e robustez do download
+
+### Contexto
+
+Depois da sheet de previa social, o usuario identificou tres falhas: a legenda copiavel abaixo do video reaproveitava a pergunta/titulo em vez do comentario escrito com o video, o arquivo baixado nao trazia a logo da Lectum antes de `Respondido na Lectum`, e o video baixado podia travar ou aparecer cortado no celular. Os prints foram usados somente como evidencia operacional.
+
+### Decisao
+
+- A modal de download deve tratar `responseText` como unica fonte de legenda copiavel. Nao ha fallback para pergunta, titulo ou `shareText`; sem comentario escrito, nao existe texto a copiar.
+- O canvas do artefato deve desenhar sempre o simbolo da Lectum antes do label do header. Para evitar incompatibilidades de SVG/canvas, o renderer usa `/icon.png`, converte a area azul da marca para branco/transparente e oferece fallback vetorial caso a imagem nao carregue.
+- O fluxo MediaBunny deve priorizar estabilidade em mobile: perfis menores tambem para iOS, audio AAC por transcode, hardware acceleration sem preferencia forcada e retorno de `VideoSample` novo com timestamp/duration originais para cada frame processado.
+- O fallback `MediaRecorder` deve gravar chunks menores e encerrar com menor tolerancia de corte; o download deve revogar o Object URL apenas depois de 60s para evitar importacao truncada pelo sistema operacional.
+- A versao de layout/cache passa para `lectum-share-v10-2026-08-28-logo-video-playback`. O frontend declara a versao no upload por `X-Lectum-Share-Layout-Version`, e o backend so persiste artefato quando a versao do cliente bate com a versao esperada, removendo best-effort apenas o upload temporario incompativel.
+
+### Consequencias
+
+- A legenda social fica fiel ao comentario do psicologo e evita copiar uma pergunta quando nao ha texto escrito.
+- Downloads novos deixam de reaproveitar cache antigo sem logo ou com pipeline de playback anterior.
+- O rollout continua tolerante a frontend/backend em versoes diferentes: cliente antigo ainda pode baixar localmente, mas nao consegue contaminar o cache v10; cliente novo com backend antigo apenas perde reaproveitamento remoto ate o deploy alinhar.
+- A mudanca nao requer migration, env obrigatoria, package novo, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Rollback: reverter a versao v10/header guard e os ajustes de renderer/exportacao; objetos ja gerados continuam temporarios por TTL.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.227`, incluindo testes estaticos da previa/media, checks frontend/backend/admin via raiz, builds frontend/backend, smoke local, `git diff --check` e smoke de homologacao apos push.

@@ -18,11 +18,11 @@ const MEDIABUNNY_SHARE_EXPORT_PROFILES = [
   { height: 960, videoBitrate: 1_000_000, width: 540 },
 ] as const;
 
-const isAndroidMediabunnyShareRuntime = () =>
-  typeof navigator !== "undefined" && /\bAndroid\b/i.test(navigator.userAgent);
+const isMobileMediabunnyShareRuntime = () =>
+  typeof navigator !== "undefined" && /\b(Android|iPhone|iPad|iPod)\b/i.test(navigator.userAgent);
 
 const mediabunnyShareExportProfiles = () =>
-  isAndroidMediabunnyShareRuntime()
+  isMobileMediabunnyShareRuntime()
     ? MEDIABUNNY_SHARE_EXPORT_PROFILES.slice(1)
     : MEDIABUNNY_SHARE_EXPORT_PROFILES;
 
@@ -69,6 +69,7 @@ export const createMediabunnyVideoShareFile = async (
     Mp4OutputFormat,
     Output,
     Quality,
+    VideoSample,
     canEncodeVideo,
   } = mediabunny;
   await registerMediabunnyAacEncoder();
@@ -123,7 +124,7 @@ export const createMediabunnyVideoShareFile = async (
       let conversion: Awaited<ReturnType<typeof Conversion.init>>;
       try {
         conversion = await Conversion.init({
-          audio: { codec: "aac", forceTranscode: false, quality: audioQuality },
+          audio: { codec: "aac", forceTranscode: true, quality: audioQuality },
           input,
           output,
           showWarnings: false,
@@ -134,21 +135,25 @@ export const createMediabunnyVideoShareFile = async (
             codec: "avc",
             forceTranscode: true,
             frameRate: VIDEO_EXPORT_FRAME_RATE,
-            hardwareAcceleration: "prefer-hardware",
+            hardwareAcceleration: "no-preference",
             height: profile.height,
             keyFrameInterval: 2,
             process: (sample) => {
-              if (sourceCanvas.width !== sample.displayWidth)
-                sourceCanvas.width = sample.displayWidth;
-              if (sourceCanvas.height !== sample.displayHeight)
-                sourceCanvas.height = sample.displayHeight;
+              const sampleWidth = Math.max(1, Math.round(sample.displayWidth));
+              const sampleHeight = Math.max(1, Math.round(sample.displayHeight));
+
+              if (sourceCanvas.width !== sampleWidth) sourceCanvas.width = sampleWidth;
+              if (sourceCanvas.height !== sampleHeight) sourceCanvas.height = sampleHeight;
               sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
               sample.draw(sourceCtx, 0, 0, sourceCanvas.width, sourceCanvas.height);
               ctx.save();
               ctx.scale(scaleX, scaleY);
               drawLectumShareFrame(ctx, sourceCanvas, layout, target, palette, assets);
               ctx.restore();
-              return canvas;
+              return new VideoSample(canvas, {
+                duration: sample.duration,
+                timestamp: sample.timestamp,
+              });
             },
             processedHeight: profile.height,
             processedWidth: profile.width,

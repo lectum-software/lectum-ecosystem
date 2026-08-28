@@ -31,6 +31,10 @@ import type {
   UserPostsResponse,
 } from "@/api/generator/types/posts";
 import { handleReq } from "@/api/handle";
+import {
+  LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION,
+  LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION_HEADER,
+} from "@/utils/lectum-share-media/layout-version";
 import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 import { MULTIPART_DEFAULT_CHUNK_BYTES, uploadFileMultipart } from "@/utils/multipart-upload";
 import {
@@ -438,6 +442,9 @@ export const shareReply = async (
 };
 
 const SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000;
+const SHARE_ARTIFACT_UPLOAD_HEADERS = {
+  [LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION_HEADER]: LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION,
+};
 const SHARE_ARTIFACT_MIME_BY_EXTENSION: Record<string, string> = {
   mp4: "video/mp4",
   webm: "video/webm",
@@ -495,7 +502,10 @@ export const uploadPostShareArtifact = async (id: string, file: File) => {
     method: "POST",
     params: { id },
     body,
-    config: { timeout: SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS },
+    config: {
+      headers: SHARE_ARTIFACT_UPLOAD_HEADERS,
+      timeout: SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS,
+    },
   });
 
   return handleReq<PostShareArtifactResponse>({
@@ -514,7 +524,10 @@ export const uploadReplyShareArtifact = async (id: string, replyId: string, file
     method: "POST",
     params: { id, replyId },
     body,
-    config: { timeout: SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS },
+    config: {
+      headers: SHARE_ARTIFACT_UPLOAD_HEADERS,
+      timeout: SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS,
+    },
   });
 
   return handleReq<PostShareArtifactResponse>({

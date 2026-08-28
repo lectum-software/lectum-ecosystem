@@ -146,6 +146,10 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
     new URL("../api/req/posts/index.ts", import.meta.url),
     "utf8",
   );
+  const layoutVersionSource = readFileSync(
+    new URL("./lectum-share-media/layout-version.ts", import.meta.url),
+    "utf8",
+  );
   const seoSource = readFileSync(
     new URL(
       "../../../backend/src/modules/api/public/seo/community-post/use-cases/services.ts",
@@ -156,6 +160,13 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   const repositorySource = readFileSync(
     new URL(
       "../../../backend/src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const shareArtifactServiceSource = readFileSync(
+    new URL(
+      "../../../backend/src/modules/api/private/posts/use-cases/services/share-artifact.ts",
       import.meta.url,
     ),
     "utf8",
@@ -364,11 +375,24 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   assert.match(seoSource, /ogImageUrl: media\.thumbnail_url \|\| null/);
   assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
   assert.match(
+    layoutVersionSource,
+    /LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION =\s*"lectum-share-v10-2026-08-28-logo-video-playback"/,
+  );
+  assert.match(layoutVersionSource, /X-Lectum-Share-Layout-Version/);
+  assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_HEADERS/);
+  assert.match(
+    postsRequestSource,
+    /\[LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION_HEADER\]: LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION/,
+  );
+  assert.match(shareArtifactServiceSource, /POST_SHARE_ARTIFACT_LAYOUT_VERSION/);
+  assert.match(shareArtifactServiceSource, /SHARE_ARTIFACT_LAYOUT_VERSION_HEADER/);
+  assert.match(shareArtifactServiceSource, /hasMatchingClientShareLayoutVersion/);
+  assert.match(
     shareArtifactUploadTypeSource,
     /throw new Error\("Arquivo de compartilhamento invalido\."\)/,
   );
   assert.doesNotMatch(shareArtifactUploadTypeSource, /\|\|\s*"video\/mp4"/);
-  assert.match(repositorySource, /lectum-share-v9-2026-08-24-mediabunny-client-artifact/);
+  assert.match(repositorySource, /lectum-share-v10-2026-08-28-logo-video-playback/);
   assert.match(repositorySource, /process\.env\.POST_SHARE_ARTIFACT_TTL_DAYS/);
   assert.match(repositorySource, /parsePositiveInteger\([\s\S]*30,/);
   assert.match(backendEnvExampleSource, /POST_SHARE_ARTIFACT_TTL_DAYS=30/);
@@ -537,8 +561,10 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(source, /blob\.size === 0/);
   assert.match(
     mbSource,
-    /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000[\s\S]*MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000[\s\S]*MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280[\s\S]*@mediabunny\/aac-encoder[\s\S]*await importMediabunny\(\)[\s\S]*canEncodeVideo[\s\S]*new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)[\s\S]*Conversion\.init[\s\S]*ctx\.scale\(scaleX, scaleY\)[\s\S]*drawLectumShareFrame\(ctx, sourceCanvas[\s\S]*processedWidth: profile\.width/,
+    /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000[\s\S]*MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000[\s\S]*MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280[\s\S]*iPhone\|iPad\|iPod[\s\S]*@mediabunny\/aac-encoder[\s\S]*await importMediabunny\(\)[\s\S]*VideoSample[\s\S]*canEncodeVideo[\s\S]*new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)[\s\S]*audio: \{ codec: "aac", forceTranscode: true[\s\S]*hardwareAcceleration: "no-preference"[\s\S]*sampleWidth = Math\.max\(1, Math\.round\(sample\.displayWidth\)\)[\s\S]*ctx\.scale\(scaleX, scaleY\)[\s\S]*drawLectumShareFrame\(ctx, sourceCanvas[\s\S]*return new VideoSample\(canvas[\s\S]*processedWidth: profile\.width/,
   );
+  assert.match(mediaSource, /DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000/);
+  assert.match(mediaSource, /URL\.revokeObjectURL\(url\), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS/);
   assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\)\.catch/);
   assert.match(videoPreparationSource, /shouldUseMediabunnyVideoShareExport\(\)/);
   assert.match(videoPreparationSource, /createMediabunnyVideoShareFile\(target, mediaUrl\)\.catch/);
@@ -546,7 +572,7 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.doesNotMatch(videoPreparationSource, /createImageShareFile\(target, fallbackVideo\)/);
 });
 
-test("exportacao de video aguarda frame renderizavel e frames do canvas no Android", () => {
+test("exportacao de video aguarda frame renderizavel e frames do canvas no mobile", () => {
   const layoutSource = readFileSync(
     new URL("./lectum-share-media/layout.ts", import.meta.url),
     "utf8",
@@ -575,7 +601,7 @@ test("exportacao de video aguarda frame renderizavel e frames do canvas no Andro
   );
   assert.match(
     exportSource,
-    /await waitForVideoRenderFrame\(video\);[\s\S]*drawLectumShareFrame\(ctx, video[\s\S]*recorder\.start\(1000\)/,
+    /await waitForVideoRenderFrame\(video\);[\s\S]*drawLectumShareFrame\(ctx, video[\s\S]*recorder\.start\(250\)/,
   );
   assert.match(
     exportSource,
@@ -597,6 +623,10 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
     new URL("./lectum-share-media/export.ts", import.meta.url),
     "utf8",
   );
+  const brandLogoSource = readFileSync(
+    new URL("./lectum-share-media/brand-logo.ts", import.meta.url),
+    "utf8",
+  );
   const repositorySource = readFileSync(
     new URL(
       "../../../backend/src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts",
@@ -605,11 +635,14 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
     "utf8",
   );
 
-  assert.match(layoutSource, /const brandLogoSrc = "\/logo-icon\.svg"/);
-  assert.match(layoutSource, /brandLogoWhite/);
-  assert.match(layoutSource, /globalCompositeOperation = "source-in"/);
-  assert.match(layoutSource, /ctx\.drawImage\(\s*assets\.brandLogoWhite/);
-  assert.doesNotMatch(layoutSource, /arc\(iconBoxX/);
+  assert.match(brandLogoSource, /LECTUM_SHARE_BRAND_LOGO_SRC = "\/icon\.png"/);
+  assert.match(brandLogoSource, /brandLogoWhite/);
+  assert.match(brandLogoSource, /getImageData\(0, 0, size, size\)/);
+  assert.match(brandLogoSource, /isLectumBrandPixel/);
+  assert.match(brandLogoSource, /ctx\.drawImage\(assets\.brandLogoWhite/);
+  assert.match(brandLogoSource, /drawLectumFallbackBrandIcon/);
+  assert.match(layoutSource, /drawLectumBrandIcon\(ctx, iconBoxX, iconBoxY/);
+  assert.doesNotMatch(layoutSource, /canDrawBrandLogo/);
   assert.match(layoutSource, /paddingX: 50/);
   assert.match(layoutSource, /width: 860/);
   assert.match(layoutSource, /x: 110/);
@@ -623,5 +656,5 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v9-2026-08-24-mediabunny-client-artifact/);
+  assert.match(repositorySource, /lectum-share-v10-2026-08-28-logo-video-playback/);
 });

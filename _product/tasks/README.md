@@ -1039,3 +1039,11 @@ Uma task só pode ser marcada como concluída quando:
 - A previa ganhou move-in ao abrir e move-out ao fechar; o target permanece montado por 300ms para a saida animada, com `prefers-reduced-motion` respeitado.
 - A modal de criar post nao foi alterada; ela foi apenas referencia visual/comportamental para a sheet.
 - Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, env, package, provider, mock, seed, reset ou limpeza de dados publicados.
+
+## Correcao operacional em 2026-08-28: legenda real, logo e video baixado estavel na previa social
+
+- Ajuste pos-feedback da TASK-42: a modal `Previa para Redes Sociais` copia somente o comentario/texto escrito junto com o video; quando nao ha comentario, nao exibe texto copiavel nem usa a pergunta/titulo como fallback.
+- O artefato baixado volta a desenhar o simbolo da Lectum a esquerda de `Respondido na Lectum`, usando fonte raster segura para canvas com fallback vetorial local.
+- A exportacao do video foi endurecida contra travamento/corte em iOS/Android: perfis mobile mais leves tambem para iPhone/iPad, frames `VideoSample` independentes, audio AAC transcodificado, chunks menores no fallback legado e Object URL mantido por 60s antes de revogar.
+- O cache de artefatos sociais foi invalidado para `lectum-share-v10-2026-08-28-logo-video-playback`, e o upload agora exige header de layout compativel para nao persistir artefatos antigos durante rollout independente de frontend/backend.
+- Alteracao frontend+backend, admin apenas manifest de versao; sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados/buckets publicados.

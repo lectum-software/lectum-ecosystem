@@ -80,6 +80,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
     /mediaItems: \[\{ mediaType: "video", mediaUrl: reply\.media_url \}\]/,
   );
   assert.match(downloadFactorySource, /posterUrl: reply\.thumbnail_url \?\? null/);
+  assert.match(downloadFactorySource, /const responseText = reply\.content\?\.trim\(\) \|\| null/);
   assert.match(downloadFactorySource, /publicCommunityReplyWhatsappShareHref/);
   assert.match(mineLogicSource, /useLectumShareDownloadDialog/);
   assert.match(mineLogicSource, /createLectumShareVideoDownloadTarget/);
@@ -107,6 +108,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(postDownloadFactorySource, /kind: "post_media"/);
   assert.match(postDownloadFactorySource, /cardLabel: "Postado na Lectum"/);
   assert.match(postDownloadFactorySource, /getFirstShareablePostVideoMedia\(post\)/);
+  assert.match(postDownloadFactorySource, /responseText: post\.content\.trim\(\) \|\| null/);
   assert.match(postDownloadFactorySource, /posterUrl: videoMedia\.posterUrl/);
   assert.match(artifactCacheSource, /createLectumSharePostVideoDownloadTarget/);
   for (const surfaceSource of [
@@ -159,7 +161,11 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(downloadDialogSource, /WebkitMaskImage: 'url\("\/logo-icon\.svg"\)'/);
   assert.doesNotMatch(downloadDialogSource, /brightness-0 invert/);
   assert.doesNotMatch(downloadDialogSource, /import Image from "next\/image"/);
-  assert.match(downloadDialogSource, /const descriptionText = target\.responseText\?\.trim\(\)/);
+  assert.match(
+    downloadDialogSource,
+    /const descriptionText = target\.responseText\?\.trim\(\) \?\? ""/,
+  );
+  assert.doesNotMatch(downloadDialogSource, /target\.shareText\.trim\(\)/);
   assert.match(downloadDialogSource, /navigator\.clipboard\.writeText\(descriptionText\)/);
   assert.match(downloadDialogSource, /Descrição copiada\./);
   assert.match(downloadDialogSource, /Copiar descrição/);

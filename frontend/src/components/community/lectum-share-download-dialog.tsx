@@ -161,7 +161,7 @@ export const LectumShareDownloadDialog = ({
   const resolvedMediaUrl = resolvePublicMediaUrl(target.mediaUrl);
   const resolvedPosterUrl = resolvePublicMediaUrl(target.posterUrl);
   const sourceText = target.sourceText.trim() || SOURCE_TEXT_FALLBACK;
-  const descriptionText = target.responseText?.trim() || target.shareText.trim();
+  const descriptionText = target.responseText?.trim() ?? "";
 
   const copyDescription = async () => {
     if (!descriptionText) return;

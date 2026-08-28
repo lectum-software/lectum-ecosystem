@@ -4,8 +4,7 @@ import prisma from "@/infra/database/prisma";
 import { parsePositiveInteger } from "@/utils/runtime-config";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 
-export const POST_SHARE_ARTIFACT_LAYOUT_VERSION =
-  "lectum-share-v9-2026-08-24-mediabunny-client-artifact";
+export const POST_SHARE_ARTIFACT_LAYOUT_VERSION = "lectum-share-v10-2026-08-28-logo-video-playback";
 export const POST_SHARE_ARTIFACT_TTL_DAYS = parsePositiveInteger(
   process.env.POST_SHARE_ARTIFACT_TTL_DAYS,
   30,

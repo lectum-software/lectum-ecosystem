@@ -389,7 +389,10 @@ export const createVideoShareFile = async (
   const assets = await loadShareCanvasAssets();
   const hasKnownDuration = Number.isFinite(video.duration) && video.duration > 0;
   const durationSeconds = resolveVideoExportDurationSeconds(video.duration);
-  const endTimeToleranceSeconds = Math.min(0.25, Math.max(0.05, durationSeconds * 0.005));
+  const endTimeToleranceSeconds = Math.min(
+    0.06,
+    Math.max(1 / VIDEO_EXPORT_FRAME_RATE, durationSeconds * 0.002),
+  );
   const safetyTimeoutMs = resolveVideoExportSafetyTimeoutMs(durationSeconds, hasKnownDuration);
   const stallTimeoutMs = resolveVideoExportStallTimeoutMs();
 
@@ -522,7 +525,7 @@ export const createVideoShareFile = async (
         await waitForVideoRenderFrame(video);
         drawLectumShareFrame(ctx, video, layout, target, palette, assets);
         requestCanvasCaptureFrame();
-        recorder.start(1000);
+        recorder.start(250);
         startedAt = performance.now();
         lastProgressAt = startedAt;
         lastVideoTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
@@ -535,7 +538,7 @@ export const createVideoShareFile = async (
             await waitForVideoRenderFrame(video);
             drawLectumShareFrame(ctx, video, layout, target, palette, assets);
             requestCanvasCaptureFrame();
-            recorder.start(1000);
+            recorder.start(250);
             startedAt = performance.now();
             lastProgressAt = startedAt;
             lastVideoTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;

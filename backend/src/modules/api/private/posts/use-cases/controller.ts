@@ -242,6 +242,7 @@ export const uploadShareArtifact = async (req: Request, res: Response) => {
     const resolve = await uploadShareArtifactService({
       auth: req.auth,
       file,
+      headers: req.headers as Record<string, string | string[] | undefined>,
       p: req.params as unknown as Parameters<typeof uploadShareArtifactService>[0]["p"],
     });
 

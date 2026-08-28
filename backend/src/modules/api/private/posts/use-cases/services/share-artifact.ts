@@ -8,6 +8,7 @@ import type {
 } from "../../DTOs/IPostDTO";
 import { PostRepository } from "../../repositories/PostRepository";
 import {
+  POST_SHARE_ARTIFACT_LAYOUT_VERSION,
   POST_SHARE_ARTIFACT_TTL_DAYS,
   type ShareArtifactTarget,
 } from "../../repositories/queries/PostShareArtifactRepository";
@@ -15,6 +16,7 @@ import { ensureCommunityActor, publicFileUrl } from "./post-support";
 
 const SHARE_ARTIFACT_ALLOWED_PREFIX = "posts/share-artifacts/";
 const SHARE_ARTIFACT_CACHE_CONTROL = "public, max-age=3600";
+const SHARE_ARTIFACT_LAYOUT_VERSION_HEADER = "x-lectum-share-layout-version";
 
 export const POST_SHARE_ARTIFACT_UPLOAD_CACHE_CONTROL = SHARE_ARTIFACT_CACHE_CONTROL;
 
@@ -62,6 +64,20 @@ const SHARE_ARTIFACT_ALLOWED_MIME_TYPES = new Set(["video/mp4", "video/webm"]);
 
 const isVideoFile = (file?: Express.Multer.File | null) =>
   Boolean(file?.mimetype && SHARE_ARTIFACT_ALLOWED_MIME_TYPES.has(file.mimetype));
+
+const getHeaderValue = (
+  headers: Record<string, string | string[] | undefined> | undefined,
+  name: string,
+) => {
+  const value = headers?.[name];
+  return Array.isArray(value) ? value[0] : value;
+};
+
+const hasMatchingClientShareLayoutVersion = (
+  headers: Record<string, string | string[] | undefined> | undefined,
+) =>
+  getHeaderValue(headers, SHARE_ARTIFACT_LAYOUT_VERSION_HEADER) ===
+  POST_SHARE_ARTIFACT_LAYOUT_VERSION;
 
 const sanitizeFileName = (value?: string | null) => {
   const normalized = Array.from(String(value ?? "").normalize("NFC"))
@@ -126,6 +142,16 @@ export const uploadShareArtifact = async (data: IPostUploadShareArtifactDTO) => 
     return {
       status: 400,
       ...error("upload_error", {}),
+    };
+  }
+
+  if (!hasMatchingClientShareLayoutVersion(data.headers)) {
+    await deleteShareArtifactObject(key).catch(() => undefined);
+
+    return {
+      status: 200,
+      ...msg("post_share_artifact_unavailable", {}),
+      data: emptyShareArtifactResponse(),
     };
   }
 

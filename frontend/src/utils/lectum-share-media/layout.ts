@@ -3,6 +3,11 @@ import {
   type LectumShareSocialTarget,
   truncateLectumShareProfessionalTagName,
 } from "@/utils/lectum-share-target";
+import {
+  createMonochromeBrandLogoCanvas,
+  drawLectumBrandIcon,
+  LECTUM_SHARE_BRAND_LOGO_SRC,
+} from "./brand-logo";
 
 export type ShareNavigator = Navigator & {
   canShare?: (data: ShareData) => boolean;
@@ -80,8 +85,6 @@ export type ShareCanvasLayout = {
 };
 
 export const VIDEO_EXPORT_FRAME_RATE = 30;
-
-const brandLogoSrc = "/logo-icon.svg";
 
 export const storyCanvasLayout: ShareCanvasLayout = {
   card: {
@@ -224,32 +227,17 @@ export const loadImageElement = async (src: string) =>
 
 let shareCanvasAssetsPromise: Promise<ShareCanvasAssets> | null = null;
 
-const createMonochromeImageCanvas = (image: HTMLImageElement, size: number, color: string) => {
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-
-  const context = canvas.getContext("2d");
-  if (!context) return null;
-
-  context.clearRect(0, 0, size, size);
-  context.drawImage(image, 0, 0, size, size);
-  context.globalCompositeOperation = "source-in";
-  context.fillStyle = color;
-  context.fillRect(0, 0, size, size);
-  context.globalCompositeOperation = "source-over";
-
-  return canvas;
-};
-
 export const loadShareCanvasAssets = () => {
   if (!shareCanvasAssetsPromise) {
-    shareCanvasAssetsPromise = loadImageElement(brandLogoSrc)
+    shareCanvasAssetsPromise = loadImageElement(LECTUM_SHARE_BRAND_LOGO_SRC)
       .then((brandLogo) => ({
         brandLogo,
         brandLogoWhite:
-          createMonochromeImageCanvas(brandLogo, storyCanvasLayout.card.brandIconSize, "#ffffff") ??
-          undefined,
+          createMonochromeBrandLogoCanvas(
+            brandLogo,
+            storyCanvasLayout.card.brandIconSize,
+            "#ffffff",
+          ) ?? undefined,
       }))
       .catch(() => ({}));
   }
@@ -545,33 +533,15 @@ export const drawQuestionCard = (
   const headerCenterY = card.y + card.headerHeight / 2;
   const headerLabelWidth = ctx.measureText(target.cardLabel).width;
   const iconBoxSize = card.brandIconSize;
-  const canDrawBrandLogo = Boolean(assets?.brandLogoWhite);
-  const headerGroupWidth = canDrawBrandLogo
-    ? iconBoxSize + card.brandGap + headerLabelWidth
-    : headerLabelWidth;
+  const headerGroupWidth = iconBoxSize + card.brandGap + headerLabelWidth;
   const headerGroupX = card.x + (card.width - headerGroupWidth) / 2;
+  const iconBoxX = headerGroupX;
+  const iconBoxY = headerCenterY - iconBoxSize / 2;
 
-  if (assets?.brandLogoWhite) {
-    const iconBoxX = headerGroupX;
-    const iconBoxY = headerCenterY - iconBoxSize / 2;
-
-    ctx.save();
-    ctx.drawImage(
-      assets.brandLogoWhite,
-      iconBoxX,
-      iconBoxY,
-      card.brandIconSize,
-      card.brandIconSize,
-    );
-    ctx.restore();
-
-    ctx.textAlign = "start";
-    ctx.fillStyle = palette.surface;
-    ctx.fillText(target.cardLabel, iconBoxX + iconBoxSize + card.brandGap, headerCenterY);
-  } else {
-    ctx.textAlign = "center";
-    ctx.fillText(target.cardLabel, card.x + card.width / 2, headerCenterY);
-  }
+  drawLectumBrandIcon(ctx, iconBoxX, iconBoxY, card.brandIconSize, palette, assets);
+  ctx.textAlign = "start";
+  ctx.fillStyle = palette.surface;
+  ctx.fillText(target.cardLabel, iconBoxX + iconBoxSize + card.brandGap, headerCenterY);
 
   ctx.fillStyle = palette.foreground;
   ctx.font = `700 ${card.bodyFontSize}px Manrope, Arial, sans-serif`;

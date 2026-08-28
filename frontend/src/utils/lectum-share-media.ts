@@ -24,6 +24,8 @@ import {
   resolveLectumLinkShareData,
 } from "./lectum-share-media/native-share";
 
+const DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000;
+
 const createLectumShareFile = async (target: LectumShareSocialTarget) => {
   const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
 
@@ -251,7 +253,7 @@ const downloadFile = (file: File) => {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS);
 };
 
 const copyShareUrl = async (url: string) => {

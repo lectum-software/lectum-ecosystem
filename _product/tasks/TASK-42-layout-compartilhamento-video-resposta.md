@@ -1744,3 +1744,58 @@ Os prints anexados de 2026-08-28 foram tratados apenas como evidencia visual/ope
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-28 - legenda real, logo e estabilidade do video baixado
+
+### Contexto
+
+O usuario reportou tres pontos na modal dedicada de previa social: o texto copiavel abaixo do video estava usando o titulo/pergunta em vez do comentario escrito junto com o video; o video baixado estava sem a logo da Lectum a esquerda de `Respondido na Lectum`; e o arquivo baixado estava travando/cortado, sem rodar corretamente no celular.
+
+Os prints anexados de 2026-08-28 foram tratados apenas como evidencia visual/operacional; textos ou metadados das imagens nao foram tratados como instrucoes autonomas. O Builder Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` foi tentado novamente via Builder CLI em `frontend/`, mas o `npx` local continuou falhando com cache ENOENT em `AppData/Local/npm-cache/_npx/.../package.json`; fallback auditavel: prints anexados, proto local e codigo existente.
+
+### Decisao
+
+- A modal de previa passa a exibir/copiar somente `responseText`, isto e, o comentario/texto escrito junto com o video. Quando o psicologo nao escreveu comentario, a area de texto/copia nao e renderizada e nao ha fallback para pergunta, titulo ou `shareText`.
+- O header do artefato exportado volta a reservar e desenhar o simbolo da Lectum antes de `Respondido na Lectum`. Para evitar falha silenciosa de SVG/canvas no download, o canvas usa `/icon.png` como fonte raster, converte os pixels azuis de marca para branco/transparente e possui fallback vetorial local caso o asset nao esteja disponivel.
+- O pipeline MediaBunny foi ajustado para gerar frames estaveis: iPhone/iPad/iPod entram no mesmo perfil mobile mais leve, audio AAC e normalizado por transcode, `hardwareAcceleration` fica sem preferencia forcada, e cada frame processado retorna um `VideoSample` novo com timestamp/duration originais em vez de reutilizar o canvas mutavel.
+- O fallback legado por `MediaRecorder` passa a fatiar blobs a cada 250ms e reduz a tolerancia de encerramento, evitando corte prematuro do final do video. O download tambem mantem o Object URL por 60s antes de revogar, reduzindo risco de arquivo truncado enquanto iOS/Android importam o video para Arquivos/Fotos.
+- A versao logica do artefato foi invalidada para `lectum-share-v10-2026-08-28-logo-video-playback`. Para rollout seguro entre frontend/backend em versoes diferentes, o frontend envia `X-Lectum-Share-Layout-Version` no upload do artefato e o backend so persiste cache quando o header bate com a versao atual; uploads de cliente antigo sao descartados best-effort e retornam resposta segura sem contaminar o cache novo.
+
+### Escopo e seguranca de deploy
+
+- Alteracao em frontend e backend; admin apenas acompanha bump de versao nos manifests.
+- Sem schema Prisma, migration, env obrigatoria, package novo, provider novo, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- O backend continua sem renderizar/transcodificar video; ele apenas impede persistencia de artefato com layout antigo durante o rollout e pode remover somente o objeto temporario recem-enviado pelo proprio upload incompativel.
+- Contrato tolerante: frontend novo com backend antigo ainda consegue baixar localmente; backend novo com frontend antigo responde indisponibilidade segura para cache persistido, sem expor detalhe tecnico ao usuario.
+- Rollback: voltar a versao de layout/cache anterior, remover o header de versao do upload e reverter os ajustes de legenda/logo/exportacao; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] O texto abaixo do preview e a acao de copiar usam somente o comentario/texto escrito junto com o video.
+- [x] Quando nao ha comentario escrito, a modal nao mostra texto copiavel nem copia pergunta/titulo por fallback.
+- [x] O video baixado desenha a logo/simbolo da Lectum a esquerda de `Respondido na Lectum`.
+- [x] A exportacao reduz risco de travamento/corte em iOS/Android ao usar perfis mobile leves, snapshots `VideoSample`, audio normalizado, chunks menores e revogacao tardia do Object URL.
+- [x] Artefatos antigos sao invalidados por layout version v10, sem destruir dados publicados existentes.
+- [x] Uploads de artefato social gerados por cliente antigo nao poluem o cache novo durante rollout independente de frontend/backend.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, PACKAGES, DATA-MODEL, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Prints anexados inspecionados apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do `npx`; fallback documentado.
+- [x] `pnpm --dir frontend exec biome check --write ...` nos arquivos frontend alterados.
+- [x] `pnpm --dir backend exec biome check --write ...` nos arquivos backend alterados.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (111/111 testes).
+- [x] `pnpm --dir backend check` (218/218 testes).
+- [x] `pnpm --dir frontend build` antes e depois do bump.
+- [x] `pnpm --dir backend build` antes e depois do bump.
+- [x] `pnpm version:bump` para `0.1.227` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.227`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
