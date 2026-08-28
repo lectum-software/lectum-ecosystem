@@ -1,4 +1,4 @@
 export const LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION =
-  "lectum-share-v10-2026-08-28-logo-video-playback";
+  "lectum-share-v11-2026-08-28-android-stable-logo";
 
 export const LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION_HEADER = "X-Lectum-Share-Layout-Version";

@@ -1047,3 +1047,11 @@ Uma task só pode ser marcada como concluída quando:
 - A exportacao do video foi endurecida contra travamento/corte em iOS/Android: perfis mobile mais leves tambem para iPhone/iPad, frames `VideoSample` independentes, audio AAC transcodificado, chunks menores no fallback legado e Object URL mantido por 60s antes de revogar.
 - O cache de artefatos sociais foi invalidado para `lectum-share-v10-2026-08-28-logo-video-playback`, e o upload agora exige header de layout compativel para nao persistir artefatos antigos durante rollout independente de frontend/backend.
 - Alteracao frontend+backend, admin apenas manifest de versao; sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-28: logo proporcional e video social estavel no Android
+
+- Ajuste pos-feedback da TASK-42: a logo branca da Lectum no video baixado passa a recortar a area util de `/icon.png`, deixando o simbolo proporcional ao texto `Respondido na Lectum` no header azul.
+- O iPhone preserva o perfil mobile que ja foi validado como correto; o Android passa a usar perfil MediaBunny mais leve (540x960, 24fps, video 850kbps constante, audio AAC 44.1kHz/2 canais a 96kbps constante) para reduzir travamentos.
+- O fallback legado por `MediaRecorder` tambem usa perfil Android reduzido (540x960, 24fps, video 900kbps, audio 96kbps) e tenta MP4 H.264/AAC nivel 3.1 antes dos WebM suportados.
+- O cache de artefatos sociais foi invalidado para `lectum-share-v11-2026-08-28-android-stable-logo`, sem apagar objetos publicados; uploads de cliente antigo continuam sendo descartados pelo guard de layout.
+- Alteracao frontend+backend, admin apenas manifest de versao; sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados/buckets publicados.

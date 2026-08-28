@@ -1799,3 +1799,56 @@ Os prints anexados de 2026-08-28 foram tratados apenas como evidencia visual/ope
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-28 - logo proporcional e exportacao Android estavel
+
+### Contexto
+
+O usuario validou que, apos a correcao anterior, o video baixado passou a rodar corretamente no iPhone, mas no Android ainda podia travar. Tambem apontou que a logo da Lectum no header azul do artefato estava pequena demais em relacao ao texto `Respondido na Lectum`.
+
+O print anexado de 2026-08-28 foi tratado apenas como evidencia visual/operacional; textos ou metadados da imagem nao foram tratados como instrucao autonoma. O Builder Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` foi tentado novamente via Builder CLI em `frontend/`, mas o `npx` local continuou falhando com cache ENOENT em `AppData/Local/npm-cache/_npx/.../package.json`; fallback auditavel: print anexado, protos locais e codigo existente.
+
+### Decisao
+
+- Manter o header e o texto aprovados, mas recortar automaticamente a area azul util da imagem `/icon.png` antes de gerar a versao branca do simbolo. Assim o desenho real da marca ocupa o box de 36px ja alinhado ao `headerFontSize`, sem aumentar artificialmente o texto.
+- Endurecer o caminho Android do MediaBunny para um perfil unico mais leve: 540x960, 24fps, video em bitrate constante de 850kbps, audio AAC transcodificado para 44.1kHz/2 canais e 96kbps constante.
+- Endurecer tambem o fallback legado por `MediaRecorder` no Android: canvas 540x960, 24fps, bitrate de video 900kbps, audio 96kbps e preferencia inicial por MIME MP4 H.264/AAC nivel 3.1 quando o navegador oferecer suporte.
+- Preservar iPhone/iPad no perfil mobile anterior, que ja foi validado pelo usuario como reproduzindo corretamente.
+- Invalidar novamente o cache de artefatos sociais para `lectum-share-v11-2026-08-28-android-stable-logo`, garantindo que Android nao reutilize objetos v10 potencialmente gerados com perfil pesado/logo pequena.
+
+### Escopo e seguranca de deploy
+
+- Alteracao em frontend e backend; admin acompanha apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- O backend continua sem renderizar/transcodificar video; ele apenas muda a versao logica usada no cache e segue recusando upload com header de layout incompativel.
+- Contrato tolerante: frontend novo com backend antigo ainda consegue gerar/download localmente, mas pode nao persistir cache v11 ate o backend subir; backend novo com frontend antigo descarta cache antigo sem expor detalhe tecnico ao usuario.
+- Rollback: reverter o layout version para o identificador anterior e remover os perfis Android/crop da logo; objetos ja gerados continuam temporarios por TTL.
+
+### Criterios de aceite do ajuste
+
+- [x] A logo branca da Lectum no video baixado usa recorte da area util da marca e fica visualmente proporcional ao texto do header.
+- [x] O iPhone mantem o perfil mobile que ja estava rodando corretamente.
+- [x] O Android passa a gerar o artefato MediaBunny em 540x960 a 24fps, com video/audio em bitrate constante e audio AAC normalizado.
+- [x] O fallback legado Android tambem reduz canvas/framerate/bitrate e prefere MP4 H.264/AAC nivel 3.1 quando suportado.
+- [x] Artefatos antigos sao invalidados por layout version v11, sem destruir dados publicados existentes.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do `npx`; fallback documentado.
+- [x] `pnpm --dir frontend exec biome check --write ...` nos arquivos frontend alterados.
+- [x] `pnpm --dir backend exec biome check --write ...` no arquivo backend alterado.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (111/111 testes).
+- [x] `pnpm --dir backend check` (218/218 testes).
+- [x] `pnpm --dir frontend build` antes e depois do bump.
+- [x] `pnpm --dir backend build` antes e depois do bump.
+- [x] `pnpm version:bump` para `0.1.228` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.228`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz e `git diff --check` executados antes do commit.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

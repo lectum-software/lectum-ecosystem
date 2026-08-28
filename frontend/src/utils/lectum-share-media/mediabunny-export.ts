@@ -12,19 +12,45 @@ import {
 
 const MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000;
 const MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000;
-const MEDIABUNNY_SHARE_EXPORT_PROFILES = [
+const ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE = 96_000;
+const ANDROID_MEDIABUNNY_SHARE_FRAME_RATE = 24;
+
+type MediabunnyShareExportProfile = {
+  readonly frameRate?: number;
+  readonly height: number;
+  readonly videoBitrate: number;
+  readonly videoBitrateMode?: "constant" | "variable";
+  readonly width: number;
+};
+
+const MEDIABUNNY_SHARE_EXPORT_PROFILES: readonly MediabunnyShareExportProfile[] = [
   { height: 1920, videoBitrate: MEDIABUNNY_SHARE_VIDEO_BITRATE, width: 1080 },
   { height: 1280, videoBitrate: 1_600_000, width: 720 },
   { height: 960, videoBitrate: 1_000_000, width: 540 },
 ] as const;
 
-const isMobileMediabunnyShareRuntime = () =>
-  typeof navigator !== "undefined" && /\b(Android|iPhone|iPad|iPod)\b/i.test(navigator.userAgent);
+const ANDROID_MEDIABUNNY_SHARE_EXPORT_PROFILES: readonly MediabunnyShareExportProfile[] = [
+  {
+    frameRate: ANDROID_MEDIABUNNY_SHARE_FRAME_RATE,
+    height: 960,
+    videoBitrate: 850_000,
+    videoBitrateMode: "constant",
+    width: 540,
+  },
+] as const;
+
+const isAndroidMediabunnyShareRuntime = () =>
+  typeof navigator !== "undefined" && /\bAndroid\b/i.test(navigator.userAgent);
+
+const isAppleMobileMediabunnyShareRuntime = () =>
+  typeof navigator !== "undefined" && /\b(iPhone|iPad|iPod)\b/i.test(navigator.userAgent);
 
 const mediabunnyShareExportProfiles = () =>
-  isMobileMediabunnyShareRuntime()
-    ? MEDIABUNNY_SHARE_EXPORT_PROFILES.slice(1)
-    : MEDIABUNNY_SHARE_EXPORT_PROFILES;
+  isAndroidMediabunnyShareRuntime()
+    ? ANDROID_MEDIABUNNY_SHARE_EXPORT_PROFILES
+    : isAppleMobileMediabunnyShareRuntime()
+      ? MEDIABUNNY_SHARE_EXPORT_PROFILES.slice(1)
+      : MEDIABUNNY_SHARE_EXPORT_PROFILES;
 
 export const shouldUseMediabunnyVideoShareExport = () =>
   process.env.NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED !== "false";
@@ -85,10 +111,13 @@ export const createMediabunnyVideoShareFile = async (
   }
 
   const assets = await loadShareCanvasAssets();
+  const isAndroidRuntime = isAndroidMediabunnyShareRuntime();
   const palette = getCanvasPalette();
   const audioQuality = new Quality({
-    bitrate: MEDIABUNNY_SHARE_AUDIO_BITRATE,
-    bitrateMode: "variable",
+    bitrate: isAndroidRuntime
+      ? ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE
+      : MEDIABUNNY_SHARE_AUDIO_BITRATE,
+    bitrateMode: isAndroidRuntime ? "constant" : "variable",
   });
   let lastError = new Error("Exportacao Mediabunny indisponivel para compartilhamento.");
 
@@ -97,9 +126,15 @@ export const createMediabunnyVideoShareFile = async (
     canvas.height = profile.height;
     const scaleX = profile.width / layout.width;
     const scaleY = profile.height / layout.height;
-    const videoQuality = new Quality({ bitrate: profile.videoBitrate, bitrateMode: "variable" });
+    const frameRate = profile.frameRate ?? VIDEO_EXPORT_FRAME_RATE;
+    const videoQuality = new Quality({
+      bitrate: profile.videoBitrate,
+      bitrateMode: profile.videoBitrateMode ?? "variable",
+    });
     const canEncodeProfile = await canEncodeVideo("avc", {
+      alpha: "discard",
       height: profile.height,
+      hardwareAcceleration: "no-preference",
       quality: videoQuality,
       width: profile.width,
     }).catch(() => false);
@@ -124,7 +159,13 @@ export const createMediabunnyVideoShareFile = async (
       let conversion: Awaited<ReturnType<typeof Conversion.init>>;
       try {
         conversion = await Conversion.init({
-          audio: { codec: "aac", forceTranscode: true, quality: audioQuality },
+          audio: {
+            codec: "aac",
+            forceTranscode: true,
+            numberOfChannels: 2,
+            quality: audioQuality,
+            sampleRate: 44_100,
+          },
           input,
           output,
           showWarnings: false,
@@ -132,9 +173,10 @@ export const createMediabunnyVideoShareFile = async (
           tracks: "primary",
           video: {
             allowRotationMetadata: false,
+            alpha: "discard",
             codec: "avc",
             forceTranscode: true,
-            frameRate: VIDEO_EXPORT_FRAME_RATE,
+            frameRate,
             hardwareAcceleration: "no-preference",
             height: profile.height,
             keyFrameInterval: 2,

@@ -376,7 +376,7 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
   assert.match(
     layoutVersionSource,
-    /LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION =\s*"lectum-share-v10-2026-08-28-logo-video-playback"/,
+    /LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION =\s*"lectum-share-v11-2026-08-28-android-stable-logo"/,
   );
   assert.match(layoutVersionSource, /X-Lectum-Share-Layout-Version/);
   assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_HEADERS/);
@@ -392,7 +392,7 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
     /throw new Error\("Arquivo de compartilhamento invalido\."\)/,
   );
   assert.doesNotMatch(shareArtifactUploadTypeSource, /\|\|\s*"video\/mp4"/);
-  assert.match(repositorySource, /lectum-share-v10-2026-08-28-logo-video-playback/);
+  assert.match(repositorySource, /lectum-share-v11-2026-08-28-android-stable-logo/);
   assert.match(repositorySource, /process\.env\.POST_SHARE_ARTIFACT_TTL_DAYS/);
   assert.match(repositorySource, /parsePositiveInteger\([\s\S]*30,/);
   assert.match(backendEnvExampleSource, /POST_SHARE_ARTIFACT_TTL_DAYS=30/);
@@ -559,10 +559,33 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(source, /lastProgressAt/);
   assert.match(source, /stalled/);
   assert.match(source, /blob\.size === 0/);
+  assert.match(mbSource, /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000/);
+  assert.match(mbSource, /MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000/);
+  assert.match(mbSource, /ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE = 96_000/);
+  assert.match(mbSource, /ANDROID_MEDIABUNNY_SHARE_FRAME_RATE = 24/);
+  assert.match(mbSource, /MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280/);
   assert.match(
     mbSource,
-    /MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000[\s\S]*MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000[\s\S]*MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280[\s\S]*iPhone\|iPad\|iPod[\s\S]*@mediabunny\/aac-encoder[\s\S]*await importMediabunny\(\)[\s\S]*VideoSample[\s\S]*canEncodeVideo[\s\S]*new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)[\s\S]*audio: \{ codec: "aac", forceTranscode: true[\s\S]*hardwareAcceleration: "no-preference"[\s\S]*sampleWidth = Math\.max\(1, Math\.round\(sample\.displayWidth\)\)[\s\S]*ctx\.scale\(scaleX, scaleY\)[\s\S]*drawLectumShareFrame\(ctx, sourceCanvas[\s\S]*return new VideoSample\(canvas[\s\S]*processedWidth: profile\.width/,
+    /ANDROID_MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 960[\s\S]*videoBitrate: 850_000[\s\S]*videoBitrateMode: "constant"[\s\S]*width: 540/,
   );
+  assert.match(mbSource, /isAndroidMediabunnyShareRuntime/);
+  assert.match(mbSource, /isAppleMobileMediabunnyShareRuntime[\s\S]*iPhone\|iPad\|iPod/);
+  assert.match(mbSource, /@mediabunny\/aac-encoder/);
+  assert.match(mbSource, /await importMediabunny\(\)/);
+  assert.match(mbSource, /VideoSample/);
+  assert.match(mbSource, /canEncodeVideo/);
+  assert.match(mbSource, /new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)/);
+  assert.match(
+    mbSource,
+    /audio: \{[\s\S]*codec: "aac"[\s\S]*forceTranscode: true[\s\S]*numberOfChannels: 2[\s\S]*sampleRate: 44_100/,
+  );
+  assert.match(mbSource, /alpha: "discard"/);
+  assert.match(mbSource, /hardwareAcceleration: "no-preference"/);
+  assert.match(mbSource, /sampleWidth = Math\.max\(1, Math\.round\(sample\.displayWidth\)\)/);
+  assert.match(mbSource, /ctx\.scale\(scaleX, scaleY\)/);
+  assert.match(mbSource, /drawLectumShareFrame\(ctx, sourceCanvas/);
+  assert.match(mbSource, /return new VideoSample\(canvas/);
+  assert.match(mbSource, /processedWidth: profile\.width/);
   assert.match(mediaSource, /DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000/);
   assert.match(mediaSource, /URL\.revokeObjectURL\(url\), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS/);
   assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\)\.catch/);
@@ -592,16 +615,27 @@ test("exportacao de video aguarda frame renderizavel e frames do canvas no mobil
   assert.match(exportSource, /attachVideoElementForCanvas\(video\)/);
   assert.match(exportSource, /CanvasCaptureStreamTrack/);
   assert.match(exportSource, /createCanvasCaptureFrameRequester/);
+  assert.match(exportSource, /ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24/);
+  assert.match(
+    exportSource,
+    /ANDROID_LEGACY_VIDEO_EXPORT_PROFILE[\s\S]*height: 960[\s\S]*videoBitsPerSecond: 900_000[\s\S]*width: 540/,
+  );
+  assert.match(exportSource, /isAndroidLegacyVideoShareRuntime/);
+  assert.match(exportSource, /canvas\.width = exportProfile\.width/);
+  assert.match(exportSource, /canvas\.height = exportProfile\.height/);
+  assert.match(exportSource, /canvas\.captureStream\(exportProfile\.frameRate\)/);
+  assert.match(exportSource, /createMediaRecorderOptions\(mimeType, exportProfile\)/);
+  assert.match(exportSource, /ctx\.scale\(scaleX, scaleY\)/);
   assert.match(exportSource, /videoTrack\?\.requestFrame\?\.\(\)/);
   assert.match(exportSource, /requestCanvasCaptureFrame\(\)/);
-  assert.match(exportSource, /window\.setTimeout\(draw, 1000 \/ VIDEO_EXPORT_FRAME_RATE\)/);
+  assert.match(exportSource, /window\.setTimeout\(draw, 1000 \/ exportProfile\.frameRate\)/);
   assert.match(
     exportSource,
     /await playVideoForShare\(video\);\s*await waitForVideoRenderFrame\(video\);/,
   );
   assert.match(
     exportSource,
-    /await waitForVideoRenderFrame\(video\);[\s\S]*drawLectumShareFrame\(ctx, video[\s\S]*recorder\.start\(250\)/,
+    /await waitForVideoRenderFrame\(video\);[\s\S]*drawShareFrame\(\)[\s\S]*recorder\.start\(250\)/,
   );
   assert.match(
     exportSource,
@@ -638,6 +672,11 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(brandLogoSource, /LECTUM_SHARE_BRAND_LOGO_SRC = "\/icon\.png"/);
   assert.match(brandLogoSource, /brandLogoWhite/);
   assert.match(brandLogoSource, /getImageData\(0, 0, size, size\)/);
+  assert.match(brandLogoSource, /BRAND_ICON_SOURCE_PADDING_RATIO/);
+  assert.match(brandLogoSource, /image\.naturalWidth/);
+  assert.match(brandLogoSource, /sourceContext\.getImageData/);
+  assert.match(brandLogoSource, /cropX/);
+  assert.match(brandLogoSource, /drawImage\([\s\S]*sourceCanvas[\s\S]*cropX/);
   assert.match(brandLogoSource, /isLectumBrandPixel/);
   assert.match(brandLogoSource, /ctx\.drawImage\(assets\.brandLogoWhite/);
   assert.match(brandLogoSource, /drawLectumFallbackBrandIcon/);
@@ -656,5 +695,5 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v10-2026-08-28-logo-video-playback/);
+  assert.match(repositorySource, /lectum-share-v11-2026-08-28-android-stable-logo/);
 });

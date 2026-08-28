@@ -14,6 +14,7 @@ import {
   getCanvasPalette,
   type LectumShareFrameTarget,
   loadShareCanvasAssets,
+  type ShareCanvasLayout,
   type ShareMediaElement,
   storyCanvasLayout,
   VIDEO_EXPORT_FRAME_RATE,
@@ -25,6 +26,7 @@ export const supportedVideoMimeType = () => {
   if (typeof MediaRecorder === "undefined") return null;
 
   const candidates = [
+    "video/mp4;codecs=avc1.42E01F,mp4a.40.2",
     "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
@@ -53,6 +55,22 @@ type CanvasCaptureStreamTrack = MediaStreamTrack & {
 };
 
 const VIDEO_PLAY_TIMEOUT_MS = 8000;
+const ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24;
+const ANDROID_LEGACY_VIDEO_EXPORT_PROFILE = {
+  audioBitsPerSecond: 96_000,
+  frameRate: ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE,
+  height: 960,
+  videoBitsPerSecond: 900_000,
+  width: 540,
+} as const;
+
+type LegacyVideoExportProfile = {
+  audioBitsPerSecond?: number;
+  frameRate: number;
+  height: number;
+  videoBitsPerSecond?: number;
+  width: number;
+};
 
 export {
   createMediabunnyVideoShareFile,
@@ -64,6 +82,31 @@ const emptyVideoAudioCapture = (): VideoAudioCapture => ({
   resume: async () => undefined,
   tracks: [],
 });
+
+const isAndroidLegacyVideoShareRuntime = () =>
+  typeof navigator !== "undefined" && /\bAndroid\b/i.test(navigator.userAgent);
+
+const resolveLegacyVideoExportProfile = (layout: ShareCanvasLayout): LegacyVideoExportProfile =>
+  isAndroidLegacyVideoShareRuntime()
+    ? ANDROID_LEGACY_VIDEO_EXPORT_PROFILE
+    : {
+        frameRate: VIDEO_EXPORT_FRAME_RATE,
+        height: layout.height,
+        width: layout.width,
+      };
+
+const createMediaRecorderOptions = (
+  mimeType: string,
+  profile: LegacyVideoExportProfile,
+): MediaRecorderOptions | undefined => {
+  const options: MediaRecorderOptions = {};
+
+  if (mimeType) options.mimeType = mimeType;
+  if (profile.audioBitsPerSecond) options.audioBitsPerSecond = profile.audioBitsPerSecond;
+  if (profile.videoBitsPerSecond) options.videoBitsPerSecond = profile.videoBitsPerSecond;
+
+  return Object.keys(options).length > 0 ? options : undefined;
+};
 
 const attachVideoElementForCanvas = (video: HTMLVideoElement) => {
   if (typeof document === "undefined" || video.isConnected || !document.body) {
@@ -364,7 +407,12 @@ export const createVideoShareFile = async (
   }
 
   const detachVideoElement = attachVideoElementForCanvas(video);
-  const stream = canvas.captureStream(VIDEO_EXPORT_FRAME_RATE);
+  const exportProfile = resolveLegacyVideoExportProfile(layout);
+  canvas.width = exportProfile.width;
+  canvas.height = exportProfile.height;
+  const scaleX = exportProfile.width / layout.width;
+  const scaleY = exportProfile.height / layout.height;
+  const stream = canvas.captureStream(exportProfile.frameRate);
   const requestCanvasCaptureFrame = createCanvasCaptureFrameRequester(stream);
   const audioCapture = createSilentVideoAudioCapture(video);
   for (const track of audioCapture.tracks) {
@@ -375,7 +423,7 @@ export const createVideoShareFile = async (
   let recorder: MediaRecorder;
 
   try {
-    recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    recorder = new MediaRecorder(stream, createMediaRecorderOptions(mimeType, exportProfile));
   } catch (error) {
     for (const track of stream.getTracks()) {
       track.stop();
@@ -391,7 +439,7 @@ export const createVideoShareFile = async (
   const durationSeconds = resolveVideoExportDurationSeconds(video.duration);
   const endTimeToleranceSeconds = Math.min(
     0.06,
-    Math.max(1 / VIDEO_EXPORT_FRAME_RATE, durationSeconds * 0.002),
+    Math.max(1 / exportProfile.frameRate, durationSeconds * 0.002),
   );
   const safetyTimeoutMs = resolveVideoExportSafetyTimeoutMs(durationSeconds, hasKnownDuration);
   const stallTimeoutMs = resolveVideoExportStallTimeoutMs();
@@ -449,11 +497,18 @@ export const createVideoShareFile = async (
     };
 
     const scheduleDraw = () => {
-      drawTimer = window.setTimeout(draw, 1000 / VIDEO_EXPORT_FRAME_RATE);
+      drawTimer = window.setTimeout(draw, 1000 / exportProfile.frameRate);
+    };
+
+    const drawShareFrame = () => {
+      ctx.save();
+      ctx.scale(scaleX, scaleY);
+      drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+      ctx.restore();
     };
 
     const draw = () => {
-      drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+      drawShareFrame();
       requestCanvasCaptureFrame();
       const now = performance.now();
       const elapsed = now - startedAt;
@@ -523,7 +578,7 @@ export const createVideoShareFile = async (
 
         await playVideoForShare(video);
         await waitForVideoRenderFrame(video);
-        drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+        drawShareFrame();
         requestCanvasCaptureFrame();
         recorder.start(250);
         startedAt = performance.now();
@@ -536,7 +591,7 @@ export const createVideoShareFile = async (
             video.muted = true;
             await playVideoForShare(video);
             await waitForVideoRenderFrame(video);
-            drawLectumShareFrame(ctx, video, layout, target, palette, assets);
+            drawShareFrame();
             requestCanvasCaptureFrame();
             recorder.start(250);
             startedAt = performance.now();

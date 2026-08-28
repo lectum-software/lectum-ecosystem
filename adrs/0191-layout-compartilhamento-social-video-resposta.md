@@ -1127,3 +1127,27 @@ Depois da sheet de previa social, o usuario identificou tres falhas: a legenda c
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.227`, incluindo testes estaticos da previa/media, checks frontend/backend/admin via raiz, builds frontend/backend, smoke local, `git diff --check` e smoke de homologacao apos push.
+
+## Ajuste 2026-08-28 - logo proporcional e perfil Android v11
+
+### Contexto
+
+A versao anterior do download social passou a funcionar corretamente no iPhone, mas o Android ainda podia produzir um arquivo travado. O usuario tambem apontou que o simbolo da Lectum no header do artefato estava pequeno em relacao ao texto.
+
+### Decisao
+
+- A versao branca da logo usada no canvas deixa de redimensionar o PNG inteiro e passa a localizar a area azul util da marca, recortando essa caixa antes de colorir para branco/transparente. O box continua alinhado ao `headerFontSize`, mas o desenho efetivo deixa de carregar a margem branca do asset original.
+- Android recebe perfil MediaBunny dedicado e mais conservador: 540x960, 24fps, video em bitrate constante de 850kbps, audio AAC transcodificado para 44.1kHz/2 canais e 96kbps constante.
+- O fallback `MediaRecorder` tambem reduz custo em Android para 540x960/24fps, limita bitrates e tenta primeiro MP4 H.264/AAC nivel 3.1 quando disponivel.
+- A versao logica/cache dos artefatos sociais passa para `lectum-share-v11-2026-08-28-android-stable-logo` para impedir reuso de arquivos v10 com perfil de Android anterior.
+
+### Consequencias
+
+- A marca no header fica visualmente proporcional sem mexer na tipografia aprovada.
+- O Android troca resolucao/framerate/bitrate por maior chance de reproduzir o arquivo final sem travamentos, enquanto iOS mantem o perfil ja validado pelo usuario.
+- A mudanca nao adiciona dependencia, env obrigatoria, migration, provider, mock, seed, reset nem limpeza de storage/dados publicados.
+- Rollback simples: voltar o layout version anterior e remover o crop da logo/perfis Android dedicados; caches seguem temporarios por TTL.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.228`, incluindo checks frontend/backend, builds antes/depois do bump, teste estatico especifico, smoke local, `pnpm check` de raiz e smoke de homologacao apos push.
