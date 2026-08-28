@@ -1066,7 +1066,7 @@ Uma task só pode ser marcada como concluída quando:
 
 ## Correcao visual em 2026-08-28: orientacao no topo da previa social
 
-- Ajuste pos-feedback da TASK-42: a modal de previa social passa a abrir com um cabecalho compacto, "Publique nas redes sociais", seguido da orientacao para baixar o video com a arte da Lectum e postar no Instagram, TikTok ou Shorts.
+- Ajuste pos-feedback da TASK-42: a modal de previa social passa a abrir com um cabecalho compacto, "Publique nas redes sociais", seguido da orientacao "Baixe o video personalizado para postar no Instagram e TikTok.".
 - O texto ocupa a area superior antes usada quase so pelo botao de fechar; o fechamento continua no canto superior direito e o titulo tambem rotula a modal por aria-labelledby.
 - A modal de criar post nao foi alterada, e a mudanca nao mexe no video exportado, legenda copiavel, regra owner-only, cache de artefatos ou compartilhamento link-only.
 - Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
@@ -1076,4 +1076,11 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-42: ao abrir a modal de previa social, qualquer audio/video que esteja tocando fora da sheet e pausado para nao manter o video de fundo em execucao.
 - O video dentro da modal fica marcado como previa social, e a abertura tenta reproduzi-lo com som usando o helper existente de playback sonoro; se o navegador bloquear autoplay com som, a midia permanece desmutada para interacao do usuario.
 - Ao fechar a modal, o video da propria previa e pausado para encerrar o som imediatamente.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao textual em 2026-08-28: copy personalizada da previa social
+
+- Ajuste pos-feedback da TASK-42: o subtitulo da modal de previa social passa a dizer exatamente "Baixe o video personalizado para postar no Instagram e TikTok.".
+- A alteracao limita-se ao texto superior; titulo, botao de fechar, preview, texto copiavel, download, som da previa, pausa de midia ao fundo, regra owner-only e modal de criar post permanecem inalterados.
+- Builder Quick Copy foi tentado apenas para inspecao, mas o npx local falhou no cache; a referencia visual auditavel usada foi o print do usuario e o codigo existente da modal.
 - Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.

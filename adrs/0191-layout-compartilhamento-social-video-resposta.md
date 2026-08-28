@@ -1184,7 +1184,7 @@ A modal dedicada de previa social ja concentrava a arte do video e a acao "Baixa
 
 ### Decisao
 
-- Incluir microcopy explicativa no topo da modal: titulo "Publique nas redes sociais" e subtitulo orientando baixar o video com a arte da Lectum para Instagram, TikTok ou Shorts.
+- Incluir microcopy explicativa no topo da modal: titulo "Publique nas redes sociais" e subtitulo "Baixe o video personalizado para postar no Instagram e TikTok.".
 - Manter o botao de fechar no topo direito e reaproveitar o titulo visual como label acessivel do dialog.
 - Limitar a mudanca a UI da modal; o artefato exportado, o cache/versionamento do layout, a legenda copiavel, a animacao da sheet e a permissao owner-only permanecem inalterados.
 
@@ -1219,3 +1219,25 @@ A entrada overlay da previa social pode ser aberta enquanto o video do card/feed
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.231, incluindo teste estatico da previa social, frontend check, build antes/depois do bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
+
+## Ajuste 2026-08-28 - copy personalizada da previa social
+
+### Contexto
+
+Depois de adicionar a orientacao superior na modal de previa social, o usuario pediu uma copy mais direta e personalizada para Instagram e TikTok. O print anexado foi usado somente como evidencia visual da modal atual.
+
+### Decisao
+
+- O subtitulo do cabecalho da modal passa a ser "Baixe o video personalizado para postar no Instagram e TikTok.".
+- O titulo "Publique nas redes sociais" continua sendo o label acessivel do dialog.
+- Nao mudar o artefato exportado, cache/versionamento do layout, CTA de download, legenda copiavel, audio da previa, pausa de midia ao fundo, permissao owner-only ou modal de criar post.
+
+### Consequencias
+
+- A mensagem fica mais objetiva e evita citar Shorts quando o foco solicitado e Instagram e TikTok.
+- A mudanca e somente de UI/copy no frontend; sem env, package, migration, backend funcional, admin UI ou dados publicados.
+- Rollback simples: restaurar o texto anterior da modal e do teste estatico.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.232, incluindo teste estatico da previa social, frontend check, build antes/depois do bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.

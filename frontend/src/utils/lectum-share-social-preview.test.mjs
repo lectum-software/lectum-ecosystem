@@ -199,7 +199,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(downloadDialogSource, /Publique nas redes sociais/);
   assert.match(
     downloadDialogSource,
-    /Baixe o v.deo com a arte da Lectum e poste no Instagram, TikTok ou Shorts\./,
+    /Baixe o v.deo personalizado para postar no Instagram e TikTok\./,
   );
   assert.match(downloadDialogSource, /Baixar v.deo/);
   assert.doesNotMatch(downloadDialogSource, /WhatsApp|Copiar link|9:16/);

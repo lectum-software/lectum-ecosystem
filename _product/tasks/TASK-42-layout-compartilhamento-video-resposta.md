@@ -1909,7 +1909,7 @@ O usuario sugeriu incluir, na parte superior da modal de previa social, um texto
 ### Decisao
 
 - Adicionar um cabecalho visual compacto no topo de LectumShareDownloadDialog, preservando o botao de fechar no canto superior direito.
-- Usar o titulo "Publique nas redes sociais" e a orientacao "Baixe o video com a arte da Lectum e poste no Instagram, TikTok ou Shorts.".
+- Usar o titulo "Publique nas redes sociais" e a orientacao "Baixe o video personalizado para postar no Instagram e TikTok.".
 - Reaproveitar o proprio h2 como label acessivel da modal via aria-labelledby="lectum-share-download-title", evitando titulo apenas sr-only.
 - Nao alterar o video exportado, a animacao/sheet, o CTA "Baixar video", o texto copiavel abaixo do video, a modal de criar post nem a regra owner-only da previa.
 
@@ -1987,5 +1987,47 @@ O usuario reportou que, ao abrir a modal de previa social, o video que estava ro
 - [x] pnpm --dir frontend build antes e depois do bump.
 - [x] pnpm version:bump para 0.1.231 e pnpm check:version.
 - [x] Smoke local do frontend buildado em http://127.0.0.1:3210: /version respondeu 0.1.231, /app/comunidades respondeu 200, /app/publicacoes/minhas respondeu 307 esperado sem sessao.
+- [x] pnpm check completo de raiz e git diff --check executados antes do commit.
+- Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-28 - copy personalizada da previa social
+
+### Contexto
+
+O usuario pediu para trocar o subtitulo superior da modal de previa social de "Baixe o video com a arte da Lectum..." para "Baixe o video personalizado para postar no Instagram e TikTok.". O print anexado de 2026-08-28 foi tratado apenas como evidencia visual/operacional; textos e metadados da imagem nao foram considerados instrucoes autonomas. O Builder Quick Copy ativo vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a foi tentado novamente em frontend/, mas o npx local seguiu falhando com ENOENT no cache; fallback auditavel: print anexado, protos locais e codigo existente da modal.
+
+### Decisao
+
+- Trocar apenas o subtitulo da modal para "Baixe o video personalizado para postar no Instagram e TikTok.".
+- Preservar titulo "Publique nas redes sociais", botao de fechar, animacao da sheet, preview 9:16, CTA "Baixar video", texto copiavel abaixo do video, pausa da midia ao fundo, audio da previa e regra owner-only.
+- Nao alterar a modal de criar post nem qualquer composicao/exportacao do video baixado.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, env obrigatoria, package novo, provider, mock, seed, reset, db push, limpeza de bucket ou dado destrutivo.
+- Rollback: restaurar o subtitulo anterior na modal e no teste estatico; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] A modal de previa social exibe exatamente o subtitulo "Baixe o video personalizado para postar no Instagram e TikTok.".
+- [x] A copy antiga com "arte da Lectum", "poste" e "Shorts" deixa de aparecer nesse subtitulo.
+- [x] A mudanca nao altera layout, exportacao, CTA, legenda copiavel, som/pausa de midia, regra owner-only ou modal de criar post.
+- [x] UI mobile-first, sem <img> cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; db:migrate nao se aplica.
+- [x] ADR atualizado em adrs/0191-layout-compartilhamento-social-video-resposta.md.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como homolog antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do npx; fallback documentado.
+- [x] pnpm --dir frontend exec biome check --write src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-social-preview.test.mjs.
+- [x] pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs (1/1).
+- [x] pnpm --dir frontend check (111/111 testes).
+- [x] pnpm --dir frontend build antes e depois do bump.
+- [x] pnpm version:bump para 0.1.232 e pnpm check:version.
+- [x] Smoke local do frontend buildado em http://127.0.0.1:3210: /version respondeu 0.1.232, /app/comunidades respondeu 200, /app/publicacoes/minhas respondeu 307 esperado sem sessao.
 - [x] pnpm check completo de raiz e git diff --check executados antes do commit.
 - Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.

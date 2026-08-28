@@ -249,7 +249,7 @@ export const LectumShareDownloadDialog = ({
               Publique nas redes sociais
             </h2>
             <p className="mt-1 max-w-[17rem] text-muted-foreground text-sm leading-5 sm:max-w-none">
-              Baixe o vídeo com a arte da Lectum e poste no Instagram, TikTok ou Shorts.
+              Baixe o vídeo personalizado para postar no Instagram e TikTok.
             </p>
           </div>
 
