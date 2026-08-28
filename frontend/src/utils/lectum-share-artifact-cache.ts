@@ -13,13 +13,13 @@ import {
 } from "@/utils/lectum-share-media";
 import { safeFileName } from "@/utils/lectum-share-media/file-name";
 import {
-  createLectumSharePostMediaTarget,
+  createLectumSharePostVideoDownloadTarget,
   type LectumShareSocialTarget,
   type LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 
-type ShareablePostWithMedia = Parameters<typeof createLectumSharePostMediaTarget>[0];
+type ShareablePostWithMedia = Parameters<typeof createLectumSharePostVideoDownloadTarget>[0];
 
 type ShareArtifactPrewarmOptions = {
   authenticated?: boolean;
@@ -141,4 +141,4 @@ export const scheduleLectumShareArtifactPrewarm = (
 export const scheduleLectumSharePostArtifactPrewarm = (
   post: ShareablePostWithMedia,
   options: ShareArtifactPrewarmOptions = {},
-) => scheduleLectumShareArtifactPrewarm(createLectumSharePostMediaTarget(post), options);
+) => scheduleLectumShareArtifactPrewarm(createLectumSharePostVideoDownloadTarget(post), options);

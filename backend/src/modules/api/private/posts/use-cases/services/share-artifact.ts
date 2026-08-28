@@ -7,7 +7,10 @@ import type {
   PostShareArtifactResponse,
 } from "../../DTOs/IPostDTO";
 import { PostRepository } from "../../repositories/PostRepository";
-import { POST_SHARE_ARTIFACT_TTL_DAYS } from "../../repositories/queries/PostShareArtifactRepository";
+import {
+  POST_SHARE_ARTIFACT_TTL_DAYS,
+  type ShareArtifactTarget,
+} from "../../repositories/queries/PostShareArtifactRepository";
 import { ensureCommunityActor, publicFileUrl } from "./post-support";
 
 const SHARE_ARTIFACT_ALLOWED_PREFIX = "posts/share-artifacts/";
@@ -75,6 +78,11 @@ const sanitizeFileName = (value?: string | null) => {
 const expiresAtFromNow = (now: Date) =>
   new Date(now.getTime() + POST_SHARE_ARTIFACT_TTL_DAYS * 24 * 60 * 60 * 1000);
 
+const canUseShareArtifactPreview = (
+  auth: { id?: string | null; role?: string | null } | undefined,
+  target: ShareArtifactTarget,
+) => auth?.role === "psicologo" && Boolean(auth.id) && auth.id === target.authorId;
+
 export const getShareArtifact = async (data: IPostShareArtifactDTO) => {
   const repository = new PostRepository();
   const target = await repository.getShareArtifactTarget({
@@ -87,6 +95,13 @@ export const getShareArtifact = async (data: IPostShareArtifactDTO) => {
       status: 200,
       ...msg("post_share_artifact_unavailable", {}),
       data: emptyShareArtifactResponse(),
+    };
+  }
+
+  if (!canUseShareArtifactPreview(data.auth, target)) {
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
     };
   }
 
@@ -127,6 +142,15 @@ export const uploadShareArtifact = async (data: IPostUploadShareArtifactDTO) => 
       status: 200,
       ...msg("post_share_artifact_unavailable", {}),
       data: emptyShareArtifactResponse(),
+    };
+  }
+
+  if (!canUseShareArtifactPreview(data.auth, target)) {
+    await deleteShareArtifactObject(key).catch(() => undefined);
+
+    return {
+      status: 403,
+      ...error("role_not_authorized", {}),
     };
   }
 

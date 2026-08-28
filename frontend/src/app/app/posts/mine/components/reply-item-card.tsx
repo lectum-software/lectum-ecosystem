@@ -27,6 +27,7 @@ import { ProfessionalAnsweredBadge } from "./header";
 
 export const ReplyItemCard = ({
   interactionCopy,
+  currentUserId,
   item,
   onChanged,
   onDownloadVideo,
@@ -34,6 +35,7 @@ export const ReplyItemCard = ({
   showProfessionalAnsweredBadge,
 }: {
   interactionCopy: InteractionCopy;
+  currentUserId?: string | null;
   item: UserPostListItem;
   onChanged?: () => void;
   onDownloadVideo?: (post: PostListPost, replyId: string) => void;
@@ -66,6 +68,8 @@ export const ReplyItemCard = ({
   const isPsychologistReply = reply.author.role === "psicologo";
   const canDownloadVideo =
     isPsychologistReply &&
+    Boolean(currentUserId) &&
+    reply.author.id === currentUserId &&
     reply.media_type === "video" &&
     Boolean(reply.media_url) &&
     Boolean(onDownloadVideo);
@@ -258,26 +262,19 @@ export const ReplyItemCard = ({
             className={cn(hasReplyText ? "mt-1" : undefined)}
             mediaType={reply.media_type}
             mediaUrl={reply.media_url}
+            overlayAction={
+              canDownloadVideo
+                ? {
+                    ariaLabel: "Abrir prévia para redes sociais",
+                    icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
+                    onClick: () => onDownloadVideo?.(item.post, reply.id),
+                  }
+                : undefined
+            }
             roundedClassName="rounded-[18px]"
             thumbnailUrl={reply.thumbnail_url}
             variant="reply"
           />
-          {canDownloadVideo ? (
-            <button
-              className={cn(
-                "mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-primary/15 bg-primary-soft px-4 text-primary text-sm font-black transition",
-                "hover:-translate-y-0.5 hover:border-primary/25 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-              )}
-              onClick={(event) => {
-                event.stopPropagation();
-                onDownloadVideo?.(item.post, reply.id);
-              }}
-              type="button"
-            >
-              <InstagramIcon className="h-4 w-4" aria-hidden="true" />
-              Prévia para Redes Sociais
-            </button>
-          ) : null}
         </div>
       ) : null}
 

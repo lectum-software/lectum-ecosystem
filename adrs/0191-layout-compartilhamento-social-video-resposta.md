@@ -1050,3 +1050,29 @@ O Android continuou exibindo o erro seguro ao tentar baixar o artefato da modal 
 - Teste estatico cobre as etapas do MediaBunny, o encadeamento para fallback legado, a chamada de Sentry no hook e a ausencia de identificadores/URLs no modulo de diagnostico.
 - Teste da politica Sentry cobre allowlist de tags e descarte de valores dinamicos/PII.
 - Validacoes finais constam na TASK-42 em 0.1.213.
+
+## Ajuste 2026-08-28 - icone overlay owner-only para previa social
+
+### Contexto
+
+Apos a entrega da acao `Previa para Redes Sociais` abaixo do video, o usuario preferiu uma entrada menos pesada: um icone branco do Instagram sobre o proprio video, no canto superior direito. A regra de dominio foi explicitada no mesmo ciclo: somente o psicologo autor do video deve poder usar a previa, inclusive quando o video aparece em comunidades.
+
+### Decisao
+
+- Transformar a entrada dedicada de previa social em uma acao overlay reutilizavel pelo frame de midia de comunidade.
+- Renderizar a acao somente quando o usuario atual e psicologo e tambem autor do video exibido.
+- Suportar tanto video de resposta profissional quanto video de post proprio do psicologo, sem mudar o botao de compartilhar link-only.
+- Fazer o backend validar a mesma regra owner-only para leitura e upload de `post_share_artifact`, usando o autor do post/resposta como fonte de verdade.
+- Usar mensagens publicas seguras e excluir best-effort a chave enviada quando upload for negado por permissao.
+
+### Consequencias
+
+- A UI fica mais discreta e reduz altura do card, especialmente em mobile, sem perder a descoberta da previa social.
+- A permissao deixa de depender apenas de ocultar o botao no frontend; artefatos temporarios tambem ficam protegidos por regra de dominio no backend.
+- O compartilhamento existente por link continua compatível com versoes anteriores de frontend/backend.
+- Nao ha migration, env obrigatoria, package novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados.
+- Rollback simples: retirar `overlayAction` das superficies, remover o alvo social dedicado para video de post e reverter a guarda owner-only dos artefatos; sem mudanca de banco.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em `0.1.225`, incluindo checks frontend/backend, builds, teste estatico especifico, smoke local e validacao final de raiz.

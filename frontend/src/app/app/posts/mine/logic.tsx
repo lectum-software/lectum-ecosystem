@@ -19,6 +19,7 @@ import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
+  createLectumSharePostVideoDownloadTarget,
   createLectumShareVideoDownloadTarget,
   createLectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
@@ -63,6 +64,7 @@ export const MyPostsLogic = () => {
   const firstPage = postsQuery.data?.pages[0];
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
   const isPsychologist = sessionUser?.role === "psicologo";
+  const currentPsychologistUserId = isPsychologist ? sessionUser?.id : null;
   const interactionCopy = getInteractionCopy(isPsychologist);
   const tabCounts = useMemo<FilterTabCounts>(
     () => ({
@@ -107,15 +109,24 @@ export const MyPostsLogic = () => {
     );
   };
 
-  const downloadReplyVideo = useCallback(
-    (post: PostListPost, replyId: string) => {
+  const openSocialVideoPreview = useCallback(
+    (post: PostListPost, replyId?: string | null) => {
       if (typeof window === "undefined") return;
+      if (!currentPsychologistUserId) return;
+
+      if (!replyId) {
+        if (post.author.id !== currentPsychologistUserId) return;
+
+        const socialTarget = createLectumSharePostVideoDownloadTarget(post);
+        if (socialTarget) openLectumDownloadDialog(socialTarget);
+        return;
+      }
 
       const replyTarget = items.find(
         (item) => item.reply?.id === replyId && item.post.id === post.id,
       )?.reply;
 
-      if (!replyTarget) return;
+      if (!replyTarget || replyTarget.author.id !== currentPsychologistUserId) return;
 
       const socialTarget = createLectumShareVideoDownloadTarget(post, replyTarget, {
         parentContent: replyTarget.parent_content ?? null,
@@ -125,7 +136,7 @@ export const MyPostsLogic = () => {
 
       openLectumDownloadDialog(socialTarget);
     },
-    [items, openLectumDownloadDialog],
+    [currentPsychologistUserId, items, openLectumDownloadDialog],
   );
 
   const handleFilterChange = (value: UserPostsType) => {
@@ -209,11 +220,12 @@ export const MyPostsLogic = () => {
               {items.map((item) =>
                 item.type === "reply" ? (
                   <ReplyItemCard
+                    currentUserId={sessionUser?.id ?? null}
                     interactionCopy={interactionCopy}
                     item={item}
                     key={item.id}
                     onChanged={handleReplyChanged}
-                    onDownloadVideo={downloadReplyVideo}
+                    onDownloadVideo={openSocialVideoPreview}
                     onShare={sharePost}
                     showProfessionalAnsweredBadge={!isPsychologist}
                   />
@@ -240,6 +252,7 @@ export const MyPostsLogic = () => {
                     hoverTone="neutral"
                     interactiveActions
                     key={item.id}
+                    onOpenSocialVideoPreview={openSocialVideoPreview}
                     onShare={sharePost}
                     openPostOnCardClick
                     post={item.post}

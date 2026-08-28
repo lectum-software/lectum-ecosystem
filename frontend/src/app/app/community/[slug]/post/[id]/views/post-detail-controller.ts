@@ -20,6 +20,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
 import { scheduleLectumShareArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
 import {
@@ -51,6 +52,7 @@ import {
   useReplyMediaPermission,
 } from "../modules/reply-support";
 import type { ReplyComposerForm } from "../use-form";
+import { usePostDetailSocialVideoPreview } from "./social-video-preview";
 
 export const usePostDetailController = ({
   initialFocusReplyId = null,
@@ -111,6 +113,7 @@ export const usePostDetailController = ({
       window.setTimeout(() => setShareFeedback(null), 2400);
     },
   });
+  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyPublishError(error)),
@@ -311,6 +314,15 @@ export const usePostDetailController = ({
       }),
     );
   };
+
+  const { openPostSocialVideoPreview, openReplySocialVideoPreview } =
+    usePostDetailSocialVideoPreview({
+      currentUserId,
+      isPsychologistUser,
+      openLectumDownloadDialog,
+      post,
+      replies,
+    });
 
   const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
     inlineReplyHasDraftRef.current = hasDraft;
@@ -651,7 +663,10 @@ export const usePostDetailController = ({
     isLoadingMoreReplies,
     isMobile,
     loadMoreRepliesRef,
+    lectumDownloadDialog,
     mediaPermission,
+    openPostSocialVideoPreview,
+    openReplySocialVideoPreview,
     post,
     postError,
     postQuery,

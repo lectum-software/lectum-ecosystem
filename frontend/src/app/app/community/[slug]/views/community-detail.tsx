@@ -23,13 +23,17 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
+  createLectumSharePostVideoDownloadTarget,
+  createLectumShareVideoDownloadTarget,
 } from "@/utils/lectum-share-target";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import {
@@ -68,6 +72,7 @@ export const CommunityDetailLogic = ({
 }: { slug: string } & CommunityRouteLogicProps) => {
   const router = useRouter();
   const conversion = useProgressiveConversion();
+  const currentUser = useAppSelector((state) => state.user);
   const [sort, setSort] = useState<CommunityPostSort>("featured");
   const [sortPeriods, setSortPeriods] = useState<CommunityPostSelectedPeriods>({});
   const [communitySearchOpen, setCommunitySearchOpen] = useState(false);
@@ -78,6 +83,7 @@ export const CommunityDetailLogic = ({
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
   const [createPostModalOpen, setCreatePostModalOpen] = useState(false);
+  const currentPsychologistUserId = currentUser?.role === "psicologo" ? currentUser.id : null;
   const detail = useCommunityDetail(slug);
   const postsQueryParams = useMemo(
     () => ({
@@ -100,6 +106,7 @@ export const CommunityDetailLogic = ({
       window.setTimeout(() => setShareFeedback(null), 2400);
     },
   });
+  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const community = detail.data?.community;
   const loadedPosts = useMemo(
     () => flattenCommunityPostPages(postsQuery.data?.pages),
@@ -184,6 +191,34 @@ export const CommunityDetailLogic = ({
     const socialTarget = createLectumSharePostMediaTarget(post);
     await shareLectumTarget(socialTarget ?? createLectumShareLinkTarget(post));
   };
+
+  const openSocialVideoPreview = useCallback(
+    (post: CommunityPost, replyId?: string | null) => {
+      if (typeof window === "undefined") return;
+      if (!currentPsychologistUserId) return;
+
+      if (replyId) {
+        const replyTarget =
+          post.highlighted_professional_reply?.id === replyId
+            ? post.highlighted_professional_reply
+            : null;
+
+        if (!replyTarget || replyTarget.author.id !== currentPsychologistUserId) return;
+
+        const socialTarget = createLectumShareVideoDownloadTarget(post, replyTarget, {
+          parentContent: replyTarget.parent_content ?? null,
+        });
+        if (socialTarget) openLectumDownloadDialog(socialTarget);
+        return;
+      }
+
+      if (post.author.id !== currentPsychologistUserId) return;
+
+      const socialTarget = createLectumSharePostVideoDownloadTarget(post);
+      if (socialTarget) openLectumDownloadDialog(socialTarget);
+    },
+    [currentPsychologistUserId, openLectumDownloadDialog],
+  );
 
   const shareCommunity = async () => {
     if (!community || typeof window === "undefined") return;
@@ -389,6 +424,7 @@ export const CommunityDetailLogic = ({
                 {posts.map((post) => (
                   <PostCard
                     key={post.id}
+                    onOpenSocialVideoPreview={openSocialVideoPreview}
                     onShare={sharePost}
                     post={post}
                     showCommunityHeader={false}
@@ -444,6 +480,7 @@ export const CommunityDetailLogic = ({
       ) : null}
 
       {shareDestinationDialog}
+      {lectumDownloadDialog}
     </PrivateTemplate>
   );
 };

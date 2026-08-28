@@ -12,6 +12,7 @@ export type CommunityPostCardProps = {
   footerExtra?: ReactNode;
   headerExtra?: ReactNode;
   interactiveActions?: boolean;
+  onOpenSocialVideoPreview?: (post: PostListPost, replyId?: string | null) => void;
   onShare: (post: PostListPost) => void;
   openPostOnCardClick?: boolean;
   post: PostListPost;

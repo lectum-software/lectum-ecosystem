@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { type ReactNode, useEffect, useState } from "react";
+import { type MouseEventHandler, type ReactNode, useEffect, useState } from "react";
 import {
   type ContentVideoWatchTrackingTarget,
   useContentVideoWatchTracking,
@@ -223,6 +223,13 @@ export const getCommunityMediaSizes = (
   orientation: CommunityMediaOrientation,
 ) => mediaFrameSizes[variant][orientation];
 
+type CommunityMediaOverlayAction = {
+  ariaLabel: string;
+  disabled?: boolean;
+  icon: ReactNode;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+};
+
 type CommunityMediaBlockProps = {
   alt: string;
   analyticsTarget?: ContentVideoWatchTrackingTarget;
@@ -231,6 +238,7 @@ type CommunityMediaBlockProps = {
   imageClassName?: string;
   mediaType: string | null;
   mediaUrl: string | null;
+  overlayAction?: CommunityMediaOverlayAction;
   roundedClassName?: string;
   sizes?: string;
   thumbnailUrl?: string | null;
@@ -247,6 +255,7 @@ export const CommunityMediaBlock = ({
   imageClassName,
   mediaType,
   mediaUrl,
+  overlayAction,
   roundedClassName = "rounded-[22px]",
   sizes,
   thumbnailUrl,
@@ -370,24 +379,42 @@ export const CommunityMediaBlock = ({
   if (normalizedMediaType === "video") {
     return (
       <div className={frameClassName}>
-        <VerticalVideoPlayer
-          className={cn(
-            "w-full border-border shadow-none",
-            videoMediaFrameAspectClassName[orientation],
-            mediaRoundedClassName,
-            viewportClassName,
-            videoClassName,
-          )}
-          controlsVariant="persistent"
-          fit="contain"
-          fullscreenVariant="content"
-          onVideoElementReady={handleVideoElementReady}
-          persistentControlsLayout="media"
-          poster={resolvedPosterUrl}
-          src={resolvedUrl}
-          style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
-          title={alt}
-        />
+        <div className="relative w-full">
+          <VerticalVideoPlayer
+            className={cn(
+              "w-full border-border shadow-none",
+              videoMediaFrameAspectClassName[orientation],
+              mediaRoundedClassName,
+              viewportClassName,
+              videoClassName,
+            )}
+            controlsVariant="persistent"
+            fit="contain"
+            fullscreenVariant="content"
+            onVideoElementReady={handleVideoElementReady}
+            persistentControlsLayout="media"
+            poster={resolvedPosterUrl}
+            src={resolvedUrl}
+            style={videoAspectRatio ? { aspectRatio: videoAspectRatio } : undefined}
+            title={alt}
+          />
+          {overlayAction ? (
+            <button
+              aria-label={overlayAction.ariaLabel}
+              className="absolute top-3 right-3 z-20 grid h-11 w-11 place-items-center rounded-full border border-media-foreground/25 bg-media-background/35 text-media-foreground backdrop-blur-md transition hover:bg-media-background/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 disabled:pointer-events-none disabled:opacity-60"
+              data-post-card-ignore-click="true"
+              disabled={overlayAction.disabled}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                overlayAction.onClick(event);
+              }}
+              type="button"
+            >
+              {overlayAction.icon}
+            </button>
+          ) : null}
+        </div>
         {footer}
       </div>
     );

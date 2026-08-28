@@ -240,6 +240,7 @@ export const AboutTab = ({
   canReviewProfile,
   canInteractPosts,
   onTabChange,
+  onOpenSocialVideoPreview,
   onSharePost,
   postsPreview,
   profile,
@@ -248,6 +249,7 @@ export const AboutTab = ({
   canReviewProfile: boolean;
   canInteractPosts: boolean;
   onTabChange: (tab: ProfileTab, options?: ProfileTabNavigationOptions) => void;
+  onOpenSocialVideoPreview?: (post: PostListPost, replyId?: string | null) => void;
   onSharePost: (post: PostListPost) => void;
   postsPreview: {
     isError: boolean;
@@ -332,6 +334,7 @@ export const AboutTab = ({
         highlightedPublication={postsPreview.highlightedPublication}
         isError={postsPreview.isError}
         isLoading={postsPreview.isLoading}
+        onOpenSocialVideoPreview={onOpenSocialVideoPreview}
         onShare={onSharePost}
         onViewAll={() => onTabChange("publicacoes", { scrollToContentTop: true })}
         posts={postsPreview.posts}

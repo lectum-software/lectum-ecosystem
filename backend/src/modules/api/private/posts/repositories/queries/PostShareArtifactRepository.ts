@@ -98,6 +98,7 @@ type ReplyShareArtifactTarget = Prisma.post_replyGetPayload<{
 }>;
 
 export type ShareArtifactTarget = {
+  authorId: string;
   cacheKey: string;
   layoutVersion: string;
   postId: string;
@@ -182,6 +183,7 @@ const toPostShareArtifactTarget = (post: PostShareArtifactTarget): ShareArtifact
   });
 
   return {
+    authorId: post.author.id,
     cacheKey,
     layoutVersion: POST_SHARE_ARTIFACT_LAYOUT_VERSION,
     postId: post.id,
@@ -227,6 +229,7 @@ const toReplyShareArtifactTarget = (
   });
 
   return {
+    authorId: reply.author.id,
     cacheKey,
     layoutVersion: POST_SHARE_ARTIFACT_LAYOUT_VERSION,
     postId: reply.post.id,

@@ -23,12 +23,15 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
+  createLectumSharePostVideoDownloadTarget,
   createLectumShareTargetFromHighlightedReply,
+  createLectumShareVideoDownloadTarget,
 } from "@/utils/lectum-share-target";
 import { AboutTab } from "./components/about";
 import { ProfileHero, ProfileMobileStickyHeader } from "./components/hero";
@@ -63,6 +66,7 @@ export const PsychologistProfileLogic = () => {
   const trackedProfileViewRef = useRef<string | null>(null);
   const trackedTabOpenRef = useRef<string | null>(null);
   const currentUser = useAppSelector((state) => state.user);
+  const currentPsychologistUserId = currentUser?.role === "psicologo" ? currentUser.id : null;
   const conversion = useProgressiveConversion();
   const id = params.id;
   const canInspectInactiveOwnProfile = currentUser?.role === "psicologo" && currentUser.id === id;
@@ -84,6 +88,7 @@ export const PsychologistProfileLogic = () => {
       window.setTimeout(() => setShareFeedback(false), 2500);
     },
   });
+  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const profile = profileQuery.data;
   const loadedProfileId = profile?.id;
   const postsPreview = useDirectoryPsychologistPosts(
@@ -362,6 +367,37 @@ export const PsychologistProfileLogic = () => {
     );
   };
 
+  const openSocialVideoPreview = useCallback(
+    (post: PostListPost, replyId?: string | null) => {
+      if (typeof window === "undefined") return;
+      if (!currentPsychologistUserId) return;
+
+      const relativeUrl = profilePublicationHref(post);
+
+      if (replyId) {
+        const replyTarget =
+          post.highlighted_professional_reply?.id === replyId
+            ? post.highlighted_professional_reply
+            : null;
+
+        if (!replyTarget || replyTarget.author.id !== currentPsychologistUserId) return;
+
+        const socialTarget = createLectumShareVideoDownloadTarget(post, replyTarget, {
+          parentContent: replyTarget.parent_content ?? null,
+          relativeUrl,
+        });
+        if (socialTarget) openLectumDownloadDialog(socialTarget);
+        return;
+      }
+
+      if (post.author.id !== currentPsychologistUserId) return;
+
+      const socialTarget = createLectumSharePostVideoDownloadTarget(post, { relativeUrl });
+      if (socialTarget) openLectumDownloadDialog(socialTarget);
+    },
+    [currentPsychologistUserId, openLectumDownloadDialog],
+  );
+
   const goBack = () => {
     if (activeTab !== "geral") {
       setActiveTab("geral", { history: "replace" });
@@ -493,6 +529,7 @@ export const PsychologistProfileLogic = () => {
                       canInteractPosts={canInteractWithPosts}
                       onTabChange={setActiveTab}
                       onSharePost={sharePost}
+                      onOpenSocialVideoPreview={openSocialVideoPreview}
                       postsPreview={{
                         isError: postsPreview.isError,
                         isLoading: postsPreview.isLoading,
@@ -521,6 +558,7 @@ export const PsychologistProfileLogic = () => {
                       isLoading={publications.isLoading}
                       onBackToOverview={() => setActiveTab("geral", { history: "replace" })}
                       onLoadMore={loadMorePublications}
+                      onOpenSocialVideoPreview={openSocialVideoPreview}
                       onShare={sharePost}
                       posts={publicationItems}
                       summary={firstPublicationPage?.summary ?? EMPTY_PUBLICATIONS_SUMMARY}
@@ -553,6 +591,7 @@ export const PsychologistProfileLogic = () => {
       </div>
 
       {shareDestinationDialog}
+      {lectumDownloadDialog}
     </PrivateTemplate>
   );
 };

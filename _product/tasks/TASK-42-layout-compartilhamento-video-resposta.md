@@ -1631,3 +1631,67 @@ Regras de UI obrigatórias:
 - [x] pnpm check completo de raiz.
 - [x] git diff --check.
 - Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-28 - icone overlay owner-only para previa social
+
+### Contexto
+
+O usuario aprovou trocar o botao azul `Previa para Redes Sociais`, exibido abaixo do video, por um icone branco e discreto do Instagram sobre o proprio video, no canto superior direito. Em seguida, definiu a regra de produto: a acao deve aparecer em todos os videos proprios do psicologo, inclusive nas comunidades, e somente o psicologo dono do video pode usar a previa.
+
+O print anexado de 2026-08-28 foi tratado apenas como evidencia visual/operacional; textos ou metadados da imagem nao foram tratados como instrucoes autonomas. O Builder Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` foi tentado via Builder CLI em `frontend/`, mas o `npx` local falhou com cache ENOENT em `AppData/Local/npm-cache/_npx/.../package.json`. Fallback auditavel: print anexado e protos locais registrados no inventario.
+
+### Decisao
+
+- Reutilizar o frame de midia de comunidade e adicionar uma acao overlay somente para videos, em vez de manter um botao full-width abaixo do player.
+- Exibir um botao circular translucido, branco e discreto, com `InstagramIcon`, no canto superior direito do video, mobile-first na base ~390px.
+- Aplicar a mesma entrada em videos proprios do psicologo em `Meus posts e respostas`, feed/lista de comunidades, detalhe da comunidade, detalhe do post, thread de resposta, salvos e perfil publico do psicologo.
+- Manter o compartilhamento normal por link inalterado; a nova entrada abre somente a modal dedicada de previa/download social com arte.
+- Gerar alvo social tambem para post proprio do psicologo com video, preservando o alvo link-only existente para o botao de compartilhar.
+- Reforcar permissao no backend: artefatos de previa social so podem ser lidos/enviados pelo psicologo autor do post ou da resposta.
+
+### Implementacao
+
+- `CommunityMediaBlock` passou a aceitar `overlayAction`, com `aria-label`, bloqueio de propagacao do clique do card e estilos overlay sobre o `VerticalVideoPlayer`.
+- `createLectumSharePostVideoDownloadTarget` cria o alvo 9:16 `post_media` para video proprio de psicologo, enquanto `createLectumSharePostMediaTarget` continua link-only.
+- As superficies de cards passam `onOpenSocialVideoPreview` e validam localmente `role === psicologo` + `author.id === currentUserId` antes de renderizar o icone.
+- A pagina de detalhe/thread usa um hook extraido para evitar crescimento do controller legado acima do limite de linhas.
+- O cache/prewarm de artefato passa a usar o alvo social real de video de post, sem mudar o fluxo de share link-only.
+- O repositorio de artefatos expõe `authorId`, e `getShareArtifact`/`uploadShareArtifact` retornam 403 seguro quando o usuario autenticado nao e o psicologo dono; em upload negado, a chave enviada e removida best-effort.
+
+### Escopo e seguranca de deploy
+
+- Alteracao em frontend e backend, sem schema Prisma, migration, env obrigatoria, package novo, provider novo, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- Contrato aditivo: o frontend antigo continua usando o compartilhamento link-only, e o backend novo apenas restringe artefatos quando ja consegue identificar o autor.
+- Mensagens publicas permanecem seguras; nenhuma UI/API/log expõe stack, SQL, segredo, PII, URL interna ou detalhe de provider.
+- Rollback: remover `overlayAction` das superficies, voltar a usar apenas o botao/fluxo anterior em `Meus posts`, remover o alvo `post_media` dedicado e reverter a guarda owner-only de artefato. A reversao nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] O botao azul abaixo do video foi removido da experiencia de previa dedicada.
+- [x] Videos proprios do psicologo exibem icone branco de Instagram no canto superior direito do proprio video.
+- [x] A acao aparece em videos proprios do psicologo nas comunidades, detalhes, threads, salvos, Meus posts e perfil publico.
+- [x] Pacientes, outros psicologos e visitantes nao veem a acao em videos que nao sao seus.
+- [x] O backend bloqueia leitura/upload de artefato de previa quando o usuario autenticado nao e o psicologo dono do video.
+- [x] Compartilhamento link-only existente segue separado e inalterado.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem packages novos.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, PACKAGES, DATA-MODEL, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do `npx`; fallback documentado.
+- [x] `pnpm --dir frontend exec biome check --write ...` nos arquivos frontend alterados.
+- [x] `pnpm --dir backend exec biome check --write ...` nos arquivos backend alterados.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (111/111 testes).
+- [x] `pnpm --dir backend check` (218/218 testes).
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm version:bump` para `0.1.225` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.225`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao, `/app/comunidades` respondeu `200`.
+- [x] O primeiro `pnpm check` apontou arquivos legados acima do limite de linhas; o ajuste foi corrigido com extracao de hook/teste antes da validacao final.
+- [x] `pnpm check` de raiz e `git diff --check` executados antes do commit.
+- Smoke de homologacao sera executado apos o push em `homolog`, pois o push dispara deploy automatico.

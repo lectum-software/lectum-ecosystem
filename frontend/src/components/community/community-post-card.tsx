@@ -24,7 +24,9 @@ import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 import {
   formatCommunityPostTime as formatPostTimeLabel,
@@ -52,6 +54,7 @@ export const CommunityPostCard = ({
   headerExtra,
   hoverTone = "primary",
   interactiveActions = false,
+  onOpenSocialVideoPreview,
   onShare,
   openPostOnCardClick = true,
   post,
@@ -66,6 +69,7 @@ export const CommunityPostCard = ({
   statusBadge,
 }: CommunityPostCardProps) => {
   const router = useRouter();
+  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const contributionType = (post as ProfileContributionPost).contribution_type;
   const primaryReply =
     profilePublicationMode && contributionType === "reply"
@@ -108,6 +112,13 @@ export const CommunityPostCard = ({
   const shouldCompactProfileReplyMedia =
     profilePublicationMode && isReplyContribution && Boolean(primaryReply);
   const isPsychologistPost = displayAuthor.role === "psicologo";
+  const canOpenDisplayVideoPreview =
+    Boolean(onOpenSocialVideoPreview) &&
+    Boolean(currentUserId) &&
+    displayAuthor.role === "psicologo" &&
+    displayAuthor.id === currentUserId &&
+    displayMediaType === "video" &&
+    Boolean(displayMediaUrl);
   const isAnonymousPatient = !primaryReply && !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost
     ? `/psicologos/${displayAuthor.id}`
@@ -508,11 +519,26 @@ export const CommunityPostCard = ({
             footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
+            overlayAction={
+              canOpenDisplayVideoPreview
+                ? {
+                    ariaLabel: "Abrir prévia para redes sociais",
+                    icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
+                    onClick: () => onOpenSocialVideoPreview?.(post, primaryReply?.id ?? null),
+                  }
+                : undefined
+            }
             thumbnailUrl={displayThumbnailUrl}
             variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
           />
         )}
         <ProfessionalReplyPreview
+          currentUserId={currentUserId}
+          onOpenSocialVideoPreview={
+            onOpenSocialVideoPreview
+              ? (replyId) => onOpenSocialVideoPreview(post, replyId)
+              : undefined
+          }
           postHref={postHref}
           presentation={isFeedPresentation ? "feed" : "default"}
           profilePublicationMode={profilePublicationMode}

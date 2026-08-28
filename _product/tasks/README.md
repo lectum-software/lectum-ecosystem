@@ -1025,3 +1025,10 @@ Uma task só pode ser marcada como concluída quando:
 - A mudanca remove a percepcao de duas faixas de background em desktop, especialmente ao expandir/recolher a sidebar, sem alterar cards, conteudo, tabs, WhatsApp, SEO ou dados do psicologo.
 - Builder Quick Copy foi tentado apenas para inspecao, mas o `npx` local falhou no cache; a referencia visual auditavel usada foi o print do usuario e `_product/proto/Feed Comunidade.jpg` / `_product/proto/Perfil Profissional - Sobre.jpg`.
 - Alteracao frontend-only, mobile-first, sem backend, migration, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-28: icone overlay owner-only para previa social de video
+
+- Ajuste pos-feedback da TASK-42: o botao azul `Previa para Redes Sociais` abaixo do video foi substituido por um icone branco e discreto do Instagram sobre o proprio video, no canto superior direito.
+- A acao aparece em todos os videos proprios do psicologo, inclusive nas comunidades, detalhes, threads, salvos, Meus posts e perfil publico; outros usuarios nao veem a entrada.
+- O backend agora valida que somente o psicologo autor do post/resposta pode ler ou enviar artefato de previa social, retornando erro seguro quando nao autorizado.
+- O compartilhamento link-only existente segue separado. Alteracao frontend+backend, sem migration, env obrigatoria, package, provider, mock, seed, reset ou limpeza de dados publicados.

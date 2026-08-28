@@ -32,6 +32,7 @@ export const RepliesList = ({
   onDeleteReply,
   onReply,
   onReportReply,
+  onOpenSocialVideoPreview,
   onShare,
   onSubmitReply,
   onVote,
@@ -59,6 +60,7 @@ export const RepliesList = ({
   onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
   onReportReply: (reply: PostReply) => void;
+  onOpenSocialVideoPreview?: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
     values: ReplyComposerForm,
@@ -131,6 +133,7 @@ export const RepliesList = ({
                   onDeleteReply={onDeleteReply}
                   onReply={onReply}
                   onReportReply={onReportReply}
+                  onOpenSocialVideoPreview={onOpenSocialVideoPreview}
                   onShare={onShare}
                   onSubmitReply={onSubmitReply}
                   onVote={onVote}

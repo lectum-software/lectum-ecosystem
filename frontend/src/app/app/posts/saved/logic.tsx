@@ -2,7 +2,7 @@
 
 import { Bookmark } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSavedPosts, useUnsavePostFromList, useUnsaveReplyFromList } from "@/api/callers/posts";
 import type { PostListPost } from "@/api/generator/types/posts";
 import { CommunityPostCard } from "@/components/community/community-post-card";
@@ -10,13 +10,17 @@ import { AppPageHeader } from "@/components/ui/app-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
+  createLectumSharePostVideoDownloadTarget,
+  createLectumShareVideoDownloadTarget,
   createLectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
 import { Pagination } from "./components/pagination";
@@ -25,6 +29,8 @@ import { SavedReplyCard } from "./components/saved-reply-card";
 import { PAGE_LIMIT, resolvePostsError, savedReplyHref } from "./modules/support";
 
 export const SavedPostsLogic = () => {
+  const currentUser = useAppSelector((state) => state.user);
+  const currentPsychologistUserId = currentUser?.role === "psicologo" ? currentUser.id : null;
   const [page, setPage] = useState(1);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [removedFeedback, setRemovedFeedback] = useState<string | null>(null);
@@ -36,6 +42,7 @@ export const SavedPostsLogic = () => {
       window.setTimeout(() => setShareFeedback(null), 2400);
     },
   });
+  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const unsavePostMutation = useUnsavePostFromList({
     onSuccess: () => {
       setRemovedFeedback("Post removido dos salvos.");
@@ -48,7 +55,7 @@ export const SavedPostsLogic = () => {
       window.setTimeout(() => setRemovedFeedback(null), 2400);
     },
   });
-  const items = postsQuery.data?.data ?? [];
+  const items = useMemo(() => postsQuery.data?.data ?? [], [postsQuery.data?.data]);
   const errorMessage = postsQuery.isError ? resolvePostsError(postsQuery.error) : null;
 
   const sharePost = async (post: PostListPost, replyId?: string) => {
@@ -79,6 +86,33 @@ export const SavedPostsLogic = () => {
       }),
     );
   };
+
+  const openSocialVideoPreview = useCallback(
+    (post: PostListPost, replyId?: string | null) => {
+      if (typeof window === "undefined") return;
+      if (!currentPsychologistUserId) return;
+
+      if (!replyId) {
+        if (post.author.id !== currentPsychologistUserId) return;
+
+        const socialTarget = createLectumSharePostVideoDownloadTarget(post);
+        if (socialTarget) openLectumDownloadDialog(socialTarget);
+        return;
+      }
+
+      const replyTarget = items.find(
+        (item) => item.reply?.id === replyId && item.post.id === post.id,
+      )?.reply;
+
+      if (!replyTarget || replyTarget.author.id !== currentPsychologistUserId) return;
+
+      const socialTarget = createLectumShareVideoDownloadTarget(post, replyTarget, {
+        parentContent: replyTarget.parent_content ?? null,
+      });
+      if (socialTarget) openLectumDownloadDialog(socialTarget);
+    },
+    [currentPsychologistUserId, items, openLectumDownloadDialog],
+  );
 
   return (
     <PrivateTemplate
@@ -146,8 +180,10 @@ export const SavedPostsLogic = () => {
               {items.map((item) =>
                 item.type === "reply" ? (
                   <SavedReplyCard
+                    currentUserId={currentPsychologistUserId}
                     item={item}
                     key={item.id}
+                    onOpenSocialVideoPreview={openSocialVideoPreview}
                     onRemove={(postId, replyId) => unsaveReplyMutation.mutate({ postId, replyId })}
                     onShare={sharePost}
                     removePending={unsaveReplyMutation.isPending}
@@ -156,6 +192,7 @@ export const SavedPostsLogic = () => {
                   <CommunityPostCard
                     key={item.id}
                     interactiveActions
+                    onOpenSocialVideoPreview={openSocialVideoPreview}
                     onShare={sharePost}
                     openPostOnCardClick
                     post={item.post}
@@ -187,6 +224,7 @@ export const SavedPostsLogic = () => {
       </section>
 
       {shareDestinationDialog}
+      {lectumDownloadDialog}
     </PrivateTemplate>
   );
 };

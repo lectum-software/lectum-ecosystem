@@ -29,16 +29,19 @@ import {
 
 export const ProfileCommunityPostCard = ({
   canInteract,
+  onOpenSocialVideoPreview,
   onShare,
   post,
 }: {
   canInteract: boolean;
+  onOpenSocialVideoPreview?: (post: PostListPost, replyId?: string | null) => void;
   onShare: (post: PostListPost) => void;
   post: DirectoryPsychologistProfilePost;
 }) => (
   <CommunityPostCard
     desktopPlainLinks
     interactiveActions={canInteract}
+    onOpenSocialVideoPreview={onOpenSocialVideoPreview}
     onShare={onShare}
     openPostOnCardClick
     post={post}
@@ -176,6 +179,7 @@ export const PostsPreviewSection = ({
   highlightedPublication,
   isError,
   isLoading,
+  onOpenSocialVideoPreview,
   onShare,
   onViewAll,
   posts,
@@ -185,6 +189,7 @@ export const PostsPreviewSection = ({
   highlightedPublication?: DirectoryPsychologistProfilePost | null;
   isError: boolean;
   isLoading: boolean;
+  onOpenSocialVideoPreview?: (post: PostListPost, replyId?: string | null) => void;
   onShare: (post: PostListPost) => void;
   onViewAll: () => void;
   posts: DirectoryPsychologistProfilePost[];
@@ -212,6 +217,7 @@ export const PostsPreviewSection = ({
         <div className="mt-3">
           <ProfileCommunityPostCard
             canInteract={canInteract}
+            onOpenSocialVideoPreview={onOpenSocialVideoPreview}
             onShare={onShare}
             post={featuredPost}
           />
@@ -237,6 +243,7 @@ export const PostsTab = ({
   isLoading,
   onBackToOverview,
   onLoadMore,
+  onOpenSocialVideoPreview,
   onShare,
   posts,
   summary,
@@ -251,6 +258,7 @@ export const PostsTab = ({
   isLoading: boolean;
   onBackToOverview: () => void;
   onLoadMore: () => void;
+  onOpenSocialVideoPreview?: (post: PostListPost, replyId?: string | null) => void;
   onShare: (post: PostListPost) => void;
   posts: DirectoryPsychologistProfilePost[];
   summary: DirectoryPsychologistParticipationSummary;
@@ -294,6 +302,7 @@ export const PostsTab = ({
             <ProfileCommunityPostCard
               canInteract={canInteract}
               key={`${post.contribution_type}-${post.id}-${post.highlighted_professional_reply?.id ?? "post"}`}
+              onOpenSocialVideoPreview={onOpenSocialVideoPreview}
               onShare={onShare}
               post={post}
             />

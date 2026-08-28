@@ -76,7 +76,15 @@ type ShareTargetOptions = {
 
 type ShareablePostWithMedia = Pick<
   PostListPost,
-  "author" | "community" | "content" | "id" | "media_items" | "media_type" | "media_url" | "title"
+  | "author"
+  | "community"
+  | "content"
+  | "id"
+  | "media_items"
+  | "media_type"
+  | "media_url"
+  | "thumbnail_url"
+  | "title"
 >;
 
 const normalizeForComparison = (value?: string | null) =>
@@ -125,6 +133,26 @@ const isShareableMedia = (
 const hasShareablePostMedia = (post: ShareablePostWithMedia) =>
   (post.media_items ?? []).some((item) => isShareableMedia(item.media_url, item.media_type)) ||
   isShareableMedia(post.media_url, post.media_type);
+
+const getFirstShareablePostVideoMedia = (post: ShareablePostWithMedia) => {
+  const firstMedia = (post.media_items ?? [])[0];
+
+  if (firstMedia) {
+    return firstMedia.media_type === "video" && firstMedia.media_url
+      ? {
+          mediaUrl: firstMedia.media_url,
+          posterUrl: firstMedia.thumbnail_url ?? null,
+        }
+      : null;
+  }
+
+  return post.media_type === "video" && post.media_url
+    ? {
+        mediaUrl: post.media_url,
+        posterUrl: post.thumbnail_url ?? null,
+      }
+    : null;
+};
 
 const createLectumSocialShareTitle = (professionalName: string) =>
   `${professionalName.replace(/\s+/g, " ").trim() || "Lectum"} na Lectum`;
@@ -196,6 +224,46 @@ export const createLectumShareTargetFromHighlightedReply = (
   if (!post.highlighted_professional_reply) return null;
 
   return createLectumShareVideoTarget(post, post.highlighted_professional_reply);
+};
+
+export const createLectumSharePostVideoDownloadTarget = (
+  post: ShareablePostWithMedia,
+  options: ShareTargetOptions = {},
+): LectumShareSocialTarget | null => {
+  if (!isProfessionalAuthor(post.author)) return null;
+
+  const videoMedia = getFirstShareablePostVideoMedia(post);
+  if (!videoMedia) return null;
+
+  const sourceText = post.title.trim() || post.content.trim() || "Post na Lectum";
+  const relativeUrl = options.relativeUrl ?? postRelativeUrl(post);
+  const professionalName =
+    normalizeLectumShareProfessionalName(post.author.name) || post.author.name;
+
+  return {
+    cardLabel: "Postado na Lectum",
+    carouselCount: 1,
+    kind: "post_media",
+    mediaItems: [{ mediaType: "video", mediaUrl: videoMedia.mediaUrl }],
+    mediaType: "video",
+    mediaUrl: videoMedia.mediaUrl,
+    posterUrl: videoMedia.posterUrl,
+    postId: post.id,
+    professional: {
+      avatar: post.author.avatar,
+      name: professionalName,
+      roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
+      verified: post.author.verified,
+    },
+    replyId: null,
+    responseText: post.content.trim() || null,
+    shareText: sourceText,
+    shareTitle: createLectumSocialShareTitle(professionalName),
+    shareUrl: toAbsoluteShareUrl(relativeUrl),
+    sourceKind: "post",
+    sourceText,
+    whatsappShareUrl: toAbsoluteShareUrl(relativeUrl),
+  };
 };
 
 export const createLectumShareVideoDownloadTarget = (
