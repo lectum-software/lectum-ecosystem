@@ -204,7 +204,19 @@ export const LectumShareDownloadDialog = ({
         data-post-card-ignore-click="true"
         role="dialog"
       >
-        <div className="flex justify-end">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 pt-1">
+            <h2
+              className="text-base font-black leading-tight tracking-[-0.01em]"
+              id="lectum-share-download-title"
+            >
+              Publique nas redes sociais
+            </h2>
+            <p className="mt-1 max-w-[17rem] text-muted-foreground text-sm leading-5 sm:max-w-none">
+              Baixe o vídeo com a arte da Lectum e poste no Instagram, TikTok ou Shorts.
+            </p>
+          </div>
+
           <button
             aria-label="Fechar"
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-background text-muted-foreground transition hover:text-foreground disabled:opacity-60"
@@ -215,10 +227,6 @@ export const LectumShareDownloadDialog = ({
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-
-        <h2 className="sr-only" id="lectum-share-download-title">
-          Baixar vídeo
-        </h2>
 
         <div className="mx-auto w-[min(76vw,320px)] min-w-[220px]">
           {resolvedMediaUrl ? (

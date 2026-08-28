@@ -1899,3 +1899,48 @@ Os prints anexados de 2026-08-28 foram tratados apenas como evidencia visual/ope
 - [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.229`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
 - [x] `pnpm check` completo de raiz e `git diff --check` executados antes do commit.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-28 - microcopy de orientacao na previa social
+
+### Contexto
+
+O usuario sugeriu incluir, na parte superior da modal de previa social, um texto orientando o psicologo a baixar o video para publica-lo nas redes sociais. O print anexado de 2026-08-28 foi tratado apenas como evidencia visual/operacional; textos ou metadados da imagem nao foram considerados instrucoes autonomas. O Builder Quick Copy ativo vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a foi tentado novamente em frontend/, mas o npx local seguiu falhando com ENOENT no cache; fallback auditavel: print anexado, protos locais e codigo existente da modal.
+
+### Decisao
+
+- Adicionar um cabecalho visual compacto no topo de LectumShareDownloadDialog, preservando o botao de fechar no canto superior direito.
+- Usar o titulo "Publique nas redes sociais" e a orientacao "Baixe o video com a arte da Lectum e poste no Instagram, TikTok ou Shorts.".
+- Reaproveitar o proprio h2 como label acessivel da modal via aria-labelledby="lectum-share-download-title", evitando titulo apenas sr-only.
+- Nao alterar o video exportado, a animacao/sheet, o CTA "Baixar video", o texto copiavel abaixo do video, a modal de criar post nem a regra owner-only da previa.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, env obrigatoria, package novo, provider, mock, seed, reset, db push, limpeza de bucket ou dado destrutivo.
+- Rollback: remover o bloco de microcopy do topo da modal e restaurar o titulo acessivel sr-only; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] A modal de previa social exibe texto superior orientando o psicologo a baixar o video para postar nas redes sociais.
+- [x] O cabecalho permanece mobile-first, compacto e com o botao de fechar preservado no topo direito.
+- [x] A acessibilidade da modal continua usando aria-labelledby="lectum-share-download-title".
+- [x] A modal de criar post nao foi alterada.
+- [x] O video exportado, a legenda copiavel e a regra owner-only nao foram alterados.
+- [x] UI sem <img> cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; db:migrate nao se aplica.
+- [x] ADR atualizado em adrs/0191-layout-compartilhamento-social-video-resposta.md.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como homolog antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do npx; fallback documentado.
+- [x] pnpm --dir frontend exec biome check --write src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-social-preview.test.mjs.
+- [x] pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs (1/1).
+- [x] pnpm --dir frontend check (111/111 testes).
+- [x] pnpm --dir frontend build antes e depois do bump.
+- [x] pnpm version:bump para 0.1.230 e pnpm check:version.
+- [x] Smoke local do frontend buildado em http://127.0.0.1:3210: /version respondeu 0.1.230, /app/comunidades respondeu 200, /app/publicacoes/minhas respondeu 307 esperado sem sessao.
+- [x] pnpm check completo de raiz e git diff --check executados antes do commit.
+- Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.

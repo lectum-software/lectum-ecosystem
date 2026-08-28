@@ -1174,4 +1174,26 @@ O iPhone mostrou dois problemas no fluxo dedicado de previa social: o simbolo do
 
 ### Validacao
 
-As validacoes finais do ajuste serao registradas na TASK-42 nesta execucao.
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.229, incluindo teste estatico da previa/media, frontend check, build antes/depois do bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
+
+## Ajuste 2026-08-28 - microcopy de orientacao no topo da previa social
+
+### Contexto
+
+A modal dedicada de previa social ja concentrava a arte do video e a acao "Baixar video", mas o topo ficava visualmente vazio e nao explicava claramente ao psicologo o proximo passo: baixar o arquivo para publicar em redes sociais.
+
+### Decisao
+
+- Incluir microcopy explicativa no topo da modal: titulo "Publique nas redes sociais" e subtitulo orientando baixar o video com a arte da Lectum para Instagram, TikTok ou Shorts.
+- Manter o botao de fechar no topo direito e reaproveitar o titulo visual como label acessivel do dialog.
+- Limitar a mudanca a UI da modal; o artefato exportado, o cache/versionamento do layout, a legenda copiavel, a animacao da sheet e a permissao owner-only permanecem inalterados.
+
+### Consequencias
+
+- O psicologo entende a finalidade da tela antes de tocar em "Baixar video", sem adicionar outro passo ou CTA.
+- O topo da sheet fica mais informativo sem alterar a modal de criar post nem contratos de API.
+- Mudanca frontend-only; sem env, package, migration, backend, admin UI ou dados publicados. Rollback simples removendo o bloco de microcopy e restaurando o label apenas visualmente oculto.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.230, incluindo teste estatico da previa social, frontend check, build antes/depois do bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.

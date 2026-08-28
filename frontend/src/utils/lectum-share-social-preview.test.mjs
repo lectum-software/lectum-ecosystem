@@ -185,8 +185,14 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.doesNotMatch(downloadDialogSource, /bg-surface-muted\/70/);
   assert.doesNotMatch(downloadDialogSource, />Descrição<\/p>/);
   assert.match(downloadDialogSource, /<Copy className="h-4 w-4"/);
+  assert.match(downloadDialogSource, /id="lectum-share-download-title"/);
+  assert.match(downloadDialogSource, /Publique nas redes sociais/);
+  assert.match(
+    downloadDialogSource,
+    /Baixe o v.deo com a arte da Lectum e poste no Instagram, TikTok ou Shorts\./,
+  );
   assert.match(downloadDialogSource, /Baixar v.deo/);
-  assert.doesNotMatch(downloadDialogSource, /WhatsApp|Instagram|TikTok|Copiar link|9:16/);
+  assert.doesNotMatch(downloadDialogSource, /WhatsApp|Copiar link|9:16/);
   assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /isAppleMobileShareDownloadRuntime/);
   assert.match(mediaSource, /shareFileThroughAppleMobileSheet/);

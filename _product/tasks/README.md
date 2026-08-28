@@ -1063,3 +1063,10 @@ Uma task só pode ser marcada como concluída quando:
 - O download dedicado da previa social passa a tratar iPhone/iPad de forma especifica: antes de cair no download por Object URL, tenta a Web Share API com arquivo para abrir a folha nativa de salvar/abrir, evitando navegar para a tela cinza do MP4.
 - A tela cinza nativa do iOS/Safari, quando ja aberta, nao e fechada de forma confiavel por JavaScript; por isso o produto passa a evitar essa navegacao. Se a geracao demorar e perder a ativacao do gesto, a modal segue aberta e orienta tocar novamente em `Baixar video` com o arquivo ja preparado.
 - Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-28: orientacao no topo da previa social
+
+- Ajuste pos-feedback da TASK-42: a modal de previa social passa a abrir com um cabecalho compacto, "Publique nas redes sociais", seguido da orientacao para baixar o video com a arte da Lectum e postar no Instagram, TikTok ou Shorts.
+- O texto ocupa a area superior antes usada quase so pelo botao de fechar; o fechamento continua no canto superior direito e o titulo tambem rotula a modal por aria-labelledby.
+- A modal de criar post nao foi alterada, e a mudanca nao mexe no video exportado, legenda copiavel, regra owner-only, cache de artefatos ou compartilhamento link-only.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
