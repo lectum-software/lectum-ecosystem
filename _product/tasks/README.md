@@ -1070,3 +1070,10 @@ Uma task só pode ser marcada como concluída quando:
 - O texto ocupa a area superior antes usada quase so pelo botao de fechar; o fechamento continua no canto superior direito e o titulo tambem rotula a modal por aria-labelledby.
 - A modal de criar post nao foi alterada, e a mudanca nao mexe no video exportado, legenda copiavel, regra owner-only, cache de artefatos ou compartilhamento link-only.
 - Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-28: previa social pausa fundo e reproduz com som
+
+- Ajuste pos-feedback da TASK-42: ao abrir a modal de previa social, qualquer audio/video que esteja tocando fora da sheet e pausado para nao manter o video de fundo em execucao.
+- O video dentro da modal fica marcado como previa social, e a abertura tenta reproduzi-lo com som usando o helper existente de playback sonoro; se o navegador bloquear autoplay com som, a midia permanece desmutada para interacao do usuario.
+- Ao fechar a modal, o video da propria previa e pausado para encerrar o som imediatamente.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.

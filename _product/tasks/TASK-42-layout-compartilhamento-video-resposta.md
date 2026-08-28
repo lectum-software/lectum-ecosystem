@@ -1944,3 +1944,48 @@ O usuario sugeriu incluir, na parte superior da modal de previa social, um texto
 - [x] Smoke local do frontend buildado em http://127.0.0.1:3210: /version respondeu 0.1.230, /app/comunidades respondeu 200, /app/publicacoes/minhas respondeu 307 esperado sem sessao.
 - [x] pnpm check completo de raiz e git diff --check executados antes do commit.
 - Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-28 - pausa de midia ao fundo e audio na previa social
+
+### Contexto
+
+O usuario reportou que, ao abrir a modal de previa social, o video que estava rodando ao fundo continuava tocando e a previa dentro da modal permanecia sem som. Nao houve novo anexo nesta solicitacao; a decisao segue a evidencia operacional da propria modal e os ajustes recentes da TASK-42. O Builder Quick Copy ativo vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a foi tentado novamente em frontend/, mas o npx local seguiu falhando com ENOENT no cache; fallback auditavel: protos locais, prints anteriores da previa social e codigo existente.
+
+### Decisao
+
+- Ao abrir a modal, pausar qualquer elemento audio/video que esteja tocando fora da sheet de previa, evitando audio ou movimento concorrente no fundo.
+- Excluir o video da propria modal dessa pausa por meio do seletor data-lectum-share-download-sheet.
+- Marcar o video da previa com data-lectum-share-preview-video e, ao abrir a modal, tentar reproduzi-lo com som usando playVideoWithSound.
+- Definir a previa como muted: false e volume seguro via helper existente, mantendo o fallback do navegador quando autoplay com som for bloqueado.
+- Ao fechar/desmontar a modal, pausar o video da propria previa para encerrar o som imediatamente.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, env obrigatoria, package novo, provider, mock, seed, reset, db push, limpeza de bucket ou dado destrutivo.
+- Rollback: remover a pausa de midia externa e voltar o video da modal para muted: true; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] Ao abrir a modal de previa social, midias audio/video em execucao fora da sheet sao pausadas.
+- [x] O video da propria modal nao e pausado pela rotina de pausa do fundo.
+- [x] O video da modal tenta iniciar/reiniciar com som ligado e muted: false.
+- [x] Ao fechar a modal, o video da propria previa e pausado.
+- [x] O download, a arte exportada, a legenda copiavel, a animacao da sheet, a microcopy e a regra owner-only nao foram alterados.
+- [x] UI mobile-first, sem <img> cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; db:migrate nao se aplica.
+- [x] ADR atualizado em adrs/0191-layout-compartilhamento-social-video-resposta.md.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como homolog antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do npx; fallback documentado.
+- [x] pnpm --dir frontend exec biome check --write src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-social-preview.test.mjs.
+- [x] pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs (1/1).
+- [x] pnpm --dir frontend check (111/111 testes).
+- [x] pnpm --dir frontend build antes e depois do bump.
+- [x] pnpm version:bump para 0.1.231 e pnpm check:version.
+- [x] Smoke local do frontend buildado em http://127.0.0.1:3210: /version respondeu 0.1.231, /app/comunidades respondeu 200, /app/publicacoes/minhas respondeu 307 esperado sem sessao.
+- [x] pnpm check completo de raiz e git diff --check executados antes do commit.
+- Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.

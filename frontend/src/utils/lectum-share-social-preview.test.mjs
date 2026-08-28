@@ -167,6 +167,16 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.doesNotMatch(downloadDialogSource, /fit="cover"/);
   assert.match(downloadDialogSource, /poster=\{resolvedPosterUrl\}/);
   assert.match(downloadDialogSource, /controls=\{false\}/);
+  assert.match(downloadDialogSource, /useLayoutEffect/);
+  assert.match(downloadDialogSource, /const pauseBackgroundMedia = \(\) =>/);
+  assert.match(downloadDialogSource, /querySelectorAll<HTMLMediaElement>\("audio, video"\)/);
+  assert.match(downloadDialogSource, /media\.closest\(PREVIEW_SHEET_SELECTOR\)/);
+  assert.match(downloadDialogSource, /const PREVIEW_VIDEO_SELECTOR/);
+  assert.match(downloadDialogSource, /playVideoWithSound\(previewVideo\)/);
+  assert.match(downloadDialogSource, /previewVideo\.pause\(\)/);
+  assert.match(downloadDialogSource, /"data-lectum-share-preview-video": "true"/);
+  assert.match(downloadDialogSource, /muted: false/);
+  assert.doesNotMatch(downloadDialogSource, /muted: true/);
   assert.match(downloadDialogSource, /maskImage: 'url\("\/logo-icon\.svg"\)'/);
   assert.match(downloadDialogSource, /WebkitMaskImage: 'url\("\/logo-icon\.svg"\)'/);
   assert.doesNotMatch(downloadDialogSource, /brightness-0 invert/);

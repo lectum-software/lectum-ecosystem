@@ -2,10 +2,11 @@
 
 import { Copy, Download, X } from "lucide-react";
 import type { CSSProperties } from "react";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { toast } from "sonner";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
+import { playVideoWithSound } from "@/lib/video-playback";
 import { storyCanvasLayout } from "@/utils/lectum-share-media/layout";
 import type { LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
@@ -20,6 +21,8 @@ type LectumShareDownloadDialogProps = {
 
 const SOURCE_TEXT_FALLBACK = "Conteúdo na Lectum";
 export const LECTUM_SHARE_PREVIEW_SHEET_EXIT_MS = 300;
+const PREVIEW_SHEET_SELECTOR = "[data-lectum-share-download-sheet]";
+const PREVIEW_VIDEO_SELECTOR = '[data-lectum-share-preview-video="true"]';
 const PREVIEW_LAYOUT = storyCanvasLayout;
 const PREVIEW_CARD = PREVIEW_LAYOUT.card;
 const PREVIEW_PROFESSIONAL_TAG = PREVIEW_LAYOUT.professionalTag;
@@ -117,6 +120,15 @@ const PreviewVerifiedBadge = () => (
   </span>
 );
 
+const pauseBackgroundMedia = () => {
+  for (const media of document.querySelectorAll<HTMLMediaElement>("audio, video")) {
+    if (media.closest(PREVIEW_SHEET_SELECTOR)) continue;
+    if (media.paused || media.ended) continue;
+
+    media.pause();
+  }
+};
+
 export const LectumShareDownloadDialog = ({
   disabled = false,
   onClose,
@@ -138,6 +150,30 @@ export const LectumShareDownloadDialog = ({
       document.body.style.overflow = previousBodyOverflow;
     };
   }, [target]);
+
+  useLayoutEffect(() => {
+    if (!open || !target || typeof document === "undefined") return;
+
+    pauseBackgroundMedia();
+
+    const previewVideo = document.querySelector<HTMLVideoElement>(PREVIEW_VIDEO_SELECTOR);
+    if (!previewVideo) return;
+
+    const playPreviewWithSound = () => {
+      void playVideoWithSound(previewVideo);
+    };
+
+    playPreviewWithSound();
+
+    previewVideo.addEventListener("loadedmetadata", playPreviewWithSound, { once: true });
+    previewVideo.addEventListener("canplay", playPreviewWithSound, { once: true });
+
+    return () => {
+      previewVideo.removeEventListener("loadedmetadata", playPreviewWithSound);
+      previewVideo.removeEventListener("canplay", playPreviewWithSound);
+      previewVideo.pause();
+    };
+  }, [open, target]);
 
   useEffect(() => {
     if (!open || disabled || typeof window === "undefined") return;
@@ -242,8 +278,9 @@ export const LectumShareDownloadDialog = ({
                 title={target.shareTitle}
                 videoProps={{
                   autoPlay: true,
+                  "data-lectum-share-preview-video": "true",
                   loop: true,
-                  muted: true,
+                  muted: false,
                 }}
               />
 

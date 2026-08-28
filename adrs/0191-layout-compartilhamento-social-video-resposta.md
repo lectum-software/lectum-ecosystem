@@ -1197,3 +1197,25 @@ A modal dedicada de previa social ja concentrava a arte do video e a acao "Baixa
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.230, incluindo teste estatico da previa social, frontend check, build antes/depois do bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
+
+## Ajuste 2026-08-28 - audio ativo na previa e pausa da midia de fundo
+
+### Contexto
+
+A entrada overlay da previa social pode ser aberta enquanto o video do card/feed ainda esta rodando. Isso gerava concorrencia visual e sonora potencial: a midia ao fundo seguia em execucao, enquanto a previa da modal estava mutada.
+
+### Decisao
+
+- A abertura da modal de previa social pausa elementos audio/video fora da propria sheet, sem tentar restaurar automaticamente a reproducao ao fundo no fechamento.
+- O video da modal e identificado com data-lectum-share-preview-video, configurado como muted: false e acionado por playVideoWithSound para tentar iniciar com som.
+- A rotina exclui elementos dentro de data-lectum-share-download-sheet para nao pausar a propria previa, e pausa essa previa no cleanup da modal.
+
+### Consequencias
+
+- O foco de reproducao passa para a previa social, reduzindo ruido e concorrencia com o card de origem.
+- Browsers que bloquearem autoplay com som continuam protegidos pela politica nativa; a Lectum tenta o som no gesto de abertura e mantem o video desmutado para uma interacao posterior.
+- Mudanca frontend-only; sem env, package, migration, backend, admin UI, contrato de API ou dados publicados. Rollback simples retornando a previa mutada e removendo a pausa global de midia da abertura.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.231, incluindo teste estatico da previa social, frontend check, build antes/depois do bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
