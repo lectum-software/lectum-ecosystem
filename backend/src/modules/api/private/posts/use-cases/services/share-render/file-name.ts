@@ -13,9 +13,10 @@ const normalizeFileBase = (value: string) =>
     .replace(/-+$/g, "");
 
 export const toShareRenderFileName = (
-  target: Pick<ShareRenderTarget, "postId" | "replyId" | "shareTitle">,
+  target: Pick<ShareRenderTarget, "postId" | "replyId" | "shareTitle" | "sourceText">,
 ) => {
-  const base = normalizeFileBase(target.shareTitle) || "lectum-video";
+  const base =
+    normalizeFileBase(`${target.shareTitle} ${target.sourceText}`.trim()) || "lectum-video";
   const suffix = target.replyId ? target.replyId : target.postId;
   const shortSuffix = normalizeFileBase(suffix).slice(0, 12) || "share";
 

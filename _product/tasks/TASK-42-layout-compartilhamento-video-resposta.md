@@ -2565,3 +2565,51 @@ O usuario anexou print do video baixado e apontou que a marca da Lectum a esquer
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-08-29 - nomes distintos no download social
+
+### Contexto
+
+O usuario validou em homologacao que downloads de videos diferentes chegavam todos como `Tulio Rezende na Lectum.mp4`, fazendo o Windows/browser renomear para `(1)` e `(2)` como se fossem repeticoes do mesmo arquivo. O print da pasta Downloads foi tratado somente como evidencia operacional/visual do resultado, nao como instrucao embutida.
+
+### Decisao
+
+- Manter o titulo de compartilhamento nativo como `Profissional na Lectum`, para nao alongar metadados da Web Share API.
+- Alterar somente o nome do arquivo baixado para `Profissional - Contexto - Lectum.ext`, usando `sourceText` ja resolvido pelo produto: pergunta do post, previa do comentario respondido ou titulo/conteudo do post com video.
+- Sanitizar caracteres invalidos de arquivo e limitar profissional/contexto para manter nomes legiveis e seguros em desktop/mobile.
+- Manter determinismo: o mesmo alvo gera o mesmo nome, permitindo `(1)`/`(2)` quando o usuario baixa o mesmo video novamente; alvos com contexto diferente geram nomes diferentes.
+- Diferenciar tambem o nome enviado pelo backend Chromium + MediaBunny no `Content-Disposition`, com contexto slugificado e sufixo estavel do post/resposta.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend + backend; admin acompanha apenas bump de versao no manifesto.
+- Sem schema Prisma, migration, backfill, seed, reset, `db push`, package novo, provider novo, FFmpeg, storage novo, env obrigatoria, mock ou limpeza de dados/buckets publicados.
+- Compatibilidade de rollout: frontend novo continua aceitando backend antigo porque envia o `File.name` desejado ao baixar o blob; backend novo melhora o header para clientes diretos/legados.
+- Rollback: reverter o commit restaura os nomes anteriores sem migracao de dados.
+
+### Criterios de aceite do ajuste
+
+- [x] Arquivos baixados pelo frontend usam nome profissional + contexto sanitizado + Lectum.
+- [x] Videos diferentes com `sourceText` diferente deixam de compartilhar o mesmo nome base.
+- [x] Baixar novamente o mesmo alvo continua deterministico, deixando o navegador/SO aplicar `(1)`/`(2)` quando houver duplicata local.
+- [x] Nome tecnico do backend para Chromium + MediaBunny inclui contexto sanitizado e sufixo estavel do post/resposta.
+- [x] Titulo nativo de compartilhamento permanece curto como `Profissional na Lectum`.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria ou FFmpeg; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Testes direcionados: `lectum-share-media.test.mjs`, `lectum-share-social-preview.test.mjs` e `share-render.test.ts`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.249` e `pnpm check:version`.
+- [x] `pnpm check:source-size` apos compactar o teste para nao aumentar arquivo legado acima do limite.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

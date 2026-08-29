@@ -1180,3 +1180,10 @@ Uma task só pode ser marcada como concluída quando:
 - O backend passa a embarcar `public/icon.png` e a aplicar o mesmo recorte por pixels azuis da marca antes de recolorir para branco/transparente no canvas quadrado do header.
 - O fallback vetorial local foi alinhado ao desenho real da marca, e as chaves efemeras de cache/job foram versionadas para nao reaproveitar resultados com o logo antigo.
 - Alteracao backend-only, admin/frontend apenas manifests de versao; sem schema, migration, env obrigatoria, package novo, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Atualizacao operacional em 2026-08-29: nomes distintos no download social
+
+- Ajuste pos-feedback da TASK-42: downloads de videos sociais deixam de usar somente `Nome na Lectum.mp4`, evitando que videos diferentes aparecam como o mesmo arquivo com `(1)`/`(2)`.
+- O frontend passa a montar o nome com profissional + trecho sanitizado da pergunta/comentario/post + Lectum, por exemplo `Tulio Rezende - Como aprender a impor limites - Lectum.mp4`. Repetir o mesmo video continua gerando o mesmo nome para o sistema operacional aplicar `(1)`/`(2)` quando fizer sentido.
+- O backend tambem diferencia o `Content-Disposition` da rota Chromium + MediaBunny com contexto slugificado e sufixo estavel do post/resposta.
+- Alteracao frontend + backend; admin apenas manifest de versao. Sem schema, migration, env obrigatoria, package novo, provider novo, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.

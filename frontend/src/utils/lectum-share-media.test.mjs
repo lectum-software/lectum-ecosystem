@@ -458,30 +458,26 @@ test("nome do arquivo compartilhavel usa profissional e contexto", () => {
     cardLabel: "Respondido na Lectum",
     kind: "video_response",
     professional: { name: "Ana Rubia Papi" },
+    sourceText: "Impor limites?",
   };
 
   assert.equal(shareFileTitle(target), "Ana Rubia Papi na Lectum");
-  assert.equal(safeFileName(target, "mp4"), "Ana Rubia Papi na Lectum.mp4");
-  assert.equal(
-    safeFileName(
-      {
-        ...target,
-        cardLabel: "Postado na Lectum",
-        kind: "post_media",
-      },
-      "mp4",
-    ),
-    "Ana Rubia Papi na Lectum.mp4",
+  assert.equal(safeFileName(target, "mp4"), "Ana Rubia Papi - Impor limites - Lectum.mp4");
+  assert.notEqual(
+    safeFileName(target, "mp4"),
+    safeFileName({ ...target, sourceText: "Outro tema da comunidade" }, "mp4"),
   );
+  assert.equal(safeFileName({ ...target, sourceText: "" }, "mp4"), "Ana Rubia Papi na Lectum.mp4");
   assert.equal(
     safeFileName(
       {
         ...target,
         professional: { name: "Dra. A/B:C* Psicologa" },
+        sourceText: "Ansiedade <hoje>?",
       },
       "mp4",
     ),
-    "Dra. ABC Psicologa na Lectum.mp4",
+    "Dra. A B C Psicologa - Ansiedade hoje - Lectum.mp4",
   );
 });
 

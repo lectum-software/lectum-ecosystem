@@ -111,13 +111,14 @@ test("renderizacao social publicada usa job assincrono para evitar resposta long
   assert.match(routesSource, /shareRenderJobValidator/);
 });
 
-test("nome do arquivo de renderizacao social nao expoe texto arbitrario", () => {
+test("nome do arquivo de renderizacao social usa contexto sanitizado e sufixo estavel", () => {
   assert.equal(
     toShareRenderFileName({
       postId: "post_1234567890abcdef",
       replyId: null,
       shareTitle: "Dra. Júlia / Lectum",
+      sourceText: "Como aprender a impor limites sem me sentir culpado?",
     }),
-    "dra-julia-lectum-post-1234567.mp4",
+    "dra-julia-lectum-como-aprender-a-impor-limites-sem-me-sentir-culpado-post-1234567.mp4",
   );
 });

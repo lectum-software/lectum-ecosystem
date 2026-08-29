@@ -1509,3 +1509,24 @@ O usuario apontou no MP4 baixado que o simbolo da Lectum ao lado de `Respondido 
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.248, incluindo teste direcionado do renderer backend, checks/builds relevantes, guardas de documentacao e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - nomes de arquivo por contexto do video social
+
+### Contexto
+
+Os MP4 baixados pelo fluxo social backend-only chegavam ao dispositivo com o mesmo nome base `Profissional na Lectum.mp4`. Quando o usuario baixava videos diferentes do mesmo profissional, o navegador/SO adicionava `(1)` e `(2)`, o que parecia repeticao do mesmo video e dificultava organizar a galeria/Downloads.
+
+### Decisao
+
+O nome do arquivo baixado passa a ser derivado de dados ja resolvidos pelo alvo social: nome profissional, `sourceText` da pergunta/comentario/post e sufixo Lectum. O titulo usado pela Web Share API permanece curto. A sanitizacao remove caracteres invalidos de filename e limita tamanho dos trechos. No backend, o `Content-Disposition` tambem recebe contexto slugificado e sufixo estavel de post/resposta para clientes diretos ou legados.
+
+### Consequencias
+
+- Videos diferentes ficam reconheciveis na pasta Downloads/galeria, por exemplo `Tulio Rezende - Como aprender a impor limites - Lectum.mp4`.
+- O mesmo alvo continua deterministico, permitindo que o SO use `(1)`/`(2)` somente em repeticoes locais do mesmo video.
+- O contexto usado no nome e o mesmo texto visivel na arte/preview; nao ha novo dado sensivel, contrato ou persistencia.
+- Sem schema, migration, env, package, FFmpeg, provider, storage ou job novo. Rollback simples reverte a formatacao do nome.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.249, incluindo testes direcionados de frontend/backend, checks/builds relevantes, versionamento sincronizado, `pnpm check`, guardas de documentacao/fonte e smoke de homologacao apos push.
