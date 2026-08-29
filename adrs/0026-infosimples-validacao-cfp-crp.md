@@ -120,3 +120,10 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - A UI mapeia `cfp_provider_config_error`, `cfp_provider_validation_error`, `cfp_provider_rate_limited`, `cfp_provider_unavailable`, `cfp_provider_error`, HTTP 5xx e falhas genericas de conexao para a copy escolhida: "O sistema do Conselho Federal de Psicologia esta indisponivel no momento. Fale com o suporte para continuarmos a verificacao manual do seu registro."
 - As traducoes backend dos erros `cfp_provider_*` foram alinhadas a mesma copy publica para tolerar rollout com frontend/backend em versoes diferentes e evitar termos como API automatica, configuracao, rate limit, token, endpoint ou provider.
 - A decisao nao altera provider, contrato, schema, armazenamento, limite de tentativas, logs ou politica de aprovacao: falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional.
+
+## Complemento 2026-08-29 - copy de suporte CFP sem repeticao
+
+- Decisao de produto: o alerta de falha CFP deve evitar repetir a orientacao de continuidade manual quando a mensagem principal ja informa esse caminho.
+- A UI mantem a mensagem publica de indisponibilidade e o CTA `Fale com o suporte pelo WhatsApp`, mas remove o paragrafo adicional "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp.".
+- A mudanca reduz redundancia visual no card mobile-first e nao altera provider, backend, contrato, codigos de erro, env, schema, armazenamento, limite de tentativas, logs ou politica de aprovacao.
+- Falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional; a continuidade manual segue pelo suporte/WhatsApp e aprovacao humana auditada.

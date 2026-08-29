@@ -349,3 +349,29 @@ Validacoes executadas:
 - Smoke estatico Node confirmou titulo, corpo, `cfp_provider_validation_error`, CTA de suporte e traducoes backend `cfp_provider_*` alinhados.
 - `pnpm check`
 - Browser local mobile-first 390x884 em `http://localhost:3000/psychologist/cfp`: rota protegida renderizou/redirecionou para login sem sessao, preservando o shell privado; o estado de erro nao foi forjado com mock.
+
+## Ajuste pos-feedback 2026-08-29 - remocao de copy duplicada no suporte CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp` e ao alias `/app/profissional/cfp`: remover o trecho "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp." do alerta de suporte.
+- `SupportGuidance` passa a renderizar apenas o CTA `Fale com o suporte pelo WhatsApp`, evitando repetir a orientacao manual que ja aparece na mensagem principal de indisponibilidade CFP.
+- A mensagem principal `cfpProviderUnavailableMessage`, o titulo `Sistema do CFP indisponivel`, o link de WhatsApp, os codigos de erro, o backend e a regra de aprovacao real/manual permanecem inalterados.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; o print anexado pelo usuario e a referencia local `_product/proto/Verificacao de CPF - Consulta CFP.jpg` foram usados como evidencia visual.
+- Alteracao frontend-only, mobile-first, sem schema Prisma, migration, endpoint, env, package novo, mock, seed, reset ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] O trecho "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp." nao aparece mais antes do botao de WhatsApp.
+- [x] O CTA `Fale com o suporte pelo WhatsApp` permanece disponivel no alerta CFP.
+- [x] Mensagens publicas continuam sanitizadas e a regra de aprovacao real/manual nao foi alterada.
+
+### Validacoes executadas pos-feedback
+
+- [x] `pnpm --dir frontend exec biome check --write "package.json" "src/app/psychologist/cfp/components/cfp-layout.tsx" "src/app/psychologist/cfp/components/cfp-copy.test.mjs"`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/psychologist/cfp/components/cfp-copy.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm version:bump` e `pnpm check:version` sincronizaram os manifests em `0.1.241`.
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] Browser local mobile-first 390x884 em `/psychologist/cfp`: rota protegida renderizou/redirecionou para login sem sessao, preservando o shell privado; o estado de erro nao foi forjado com mock.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.

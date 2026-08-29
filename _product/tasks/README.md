@@ -1131,3 +1131,9 @@ Uma task só pode ser marcada como concluída quando:
 - A previa visivel da modal foi reduzida para `min(58vw,220px)` com minimo de `190px`, e o gap interno foi compactado para `gap-3`, mantendo aspect ratio 9:16, arte, `contain`, audio, legenda copiavel e CTA `Baixar video` inalterados.
 - O overflow da sheet permanece apenas como fallback de acessibilidade para telas muito pequenas, zoom alto ou textos maiores; o layout padrao passa a caber completo sem barra de rolagem na viewport desktop reportada.
 - Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-29: remocao de copy duplicada no suporte CFP
+
+- Ajuste pos-feedback da TASK-10: o bloco de suporte em `/psychologist/cfp`/`/app/profissional/cfp` deixa de exibir o trecho "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp.", mantendo o CTA `Fale com o suporte pelo WhatsApp`.
+- O print anexado em 2026-08-29 foi usado somente como evidencia visual do trecho duplicado; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
