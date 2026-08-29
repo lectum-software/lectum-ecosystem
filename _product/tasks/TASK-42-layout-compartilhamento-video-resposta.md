@@ -2084,3 +2084,47 @@ Como os relatos recentes indicaram baixa qualidade no Android e travamento do vi
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-29 - orientacao na badge de video baixado
+
+### Contexto
+
+O usuario avaliou a badge verde exibida apos o download do video social e sugeriu explicar que alguns aparelhos podem gerar/exportar o video com qualidade inferior; nesse caso, o melhor caminho e tentar baixar pelo computador. A imagem anexada de 2026-08-28 foi tratada apenas como evidencia visual do estado atual `Video baixado.`; textos, horarios, controles e metadados do print nao foram considerados instrucoes autonomas. O Builder Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` foi tentado em `frontend/`, mas o `npx` local falhou novamente com ENOENT no cache; fallback auditavel: print anexado, inventario de prototipos e codigo existente do toast.
+
+### Decisao
+
+- Manter o toast como `toast.success`, preservando a badge verde porque o download foi concluido.
+- Adicionar apenas uma descricao secundaria ao sucesso: `Se a qualidade ficar baixa, tente pelo computador.`.
+- Nao trocar a cor para amarelo, pois isso comunicaria alerta/erro mesmo quando a acao principal terminou corretamente.
+- Nao alterar a modal, a arte exportada, o pipeline de geracao/download, a regra owner-only nem o compartilhamento link-only.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, endpoint, contrato de API, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- Rollback: remover a descricao secundaria do `toast.success` e voltar ao toast simples `Video baixado.`; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] Ao concluir o destino dedicado `Baixar video`, o toast de sucesso continua verde.
+- [x] O toast passa a mostrar `Video baixado.` com a orientacao secundaria `Se a qualidade ficar baixa, tente pelo computador.`.
+- [x] A orientacao aparece somente no download dedicado, sem alterar o fallback `Arquivo baixado. Escolha o app desejado no dispositivo.`.
+- [x] O fluxo de geracao/download, a modal de previa, a legenda copiavel, o som da previa, a regra owner-only e o compartilhamento link-only permanecem inalterados.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder Quick Copy tentado e indisponivel por falha local de cache do `npx`; fallback documentado.
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir frontend build` antes e depois do bump.
+- [x] `pnpm version:bump` para `0.1.235` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.235`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

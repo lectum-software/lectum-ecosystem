@@ -534,7 +534,11 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(mbSource, /await importMediabunny\(\)/);
   assert.match(mbSource, /VideoSample/);
   assert.match(mbSource, /canEncodeVideo/);
+  assert.match(mbSource, /finalizeMediabunnyMp4ShareFile/);
+  assert.match(mbSource, /isMp4ShareFile/);
+  assert.match(mbSource, /input\.computeDuration\(\)/);
   assert.match(mbSource, /new Mp4OutputFormat\(\{ fastStart: "in-memory" \}\)/);
+  assert.match(mbSource, /trim: \{ end: durationSeconds \}/);
   assert.match(
     mbSource,
     /audio: \{[\s\S]*codec: "aac"[\s\S]*forceTranscode: true[\s\S]*numberOfChannels: 2[\s\S]*sampleRate: 44_100/,
@@ -544,7 +548,12 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(mbSource, /sampleWidth = Math\.max\(1, Math\.round\(sample\.displayWidth\)\)/);
   assert.match(mbSource, /ctx\.scale\(scaleX, scaleY\)/);
   assert.match(mbSource, /drawLectumShareFrame\(ctx, sourceCanvas/);
+  assert.match(mbSource, /const frameDurationSeconds = 1 \/ frameRate/);
+  assert.match(mbSource, /let processedFrameIndex = 0/);
+  assert.match(mbSource, /outputTimestamp = processedFrameIndex \* frameDurationSeconds/);
   assert.match(mbSource, /return new VideoSample\(canvas/);
+  assert.match(mbSource, /duration: frameDurationSeconds/);
+  assert.match(mbSource, /timestamp: outputTimestamp/);
   assert.match(mbSource, /processedWidth: profile\.width/);
   assert.match(mediaSource, /DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000/);
   assert.match(mediaSource, /URL\.revokeObjectURL\(url\), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS/);
@@ -576,11 +585,14 @@ test("exportacao de video aguarda frame renderizavel e frames do canvas no mobil
   assert.match(exportSource, /CanvasCaptureStreamTrack/);
   assert.match(exportSource, /createCanvasCaptureFrameRequester/);
   assert.match(exportSource, /ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24/);
+  assert.match(exportSource, /LEGACY_RECORDER_ANDROID_TIMESLICE_MS = 250/);
   assert.match(
     exportSource,
     /ANDROID_LEGACY_VIDEO_EXPORT_PROFILE[\s\S]*height: 960[\s\S]*videoBitsPerSecond: 900_000[\s\S]*width: 540/,
   );
   assert.match(exportSource, /isAndroidLegacyVideoShareRuntime/);
+  assert.match(exportSource, /resolveLegacyVideoRecorderTimesliceMs/);
+  assert.match(exportSource, /startLegacyVideoRecorder/);
   assert.match(exportSource, /canvas\.width = exportProfile\.width/);
   assert.match(exportSource, /canvas\.height = exportProfile\.height/);
   assert.match(exportSource, /canvas\.captureStream\(exportProfile\.frameRate\)/);
@@ -595,8 +607,11 @@ test("exportacao de video aguarda frame renderizavel e frames do canvas no mobil
   );
   assert.match(
     exportSource,
-    /await waitForVideoRenderFrame\(video\);[\s\S]*drawShareFrame\(\)[\s\S]*recorder\.start\(250\)/,
+    /await waitForVideoRenderFrame\(video\);[\s\S]*drawShareFrame\(\)[\s\S]*startLegacyVideoRecorder\(recorder, recorderTimesliceMs\)/,
   );
+  assert.match(exportSource, /startLegacyVideoRecorder\(recorder, recorderTimesliceMs\)/);
+  assert.match(exportSource, /finalizeMediabunnyMp4ShareFile\(file\)/);
+  assert.match(exportSource, /then\(resolve, \(\) => resolve\(file\)\)/);
   assert.match(
     exportSource,
     /failExport\(new Error\("Nao foi possivel gravar o video inteiro para compartilhamento\."\)\)/,

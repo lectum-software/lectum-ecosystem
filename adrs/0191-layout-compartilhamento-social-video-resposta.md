@@ -1268,3 +1268,26 @@ O cache remoto de artefatos sociais em R2 tinha utilidade quando o mesmo video c
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.233, incluindo testes estaticos da previa/media, checks frontend/backend, builds, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - orientacao no toast de video baixado
+
+### Contexto
+
+O toast verde `Video baixado.` confirma que o arquivo social foi salvo, mas alguns aparelhos podem produzir/exportar o video com qualidade inferior. O usuario sugeriu explicar esse limite e perguntou se a badge deveria virar amarela por conter um aviso.
+
+### Decisao
+
+- Preservar o toast como sucesso verde, porque a acao principal foi concluida.
+- Adicionar uma descricao secundaria e condicional ao `toast.success`: `Se a qualidade ficar baixa, tente pelo computador.`.
+- Evitar trocar para amarelo para nao comunicar falha quando o download funcionou.
+- Limitar a mudanca ao destino dedicado de download; o fallback de compartilhamento que baixa arquivo continua com a mensagem propria.
+
+### Consequencias
+
+- O usuario recebe a orientacao no momento certo sem perder a percepcao de sucesso.
+- A mensagem evita termos tecnicos e aponta uma solucao acionavel.
+- Mudanca frontend-only; sem backend, admin UI, contrato de API, env, package, migration, provider ou dados publicados. Rollback simples removendo a descricao secundaria do toast.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.235, incluindo formatter/check do arquivo alterado, frontend check/build, build apos bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.

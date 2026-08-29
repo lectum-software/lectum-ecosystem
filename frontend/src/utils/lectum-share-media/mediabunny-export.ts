@@ -15,6 +15,10 @@ const MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000;
 const ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE = 96_000;
 const ANDROID_MEDIABUNNY_SHARE_FRAME_RATE = 24;
 
+type MediabunnyInputWithDuration = {
+  computeDuration: () => Promise<number>;
+};
+
 type MediabunnyShareExportProfile = {
   readonly frameRate?: number;
   readonly height: number;
@@ -55,12 +59,74 @@ const mediabunnyShareExportProfiles = () =>
 export const shouldUseMediabunnyVideoShareExport = () =>
   process.env.NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED !== "false";
 
+const isMp4ShareFile = (file: File) => {
+  const mimeType = file.type.trim().toLowerCase().split(";", 1)[0];
+
+  return mimeType === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
+};
+
+const resolveMediabunnyDurationSeconds = async (input: MediabunnyInputWithDuration) => {
+  const duration = await input.computeDuration().catch(() => null);
+
+  return typeof duration === "number" && Number.isFinite(duration) && duration > 0
+    ? duration
+    : null;
+};
+
 const registerMediabunnyAacEncoder = async () => {
   try {
     const { registerAacEncoder } = await import("@mediabunny/aac-encoder");
     registerAacEncoder();
   } catch {
     // Sem o encoder auxiliar, o Mediabunny ainda pode usar codecs nativos ou cair no fallback legado.
+  }
+};
+
+export const finalizeMediabunnyMp4ShareFile = async (file: File) => {
+  if (!shouldUseMediabunnyVideoShareExport() || !isMp4ShareFile(file)) return file;
+
+  let mediabunny: Awaited<ReturnType<typeof importMediabunny>>;
+  try {
+    mediabunny = await importMediabunny();
+  } catch {
+    return file;
+  }
+
+  const { ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output } =
+    mediabunny;
+
+  try {
+    const input = new Input({ formats: ALL_FORMATS, source: new BlobSource(file) });
+
+    try {
+      const targetBuffer = new BufferTarget();
+      const output = new Output({
+        format: new Mp4OutputFormat({ fastStart: "in-memory" }),
+        target: targetBuffer,
+      });
+      const durationSeconds = await resolveMediabunnyDurationSeconds(input);
+      const conversion = await Conversion.init({
+        input,
+        output,
+        showWarnings: false,
+        tags: {},
+        tracks: "primary",
+        ...(durationSeconds ? { trim: { end: durationSeconds } } : {}),
+      });
+
+      if (!conversion.isValid) return file;
+
+      await conversion.execute();
+
+      const buffer = targetBuffer.buffer;
+      if (!buffer || buffer.byteLength === 0) return file;
+
+      return new File([buffer], file.name, { type: "video/mp4" });
+    } finally {
+      input.dispose();
+    }
+  } catch {
+    return file;
   }
 };
 
@@ -131,6 +197,7 @@ export const createMediabunnyVideoShareFile = async (
       bitrate: profile.videoBitrate,
       bitrateMode: profile.videoBitrateMode ?? "variable",
     });
+    const frameDurationSeconds = 1 / frameRate;
     const canEncodeProfile = await canEncodeVideo("avc", {
       alpha: "discard",
       height: profile.height,
@@ -157,6 +224,7 @@ export const createMediabunnyVideoShareFile = async (
 
     try {
       let conversion: Awaited<ReturnType<typeof Conversion.init>>;
+      let processedFrameIndex = 0;
       try {
         conversion = await Conversion.init({
           audio: {
@@ -181,6 +249,7 @@ export const createMediabunnyVideoShareFile = async (
             height: profile.height,
             keyFrameInterval: 2,
             process: (sample) => {
+              const outputTimestamp = processedFrameIndex * frameDurationSeconds;
               const sampleWidth = Math.max(1, Math.round(sample.displayWidth));
               const sampleHeight = Math.max(1, Math.round(sample.displayHeight));
 
@@ -192,9 +261,10 @@ export const createMediabunnyVideoShareFile = async (
               ctx.scale(scaleX, scaleY);
               drawLectumShareFrame(ctx, sourceCanvas, layout, target, palette, assets);
               ctx.restore();
+              processedFrameIndex += 1;
               return new VideoSample(canvas, {
-                duration: sample.duration,
-                timestamp: sample.timestamp,
+                duration: frameDurationSeconds,
+                timestamp: outputTimestamp,
               });
             },
             processedHeight: profile.height,

@@ -1097,3 +1097,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-10: qualquer erro nas acoes da tela de verificacao profissional CFP passa a exibir orientacao explicita e CTA para falar com o suporte.
 - O caso `cfp_provider_validation_error`, observado no print do usuario como falha da API automatica com os dados informados, agora tambem entra no caminho de suporte para verificacao manual.
 - A confirmacao de resultado encontrado tambem mostra o CTA de suporte se falhar. Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, provider, mock, seed, reset ou aprovacao automatica.
+
+## Correcao textual em 2026-08-29: orientacao na badge de video baixado
+
+- Ajuste pos-feedback da TASK-42: o toast verde de sucesso `Video baixado.` passa a incluir a orientacao secundaria `Se a qualidade ficar baixa, tente pelo computador.`.
+- A badge permanece verde porque o download foi concluido; a orientacao e condicional e nao deve transformar o sucesso em alerta amarelo.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.

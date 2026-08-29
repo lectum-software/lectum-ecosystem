@@ -21,6 +21,11 @@ import {
   type VideoWithCaptureStream,
   waitForEvent,
 } from "./layout";
+import {
+  createMediabunnyVideoShareFile,
+  finalizeMediabunnyMp4ShareFile,
+  shouldUseMediabunnyVideoShareExport,
+} from "./mediabunny-export";
 
 export const supportedVideoMimeType = () => {
   if (typeof MediaRecorder === "undefined") return null;
@@ -56,6 +61,7 @@ type CanvasCaptureStreamTrack = MediaStreamTrack & {
 
 const VIDEO_PLAY_TIMEOUT_MS = 8000;
 const ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24;
+const LEGACY_RECORDER_ANDROID_TIMESLICE_MS = 250;
 const ANDROID_LEGACY_VIDEO_EXPORT_PROFILE = {
   audioBitsPerSecond: 96_000,
   frameRate: ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE,
@@ -74,8 +80,9 @@ type LegacyVideoExportProfile = {
 
 export {
   createMediabunnyVideoShareFile,
+  finalizeMediabunnyMp4ShareFile,
   shouldUseMediabunnyVideoShareExport,
-} from "./mediabunny-export";
+};
 
 const emptyVideoAudioCapture = (): VideoAudioCapture => ({
   cleanup: () => undefined,
@@ -94,6 +101,18 @@ const resolveLegacyVideoExportProfile = (layout: ShareCanvasLayout): LegacyVideo
         height: layout.height,
         width: layout.width,
       };
+
+const resolveLegacyVideoRecorderTimesliceMs = () =>
+  isAndroidLegacyVideoShareRuntime() ? LEGACY_RECORDER_ANDROID_TIMESLICE_MS : undefined;
+
+const startLegacyVideoRecorder = (recorder: MediaRecorder, timesliceMs?: number) => {
+  if (timesliceMs) {
+    recorder.start(timesliceMs);
+    return;
+  }
+
+  recorder.start();
+};
 
 const createMediaRecorderOptions = (
   mimeType: string,
@@ -443,6 +462,7 @@ export const createVideoShareFile = async (
   );
   const safetyTimeoutMs = resolveVideoExportSafetyTimeoutMs(durationSeconds, hasKnownDuration);
   const stallTimeoutMs = resolveVideoExportStallTimeoutMs();
+  const recorderTimesliceMs = resolveLegacyVideoRecorderTimesliceMs();
 
   return new Promise<File>((resolve, reject) => {
     let cleaned = false;
@@ -558,8 +578,15 @@ export const createVideoShareFile = async (
       }
 
       const extension = extensionFromMimeType(outputType);
+      const file = new File([blob], safeFileName(target, extension), { type: outputType });
       settled = true;
-      resolve(new File([blob], safeFileName(target, extension), { type: outputType }));
+
+      if (extension === "mp4") {
+        void finalizeMediabunnyMp4ShareFile(file).then(resolve, () => resolve(file));
+        return;
+      }
+
+      resolve(file);
     };
 
     const start = async () => {
@@ -580,7 +607,7 @@ export const createVideoShareFile = async (
         await waitForVideoRenderFrame(video);
         drawShareFrame();
         requestCanvasCaptureFrame();
-        recorder.start(250);
+        startLegacyVideoRecorder(recorder, recorderTimesliceMs);
         startedAt = performance.now();
         lastProgressAt = startedAt;
         lastVideoTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
@@ -593,7 +620,7 @@ export const createVideoShareFile = async (
             await waitForVideoRenderFrame(video);
             drawShareFrame();
             requestCanvasCaptureFrame();
-            recorder.start(250);
+            startLegacyVideoRecorder(recorder, recorderTimesliceMs);
             startedAt = performance.now();
             lastProgressAt = startedAt;
             lastVideoTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
