@@ -75,6 +75,10 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
     new URL("../api/req/posts/index.ts", import.meta.url),
     "utf8",
   );
+  const mediabunnyExportSource = readFileSync(
+    new URL("./lectum-share-media/mediabunny-export.ts", import.meta.url),
+    "utf8",
+  );
   const instagramIconSource = readFileSync(
     new URL("../components/ui/instagram-icon.tsx", import.meta.url),
     "utf8",
@@ -222,11 +226,19 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /prepareLectumShareFileWithServerRender/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_MOBILE_TIMEOUT_MS = 50_000/);
+  assert.match(mediaSource, /shouldAvoidClientSideVideoShareRender/);
+  assert.match(mediaSource, /MOBILE_VIDEO_RENDER_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /new AbortController\(\)/);
   assert.match(mediaSource, /signal: controller\.signal/);
+  assert.match(mediaSource, /timeoutMs: timeoutMs \+ SERVER_SHARE_RENDER_HTTP_GRACE_MS/);
   assert.match(postsReqSource, /share-artifact\/render/);
   assert.match(postsReqSource, /responseType: "blob"/);
   assert.match(postsReqSource, /SHARE_VIDEO_RENDER_TIMEOUT_MS = 20_000/);
+  assert.match(postsReqSource, /timeoutMs \?\? SHARE_VIDEO_RENDER_TIMEOUT_MS/);
+  assert.match(mediabunnyExportSource, /return canvas;/);
+  assert.doesNotMatch(mediabunnyExportSource, /processedFrameIndex/);
+  assert.doesNotMatch(mediabunnyExportSource, /frameDurationSeconds/);
   assert.match(mediaSource, /isAppleMobileShareDownloadRuntime/);
   assert.match(mediaSource, /shareFileThroughAppleMobileSheet/);
   assert.match(mediaSource, /resolveLectumFileShareData\(nav/);
@@ -234,8 +246,10 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(directShareHookSource, /DOWNLOAD_READY_RETRY_MESSAGE/);
   assert.match(
     directShareHookSource,
-    /destination === "download"[\s\S]*prepareLectumShareFileWithServerRender\(socialTarget\)/,
+    /destination === "download"[\s\S]*prepareLectumShareFileWithServerRender\(socialTarget,\s*\{[\s\S]*serverOnly: shouldUseServerOnlyDownloadRender/,
   );
+  assert.match(directShareHookSource, /shouldUseServerOnlyDownloadRender[\s\S]*throw error/);
+  assert.match(directShareHookSource, /MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE/);
   assert.match(directShareHookSource, /DOWNLOAD_QUALITY_GUIDANCE_MESSAGE/);
   assert.match(directShareHookSource, /shouldShowDownloadQualityGuidance/);
   assert.match(directShareHookSource, /userAgentData\?\.mobile === true/);

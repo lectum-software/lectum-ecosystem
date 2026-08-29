@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { test } from "node:test";
 import { getShareRenderBrowserPageHtml } from "./share-render/browser-page";
 import { resolveShareChromiumConfig } from "./share-render/config";
@@ -53,7 +55,19 @@ test("pagina interna do Chromium usa MediaBunny para mp4 fast start com AVC/AAC"
   assert.match(html, /codec: "aac"/);
   assert.match(html, /codec: "avc"/);
   assert.match(html, /fit: "fill"/);
-  assert.match(html, /return new VideoSample\(canvas/);
+  assert.match(html, /return canvas;/);
+  assert.doesNotMatch(html, /processedFrameIndex/);
+  assert.doesNotMatch(html, /frameDurationSeconds/);
+});
+
+test("renderizacao social no backend deduplica e reaproveita resultado em memoria", () => {
+  const rendererSource = readFileSync(path.join(__dirname, "share-render", "renderer.ts"), "utf8");
+
+  assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_VERSION/);
+  assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_TTL_MS = 30 \* 60_000/);
+  assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4/);
+  assert.match(rendererSource, /renderWithResultCache/);
+  assert.match(rendererSource, /createShareRenderResultCacheKey\(target\)/);
 });
 
 test("nome do arquivo de renderizacao social nao expoe texto arbitrario", () => {

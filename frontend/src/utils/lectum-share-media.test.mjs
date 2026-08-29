@@ -539,7 +539,7 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(mbSource, /isMobileRuntime = isAndroidRuntime \|\| isAppleMobileRuntime/);
   assert.match(mbSource, /@mediabunny\/aac-encoder/);
   assert.match(mbSource, /await importMediabunny\(\)/);
-  assert.match(mbSource, /VideoSample/);
+  assert.doesNotMatch(mbSource, /VideoSample/);
   assert.match(mbSource, /canEncodeVideo/);
   assert.match(mbSource, /finalizeMediabunnyMp4ShareFile/);
   assert.match(mbSource, /isMp4ShareFile/);
@@ -554,12 +554,12 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(mbSource, /sampleWidth = Math\.max\(1, Math\.round\(sample\.displayWidth\)\)/);
   assert.match(mbSource, /ctx\.scale\(scaleX, scaleY\)/);
   assert.match(mbSource, /drawLectumShareFrame\(ctx, sourceCanvas/);
-  assert.match(mbSource, /const frameDurationSeconds = 1 \/ frameRate/);
-  assert.match(mbSource, /let processedFrameIndex = 0/);
-  assert.match(mbSource, /outputTimestamp = processedFrameIndex \* frameDurationSeconds/);
-  assert.match(mbSource, /return new VideoSample\(canvas/);
-  assert.match(mbSource, /duration: frameDurationSeconds/);
-  assert.match(mbSource, /timestamp: outputTimestamp/);
+  assert.match(mbSource, /return canvas;/);
+  assert.doesNotMatch(mbSource, /const frameDurationSeconds = 1 \/ frameRate/);
+  assert.doesNotMatch(mbSource, /let processedFrameIndex = 0/);
+  assert.doesNotMatch(mbSource, /outputTimestamp = processedFrameIndex \* frameDurationSeconds/);
+  assert.doesNotMatch(mbSource, /duration: frameDurationSeconds/);
+  assert.doesNotMatch(mbSource, /timestamp: outputTimestamp/);
   assert.match(mbSource, /processedWidth: profile\.width/);
   assert.match(mediaSource, /DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000/);
   assert.match(mediaSource, /URL\.revokeObjectURL\(url\), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS/);

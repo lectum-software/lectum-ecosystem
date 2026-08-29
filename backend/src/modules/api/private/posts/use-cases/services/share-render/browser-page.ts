@@ -8,7 +8,6 @@ const {
   Mp4OutputFormat,
   Output,
   Quality,
-  VideoSample,
   canEncodeVideo,
 } = await import("mediabunny");
 const { registerAacEncoder } = await import("/vendor/" + "aac-encoder.mjs");
@@ -464,8 +463,6 @@ const renderLectumShare = async (target) => {
 
   const scaleX = OUTPUT_PROFILE.width / LAYOUT.width;
   const scaleY = OUTPUT_PROFILE.height / LAYOUT.height;
-  const frameDurationSeconds = 1 / OUTPUT_PROFILE.frameRate;
-  let processedFrameIndex = 0;
 
   try {
     const conversion = await Conversion.init({
@@ -495,7 +492,6 @@ const renderLectumShare = async (target) => {
         height: OUTPUT_PROFILE.height,
         keyFrameInterval: 2,
         process: (sample) => {
-          const outputTimestamp = processedFrameIndex * frameDurationSeconds;
           const sampleWidth = Math.max(1, Math.round(sample.displayWidth));
           const sampleHeight = Math.max(1, Math.round(sample.displayHeight));
 
@@ -507,11 +503,7 @@ const renderLectumShare = async (target) => {
           ctx.scale(scaleX, scaleY);
           drawLectumShareFrame(ctx, sourceCanvas, LAYOUT, target, PALETTE, assets);
           ctx.restore();
-          processedFrameIndex += 1;
-          return new VideoSample(canvas, {
-            duration: frameDurationSeconds,
-            timestamp: outputTimestamp,
-          });
+          return canvas;
         },
         processedHeight: OUTPUT_PROFILE.height,
         processedWidth: OUTPUT_PROFILE.width,

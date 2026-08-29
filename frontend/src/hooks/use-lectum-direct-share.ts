@@ -14,6 +14,7 @@ import {
   shareLectumLinkTarget,
   shareLectumWhatsAppPreviewTarget,
   sharePreparedLectumVideoResponse,
+  shouldAvoidClientSideVideoShareRender,
 } from "@/utils/lectum-share-media";
 import { reportLectumShareExportFailure } from "@/utils/lectum-share-media/diagnostics";
 import type { ShareExportResult } from "@/utils/lectum-share-media/layout";
@@ -46,6 +47,8 @@ const SHARE_READY_RETRY_MESSAGE =
 const DOWNLOAD_READY_RETRY_MESSAGE =
   "Vídeo preparado. Toque em Baixar vídeo novamente para escolher onde salvar.";
 const DOWNLOAD_QUALITY_GUIDANCE_MESSAGE = "Se a qualidade ficar baixa, tente pelo computador.";
+const MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE =
+  "Não conseguimos gerar o vídeo com arte neste aparelho agora. Tente novamente em instantes ou pelo computador.";
 const MOBILE_DOWNLOAD_QUALITY_GUIDANCE_USER_AGENT_PATTERN = /\b(Android|iPhone|iPad|iPod)\b/i;
 
 const shouldShowDownloadQualityGuidance = () => {
@@ -100,6 +103,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
       const destination = shareOptions.destination ?? "social";
 
       let loadingToastId: string | number | null = null;
+      let mobileDownloadServerRenderOnly = false;
 
       try {
         let result: ShareExportResult;
@@ -107,6 +111,10 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           const cachedFile = getPreparedLectumShareFile(socialTarget);
           const shouldUseSourceVideoFallback =
             destination === "social" && socialTarget.mediaType === "video";
+          const shouldUseServerOnlyDownloadRender =
+            destination === "download" &&
+            socialTarget.mediaType === "video" &&
+            shouldAvoidClientSideVideoShareRender();
 
           if (!cachedFile) {
             loadingToastId = toast.loading(
@@ -126,9 +134,16 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           const file =
             cachedFile ??
             (destination === "download"
-              ? await prepareLectumShareFileWithServerRender(socialTarget).catch(
-                  prepareClientShareFile,
-                )
+              ? await prepareLectumShareFileWithServerRender(socialTarget, {
+                  serverOnly: shouldUseServerOnlyDownloadRender,
+                }).catch((error) => {
+                  if (shouldUseServerOnlyDownloadRender) {
+                    mobileDownloadServerRenderOnly = true;
+                    throw error;
+                  }
+
+                  return prepareClientShareFile();
+                })
               : await prepareClientShareFile());
 
           if (loadingToastId !== null) {
@@ -198,9 +213,11 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         toast.error(
           target.kind === "link"
             ? "Não foi possível abrir o compartilhamento. Tente copiar o link novamente."
-            : destination === "download"
-              ? "Não foi possível preparar o vídeo com arte agora. Tente novamente."
-              : "Não foi possível preparar o compartilhamento agora. Tente novamente.",
+            : mobileDownloadServerRenderOnly
+              ? MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE
+              : destination === "download"
+                ? "Não foi possível preparar o vídeo com arte agora. Tente novamente."
+                : "Não foi possível preparar o compartilhamento agora. Tente novamente.",
         );
 
         return null;

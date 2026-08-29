@@ -2372,4 +2372,52 @@ Apos publicar a POC Chromium + MediaBunny em homologacao, o usuario testou no co
 - [x] `pnpm version:bump` para `0.1.244` e `pnpm check:version`.
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
-- [ ] Smoke de homologacao apos push de `homolog`: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+- [x] Smoke de homologacao apos push de `homolog`: backend `/health`, `/ready`, `/ping`; frontend/admin `/version` publicados em `0.1.244`.
+
+## Ajuste 2026-08-29 - sincronismo do MP4 e mobile sem encode local pesado
+
+### Contexto
+
+Depois do ajuste de fallback rapido, o usuario validou em homologacao que o arquivo baixado no computador ficou com a imagem levemente atrasada em relacao ao audio, enquanto no celular o download ainda travava muito. A causa provavel e dupla: o caminho MediaBunny recriava timestamps do video por contador fixo de frames, que pode gerar drift contra o audio original; e, no mobile, a queda para o pipeline client-side ainda obrigava iPhone/Android a decodificar, desenhar e encodar localmente um MP4 com arte.
+
+### Decisao
+
+- No MediaBunny client-side e na pagina Chromium backend, o `process` de video deixa de criar `VideoSample` com timestamp sintetico por `processedFrameIndex` e passa a retornar o canvas diretamente. Assim o MediaBunny reaproveita timestamp e duracao do sample ja normalizado pelo proprio pipeline, preservando a linha do tempo de audio/video.
+- O backend adiciona cache em memoria por processo para resultados de renderizacao, com deduplicacao de chamadas simultaneas do mesmo alvo, TTL de 30 minutos, maximo de 4 entradas e limite total de 80 MiB. O cache e best effort, nao persiste em R2/banco e e invalidado por versao de layout.
+- No destino dedicado `Baixar video`, iPhone/Android/tablet deixam de cair para encode client-side pesado quando o backend nao entrega o artefato. Em mobile, o frontend aguarda ate 50s pelo backend e, se falhar, mostra erro publico acionavel; no desktop, o fallback client-side permanece disponivel.
+- A chamada binaria aceita timeout por operacao, mantendo 20s como padrao desktop e usando 55s no caminho mobile server-only.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend + backend; admin acompanha apenas bump de versao no manifesto.
+- Sem schema Prisma, migration, backfill, seed, reset, `db push`, pacote novo, provider novo, armazenamento novo, mock ou limpeza de bucket/dados publicados.
+- Contrato segue aditivo: backend novo continua retornando MP4 na mesma rota; frontend novo tolera backend antigo/indisponivel. Rollback operacional permanece por `LECTUM_SHARE_CHROMIUM_ENABLED=false`, e rollback completo reverte o fallback server-only mobile.
+- O cache em memoria e efemero por instancia; nao substitui persistencia e nao garante reaproveitamento entre deploys/instancias.
+
+### Criterios de aceite do ajuste
+
+- [x] MediaBunny backend e client-side preservam timestamps/duracoes do pipeline em vez de gerar timestamp sintetico por contador fixo.
+- [x] Download mobile dedicado nao inicia encode client-side pesado se o backend experimental falhar ou demorar.
+- [x] Mobile aguarda backend por prazo suficiente para a rota de 45s e usa mensagem publica sem stack/provider/PII quando nao houver artefato.
+- [x] Backend deduplica/reaproveita resultado renderizado em memoria por curto prazo, sem gravar R2/banco nem limpar dados publicados.
+- [x] Desktop preserva fallback client-side para nao regredir quando backend estiver indisponivel.
+- [x] Compartilhamento social, WhatsApp, link-only, modal, arte visual e UI mobile-first permanecem inalterados.
+- [x] Nenhum banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES e ADR-0191 consultados.
+- [x] Print/feedback do usuario usado apenas como evidencia operacional do atraso/travamento.
+- [x] Render local Chromium + MediaBunny com MP4 real apos ajuste de timestamps: `video/mp4` com `5.883.043` bytes.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

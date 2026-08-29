@@ -1414,3 +1414,26 @@ Apos o primeiro deploy da POC Chromium + MediaBunny, o usuario reportou em homol
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.244, incluindo checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - sincronismo e mobile server-only no download social
+
+### Contexto
+
+Apos o fallback rapido, o usuario reportou dois sintomas remanescentes em homologacao: no computador, o video baixado tinha imagem levemente atrasada do audio; no celular, o preparo/download travava muito. O primeiro sintoma apontava para drift de timeline na composicao do MP4; o segundo, para custo excessivo do fallback client-side quando iPhone/Android precisavam encodar localmente.
+
+### Decisao
+
+- No MediaBunny do backend Chromium e no MediaBunny client-side, o callback `process` deixa de retornar `VideoSample` com timestamp sintetico calculado por contador de frames. Ao retornar o canvas diretamente, o MediaBunny conserva timestamp e duracao do sample normalizado pelo pipeline, incluindo a normalizacao de framerate que a biblioteca ja aplica antes do callback.
+- O backend adiciona cache em memoria, por processo, com chave incluindo versao de layout, alvo, midia, textos e profissional. O cache deduplica render simultaneo do mesmo alvo e retém ate 4 resultados/80 MiB por 30 minutos. Ele e efemero, nao persistido e nao reintroduz cache remoto em R2.
+- Em runtime mobile/tablet, o destino dedicado `Baixar video` passa a ser server-only: aguarda ate 50s pela rota backend, com timeout HTTP de 55s, e nao cai para o encode local pesado quando a tentativa falha. Desktop conserva fallback client-side para resiliencia.
+
+### Consequencias
+
+- A linha de tempo de audio/video fica menos suscetivel a atraso acumulado quando a fonte tem cadencia irregular, frames repetidos ou ajuste interno de framerate.
+- Celulares deixam de congelar tentando encodar o MP4 localmente apos falha do backend; quando o servidor nao conseguir gerar o artefato, a UI mostra mensagem publica e acionavel.
+- O backend pode servir segundo clique/retry do mesmo alvo sem render novo enquanto o processo estiver vivo, mas o cache nao e garantia multi-instancia nem sobrevive a deploy/restart.
+- Sem schema/migration/env obrigatoria/package novo/provider novo/dados persistidos. Rollback operacional segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false`; rollback completo remove o cache em memoria e o server-only mobile.
+
+### Validacao
+
+As validacoes finais serao registradas na TASK-42 em 0.1.245, incluindo render local Chromium + MediaBunny com MP4 real, checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.

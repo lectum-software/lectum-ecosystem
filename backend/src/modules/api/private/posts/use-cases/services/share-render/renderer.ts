@@ -42,6 +42,118 @@ const SHARE_RENDER_VIEWPORT = {
   width: 540,
 } as const;
 const SHARE_RENDER_CLOSE_TIMEOUT_MS = 3_000;
+const SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v2-synced-timestamps";
+const SHARE_RENDER_RESULT_CACHE_TTL_MS = 30 * 60_000;
+const SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4;
+const SHARE_RENDER_RESULT_CACHE_MAX_BYTES = 80 * 1024 * 1024;
+
+type ShareRenderResultCacheEntry =
+  | {
+      createdAt: number;
+      promise: Promise<ShareRenderResult>;
+      sizeBytes: 0;
+    }
+  | {
+      createdAt: number;
+      result: ShareRenderResult;
+      sizeBytes: number;
+    };
+
+const shareRenderResultCache = new Map<string, ShareRenderResultCacheEntry>();
+
+const createShareRenderResultCacheKey = (target: ShareRenderTarget) =>
+  JSON.stringify([
+    SHARE_RENDER_RESULT_CACHE_VERSION,
+    target.postId,
+    target.replyId,
+    target.mediaUrl,
+    target.cardLabel,
+    target.sourceText,
+    target.responseText,
+    target.shareTitle,
+    target.professional.name,
+    target.professional.roleLabel,
+    target.professional.verified,
+  ]);
+
+const pruneShareRenderResultCache = (now = Date.now()) => {
+  let totalBytes = 0;
+
+  for (const [key, entry] of shareRenderResultCache) {
+    if (now - entry.createdAt > SHARE_RENDER_RESULT_CACHE_TTL_MS) {
+      shareRenderResultCache.delete(key);
+      continue;
+    }
+
+    totalBytes += entry.sizeBytes;
+  }
+
+  while (
+    shareRenderResultCache.size > SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES ||
+    totalBytes > SHARE_RENDER_RESULT_CACHE_MAX_BYTES
+  ) {
+    const oldest = shareRenderResultCache.entries().next().value as
+      | [string, ShareRenderResultCacheEntry]
+      | undefined;
+    if (!oldest) break;
+
+    shareRenderResultCache.delete(oldest[0]);
+    totalBytes -= oldest[1].sizeBytes;
+  }
+};
+
+const getCachedShareRenderResult = (cacheKey: string) => {
+  pruneShareRenderResultCache();
+
+  const entry = shareRenderResultCache.get(cacheKey);
+  if (!entry) return null;
+
+  shareRenderResultCache.delete(cacheKey);
+  shareRenderResultCache.set(cacheKey, entry);
+
+  return "result" in entry ? Promise.resolve(entry.result) : entry.promise;
+};
+
+const renderWithResultCache = async (
+  cacheKey: string,
+  renderOperation: () => Promise<ShareRenderResult>,
+) => {
+  const cached = getCachedShareRenderResult(cacheKey);
+  if (cached) return cached;
+
+  const promise = renderOperation().then(
+    (result) => {
+      if (result.sizeBytes <= SHARE_RENDER_RESULT_CACHE_MAX_BYTES) {
+        shareRenderResultCache.set(cacheKey, {
+          createdAt: Date.now(),
+          result,
+          sizeBytes: result.sizeBytes,
+        });
+        pruneShareRenderResultCache();
+      } else {
+        shareRenderResultCache.delete(cacheKey);
+      }
+
+      return result;
+    },
+    (error: unknown) => {
+      const entry = shareRenderResultCache.get(cacheKey);
+      if (entry && "promise" in entry && entry.promise === promise) {
+        shareRenderResultCache.delete(cacheKey);
+      }
+
+      throw error;
+    },
+  );
+
+  shareRenderResultCache.set(cacheKey, {
+    createdAt: Date.now(),
+    promise,
+    sizeBytes: 0,
+  });
+
+  return promise;
+};
 
 const launchChromium = async (config: ShareChromiumConfig, timeoutMs: number) => {
   if (!config.enabled) throw new ShareRenderDisabledError();
@@ -206,19 +318,26 @@ export const renderShareVideoWithChromium = async (
   const gate = dependencies.config
     ? createShareRenderConcurrencyGate(config.concurrency, config.queueSize)
     : defaultGate;
-
-  try {
+  const renderOperation = async () => {
     await gate.acquire();
     try {
       return await renderShareVideo(target, config);
     } finally {
       gate.release();
     }
+  };
+
+  try {
+    const cacheKey = dependencies.config ? null : createShareRenderResultCacheKey(target);
+
+    return cacheKey
+      ? await renderWithResultCache(cacheKey, renderOperation)
+      : await renderOperation();
   } catch (error) {
     if (error instanceof ShareRenderDisabledError) throw error;
     if (isExpectedCapacityError(error)) throw error;
 
-    console.warn("[SHARE_RENDER] Renderizacao indisponivel; fallback no cliente sera usado.", {
+    console.warn("[SHARE_RENDER] Renderizacao indisponivel; fluxo chamador tratara fallback.", {
       ...toSafeErrorLog(error),
     });
     throw new ShareRenderUnavailableError();

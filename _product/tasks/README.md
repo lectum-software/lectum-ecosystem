@@ -1156,3 +1156,10 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-42: apos homologacao da POC Chromium + MediaBunny, o destino `Baixar video` nao deve ficar preso aguardando o backend experimental por ate 180s.
 - O frontend agora aborta a tentativa backend apos 12s e volta ao pipeline client-side existente; a chamada binaria tem timeout HTTP de 20s.
 - O backend tambem reduz o prazo padrao total da renderizacao experimental para 45s, incluindo download R2, Chromium e MediaBunny. Sem banco, migration, pacote novo, env obrigatoria ou persistencia de artefatos.
+
+## Correcao operacional em 2026-08-29: sincronismo do MP4 social e mobile sem encode local pesado
+
+- Ajuste pos-feedback da TASK-42: o render MediaBunny do video social passa a preservar timestamps/duracoes do proprio pipeline em vez de sintetizar tempo por contador fixo de frames, reduzindo risco de imagem atrasada em relacao ao audio.
+- O backend Chromium + MediaBunny passa a deduplicar e cachear em memoria, por curto prazo e por processo, o resultado renderizado do mesmo alvo, sem voltar a persistir artefatos em R2/banco.
+- No destino dedicado `Baixar video`, iPhone/Android/tablet deixam de acionar o encode client-side pesado quando o backend falha ou demora; o mobile aguarda o backend por prazo compatível com a rota e mostra erro publico acionavel se nao houver MP4. Desktop preserva fallback local.
+- Alteracao frontend+backend, admin apenas manifest; sem schema, migration, env obrigatoria, pacote novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados.

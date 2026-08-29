@@ -28,6 +28,13 @@ import {
 const DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000;
 const APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN = /iPhone|iPad|iPod/u;
 const APPLE_MOBILE_RETRYABLE_SHARE_ERROR_NAMES = new Set(["InvalidStateError", "TypeError"]);
+const MOBILE_VIDEO_RENDER_USER_AGENT_PATTERN = /\b(Android|iPhone|iPad|iPod)\b/i;
+
+type NavigatorWithUserAgentData = Navigator & {
+  userAgentData?: {
+    mobile?: boolean;
+  };
+};
 
 const createLectumShareFile = async (target: LectumShareSocialTarget) => {
   const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
@@ -71,6 +78,10 @@ const createLectumShareFile = async (target: LectumShareSocialTarget) => {
 
 type PreparedShareFileCacheValue = File | Promise<File>;
 
+type PrepareLectumShareFileWithServerRenderOptions = {
+  serverOnly?: boolean;
+};
+
 const preparedShareFileCache = new Map<string, PreparedShareFileCacheValue>();
 
 const createPreparedShareFileCacheKey = (target: LectumShareSocialTarget) =>
@@ -102,10 +113,27 @@ const SOURCE_VIDEO_FALLBACK_EXTENSION_BY_MIME: Record<string, string> = {
 
 const sourceVideoFallbackFileCache = new Map<string, PreparedShareFileCacheValue>();
 const SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000;
+const SERVER_SHARE_RENDER_MOBILE_TIMEOUT_MS = 50_000;
+const SERVER_SHARE_RENDER_HTTP_GRACE_MS = 5_000;
 const sourceVideoFallbackFiles = new WeakSet<File>();
 
 const isPreparedShareFile = (value: PreparedShareFileCacheValue): value is File =>
   typeof File !== "undefined" && value instanceof File;
+
+export const shouldAvoidClientSideVideoShareRender = () => {
+  if (typeof navigator === "undefined") return false;
+
+  const navigatorWithHints = navigator as NavigatorWithUserAgentData;
+  const userAgent = navigatorWithHints.userAgent ?? "";
+  const platform = navigatorWithHints.platform ?? "";
+  const maxTouchPoints = navigatorWithHints.maxTouchPoints ?? 0;
+
+  return (
+    navigatorWithHints.userAgentData?.mobile === true ||
+    MOBILE_VIDEO_RENDER_USER_AGENT_PATTERN.test(userAgent) ||
+    (platform === "MacIntel" && maxTouchPoints > 1)
+  );
+};
 
 const normalizeMimeType = (value?: string | null) =>
   value?.trim().toLowerCase().split(";", 1)[0] ?? "";
@@ -220,17 +248,20 @@ export const prepareLectumShareFile = (target: LectumShareSocialTarget) => {
   return pendingFile;
 };
 
-export const prepareLectumShareFileWithServerRender = async (target: LectumShareSocialTarget) => {
+export const prepareLectumShareFileWithServerRender = async (
+  target: LectumShareSocialTarget,
+  options: PrepareLectumShareFileWithServerRenderOptions = {},
+) => {
   if (target.mediaType !== "video") return prepareLectumShareFile(target);
 
   const cached = getPreparedLectumShareFile(target);
   if (cached) return cached;
 
+  const timeoutMs = options.serverOnly
+    ? SERVER_SHARE_RENDER_MOBILE_TIMEOUT_MS
+    : SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS;
   const controller = new AbortController();
-  const fallbackTimeout = window.setTimeout(
-    () => controller.abort(),
-    SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS,
-  );
+  const fallbackTimeout = window.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const file = await renderPostShareVideoArtifact({
@@ -238,6 +269,7 @@ export const prepareLectumShareFileWithServerRender = async (target: LectumShare
       postId: target.postId,
       replyId: target.replyId,
       signal: controller.signal,
+      timeoutMs: timeoutMs + SERVER_SHARE_RENDER_HTTP_GRACE_MS,
     });
     cachePreparedLectumShareFile(target, file);
 

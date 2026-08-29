@@ -179,7 +179,6 @@ export const createMediabunnyVideoShareFile = async (
     Mp4OutputFormat,
     Output,
     Quality,
-    VideoSample,
     canEncodeVideo,
   } = mediabunny;
   await registerMediabunnyAacEncoder();
@@ -219,7 +218,6 @@ export const createMediabunnyVideoShareFile = async (
       bitrate: profile.videoBitrate,
       bitrateMode: profile.videoBitrateMode ?? "variable",
     });
-    const frameDurationSeconds = 1 / frameRate;
     const canEncodeProfile = await canEncodeVideo("avc", {
       alpha: "discard",
       height: profile.height,
@@ -246,7 +244,6 @@ export const createMediabunnyVideoShareFile = async (
 
     try {
       let conversion: Awaited<ReturnType<typeof Conversion.init>>;
-      let processedFrameIndex = 0;
       try {
         conversion = await Conversion.init({
           audio: {
@@ -272,7 +269,6 @@ export const createMediabunnyVideoShareFile = async (
             height: profile.height,
             keyFrameInterval: 2,
             process: (sample) => {
-              const outputTimestamp = processedFrameIndex * frameDurationSeconds;
               const sampleWidth = Math.max(1, Math.round(sample.displayWidth));
               const sampleHeight = Math.max(1, Math.round(sample.displayHeight));
 
@@ -284,11 +280,7 @@ export const createMediabunnyVideoShareFile = async (
               ctx.scale(scaleX, scaleY);
               drawLectumShareFrame(ctx, sourceCanvas, layout, target, palette, assets);
               ctx.restore();
-              processedFrameIndex += 1;
-              return new VideoSample(canvas, {
-                duration: frameDurationSeconds,
-                timestamp: outputTimestamp,
-              });
+              return canvas;
             },
             processedHeight: profile.height,
             processedWidth: profile.width,

@@ -92,6 +92,7 @@ type RenderPostShareVideoArtifactInput = {
   postId: string;
   replyId?: string | null;
   signal?: AbortSignal;
+  timeoutMs?: number;
 };
 
 export const getMyPosts = async (query: UserPostsQuery = {}) => {
@@ -147,6 +148,7 @@ export const renderPostShareVideoArtifact = async ({
   postId,
   replyId,
   signal,
+  timeoutMs,
 }: RenderPostShareVideoArtifactInput) => {
   const handle = callEndpoint({
     route: replyId
@@ -156,7 +158,7 @@ export const renderPostShareVideoArtifact = async ({
     params: { id: postId, replyId },
     config: {
       signal,
-      timeout: SHARE_VIDEO_RENDER_TIMEOUT_MS,
+      timeout: timeoutMs ?? SHARE_VIDEO_RENDER_TIMEOUT_MS,
     },
   });
   const response = await api.request<Blob>({
