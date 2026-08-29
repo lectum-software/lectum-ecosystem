@@ -68,12 +68,28 @@ test("pagina interna do Chromium usa MediaBunny para mp4 fast start com AVC/AAC"
   assert.doesNotMatch(html, /frameDurationSeconds/);
 });
 
+test("marca Lectum do render backend preserva proporcao no canvas quadrado", () => {
+  const html = getShareRenderBrowserPageHtml();
+  const iconAsset = readFileSync(path.resolve(__dirname, "../../../../../../../public/icon.png"));
+
+  assert.ok(iconAsset.byteLength > 0);
+  assert.match(html, /BRAND_ICON_SOURCE_PADDING_RATIO/);
+  assert.match(html, /isLectumBrandPixel/);
+  assert.match(html, /image\.naturalWidth \|\| image\.width \|\| size/);
+  assert.match(html, /const scale = Math\.min\(size \/ cropWidth, size \/ cropHeight\)/);
+  assert.match(html, /const drawX = \(size - drawWidth\) \/ 2/);
+  assert.match(html, /const drawY = \(size - drawHeight\) \/ 2/);
+  assert.match(html, /sourceCanvas,[\s\S]*cropX,[\s\S]*cropY,[\s\S]*drawX,[\s\S]*drawY/);
+  assert.match(html, /drawLectumFallbackBrandIcon/);
+  assert.doesNotMatch(html, /sourceContext\.drawImage\(image, 0, 0, size, size\)/);
+});
+
 test("renderizacao social no backend deduplica e reaproveita resultado em memoria", () => {
   const rendererSource = readFileSync(path.join(__dirname, "share-render", "renderer.ts"), "utf8");
 
   assert.match(
     rendererSource,
-    /SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v3-cfr30-quality-server"/,
+    /SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v4-square-logo-cfr30-quality-server"/,
   );
   assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_TTL_MS = 30 \* 60_000/);
   assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4/);
@@ -85,7 +101,7 @@ test("renderizacao social publicada usa job assincrono para evitar resposta long
   const jobsSource = readFileSync(path.join(__dirname, "share-render", "jobs.ts"), "utf8");
   const routesSource = readFileSync(path.join(__dirname, "..", "..", "index.ts"), "utf8");
 
-  assert.match(jobsSource, /SHARE_RENDER_JOB_VERSION = "share-render-job-v1-cf-safe-cfr30"/);
+  assert.match(jobsSource, /SHARE_RENDER_JOB_VERSION = "share-render-job-v2-square-logo-cfr30"/);
   assert.match(jobsSource, /SHARE_RENDER_JOB_TTL_MS = 30 \* 60_000/);
   assert.match(jobsSource, /startShareRenderJob/);
   assert.match(jobsSource, /getShareRenderJobSnapshot/);

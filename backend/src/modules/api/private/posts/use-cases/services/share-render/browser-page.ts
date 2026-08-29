@@ -62,6 +62,9 @@ const OUTPUT_PROFILE = {
 const TEXT_ELLIPSIS = "...";
 const PROFESSIONAL_TAG_NAME_MAX_LENGTH = 18;
 const BASE64_CHUNK_SIZE = 32_766;
+const BRAND_ICON_BLUE_MINIMUM_VALUE = 120;
+const BRAND_ICON_COLOR_CHANNEL_GAP = 20;
+const BRAND_ICON_SOURCE_PADDING_RATIO = 0.03;
 
 const createCanvas = (width, height) => {
   const canvas = document.createElement("canvas");
@@ -187,28 +190,123 @@ const loadImage = (src) =>
     image.src = src;
   });
 
+const parseSolidHexColor = (color) => {
+  const normalized = String(color || "").trim().replace("#", "");
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null;
+
+  return {
+    blue: Number.parseInt(normalized.slice(4, 6), 16),
+    green: Number.parseInt(normalized.slice(2, 4), 16),
+    red: Number.parseInt(normalized.slice(0, 2), 16),
+  };
+};
+
+const isLectumBrandPixel = (red, green, blue, alpha) =>
+  alpha > 0 &&
+  blue >= BRAND_ICON_BLUE_MINIMUM_VALUE &&
+  blue >= red + BRAND_ICON_COLOR_CHANNEL_GAP &&
+  blue >= green + BRAND_ICON_COLOR_CHANNEL_GAP;
+
 const createMonochromeBrandLogoCanvas = (image, size, fillColor) => {
-  const sourceCanvas = createCanvas(size, size);
-  const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
-  if (!sourceContext) return null;
+  const canvas = createCanvas(size, size);
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return null;
 
-  sourceContext.drawImage(image, 0, 0, size, size);
-  const imageData = sourceContext.getImageData(0, 0, size, size);
-  const fill = fillColor.trim().replace("#", "");
-  const red = Number.parseInt(fill.slice(0, 2), 16);
-  const green = Number.parseInt(fill.slice(2, 4), 16);
-  const blue = Number.parseInt(fill.slice(4, 6), 16);
+  const targetColor = parseSolidHexColor(fillColor);
+  if (!targetColor) return null;
 
-  for (let index = 0; index < imageData.data.length; index += 4) {
-    const alpha = imageData.data[index + 3];
-    imageData.data[index] = red;
-    imageData.data[index + 1] = green;
-    imageData.data[index + 2] = blue;
-    imageData.data[index + 3] = alpha;
+  try {
+    const sourceWidth = Math.max(1, image.naturalWidth || image.width || size);
+    const sourceHeight = Math.max(1, image.naturalHeight || image.height || size);
+    const sourceCanvas = createCanvas(sourceWidth, sourceHeight);
+    const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+    if (!sourceContext) return null;
+
+    sourceContext.clearRect(0, 0, sourceWidth, sourceHeight);
+    sourceContext.drawImage(image, 0, 0, sourceWidth, sourceHeight);
+    const sourceImageData = sourceContext.getImageData(0, 0, sourceWidth, sourceHeight);
+    const sourceData = sourceImageData.data;
+    let maxX = -1;
+    let maxY = -1;
+    let minX = sourceWidth;
+    let minY = sourceHeight;
+
+    for (let index = 0; index < sourceData.length; index += 4) {
+      const red = sourceData[index];
+      const green = sourceData[index + 1];
+      const blue = sourceData[index + 2];
+      const alpha = sourceData[index + 3];
+
+      if (!isLectumBrandPixel(red, green, blue, alpha)) continue;
+
+      const pixelIndex = index / 4;
+      const x = pixelIndex % sourceWidth;
+      const y = Math.floor(pixelIndex / sourceWidth);
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+
+    if (maxX < minX || maxY < minY) return null;
+
+    const padding = Math.round(
+      Math.max(maxX - minX + 1, maxY - minY + 1) * BRAND_ICON_SOURCE_PADDING_RATIO,
+    );
+    const cropX = Math.max(0, minX - padding);
+    const cropY = Math.max(0, minY - padding);
+    const cropRight = Math.min(sourceWidth, maxX + padding + 1);
+    const cropBottom = Math.min(sourceHeight, maxY + padding + 1);
+    const cropWidth = Math.max(1, cropRight - cropX);
+    const cropHeight = Math.max(1, cropBottom - cropY);
+    const scale = Math.min(size / cropWidth, size / cropHeight);
+    const drawWidth = cropWidth * scale;
+    const drawHeight = cropHeight * scale;
+    const drawX = (size - drawWidth) / 2;
+    const drawY = (size - drawHeight) / 2;
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.clearRect(0, 0, size, size);
+    context.drawImage(
+      sourceCanvas,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      drawX,
+      drawY,
+      drawWidth,
+      drawHeight,
+    );
+
+    const imageData = context.getImageData(0, 0, size, size);
+    const { data } = imageData;
+
+    for (let index = 0; index < data.length; index += 4) {
+      const red = data[index];
+      const green = data[index + 1];
+      const blue = data[index + 2];
+      const alpha = data[index + 3];
+
+      if (isLectumBrandPixel(red, green, blue, alpha)) {
+        data[index] = targetColor.red;
+        data[index + 1] = targetColor.green;
+        data[index + 2] = targetColor.blue;
+        data[index + 3] = alpha;
+      } else {
+        data[index + 3] = 0;
+      }
+    }
+
+    context.putImageData(imageData, 0, 0);
+  } catch {
+    context.clearRect(0, 0, size, size);
+    return null;
   }
 
-  sourceContext.putImageData(imageData, 0, 0);
-  return sourceCanvas;
+  return canvas;
 };
 
 const assetsPromise = loadImage("/icon.png")
@@ -219,21 +317,38 @@ const assetsPromise = loadImage("/icon.png")
   .catch(() => ({}));
 
 const drawLectumFallbackBrandIcon = (ctx, x, y, size, palette) => {
+  const lineWidth = Math.max(3, size * 0.16);
+
   ctx.save();
   ctx.strokeStyle = palette.surface;
-  ctx.lineWidth = Math.max(2, size * 0.12);
-  const radius = size * 0.22;
-  const centers = [
-    [x + size * 0.35, y + size * 0.35],
-    [x + size * 0.64, y + size * 0.35],
-    [x + size * 0.5, y + size * 0.64],
-  ];
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = lineWidth;
 
-  for (const center of centers) {
-    ctx.beginPath();
-    ctx.arc(center[0], center[1], radius, 0, Math.PI * 2);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.38, y + size * 0.36, size * 0.23, size * 0.27, -0.22, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.68, y + size * 0.42, size * 0.2, size * 0.25, 0.18, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.2, y + size * 0.92);
+  ctx.lineTo(x + size * 0.2, y + size * 0.68);
+  ctx.quadraticCurveTo(x + size * 0.2, y + size * 0.56, x + size * 0.33, y + size * 0.55);
+  ctx.quadraticCurveTo(x + size * 0.49, y + size * 0.55, x + size * 0.49, y + size * 0.75);
+  ctx.lineTo(x + size * 0.49, y + size * 0.92);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.55, y + size * 0.92);
+  ctx.lineTo(x + size * 0.55, y + size * 0.73);
+  ctx.quadraticCurveTo(x + size * 0.55, y + size * 0.57, x + size * 0.7, y + size * 0.57);
+  ctx.quadraticCurveTo(x + size * 0.82, y + size * 0.57, x + size * 0.82, y + size * 0.68);
+  ctx.lineTo(x + size * 0.82, y + size * 0.92);
+  ctx.stroke();
+
   ctx.restore();
 };
 

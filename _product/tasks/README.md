@@ -1172,3 +1172,11 @@ Uma task só pode ser marcada como concluída quando:
 - Render local com o MP4 longo fornecido confirmou `frameRateIsConstant=true`, `underlyingFrameRate=30`, 3707 frames com duracao unica de 0,033333s, 17.944.835 bytes e tempo de render de 108.357ms.
 - Sem FFmpeg, schema, migration, env obrigatoria, pacote novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback operacional segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false`, com o trade-off de o download dedicado de video falhar em vez de cair para encode local.
 - Correcao operacional em 2026-08-29: o download social backend-only passou a usar job assincrono efemero + polling para evitar resposta binaria longa atras do Cloudflare, mantendo Chromium + MediaBunny sem FFmpeg e elevando o timeout defensivo do render.
+
+
+## Correcao visual em 2026-08-29: marca Lectum proporcional no render backend
+
+- Ajuste pos-feedback da TASK-42: o MP4 backend-only gerado por Chromium + MediaBunny estava usando fallback/asset incorreto para a marca no header, deixando o simbolo branco ao lado de `Respondido na Lectum` visualmente deformado.
+- O backend passa a embarcar `public/icon.png` e a aplicar o mesmo recorte por pixels azuis da marca antes de recolorir para branco/transparente no canvas quadrado do header.
+- O fallback vetorial local foi alinhado ao desenho real da marca, e as chaves efemeras de cache/job foram versionadas para nao reaproveitar resultados com o logo antigo.
+- Alteracao backend-only, admin/frontend apenas manifests de versao; sem schema, migration, env obrigatoria, package novo, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados.

@@ -1485,3 +1485,27 @@ A versao 0.1.246 tornou o download dedicado backend-only e CFR 30, mas a validac
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.247, incluindo testes direcionados, checks/builds relevantes, bump/check de versao, `pnpm check`, push em homologacao e smoke publico.
+
+
+## Ajuste 2026-08-29 - marca Lectum proporcional no render backend
+
+### Contexto
+
+O usuario apontou no MP4 baixado que o simbolo da Lectum ao lado de `Respondido na Lectum` estava deformado. O print foi usado apenas como evidencia visual. O renderer backend, introduzido para o download backend-only, tentava carregar `/icon.png` a partir do `backend/public`, mas esse asset nao estava embarcado; com isso, o video podia cair no fallback vetorial simplificado. A rotina backend tambem nao tinha a mesma protecao do cliente para recortar apenas a area azul da marca antes de gerar a versao branca.
+
+### Decisao
+
+- Duplicar de forma explicita o asset oficial quadrado como `backend/public/icon.png`, porque backend e frontend sao apps separados em producao e o container do backend nao deve depender de `frontend/public`.
+- Levar para a pagina Chromium o mesmo principio do cliente: detectar pixels azuis da marca, calcular bounding box, aplicar padding minimo, escalar com proporcao uniforme e centralizar o resultado em canvas quadrado antes de recolorir para branco/transparente.
+- Atualizar o fallback vetorial backend para o desenho com elipses e hastes usado no cliente, evitando a aproximacao anterior de tres circulos.
+- Invalidar resultados efemeros por nova chave de cache/job: `share-render-v4-square-logo-cfr30-quality-server` e `share-render-job-v2-square-logo-cfr30`.
+
+### Consequencias
+
+- O header do MP4 gerado pelo backend deve exibir a marca real da Lectum em branco, proporcional ao texto e sem aparencia achatada/deformada.
+- O backend ganha um asset estatico pequeno ja existente no produto, sem dependencia nova e sem acoplar o deploy ao frontend.
+- Nao ha mudanca de API, banco, storage, provider, env, pacote, FFmpeg ou dados persistidos. Rollback simples reverte o asset, o crop/fallback e as versoes efemeras.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.248, incluindo teste direcionado do renderer backend, checks/builds relevantes, guardas de documentacao e smoke de homologacao apos push.

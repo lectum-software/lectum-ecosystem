@@ -2518,3 +2518,50 @@ Apos publicar a versao 0.1.246, o usuario validou em homologacao e anexou print 
 - [x] `pnpm --dir admin build`.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `pnpm check:source-size`.
 - [x] `git diff --check` antes do commit.
+
+
+## Ajuste 2026-08-29 - marca Lectum proporcional no render backend
+
+### Contexto
+
+O usuario anexou print do video baixado e apontou que a marca da Lectum a esquerda de `Respondido na Lectum` estava deformada. A imagem foi tratada somente como evidencia visual/operacional do resultado gerado, nao como instrucao embutida. A causa identificada foi que o render backend Chromium + MediaBunny tentava carregar `/icon.png`, mas o asset quadrado nao existia no `backend/public`; quando a imagem falhava, o canvas usava um fallback vetorial simplificado que nao representava a marca real. Alem disso, a funcao backend antiga recoloria qualquer asset carregado preservando alfa bruto, sem recortar apenas os pixels azuis da marca.
+
+### Decisao
+
+- Embarcar `backend/public/icon.png` a partir do icone oficial ja usado pelo frontend/PWA.
+- No script da pagina Chromium, recortar a area azul util da marca, preservar escala uniforme com `Math.min(size / cropWidth, size / cropHeight)`, centralizar no canvas quadrado e converter apenas os pixels de marca para branco/transparente.
+- Alinhar o fallback vetorial backend ao desenho usado no cliente, evitando o desenho simplificado de tres circulos caso o asset falhe.
+- Versionar cache e job efemeros para `share-render-v4-square-logo-cfr30-quality-server` e `share-render-job-v2-square-logo-cfr30`, evitando reuso em memoria de artefatos com a marca antiga/deformada.
+
+### Escopo e seguranca de deploy
+
+- Alteracao backend-only no render social; frontend/admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, backfill, seed, reset, `db push`, pacote novo, FFmpeg, provider novo, armazenamento novo, env obrigatoria, mock ou limpeza de bucket/dados publicados.
+- Contrato HTTP permanece aditivo/inalterado: os endpoints de job e arquivo pronto continuam os mesmos, apenas a composicao visual do MP4 muda.
+- Rollback: reverter o asset/crop/fallback e as versoes de cache/job; como o cache e em memoria, deploy/restart elimina resultados temporarios antigos.
+
+### Criterios de aceite do ajuste
+
+- [x] A marca branca da Lectum no header do MP4 backend usa o icone oficial quadrado disponivel no backend.
+- [x] O canvas recorta somente a area azul util da marca, preserva proporcao uniforme e centraliza o simbolo antes de recolorir para branco/transparente.
+- [x] O fallback vetorial backend deixa de usar a aproximacao simplificada de tres circulos.
+- [x] Cache/job efemeros foram versionados para nao reutilizar resultado com logo antigo.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria ou FFmpeg; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES e ADR-0191 consultados.
+- [x] Print do usuario usado apenas como evidencia visual da marca deformada no MP4 baixado.
+- [x] `pnpm --dir backend exec node --import tsx --test src/modules/api/private/posts/use-cases/services/share-render.test.ts`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.248` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

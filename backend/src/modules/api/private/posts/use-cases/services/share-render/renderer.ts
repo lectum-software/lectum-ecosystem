@@ -42,7 +42,7 @@ const SHARE_RENDER_VIEWPORT = {
   width: 540,
 } as const;
 const SHARE_RENDER_CLOSE_TIMEOUT_MS = 3_000;
-const SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v3-cfr30-quality-server";
+const SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v4-square-logo-cfr30-quality-server";
 const SHARE_RENDER_RESULT_CACHE_TTL_MS = 30 * 60_000;
 const SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4;
 const SHARE_RENDER_RESULT_CACHE_MAX_BYTES = 80 * 1024 * 1024;

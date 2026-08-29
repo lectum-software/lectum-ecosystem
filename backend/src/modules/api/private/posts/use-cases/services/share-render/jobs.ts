@@ -3,7 +3,7 @@ import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { renderShareVideoWithChromium } from "./renderer";
 import type { ShareRenderResult, ShareRenderTarget } from "./types";
 
-const SHARE_RENDER_JOB_VERSION = "share-render-job-v1-cf-safe-cfr30";
+const SHARE_RENDER_JOB_VERSION = "share-render-job-v2-square-logo-cfr30";
 const SHARE_RENDER_JOB_TTL_MS = 30 * 60_000;
 const SHARE_RENDER_JOB_FAILED_TTL_MS = 5 * 60_000;
 const SHARE_RENDER_JOB_MAX_ENTRIES = 6;
