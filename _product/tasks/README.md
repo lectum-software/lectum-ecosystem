@@ -1103,3 +1103,11 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-42: o toast verde de sucesso `Video baixado.` passa a incluir a orientacao secundaria `Se a qualidade ficar baixa, tente pelo computador.`.
 - A badge permanece verde porque o download foi concluido; a orientacao e condicional e nao deve transformar o sucesso em alerta amarelo.
 - Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+### Ajuste pos-feedback 2026-08-29 - copy de indisponibilidade CFP
+
+- Concluido em `homolog`: o fluxo `/psychologist/cfp`/`/app/profissional/cfp` passa a usar a copy escolhida "Sistema do CFP indisponivel" para falhas relacionadas ao sistema do Conselho Federal de Psicologia.
+- Erros `cfp_provider_*`, HTTP 5xx e falhas genericas de conexao exibem a mensagem publica "O sistema do Conselho Federal de Psicologia esta indisponivel no momento. Fale com o suporte para continuarmos a verificacao manual do seu registro." e mantem CTA de suporte por WhatsApp.
+- Traducoes backend dos erros `cfp_provider_*` alinhadas para rollout com frontend/backend em versoes diferentes, sem mudar provider, endpoint, schema, migration, env, packages, mock, seed, reset ou regra de aprovacao.
+- Evidencia visual: print anexado pelo usuario e fallback local `_product/proto/Verificacao de CPF - Consulta CFP.jpg`, pois Builder/Quick Copy nao esta acessivel neste ambiente.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`; criterios de aceite em `_product/tasks/TASK-10-consulta-cfp-resultado.md` marcados como concluidos.

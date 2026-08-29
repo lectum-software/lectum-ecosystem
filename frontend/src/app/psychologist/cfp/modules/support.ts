@@ -13,14 +13,13 @@ export const supportLinkProps = {
   target: "_blank",
 } as const;
 
-export const cfpSystemErrorMessage =
-  "N\u00e3o foi poss\u00edvel concluir a verifica\u00e7\u00e3o autom\u00e1tica agora.";
+export const cfpErrorTitle = "Sistema do CFP indisponível";
 
 export const cfpAttemptLimitMessage =
   "Você excedeu o número de tentativas de busca de CPF. Entre em contato com o suporte para continuar a verificação do seu registro.";
 
 export const cfpProviderUnavailableMessage =
-  "O sistema do Conselho Federal de Psicologia está indisponível no momento. Entre em contato com o suporte para a consulta manual do seu registro.";
+  "O sistema do Conselho Federal de Psicologia está indisponível no momento. Fale com o suporte para continuarmos a verificação manual do seu registro.";
 
 export type ApiError = Error & {
   data?: unknown;
@@ -48,7 +47,13 @@ export const getStatusValue = (value: unknown) => {
 };
 
 const cfpAttemptLimitCodes = new Set(["cfp_search_attempts_exceeded"]);
-const cfpConnectionErrorCodes = new Set(["cfp_provider_unavailable"]);
+const cfpProviderIssueCodes = new Set([
+  "cfp_provider_config_error",
+  "cfp_provider_error",
+  "cfp_provider_rate_limited",
+  "cfp_provider_unavailable",
+  "cfp_provider_validation_error",
+]);
 
 const isGenericConnectionMessage = (message: string) =>
   /conectar ao servi\u00e7o|servi\u00e7o temporariamente indispon\u00edvel|temporariamente indispon\u00edvel/i.test(
@@ -64,11 +69,11 @@ export const resolveApiError = (error: unknown) => {
     getStatusValue(responseData.status) ||
     getStatusValue(apiError?.response?.status);
   const code = getStringValue(data.code) || getStringValue(responseData.code);
-  const rawMessage = getSafeApiErrorMessage(error, cfpSystemErrorMessage);
+  const rawMessage = getSafeApiErrorMessage(error, cfpProviderUnavailableMessage);
   const isAttemptLimit = Boolean(code && cfpAttemptLimitCodes.has(code));
-  const isProviderUnavailable = Boolean(code && cfpConnectionErrorCodes.has(code));
-  const isOperationalUnavailable =
-    isProviderUnavailable ||
+  const isProviderIssue = Boolean(code && cfpProviderIssueCodes.has(code));
+  const shouldUseProviderUnavailableMessage =
+    isProviderIssue ||
     (typeof status === "number" && status >= 500) ||
     (!status && isGenericConnectionMessage(rawMessage));
 
@@ -76,7 +81,7 @@ export const resolveApiError = (error: unknown) => {
     code,
     message: isAttemptLimit
       ? cfpAttemptLimitMessage
-      : isOperationalUnavailable
+      : shouldUseProviderUnavailableMessage
         ? cfpProviderUnavailableMessage
         : rawMessage,
     showSupportGuidance: true,

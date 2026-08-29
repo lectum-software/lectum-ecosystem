@@ -15,6 +15,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
+  cfpErrorTitle,
   formatCfpRegistrationDate,
   nextStepHref,
   type ResolvedApiError,
@@ -224,7 +225,7 @@ export const ResultsScreen = ({
         ) : null}
 
         {apiError ? (
-          <InlineAlert className="mt-5" title="Não foi possível confirmar" variant="error">
+          <InlineAlert className="mt-5" title={cfpErrorTitle} variant="error">
             <div className="grid gap-3">
               <p>{apiError.message}</p>
               {shouldShowCfpSupportGuidance(apiError) ? <SupportGuidance /> : null}

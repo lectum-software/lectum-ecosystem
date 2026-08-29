@@ -112,3 +112,11 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Falhas na confirmacao de um resultado encontrado tambem exibem a mesma orientacao, mantendo uma unica saida operacional para o psicologo.
 - A mudanca nao altera contrato, provider, banco, limite de tentativas, logs, armazenamento ou regra de aprovacao: falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional.
 - Mensagens publicas permanecem sanitizadas e nao expõem InfoSimples, token, endpoint, CPF completo, payload tecnico, stack ou detalhes internos.
+
+## Ajuste 2026-08-29 - copy publica de indisponibilidade do CFP
+
+- Decisao de produto: falhas relacionadas ao provedor/sistema CFP devem usar uma mensagem unica que atribui a indisponibilidade ao sistema do Conselho Federal de Psicologia e direciona o psicologo ao suporte para verificacao manual.
+- O alerta da UI passa a usar o titulo "Sistema do CFP indisponivel" nas falhas da busca e da confirmacao CFP.
+- A UI mapeia `cfp_provider_config_error`, `cfp_provider_validation_error`, `cfp_provider_rate_limited`, `cfp_provider_unavailable`, `cfp_provider_error`, HTTP 5xx e falhas genericas de conexao para a copy escolhida: "O sistema do Conselho Federal de Psicologia esta indisponivel no momento. Fale com o suporte para continuarmos a verificacao manual do seu registro."
+- As traducoes backend dos erros `cfp_provider_*` foram alinhadas a mesma copy publica para tolerar rollout com frontend/backend em versoes diferentes e evitar termos como API automatica, configuracao, rate limit, token, endpoint ou provider.
+- A decisao nao altera provider, contrato, schema, armazenamento, limite de tentativas, logs ou politica de aprovacao: falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional.

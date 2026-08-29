@@ -21,6 +21,7 @@ import {
   SessionMissingScreen,
 } from "./components/result-screens";
 import {
+  cfpErrorTitle,
   nextStepHref,
   type ResolvedApiError,
   resolveApiError,
@@ -164,7 +165,7 @@ export const PsychologistCfpLogic = () => {
 
         <Form className="mt-8 grid gap-5" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
           {apiError ? (
-            <InlineAlert title={"N\u00e3o foi poss\u00edvel consultar"} variant="error">
+            <InlineAlert title={cfpErrorTitle} variant="error">
               <div className="grid gap-3">
                 <p>{apiError.message}</p>
                 {shouldShowCfpSupportGuidance(apiError) ? <SupportGuidance /> : null}

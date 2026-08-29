@@ -321,3 +321,31 @@ Validacoes executadas:
 - [x] Falhas de busca CFP, incluindo `cfp_provider_validation_error`, exibem orientacao para contato com suporte.
 - [x] Falhas de confirmacao CFP exibem a mesma orientacao de suporte.
 - [x] Mensagens publicas continuam sanitizadas e a regra de aprovacao real/manual nao foi alterada.
+
+## Ajuste pos-feedback 2026-08-29 - copy de indisponibilidade do CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp` e ao alias `/app/profissional/cfp`: a segunda opcao de copy foi adotada para falhas relacionadas ao sistema do Conselho Federal de Psicologia.
+- O titulo publico do alerta passa a ser "Sistema do CFP indisponivel".
+- Para `cfp_provider_config_error`, `cfp_provider_validation_error`, `cfp_provider_rate_limited`, `cfp_provider_unavailable`, `cfp_provider_error`, HTTP 5xx e falhas genericas de conexao, a UI passa a exibir: "O sistema do Conselho Federal de Psicologia esta indisponivel no momento. Fale com o suporte para continuarmos a verificacao manual do seu registro."
+- A traducao backend dos erros `cfp_provider_*` foi alinhada para compatibilidade durante rollout com frontend/backend em versoes diferentes; os codigos de dominio, statuses, limites de tentativa, provider e contrato nao foram alterados.
+- O CTA de suporte permanece no alerta, agora como complemento curto de acao pelo WhatsApp, sem repetir a mesma frase da mensagem principal.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a imagem anexada pelo usuario e a referencia local `_product/proto/Verificacao de CPF - Consulta CFP.jpg` foram usadas como evidencia visual.
+- Alteracao de copy frontend/backend locale, mobile-first, sem schema Prisma, migration, endpoint, env, package novo, mock, seed, reset ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] O alerta de falhas do sistema CFP usa o titulo "Sistema do CFP indisponivel".
+- [x] Falhas `cfp_provider_*`, incluindo `cfp_provider_validation_error` do print, informam que o sistema do Conselho Federal de Psicologia esta indisponivel e orientam suporte para verificacao manual.
+- [x] Mensagens publicas continuam sanitizadas e a regra de aprovacao real/manual nao foi alterada.
+
+### Validacoes executadas pos-feedback
+
+- `pnpm version:bump` e `pnpm check:version` sincronizaram os manifests em `0.1.237`.
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- Smoke estatico Node confirmou titulo, corpo, `cfp_provider_validation_error`, CTA de suporte e traducoes backend `cfp_provider_*` alinhados.
+- `pnpm check`
+- Browser local mobile-first 390x884 em `http://localhost:3000/psychologist/cfp`: rota protegida renderizou/redirecionou para login sem sessao, preservando o shell privado; o estado de erro nao foi forjado com mock.
