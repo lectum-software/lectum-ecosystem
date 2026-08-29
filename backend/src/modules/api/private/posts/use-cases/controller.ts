@@ -7,6 +7,8 @@ import {
   createReply as createReplyService,
   deletePost as deletePostService,
   deleteReply as deleteReplyService,
+  getRenderShareArtifactJobFile as getRenderShareArtifactJobFileService,
+  getRenderShareArtifactJob as getRenderShareArtifactJobService,
   getShareArtifact as getShareArtifactService,
   initiateReplyMediaMultipartUpload as initiateReplyMediaMultipartUploadService,
   mine as mineService,
@@ -20,6 +22,7 @@ import {
   save as saveService,
   share as shareService,
   show as showService,
+  startRenderShareArtifactJob as startRenderShareArtifactJobService,
   unmute as unmuteService,
   unsaveReply as unsaveReplyService,
   unsave as unsaveService,
@@ -301,6 +304,55 @@ export const renderShareArtifact = async (req: Request, res: Response) => {
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_share_artifact_render", err);
+  }
+};
+
+export const startRenderShareArtifactJob = async (req: Request, res: Response) => {
+  try {
+    const resolve = await startRenderShareArtifactJobService({
+      auth: req.auth,
+      p: req.params as unknown as Parameters<typeof startRenderShareArtifactJobService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_render_job_start", err);
+  }
+};
+
+export const getRenderShareArtifactJob = async (req: Request, res: Response) => {
+  try {
+    const resolve = await getRenderShareArtifactJobService({
+      auth: req.auth,
+      p: req.params as unknown as Parameters<typeof getRenderShareArtifactJobService>[0]["p"],
+    });
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_render_job", err);
+  }
+};
+
+export const getRenderShareArtifactJobFile = async (req: Request, res: Response) => {
+  try {
+    const resolve = await getRenderShareArtifactJobFileService({
+      auth: req.auth,
+      p: req.params as unknown as Parameters<typeof getRenderShareArtifactJobFileService>[0]["p"],
+    });
+
+    if (resolve.success && isShareArtifactRenderResponseData(resolve.data)) {
+      res.setHeader("Cache-Control", "private, no-store");
+      res.setHeader("Content-Disposition", contentDispositionForFileName(resolve.data.fileName));
+      res.setHeader("Content-Length", String(resolve.data.sizeBytes));
+      res.setHeader("Content-Type", resolve.data.contentType);
+      res.setHeader("X-Content-Type-Options", "nosniff");
+
+      return res.status(200).send(resolve.data.buffer);
+    }
+
+    return send(res, resolve);
+  } catch (err) {
+    return error500(res, "post_share_artifact_render_job_file", err);
   }
 };
 

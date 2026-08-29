@@ -1,4 +1,9 @@
-import { renderPostShareVideoArtifact } from "@/api/req/posts";
+import {
+  downloadPostShareVideoArtifactRenderJobFile,
+  getPostShareVideoArtifactRenderJob,
+  renderPostShareVideoArtifact,
+  startPostShareVideoArtifactRenderJob,
+} from "@/api/req/posts";
 import type { LectumShareLinkTarget, LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import {
@@ -113,8 +118,13 @@ const SOURCE_VIDEO_FALLBACK_EXTENSION_BY_MIME: Record<string, string> = {
 
 const sourceVideoFallbackFileCache = new Map<string, PreparedShareFileCacheValue>();
 const SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000;
-const SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 155_000;
+const SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 260_000;
 const SERVER_SHARE_RENDER_HTTP_GRACE_MS = 5_000;
+const SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS = 60_000;
+const SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS = 2_500;
+const SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS = 6_000;
+const SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS = 20_000;
+const SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS = 15_000;
 const sourceVideoFallbackFiles = new WeakSet<File>();
 
 const isPreparedShareFile = (value: PreparedShareFileCacheValue): value is File =>
@@ -222,6 +232,73 @@ export const clearPreparedLectumShareFile = (target: LectumShareSocialTarget) =>
   preparedShareFileCache.delete(createPreparedShareFileCacheKey(target));
 };
 
+const waitForShareRenderPoll = (delayMs: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new DOMException("Operacao cancelada.", "AbortError"));
+      return;
+    }
+
+    function handleAbort() {
+      window.clearTimeout(timeout);
+      reject(signal?.reason ?? new DOMException("Operacao cancelada.", "AbortError"));
+    }
+
+    const timeout = window.setTimeout(() => {
+      signal?.removeEventListener("abort", handleAbort);
+      resolve();
+    }, delayMs);
+
+    signal?.addEventListener("abort", handleAbort, { once: true });
+  });
+
+const prepareLectumShareFileWithServerRenderJob = async (
+  target: LectumShareSocialTarget,
+  signal: AbortSignal,
+) => {
+  const startedAt = Date.now();
+  const deadlineAt = startedAt + SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS;
+  const job = await startPostShareVideoArtifactRenderJob({
+    postId: target.postId,
+    replyId: target.replyId,
+    signal,
+    timeoutMs: SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS,
+  });
+  let status = job;
+  let pollIntervalMs = SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS;
+
+  while (!status.ready && status.status === "processing" && Date.now() < deadlineAt) {
+    const retryAfterMs =
+      status.retry_after_ms > 0
+        ? Math.min(status.retry_after_ms, SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS)
+        : pollIntervalMs;
+
+    await waitForShareRenderPoll(retryAfterMs, signal);
+
+    status = await getPostShareVideoArtifactRenderJob({
+      jobId: status.job_id,
+      postId: target.postId,
+      replyId: target.replyId,
+      signal,
+      timeoutMs: SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS,
+    });
+    pollIntervalMs = Math.min(pollIntervalMs + 500, SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS);
+  }
+
+  if (!status.ready || status.status !== "completed") {
+    throw new Error("Video indisponivel para download.");
+  }
+
+  return downloadPostShareVideoArtifactRenderJobFile({
+    fileName: safeFileName(target, "mp4"),
+    jobId: status.job_id,
+    postId: target.postId,
+    replyId: target.replyId,
+    signal,
+    timeoutMs: SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS,
+  });
+};
+
 export const prepareLectumShareFile = (target: LectumShareSocialTarget) => {
   const cacheKey = createPreparedShareFileCacheKey(target);
   const cached = preparedShareFileCache.get(cacheKey);
@@ -264,6 +341,13 @@ export const prepareLectumShareFileWithServerRender = async (
   const fallbackTimeout = window.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    if (options.serverOnly) {
+      const file = await prepareLectumShareFileWithServerRenderJob(target, controller.signal);
+      cachePreparedLectumShareFile(target, file);
+
+      return file;
+    }
+
     const file = await renderPostShareVideoArtifact({
       fileName: safeFileName(target, "mp4"),
       postId: target.postId,

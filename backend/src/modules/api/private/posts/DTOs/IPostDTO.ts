@@ -325,6 +325,18 @@ export type PostShareRenderTargetDTO = {
   sourceText: string;
 };
 
+export type PostShareRenderJobStatus = "completed" | "expired" | "failed" | "processing";
+
+export type PostShareRenderJobResponse = {
+  created_at: Date;
+  expires_at: Date;
+  job_id: string;
+  ready: boolean;
+  retry_after_ms: number;
+  size_bytes: number | null;
+  status: PostShareRenderJobStatus;
+};
+
 export type PostReplyDeleteResponse = {
   post_id: string;
   reply_ids: string[];
@@ -411,6 +423,11 @@ export type IPostShareArtifactDTO = {
 
 export type IPostRenderShareArtifactDTO = {
   p: PostParams & { replyId?: string };
+  auth: user;
+};
+
+export type IPostRenderShareArtifactJobDTO = {
+  p: PostParams & { jobId?: string; replyId?: string };
   auth: user;
 };
 

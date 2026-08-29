@@ -2472,3 +2472,49 @@ O usuario anexou o arquivo `Túlio Rezende na Lectum (1).mp4` baixado no computa
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-08-29 - render social assíncrono por job em homologação
+
+### Contexto
+
+Apos publicar a versao 0.1.246, o usuario validou em homologacao e anexou print com o toast publico `Nao conseguimos gerar o video com arte agora. Tente novamente em instantes.` ao acionar `Baixar video`. O print foi tratado somente como evidencia operacional da falha. Como o backend publicado esta atras do Cloudflare e o render local do mesmo video longo levou 108.357ms, uma requisicao HTTP segurada ate o MP4 ficar pronto pode ultrapassar o limite do proxy/origem antes da resposta. Tambem foi identificado que `.env.example` ainda documentava `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS=45000`, podendo manter configuracao legada baixa em ambientes publicados.
+
+### Decisoes
+
+- Manter Chromium + MediaBunny no backend e nao adicionar FFmpeg.
+- Criar endpoints privados owner-only de job efemero em memoria para render social: iniciar job, consultar status e baixar o arquivo pronto.
+- O frontend server-only passa a iniciar o job, fazer polling curto e chamar o endpoint binario somente depois de `completed`, evitando uma unica resposta HTTP longa atraves do Cloudflare.
+- Manter a rota binaria direta antiga por compatibilidade entre versoes, mas o fluxo novo de download dedicado usa `render-jobs`.
+- Elevar o timeout default do render backend para 240s e aplicar minimo defensivo de 150s; env legada com 45s passa a cair no fallback seguro do codigo.
+- Atualizar `.env.example` para `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS=240000` sem criar env nova obrigatoria.
+
+### Impacto de deploy
+
+- Mudanca aditiva de API; backend novo continua aceitando a rota direta antiga e frontend novo usa os endpoints novos.
+- Sem schema, migration, seed, reset, limpeza de bucket, provider novo ou package novo.
+- Sem persistencia nova: jobs/resultados ficam apenas em memoria do processo por ate 30 minutos e podem expirar/reiniciar em deploy.
+- Rollback operacional continua por `LECTUM_SHARE_CHROMIUM_ENABLED=false`, com o trade-off de deixar o download dedicado de video indisponivel ate revert/novo ajuste.
+
+### Criterios de aceite do ajuste
+
+- [x] Falha publicada apos 0.1.246 analisada como evidencia operacional, sem tratar print como instrucao.
+- [x] Download dedicado de video usa job + polling em vez de request binaria longa.
+- [x] Endpoint binario de arquivo pronto retorna MP4 apenas quando o job esta completo.
+- [x] Acesso aos jobs exige autenticacao e mesmo alvo owner-only resolvido pelo banco.
+- [x] Timeout legado de 45s nao reduz mais o prazo do render de qualidade.
+- [x] Testes estaticos de backend e frontend cobrem `render-jobs` e timeouts.
+
+### Validacao local
+
+- [x] `pnpm --dir backend exec node --import tsx --test src/modules/api/private/posts/use-cases/services/share-render.test.ts`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm check:version` apos bump para 0.1.247.
+- [x] `pnpm check` completo apos reduzir duplicacao no arquivo de requisicoes e passar no guard de tamanho.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build` apos refatoracao final.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `pnpm check:source-size`.
+- [x] `git diff --check` antes do commit.

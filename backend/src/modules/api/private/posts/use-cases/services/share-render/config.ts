@@ -2,7 +2,9 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { parsePositiveInteger } from "@/utils/runtime-config";
 
-const DEFAULT_SHARE_RENDER_TIMEOUT_MS = 150_000;
+const DEFAULT_SHARE_RENDER_TIMEOUT_MS = 240_000;
+const MIN_SHARE_RENDER_TIMEOUT_MS = 150_000;
+const MAX_SHARE_RENDER_TIMEOUT_MS = 300_000;
 const DEFAULT_SHARE_RENDER_SOURCE_MAX_MB = 90;
 const DEFAULT_SHARE_RENDER_CONCURRENCY = 1;
 const DEFAULT_SHARE_RENDER_QUEUE_SIZE = 2;
@@ -98,7 +100,7 @@ export const resolveShareChromiumConfig = (
     timeoutMs: parsePositiveInteger(
       env.LECTUM_SHARE_CHROMIUM_TIMEOUT_MS,
       DEFAULT_SHARE_RENDER_TIMEOUT_MS,
-      { max: 180_000, min: 10_000 },
+      { max: MAX_SHARE_RENDER_TIMEOUT_MS, min: MIN_SHARE_RENDER_TIMEOUT_MS },
     ),
   };
 };

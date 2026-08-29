@@ -23,6 +23,14 @@ const replyIdParams = [
   },
 ] satisfies IValidatorRequest["params"];
 
+const shareRenderJobIdParam = {
+  key: "jobId",
+  coerse: "string",
+  method: "string",
+  min: 8,
+  max: 120,
+} satisfies NonNullable<IValidatorRequest["params"]>[number];
+
 const paginationQuery = [
   {
     key: "limit",
@@ -356,6 +364,14 @@ export const replySaveSchema: IValidatorRequest = {
   params: replyIdParams,
 };
 
+export const shareRenderJobSchema: IValidatorRequest = {
+  params: [...idParams, shareRenderJobIdParam],
+};
+
+export const replyShareRenderJobSchema: IValidatorRequest = {
+  params: [...replyIdParams, shareRenderJobIdParam],
+};
+
 export const reportSchema: IValidatorRequest = {
   params: idParams,
   body: [
@@ -396,6 +412,8 @@ export const shareValidator = validator(shareSchema);
 export const replyShareValidator = validator(replyShareSchema);
 export const saveValidator = validator(showSchema);
 export const replySaveValidator = validator(replySaveSchema);
+export const shareRenderJobValidator = validator(shareRenderJobSchema);
+export const replyShareRenderJobValidator = validator(replyShareRenderJobSchema);
 export const reportValidator = validator(reportSchema);
 export const replyReportValidator = validator(replyReportSchema);
 

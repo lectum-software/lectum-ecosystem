@@ -226,16 +226,26 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /prepareLectumShareFileWithServerRender/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000/);
-  assert.match(mediaSource, /SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 155_000/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 260_000/);
+  assert.match(mediaSource, /prepareLectumShareFileWithServerRenderJob/);
+  assert.match(mediaSource, /startPostShareVideoArtifactRenderJob/);
+  assert.match(mediaSource, /getPostShareVideoArtifactRenderJob/);
+  assert.match(mediaSource, /downloadPostShareVideoArtifactRenderJobFile/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS = 2_500/);
   assert.match(mediaSource, /shouldAvoidClientSideVideoShareRender/);
   assert.match(mediaSource, /MOBILE_VIDEO_RENDER_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /new AbortController\(\)/);
-  assert.match(mediaSource, /signal: controller\.signal/);
-  assert.match(mediaSource, /timeoutMs: timeoutMs \+ SERVER_SHARE_RENDER_HTTP_GRACE_MS/);
+  assert.match(
+    mediaSource,
+    /prepareLectumShareFileWithServerRenderJob\(target, controller\.signal\)/,
+  );
   assert.match(postsReqSource, /share-artifact\/render/);
+  assert.match(postsReqSource, /share-artifact\/render-jobs/);
+  assert.match(postsReqSource, /share-artifact\/render-jobs\/:jobId\/file/);
   assert.match(postsReqSource, /responseType: "blob"/);
-  assert.match(postsReqSource, /SHARE_VIDEO_RENDER_TIMEOUT_MS = 20_000/);
-  assert.match(postsReqSource, /timeoutMs \?\? SHARE_VIDEO_RENDER_TIMEOUT_MS/);
+  assert.match(postsReqSource, /SHARE_VIDEO_RENDER_DIRECT_TIMEOUT_MS = 20_000/);
+  assert.match(postsReqSource, /SHARE_VIDEO_RENDER_JOB_STATUS_TIMEOUT_MS = 15_000/);
+  assert.match(postsReqSource, /timeoutMs \?\? SHARE_VIDEO_RENDER_DIRECT_TIMEOUT_MS/);
   assert.match(mediabunnyExportSource, /return canvas;/);
   assert.doesNotMatch(mediabunnyExportSource, /processedFrameIndex/);
   assert.doesNotMatch(mediabunnyExportSource, /frameDurationSeconds/);

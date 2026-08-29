@@ -14,17 +14,23 @@ test("renderizacao social no backend mantem Chromium opcional e com limites segu
     LECTUM_SHARE_CHROMIUM_EXECUTABLE_PATH: "/opt/chromium/chrome",
     LECTUM_SHARE_CHROMIUM_QUEUE_SIZE: "4",
     LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB: "25",
-    LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "120000",
+    LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "260000",
   } as NodeJS.ProcessEnv);
 
   assert.equal(config.enabled, false);
   assert.equal(config.executablePath, "/opt/chromium/chrome");
-  assert.equal(config.timeoutMs, 120_000);
+  assert.equal(config.timeoutMs, 260_000);
   assert.equal(config.sourceMaxBytes, 25 * 1024 * 1024);
   assert.equal(config.concurrency, 2);
   assert.equal(config.queueSize, 4);
 
-  assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 150_000);
+  assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 240_000);
+  assert.equal(
+    resolveShareChromiumConfig({
+      LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "45000",
+    } as NodeJS.ProcessEnv).timeoutMs,
+    240_000,
+  );
 });
 
 test("renderizacao social aceita somente objetos publicos de midia da comunidade", () => {
@@ -73,6 +79,20 @@ test("renderizacao social no backend deduplica e reaproveita resultado em memori
   assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4/);
   assert.match(rendererSource, /renderWithResultCache/);
   assert.match(rendererSource, /createShareRenderResultCacheKey\(target\)/);
+});
+
+test("renderizacao social publicada usa job assincrono para evitar resposta longa", () => {
+  const jobsSource = readFileSync(path.join(__dirname, "share-render", "jobs.ts"), "utf8");
+  const routesSource = readFileSync(path.join(__dirname, "..", "..", "index.ts"), "utf8");
+
+  assert.match(jobsSource, /SHARE_RENDER_JOB_VERSION = "share-render-job-v1-cf-safe-cfr30"/);
+  assert.match(jobsSource, /SHARE_RENDER_JOB_TTL_MS = 30 \* 60_000/);
+  assert.match(jobsSource, /startShareRenderJob/);
+  assert.match(jobsSource, /getShareRenderJobSnapshot/);
+  assert.match(jobsSource, /getShareRenderJobResult/);
+  assert.match(routesSource, /share-artifact\/render-jobs/);
+  assert.match(routesSource, /share-artifact\/render-jobs\/:jobId\/file/);
+  assert.match(routesSource, /shareRenderJobValidator/);
 });
 
 test("nome do arquivo de renderizacao social nao expoe texto arbitrario", () => {

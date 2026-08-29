@@ -274,6 +274,18 @@ export type PostShareArtifactResponse = {
   size_bytes: number | null;
 };
 
+export type PostShareRenderJobStatus = "completed" | "expired" | "failed" | "processing";
+
+export type PostShareRenderJobResponse = {
+  created_at: string;
+  expires_at: string;
+  job_id: string;
+  ready: boolean;
+  retry_after_ms: number;
+  size_bytes: number | null;
+  status: PostShareRenderJobStatus;
+};
+
 export type PostSaveResponse = {
   target_type: "post" | "reply";
   post_id: string;

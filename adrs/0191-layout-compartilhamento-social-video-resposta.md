@@ -1461,3 +1461,27 @@ O arquivo baixado no computador apos o ajuste anterior foi inspecionado como evi
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.246, incluindo render local do MP4 longo em CFR 30, checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - job assincrono para contornar resposta longa do proxy
+
+### Contexto
+
+A versao 0.1.246 tornou o download dedicado backend-only e CFR 30, mas a validacao em homologacao mostrou erro publico ao baixar. O backend homologado responde por Cloudflare, enquanto o render local do video longo ja tinha levado 108.357ms. Portanto, manter uma unica requisicao aberta ate o MP4 ficar pronto e fragil: pode bater limite do proxy antes de entregar o binario. Tambem havia risco de env legada `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS=45000` abortar o render antes do prazo necessario.
+
+### Decisao
+
+- O fluxo novo de download social usa uma API aditiva de jobs efemeros em memoria: `POST .../share-artifact/render-jobs`, `GET .../render-jobs/:jobId` e `GET .../render-jobs/:jobId/file`.
+- O job continua usando Chromium + MediaBunny, cache/gate existentes e perfil CFR 30; o arquivo binario so e baixado em requisicao curta depois de `completed`.
+- Jobs sao privados por usuario/alvo, deduplicados por chave de target, limitados em entradas/bytes e expiram em memoria; nao ha R2, banco ou fila externa nesta etapa.
+- O timeout default sobe para 240s com minimo defensivo de 150s para ignorar configuracao legada curta; rollback continua por flag de desativacao do Chromium.
+
+### Consequencias
+
+- Evita que Cloudflare/proxy encerre uma resposta HTTP longa antes do MP4 ficar pronto.
+- A primeira tentativa ainda pode demorar varios minutos no toast de preparo, mas as chamadas HTTP passam a ser curtas e observaveis por polling.
+- Como o estado e em memoria, deploy/restart pode expirar o job; o usuario pode tentar novamente sem corromper dados persistentes.
+- Sem FFmpeg, package novo, schema, migration, env obrigatoria, mock, seed, reset, `db push` ou limpeza de bucket.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.247, incluindo testes direcionados, checks/builds relevantes, bump/check de versao, `pnpm check`, push em homologacao e smoke publico.
