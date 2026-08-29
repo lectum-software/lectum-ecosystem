@@ -160,6 +160,10 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(downloadDialogSource, /lectum-share-download-sheet-exit/);
   assert.match(downloadDialogSource, /max-w-\[min\(100vw,44rem\)\]/);
   assert.match(downloadDialogSource, /pb-\[calc\(var\(--lectum-bottom-fixed-padding\)\+1rem\)\]/);
+  assert.match(downloadDialogSource, /gap-3 overflow-y-auto/);
+  assert.match(downloadDialogSource, /w-\[min\(58vw,220px\)\] min-w-\[190px\]/);
+  assert.doesNotMatch(downloadDialogSource, /w-\[min\(64vw,250px\)\] min-w-\[200px\]/);
+  assert.doesNotMatch(downloadDialogSource, /w-\[min\(76vw,320px\)\] min-w-\[220px\]/);
   assert.doesNotMatch(downloadDialogSource, /px-3 pb-3/);
   assert.doesNotMatch(downloadDialogSource, /max-w-\[430px\]/);
   assert.match(downloadDialogSource, /storyCanvasLayout/);

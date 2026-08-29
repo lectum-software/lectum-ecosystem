@@ -242,7 +242,7 @@ export const LectumShareDownloadDialog = ({
         aria-labelledby="lectum-share-download-title"
         aria-modal="true"
         className={cn(
-          "relative z-10 grid max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] transform-gpu gap-4 overflow-y-auto overscroll-contain rounded-t-[2rem] border border-border bg-surface px-5 pt-5 pb-[calc(var(--lectum-bottom-fixed-padding)+1rem)] text-foreground shadow-[var(--lectum-shadow)] transition-transform will-change-transform sm:max-h-[min(760px,calc(100dvh-3rem))] sm:max-w-md sm:rounded-[2rem] sm:pb-5",
+          "relative z-10 grid max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-[min(100vw,44rem)] transform-gpu gap-3 overflow-y-auto overscroll-contain rounded-t-[2rem] border border-border bg-surface px-5 pt-5 pb-[calc(var(--lectum-bottom-fixed-padding)+1rem)] text-foreground shadow-[var(--lectum-shadow)] transition-transform will-change-transform sm:max-h-[min(760px,calc(100dvh-3rem))] sm:max-w-md sm:rounded-[2rem] sm:pb-5",
           sheetMotionState === "enter"
             ? "translate-y-0 duration-[340ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
             : "translate-y-[calc(100%+2rem)] duration-[300ms] ease-[cubic-bezier(0.4,0,1,1)]",
@@ -277,7 +277,7 @@ export const LectumShareDownloadDialog = ({
           </button>
         </div>
 
-        <div className="mx-auto w-[min(76vw,320px)] min-w-[220px]">
+        <div className="mx-auto w-[min(58vw,220px)] min-w-[190px]">
           {resolvedMediaUrl ? (
             <div className="relative aspect-[9/16] overflow-hidden rounded-[28px] border border-border bg-media-background [container-type:inline-size]">
               <VerticalVideoPlayer

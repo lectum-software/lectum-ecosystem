@@ -1316,3 +1316,25 @@ Depois de o Android voltar a baixar o video personalizado da modal **Previa para
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.238, incluindo testes estaticos da previa/media, `frontend check`, build antes/depois do bump, smoke local, `pnpm check` de raiz, `git diff --check` e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - previa social compacta sem scroll da modal
+
+### Contexto
+
+A modal `Publique nas redes sociais` passou a ter cabecalho, previa 9:16, descricao copiavel e CTA. Na viewport desktop reportada pelo usuario, a previa visivel de ate 320px deixava a sheet mais alta que a area util e gerava barra de rolagem para ver o rodape.
+
+### Decisao
+
+- Reduzir somente a previa visivel da modal para `min(58vw,220px)`, com minimo `190px`, e compactar o gap interno para `gap-3`.
+- Preservar a mesma composicao 9:16, `contain`, overlay de pergunta/profissional escalado por container query, audio da previa e CTA de download.
+- Manter `overflow-y-auto` como fallback de acessibilidade para telas muito pequenas ou zoom alto, mas fazer a configuracao padrao caber sem scroll na viewport desktop reportada.
+
+### Consequencias
+
+- A modal fica mais compacta e permite visualizar cabecalho, preview, descricao e botao final sem rolagem no desktop comum.
+- A previa perde tamanho visual dentro da sheet, mas o arquivo exportado/downloadado permanece inalterado.
+- Mudanca frontend-only; sem backend, admin UI, contrato de API, env, package, migration, provider ou dados publicados. Rollback simples restaura a largura anterior da previa.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.239, incluindo teste estatico da previa social, `frontend check`, build antes/depois do bump, smoke local, Browser/Chrome CDP de ausencia de overflow na janela `1365x768`/viewport interna `672px`, `pnpm check` de raiz, `git diff --check` e smoke de homologacao apos push.

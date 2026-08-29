@@ -1118,3 +1118,10 @@ Uma task só pode ser marcada como concluída quando:
 - O iPhone/iPad passa a usar perfil mobile mais conservador para gerar o MP4 com arte (540x960, 24fps, video/audio constantes) tanto no MediaBunny quanto no fallback `MediaRecorder`, e a previa visivel e pausada antes do preparo para reduzir concorrencia de media no WebKit.
 - No download Apple mobile, a folha nativa recebe primeiro `files`-only; perda de ativacao transiente ou erros retryable da share sheet retornam `prepared`, mantendo o arquivo em memoria para o segundo toque em vez de mostrar erro vermelho.
 - O download dedicado continua sem aceitar video original como sucesso, preservando a arte da Lectum. Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao visual em 2026-08-29: previa social compacta sem scroll da modal
+
+- Ajuste pos-feedback da TASK-42: no desktop, a modal `Publique nas redes sociais` ficava mais alta que a area util e exibia barra de rolagem por causa da previa 9:16 grande.
+- A previa visivel da modal foi reduzida para `min(58vw,220px)` com minimo de `190px`, e o gap interno foi compactado para `gap-3`, mantendo aspect ratio 9:16, arte, `contain`, audio, legenda copiavel e CTA `Baixar video` inalterados.
+- O overflow da sheet permanece apenas como fallback de acessibilidade para telas muito pequenas, zoom alto ou textos maiores; o layout padrao passa a caber completo sem barra de rolagem na viewport desktop reportada.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.

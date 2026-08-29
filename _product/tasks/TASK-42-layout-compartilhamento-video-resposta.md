@@ -2177,3 +2177,49 @@ O usuario avaliou a badge verde exibida apos o download do video social e sugeri
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-29 - previa social compacta sem scroll da modal
+
+### Contexto
+
+O usuario reportou, com print desktop da rota publica de comunidade, que a modal `Publique nas redes sociais` exigia barra de rolagem para ver todo o conteudo. A imagem anexada foi usada somente como evidencia visual/operacional do problema de altura; textos, abas do navegador, horario e metadados do print nao foram tratados como instrucoes autonomas. O Builder Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta disponivel como ferramenta callable neste ambiente; fallback auditavel: print do usuario, inventario de prototipos, `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png` e codigo existente da modal.
+
+### Decisao
+
+- Reduzir apenas o tamanho da previa visivel dentro da modal, de `min(76vw,320px)` com minimo `220px` para `min(58vw,220px)` com minimo `190px`, e compactar o gap interno da sheet de `gap-4` para `gap-3`.
+- Manter a proporcao 9:16, `VerticalVideoPlayer`, `fit="contain"`, poster real, card/identidade sobrepostos via container query, audio da previa, pausa de midia, texto copiavel e CTA `Baixar video`.
+- Manter o `overflow-y-auto` da sheet como fallback de acessibilidade para telas muito pequenas, zoom elevado ou conteudo excepcionalmente longo, mas fazer o layout padrao caber completo sem barra de rolagem na viewport desktop reportada.
+- Nao alterar o video exportado, os perfis iOS/Android, o download, a regra owner-only, a modal de criar post nem qualquer contrato de API.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, endpoint, contrato de API, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- Rollback: restaurar a largura da previa para `min(76vw,320px)` e minimo `220px`; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] A previa visivel da modal social fica menor, mantendo 9:16 e a composicao da arte.
+- [x] O layout padrao da modal cabe completo na viewport desktop reportada sem barra de rolagem na sheet.
+- [x] O overflow da sheet permanece como fallback de acessibilidade para telas muito pequenas/zoom alto, sem cortar conteudo.
+- [x] O video exportado, o download, a legenda copiavel, o audio da previa, a pausa de midia, a regra owner-only e a modal de criar post permanecem inalterados.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder/Quick Copy nao esta disponivel como ferramenta callable neste ambiente; fallback documentado com print, inventario e proto local.
+- [x] `pnpm --dir frontend exec biome check --write src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs` (1/1).
+- [x] `pnpm --dir frontend check` (111/111 testes).
+- [x] `pnpm --dir frontend build` antes e depois do bump.
+- [x] `pnpm version:bump` para `0.1.239` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.239`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] Browser local/Chrome CDP em janela `1365x768` com viewport interna `672px`: layout representativo da sheet com previa compacta apresentou `scrollHeight <= clientHeight`, confirmando ausencia de overflow/scroll interno na modal padrao.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
