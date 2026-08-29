@@ -79,7 +79,7 @@ export const resolveApiError = (error: unknown) => {
       : isOperationalUnavailable
         ? cfpProviderUnavailableMessage
         : rawMessage,
-    showSupportGuidance: isAttemptLimit || isOperationalUnavailable,
+    showSupportGuidance: true,
     status,
   };
 };
@@ -91,6 +91,7 @@ export const supportableCfpErrorCodes = new Set([
   "cfp_provider_error",
   "cfp_provider_rate_limited",
   "cfp_provider_unavailable",
+  "cfp_provider_validation_error",
   "cfp_search_attempts_exceeded",
 ]);
 
@@ -99,7 +100,7 @@ export const shouldShowCfpSupportGuidance = (error?: ResolvedApiError | null) =>
     error &&
       (error.showSupportGuidance ||
         (error.code && supportableCfpErrorCodes.has(error.code)) ||
-        (typeof error.status === "number" && error.status >= 500)),
+        (typeof error.status === "number" && error.status >= 400)),
   );
 
 export const formatCfpRegistrationDate = (value?: string | null) => {

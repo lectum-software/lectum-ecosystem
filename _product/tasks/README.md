@@ -1091,3 +1091,9 @@ Uma task só pode ser marcada como concluída quando:
 - O frontend deixa de buscar, enviar, preaquecer e renovar artefatos em `post_share_artifacts`; o video personalizado e gerado somente sob demanda na acao explicita do psicologo, com reaproveitamento apenas em memoria durante a mesma interacao.
 - As rotas backend `share-artifact` permanecem por compatibilidade de rollout, mas retornam indisponivel sem criar novo objeto R2/registro de banco; o upload nao usa mais multer. A limpeza por expiracao de artefatos legados permanece, sem limpeza destrutiva de bucket/dados publicados.
 - `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env; nao ha env obrigatoria nova, package, migration, provider, mock, seed, reset ou dados publicados afetados.
+
+## Correcao operacional em 2026-08-29: suporte em qualquer falha CFP
+
+- Ajuste pos-feedback da TASK-10: qualquer erro nas acoes da tela de verificacao profissional CFP passa a exibir orientacao explicita e CTA para falar com o suporte.
+- O caso `cfp_provider_validation_error`, observado no print do usuario como falha da API automatica com os dados informados, agora tambem entra no caminho de suporte para verificacao manual.
+- A confirmacao de resultado encontrado tambem mostra o CTA de suporte se falhar. Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, provider, mock, seed, reset ou aprovacao automatica.

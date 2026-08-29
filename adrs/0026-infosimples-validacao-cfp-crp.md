@@ -104,3 +104,11 @@ Pesquisa publica identificou a consulta InfoSimples `Conselho Federal de Psicolo
 - Indisponibilidade da origem (`cfp_provider_unavailable`), HTTP 5xx ou falha generica de conexao no fluxo CFP passam a ser apresentados como indisponibilidade do sistema do Conselho Federal de Psicologia, com orientacao para consulta manual do registro pelo suporte.
 - As mensagens publicas evitam mencionar InfoSimples, token, endpoint, stack, payload ou detalhes tecnicos; a auditoria e os logs sanitizados continuam sendo a camada operacional para diagnostico.
 - Nao houve mudanca de provider, endpoint, schema Prisma, env, pacote, armazenamento de dados ou politica de fallback.
+
+## Ajuste 2026-08-29 - suporte em qualquer falha da tela CFP
+
+- Decisao de produto: qualquer falha nas acoes da tela de verificacao profissional deve oferecer contato com suporte para continuidade manual da verificacao.
+- A UI passa a exibir o CTA de suporte para todos os erros resolvidos por `/psychologist/cfp` e `/app/profissional/cfp`, inclusive `cfp_provider_validation_error` retornado quando a API automatica rejeita os dados enviados.
+- Falhas na confirmacao de um resultado encontrado tambem exibem a mesma orientacao, mantendo uma unica saida operacional para o psicologo.
+- A mudanca nao altera contrato, provider, banco, limite de tentativas, logs, armazenamento ou regra de aprovacao: falha automatica continua sem preencher `cfp_verified_at` e sem aprovar automaticamente o profissional.
+- Mensagens publicas permanecem sanitizadas e nao expõem InfoSimples, token, endpoint, CPF completo, payload tecnico, stack ou detalhes internos.

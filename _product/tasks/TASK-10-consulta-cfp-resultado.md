@@ -305,3 +305,19 @@ Validacoes executadas:
 - [x] Limite de 3 tentativas de busca de CPF exibe orientacao para contato com suporte.
 - [x] Erro de conexao/indisponibilidade da consulta CFP exibe orientacao para consulta manual pelo suporte.
 - [x] Mensagens publicas permanecem sem detalhes tecnicos do provider e sem alterar a regra de aprovacao real/manual.
+
+## Ajuste pos-feedback 2026-08-29 - suporte em qualquer falha CFP
+
+- Pedido direto de produto aplicado ao fluxo `/psychologist/cfp` e ao alias `/app/profissional/cfp`: qualquer erro retornado pelas acoes de busca ou confirmacao da verificacao profissional passa a exibir orientacao explicita para contato com o suporte.
+- A mensagem especifica de tentativa excedida e a mensagem de indisponibilidade operacional continuam priorizadas quando aplicaveis; os demais erros seguros mantem a copy retornada pelo backend, mas agora tambem mostram o CTA de suporte para continuidade manual da verificacao.
+- O erro de validacao da API automatica (`cfp_provider_validation_error`), visto no print anexado pelo usuario, passa a entrar no conjunto de falhas com suporte, sem expor InfoSimples, token, endpoint, stack, CPF completo ou payload tecnico.
+- A tela de confirmacao de resultado tambem passa a mostrar o mesmo CTA quando a etapa de confirmar registro falhar.
+- Builder/Quick Copy nao esta exposto como ferramenta direta neste ambiente; a imagem anexada pelo usuario e a referencia local `_product/proto/Verificação de CPF - Consulta CFP.jpg` foram usadas como evidencia visual.
+- Alteracao frontend-only, mobile-first, sem schema Prisma, migration, endpoint, env, package, mock, seed, reset ou aprovacao automatica.
+- ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`.
+
+### Criterios de aceite pos-feedback
+
+- [x] Falhas de busca CFP, incluindo `cfp_provider_validation_error`, exibem orientacao para contato com suporte.
+- [x] Falhas de confirmacao CFP exibem a mesma orientacao de suporte.
+- [x] Mensagens publicas continuam sanitizadas e a regra de aprovacao real/manual nao foi alterada.

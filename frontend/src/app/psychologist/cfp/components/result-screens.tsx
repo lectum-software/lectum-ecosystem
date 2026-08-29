@@ -18,9 +18,10 @@ import {
   formatCfpRegistrationDate,
   nextStepHref,
   type ResolvedApiError,
+  shouldShowCfpSupportGuidance,
   supportLinkProps,
 } from "../modules/support";
-import { CfpHero, PageFrame, PremiumPanel } from "./cfp-layout";
+import { CfpHero, PageFrame, PremiumPanel, SupportGuidance } from "./cfp-layout";
 
 export const LoadingScreen = () => (
   <PageFrame>
@@ -224,7 +225,10 @@ export const ResultsScreen = ({
 
         {apiError ? (
           <InlineAlert className="mt-5" title="Não foi possível confirmar" variant="error">
-            {apiError.message}
+            <div className="grid gap-3">
+              <p>{apiError.message}</p>
+              {shouldShowCfpSupportGuidance(apiError) ? <SupportGuidance /> : null}
+            </div>
           </InlineAlert>
         ) : null}
 

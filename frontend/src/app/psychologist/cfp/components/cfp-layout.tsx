@@ -23,6 +23,9 @@ export const SupportFooterLink = () => (
 
 export const SupportGuidance = () => (
   <div className="grid gap-3">
+    <p className="text-sm leading-6 text-danger">
+      Fale com o suporte para continuarmos a verificação do seu registro manualmente.
+    </p>
     <Button asChild className="h-11 w-full rounded-full" variant="outline">
       <a {...supportLinkProps}>{"Fale com o suporte pelo WhatsApp"}</a>
     </Button>
