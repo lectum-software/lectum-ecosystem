@@ -2031,3 +2031,56 @@ O usuario pediu para trocar o subtitulo superior da modal de previa social de "B
 - [x] Smoke local do frontend buildado em http://127.0.0.1:3210: /version respondeu 0.1.232, /app/comunidades respondeu 200, /app/publicacoes/minhas respondeu 307 esperado sem sessao.
 - [x] pnpm check completo de raiz e git diff --check executados antes do commit.
 - Smoke de homologacao sera executado apos o push de homolog, pois o push dispara deploy automatico.
+## Ajuste 2026-08-28 - remocao do cache remoto R2 da previa social
+
+### Contexto
+
+O cache remoto de artefatos sociais em R2 por ate 30 dias foi criado quando o video com a arte poderia ser baixado/compartilhado por varias pessoas, inclusive pacientes, reaproveitando o mesmo arquivo. A regra de produto mudou: a previa social de video e uma acao owner-only, usada pelo proprio psicologo dono do video para baixar o arquivo personalizado e postar manualmente nas redes. Nesse cenario, o download tende a acontecer uma unica vez, talvez sem segundo download.
+
+Como os relatos recentes indicaram baixa qualidade no Android e travamento do video baixado, manter o artefato remoto por 30 dias aumentava o risco de preservar e reutilizar um arquivo ruim/corrompido gerado no cliente. A decisao operacional e remover o reaproveitamento remoto em vez de prolongar a vida util de um artefato potencialmente defeituoso.
+
+### Decisao
+
+- Desativar leitura, upload, persistencia, prewarm e renovacao de TTL do cache remoto/R2 de `post_share_artifacts`.
+- Gerar o video com arte somente sob demanda, na acao explicita do psicologo na modal de previa social.
+- Manter apenas o arquivo preparado em memoria durante a interacao local, para permitir segundo toque/download sem nova renderizacao imediata.
+- Manter as rotas backend de `share-artifact` por compatibilidade de rollout, mas retornar `post_share_artifact_unavailable` com resposta vazia e sem criar novo objeto R2 ou registro de banco.
+- Remover o multer das rotas de upload de artefato social para impedir novas gravacoes no bucket por esse caminho.
+- Preservar a rotina de limpeza de artefatos legados ja expirados, sem limpeza destrutiva de bucket/dados publicados.
+- Remover `POST_SHARE_ARTIFACT_TTL_DAYS` do `.env.example`; as variaveis opcionais de cleanup legado permanecem.
+
+### Escopo e seguranca de deploy
+
+- Alteracao em frontend e backend; admin acompanha apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- Contrato tolerante: frontend novo com backend antigo deixa de chamar cache remoto; backend novo com frontend antigo responde indisponivel e nao persiste upload, fazendo o cliente antigo cair para geracao local/fallback existente.
+- Rollback: restaurar helpers frontend de leitura/upload, prewarm, multer das rotas, servico/repository de persistencia e renovacao de TTL.
+
+### Criterios de aceite do ajuste
+
+- [x] A previa/download social nao busca artefato remoto antes de gerar o arquivo.
+- [x] O cliente nao envia nem persiste novo artefato gerado em `post_share_artifacts`/R2.
+- [x] O agendamento de prewarm nao gera nem persiste artefato em background.
+- [x] O backend `share-artifact` retorna indisponivel em GET e POST sem criar objeto R2 ou registro de banco.
+- [x] Artefatos legados nao sao apagados de forma destrutiva; a limpeza por expiracao permanece.
+- [x] `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env; nenhuma env obrigatoria nova foi criada.
+- [x] UI mobile-first sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts src/utils/lectum-share-artifact-cache.ts src/api/req/posts/index.ts src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir backend exec biome check --write src/modules/api/private/posts/index.ts src/modules/api/private/posts/DTOs/IPostDTO.ts src/modules/api/private/posts/repositories/PostRepository.ts src/modules/api/private/posts/repositories/queries/PostShareArtifactRepository.ts src/modules/api/private/posts/use-cases/controller.ts src/modules/api/private/posts/use-cases/services/share-artifact.ts src/modules/api/private/posts/use-cases/services/media-actions.ts`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check` (111/111 testes).
+- [x] `pnpm --dir backend check` (218/218 testes).
+- [x] `pnpm --dir frontend build` antes e depois do bump.
+- [x] `pnpm --dir backend build` antes e depois do bump.
+- [x] `pnpm version:bump` para `0.1.233` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.233`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

@@ -141,36 +141,6 @@ export class PostRepository implements IPostRepository {
     return this.replyStateRepository.deleteReply(...args);
   }
 
-  getShareArtifactTarget(
-    ...args: Parameters<PostShareArtifactRepository["getTarget"]>
-  ): ReturnType<PostShareArtifactRepository["getTarget"]> {
-    return this.shareArtifactRepository.getTarget(...args);
-  }
-
-  findValidShareArtifact(
-    ...args: Parameters<PostShareArtifactRepository["findValidByCacheKey"]>
-  ): ReturnType<PostShareArtifactRepository["findValidByCacheKey"]> {
-    return this.shareArtifactRepository.findValidByCacheKey(...args);
-  }
-
-  findShareArtifactStorageKey(
-    ...args: Parameters<PostShareArtifactRepository["findStorageKeyByCacheKey"]>
-  ): ReturnType<PostShareArtifactRepository["findStorageKeyByCacheKey"]> {
-    return this.shareArtifactRepository.findStorageKeyByCacheKey(...args);
-  }
-
-  upsertShareArtifact(
-    ...args: Parameters<PostShareArtifactRepository["upsertArtifact"]>
-  ): ReturnType<PostShareArtifactRepository["upsertArtifact"]> {
-    return this.shareArtifactRepository.upsertArtifact(...args);
-  }
-
-  renewShareArtifact(
-    ...args: Parameters<PostShareArtifactRepository["renewArtifact"]>
-  ): ReturnType<PostShareArtifactRepository["renewArtifact"]> {
-    return this.shareArtifactRepository.renewArtifact(...args);
-  }
-
   listExpiredShareArtifacts(
     ...args: Parameters<PostShareArtifactRepository["listExpired"]>
   ): ReturnType<PostShareArtifactRepository["listExpired"]> {

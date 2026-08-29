@@ -142,14 +142,6 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
     ),
     "utf8",
   );
-  const postsRequestSource = readFileSync(
-    new URL("../api/req/posts/index.ts", import.meta.url),
-    "utf8",
-  );
-  const layoutVersionSource = readFileSync(
-    new URL("./lectum-share-media/layout-version.ts", import.meta.url),
-    "utf8",
-  );
   const seoSource = readFileSync(
     new URL(
       "../../../backend/src/modules/api/public/seo/community-post/use-cases/services.ts",
@@ -169,10 +161,6 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
       "../../../backend/src/modules/api/private/posts/use-cases/services/share-artifact.ts",
       import.meta.url,
     ),
-    "utf8",
-  );
-  const backendEnvExampleSource = readFileSync(
-    new URL("../../../backend/.env.example", import.meta.url),
     "utf8",
   );
   const frontendEnvExampleSource = readFileSync(
@@ -215,10 +203,6 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   const copyTargetSource = mediaSource.slice(
     mediaSource.indexOf("export const copyLectumShareTargetUrl"),
     mediaSource.indexOf("export const sharePreparedLectumVideoResponse"),
-  );
-  const shareArtifactUploadTypeSource = postsRequestSource.slice(
-    postsRequestSource.indexOf("const withShareArtifactFileType"),
-    postsRequestSource.indexOf("export const getPostShareArtifact"),
   );
   const videoTargetFactorySource = targetSource.slice(
     targetSource.indexOf("export const createLectumShareVideoTarget"),
@@ -272,15 +256,15 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
     hookSource,
     /prepareSocialFileTarget\(target\)[\s\S]*sharePreparedLectumVideoResponse\(target, file/,
   );
-  assert.match(hookSource, /getLectumShareArtifactFile\(socialTarget\)/);
+  assert.doesNotMatch(hookSource, /getLectumShareArtifactFile\(socialTarget\)/);
   assert.match(hookSource, /DOWNLOAD_TOAST_MESSAGE/);
   assert.match(
     hookSource,
     /destination === "social"[\s\S]*prepareLectumSourceVideoFallbackFile\(socialTarget\)/,
   );
-  assert.match(
+  assert.doesNotMatch(
     hookSource,
-    /!isLectumSourceVideoFallbackFile\(file\)[\s\S]*persistLectumShareArtifact\(socialTarget, file\)/,
+    /persistLectumShareArtifact|getLectumShareArtifactFile|isLectumSourceVideoFallbackFile/,
   );
   assert.match(
     hookSource,
@@ -373,42 +357,25 @@ test("videos compartilhados usam somente link nativo sem modal ou arte", () => {
   assert.match(seoSource, /\$\{name\} na Lectum/);
   assert.match(seoSource, /thumbnail_url/);
   assert.match(seoSource, /ogImageUrl: media\.thumbnail_url \|\| null/);
-  assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000/);
-  assert.match(
-    layoutVersionSource,
-    /LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION =\s*"lectum-share-v11-2026-08-28-android-stable-logo"/,
-  );
-  assert.match(layoutVersionSource, /X-Lectum-Share-Layout-Version/);
-  assert.match(postsRequestSource, /SHARE_ARTIFACT_UPLOAD_HEADERS/);
-  assert.match(
-    postsRequestSource,
-    /\[LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION_HEADER\]: LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION/,
-  );
-  assert.match(shareArtifactServiceSource, /POST_SHARE_ARTIFACT_LAYOUT_VERSION/);
-  assert.match(shareArtifactServiceSource, /SHARE_ARTIFACT_LAYOUT_VERSION_HEADER/);
-  assert.match(shareArtifactServiceSource, /hasMatchingClientShareLayoutVersion/);
-  assert.match(
-    shareArtifactUploadTypeSource,
-    /throw new Error\("Arquivo de compartilhamento invalido\."\)/,
-  );
-  assert.doesNotMatch(shareArtifactUploadTypeSource, /\|\|\s*"video\/mp4"/);
-  assert.match(repositorySource, /lectum-share-v11-2026-08-28-android-stable-logo/);
-  assert.match(repositorySource, /process\.env\.POST_SHARE_ARTIFACT_TTL_DAYS/);
-  assert.match(repositorySource, /parsePositiveInteger\([\s\S]*30,/);
-  assert.match(backendEnvExampleSource, /POST_SHARE_ARTIFACT_TTL_DAYS=30/);
   assert.match(frontendEnvExampleSource, /NEXT_PUBLIC_LECTUM_SHARE_MEDIABUNNY_ENABLED=true/);
-  assert.match(repositorySource, /renewArtifact/);
-  assert.match(repositorySource, /last_accessed_at: accessedAt/);
-  assert.match(artifactCacheSource, /SHARE_ARTIFACT_VIDEO_FILE_EXTENSIONS/);
+  assert.match(shareArtifactServiceSource, /emptyShareArtifactResponse/);
+  assert.match(shareArtifactServiceSource, /post_share_artifact_unavailable/);
+  assert.match(shareArtifactServiceSource, /deleteShareArtifactObject\(key\)/);
+  assert.doesNotMatch(shareArtifactServiceSource, /upsertShareArtifact|findValidShareArtifact/);
+  assert.doesNotMatch(
+    repositorySource,
+    /POST_SHARE_ARTIFACT_TTL_DAYS|upsertArtifact|renewArtifact/,
+  );
+  assert.match(repositorySource, /listExpired/);
+  assert.match(repositorySource, /markDeleted/);
+  assert.doesNotMatch(artifactCacheSource, /getPostShareArtifact|uploadPostShareArtifact/);
   assert.doesNotMatch(artifactCacheSource, /quicktime/);
   assert.doesNotMatch(artifactCacheSource, /png"\)/);
   assert.match(artifactCacheSource, /prewarmLectumShareArtifact/);
   assert.match(artifactCacheSource, /scheduleLectumShareArtifactPrewarm/);
-  assert.match(artifactCacheSource, /requestIdleCallback/);
-  assert.match(artifactCacheSource, /uploadPostShareArtifact/);
-  assert.match(artifactCacheSource, /uploadReplyShareArtifact/);
-  assert.match(mediaActionsSource, /if \(res\.data\.shared\)/);
-  assert.match(mediaActionsSource, /renewShareArtifactAfterConfirmedShare/);
+  assert.match(artifactCacheSource, /somente sob demanda/);
+  assert.doesNotMatch(artifactCacheSource, /requestIdleCallback|prepareLectumShareFile/);
+  assert.doesNotMatch(mediaActionsSource, /renewShareArtifactAfterConfirmedShare/);
   assert.match(createPostControllerSource, /scheduleLectumSharePostArtifactPrewarm\(post/);
   assert.match(createPostControllerSource, /authenticated: Boolean\(storedUser\?\.id\)/);
   assert.match(postEditSource, /scheduleLectumSharePostArtifactPrewarm\(updatedPost/);
@@ -447,7 +414,7 @@ test("fallback operacional em redes sociais compartilha video original sem grava
   );
   assert.match(
     hookSource,
-    /getLectumShareArtifactFile\(socialTarget\)[\s\S]*toast\.loading\([\s\S]*SHARING_TOAST_MESSAGE[\s\S]*prepareLectumShareFile\(socialTarget\)\.catch/,
+    /getPreparedLectumShareFile\(socialTarget\)[\s\S]*toast\.loading\([\s\S]*SHARING_TOAST_MESSAGE[\s\S]*prepareLectumShareFile\(socialTarget\)\.catch/,
   );
   assert.match(
     hookSource,
@@ -459,22 +426,15 @@ test("fallback operacional em redes sociais compartilha video original sem grava
   );
   assert.doesNotMatch(hookSource, /shouldBypassSocialVideoExport/);
   assert.doesNotMatch(hookSource, /shouldPreferLectumSourceVideoFallbackForSocialShare/);
-  assert.match(
+  assert.doesNotMatch(
     hookSource,
-    /!isLectumSourceVideoFallbackFile\(file\)[\s\S]*persistLectumShareArtifact\(socialTarget, file\)/,
-  );
-  assert.match(
-    artifactCacheSource,
-    /storedFile[\s\S]*prepareLectumShareFile\(target\)[\s\S]*persistLectumShareArtifact\(target, file\)/,
+    /persistLectumShareArtifact|isLectumSourceVideoFallbackFile|getLectumShareArtifactFile/,
   );
   assert.doesNotMatch(
     artifactCacheSource,
-    /!options\.authenticated \|\| !isLectumShareArtifactTarget/,
+    /persistLectumShareArtifact|uploadPostShareArtifact|uploadReplyShareArtifact|getPostShareArtifact|getReplyShareArtifact/,
   );
-  assert.match(
-    artifactCacheSource,
-    /if \(options\.authenticated\) \{[\s\S]*persistLectumShareArtifact/,
-  );
+  assert.match(artifactCacheSource, /somente sob demanda/);
   assert.doesNotMatch(artifactCacheSource, /shouldPreferLectumSourceVideoFallbackForSocialShare/);
   assert.doesNotMatch(artifactCacheSource, /video\/quicktime/);
 });
@@ -695,5 +655,6 @@ test("layout social usa card parecido com instagram e respeita safe area de reel
   assert.match(layoutSource, /ctx\.fillText\(roleLabel, nameStartX, roleY\)/);
   assert.doesNotMatch(layoutSource, /ctx\.fillText\(roleLabel, layout\.width \/ 2, roleY\)/);
   assert.match(exportSource, /loadShareCanvasAssets/);
-  assert.match(repositorySource, /lectum-share-v11-2026-08-28-android-stable-logo/);
+  assert.match(repositorySource, /listExpired/);
+  assert.doesNotMatch(repositorySource, /lectum-share-v11-2026-08-28-android-stable-logo/);
 });

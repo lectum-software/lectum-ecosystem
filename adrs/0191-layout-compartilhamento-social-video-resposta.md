@@ -1241,3 +1241,30 @@ Depois de adicionar a orientacao superior na modal de previa social, o usuario p
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.232, incluindo teste estatico da previa social, frontend check, build antes/depois do bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
+
+## Ajuste 2026-08-28 - remocao do cache remoto R2 da previa social
+
+### Contexto
+
+O cache remoto de artefatos sociais em R2 tinha utilidade quando o mesmo video com arte poderia ser compartilhado/baixado por varias pessoas. A experiencia atual da TASK-42 mudou para uma previa owner-only: somente o psicologo dono do video baixa o arquivo personalizado para postar manualmente. O reaproveitamento por ate 30 dias perdeu valor e pode manter arquivos gerados com qualidade ruim ou travamento, especialmente em Android.
+
+### Decisao
+
+- Remover o cache remoto como caminho de produto: sem leitura, upload, prewarm, persistencia ou renovacao de TTL de artefatos sociais.
+- Gerar o arquivo com arte apenas sob demanda no cliente, a partir do gesto explicito do psicologo.
+- Reaproveitar somente o arquivo preparado em memoria durante a interacao atual.
+- Manter os endpoints backend por compatibilidade, retornando `post_share_artifact_unavailable` e apagando best-effort apenas eventual upload temporario recebido por cliente antigo, sem persistir registro/objeto novo.
+- Preservar cleanup legado por expiracao para objetos/registros ja existentes, sem reset, seed, bucket cleanup ou exclusao em massa.
+- Remover `POST_SHARE_ARTIFACT_TTL_DAYS` do exemplo de env porque nao ha mais criacao/renovacao de TTL para novos artefatos.
+
+### Consequencias
+
+- Reduzimos o risco de Android baixar novamente um arquivo travado, corrompido ou de baixa qualidade que ficou salvo no R2.
+- Cada download reflete o pipeline atual do cliente, em vez de um artefato antigo preso por TTL.
+- Perdemos o ganho de performance/banda do cache remoto, mas o impacto esperado e baixo porque a acao e feita pelo dono do video e tende a ser unica.
+- O rollout segue tolerante: frontend novo nao usa o cache mesmo com backend antigo; backend novo nao persiste uploads de frontend antigo e retorna indisponivel, permitindo fallback local.
+- Sem schema/migration/package/env obrigatoria. Rollback exige restaurar helpers frontend, prewarm, multer, repository/service de persistencia e renovacao de TTL.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.233, incluindo testes estaticos da previa/media, checks frontend/backend, builds, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.

@@ -1,24 +1,10 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
-import { error, msg } from "@/helpers/translate";
-import type {
-  IPostShareArtifactDTO,
-  IPostUploadShareArtifactDTO,
-  PostShareArtifactResponse,
-} from "../../DTOs/IPostDTO";
-import { PostRepository } from "../../repositories/PostRepository";
-import {
-  POST_SHARE_ARTIFACT_LAYOUT_VERSION,
-  POST_SHARE_ARTIFACT_TTL_DAYS,
-  type ShareArtifactTarget,
-} from "../../repositories/queries/PostShareArtifactRepository";
-import { ensureCommunityActor, publicFileUrl } from "./post-support";
+import { msg } from "@/helpers/translate";
+import type { IPostUploadShareArtifactDTO, PostShareArtifactResponse } from "../../DTOs/IPostDTO";
+import { ensureCommunityActor } from "./post-support";
 
 const SHARE_ARTIFACT_ALLOWED_PREFIX = "posts/share-artifacts/";
-const SHARE_ARTIFACT_CACHE_CONTROL = "public, max-age=3600";
-const SHARE_ARTIFACT_LAYOUT_VERSION_HEADER = "x-lectum-share-layout-version";
-
-export const POST_SHARE_ARTIFACT_UPLOAD_CACHE_CONTROL = SHARE_ARTIFACT_CACHE_CONTROL;
 
 const emptyShareArtifactResponse = (): PostShareArtifactResponse => ({
   artifact_url: null,
@@ -45,88 +31,11 @@ const deleteShareArtifactObject = async (key?: string | null) => {
   return true;
 };
 
-const toPublicResponse = (artifact: {
-  content_type: string;
-  expires_at: Date;
-  file_name: string | null;
-  size_bytes: number;
-  storage_key: string;
-}): PostShareArtifactResponse => ({
-  artifact_url: publicFileUrl(artifact.storage_key),
-  available: true,
-  content_type: artifact.content_type,
-  expires_at: artifact.expires_at,
-  file_name: artifact.file_name,
-  size_bytes: artifact.size_bytes,
-});
-
-const SHARE_ARTIFACT_ALLOWED_MIME_TYPES = new Set(["video/mp4", "video/webm"]);
-
-const isVideoFile = (file?: Express.Multer.File | null) =>
-  Boolean(file?.mimetype && SHARE_ARTIFACT_ALLOWED_MIME_TYPES.has(file.mimetype));
-
-const getHeaderValue = (
-  headers: Record<string, string | string[] | undefined> | undefined,
-  name: string,
-) => {
-  const value = headers?.[name];
-  return Array.isArray(value) ? value[0] : value;
-};
-
-const hasMatchingClientShareLayoutVersion = (
-  headers: Record<string, string | string[] | undefined> | undefined,
-) =>
-  getHeaderValue(headers, SHARE_ARTIFACT_LAYOUT_VERSION_HEADER) ===
-  POST_SHARE_ARTIFACT_LAYOUT_VERSION;
-
-const sanitizeFileName = (value?: string | null) => {
-  const normalized = Array.from(String(value ?? "").normalize("NFC"))
-    .filter((character) => {
-      const code = character.charCodeAt(0);
-      return code > 31 && code !== 127;
-    })
-    .join("")
-    .trim();
-
-  return normalized ? normalized.slice(0, 255) : null;
-};
-
-const expiresAtFromNow = (now: Date) =>
-  new Date(now.getTime() + POST_SHARE_ARTIFACT_TTL_DAYS * 24 * 60 * 60 * 1000);
-
-const canUseShareArtifactPreview = (
-  auth: { id?: string | null; role?: string | null } | undefined,
-  target: ShareArtifactTarget,
-) => auth?.role === "psicologo" && Boolean(auth.id) && auth.id === target.authorId;
-
-export const getShareArtifact = async (data: IPostShareArtifactDTO) => {
-  const repository = new PostRepository();
-  const target = await repository.getShareArtifactTarget({
-    postId: data.p.id,
-    replyId: data.p.replyId ?? null,
-  });
-
-  if (!target) {
-    return {
-      status: 200,
-      ...msg("post_share_artifact_unavailable", {}),
-      data: emptyShareArtifactResponse(),
-    };
-  }
-
-  if (!canUseShareArtifactPreview(data.auth, target)) {
-    return {
-      status: 403,
-      ...error("role_not_authorized", {}),
-    };
-  }
-
-  const artifact = await repository.findValidShareArtifact(target.cacheKey, new Date());
-
+export const getShareArtifact = async (_data?: unknown) => {
   return {
     status: 200,
-    ...msg(artifact ? "post_share_artifact_available" : "post_share_artifact_unavailable", {}),
-    data: artifact ? toPublicResponse(artifact) : emptyShareArtifactResponse(),
+    ...msg("post_share_artifact_unavailable", {}),
+    data: emptyShareArtifactResponse(),
   };
 };
 
@@ -135,69 +44,12 @@ export const uploadShareArtifact = async (data: IPostUploadShareArtifactDTO) => 
   if (unauthorized) return unauthorized;
 
   const key = data.file?.path || data.file?.key;
-
-  if (!isVideoFile(data.file) || !isShareArtifactStorageKey(key)) {
-    await deleteShareArtifactObject(key).catch(() => undefined);
-
-    return {
-      status: 400,
-      ...error("upload_error", {}),
-    };
-  }
-
-  if (!hasMatchingClientShareLayoutVersion(data.headers)) {
-    await deleteShareArtifactObject(key).catch(() => undefined);
-
-    return {
-      status: 200,
-      ...msg("post_share_artifact_unavailable", {}),
-      data: emptyShareArtifactResponse(),
-    };
-  }
-
-  const repository = new PostRepository();
-  const target = await repository.getShareArtifactTarget({
-    postId: data.p.id,
-    replyId: data.p.replyId ?? null,
-  });
-
-  if (!target) {
-    await deleteShareArtifactObject(key).catch(() => undefined);
-
-    return {
-      status: 200,
-      ...msg("post_share_artifact_unavailable", {}),
-      data: emptyShareArtifactResponse(),
-    };
-  }
-
-  if (!canUseShareArtifactPreview(data.auth, target)) {
-    await deleteShareArtifactObject(key).catch(() => undefined);
-
-    return {
-      status: 403,
-      ...error("role_not_authorized", {}),
-    };
-  }
-
-  const previousArtifact = await repository.findShareArtifactStorageKey(target.cacheKey);
-  const artifact = await repository.upsertShareArtifact({
-    ...target,
-    contentType: data.file!.mimetype,
-    expiresAt: expiresAtFromNow(new Date()),
-    fileName: sanitizeFileName(data.file!.originalname),
-    sizeBytes: data.file!.size,
-    storageKey: key!,
-  });
-
-  if (previousArtifact?.storage_key && previousArtifact.storage_key !== key) {
-    await deleteShareArtifactObject(previousArtifact.storage_key).catch(() => undefined);
-  }
+  await deleteShareArtifactObject(key).catch(() => undefined);
 
   return {
     status: 200,
-    ...msg("post_share_artifact_saved", {}),
-    data: toPublicResponse(artifact),
+    ...msg("post_share_artifact_unavailable", {}),
+    data: emptyShareArtifactResponse(),
   };
 };
 

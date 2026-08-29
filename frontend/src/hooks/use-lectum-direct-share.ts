@@ -3,16 +3,10 @@
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSharePost, useShareReply } from "@/api/callers/posts";
-import { useAppSelector } from "@/hooks/redux";
-import {
-  getLectumShareArtifactFile,
-  persistLectumShareArtifact,
-} from "@/utils/lectum-share-artifact-cache";
 import {
   copyLectumShareTargetUrl,
   downloadPreparedLectumShareFile,
   getPreparedLectumShareFile,
-  isLectumSourceVideoFallbackFile,
   isNativeShareAbortError,
   prepareLectumShareFile,
   prepareLectumSourceVideoFallbackFile,
@@ -51,7 +45,6 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
   const sharingRef = useRef(false);
   const { mutate: trackPostShare } = useSharePost();
   const { mutate: trackReplyShare } = useShareReply();
-  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
 
   const trackShare = useCallback(
     (target: LectumShareVideoTarget, channel: LectumShareChannel | null) => {
@@ -87,13 +80,9 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
       try {
         let result: ShareExportResult;
         const prepareSocialFileTarget = async (socialTarget: LectumShareSocialTarget) => {
-          let cachedFile = getPreparedLectumShareFile(socialTarget);
+          const cachedFile = getPreparedLectumShareFile(socialTarget);
           const shouldUseSourceVideoFallback =
             destination === "social" && socialTarget.mediaType === "video";
-
-          if (!cachedFile) {
-            cachedFile = await getLectumShareArtifactFile(socialTarget).catch(() => null);
-          }
 
           if (!cachedFile) {
             loadingToastId = toast.loading(
@@ -110,10 +99,6 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
 
               throw error;
             }));
-
-          if (!cachedFile && currentUserId && !isLectumSourceVideoFallbackFile(file)) {
-            void persistLectumShareArtifact(socialTarget, file).catch(() => undefined);
-          }
 
           if (loadingToastId !== null) {
             toast.dismiss(loadingToastId);
@@ -188,7 +173,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         setIsSharing(false);
       }
     },
-    [currentUserId, onShared, trackShare],
+    [onShared, trackShare],
   );
 
   return { isSharing, shareLectumTarget };

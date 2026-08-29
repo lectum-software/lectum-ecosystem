@@ -19,7 +19,6 @@ import type {
   PostReportPayload,
   PostReportResponse,
   PostSaveResponse,
-  PostShareArtifactResponse,
   PostSharePayload,
   PostShareResponse,
   PostUpdateResponse,
@@ -31,10 +30,6 @@ import type {
   UserPostsResponse,
 } from "@/api/generator/types/posts";
 import { handleReq } from "@/api/handle";
-import {
-  LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION,
-  LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION_HEADER,
-} from "@/utils/lectum-share-media/layout-version";
 import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 import { MULTIPART_DEFAULT_CHUNK_BYTES, uploadFileMultipart } from "@/utils/multipart-upload";
 import {
@@ -438,102 +433,6 @@ export const shareReply = async (
   return handleReq<PostShareResponse>({
     ...handle,
     hideError: true,
-  });
-};
-
-const SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS = 300_000;
-const SHARE_ARTIFACT_UPLOAD_HEADERS = {
-  [LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION_HEADER]: LECTUM_SHARE_ARTIFACT_LAYOUT_VERSION,
-};
-const SHARE_ARTIFACT_MIME_BY_EXTENSION: Record<string, string> = {
-  mp4: "video/mp4",
-  webm: "video/webm",
-};
-
-const withShareArtifactFileType = (file: File) => {
-  const declaredMimeType = file.type.trim().toLowerCase().split(";", 1)[0] ?? "";
-  const extension = file.name.toLowerCase().split(".").pop() ?? "";
-  const supportedDeclaredMimeType =
-    declaredMimeType === "video/mp4" || declaredMimeType === "video/webm" ? declaredMimeType : null;
-  const mimeType = supportedDeclaredMimeType || SHARE_ARTIFACT_MIME_BY_EXTENSION[extension];
-
-  if (!mimeType) {
-    throw new Error("Arquivo de compartilhamento invalido.");
-  }
-
-  if (file.type.trim().toLowerCase() === mimeType) return file;
-
-  return new File([file], file.name || "video-lectum.mp4", {
-    lastModified: file.lastModified,
-    type: mimeType,
-  });
-};
-
-export const getPostShareArtifact = async (id: string) => {
-  const handle = callEndpoint({
-    route: "/api/private/posts/:id/share-artifact",
-    params: { id },
-  });
-
-  return handleReq<PostShareArtifactResponse>({
-    ...handle,
-    hideError: true,
-  });
-};
-
-export const getReplyShareArtifact = async (id: string, replyId: string) => {
-  const handle = callEndpoint({
-    route: "/api/private/posts/:id/replies/:replyId/share-artifact",
-    params: { id, replyId },
-  });
-
-  return handleReq<PostShareArtifactResponse>({
-    ...handle,
-    hideError: true,
-  });
-};
-
-export const uploadPostShareArtifact = async (id: string, file: File) => {
-  const body = new FormData();
-  body.append("share-artifacts", withShareArtifactFileType(file));
-
-  const handle = callEndpoint({
-    route: "/api/private/posts/:id/share-artifact",
-    method: "POST",
-    params: { id },
-    body,
-    config: {
-      headers: SHARE_ARTIFACT_UPLOAD_HEADERS,
-      timeout: SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS,
-    },
-  });
-
-  return handleReq<PostShareArtifactResponse>({
-    ...handle,
-    hideError: true,
-    signOutOnUnauthorized: false,
-  });
-};
-
-export const uploadReplyShareArtifact = async (id: string, replyId: string, file: File) => {
-  const body = new FormData();
-  body.append("share-artifacts", withShareArtifactFileType(file));
-
-  const handle = callEndpoint({
-    route: "/api/private/posts/:id/replies/:replyId/share-artifact",
-    method: "POST",
-    params: { id, replyId },
-    body,
-    config: {
-      headers: SHARE_ARTIFACT_UPLOAD_HEADERS,
-      timeout: SHARE_ARTIFACT_UPLOAD_TIMEOUT_MS,
-    },
-  });
-
-  return handleReq<PostShareArtifactResponse>({
-    ...handle,
-    hideError: true,
-    signOutOnUnauthorized: false,
   });
 };
 

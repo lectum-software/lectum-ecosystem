@@ -5,10 +5,8 @@ import type {
   IPostShareDTO,
   IPostUploadReplyMediaDTO,
   IPostVoteDTO,
-  PostShareResponse,
 } from "../../DTOs/IPostDTO";
 import { PostRepository } from "../../repositories/PostRepository";
-import { POST_SHARE_ARTIFACT_TTL_DAYS } from "../../repositories/queries/PostShareArtifactRepository";
 
 import {
   type AuthenticatedPostShowDTO,
@@ -22,28 +20,6 @@ import {
   reportReasons,
   resolveMutationResult,
 } from "./post-support";
-
-const shareArtifactExpiresAtFrom = (accessedAt: Date) =>
-  new Date(accessedAt.getTime() + POST_SHARE_ARTIFACT_TTL_DAYS * 24 * 60 * 60 * 1000);
-
-const renewShareArtifactAfterConfirmedShare = async (
-  repository: PostRepository,
-  shareData: PostShareResponse,
-) => {
-  const accessedAt = new Date();
-  const target = await repository.getShareArtifactTarget({
-    postId: shareData.post_id,
-    replyId: shareData.reply_id,
-  });
-
-  if (!target) return;
-
-  await repository.renewShareArtifact({
-    ...target,
-    accessedAt,
-    expiresAt: shareArtifactExpiresAtFrom(accessedAt),
-  });
-};
 
 export const authorizeReplyMediaUpload = async (data: AuthenticatedPostShowDTO) => {
   const unauthorized = ensureCommunityActor(data);
@@ -129,10 +105,6 @@ export const share = async (data: IPostShareDTO) => {
       replyId: res.data.reply_id,
       shareId: res.data.notification_event_id,
     });
-  }
-
-  if (res.data.shared) {
-    await renewShareArtifactAfterConfirmedShare(repository, res.data).catch(() => undefined);
   }
 
   return {

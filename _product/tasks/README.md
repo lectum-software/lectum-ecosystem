@@ -1084,3 +1084,10 @@ Uma task só pode ser marcada como concluída quando:
 - A alteracao limita-se ao texto superior; titulo, botao de fechar, preview, texto copiavel, download, som da previa, pausa de midia ao fundo, regra owner-only e modal de criar post permanecem inalterados.
 - Builder Quick Copy foi tentado apenas para inspecao, mas o npx local falhou no cache; a referencia visual auditavel usada foi o print do usuario e o codigo existente da modal.
 - Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, env obrigatoria, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-28: remocao do cache remoto R2 da previa social
+
+- Ajuste pos-feedback da TASK-42: o cache remoto/R2 de artefatos sociais por 30 dias deixa de ser usado porque a previa agora e owner-only; o proprio psicologo tende a baixar uma unica vez e nao ha mais beneficio relevante em reaproveitar o arquivo para pacientes ou varios usuarios.
+- O frontend deixa de buscar, enviar, preaquecer e renovar artefatos em `post_share_artifacts`; o video personalizado e gerado somente sob demanda na acao explicita do psicologo, com reaproveitamento apenas em memoria durante a mesma interacao.
+- As rotas backend `share-artifact` permanecem por compatibilidade de rollout, mas retornam indisponivel sem criar novo objeto R2/registro de banco; o upload nao usa mais multer. A limpeza por expiracao de artefatos legados permanece, sem limpeza destrutiva de bucket/dados publicados.
+- `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env; nao ha env obrigatoria nova, package, migration, provider, mock, seed, reset ou dados publicados afetados.

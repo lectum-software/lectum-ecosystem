@@ -396,7 +396,6 @@ export type IPostUploadShareArtifactDTO = {
   p: PostParams & { replyId?: string };
   auth: user;
   file?: Express.Multer.File & { key?: string; path?: string };
-  headers?: Record<string, string | string[] | undefined>;
 };
 
 export type IPostInitiateReplyMediaMultipartDTO = {

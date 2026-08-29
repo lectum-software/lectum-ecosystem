@@ -135,12 +135,12 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(postDetailSource, /post\.author\.id === currentUserId/);
   assert.match(replyCardSource, /reply\.author\.id === currentUserId/);
   assert.match(savedReplyCardSource, /reply\.author\.id === currentUserId/);
-  assert.match(repositorySource, /authorId: string/);
-  assert.match(repositorySource, /authorId: post\.author\.id/);
-  assert.match(repositorySource, /authorId: reply\.author\.id/);
-  assert.match(shareArtifactServiceSource, /canUseShareArtifactPreview/);
-  assert.match(shareArtifactServiceSource, /auth\?\.role === "psicologo"/);
-  assert.match(shareArtifactServiceSource, /auth\.id === target\.authorId/);
+  assert.match(repositorySource, /listExpired/);
+  assert.match(repositorySource, /markDeleted/);
+  assert.doesNotMatch(repositorySource, /authorId: string|upsertArtifact|renewArtifact/);
+  assert.match(shareArtifactServiceSource, /post_share_artifact_unavailable/);
+  assert.match(shareArtifactServiceSource, /deleteShareArtifactObject\(key\)/);
+  assert.doesNotMatch(shareArtifactServiceSource, /canUseShareArtifactPreview|upsertShareArtifact/);
   assert.doesNotMatch(replyItemCardSource, /import \{ Download, Reply \} from "lucide-react"/);
   assert.match(downloadHookSource, /LectumShareDownloadDialog/);
   assert.match(

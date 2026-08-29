@@ -735,26 +735,26 @@ Regras: criar evento somente no fluxo real de compartilhamento da interface; ded
 usuario/dispositivo/alvo; emitir `compartilhamento` para o autor do post ou comentario, respeitando preferencias e
 silenciamento do post. A identidade de quem compartilhou nao e exposta na central.
 
-`post_share_artifact` / `post_share_artifacts` (TASK-42, cache temporario do video com arte):
+`post_share_artifact` / `post_share_artifacts` (TASK-42, artefatos legados do video com arte):
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `cache_key` | `String @unique` | hash do alvo, midia, fingerprint do conteudo e versao do layout |
+| `cache_key` | `String @unique` | hash legado do alvo, midia, fingerprint do conteudo e versao do layout |
 | `post_id` | `String` | post compartilhado ou post pai da resposta |
 | `reply_id` | `String?` | resposta compartilhada, quando aplicavel |
 | `target_type` | `String` | `"post" \| "reply"` |
-| `source_media_url` | `String` | URL publica da midia original usada como fonte |
-| `source_fingerprint` | `String` | hash de titulo/texto/autoria/metadados que invalidam a arte |
-| `layout_version` | `String` | versao logica do canvas social |
-| `storage_key` | `String` | objeto publico em R2 sob `posts/share-artifacts/` |
+| `source_media_url` | `String` | URL publica da midia original usada como fonte no cache legado |
+| `source_fingerprint` | `String` | hash legado de titulo/texto/autoria/metadados que invalidavam a arte |
+| `layout_version` | `String` | versao logica legada do canvas social |
+| `storage_key` | `String` | objeto publico legado em R2 sob `posts/share-artifacts/` |
 | `file_name` | `String?` | nome seguro do arquivo gerado no navegador |
 | `content_type` | `String` | `video/mp4` ou `video/webm` normalizado |
 | `size_bytes` | `Int` | tamanho do arquivo com arte |
-| `expires_at` | `DateTime` | expira 30 dias apos preparo/upload do artefato por default; `POST_SHARE_ARTIFACT_TTL_DAYS` opcional pode ajustar a janela; compartilhamento aceito renova por mais uma janela |
-| `last_accessed_at` | `DateTime @default(now())` | reservado para auditoria/telemetria futura |
-| `@@index([post_id, expires_at])`, `@@index([reply_id, expires_at])`, `@@index([expires_at])`, `@@index([storage_key])` | | limpeza e consulta por alvo |
+| `expires_at` | `DateTime` | mantido para limpeza de objetos/registros legados; novos artefatos nao sao criados nem renovados desde 2026-08-28 |
+| `last_accessed_at` | `DateTime @default(now())` | historico legado, sem renovacao pelo fluxo atual |
+| `@@index([post_id, expires_at])`, `@@index([reply_id, expires_at])`, `@@index([expires_at])`, `@@index([storage_key])` | | limpeza de legado por expiracao |
 
-Regras: o frontend agenda preparo best-effort apos publicacao/edicao de post com video profissional e apos criacao de resposta profissional com video; tambem consulta o cache antes de compartilhar. Se nao houver arte valida, gera a composicao no navegador, compartilha pelo fluxo nativo e tenta persistir o arquivo em background para os proximos compartilhamentos. O backend nao pre-renderiza todos os videos fora desses fluxos e nao renova cache por leitura/crawler. Quando `post_share.shared=true`, o backend renova `expires_at` e `last_accessed_at` do artefato vigente do alvo pela janela configurada em `POST_SHARE_ARTIFACT_TTL_DAYS` (30 dias por default); cliques abortados ou deduplicados nao renovam. Quando um novo artefato substitui o mesmo `cache_key`, o objeto anterior e removido best-effort para evitar duas versoes ativas do mesmo alvo. O scheduler de limpeza remove objetos expirados e marca os registros como `deleted`, sem depender de nova env obrigatoria.
+Regras desde 2026-08-28: a previa social de video e owner-only e o proprio psicologo baixa o arquivo personalizado sob demanda. O frontend nao consulta, nao envia, nao preaquece, nao persiste e nao renova cache remoto/R2 de `post_share_artifacts`; reaproveita somente o arquivo preparado em memoria durante a mesma interacao. O backend mantem as rotas `share-artifact` apenas por compatibilidade de rollout, retornando artefato indisponivel e sem criar objeto R2 ou registro novo. A rotina existente de limpeza remove objetos expirados e marca registros legados como `deleted`, sem reset, seed, `db push`, lifecycle destrutivo manual ou env obrigatoria. `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env porque nao ha mais criacao/renovacao de TTL para novos artefatos.
 
 ### Ranking de mentores (TASK-27 - derivado)
 
