@@ -1290,4 +1290,4 @@ O toast verde `Video baixado.` confirma que o arquivo social foi salvo, mas algu
 
 ### Validacao
 
-As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.235, incluindo formatter/check do arquivo alterado, frontend check/build, build apos bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.236, incluindo formatter/check do arquivo alterado, frontend check/build, build apos bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.

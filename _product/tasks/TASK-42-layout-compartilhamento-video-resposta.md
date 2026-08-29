@@ -2123,8 +2123,8 @@ O usuario avaliou a badge verde exibida apos o download do video social e sugeri
 - [x] `pnpm --dir frontend exec biome check --write src/hooks/use-lectum-direct-share.ts`.
 - [x] `pnpm --dir frontend check`.
 - [x] `pnpm --dir frontend build` antes e depois do bump.
-- [x] `pnpm version:bump` para `0.1.235` e `pnpm check:version`.
-- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.235`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm version:bump` para `0.1.236` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.236`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

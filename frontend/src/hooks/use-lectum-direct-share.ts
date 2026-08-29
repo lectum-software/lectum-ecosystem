@@ -134,11 +134,13 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         }
 
         if (result.mode === "download") {
-          toast.success(
-            destination === "download"
-              ? "Vídeo baixado."
-              : "Arquivo baixado. Escolha o app desejado no dispositivo.",
-          );
+          if (destination === "download") {
+            toast.success("Vídeo baixado.", {
+              description: "Se a qualidade ficar baixa, tente pelo computador.",
+            });
+          } else {
+            toast.success("Arquivo baixado. Escolha o app desejado no dispositivo.");
+          }
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
         } else if (result.mode === "prepared") {
