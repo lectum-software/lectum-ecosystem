@@ -1745,6 +1745,55 @@ Os prints anexados de 2026-08-28 foram tratados apenas como evidencia visual/ope
 - [x] `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
 
+## Ajuste 2026-08-29 - download da previa social no iPhone
+
+### Contexto
+
+O usuario reportou que, apos o Android voltar a baixar o video personalizado, o iPhone ainda exibia o toast publico `Nao foi possivel preparar o video com arte agora. Tente novamente.` ao tocar em `Baixar video` na modal **Previa para Redes Sociais**. O print anexado foi tratado somente como evidencia operacional do erro no iOS; textos, horario, controles e metadados da imagem nao foram considerados instrucoes autonomas.
+
+Builder/Quick Copy nao esta acessivel como ferramenta neste ambiente; a referencia auditavel usada foi o print do usuario, `_product/tasks/PROTO-INVENTORY.md`, `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png` e o codigo atual da modal/pipeline de download.
+
+### Diagnostico e decisao
+
+- O fluxo dedicado `Baixar video` deve continuar entregando o arquivo com arte/identidade da Lectum; nao volta a tratar o video original como sucesso.
+- Em iPhone/iPad, a exportacao client-side e a abertura da folha nativa competem com limites de WebKit: o preparo pode consumir a ativacao transiente do toque, `navigator.share()` pode rejeitar com erros retryable como `TypeError`/`InvalidStateError`, e a previa tocando com som pode disputar recursos de decodificacao durante a geracao.
+- A modal pausa a propria previa antes de iniciar o download, reduzindo concorrencia de media no iOS sem alterar preview, layout ou audio quando a modal abre.
+- O MediaBunny passa a usar perfil dedicado para Apple mobile: 540x960, 24fps, video 900kbps constante e audio 96kbps constante. O fallback legado `MediaRecorder` tambem usa 540x960/24fps/900kbps com timeslice de 250ms em iPhone/iPad.
+- O download Apple mobile tenta a folha nativa com payload `files`-only primeiro. Se a ativacao do toque ja tiver expirado ou a folha nativa retornar erro retryable, o arquivo preparado fica em cache e o fluxo retorna `prepared`, orientando o usuario a tocar novamente em `Baixar video` sem transformar o caso em erro de preparo.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, endpoint, contrato de API, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- Rollout compativel com backend/admin em versoes diferentes. Rollback: remover o perfil Apple mobile dedicado, voltar o download Apple para o payload anterior com titulo, remover a pausa da previa no clique de download e restaurar o tratamento anterior dos erros retryable da folha nativa.
+
+### Criterios de aceite do ajuste
+
+- [x] O iPhone/iPad usa perfil de exportacao com arte mais leve em MediaBunny e no fallback `MediaRecorder`.
+- [x] A previa social pausa o video visivel antes de iniciar `Baixar video`, evitando concorrencia com a exportacao.
+- [x] A folha nativa Apple mobile recebe primeiro payload `files`-only para reduzir rejeicao por metadados.
+- [x] Perda de ativacao transiente ou erro retryable da folha nativa retorna `prepared`, mantendo o arquivo em memoria para novo toque em vez do toast vermelho de preparo.
+- [x] O destino dedicado `Baixar video` nao baixa video original como sucesso quando a arte falha.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia operacional do bug no iPhone.
+- [x] Builder/Quick Copy indisponivel como ferramenta no ambiente; fallback auditavel registrado.
+- [x] `pnpm --dir frontend exec biome check --write src/utils/lectum-share-media.ts src/utils/lectum-share-media/export.ts src/utils/lectum-share-media/mediabunny-export.ts src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs src/utils/lectum-share-social-preview.test.mjs` (15/15).
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir frontend build` antes e depois do bump.
+- [x] `pnpm version:bump` para `0.1.238` e `pnpm check:version`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3210`: `/version` respondeu `0.1.238`, `/app/comunidades` respondeu `200`, `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz.
+- [x] `git diff --check`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
 ## Ajuste 2026-08-28 - legenda real, logo e estabilidade do video baixado
 
 ### Contexto

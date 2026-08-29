@@ -1111,3 +1111,10 @@ Uma task só pode ser marcada como concluída quando:
 - Traducoes backend dos erros `cfp_provider_*` alinhadas para rollout com frontend/backend em versoes diferentes, sem mudar provider, endpoint, schema, migration, env, packages, mock, seed, reset ou regra de aprovacao.
 - Evidencia visual: print anexado pelo usuario e fallback local `_product/proto/Verificacao de CPF - Consulta CFP.jpg`, pois Builder/Quick Copy nao esta acessivel neste ambiente.
 - ADR atualizado: `adrs/0026-infosimples-validacao-cfp-crp.md`; criterios de aceite em `_product/tasks/TASK-10-consulta-cfp-resultado.md` marcados como concluidos.
+
+## Correcao operacional em 2026-08-29: download da previa social no iPhone
+
+- Ajuste pos-feedback da TASK-42: apos o Android baixar corretamente, o iPhone ainda mostrava `Nao foi possivel preparar o video com arte agora. Tente novamente.` no CTA `Baixar video` da previa social.
+- O iPhone/iPad passa a usar perfil mobile mais conservador para gerar o MP4 com arte (540x960, 24fps, video/audio constantes) tanto no MediaBunny quanto no fallback `MediaRecorder`, e a previa visivel e pausada antes do preparo para reduzir concorrencia de media no WebKit.
+- No download Apple mobile, a folha nativa recebe primeiro `files`-only; perda de ativacao transiente ou erros retryable da share sheet retornam `prepared`, mantendo o arquivo em memoria para o segundo toque em vez de mostrar erro vermelho.
+- O download dedicado continua sem aceitar video original como sucesso, preservando a arte da Lectum. Alteracao frontend-only, mobile-first, sem backend, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.

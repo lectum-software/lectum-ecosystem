@@ -1291,3 +1291,28 @@ O toast verde `Video baixado.` confirma que o arquivo social foi salvo, mas algu
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.236, incluindo formatter/check do arquivo alterado, frontend check/build, build apos bump, smoke local, pnpm check de raiz, git diff --check e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - download da previa social no iPhone
+
+### Contexto
+
+Depois de o Android voltar a baixar o video personalizado da modal **Previa para Redes Sociais**, o iPhone ainda apresentava o toast publico `Nao foi possivel preparar o video com arte agora. Tente novamente.` ao tocar em `Baixar video`. O print anexado foi usado somente como evidencia operacional do erro em iOS; seu conteudo visual, horario e metadados nao foram tratados como instrucoes de produto.
+
+### Decisao
+
+- Manter a regra do destino dedicado `Baixar video`: o sucesso precisa ser o artefato com a arte da Lectum, nao o video original sem identidade.
+- Pausar o video da propria previa antes de iniciar o preparo/download, reduzindo concorrencia de decodificacao/reproducao no WebKit durante a exportacao.
+- Usar perfil Apple mobile dedicado no MediaBunny: 540x960, 24fps, video 900kbps constante e audio 96kbps constante. O fallback legado por `MediaRecorder` usa o mesmo tamanho/framerate/bitrate e timeslice de 250ms em iPhone/iPad.
+- No download Apple mobile, preferir payload `files`-only na Web Share API, porque o nome do arquivo ja carrega o titulo e isso reduz rejeicoes por metadados na folha nativa.
+- Se a exportacao longa consumir a ativacao transiente do gesto, ou se a folha nativa Apple retornar erro retryable (`TypeError`/`InvalidStateError` alem dos erros de ativacao ja tratados), o fluxo retorna `prepared`: o arquivo fica em memoria e o usuario toca novamente em `Baixar video`, agora sem nova geracao longa.
+
+### Consequencias
+
+- iPhone/iPad passam a ter um caminho mais conservador para gerar e entregar o MP4 com arte, sem adicionar servidor de transcodificacao ou dependencia nova.
+- O primeiro toque pode terminar com orientacao de retry quando a ativacao do gesto expirar, mas deixa de virar toast vermelho de preparo quando o arquivo ja foi gerado.
+- Desktop e Android continuam nos caminhos existentes; Android preserva o perfil 540x960/24fps validado no ajuste anterior.
+- Sem backend, admin UI, schema, migration, env, package, provider, mock, seed, reset, `db push` ou limpeza de bucket/dados publicados. Rollback simples reverte os perfis Apple mobile, a pausa da previa e o tratamento retryable do share nativo.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.238, incluindo testes estaticos da previa/media, `frontend check`, build antes/depois do bump, smoke local, `pnpm check` de raiz, `git diff --check` e smoke de homologacao apos push.

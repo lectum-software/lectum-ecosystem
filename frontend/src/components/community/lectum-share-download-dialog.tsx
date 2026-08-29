@@ -129,6 +129,14 @@ const pauseBackgroundMedia = () => {
   }
 };
 
+const pausePreviewMediaBeforeDownload = () => {
+  for (const media of document.querySelectorAll<HTMLMediaElement>(PREVIEW_VIDEO_SELECTOR)) {
+    if (media.paused || media.ended) continue;
+
+    media.pause();
+  }
+};
+
 export const LectumShareDownloadDialog = ({
   disabled = false,
   onClose,
@@ -208,6 +216,11 @@ export const LectumShareDownloadDialog = ({
     } catch {
       toast.error("Não foi possível copiar a descrição agora.");
     }
+  };
+
+  const handleDownload = () => {
+    pausePreviewMediaBeforeDownload();
+    onDownload();
   };
 
   return (
@@ -360,7 +373,7 @@ export const LectumShareDownloadDialog = ({
             "disabled:pointer-events-none disabled:opacity-65",
           )}
           disabled={disabled}
-          onClick={onDownload}
+          onClick={handleDownload}
           type="button"
         >
           <Download className="h-4 w-4" aria-hidden="true" />

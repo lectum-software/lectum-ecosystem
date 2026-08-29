@@ -14,6 +14,8 @@ const MEDIABUNNY_SHARE_AUDIO_BITRATE = 128_000;
 const MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000;
 const ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE = 96_000;
 const ANDROID_MEDIABUNNY_SHARE_FRAME_RATE = 24;
+const APPLE_MOBILE_MEDIABUNNY_SHARE_AUDIO_BITRATE = 96_000;
+const APPLE_MOBILE_MEDIABUNNY_SHARE_FRAME_RATE = 24;
 
 type MediabunnyInputWithDuration = {
   computeDuration: () => Promise<number>;
@@ -43,17 +45,33 @@ const ANDROID_MEDIABUNNY_SHARE_EXPORT_PROFILES: readonly MediabunnyShareExportPr
   },
 ] as const;
 
+const APPLE_MOBILE_MEDIABUNNY_SHARE_EXPORT_PROFILES: readonly MediabunnyShareExportProfile[] = [
+  {
+    frameRate: APPLE_MOBILE_MEDIABUNNY_SHARE_FRAME_RATE,
+    height: 960,
+    videoBitrate: 900_000,
+    videoBitrateMode: "constant",
+    width: 540,
+  },
+] as const;
+
 const isAndroidMediabunnyShareRuntime = () =>
   typeof navigator !== "undefined" && /\bAndroid\b/i.test(navigator.userAgent);
 
-const isAppleMobileMediabunnyShareRuntime = () =>
-  typeof navigator !== "undefined" && /\b(iPhone|iPad|iPod)\b/i.test(navigator.userAgent);
+const isAppleMobileMediabunnyShareRuntime = () => {
+  if (typeof navigator === "undefined") return false;
+
+  return (
+    /\b(iPhone|iPad|iPod)\b/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+};
 
 const mediabunnyShareExportProfiles = () =>
   isAndroidMediabunnyShareRuntime()
     ? ANDROID_MEDIABUNNY_SHARE_EXPORT_PROFILES
     : isAppleMobileMediabunnyShareRuntime()
-      ? MEDIABUNNY_SHARE_EXPORT_PROFILES.slice(1)
+      ? APPLE_MOBILE_MEDIABUNNY_SHARE_EXPORT_PROFILES
       : MEDIABUNNY_SHARE_EXPORT_PROFILES;
 
 export const shouldUseMediabunnyVideoShareExport = () =>
@@ -178,12 +196,16 @@ export const createMediabunnyVideoShareFile = async (
 
   const assets = await loadShareCanvasAssets();
   const isAndroidRuntime = isAndroidMediabunnyShareRuntime();
+  const isAppleMobileRuntime = isAppleMobileMediabunnyShareRuntime();
+  const isMobileRuntime = isAndroidRuntime || isAppleMobileRuntime;
   const palette = getCanvasPalette();
   const audioQuality = new Quality({
-    bitrate: isAndroidRuntime
-      ? ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE
+    bitrate: isMobileRuntime
+      ? isAndroidRuntime
+        ? ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE
+        : APPLE_MOBILE_MEDIABUNNY_SHARE_AUDIO_BITRATE
       : MEDIABUNNY_SHARE_AUDIO_BITRATE,
-    bitrateMode: isAndroidRuntime ? "constant" : "variable",
+    bitrateMode: isMobileRuntime ? "constant" : "variable",
   });
   let lastError = new Error("Exportacao Mediabunny indisponivel para compartilhamento.");
 

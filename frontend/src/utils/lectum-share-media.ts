@@ -26,6 +26,7 @@ import {
 
 const DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000;
 const APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN = /iPhone|iPad|iPod/u;
+const APPLE_MOBILE_RETRYABLE_SHARE_ERROR_NAMES = new Set(["InvalidStateError", "TypeError"]);
 
 const createLectumShareFile = async (target: LectumShareSocialTarget) => {
   const mediaUrl = resolvePublicMediaUrl(target.mediaUrl);
@@ -266,6 +267,24 @@ const isAppleMobileShareDownloadRuntime = () => {
   return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
 };
 
+const hasNativeShareUserActivation = () => {
+  const userActivation = (
+    navigator as Navigator & {
+      userActivation?: UserActivation;
+    }
+  ).userActivation;
+
+  return !userActivation || userActivation.isActive;
+};
+
+const nativeShareErrorName = (error: unknown) =>
+  typeof error === "object" && error !== null && "name" in error
+    ? String((error as { name?: unknown }).name ?? "")
+    : "";
+
+const isAppleMobileRetryableShareError = (error: unknown) =>
+  APPLE_MOBILE_RETRYABLE_SHARE_ERROR_NAMES.has(nativeShareErrorName(error));
+
 const shareFileThroughAppleMobileSheet = async (
   target: LectumShareSocialTarget,
   file: File,
@@ -273,12 +292,16 @@ const shareFileThroughAppleMobileSheet = async (
   if (!isAppleMobileShareDownloadRuntime()) return null;
 
   const nav = navigator as ShareNavigator;
-  const nativeShareData = resolveLectumFileShareData(nav, {
-    files: [file],
-    title: target.shareTitle,
-  });
+  const filesOnlyShareData = resolveLectumFileShareData(nav, { files: [file] });
+  const nativeShareData =
+    filesOnlyShareData ??
+    resolveLectumFileShareData(nav, {
+      files: [file],
+      title: target.shareTitle,
+    });
 
   if (!nativeShareData) return null;
+  if (!hasNativeShareUserActivation()) return { channel: null, file, mode: "prepared" };
 
   try {
     await nav.share?.(nativeShareData);
@@ -286,7 +309,7 @@ const shareFileThroughAppleMobileSheet = async (
   } catch (error) {
     if (isNativeShareAbortError(error)) throw error;
 
-    if (isNativeShareActivationError(error)) {
+    if (isNativeShareActivationError(error) || isAppleMobileRetryableShareError(error)) {
       return { channel: null, file, mode: "prepared" };
     }
 

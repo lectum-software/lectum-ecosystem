@@ -61,10 +61,19 @@ type CanvasCaptureStreamTrack = MediaStreamTrack & {
 
 const VIDEO_PLAY_TIMEOUT_MS = 8000;
 const ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24;
+const APPLE_MOBILE_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24;
 const LEGACY_RECORDER_ANDROID_TIMESLICE_MS = 250;
+const LEGACY_RECORDER_APPLE_MOBILE_TIMESLICE_MS = 250;
 const ANDROID_LEGACY_VIDEO_EXPORT_PROFILE = {
   audioBitsPerSecond: 96_000,
   frameRate: ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE,
+  height: 960,
+  videoBitsPerSecond: 900_000,
+  width: 540,
+} as const;
+const APPLE_MOBILE_LEGACY_VIDEO_EXPORT_PROFILE = {
+  audioBitsPerSecond: 96_000,
+  frameRate: APPLE_MOBILE_LEGACY_VIDEO_EXPORT_FRAME_RATE,
   height: 960,
   videoBitsPerSecond: 900_000,
   width: 540,
@@ -93,17 +102,32 @@ const emptyVideoAudioCapture = (): VideoAudioCapture => ({
 const isAndroidLegacyVideoShareRuntime = () =>
   typeof navigator !== "undefined" && /\bAndroid\b/i.test(navigator.userAgent);
 
+const isAppleMobileLegacyVideoShareRuntime = () => {
+  if (typeof navigator === "undefined") return false;
+
+  return (
+    /\b(iPhone|iPad|iPod)\b/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+};
+
 const resolveLegacyVideoExportProfile = (layout: ShareCanvasLayout): LegacyVideoExportProfile =>
   isAndroidLegacyVideoShareRuntime()
     ? ANDROID_LEGACY_VIDEO_EXPORT_PROFILE
-    : {
-        frameRate: VIDEO_EXPORT_FRAME_RATE,
-        height: layout.height,
-        width: layout.width,
-      };
+    : isAppleMobileLegacyVideoShareRuntime()
+      ? APPLE_MOBILE_LEGACY_VIDEO_EXPORT_PROFILE
+      : {
+          frameRate: VIDEO_EXPORT_FRAME_RATE,
+          height: layout.height,
+          width: layout.width,
+        };
 
 const resolveLegacyVideoRecorderTimesliceMs = () =>
-  isAndroidLegacyVideoShareRuntime() ? LEGACY_RECORDER_ANDROID_TIMESLICE_MS : undefined;
+  isAndroidLegacyVideoShareRuntime()
+    ? LEGACY_RECORDER_ANDROID_TIMESLICE_MS
+    : isAppleMobileLegacyVideoShareRuntime()
+      ? LEGACY_RECORDER_APPLE_MOBILE_TIMESLICE_MS
+      : undefined;
 
 const startLegacyVideoRecorder = (recorder: MediaRecorder, timesliceMs?: number) => {
   if (timesliceMs) {

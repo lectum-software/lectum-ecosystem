@@ -513,7 +513,6 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
     mediaSource.indexOf("const createLectumShareFile"),
     mediaSource.indexOf("type PreparedShareFileCacheValue"),
   );
-
   assert.doesNotMatch(source, /MAX_VIDEO_EXPORT_SECONDS/);
   assert.match(source, /recorder\.requestData\(\)/);
   assert.match(source, /lastProgressAt/);
@@ -523,13 +522,21 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(mbSource, /MEDIABUNNY_SHARE_VIDEO_BITRATE = 2_400_000/);
   assert.match(mbSource, /ANDROID_MEDIABUNNY_SHARE_AUDIO_BITRATE = 96_000/);
   assert.match(mbSource, /ANDROID_MEDIABUNNY_SHARE_FRAME_RATE = 24/);
+  assert.match(mbSource, /APPLE_MOBILE_MEDIABUNNY_SHARE_AUDIO_BITRATE = 96_000/);
+  assert.match(mbSource, /APPLE_MOBILE_MEDIABUNNY_SHARE_FRAME_RATE = 24/);
   assert.match(mbSource, /MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 1280/);
   assert.match(
     mbSource,
     /ANDROID_MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 960[\s\S]*videoBitrate: 850_000[\s\S]*videoBitrateMode: "constant"[\s\S]*width: 540/,
   );
+  assert.match(
+    mbSource,
+    /APPLE_MOBILE_MEDIABUNNY_SHARE_EXPORT_PROFILES[\s\S]*height: 960[\s\S]*videoBitrate: 900_000[\s\S]*videoBitrateMode: "constant"[\s\S]*width: 540/,
+  );
   assert.match(mbSource, /isAndroidMediabunnyShareRuntime/);
   assert.match(mbSource, /isAppleMobileMediabunnyShareRuntime[\s\S]*iPhone\|iPad\|iPod/);
+  assert.match(mbSource, /navigator\.platform === "MacIntel" && navigator\.maxTouchPoints > 1/);
+  assert.match(mbSource, /isMobileRuntime = isAndroidRuntime \|\| isAppleMobileRuntime/);
   assert.match(mbSource, /@mediabunny\/aac-encoder/);
   assert.match(mbSource, /await importMediabunny\(\)/);
   assert.match(mbSource, /VideoSample/);
@@ -557,6 +564,16 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
   assert.match(mbSource, /processedWidth: profile\.width/);
   assert.match(mediaSource, /DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000/);
   assert.match(mediaSource, /URL\.revokeObjectURL\(url\), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS/);
+  for (const expected of [
+    /APPLE_MOBILE_RETRYABLE_SHARE_ERROR_NAMES = new Set\(\["InvalidStateError", "TypeError"\]\)/,
+    /const hasNativeShareUserActivation = \(\) =>/,
+    /userActivation\?: UserActivation/,
+    /filesOnlyShareData = resolveLectumFileShareData\(nav, \{ files: \[file\] \}\)/,
+    /if \(!hasNativeShareUserActivation\(\)\) return \{ channel: null, file, mode: "prepared" \}/,
+    /isNativeShareActivationError\(error\) \|\| isAppleMobileRetryableShareError\(error\)/,
+  ]) {
+    assert.match(mediaSource, expected);
+  }
   assert.match(videoPreparationSource, /return createVideoShareFile\(target, video\)\.catch/);
   assert.match(videoPreparationSource, /shouldUseMediabunnyVideoShareExport\(\)/);
   assert.match(videoPreparationSource, /createMediabunnyVideoShareFile\(target, mediaUrl\)\.catch/);
@@ -585,12 +602,19 @@ test("exportacao de video aguarda frame renderizavel e frames do canvas no mobil
   assert.match(exportSource, /CanvasCaptureStreamTrack/);
   assert.match(exportSource, /createCanvasCaptureFrameRequester/);
   assert.match(exportSource, /ANDROID_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24/);
+  assert.match(exportSource, /APPLE_MOBILE_LEGACY_VIDEO_EXPORT_FRAME_RATE = 24/);
   assert.match(exportSource, /LEGACY_RECORDER_ANDROID_TIMESLICE_MS = 250/);
+  assert.match(exportSource, /LEGACY_RECORDER_APPLE_MOBILE_TIMESLICE_MS = 250/);
   assert.match(
     exportSource,
     /ANDROID_LEGACY_VIDEO_EXPORT_PROFILE[\s\S]*height: 960[\s\S]*videoBitsPerSecond: 900_000[\s\S]*width: 540/,
   );
+  assert.match(
+    exportSource,
+    /APPLE_MOBILE_LEGACY_VIDEO_EXPORT_PROFILE[\s\S]*height: 960[\s\S]*videoBitsPerSecond: 900_000[\s\S]*width: 540/,
+  );
   assert.match(exportSource, /isAndroidLegacyVideoShareRuntime/);
+  assert.match(exportSource, /isAppleMobileLegacyVideoShareRuntime[\s\S]*iPhone\|iPad\|iPod/);
   assert.match(exportSource, /resolveLegacyVideoRecorderTimesliceMs/);
   assert.match(exportSource, /startLegacyVideoRecorder/);
   assert.match(exportSource, /canvas\.width = exportProfile\.width/);
