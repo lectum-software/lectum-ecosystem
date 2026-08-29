@@ -5,6 +5,7 @@ import { PostListRepository } from "./queries/PostListRepository";
 import { PostReplyRepository } from "./queries/PostReplyRepository";
 import { PostReplyStateRepository } from "./queries/PostReplyStateRepository";
 import { PostShareArtifactRepository } from "./queries/PostShareArtifactRepository";
+import { PostShareRenderRepository } from "./queries/PostShareRenderRepository";
 import { PostStateRepository } from "./queries/PostStateRepository";
 import { PostUpdateRepository } from "./queries/PostUpdateRepository";
 
@@ -24,6 +25,8 @@ export class PostRepository implements IPostRepository {
   private readonly replyStateRepository = new PostReplyStateRepository();
 
   private readonly shareArtifactRepository = new PostShareArtifactRepository();
+
+  private readonly shareRenderRepository = new PostShareRenderRepository();
 
   exists(
     ...args: Parameters<PostCoreRepository["exists"]>
@@ -151,5 +154,11 @@ export class PostRepository implements IPostRepository {
     ...args: Parameters<PostShareArtifactRepository["markDeleted"]>
   ): ReturnType<PostShareArtifactRepository["markDeleted"]> {
     return this.shareArtifactRepository.markDeleted(...args);
+  }
+
+  findShareRenderTarget(
+    ...args: Parameters<PostShareRenderRepository["findTarget"]>
+  ): ReturnType<PostShareRenderRepository["findTarget"]> {
+    return this.shareRenderRepository.findTarget(...args);
   }
 }

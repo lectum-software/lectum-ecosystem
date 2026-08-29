@@ -308,6 +308,23 @@ export type PostShareArtifactResponse = {
   size_bytes: number | null;
 };
 
+export type PostShareRenderProfessionalDTO = {
+  name: string;
+  roleLabel: "Psicóloga" | "Psicólogo";
+  verified: boolean;
+};
+
+export type PostShareRenderTargetDTO = {
+  cardLabel: "Postado na Lectum" | "Respondido na Lectum";
+  mediaUrl: string;
+  postId: string;
+  professional: PostShareRenderProfessionalDTO;
+  replyId: string | null;
+  responseText: string | null;
+  shareTitle: string;
+  sourceText: string;
+};
+
 export type PostReplyDeleteResponse = {
   post_id: string;
   reply_ids: string[];
@@ -390,6 +407,11 @@ export type IPostUploadReplyMediaDTO = {
 export type IPostShareArtifactDTO = {
   p: PostParams & { replyId?: string };
   auth?: user;
+};
+
+export type IPostRenderShareArtifactDTO = {
+  p: PostParams & { replyId?: string };
+  auth: user;
 };
 
 export type IPostUploadShareArtifactDTO = {

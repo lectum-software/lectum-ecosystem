@@ -9,6 +9,7 @@ import {
   getPreparedLectumShareFile,
   isNativeShareAbortError,
   prepareLectumShareFile,
+  prepareLectumShareFileWithServerRender,
   prepareLectumSourceVideoFallbackFile,
   shareLectumLinkTarget,
   shareLectumWhatsAppPreviewTarget,
@@ -113,15 +114,22 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
             );
           }
 
-          const file =
-            cachedFile ??
-            (await prepareLectumShareFile(socialTarget).catch((error) => {
+          const prepareClientShareFile = () =>
+            prepareLectumShareFile(socialTarget).catch((error) => {
               if (shouldUseSourceVideoFallback) {
                 return prepareLectumSourceVideoFallbackFile(socialTarget);
               }
 
               throw error;
-            }));
+            });
+
+          const file =
+            cachedFile ??
+            (destination === "download"
+              ? await prepareLectumShareFileWithServerRender(socialTarget).catch(
+                  prepareClientShareFile,
+                )
+              : await prepareClientShareFile());
 
           if (loadingToastId !== null) {
             toast.dismiss(loadingToastId);

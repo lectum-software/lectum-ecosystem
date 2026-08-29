@@ -1,6 +1,6 @@
 # Packages e Política de Dependências
 
-Última auditoria dos manifests/lockfiles: **2026-08-21**, com `pnpm audit --prod` separado na raiz, backend, frontend e admin.
+Última auditoria dos manifests/lockfiles: **2026-08-29**, com `pnpm audit --prod` separado na raiz, backend, frontend e admin.
 Resultado: **zero vulnerabilidades conhecidas** nos quatro escopos. React Hook Form permanece como
 padrão de formulários; TanStack Query permanece como padrão de server state.
 
@@ -146,8 +146,12 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `dotenv` | `^17.4.2` | `17.4.2` | Carregamento de env no processo backend |
 | `uuid` | `^14.0.0` | `14.0.0` | Identificadores de correlação |
 | `@sentry/node` | `10.70.0` | `10.70.0` | Captura sanitizada de falhas operacionais e Express 5 |
+| `playwright-core` | `1.60.0` | `1.60.0` | Acionamento programático do Chromium do sistema no backend para POC de renderização social (TASK-42) |
+| `mediabunny` | `1.55.1` | `1.55.1` | Bundle browser servido em origem local ao Chromium backend para exportar MP4 fast-start experimental (TASK-42) |
+| `@mediabunny/aac-encoder` | `1.55.1` | `1.55.1` | Encoder AAC auxiliar dentro do Chromium backend; não adota `@mediabunny/server`/NodeAV nesta POC (TASK-42) |
 
 O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnly`; `express-session` foi removido por não ser necessário para esse fluxo. O verificador mantém transição temporária para states assinados pela versão anterior durante o rollout.
+Para a POC Chromium + MediaBunny da TASK-42, o backend usa `playwright-core` sem download de browser e instala o pacote Debian `chromium` no Docker runner. A escolha evita `@mediabunny/server`/NodeAV e mantém FFmpeg fora do runtime.
 
 ## Admin já instalado
 

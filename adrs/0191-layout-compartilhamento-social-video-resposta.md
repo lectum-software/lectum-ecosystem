@@ -1360,3 +1360,32 @@ A orientacao `Se a qualidade ficar baixa, tente pelo computador.` foi criada par
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.242, incluindo formatter/teste estatico da previa social, `frontend check`, `frontend build`, smoke local, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - POC Chromium + MediaBunny no backend
+
+### Contexto
+
+O arquivo social gerado no cliente pode travar ou sair com baixa qualidade em alguns aparelhos, mesmo quando a previa da modal roda bem. A previa apenas reproduz a midia original com overlays DOM/CSS; o download precisa decodificar, compor canvas, codificar e muxar um novo MP4 no dispositivo. A POC move o caminho dedicado de `Baixar video` para o backend primeiro, usando Chromium headless e o bundle browser do MediaBunny, mantendo fallback client-side quando o backend estiver indisponivel.
+
+### Decisao
+
+- Criar rota privada owner-only `POST /api/private/posts/:id/share-artifact/render` e equivalente para resposta, retornando MP4 binario sem persistir em R2.
+- Resolver o alvo a partir do banco e da sessao autenticada; a request nao aceita URL/texto arbitrario para renderizar.
+- Carregar a midia fonte apenas de objetos publicos `posts/media/` do R2, com limite opcional de tamanho, evitando SSRF e evitando ler buckets/paths fora do dominio de comunidade.
+- Executar Chromium via `playwright-core` + Chromium do sistema/Docker runner; servir MediaBunny e `@mediabunny/aac-encoder` em uma origem local efemera `127.0.0.1` para manter WebCodecs/Canvas no contexto do browser.
+- Exportar MP4 `fastStart: "in-memory"`, AVC/AAC, 540x960, 24fps, bitrate constante conservador, `fit: "fill"` no MediaBunny e layout visual igual ao canvas client-side.
+- Nao adotar FFmpeg nem `@mediabunny/server`/NodeAV nesta POC para manter custo/peso menor e validar primeiro o caminho Chromium.
+- Integrar o frontend apenas no destino dedicado `download`: tenta backend, cai para a geracao client-side atual se receber erro/503; o compartilhamento social/link-only permanece igual.
+- Adicionar envs opcionais com fallback seguro: `LECTUM_SHARE_CHROMIUM_ENABLED`, `LECTUM_SHARE_CHROMIUM_EXECUTABLE_PATH`, `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS`, `LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB`, `LECTUM_SHARE_CHROMIUM_CONCURRENCY`, `LECTUM_SHARE_CHROMIUM_QUEUE_SIZE`. Rollback rapido: `LECTUM_SHARE_CHROMIUM_ENABLED=false`.
+
+### Consequencias
+
+- O download em celular passa a poder receber um MP4 gerado em ambiente controlado, reduzindo variacao de encoder/CPU/memoria do aparelho.
+- O servidor ganha custo de CPU/memoria por render; por isso a POC limita concorrencia, fila, tamanho da fonte e timeout, e nao persiste artefatos novos.
+- Se o Chromium, MediaBunny, R2 ou encoder falhar, o cliente segue tentando o pipeline anterior, sem bloquear a operacao.
+- O Docker do backend fica maior por instalar `chromium` e `fonts-liberation`, mas ainda evita FFmpeg/NodeAV.
+- Sem schema, migration, backfill, seed, reset, `db push`, alteracao destrutiva ou limpeza de bucket. A API e aditiva e tolera frontend/backend em versoes diferentes.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.243, incluindo testes/checks/builds backend/frontend/admin, render local Chromium + MediaBunny com MP4 real, auditorias de dependencias, `pnpm check`, guardas de versao/documentacao/diff e smoke de homologacao apos push.

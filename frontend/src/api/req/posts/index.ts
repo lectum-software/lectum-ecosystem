@@ -1,3 +1,4 @@
+import api from "@/api";
 import { getApiErrorStatus } from "@/api/errors";
 import { callEndpoint } from "@/api/generator";
 import type {
@@ -38,6 +39,7 @@ import {
 } from "@/utils/upload-lifecycle";
 
 const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
+const SHARE_VIDEO_RENDER_TIMEOUT_MS = 180_000;
 const REPLY_MEDIA_ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -83,6 +85,13 @@ const withReplyMediaFileType = (file: File) => {
     }),
     mimeType,
   };
+};
+
+type RenderPostShareVideoArtifactInput = {
+  fileName: string;
+  postId: string;
+  replyId?: string | null;
+  signal?: AbortSignal;
 };
 
 export const getMyPosts = async (query: UserPostsQuery = {}) => {
@@ -131,6 +140,44 @@ export const getPostReplyThread = async (id: string, replyId: string) => {
   const reply = await handleReq<PostReply>(handle);
 
   return { reply } satisfies PostReplyThreadResponse;
+};
+
+export const renderPostShareVideoArtifact = async ({
+  fileName,
+  postId,
+  replyId,
+  signal,
+}: RenderPostShareVideoArtifactInput) => {
+  const handle = callEndpoint({
+    route: replyId
+      ? "/api/private/posts/:id/replies/:replyId/share-artifact/render"
+      : "/api/private/posts/:id/share-artifact/render",
+    method: "POST",
+    params: { id: postId, replyId },
+    config: {
+      signal,
+      timeout: SHARE_VIDEO_RENDER_TIMEOUT_MS,
+    },
+  });
+  const response = await api.request<Blob>({
+    ...handle.config,
+    data: undefined,
+    headers: { Accept: "video/mp4" },
+    method: handle.method,
+    responseType: "blob",
+    url: handle.url,
+  });
+  const blob = response.data;
+
+  if (!blob || blob.size === 0) {
+    throw new Error("Video indisponivel para download.");
+  }
+
+  const contentType =
+    String(response.headers["content-type"] || blob.type || "video/mp4").split(";", 1)[0] ||
+    "video/mp4";
+
+  return new File([blob], fileName || "lectum-video.mp4", { type: contentType });
 };
 
 export const createPostReply = async (id: string, body: CreatePostReplyPayload) => {

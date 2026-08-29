@@ -265,6 +265,7 @@ export const createMediabunnyVideoShareFile = async (
             allowRotationMetadata: false,
             alpha: "discard",
             codec: "avc",
+            fit: "fill",
             forceTranscode: true,
             frameRate,
             hardwareAcceleration: "no-preference",

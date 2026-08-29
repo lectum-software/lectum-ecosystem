@@ -174,10 +174,10 @@ Regras de UI obrigatórias:
 
 ## Validação mínima
 
-- `pnpm --dir backend check`.
-- `pnpm --dir backend build`.
-- `pnpm --dir frontend check`.
-- `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend check` (222/222 testes).
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend check` (114/114 testes).
+- [x] `pnpm --dir frontend build`.
 - `pnpm check`.
 - Browser local em rota com cards de comunidade/post, validando abertura do modal e ausência de play central no layout.
 
@@ -2267,3 +2267,66 @@ O usuario baixou o video social pelo computador e reportou que o toast desktop a
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-29 - POC Chromium + MediaBunny no backend
+
+### Contexto
+
+O usuario reportou que a previa da modal roda perfeitamente, mas o video baixado com arte continua travando e com baixa qualidade, sobretudo para teste em celular. A diferenca operacional e que a previa usa o player do video original com overlay visual, enquanto o download precisa gerar um novo MP4 com decodificacao, desenho em canvas, encode e mux. Como FFmpeg pode aumentar peso/custo do servidor, foi escolhida uma POC com Chromium headless + MediaBunny no backend antes de considerar FFmpeg.
+
+Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` nao esta disponivel como ferramenta callable neste ambiente; fallback auditavel: print do usuario, inventario de prototipos, `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`, codigo existente da modal e teste local com video MP4 real em `backend/public/community/replies/ansiedade-resposta-psi-thaisbruni.mp4`.
+
+### Decisao
+
+- Implementar rota privada e aditiva `POST /api/private/posts/:id/share-artifact/render` e rota equivalente de resposta `POST /api/private/posts/:id/replies/:replyId/share-artifact/render`.
+- A rota resolve post/resposta diretamente pelo banco, exige sessao de usuario comunidade, exige owner-only, exige autor psicologo e usa somente midia de video real em `posts/media/`.
+- O backend baixa a fonte do R2 publico via SDK S3, respeitando limite configuravel, e serve a fonte para uma pagina local efemera em `127.0.0.1`.
+- A pagina local roda no Chromium headless controlado por `playwright-core`, importa o bundle browser do `mediabunny` e `@mediabunny/aac-encoder`, compoe o mesmo layout da arte e exporta MP4 `fastStart`, AVC/AAC, 540x960, 24fps e bitrate constante.
+- O Docker runner instala `chromium` e `fonts-liberation`; nao foi adotado FFmpeg nem `@mediabunny/server`/NodeAV nesta POC.
+- O frontend, somente no destino dedicado `Baixar video`, tenta primeiro o render backend e volta ao pipeline client-side atual em caso de erro/indisponibilidade. Compartilhamento social, link-only, WhatsApp, prewarm/cache remoto e modal permanecem inalterados.
+- As envs novas sao opcionais e possuem fallback seguro: `LECTUM_SHARE_CHROMIUM_ENABLED`, `LECTUM_SHARE_CHROMIUM_EXECUTABLE_PATH`, `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS`, `LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB`, `LECTUM_SHARE_CHROMIUM_CONCURRENCY`, `LECTUM_SHARE_CHROMIUM_QUEUE_SIZE`.
+
+### Escopo e seguranca de deploy
+
+- Alteracao backend + frontend; admin acompanha bump de versao no manifesto.
+- Sem schema Prisma, migration, backfill, seed, reset, `db push`, alteracao destrutiva, limpeza de bucket ou persistencia nova de artefatos.
+- Contrato aditivo e tolerante a rollout: frontend novo cai para client-side se backend antigo nao tiver a rota; backend novo nao afeta clientes antigos.
+- Sem env obrigatoria nova; rollback operacional rapido com `LECTUM_SHARE_CHROMIUM_ENABLED=false` no backend ou revert do frontend para nao chamar a rota.
+- Push em `homolog` dispara deploy automatico de homologacao; smoke sera executado apos o deploy.
+
+### Criterios de aceite do ajuste
+
+- [x] Backend possui renderizacao experimental Chromium + MediaBunny para video social sem FFmpeg.
+- [x] Rota privada retorna MP4 binario somente para o dono psicologo do post/resposta, sem aceitar URL arbitraria do cliente.
+- [x] Midia fonte e restrita a objetos publicos `posts/media/`, com limite de tamanho, fila/concorrencia e timeout.
+- [x] Docker de backend inclui Chromium do sistema para homologacao/producao, sem baixar browser via pacote npm.
+- [x] Frontend tenta backend primeiro apenas em `Baixar video` e preserva fallback client-side/fluxos de compartilhamento existentes.
+- [x] MediaBunny client-side e backend usam `fit: "fill"` quando informam largura e altura ao `Conversion.init`, evitando queda imediata para fallback legado.
+- [x] UI mobile-first da modal permanece inalterada, sem `<img>` cru e sem mocks.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md` e packages registrados em `_product/tasks/PACKAGES.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder/Quick Copy nao esta disponivel como ferramenta callable neste ambiente; fallback documentado.
+- [x] `pnpm --dir backend add playwright-core@1.60.0 mediabunny@1.55.1 @mediabunny/aac-encoder@1.55.1` apos validar `_product/tasks/PACKAGES.md`.
+- [x] Render local Chromium + MediaBunny com MP4 real: fonte `backend/public/community/replies/ansiedade-resposta-psi-thaisbruni.mp4` gerou `video/mp4` com `5.884.202` bytes.
+- [x] `pnpm --dir backend biome:fix` e `pnpm --dir frontend biome:fix`.
+- [x] `pnpm --dir backend typecheck`.
+- [x] `pnpm --dir frontend typecheck`.
+- [x] `pnpm --dir frontend test -- --test-name-pattern "video profissional"` (114/114 testes executados pelo runner atual).
+- [x] `pnpm --dir backend test -- --test-name-pattern "renderizacao social"` (222/222 testes executados pelo runner atual; primeira tentativa revelou ajuste necessario em `fit: "fill"`/teste de nome e foi corrigida).
+- [x] `pnpm --dir backend check` (222/222 testes).
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend check` (114/114 testes).
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir admin check` (32/32 testes).
+- [x] `pnpm --dir admin build`.
+- [x] Auditorias de dependencias de producao: `pnpm audit --prod`, `pnpm --dir backend audit --prod`, `pnpm --dir frontend audit --prod`, `pnpm --dir admin audit --prod` (zero vulnerabilidades conhecidas).
+- [x] `pnpm version:bump` para `0.1.243` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+- [ ] Smoke de homologacao apos push de `homolog`: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

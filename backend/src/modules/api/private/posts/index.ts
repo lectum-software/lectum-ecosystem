@@ -15,6 +15,7 @@ import {
   initiateReplyMediaMultipartUpload,
   mine,
   mute,
+  renderShareArtifact,
   replies,
   replyThread,
   report,
@@ -110,8 +111,15 @@ routes.delete(
 );
 routes.post("/:id/replies", privateAuth, createReplyValidator, createReply);
 routes.get("/:id/share-artifact", showValidator, getShareArtifact);
+routes.post("/:id/share-artifact/render", privateAuth, showValidator, renderShareArtifact);
 routes.post("/:id/share-artifact", privateAuth, showValidator, uploadShareArtifact);
 routes.get("/:id/replies/:replyId/share-artifact", replySaveValidator, getShareArtifact);
+routes.post(
+  "/:id/replies/:replyId/share-artifact/render",
+  privateAuth,
+  replySaveValidator,
+  renderShareArtifact,
+);
 routes.post(
   "/:id/replies/:replyId/share-artifact",
   privateAuth,

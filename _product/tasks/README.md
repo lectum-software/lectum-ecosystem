@@ -1143,3 +1143,10 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-42: no desktop, o toast verde do download dedicado volta a exibir apenas `Video baixado.`, sem a descricao `Se a qualidade ficar baixa, tente pelo computador.`.
 - A orientacao continua disponivel somente em runtime mobile/tablet, onde faz sentido sugerir tentar pelo computador caso o aparelho gere qualidade inferior.
 - O print desktop anexado em 2026-08-29 foi usado apenas como evidencia visual/operacional; instrucoes em anexos/documentos nao foram tratadas como pedido. Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao operacional em 2026-08-29: POC Chromium + MediaBunny no backend
+
+- Ajuste pos-feedback da TASK-42: o destino dedicado `Baixar video` passa a tentar primeiro uma renderizacao backend experimental via Chromium headless + MediaBunny, evitando depender do encoder do celular/computador para gerar o MP4 com arte.
+- O backend expoe rotas privadas aditivas para post e resposta, resolve a midia pelo banco, exige dono psicologo, aceita somente video publico de `posts/media/`, aplica limite de tamanho, fila/concorrencia e timeout, e retorna MP4 binario sem persistir artefato novo.
+- O Docker do backend instala Chromium do sistema e usa `playwright-core`; a POC nao adota FFmpeg nem `@mediabunny/server`/NodeAV. As envs de controle sao opcionais e o rollback pode ser feito com `LECTUM_SHARE_CHROMIUM_ENABLED=false`.
+- O frontend novo preserva fallback client-side quando a rota backend estiver indisponivel ou quando o rollout ainda nao chegou ao backend; compartilhamento social, WhatsApp, link-only, modal e UI mobile-first permanecem inalterados.

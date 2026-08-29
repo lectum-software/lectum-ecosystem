@@ -1,3 +1,4 @@
+import { renderPostShareVideoArtifact } from "@/api/req/posts";
 import type { LectumShareLinkTarget, LectumShareSocialTarget } from "@/utils/lectum-share-target";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import {
@@ -216,6 +217,22 @@ export const prepareLectumShareFile = (target: LectumShareSocialTarget) => {
 
   preparedShareFileCache.set(cacheKey, pendingFile);
   return pendingFile;
+};
+
+export const prepareLectumShareFileWithServerRender = async (target: LectumShareSocialTarget) => {
+  if (target.mediaType !== "video") return prepareLectumShareFile(target);
+
+  const cached = getPreparedLectumShareFile(target);
+  if (cached) return cached;
+
+  const file = await renderPostShareVideoArtifact({
+    fileName: safeFileName(target, "mp4"),
+    postId: target.postId,
+    replyId: target.replyId,
+  });
+  cachePreparedLectumShareFile(target, file);
+
+  return file;
 };
 
 export const isLectumSourceVideoFallbackFile = (file: File) => sourceVideoFallbackFiles.has(file);

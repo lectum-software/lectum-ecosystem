@@ -47,7 +47,7 @@ ENV PORT=${PORT}
 ENV SWAGGER=false
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && apt-get install -y --no-install-recommends ca-certificates chromium fonts-liberation openssl \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

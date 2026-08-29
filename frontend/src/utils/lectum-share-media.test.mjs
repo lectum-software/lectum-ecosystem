@@ -550,8 +550,7 @@ test("exportacao de video usa a duracao real em vez de limitar a um minuto", () 
     mbSource,
     /audio: \{[\s\S]*codec: "aac"[\s\S]*forceTranscode: true[\s\S]*numberOfChannels: 2[\s\S]*sampleRate: 44_100/,
   );
-  assert.match(mbSource, /alpha: "discard"/);
-  assert.match(mbSource, /hardwareAcceleration: "no-preference"/);
+  assert.match(mbSource, /alpha: "discard"[\s\S]*fit: "fill"[\s\S]*hardwareAcceleration/);
   assert.match(mbSource, /sampleWidth = Math\.max\(1, Math\.round\(sample\.displayWidth\)\)/);
   assert.match(mbSource, /ctx\.scale\(scaleX, scaleY\)/);
   assert.match(mbSource, /drawLectumShareFrame\(ctx, sourceCanvas/);

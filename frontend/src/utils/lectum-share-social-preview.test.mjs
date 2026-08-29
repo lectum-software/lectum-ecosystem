@@ -71,6 +71,10 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
     new URL("../hooks/use-lectum-direct-share.ts", import.meta.url),
     "utf8",
   );
+  const postsReqSource = readFileSync(
+    new URL("../api/req/posts/index.ts", import.meta.url),
+    "utf8",
+  );
   const instagramIconSource = readFileSync(
     new URL("../components/ui/instagram-icon.tsx", import.meta.url),
     "utf8",
@@ -216,11 +220,18 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(downloadDialogSource, /Baixar v.deo/);
   assert.doesNotMatch(downloadDialogSource, /WhatsApp|Copiar link|9:16/);
   assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
+  assert.match(mediaSource, /prepareLectumShareFileWithServerRender/);
+  assert.match(postsReqSource, /share-artifact\/render/);
+  assert.match(postsReqSource, /responseType: "blob"/);
   assert.match(mediaSource, /isAppleMobileShareDownloadRuntime/);
   assert.match(mediaSource, /shareFileThroughAppleMobileSheet/);
   assert.match(mediaSource, /resolveLectumFileShareData\(nav/);
   assert.match(mediaSource, /isNativeShareActivationError\(error\)[\s\S]*mode: "prepared"/);
   assert.match(directShareHookSource, /DOWNLOAD_READY_RETRY_MESSAGE/);
+  assert.match(
+    directShareHookSource,
+    /destination === "download"[\s\S]*prepareLectumShareFileWithServerRender\(socialTarget\)/,
+  );
   assert.match(directShareHookSource, /DOWNLOAD_QUALITY_GUIDANCE_MESSAGE/);
   assert.match(directShareHookSource, /shouldShowDownloadQualityGuidance/);
   assert.match(directShareHookSource, /userAgentData\?\.mobile === true/);
