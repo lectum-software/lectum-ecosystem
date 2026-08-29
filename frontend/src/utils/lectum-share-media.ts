@@ -101,6 +101,7 @@ const SOURCE_VIDEO_FALLBACK_EXTENSION_BY_MIME: Record<string, string> = {
 };
 
 const sourceVideoFallbackFileCache = new Map<string, PreparedShareFileCacheValue>();
+const SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000;
 const sourceVideoFallbackFiles = new WeakSet<File>();
 
 const isPreparedShareFile = (value: PreparedShareFileCacheValue): value is File =>
@@ -225,14 +226,25 @@ export const prepareLectumShareFileWithServerRender = async (target: LectumShare
   const cached = getPreparedLectumShareFile(target);
   if (cached) return cached;
 
-  const file = await renderPostShareVideoArtifact({
-    fileName: safeFileName(target, "mp4"),
-    postId: target.postId,
-    replyId: target.replyId,
-  });
-  cachePreparedLectumShareFile(target, file);
+  const controller = new AbortController();
+  const fallbackTimeout = window.setTimeout(
+    () => controller.abort(),
+    SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS,
+  );
 
-  return file;
+  try {
+    const file = await renderPostShareVideoArtifact({
+      fileName: safeFileName(target, "mp4"),
+      postId: target.postId,
+      replyId: target.replyId,
+      signal: controller.signal,
+    });
+    cachePreparedLectumShareFile(target, file);
+
+    return file;
+  } finally {
+    window.clearTimeout(fallbackTimeout);
+  }
 };
 
 export const isLectumSourceVideoFallbackFile = (file: File) => sourceVideoFallbackFiles.has(file);

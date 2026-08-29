@@ -1389,3 +1389,28 @@ O arquivo social gerado no cliente pode travar ou sair com baixa qualidade em al
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.243, incluindo testes/checks/builds backend/frontend/admin, render local Chromium + MediaBunny com MP4 real, auditorias de dependencias, `pnpm check`, guardas de versao/documentacao/diff e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - fallback rapido do render backend experimental
+
+### Contexto
+
+Apos o primeiro deploy da POC Chromium + MediaBunny, o usuario reportou em homologacao que computador, iPhone e Android ficavam presos em `Preparando video para baixar...` / `Preparando...`. O risco identificado e que a rota backend experimental pode demorar mais que o aceitavel para baixar a fonte, subir Chromium e encodar com MediaBunny; nesse periodo, o frontend nao iniciava o fallback client-side.
+
+### Decisao
+
+- Manter Chromium + MediaBunny como POC, mas usa-lo como tentativa curta no download dedicado.
+- O frontend aborta a tentativa backend apos 12s via `AbortController` e entao chama o pipeline client-side existente.
+- O timeout HTTP da chamada binaria fica em 20s.
+- O backend reduz o timeout padrao para 45s e usa prazo total da operacao, incluindo fonte R2, launch do Chromium, pagina local e `Conversion.execute`.
+- Nenhuma env obrigatoria nova; `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS` continua opcional para testes controlados.
+
+### Consequencias
+
+- O usuario nao fica bloqueado por render backend longo antes de tentar baixar.
+- A POC ainda pode vencer em videos curtos/ambiente rapido; quando demorar, o comportamento volta ao fluxo anterior automaticamente.
+- O backend reduz ocupacao maxima por tentativa experimental, mitigando custo/capacidade.
+- Sem banco, migration, pacote novo, provider novo, mock, seed, reset, `db push` ou limpeza de dados/buckets. Rollback segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false` ou revert do frontend.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.244, incluindo checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.

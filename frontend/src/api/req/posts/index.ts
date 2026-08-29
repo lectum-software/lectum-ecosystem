@@ -39,7 +39,7 @@ import {
 } from "@/utils/upload-lifecycle";
 
 const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
-const SHARE_VIDEO_RENDER_TIMEOUT_MS = 180_000;
+const SHARE_VIDEO_RENDER_TIMEOUT_MS = 20_000;
 const REPLY_MEDIA_ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",

@@ -221,8 +221,12 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.doesNotMatch(downloadDialogSource, /WhatsApp|Copiar link|9:16/);
   assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /prepareLectumShareFileWithServerRender/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000/);
+  assert.match(mediaSource, /new AbortController\(\)/);
+  assert.match(mediaSource, /signal: controller\.signal/);
   assert.match(postsReqSource, /share-artifact\/render/);
   assert.match(postsReqSource, /responseType: "blob"/);
+  assert.match(postsReqSource, /SHARE_VIDEO_RENDER_TIMEOUT_MS = 20_000/);
   assert.match(mediaSource, /isAppleMobileShareDownloadRuntime/);
   assert.match(mediaSource, /shareFileThroughAppleMobileSheet/);
   assert.match(mediaSource, /resolveLectumFileShareData\(nav/);

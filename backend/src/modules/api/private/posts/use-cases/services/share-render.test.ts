@@ -21,6 +21,8 @@ test("renderizacao social no backend mantem Chromium opcional e com limites segu
   assert.equal(config.sourceMaxBytes, 25 * 1024 * 1024);
   assert.equal(config.concurrency, 2);
   assert.equal(config.queueSize, 4);
+
+  assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 45_000);
 });
 
 test("renderizacao social aceita somente objetos publicos de midia da comunidade", () => {

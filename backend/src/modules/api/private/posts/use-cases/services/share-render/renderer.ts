@@ -43,7 +43,7 @@ const SHARE_RENDER_VIEWPORT = {
 } as const;
 const SHARE_RENDER_CLOSE_TIMEOUT_MS = 3_000;
 
-const launchChromium = async (config: ShareChromiumConfig) => {
+const launchChromium = async (config: ShareChromiumConfig, timeoutMs: number) => {
   if (!config.enabled) throw new ShareRenderDisabledError();
   if (!config.executablePath) throw new ShareRenderUnavailableError();
 
@@ -60,6 +60,7 @@ const launchChromium = async (config: ShareChromiumConfig) => {
     ],
     executablePath: config.executablePath,
     headless: true,
+    timeout: timeoutMs,
   });
 };
 
@@ -141,38 +142,45 @@ const renderShareVideo = async (
   target: ShareRenderTarget,
   config: ShareChromiumConfig,
 ): Promise<ShareRenderResult> => {
-  const source = await loadShareRenderSource(target.mediaUrl, { maxBytes: config.sourceMaxBytes });
+  const startedAt = Date.now();
+  const remainingTimeoutMs = () => Math.max(1, config.timeoutMs - (Date.now() - startedAt));
+  const operationAbortController = new AbortController();
+  const operationTimeout = setTimeout(() => operationAbortController.abort(), config.timeoutMs);
   let server: ShareRenderLocalServer | null = null;
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
   let page: Page | null = null;
 
   try {
+    const source = await loadShareRenderSource(target.mediaUrl, {
+      maxBytes: config.sourceMaxBytes,
+      signal: operationAbortController.signal,
+    });
     server = await createShareRenderLocalServer({
       sourceBuffer: source.buffer,
       sourceContentType: source.contentType,
     });
-    browser = await launchChromium(config);
+    browser = await launchChromium(config, remainingTimeoutMs());
     context = await browser.newContext({
       deviceScaleFactor: 1,
       locale: "pt-BR",
       viewport: SHARE_RENDER_VIEWPORT,
     });
     page = await context.newPage();
-    page.setDefaultTimeout(config.timeoutMs);
-    page.setDefaultNavigationTimeout(config.timeoutMs);
-    await page.goto(server.origin, { timeout: config.timeoutMs, waitUntil: "load" });
+    page.setDefaultTimeout(remainingTimeoutMs());
+    page.setDefaultNavigationTimeout(remainingTimeoutMs());
+    await page.goto(server.origin, { timeout: remainingTimeoutMs(), waitUntil: "load" });
     await page.waitForFunction(
       () => Boolean((globalThis as unknown as { __lectumReady?: boolean }).__lectumReady),
       undefined,
       {
-        timeout: config.timeoutMs,
+        timeout: remainingTimeoutMs(),
       },
     );
 
     const rendered = await withRenderTimeout(
       renderInPage(page, toBrowserTarget(target)),
-      config.timeoutMs,
+      remainingTimeoutMs(),
     );
     const buffer = Buffer.from(rendered.base64, "base64");
 
@@ -185,6 +193,7 @@ const renderShareVideo = async (
       sizeBytes: buffer.length,
     };
   } finally {
+    clearTimeout(operationTimeout);
     await closeBrowserResources(page, browser, context, server);
   }
 };

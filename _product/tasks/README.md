@@ -1150,3 +1150,9 @@ Uma task só pode ser marcada como concluída quando:
 - O backend expoe rotas privadas aditivas para post e resposta, resolve a midia pelo banco, exige dono psicologo, aceita somente video publico de `posts/media/`, aplica limite de tamanho, fila/concorrencia e timeout, e retorna MP4 binario sem persistir artefato novo.
 - O Docker do backend instala Chromium do sistema e usa `playwright-core`; a POC nao adota FFmpeg nem `@mediabunny/server`/NodeAV. As envs de controle sao opcionais e o rollback pode ser feito com `LECTUM_SHARE_CHROMIUM_ENABLED=false`.
 - O frontend novo preserva fallback client-side quando a rota backend estiver indisponivel ou quando o rollout ainda nao chegou ao backend; compartilhamento social, WhatsApp, link-only, modal e UI mobile-first permanecem inalterados.
+
+## Correcao operacional em 2026-08-29: fallback rapido do render backend social
+
+- Ajuste pos-feedback da TASK-42: apos homologacao da POC Chromium + MediaBunny, o destino `Baixar video` nao deve ficar preso aguardando o backend experimental por ate 180s.
+- O frontend agora aborta a tentativa backend apos 12s e volta ao pipeline client-side existente; a chamada binaria tem timeout HTTP de 20s.
+- O backend tambem reduz o prazo padrao total da renderizacao experimental para 45s, incluindo download R2, Chromium e MediaBunny. Sem banco, migration, pacote novo, env obrigatoria ou persistencia de artefatos.

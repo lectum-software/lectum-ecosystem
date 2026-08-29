@@ -2329,4 +2329,47 @@ Builder/Quick Copy ativo `vcp://quickcopy/vcp-24aaa2941d814e5b90572bc93ae50e2a` 
 - [x] `pnpm version:bump` para `0.1.243` e `pnpm check:version`.
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+Smoke de homologacao apos push de `homolog`: backend `/health`, `/ready`, `/ping`; frontend/admin `/version` sera registrado no relatorio final, pois depende do deploy automatico disparado pelo push.
+
+## Ajuste 2026-08-29 - fallback rapido quando render backend demora
+
+### Contexto
+
+Apos publicar a POC Chromium + MediaBunny em homologacao, o usuario testou no computador, iPhone e Android e reportou que a UI ficava apenas em `Preparando video para baixar...` / `Preparando...`, sem baixar. O comportamento indica que a tentativa backend experimental estava segurando o fluxo por tempo excessivo antes de liberar o fallback client-side, especialmente quando o Chromium/MediaBunny em homologacao demora mais que o aceitavel para compor e encodar o MP4.
+
+### Decisao
+
+- Manter a POC backend ativa, mas tratar sua chamada como tentativa curta: o frontend aborta o render backend apos 12s e passa ao pipeline client-side existente.
+- Reduzir o timeout axios da rota binaria de 180s para 20s, deixando a chamada HTTP alinhada ao uso como probe/fallback e nao como bloqueio longo.
+- Reduzir o timeout padrao backend de 180s para 45s e aplica-lo como prazo total de operacao, incluindo download da fonte do R2, launch do Chromium, carregamento da pagina local e execucao do MediaBunny.
+- Manter env opcional `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS` para ampliar o tempo em testes controlados, com limite seguro. Sem env obrigatoria nova.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend + backend; admin acompanha apenas bump de versao no manifesto.
+- Sem schema Prisma, migration, backfill, seed, reset, `db push`, pacote novo, provider novo, armazenamento novo, mock ou limpeza de bucket/dados publicados.
+- Rollback operacional segue disponivel por `LECTUM_SHARE_CHROMIUM_ENABLED=false`; tambem e possivel reverter o frontend para nao tentar a rota backend.
+
+### Criterios de aceite do ajuste
+
+- [x] O download dedicado nao fica preso aguardando render backend por ate 180s; apos 12s sem resposta, o frontend aborta e cai para o preparo client-side existente.
+- [x] A rota backend experimental permanece aditiva e owner-only, mas seu timeout padrao passa a ser 45s totais.
+- [x] A chamada binaria do frontend usa timeout HTTP de 20s e signal abortavel.
+- [x] Compartilhamento social, WhatsApp, link-only, modal, arte visual e UI mobile-first permanecem inalterados.
+- [x] Nenhum banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional do travamento.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.244` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
 - [ ] Smoke de homologacao apos push de `homolog`: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
