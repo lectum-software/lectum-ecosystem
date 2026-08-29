@@ -53,3 +53,34 @@ As rotas publicas de detalhe que forcam retorno ao feed passam a preferir a orig
 ## Pendencias
 
 - Sem decisao externa pendente.
+
+## Complemento em 2026-08-29 - retorno de perfil indisponivel para origem persistida
+
+O video anexado em 2026-08-29 mostrou um desvio de fluxo: a partir de uma publicacao/comunidade, o usuario abriu um perfil publico de psicologo indisponivel e o CTA de retorno enviou para `/psicologos`, perdendo a continuidade do feed.
+
+Decisao complementar:
+
+- extrair a memoria efemera do feed para `frontend/src/utils/community-feed-scroll-memory.ts`, mantendo o mesmo `sessionStorage`, expiracao curta e ausencia de dados sensiveis;
+- criar `navigateBackToPersistedOrigin` para priorizar a origem comunitaria salva quando a origem imediata do perfil indisponivel vem de rota de comunidade;
+- manter `/psicologos` apenas como fallback quando nao existir snapshot comunitario valido ou quando a origem imediata for a propria busca de psicologos;
+- salvar o snapshot tambem nos links de autor profissional do feed, alem da navegacao para detalhe do post, para cobrir clique direto em perfil a partir do card;
+- aplicar o mesmo retorno persistido ao estado de contato indisponivel para evitar um segundo caminho com link fixo para a busca.
+
+Consequencias:
+
+- O usuario que sai do feed/comunidade para um perfil indisponivel volta direto para a lista na posicao salva, sem precisar passar pela busca de psicologos.
+- A regra evita usar snapshot antigo quando a origem imediata do perfil e `/psicologos`, preservando a expectativa do diretorio de profissionais.
+- Nao ha endpoint, banco, env, provider, package, seed, reset ou dado persistido novo; o rollout e somente frontend e compativel com backend antigo/novo.
+
+Validacao complementar:
+
+- `pnpm --dir frontend exec biome check --write "package.json" "src/utils/community-feed-scroll-memory.ts" "src/utils/navigation-history.ts" "src/utils/persisted-origin-navigation.ts" "src/utils/persisted-origin-navigation.test.mjs" "src/app/app/community/[slug]/hooks/use-community-feed-scroll-restoration.ts" "src/app/app/community/[slug]/components/post-card.tsx" "src/app/app/psychologist/[id]/psychologist-profile.tsx" "src/app/app/psychologist/[id]/contact/logic.tsx"` - OK.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/persisted-origin-navigation.test.mjs` - OK.
+- `pnpm --dir frontend typecheck` - OK.
+- `pnpm --dir frontend check` - OK.
+- `pnpm --dir frontend build` apos bump para `0.1.240` - OK.
+- `pnpm version:bump` para `0.1.240` - OK.
+- `pnpm check:version` - OK.
+- `pnpm check` - OK.
+- Browser local mobile-first no frontend buildado: `/version` respondeu `0.1.240`; rotas relacionadas responderam sem mock.
+- `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check` - OK.

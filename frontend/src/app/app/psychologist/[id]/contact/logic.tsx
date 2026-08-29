@@ -12,7 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDirectoryPsychologist, useDirectoryPsychologistContact } from "@/api/callers/directory";
 import { getSafeApiErrorMessage } from "@/api/errors";
@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
+import { navigateBackToPersistedOrigin } from "@/utils/persisted-origin-navigation";
 import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { toContactPhoneE164, useForm, type WhatsAppContactForm } from "./use-form";
 
@@ -128,6 +129,7 @@ const PrivacyCard = () => {
 
 export const PsychologistContactLogic = () => {
   const params = useParams<{ id?: string | string[] }>();
+  const router = useRouter();
   const psychologistId = getParamId(params?.id);
   const storedUser = useAppSelector((state) => state.user);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -219,6 +221,10 @@ export const PsychologistContactLogic = () => {
     isUnavailable ||
     !professional;
 
+  const goBackToPersistedOrigin = () => {
+    navigateBackToPersistedOrigin(router, "/psicologos");
+  };
+
   const onSubmit = hook.handleSubmit((values: WhatsAppContactForm) => {
     setApiError(null);
     setWhatsappUrl(null);
@@ -291,8 +297,8 @@ export const PsychologistContactLogic = () => {
         {!isProfileLoading && profileErrorMessage ? (
           <EmptyState
             action={
-              <Button asChild variant="outline">
-                <Link href="/psicologos">Voltar para a busca</Link>
+              <Button onClick={goBackToPersistedOrigin} type="button" variant="outline">
+                Voltar à página anterior
               </Button>
             }
             description={profileErrorMessage}

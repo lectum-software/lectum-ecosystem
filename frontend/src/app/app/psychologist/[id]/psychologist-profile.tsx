@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useImportantActionTracking } from "@/api/callers/analytics";
@@ -33,6 +31,8 @@ import {
   createLectumShareTargetFromHighlightedReply,
   createLectumShareVideoDownloadTarget,
 } from "@/utils/lectum-share-target";
+import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { navigateBackToPersistedOrigin } from "@/utils/persisted-origin-navigation";
 import { AboutTab } from "./components/about";
 import { ProfileHero, ProfileMobileStickyHeader } from "./components/hero";
 import { PostsTab } from "./components/publications";
@@ -404,12 +404,11 @@ export const PsychologistProfileLogic = () => {
       return;
     }
 
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-      return;
-    }
+    navigateBackWithFallback(router, "/psicologos");
+  };
 
-    router.push("/psicologos");
+  const goBackToPersistedOrigin = () => {
+    navigateBackToPersistedOrigin(router, "/psicologos");
   };
 
   const goToProfileEdit = () => {
@@ -493,8 +492,8 @@ export const PsychologistProfileLogic = () => {
                 <InlineAlert title="Perfil indisponível" variant="error">
                   {profileErrorMessage}
                 </InlineAlert>
-                <Button asChild variant="outline">
-                  <Link href="/psicologos">Voltar para a busca</Link>
+                <Button onClick={goBackToPersistedOrigin} type="button" variant="outline">
+                  Voltar à página anterior
                 </Button>
               </div>
             ) : null}

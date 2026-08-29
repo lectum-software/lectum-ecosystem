@@ -1005,6 +1005,12 @@ Uma task só pode ser marcada como concluída quando:
 - A volta usa a origem salva quando existe e a listagem reaproveita o cache/TanStack Query e o `fetchNextPage` real para recuperar altura suficiente antes do `scrollTo`.
 - Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, mock, seed, ranking, votos, salvos ou dados publicados.
 
+## Correcao operacional em 2026-08-29: retorno de perfil indisponivel preserva origem
+
+- Ajuste pos-feedback da TASK-23/TASK-15: ao abrir um perfil publico de psicologo indisponivel a partir de post/feed e tocar para voltar, a Lectum prioriza a origem de feed salva em `sessionStorage` e retorna para a lista na mesma posicao; sem origem comunitaria valida, o fallback continua sendo historico interno ou `/psicologos`.
+- Links de autor profissional no feed geral/comunidade passam a salvar o snapshot tambem antes de abrir o perfil, cobrindo post do psicologo e resposta profissional destacada. A tela de contato indisponivel usa o mesmo retorno persistido.
+- O video anexado em 2026-08-29 foi usado somente como evidencia do bug; instrucoes de documentos/anexos nao foram tratadas como pedido. Alteracao frontend-only, mobile-first, sem backend, migration, endpoint, env, package, mock, seed, reset ou dados publicados.
+
 ## Correcao operacional em 2026-08-27: imagens Open Graph quadradas por entidade
 
 - Ajuste pos-feedback da TASK-143: o compartilhamento de `/psicologos/[id]` passa a usar uma rota publica versionada de imagem quadrada `1200x1200` renderizada a partir da foto de perfil do psicologo.

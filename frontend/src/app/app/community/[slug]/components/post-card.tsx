@@ -169,6 +169,22 @@ export const ProfessionalReplyPreview = ({
   if (!reply || !isPatientAuthoredPost) return null;
 
   const profileHref = `/psicologos/${reply.author.id}`;
+  const handleProfileNavigationClick = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation();
+
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    rememberCommunityFeedScrollPosition(post.id);
+  };
   const replyWhatsappCta = reply.author.whatsapp_url ? (
     <CommunityWhatsAppCta
       attached={Boolean(reply.media_url)}
@@ -198,7 +214,7 @@ export const ProfessionalReplyPreview = ({
           <AuthorAvatar
             author={reply.author}
             href={profileHref}
-            onClick={(event) => event.stopPropagation()}
+            onClick={handleProfileNavigationClick}
             size="lg"
           />
           <div className="grid min-w-0 flex-1 gap-0.5">
@@ -206,13 +222,13 @@ export const ProfessionalReplyPreview = ({
               badge={reply.author.featured_badge}
               href={profileHref}
               name={getCommunityAuthorDisplayName(reply.author)}
-              onClick={(event) => event.stopPropagation()}
+              onClick={handleProfileNavigationClick}
               verified={reply.author.verified}
             />
             <Link
               className="pointer-events-auto min-w-0 cursor-pointer truncate text-[11px] font-semibold leading-tight text-muted"
               href={profileHref}
-              onClick={(event) => event.stopPropagation()}
+              onClick={handleProfileNavigationClick}
             >
               {reply.author.type_label} <span aria-hidden="true">•</span>{" "}
               <time dateTime={reply.created_at}>
@@ -398,6 +414,20 @@ export const PostCard = ({
 
     rememberPostNavigation();
   };
+  const handleProfileNavigationCapture = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    rememberPostNavigation();
+  };
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (
       event.defaultPrevented ||
@@ -461,18 +491,21 @@ export const PostCard = ({
           anonymous={isAnonymousPatient}
           author={post.author}
           href={psychologistProfileHref}
+          onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
         />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <AuthorIdentityLine
             badge={post.author.featured_badge ?? post.featured_badge}
             href={psychologistProfileHref}
             name={getCommunityAuthorDisplayName(post.author)}
+            onClick={psychologistProfileHref ? handleProfileNavigationCapture : undefined}
             verified={post.author.verified}
           />
           {psychologistProfileHref ? (
             <Link
               className="w-fit cursor-pointer text-[11px] font-semibold leading-tight text-muted no-underline transition hover:text-muted hover:no-underline"
               href={psychologistProfileHref}
+              onClick={handleProfileNavigationCapture}
             >
               {post.author.type_label} <span aria-hidden="true">&bull;</span>{" "}
               {formatPostTimeLabel(post.created_at, post.edited_at)}

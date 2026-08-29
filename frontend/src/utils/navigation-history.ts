@@ -66,6 +66,8 @@ const getPreviousAppHref = () => {
   return normalizedHistory[normalizedHistory.length - 1] ?? null;
 };
 
+export const getPreviousAppNavigationHref = () => getPreviousAppHref();
+
 const hasSameOriginReferrer = () => {
   if (typeof window === "undefined" || !document.referrer) return false;
 

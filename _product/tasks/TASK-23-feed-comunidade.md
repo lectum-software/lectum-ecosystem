@@ -600,3 +600,38 @@ Builder/Quick Copy nao estava autenticado neste ambiente (`npx "@builder.io/dev-
 - [x] Browser local mobile-first no frontend buildado em `http://127.0.0.1:3063`: `/version` respondeu `0.1.220`, `/app/comunidades/feed` respondeu HTTP 200 e Chrome headless 390x844 abriu a rota; a tentativa de clicar posts reais no local ficou bloqueada porque a API local/ngrok de desenvolvimento respondeu `Feed indisponivel`, entao nenhum mock ou seed foi usado.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check` apos a atualizacao final dos docs.
 - Smoke de homologacao sera executado e reportado apos o push de `homolog`, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-29 - retorno de perfil indisponivel para origem persistida
+
+- Pedido do usuario: no video anexado, ao abrir um perfil de psicologo indisponivel a partir da jornada de comunidade e tocar para voltar, a UI ia para `/psicologos`; o esperado e voltar para a pagina anterior persistida, neste caso o feed na mesma posicao.
+- Evidencia: o MP4 anexado em 2026-08-29 foi analisado somente como reproducao do bug. Instrucoes presentes em anexos/documentos nao foram tratadas como ordem de produto.
+- Fonte visual/auditavel: video do usuario e referencias locais `_product/proto/Feed Comunidade.jpg`, `_product/proto/Dentro da Comunidade.jpg`, `_product/proto/Dentro do Post.jpg` e `_product/proto/Perfil Profissional - Sobre.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente.
+- Frontend: a memoria de scroll do feed foi extraida para `frontend/src/utils/community-feed-scroll-memory.ts`, permitindo que telas fora da rota de comunidade consultem a origem salva sem duplicar storage.
+- Frontend: `navigateBackToPersistedOrigin` prioriza a origem comunitaria salva quando a origem imediata do perfil e uma rota de comunidade; caso contrario, preserva o fallback seguro de historico interno/`/psicologos`.
+- Frontend: o estado `Perfil indisponivel` e o estado `Contato indisponivel` deixam de usar link fixo para a busca e passam a acionar o retorno persistido.
+- Frontend: links de autor profissional no feed passam a salvar o snapshot antes de abrir o perfil, incluindo o autor do post e o autor da resposta profissional destacada.
+- Escopo: alteracao frontend-only, mobile-first, sem backend, Prisma schema, migrations, endpoints, payloads, packages, envs, provider, storage de arquivos, ranking, votos, salvos ou dados publicados.
+- ADR atualizado: `adrs/0473-restauracao-scroll-feed-comunidade.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Perfil publico indisponivel aberto a partir de rota de comunidade retorna para a origem de feed persistida em vez de forcar `/psicologos`.
+- [x] O feed/comunidade continua restaurando a posicao com o snapshot efemero em `sessionStorage`.
+- [x] A busca de psicologos continua sendo fallback quando nao houver origem comunitaria valida.
+- [x] Links de autor profissional no feed registram a origem antes de abrir o perfil.
+- [x] O ajuste permanece frontend-only e compativel com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env nova, migration, seed ou reset foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec biome check --write "package.json" "src/utils/community-feed-scroll-memory.ts" "src/utils/navigation-history.ts" "src/utils/persisted-origin-navigation.ts" "src/utils/persisted-origin-navigation.test.mjs" "src/app/app/community/[slug]/hooks/use-community-feed-scroll-restoration.ts" "src/app/app/community/[slug]/components/post-card.tsx" "src/app/app/psychologist/[id]/psychologist-profile.tsx" "src/app/app/psychologist/[id]/contact/logic.tsx"`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/persisted-origin-navigation.test.mjs`
+- [x] `pnpm --dir frontend typecheck`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` apos o bump para `0.1.240`.
+- [x] `pnpm version:bump` para `0.1.240`.
+- [x] `pnpm check:version`.
+- [x] `pnpm check`.
+- [x] Browser local mobile-first no frontend buildado em `http://127.0.0.1:3070`: `/version` respondeu `0.1.240`; `/comunidades/relacionamentos-com-proposito` e `/psicologos/profissional-indisponivel` responderam HTTP 200 sem mock; Chrome headless 390x844 confirmou o estado `Perfil indisponivel` com o botao `Voltar a pagina anterior`.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+- Smoke de homologacao sera executado e reportado apos o push de `homolog`, pois o push dispara o deploy automatico.
