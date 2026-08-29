@@ -1338,3 +1338,25 @@ A modal `Publique nas redes sociais` passou a ter cabecalho, previa 9:16, descri
 ### Validacao
 
 As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.239, incluindo teste estatico da previa social, `frontend check`, build antes/depois do bump, smoke local, Browser/Chrome CDP de ausencia de overflow na janela `1365x768`/viewport interna `672px`, `pnpm check` de raiz, `git diff --check` e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - orientacao de qualidade somente em mobile/tablet
+
+### Contexto
+
+A orientacao `Se a qualidade ficar baixa, tente pelo computador.` foi criada para aparelhos que podem exportar o video social com qualidade inferior. No desktop, entretanto, o usuario ja esta no computador; manter a frase apos download concluido fica redundante e incoerente.
+
+### Decisao
+
+- O toast de sucesso do destino dedicado `Baixar video` continua verde e com titulo `Video baixado.`.
+- A descricao de tentar pelo computador passa a ser condicionada ao runtime mobile/tablet, identificado por `navigator.userAgentData.mobile`, user agent Android/iPhone/iPad/iPod ou iPadOS com plataforma `MacIntel` e toque.
+- Desktop/computador nao recebe descricao secundaria nesse toast.
+- A decisao nao altera download, exportacao, arte, modal, tracking, regra owner-only, backend, contrato, env, package, schema, armazenamento ou politica de rollback.
+
+### Consequencias
+
+- A microcopy fica contextual: mobile/tablet continuam recebendo uma alternativa pratica caso a qualidade fique baixa; desktop recebe somente a confirmacao do sucesso.
+- Rollback simples remove a condicional e restaura a descricao direta no toast, sem migracao ou mudanca operacional.
+
+### Validacao
+
+As validacoes finais do ajuste foram registradas na TASK-42 em 0.1.242, incluindo formatter/teste estatico da previa social, `frontend check`, `frontend build`, smoke local, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.

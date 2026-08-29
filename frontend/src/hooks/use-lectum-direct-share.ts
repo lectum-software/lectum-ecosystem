@@ -32,12 +32,35 @@ type ShareLectumTargetOptions = {
   destination?: LectumShareDestination;
 };
 
+type NavigatorWithUserAgentData = Navigator & {
+  userAgentData?: {
+    mobile?: boolean;
+  };
+};
+
 const SHARING_TOAST_MESSAGE = "Preparando vídeo para compartilhar...";
 const DOWNLOAD_TOAST_MESSAGE = "Preparando vídeo para baixar...";
 const SHARE_READY_RETRY_MESSAGE =
   "Vídeo preparado. Toque em compartilhar novamente e escolha Redes Sociais.";
 const DOWNLOAD_READY_RETRY_MESSAGE =
   "Vídeo preparado. Toque em Baixar vídeo novamente para escolher onde salvar.";
+const DOWNLOAD_QUALITY_GUIDANCE_MESSAGE = "Se a qualidade ficar baixa, tente pelo computador.";
+const MOBILE_DOWNLOAD_QUALITY_GUIDANCE_USER_AGENT_PATTERN = /\b(Android|iPhone|iPad|iPod)\b/i;
+
+const shouldShowDownloadQualityGuidance = () => {
+  if (typeof window === "undefined") return false;
+
+  const navigatorWithHints = window.navigator as NavigatorWithUserAgentData;
+  const userAgent = navigatorWithHints.userAgent ?? "";
+  const platform = navigatorWithHints.platform ?? "";
+  const maxTouchPoints = navigatorWithHints.maxTouchPoints ?? 0;
+
+  return (
+    navigatorWithHints.userAgentData?.mobile === true ||
+    MOBILE_DOWNLOAD_QUALITY_GUIDANCE_USER_AGENT_PATTERN.test(userAgent) ||
+    (platform === "MacIntel" && maxTouchPoints > 1)
+  );
+};
 
 export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) => {
   const { onShared } = options;
@@ -135,9 +158,12 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
 
         if (result.mode === "download") {
           if (destination === "download") {
-            toast.success("Vídeo baixado.", {
-              description: "Se a qualidade ficar baixa, tente pelo computador.",
-            });
+            toast.success(
+              "Vídeo baixado.",
+              shouldShowDownloadQualityGuidance()
+                ? { description: DOWNLOAD_QUALITY_GUIDANCE_MESSAGE }
+                : undefined,
+            );
           } else {
             toast.success("Arquivo baixado. Escolha o app desejado no dispositivo.");
           }

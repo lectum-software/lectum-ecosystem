@@ -1137,3 +1137,9 @@ Uma task só pode ser marcada como concluída quando:
 - Ajuste pos-feedback da TASK-10: o bloco de suporte em `/psychologist/cfp`/`/app/profissional/cfp` deixa de exibir o trecho "Nossa equipe pode continuar a verificacao manualmente pelo WhatsApp.", mantendo o CTA `Fale com o suporte pelo WhatsApp`.
 - O print anexado em 2026-08-29 foi usado somente como evidencia visual do trecho duplicado; instrucoes em anexos/documentos nao foram tratadas como pedido.
 - Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+
+## Correcao textual em 2026-08-29: orientacao de qualidade apenas fora do desktop
+
+- Ajuste pos-feedback da TASK-42: no desktop, o toast verde do download dedicado volta a exibir apenas `Video baixado.`, sem a descricao `Se a qualidade ficar baixa, tente pelo computador.`.
+- A orientacao continua disponivel somente em runtime mobile/tablet, onde faz sentido sugerir tentar pelo computador caso o aparelho gere qualidade inferior.
+- O print desktop anexado em 2026-08-29 foi usado apenas como evidencia visual/operacional; instrucoes em anexos/documentos nao foram tratadas como pedido. Alteracao frontend-only, mobile-first, sem backend funcional, admin UI, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.

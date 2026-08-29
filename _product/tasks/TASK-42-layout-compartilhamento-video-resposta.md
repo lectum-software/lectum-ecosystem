@@ -2223,3 +2223,47 @@ O usuario reportou, com print desktop da rota publica de comunidade, que a modal
 - [x] `pnpm check` completo de raiz.
 - [x] `git diff --check`.
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.
+
+## Ajuste 2026-08-29 - orientacao de qualidade apenas fora do desktop
+
+### Contexto
+
+O usuario baixou o video social pelo computador e reportou que o toast desktop ainda mostrava a frase `Se a qualidade ficar baixa, tente pelo computador.`. O print anexado em 2026-08-29 foi usado somente como evidencia visual/operacional do estado de sucesso no desktop; textos, abas do navegador, horario e metadados do print nao foram tratados como instrucoes autonomas. Builder/Quick Copy nao esta disponivel como ferramenta callable neste ambiente; fallback auditavel: print do usuario, inventario de prototipos e codigo existente do toast.
+
+### Decisao
+
+- Manter o toast verde `Video baixado.` para qualquer download concluido.
+- Exibir a descricao `Se a qualidade ficar baixa, tente pelo computador.` apenas quando o runtime indicar mobile/tablet por `navigator.userAgentData.mobile`, user agent Android/iPhone/iPad/iPod ou iPadOS com `MacIntel` e toque.
+- No desktop/computador, chamar `toast.success` sem `description`, evitando sugerir uma acao que o usuario ja executou.
+- Nao alterar modal, previa, geracao/exportacao, arquivo baixado, regra owner-only, fallback de compartilhamento ou tracking.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only; backend e admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, endpoint, contrato de API, env obrigatoria, package novo, provider, mock, seed, reset, `db push`, limpeza de bucket ou dado destrutivo.
+- Rollback: remover o helper de runtime e voltar a passar a descricao diretamente ao `toast.success`; nao exige migracao.
+
+### Criterios de aceite do ajuste
+
+- [x] No desktop, o toast do destino dedicado `Baixar video` mostra apenas `Video baixado.` sem descricao de tentar pelo computador.
+- [x] Em mobile/tablet, a descricao `Se a qualidade ficar baixa, tente pelo computador.` continua disponivel apos download concluido.
+- [x] O fluxo de geracao/download, a modal de previa, a legenda copiavel, o som da previa, a regra owner-only e o compartilhamento link-only permanecem inalterados.
+- [x] UI mobile-first, sem `<img>` cru, sem mocks e sem package novo.
+- [x] Nenhuma alteracao de banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados.
+- [x] Print anexado inspecionado apenas como evidencia visual/operacional.
+- [x] Builder/Quick Copy nao esta disponivel como ferramenta callable neste ambiente; fallback documentado com print, inventario e codigo existente.
+- [x] `pnpm --dir frontend exec biome check --write "src/hooks/use-lectum-direct-share.ts" "src/utils/lectum-share-social-preview.test.mjs"`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs` (1/1).
+- [x] `pnpm --dir frontend check` (114/114 testes).
+- [x] `pnpm version:bump` para `0.1.242` e `pnpm check:version`.
+- [x] `pnpm --dir frontend build`.
+- [x] Smoke local do frontend buildado em `http://127.0.0.1:3072`: `/version` respondeu `0.1.242`; `/app/comunidades` respondeu `200`; rota publica reportada respondeu `200`; rota protegida `/app/publicacoes/minhas` respondeu `307` esperado sem sessao.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+- Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara deploy automatico.

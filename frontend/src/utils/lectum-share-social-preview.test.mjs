@@ -221,6 +221,21 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(mediaSource, /resolveLectumFileShareData\(nav/);
   assert.match(mediaSource, /isNativeShareActivationError\(error\)[\s\S]*mode: "prepared"/);
   assert.match(directShareHookSource, /DOWNLOAD_READY_RETRY_MESSAGE/);
+  assert.match(directShareHookSource, /DOWNLOAD_QUALITY_GUIDANCE_MESSAGE/);
+  assert.match(directShareHookSource, /shouldShowDownloadQualityGuidance/);
+  assert.match(directShareHookSource, /userAgentData\?\.mobile === true/);
+  assert.match(
+    directShareHookSource,
+    /MOBILE_DOWNLOAD_QUALITY_GUIDANCE_USER_AGENT_PATTERN\.test\(userAgent\)/,
+  );
+  assert.match(
+    directShareHookSource,
+    /shouldShowDownloadQualityGuidance\(\)[\s\S]*description: DOWNLOAD_QUALITY_GUIDANCE_MESSAGE[\s\S]*: undefined/,
+  );
+  assert.doesNotMatch(
+    directShareHookSource,
+    /description: "Se a qualidade ficar baixa, tente pelo computador\."/,
+  );
   assert.match(shareDialogHookSource, /shareDestinationDialog: null/);
   assert.match(shareDialogHookSource, /toLectumLinkOnlyTarget/);
 });
