@@ -113,7 +113,7 @@ const SOURCE_VIDEO_FALLBACK_EXTENSION_BY_MIME: Record<string, string> = {
 
 const sourceVideoFallbackFileCache = new Map<string, PreparedShareFileCacheValue>();
 const SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000;
-const SERVER_SHARE_RENDER_MOBILE_TIMEOUT_MS = 50_000;
+const SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 155_000;
 const SERVER_SHARE_RENDER_HTTP_GRACE_MS = 5_000;
 const sourceVideoFallbackFiles = new WeakSet<File>();
 
@@ -258,7 +258,7 @@ export const prepareLectumShareFileWithServerRender = async (
   if (cached) return cached;
 
   const timeoutMs = options.serverOnly
-    ? SERVER_SHARE_RENDER_MOBILE_TIMEOUT_MS
+    ? SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS
     : SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS;
   const controller = new AbortController();
   const fallbackTimeout = window.setTimeout(() => controller.abort(), timeoutMs);

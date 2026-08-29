@@ -226,7 +226,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /prepareLectumShareFileWithServerRender/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000/);
-  assert.match(mediaSource, /SERVER_SHARE_RENDER_MOBILE_TIMEOUT_MS = 50_000/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 155_000/);
   assert.match(mediaSource, /shouldAvoidClientSideVideoShareRender/);
   assert.match(mediaSource, /MOBILE_VIDEO_RENDER_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /new AbortController\(\)/);
@@ -248,8 +248,14 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
     directShareHookSource,
     /destination === "download"[\s\S]*prepareLectumShareFileWithServerRender\(socialTarget,\s*\{[\s\S]*serverOnly: shouldUseServerOnlyDownloadRender/,
   );
+  assert.match(
+    directShareHookSource,
+    /shouldUseServerOnlyDownloadRender =\s*destination === "download" && socialTarget\.mediaType === "video"/,
+  );
   assert.match(directShareHookSource, /shouldUseServerOnlyDownloadRender[\s\S]*throw error/);
   assert.match(directShareHookSource, /MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE/);
+  assert.match(directShareHookSource, /DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE/);
+  assert.doesNotMatch(directShareHookSource, /shouldAvoidClientSideVideoShareRender/);
   assert.match(directShareHookSource, /DOWNLOAD_QUALITY_GUIDANCE_MESSAGE/);
   assert.match(directShareHookSource, /shouldShowDownloadQualityGuidance/);
   assert.match(directShareHookSource, /userAgentData\?\.mobile === true/);

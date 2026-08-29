@@ -2421,3 +2421,54 @@ Depois do ajuste de fallback rapido, o usuario validou em homologacao que o arqu
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-08-29 - download social backend-only em CFR 30
+
+### Contexto
+
+O usuario anexou o arquivo `Túlio Rezende na Lectum (1).mp4` baixado no computador apos o ajuste anterior. O arquivo foi tratado somente como evidencia tecnica do resultado, nao como instrucao autonoma. A inspecao indicou um MP4 valido com arte aplicada, mas em 1080x1920, 26,1 MiB, video VFR com media de 18,8fps, mediana ~29fps, frames de ate ~1,014s e audio terminando cerca de 286ms antes do video. Como o backend experimental renderiza 540x960 e o teste local do backend anterior ja produzia CFR 24, a evidencia aponta que o desktop desistiu do backend em 12s e caiu no encoder local, gerando um artefato visualmente correto porem irregular para players de celular.
+
+### Decisao
+
+- O destino dedicado `Baixar video` para videos passa a ser qualidade-primeiro em todos os runtimes: tenta apenas o backend Chromium + MediaBunny e nao entrega fallback client-side local quando o servidor falhar ou demorar.
+- O backend altera o perfil da POC para MP4 AVC/AAC em 540x960, 30fps constante, bitrate de video de 1,2Mbps e audio AAC 96kbps, preservando `fastStart: "in-memory"` e o layout visual atual.
+- O timeout padrao backend sobe para 150s, pois o render local do video longo fornecido levou ~108s em 30fps. O frontend usa 155s no modo server-only/qualidade e mantem 5s de folga HTTP. O caminho curto de 12s permanece apenas como fallback interno de API caso algum chamador futuro use `serverOnly=false`.
+- A versao da chave de cache em memoria muda para `share-render-v3-cfr30-quality-server`, invalidando resultados anteriores 24fps/POC.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend + backend; admin acompanha apenas bump de versao no manifesto.
+- Sem FFmpeg, schema Prisma, migration, backfill, seed, reset, `db push`, pacote novo, provider novo, armazenamento novo, mock ou limpeza de bucket/dados publicados.
+- Contrato segue aditivo: a rota backend e a resposta binaria continuam iguais. Backend novo tolera frontend antigo; frontend novo com backend antigo pode receber erro publico em vez de arquivo local irregular durante o rollout.
+- Rollback operacional segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false`; nesse rollback, o download dedicado de video passa a falhar com mensagem publica em vez de gerar um MP4 local VFR. Rollback completo reverte o server-only desktop e o perfil CFR 30.
+
+### Criterios de aceite do ajuste
+
+- [x] Backend Chromium + MediaBunny gera perfil de video social com 30 FPS constante.
+- [x] Timeout backend/frontend comporta videos longos sem voltar ao limite curto de 12s no download dedicado.
+- [x] Desktop e mobile nao caem mais para encoder local no destino dedicado `Baixar video` quando o alvo e video.
+- [x] Se o backend nao gerar o artefato, a UI exibe erro publico acionavel e nao entrega arquivo local de qualidade inferior.
+- [x] Cache em memoria invalida a geracao anterior por nova versao de layout/qualidade.
+- [x] Compartilhamento social, WhatsApp, link-only, modal, arte visual e UI mobile-first permanecem inalterados.
+- [x] Nenhum banco/schema/migration; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacoes do ajuste
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES e ADR-0191 consultados.
+- [x] Arquivo anexado pelo usuario inspecionado apenas como evidencia tecnica: saida local baixada estava VFR com media de 18,8fps e frame maximo ~1,014s.
+- [x] Render local backend antes do ajuste, usando o MP4 longo como fonte tecnica, levou 87.653ms e confirmou que a POC backend ja saia CFR 24 em 540x960.
+- [x] Render local backend apos o ajuste, usando o MP4 longo como fonte tecnica, gerou `video/mp4` com 17.944.835 bytes em 108.357ms.
+- [x] Inspecao MediaBunny do render local apos o ajuste confirmou `underlyingFrameRate=30`, `frameRateIsConstant=true`, 3707 frames, duracao unica de frame 0,033333s e zero timestamps nao monotonicos.
+- [x] Testes direcionados: `share-render.test.ts`, `lectum-share-media.test.mjs` e `lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.246` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

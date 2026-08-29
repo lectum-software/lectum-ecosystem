@@ -1163,3 +1163,11 @@ Uma task só pode ser marcada como concluída quando:
 - O backend Chromium + MediaBunny passa a deduplicar e cachear em memoria, por curto prazo e por processo, o resultado renderizado do mesmo alvo, sem voltar a persistir artefatos em R2/banco.
 - No destino dedicado `Baixar video`, iPhone/Android/tablet deixam de acionar o encode client-side pesado quando o backend falha ou demora; o mobile aguarda o backend por prazo compatível com a rota e mostra erro publico acionavel se nao houver MP4. Desktop preserva fallback local.
 - Alteracao frontend+backend, admin apenas manifest; sem schema, migration, env obrigatoria, pacote novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao operacional em 2026-08-29: download social backend-only com CFR 30
+
+- Ajuste pos-feedback da TASK-42: o MP4 baixado no computador foi inspecionado como evidencia tecnica e mostrou arte aplicada, porem saida 1080x1920 VFR com media de 18,8fps e frame de ate ~1s, indicando queda para o pipeline local em vez do backend.
+- O destino dedicado `Baixar video` para videos passa a exigir o backend Chromium + MediaBunny tambem no desktop; se o servidor nao gerar o artefato, a UI mostra erro publico e nao entrega um MP4 local VFR de qualidade inferior.
+- O backend passa a gerar MP4 AVC/AAC em 540x960, 30fps constante, bitrate de video 1,2Mbps e timeout controlado de 150s; o frontend aguarda 155s no modo qualidade, com 5s de folga HTTP.
+- Render local com o MP4 longo fornecido confirmou `frameRateIsConstant=true`, `underlyingFrameRate=30`, 3707 frames com duracao unica de 0,033333s, 17.944.835 bytes e tempo de render de 108.357ms.
+- Sem FFmpeg, schema, migration, env obrigatoria, pacote novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback operacional segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false`, com o trade-off de o download dedicado de video falhar em vez de cair para encode local.

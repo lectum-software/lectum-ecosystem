@@ -53,9 +53,9 @@ const PALETTE = {
 
 const OUTPUT_PROFILE = {
   audioBitrate: 96_000,
-  frameRate: 24,
+  frameRate: 30,
   height: 960,
-  videoBitrate: 900_000,
+  videoBitrate: 1_200_000,
   width: 540,
 };
 

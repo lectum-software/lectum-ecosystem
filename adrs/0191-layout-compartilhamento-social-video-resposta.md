@@ -1436,4 +1436,28 @@ Apos o fallback rapido, o usuario reportou dois sintomas remanescentes em homolo
 
 ### Validacao
 
-As validacoes finais serao registradas na TASK-42 em 0.1.245, incluindo render local Chromium + MediaBunny com MP4 real, checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.
+As validacoes finais foram registradas na TASK-42 em 0.1.245, incluindo render local Chromium + MediaBunny com MP4 real, checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - download backend-only e CFR 30
+
+### Contexto
+
+O arquivo baixado no computador apos o ajuste anterior foi inspecionado como evidencia tecnica. Ele estava valido e com a arte visual aplicada, porem em 1080x1920 VFR, media de 18,8fps, frames de ate ~1s e audio terminando cerca de 286ms antes do video. Como o backend experimental gera 540x960 e o teste local da POC anterior saiu CFR 24, a evidencia indica que o timeout curto do desktop levou ao fallback local, que era resiliente mas podia gerar MP4 irregular para players mobile.
+
+### Decisao
+
+- O destino dedicado `Baixar video` passa a ser backend-only para videos em desktop, mobile e tablet. Se o backend Chromium + MediaBunny nao entregar o artefato dentro do prazo, o fluxo mostra erro publico e nao gera um MP4 client-side de qualidade inferior.
+- O perfil backend passa de 24fps/900kbps para 30fps constante/1,2Mbps em 540x960, mantendo AVC/AAC, audio 96kbps, `fit: "fill"` e `fastStart: "in-memory"`.
+- O timeout padrao backend sobe para 150s. O frontend aguarda 155s no modo server-only/qualidade, mais 5s de folga HTTP, porque o render local do video longo fornecido levou 108.357ms.
+- A chave do cache em memoria muda para `share-render-v3-cfr30-quality-server`, evitando reaproveitar artefatos gerados no perfil anterior.
+
+### Consequencias
+
+- O download dedicado prioriza compatibilidade final do MP4 em vez de resiliencia por fallback local. Isso reduz risco de arquivos VFR com travamentos em celular, mas pode exibir erro se o backend estiver indisponivel.
+- Videos longos podem manter o toast de preparo por ate pouco mais de 2 minutos; o timeout continua bounded e a concorrencia backend segue limitada a 1 render com fila pequena.
+- O custo de CPU sobe em relacao ao perfil 24fps, mas sem adicionar FFmpeg, NodeAV, worker externo, pacote novo ou persistencia de artefatos.
+- Sem schema/migration/env obrigatoria/provider novo/dados persistidos. Rollback operacional continua por `LECTUM_SHARE_CHROMIUM_ENABLED=false`, com o trade-off de indisponibilizar o download dedicado de video ate reverter o frontend.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.246, incluindo render local do MP4 longo em CFR 30, checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/diff e smoke de homologacao apos push.

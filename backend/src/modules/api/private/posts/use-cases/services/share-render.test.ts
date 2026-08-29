@@ -24,7 +24,7 @@ test("renderizacao social no backend mantem Chromium opcional e com limites segu
   assert.equal(config.concurrency, 2);
   assert.equal(config.queueSize, 4);
 
-  assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 45_000);
+  assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 150_000);
 });
 
 test("renderizacao social aceita somente objetos publicos de midia da comunidade", () => {
@@ -55,6 +55,8 @@ test("pagina interna do Chromium usa MediaBunny para mp4 fast start com AVC/AAC"
   assert.match(html, /codec: "aac"/);
   assert.match(html, /codec: "avc"/);
   assert.match(html, /fit: "fill"/);
+  assert.match(html, /frameRate: 30/);
+  assert.match(html, /videoBitrate: 1_200_000/);
   assert.match(html, /return canvas;/);
   assert.doesNotMatch(html, /processedFrameIndex/);
   assert.doesNotMatch(html, /frameDurationSeconds/);
@@ -63,7 +65,10 @@ test("pagina interna do Chromium usa MediaBunny para mp4 fast start com AVC/AAC"
 test("renderizacao social no backend deduplica e reaproveita resultado em memoria", () => {
   const rendererSource = readFileSync(path.join(__dirname, "share-render", "renderer.ts"), "utf8");
 
-  assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_VERSION/);
+  assert.match(
+    rendererSource,
+    /SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v3-cfr30-quality-server"/,
+  );
   assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_TTL_MS = 30 \* 60_000/);
   assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4/);
   assert.match(rendererSource, /renderWithResultCache/);
