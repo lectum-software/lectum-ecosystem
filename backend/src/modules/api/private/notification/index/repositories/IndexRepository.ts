@@ -124,6 +124,21 @@ const toNotificationActor = (author: NotificationAuthor, anonymous = false) => {
   } satisfies NonNullable<notification["actor"]>;
 };
 
+const withDerivedMessageProps = (messageProps: unknown, derivedProps: Record<string, unknown>) => {
+  const entries = Object.entries(derivedProps).filter(([, value]) => {
+    if (typeof value !== "string") return value !== null && value !== undefined;
+
+    return value.trim().length > 0;
+  });
+
+  if (entries.length === 0) return messageProps;
+
+  return {
+    ...(isRecord(messageProps) ? messageProps : {}),
+    ...Object.fromEntries(entries),
+  };
+};
+
 const postIdFromNotification = (item: notification) => {
   const sourceType = getStringProp(item.message_props, "source_type");
 
@@ -234,6 +249,13 @@ export class IndexRepository implements IIndexRepository {
             select: {
               id: true,
               anonymous: true,
+              community: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
               author: {
                 select: notificationAuthorSelect,
               },
@@ -317,10 +339,16 @@ export class IndexRepository implements IIndexRepository {
         : Promise.resolve([]),
     ]);
 
-    const postActors = new Map(
+    const postContexts = new Map(
       posts.map((post) => [
         post.id,
-        toNotificationActor(post.author, post.author.role !== "psicologo" && post.anonymous),
+        {
+          actor: toNotificationActor(
+            post.author,
+            post.author.role !== "psicologo" && post.anonymous,
+          ),
+          community: post.community,
+        },
       ]),
     );
     const replyActors = new Map(
@@ -350,10 +378,17 @@ export class IndexRepository implements IIndexRepository {
     return items.map((item) => {
       if (item.message_key === "novo_post") {
         const postId = postIdFromNotification(item);
+        const postContext = postId ? postContexts.get(postId) : undefined;
+        const communityName = postContext?.community.name?.trim();
 
         return {
           ...item,
-          actor: postId ? (postActors.get(postId) ?? null) : null,
+          actor: postContext?.actor ?? null,
+          message_props: withDerivedMessageProps(item.message_props, {
+            community_id: postContext?.community.id,
+            community_name: communityName,
+            community_slug: postContext?.community.slug,
+          }),
         };
       }
 

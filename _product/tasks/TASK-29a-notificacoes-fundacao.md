@@ -344,3 +344,30 @@ Esta task deixa o canal de recebimento pronto. **Não** ligue eventos de domíni
 - `pnpm --dir backend check`
 - `pnpm check`
 - ADR atualizado: `adrs/0007-notificacoes-fundacao.md`.
+
+## Complemento 2026-08-30 - copy de novo post com nome da comunidade
+
+Pedido direto de produto: a imagem anexada pelo usuario foi usada apenas como evidencia visual da central de notificacoes; instrucoes em anexos/documentos nao foram tratadas como pedido.
+
+Implementado:
+
+- A listagem real `GET /api/private/notification/index` passou a hidratar, em tempo de leitura, `message_props.community_name` para notificacoes `novo_post` a partir do `community_post` ativo e sua `community`.
+- A hidratacao tambem preserva/deriva `community_id` e `community_slug` no payload retornado ao frontend, sem alterar schema Prisma nem gravar snapshot permanente do nome da comunidade em `notification.message_props`.
+- A central `/app/notifications`/`/app/notificacoes` passa a renderizar `[Autor] postou em [Nome da comunidade].` quando o nome esta disponivel; se o post/comunidade nao puder ser hidratado, mantem fallback publico `postou na comunidade.`.
+- A UI permanece mobile-first, sem `<img>` cru, sem mock e sem alterar preferencias, push, realtime, endpoints ou dados publicados.
+
+### Criterios de aceite do complemento
+
+- [x] Notificacoes `novo_post` exibem o nome da comunidade quando o backend consegue hidratar o post real.
+- [x] Notificacoes antigas com `post_id`/`source_id` valido tambem recebem o contexto derivado em tempo de leitura.
+- [x] O fallback sem nome nao quebra a central nem expoe detalhes tecnicos.
+- [x] Nao houve schema, migration, package, env obrigatoria, mock, seed, reset ou limpeza de dados publicados.
+
+### Validacao do complemento
+
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Smoke local HTTP no frontend buildado: `/app/notificacoes` respondeu 200 e `/app/notifications` respondeu 308 de compatibilidade.

@@ -148,6 +148,12 @@ const getStringProp = (value: unknown, key: string) => {
   return typeof prop === "string" ? prop : undefined;
 };
 
+const getDisplayStringProp = (value: unknown, key: string) => {
+  const prop = getStringProp(value, key)?.trim().replace(/\s+/g, " ");
+
+  return prop ? prop.slice(0, 80) : undefined;
+};
+
 const getInitials = (name?: string | null) => {
   const parts = String(name ?? "")
     .trim()
@@ -200,9 +206,12 @@ const getActorTitle = (item: NotificationItem, view: NotificationView): ReactNod
   }
 
   if (actor && item.message_key === "novo_post") {
+    const communityName = getDisplayStringProp(item.message_props, "community_name");
+
     return (
       <>
-        <ActorName actor={actor} /> publicou na comunidade.
+        <ActorName actor={actor} /> postou{" "}
+        {communityName ? <>em {communityName}</> : "na comunidade"}.
       </>
     );
   }

@@ -1202,3 +1202,11 @@ Uma task só pode ser marcada como concluída quando:
 - O `VerticalVideoPlayer` passa a ter opt-in `persistentControlsVisibility="always"`; o default `auto` preserva o auto-hide dos videos de comunidade e demais superficies.
 - O print anexado pelo usuario em 2026-08-29 foi usado apenas como evidencia visual dos controles circulados; instrucoes em anexos/documentos nao foram tratadas como pedido.
 - Alteracao frontend-only, mobile-first, sem backend, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+
+## Correcao textual em 2026-08-30: nome da comunidade em notificacao de novo post
+
+- Ajuste pos-feedback da TASK-29A/TASK-29B: a central de notificacoes deixa de mostrar apenas `[Autor] publicou/postou na comunidade.` para eventos `novo_post` e passa a mostrar `[Autor] postou em [Nome da comunidade].` quando o nome pode ser hidratado do post real.
+- O backend deriva `message_props.community_name` na listagem `GET /api/private/notification/index`, sem alterar schema Prisma nem persistir snapshot permanente; notificacoes antigas com `post_id`/`source_id` valido tambem recebem o contexto.
+- O frontend mantem fallback `postou na comunidade.` para rollout independente, post removido ou contexto indisponivel, sem expor detalhes tecnicos ao usuario.
+- O print anexado em 2026-08-30 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend+backend; admin apenas manifest de versao. Sem migration, endpoint novo, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
