@@ -101,6 +101,7 @@ export const PsychologistSlide = ({
               className="h-full w-full rounded-none border-0 shadow-none"
               controls={slideUsesNativeVideoControls}
               controlsVariant={slideUsesNativeVideoControls ? "persistent" : "native"}
+              persistentControlsVisibility="always"
               fit="cover"
               onContentClick={slideUsesNativeVideoControls ? revealUiFromImmersiveVideo : undefined}
               poster={slidePosterSrc || undefined}

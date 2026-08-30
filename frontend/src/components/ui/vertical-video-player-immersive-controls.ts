@@ -3,8 +3,13 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
+import {
+  type PersistentControlsVisibility,
+  shouldHidePersistentVideoControls,
+} from "./vertical-video-player-support";
 
 type UseVerticalVideoPlayerImmersiveControlsInput = {
+  controlsVisibility?: PersistentControlsVisibility;
   enabled: boolean;
   fullscreenVariant: "default" | "content";
   isPaused: boolean;
@@ -15,6 +20,7 @@ type UseVerticalVideoPlayerImmersiveControlsInput = {
 const REVEALED_CONTROLS_AUTO_HIDE_MS = 2200;
 
 export const useVerticalVideoPlayerImmersiveControls = ({
+  controlsVisibility = "auto",
   enabled,
   fullscreenVariant,
   isPaused,
@@ -39,11 +45,13 @@ export const useVerticalVideoPlayerImmersiveControls = ({
   const scheduleAutoHide = useCallback(() => {
     clearAutoHideTimer();
 
+    if (controlsVisibility === "always") return;
+
     autoHideTimerRef.current = setTimeout(() => {
       if (isVideoPlaying()) setControlsRevealed(false);
       autoHideTimerRef.current = null;
     }, REVEALED_CONTROLS_AUTO_HIDE_MS);
-  }, [clearAutoHideTimer, isVideoPlaying]);
+  }, [clearAutoHideTimer, controlsVisibility, isVideoPlaying]);
 
   const revealControlsTemporarily = useCallback(() => {
     setControlsRevealed(true);
@@ -95,10 +103,15 @@ export const useVerticalVideoPlayerImmersiveControls = ({
   }, [fullscreenVariant, videoRef]);
 
   const handleControlsInteraction = useCallback(() => {
-    if (enabled && isVideoPlaying()) scheduleAutoHide();
-  }, [enabled, isVideoPlaying, scheduleAutoHide]);
+    if (enabled && controlsVisibility === "auto" && isVideoPlaying()) scheduleAutoHide();
+  }, [controlsVisibility, enabled, isVideoPlaying, scheduleAutoHide]);
 
-  const controlsHidden = enabled && !isPaused && !controlsRevealed;
+  const controlsHidden = shouldHidePersistentVideoControls({
+    controlsRevealed,
+    enabled,
+    isPaused,
+    visibility: controlsVisibility,
+  });
 
   return {
     controlsHidden,

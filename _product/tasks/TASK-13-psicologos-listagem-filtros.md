@@ -1713,3 +1713,31 @@ Validações do complemento:
 - `pnpm check`
 - `pnpm check:version`
 - `git diff --check`
+
+## Execucao complementar: controles imersivos sempre visiveis no video (2026-08-30)
+
+- Pedido do usuario: na pagina de psicologos, no modo imersivo do video, manter os controles de play/pause, minutagem, progresso e volume visiveis o tempo todo, conforme area circulada no print anexado `WhatsApp Image 2026-08-29 at 22.14.17.jpeg`.
+- O print anexado foi usado somente como evidencia visual dos controles alvo; instrucoes em anexos/documentos nao foram tratadas como pedido de produto alem da solicitacao explicita do usuario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, o fallback local `_product/proto/Psicólogos.jpg` e o print anexado.
+- Frontend: `VerticalVideoPlayer` ganhou o opt-in `persistentControlsVisibility="always"`; o default continua `auto`, preservando o auto-hide imersivo dos videos de comunidade.
+- Frontend: o slide imersivo de psicologos passa a usar esse opt-in somente quando a UI Lectum esta escondida e os controles persistentes do player compartilhado estao ativos.
+- Nao houve alteracao de backend, Prisma, migrations, API, storage, env, package novo, mock, seed, reset ou dados publicados.
+- ADR atualizado: `adrs/0181-controles-imersivos-video-psicologos.md`.
+
+Criterios complementares:
+
+- [x] No modo imersivo da pagina de psicologos, os controles persistentes permanecem visiveis durante a reproducao, sem auto-hide.
+- [x] O auto-hide dos controles persistentes continua preservado para os demais usos do `VerticalVideoPlayer`, incluindo videos de comunidade.
+- [x] O ajuste reutiliza o player compartilhado e nao cria overlay/componente paralelo de controles.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi adicionado.
+- [x] Nenhum mock, dado fake permanente, seed, endpoint simulado, package novo ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/ui/vertical-video-player-support.test.mjs`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- `pnpm check:version`
+- `git diff --check`
+- Browser local mobile `390x844` em `http://127.0.0.1:3000/psicologos`: rota carregou sem app error e `/version` local retornou `0.1.251`; a API configurada no `.env` local registrou bloqueio CORS do tunnel e nao retornou videos reais para interacao visual, entao a permanencia dos controles foi coberta por teste automatizado e validacao estatica do opt-in no slide.

@@ -1195,3 +1195,10 @@ Uma task só pode ser marcada como concluída quando:
 - O backend agora recebe o resultado por `POST /result` no servidor local 127.0.0.1, aceita somente `video/mp4`, valida tamanho/tipo e faz `page.evaluate` retornar apenas metadados pequenos.
 - O timeout opcional existente foi ampliado para default 360s/minimo 300s/maximo 600s no backend; o frontend server-only aguarda ate 390s. `.env.example` documenta `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS=360000`.
 - Cache/job efemeros foram versionados para invalidar resultados do transporte antigo. Alteracao frontend + backend; admin apenas manifest de versao. Sem schema, migration, env obrigatoria, package novo, provider novo, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados.
+
+## Correcao visual em 2026-08-30: controles persistentes no video imersivo de psicologos
+
+- Ajuste pos-feedback da TASK-13: na pagina de psicologos, o modo imersivo do video volta a manter play/pause, minutagem, progresso e volume visiveis durante toda a reproducao.
+- O `VerticalVideoPlayer` passa a ter opt-in `persistentControlsVisibility="always"`; o default `auto` preserva o auto-hide dos videos de comunidade e demais superficies.
+- O print anexado pelo usuario em 2026-08-29 foi usado apenas como evidencia visual dos controles circulados; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend-only, mobile-first, sem backend, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.

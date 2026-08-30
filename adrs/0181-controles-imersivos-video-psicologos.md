@@ -93,6 +93,37 @@ Androids.
   habilitado.
 - Não há mudança de contrato, banco, packages, backend, analytics ou dados persistidos.
 
+## Complemento 2026-08-30 - controles sempre visiveis no modo imersivo
+
+### Contexto
+
+Um print enviado pelo usuario em 2026-08-29 destacou a barra inferior do video imersivo da pagina de psicologos: play/pause, minutagem, progresso e volume. O comportamento esperado para essa superficie e diferente do player de comunidade: em psicologos, o modo imersivo ja troca a UI Lectum por controles persistentes e esses controles devem permanecer visiveis durante toda a reproducao.
+
+A regressao veio do comportamento imersivo centralizado em `VerticalVideoPlayer`, criado para esconder temporariamente os controles de comunidade durante a reproducao. Aplicar a mesma regra ao feed de psicologos contrariava a decisao original deste ADR.
+
+### Decisao
+
+- Adicionar ao `VerticalVideoPlayer` o opt-in `persistentControlsVisibility`, com valores `auto` e `always`.
+- Manter `auto` como default para preservar a experiencia imersiva dos videos de comunidade e demais superficies que usam controles persistentes.
+- Usar `persistentControlsVisibility="always"` no slide da pagina de psicologos quando o modo imersivo ativa os controles persistentes.
+- Centralizar a regra de ocultacao em `shouldHidePersistentVideoControls` para deixar a diferenca testavel e evitar overlays paralelos.
+
+### Consequencias
+
+- O modo imersivo de psicologos exibe os controles durante toda a reproducao, inclusive apos o tempo que antes acionava auto-hide.
+- Videos de comunidade continuam escondendo os controles durante a reproducao e revelando-os temporariamente por toque, porque nao passam o opt-in `always`.
+- Nao ha mudanca de contrato, backend, schema, storage, env, package ou dados persistidos.
+
+### Validacao
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/components/ui/vertical-video-player-support.test.mjs` - OK.
+- `pnpm --dir frontend check` - OK.
+- `pnpm --dir frontend build` - OK.
+- `pnpm check` - OK.
+- `pnpm check:version` - OK.
+- `git diff --check` - OK.
+- Browser local mobile `390x844` em `/psicologos` - sem app error, com `/version` local em `0.1.251`; API local configurada via tunnel registrou bloqueio CORS e nao retornou videos reais para interacao visual.
+
 ## Pendencias
 
 - Validar manualmente em dispositivo/navegador mobile real com videos de psicologos publicados para confirmar o seek persistente no Safari/Chrome mobile.

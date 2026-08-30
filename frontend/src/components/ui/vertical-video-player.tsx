@@ -43,6 +43,7 @@ export const VerticalVideoPlayer = ({
   onContentClick,
   onVideoElementReady,
   persistentControlsLayout = "stacked",
+  persistentControlsVisibility = "auto",
   poster,
   preload = "metadata",
   src,
@@ -240,6 +241,7 @@ export const VerticalVideoPlayer = ({
     handleMuteToggle: handlePersistentMuteToggle,
     handlePlayPause: handlePersistentPlayPause,
   } = useVerticalVideoPlayerImmersiveControls({
+    controlsVisibility: persistentControlsVisibility,
     enabled: usesPersistentControls,
     fullscreenVariant,
     isPaused,

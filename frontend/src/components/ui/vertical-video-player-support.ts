@@ -4,6 +4,7 @@ export type VideoFit = "contain" | "cover";
 
 export type ControlsVariant = "native" | "minimal" | "persistent";
 export type PersistentControlsLayout = "stacked" | "media";
+export type PersistentControlsVisibility = "auto" | "always";
 
 export type VideoDataAttributes = {
   [key: `data-${string}`]: string | undefined;
@@ -24,6 +25,7 @@ export type VerticalVideoPlayerProps = {
   onContentClick?: () => void;
   onVideoElementReady?: (video: HTMLVideoElement | null) => void;
   persistentControlsLayout?: PersistentControlsLayout;
+  persistentControlsVisibility?: PersistentControlsVisibility;
   poster?: string | null;
   preload?: "auto" | "metadata" | "none";
   src: string;
@@ -53,6 +55,18 @@ export const getReadableVideoDuration = (video: HTMLVideoElement) =>
 
 export const clampNumber = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
+
+export const shouldHidePersistentVideoControls = ({
+  controlsRevealed,
+  enabled,
+  isPaused,
+  visibility,
+}: {
+  controlsRevealed: boolean;
+  enabled: boolean;
+  isPaused: boolean;
+  visibility: PersistentControlsVisibility;
+}) => enabled && visibility === "auto" && !isPaused && !controlsRevealed;
 
 const MAX_SEEK_FALLBACK_VIDEO_BYTES = 64 * 1024 * 1024;
 

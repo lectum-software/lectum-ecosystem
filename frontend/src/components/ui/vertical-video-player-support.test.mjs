@@ -1,0 +1,49 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { test } from "node:test";
+import { shouldHidePersistentVideoControls } from "./vertical-video-player-support.ts";
+
+test("controles persistentes permitem visibilidade permanente no modo imersivo", () => {
+  assert.equal(
+    shouldHidePersistentVideoControls({
+      controlsRevealed: false,
+      enabled: true,
+      isPaused: false,
+      visibility: "auto",
+    }),
+    true,
+  );
+
+  assert.equal(
+    shouldHidePersistentVideoControls({
+      controlsRevealed: false,
+      enabled: true,
+      isPaused: false,
+      visibility: "always",
+    }),
+    false,
+  );
+
+  assert.equal(
+    shouldHidePersistentVideoControls({
+      controlsRevealed: false,
+      enabled: true,
+      isPaused: true,
+      visibility: "auto",
+    }),
+    false,
+  );
+});
+
+test("feed imersivo de psicologos opta por controles sempre visiveis", () => {
+  const slideSource = readFileSync(
+    new URL("../../app/app/psychologists/view/components/slide.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    slideSource,
+    /controlsVariant=\{slideUsesNativeVideoControls \? "persistent" : "native"\}/,
+  );
+  assert.match(slideSource, /persistentControlsVisibility="always"/);
+});
