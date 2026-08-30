@@ -1530,3 +1530,29 @@ O nome do arquivo baixado passa a ser derivado de dados ja resolvidos pelo alvo 
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.249, incluindo testes direcionados de frontend/backend, checks/builds relevantes, versionamento sincronizado, `pnpm check`, guardas de documentacao/fonte e smoke de homologacao apos push.
+
+## Ajuste 2026-08-29 - transporte local do artefato gerado pelo Chromium
+
+### Contexto
+
+O download social backend-only ainda podia falhar em homologacao com erro publico mesmo quando a fonte de video era valida. A investigacao comparou o anexo do usuario, a midia publica de homologacao e o replay local do renderer; o arquivo de origem nao era a causa, pois o mesmo MP4 gerou artefato CFR 30 localmente. O gargalo removivel estava no transporte interno do artefato pronto: a pagina Chromium devolvia o MP4 inteiro como base64 por `page.evaluate`, inflando um resultado de cerca de 21,8 MiB para cerca de 29 MiB e cruzando o protocolo de automacao do navegador antes de o Node poder entregar o arquivo.
+
+### Decisao
+
+- Manter Chromium + MediaBunny como renderer de qualidade, sem FFmpeg, pacote novo, banco, R2 ou fila externa.
+- Reaproveitar o servidor local 127.0.0.1 do renderer para receber o resultado pronto em `POST /result`; a pagina Chromium envia um `Blob` `video/mp4` e retorna por `page.evaluate` apenas metadados pequenos.
+- O servidor local aceita somente `video/mp4`, aplica limite defensivo de 120 MiB e entrega ao Node um `Buffer` obtido do corpo HTTP local.
+- O renderer valida tipo/tamanho informado pela pagina contra o corpo recebido antes de concluir job/rota.
+- Aumentar a margem do timeout opcional existente para videos longos: default 360s, minimo 300s, maximo 600s no backend, e 390s no fluxo frontend server-only.
+- Invalidar caches/jobs em memoria por nova versao: `share-render-v5-local-result-cfr30-quality-server` e `share-render-job-v3-local-result-cfr30`.
+
+### Consequencias
+
+- A etapa mais pesada deixa de trafegar como string base64 no DevTools protocol; a copia grande passa por HTTP local dentro do mesmo processo/host.
+- O contrato externo nao muda: as rotas privadas de job e arquivo pronto continuam iguais, e o usuario continua vendo apenas mensagens publicas.
+- O prazo maximo percebido pelo usuario pode ser maior em videos longos, mas fica bounded e evita erro prematuro por configuracao legada curta.
+- Sem schema, migration, env obrigatoria, provider, package, FFmpeg, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback operacional segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false`; rollback completo reverte o transporte `/result`, timeouts e versoes efemeras.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.250, incluindo replay local com a midia real de homologacao pelo transporte `/result`, inspecao MediaBunny CFR 30, testes direcionados, checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/fonte e smoke de homologacao apos push.

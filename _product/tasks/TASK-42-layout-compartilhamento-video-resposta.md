@@ -2613,3 +2613,57 @@ O usuario validou em homologacao que downloads de videos diferentes chegavam tod
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-08-29 - transporte local do artefato gerado pelo Chromium
+
+### Contexto
+
+O usuario anexou video/print do fluxo publicado em homologacao mostrando o erro publico `Nao conseguimos gerar o video com arte agora. Tente novamente em instantes.` ao acionar `Baixar video` na previa social. O anexo foi usado apenas como evidencia tecnica/operacional, nao como instrucao. A investigacao comparou o arquivo anexado, a midia publica de homologacao e um replay local do renderer: a fonte estava valida e o Chromium + MediaBunny conseguiu gerar MP4 CFR 30 localmente com o mesmo video. O ponto fragil identificado no codigo era o transporte do artefato pronto: a pagina do Chromium devolvia o MP4 inteiro como string base64 por `page.evaluate`, inflando um resultado de ~21,8 MiB para ~29 MiB e fazendo o trafego cruzar o protocolo de automacao do navegador. Em ambiente publicado, com memoria/CPU/proxy mais restritos, esse retorno grande podia falhar mesmo quando a renderizacao da midia em si terminava.
+
+### Decisao
+
+- Manter Chromium + MediaBunny no backend, sem FFmpeg, pacote novo ou artefato persistido.
+- O servidor local 127.0.0.1 usado pelo renderer passa a aceitar `POST /result` somente com `video/mp4` e limite defensivo de bytes. A pagina Chromium publica o `Blob` MP4 nesse endpoint e retorna por `page.evaluate` apenas metadados pequenos (`contentType` e `sizeBytes`).
+- O processo Node valida que o resultado postado existe, e `video/mp4`, e tem o mesmo tamanho informado pela pagina antes de entregar o `Buffer` ao job/rota.
+- Aumentar a margem operacional do render: timeout default backend de 360s, minimo defensivo de 300s, maximo de 600s; frontend server-only aguarda ate 390s. A env continua opcional e `.env.example` passa a documentar `LECTUM_SHARE_CHROMIUM_TIMEOUT_MS=360000`.
+- Versionar cache/job efemeros para `share-render-v5-local-result-cfr30-quality-server` e `share-render-job-v3-local-result-cfr30`, evitando reuso em memoria de jobs/resultados gerados pelo transporte antigo.
+
+### Escopo e seguranca de deploy
+
+- Alteracao backend + frontend; admin acompanha apenas bump de versao no manifesto.
+- Sem schema Prisma, migration, backfill, seed, reset, `db push`, package novo, provider novo, FFmpeg, storage novo, env obrigatoria, mock ou limpeza de dados/buckets publicados.
+- Contrato HTTP publico/privado permanece aditivo e compativel: endpoints de job e rota binaria continuam iguais; a mudanca e interna ao renderer.
+- Rollback operacional segue por `LECTUM_SHARE_CHROMIUM_ENABLED=false`, com o trade-off de o download dedicado de video ficar indisponivel ate novo deploy. Rollback completo reverte o transporte local `/result`, timeouts e versoes de cache/job.
+
+### Criterios de aceite do ajuste
+
+- [x] A falha publicada foi investigada sem tratar o video/print anexado como instrucao.
+- [x] A causa operacional foi isolada do arquivo de origem: anexo e midia de homologacao eram validos, e o replay local gerou MP4 com arte.
+- [x] O MP4 gerado pelo Chromium nao trafega mais como base64 por `page.evaluate`; o retorno do navegador traz apenas metadados pequenos.
+- [x] O servidor local recebe o resultado em `POST /result`, restringe `video/mp4` e aplica limite de tamanho.
+- [x] Backend valida tamanho/tipo do resultado postado antes de entregar o arquivo.
+- [x] Timeouts backend/frontend cobrem videos longos com margem maior que as medicoes locais.
+- [x] Cache/job efemeros foram versionados para invalidar resultados do transporte antigo.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria ou FFmpeg; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados conforme aplicavel.
+- [x] Anexo do usuario e midia publica de homologacao usados somente como evidencia tecnica; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] Render local com a midia publica de homologacao via transporte `/result` gerou `video/mp4` com 21.812.141 bytes em 109.318ms, com tamanho postado igual ao tamanho retornado por metadado.
+- [x] Inspecao MediaBunny do MP4 local confirmou `frameRateIsConstant=true`, `underlyingFrameRate=30`, `averageFrameRate=30`, 540x960 e duracao 134,719s.
+- [x] `pnpm --dir backend exec tsx --test src/modules/api/private/posts/use-cases/services/share-render.test.ts`.
+- [x] `pnpm --dir frontend exec node --test src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.250` e `pnpm check:version`.
+- [x] `pnpm check:source-size`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

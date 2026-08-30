@@ -61,7 +61,6 @@ const OUTPUT_PROFILE = {
 
 const TEXT_ELLIPSIS = "...";
 const PROFESSIONAL_TAG_NAME_MAX_LENGTH = 18;
-const BASE64_CHUNK_SIZE = 32_766;
 const BRAND_ICON_BLUE_MINIMUM_VALUE = 120;
 const BRAND_ICON_COLOR_CHANNEL_GAP = 20;
 const BRAND_ICON_SOURCE_PADDING_RATIO = 0.03;
@@ -506,19 +505,6 @@ const drawLectumShareFrame = (ctx, media, layout, target, palette, assets) => {
   drawProfessionalTag(ctx, layout, target, palette);
 };
 
-const bytesToBase64 = (bytes) => {
-  let base64 = "";
-  for (let index = 0; index < bytes.length; index += BASE64_CHUNK_SIZE) {
-    const slice = bytes.subarray(index, index + BASE64_CHUNK_SIZE);
-    let binary = "";
-    for (let byteIndex = 0; byteIndex < slice.length; byteIndex += 1) {
-      binary += String.fromCharCode(slice[byteIndex]);
-    }
-    base64 += btoa(binary);
-  }
-  return base64;
-};
-
 const waitForFonts = async () => {
   if (!document.fonts || !document.fonts.ready) return;
   await document.fonts.ready.catch(() => undefined);
@@ -528,6 +514,18 @@ const normalizeOutputBytes = (buffer) => {
   if (buffer instanceof Uint8Array) return buffer;
   if (buffer instanceof ArrayBuffer) return new Uint8Array(buffer);
   return new Uint8Array(buffer.buffer || buffer);
+};
+
+const postRenderResult = async (bytes) => {
+  const response = await fetch("/result", {
+    body: new Blob([bytes], { type: "video/mp4" }),
+    headers: {
+      "Content-Type": "video/mp4",
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) throw new Error("RESULT_UPLOAD_FAILED");
 };
 
 const fetchSourceBlob = async () => {
@@ -632,9 +630,9 @@ const renderLectumShare = async (target) => {
     await conversion.execute();
     const bytes = normalizeOutputBytes(outputBuffer.buffer);
     if (!bytes.byteLength) throw new Error("OUTPUT_EMPTY");
+    await postRenderResult(bytes);
 
     return {
-      base64: bytesToBase64(bytes),
       contentType: "video/mp4",
       sizeBytes: bytes.byteLength,
     };

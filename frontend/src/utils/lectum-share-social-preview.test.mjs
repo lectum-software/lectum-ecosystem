@@ -226,7 +226,7 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(mediaSource, /APPLE_MOBILE_DOWNLOAD_USER_AGENT_PATTERN/);
   assert.match(mediaSource, /prepareLectumShareFileWithServerRender/);
   assert.match(mediaSource, /SERVER_SHARE_RENDER_FALLBACK_TIMEOUT_MS = 12_000/);
-  assert.match(mediaSource, /SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 260_000/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 390_000/);
   assert.match(mediaSource, /prepareLectumShareFileWithServerRenderJob/);
   assert.match(mediaSource, /startPostShareVideoArtifactRenderJob/);
   assert.match(mediaSource, /getPostShareVideoArtifactRenderJob/);

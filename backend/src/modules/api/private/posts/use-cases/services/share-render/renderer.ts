@@ -22,7 +22,6 @@ export class ShareRenderDisabledError extends ShareRenderUnavailableError {
 }
 
 type BrowserRenderResult = {
-  base64: string;
   contentType: string;
   sizeBytes: number;
 };
@@ -42,10 +41,11 @@ const SHARE_RENDER_VIEWPORT = {
   width: 540,
 } as const;
 const SHARE_RENDER_CLOSE_TIMEOUT_MS = 3_000;
-const SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v4-square-logo-cfr30-quality-server";
+const SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v5-local-result-cfr30-quality-server";
 const SHARE_RENDER_RESULT_CACHE_TTL_MS = 30 * 60_000;
 const SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4;
 const SHARE_RENDER_RESULT_CACHE_MAX_BYTES = 80 * 1024 * 1024;
+const SHARE_RENDER_RESULT_UPLOAD_MAX_BYTES = 120 * 1024 * 1024;
 
 type ShareRenderResultCacheEntry =
   | {
@@ -250,6 +250,9 @@ const closeBrowserResources = async (
 const isExpectedCapacityError = (error: unknown) =>
   error instanceof ShareRenderQueueFullError || error instanceof ShareRenderSourceTooLargeError;
 
+const isVideoMp4ContentType = (contentType: string) =>
+  contentType.split(";")[0]?.trim().toLowerCase() === "video/mp4";
+
 const renderShareVideo = async (
   target: ShareRenderTarget,
   config: ShareChromiumConfig,
@@ -269,6 +272,7 @@ const renderShareVideo = async (
       signal: operationAbortController.signal,
     });
     server = await createShareRenderLocalServer({
+      resultMaxBytes: SHARE_RENDER_RESULT_UPLOAD_MAX_BYTES,
       sourceBuffer: source.buffer,
       sourceContentType: source.contentType,
     });
@@ -294,15 +298,25 @@ const renderShareVideo = async (
       renderInPage(page, toBrowserTarget(target)),
       remainingTimeoutMs(),
     );
-    const buffer = Buffer.from(rendered.base64, "base64");
+    const postedResult = await withRenderTimeout(
+      server.getResult(),
+      Math.max(1_000, remainingTimeoutMs()),
+    );
 
-    if (!buffer.length) throw new ShareRenderUnavailableError();
+    if (
+      !postedResult.buffer.length ||
+      postedResult.sizeBytes !== rendered.sizeBytes ||
+      !isVideoMp4ContentType(rendered.contentType) ||
+      !isVideoMp4ContentType(postedResult.contentType)
+    ) {
+      throw new ShareRenderUnavailableError();
+    }
 
     return {
-      buffer,
+      buffer: postedResult.buffer,
       contentType: "video/mp4",
       fileName: toShareRenderFileName(target),
-      sizeBytes: buffer.length,
+      sizeBytes: postedResult.buffer.length,
     };
   } finally {
     clearTimeout(operationTimeout);

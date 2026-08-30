@@ -2,9 +2,9 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { parsePositiveInteger } from "@/utils/runtime-config";
 
-const DEFAULT_SHARE_RENDER_TIMEOUT_MS = 240_000;
-const MIN_SHARE_RENDER_TIMEOUT_MS = 150_000;
-const MAX_SHARE_RENDER_TIMEOUT_MS = 300_000;
+const DEFAULT_SHARE_RENDER_TIMEOUT_MS = 360_000;
+const MIN_SHARE_RENDER_TIMEOUT_MS = 300_000;
+const MAX_SHARE_RENDER_TIMEOUT_MS = 600_000;
 const DEFAULT_SHARE_RENDER_SOURCE_MAX_MB = 90;
 const DEFAULT_SHARE_RENDER_CONCURRENCY = 1;
 const DEFAULT_SHARE_RENDER_QUEUE_SIZE = 2;

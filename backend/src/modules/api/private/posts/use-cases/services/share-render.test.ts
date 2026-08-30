@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { getShareRenderBrowserPageHtml } from "./share-render/browser-page";
 import { resolveShareChromiumConfig } from "./share-render/config";
 import { toShareRenderFileName } from "./share-render/file-name";
+import { createShareRenderLocalServer } from "./share-render/local-server";
 import { shareRenderSourceKeyFromUrl } from "./share-render/source";
 
 test("renderizacao social no backend mantem Chromium opcional e com limites seguros", () => {
@@ -14,22 +15,22 @@ test("renderizacao social no backend mantem Chromium opcional e com limites segu
     LECTUM_SHARE_CHROMIUM_EXECUTABLE_PATH: "/opt/chromium/chrome",
     LECTUM_SHARE_CHROMIUM_QUEUE_SIZE: "4",
     LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB: "25",
-    LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "260000",
+    LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "420000",
   } as NodeJS.ProcessEnv);
 
   assert.equal(config.enabled, false);
   assert.equal(config.executablePath, "/opt/chromium/chrome");
-  assert.equal(config.timeoutMs, 260_000);
+  assert.equal(config.timeoutMs, 420_000);
   assert.equal(config.sourceMaxBytes, 25 * 1024 * 1024);
   assert.equal(config.concurrency, 2);
   assert.equal(config.queueSize, 4);
 
-  assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 240_000);
+  assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 360_000);
   assert.equal(
     resolveShareChromiumConfig({
-      LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "45000",
+      LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "240000",
     } as NodeJS.ProcessEnv).timeoutMs,
-    240_000,
+    360_000,
   );
 });
 
@@ -63,9 +64,40 @@ test("pagina interna do Chromium usa MediaBunny para mp4 fast start com AVC/AAC"
   assert.match(html, /fit: "fill"/);
   assert.match(html, /frameRate: 30/);
   assert.match(html, /videoBitrate: 1_200_000/);
+  assert.match(html, /fetch\("\/result"/);
+  assert.match(html, /new Blob\(\[bytes\], \{ type: "video\/mp4" \}\)/);
   assert.match(html, /return canvas;/);
+  assert.doesNotMatch(html, /base64/);
+  assert.doesNotMatch(html, /BASE64_CHUNK_SIZE/);
+  assert.doesNotMatch(html, /bytesToBase64/);
   assert.doesNotMatch(html, /processedFrameIndex/);
   assert.doesNotMatch(html, /frameDurationSeconds/);
+});
+
+test("servidor local do render recebe resultado mp4 sem trafegar base64 pelo protocolo", async () => {
+  const server = await createShareRenderLocalServer({
+    resultMaxBytes: 1_024,
+    sourceBuffer: Buffer.from("source"),
+    sourceContentType: "video/mp4",
+  });
+
+  try {
+    const response = await fetch(`${server.origin}/result`, {
+      body: Buffer.from("result"),
+      headers: {
+        "Content-Type": "video/mp4",
+      },
+      method: "POST",
+    });
+
+    assert.equal(response.status, 204);
+    const result = await server.getResult();
+    assert.equal(result.buffer.toString("utf8"), "result");
+    assert.equal(result.contentType, "video/mp4");
+    assert.equal(result.sizeBytes, 6);
+  } finally {
+    await server.close();
+  }
 });
 
 test("marca Lectum do render backend preserva proporcao no canvas quadrado", () => {
@@ -89,7 +121,7 @@ test("renderizacao social no backend deduplica e reaproveita resultado em memori
 
   assert.match(
     rendererSource,
-    /SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v4-square-logo-cfr30-quality-server"/,
+    /SHARE_RENDER_RESULT_CACHE_VERSION = "share-render-v5-local-result-cfr30-quality-server"/,
   );
   assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_TTL_MS = 30 \* 60_000/);
   assert.match(rendererSource, /SHARE_RENDER_RESULT_CACHE_MAX_ENTRIES = 4/);
@@ -101,7 +133,7 @@ test("renderizacao social publicada usa job assincrono para evitar resposta long
   const jobsSource = readFileSync(path.join(__dirname, "share-render", "jobs.ts"), "utf8");
   const routesSource = readFileSync(path.join(__dirname, "..", "..", "index.ts"), "utf8");
 
-  assert.match(jobsSource, /SHARE_RENDER_JOB_VERSION = "share-render-job-v2-square-logo-cfr30"/);
+  assert.match(jobsSource, /SHARE_RENDER_JOB_VERSION = "share-render-job-v3-local-result-cfr30"/);
   assert.match(jobsSource, /SHARE_RENDER_JOB_TTL_MS = 30 \* 60_000/);
   assert.match(jobsSource, /startShareRenderJob/);
   assert.match(jobsSource, /getShareRenderJobSnapshot/);
