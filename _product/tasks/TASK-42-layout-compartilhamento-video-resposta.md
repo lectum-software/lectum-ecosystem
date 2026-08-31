@@ -2812,3 +2812,48 @@ O usuario perguntou se a tela do celular apagar atrapalha a preparacao do video 
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-08-31 - botao de volume na previa social
+
+### Contexto
+
+O usuario anexou print mobile da modal de download social e pediu um controle de volume no canto inferior direito da previa para mutar o video. A imagem anexada foi usada somente como evidencia visual do estado atual da interface; qualquer texto no anexo nao foi tratado como instrucao.
+
+### Decisao
+
+- Adicionar um botao circular sobreposto no canto inferior direito do preview 9:16 da modal `Publique nas redes sociais`.
+- O botao alterna entre som ativo e mudo usando estado local da previa, com `aria-pressed`, rotulos acessiveis e icones `Volume2`/`VolumeX` ja disponiveis em `lucide-react`.
+- O controle afeta somente o elemento de preview no navegador. O preparo/download do MP4 com arte continua preservando o audio do artefato e nao recebe estado de mute.
+- Manter o botao funcional mesmo durante o preparo do download, para permitir silenciar a previa enquanto o toast de preparacao permanece ativo.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only, mobile-first; backend/admin acompanham apenas bump de versao nos manifests.
+- Sem schema Prisma, migration, `db:migrate`, backfill, seed, reset, `db push`, limpeza de bucket/dados publicados, env obrigatoria nova, package novo, provider, FFmpeg ou persistencia nova.
+- Compatibilidade de rollout: backend atual e novo continuam recebendo as mesmas chamadas de job/arquivo; a mudanca e apenas interacao local da previa.
+- Rollback simples reverte o botao e restaura a previa sempre com som ativo.
+
+### Criterios de aceite do ajuste
+
+- [x] A previa social exibe botao de volume no canto inferior direito quando ha video resolvido.
+- [x] O botao alterna entre mutar e ativar som sem fechar a modal nem interferir nos cliques/gestos da sheet.
+- [x] O estado de mute e aplicado apenas ao video de preview; o artefato/exportacao continua preservando audio.
+- [x] O controle usa pacote ja instalado (`lucide-react`), sem dependencia nova.
+- [x] Nenhum banco/schema/migration, env obrigatoria, provider, FFmpeg ou persistencia nova; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados conforme aplicavel.
+- [x] Print/anexo do usuario usado somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] Builder/Quick Copy nao esta disponivel neste ambiente; foi usada a evidencia visual anexada e a referencia registrada em PROTO-INVENTORY para TASK-42.
+- [x] `pnpm --dir frontend exec biome check --write -- src/components/community/lectum-share-download-dialog.tsx src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir frontend check` apos remover reset sincronico de estado apontado pelo lint React Hooks na primeira tentativa.
+- [x] `pnpm --dir frontend build`.
+- [x] Chrome headless local mobile 390x844 abriu `http://localhost:3000/community` com o build em `next start`; sem mock/seed e sem dados reais suficientes para abrir a modal localmente.
+- [x] `pnpm check`.
+- [x] `pnpm version:bump` para `0.1.257` e `pnpm check:version`.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

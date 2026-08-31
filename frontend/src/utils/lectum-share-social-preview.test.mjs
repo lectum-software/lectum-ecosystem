@@ -194,8 +194,26 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(downloadDialogSource, /const handleDownload = \(\) =>/);
   assert.match(downloadDialogSource, /pausePreviewMediaBeforeDownload\(\)/);
   assert.match(downloadDialogSource, /onClick=\{handleDownload\}/);
+  assert.match(
+    downloadDialogSource,
+    /import \{ Copy, Download, Volume2, VolumeX, X \} from "lucide-react"/,
+  );
+  assert.match(downloadDialogSource, /useRef<HTMLVideoElement \| null>\(null\)/);
+  assert.match(
+    downloadDialogSource,
+    /const \[isPreviewMuted, setIsPreviewMuted\] = useState\(false\)/,
+  );
+  assert.match(downloadDialogSource, /onVideoElementReady=\{handlePreviewVideoReady\}/);
   assert.match(downloadDialogSource, /"data-lectum-share-preview-video": "true"/);
-  assert.match(downloadDialogSource, /muted: false/);
+  assert.match(downloadDialogSource, /muted: isPreviewMuted/);
+  assert.match(downloadDialogSource, /data-lectum-share-preview-volume-button="true"/);
+  assert.match(downloadDialogSource, /absolute right-3 bottom-3 z-\[5\]/);
+  assert.match(downloadDialogSource, /aria-pressed=\{isPreviewMuted\}/);
+  assert.match(downloadDialogSource, /Mutar pr.via do v.deo/);
+  assert.match(downloadDialogSource, /Ativar som da pr.via do v.deo/);
+  assert.match(downloadDialogSource, /applyPreviewMutedState\(previewVideo, nextMutedState\)/);
+  assert.match(downloadDialogSource, /<VolumeX className="h-\[1\.125rem\] w-\[1\.125rem\]"/);
+  assert.match(downloadDialogSource, /<Volume2 className="h-\[1\.125rem\] w-\[1\.125rem\]"/);
   assert.doesNotMatch(downloadDialogSource, /muted: true/);
   assert.match(downloadDialogSource, /maskImage: 'url\("\/logo-icon\.svg"\)'/);
   assert.match(downloadDialogSource, /WebkitMaskImage: 'url\("\/logo-icon\.svg"\)'/);

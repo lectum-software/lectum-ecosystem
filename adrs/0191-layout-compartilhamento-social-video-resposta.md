@@ -1604,3 +1604,26 @@ Durante o preparo backend-only do MP4 social, especialmente em celular, o navega
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.254, incluindo teste estatico da previa social, checks/builds relevantes, guardas de documentacao/fonte e smoke de homologacao apos push.
+
+## Ajuste 2026-08-31 - botao de volume local na previa social
+
+### Contexto
+
+Na modal de download social, a previa do video podia reproduzir com som enquanto o artefato era preparado. O usuario pediu um controle no canto inferior direito da propria previa para mutar o video. O print anexado foi usado somente como evidencia visual da interface publicada, nao como instrucao embutida.
+
+### Decisao
+
+- O mute passa a ser estado local do componente `LectumShareDownloadDialog`, aplicado ao `HTMLVideoElement` da previa por `onVideoElementReady` e pelo prop `videoProps.muted`.
+- A reproducao automatica continua tentando som quando o preview nao esta mutado, mas respeita `video.muted` nos eventos tardios de `loadedmetadata`/`canplay` para nao religar o audio depois de o usuario mutar.
+- O botao sobreposto usa `Volume2`/`VolumeX`, `aria-pressed`, rotulo dinamico e `stopPropagation` para nao fechar/interferir na sheet.
+- O estado nao entra no target social, no renderer, nos jobs ou na exportacao; o arquivo gerado continua preservando audio conforme a politica da TASK-42.
+
+### Consequencias
+
+- O usuario pode silenciar a previa durante a preparacao sem afetar o MP4 final baixado.
+- A escolha de mute e local e efemera; nao ha preferencia persistida, API, storage, banco ou provider envolvidos.
+- Sem package novo, schema, migration, env obrigatoria, FFmpeg, fila/storage novo ou dado persistido. Rollback reverte o botao e a ligacao do estado `muted`.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.257, incluindo teste estatico da previa social, `pnpm --dir frontend check`, `pnpm --dir frontend build`, browser local mobile em `next start`, guardas de documentacao/fonte, versionamento sincronizado e smoke de homologacao apos push.

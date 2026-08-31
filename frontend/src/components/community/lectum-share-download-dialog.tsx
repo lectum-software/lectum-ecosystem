@@ -1,8 +1,8 @@
 "use client";
 
-import { Copy, Download, X } from "lucide-react";
+import { Copy, Download, Volume2, VolumeX, X } from "lucide-react";
 import type { CSSProperties } from "react";
-import { useEffect, useLayoutEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
@@ -137,6 +137,14 @@ const pausePreviewMediaBeforeDownload = () => {
   }
 };
 
+const applyPreviewMutedState = (video: HTMLVideoElement, muted: boolean) => {
+  video.muted = muted;
+
+  if (!muted && video.volume <= 0) {
+    video.volume = 1;
+  }
+};
+
 export const LectumShareDownloadDialog = ({
   disabled = false,
   onClose,
@@ -144,6 +152,20 @@ export const LectumShareDownloadDialog = ({
   open,
   target,
 }: LectumShareDownloadDialogProps) => {
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPreviewMuted, setIsPreviewMuted] = useState(false);
+
+  const handlePreviewVideoReady = useCallback(
+    (video: HTMLVideoElement | null) => {
+      previewVideoRef.current = video;
+
+      if (!video) return;
+
+      applyPreviewMutedState(video, isPreviewMuted);
+    },
+    [isPreviewMuted],
+  );
+
   useEffect(() => {
     if (!target || typeof document === "undefined") return;
 
@@ -164,21 +186,27 @@ export const LectumShareDownloadDialog = ({
 
     pauseBackgroundMedia();
 
-    const previewVideo = document.querySelector<HTMLVideoElement>(PREVIEW_VIDEO_SELECTOR);
+    const previewVideo =
+      previewVideoRef.current ?? document.querySelector<HTMLVideoElement>(PREVIEW_VIDEO_SELECTOR);
     if (!previewVideo) return;
 
-    const playPreviewWithSound = () => {
+    const playPreviewVideo = () => {
+      if (previewVideo.muted) {
+        void previewVideo.play().catch(() => undefined);
+        return;
+      }
+
       void playVideoWithSound(previewVideo);
     };
 
-    playPreviewWithSound();
+    playPreviewVideo();
 
-    previewVideo.addEventListener("loadedmetadata", playPreviewWithSound, { once: true });
-    previewVideo.addEventListener("canplay", playPreviewWithSound, { once: true });
+    previewVideo.addEventListener("loadedmetadata", playPreviewVideo, { once: true });
+    previewVideo.addEventListener("canplay", playPreviewVideo, { once: true });
 
     return () => {
-      previewVideo.removeEventListener("loadedmetadata", playPreviewWithSound);
-      previewVideo.removeEventListener("canplay", playPreviewWithSound);
+      previewVideo.removeEventListener("loadedmetadata", playPreviewVideo);
+      previewVideo.removeEventListener("canplay", playPreviewVideo);
       previewVideo.pause();
     };
   }, [open, target]);
@@ -221,6 +249,23 @@ export const LectumShareDownloadDialog = ({
   const handleDownload = () => {
     pausePreviewMediaBeforeDownload();
     onDownload();
+  };
+
+  const handlePreviewMuteToggle = () => {
+    const nextMutedState = !isPreviewMuted;
+    setIsPreviewMuted(nextMutedState);
+
+    const previewVideo = previewVideoRef.current;
+    if (!previewVideo) return;
+
+    applyPreviewMutedState(previewVideo, nextMutedState);
+
+    if (nextMutedState) {
+      void previewVideo.play().catch(() => undefined);
+      return;
+    }
+
+    void playVideoWithSound(previewVideo);
   };
 
   return (
@@ -289,13 +334,37 @@ export const LectumShareDownloadDialog = ({
                 preload="auto"
                 src={resolvedMediaUrl}
                 title={target.shareTitle}
+                onVideoElementReady={handlePreviewVideoReady}
                 videoProps={{
                   autoPlay: true,
                   "data-lectum-share-preview-video": "true",
                   loop: true,
-                  muted: false,
+                  muted: isPreviewMuted,
                 }}
               />
+
+              <button
+                aria-label={
+                  isPreviewMuted ? "Ativar som da prévia do vídeo" : "Mutar prévia do vídeo"
+                }
+                aria-pressed={isPreviewMuted}
+                className="absolute right-3 bottom-3 z-[5] grid h-10 w-10 place-items-center rounded-full border border-media-foreground/15 bg-media-background/65 text-media-foreground backdrop-blur transition hover:bg-media-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 disabled:pointer-events-none disabled:opacity-50"
+                data-lectum-share-preview-volume-button="true"
+                disabled={!open}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handlePreviewMuteToggle();
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                title={isPreviewMuted ? "Ativar som da prévia do vídeo" : "Mutar prévia do vídeo"}
+                type="button"
+              >
+                {isPreviewMuted ? (
+                  <VolumeX className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
+                ) : (
+                  <Volume2 className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
+                )}
+              </button>
 
               <div
                 className="pointer-events-none absolute z-[4] overflow-hidden border border-surface/80 bg-surface/95 text-center shadow-[var(--lectum-shadow-soft)]"
