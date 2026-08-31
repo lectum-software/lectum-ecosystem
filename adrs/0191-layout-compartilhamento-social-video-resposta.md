@@ -1580,3 +1580,27 @@ O erro mobile reportado em homologacao no CTA `Baixar video` ocorreu com uma fon
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.253, incluindo confirmacao da causa pelo tamanho/tipo da midia publica de homologacao, replay local do MOV real com Chromium + MediaBunny, teste direcionado do renderer, checks/builds relevantes, guardas de documentacao/fonte e smoke de homologacao apos push.
+
+## Ajuste 2026-08-31 - orientacao durante preparo do download
+
+### Contexto
+
+Durante o preparo backend-only do MP4 social, especialmente em celular, o navegador pode suspender timers/polling quando a tela apaga ou a pagina deixa de ficar ativa. O usuario pediu que a orientacao para manter a tela aberta apareca junto com a tag de preparo do video.
+
+### Decisao
+
+- Exibir `Mantenha esta tela aberta ate o download comecar.` como descricao do toast `Preparando video para baixar...`.
+- Limitar a copy ao destino dedicado `download`, porque o fluxo de compartilhamento social tem outro objetivo e ja usa retry especifico da share sheet quando necessario.
+- Nao adotar Screen Wake Lock nesta etapa: a melhoria solicitada e textual, nao exige permissao/suporte de navegador e nao muda jobs, render, cache ou contrato.
+- Preservar mensagens publicas sem detalhes tecnicos e sem PII.
+
+### Consequencias
+
+- O usuario recebe uma orientacao pratica no momento em que ela e necessaria, reduzindo chance de bloquear a tela antes de o download iniciar.
+- A preparacao continua dependente do backend/job atual, sem alterar custo, timeout, filas, armazenamento ou compatibilidade entre frontend/backend.
+- Sem schema, migration, env obrigatoria, package, provider, FFmpeg, persistencia nova, reset, seed ou limpeza de dados/buckets publicados.
+- Rollback simples remove a descricao do toast.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.254, incluindo teste estatico da previa social, checks/builds relevantes, guardas de documentacao/fonte e smoke de homologacao apos push.

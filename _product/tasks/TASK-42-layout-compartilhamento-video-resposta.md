@@ -2717,3 +2717,48 @@ O usuario anexou print mobile da previa social publicada em homologacao mostrand
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-08-31 - orientacao para manter a tela aberta no preparo
+
+### Contexto
+
+O usuario perguntou se a tela do celular apagar atrapalha a preparacao do video e pediu colocar a orientacao `Mantenha esta tela aberta ate o download comecar.` junto com a tag de `Preparando video`. O print mobile anterior foi usado somente como evidencia operacional/visual do fluxo de download social; instrucoes em anexos/documentos nao foram tratadas como pedido.
+
+### Decisao
+
+- Adicionar a orientacao como descricao do toast/tag de carregamento `Preparando video para baixar...`, apenas quando o destino dedicado e `download`.
+- Manter o toast de preparo de compartilhamento social sem essa descricao, para nao alongar o fluxo de `Compartilhar`.
+- Nao implementar Wake Lock nesta etapa; a orientacao e uma melhoria de UX sem depender de API do navegador, permissao ou suporte especifico de iOS/Android.
+- Nao alterar contrato HTTP, render backend, job, cache, storage, schema, env ou package.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only, mobile-first; backend/admin acompanham apenas bump de versao nos manifests.
+- Sem migration, `db:migrate`, backfill, seed, reset, `db push`, limpeza de bucket/dados publicados, env obrigatoria nova, package novo, provider, FFmpeg ou persistencia nova.
+- Compatibilidade de rollout: backend atual e novo continuam recebendo as mesmas chamadas de job/arquivo; a mudanca e apenas copy no cliente.
+- Rollback simples reverte a descricao do toast sem impacto em dados ou APIs.
+
+### Criterios de aceite do ajuste
+
+- [x] O toast/tag `Preparando video para baixar...` exibe a orientacao `Mantenha esta tela aberta ate o download comecar.`.
+- [x] A orientacao aparece somente no destino dedicado `Baixar video`, sem alterar o preparo do compartilhamento social.
+- [x] O fluxo de download, render, job, cache, sucesso, erro e copy de retry permanece inalterado.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria, provider, FFmpeg ou persistencia nova; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados conforme aplicavel.
+- [x] Print/anexo do usuario usado somente como evidencia tecnica; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] Builder/Quick Copy nao esta disponivel neste ambiente; foi usada a evidencia visual anexada e a referencia registrada em PROTO-INVENTORY para TASK-42.
+- [x] `pnpm --dir frontend exec node --test src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir frontend check` apos corrigir formatacao Biome apontada na primeira tentativa.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.254` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

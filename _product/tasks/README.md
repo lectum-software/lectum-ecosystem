@@ -1218,3 +1218,10 @@ Uma task só pode ser marcada como concluída quando:
 - O backend Chromium + MediaBunny passa a usar default/minimo de 200 MB para `LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB`, mantendo maximo de 250 MB e fallback seguro para env legada abaixo de 200 MB.
 - Replay local com a mesma fonte MOV gerou MP4 CFR 30 540x960, confirmando que o arquivo era renderizavel quando nao bloqueado pelo teto de fonte.
 - Alteracao backend-only; frontend/admin apenas manifests de versao. Sem schema, migration, env obrigatoria nova, package novo, provider, FFmpeg, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados. Rollback simples reverte o limite, com risco conhecido para videos entre 90 MB e 200 MB.
+
+## Correcao textual em 2026-08-31: manter tela aberta durante preparo do video social
+
+- Ajuste pos-feedback da TASK-42: a tag/toast `Preparando video para baixar...` passa a exibir a orientacao `Mantenha esta tela aberta ate o download comecar.`.
+- A copy aparece somente no destino dedicado `Baixar video`, onde o celular pode suspender a pagina/timers antes de o arquivo ficar pronto; o preparo de compartilhamento social permanece sem descricao extra.
+- O print/anexo do usuario foi usado apenas como evidencia do fluxo mobile; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Alteracao frontend-only, mobile-first; backend/admin apenas manifests de versao. Sem schema, migration, env obrigatoria, package novo, provider, FFmpeg, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados. Rollback simples reverte a descricao.

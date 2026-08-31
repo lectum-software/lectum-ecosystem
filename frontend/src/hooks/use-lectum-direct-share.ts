@@ -41,6 +41,7 @@ type NavigatorWithUserAgentData = Navigator & {
 
 const SHARING_TOAST_MESSAGE = "Preparando vídeo para compartilhar...";
 const DOWNLOAD_TOAST_MESSAGE = "Preparando vídeo para baixar...";
+const DOWNLOAD_PREPARING_GUIDANCE_MESSAGE = "Mantenha esta tela aberta até o download começar.";
 const SHARE_READY_RETRY_MESSAGE =
   "Vídeo preparado. Toque em compartilhar novamente e escolha Redes Sociais.";
 const DOWNLOAD_READY_RETRY_MESSAGE =
@@ -118,6 +119,9 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           if (!cachedFile) {
             loadingToastId = toast.loading(
               destination === "download" ? DOWNLOAD_TOAST_MESSAGE : SHARING_TOAST_MESSAGE,
+              destination === "download"
+                ? { description: DOWNLOAD_PREPARING_GUIDANCE_MESSAGE }
+                : undefined,
             );
           }
 

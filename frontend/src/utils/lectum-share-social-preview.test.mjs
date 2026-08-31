@@ -267,6 +267,12 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(directShareHookSource, /DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE/);
   assert.doesNotMatch(directShareHookSource, /shouldAvoidClientSideVideoShareRender/);
   assert.match(directShareHookSource, /DOWNLOAD_QUALITY_GUIDANCE_MESSAGE/);
+  assert.match(directShareHookSource, /DOWNLOAD_PREPARING_GUIDANCE_MESSAGE/);
+  assert.match(directShareHookSource, /Mantenha esta tela aberta at. o download come.ar\./);
+  assert.match(
+    directShareHookSource,
+    /toast\.loading\([\s\S]*destination === "download" \? DOWNLOAD_TOAST_MESSAGE : SHARING_TOAST_MESSAGE,[\s\S]*destination === "download"[\s\S]*description: DOWNLOAD_PREPARING_GUIDANCE_MESSAGE[\s\S]*: undefined/,
+  );
   assert.match(directShareHookSource, /shouldShowDownloadQualityGuidance/);
   assert.match(directShareHookSource, /userAgentData\?\.mobile === true/);
   assert.match(
