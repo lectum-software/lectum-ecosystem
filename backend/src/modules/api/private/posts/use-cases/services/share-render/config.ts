@@ -5,7 +5,9 @@ import { parsePositiveInteger } from "@/utils/runtime-config";
 const DEFAULT_SHARE_RENDER_TIMEOUT_MS = 360_000;
 const MIN_SHARE_RENDER_TIMEOUT_MS = 300_000;
 const MAX_SHARE_RENDER_TIMEOUT_MS = 600_000;
-const DEFAULT_SHARE_RENDER_SOURCE_MAX_MB = 90;
+const DEFAULT_SHARE_RENDER_SOURCE_MAX_MB = 200;
+const MIN_SHARE_RENDER_SOURCE_MAX_MB = 200;
+const MAX_SHARE_RENDER_SOURCE_MAX_MB = 250;
 const DEFAULT_SHARE_RENDER_CONCURRENCY = 1;
 const DEFAULT_SHARE_RENDER_QUEUE_SIZE = 2;
 
@@ -80,7 +82,7 @@ export const resolveShareChromiumConfig = (
   const sourceMaxMb = parsePositiveInteger(
     env.LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB,
     DEFAULT_SHARE_RENDER_SOURCE_MAX_MB,
-    { max: 250, min: 1 },
+    { max: MAX_SHARE_RENDER_SOURCE_MAX_MB, min: MIN_SHARE_RENDER_SOURCE_MAX_MB },
   );
 
   return {

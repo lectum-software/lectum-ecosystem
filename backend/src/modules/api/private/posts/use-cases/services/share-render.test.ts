@@ -14,18 +14,28 @@ test("renderizacao social no backend mantem Chromium opcional e com limites segu
     LECTUM_SHARE_CHROMIUM_ENABLED: "false",
     LECTUM_SHARE_CHROMIUM_EXECUTABLE_PATH: "/opt/chromium/chrome",
     LECTUM_SHARE_CHROMIUM_QUEUE_SIZE: "4",
-    LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB: "25",
+    LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB: "220",
     LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "420000",
   } as NodeJS.ProcessEnv);
 
   assert.equal(config.enabled, false);
   assert.equal(config.executablePath, "/opt/chromium/chrome");
   assert.equal(config.timeoutMs, 420_000);
-  assert.equal(config.sourceMaxBytes, 25 * 1024 * 1024);
+  assert.equal(config.sourceMaxBytes, 220 * 1024 * 1024);
   assert.equal(config.concurrency, 2);
   assert.equal(config.queueSize, 4);
 
   assert.equal(resolveShareChromiumConfig({} as NodeJS.ProcessEnv).timeoutMs, 360_000);
+  assert.equal(
+    resolveShareChromiumConfig({} as NodeJS.ProcessEnv).sourceMaxBytes,
+    200 * 1024 * 1024,
+  );
+  assert.equal(
+    resolveShareChromiumConfig({
+      LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB: "90",
+    } as NodeJS.ProcessEnv).sourceMaxBytes,
+    200 * 1024 * 1024,
+  );
   assert.equal(
     resolveShareChromiumConfig({
       LECTUM_SHARE_CHROMIUM_TIMEOUT_MS: "240000",

@@ -1556,3 +1556,27 @@ O download social backend-only ainda podia falhar em homologacao com erro public
 ### Validacao
 
 As validacoes finais foram registradas na TASK-42 em 0.1.250, incluindo replay local com a midia real de homologacao pelo transporte `/result`, inspecao MediaBunny CFR 30, testes direcionados, checks/builds backend/frontend/admin, `pnpm check`, guardas de documentacao/fonte e smoke de homologacao apos push.
+
+## Ajuste 2026-08-31 - limite de fonte alinhado ao upload social
+
+### Contexto
+
+O erro mobile reportado em homologacao no CTA `Baixar video` ocorreu com uma fonte MOV valida de aproximadamente 195 MB. Essa midia estava dentro do limite publico de upload de posts/respostas (200 MB), mas acima do limite interno/documentado do render Chromium (`LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB=90`). Portanto, o job backend podia rejeitar um video que o produto ja aceitava publicar, levando a mensagem publica de indisponibilidade do artefato no celular.
+
+### Decisao
+
+- O limite defensivo de fonte do renderer social passa a ter default e minimo de 200 MB, alinhado ao upload social permitido.
+- A env opcional `LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB` permanece para aumentar ate 250 MB, mas valores legados abaixo de 200 MB caem no fallback de 200 MB para nao rejeitar conteudo publicado/aceito.
+- `.env.example` passa a documentar 200 MB, e o teste do renderer cobre tanto configuracao valida acima do minimo quanto fallback de valor legado baixo.
+- Mantemos Chromium + MediaBunny, jobs efemeros, cache em memoria, rotas existentes e mensagens publicas sem exposicao tecnica.
+
+### Consequencias
+
+- Videos MOV grandes, mas dentro do limite de upload de 200 MB, deixam de falhar antes da renderizacao.
+- O backend pode baixar fontes maiores que antes; o limite continua bounded, a concorrencia do renderer segue controlada e o resultado MP4 permanece limitado separadamente.
+- Nao ha schema, migration, package, provider, FFmpeg, env obrigatoria nova, persistencia de artefato, cache remoto, reset, seed ou limpeza de dados/buckets publicados.
+- Rollback simples reverte o limite, com risco conhecido de regressao para videos entre 90 MB e 200 MB; rollback operacional por `LECTUM_SHARE_CHROMIUM_ENABLED=false` desativa o download dedicado de video.
+
+### Validacao
+
+As validacoes finais foram registradas na TASK-42 em 0.1.253, incluindo confirmacao da causa pelo tamanho/tipo da midia publica de homologacao, replay local do MOV real com Chromium + MediaBunny, teste direcionado do renderer, checks/builds relevantes, guardas de documentacao/fonte e smoke de homologacao apos push.

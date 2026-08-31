@@ -2667,3 +2667,53 @@ O usuario anexou video/print do fluxo publicado em homologacao mostrando o erro 
 - [x] `pnpm check` completo de raiz.
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
+## Ajuste 2026-08-31 - limite de fonte compativel com upload social
+
+### Contexto
+
+O usuario anexou print mobile da previa social publicada em homologacao mostrando o erro publico `Nao conseguimos gerar o video com arte neste aparelho agora. Tente novamente em instantes ou pelo computador.` ao acionar `Baixar video`. O anexo foi usado somente como evidencia operacional/visual do erro, nao como instrucao. A investigacao do alvo publicado mostrou que a midia de origem era um MOV valido de aproximadamente 195 MB, aceito pelo limite de upload de posts/respostas (200 MB), mas rejeitado pelo limite interno do renderer backend (`LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB`) que ainda tinha default/documentacao de 90 MB.
+
+### Decisao
+
+- Compatibilizar o limite defensivo de fonte do Chromium + MediaBunny com o limite publico de upload de midia social: default/minimo de 200 MB e maximo de 250 MB.
+- Manter a env opcional `LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB`; valores legados abaixo de 200 MB passam a cair no fallback seguro de 200 MB para nao quebrar videos ja aceitos pelo produto.
+- Atualizar `.env.example` para documentar 200 MB e cobrir a regra em teste direcionado do backend.
+- Nao alterar UI, contrato HTTP, schema, storage, provider, package, FFmpeg, persistencia de artefatos ou cache remoto.
+
+### Escopo e seguranca de deploy
+
+- Alteracao backend-only; frontend/admin acompanham apenas bump de versao nos manifests.
+- Sem migration, `db:migrate`, backfill, seed, reset, `db push`, limpeza de bucket/dados publicados, package novo ou env obrigatoria nova.
+- Compatibilidade de rollout: frontend atual continua usando os mesmos endpoints de job/arquivo; backend novo apenas deixa de rejeitar fontes publicas validas entre 90 MB e 200 MB.
+- Rollback simples reverte o limite para 90 MB, com o trade-off de voltar a falhar para videos MOV grandes ja permitidos no upload; rollback operacional por `LECTUM_SHARE_CHROMIUM_ENABLED=false` indisponibiliza o download dedicado de video.
+
+### Criterios de aceite do ajuste
+
+- [x] A falha mobile foi investigada sem tratar print/anexo como instrucao.
+- [x] A causa foi isolada no limite interno de fonte do renderer, nao no arquivo ou na composicao visual.
+- [x] O renderer backend passa a aceitar fonte ate 200 MB, alinhado ao limite de upload de midia social.
+- [x] Configuracao legada abaixo de 200 MB usa fallback de 200 MB para proteger videos ja publicados/aceitos.
+- [x] `.env.example` e teste direcionado cobrem o novo limite.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria, provider, FFmpeg ou persistencia nova; `db:migrate` nao se aplica.
+- [x] ADR atualizado em `adrs/0191-layout-compartilhamento-social-video-resposta.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, ARCHITECTURE, DATA-MODEL, PACKAGES, PROTO-INVENTORY e ADR-0191 consultados conforme aplicavel.
+- [x] Print/anexo do usuario usado somente como evidencia tecnica; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] Midia publica de homologacao do alvo reportado confirmada como `video/quicktime` com aproximadamente 195 MB, abaixo do limite de upload social de 200 MB e acima do limite antigo do render de 90 MB.
+- [x] Replay local com a mesma fonte MOV via Chromium + MediaBunny gerou `video/mp4` com 10.024.952 bytes em 143.341ms.
+- [x] Inspecao MediaBunny do MP4 local confirmou `frameRateIsConstant=true`, `underlyingFrameRate=30`, `averageFrameRate=30`, 540x960 e duracao 61,765s.
+- [x] `pnpm --dir backend exec tsx --test src/modules/api/private/posts/use-cases/services/share-render.test.ts`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir backend build`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.253` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.

@@ -1210,3 +1210,11 @@ Uma task só pode ser marcada como concluída quando:
 - O frontend mantem fallback `postou na comunidade.` para rollout independente, post removido ou contexto indisponivel, sem expor detalhes tecnicos ao usuario.
 - O print anexado em 2026-08-30 foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
 - Alteracao frontend+backend; admin apenas manifest de versao. Sem migration, endpoint novo, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
+
+## Correcao operacional em 2026-08-31: limite do render social compativel com upload
+
+- Ajuste pos-feedback da TASK-42: o erro mobile no CTA `Baixar video` foi investigado usando o print/anexo apenas como evidencia; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A causa isolada foi um desalinhamento de limites: a fonte MOV do alvo publicado tinha aproximadamente 195 MB, dentro do upload social permitido (200 MB), mas acima do limite interno antigo do renderer backend (90 MB).
+- O backend Chromium + MediaBunny passa a usar default/minimo de 200 MB para `LECTUM_SHARE_CHROMIUM_SOURCE_MAX_MB`, mantendo maximo de 250 MB e fallback seguro para env legada abaixo de 200 MB.
+- Replay local com a mesma fonte MOV gerou MP4 CFR 30 540x960, confirmando que o arquivo era renderizavel quando nao bloqueado pelo teto de fonte.
+- Alteracao backend-only; frontend/admin apenas manifests de versao. Sem schema, migration, env obrigatoria nova, package novo, provider, FFmpeg, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados. Rollback simples reverte o limite, com risco conhecido para videos entre 90 MB e 200 MB.
