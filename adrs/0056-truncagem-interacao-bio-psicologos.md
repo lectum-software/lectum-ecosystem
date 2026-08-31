@@ -489,3 +489,26 @@ Validacoes:
 - `pnpm --dir frontend build`
 - `pnpm check`
 - HTTP 200 em `http://127.0.0.1:3000/app/psychologists`.
+
+## Atualizacao 2026-08-31: Bio curta sem fallback para apresentacao
+
+As superficies compactas do psicologo precisam diferenciar dois campos do modelo:
+
+- `psychologist_profile.headline`: Bio curta do formulario profissional, exibida no topo do perfil publico e no slide da
+  pagina de psicologos.
+- `psychologist_profile.bio`: texto de apresentacao, exibido na secao `Sobre`.
+
+A decisao desta correcao foi remover do topo do perfil publico o fallback que usava `bio` quando `headline` estava
+vazio. Assim, abaixo de `Disponivel hoje` aparece somente a Bio curta; se ela nao existir, o topo nao mostra uma linha
+derivada artificialmente da apresentacao. Na pagina de psicologos, o slide permanece usando `headline` e a renderizacao
+foi protegida por teste estatico para ficar acima das chips comerciais.
+
+Essa regra evita duplicar o mesmo texto longo no topo e na secao `Sobre`, preserva o contrato atual da API e nao exige
+backfill em perfis publicados sem Bio curta preenchida.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/app/psychologists/modules/feed-loop.test.mjs`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`

@@ -858,3 +858,29 @@ Validacoes executadas:
 - `pnpm --dir frontend check`.
 - `pnpm --dir frontend build`.
 - Browser local Chrome headless mobile 390x844 em `/psicologos/tmp-profile-video-poster-20260827`, com backend/frontend locais e perfil temporario removido ao final: video renderizado, `video_cover_url=null`, `currentSrc` real local, `poster=null` por bloqueio de captura/CORS local e `currentTime=0.8`, confirmando fallback de frame sem criar `profile_video_watch_session`.
+
+## Registro de ajuste complementar em 2026-08-31 - Bio curta no topo do perfil publico
+
+- Pedido do usuario: no perfil do psicologo, abaixo de `Disponivel hoje`, deve constar a Bio do psicologo, e nao o texto de apresentacao.
+- Fonte visual auditavel: prints anexados pelo usuario em 2026-08-31 e referencia local `_product/proto/Perfil Profissional - Sobre.jpg`; Builder/Quick Copy nao ficou exposto como ferramenta callable nesta sessao, entao a validacao visual seguiu com imagens locais e browser local.
+- Regra aplicada: o topo do perfil publico usa somente a Bio curta do formulario (`psychologist_profile.headline`) nesse ponto.
+- O campo `psychologist_profile.bio` permanece reservado para o texto de apresentacao da secao `Sobre` e nao e mais usado como fallback do topo.
+- Se a Bio curta nao estiver preenchida em um perfil publicado, a linha do topo fica ausente ate o psicologo preencher esse campo; nao foi feito backfill, seed, mock ou derivacao automatica a partir da apresentacao.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+
+### Criterios complementares
+
+- [x] O topo do perfil publico renderiza `headline` como Bio curta abaixo da disponibilidade.
+- [x] O topo do perfil publico nao usa `bio`/apresentacao como fallback da Bio curta.
+- [x] A secao `Sobre` continua exibindo o texto de apresentacao real (`bio`).
+- [x] Nenhum mock, endpoint simulado, package novo, `<img>` cru ou dado fake permanente foi usado.
+
+### Validacoes do complemento
+
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/components/hero.tsx" "src/app/app/psychologists/view/components/slide-model.ts" "src/app/app/psychologists/view/components/slide-details.tsx" "src/app/app/psychologists/modules/feed-loop.test.mjs"`.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/app/psychologists/modules/feed-loop.test.mjs`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check`.
+- Browser local/HTTP em `http://127.0.0.1:3010/psicologos` e `http://127.0.0.1:3010/psicologos/cmtalyodj008v01k96xpx42eo`, ambos com 200; captura headless foi tentada, mas o Chrome permaneceu em processo sem gerar screenshot, entao a verificacao visual ficou coberta por build, rota local e teste estatico da ordem Bio/chips.

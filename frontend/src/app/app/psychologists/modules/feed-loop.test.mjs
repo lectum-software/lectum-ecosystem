@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   buildPsychologistsFeedSlides,
   clampPsychologistFeedSlideIndex,
@@ -8,6 +11,9 @@ import {
   getPsychologistsFeedLoopCycleCount,
   getPsychologistsFeedSlideCount,
 } from "./feed-loop.ts";
+
+const readSource = (...segments) =>
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), ...segments), "utf8");
 
 const psychologists = [
   { id: "psi-a", name: "Psicologa A" },
@@ -79,4 +85,29 @@ test("preserva listagens vazias ou com um unico psicologo sem duplicar DOM", () 
   assert.equal(getPsychologistsFeedSlideCount(1), 1);
   assert.equal(clampPsychologistFeedSlideIndex(10, 1), 0);
   assert.equal(buildPsychologistsFeedSlides([psychologists[0]]).length, 1);
+});
+
+test("perfil publico usa Bio curta sem cair na apresentacao", () => {
+  const heroSource = readSource("../../psychologist/[id]/components/hero.tsx");
+  const aboutSource = readSource("../../psychologist/[id]/components/about.tsx");
+
+  assert.match(heroSource, /const shortBio = profile\.headline\?\.trim\(\) \?\? "";/);
+  assert.doesNotMatch(heroSource, /profile\.headline\?\.trim\(\)\s*\|\|\s*profile\.bio/);
+  assert.doesNotMatch(heroSource, /shortBio\s*=.*profile\.bio/);
+  assert.match(aboutSource, /const bioText = profile\.bio\?\.trim\(\) \?\? "";/);
+});
+
+test("slide de psicologos exibe a Bio curta acima das chips comerciais", () => {
+  const slideModelSource = readSource("../view/components/slide-model.ts");
+  const slideDetailsSource = readSource("../view/components/slide-details.tsx");
+  const slideBioIndex = slideDetailsSource.indexOf('data-psychologist-slide-bio="headline"');
+  const benefitChipsIndex = slideDetailsSource.indexOf('aria-label="Benef');
+
+  assert.match(slideModelSource, /const slideBio = psychologist\.headline\?\.trim\(\) \?\? "";/);
+  assert.doesNotMatch(slideModelSource, /psychologist\.bio/);
+  assert.ok(slideBioIndex >= 0, "a Bio curta precisa ser renderizada no slide");
+  assert.ok(
+    benefitChipsIndex > slideBioIndex,
+    "as chips comerciais precisam ficar depois da Bio curta",
+  );
 });

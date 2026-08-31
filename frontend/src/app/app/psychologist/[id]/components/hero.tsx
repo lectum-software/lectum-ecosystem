@@ -122,7 +122,7 @@ export const ProfileHero = ({
   profile: DirectoryPsychologistProfile;
 }) => {
   const displayName = getPsychologistDisplayName(profile) || profile.name || "Profissional";
-  const headline = (profile.headline?.trim() || profile.bio?.trim() || "").trim();
+  const shortBio = profile.headline?.trim() ?? "";
   const benefitTags = buildBenefitTags(profile);
   const formattedCrp = formatCrpLabel(profile.crp);
   const experienceLabel =
@@ -236,8 +236,10 @@ export const ProfileHero = ({
             ) : null}
           </div>
 
-          {headline ? (
-            <ExpandableAboutText containerClassName="mt-0.5 max-w-2xl" text={headline} />
+          {shortBio ? (
+            <div data-profile-hero-short-bio="headline">
+              <ExpandableAboutText containerClassName="mt-0.5 max-w-2xl" text={shortBio} />
+            </div>
           ) : null}
 
           {experienceLabel ? (

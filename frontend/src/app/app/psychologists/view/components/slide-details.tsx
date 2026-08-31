@@ -158,6 +158,7 @@ export const PsychologistSlideDetails = ({
         {slideBio ? (
           <p
             className="pointer-events-auto mt-2 w-full whitespace-pre-line text-left text-primary-foreground/90"
+            data-psychologist-slide-bio="headline"
             onPointerDown={stopInteractionPropagation}
             ref={(node) => {
               if (isActiveSlide && slideBenefitChips.length === 0) {

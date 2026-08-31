@@ -49,7 +49,7 @@ export const buildPsychologistSlideView = ({
     (!isActiveSlide || slideShouldShowVideo) &&
     !slideUsesNativeVideoControls;
 
-  const slideBio = psychologist.headline?.trim() || "";
+  const slideBio = psychologist.headline?.trim() ?? "";
 
   const slideNameParts = splitNameForBadge(psychologist.name);
 

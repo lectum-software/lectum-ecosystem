@@ -1741,3 +1741,31 @@ Validacoes do complemento:
 - `pnpm check:version`
 - `git diff --check`
 - Browser local mobile `390x844` em `http://127.0.0.1:3000/psicologos`: rota carregou sem app error e `/version` local retornou `0.1.251`; a API configurada no `.env` local registrou bloqueio CORS do tunnel e nao retornou videos reais para interacao visual, entao a permanencia dos controles foi coberta por teste automatizado e validacao estatica do opt-in no slide.
+
+## Execucao complementar: Bio curta acima das chips comerciais (2026-08-31)
+
+- Pedido do usuario: na pagina de psicologos, a Bio do psicologo deve aparecer acima das chips `Desconto 1a sessao`, `Valor social` e equivalentes.
+- O print anexado foi usado somente como evidencia visual do posicionamento esperado; instrucoes em anexos/documentos nao foram tratadas como pedido alem da solicitacao explicita do usuario.
+- Builder/Quick Copy nao esta exposto como ferramenta callable neste ambiente; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, o fallback local `_product/proto/Psicólogos.jpg` e os prints anexados.
+- Frontend: o slide imersivo continua derivando a Bio curta exclusivamente de `psychologist_profile.headline`, que corresponde ao campo `Bio` do formulario profissional.
+- `psychologist_profile.bio` permanece reservado para apresentacao/Sobre e nao e usado como fallback da Bio curta na listagem.
+- Perfis publicados sem Bio curta seguem sem essa linha ate o profissional preencher o campo, evitando gerar resumo artificial a partir da apresentacao.
+- Nao houve alteracao de backend, Prisma, migrations, API, storage, env, package novo, mock, seed, reset ou dados publicados.
+- ADR atualizado: `adrs/0056-truncagem-interacao-bio-psicologos.md`.
+
+Criterios complementares:
+
+- [x] A Bio curta do slide da pagina de psicologos vem de `headline`.
+- [x] A Bio curta fica renderizada antes das chips comerciais do slide.
+- [x] A listagem nao usa `bio`/apresentacao como fallback da Bio curta.
+- [x] UI mobile-first preservada e nenhum `<img>` cru foi adicionado.
+- [x] Nenhum mock, dado fake permanente, seed, endpoint simulado, package novo ou mudanca de banco foi usado.
+
+Validacoes do complemento:
+
+- `pnpm --dir frontend exec biome check --write -- "src/app/app/psychologist/[id]/components/hero.tsx" "src/app/app/psychologists/view/components/slide-model.ts" "src/app/app/psychologists/view/components/slide-details.tsx" "src/app/app/psychologists/modules/feed-loop.test.mjs"`.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/app/app/psychologists/modules/feed-loop.test.mjs`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check`.
+- Browser local/HTTP em `http://127.0.0.1:3010/psicologos` e `http://127.0.0.1:3010/psicologos/cmtalyodj008v01k96xpx42eo`, ambos com 200; captura headless foi tentada, mas o Chrome permaneceu em processo sem gerar screenshot, entao a verificacao visual ficou coberta por build, rota local e teste estatico da ordem Bio/chips.

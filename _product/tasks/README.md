@@ -1225,3 +1225,13 @@ Uma task só pode ser marcada como concluída quando:
 - A copy aparece somente no destino dedicado `Baixar video`, onde o celular pode suspender a pagina/timers antes de o arquivo ficar pronto; o preparo de compartilhamento social permanece sem descricao extra.
 - O print/anexo do usuario foi usado apenas como evidencia do fluxo mobile; instrucoes em anexos/documentos nao foram tratadas como pedido.
 - Alteracao frontend-only, mobile-first; backend/admin apenas manifests de versao. Sem schema, migration, env obrigatoria, package novo, provider, FFmpeg, mock, seed, reset, persistencia nova ou limpeza de dados/buckets publicados. Rollback simples reverte a descricao.
+
+## Correcao visual em 2026-08-31: Bio curta no perfil e na pagina de psicologos
+
+- Ajuste pos-feedback das TASK-13/TASK-15: abaixo de `Disponivel hoje` no perfil publico do psicologo deve aparecer a Bio curta do formulario (`psychologist_profile.headline`), nao o texto de apresentacao.
+- Na pagina de psicologos, a Bio curta fica como conteudo textual acima das chips comerciais (`Desconto 1a sessao`, `Valor social`, `Aceita convenios`).
+- `psychologist_profile.bio` permanece reservado para a apresentacao da secao `Sobre`; se `headline` estiver vazio, a UI nao deriva uma Bio artificial a partir da apresentacao.
+- Os prints anexados pelo usuario foram usados apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, os fallbacks locais de prototipo e os prints anexados.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+- Validacoes: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm check:version`, teste estatico de ordem Bio/chips e HTTP local 200 em `/psicologos` e `/psicologos/cmtalyodj008v01k96xpx42eo`.
