@@ -291,6 +291,9 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
       >
         {selectedMediaItems.map((mediaItem, index) => {
           const isLandscapePreview = mediaItem.orientation === "landscape";
+          const videoPreviewImageSrc = mediaItem.type === "video" ? mediaItem.thumbnailUrl : null;
+          const shouldRenderImagePreview =
+            mediaItem.type === "image" || Boolean(videoPreviewImageSrc);
           const frameClassName = isLandscapePreview
             ? "h-20 w-32 sm:h-[5.5rem] sm:w-[9.75rem]"
             : mediaItem.orientation === "portrait"
@@ -305,9 +308,13 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
               )}
               key={mediaItem.id}
             >
-              {mediaItem.type === "image" ? (
+              {shouldRenderImagePreview ? (
                 <Image
-                  alt={`Miniatura da imagem anexada ${index + 1}`}
+                  alt={
+                    mediaItem.type === "video"
+                      ? `Miniatura do vídeo anexado ${index + 1}`
+                      : `Miniatura da imagem anexada ${index + 1}`
+                  }
                   className="object-cover"
                   fill
                   onLoad={(event) => {
@@ -320,7 +327,7 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
                     );
                   }}
                   sizes="160px"
-                  src={mediaItem.previewUrl}
+                  src={videoPreviewImageSrc ?? mediaItem.previewUrl}
                   unoptimized
                 />
               ) : (
@@ -342,6 +349,12 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
                   src={mediaItem.previewUrl}
                 />
               )}
+              {mediaItem.isPreparingPreview ? (
+                <span className="absolute inset-0 grid place-items-center bg-foreground/20 text-surface">
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span className="sr-only">Preparando miniatura do vídeo</span>
+                </span>
+              ) : null}
 
               <button
                 aria-label={`Remover mídia anexada ${index + 1}`}

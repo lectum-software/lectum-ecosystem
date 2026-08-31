@@ -507,3 +507,4 @@ Formato recomendado:
 - [ADR-0474 — Imagens Open Graph quadradas por entidade](0474-imagens-open-graph-quadradas-entidades.md)
 - [ADR-0475 — Background uniforme no perfil público](0475-background-uniforme-perfil-publico.md)
 - [ADR-0476 — Capas internas de videos sem arte social](0476-capas-internas-videos-sem-arte-social.md)
+- [ADR-0477 — Miniatura neutra de video anexado em novo post](0477-miniatura-neutra-video-anexado-novo-post.md)

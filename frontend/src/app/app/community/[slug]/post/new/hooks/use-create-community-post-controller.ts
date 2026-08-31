@@ -38,6 +38,7 @@ import {
   MAX_POST_CAROUSEL_IMAGES,
   moveContenteditableCaretToEnd,
   normalizeParam,
+  prepareSelectedVideoPreview,
   resolveCommunityOptions,
   resolveCreatePostCloseFallbackHref,
   resolveCreatePostDefaultSlug,
@@ -70,6 +71,7 @@ export const useCreateCommunityPostController = ({
   const closeTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastFocusedEditorIdRef = useRef("create-post-title");
+  const selectedMediaPreviewGenerationRef = useRef(0);
   const selectedMediaPreviewUrlsRef = useRef<string[]>([]);
   const titleAutoFocusCancelledRef = useRef(false);
 
@@ -276,18 +278,25 @@ export const useCreateCommunityPostController = ({
   }, []);
 
   const clearSelectedMedia = () => {
+    selectedMediaPreviewGenerationRef.current += 1;
     revokeSelectedMediaPreview();
     setSelectedMediaItems([]);
   };
 
   const removeSelectedMediaAt = (index: number) => {
+    selectedMediaPreviewGenerationRef.current += 1;
     setSelectedMediaItems((currentItems) => {
       const removedItem = currentItems[index];
       if (!removedItem) return currentItems;
 
-      URL.revokeObjectURL(removedItem.previewUrl);
+      const urlsToRevoke = [removedItem.previewUrl, removedItem.thumbnailUrl].filter(
+        (previewUrl): previewUrl is string => Boolean(previewUrl),
+      );
+      urlsToRevoke.forEach((previewUrl) => {
+        URL.revokeObjectURL(previewUrl);
+      });
       selectedMediaPreviewUrlsRef.current = selectedMediaPreviewUrlsRef.current.filter(
-        (previewUrl) => previewUrl !== removedItem.previewUrl,
+        (previewUrl) => !urlsToRevoke.includes(previewUrl),
       );
 
       return currentItems.filter((_, currentIndex) => currentIndex !== index);
@@ -482,16 +491,26 @@ export const useCreateCommunityPostController = ({
       }
 
       clearSelectedMedia();
+      const previewGeneration = selectedMediaPreviewGenerationRef.current + 1;
+      selectedMediaPreviewGenerationRef.current = previewGeneration;
       const previewUrl = URL.createObjectURL(videoFiles[0]);
+      const selectedVideoItem: SelectedPostMedia = {
+        file: videoFiles[0],
+        id: createSelectedMediaId(),
+        isPreparingPreview: true,
+        previewUrl,
+        thumbnailUrl: null,
+        type: "video",
+      };
       selectedMediaPreviewUrlsRef.current = [previewUrl];
-      setSelectedMediaItems([
-        {
-          file: videoFiles[0],
-          id: createSelectedMediaId(),
-          previewUrl,
-          type: "video",
-        },
-      ]);
+      setSelectedMediaItems([selectedVideoItem]);
+      prepareSelectedVideoPreview({
+        getCurrentPreviewGeneration: () => selectedMediaPreviewGenerationRef.current,
+        mediaItem: selectedVideoItem,
+        previewGeneration,
+        rememberPreviewUrl: (url) => selectedMediaPreviewUrlsRef.current.push(url),
+        setSelectedMediaItems,
+      });
       focusLastEditor();
       return;
     }

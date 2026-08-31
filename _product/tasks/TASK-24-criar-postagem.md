@@ -826,3 +826,39 @@ Validacoes finais deste complemento:
 - [x] `pnpm check:adrs`
 - [x] `pnpm check:tasks`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Complemento 2026-08-31 - miniatura de video anexado no novo post
+
+- Pedido do usuario: na midia anexada em novo post, exibir uma capa de miniatura em vez do card vazio observado no screenshot mobile de 2026-08-31.
+- Diagnostico: o fluxo de criacao gerava apenas `previewUrl` do arquivo e renderizava o proprio `<video>` sem poster; no mobile, antes da decodificacao do primeiro frame, a miniatura podia aparecer vazia.
+- Frontend: videos selecionados em `Criar Post` agora entram com `isPreparingPreview` e uma preparacao best effort que captura uma capa neutra via `createVideoPosterObjectUrl`, exibida com `next/image` quando pronta.
+- Frontend: enquanto a capa e preparada, a miniatura mostra um indicador acessivel; ao remover/trocar midia ou desmontar a tela, `objectURL`s de preview e de capa sao revogados.
+- Regra visual: a capa do novo post usa somente frame do proprio video, sem arte social, tag `Postado/Respondido na Lectum`, autoria ou moldura.
+- Fonte visual auditavel: screenshot anexado pelo usuario e prototipo local `_product/proto/Criar Nova Postagem - Psicologo.jpg`; Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Escopo: sem mudanca de backend, Prisma, migrations, endpoints, payloads, storage, envs, dados publicados ou packages.
+- ADR criado: `adrs/0477-miniatura-neutra-video-anexado-novo-post.md`.
+
+### Criterios de aceite do complemento
+
+- [x] Video anexado no novo post prepara uma miniatura propria antes do envio.
+- [x] A miniatura preparada nao usa arte social interna nem externa.
+- [x] O estado de preparacao e visivel/acessivel enquanto a captura best effort ocorre.
+- [x] URLs temporarias de preview/capa sao revogadas ao remover, trocar ou desmontar.
+- [x] Nenhum backend, endpoint, migration, env, provider ou package novo foi adicionado.
+- [x] Nenhum mock, dado fake permanente ou endpoint simulado foi usado.
+- [x] UI mobile-first; nenhum `<img>` cru foi usado.
+
+### Validacoes
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-social-preview.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build`
+- [x] `pnpm check`
+- [x] `git diff --check`
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.256`
+- [x] `pnpm check:version`
+- [x] Browser local/headless mobile em `http://127.0.0.1:3188/app/comunidades/feed/publicacao/nova`; sem cookie autenticado local, a rota redirecionou para login, entao nao foi usado mock para forcar sessao.
+- [x] Commit proprio criado e push em `homolog` executado.

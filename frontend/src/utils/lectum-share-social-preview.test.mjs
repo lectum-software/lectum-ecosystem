@@ -342,3 +342,37 @@ test("videos internos nao reaproveitam arte social como capa", () => {
     assert.doesNotMatch(source, /cardLabel: "Postado na Lectum"/);
   }
 });
+
+test("novo post prepara capa neutra para video anexado antes do envio", () => {
+  const createPostSupportSource = readFileSync(
+    new URL("../app/app/community/[slug]/post/new/modules/create-post-support.ts", import.meta.url),
+    "utf8",
+  );
+  const createPostControllerSource = readFileSync(
+    new URL(
+      "../app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const createPostViewSource = readFileSync(
+    new URL(
+      "../app/app/community/[slug]/post/new/views/create-community-post.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(createPostSupportSource, /isPreparingPreview\?: boolean;/);
+  assert.match(createPostSupportSource, /thumbnailUrl\?: string \| null;/);
+  assert.match(createPostSupportSource, /createVideoPosterObjectUrl/);
+  assert.match(createPostControllerSource, /prepareSelectedVideoPreview/);
+  assert.match(createPostControllerSource, /isPreparingPreview: true/);
+  assert.match(createPostControllerSource, /thumbnailUrl: null/);
+  assert.match(createPostSupportSource, /URL\.revokeObjectURL\(thumbnailUrl\)/);
+  assert.match(createPostControllerSource, /removedItem\.thumbnailUrl/);
+  assert.match(createPostViewSource, /const videoPreviewImageSrc =/);
+  assert.match(createPostViewSource, /const shouldRenderImagePreview =/);
+  assert.match(createPostViewSource, /src=\{videoPreviewImageSrc \?\? mediaItem\.previewUrl\}/);
+  assert.match(createPostViewSource, /Preparando miniatura do vídeo/);
+});

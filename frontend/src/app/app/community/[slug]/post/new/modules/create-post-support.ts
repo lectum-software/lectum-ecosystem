@@ -1,5 +1,6 @@
 import { getSafeApiErrorMessage } from "@/api/errors";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 import type { CreateCommunityPostForm } from "../use-form";
 
 export type ApiErrorData = {
@@ -160,9 +161,60 @@ export const MAX_POST_CAROUSEL_IMAGES = 10;
 export type SelectedPostMedia = {
   file: File;
   id: string;
+  isPreparingPreview?: boolean;
   orientation?: "landscape" | "portrait";
   previewUrl: string;
+  thumbnailUrl?: string | null;
   type: "image" | "video";
+};
+
+type SelectedVideoPreviewPreparationOptions = {
+  getCurrentPreviewGeneration: () => number;
+  mediaItem: SelectedPostMedia;
+  previewGeneration: number;
+  rememberPreviewUrl: (previewUrl: string) => void;
+  setSelectedMediaItems: (
+    updater: (currentItems: SelectedPostMedia[]) => SelectedPostMedia[],
+  ) => void;
+};
+
+export const prepareSelectedVideoPreview = ({
+  getCurrentPreviewGeneration,
+  mediaItem,
+  previewGeneration,
+  rememberPreviewUrl,
+  setSelectedMediaItems,
+}: SelectedVideoPreviewPreparationOptions) => {
+  void createVideoPosterObjectUrl(mediaItem.previewUrl)
+    .then((thumbnailUrl) => {
+      if (getCurrentPreviewGeneration() !== previewGeneration) {
+        if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+        return;
+      }
+
+      if (thumbnailUrl) {
+        rememberPreviewUrl(thumbnailUrl);
+      }
+
+      setSelectedMediaItems((currentItems) =>
+        currentItems.map((item) =>
+          item.id === mediaItem.id && item.previewUrl === mediaItem.previewUrl
+            ? { ...item, isPreparingPreview: false, thumbnailUrl }
+            : item,
+        ),
+      );
+    })
+    .catch(() => {
+      if (getCurrentPreviewGeneration() !== previewGeneration) return;
+
+      setSelectedMediaItems((currentItems) =>
+        currentItems.map((item) =>
+          item.id === mediaItem.id && item.previewUrl === mediaItem.previewUrl
+            ? { ...item, isPreparingPreview: false, thumbnailUrl: null }
+            : item,
+        ),
+      );
+    });
 };
 
 export const createSelectedMediaId = () =>
