@@ -239,8 +239,9 @@ export function ReplyMediaAttachmentControl({
   const currentType = normalizeMediaType(currentMedia?.mediaType);
   const currentSrc =
     currentMedia?.mediaUrl && currentType ? resolvePublicMediaUrl(currentMedia.mediaUrl) : null;
+  // Em video atual, evitar thumbnail_url persistido para nao reexibir moldura social antiga.
   const currentThumbnailSrc =
-    currentMedia?.thumbnailUrl && currentType
+    currentMedia?.thumbnailUrl && currentType === "image"
       ? resolvePublicMediaUrl(currentMedia.thumbnailUrl)
       : null;
   const currentOrientationProbeSrc = currentThumbnailSrc ?? currentSrc;

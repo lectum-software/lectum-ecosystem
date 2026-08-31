@@ -67,6 +67,12 @@ Decisao complementar: o `thumbnail_url` persistido para videos de posts e respos
 
 A extracao no navegador tambem deixa de capturar apenas `0.5s`: o utilitario tenta tempos diferentes do proprio arquivo e usa uma heuristica simples de luminosidade/contraste para pular frames provavelmente pretos. Se todos os candidatos forem escuros, preserva o melhor frame encontrado em vez de bloquear a publicacao. Videos antigos sem `thumbnail_url` continuam sem backfill automatico nesta mudanca; eles podem ganhar capa ao serem editados ou em uma task futura de backfill real.
 
+## Complemento 2026-08-31 - poster interno desacoplado da miniatura social
+
+Feedback de produto posterior mostrou que a arte `Postado/Respondido na Lectum` nao deve aparecer em videos dentro da Lectum, nem como foto de capa. A decisao de 2026-08-10, que reaproveitava `thumbnail_url` como poster inline, fica substituida para superficies internas: players e previews de edicao devem usar o proprio video para gerar/mostrar a capa.
+
+`thumbnail_url` permanece no contrato por compatibilidade e SEO externo, mas nao deve ser tratada como fonte visual confiavel para capa interna de video. A separacao operacional completa esta registrada em ADR-0476.
+
 ## Complemento 2026-08-22 - preview WhatsApp de link de video
 
 ### Contexto

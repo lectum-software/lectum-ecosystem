@@ -29,10 +29,7 @@ import {
 } from "@/utils/media-upload-error";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
-import {
-  createVideoThumbnailFile,
-  type LectumVideoThumbnailFrameOptions,
-} from "@/utils/video-thumbnail";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
@@ -563,24 +560,8 @@ export const useCreateCommunityPostController = ({
                   }),
                 )
               : [];
-          const thumbnailFrame = isPsychologist
-            ? ({
-                cardLabel: "Postado na Lectum",
-                professional: {
-                  avatar: storedUser?.avatar ?? null,
-                  name: storedUser?.name || "Profissional Lectum",
-                  roleLabel: "Psicólogo",
-                  verified: Boolean(
-                    storedUser?.psychologist_profile?.cfp_verified_at ||
-                      storedUser?.psychologist_profile?.crp_status === "aprovado",
-                  ),
-                },
-                sourceText: values.title,
-              } satisfies LectumVideoThumbnailFrameOptions)
-            : null;
           const thumbnailFile = selectedVideo
             ? await createVideoThumbnailFile(selectedVideo.file, {
-                lectumShareFrame: thumbnailFrame,
                 signal: operation?.signal,
               })
             : null;

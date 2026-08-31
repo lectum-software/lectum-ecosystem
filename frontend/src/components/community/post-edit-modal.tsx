@@ -22,7 +22,6 @@ import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
 import { scheduleLectumSharePostArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
-import { normalizeLectumShareProfessionalRole } from "@/utils/lectum-share-target";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
 import { isUploadPreparationCanceled, resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
@@ -30,10 +29,7 @@ import {
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
-import {
-  createVideoThumbnailFile,
-  type LectumVideoThumbnailFrameOptions,
-} from "@/utils/video-thumbnail";
+import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import { PostEditMediaPreview } from "./post-edit-media-preview";
 import { PostEditAnonymousControls, PostEditMediaButton } from "./post-edit-modal-controls";
 import {
@@ -395,22 +391,8 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                   }),
                 )
               : [];
-          const thumbnailFrame =
-            selectedVideo && post.author.role === "psicologo"
-              ? ({
-                  cardLabel: "Postado na Lectum",
-                  professional: {
-                    avatar: post.author.avatar,
-                    name: post.author.name,
-                    roleLabel: normalizeLectumShareProfessionalRole(post.author.type_label),
-                    verified: post.author.verified,
-                  },
-                  sourceText: values.title,
-                } satisfies LectumVideoThumbnailFrameOptions)
-              : null;
           const thumbnailFile = selectedVideo
             ? await createVideoThumbnailFile(selectedVideo.file, {
-                lectumShareFrame: thumbnailFrame,
                 signal: operation?.signal,
               })
             : null;

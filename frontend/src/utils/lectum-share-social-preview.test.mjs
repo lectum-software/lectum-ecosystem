@@ -290,3 +290,55 @@ test("meus posts permite baixar video profissional com arte sem alterar comparti
   assert.match(shareDialogHookSource, /shareDestinationDialog: null/);
   assert.match(shareDialogHookSource, /toLectumLinkOnlyTarget/);
 });
+
+test("videos internos nao reaproveitam arte social como capa", () => {
+  const videoThumbnailSource = readFileSync(
+    new URL("./video-thumbnail.ts", import.meta.url),
+    "utf8",
+  );
+  const communityMediaFrameSource = readFileSync(
+    new URL("../components/community/community-media-frame.tsx", import.meta.url),
+    "utf8",
+  );
+  const postEditSupportSource = readFileSync(
+    new URL("../components/community/post-edit-modal-support.ts", import.meta.url),
+    "utf8",
+  );
+  const replyMediaAttachmentSource = readFileSync(
+    new URL("../components/community/reply-media-attachment-control.tsx", import.meta.url),
+    "utf8",
+  );
+  const createPostControllerSource = readFileSync(
+    new URL(
+      "../app/app/community/[slug]/post/new/hooks/use-create-community-post-controller.ts",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const postEditSource = readFileSync(
+    new URL("../components/community/post-edit-modal.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(videoThumbnailSource, /lectumShareFrame/);
+  assert.doesNotMatch(videoThumbnailSource, /LectumVideoThumbnailFrameOptions/);
+  assert.doesNotMatch(videoThumbnailSource, /createLectumShareFrameImageFile/);
+  assert.match(
+    communityMediaFrameSource,
+    /const fallbackPosterKey = normalizedMediaType === "video" \? resolvedUrl : null;/,
+  );
+  assert.match(communityMediaFrameSource, /const resolvedPosterUrl = fallbackPosterUrl;/);
+  assert.doesNotMatch(communityMediaFrameSource, /shouldUseStoredVideoThumbnail/);
+  assert.doesNotMatch(communityMediaFrameSource, /resolvedThumbnailUrl/);
+  assert.match(postEditSupportSource, /imagePreviewSrc: mediaItem\.type === "image"/);
+  assert.match(
+    replyMediaAttachmentSource,
+    /currentMedia\?\.thumbnailUrl && currentType === "image"/,
+  );
+
+  for (const source of [createPostControllerSource, postEditSource]) {
+    assert.doesNotMatch(source, /lectumShareFrame/);
+    assert.doesNotMatch(source, /LectumVideoThumbnailFrameOptions/);
+    assert.doesNotMatch(source, /cardLabel: "Postado na Lectum"/);
+  }
+});

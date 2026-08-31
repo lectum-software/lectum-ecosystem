@@ -258,22 +258,18 @@ export const CommunityMediaBlock = ({
   overlayAction,
   roundedClassName = "rounded-[22px]",
   sizes,
-  thumbnailUrl,
   variant = "post",
   videoClassName,
   viewportClassName,
 }: CommunityMediaBlockProps) => {
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
-  const shouldUseStoredVideoThumbnail = normalizedMediaType === "video" && variant !== "reply";
-  const resolvedThumbnailUrl =
-    shouldUseStoredVideoThumbnail && thumbnailUrl ? resolvePublicMediaUrl(thumbnailUrl) : null;
-  const fallbackPosterKey =
-    normalizedMediaType === "video" && !resolvedThumbnailUrl ? resolvedUrl : null;
+  // Players internos nao usam thumbnail_url: registros antigos podem conter a arte social exportavel.
+  const fallbackPosterKey = normalizedMediaType === "video" ? resolvedUrl : null;
   const [fallbackPoster, setFallbackPoster] = useState<{ key: string; url: string } | null>(null);
   const fallbackPosterUrl =
     fallbackPoster && fallbackPoster.key === fallbackPosterKey ? fallbackPoster.url : null;
-  const resolvedPosterUrl = resolvedThumbnailUrl ?? fallbackPosterUrl;
+  const resolvedPosterUrl = fallbackPosterUrl;
   const handleVideoElementReady = useContentVideoWatchTracking(
     normalizedMediaType === "video" && analyticsTarget
       ? {

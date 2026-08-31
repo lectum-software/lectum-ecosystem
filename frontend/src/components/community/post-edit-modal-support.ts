@@ -74,16 +74,18 @@ export const resolveEditableMediaPreviewUrls = (mediaItem: EditablePostMediaPrev
     mediaItem.source === "stored"
       ? (resolvePublicMediaUrl(mediaItem.src) ?? mediaItem.src)
       : mediaItem.src;
-  const thumbnailSrc = mediaItem.thumbnailUrl
-    ? mediaItem.source === "stored"
-      ? (resolvePublicMediaUrl(mediaItem.thumbnailUrl) ?? mediaItem.thumbnailUrl)
-      : mediaItem.thumbnailUrl
-    : null;
+  // Videos editados usam a propria midia no preview, nunca thumbnail_url com moldura social.
+  const thumbnailSrc =
+    mediaItem.type === "image" && mediaItem.thumbnailUrl
+      ? mediaItem.source === "stored"
+        ? (resolvePublicMediaUrl(mediaItem.thumbnailUrl) ?? mediaItem.thumbnailUrl)
+        : mediaItem.thumbnailUrl
+      : null;
 
   return {
-    imagePreviewSrc: mediaItem.type === "video" ? thumbnailSrc : mediaSrc,
+    imagePreviewSrc: mediaItem.type === "image" ? (thumbnailSrc ?? mediaSrc) : null,
     mediaSrc,
-    shouldRenderImagePreview: mediaItem.type === "image" || Boolean(thumbnailSrc),
+    shouldRenderImagePreview: mediaItem.type === "image",
   };
 };
 

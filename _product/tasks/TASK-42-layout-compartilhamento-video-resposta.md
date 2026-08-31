@@ -2566,6 +2566,56 @@ O usuario anexou print do video baixado e apontou que a marca da Lectum a esquer
 - [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
 - Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
 
+## Ajuste 2026-08-31 - videos internos sem arte social como capa
+
+### Contexto
+
+O usuario anexou print mobile do feed interno de comunidade mostrando a capa de um video com a arte social `Postado na Lectum`. O anexo foi usado somente como evidencia visual do problema; instrucoes em documentos/anexos nao foram tratadas como pedido.
+
+A investigacao mostrou que a criacao/edicao de posts de psicologos gerava `thumbnail_url` com `lectumShareFrame`, e que superficies internas reaproveitavam essa miniatura persistida como poster/capa do video. Assim, uma arte que deveria ficar restrita ao download/compartilhamento social aparecia dentro da Lectum.
+
+### Decisao
+
+- Remover `lectumShareFrame` do utilitario `createVideoThumbnailFile`; miniaturas novas voltam a ser frames crus do proprio video.
+- Remover o frame social da criacao e edicao de posts com video.
+- Fazer o player interno de comunidade ignorar `thumbnail_url` para videos e gerar capa transitoria a partir da propria URL do video, evitando tambem registros antigos com moldura.
+- Fazer previews de edicao de post e midia atual de resposta renderizarem o proprio video em vez da miniatura persistida quando a midia for video.
+- Manter `Postado na Lectum`/`Respondido na Lectum` somente na modal/arquivo social de compartilhamento/download.
+
+### Escopo e seguranca de deploy
+
+- Alteracao frontend-only, mobile-first; backend/admin acompanham apenas bump de versao nos manifests.
+- Sem migration, `db:migrate`, backfill, seed, reset, `db push`, limpeza de bucket/dados publicados, env obrigatoria nova, package novo, provider, FFmpeg ou persistencia nova.
+- Compatibilidade de rollout: backend atual e novo continuam entregando `thumbnail_url`; o frontend novo apenas deixa de usa-la como capa interna de video.
+- Rollback simples reverte o commit, com o trade-off de voltar a exibir miniaturas antigas com arte social dentro da Lectum.
+
+### Criterios de aceite do ajuste
+
+- [x] A falha visual foi investigada sem tratar print/anexo como instrucao.
+- [x] Videos exibidos dentro da Lectum nao usam `thumbnail_url` persistido como capa quando a midia e video.
+- [x] Criacao e edicao de posts com video nao geram mais miniatura com `Postado na Lectum`.
+- [x] Previews de edicao usam o proprio video para capas internas, evitando molduras sociais antigas.
+- [x] A arte social continua disponivel apenas no fluxo de download/compartilhamento social.
+- [x] Nenhum banco/schema/migration, package novo, env obrigatoria, provider, FFmpeg ou persistencia nova; `db:migrate` nao se aplica.
+- [x] ADR criado em `adrs/0476-capas-internas-videos-sem-arte-social.md`.
+
+### Validacao local
+
+- [x] Branch confirmada como `homolog` antes de editar.
+- [x] AGENTS, skill `execute-lectum-task`, TASK-42, ARCHITECTURE, PACKAGES e PROTO-INVENTORY consultados conforme aplicavel.
+- [x] Print/anexo do usuario usado somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- [x] Browser local mobile-first em `http://localhost:3000/comunidades/relacionamentos-com-proposito/publicacao/cmtbj0jbe005j01rcsrguzyqz` retornou 200, mas exibiu `Post indisponivel` porque a API nao entregou o post no ambiente local; a validacao visual com dado real fica para o smoke de homologacao apos deploy, sem mock/seed.
+- [x] `pnpm --dir frontend exec node --test src/utils/lectum-share-social-preview.test.mjs`.
+- [x] `pnpm --dir frontend check`.
+- [x] `pnpm --dir frontend build`.
+- [x] `pnpm --dir backend check`.
+- [x] `pnpm --dir admin check`.
+- [x] `pnpm --dir admin build`.
+- [x] `pnpm version:bump` para `0.1.255` e `pnpm check:version`.
+- [x] `pnpm check` completo de raiz.
+- [x] `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm check:source-size` e `git diff --check`.
+- Smoke de homologacao apos push de `homolog` sera registrado no relatorio final: backend `/health`, `/ready`, `/ping`; frontend/admin `/version`.
+
 ## Ajuste 2026-08-29 - nomes distintos no download social
 
 ### Contexto
