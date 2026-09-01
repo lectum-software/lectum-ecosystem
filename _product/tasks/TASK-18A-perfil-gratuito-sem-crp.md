@@ -859,3 +859,30 @@ Validacoes executadas:
 - `pnpm check`
 - Smoke local em `http://127.0.0.1:3168`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.215"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao, preservando a protecao da rota privada.
 - O comportamento autenticado de perfil oculto foi validado por teste unitario do redirecionamento; validacao browser autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.
+
+## Ajuste complementar em 2026-08-31 - exclusao fora da edicao profissional
+
+- Pedido do usuario: remover `Excluir minha conta` de dentro da edicao do perfil, mantendo a acao apenas em `E-mail e senha`.
+- A tela profissional `/app/profissional/perfil/configurar` (alias `/app/professional/profile/setup`) deixa de renderizar `AccountDeleteSection` abaixo de `Salvar alteracoes`.
+- O fluxo destrutivo real de exclusao de conta permanece inalterado em `/app/configuracoes/conta`, preservando reautenticacao Google, senha atual para contas locais e bloqueio por assinatura quando aplicavel.
+- A referencia visual foi o print anexado pelo usuario com o rodape da edicao profissional; Builder/Quick Copy nao esta exposto como ferramenta callable, entao o inventario e o prototipo local `_product/proto/Editar Perfil - Psicologo.jpg` foram usados como fallback auditavel.
+- Alteracao frontend-only, mobile-first; sem backend, schema, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+- ADR atualizado: `adrs/0075-exclusao-conta-psicologo-assinatura.md`.
+
+Criterios complementares:
+
+- [x] `/app/profissional/perfil/configurar` nao renderiza mais `AccountDeleteSection` nem o CTA `Excluir minha conta`.
+- [x] `/app/configuracoes/conta` continua sendo o unico local da acao de exclusao de conta.
+- [x] Nenhum fluxo destrutivo, endpoint, contrato ou dado persistido foi alterado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/profile/edit/logic.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx src/utils/session-policy.test.mjs`
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm check`
+- Browser local sem sessao em `http://127.0.0.1:3259`: `/version` respondeu 200 com `0.1.259`; `/app/profissional/perfil/configurar`, `/app/perfil/editar` e `/app/configuracoes/conta` responderam 307 para autenticacao, e `/app/profile/edit` respondeu 308 para o alias canonico, preservando a protecao. Validacao autenticada ficou limitada por nao haver sessao real sem criar mock.
+- `pnpm version:bump` (`0.1.258` -> `0.1.259`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.259`.

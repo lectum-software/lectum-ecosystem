@@ -276,3 +276,18 @@ Critérios complementares:
 
 - [x] A descrição do campo `Estado` exibe `Informe para aproximarmos psicólogos da sua região.`.
 - [x] A copy antiga `Opcional. Use para aproximarmos psicólogos da sua região.` não permanece no formulário de edição do paciente.
+
+## Ajuste complementar em 2026-08-31 - exclusao fora da edicao do perfil pessoal
+
+- Pedido do usuario: manter a opcao `Excluir minha conta` somente em `E-mail e senha`, removendo-a da edicao do perfil.
+- A tela pessoal `/app/perfil/editar` (alias `/app/profile/edit`) deixa de renderizar `AccountDeleteSection`, reforcando a decisao original da TASK-21 de separar dados pessoais de e-mail/senha/exclusao.
+- A exclusao continua disponivel em `/app/configuracoes/conta` para pacientes e psicologos, sem alterar endpoints, modal, reautenticacao ou regras de seguranca.
+- Referencias consultadas: `_product/proto/Editar Perfil - Paciente.jpg`, `_product/proto/Editar E-mail e Senha.jpg`, inventario ativo e print anexado pelo usuario apenas como evidencia visual. Builder/Quick Copy nao esta callable neste ambiente.
+- Alteracao frontend-only, mobile-first; sem backend, schema, migration, endpoint, env, package, provider, mock, seed, reset ou dados publicados.
+- ADR atualizado: `adrs/0031-perfil-privado-paciente.md`.
+
+Criterios complementares:
+
+- [x] `/app/perfil/editar` nao renderiza `AccountDeleteSection` nem o CTA `Excluir minha conta`.
+- [x] A acao de exclusao permanece em `/app/configuracoes/conta`.
+- [x] A edicao de perfil pessoal continua separada de configuracoes sensiveis de conta.

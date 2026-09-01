@@ -13,7 +13,6 @@ import type {
   PatientProfileAvatarRemoval,
   PatientProfileAvatarUpload,
 } from "@/api/generator/types";
-import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { components } from "@/components/controllers";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -321,7 +320,6 @@ export const ProfileEditLogic = () => {
             </Button>
           </form>
         ) : null}
-        {!profile.isLoading && !profile.isPending ? <AccountDeleteSection /> : null}
       </section>
     </PrivateTemplate>
   );

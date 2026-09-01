@@ -25,3 +25,14 @@ O checkout/gateway pago ainda pertence às tasks de pagamento futuras, mas o mod
 - Perfil público, dados sensíveis do perfil profissional e sessões são desativados em uma transação única.
 - O fluxo fica compatível com a futura TASK-33: quando houver cancelamento real no gateway, a exclusão poderá prosseguir após a assinatura deixar de ser bloqueante.
 - Não houve alteração de schema nem instalação de packages.
+
+## Ajuste em 2026-08-31 - local da acao destrutiva
+
+A decisao visual de 2026-06-13 de expor o botao de exclusao no perfil do psicologo foi revisada por produto. A regra de dominio e backend permanece a mesma, mas a UI passa a expor `AccountDeleteSection` somente na tela de seguranca da conta (`/app/configuracoes/conta`, alias `/app/settings/account`).
+
+Consequencias:
+
+- A edicao profissional (`/app/profissional/perfil/configurar`) deixa de misturar alteracoes de perfil com a acao destrutiva de conta.
+- O fluxo de exclusao do psicologo continua protegido por confirmacao forte, reautenticacao/senha e bloqueio de assinatura quando aplicavel.
+- O retorno de reautenticacao Google permanece em `/app/configuracoes/conta?deleteReauth=ok`, evitando interceptacao por onboarding ou edicao de perfil.
+- Sem mudanca de schema, endpoint, provider, env ou package.

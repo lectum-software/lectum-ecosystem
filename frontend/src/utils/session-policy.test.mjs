@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -11,6 +11,9 @@ import {
 } from "../components/analytics/location-capture-policy.ts";
 
 const sourceRoot = new URL("../", import.meta.url);
+
+const readFrontendSource = (relativePath) =>
+  readFileSync(new URL(relativePath, sourceRoot), "utf8");
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -424,6 +427,18 @@ test("mantém retorno ao modal de exclusão Google mesmo quando onboarding do ps
     resolveAuthRedirect(user, null, "/app/configuracoes/conta?deleteReauth=ok"),
     "/app/profissional/assinatura/planos",
   );
+});
+
+test("mantem exclusao de conta somente em Email e senha", () => {
+  const accountSettingsSource = readFrontendSource("app/app/settings/account/logic.tsx");
+  const patientProfileEditSource = readFrontendSource("app/app/profile/edit/logic.tsx");
+  const professionalProfileEditSource = readFrontendSource(
+    "app/app/professional/profile/setup/views/professional-profile-setup.tsx",
+  );
+
+  assert.match(accountSettingsSource, /AccountDeleteSection/);
+  assert.doesNotMatch(patientProfileEditSource, /AccountDeleteSection|account-delete-section/);
+  assert.doesNotMatch(professionalProfileEditSource, /AccountDeleteSection|account-delete-section/);
 });
 
 test("marca retorno autenticado para criar post e consome fechamento para home", async () => {

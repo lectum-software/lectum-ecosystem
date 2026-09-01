@@ -477,3 +477,16 @@ Esta task deve ser concluída em um commit próprio. Se houver bloqueio externo,
   chamada destrutiva.
 - [x] Checks backend/frontend, build relevante, versionamento, commit, push e smoke de homologacao
   sao registrados sem excluir conta real.
+
+## Ajuste complementar em 2026-08-31 - exclusao centralizada em E-mail e senha
+
+- Pedido do usuario: remover `Excluir minha conta` das telas de edicao de perfil e manter a acao somente em `E-mail e senha`.
+- A rota `/app/configuracoes/conta` (alias `/app/settings/account`) continua renderizando `AccountDeleteSection` como unico ponto de entrada da exclusao self-service.
+- As telas `/app/profissional/perfil/configurar` e `/app/perfil/editar` deixam de importar/renderizar a secao destrutiva, evitando duplicidade e misturas entre perfil e seguranca de conta.
+- Nenhuma regra do backend foi alterada: continuam valendo confirmacao `EXCLUIR`, senha atual quando aplicavel, reautenticacao Google e bloqueio de assinatura do psicologo.
+
+Criterios complementares:
+
+- [x] `AccountDeleteSection` permanece em `frontend/src/app/app/settings/account/logic.tsx`.
+- [x] `AccountDeleteSection` nao aparece nas telas de edicao de perfil pessoal/profissional.
+- [x] O teste de politica cobre a centralizacao da exclusao em `E-mail e senha`.

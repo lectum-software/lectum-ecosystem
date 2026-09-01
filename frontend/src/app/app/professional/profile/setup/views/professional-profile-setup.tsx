@@ -19,7 +19,6 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { AccountDeleteSection } from "@/components/account/account-delete-section";
 import { ActionableCoachMark } from "@/components/onboarding/actionable-coach-mark";
 import { AppPageHeader } from "@/components/ui/app-page-header";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -671,7 +670,6 @@ export const ProfessionalProfileSetupLogic = () => {
                 Salvar alterações
               </Button>
             </div>
-            <AccountDeleteSection />
           </Form>
         ) : null}
       </section>

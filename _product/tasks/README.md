@@ -1235,3 +1235,12 @@ Uma task só pode ser marcada como concluída quando:
 - Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, os fallbacks locais de prototipo e os prints anexados.
 - Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
 - Validacoes: `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm check:version`, teste estatico de ordem Bio/chips e HTTP local 200 em `/psicologos` e `/psicologos/cmtalyodj008v01k96xpx42eo`.
+
+## Correcao visual em 2026-08-31: exclusao de conta centralizada em E-mail e senha
+
+- Ajuste pos-feedback das TASK-18A/TASK-21/TASK-30: o CTA destrutivo `Excluir minha conta` saiu das edicoes de perfil (`/app/profissional/perfil/configurar`, alias `/app/professional/profile/setup`, `/app/perfil/editar` e alias `/app/profile/edit`) para que edicao de dados pessoais/profissionais nao misture exclusao de conta.
+- A exclusao permanece somente em `E-mail e senha` (`/app/configuracoes/conta` e alias `/app/settings/account`), usando o `AccountDeleteSection` existente e o fluxo seguro real de reautenticacao Google/senha atual.
+- O print anexado pelo usuario foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, os fallbacks locais de prototipo de editar perfil e a rota real de `E-mail e senha`.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
+- Validacoes: `pnpm --dir frontend exec biome check --write ...`, `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local sem sessao em `/version`, `/app/profissional/perfil/configurar`, `/app/perfil/editar` e `/app/configuracoes/conta`, `pnpm version:bump`, `pnpm check:version` e rebuild frontend pos-bump.
