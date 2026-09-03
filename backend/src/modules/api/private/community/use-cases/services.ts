@@ -1,5 +1,7 @@
 import { error, msg } from "@/helpers/translate";
+import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { notifyNewCommunityPost } from "@/main/notification/domain-events";
+import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
 import { canAttachCommunityMedia } from "@/utils/community-media-entitlement";
 import { type ModerationResult, moderatePatientText } from "@/utils/content-moderation";
 import {
@@ -347,7 +349,18 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
     nextMediaType = "image";
     nextThumbnailUrl = undefined;
   } else if (hasLegacyMedia) {
-    if (!mediaUrl || !mediaType || !isPublicPostMediaUrl(mediaUrl)) {
+    const streamVideoReference =
+      mediaUrl && mediaType === "video" && isVideoAssetPlaybackReference(mediaUrl)
+        ? await resolveReadyOwnedVideoAssetReference({
+            contextId: data.p.slug,
+            ownerId: data.auth.id!,
+            purpose: "community_post",
+            reference: mediaUrl,
+          })
+        : null;
+    const streamVideoReady = Boolean(streamVideoReference);
+
+    if (!mediaUrl || !mediaType || (!isPublicPostMediaUrl(mediaUrl) && !streamVideoReady)) {
       return invalidPostMedia();
     }
 
@@ -357,7 +370,8 @@ export const createPost = async (data: ICommunityCreatePostDTO) => {
 
     normalizedMediaItems =
       mediaType === "image" ? [{ mediaType: "image", mediaUrl, position: 0 }] : [];
-    nextThumbnailUrl = mediaType === "video" ? thumbnailUrl : undefined;
+    nextMediaUrl = streamVideoReference || mediaUrl;
+    nextThumbnailUrl = mediaType === "video" && !streamVideoReady ? thumbnailUrl : undefined;
   } else if (thumbnailUrl) {
     return invalidPostMedia();
   }

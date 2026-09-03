@@ -1,5 +1,8 @@
+import type { UseFormReturn } from "react-hook-form";
 import { getSafeApiErrorMessage } from "@/api/errors";
+import type { CommunityPostMediaUploadResponse } from "@/api/generator/types/community";
 import { COMMUNITY_FEED_SLUG, DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
+import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 import type { CreateCommunityPostForm } from "../use-form";
 
@@ -21,6 +24,46 @@ export type CreatePostErrorResolution = {
 
 export type UseCreateCommunityPostControllerOptions = {
   onCloseComplete?: () => void;
+};
+
+export const classifyUploadedCommunityMedia = (
+  uploadedMedia: CommunityPostMediaUploadResponse[],
+) => {
+  const video = uploadedMedia.find((media) => media.media_type === "video");
+  const streamVideoReference = isVideoAssetReference(video?.media_url)
+    ? video?.media_url || null
+    : null;
+  const imageItems = uploadedMedia
+    .filter((media) => media.media_type === "image")
+    .map((media, position) => ({
+      mediaType: "image" as const,
+      mediaUrl: media.media_url,
+      position,
+    }));
+
+  return { imageItems, streamVideoReference };
+};
+
+export const scheduleCorrectedCreatePostErrorClear = ({
+  clearErrors,
+  communityValues,
+  getValues,
+}: {
+  clearErrors: UseFormReturn<CreateCommunityPostForm>["clearErrors"];
+  communityValues: readonly string[];
+  getValues: UseFormReturn<CreateCommunityPostForm>["getValues"];
+}) => {
+  window.setTimeout(() => {
+    const values = getValues();
+    const validCommunity = communityValues.includes(values.community_slug);
+    const validTitle = String(values.title ?? "").trim().length >= 3;
+    const validContent = String(values.content ?? "").trim().length >= 10;
+
+    if (validCommunity) clearErrors("community_slug");
+    if (validTitle) clearErrors("title");
+    if (validContent) clearErrors("content");
+    if (validCommunity && validTitle && validContent) clearErrors();
+  }, 0);
 };
 
 export const moveContenteditableCaretToEnd = (element: HTMLElement) => {

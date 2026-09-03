@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 import { useAdminPatientReports } from "@/api/callers/patients";
 import { resolveApiError } from "@/api/handle";
 import type { AdminPatientReportItem, AdminPatientReportsQuery } from "@/api/req/patients";
+import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
@@ -177,7 +178,7 @@ export const PatientReportMedia = ({ report }: { report: AdminPatientReportItem 
         />
       ) : null}
       {videoSrc ? (
-        <video
+        <AdminStreamVideo
           aria-label={mediaLabel}
           className="h-full w-full bg-media-background object-cover"
           controls

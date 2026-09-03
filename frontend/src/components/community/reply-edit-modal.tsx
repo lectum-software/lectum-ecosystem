@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useUpdatePostReply, useUploadPostReplyMedia } from "@/api/callers/posts";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { PostReply, UserPostReply } from "@/api/generator/types/posts";
+import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import {
   createReplyVideoThumbnail,
@@ -30,6 +31,7 @@ import {
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
+import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 
 const replyEditSchema = z.object({
@@ -252,6 +254,8 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
       return;
     }
 
+    let stagedStreamVideoReference: string | null = null;
+
     try {
       const { uploadedMedia, uploadedThumbnail } = await (async () => {
         const operation = selectedMedia?.type === "video" ? beginVideoUpload() : null;
@@ -265,8 +269,13 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
                 signal: operation?.signal,
               })
             : null;
+          stagedStreamVideoReference = isVideoAssetReference(uploadedMedia?.media_url)
+            ? uploadedMedia?.media_url || null
+            : null;
           const thumbnailFile =
-            selectedMedia && uploadedMedia?.media_type === "video"
+            selectedMedia &&
+            uploadedMedia?.media_type === "video" &&
+            !isVideoAssetReference(uploadedMedia.media_url)
               ? await createVideoThumbnailFile(selectedMedia.file, {
                   signal: operation?.signal,
                 })
@@ -287,7 +296,6 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
           operation?.complete();
         }
       })();
-
       await updateMutation.mutateAsync({
         body: {
           content: values.content.trim(),
@@ -310,7 +318,9 @@ export function ReplyEditModal({ onClose, onUpdated, open, postId, reply }: Repl
         postId,
         replyId: reply.id,
       });
+      stagedStreamVideoReference = null;
     } catch {
+      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
       // Feedback fica nas mutations para preservar o texto e a mídia escolhida.
     }
   });

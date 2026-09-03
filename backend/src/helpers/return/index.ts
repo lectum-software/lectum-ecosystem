@@ -8,6 +8,7 @@ import { applyUserAuthCookie } from "@/utils/user-auth-cookie";
 
 export type Resolve = {
   allowAuthTokens?: boolean;
+  allowSignedMediaUrls?: boolean;
   status?: number;
   success: boolean;
   data?: unknown;
@@ -23,6 +24,7 @@ export const send = (res: Response, resolve: Resolve) => {
   const cookieAwareResolve = applyUserAuthCookie(res.req, res, resolve);
   const {
     allowAuthTokens = false,
+    allowSignedMediaUrls = false,
     entity: _entity,
     type: _type,
     ...publicResolve
@@ -30,7 +32,10 @@ export const send = (res: Response, resolve: Resolve) => {
   const sanitizedResolve = {
     ...publicResolve,
     data: sanitizePublicResponseData(
-      sanitizeSensitiveData(cookieAwareResolve.data, { removeAuthTokens: !allowAuthTokens }),
+      sanitizeSensitiveData(cookieAwareResolve.data, {
+        allowSignedMediaUrls,
+        removeAuthTokens: !allowAuthTokens,
+      }),
     ),
   };
 

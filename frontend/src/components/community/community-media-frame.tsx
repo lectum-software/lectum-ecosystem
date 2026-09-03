@@ -9,6 +9,7 @@ import {
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
+import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 
 export type CommunityMediaFrameVariant = "post" | "detail" | "reply";
@@ -264,8 +265,9 @@ export const CommunityMediaBlock = ({
 }: CommunityMediaBlockProps) => {
   const normalizedMediaType = normalizeCommunityMediaType(mediaType);
   const resolvedUrl = mediaUrl ? resolvePublicMediaUrl(mediaUrl) : null;
+  const isStreamVideo = normalizedMediaType === "video" && isVideoAssetReference(mediaUrl);
   // Players internos nao usam thumbnail_url: registros antigos podem conter a arte social exportavel.
-  const fallbackPosterKey = normalizedMediaType === "video" ? resolvedUrl : null;
+  const fallbackPosterKey = normalizedMediaType === "video" && !isStreamVideo ? resolvedUrl : null;
   const [fallbackPoster, setFallbackPoster] = useState<{ key: string; url: string } | null>(null);
   const fallbackPosterUrl =
     fallbackPoster && fallbackPoster.key === fallbackPosterKey ? fallbackPoster.url : null;
@@ -318,7 +320,7 @@ export const CommunityMediaBlock = ({
   }, [fallbackPosterKey]);
 
   useEffect(() => {
-    if (!resolvedUrl || !normalizedMediaType) {
+    if (!resolvedUrl || !normalizedMediaType || isStreamVideo) {
       return;
     }
 
@@ -339,11 +341,12 @@ export const CommunityMediaBlock = ({
     return () => {
       isMounted = false;
     };
-  }, [normalizedMediaType, resolvedUrl]);
+  }, [isStreamVideo, normalizedMediaType, resolvedUrl]);
 
   if (!mediaUrl || !resolvedUrl || !normalizedMediaType) return null;
 
-  const shouldForceReplyVideoAspectRatio = normalizedMediaType === "video" && variant === "reply";
+  const shouldForceReplyVideoAspectRatio =
+    normalizedMediaType === "video" && (variant === "reply" || isStreamVideo);
   const orientation = shouldForceReplyVideoAspectRatio
     ? "portrait"
     : detectedMedia?.src === resolvedUrl && detectedMedia.type === normalizedMediaType

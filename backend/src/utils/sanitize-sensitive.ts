@@ -1,4 +1,5 @@
 type SanitizeOptions = {
+  allowSignedMediaUrls?: boolean;
   removeAuthTokens?: boolean;
   removePii?: boolean;
 };
@@ -115,6 +116,22 @@ const PII_VALUE_PATTERNS = [
 const containsPattern = (value: string, patterns: readonly RegExp[]) =>
   patterns.some((pattern) => pattern.test(value));
 
+const SIGNED_MEDIA_URL_KEYS = new Set(["hlsurl", "thumbnailurl"]);
+const SIGNED_CLOUDFLARE_STREAM_URL =
+  /^https:\/\/customer-[a-zA-Z0-9_-]{1,128}\.cloudflarestream\.com\/eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\/(?:manifest\/video\.m3u8|thumbnails\/thumbnail\.jpg)(?:\?[^\s#]*)?$/;
+
+const isAllowedSignedMediaUrl = (
+  key: string | undefined,
+  value: string,
+  options: SanitizeOptions,
+) =>
+  Boolean(
+    options.allowSignedMediaUrls &&
+      key &&
+      SIGNED_MEDIA_URL_KEYS.has(normalizeSensitiveKey(key)) &&
+      SIGNED_CLOUDFLARE_STREAM_URL.test(value),
+  );
+
 const shouldRemoveKey = (key: string, value: unknown, options: SanitizeOptions) => {
   const normalizedKey = normalizeSensitiveKey(key);
 
@@ -146,12 +163,16 @@ const shouldRemoveKey = (key: string, value: unknown, options: SanitizeOptions) 
 export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOptions = {}): T => {
   const stack = new WeakSet<object>();
 
-  const visit = (entry: unknown): unknown => {
+  const visit = (entry: unknown, key?: string): unknown => {
     if (entry === null || entry === undefined) return entry;
     if (entry instanceof Date || entry instanceof Buffer) return entry;
 
     if (typeof entry === "string") {
-      if (options.removeAuthTokens && containsPattern(entry, AUTH_TOKEN_VALUE_PATTERNS)) {
+      if (
+        options.removeAuthTokens &&
+        containsPattern(entry, AUTH_TOKEN_VALUE_PATTERNS) &&
+        !isAllowedSignedMediaUrl(key, entry, options)
+      ) {
         return "[REDACTED]";
       }
       if (options.removePii && containsPattern(entry, PII_VALUE_PATTERNS)) return "[REDACTED]";
@@ -163,12 +184,12 @@ export const sanitizeSensitiveData = <T = unknown>(value: T, options: SanitizeOp
     stack.add(entry);
 
     try {
-      if (Array.isArray(entry)) return entry.map(visit);
+      if (Array.isArray(entry)) return entry.map((item) => visit(item));
 
       const sanitized: Record<string, unknown> = {};
       for (const [key, entryValue] of Object.entries(entry)) {
         if (shouldRemoveKey(key, entryValue, options)) continue;
-        sanitized[key] = visit(entryValue);
+        sanitized[key] = visit(entryValue, key);
       }
 
       return sanitized;

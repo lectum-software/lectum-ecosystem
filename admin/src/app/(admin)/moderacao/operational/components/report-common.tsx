@@ -15,6 +15,7 @@ import type {
   AdminModerationSeverity,
 } from "@/api/req/moderation";
 import { VerifiedBadgeIcon } from "@/components/admin-icons";
+import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { moderationSeverityLabel } from "@/lib/moderation-copy";
 
@@ -229,16 +230,15 @@ export const ModerationReportMedia = ({ report }: { report: ModerationReport }) 
       ) : null}
       {videoSrc ? (
         <>
-          <video
+          <AdminStreamVideo
             aria-label={mediaLabel}
             className="h-full w-full object-cover"
             controls
             muted
             playsInline
             preload="metadata"
-          >
-            <source src={videoSrc} type={mediaType.startsWith("video") ? mediaType : undefined} />
-          </video>
+            src={videoSrc}
+          />
           <div className="pointer-events-none absolute inset-0 grid place-items-center">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-foreground/70 text-background shadow-admin-soft">
               <Play aria-hidden className="h-5 w-5 fill-current" />

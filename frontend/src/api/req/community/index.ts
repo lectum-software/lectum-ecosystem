@@ -32,6 +32,8 @@ import {
   MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS,
   throwIfMediaUploadCanceled,
 } from "@/utils/upload-lifecycle";
+import { uploadVideoAsset } from "@/utils/video-asset-upload";
+import { isCloudflareStreamUploadEnabled } from "@/utils/video-stream";
 
 const COMMUNITY_POST_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
 const COMMUNITY_POST_MEDIA_ALLOWED_MIME_TYPES = new Set([
@@ -343,6 +345,21 @@ export const uploadCommunityPostMedia = async (
   onProgress?: (percentage: number) => void,
   signal?: AbortSignal,
 ) => {
+  const { file: uploadFile, mimeType } = withCommunityPostMediaFileType(file);
+  if (isCloudflareStreamUploadEnabled() && mimeType.startsWith("video/")) {
+    const uploaded = await uploadVideoAsset({
+      contextId: slug,
+      file: uploadFile,
+      onProgress,
+      purpose: "community_post",
+      signal,
+    });
+    return {
+      media_type: "video" as const,
+      media_url: uploaded.media_url,
+    };
+  }
+
   if (file.size <= COMMUNITY_POST_MEDIA_MULTIPART_THRESHOLD_BYTES) {
     return uploadCommunityPostMediaSingle(slug, file, onProgress, signal);
   }

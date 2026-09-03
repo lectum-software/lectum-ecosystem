@@ -18,6 +18,7 @@ declare global {
       device: string;
       bucket: string;
       file_names: Record<string, string>;
+      rawBody?: Buffer;
     }
 
     namespace Multer {

@@ -77,6 +77,9 @@ const keys = {
     root: () => ["psychologist_analytics"],
     show: (filters?: unknown) => ["psychologist_analytics", filters],
   },
+  videoAssets: {
+    playback: (assetId?: string | null) => ["video_asset_playback", assetId ?? "none"],
+  },
   psychologistReviews: {
     root: () => ["psychologist_reviews"],
     list: (filters?: unknown) => ["psychologist_reviews", filters],

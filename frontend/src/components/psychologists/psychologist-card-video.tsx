@@ -1,7 +1,8 @@
 "use client";
 
-import { Pause, Play, VolumeX } from "lucide-react";
+import { LoaderCircle, Pause, Play, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAttachVideoSource, useVideoPlaybackSource } from "@/hooks/video-stream";
 import { playVideoWithSound } from "@/lib/video-playback";
 
 import {
@@ -21,8 +22,14 @@ export const CardVideo = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
   const [focused, setFocused] = useState(false);
+  const playback = useVideoPlaybackSource(url, poster, focused);
+  const adaptivePlaybackFailed = useAttachVideoSource({
+    adaptive: playback.isStream,
+    source: playback.source,
+    videoRef,
+  });
+  const [playing, setPlaying] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(globalSoundEnabled);
   const [controlMode, setControlMode] = useState<"hidden" | "media">(
     globalSoundEnabled ? "hidden" : "media",
@@ -94,7 +101,14 @@ export const CardVideo = ({
 
   const handleVideoPosterExtraction = () => {
     const currentVideo = videoRef.current;
-    if (!currentVideo || videoPoster || posterExtractionStarted.current) return;
+    if (
+      !currentVideo ||
+      playback.isStream ||
+      playback.poster ||
+      videoPoster ||
+      posterExtractionStarted.current
+    )
+      return;
     if (
       currentVideo.readyState < 1 ||
       !Number.isFinite(currentVideo.duration) ||
@@ -224,16 +238,33 @@ export const CardVideo = ({
         loop
         muted
         crossOrigin="anonymous"
+        onCanPlay={() => {
+          const currentVideo = videoRef.current;
+          if (!focused || !currentVideo) return;
+          void currentVideo.play().catch(() => setPlaying(false));
+        }}
         onLoadedMetadata={handleVideoPosterExtraction}
-        poster={videoPoster || poster || undefined}
+        poster={playback.poster || videoPoster || undefined}
         onPause={onPause}
         onPlay={onPlay}
         onEnded={onEnded}
         playsInline
         preload="metadata"
         ref={videoRef}
-        src={url}
+        src={playback.isStream ? undefined : playback.source}
       />
+
+      {playback.isLoading ? (
+        <div className="pointer-events-none absolute inset-0 z-[4] grid place-items-center bg-media-background/45 text-media-foreground">
+          <LoaderCircle aria-label="Preparando vídeo" className="h-5 w-5 animate-spin" />
+        </div>
+      ) : null}
+
+      {playback.error || adaptivePlaybackFailed ? (
+        <div className="absolute inset-0 z-[4] grid place-items-center bg-media-background/65 px-6 text-center text-sm text-media-foreground">
+          Vídeo indisponível no momento.
+        </div>
+      ) : null}
 
       {focused && showPlaybackControls && (
         <div className="absolute left-1/2 top-[46%] z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-4">

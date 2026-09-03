@@ -1,3 +1,6 @@
+import prisma from "@/infra/database/prisma";
+import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
+import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
 import type { IPostUpdateDTO, IPostUpdateReplyDTO } from "../../DTOs/IPostDTO";
 import { PostRepository } from "../../repositories/PostRepository";
 
@@ -52,6 +55,29 @@ export const updatePost = async (data: IPostUpdateDTO) => {
       Boolean(mediaUrl) &&
       Boolean(mediaType) &&
       isPublicPostMediaUrl(mediaUrl);
+    let replacingWithStreamVideo = false;
+    let streamVideoReference: string | null = null;
+
+    if (
+      typeof mediaUrl === "string" &&
+      mediaType === "video" &&
+      isVideoAssetPlaybackReference(mediaUrl)
+    ) {
+      const post = await prisma.community_post.findFirst({
+        where: { author_id: data.auth.id!, deleted: false, id: data.p.id },
+        select: { community: { select: { slug: true } } },
+      });
+      streamVideoReference = post
+        ? await resolveReadyOwnedVideoAssetReference({
+            contextId: post.community.slug,
+            ownerId: data.auth.id!,
+            purpose: "community_post",
+            reference: mediaUrl,
+          })
+        : null;
+      replacingWithStreamVideo = Boolean(streamVideoReference);
+      replacingMedia = replacingWithStreamVideo;
+    }
 
     if (hasMediaItems) {
       const invalidItems = requestedMediaItems.some(
@@ -84,9 +110,10 @@ export const updatePost = async (data: IPostUpdateDTO) => {
     } else if (replacingMedia) {
       if (thumbnailUrl && !isPublicPostMediaUrl(thumbnailUrl)) return invalidPostMedia();
 
-      body.mediaUrl = mediaUrl as string;
+      body.mediaUrl = streamVideoReference || (mediaUrl as string);
       body.mediaType = mediaType as "image" | "video";
-      body.thumbnailUrl = mediaType === "video" ? (thumbnailUrl ?? null) : null;
+      body.thumbnailUrl =
+        mediaType === "video" && !replacingWithStreamVideo ? (thumbnailUrl ?? null) : null;
       body.mediaItems =
         mediaType === "image"
           ? [{ mediaType: "image", mediaUrl: mediaUrl as string, position: 0 }]
@@ -134,11 +161,28 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
     const mediaType = data.b.mediaType === null ? null : normalizePostMediaType(data.b.mediaType);
     const thumbnailUrl = data.b.thumbnailUrl === null ? null : data.b.thumbnailUrl?.trim();
     const clearingMedia = mediaUrl === null && mediaType === null;
-    const replacingMedia =
+    let replacingMedia =
       typeof mediaUrl === "string" &&
       Boolean(mediaUrl) &&
       Boolean(mediaType) &&
       isPublicPostMediaUrl(mediaUrl);
+    let replacingWithStreamVideo = false;
+    let streamVideoReference: string | null = null;
+
+    if (
+      typeof mediaUrl === "string" &&
+      mediaType === "video" &&
+      isVideoAssetPlaybackReference(mediaUrl)
+    ) {
+      streamVideoReference = await resolveReadyOwnedVideoAssetReference({
+        contextId: data.p.id,
+        ownerId: data.auth.id!,
+        purpose: "community_reply",
+        reference: mediaUrl,
+      });
+      replacingWithStreamVideo = Boolean(streamVideoReference);
+      replacingMedia = replacingWithStreamVideo;
+    }
 
     if (thumbnailUrl && !isPublicPostMediaUrl(thumbnailUrl)) return invalidMedia();
     if (!clearingMedia && !replacingMedia && !hasOwnBodyKey(data.b, "thumbnailUrl")) {
@@ -156,12 +200,14 @@ export const updateReply = async (data: IPostUpdateReplyDTO) => {
       body.thumbnailUrl = null;
     } else {
       if (replacingMedia) {
-        body.mediaUrl = mediaUrl as string;
+        body.mediaUrl = streamVideoReference || (mediaUrl as string);
         body.mediaType = mediaType as "image" | "video";
       }
       body.thumbnailUrl = replacingMedia
         ? mediaType === "video"
-          ? (thumbnailUrl ?? null)
+          ? replacingWithStreamVideo
+            ? null
+            : (thumbnailUrl ?? null)
           : null
         : thumbnailUrl;
     }

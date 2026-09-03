@@ -232,6 +232,16 @@ fluxo.
 | `published` | `Boolean @default(false)` | só `true` aparece na busca (PRD §7: apenas ativos/verificados) |
 | `@@index([user_id])`, `@@index([published, deleted])` | | |
 
+Complemento TASK-163: novos vídeos de apresentação usam `psychologist_profile.video_url` somente
+como referência estável `/api/private/video-assets/:id/playback` para um `video_asset` pronto do
+mesmo proprietário e com `purpose="profile_presentation"`. `video_cover_url` permanece `null` nesse
+caminho porque a miniatura assinada é derivada no momento do playback. Apenas o upload de perfil
+mais recente pode substituir a referência atual depois de ficar pronto; um upload ainda em
+processamento ou com erro não remove o vídeo funcional anterior. URLs R2 legadas continuam válidas
+durante o rollout. Ao concluir a troca, os outros `video_assets` de apresentação daquele dono são
+aposentados logicamente na mesma transação; a exclusão física no Stream e a remoção da mídia R2
+substituída são best effort posteriores ao commit.
+
 Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `crp_status="aprovado"` ou `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
 
 Complemento TASK-66 (2026-07-11): na etapa `/api/private/psychologist/cfp/search`, um CPF válido informado pelo psicólogo é persistido em `psychologist_profile.cpf` antes da chamada externa, mesmo quando a API automática falha, fica indisponível ou retorna erro operacional. Essa persistência não aprova o registro, não preenche `cfp_verified_at`, não altera CRP/data e não sobrescreve identidades já bloqueadas por aprovação profissional ou cortesia administrativa ativa; serve para a triagem do Admin na aba Perfil e cadastro. Tentativas históricas com CPF em `professional_registry_check` podem ser usadas como fallback de exibição no Admin sem copiar dados retroativamente.
@@ -580,6 +590,46 @@ Backfill canônico TASK-52 para comunidades existentes: `Respeito e empatia`, `S
 
 Complemento TASK-149 (2026-08-10): o usuário final continua apenas enviando `community_suggestion`; blocos são entidade interna do Admin para análise de demanda e não publicam comunidade automaticamente. Mover/arquivar sugestões e criar/atualizar blocos deve registrar auditoria em `admin_activity_log` com snapshots seguros.
 
+`video_asset` / `video_assets` (TASK-163, plano de controle do Cloudflare Stream):
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `owner_id` | `String` | dono autenticado; relação `user.video_assets`, cascade apenas em exclusão física de usuário |
+| `provider` | `String @default("cloudflare_stream")` | provider técnico fechado da V1; não expor em DTO público |
+| `provider_uid` | `String @unique` | UID privado no banco/backend; nunca é referência de domínio nem prova de autorização |
+| `purpose` | `String` | `"profile_presentation" \| "community_post" \| "community_reply"` |
+| `context_id` | `String?` | perfil para apresentação, slug da comunidade antes de criar post, ou ID do post para resposta |
+| `status` | `String @default("uploading")` | `"uploading" \| "processing" \| "ready" \| "error" \| "canceled"` |
+| `mime_type` / `size_bytes` | `String` / `BigInt` | declaração autorizada antes de provisionar TUS; tamanho também vai em `Upload-Length` |
+| `duration_seconds` | `Float?` | duração derivada do provider após processamento |
+| `width` / `height` | `Int?` | dimensões derivadas do provider após processamento |
+| `upload_expires_at` | `DateTime` | expiração RFC3339 enviada ao provisionamento TUS e usada para fechar upload abandonado |
+| `last_provider_sync_at` / `ready_at` | `DateTime?` | reconciliação limitada e momento em que o ativo ficou reproduzível |
+| `error_code` | `String?` | classificação interna controlada; mensagem crua do provider não é persistida/exposta |
+| `last_webhook_at` / `last_webhook_digest` | `DateTime?` / `String?` | idempotência do webhook autenticado, sem armazenar assinatura ou corpo bruto |
+| `deleted` / `deleted_at` | `Boolean` / `DateTime?` | cancelamento/aposentadoria lógica; exclusão no provider é best effort |
+| `@@index([owner_id, purpose, deleted, createdAt])` | | histórico e limitação de provisionamentos por dono/finalidade |
+| `@@index([status, deleted, updatedAt])` | | reconciliação/limpeza futura de estados |
+| `@@index([context_id, purpose, deleted])` | | validação de associação ao contexto autorizado |
+
+Contratos derivados:
+
+- O banco não armazena URL TUS nem token de playback. Campos de conteúdo guardam a referência
+  estável `/api/private/video-assets/:id/playback`; o `:id` é Lectum, não `provider_uid`.
+- O JWT de playback Cloudflare é assinado e não criptografado; o UID pode ser observado ao
+  decodificar o `sub`. Ele não é segredo e não concede acesso sem assinatura válida. Não devolver o
+  UID como campo separado nem usá-lo como autorização.
+- Ativo de perfil é associado automaticamente apenas quando o upload mais recente daquele dono
+  chega a `ready`. Post/resposta só aceitam ativo `ready`, do mesmo autor, finalidade e contexto.
+- Antes da chamada externa, uma linha transitória reserva atomicamente a cota do dono (três uploads
+  abertos e vinte criações por hora). O UID definitivo substitui a referência de reserva antes que a
+  URL TUS seja devolvida; reservas falhas são canceladas logicamente.
+- Dono pode assistir ao próprio ativo pronto. Terceiros autenticados somente quando a referência
+  estiver em perfil publicado/ativo ou conteúdo publicado de comunidade ativa; Admin usa endpoint
+  autenticado separado. Usuário anônimo não recebe token.
+- Vídeos R2 anteriores e seus campos nullable continuam válidos. Não há backfill, cópia, reset ou
+  remoção de objeto no rollout da TASK-163.
+
 `community_member` (seguir/participar, TASK-25; PRD "Comunidades seguidas"):
 
 | Campo | Tipo | Notas |
@@ -617,6 +667,11 @@ Complemento 2026-06-22: posts de comunidade passam a suportar carrossel de image
 - `community_post.media_url`/`media_type` permanecem como compatibilidade e refletem a primeira midia ativa; `thumbnail_url` acompanha videos; os DTOs passam a retornar tambem `media_items` ordenado por `position` com `thumbnail_url`.
 - Edicao de post substitui o conjunto anterior do carrossel com soft delete dos itens antigos; remocao usa `mediaItems:null` e/ou `mediaUrl:null`/`mediaType:null`.
 
+Complemento TASK-163: imagens e carrosséis continuam no R2. Quando a flag Stream estiver ativa,
+vídeo único usa upload TUS direto e `community_post.media_url` recebe a referência interna de um
+`video_asset` pronto, do autor e do contexto da comunidade; `thumbnail_url=null`, pois a capa
+assinada é derivada no playback. O backend continua aceitando as URLs R2 legadas durante o rollout.
+
 Complemento 2026-06-21: na comunidade, `author.verified` para psicologos considera `cfp_verified_at` preenchido **ou** cortesia administrativa ativa (`professional_subscription.source="admin_grant"` com entitlement profissional ativo). A URL derivada `author.whatsapp_url` deve ser exposta para posts e respostas de qualquer psicologo com WhatsApp publico cadastrado, inclusive no plano gratuito, sem depender de selo ou assinatura profissional. `highlighted_professional_reply` e flags como `has_verified_professional_reply` passam a tratar cortesia administrativa ativa como equivalencia publica de psicologo verificado.
 
 Complemento 2026-07-26: posts raiz de pacientes classificados como `block` ou `safety_hold` pela moderacao textual deterministica passam a ser persistidos como `community_post.status="bloqueado"` para auditoria e detalhe protegido no Admin. Esses registros nao entram nos endpoints publicos/privados de feed/detalhe, nao geram notificacao de nova postagem e nao devem receber interacoes publicas. Respostas/comentarios bloqueados continuam snapshot-only em `content_moderation_event` ate existir status proprio em `post_reply`.
@@ -652,6 +707,12 @@ Contratos da tela interna do post (TASK-26):
 - `POST /api/private/posts/:id/share` e `POST /api/private/posts/:id/replies/:replyId/share` persistem compartilhamentos aceitos via `post_share` apos sucesso de `navigator.share` ou clipboard no frontend. A rota usa `optionalAuth`, aceita `{ channel?: "clipboard"|"web_share", replyId? }`, deduplica por 1 hora por usuario/dispositivo e nao notifica o proprio autor. Na TASK-42, video-respostas profissionais continuam usando essa mesma rota de reply share apos Web Share API ou fallback de link; clicar em `Redes sociais` antes da conclusao da folha nativa nao grava contagem. A Web Share API nao expoe qual app foi escolhido dentro da folha do celular, entao nao ha rastreamento confiavel de clique especifico no Instagram.
 - Complemento TASK-42 (2026-08-22/2026-08-23): `GET /api/private/posts/:id/share-artifact`, `POST /api/private/posts/:id/share-artifact`, `GET /api/private/posts/:id/replies/:replyId/share-artifact` e `POST /api/private/posts/:id/replies/:replyId/share-artifact` controlam cache temporario do arquivo social com arte. A leitura reaproveita arte ja preparada; o upload exige usuario autenticado e aceita somente arquivo de video gerado no fluxo real de publicacao/compartilhamento. O cache e aquecido em background apos publicacao/edicao de post com video profissional ou criacao bem-sucedida de resposta profissional com video e continua podendo ser criado sob demanda quando faltar no primeiro share. Novos artefatos expiram em 7 dias; leituras `GET` nao renovam o prazo, e apenas `post_share.shared=true` renova por mais 7 dias.
 - `POST /api/private/posts/:id/report` e `POST /api/private/posts/:id/replies/:replyId/report` registram denuncia reativa com motivo e descricao opcional, sem remocao automatica do conteudo; o alvo fica normalizado em `post_report.target_type`/`target_id` para triagem/admin futuro.
+
+Complemento TASK-163: novos vídeos de resposta podem usar referência interna de `video_asset`
+`ready`, pertencente ao autor, com `purpose="community_reply"` e `context_id` igual ao post. A capa
+é emitida de forma assinada no playback e não é persistida em `thumbnail_url`; objetos R2 antigos
+seguem aceitos. Remover o conteúdo e remover o ativo são operações separadas para não apagar um
+vídeo ainda associado por engano.
 
 Complemento 2026-07-01: autoações autenticadas do autor sobre o próprio `community_post` ou
 `post_reply` (comentar no próprio post/comentário, upvote ativo, salvamento ou compartilhamento do

@@ -7,6 +7,7 @@ import {
   useAdminPsychologistStatistics,
 } from "@/api/callers/psychologists";
 import type { AdminPsychologistDetail } from "@/api/req/psychologists";
+import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { CardShell, IconCircle } from "../../components/shared";
 import { GENERAL_TAB_STATISTICS_QUERY } from "../../support/config";
@@ -126,9 +127,8 @@ export const VideoCard = ({ detail }: { detail: AdminPsychologistDetail }) => {
       </div>
 
       {videoSrc ? (
-        <div className="mt-5 max-w-[260px] overflow-hidden rounded-[1.6rem] border border-border bg-media-background">
-          {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para o vídeo do perfil. */}
-          <video
+        <div className="relative mt-5 max-w-[260px] overflow-hidden rounded-[1.6rem] border border-border bg-media-background">
+          <AdminStreamVideo
             aria-label={`Vídeo de apresentação de ${detail.header.name}`}
             className="aspect-[9/16] w-full bg-media-background object-cover"
             controls

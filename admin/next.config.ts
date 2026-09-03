@@ -93,6 +93,7 @@ const getConnectCspSources = () => {
 };
 
 const configuredAssetSources = Array.from(assetCspSources).join(" ");
+const cloudflareStreamCspSource = "https://*.cloudflarestream.com";
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -102,9 +103,9 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  `img-src 'self' data: blob: ${configuredAssetSources}`,
-  `media-src 'self' blob: ${configuredAssetSources}`,
-  `connect-src 'self' ${getConnectCspSources().join(" ")}`,
+  `img-src 'self' data: blob: ${configuredAssetSources} ${cloudflareStreamCspSource}`,
+  `media-src 'self' blob: ${configuredAssetSources} ${cloudflareStreamCspSource}`,
+  `connect-src 'self' ${getConnectCspSources().join(" ")} ${cloudflareStreamCspSource}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
 ].join("; ");

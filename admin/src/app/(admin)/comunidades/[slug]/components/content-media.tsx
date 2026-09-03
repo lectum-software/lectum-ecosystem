@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import type { AdminCommunityContentItem } from "@/api/req/communities";
+import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { cn } from "@/lib/utils";
 
@@ -111,7 +112,7 @@ export const ContentVideoMiniplayer = ({ label, src }: { label: string; src: str
 
   return (
     <div className="relative h-full w-full bg-media-background">
-      <video
+      <AdminStreamVideo
         aria-label={label}
         className="admin-community-video-player h-full w-full object-cover"
         controls
@@ -165,7 +166,7 @@ export const ContentVideoMiniplayer = ({ label, src }: { label: string; src: str
           >
             <X aria-hidden className="h-5 w-5" />
           </button>
-          <video
+          <AdminStreamVideo
             aria-label={`${label} ampliado`}
             className="admin-community-video-expanded object-cover"
             controls

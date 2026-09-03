@@ -27,6 +27,8 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 | `tailwindcss` | `^4` | `4.3.0` | Estilo |
 | `@tailwindcss/postcss` | `^4` | `4.3.0` | PostCSS |
 | `@tanstack/react-query` | `^5.101.0` | `5.101.0` | Server state |
+| `tus-js-client` | `^4.3.1` | `4.3.1` | Upload resumível direto ao Cloudflare Stream, sem transportar vídeo pelo Next/Express (TASK-163) |
+| `hls.js` | `1.7.2` | `1.7.2` | Reprodução HLS adaptativa no frontend e admin em browsers MSE; Safari usa HLS nativo (TASK-163) |
 | `axios` | `^1.19.0` | `1.19.0` | HTTP client |
 | `react-hook-form` | `^7.77.0` | `7.77.0` | Formulários |
 | `@hookform/resolvers` | `^5.4.0` | `5.4.0` | Zod resolver |
@@ -197,9 +199,10 @@ não recebe credenciais no bundle.
 | Backend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `twilio > axios > form-data`. |
 | Backend | `hono@4.12.34`, `@hono/node-server@2.0.5` | Corrige advisories transitivos do tooling Prisma. |
 | Backend | `deepmerge-ts@8.0.0` | Corrige CVE-2026-40345 em `prisma > @prisma/config`; o CLI/config foi revalidado sem alterar banco. |
-| Backend | `axios@1.19.0`, `body-parser@2.3.0`, `brace-expansion@5.0.9`, `fast-uri@3.1.5`, `nanoid@5.1.16`, `socket.io-parser@4.2.7`, `valibot@1.4.2` | Patches transitivos fixados após auditoria. |
-| Admin | `form-data@4.0.6`, `brace-expansion@5.0.9`, `postcss@8.5.26`, `sharp@0.35.3`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
-| Raiz | `fast-uri@3.1.5`, `js-yaml@4.3.1` | Correções transitivas das ferramentas de commit/hook. |
+| Frontend | `browserslist@4.28.7`, `fast-uri@3.1.6` | Corrige advisories transitivos do pipeline Sentry/Babel/webpack. |
+| Backend | `axios@1.19.0`, `body-parser@2.3.0`, `brace-expansion@5.0.9`, `fast-uri@3.1.6`, `mysql2@3.23.1`, `nanoid@5.1.16`, `qs@6.16.0`, `socket.io-parser@4.2.7`, `valibot@1.4.2` | Patches transitivos fixados após auditoria; `mysql2` permanece apenas dependência transitiva do CLI Prisma, não datasource da aplicação. |
+| Admin | `form-data@4.0.6`, `brace-expansion@5.0.9`, `browserslist@4.28.7`, `fast-uri@3.1.6`, `postcss@8.5.26`, `sharp@0.35.3`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
+| Raiz | `fast-uri@3.1.6`, `js-yaml@4.3.1` | Correções transitivas das ferramentas de commit/hook. |
 
 Validação obrigatória após alteração de dependências de produção: `pnpm audit --prod`, `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`, `pnpm --dir admin audit --prod`, `pnpm check` e os três builds.
 

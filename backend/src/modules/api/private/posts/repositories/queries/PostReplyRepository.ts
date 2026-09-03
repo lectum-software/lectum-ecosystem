@@ -1,5 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
+import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
 import { ensureCommunityMembership } from "@/utils/community-membership";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
@@ -220,13 +222,24 @@ export class PostReplyRepository extends PostRepositoryContext {
     const mediaType = normalizeReplyMediaType(data.b.mediaType);
     const thumbnailUrl = data.b.thumbnailUrl?.trim() || null;
     const hasMedia = Boolean(mediaUrl || data.b.mediaType);
+    let streamVideoReference: string | null = null;
 
     if (!content && !hasMedia) {
       return { kind: "invalid_content" };
     }
 
     if (hasMedia) {
-      if (!mediaUrl || !mediaType || !isPublicReplyMediaUrl(mediaUrl)) {
+      streamVideoReference =
+        mediaUrl && mediaType === "video" && isVideoAssetPlaybackReference(mediaUrl)
+          ? await resolveReadyOwnedVideoAssetReference({
+              contextId: post.id,
+              ownerId: data.auth.id!,
+              purpose: "community_reply",
+              reference: mediaUrl,
+            })
+          : null;
+
+      if (!mediaUrl || !mediaType || (!isPublicReplyMediaUrl(mediaUrl) && !streamVideoReference)) {
         return { kind: "invalid_media" };
       }
 
@@ -269,8 +282,8 @@ export class PostReplyRepository extends PostRepositoryContext {
           parent_reply_id: data.b.parentReplyId || null,
           content,
           media_type: mediaType,
-          media_url: mediaUrl,
-          thumbnail_url: mediaType === "video" ? thumbnailUrl : null,
+          media_url: streamVideoReference || mediaUrl,
+          thumbnail_url: mediaType === "video" && !streamVideoReference ? thumbnailUrl : null,
         },
         select: replyBaseSelect,
       });

@@ -314,6 +314,12 @@ export const adminTrafficKeys = {
     [...adminTrafficKeys.all, "summary", normalizeRange(input)] as const,
 };
 
+export const adminVideoAssetsKeys = {
+  all: ["admin", "video-assets"] as const,
+  playback: (assetId: string | null) =>
+    [...adminVideoAssetsKeys.all, "playback", assetId ?? "none"] as const,
+};
+
 export const adminCommunitiesKeys = {
   all: ["admin", "communities"] as const,
   activities: (id: string, input: AdminCommunityActivitiesQuery) =>

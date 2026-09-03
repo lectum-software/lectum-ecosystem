@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useUploadCommunityPostMedia } from "@/api/callers/community";
 import { useUpdatePost } from "@/api/callers/posts";
 import { getSafeApiErrorMessage } from "@/api/errors";
+import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
 import { CommunityVideoUploadProgress } from "@/components/community/community-video-upload-progress";
 import { components } from "@/components/controllers";
 import { useFormList } from "@/hooks/form";
@@ -29,6 +30,7 @@ import {
   resolveMediaUploadError,
 } from "@/utils/media-upload-error";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
+import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import { PostEditMediaPreview } from "./post-edit-media-preview";
 import { PostEditAnonymousControls, PostEditMediaButton } from "./post-edit-modal-controls";
@@ -367,6 +369,8 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   };
 
   const handleSubmit = hook.handleSubmit(async (values) => {
+    let stagedStreamVideoReference: string | null = null;
+
     try {
       const selectedVideo =
         selectedMediaItems.find((mediaItem) => mediaItem.type === "video") ?? null;
@@ -391,11 +395,16 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
                   }),
                 )
               : [];
-          const thumbnailFile = selectedVideo
-            ? await createVideoThumbnailFile(selectedVideo.file, {
-                signal: operation?.signal,
-              })
+          const uploadedVideo = uploadedMedia.find((media) => media.media_type === "video");
+          stagedStreamVideoReference = isVideoAssetReference(uploadedVideo?.media_url)
+            ? uploadedVideo?.media_url || null
             : null;
+          const thumbnailFile =
+            selectedVideo && !isVideoAssetReference(uploadedVideo?.media_url)
+              ? await createVideoThumbnailFile(selectedVideo.file, {
+                  signal: operation?.signal,
+                })
+              : null;
           throwIfMediaUploadCanceled(operation?.signal);
           const uploadedThumbnail = thumbnailFile
             ? await uploadMutation.mutateAsync({
@@ -470,7 +479,9 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
           ...mediaPayload,
         },
       });
+      stagedStreamVideoReference = null;
     } catch {
+      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
       // Feedback fica nas mutations para preservar o conteúdo editado.
     }
   });

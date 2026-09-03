@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useVerticalVideoPlayerImmersiveControls } from "./vertical-video-player-immersive-controls";
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
+import { useVerticalVideoStream, VerticalVideoStreamStatus } from "./vertical-video-player-stream";
 import {
   clampNumber,
   fetchBoundedVideoBlob,
@@ -53,8 +54,10 @@ export const VerticalVideoPlayer = ({
   videoProps,
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const { adaptivePlaybackFailed, playback } = useVerticalVideoStream({ poster, src, videoRef });
+  const effectiveSource = playback.source;
   const storedFullscreenStylesRef = useRef<StoredVideoStyle[] | null>(null);
-  const latestSourceRef = useRef(src);
+  const latestSourceRef = useRef(effectiveSource);
   const isSeekingRef = useRef(false);
   const blobBackedVideoRef = useRef<{ source: string; url: string } | null>(null);
   const blobBackedVideoRequestRef = useRef<BlobBackedVideoRequest | null>(null);
@@ -81,9 +84,10 @@ export const VerticalVideoPlayer = ({
     ...passthroughVideoProps
   } = videoProps ?? {};
   const defaultNativeControlsList = "nodownload noplaybackrate noremoteplayback";
+
   useLayoutEffect(() => {
-    latestSourceRef.current = src;
-  }, [src]);
+    latestSourceRef.current = effectiveSource;
+  }, [effectiveSource]);
 
   useEffect(() => {
     onVideoElementReady?.(videoRef.current);
@@ -92,7 +96,7 @@ export const VerticalVideoPlayer = ({
   }, [onVideoElementReady]);
 
   useEffect(() => {
-    const effectSource = src;
+    const effectSource = effectiveSource;
 
     return () => {
       if (persistentSeekVerificationTimerRef.current) {
@@ -115,7 +119,7 @@ export const VerticalVideoPlayer = ({
         blobBackedVideoRef.current = null;
       }
     };
-  }, [src]);
+  }, [effectiveSource]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -256,21 +260,21 @@ export const VerticalVideoPlayer = ({
       }
 
       const video = videoRef.current;
-      if (!video || !src) return Promise.resolve(false);
+      if (!video || !effectiveSource || playback.isStream) return Promise.resolve(false);
 
       const currentBlobBackedVideo = blobBackedVideoRef.current;
-      if (currentBlobBackedVideo?.source === src) {
+      if (currentBlobBackedVideo?.source === effectiveSource) {
         return Promise.resolve(true);
       }
 
       const pendingRequest = blobBackedVideoRequestRef.current;
-      if (pendingRequest?.source === src) {
+      if (pendingRequest?.source === effectiveSource) {
         return pendingRequest.promise;
       }
 
       pendingRequest?.controller.abort();
 
-      const source = src;
+      const source = effectiveSource;
       const controller = new AbortController();
       let request: BlobBackedVideoRequest | null = null;
 
@@ -357,7 +361,7 @@ export const VerticalVideoPlayer = ({
 
       return promise;
     },
-    [src],
+    [effectiveSource, playback.isStream],
   );
 
   const seekPersistentVideoToTime = useCallback(
@@ -597,13 +601,18 @@ export const VerticalVideoPlayer = ({
         onClick={handleVideoClick}
         onContextMenu={handleVideoContextMenu}
         playsInline
-        poster={poster || undefined}
+        poster={playback.poster || undefined}
         preload={preload}
         ref={videoRef}
-        src={src}
+        src={playback.isStream ? undefined : effectiveSource}
       >
         Seu navegador não suporta a reprodução de vídeo.
       </video>
+      <VerticalVideoStreamStatus
+        adaptivePlaybackFailed={adaptivePlaybackFailed}
+        error={playback.error}
+        isLoading={playback.isLoading}
+      />
       <button
         aria-label={
           persistentControlsHidden

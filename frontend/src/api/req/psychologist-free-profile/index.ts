@@ -16,6 +16,7 @@ import type {
   FreeProfessionalProfileVideoUpload,
 } from "@/api/generator/types/free-profile";
 import { handleReq } from "@/api/handle";
+import { deleteVideoAsset } from "@/api/req/video-assets";
 import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 import { uploadFileMultipart } from "@/utils/multipart-upload";
 import { throwIfProfileVideoUploadCanceled } from "@/utils/profile-video-optimization";
@@ -24,6 +25,8 @@ import {
   PROFILE_VIDEO_SIMPLE_LIMIT_MB,
   withProfileVideoFileType,
 } from "@/utils/profile-video-upload";
+import { uploadVideoAsset } from "@/utils/video-asset-upload";
+import { isCloudflareStreamUploadEnabled, videoAssetIdFromReference } from "@/utils/video-stream";
 
 const route = "/api/private/psychologist/free-profile";
 
@@ -204,6 +207,22 @@ export const uploadPsychologistFreeProfileVideo = async (
   onProgress?: (percentage: number) => void,
   signal?: AbortSignal,
 ) => {
+  if (isCloudflareStreamUploadEnabled()) {
+    const { file: uploadFile } = withProfileVideoFileType(file);
+    const uploaded = await uploadVideoAsset({
+      file: uploadFile,
+      onProgress,
+      purpose: "profile_presentation",
+      signal,
+    });
+    const profile = await getPsychologistFreeProfile();
+
+    return {
+      profile,
+      video_url: uploaded.media_url,
+    } satisfies FreeProfessionalProfileVideoUpload;
+  }
+
   if (file.size <= PROFILE_VIDEO_MULTIPART_THRESHOLD_BYTES) {
     return uploadPsychologistFreeProfileVideoSingle(file, onProgress, signal);
   }
@@ -234,6 +253,15 @@ export const uploadPsychologistFreeProfileVideoCover = async (file: File) => {
 };
 
 export const deletePsychologistFreeProfileVideo = async () => {
+  const current = await getPsychologistFreeProfile();
+  const assetId = videoAssetIdFromReference(current.profile.video_url);
   const handle = callEndpoint({ route: `${route}/video`, method: "DELETE" });
-  return handleReq<FreeProfessionalProfileVideoRemoval>({ ...handle, hideError: true });
+  const removed = await handleReq<FreeProfessionalProfileVideoRemoval>({
+    ...handle,
+    hideError: true,
+  });
+  if (assetId) {
+    await deleteVideoAsset(assetId).catch(() => undefined);
+  }
+  return removed;
 };

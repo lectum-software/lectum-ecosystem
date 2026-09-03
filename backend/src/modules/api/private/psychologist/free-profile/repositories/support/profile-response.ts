@@ -1,15 +1,18 @@
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { UPLOAD_LIMITS } from "@/config/multer/limits";
-import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+
+export {
+  deletePublicProfileMedia,
+  publicProfileMediaKeyFromUrl,
+} from "@/modules/profile-media/public-storage";
+
 import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional-experience-tag";
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
 import { parseStoredCrp, resolveCrpFromRegistryChecks } from "@/utils/professional-registry";
-import { publicFileKeyFromUrl } from "@/utils/public-origin";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
@@ -181,31 +184,6 @@ export const buildActivationPendingFields = ({
     pending.push({ key: "address", label: "Estado e cidade" });
   }
   return pending;
-};
-
-export const publicProfileMediaKeyFromUrl = (value?: string | null) => {
-  return publicFileKeyFromUrl(value, [
-    "psychologist/avatar/",
-    "psychologist/cover-image/",
-    "psychologist/video/",
-    "psychologist/video-cover/",
-  ]);
-};
-
-export const deletePublicProfileMedia = async (value?: string | null) => {
-  const key = publicProfileMediaKeyFromUrl(value);
-  if (!key) return;
-
-  try {
-    await S3.send(
-      new DeleteObjectCommand({
-        Bucket: PUBLIC_BUCKET,
-        Key: key,
-      }),
-    );
-  } catch (_err) {
-    // A troca de foto não deve falhar por limpeza assíncrona de arquivo anterior.
-  }
 };
 
 export const isCatalogItem = (

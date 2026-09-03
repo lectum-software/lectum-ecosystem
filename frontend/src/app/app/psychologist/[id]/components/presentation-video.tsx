@@ -9,6 +9,7 @@ import { documentHasUserAttention } from "@/components/analytics/attention";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { useAppSelector } from "@/hooks/redux";
 import { resolvePublicMediaUrl } from "@/utils/media";
+import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoPosterObjectUrl } from "@/utils/video-thumbnail";
 
 import {
@@ -50,7 +51,7 @@ export const PresentationVideo = ({ profile }: { profile: DirectoryPsychologistP
   const posterSrc = videoCoverSrc ?? generatedPosterUrl;
 
   useEffect(() => {
-    if (!videoSrc || videoCoverSrc) {
+    if (!videoSrc || videoCoverSrc || isVideoAssetReference(videoSrc)) {
       return;
     }
 

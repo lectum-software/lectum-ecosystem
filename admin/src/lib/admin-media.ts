@@ -1,4 +1,10 @@
 import { adminApiUrl } from "./api-url";
+
+export {
+  isAdminVideoAssetReference,
+  videoAssetIdFromAdminReference,
+} from "./admin-video-stream-reference";
+
 import { isLoopbackHostname, parseConfiguredHttpOrigin } from "./http-origin-policy";
 
 const publicMediaPathPrefixes = ["/public/files/", "/community/icons/"] as const;

@@ -3,9 +3,11 @@ import type {
   PostReply,
   PostReplyMediaUploadResponse,
 } from "@/api/generator/types/posts";
+import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { isUploadPreparationCanceled, type MediaUploadProgress } from "@/utils/media-preparation";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
+import { isVideoAssetReference } from "@/utils/video-stream";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import { type ReplyComposerForm, toCreatePostReplyPayload } from "../use-form";
 
@@ -74,7 +76,8 @@ const uploadBestEffortVideoThumbnail = async ({
 > & {
   media: PostReplyMediaUploadResponse | null;
 }) => {
-  if (!mediaFile || media?.media_type !== "video") return null;
+  if (!mediaFile || media?.media_type !== "video" || isVideoAssetReference(media.media_url))
+    return null;
 
   let thumbnailFile: File | null = null;
 
@@ -116,34 +119,49 @@ export const submitReplyWithOptionalMedia = async ({
   videoUploadOperation,
 }: SubmitReplyWithOptionalMediaInput) => {
   setReplyError(null);
+  let stagedStreamVideoReference: string | null = null;
 
-  const { media, thumbnail } = await (async () => {
-    try {
-      const media = await uploadRequiredReplyMedia({
-        mediaFile,
-        postId,
-        setReplyError,
-        uploadReplyMedia,
-        videoUploadOperation,
-      });
-      throwIfMediaUploadCanceled(videoUploadOperation?.signal);
-      const thumbnail = await uploadBestEffortVideoThumbnail({
-        media,
-        mediaFile,
-        postId,
-        uploadReplyMedia,
-        videoUploadOperation,
-      });
+  let uploadResult: {
+    media: PostReplyMediaUploadResponse | null;
+    thumbnail: PostReplyMediaUploadResponse | null;
+  };
+  try {
+    uploadResult = await (async () => {
+      try {
+        const media = await uploadRequiredReplyMedia({
+          mediaFile,
+          postId,
+          setReplyError,
+          uploadReplyMedia,
+          videoUploadOperation,
+        });
+        stagedStreamVideoReference = isVideoAssetReference(media?.media_url)
+          ? media?.media_url || null
+          : null;
+        throwIfMediaUploadCanceled(videoUploadOperation?.signal);
+        const thumbnail = await uploadBestEffortVideoThumbnail({
+          media,
+          mediaFile,
+          postId,
+          uploadReplyMedia,
+          videoUploadOperation,
+        });
 
-      return { media, thumbnail };
-    } finally {
-      videoUploadOperation?.complete();
-    }
-  })();
-  throwIfMediaUploadCanceled(videoUploadOperation?.signal);
+        return { media, thumbnail };
+      } finally {
+        videoUploadOperation?.complete();
+      }
+    })();
+  } catch (error) {
+    await cleanupDetachedVideoAsset(stagedStreamVideoReference);
+    throw error;
+  }
+
+  const { media, thumbnail } = uploadResult;
 
   try {
-    return await createReply({
+    throwIfMediaUploadCanceled(videoUploadOperation?.signal);
+    const created = await createReply({
       id: postId,
       body: toCreatePostReplyPayload(
         values,
@@ -159,7 +177,10 @@ export const submitReplyWithOptionalMedia = async ({
           : null,
       ),
     });
+    stagedStreamVideoReference = null;
+    return created;
   } catch (error) {
+    await cleanupDetachedVideoAsset(stagedStreamVideoReference);
     setReplyError(resolveReplyPublishError(error));
     throw error;
   }

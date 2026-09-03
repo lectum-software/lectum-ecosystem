@@ -1,6 +1,7 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
+import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import type { PublicCommunityPostSeoDTO } from "../DTOs/IPublicCommunityPostSeoDTO";
 
@@ -95,6 +96,16 @@ const resolveMediaPreview = (media?: MediaCandidate | null) => {
   }
 
   if (media.media_type === "video") {
+    if (isVideoAssetPlaybackReference(media.media_url)) {
+      return {
+        mediaType: "video",
+        ogImageHeight: null,
+        ogImageUrl: null,
+        ogImageWidth: null,
+        ogVideoUrl: null,
+      };
+    }
+
     const hasThumbnail = Boolean(media.thumbnail_url);
 
     return {

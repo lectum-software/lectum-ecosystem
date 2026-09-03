@@ -32,6 +32,7 @@ import apiAdminPrivateSettingsSeo from "@/modules/api/admin/private/settings/seo
 import apiAdminPrivateSettingsSubscriptionPlan from "@/modules/api/admin/private/settings/subscription-plan";
 import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/export";
 import apiAdminPrivateTrafficSummary from "@/modules/api/admin/private/traffic/summary";
+import apiAdminPrivateVideoAssets from "@/modules/api/admin/private/video-assets";
 import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
 import privateAuth from "@/modules/api/middlewares/_auth";
 import optionalAuth from "@/modules/api/middlewares/optional-auth";
@@ -71,6 +72,7 @@ import apiPrivatePsychologistCfp from "@/modules/api/private/psychologist/cfp";
 import apiPrivatePsychologistFreeProfile from "@/modules/api/private/psychologist/free-profile";
 import apiPrivatePsychologistReviews from "@/modules/api/private/psychologist/reviews";
 import apiPrivatePsychologistWhatsappVerification from "@/modules/api/private/psychologist/whatsapp-verification";
+import apiPrivateVideoAssets from "@/modules/api/private/video-assets";
 import apiPublicAnalyticsAction from "@/modules/api/public/analytics/action";
 import apiPublicAnalyticsContentAttention from "@/modules/api/public/analytics/content-attention";
 import apiPublicAnalyticsContentVideoWatch from "@/modules/api/public/analytics/content-video-watch";
@@ -89,6 +91,7 @@ import apiPublicSeoCommunityPost from "@/modules/api/public/seo/community-post";
 import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
 import apiPublicSeoPsychologist from "@/modules/api/public/seo/psychologist";
 import apiPublicUser from "@/modules/api/public/user";
+import apiPublicVideoStreamWebhook from "@/modules/api/public/video-stream/webhook";
 import {
   listPrivateRoutePolicyViolations,
   type MountedRoutePolicyRecord,
@@ -176,6 +179,7 @@ mountRoute("/api/public/seo/community-post", apiPublicSeoCommunityPost);
 mountRoute("/api/public/seo/metadata", apiPublicSeoMetadata);
 mountRoute("/api/public/seo/psychologist", apiPublicSeoPsychologist);
 mountRoute("/api/public/user", apiPublicUser);
+mountRoute("/api/public/video-stream/webhook", apiPublicVideoStreamWebhook);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
 mountRoute("/api/admin/private/auth/hidrate", apiAdminPrivateAuthHidrate);
 mountRoute("/api/admin/private/auth/logout", apiAdminPrivateAuthLogout);
@@ -212,8 +216,10 @@ mountRoute(
 );
 mountRoute("/api/admin/private/traffic/summary", apiAdminPrivateTrafficSummary);
 mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
+mountRoute("/api/admin/private/video-assets", apiAdminPrivateVideoAssets);
 mountAuthOnlyRoute("/api/private/user/favorites", apiPrivatePatientFavorites);
 mountAuthOnlyRoute("/api/private/user/reviews", apiPrivatePatientReviews);
+mountAuthOnlyRoute("/api/private/video-assets", apiPrivateVideoAssets);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);
 mountRoleGuardedRoute("/api/private/patient/profile", "paciente", apiPrivatePatientProfile);

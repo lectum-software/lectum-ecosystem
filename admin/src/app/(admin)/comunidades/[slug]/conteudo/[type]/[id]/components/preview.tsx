@@ -8,6 +8,7 @@ import type {
   AdminCommunityContentAuthor,
 } from "@/api/req/communities";
 import { VerifiedBadgeIcon, WhatsAppIcon } from "@/components/admin-icons";
+import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { isAdminPublicMediaUrl, renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
@@ -102,8 +103,7 @@ export const ContentVideoPreview = ({ label, src }: { label: string; src: string
 
   return (
     <div className="relative mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-[20px] border border-border bg-media-background xl:ml-0 xl:mr-auto">
-      {/* biome-ignore lint/a11y/useMediaCaption: o backend ainda não expõe arquivo de legenda para vídeos de conteúdo da comunidade. */}
-      <video
+      <AdminStreamVideo
         aria-label={label}
         className="h-full w-full object-contain"
         controls

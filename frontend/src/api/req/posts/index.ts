@@ -38,58 +38,16 @@ import {
   MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS,
   throwIfMediaUploadCanceled,
 } from "@/utils/upload-lifecycle";
+import { withReplyMediaFileType } from "./reply-media-file";
+import { uploadReplyVideoToStreamWhenEnabled } from "./reply-stream-upload";
 
 const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
 const SHARE_VIDEO_RENDER_DIRECT_TIMEOUT_MS = 20_000;
 const SHARE_VIDEO_RENDER_JOB_FILE_TIMEOUT_MS = 60_000;
 const SHARE_VIDEO_RENDER_JOB_START_TIMEOUT_MS = 20_000;
 const SHARE_VIDEO_RENDER_JOB_STATUS_TIMEOUT_MS = 15_000;
-const REPLY_MEDIA_ALLOWED_MIME_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "video/mp4",
-  "video/quicktime",
-  "video/webm",
-]);
-const REPLY_MEDIA_MIME_BY_EXTENSION: Record<string, string> = {
-  jpeg: "image/jpeg",
-  jpg: "image/jpeg",
-  mov: "video/quicktime",
-  mp4: "video/mp4",
-  png: "image/png",
-  webm: "video/webm",
-  webp: "image/webp",
-};
-
 const shouldUseMultipartReplyUpload = (file: File) =>
   file.size > REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES;
-
-const resolveReplyMediaMimeType = (file: File) => {
-  const declaredMimeType = file.type.trim().toLowerCase().split(";", 1)[0] ?? "";
-  if (REPLY_MEDIA_ALLOWED_MIME_TYPES.has(declaredMimeType)) return declaredMimeType;
-
-  const extension = file.name.toLowerCase().split(".").pop() ?? "";
-  const inferredMimeType = REPLY_MEDIA_MIME_BY_EXTENSION[extension];
-  if (inferredMimeType) return inferredMimeType;
-
-  return declaredMimeType;
-};
-
-const withReplyMediaFileType = (file: File) => {
-  const mimeType = resolveReplyMediaMimeType(file);
-  if (!mimeType || file.type.trim().toLowerCase() === mimeType) {
-    return { file, mimeType };
-  }
-
-  return {
-    file: new File([file], file.name || "media", {
-      lastModified: file.lastModified,
-      type: mimeType,
-    }),
-    mimeType,
-  };
-};
 
 type RenderPostShareVideoArtifactInput = {
   fileName: string;
@@ -495,6 +453,16 @@ export const uploadPostReplyMedia = async (
   onProgress?: (percentage: number) => void,
   signal?: AbortSignal,
 ) => {
+  const { file: uploadFile, mimeType } = withReplyMediaFileType(file);
+  const streamUpload = await uploadReplyVideoToStreamWhenEnabled({
+    file: uploadFile,
+    mimeType,
+    onProgress,
+    postId: id,
+    signal,
+  });
+  if (streamUpload) return streamUpload;
+
   if (shouldUseMultipartReplyUpload(file)) {
     try {
       return await uploadPostReplyMediaMultipart(id, file, onProgress, signal);

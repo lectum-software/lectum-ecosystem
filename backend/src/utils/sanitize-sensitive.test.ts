@@ -100,6 +100,27 @@ describe("sanitizeSensitiveData", () => {
     });
   });
 
+  it("preserva JWT somente nos campos estritos de mídia assinada", () => {
+    const token = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ2aWRlbyJ9.signature_value";
+    const hlsUrl = `https://customer-code_123.cloudflarestream.com/${token}/manifest/video.m3u8`;
+    const thumbnailUrl = `https://customer-code_123.cloudflarestream.com/${token}/thumbnails/thumbnail.jpg?time=1s`;
+
+    assert.deepEqual(
+      sanitizeSensitiveData(
+        { hls_url: hlsUrl, thumbnail_url: thumbnailUrl },
+        { allowSignedMediaUrls: true, removeAuthTokens: true },
+      ),
+      { hls_url: hlsUrl, thumbnail_url: thumbnailUrl },
+    );
+    assert.deepEqual(
+      sanitizeSensitiveData(
+        { arbitrary_url: hlsUrl, hls_url: `https://attacker.example/${token}` },
+        { allowSignedMediaUrls: true, removeAuthTokens: true },
+      ),
+      { arbitrary_url: "[REDACTED]", hls_url: "[REDACTED]" },
+    );
+  });
+
   it("não recursa indefinidamente em estruturas circulares", () => {
     const circular: Record<string, unknown> = { safe: true };
     circular.self = circular;

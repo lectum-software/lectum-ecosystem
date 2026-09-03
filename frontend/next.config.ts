@@ -35,6 +35,8 @@ const mercadoPagoStaticCspSources = [
   "https://api-static.mercadopago.com",
 ];
 const cepLookupCspSources = ["https://viacep.com.br"];
+const cloudflareStreamCspSources = ["https://*.cloudflarestream.com"];
+const cloudflareStreamUploadCspSources = ["https://upload.videodelivery.net"];
 const sentryIngestOrigin = getSentryIngestOrigin(
   process.env.NEXT_PUBLIC_SENTRY_DSN,
   process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT,
@@ -63,9 +65,9 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} ${mercadoPagoScriptCspSources.join(" ")}`,
   `style-src 'self' 'unsafe-inline' ${mercadoPagoStaticCspSources.join(" ")}`,
   `font-src 'self' data: ${mercadoPagoStaticCspSources.join(" ")}`,
-  `img-src 'self' data: blob: ${assetCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${mercadoPagoCoreCspSources.join(" ")}`,
-  `media-src 'self' blob: ${assetCspSources.join(" ")}`,
-  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} ${sentryIngestOrigin ?? ""} https://*.mercadolibre.com`,
+  `img-src 'self' data: blob: ${assetCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")}`,
+  `media-src 'self' blob: ${assetCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")}`,
+  `connect-src 'self' ${getApiCspSources().join(" ")} ${mercadoPagoCoreCspSources.join(" ")} ${mercadoPagoStaticCspSources.join(" ")} ${cepLookupCspSources.join(" ")} ${cloudflareStreamCspSources.join(" ")} ${cloudflareStreamUploadCspSources.join(" ")} ${sentryIngestOrigin ?? ""} https://*.mercadolibre.com`,
   `frame-src ${mercadoPagoCoreCspSources.join(" ")} https://*.mercadolibre.com`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",

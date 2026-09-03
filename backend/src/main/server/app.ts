@@ -2,7 +2,7 @@ import "@/config/dotenv";
 import path from "node:path";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express, { type Application, type Express } from "express";
+import express, { type Application, type Express, type Request } from "express";
 import helmet from "helmet";
 import * as i18nextMiddleware from "i18next-http-middleware";
 
@@ -10,6 +10,7 @@ import { filesRoute } from "@/config/multer/filesRoute";
 import { getLimiter } from "@/external/limiter";
 import prisma from "@/infra/database/prisma";
 import { setupSentryExpressErrorHandler } from "@/infra/observability/sentry";
+import { getVideoStreamConfig, isVideoStreamEnabled } from "@/infra/video-stream";
 import { errorHandler, errorRoute } from "@/main/server/error";
 import { socket } from "@/main/socket";
 import { getPublicWebOrigins } from "@/utils/public-origin";
@@ -47,6 +48,9 @@ server.get("/ready", async (_req, res) => {
 
   try {
     await prisma.$queryRaw`SELECT 1`;
+    if (isVideoStreamEnabled() && !getVideoStreamConfig()) {
+      return res.status(503).json({ status: "unavailable" });
+    }
     return res.status(200).json({ status: "ready" });
   } catch (error) {
     console.error("[READINESS] Banco de dados indisponível.", {
@@ -63,6 +67,7 @@ server.use((req, res, next) => {
     "/api/public/auth/",
     "/api/public/google/",
     "/api/public/user",
+    "/api/public/video-stream/",
   ];
 
   if (sensitivePrefixes.some((prefix) => req.path.startsWith(prefix))) {
@@ -104,7 +109,17 @@ server.use(
 );
 
 const bodyLimit = getBodyLimit();
-server.use(express.json({ limit: bodyLimit }));
+server.use(
+  express.json({
+    limit: bodyLimit,
+    verify: (request, _response, body) => {
+      const expressRequest = request as Request;
+      if (expressRequest.originalUrl.startsWith("/api/public/video-stream/webhook")) {
+        expressRequest.rawBody = Buffer.from(body);
+      }
+    },
+  }),
+);
 server.use(express.urlencoded({ limit: bodyLimit, extended: true }));
 
 const { httpServer } = socket(server as Express);

@@ -343,7 +343,7 @@ test("videos internos nao reaproveitam arte social como capa", () => {
   assert.doesNotMatch(videoThumbnailSource, /createLectumShareFrameImageFile/);
   assert.match(
     communityMediaFrameSource,
-    /const fallbackPosterKey = normalizedMediaType === "video" \? resolvedUrl : null;/,
+    /const fallbackPosterKey =\s+normalizedMediaType === "video" && !isStreamVideo \? resolvedUrl : null;/,
   );
   assert.match(communityMediaFrameSource, /const resolvedPosterUrl = fallbackPosterUrl;/);
   assert.doesNotMatch(communityMediaFrameSource, /shouldUseStoredVideoThumbnail/);

@@ -86,6 +86,7 @@ model user {
   logs                                    log__user[]                   @relation("log__user_user")
   notifications                           notification[]                @relation("notifications")
   notification_preference                 notification_preference?      @relation("notification_preference_user")
+  video_assets                            video_asset[]                 @relation("video_asset_owner")
 
   @@index([email, deleted])
   @@index([active, deleted])
@@ -1001,6 +1002,37 @@ model community_post {
   @@index([author_id])
   @@index([author_id, status, createdAt])
   @@map("community_posts")
+}
+
+model video_asset {
+  id                    String    @id @default(cuid())
+  deleted               Boolean   @default(false)
+  deletedAt             DateTime? @map("deleted_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  owner_id              String    @map("owner_id")
+  provider              String    @default("cloudflare_stream")
+  provider_uid          String    @unique @map("provider_uid")
+  purpose               String
+  context_id            String?   @map("context_id")
+  status                String    @default("uploading")
+  mime_type             String    @map("mime_type")
+  size_bytes            BigInt    @map("size_bytes")
+  duration_seconds      Float?    @map("duration_seconds")
+  width                 Int?
+  height                Int?
+  upload_expires_at     DateTime  @map("upload_expires_at")
+  last_provider_sync_at DateTime? @map("last_provider_sync_at")
+  ready_at              DateTime? @map("ready_at")
+  error_code            String?   @map("error_code")
+  last_webhook_at       DateTime? @map("last_webhook_at")
+  last_webhook_digest   String?   @map("last_webhook_digest")
+  owner                 user      @relation("video_asset_owner", fields: [owner_id], references: [id], onDelete: Cascade)
+
+  @@index([owner_id, purpose, deleted, createdAt])
+  @@index([status, deleted, updatedAt])
+  @@index([context_id, purpose, deleted])
+  @@map("video_assets")
 }
 
 model community_post_media {

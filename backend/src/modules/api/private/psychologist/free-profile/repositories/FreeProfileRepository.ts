@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { retireOwnedVideoAssetReference } from "@/modules/video-assets/lifecycle";
 import type {
   FreeProfessionalProfileResponse,
   FreeProfessionalProfileUpdateBody,
@@ -12,6 +13,22 @@ import {
   getUserWithProfile,
   toResponse,
 } from "./support/profile-response";
+
+const cleanupReplacedProfileVideo = async (
+  ownerId: string,
+  videoUrl?: string | null,
+  videoCoverUrl?: string | null,
+) => {
+  await Promise.allSettled([
+    deletePublicProfileMedia(videoUrl),
+    deletePublicProfileMedia(videoCoverUrl),
+    retireOwnedVideoAssetReference({
+      ownerId,
+      purpose: "profile_presentation",
+      reference: videoUrl,
+    }),
+  ]);
+};
 
 export class FreeProfileRepository implements IFreeProfileRepository {
   async show(userId: string): Promise<FreeProfessionalProfileResponse | null> {
@@ -186,8 +203,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
     });
 
     if (!options.canUploadVideo) {
-      await deletePublicProfileMedia(profile.video_url);
-      await deletePublicProfileMedia(profile.video_cover_url);
+      await cleanupReplacedProfileVideo(userId, profile.video_url, profile.video_cover_url);
     }
 
     return this.show(userId);
@@ -237,8 +253,9 @@ export class FreeProfileRepository implements IFreeProfileRepository {
       data: { video_url: videoUrl, video_cover_url: null },
     });
 
-    await deletePublicProfileMedia(profile.video_url);
-    await deletePublicProfileMedia(profile.video_cover_url);
+    if (profile.video_url !== videoUrl) {
+      await cleanupReplacedProfileVideo(userId, profile.video_url, profile.video_cover_url);
+    }
 
     return this.show(userId);
   }
@@ -289,8 +306,7 @@ export class FreeProfileRepository implements IFreeProfileRepository {
       data: { video_url: null, video_cover_url: null },
     });
 
-    await deletePublicProfileMedia(profile.video_url);
-    await deletePublicProfileMedia(profile.video_cover_url);
+    await cleanupReplacedProfileVideo(userId, profile.video_url, profile.video_cover_url);
 
     return this.show(userId);
   }

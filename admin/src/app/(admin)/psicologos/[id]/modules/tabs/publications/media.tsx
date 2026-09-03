@@ -23,6 +23,7 @@ import type {
   AdminPsychologistPublicationMetric,
 } from "@/api/req/psychologists";
 import { WhatsAppIcon } from "@/components/admin-icons";
+import { AdminStreamVideo } from "@/components/admin-stream-video";
 import { renderableImageSrc, resolveAdminMediaUrl } from "@/lib/admin-media";
 import { formatDateTime, formatEngagementMetricValue } from "../../support/formatters";
 import { isPublicAdminMediaSrc } from "../../support/media";
@@ -164,7 +165,7 @@ export const PublicationVideoMiniplayer = ({ label, src }: { label: string; src:
 
   return (
     <div className="relative h-full w-full bg-media-background">
-      <video
+      <AdminStreamVideo
         aria-label={label}
         className="admin-community-video-player h-full w-full object-cover"
         controls
@@ -218,7 +219,7 @@ export const PublicationVideoMiniplayer = ({ label, src }: { label: string; src:
           >
             <X aria-hidden className="h-5 w-5" />
           </button>
-          <video
+          <AdminStreamVideo
             aria-label={`${label} ampliado`}
             className="admin-community-video-expanded object-cover"
             controls
@@ -268,7 +269,7 @@ const PublicationMedia = ({ item }: { item: AdminPsychologistPublicationItem }) 
       ) : null}
       {videoSrc ? (
         <>
-          <video
+          <AdminStreamVideo
             aria-label={mediaLabel}
             className="h-full w-full bg-media-background object-cover"
             muted

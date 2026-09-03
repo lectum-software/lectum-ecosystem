@@ -16,6 +16,7 @@ import {
   useCreateCommunityPost,
   useUploadCommunityPostMedia,
 } from "@/api/callers/community";
+import { cleanupDetachedVideoAsset } from "@/api/req/video-assets";
 import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
@@ -31,6 +32,7 @@ import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { createVideoThumbnailFile } from "@/utils/video-thumbnail";
 import {
+  classifyUploadedCommunityMedia,
   createSelectedMediaId,
   EDITOR_FIELD_IDS,
   getCreatePostInitialEditorFocusDelays,
@@ -46,6 +48,7 @@ import {
   resolveKeyboardViewportOffset,
   type SelectedPostMedia,
   SHEET_CLOSE_DELAY_MS,
+  scheduleCorrectedCreatePostErrorClear,
   type UseCreateCommunityPostControllerOptions,
 } from "../modules/create-post-support";
 import { toCreateCommunityPostPayload, useCreateCommunityPostForm } from "../use-form";
@@ -555,6 +558,8 @@ export const useCreateCommunityPostController = ({
   };
 
   const onSubmit = hook.handleSubmit(async (values) => {
+    let stagedStreamVideoReference: string | null = null;
+
     try {
       const mediaFiles = mediaPermission.canAttach ? selectedMediaItems : [];
       const selectedVideo = mediaFiles.find((mediaItem) => mediaItem.type === "video") ?? null;
@@ -579,11 +584,14 @@ export const useCreateCommunityPostController = ({
                   }),
                 )
               : [];
-          const thumbnailFile = selectedVideo
-            ? await createVideoThumbnailFile(selectedVideo.file, {
-                signal: operation?.signal,
-              })
-            : null;
+          const { streamVideoReference } = classifyUploadedCommunityMedia(uploadedMedia);
+          stagedStreamVideoReference = streamVideoReference;
+          const thumbnailFile =
+            selectedVideo && !streamVideoReference
+              ? await createVideoThumbnailFile(selectedVideo.file, {
+                  signal: operation?.signal,
+                })
+              : null;
           throwIfMediaUploadCanceled(operation?.signal);
           const uploadedThumbnail = thumbnailFile
             ? await uploadMutation.mutateAsync({
@@ -601,13 +609,7 @@ export const useCreateCommunityPostController = ({
         }
       })();
       const firstMedia = uploadedMedia[0] ?? null;
-      const imageMediaItems = uploadedMedia
-        .filter((media) => media.media_type === "image")
-        .map((media, index) => ({
-          mediaType: "image" as const,
-          mediaUrl: media.media_url,
-          position: index,
-        }));
+      const imageMediaItems = classifyUploadedCommunityMedia(uploadedMedia).imageItems;
 
       await mutation.mutateAsync({
         slug: values.community_slug,
@@ -625,37 +627,19 @@ export const useCreateCommunityPostController = ({
           ...(imageMediaItems.length > 0 ? { mediaItems: imageMediaItems } : {}),
         },
       });
+      stagedStreamVideoReference = null;
     } catch {
+      await cleanupDetachedVideoAsset(stagedStreamVideoReference);
       // O feedback fica centralizado nas mutations para preservar o rascunho do post.
     }
   });
 
-  const clearCorrectedFormErrorsSoon = () => {
-    window.setTimeout(() => {
-      const values = hook.getValues();
-      const hasValidCommunity = communityOptions.some(
-        (option) => option.value === values.community_slug,
-      );
-      const hasValidTitle = String(values.title ?? "").trim().length >= 3;
-      const hasValidContent = String(values.content ?? "").trim().length >= 10;
-
-      if (hasValidCommunity) {
-        hook.clearErrors("community_slug");
-      }
-
-      if (hasValidTitle) {
-        hook.clearErrors("title");
-      }
-
-      if (hasValidContent) {
-        hook.clearErrors("content");
-      }
-
-      if (hasValidCommunity && hasValidTitle && hasValidContent) {
-        hook.clearErrors();
-      }
-    }, 0);
-  };
+  const clearCorrectedFormErrorsSoon = () =>
+    scheduleCorrectedCreatePostErrorClear({
+      clearErrors: hook.clearErrors,
+      communityValues: communityOptions.map((option) => option.value),
+      getValues: hook.getValues,
+    });
 
   return {
     clearCorrectedFormErrorsSoon,

@@ -346,6 +346,31 @@ Templates/shells devem viver em `frontend/src/templates`.
 - Para tabelas/datagirds complexos, avaliar `@tanstack/react-table`.
 - Não instalar TanStack Router enquanto Next App Router for a arquitetura vigente.
 
+### Plano de controle e plano de dados de vídeo
+
+- O backend Lectum é o **plano de controle**: autoriza o dono, persiste `video_asset`, valida a
+  associação com perfil/post/resposta, recebe webhook assinado e emite playback curto.
+- Cloudflare Stream é o **plano de dados** dos novos vídeos: o navegador envia por TUS diretamente
+  para `upload.videodelivery.net` e reproduz HLS diretamente de `cloudflarestream.com`. Next e
+  Express não transportam partes nem fazem proxy de manifestos/segmentos.
+- `CLOUDFLARE_STREAM_API_TOKEN`, signing private key e webhook secret existem somente no backend.
+  A URL TUS é uma capability temporária devolvida apenas ao dono e nunca é persistida/logada.
+- Todo vídeo Stream nasce com `requiresignedurls` e `allowedorigins`. O player solicita uma URL
+  assinada em endpoint autenticado; URL assinada fica apenas em memória/cache curto e nunca em
+  banco, Redux, storage, analytics, export ou toast.
+- O token Cloudflare é um JWT assinado, não criptografado. Portanto, seu payload técnico pode ser
+  decodificado pelo cliente; o UID do provider não é uma credencial e jamais deve ser usado como
+  autorização. A segurança vem da assinatura RS256, expiração, allowed origins e decisão do backend.
+- Campos legados (`video_url`, `media_url`) armazenam somente a referência estável Lectum
+  `/api/private/video-assets/:id/playback`. Vídeos R2 antigos seguem legíveis durante rollout.
+- Safari/iPhone usa HLS nativo; Chrome/Android/Admin usa `hls.js` quando MSE está disponível. Em
+  nenhum caso o download/original é habilitado pelo token.
+- A feature flag pública e a flag backend começam desativadas. Rollout: migration/backend →
+  credenciais/signing/webhook/origens → backend flag → frontend flag. Depois que o primeiro ativo
+  Stream for associado, rollback de escrita desliga somente a flag pública; o backend/configuração
+  Stream deve continuar ativo para reproduzir referências existentes. Nunca apagar ativos Stream
+  ou objetos R2 no rollback.
+
 ## Anti-recriação
 
 Antes de criar arquivo novo, o executor deve procurar:
