@@ -3,6 +3,7 @@ import type { CSSProperties, VideoHTMLAttributes } from "react";
 export type VideoFit = "contain" | "cover";
 
 export type ControlsVariant = "native" | "minimal" | "persistent";
+export type FullscreenVariant = "default" | "content";
 export type PersistentControlsLayout = "stacked" | "media";
 export type PersistentControlsVisibility = "auto" | "always";
 
@@ -21,7 +22,7 @@ export type VerticalVideoPlayerProps = {
   controls?: boolean;
   controlsVariant?: ControlsVariant;
   fit?: VideoFit;
-  fullscreenVariant?: "default" | "content";
+  fullscreenVariant?: FullscreenVariant;
   onContentClick?: () => void;
   onVideoElementReady?: (video: HTMLVideoElement | null) => void;
   persistentControlsLayout?: PersistentControlsLayout;
@@ -67,6 +68,22 @@ export const shouldHidePersistentVideoControls = ({
   isPaused: boolean;
   visibility: PersistentControlsVisibility;
 }) => enabled && visibility === "auto" && !isPaused && !controlsRevealed;
+
+export const shouldUseInlineContentVideoExpansion = ({
+  controlsEnabled,
+  controlsVariant,
+  fullscreenVariant,
+  persistentControlsLayout,
+}: {
+  controlsEnabled: boolean;
+  controlsVariant: ControlsVariant;
+  fullscreenVariant: FullscreenVariant;
+  persistentControlsLayout: PersistentControlsLayout;
+}) =>
+  controlsEnabled &&
+  controlsVariant === "persistent" &&
+  persistentControlsLayout === "media" &&
+  fullscreenVariant === "content";
 
 const MAX_SEEK_FALLBACK_VIDEO_BYTES = 64 * 1024 * 1024;
 

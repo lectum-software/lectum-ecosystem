@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
+import { Minimize2, Pause, Play } from "lucide-react";
 import {
   type MouseEvent,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -12,6 +12,10 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
+import {
+  useInlineContentVideoExpansion,
+  useMobileContentFullscreenStyles,
+} from "./vertical-video-player-content-expansion";
 import { useVerticalVideoPlayerImmersiveControls } from "./vertical-video-player-immersive-controls";
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
 import { useVerticalVideoStream, VerticalVideoStreamStatus } from "./vertical-video-player-stream";
@@ -20,9 +24,7 @@ import {
   fetchBoundedVideoBlob,
   fitClassName,
   getReadableVideoDuration,
-  MOBILE_FULLSCREEN_MEDIA_QUERY,
-  type StoredVideoStyle,
-  staticMobileContentFullscreenStyles,
+  shouldUseInlineContentVideoExpansion,
   type VerticalVideoPlayerProps,
   waitForVideoEvent,
 } from "./vertical-video-player-support";
@@ -56,7 +58,6 @@ export const VerticalVideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const { adaptivePlaybackFailed, playback } = useVerticalVideoStream({ poster, src, videoRef });
   const effectiveSource = playback.source;
-  const storedFullscreenStylesRef = useRef<StoredVideoStyle[] | null>(null);
   const latestSourceRef = useRef(effectiveSource);
   const isSeekingRef = useRef(false);
   const blobBackedVideoRef = useRef<{ source: string; url: string } | null>(null);
@@ -74,6 +75,12 @@ export const VerticalVideoPlayer = ({
   const usesPersistentControls = controls && controlsVariant === "persistent";
   const usesMediaPersistentControls =
     usesPersistentControls && persistentControlsLayout === "media";
+  const usesInlineContentExpansion = shouldUseInlineContentVideoExpansion({
+    controlsEnabled: controls,
+    controlsVariant,
+    fullscreenVariant,
+    persistentControlsLayout,
+  });
   const hasNativeControls = controls && !usesMinimalControls && !usesPersistentControls;
   const {
     controlsList: videoControlsList,
@@ -84,6 +91,13 @@ export const VerticalVideoPlayer = ({
     ...passthroughVideoProps
   } = videoProps ?? {};
   const defaultNativeControlsList = "nodownload noplaybackrate noremoteplayback";
+  const { closeInlineContentExpansion, handleInlineContentExpansion, isContentExpanded } =
+    useInlineContentVideoExpansion({
+      effectiveSource,
+      enabled: usesInlineContentExpansion,
+    });
+
+  useMobileContentFullscreenStyles({ fullscreenVariant, videoRef });
 
   useLayoutEffect(() => {
     latestSourceRef.current = effectiveSource;
@@ -129,72 +143,6 @@ export const VerticalVideoPlayer = ({
       video.controls = false;
     }
   }, [usesMinimalControls, usesPersistentControls]);
-
-  useEffect(() => {
-    if (fullscreenVariant !== "content" || typeof window === "undefined") return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    const restoreMobileContentFullscreenStyles = () => {
-      const storedStyles = storedFullscreenStylesRef.current;
-      if (!storedStyles) return;
-
-      for (const { name, priority, value } of storedStyles) {
-        video.style.setProperty(name, value, priority);
-      }
-
-      storedFullscreenStylesRef.current = null;
-    };
-
-    const applyMobileContentFullscreenStyles = () => {
-      if (!window.matchMedia(MOBILE_FULLSCREEN_MEDIA_QUERY).matches) {
-        restoreMobileContentFullscreenStyles();
-        return;
-      }
-
-      const viewportHeight =
-        typeof CSS !== "undefined" && CSS.supports("height: 100dvh") ? "100dvh" : "100vh";
-      const dynamicStyles = [
-        ["width", `min(100vw, calc(${viewportHeight} * 9 / 16))`],
-        ["height", `min(${viewportHeight}, calc(100vw * 16 / 9))`],
-        ["max-height", viewportHeight],
-      ] as const;
-      const fullscreenStyles = [...staticMobileContentFullscreenStyles, ...dynamicStyles];
-
-      if (!storedFullscreenStylesRef.current) {
-        storedFullscreenStylesRef.current = fullscreenStyles.map(([name]) => ({
-          name,
-          priority: video.style.getPropertyPriority(name),
-          value: video.style.getPropertyValue(name),
-        }));
-      }
-
-      for (const [name, value] of fullscreenStyles) {
-        video.style.setProperty(name, value, "important");
-      }
-    };
-
-    const handleFullscreenChange = () => {
-      if (document.fullscreenElement === video) {
-        applyMobileContentFullscreenStyles();
-        return;
-      }
-
-      restoreMobileContentFullscreenStyles();
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    video.addEventListener("webkitbeginfullscreen", applyMobileContentFullscreenStyles);
-    video.addEventListener("webkitendfullscreen", restoreMobileContentFullscreenStyles);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      video.removeEventListener("webkitbeginfullscreen", applyMobileContentFullscreenStyles);
-      video.removeEventListener("webkitendfullscreen", restoreMobileContentFullscreenStyles);
-      restoreMobileContentFullscreenStyles();
-    };
-  }, [fullscreenVariant]);
 
   useEffect(() => {
     if (!usesMinimalControls && !usesPersistentControls) return;
@@ -250,6 +198,7 @@ export const VerticalVideoPlayer = ({
     fullscreenVariant,
     isPaused,
     onContentClick,
+    onFullscreenRequest: usesInlineContentExpansion ? handleInlineContentExpansion : undefined,
     videoRef,
   });
 
@@ -577,13 +526,21 @@ export const VerticalVideoPlayer = ({
       className={cn(
         "relative aspect-[9/16] overflow-hidden rounded-[22px] border border-border bg-media-background shadow-inner",
         className,
+        isContentExpanded &&
+          "fixed inset-0 z-[100] h-[100dvh] w-screen max-w-none rounded-none border-0 bg-media-background shadow-none",
       )}
+      data-lectum-video-expanded={isContentExpanded ? "true" : undefined}
       style={style}
     >
       <video
         {...passthroughVideoProps}
         aria-label={title}
-        className={cn("h-full w-full bg-media-background", fitClassName[fit], videoClassName)}
+        className={cn(
+          "h-full w-full bg-media-background",
+          fitClassName[fit],
+          videoClassName,
+          isContentExpanded && "object-contain",
+        )}
         controls={hasNativeControls}
         controlsList={
           usesMinimalControls
@@ -613,6 +570,21 @@ export const VerticalVideoPlayer = ({
         error={playback.error}
         isLoading={playback.isLoading}
       />
+      {isContentExpanded ? (
+        <button
+          aria-label={`Sair do vídeo ampliado: ${title}`}
+          className="absolute right-3 z-[3] grid h-11 w-11 place-items-center rounded-full border border-media-foreground/20 bg-media-background/40 text-primary-foreground shadow-lectum-soft backdrop-blur-md transition hover:bg-media-background/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95"
+          data-lectum-inline-video-exit="true"
+          onClick={closeInlineContentExpansion}
+          onPointerDown={(event) => event.stopPropagation()}
+          style={{
+            top: "calc(env(safe-area-inset-top) + 12px)",
+          }}
+          type="button"
+        >
+          <Minimize2 className="h-5 w-5" aria-hidden="true" strokeWidth={2.3} />
+        </button>
+      ) : null}
       <button
         aria-label={
           persistentControlsHidden
@@ -655,6 +627,7 @@ export const VerticalVideoPlayer = ({
         <VerticalVideoPlayerPersistentControls
           currentTime={currentTime}
           duration={duration}
+          fullscreenActive={isContentExpanded}
           isMuted={isMuted}
           isPaused={isPaused}
           hidden={persistentControlsHidden}

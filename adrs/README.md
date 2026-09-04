@@ -515,3 +515,4 @@ Formato recomendado:
 - [ADR-0482 — Pull-to-refresh convencional no frontend mobile](0482-pull-to-refresh-convencional-frontend.md)
 - [ADR-0483 — Playback público assinado no Cloudflare Stream](0483-playback-publico-assinado-cloudflare-stream.md)
 - [ADR-0484 — Memória efêmera de retorno no feed de vídeos de psicólogos](0484-memoria-retorno-feed-videos-psicologos.md)
+- [ADR-0485 — Vídeo expandido inline sem fullscreen nativo](0485-video-expandido-inline-sem-fullscreen-nativo.md)

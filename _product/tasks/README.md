@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 175 tasks: `TASK-00` a `TASK-168`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 176 tasks: `TASK-00` a `TASK-169`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -266,6 +266,7 @@ ou cortesia manual.
 | 166 | [TASK-166 - Estabilizar origem pública da migração R2 para Stream](TASK-166-estabilizar-origem-migracao-r2-stream.md) | Completed | 157, 163, 165 |
 | 167 | [TASK-167 - Restaurar playback público seguro no Cloudflare Stream](TASK-167-restaurar-playback-publico-stream.md) | Completed | 40, 163, 165, 166 |
 | 168 | [TASK-168 - Preservar vídeo ao voltar do perfil do psicólogo](TASK-168-preservar-video-ao-voltar-perfil-psicologo.md) | Completed | 13, 15, 145, 161, 162 |
+| 169 | [TASK-169 - Remover tag nativa no vídeo expandido](TASK-169-video-expandido-sem-tag-nativa-fullscreen.md) | Completed | 13, 23, 42, 161 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1285,3 +1286,12 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: testes focados de memoria de retorno, `pnpm --dir frontend check`, `pnpm --dir
   frontend build`, `pnpm check` e browser local mobile com dados reais de homologacao confirmando
   retorno ao candidato ativo 2 e snapshot consumido; `version:bump`/`check:version` em `0.1.268`.
+
+## Correcao em 2026-09-04: video expandido sem tag nativa do navegador
+
+- Ajuste pos-feedback das TASK-13/TASK-23/TASK-42/TASK-161: videos de conteudo ampliados deixam de chamar fullscreen nativo do navegador, evitando a faixa `homolog.lectum.com.br - Para sair da tela cheia...` exibida pelo sistema mobile.
+- O `VerticalVideoPlayer` passa a usar expansao inline/fixa no DOM para `fullscreenVariant="content"` com layout `media`, mantendo `object-contain`, controles persistentes, botao proprio de saida e body sem rolagem enquanto ampliado.
+- No feed de psicologos, o modo imersivo nao habilita mais `video.controls = true` transitoriamente; a experiencia permanece nos controles customizados/persistentes do produto.
+- O print anexado pelo usuario foi usado apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado de player, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local mobile em `/psicologos` com `nativeFullscreenCalls=0`/`video.controls=false` e em `/comunidades/autocuidado-em-pratica` com overlay inline `position=fixed`, `object-fit=contain`, botao de saida e zero chamadas nativas.

@@ -4,6 +4,7 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 import {
+  type FullscreenVariant,
   type PersistentControlsVisibility,
   shouldHidePersistentVideoControls,
 } from "./vertical-video-player-support";
@@ -11,9 +12,10 @@ import {
 type UseVerticalVideoPlayerImmersiveControlsInput = {
   controlsVisibility?: PersistentControlsVisibility;
   enabled: boolean;
-  fullscreenVariant: "default" | "content";
+  fullscreenVariant: FullscreenVariant;
   isPaused: boolean;
   onContentClick?: () => void;
+  onFullscreenRequest?: () => void;
   videoRef: RefObject<HTMLVideoElement | null>;
 };
 
@@ -25,6 +27,7 @@ export const useVerticalVideoPlayerImmersiveControls = ({
   fullscreenVariant,
   isPaused,
   onContentClick,
+  onFullscreenRequest,
   videoRef,
 }: UseVerticalVideoPlayerImmersiveControlsInput) => {
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,11 +99,16 @@ export const useVerticalVideoPlayerImmersiveControls = ({
   }, [videoRef]);
 
   const handleFullscreen = useCallback(() => {
+    if (onFullscreenRequest) {
+      onFullscreenRequest();
+      return;
+    }
+
     void requestVideoFullscreen(videoRef.current, {
       forceContain: fullscreenVariant === "content",
       temporaryControls: true,
     });
-  }, [fullscreenVariant, videoRef]);
+  }, [fullscreenVariant, onFullscreenRequest, videoRef]);
 
   const handleControlsInteraction = useCallback(() => {
     if (enabled && controlsVisibility === "auto" && isVideoPlaying()) scheduleAutoHide();

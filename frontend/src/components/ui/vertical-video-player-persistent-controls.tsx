@@ -1,4 +1,4 @@
-import { Maximize2, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Maximize2, Minimize2, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import type { KeyboardEventHandler, PointerEventHandler, Ref } from "react";
 import { formatVideoTime, type PersistentControlsLayout } from "./vertical-video-player-support";
 
@@ -9,6 +9,7 @@ type VerticalVideoPlayerPersistentControlsProps = {
   isMuted: boolean;
   isPaused: boolean;
   layout?: PersistentControlsLayout;
+  fullscreenActive?: boolean;
   onFullscreen?: () => void;
   onInteraction?: () => void;
   onMuteToggle: () => void;
@@ -29,6 +30,7 @@ export const VerticalVideoPlayerPersistentControls = ({
   isMuted,
   isPaused,
   layout = "stacked",
+  fullscreenActive = false,
   onFullscreen,
   onInteraction,
   onMuteToggle,
@@ -114,14 +116,18 @@ export const VerticalVideoPlayerPersistentControls = ({
 
             {onFullscreen ? (
               <button
-                aria-label={`Ampliar vídeo: ${title}`}
+                aria-label={`${fullscreenActive ? "Reduzir" : "Ampliar"} vídeo: ${title}`}
                 className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10 active:scale-95"
                 onClick={onFullscreen}
                 onPointerDown={(event) => event.stopPropagation()}
                 tabIndex={hidden ? -1 : undefined}
                 type="button"
               >
-                <Maximize2 className="h-[18px] w-[18px]" />
+                {fullscreenActive ? (
+                  <Minimize2 className="h-[18px] w-[18px]" />
+                ) : (
+                  <Maximize2 className="h-[18px] w-[18px]" />
+                )}
               </button>
             ) : null}
           </div>

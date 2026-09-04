@@ -70,8 +70,9 @@ export const usePsychologistsVideoGestures = ({
         currentVideo.ended ||
         isVideoPaused;
 
+      currentVideo.controls = false;
+
       if (shouldActivateVideoWithSound) {
-        currentVideo.controls = true;
         playCurrentVideoWithSound();
         setIsUiHidden(true);
         return;
@@ -79,7 +80,7 @@ export const usePsychologistsVideoGestures = ({
 
       setIsUiHidden((current) => {
         const next = !current;
-        currentVideo.controls = next;
+        currentVideo.controls = false;
         return next;
       });
       return;
