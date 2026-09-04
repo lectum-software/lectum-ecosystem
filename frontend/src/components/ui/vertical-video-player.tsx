@@ -18,6 +18,8 @@ import {
 } from "./vertical-video-player-content-expansion";
 import { useVerticalVideoPlayerImmersiveControls } from "./vertical-video-player-immersive-controls";
 import { VerticalVideoPlayerPersistentControls } from "./vertical-video-player-persistent-controls";
+import { useVideoPlaybackContinuity } from "./vertical-video-player-playback-continuity";
+import { VerticalVideoPlayerShell } from "./vertical-video-player-shell";
 import { useVerticalVideoStream, VerticalVideoStreamStatus } from "./vertical-video-player-stream";
 import {
   clampNumber,
@@ -56,9 +58,7 @@ export const VerticalVideoPlayer = ({
   videoProps,
 }: VerticalVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const { adaptivePlaybackFailed, playback } = useVerticalVideoStream({ poster, src, videoRef });
-  const effectiveSource = playback.source;
-  const latestSourceRef = useRef(effectiveSource);
+  const latestSourceRef = useRef(src);
   const isSeekingRef = useRef(false);
   const blobBackedVideoRef = useRef<{ source: string; url: string } | null>(null);
   const blobBackedVideoRequestRef = useRef<BlobBackedVideoRequest | null>(null);
@@ -71,6 +71,22 @@ export const VerticalVideoPlayer = ({
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const { capturePlaybackSnapshot, handleVideoElementRef, videoElementVersion } =
+    useVideoPlaybackContinuity({
+      currentTime,
+      onVideoElementReady,
+      setCurrentTime,
+      setIsMuted,
+      setIsPaused,
+      videoRef,
+    });
+  const { adaptivePlaybackFailed, playback } = useVerticalVideoStream({
+    poster,
+    src,
+    videoElementVersion,
+    videoRef,
+  });
+  const effectiveSource = playback.source;
   const usesMinimalControls = controls && controlsVariant === "minimal";
   const usesPersistentControls = controls && controlsVariant === "persistent";
   const usesMediaPersistentControls =
@@ -99,15 +115,19 @@ export const VerticalVideoPlayer = ({
 
   useMobileContentFullscreenStyles({ fullscreenVariant, videoRef });
 
+  const handleInlineContentExpansionRequest = useCallback(() => {
+    capturePlaybackSnapshot();
+    handleInlineContentExpansion();
+  }, [capturePlaybackSnapshot, handleInlineContentExpansion]);
+
+  const handleInlineContentClose = useCallback(() => {
+    capturePlaybackSnapshot();
+    closeInlineContentExpansion();
+  }, [capturePlaybackSnapshot, closeInlineContentExpansion]);
+
   useLayoutEffect(() => {
     latestSourceRef.current = effectiveSource;
   }, [effectiveSource]);
-
-  useEffect(() => {
-    onVideoElementReady?.(videoRef.current);
-
-    return () => onVideoElementReady?.(null);
-  }, [onVideoElementReady]);
 
   useEffect(() => {
     const effectSource = effectiveSource;
@@ -136,16 +156,21 @@ export const VerticalVideoPlayer = ({
   }, [effectiveSource]);
 
   useEffect(() => {
+    // Reexecuta quando o ref recebe outro elemento ao alternar o portal expandido.
+    void videoElementVersion;
+
     const video = videoRef.current;
     if (!video) return;
 
     if (usesMinimalControls || usesPersistentControls) {
       video.controls = false;
     }
-  }, [usesMinimalControls, usesPersistentControls]);
+  }, [usesMinimalControls, usesPersistentControls, videoElementVersion]);
 
   useEffect(() => {
     if (!usesMinimalControls && !usesPersistentControls) return;
+    // Reexecuta quando o ref recebe outro elemento ao alternar o portal expandido.
+    void videoElementVersion;
 
     const video = videoRef.current;
     if (!video) return;
@@ -183,7 +208,7 @@ export const VerticalVideoPlayer = ({
       video.removeEventListener("timeupdate", syncPlayerState);
       video.removeEventListener("volumechange", syncPlayerState);
     };
-  }, [usesMinimalControls, usesPersistentControls]);
+  }, [usesMinimalControls, usesPersistentControls, videoElementVersion]);
 
   const {
     controlsHidden: persistentControlsHidden,
@@ -198,7 +223,9 @@ export const VerticalVideoPlayer = ({
     fullscreenVariant,
     isPaused,
     onContentClick,
-    onFullscreenRequest: usesInlineContentExpansion ? handleInlineContentExpansion : undefined,
+    onFullscreenRequest: usesInlineContentExpansion
+      ? handleInlineContentExpansionRequest
+      : undefined,
     videoRef,
   });
 
@@ -522,14 +549,9 @@ export const VerticalVideoPlayer = ({
   const persistentProgressRatio = duration > 0 ? clampNumber(currentTime / duration, 0, 1) : 0;
 
   return (
-    <div
-      className={cn(
-        "relative aspect-[9/16] overflow-hidden rounded-[22px] border border-border bg-media-background shadow-inner",
-        className,
-        isContentExpanded &&
-          "fixed inset-0 z-[100] h-[100dvh] w-screen max-w-none rounded-none border-0 bg-media-background shadow-none",
-      )}
-      data-lectum-video-expanded={isContentExpanded ? "true" : undefined}
+    <VerticalVideoPlayerShell
+      className={className}
+      isContentExpanded={isContentExpanded}
       style={style}
     >
       <video
@@ -560,7 +582,7 @@ export const VerticalVideoPlayer = ({
         playsInline
         poster={playback.poster || undefined}
         preload={preload}
-        ref={videoRef}
+        ref={handleVideoElementRef}
         src={playback.isStream ? undefined : effectiveSource}
       >
         Seu navegador não suporta a reprodução de vídeo.
@@ -575,7 +597,7 @@ export const VerticalVideoPlayer = ({
           aria-label={`Sair do vídeo ampliado: ${title}`}
           className="absolute right-3 z-[3] grid h-11 w-11 place-items-center rounded-full border border-media-foreground/20 bg-media-background/40 text-primary-foreground shadow-lectum-soft backdrop-blur-md transition hover:bg-media-background/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95"
           data-lectum-inline-video-exit="true"
-          onClick={closeInlineContentExpansion}
+          onClick={handleInlineContentClose}
           onPointerDown={(event) => event.stopPropagation()}
           style={{
             top: "calc(env(safe-area-inset-top) + 12px)",
@@ -663,6 +685,6 @@ export const VerticalVideoPlayer = ({
           </div>
         </div>
       ) : null}
-    </div>
+    </VerticalVideoPlayerShell>
   );
 };

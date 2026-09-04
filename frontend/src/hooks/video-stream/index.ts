@@ -52,15 +52,20 @@ export const useVideoPlaybackSource = (
 export const useAttachVideoSource = ({
   adaptive,
   source,
+  videoElementVersion = 0,
   videoRef,
 }: {
   adaptive: boolean;
   source: string;
+  videoElementVersion?: number;
   videoRef: RefObject<HTMLVideoElement | null>;
 }) => {
   const [failedSource, setFailedSource] = useState<string | null>(null);
 
   useEffect(() => {
+    // Reanexa HLS/native source quando o ref recebe outro elemento de video.
+    void videoElementVersion;
+
     if (!adaptive || !source) return;
 
     const video = videoRef.current;
@@ -140,7 +145,7 @@ export const useAttachVideoSource = ({
         video.load();
       }
     };
-  }, [adaptive, source, videoRef]);
+  }, [adaptive, source, videoElementVersion, videoRef]);
 
   return failedSource === source;
 };

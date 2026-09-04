@@ -96,6 +96,10 @@ test("video de conteudo ampliado usa expansao inline sem fullscreen nativo", () 
     new URL("./vertical-video-player.tsx", import.meta.url),
     "utf8",
   );
+  const shellSource = readFileSync(
+    new URL("./vertical-video-player-shell.tsx", import.meta.url),
+    "utf8",
+  );
   const gesturesSource = readFileSync(
     new URL(
       "../../app/app/psychologists/hooks/use-psychologists-video-gestures.ts",
@@ -106,11 +110,36 @@ test("video de conteudo ampliado usa expansao inline sem fullscreen nativo", () 
 
   assert.match(
     playerSource,
-    /onFullscreenRequest:\s*usesInlineContentExpansion \? handleInlineContentExpansion : undefined/,
+    /onFullscreenRequest:\s*usesInlineContentExpansion\s*\?\s*handleInlineContentExpansionRequest\s*:\s*undefined/,
   );
   assert.match(
-    playerSource,
+    shellSource,
     /data-lectum-video-expanded=\{isContentExpanded \? "true" : undefined\}/,
   );
   assert.doesNotMatch(gesturesSource, /currentVideo\.controls = true/);
+});
+
+test("video expandido sai de cards com overflow e cobre o feed inferior", () => {
+  const playerSource = readFileSync(
+    new URL("./vertical-video-player.tsx", import.meta.url),
+    "utf8",
+  );
+  const shellSource = readFileSync(
+    new URL("./vertical-video-player-shell.tsx", import.meta.url),
+    "utf8",
+  );
+  const expansionSource = readFileSync(
+    new URL("./vertical-video-player-content-expansion.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(playerSource, /<VerticalVideoPlayerShell/);
+  assert.match(shellSource, /import \{ createPortal \} from "react-dom";/);
+  assert.match(shellSource, /data-lectum-video-inline-placeholder="true"/);
+  assert.match(shellSource, /createPortal\(playerRoot, document\.body\)/);
+  assert.match(shellSource, /z-\[1100\]/);
+  assert.match(shellSource, /data-lectum-video-expanded-portal/);
+  assert.match(expansionSource, /data-lectum-inline-video-expanded/);
+  assert.match(expansionSource, /documentElement\.style\.overflow = "hidden"/);
+  assert.match(expansionSource, /document\.body\.style\.overscrollBehavior = "none"/);
 });

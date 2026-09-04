@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 178 tasks: `TASK-00` a `TASK-171`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 179 tasks: `TASK-00` a `TASK-172`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -269,6 +269,7 @@ ou cortesia manual.
 | 169 | [TASK-169 - Remover tag nativa no vídeo expandido](TASK-169-video-expandido-sem-tag-nativa-fullscreen.md) | Completed | 13, 23, 42, 161 |
 | 170 | [TASK-170 - Retorno instantâneo ao vídeo anterior de psicólogos](TASK-170-retorno-instantaneo-video-psicologos.md) | Completed | 13, 15, 168 |
 | 171 | [TASK-171 - Corrigir troca do vídeo de apresentação do psicólogo](TASK-171-corrigir-troca-video-apresentacao-psicologo.md) | Completed | 157, 163, 167 |
+| 172 | [TASK-172 - Corrigir vazamento visual abaixo do vídeo expandido no feed](TASK-172-corrigir-video-expandido-feed-inferior.md) | Completed | 23, 42, 169 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1326,3 +1327,21 @@ Uma task só pode ser marcada como concluída quando:
 - A imagem anexada em 2026-09-04 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
 - Alteracao frontend+backend; admin/video apenas manifests de versao. Sem schema, migration, endpoint novo, env obrigatoria, package novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
 - Validacoes: testes focados de Stream frontend/backend, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local mobile sem sessao com redirect seguro para login, `pnpm version:bump` e `pnpm check:version` em `0.1.271`.
+
+## Correcao em 2026-09-04: video expandido acima do feed inferior
+
+- Ajuste pos-feedback da TASK-169: videos de conteudo ampliados continuam sem fullscreen nativo,
+  mas agora saem da arvore do card/feed e sao montados em `document.body` via portal.
+- O local original do card recebe placeholder sem video para preservar altura/scroll, enquanto o
+  overlay usa camada `z-[1100]`, fundo opaco e `object-contain`, cobrindo bottom navigation, FAB e
+  conteudo inferior.
+- `html` e `body` ficam com scroll/overscroll travados durante a expansao; o documento recebe
+  `data-lectum-inline-video-expanded` e restaura o estado ao fechar.
+- Como a ida ao portal troca o elemento `<video>`, o player preserva tempo/pausa/mute/volume basicos
+  e reobserva/reanexa Stream/HLS quando o ref muda.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como
+  ferramenta callable nesta sessao.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration,
+  endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback
+  simples reverte o commit.

@@ -108,15 +108,37 @@ export const useInlineContentVideoExpansion = ({
     if (!isContentExpanded || typeof document === "undefined") return;
 
     const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
+    const documentElement = document.documentElement;
+    const previousDocumentOverflow = documentElement.style.overflow;
+    const previousDocumentOverscrollBehavior = documentElement.style.overscrollBehavior;
+    const previousExpansionAttribute = documentElement.getAttribute(
+      "data-lectum-inline-video-expanded",
+    );
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setExpandedContentSource(null);
     };
 
+    documentElement.setAttribute("data-lectum-inline-video-expanded", "true");
+    documentElement.style.overflow = "hidden";
+    documentElement.style.overscrollBehavior = "none";
     document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      if (previousExpansionAttribute === null) {
+        documentElement.removeAttribute("data-lectum-inline-video-expanded");
+      } else {
+        documentElement.setAttribute(
+          "data-lectum-inline-video-expanded",
+          previousExpansionAttribute,
+        );
+      }
+      documentElement.style.overflow = previousDocumentOverflow;
+      documentElement.style.overscrollBehavior = previousDocumentOverscrollBehavior;
       document.body.style.overflow = previousBodyOverflow;
+      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isContentExpanded]);

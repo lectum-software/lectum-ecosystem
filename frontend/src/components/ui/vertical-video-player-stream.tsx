@@ -8,10 +8,12 @@ import { isVideoAssetReference } from "@/utils/video-stream";
 export const useVerticalVideoStream = ({
   poster,
   src,
+  videoElementVersion = 0,
   videoRef,
 }: {
   poster?: string | null;
   src: string;
+  videoElementVersion?: number;
   videoRef: RefObject<HTMLVideoElement | null>;
 }) => {
   const isStreamReference = isVideoAssetReference(src);
@@ -20,10 +22,14 @@ export const useVerticalVideoStream = ({
   const adaptivePlaybackFailed = useAttachVideoSource({
     adaptive: playback.isStream,
     source: playback.source,
+    videoElementVersion,
     videoRef,
   });
 
   useEffect(() => {
+    // Reobserva o elemento quando o player expandido troca de container via portal.
+    void videoElementVersion;
+
     if (!isStreamReference) return;
 
     const video = videoRef.current;
@@ -42,7 +48,7 @@ export const useVerticalVideoStream = ({
     );
     observer.observe(video);
     return () => observer.disconnect();
-  }, [isStreamReference, src, videoRef]);
+  }, [isStreamReference, src, videoElementVersion, videoRef]);
 
   return { adaptivePlaybackFailed, playback };
 };
