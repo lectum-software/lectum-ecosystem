@@ -65,7 +65,8 @@ superfície pública da API nem transportar a chave pela internet aberta.
 1. No backend de homologação, cadastrar a URL WireGuard privada e a mesma API key da app `video/`;
    como o código anterior não lê essas envs, não é necessário um redeploy isolado.
 2. Publicar o backend com configuração opcional; comportamento atual permanece idêntico.
-3. Aguardar o deploy automático e executar `pnpm video:check-processing-service` no container.
+3. Aguardar o deploy automático e executar `pnpm --dir backend video:check-processing-service` no
+   container, ou chamar diretamente o artefato compilado da operação.
 4. Validar também `/health`, `/ready` e `/ping` antes de considerar homologação concluída.
 5. Repetir provisionamento/smoke em produção somente durante promoção revisada futura.
 

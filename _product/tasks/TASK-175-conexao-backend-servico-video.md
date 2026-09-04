@@ -8,7 +8,7 @@
 | Prioridade | P0 |
 | Esforço | M |
 | Fase | Infraestrutura de mídia e operação |
-| Status | In Progress |
+| Status | Completed |
 | Dependências | TASK-164 |
 | ADR alvo | ADR-0491 |
 
@@ -59,7 +59,8 @@ vídeo sem executar qualquer mutação.
 - **Jobs/providers:** o probe usa somente GET e não cria, consulta ou remove job real.
 - **Rollback:** remover as envs/reverter o cliente; banco, Redis, volume, R2 e Stream não mudam.
 - **Smoke:** confirmar backend `/health`, `/ready`, `/ping` e executar
-  `pnpm video:check-processing-service`, esperando readiness, versão e autenticação válidas.
+  `pnpm --dir backend video:check-processing-service`, esperando readiness, versão e autenticação
+  válidas.
 
 ### ALERTA DE DEPLOY
 
@@ -93,10 +94,10 @@ Referências: `ARCHITECTURE.md` › “Serviço isolado de processamento de víd
 - [x] Nenhum fluxo atual, `/ready` do backend, upload, playback ou dado persistido foi alterado.
 - [x] Envs, ordem de deploy, rollback e smoke de homologação foram registrados.
 - [x] Testes e checks/build backend passam sem warnings.
-- [ ] Smoke autenticado passa dentro do container real do backend de homologação.
+- [x] Smoke autenticado passa dentro do container real do backend de homologação.
 - [x] ADR-0491 está criado e indexado.
 - [x] Versão dos cinco manifests foi incrementada uma vez e permanece sincronizada.
-- [ ] Commit e push ocorrem em `homolog`; deploy automático e smoke foram comunicados.
+- [x] Commit e push ocorrem em `homolog`; deploy automático e smoke foram comunicados.
 
 ## Validação mínima
 
@@ -115,4 +116,9 @@ Referências: `ARCHITECTURE.md` › “Serviço isolado de processamento de víd
   completo `pnpm check` terminaram sem warnings antes do deploy.
 - As envs backend-only foram cadastradas em homologação antes do push para que o novo container já
   nasça apto ao smoke autenticado; seus valores não foram copiados para código, documentação ou log.
+- O commit funcional `28f7892f` foi publicado em `homolog`; após a troca do container, `/health` e
+  `/ready` responderam corretamente e `/ping` confirmou a versão `0.1.275`.
+- No container real do backend de homologação, a operação compilada confirmou
+  `authentication: valid`, `readiness: ready`, versão `0.1.275` do serviço e transporte
+  `private_network`. Nenhum job foi criado durante o probe.
 - Nenhum reset, migration, seed, job ou alteração de mídia faz parte desta task.

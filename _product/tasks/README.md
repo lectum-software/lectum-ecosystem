@@ -272,7 +272,7 @@ ou cortesia manual.
 | 172 | [TASK-172 - Corrigir vazamento visual abaixo do vídeo expandido no feed](TASK-172-corrigir-video-expandido-feed-inferior.md) | Completed | 23, 42, 169 |
 | 173 | [TASK-173 - Corrigir upload de vídeos nos posts e respostas](TASK-173-corrigir-upload-video-posts-respostas.md) | Completed | 23, 24, 26, 163, 171 |
 | 174 | [TASK-174 - Fixar barra de comentários no detalhe do post](TASK-174-fixar-barra-comentarios-detalhe-post.md) | Completed | 23, 24, 26, 45 |
-| 175 | [TASK-175 - Conexão autenticada do backend ao serviço de vídeo](TASK-175-conexao-backend-servico-video.md) | In Progress | 164 |
+| 175 | [TASK-175 - Conexão autenticada do backend ao serviço de vídeo](TASK-175-conexao-backend-servico-video.md) | Completed | 164 |
 
 ## Ordem operacional recomendada sem bloqueios
 
