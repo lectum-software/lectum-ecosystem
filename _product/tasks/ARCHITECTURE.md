@@ -294,6 +294,7 @@ Templates/shells devem viver em `frontend/src/templates`.
 - Design foundation deve transformar `registry/new-york-v4` e `components/ui` no padrão Lectum.
 - Componentes de interface devem usar ícones `lucide-react` quando houver equivalente.
 - Telas devem consultar `PROTO-INVENTORY.md` antes da implementação.
+- Barras fixas inferiores no mobile, como o composer principal de comentários, devem ancorar em `bottom-0` com safe area; offset de teclado só pode vir de medição ativa (`visualViewport`) e não de `env(keyboard-inset-height)` como fallback permanente, para evitar barras flutuando após o teclado fechar.
 - Quando Builder/Quick Copy estiver disponível no cliente, usar o Quick Copy ativo para complementar a leitura visual.
 - Quando Builder/Quick Copy não estiver acessível no ambiente, usar as imagens exportadas em `_product/proto` e registrar a limitação.
 - Imagens de protótipo não autorizam copiar arquitetura, criar mocks ou aceitar código gerado automaticamente.

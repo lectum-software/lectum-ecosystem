@@ -140,11 +140,8 @@ export const ReplyComposer = ({
   );
   const composerStyle = useMemo(() => {
     const style: CSSProperties = {};
-    if (!isInline) {
-      style.bottom =
-        keyboardOffset > 0
-          ? `max(${keyboardOffset}px, env(keyboard-inset-height, 0px))`
-          : "env(keyboard-inset-height, 0px)";
+    if (!isInline && shouldUseKeyboardSafeArea) {
+      style.bottom = `${keyboardOffset}px`;
     }
 
     if (dragOffset > 0) {
@@ -152,7 +149,7 @@ export const ReplyComposer = ({
     }
 
     return Object.keys(style).length > 0 ? style : undefined;
-  }, [dragOffset, isInline, keyboardOffset]);
+  }, [dragOffset, isInline, keyboardOffset, shouldUseKeyboardSafeArea]);
 
   const revokeSelectedMediaPreview = useCallback(() => {
     if (!selectedMediaPreviewUrlRef.current) return;

@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 180 tasks: `TASK-00` a `TASK-173`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 181 tasks: `TASK-00` a `TASK-174`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -271,6 +271,7 @@ ou cortesia manual.
 | 171 | [TASK-171 - Corrigir troca do vídeo de apresentação do psicólogo](TASK-171-corrigir-troca-video-apresentacao-psicologo.md) | Completed | 157, 163, 167 |
 | 172 | [TASK-172 - Corrigir vazamento visual abaixo do vídeo expandido no feed](TASK-172-corrigir-video-expandido-feed-inferior.md) | Completed | 23, 42, 169 |
 | 173 | [TASK-173 - Corrigir upload de vídeos nos posts e respostas](TASK-173-corrigir-upload-video-posts-respostas.md) | Completed | 23, 24, 26, 163, 171 |
+| 174 | [TASK-174 - Fixar barra de comentários no detalhe do post](TASK-174-fixar-barra-comentarios-detalhe-post.md) | Completed | 23, 24, 26, 45 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1367,3 +1368,12 @@ Uma task só pode ser marcada como concluída quando:
   build`, `pnpm check`, browser/local HTTP em `/version` e `/comunidades`, `pnpm version:bump` e
   `pnpm check:version` em `0.1.273`; upload autenticado real nao foi executado localmente por falta
   de sessao/credenciais no ambiente do agente, sem uso de mocks.
+
+## Correção visual em 2026-09-04: barra de comentários fixa no detalhe do post
+
+- Ajuste pós-feedback das TASK-23/TASK-24/TASK-26/TASK-45/ADR-0453: no detalhe do post e na árvore de respostas, a barra principal de comentários deve permanecer ancorada no rodapé da viewport mobile, sem flutuar no meio do conteúdo após abrir/fechar o teclado.
+- A causa isolada foi o uso de `env(keyboard-inset-height)` como `bottom` padrão do composer fixo. Em navegadores mobile/PWA esse valor pode ficar desatualizado após o teclado fechar e empurrar a barra para cima mesmo sem teclado visível.
+- O composer agora usa `bottom-0` + safe area como estado padrão e só aplica `bottom` inline com offset medido pelo `visualViewport` enquanto há teclado ativo, preservando o espaço inferior (`pb-36`) para que comentários/vídeos não fiquem cobertos.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido. Builder/Quick Copy não está exposto como ferramenta callable nesta sessão; foram consultados o inventário `_product/tasks/PROTO-INVENTORY.md` e o fallback local `_product/proto/Dentro do Post.jpg`.
+- Alteração frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatória, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
+- Validações: teste focado do layout do composer, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser/local HTTP em `/version` e `/comunidades`, `pnpm version:bump` e `pnpm check:version` em `0.1.274`; deploy/smoke de homologação após `git push`.
