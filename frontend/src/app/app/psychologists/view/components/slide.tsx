@@ -80,11 +80,12 @@ export const PsychologistSlide = ({
     slideProgressBottom,
     slideCanSeekProgress,
     slideVideoAreaLabel,
+    slideDisplayName,
   } = slide;
 
   return (
     <section
-      aria-label={`Psicólogo ${psychologist.name}`}
+      aria-label={`Psicólogo ${slideDisplayName}`}
       className={cn(
         "relative h-[100dvh] w-full snap-start snap-always overflow-hidden lg:h-[var(--psychologists-desktop-slide-height)] lg:overflow-visible",
         isActiveSlide && shouldNudgeSwipeCard ? "psychologists-swipe-nudge" : null,
@@ -107,7 +108,7 @@ export const PsychologistSlide = ({
               poster={slidePosterSrc || undefined}
               preload={isActiveSlide ? "auto" : "metadata"}
               src={slideVideoSrc ?? ""}
-              title={`Vídeo de apresentação de ${psychologist.name}`}
+              title={`Vídeo de apresentação de ${slideDisplayName}`}
               videoClassName="h-full w-full bg-media-background object-cover"
               videoProps={{
                 "data-psychologist-id": psychologist.id,
@@ -181,7 +182,7 @@ export const PsychologistSlide = ({
             />
           ) : slidePosterSrc ? (
             <Image
-              alt={psychologist.name}
+              alt={slideDisplayName}
               className="h-full w-full object-cover"
               fill
               priority={isActiveSlide}
@@ -191,7 +192,7 @@ export const PsychologistSlide = ({
             />
           ) : (
             <div className="grid h-full w-full place-items-center bg-surface-muted text-3xl font-extrabold text-subtle">
-              {getInitials(psychologist.name)}
+              {getInitials(slideDisplayName)}
             </div>
           )}
 
@@ -233,8 +234,8 @@ export const PsychologistSlide = ({
             <button
               aria-label={
                 isVideoPaused
-                  ? `Retomar vídeo de ${psychologist.name}`
-                  : `Ativar som do vídeo de ${psychologist.name}`
+                  ? `Retomar vídeo de ${slideDisplayName}`
+                  : `Ativar som do vídeo de ${slideDisplayName}`
               }
               className="absolute top-1/2 left-1/2 z-20 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-media-foreground/35 bg-media-background/30 text-primary-foreground shadow-lectum-soft backdrop-blur-sm transition hover:bg-media-background/40"
               onClick={handleVideoControlTap}
@@ -250,7 +251,7 @@ export const PsychologistSlide = ({
 
           {slideShouldRenderProgress ? (
             <div
-              aria-label={`Progresso do vídeo de ${psychologist.name}`}
+              aria-label={`Progresso do vídeo de ${slideDisplayName}`}
               aria-valuemax={isActiveSlide ? Math.round(videoProgress.duration) : 0}
               aria-valuemin={0}
               aria-valuenow={isActiveSlide ? Math.round(videoProgress.currentTime) : 0}
@@ -325,7 +326,7 @@ export const PsychologistSlide = ({
 
           {isActiveSlide && slideShouldShowVideo && slideIsUiHidden ? (
             <button
-              aria-label="Mostrar interface do video"
+              aria-label="Mostrar interface do vídeo"
               className="pointer-events-auto absolute left-4 z-[70] grid h-12 w-12 place-items-center rounded-full border border-media-foreground/10 bg-media-background/55 text-primary-foreground shadow-lectum-soft backdrop-blur-md transition hover:bg-media-background/65 active:scale-95"
               data-psychologists-scroll-lock="true"
               onClick={handleImmersiveExit}

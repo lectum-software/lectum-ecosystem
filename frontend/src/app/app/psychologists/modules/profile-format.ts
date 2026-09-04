@@ -2,6 +2,7 @@ import type {
   DirectoryPsychologist,
   DirectoryPsychologistsQuery,
 } from "@/api/generator/types/directory";
+import { normalizeProfessionalDisplayName } from "../../../../utils/professional-name";
 import { normalizePatientModalityFilter, type PsychologistsFilterForm } from "../use-form";
 import { PAGE_LIMIT } from "./onboarding";
 
@@ -35,7 +36,7 @@ export const formatProfileTitle = (
 };
 
 export const formatDisplayName = (name: string) => {
-  return name;
+  return normalizeProfessionalDisplayName(name) || name.replace(/\s+/g, " ").trim();
 };
 
 const normalizePsychologistSearchText = (value: string) =>

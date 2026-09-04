@@ -1,5 +1,8 @@
 import { error, msg } from "@/helpers/translate";
-import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
+import {
+  buildProfessionalFullDisplayName,
+  normalizeProfessionalNamePart,
+} from "@/utils/professional-name";
 import type {
   FreeProfessionalProfileUpdateBody,
   IFreeProfessionalProfileShowDTO,
@@ -126,15 +129,24 @@ export const update = async (data: IFreeProfessionalProfileUpdateDTO) => {
         ? [legacyAcademic]
         : [];
   const primaryAcademic = resolvedAcademicFormations[0] || legacyAcademic;
+  const professionalFirstName = normalizeProfessionalNamePart(parsed.data.professional_first_name);
+  const professionalLastName = normalizeProfessionalNamePart(parsed.data.professional_last_name);
+
+  if (!professionalFirstName || !professionalLastName) {
+    return {
+      status: 400,
+      ...error("invalid_structure", {}),
+    };
+  }
 
   const body: Required<FreeProfessionalProfileUpdateBody> = {
     name: buildProfessionalFullDisplayName({
       fallbackName: parsed.data.name,
-      firstName: parsed.data.professional_first_name,
-      lastName: parsed.data.professional_last_name,
+      firstName: professionalFirstName,
+      lastName: professionalLastName,
     }),
-    professional_first_name: parsed.data.professional_first_name,
-    professional_last_name: parsed.data.professional_last_name,
+    professional_first_name: professionalFirstName,
+    professional_last_name: professionalLastName,
     cpf,
     birthdate,
     gender: trimToNull(parsed.data.gender),

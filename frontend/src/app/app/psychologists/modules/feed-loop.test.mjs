@@ -4,6 +4,10 @@ import { dirname, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  normalizeProfessionalDisplayName,
+  normalizeProfessionalNamePart,
+} from "../../../../utils/professional-name.ts";
+import {
   buildPsychologistsFeedSlides,
   clampPsychologistFeedSlideIndex,
   getPsychologistFeedRealIndex,
@@ -110,4 +114,18 @@ test("slide de psicologos exibe a Bio curta acima das chips comerciais", () => {
     benefitChipsIndex > slideBioIndex,
     "as chips comerciais precisam ficar depois da Bio curta",
   );
+});
+
+test("slide de psicologos remove prefixo profissional do nome exibido", () => {
+  const profileFormatSource = readSource("profile-format.ts");
+  const slideModelSource = readSource("../view/components/slide-model.ts");
+
+  assert.equal(
+    normalizeProfessionalDisplayName("Psicóloga Rafaela Gomes Geraldo"),
+    "Rafaela Gomes Geraldo",
+  );
+  assert.equal(normalizeProfessionalDisplayName("Dra. Ana Rúbia Cunha"), "Ana Rúbia Cunha");
+  assert.equal(normalizeProfessionalNamePart("Psi - Camila"), "Camila");
+  assert.match(profileFormatSource, /normalizeProfessionalDisplayName\(name\)/);
+  assert.match(slideModelSource, /const slideNameParts = splitNameForBadge\(psychologist\.name\)/);
 });

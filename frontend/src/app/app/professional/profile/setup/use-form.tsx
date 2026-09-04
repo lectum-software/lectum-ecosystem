@@ -11,6 +11,10 @@ import {
   findCountryCallingCode,
 } from "@/utils/country-calling-codes";
 import {
+  normalizeProfessionalDisplayName,
+  normalizeProfessionalNamePart,
+} from "@/utils/professional-name";
+import {
   CRP_REGION_OPTIONS,
   GENDER_OPTIONS,
   LANGUAGE_OPTIONS,
@@ -488,11 +492,7 @@ const catalogNameOptions = (items?: FreeProfileCatalogItem[] | null) =>
   (items ?? []).map((item) => ({ label: item.name, value: item.name }));
 
 const splitProfessionalNameFallback = (fullName?: string | null) => {
-  const parts = String(fullName ?? "")
-    .trim()
-    .replace(/\s{2,}/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts = normalizeProfessionalDisplayName(fullName).split(/\s+/).filter(Boolean);
 
   return {
     firstName: parts[0] ?? "",
@@ -504,8 +504,11 @@ export const getDefaultValues = (data?: FreeProfessionalProfile | null): FreePro
   const fallbackName = splitProfessionalNameFallback(data?.user.name);
 
   return {
-    professional_first_name: data?.profile.professional_first_name || fallbackName.firstName,
-    professional_last_name: data?.profile.professional_last_name || fallbackName.lastName,
+    professional_first_name:
+      normalizeProfessionalNamePart(data?.profile.professional_first_name) ||
+      fallbackName.firstName,
+    professional_last_name:
+      normalizeProfessionalNamePart(data?.profile.professional_last_name) || fallbackName.lastName,
     gender: data?.profile.gender || "",
     race_color: data?.profile.race_color || "",
     religion: data?.profile.religion || "",

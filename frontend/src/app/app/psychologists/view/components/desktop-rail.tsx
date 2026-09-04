@@ -2,11 +2,14 @@
 
 import { ArrowDown, ArrowUp, Heart, Search, Share2, SlidersHorizontal } from "lucide-react";
 import Image from "next/image";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  getPsychologistWhatsappDisplayName,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import { formatProfileTitle, getInitials } from "../../modules/profile-format";
+import { formatDisplayName, formatProfileTitle, getInitials } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
 
 export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewModel }) => {
@@ -48,6 +51,16 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
   const { shareCurrent, toggleFavorite } = model.favorite;
 
   const { navigateToNextPsychologist, navigateToPreviousPsychologist } = model.feed;
+  const desktopActionDisplayName = desktopActionPsychologist
+    ? formatDisplayName(desktopActionPsychologist.name)
+    : "";
+  const desktopActionWhatsappName = desktopActionPsychologist
+    ? getPsychologistWhatsappDisplayName({
+        id: desktopActionPsychologist.id,
+        name: desktopActionDisplayName,
+        whatsappName: desktopActionPsychologist.whatsapp_name,
+      })
+    : "";
 
   return (
     <aside
@@ -119,22 +132,26 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                         Buscando profissionais...
                       </div>
                     ) : (
-                      searchSuggestionItems.map((suggestion) => (
-                        <button
-                          aria-label={`Buscar por ${suggestion.name}`}
-                          aria-selected={false}
-                          className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-surface-muted"
-                          key={suggestion.id}
-                          onClick={() => handleSearchSuggestionSelect(suggestion.name)}
-                          role="option"
-                          type="button"
-                        >
-                          <span className="min-w-0 truncate">{suggestion.name}</span>
-                          <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-extrabold text-primary">
-                            {suggestion.verified ? "Verificado" : "Gratuito"}
-                          </span>
-                        </button>
-                      ))
+                      searchSuggestionItems.map((suggestion) => {
+                        const displayName = formatDisplayName(suggestion.name);
+
+                        return (
+                          <button
+                            aria-label={`Buscar por ${displayName}`}
+                            aria-selected={false}
+                            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-surface-muted"
+                            key={suggestion.id}
+                            onClick={() => handleSearchSuggestionSelect(displayName)}
+                            role="option"
+                            type="button"
+                          >
+                            <span className="min-w-0 truncate">{displayName}</span>
+                            <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-extrabold text-primary">
+                              {suggestion.verified ? "Verificado" : "Gratuito"}
+                            </span>
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 ) : null}
@@ -194,7 +211,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
         >
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
             <button
-              aria-label={`Ver perfil de ${desktopActionPsychologist.name}`}
+              aria-label={`Ver perfil de ${desktopActionDisplayName}`}
               className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-border bg-surface p-0.5 text-foreground transition hover:scale-105 hover:bg-surface-muted active:scale-95"
               disabled={isDesktopActionRailHidden}
               onClick={(event) =>
@@ -207,7 +224,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
               <span className="relative grid h-full w-full place-items-center overflow-hidden rounded-full bg-surface-muted text-[11px] font-bold text-muted">
                 {desktopActionPsychologist.avatar ? (
                   <Image
-                    alt={desktopActionPsychologist.name}
+                    alt={desktopActionDisplayName}
                     className="h-full w-full rounded-full object-cover"
                     fill
                     sizes="40px"
@@ -215,7 +232,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                     unoptimized={isPublicMediaUrl(desktopActionPsychologist.avatar)}
                   />
                 ) : (
-                  getInitials(desktopActionPsychologist.name)
+                  getInitials(desktopActionDisplayName)
                 )}
               </span>
             </button>
@@ -228,8 +245,8 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                 desktopActionIsOwnProfile
                   ? "Você não pode favoritar o próprio perfil"
                   : desktopActionIsFavorited
-                    ? `Remover ${desktopActionPsychologist.name} dos favoritos`
-                    : `Favoritar ${desktopActionPsychologist.name}`
+                    ? `Remover ${desktopActionDisplayName} dos favoritos`
+                    : `Favoritar ${desktopActionDisplayName}`
               }
               aria-busy={desktopActionIsFavoritePending}
               aria-pressed={desktopActionIsFavorited}
@@ -259,7 +276,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
 
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
             <button
-              aria-label={`Compartilhar perfil de ${desktopActionPsychologist.name}`}
+              aria-label={`Compartilhar perfil de ${desktopActionDisplayName}`}
               className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted transition hover:scale-105 hover:bg-surface-muted active:scale-95"
               disabled={isDesktopActionRailHidden}
               onClick={(event) => {
@@ -277,7 +294,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
           <div className="grid w-[68px] justify-items-center gap-1 text-center">
             {desktopActionPsychologist.whatsapp_url ? (
               <PsychologistWhatsAppRedirectButton
-                aria-label={`Fale com ${desktopActionPsychologist.whatsapp_name || desktopActionPsychologist.name} no WhatsApp`}
+                aria-label={`Fale com ${desktopActionWhatsappName || desktopActionDisplayName} no WhatsApp`}
                 className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-success transition hover:scale-105 hover:bg-surface-muted active:scale-95"
                 data-psychologists-tip-target={isDesktopActionRailHidden ? undefined : "whatsapp"}
                 importantActionType="psychologist_video_whatsapp_click"
@@ -286,9 +303,9 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
                   avatar: desktopActionPsychologist.avatar,
                   crp: desktopActionPsychologist.crp,
                   id: desktopActionPsychologist.id,
-                  name: desktopActionPsychologist.name,
+                  name: desktopActionDisplayName,
                   typeLabel: formatProfileTitle(desktopActionPsychologist.gender, null, false),
-                  whatsappName: desktopActionPsychologist.whatsapp_name,
+                  whatsappName: desktopActionWhatsappName,
                   whatsappUrl: desktopActionPsychologist.whatsapp_url,
                 }}
                 stopPropagation
@@ -304,7 +321,7 @@ export const PsychologistsDesktopRail = ({ model }: { model: PsychologistsViewMo
             ) : (
               <button
                 aria-disabled="true"
-                aria-label={`WhatsApp indisponível para ${desktopActionPsychologist.name}`}
+                aria-label={`WhatsApp indisponível para ${desktopActionDisplayName}`}
                 className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-success opacity-55"
                 disabled={isDesktopActionRailHidden}
                 onClick={stopInteractionPropagation}

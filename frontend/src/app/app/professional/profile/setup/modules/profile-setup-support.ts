@@ -8,6 +8,7 @@ import type {
   FreeProfileCatalogCategory,
   FreeProfileCatalogItem,
 } from "@/api/generator/types/free-profile";
+import { normalizeProfessionalNamePart } from "@/utils/professional-name";
 import type { FreeProfileForm } from "../use-form";
 import { getLanguages, toBirthdateIso, toWhatsappPhoneE164 } from "../use-form";
 
@@ -192,8 +193,8 @@ export const toFreeProfessionalProfilePayload = (
   lockProfessionalIdentity: boolean,
 ): FreeProfessionalProfilePayload => {
   const lockedIdentityProfile = lockProfessionalIdentity ? profile?.profile : null;
-  const professionalFirstName = values.professional_first_name.trim();
-  const professionalLastName = values.professional_last_name.trim();
+  const professionalFirstName = normalizeProfessionalNamePart(values.professional_first_name);
+  const professionalLastName = normalizeProfessionalNamePart(values.professional_last_name);
 
   return {
     name: [professionalFirstName, professionalLastName].filter(Boolean).join(" "),

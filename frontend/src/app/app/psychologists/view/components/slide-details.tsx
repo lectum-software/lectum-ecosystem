@@ -2,7 +2,10 @@
 
 import { Heart, Share2, Star } from "lucide-react";
 import Image from "next/image";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  getPsychologistWhatsappDisplayName,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { cn } from "@/lib/utils";
@@ -51,6 +54,12 @@ export const PsychologistSlideDetails = ({
     slideShouldHideChrome,
     slideUiVisibilityClass,
   } = slide;
+  const displayName = formatDisplayName(psychologist.name);
+  const whatsappName = getPsychologistWhatsappDisplayName({
+    id: psychologist.id,
+    name: displayName,
+    whatsappName: psychologist.whatsapp_name,
+  });
 
   return (
     <section
@@ -87,7 +96,7 @@ export const PsychologistSlideDetails = ({
 
         <div className="grid gap-1.5">
           <button
-            aria-label={`Ver perfil de ${psychologist.name}`}
+            aria-label={`Ver perfil de ${displayName}`}
             className="block w-full min-w-0 max-w-full cursor-pointer text-left font-bold text-primary-foreground"
             disabled={slideShouldHideChrome}
             onClick={(event) => navigateToPublicPsychologistProfile(psychologist.id, event)}
@@ -104,7 +113,7 @@ export const PsychologistSlideDetails = ({
           >
             {slideNameParts.firstPart ? <span>{slideNameParts.firstPart} </span> : null}
             <span className="inline-flex max-w-full items-center gap-1.5 whitespace-nowrap align-baseline">
-              <span>{slideNameParts.lastPart || formatDisplayName(psychologist.name)}</span>
+              <span>{slideNameParts.lastPart || displayName}</span>
               {psychologist.verified ? (
                 <VerifiedBadgeIcon
                   aria-hidden="true"
@@ -225,7 +234,7 @@ export const PsychologistSlideDetails = ({
         >
           <div className="grid justify-items-center text-center">
             <button
-              aria-label={`Ver perfil de ${psychologist.name}`}
+              aria-label={`Ver perfil de ${displayName}`}
               className="grid place-items-center rounded-full bg-transparent transition active:scale-95"
               disabled={slideShouldHideChrome}
               onClick={(event) => navigateToPublicPsychologistProfile(psychologist.id, event)}
@@ -247,7 +256,7 @@ export const PsychologistSlideDetails = ({
               >
                 {psychologist.avatar ? (
                   <Image
-                    alt={psychologist.name}
+                    alt={displayName}
                     className="h-full w-full rounded-full object-cover"
                     fill
                     sizes={`${metrics.actionAvatarSize}px`}
@@ -256,7 +265,7 @@ export const PsychologistSlideDetails = ({
                   />
                 ) : (
                   <span className="grid h-full w-full place-items-center rounded-full bg-surface-muted text-[10px] font-semibold text-muted">
-                    {getInitials(psychologist.name)}
+                    {getInitials(displayName)}
                   </span>
                 )}
               </div>
@@ -302,7 +311,7 @@ export const PsychologistSlideDetails = ({
 
           <div className="grid justify-items-center text-center">
             <button
-              aria-label={`Compartilhar perfil de ${psychologist.name}`}
+              aria-label={`Compartilhar perfil de ${displayName}`}
               className="grid place-items-center rounded-full bg-transparent text-primary-foreground transition hover:bg-media-foreground/10"
               disabled={slideShouldHideChrome}
               onClick={(event) => {
@@ -337,7 +346,7 @@ export const PsychologistSlideDetails = ({
               }}
             >
               <PsychologistWhatsAppRedirectButton
-                aria-label={`Fale com ${psychologist.whatsapp_name || psychologist.name} no WhatsApp`}
+                aria-label={`Fale com ${whatsappName || displayName} no WhatsApp`}
                 className="grid place-items-center rounded-full bg-transparent text-primary-foreground transition active:scale-95"
                 data-psychologists-tip-target={isActiveSlide ? "whatsapp" : undefined}
                 importantActionType="psychologist_video_whatsapp_click"
@@ -346,9 +355,9 @@ export const PsychologistSlideDetails = ({
                   avatar: psychologist.avatar,
                   crp: psychologist.crp,
                   id: psychologist.id,
-                  name: psychologist.name,
+                  name: displayName,
                   typeLabel: formatProfileTitle(psychologist.gender, null, false),
-                  whatsappName: psychologist.whatsapp_name,
+                  whatsappName,
                   whatsappUrl: psychologist.whatsapp_url,
                 }}
                 stopPropagation
@@ -393,7 +402,7 @@ export const PsychologistSlideDetails = ({
             >
               <button
                 aria-disabled="true"
-                aria-label={`WhatsApp indisponível para ${psychologist.name}`}
+                aria-label={`WhatsApp indisponível para ${displayName}`}
                 className="grid place-items-center rounded-full bg-transparent text-primary-foreground transition"
                 disabled
                 tabIndex={-1}

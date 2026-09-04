@@ -8,7 +8,10 @@ import { useMemo } from "react";
 import { useCommunityTopMentors } from "@/api/callers/community";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { CommunityTopMentor } from "@/api/generator/types/community";
-import { PsychologistWhatsAppRedirectButton } from "@/components/psychologists/psychologist-whatsapp-redirect-button";
+import {
+  getPsychologistWhatsappDisplayName,
+  PsychologistWhatsAppRedirectButton,
+} from "@/components/psychologists/psychologist-whatsapp-redirect-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -19,6 +22,7 @@ import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
+import { normalizeProfessionalDisplayName } from "@/utils/professional-name";
 import { normalizeSafeInternalRedirect } from "@/utils/safe-redirect";
 
 type ApiErrorData = {
@@ -59,6 +63,9 @@ const getInitials = (name: string) => {
 
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
+
+const getMentorProfessionalDisplayName = (mentor: CommunityTopMentor) =>
+  normalizeProfessionalDisplayName(mentor.professional.name) || mentor.professional.name;
 
 const rankTone = (position: number) => {
   if (position === 1) {
@@ -128,10 +135,11 @@ const Avatar = ({
   size?: number;
 }) => {
   const avatarSrc = resolvePublicMediaUrl(mentor.professional.avatar);
+  const displayName = getMentorProfessionalDisplayName(mentor);
   const tone = rankTone(mentor.position);
   const avatarContent = avatarSrc ? (
     <Image
-      alt={mentor.professional.name}
+      alt={displayName}
       className="object-cover"
       fill
       sizes={`${size}px`}
@@ -139,7 +147,7 @@ const Avatar = ({
       unoptimized={isPublicMediaUrl(mentor.professional.avatar)}
     />
   ) : (
-    <span className="relative z-10">{getInitials(mentor.professional.name)}</span>
+    <span className="relative z-10">{getInitials(displayName)}</span>
   );
 
   if (ringed && tone.metal) {
@@ -191,6 +199,7 @@ const PodiumMentor = ({
 }) => {
   const tone = rankTone(mentor.position);
   const isWinner = mentor.position === 1;
+  const displayName = getMentorProfessionalDisplayName(mentor);
 
   return (
     <Link
@@ -222,7 +231,7 @@ const PodiumMentor = ({
           tone.name,
         )}
       >
-        {mentor.professional.name}
+        {displayName}
       </span>
     </Link>
   );
@@ -290,11 +299,17 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
   const isTopThree = mentor.position <= 3;
   const professionalType = professionLabel(mentor);
   const canOpenWhatsApp = Boolean(mentor.professional.whatsapp_url);
+  const displayName = getMentorProfessionalDisplayName(mentor);
+  const whatsappName = getPsychologistWhatsappDisplayName({
+    id: mentor.professional.id,
+    name: displayName,
+    whatsappName: mentor.professional.whatsapp_name,
+  });
 
   return (
     <article className="flex w-full min-w-0 max-w-full items-center gap-3 overflow-visible rounded-[1.35rem] border border-border bg-surface px-3.5 py-3.5 shadow-none transition hover:-translate-y-0.5 hover:border-primary/30 dark:border-border dark:bg-surface">
       <Link
-        aria-label={`Ver perfil de ${mentor.professional.name}`}
+        aria-label={`Ver perfil de ${displayName}`}
         className="group/profile flex min-w-0 flex-1 items-center gap-3"
         href={topMentorProfileUrl(mentor.professional.profile_url)}
       >
@@ -302,7 +317,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         <span className="min-w-0 flex-1">
           <span className="flex min-w-0 items-center gap-1.5">
             <strong className="truncate text-base font-black tracking-[-0.02em] text-foreground transition group-hover/profile:text-primary dark:text-foreground">
-              {mentor.professional.name}
+              {displayName}
             </strong>
             <VerifiedBadgeIcon className="h-3 w-3 shrink-0" aria-label="Perfil verificado" />
           </span>
@@ -312,9 +327,7 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
         </span>
       </Link>
       <PsychologistWhatsAppRedirectButton
-        aria-label={`Fale com ${
-          mentor.professional.whatsapp_name || mentor.professional.name
-        } no WhatsApp`}
+        aria-label={`Fale com ${whatsappName || displayName} no WhatsApp`}
         className={cn(
           "grid h-10 w-10 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-4 focus:ring-success/15",
           canOpenWhatsApp
@@ -325,9 +338,9 @@ const RankingCard = ({ mentor }: { mentor: CommunityTopMentor }) => {
           avatar: mentor.professional.avatar,
           crp: mentor.professional.crp,
           id: mentor.professional.id,
-          name: mentor.professional.name,
+          name: displayName,
           typeLabel: professionalType,
-          whatsappName: mentor.professional.whatsapp_name,
+          whatsappName,
           whatsappUrl: mentor.professional.whatsapp_url,
         }}
         stopPropagation

@@ -4,7 +4,7 @@ import Image from "next/image";
 import type { DirectoryPsychologist } from "@/api/generator/types/directory";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
-import { getInitials } from "./profile-format";
+import { formatDisplayName, getInitials } from "./profile-format";
 
 export const PsychologistFilterSearchSuggestions = ({
   isLoading,
@@ -31,10 +31,11 @@ export const PsychologistFilterSearchSuggestions = ({
       <div className="max-h-[292px] overflow-y-auto py-1">
         {items.map((psychologist) => {
           const avatarSrc = resolvePublicMediaUrl(psychologist.avatar);
+          const displayName = formatDisplayName(psychologist.name);
 
           return (
             <button
-              aria-label={`Abrir perfil de ${psychologist.name}`}
+              aria-label={`Abrir perfil de ${displayName}`}
               aria-selected={false}
               className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition duration-150 ease-out hover:bg-primary-soft/55 focus-visible:bg-primary-soft/65 focus-visible:outline-none"
               key={psychologist.id}
@@ -53,13 +54,13 @@ export const PsychologistFilterSearchSuggestions = ({
                     unoptimized={isPublicMediaUrl(psychologist.avatar)}
                   />
                 ) : (
-                  getInitials(psychologist.name)
+                  getInitials(displayName)
                 )}
               </span>
 
               <span className="flex min-w-0 flex-1 items-center gap-1.5">
                 <span className="truncate text-sm font-extrabold leading-5 text-foreground">
-                  {psychologist.name}
+                  {displayName}
                 </span>
                 {psychologist.verified ? <VerifiedBadgeIcon className="h-4 w-4 shrink-0" /> : null}
               </span>

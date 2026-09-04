@@ -15,6 +15,8 @@ export const normalizeProfessionalDisplayName = (fullName?: string | null) =>
 
 export const normalizeProfessionalNamePart = (value?: string | null) =>
   String(value ?? "")
+    .trim()
+    .replace(PROFESSIONAL_TITLE_PREFIX_PATTERN, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 

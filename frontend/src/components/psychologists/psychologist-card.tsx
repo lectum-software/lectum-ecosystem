@@ -41,9 +41,11 @@ export function PsychologistCard({
   const mediaIsPublic = isPublicMediaUrl(avatarSrc);
   const tags = buildBenefitTags(psychologist);
   const displayName = getPsychologistDisplayName(psychologist);
-  const whatsappName =
-    psychologist.whatsapp_name ||
-    getPsychologistWhatsappDisplayName({ id: psychologist.id, name: displayName });
+  const whatsappName = getPsychologistWhatsappDisplayName({
+    id: psychologist.id,
+    name: displayName,
+    whatsappName: psychologist.whatsapp_name,
+  });
   const route = `/psicologos/${psychologist.id}`;
   const overlayRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);

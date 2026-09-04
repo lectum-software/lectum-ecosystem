@@ -2,7 +2,7 @@ import type { DirectoryPsychologist } from "@/api/generator/types/directory";
 import { resolvePublicMediaUrl } from "@/utils/media";
 import { buildBenefitChips } from "../../modules/filter-config";
 import { clampNumber, VIDEO_PROGRESS_BOTTOM_WITH_NAV } from "../../modules/onboarding";
-import { splitNameForBadge } from "../../modules/profile-format";
+import { formatDisplayName, splitNameForBadge } from "../../modules/profile-format";
 import type { PsychologistsViewModel } from "../types";
 
 export const buildPsychologistSlideView = ({
@@ -51,6 +51,8 @@ export const buildPsychologistSlideView = ({
 
   const slideBio = psychologist.headline?.trim() ?? "";
 
+  const slideDisplayName = formatDisplayName(psychologist.name);
+
   const slideNameParts = splitNameForBadge(psychologist.name);
 
   const slideBenefitChips = buildBenefitChips(psychologist);
@@ -64,8 +66,8 @@ export const buildPsychologistSlideView = ({
   const slideFavoriteLabel = slideIsOwnProfile
     ? "Você não pode favoritar o próprio perfil"
     : slideIsFavorited
-      ? `Remover ${psychologist.name} dos favoritos`
-      : `Favoritar ${psychologist.name}`;
+      ? `Remover ${slideDisplayName} dos favoritos`
+      : `Favoritar ${slideDisplayName}`;
 
   const slideIsFavoritePending = !slideIsOwnProfile && favoritePendingId === psychologist.id;
 
@@ -95,10 +97,10 @@ export const buildPsychologistSlideView = ({
 
   const slideVideoAreaLabel =
     isActiveSlide && slideShouldShowVideo && (isVideoMuted || videoVolume <= 0 || isVideoPaused)
-      ? `Ativar som e reproduzir vídeo de ${psychologist.name}`
+      ? `Ativar som e reproduzir vídeo de ${slideDisplayName}`
       : slideIsUiHidden
-        ? `Mostrar interface de ${psychologist.name}`
-        : `Ocultar interface de ${psychologist.name}`;
+        ? `Mostrar interface de ${slideDisplayName}`
+        : `Ocultar interface de ${slideDisplayName}`;
 
   return {
     index,
@@ -111,6 +113,7 @@ export const buildPsychologistSlideView = ({
     slideUsesNativeVideoControls,
     slideShouldRenderProgress,
     slideBio,
+    slideDisplayName,
     slideNameParts,
     slideBenefitChips,
     slideIsOwnProfile,

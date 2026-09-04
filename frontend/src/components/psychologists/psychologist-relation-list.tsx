@@ -319,9 +319,11 @@ const FavoritePsychologistCard = ({
   const route = `/psicologos/${psychologist.id}`;
   const favoriteBio = getFavoriteBio(psychologist);
   const displayName = normalizeProfessionalDisplayName(psychologist.name) || psychologist.name;
-  const whatsappName =
-    psychologist.whatsapp_name ||
-    getPsychologistWhatsappDisplayName({ id: psychologist.id, name: displayName });
+  const whatsappName = getPsychologistWhatsappDisplayName({
+    id: psychologist.id,
+    name: displayName,
+    whatsappName: psychologist.whatsapp_name,
+  });
 
   const handleFavoriteClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { buildAuthRouteWithRedirect, resolveAuthReturnTo } from "@/utils/auth-redirect";
 import { fingerprint } from "@/utils/fingerprint";
+import { normalizeProfessionalNamePart } from "@/utils/professional-name";
 import { buildTrustedGoogleLoginUrl } from "@/utils/trusted-navigation";
 import { type RegisterPsychologistForm, TERMS_VERSION, useForm } from "./use-form";
 
@@ -54,8 +55,8 @@ export const RegisterPsychologistLogic = () => {
 
   const handleSubmit = (data: RegisterPsychologistForm) => {
     setApiError(null);
-    const professionalFirstName = data.professional_first_name.trim();
-    const professionalLastName = data.professional_last_name.trim();
+    const professionalFirstName = normalizeProfessionalNamePart(data.professional_first_name);
+    const professionalLastName = normalizeProfessionalNamePart(data.professional_last_name);
     const analyticsIdentity = getOrCreateAnalyticsIdentity();
 
     registerPsychologist.mutate({

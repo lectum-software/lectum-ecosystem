@@ -1202,6 +1202,7 @@ Para evitar referência a tabela inexistente, criar nesta ordem (cada uma com su
 - Links `author.whatsapp_url` e `whatsapp_url` de perfil/listagem/contato passam a incluir mensagem pronta com o mesmo nome exibido no CTA `Fale com ...` do psicólogo quando disponível.
 - A partir da TASK-69, esse nome vem prioritariamente de `psychologist_profile.professional_first_name`; se o campo estiver vazio em perfil legado, o fallback continua usando o primeiro nome útil derivado de `user.name`.
 - O fallback de primeiro nome útil normaliza espaços, remove prefixos/títulos profissionais de início (`Dr.`, `Dra.`, `Psicólogo`, `Psicóloga`, `Psi`/`Psic.`) e usa o primeiro termo restante que não seja partícula de nome (`de`, `da`, `do`, `das`, `dos`, `di`, `du`, `e`); se não houver nome, mantém fallback genérico.
+- Complemento 2026-09-04: a mesma remoção de prefixos/títulos profissionais também se aplica ao próprio `professional_first_name` e ao nome público derivado de `professional_first_name` + `professional_last_name`, porque perfis reais podem ter salvado `Psicóloga`, `Psicólogo`, `Dr.`, `Dra.` ou `Psi` dentro do campo **Nome**. A correção é de leitura/normalização e não exige migration/backfill obrigatório.
 - O texto do `wa.me` é contextual: perfil (`encontrei seu perfil na Lectum`), post profissional (`encontrei seu post na Lectum`) e resposta/comentário profissional (`encontrei sua resposta na Lectum`).
 - O contrato permanece uma string URL pública; não há exposição do telefone bruto fora do link de intenção.
 

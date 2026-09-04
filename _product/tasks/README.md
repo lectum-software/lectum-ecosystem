@@ -1257,3 +1257,11 @@ Uma task só pode ser marcada como concluída quando:
 - O gesto fica protegido contra acionamento em campos/editaveis, modais, scroll interno fora do topo e rotas de login/cadastro, configuracoes/conta, assinatura/checkout/WhatsApp, setup/edicao e criacao/sugestao de conteudo; cards, links e botoes de listas podem iniciar o arrasto vertical convencional.
 - Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, o shell mobile existente e a modal PWA atual.
 - Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, seed, reset ou dados publicados. Rollback simples reverte o commit.
+
+## Correcao em 2026-09-04: prefixo profissional no nome e no WhatsApp
+
+- Ajuste pos-feedback da TASK-69: a remocao de termos como `Psicologa`, `Psicologo`, `Dr.`, `Dra.` e `Psi` passa a valer tambem quando o termo foi salvo dentro de `psychologist_profile.professional_first_name`, nao apenas no fallback por `user.name`.
+- Backend normaliza leitura e novos salvamentos; descoberta, perfil, favoritos, comunidade/ranking e links `wa.me` deixam de montar nome publico, `whatsapp_name` ou saudacao com o prefixo salvo no campo Nome.
+- Frontend normaliza feed `/psicologos`, sugestoes, CTAs e mensagens `wa.me` preservadas durante o rollout, tolerando backend antigo/cache.
+- Os prints anexados pelo usuario foram usados apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Alteracao sem schema/migration, package, env obrigatoria, provider, job, mock, seed, reset, backfill ou alteracao destrutiva de dados publicados. Rollback simples reverte o commit.

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { PrivateTemplate } from "@/templates/private";
 import { FILTER_FEATURE_OPTIONS, FilterFeatureCard } from "../modules/filter-config";
 import { MOBILE_BOTTOM_NAV_OFFSET, PsychologistsCoachMark } from "../modules/onboarding";
+import { formatDisplayName } from "../modules/profile-format";
 import { PsychologistsDesktopRail } from "./components/desktop-rail";
 import { PsychologistsFeed } from "./components/feed";
 import { PsychologistsFeedStyles } from "./components/feed-styles";
@@ -327,22 +328,26 @@ export const PsychologistsView = ({ model }: { model: PsychologistsViewModel }) 
                           Buscando profissionais...
                         </div>
                       ) : (
-                        searchSuggestionItems.map((suggestion) => (
-                          <button
-                            aria-label={`Buscar por ${suggestion.name}`}
-                            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-surface-muted"
-                            key={suggestion.id}
-                            aria-selected={false}
-                            onClick={() => handleSearchSuggestionSelect(suggestion.name)}
-                            role="option"
-                            type="button"
-                          >
-                            <span className="min-w-0 truncate">{suggestion.name}</span>
-                            <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-extrabold text-primary">
-                              {suggestion.verified ? "Verificado" : "Gratuito"}
-                            </span>
-                          </button>
-                        ))
+                        searchSuggestionItems.map((suggestion) => {
+                          const displayName = formatDisplayName(suggestion.name);
+
+                          return (
+                            <button
+                              aria-label={`Buscar por ${displayName}`}
+                              className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold transition hover:bg-surface-muted"
+                              key={suggestion.id}
+                              aria-selected={false}
+                              onClick={() => handleSearchSuggestionSelect(displayName)}
+                              role="option"
+                              type="button"
+                            >
+                              <span className="min-w-0 truncate">{displayName}</span>
+                              <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-extrabold text-primary">
+                                {suggestion.verified ? "Verificado" : "Gratuito"}
+                              </span>
+                            </button>
+                          );
+                        })
                       )}
                     </div>
                   ) : null}

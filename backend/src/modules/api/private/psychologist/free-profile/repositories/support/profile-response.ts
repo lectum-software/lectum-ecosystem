@@ -11,6 +11,7 @@ import { resolveProfessionalExperienceTagVisibility } from "@/utils/professional
 import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
+  normalizeProfessionalNamePart,
 } from "@/utils/professional-name";
 import { parseStoredCrp, resolveCrpFromRegistryChecks } from "@/utils/professional-registry";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
@@ -369,14 +370,16 @@ export const toResponse = async (
 ): Promise<FreeProfessionalProfileResponse | null> => {
   const profile = item.psychologist_profile;
   if (!profile) return null;
+  const professionalFirstName = normalizeProfessionalNamePart(profile.professional_first_name);
+  const professionalLastName = normalizeProfessionalNamePart(profile.professional_last_name);
   const displayName = buildProfessionalFullDisplayName({
     fallbackName: item.name,
-    firstName: profile.professional_first_name,
-    lastName: profile.professional_last_name,
+    firstName: professionalFirstName,
+    lastName: professionalLastName,
   });
   const whatsappDisplayName = getProfessionalWhatsappDisplayName({
     fallbackName: displayName,
-    firstName: profile.professional_first_name,
+    firstName: professionalFirstName,
   });
 
   const current = profile.subscriptions[0] || null;
@@ -447,8 +450,8 @@ export const toResponse = async (
     },
     profile: {
       id: profile.id,
-      professional_first_name: profile.professional_first_name,
-      professional_last_name: profile.professional_last_name,
+      professional_first_name: professionalFirstName,
+      professional_last_name: professionalLastName,
       headline: profile.headline,
       bio: profile.bio,
       modality: profile.modality,

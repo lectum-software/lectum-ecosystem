@@ -20,6 +20,7 @@ import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import {
   getProfessionalShortDisplayName,
   normalizeProfessionalDisplayName,
+  normalizeProfessionalNamePart,
 } from "@/utils/professional-name";
 
 export const WHATSAPP_REDIRECT_MIN_DELAY_MS = 900;
@@ -92,8 +93,52 @@ const getDisplayMode = (): DisplayMode => {
   return "unknown";
 };
 
-const preserveFallbackWhatsAppText = (fallbackUrl: string, trackedUrl?: string | null) => {
+const normalizeLectumWhatsAppTextGreeting = (
+  text: string,
+  psychologist: PsychologistWhatsAppIdentity,
+) => {
+  if (!text.includes("Lectum")) return text;
+
+  const suffix = text.replace(/^Olá(?:\s+[^,]*)?,\s*/iu, "");
+  if (suffix === text) return text;
+
+  const whatsappName = getPsychologistWhatsappDisplayName(psychologist);
+  const greeting = whatsappName ? `Olá ${whatsappName},` : "Olá,";
+
+  return `${greeting} ${suffix}`;
+};
+
+const normalizeFallbackWhatsAppUrlText = (
+  fallbackUrl?: string | null,
+  psychologist?: PsychologistWhatsAppIdentity,
+) => {
   const safeFallbackUrl = normalizeTrustedWhatsAppUrl(fallbackUrl);
+  if (!safeFallbackUrl) return "";
+  if (!psychologist) return safeFallbackUrl;
+
+  try {
+    const fallback = new URL(safeFallbackUrl);
+    const fallbackText = fallback.searchParams.get("text");
+
+    if (!fallbackText) return safeFallbackUrl;
+
+    fallback.searchParams.set(
+      "text",
+      normalizeLectumWhatsAppTextGreeting(fallbackText, psychologist),
+    );
+
+    return fallback.toString();
+  } catch {
+    return safeFallbackUrl;
+  }
+};
+
+const preserveFallbackWhatsAppText = (
+  fallbackUrl: string,
+  trackedUrl: string | null | undefined,
+  psychologist: PsychologistWhatsAppIdentity,
+) => {
+  const safeFallbackUrl = normalizeFallbackWhatsAppUrlText(fallbackUrl, psychologist);
   const safeTrackedUrl = normalizeTrustedWhatsAppUrl(trackedUrl);
   if (!safeFallbackUrl) return "";
   if (!safeTrackedUrl) return safeFallbackUrl;
@@ -129,7 +174,8 @@ const professionalLabel = (psychologist: PsychologistWhatsAppIdentity) => {
 };
 
 export const getPsychologistWhatsappDisplayName = (psychologist: PsychologistWhatsAppIdentity) =>
-  psychologist.whatsappName?.trim() || getProfessionalShortDisplayName(psychologist.name);
+  normalizeProfessionalNamePart(psychologist.whatsappName) ||
+  getProfessionalShortDisplayName(psychologist.name);
 
 export const openPsychologistWhatsApp = (url: string) => {
   const trustedUrl = normalizeTrustedWhatsAppUrl(url);
@@ -321,7 +367,9 @@ export const PsychologistWhatsAppRedirectButton = ({
 
     if (disabled || !psychologist.whatsappUrl) return;
 
-    const fallbackUrl = psychologist.whatsappUrl;
+    const fallbackUrl = normalizeFallbackWhatsAppUrlText(psychologist.whatsappUrl, psychologist);
+
+    if (!fallbackUrl) return;
 
     if (!conversion.requestWhatsAppAccess(fallbackUrl)) {
       return;
@@ -354,7 +402,7 @@ export const PsychologistWhatsAppRedirectButton = ({
 
     const trackedUrlPromise = tracking
       .mutateAsync()
-      .then((data) => preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url))
+      .then((data) => preserveFallbackWhatsAppText(fallbackUrl, data.whatsapp_url, psychologist))
       .catch(() => fallbackUrl);
 
     const nextUrl =
