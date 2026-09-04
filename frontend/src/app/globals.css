@@ -242,6 +242,11 @@ body {
   touch-action: pan-x pan-y;
 }
 
+html.lectum-pull-to-refresh-enabled,
+body.lectum-pull-to-refresh-enabled {
+  overscroll-behavior-y: contain;
+}
+
 button,
 input,
 textarea,

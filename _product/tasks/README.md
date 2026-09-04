@@ -1248,3 +1248,11 @@ Uma task só pode ser marcada como concluída quando:
 - Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, os fallbacks locais de prototipo de editar perfil e a rota real de `E-mail e senha`.
 - Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados.
 - Validacoes: `pnpm --dir frontend exec biome check --write ...`, `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/session-policy.test.mjs`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local sem sessao em `/version`, `/app/profissional/perfil/configurar`, `/app/perfil/editar` e `/app/configuracoes/conta`, `pnpm version:bump`, `pnpm check:version` e rebuild frontend pos-bump.
+
+## Refinamento em 2026-09-04: pull-to-refresh convencional no mobile/PWA
+
+- Ajuste pos-feedback da TASK-37: arrastar a tela para baixo no topo passa a atualizar o conteudo da tela atual no navegador mobile e no PWA, seguindo o comportamento convencional de apps/listas.
+- O refresh usa `router.refresh()`, invalida queries ativas do TanStack Query e tenta atualizar o registro PWA quando o navegador suportar; nao usa hard refresh nem limpa storage/cache/sessao.
+- O gesto fica protegido contra acionamento em campos, controles, modais, scroll interno fora do topo e rotas de login/cadastro, configuracoes/conta, assinatura/checkout/WhatsApp, setup/edicao e criacao/sugestao de conteudo.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, o shell mobile existente e a modal PWA atual.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, seed, reset ou dados publicados. Rollback simples reverte o commit.

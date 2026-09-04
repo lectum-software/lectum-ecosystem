@@ -16,8 +16,8 @@ describe("video storage contracts", () => {
     assert.equal(isVideoJobId(jobId), true);
     assert.equal(isVideoJobId("../outside"), false);
     const paths = videoStoragePaths("/srv/video", jobId);
-    assert.equal(paths.inputPath, `/srv/video/incoming/${jobId}/source`);
-    assert.equal(paths.outputPath, `/srv/video/outputs/${jobId}/video.mp4`);
+    assert.equal(paths.inputPath, path.resolve("/srv/video", "incoming", jobId, "source"));
+    assert.equal(paths.outputPath, path.resolve("/srv/video", "outputs", jobId, "video.mp4"));
     assert.throws(() => assertPathInsideStorage("/srv/video", "/srv/outside"));
   });
 

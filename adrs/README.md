@@ -512,3 +512,4 @@ Formato recomendado:
 - [ADR-0479 — Serviço isolado de processamento de vídeo com BullMQ e FFmpeg](0479-servico-isolado-processamento-video-bullmq-ffmpeg.md)
 - [ADR-0480 — Backfill retomável de vídeos R2 para Cloudflare Stream](0480-migracao-segura-videos-r2-cloudflare-stream.md)
 - [ADR-0481 — Origem extensionless para importação R2 no Cloudflare Stream](0481-origem-extensionless-migracao-r2-stream.md)
+- [ADR-0482 — Pull-to-refresh convencional no frontend mobile](0482-pull-to-refresh-convencional-frontend.md)

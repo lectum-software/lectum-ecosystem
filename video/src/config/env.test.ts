@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import { describe, it } from "node:test";
 import { parseVideoServiceConfig } from "./env.js";
 
@@ -15,7 +16,7 @@ describe("video service config", () => {
     assert.equal(config.port, 3003);
     assert.equal(config.workerConcurrency, 1);
     assert.equal(config.maxInputBytes, 500 * 1024 * 1024);
-    assert.equal(config.storageRoot, "/tmp/lectum-video-test/.data");
+    assert.equal(config.storageRoot, path.resolve("/tmp/lectum-video-test/.data"));
     assert.equal(config.ffmpegPreset, "medium");
   });
 
@@ -39,7 +40,7 @@ describe("video service config", () => {
       REDIS_URL: "redis://default:local-secret@redis:6379/0",
       VIDEO_STORAGE_ROOT: "/var/lib/lectum-video",
     });
-    assert.equal(config.storageRoot, "/var/lib/lectum-video");
+    assert.equal(config.storageRoot, path.resolve("/var/lib/lectum-video"));
   });
 
   it("recusa storage relativo/raiz, Redis sem autenticação e reserva curta em produção", () => {

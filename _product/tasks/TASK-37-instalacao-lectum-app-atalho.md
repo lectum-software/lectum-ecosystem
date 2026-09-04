@@ -258,3 +258,55 @@ Persistência local:
 - [x] `pnpm version:bump`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog` e reportado ao usuario, pois o push dispara o deploy automatico.
+
+## Refinamento 2026-09-04 - pull-to-refresh convencional no mobile/PWA
+
+- Pedido de produto: fazer o arraste para baixo funcionar da forma mais convencional em navegador
+  mobile e PWA.
+- Decisao: o gesto atualiza a tela atual, nao executa hard refresh destrutivo. A atualizacao usa
+  `router.refresh()`, invalida queries ativas do TanStack Query e tenta atualizar o registro PWA de
+  forma best-effort quando o navegador suportar.
+- Implementacao frontend-only:
+  - `frontend/src/components/pull-to-refresh.tsx` cria o indicador mobile-first e captura o gesto
+    somente no topo da pagina;
+  - `frontend/src/utils/pull-to-refresh.ts` centraliza limiares, rotas habilitadas e guardas contra
+    campos, controles, modais e cadeias de scroll ainda roladas;
+  - `frontend/src/app/layout.tsx` monta o componente dentro do `QueryClientProvider`;
+  - `frontend/src/app/globals.css` contem o overscroll mobile para evitar concorrencia com o gesto
+    nativo do navegador;
+  - `frontend/src/utils/pull-to-refresh.test.mjs` cobre limiar visual e rotas habilitadas/bloqueadas.
+- Rotas de login/cadastro, configuracoes/conta, assinatura/checkout/WhatsApp, setup/edicao e
+  criacao/sugestao de conteudo ficam sem o gesto para reduzir risco de perda de progresso.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados
+  `_product/tasks/PROTO-INVENTORY.md`, o shell mobile existente e a modal PWA atual.
+- Alteracao frontend-only, mobile-first; sem backend, admin UI, schema, migration, endpoint, env
+  obrigatoria, package novo, provider, seed, reset ou dados publicados. Rollback simples reverte o
+  commit.
+
+### Criterios de aceite do refinamento
+
+- [x] O gesto em experiencia mobile/PWA atualiza a tela com comportamento convencional de dados/rota,
+  sem `window.location.reload()` como padrao.
+- [x] O acionamento exige estar no topo e soltar apos limiar visual claro.
+- [x] O indicador usa tokens Lectum, copy PT-BR e nenhuma tag `<img>`.
+- [x] Campos, controles, modais, rotas de formulario/checkout/setup e scroll interno fora do topo nao
+  disparam refresh.
+- [x] Nenhum pacote novo, backend, admin, env, schema ou migration foi adicionado.
+- [x] ADR criado: `adrs/0482-pull-to-refresh-convencional-frontend.md`.
+
+### Validacoes do refinamento
+
+- [x] `pnpm --dir frontend exec biome check --write src/app/layout.tsx src/app/globals.css src/components/pull-to-refresh.tsx src/utils/pull-to-refresh.ts src/utils/pull-to-refresh.test.mjs package.json`
+- [x] `pnpm --dir frontend exec tsc --noEmit --pretty false`
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/pull-to-refresh.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` reexecutado apos o bump para validar o estado `0.1.265`.
+- [x] `pnpm --dir video check` passou apos integrar `homolog` remoto e ajustar testes de caminho do
+  novo servico de video para Windows/Linux.
+- [x] `pnpm check` passou apos corrigir encoding de comentario detectado na primeira tentativa e
+  revalidar o estado rebaseado.
+- [x] Browser local/headless no build final, viewport mobile 390x844, validou `/psicologos` com indicador "Solte para atualizar", estado "Atualizando..." apos soltar e retorno para idle; `/auth/login` permaneceu sem texto/estado de pull-to-refresh; `/version` retornou frontend `0.1.265`.
+- [x] `git diff --check`
+- [x] `pnpm check:adrs` e `pnpm check:tasks`
+- [x] `pnpm version:bump` e `pnpm check:version` antes do commit (`0.1.264` -> `0.1.265`).
+- [ ] Push em `homolog` e smoke de homologacao apos deploy automatico.
