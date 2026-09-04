@@ -45,6 +45,14 @@ const {
 } = await import("./community-feed-scroll-memory.ts");
 const { recordAppNavigationPoint } = await import("./navigation-history.ts");
 const { navigateBackToPersistedOrigin } = await import("./persisted-origin-navigation.ts");
+const {
+  getRememberedPsychologistsFeedHref,
+  isPsychologistsFeedHref,
+  readPsychologistsFeedReturnSnapshot,
+  rememberPsychologistsFeedReturnPosition,
+  resolvePsychologistsFeedReturnIndex,
+  shouldRestorePsychologistsFeedReturnSnapshot,
+} = await import("./psychologists-feed-return-memory.ts");
 
 class MemoryStorage {
   #items = new Map();
@@ -179,6 +187,103 @@ test("ignora feed persistido quando a origem imediata do perfil indisponivel nao
       navigateBackToPersistedOrigin(router, "/psicologos");
 
       assert.deepEqual(calls, [["back"]]);
+    });
+  } finally {
+    Date.now = previousNow;
+  }
+});
+
+test("preserva o slide ativo do feed de psicologos ao abrir perfil e voltar", async () => {
+  const fixedNow = Date.parse("2026-09-04T12:00:00.000Z");
+  const previousNow = Date.now;
+  Date.now = () => fixedNow;
+
+  try {
+    await withBrowserNavigation(() => {
+      window.location.pathname = "/psicologos";
+      window.location.search = "?search=Rafaela";
+      window.location.hash = "";
+
+      assert.equal(
+        rememberPsychologistsFeedReturnPosition({
+          activeIndex: 4,
+          feedLoopCycleCount: 3,
+          psychologistId: "psi-b",
+          scrollTop: 1680,
+        }),
+        true,
+      );
+
+      const snapshot = readPsychologistsFeedReturnSnapshot();
+
+      assert.equal(snapshot?.sourceHref, "/psicologos?search=Rafaela");
+      assert.equal(getRememberedPsychologistsFeedHref("psi-b"), "/psicologos?search=Rafaela");
+      assert.equal(shouldRestorePsychologistsFeedReturnSnapshot(snapshot), true);
+      assert.equal(
+        resolvePsychologistsFeedReturnIndex(snapshot, ["psi-a", "psi-b", "psi-c"], 9),
+        4,
+      );
+    });
+  } finally {
+    Date.now = previousNow;
+  }
+});
+
+test("restaura por id quando a ordem renderizada dos psicologos mudou", async () => {
+  const fixedNow = Date.parse("2026-09-04T12:00:00.000Z");
+  const previousNow = Date.now;
+  Date.now = () => fixedNow;
+
+  try {
+    await withBrowserNavigation(() => {
+      window.location.pathname = "/app/psychologists";
+      window.location.search = "";
+      window.location.hash = "";
+
+      rememberPsychologistsFeedReturnPosition({
+        activeIndex: 5,
+        feedLoopCycleCount: 3,
+        psychologistId: "psi-c",
+        scrollTop: 2400,
+      });
+
+      const snapshot = readPsychologistsFeedReturnSnapshot();
+
+      assert.equal(isPsychologistsFeedHref("/app/psychologists"), true);
+      assert.equal(isPsychologistsFeedHref("/psicologos/psi-c"), false);
+      assert.equal(resolvePsychologistsFeedReturnIndex(snapshot, ["psi-a", "psi-c"], 4), 1);
+    });
+  } finally {
+    Date.now = previousNow;
+  }
+});
+
+test("ignora snapshot antigo ou de outra query do feed de psicologos", async () => {
+  const fixedNow = Date.parse("2026-09-04T12:00:00.000Z");
+  const previousNow = Date.now;
+  Date.now = () => fixedNow;
+
+  try {
+    await withBrowserNavigation(({ sessionStorage }) => {
+      window.location.pathname = "/psicologos";
+      window.location.search = "?search=Rafaela";
+
+      rememberPsychologistsFeedReturnPosition({
+        activeIndex: 2,
+        feedLoopCycleCount: 3,
+        psychologistId: "psi-c",
+        scrollTop: 820,
+      });
+
+      const snapshot = readPsychologistsFeedReturnSnapshot();
+      window.location.search = "?search=Ana";
+
+      assert.equal(shouldRestorePsychologistsFeedReturnSnapshot(snapshot), false);
+
+      Date.now = () => fixedNow + 31 * 60 * 1000;
+
+      assert.equal(readPsychologistsFeedReturnSnapshot(), null);
+      assert.equal(sessionStorage.getItem("lectum.psychologists.feedReturn.v1"), null);
     });
   } finally {
     Date.now = previousNow;

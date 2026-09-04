@@ -30,6 +30,7 @@ import {
 } from "@/utils/lectum-share-target";
 import { navigateBackWithFallback } from "@/utils/navigation-history";
 import { navigateBackToPersistedOrigin } from "@/utils/persisted-origin-navigation";
+import { getRememberedPsychologistsFeedHref } from "@/utils/psychologists-feed-return-memory";
 import { AboutTab } from "./components/about";
 import { ProfileHero, ProfileMobileStickyHeader } from "./components/hero";
 import { PostsTab } from "./components/publications";
@@ -368,7 +369,7 @@ export const PsychologistProfileLogic = () => {
       return;
     }
 
-    navigateBackWithFallback(router, "/psicologos");
+    navigateBackWithFallback(router, getRememberedPsychologistsFeedHref(id) ?? "/psicologos");
   };
 
   const goBackToPersistedOrigin = () => {

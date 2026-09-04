@@ -7,6 +7,10 @@ import { useImportantActionTracking } from "@/api/callers/analytics";
 import { usePatient } from "@/api/callers/patient";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { useAppSelector } from "@/hooks/redux";
+import {
+  readPsychologistsFeedReturnSnapshot,
+  shouldRestorePsychologistsFeedReturnSnapshot,
+} from "@/utils/psychologists-feed-return-memory";
 import { getPageFromParams, readFiltersFromParams } from "../modules/directory-url";
 import { PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES } from "../modules/feed-loop";
 import type { PsychologistsOnboardingTip } from "../modules/onboarding";
@@ -37,6 +41,12 @@ export const usePsychologistsSetup = () => {
   const filterValues = useMemo(() => readFiltersFromParams(params), [params]);
 
   const currentPage = useMemo(() => getPageFromParams(params), [params]);
+
+  const initialFeedReturnSnapshot = useMemo(() => {
+    const snapshot = readPsychologistsFeedReturnSnapshot();
+
+    return snapshot && shouldRestorePsychologistsFeedReturnSnapshot(snapshot) ? snapshot : null;
+  }, []);
 
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -91,10 +101,17 @@ export const usePsychologistsSetup = () => {
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  const [activePsychologistIndex, setActivePsychologistIndex] = useState(0);
+  const [activePsychologistIndex, setActivePsychologistIndex] = useState(
+    () => initialFeedReturnSnapshot?.activeIndex ?? 0,
+  );
 
-  const [feedLoopCycleCount, setFeedLoopCycleCount] = useState(
-    PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
+  const [feedLoopCycleCount, setFeedLoopCycleCount] = useState(() =>
+    initialFeedReturnSnapshot
+      ? Math.max(
+          PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
+          initialFeedReturnSnapshot.feedLoopCycleCount,
+        )
+      : PSYCHOLOGISTS_FEED_INITIAL_LOOP_CYCLES,
   );
 
   const [desktopFilterChipScroll, setDesktopFilterChipScroll] = useState({

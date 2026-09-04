@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, type WheelEvent as ReactWheelEvent, useCallback, useEffect } from "react";
+import { rememberPsychologistsFeedReturnPosition } from "@/utils/psychologists-feed-return-memory";
 import { buildFiltersParams } from "../modules/directory-url";
 import type { FilterFeatureKey, PsychologistFilterKey } from "../modules/filter-config";
 import { normalizeFormValues } from "../modules/profile-format";
@@ -18,10 +19,13 @@ export const usePsychologistsNavigation = ({
 }) => {
   const setup = usePsychologistsSetupContext();
   const {
+    activePsychologistIndex,
     backgroundVideoRef,
     desktopFilterChipsRef,
     didLongPressRef,
     didMoveDuringPressRef,
+    feedContainerRef,
+    feedLoopCycleCount,
     filterValues,
     hasShownOnboardingTipThisVisitRef,
     isSearchModeActiveRef,
@@ -61,6 +65,18 @@ export const usePsychologistsNavigation = ({
   const stopInteractionPropagation = useCallback((event: { stopPropagation: () => void }) => {
     event.stopPropagation();
   }, []);
+
+  const rememberCurrentFeedReturn = useCallback(
+    (psychologistId: string) => {
+      rememberPsychologistsFeedReturnPosition({
+        activeIndex: activePsychologistIndex,
+        feedLoopCycleCount,
+        psychologistId,
+        scrollTop: feedContainerRef.current?.scrollTop ?? 0,
+      });
+    },
+    [activePsychologistIndex, feedContainerRef, feedLoopCycleCount],
+  );
 
   const updateDesktopFilterChipScrollState = useCallback(() => {
     const container = desktopFilterChipsRef.current;
@@ -150,10 +166,11 @@ export const usePsychologistsNavigation = ({
       event.preventDefault?.();
       event.stopPropagation();
 
+      rememberCurrentFeedReturn(psychologistId);
       trackPresentationVideoAction("psychologist_video_profile_access", psychologistId);
       router.push(`/psicologos/${psychologistId}`);
     },
-    [router, trackPresentationVideoAction],
+    [rememberCurrentFeedReturn, router, trackPresentationVideoAction],
   );
 
   const cancelPendingVideoGestureTimers = useCallback(() => {

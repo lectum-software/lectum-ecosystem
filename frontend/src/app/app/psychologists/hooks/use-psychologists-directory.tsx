@@ -13,6 +13,7 @@ import type {
 import type { ImportantActionTrackingRequest } from "@/api/req/analytics";
 import { getOrCreateAnalyticsIdentity } from "@/components/analytics/storage";
 import { resolvePublicMediaUrl } from "@/utils/media";
+import { rememberPsychologistsFeedReturnPosition } from "@/utils/psychologists-feed-return-memory";
 import { currentAnalyticsPath, getDisplayMode } from "../modules/directory-url";
 import { getPsychologistFeedRealIndex } from "../modules/feed-loop";
 import {
@@ -36,6 +37,8 @@ export const usePsychologistsDirectory = () => {
   const {
     activePsychologistIndex,
     currentPage,
+    feedContainerRef,
+    feedLoopCycleCount,
     filterDialogCloseTimerRef,
     filterDialogOpenFrameRef,
     filterModalSearchDraft,
@@ -202,11 +205,24 @@ export const usePsychologistsDirectory = () => {
 
   const handleFilterSuggestionSelect = useCallback(
     (psychologist: DirectoryPsychologist) => {
+      rememberPsychologistsFeedReturnPosition({
+        activeIndex: activePsychologistIndex,
+        feedLoopCycleCount,
+        psychologistId: psychologist.id,
+        scrollTop: feedContainerRef.current?.scrollTop ?? 0,
+      });
       setFilterModalSearchDraft("");
       closeFilterDialogWithMotion();
       router.push(`/psicologos/${psychologist.id}`);
     },
-    [closeFilterDialogWithMotion, router, setFilterModalSearchDraft],
+    [
+      activePsychologistIndex,
+      closeFilterDialogWithMotion,
+      feedContainerRef,
+      feedLoopCycleCount,
+      router,
+      setFilterModalSearchDraft,
+    ],
   );
 
   const filterSearchSuggestionsSlot = useMemo(() => {

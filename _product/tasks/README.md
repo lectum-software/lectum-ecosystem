@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 174 tasks: `TASK-00` a `TASK-167`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 175 tasks: `TASK-00` a `TASK-168`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -265,6 +265,7 @@ ou cortesia manual.
 | 165 | [TASK-165 - Migração segura de vídeos legados do R2 para Cloudflare Stream](TASK-165-migracao-segura-videos-r2-cloudflare-stream.md) | Completed | 157, 163, 164 |
 | 166 | [TASK-166 - Estabilizar origem pública da migração R2 para Stream](TASK-166-estabilizar-origem-migracao-r2-stream.md) | Completed | 157, 163, 165 |
 | 167 | [TASK-167 - Restaurar playback público seguro no Cloudflare Stream](TASK-167-restaurar-playback-publico-stream.md) | Completed | 40, 163, 165, 166 |
+| 168 | [TASK-168 - Preservar vídeo ao voltar do perfil do psicólogo](TASK-168-preservar-video-ao-voltar-perfil-psicologo.md) | Completed | 13, 15, 145, 161, 162 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1265,3 +1266,22 @@ Uma task só pode ser marcada como concluída quando:
 - Frontend normaliza feed `/psicologos`, sugestoes, CTAs e mensagens `wa.me` preservadas durante o rollout, tolerando backend antigo/cache.
 - Os prints anexados pelo usuario foram usados apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
 - Alteracao sem schema/migration, package, env obrigatoria, provider, job, mock, seed, reset, backfill ou alteracao destrutiva de dados publicados. Rollback simples reverte o commit.
+
+## Correcao em 2026-09-04: retorno ao mesmo video de psicologos
+
+- Ajuste pos-feedback das TASK-13/TASK-161/TASK-162: ao abrir um perfil a partir do feed de videos
+  de psicologos e retornar, o frontend deixa de reiniciar a lista no primeiro item e restaura o
+  mesmo slide ativo/scroll da origem.
+- A memoria e efemera por aba via `sessionStorage`, expira em 30 minutos e so e aplicada quando a
+  URL atual coincide exatamente com a origem salva, preservando busca, filtros, hash e aliases
+  PT/EN.
+- Se a lista atual mudou, a restauracao tenta reconciliar pelo `psychologistId`; se nao encontrar
+  correspondencia valida, descarta o snapshot e segue com o fallback anterior.
+- Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o
+  inventario `_product/tasks/PROTO-INVENTORY.md` e os prototipos locais de Psicologos/Perfil.
+- Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration,
+  endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback
+  simples reverte o commit.
+- Validacoes: testes focados de memoria de retorno, `pnpm --dir frontend check`, `pnpm --dir
+  frontend build`, `pnpm check` e browser local mobile com dados reais de homologacao confirmando
+  retorno ao candidato ativo 2 e snapshot consumido; `version:bump`/`check:version` em `0.1.268`.

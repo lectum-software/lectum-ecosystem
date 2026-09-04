@@ -6,11 +6,21 @@ import {
   type UIEvent,
   useCallback,
   useEffect,
+  useRef,
 } from "react";
 import { playVideoWithSound } from "@/lib/video-playback";
 import {
+  clearPsychologistsFeedReturnSnapshot,
+  getCurrentInternalHref,
+  isPsychologistsFeedHref,
+  readPsychologistsFeedReturnSnapshot,
+  resolvePsychologistsFeedReturnIndex,
+  shouldRestorePsychologistsFeedReturnSnapshot,
+} from "@/utils/psychologists-feed-return-memory";
+import {
   clampPsychologistFeedSlideIndex,
   getPsychologistsFeedCycleCountForIndex,
+  getPsychologistsFeedSlideCount,
 } from "../modules/feed-loop";
 import {
   isPsychologistsScrollLockTarget,
@@ -60,6 +70,8 @@ export const usePsychologistsFeedNavigation = ({
 
   const { cancelPendingVideoGestureTimers, exitSearchMode, handleFiltersClose } = navigation;
 
+  const hasRestoredFeedReturnRef = useRef(false);
+
   const extendFeedLoopThroughIndex = useCallback(
     (index: number) => {
       const nextCycleCount = getPsychologistsFeedCycleCountForIndex({
@@ -78,7 +90,7 @@ export const usePsychologistsFeedNavigation = ({
   );
 
   const scrollFeedContainerToIndex = useCallback(
-    (index: number, behavior: ScrollBehavior) => {
+    (index: number, behavior: ScrollBehavior, fallbackTop?: number) => {
       const container = feedContainerRef.current;
       if (!container) return;
 
@@ -88,11 +100,64 @@ export const usePsychologistsFeedNavigation = ({
 
       container.scrollTo({
         behavior,
-        top: targetSlide?.offsetTop ?? index * container.clientHeight,
+        top: targetSlide?.offsetTop ?? fallbackTop ?? index * container.clientHeight,
       });
     },
     [feedContainerRef],
   );
+
+  useEffect(() => {
+    if (hasRestoredFeedReturnRef.current || isSearchFocused || psychologists.length === 0) return;
+
+    const snapshot = readPsychologistsFeedReturnSnapshot();
+    if (!snapshot) return;
+
+    if (!shouldRestorePsychologistsFeedReturnSnapshot(snapshot)) {
+      if (isPsychologistsFeedHref(getCurrentInternalHref())) {
+        clearPsychologistsFeedReturnSnapshot();
+      }
+      return;
+    }
+
+    const renderedSlideCount = getPsychologistsFeedSlideCount(
+      psychologists.length,
+      feedLoopCycleCount,
+    );
+    const restoreIndex = resolvePsychologistsFeedReturnIndex(
+      snapshot,
+      psychologists.map((psychologist) => psychologist.id),
+      renderedSlideCount,
+    );
+
+    if (restoreIndex === null) {
+      clearPsychologistsFeedReturnSnapshot();
+      return;
+    }
+
+    hasRestoredFeedReturnRef.current = true;
+    setActivePsychologistIndex(restoreIndex);
+
+    let firstFrame = 0;
+    let secondFrame = 0;
+
+    firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        scrollFeedContainerToIndex(restoreIndex, "auto", snapshot.scrollTop);
+        clearPsychologistsFeedReturnSnapshot();
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [
+    feedLoopCycleCount,
+    isSearchFocused,
+    psychologists,
+    scrollFeedContainerToIndex,
+    setActivePsychologistIndex,
+  ]);
 
   const pauseVideoPlayback = useCallback(() => {
     const currentVideo = backgroundVideoRef.current;
