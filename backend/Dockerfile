@@ -6,11 +6,15 @@
 FROM node:22-bookworm-slim AS base
 
 ENV PNPM_HOME=/pnpm
+ENV COREPACK_HOME=/corepack
 ENV PATH=${PNPM_HOME}:${PATH}
+ENV COREPACK_DEFAULT_TO_LATEST=0
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+RUN corepack enable \
+  && corepack prepare pnpm@10.33.0 --activate \
+  && chmod -R a+rX "${COREPACK_HOME}"
 
 FROM base AS deps
 
@@ -43,6 +47,7 @@ ARG PORT=3001
 
 ENV NODE_ENV=production
 ENV PORT=${PORT}
+ENV COREPACK_ENABLE_NETWORK=0
 # API docs remain disabled in every published runtime. Generate/inspect them locally.
 ENV SWAGGER=false
 
@@ -66,6 +71,10 @@ RUN chmod +x ./scripts/docker-entrypoint.sh \
   && chown -R node:node /app
 
 USER node
+
+# Prova no build que o usuário não privilegiado encontra o pnpm já embarcado,
+# sem depender de download ou mutação do container em runtime.
+RUN pnpm --version
 
 EXPOSE ${PORT}
 

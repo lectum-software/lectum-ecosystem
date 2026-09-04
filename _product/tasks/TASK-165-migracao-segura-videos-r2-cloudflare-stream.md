@@ -267,3 +267,11 @@ confirmação muda para `--confirm=production`; isso não autoriza push direto e
 - Não foi executado dry-run/apply contra mídia publicada antes do deploy. Essa validação real fica
   deliberadamente no runbook manual de homologação, sem mocks ou alegação de migração concluída.
 - Não houve alteração de UI; Builder/protótipos e validação visual não se aplicam.
+
+## Correção pós-deploy — TASK-166
+
+O primeiro dry-run real encontrou um item elegível e recusou quatro por ausência/inconsistência do
+contrato `HEAD` depois da passagem pelo Cloudflare Proxy. Nenhum apply foi executado. A TASK-166
+substituiu a origem de importação por rota extensionless e no-store, acrescentou diagnóstico
+sanitizado e fixou o pnpm do container. O runbook deve continuar somente após o novo deploy e a
+repetição do dry-run.

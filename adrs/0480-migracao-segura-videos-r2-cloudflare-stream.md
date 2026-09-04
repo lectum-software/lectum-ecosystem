@@ -110,3 +110,10 @@ como parte do rollback.
 - Definir em task futura retenção, prova de não uso e eventual remoção segura das origens R2.
 - Definir limpeza de ativos Stream não associados somente após observar casos reais; esta task os
   preserva por segurança.
+
+## Emenda pós-deploy
+
+O primeiro dry-run de homologação não escreveu dados e expôs que respostas `HEAD` de quatro origens
+perdiam parte do contrato esperado ao atravessar o Cloudflare Proxy. A ADR-0481 substitui a URL
+legada pela origem técnica extensionless/no-store e mantém o probe fail-closed. Nenhum apply deve ser
+executado até a nova versão ser publicada e o dry-run de cinco itens ser repetido.

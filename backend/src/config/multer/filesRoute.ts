@@ -3,6 +3,7 @@ import type { Application, Request, Response } from "express";
 import { PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { send } from "@/helpers/return";
 import { error } from "@/helpers/translate";
+import { videoStreamImportObjectKey } from "@/utils/video-stream-import-source";
 
 const getRequestedFile = (file?: string | string[]) => {
   return Array.isArray(file) ? file.join("/") : file;
@@ -71,7 +72,22 @@ const isVideoObject = (file: string, contentType?: string) =>
   contentType?.trim().toLowerCase().startsWith("video/") === true ||
   /\.(?:mov|mp4|webm)$/i.test(file);
 
-const headFile = async (file: string | undefined, res: Response) => {
+const setStreamImportResponseHeaders = (res: Response) => {
+  res.setHeader("Cache-Control", "private, no-store, max-age=0");
+  res.setHeader("CDN-Cache-Control", "no-store");
+  res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+};
+
+type FileResponseOptions = {
+  streamImport?: boolean;
+};
+
+const headFile = async (
+  file: string | undefined,
+  res: Response,
+  options: FileResponseOptions = {},
+) => {
   if (!file) {
     return sendNotFound(res);
   }
@@ -82,19 +98,28 @@ const headFile = async (file: string | undefined, res: Response) => {
       Key: file,
     });
     const data = await S3.send(command);
+    if (options.streamImport && !isVideoObject(file, data.ContentType)) {
+      return sendNotFound(res);
+    }
     const contentRange =
       isVideoObject(file, data.ContentType) && data.ContentLength && data.ContentLength > 0
         ? `bytes 0-${data.ContentLength - 1}/${data.ContentLength}`
         : undefined;
 
     setObjectResponseHeaders(res, { ...data, ContentRange: contentRange });
+    if (options.streamImport) setStreamImportResponseHeaders(res);
     return res.status(200).end();
   } catch {
     return sendNotFound(res);
   }
 };
 
-const streamFile = async (file: string | undefined, req: Request, res: Response) => {
+const streamFile = async (
+  file: string | undefined,
+  req: Request,
+  res: Response,
+  options: FileResponseOptions = {},
+) => {
   if (!file) {
     return sendNotFound(res);
   }
@@ -111,13 +136,23 @@ const streamFile = async (file: string | undefined, req: Request, res: Response)
       return sendNotFound(res);
     }
 
-    setObjectResponseHeaders(res, data);
+    const body = data.Body as NodeJS.ReadableStream & { destroy?: (error?: Error) => void };
+    if (options.streamImport && !isVideoObject(file, data.ContentType)) {
+      body.destroy?.();
+      return sendNotFound(res);
+    }
+
+    const fullContentRange =
+      options.streamImport && !range && data.ContentLength && data.ContentLength > 0
+        ? `bytes 0-${data.ContentLength - 1}/${data.ContentLength}`
+        : undefined;
+    setObjectResponseHeaders(res, { ...data, ContentRange: data.ContentRange ?? fullContentRange });
+    if (options.streamImport) setStreamImportResponseHeaders(res);
 
     if (data.ContentRange) {
       res.status(206);
     }
 
-    const body = data.Body as NodeJS.ReadableStream & { destroy?: (error?: Error) => void };
     const destroyBody = () => body.destroy?.();
 
     body.once("error", () => {
@@ -157,6 +192,21 @@ export const filesRoute = (server: Application) => {
     return req.method === "HEAD" ? headFile(file, res) : streamFile(file, req, res);
   };
 
+  const handleVideoStreamImportSource = async (req: Request, res: Response) => {
+    if (Object.keys(req.query).length > 0) return sendNotFound(res);
+
+    const params = req.params as { source?: string };
+    const file = videoStreamImportObjectKey(params.source);
+    if (!file) return sendNotFound(res);
+
+    const options = { streamImport: true } as const;
+    return req.method === "HEAD"
+      ? headFile(file, res, options)
+      : streamFile(file, req, res, options);
+  };
+
   server.head("/public/files/*file", handlePublicFileRequest);
   server.get("/public/files/*file", handlePublicFileRequest);
+  server.head("/public/video-stream-import/v1/:source", handleVideoStreamImportSource);
+  server.get("/public/video-stream-import/v1/:source", handleVideoStreamImportSource);
 };

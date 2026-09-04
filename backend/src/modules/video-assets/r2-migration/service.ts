@@ -35,6 +35,11 @@ const safeFailureReason = (error: unknown) => {
   return "migration_unexpected_failure";
 };
 
+const safeFailureDiagnostic = (error: unknown) =>
+  error instanceof R2MigrationSourceError && error.diagnostic
+    ? { sourceProbe: error.diagnostic }
+    : {};
+
 const sleep = (milliseconds: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 
@@ -200,6 +205,7 @@ export class R2ToStreamMigrationService {
         migrationRef: identity.migrationRef,
         purpose: candidate.purpose,
         reason,
+        ...safeFailureDiagnostic(error),
       });
       return {
         migrationRef: identity.migrationRef,

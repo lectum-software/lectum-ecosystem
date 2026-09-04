@@ -379,6 +379,9 @@ Templates/shells devem viver em `frontend/src/templates`.
 - A importação por link reconstrói a origem com o `BASE` atual, valida o objeto no R2 e exige
   `HEAD`/`GET Range` antes de chamar Stream. `creator` e `migration_key` determinísticos permitem
   retomada; resposta ambígua do provider falha fechada.
+- A origem desse backfill usa o endpoint técnico extensionless e no-store da TASK-166, não a URL
+  legada com extensão. Isso preserva `HEAD` + `GET Range` quando o Cloudflare Proxy converte uma
+  requisição cacheável antes de consultar a origem e mantém a reprodução final fora do backend.
 - Campos de perfil/post/resposta só recebem a referência Lectum depois de `ready` e por
   compare-and-swap da origem observada. A operação não apaga vídeo/capa R2; retenção e contração
   futuras exigem task própria depois de homologação e inventário zero.

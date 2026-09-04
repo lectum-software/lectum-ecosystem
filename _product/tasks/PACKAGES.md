@@ -157,6 +157,12 @@ identidade usa `node:crypto`; lock usa o `pg` já instalado; inspeção de orige
 `@aws-sdk/client-s3` existente. Não instalar SDK Cloudflare ou ferramenta de migration externa para
 esse backfill.
 
+A correção operacional da TASK-166 também não adiciona package. Como o backend é construído e
+executado a partir de contexto isolado, seu `package.json` deve fixar `packageManager: pnpm@10.33.0`
+na mesma versão preparada pelo Docker/Corepack. O cache preparado deve estar disponível ao usuário
+não privilegiado e a rede do Corepack deve permanecer bloqueada no estágio runtime. Não permitir que
+o terminal do container baixe/atualize pnpm ou reinstale `node_modules` em runtime.
+
 ## Admin já instalado
 
 | Pacote | Versão instalada | Última verificada | Uso |
