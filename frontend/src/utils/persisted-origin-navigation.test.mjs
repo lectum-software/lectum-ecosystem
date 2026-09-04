@@ -53,6 +53,11 @@ const {
   resolvePsychologistsFeedReturnIndex,
   shouldRestorePsychologistsFeedReturnSnapshot,
 } = await import("./psychologists-feed-return-memory.ts");
+const {
+  getPsychologistsFeedRestoreScrollTop,
+  PSYCHOLOGISTS_FEED_INSTANT_RESTORE_ATTRIBUTE,
+  restorePsychologistsFeedScrollInstantly,
+} = await import("../app/app/psychologists/modules/feed-restore-scroll.ts");
 
 class MemoryStorage {
   #items = new Map();
@@ -227,6 +232,100 @@ test("preserva o slide ativo do feed de psicologos ao abrir perfil e voltar", as
   } finally {
     Date.now = previousNow;
   }
+});
+
+test("restauracao do feed de psicologos posiciona o container sem animacao suave", () => {
+  const previousWindow = globalThis.window;
+  const callbacks = new Map();
+  let nextFrameId = 1;
+  const attributes = new Map();
+  const requestedSelectors = [];
+  const container = {
+    clientHeight: 720,
+    scrollLeft: 18,
+    scrollTop: 0,
+    style: {
+      scrollBehavior: "smooth",
+      scrollSnapType: "y mandatory",
+    },
+    getAttribute(name) {
+      return attributes.get(name) ?? null;
+    },
+    querySelector(selector) {
+      requestedSelectors.push(selector);
+      return selector.includes('"4"') ? { offsetTop: 2880 } : null;
+    },
+    removeAttribute(name) {
+      attributes.delete(name);
+    },
+    setAttribute(name, value) {
+      attributes.set(name, String(value));
+    },
+  };
+
+  globalThis.window = {
+    cancelAnimationFrame(id) {
+      callbacks.delete(id);
+    },
+    requestAnimationFrame(callback) {
+      const id = nextFrameId;
+      nextFrameId += 1;
+      callbacks.set(id, callback);
+      return id;
+    },
+  };
+
+  try {
+    const cleanup = restorePsychologistsFeedScrollInstantly(container, 4, 1440);
+
+    assert.deepEqual(requestedSelectors, ['[data-psychologists-slide-index="4"]']);
+    assert.equal(container.scrollTop, 2880);
+    assert.equal(container.scrollLeft, 0);
+    assert.equal(container.style.scrollBehavior, "auto");
+    assert.equal(container.style.scrollSnapType, "none");
+    assert.equal(attributes.get(PSYCHOLOGISTS_FEED_INSTANT_RESTORE_ATTRIBUTE), "true");
+
+    cleanup();
+
+    assert.equal(container.style.scrollBehavior, "smooth");
+    assert.equal(container.style.scrollSnapType, "y mandatory");
+    assert.equal(attributes.get(PSYCHOLOGISTS_FEED_INSTANT_RESTORE_ATTRIBUTE), undefined);
+  } finally {
+    if (previousWindow === undefined) {
+      delete globalThis.window;
+    } else {
+      globalThis.window = previousWindow;
+    }
+  }
+});
+
+test("restauracao do feed de psicologos usa fallback quando slide nao existe", () => {
+  assert.equal(
+    getPsychologistsFeedRestoreScrollTop(
+      {
+        clientHeight: 620,
+        querySelector() {
+          return null;
+        },
+      },
+      3,
+      1240,
+    ),
+    1240,
+  );
+
+  assert.equal(
+    getPsychologistsFeedRestoreScrollTop(
+      {
+        clientHeight: 620,
+        querySelector() {
+          return null;
+        },
+      },
+      3,
+    ),
+    1860,
+  );
 });
 
 test("restaura por id quando a ordem renderizada dos psicologos mudou", async () => {

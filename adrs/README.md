@@ -516,3 +516,4 @@ Formato recomendado:
 - [ADR-0483 — Playback público assinado no Cloudflare Stream](0483-playback-publico-assinado-cloudflare-stream.md)
 - [ADR-0484 — Memória efêmera de retorno no feed de vídeos de psicólogos](0484-memoria-retorno-feed-videos-psicologos.md)
 - [ADR-0485 — Vídeo expandido inline sem fullscreen nativo](0485-video-expandido-inline-sem-fullscreen-nativo.md)
+- [ADR-0486 — Restauração instantânea do feed de vídeos de psicólogos](0486-retorno-instantaneo-feed-videos-psicologos.md)

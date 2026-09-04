@@ -6,6 +6,7 @@ import {
   type UIEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
 } from "react";
 import { playVideoWithSound } from "@/lib/video-playback";
@@ -22,6 +23,7 @@ import {
   getPsychologistsFeedCycleCountForIndex,
   getPsychologistsFeedSlideCount,
 } from "../modules/feed-loop";
+import { restorePsychologistsFeedScrollInstantly } from "../modules/feed-restore-scroll";
 import {
   isPsychologistsScrollLockTarget,
   PSYCHOLOGISTS_BACKGROUND_VIDEO_SELECTOR,
@@ -106,7 +108,7 @@ export const usePsychologistsFeedNavigation = ({
     [feedContainerRef],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (hasRestoredFeedReturnRef.current || isSearchFocused || psychologists.length === 0) return;
 
     const snapshot = readPsychologistsFeedReturnSnapshot();
@@ -137,25 +139,25 @@ export const usePsychologistsFeedNavigation = ({
     hasRestoredFeedReturnRef.current = true;
     setActivePsychologistIndex(restoreIndex);
 
-    let firstFrame = 0;
-    let secondFrame = 0;
+    const container = feedContainerRef.current;
+    if (!container) {
+      clearPsychologistsFeedReturnSnapshot();
+      return;
+    }
 
-    firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        scrollFeedContainerToIndex(restoreIndex, "auto", snapshot.scrollTop);
-        clearPsychologistsFeedReturnSnapshot();
-      });
-    });
+    const restoreStyles = restorePsychologistsFeedScrollInstantly(
+      container,
+      restoreIndex,
+      snapshot.scrollTop,
+    );
+    clearPsychologistsFeedReturnSnapshot();
 
-    return () => {
-      window.cancelAnimationFrame(firstFrame);
-      window.cancelAnimationFrame(secondFrame);
-    };
+    return restoreStyles;
   }, [
+    feedContainerRef,
     feedLoopCycleCount,
     isSearchFocused,
     psychologists,
-    scrollFeedContainerToIndex,
     setActivePsychologistIndex,
   ]);
 

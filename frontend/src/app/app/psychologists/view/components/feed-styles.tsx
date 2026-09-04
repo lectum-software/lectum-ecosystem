@@ -77,6 +77,11 @@ export const PsychologistsFeedStyles = () => {
                   display: none;
                 }
 
+                .psychologists-video-feed[data-psychologists-feed-instant-restore="true"] {
+                  scroll-behavior: auto;
+                  scroll-snap-type: none;
+                }
+
                 .psychologists-filter-dialog-scroll {
                   scrollbar-width: none;
                   -ms-overflow-style: none;
