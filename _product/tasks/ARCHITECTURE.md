@@ -373,6 +373,15 @@ Templates/shells devem viver em `frontend/src/templates`.
   Stream for associado, rollback de escrita desliga somente a flag pública; o backend/configuração
   Stream deve continuar ativo para reproduzir referências existentes. Nunca apagar ativos Stream
   ou objetos R2 no rollback.
+- O backfill de referências R2 existentes pertence à TASK-165 e nunca roda no boot/deploy. Usar a
+  operação compilada `video:migrate-r2-to-stream` em dry-run e lotes pequenos, com confirmação
+  explícita do ambiente para qualquer escrita.
+- A importação por link reconstrói a origem com o `BASE` atual, valida o objeto no R2 e exige
+  `HEAD`/`GET Range` antes de chamar Stream. `creator` e `migration_key` determinísticos permitem
+  retomada; resposta ambígua do provider falha fechada.
+- Campos de perfil/post/resposta só recebem a referência Lectum depois de `ready` e por
+  compare-and-swap da origem observada. A operação não apaga vídeo/capa R2; retenção e contração
+  futuras exigem task própria depois de homologação e inventário zero.
 
 
 ### Serviço isolado de processamento de vídeo

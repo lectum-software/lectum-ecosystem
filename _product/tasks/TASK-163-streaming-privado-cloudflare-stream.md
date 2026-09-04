@@ -138,6 +138,9 @@ precisar reproduzir referência Stream. Nenhuma URL assinada é persistida ou in
 - Download do original, DRM, geoblocking/IP binding, live streaming ou armazenamento de token.
 - Reset/seed/limpeza em homologação ou produção.
 
+> Complemento posterior: a cópia operacional dos vídeos legados foi especificada na TASK-165, sem
+> alterar o escopo histórico nem executar limpeza do R2.
+
 ## Impacto em produção e plano de rollout
 
 - **Banco:** expansão aditiva sem backfill. `video_assets` começa vazia; campos existentes seguem

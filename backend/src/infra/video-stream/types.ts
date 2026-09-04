@@ -29,6 +29,11 @@ export type ProvisionedVideoUpload = {
   uploadUrl: string;
 };
 
+export type ImportVideoByUrlInput = {
+  assetId: string;
+  sourceUrl: string;
+};
+
 export type SignedVideoPlayback = {
   expiresAt: Date;
   hlsUrl: string;

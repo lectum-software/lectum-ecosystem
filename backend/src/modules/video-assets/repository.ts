@@ -7,6 +7,7 @@ import {
 } from "@/infra/video-stream";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { canViewVideoAsset } from "./authorization";
+import { isR2MigrationAsset } from "./r2-migration/policy";
 import { mutableVideoAssetStatusesFor } from "./status";
 import type {
   ProfileVideoAssetAttachment,
@@ -36,6 +37,7 @@ export class VideoAssetRepository {
         transaction.video_asset.count({
           where: {
             ...activeAssetWhere,
+            migration_key: null,
             owner_id: data.ownerId,
             status: { in: ["uploading", "processing"] },
             upload_expires_at: { gt: now },
@@ -45,6 +47,7 @@ export class VideoAssetRepository {
           where: {
             ...activeAssetWhere,
             createdAt: { gte: oneHourAgo },
+            migration_key: null,
             owner_id: data.ownerId,
           },
         }),
@@ -203,6 +206,8 @@ export class VideoAssetRepository {
 
       const reference = videoAssetPlaybackReference(asset.id);
       if (profile.video_url === reference) return notAttached();
+      const isR2Migration = isR2MigrationAsset(asset);
+      if (isR2Migration && profile.video_url !== asset.source_reference) return notAttached();
 
       const replacedAssets = await transaction.video_asset.findMany({
         where: {
@@ -219,6 +224,7 @@ export class VideoAssetRepository {
           id: profile.id,
           user_id: asset.owner_id,
           video_url: profile.video_url,
+          ...(isR2Migration ? { video_cover_url: asset.source_thumbnail_reference } : {}),
         },
         data: {
           video_cover_url: null,
@@ -242,6 +248,13 @@ export class VideoAssetRepository {
             error_code: null,
             status: "canceled",
           },
+        });
+      }
+
+      if (isR2Migration) {
+        await transaction.video_asset.update({
+          where: { id: asset.id },
+          data: { migrated_at: new Date() },
         });
       }
 

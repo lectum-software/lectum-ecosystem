@@ -1005,29 +1005,34 @@ model community_post {
 }
 
 model video_asset {
-  id                    String    @id @default(cuid())
-  deleted               Boolean   @default(false)
-  deletedAt             DateTime? @map("deleted_at")
-  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
-  createdAt             DateTime  @default(now()) @map("created_at")
-  owner_id              String    @map("owner_id")
-  provider              String    @default("cloudflare_stream")
-  provider_uid          String    @unique @map("provider_uid")
-  purpose               String
-  context_id            String?   @map("context_id")
-  status                String    @default("uploading")
-  mime_type             String    @map("mime_type")
-  size_bytes            BigInt    @map("size_bytes")
-  duration_seconds      Float?    @map("duration_seconds")
-  width                 Int?
-  height                Int?
-  upload_expires_at     DateTime  @map("upload_expires_at")
-  last_provider_sync_at DateTime? @map("last_provider_sync_at")
-  ready_at              DateTime? @map("ready_at")
-  error_code            String?   @map("error_code")
-  last_webhook_at       DateTime? @map("last_webhook_at")
-  last_webhook_digest   String?   @map("last_webhook_digest")
-  owner                 user      @relation("video_asset_owner", fields: [owner_id], references: [id], onDelete: Cascade)
+  id                         String    @id @default(cuid())
+  deleted                    Boolean   @default(false)
+  deletedAt                  DateTime? @map("deleted_at")
+  updatedAt                  DateTime  @default(now()) @updatedAt @map("updated_at")
+  createdAt                  DateTime  @default(now()) @map("created_at")
+  owner_id                   String    @map("owner_id")
+  provider                   String    @default("cloudflare_stream")
+  provider_uid               String    @unique @map("provider_uid")
+  purpose                    String
+  context_id                 String?   @map("context_id")
+  status                     String    @default("uploading")
+  mime_type                  String    @map("mime_type")
+  size_bytes                 BigInt    @map("size_bytes")
+  duration_seconds           Float?    @map("duration_seconds")
+  width                      Int?
+  height                     Int?
+  upload_expires_at          DateTime  @map("upload_expires_at")
+  last_provider_sync_at      DateTime? @map("last_provider_sync_at")
+  ready_at                   DateTime? @map("ready_at")
+  error_code                 String?   @map("error_code")
+  last_webhook_at            DateTime? @map("last_webhook_at")
+  last_webhook_digest        String?   @map("last_webhook_digest")
+  source_provider            String?   @map("source_provider")
+  source_reference           String?   @map("source_reference")
+  source_thumbnail_reference String?   @map("source_thumbnail_reference")
+  migration_key              String?   @unique @map("migration_key")
+  migrated_at                DateTime? @map("migrated_at")
+  owner                      user      @relation("video_asset_owner", fields: [owner_id], references: [id], onDelete: Cascade)
 
   @@index([owner_id, purpose, deleted, createdAt])
   @@index([status, deleted, updatedAt])

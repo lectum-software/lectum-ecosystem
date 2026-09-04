@@ -607,6 +607,11 @@ Complemento TASK-149 (2026-08-10): o usuário final continua apenas enviando `co
 | `last_provider_sync_at` / `ready_at` | `DateTime?` | reconciliação limitada e momento em que o ativo ficou reproduzível |
 | `error_code` | `String?` | classificação interna controlada; mensagem crua do provider não é persistida/exposta |
 | `last_webhook_at` / `last_webhook_digest` | `DateTime?` / `String?` | idempotência do webhook autenticado, sem armazenar assinatura ou corpo bruto |
+| `source_provider` | `String?` | TASK-165: `"cloudflare_r2"` somente em ativo criado pelo backfill; nulo nos uploads Stream normais |
+| `source_reference` | `String?` | TASK-165: referência R2 observada antes da troca, preservada para auditoria/rollback; não é devolvida no playback |
+| `source_thumbnail_reference` | `String?` | TASK-165: capa R2 observada antes da troca; preservada e nullable |
+| `migration_key` | `String? @unique` | TASK-165: SHA-256 determinístico por finalidade/alvo/object key para deduplicação e retomada |
+| `migrated_at` | `DateTime?` | TASK-165: preenchido somente após associação atômica da referência Stream |
 | `deleted` / `deleted_at` | `Boolean` / `DateTime?` | cancelamento/aposentadoria lógica; exclusão no provider é best effort |
 | `@@index([owner_id, purpose, deleted, createdAt])` | | histórico e limitação de provisionamentos por dono/finalidade |
 | `@@index([status, deleted, updatedAt])` | | reconciliação/limpeza futura de estados |
@@ -627,8 +632,10 @@ Contratos derivados:
 - Dono pode assistir ao próprio ativo pronto. Terceiros autenticados somente quando a referência
   estiver em perfil publicado/ativo ou conteúdo publicado de comunidade ativa; Admin usa endpoint
   autenticado separado. Usuário anônimo não recebe token.
-- Vídeos R2 anteriores e seus campos nullable continuam válidos. Não há backfill, cópia, reset ou
-  remoção de objeto no rollout da TASK-163.
+- Vídeos R2 anteriores e seus campos nullable continuam válidos. Não houve backfill, cópia, reset
+  ou remoção de objeto no rollout da TASK-163. A TASK-165 adiciona uma operação manual: copia em
+  lotes, associa somente depois de `ready`, preserva as referências de origem e nunca remove o
+  objeto/capa R2.
 
 `community_member` (seguir/participar, TASK-25; PRD "Comunidades seguidas"):
 

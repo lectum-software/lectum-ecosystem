@@ -17,6 +17,7 @@ import {
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { deletePublicProfileMedia } from "../profile-media/public-storage";
 import { deleteRetiredProviderVideos } from "./lifecycle";
+import { isR2MigrationAsset } from "./r2-migration/policy";
 import { VideoAssetRepository } from "./repository";
 import type { VideoAssetProviderUpdate, VideoAssetRecord } from "./types";
 
@@ -214,9 +215,13 @@ const attachReadyProfileAsset = async (
   const attachment = await repository.attachReadyProfileAsset(asset);
   if (!attachment.attached) return;
 
+  const preserveR2Source = isR2MigrationAsset(asset);
+
   await Promise.all([
-    deletePublicProfileMedia(attachment.previousVideoUrl),
-    deletePublicProfileMedia(attachment.previousVideoCoverUrl),
+    preserveR2Source ? Promise.resolve() : deletePublicProfileMedia(attachment.previousVideoUrl),
+    preserveR2Source
+      ? Promise.resolve()
+      : deletePublicProfileMedia(attachment.previousVideoCoverUrl),
     deleteRetiredProviderVideos(attachment.retiredProviderUids),
   ]);
 };

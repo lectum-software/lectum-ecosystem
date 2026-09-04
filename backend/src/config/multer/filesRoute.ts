@@ -67,6 +67,10 @@ const sendNotFound = (res: Response) =>
     type: 2,
   });
 
+const isVideoObject = (file: string, contentType?: string) =>
+  contentType?.trim().toLowerCase().startsWith("video/") === true ||
+  /\.(?:mov|mp4|webm)$/i.test(file);
+
 const headFile = async (file: string | undefined, res: Response) => {
   if (!file) {
     return sendNotFound(res);
@@ -78,8 +82,12 @@ const headFile = async (file: string | undefined, res: Response) => {
       Key: file,
     });
     const data = await S3.send(command);
+    const contentRange =
+      isVideoObject(file, data.ContentType) && data.ContentLength && data.ContentLength > 0
+        ? `bytes 0-${data.ContentLength - 1}/${data.ContentLength}`
+        : undefined;
 
-    setObjectResponseHeaders(res, data);
+    setObjectResponseHeaders(res, { ...data, ContentRange: contentRange });
     return res.status(200).end();
   } catch {
     return sendNotFound(res);

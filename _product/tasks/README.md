@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 171 tasks: `TASK-00` a `TASK-164`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 172 tasks: `TASK-00` a `TASK-165`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -76,7 +76,7 @@ ou cortesia manual.
 - Use as imagens exportadas de `_product/proto` como fallback e como referência auditável da task.
 - Ao concluir, marque critérios de aceite `[x]`, registre ADR, faça commit próprio e execute `git push` para publicar a branch/remoto correspondente. Se a branch ainda não tiver upstream, use `git push -u origin <branch>`.
 - Commit e push da task devem ocorrer em `homolog`; o executor deve informar que o push iniciou o deploy automático de homologação.
-- Antes de cada novo commit do agente, executar uma única vez `pnpm version:bump`, incluir os quatro `package.json` sincronizados e validar `pnpm check:version`. Não repetir o bump ao apenas tentar novamente um commit que falhou.
+- Antes de cada novo commit do agente, executar uma única vez `pnpm version:bump`, incluir os cinco `package.json` sincronizados e validar `pnpm check:version`. Não repetir o bump ao apenas tentar novamente um commit que falhou.
 - Não use referências externas ao workspace da task como atalho arquitetural.
 - Antes de criar código novo, consulte `ARCHITECTURE.md`.
 - Antes de criar/alterar modelo Prisma ou contrato de API, consulte `DATA-MODEL.md` e referencie a seção em vez de redefinir o schema.
@@ -262,6 +262,7 @@ ou cortesia manual.
 | 162 | [TASK-162 - Corrigir bug visual do loop de videos de psicologos](TASK-162-corrigir-loop-videos-psicologos.md) | Completed | 13, 40, 75, 145, 161 |
 | 163 | [TASK-163 - Streaming privado de vídeos com Cloudflare Stream](TASK-163-streaming-privado-cloudflare-stream.md) | Completed | 03, 13, 15, 23, 24, 26, 29B, 157, 159 |
 | 164 | [TASK-164 - Serviço isolado de processamento de vídeos](TASK-164-servico-isolado-processamento-videos.md) | Completed | 42, 158, 159, 163 |
+| 165 | [TASK-165 - Migração segura de vídeos legados do R2 para Cloudflare Stream](TASK-165-migracao-segura-videos-r2-cloudflare-stream.md) | Completed | 157, 163, 164 |
 
 ## Ordem operacional recomendada sem bloqueios
 

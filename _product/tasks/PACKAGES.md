@@ -152,6 +152,11 @@ O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnl
 MediaBunny, seu encoder AAC e a POC Playwright/Chromium foram removidos pela TASK-164. Novos vídeos
 usam Cloudflare Stream; transformações offline pertencem à aplicação `video/`.
 
+A migração manual R2 → Stream da TASK-165 não adiciona dependência. O adapter usa `fetch` nativo;
+identidade usa `node:crypto`; lock usa o `pg` já instalado; inspeção de origem usa o
+`@aws-sdk/client-s3` existente. Não instalar SDK Cloudflare ou ferramenta de migration externa para
+esse backfill.
+
 ## Admin já instalado
 
 | Pacote | Versão instalada | Última verificada | Uso |

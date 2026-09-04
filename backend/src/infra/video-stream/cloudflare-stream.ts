@@ -1,16 +1,18 @@
 import type { VideoStreamConfig } from "./config";
 import { createSignedVideoPlayback } from "./signing";
 import type {
+  ImportVideoByUrlInput,
   ProvisionedVideoUpload,
   ProvisionVideoUploadInput,
   VideoStreamDetails,
 } from "./types";
 
 type CloudflareVideo = {
+  creator?: unknown;
   duration?: unknown;
   input?: { height?: unknown; width?: unknown };
   readyToStream?: unknown;
-  status?: { errReasonCode?: unknown; state?: unknown };
+  status?: { errorReasonCode?: unknown; errReasonCode?: unknown; state?: unknown };
   uid?: unknown;
 };
 
@@ -43,6 +45,30 @@ const normalizeProviderErrorCode = (value: unknown) => {
   return /^[a-z0-9_-]{1,80}$/.test(normalized) ? normalized : null;
 };
 
+const toVideoStreamDetails = (
+  video: CloudflareVideo,
+  expectedProviderUid?: string,
+): VideoStreamDetails | null => {
+  const providerUid = typeof video.uid === "string" ? video.uid.trim() : "";
+  if (
+    !isCloudflareStreamVideoUid(providerUid) ||
+    (expectedProviderUid && providerUid !== expectedProviderUid)
+  ) {
+    return null;
+  }
+
+  return {
+    durationSeconds: toFiniteNumber(video.duration),
+    errorCode: normalizeProviderErrorCode(
+      video.status?.errorReasonCode ?? video.status?.errReasonCode,
+    ),
+    height: toDimension(video.input?.height),
+    providerUid,
+    status: classifyStatus(video),
+    width: toDimension(video.input?.width),
+  };
+};
+
 const encodeMetadataValue = (value: string) => Buffer.from(value, "utf8").toString("base64");
 
 const buildUploadMetadata = (input: ProvisionVideoUploadInput, allowedOrigins: readonly string[]) =>
@@ -70,6 +96,19 @@ const isCloudflareDirectUploadUrl = (value: string) => {
 };
 
 export const isCloudflareStreamVideoUid = (value: string) => /^[a-f0-9]{32}$/i.test(value);
+
+const isMigrationCreatorId = (value: string) => /^[a-z0-9_-]{8,64}$/i.test(value);
+
+const isSafeImportSourceUrl = (value: string) => {
+  if (!value || value.length > 4_096 || value.includes("\\")) return false;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password && !url.hash;
+  } catch {
+    return false;
+  }
+};
 
 export class VideoStreamProviderError extends Error {
   readonly operation: string;
@@ -100,8 +139,8 @@ export class CloudflareStreamAdapter {
       response = await this.fetcher(this.endpoint(path), {
         ...init,
         headers: {
-          Authorization: `Bearer ${this.config.apiToken}`,
           ...init.headers,
+          Authorization: `Bearer ${this.config.apiToken}`,
         },
         signal: AbortSignal.timeout(this.config.requestTimeoutMs),
       });
@@ -141,6 +180,86 @@ export class CloudflareStreamAdapter {
     return { providerUid, uploadUrl };
   }
 
+  async importVideoByUrl(input: ImportVideoByUrlInput): Promise<VideoStreamDetails> {
+    if (!isMigrationCreatorId(input.assetId) || !isSafeImportSourceUrl(input.sourceUrl)) {
+      throw new VideoStreamProviderError("import_video_contract", null);
+    }
+
+    const response = await this.request(
+      "/copy",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          allowedOrigins: this.config.allowedOrigins,
+          creator: input.assetId,
+          input: input.sourceUrl,
+          meta: {
+            lectum_asset_id: input.assetId,
+            operation: "r2_to_stream",
+          },
+          requireSignedURLs: true,
+          thumbnailTimestampPct: 0.1,
+        }),
+      },
+      "import_video",
+    );
+
+    let envelope: CloudflareEnvelope<CloudflareVideo>;
+    try {
+      envelope = (await response.json()) as CloudflareEnvelope<CloudflareVideo>;
+    } catch {
+      throw new VideoStreamProviderError("import_video_contract", response.status);
+    }
+
+    const details = envelope.result ? toVideoStreamDetails(envelope.result) : null;
+    if (envelope.success !== true || envelope.result?.creator !== input.assetId || !details) {
+      throw new VideoStreamProviderError("import_video_contract", response.status);
+    }
+
+    return details;
+  }
+
+  async findVideoByCreator(assetId: string): Promise<VideoStreamDetails | null> {
+    if (!isMigrationCreatorId(assetId)) {
+      throw new VideoStreamProviderError("find_video_by_creator_contract", null);
+    }
+
+    const query = new URLSearchParams({
+      creator: assetId,
+      include_counts: "false",
+      limit: "10",
+    });
+    const response = await this.request(`?${query}`, {}, "find_video_by_creator");
+    let envelope: CloudflareEnvelope<CloudflareVideo[]>;
+
+    try {
+      envelope = (await response.json()) as CloudflareEnvelope<CloudflareVideo[]>;
+    } catch {
+      throw new VideoStreamProviderError("find_video_by_creator_contract", response.status);
+    }
+
+    if (
+      envelope.success !== true ||
+      !Array.isArray(envelope.result) ||
+      envelope.result.length > 1 ||
+      envelope.result.some((video) => video.creator !== assetId)
+    ) {
+      throw new VideoStreamProviderError("find_video_by_creator_contract", response.status);
+    }
+
+    const matches = envelope.result.map((video) => toVideoStreamDetails(video));
+    const validMatches = matches.filter((details): details is VideoStreamDetails =>
+      Boolean(details),
+    );
+
+    if (validMatches.length !== envelope.result.length) {
+      throw new VideoStreamProviderError("find_video_by_creator_contract", response.status);
+    }
+
+    return validMatches[0] ?? null;
+  }
+
   async getVideo(providerUid: string): Promise<VideoStreamDetails> {
     if (!isCloudflareStreamVideoUid(providerUid)) {
       throw new VideoStreamProviderError("get_video_contract", null);
@@ -154,20 +273,12 @@ export class CloudflareStreamAdapter {
       throw new VideoStreamProviderError("get_video_contract", response.status);
     }
 
-    const video = envelope.result;
-    const uid = typeof video?.uid === "string" ? video.uid : providerUid;
-    if (!video || envelope.success !== true || uid !== providerUid) {
+    const details = envelope.result ? toVideoStreamDetails(envelope.result, providerUid) : null;
+    if (envelope.success !== true || !details) {
       throw new VideoStreamProviderError("get_video_contract", response.status);
     }
 
-    return {
-      durationSeconds: toFiniteNumber(video.duration),
-      errorCode: normalizeProviderErrorCode(video.status?.errReasonCode),
-      height: toDimension(video.input?.height),
-      providerUid,
-      status: classifyStatus(video),
-      width: toDimension(video.input?.width),
-    };
+    return details;
   }
 
   async deleteVideo(providerUid: string) {

@@ -179,6 +179,112 @@ describe("Cloudflare Stream direct upload", () => {
     assert.equal((await adapter.getVideo(providerUid)).status, "processing");
     assert.equal((await adapter.getVideo(providerUid)).status, "ready");
   });
+
+  it("importa URL HTTPS como vídeo privado e associa o creator ao ativo interno", async () => {
+    const providerUid = "0123456789abcdef0123456789abcdef";
+    let capturedInit: RequestInit | undefined;
+    let capturedUrl = "";
+    const fetcher = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      capturedUrl = String(input);
+      capturedInit = init;
+      return Response.json({
+        result: {
+          creator: "r2m_asset_12345678",
+          readyToStream: false,
+          status: { state: "downloading" },
+          uid: providerUid,
+        },
+        success: true,
+      });
+    }) as typeof fetch;
+    const adapter = new CloudflareStreamAdapter(createConfig(), fetcher);
+
+    const result = await adapter.importVideoByUrl({
+      assetId: "r2m_asset_12345678",
+      sourceUrl: "https://homolog-api.lectum.com.br/public/files/posts/media/video.mp4",
+    });
+
+    assert.equal(
+      capturedUrl,
+      "https://api.cloudflare.com/client/v4/accounts/account_123/stream/copy",
+    );
+    const body = JSON.parse(String(capturedInit?.body));
+    assert.deepEqual(body.allowedOrigins, ["homolog.lectum.com.br"]);
+    assert.equal(body.creator, "r2m_asset_12345678");
+    assert.equal(body.requireSignedURLs, true);
+    assert.equal(body.thumbnailTimestampPct, 0.1);
+    assert.equal(
+      body.input,
+      "https://homolog-api.lectum.com.br/public/files/posts/media/video.mp4",
+    );
+    assert.equal(result.providerUid, providerUid);
+    assert.equal(result.status, "processing");
+    assert.doesNotMatch(JSON.stringify(body), /private-api-token/);
+  });
+
+  it("reconcilia importação interrompida pelo creator sem criar uma segunda cópia", async () => {
+    const providerUid = "fedcba9876543210fedcba9876543210";
+    const fetcher = (async () =>
+      Response.json({
+        result: [
+          {
+            creator: "r2m_asset_12345678",
+            readyToStream: true,
+            status: { state: "ready" },
+            uid: providerUid,
+          },
+        ],
+        success: true,
+      })) as typeof fetch;
+    const adapter = new CloudflareStreamAdapter(createConfig(), fetcher);
+
+    assert.deepEqual(await adapter.findVideoByCreator("r2m_asset_12345678"), {
+      durationSeconds: null,
+      errorCode: null,
+      height: null,
+      providerUid,
+      status: "ready",
+      width: null,
+    });
+  });
+
+  it("falha fechado quando a busca por creator devolve contrato ambíguo", async () => {
+    const fetcher = (async () =>
+      Response.json({
+        result: [
+          {
+            readyToStream: true,
+            status: { state: "ready" },
+            uid: "fedcba9876543210fedcba9876543210",
+          },
+        ],
+        success: true,
+      })) as typeof fetch;
+    const adapter = new CloudflareStreamAdapter(createConfig(), fetcher);
+
+    await assert.rejects(
+      adapter.findVideoByCreator("r2m_asset_12345678"),
+      VideoStreamProviderError,
+    );
+  });
+
+  it("recusa origem não HTTPS antes de chamar o provider", async () => {
+    let called = false;
+    const fetcher = (async () => {
+      called = true;
+      return Response.json({ success: true });
+    }) as typeof fetch;
+    const adapter = new CloudflareStreamAdapter(createConfig(), fetcher);
+
+    await assert.rejects(
+      adapter.importVideoByUrl({
+        assetId: "r2m_asset_12345678",
+        sourceUrl: "http://localhost:3001/public/files/posts/media/video.mp4",
+      }),
+      VideoStreamProviderError,
+    );
+    assert.equal(called, false);
+  });
 });
 
 describe("Cloudflare Stream private playback", () => {
