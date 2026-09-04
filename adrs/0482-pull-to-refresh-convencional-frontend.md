@@ -31,8 +31,11 @@ modais PWA e componentes com tokens Lectum.
   - a página está no topo;
   - a cadeia de scroll do alvo também está no topo;
   - não há modal ou superfície bloqueante aberta;
-  - o início do toque não acontece sobre campo, botão, link, elemento editável ou controles
-    interativos.
+  - o início do toque não acontece sobre campo de entrada, elemento editável, slider/textbox ou alvo
+    marcado explicitamente para ignorar o gesto.
+- Permitir que cards, links e botões clicáveis participem do gesto quando houver arrasto vertical,
+  porque esse é o comportamento mais próximo do pull-to-refresh convencional em listas e feeds
+  mobile; um toque simples continua acionando o controle normalmente.
 - Ao soltar após o limite visual, atualizar a tela atual com:
   - `router.refresh()` para recarregar dados de Server Components/Next;
   - `queryClient.invalidateQueries({ refetchType: "active" })` para refazer queries ativas;

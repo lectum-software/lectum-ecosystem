@@ -270,7 +270,7 @@ Persistência local:
   - `frontend/src/components/pull-to-refresh.tsx` cria o indicador mobile-first e captura o gesto
     somente no topo da pagina;
   - `frontend/src/utils/pull-to-refresh.ts` centraliza limiares, rotas habilitadas e guardas contra
-    campos, controles, modais e cadeias de scroll ainda roladas;
+    campos/editaveis, modais e cadeias de scroll ainda roladas;
   - `frontend/src/app/layout.tsx` monta o componente dentro do `QueryClientProvider`;
   - `frontend/src/app/globals.css` contem o overscroll mobile para evitar concorrencia com o gesto
     nativo do navegador;
@@ -289,8 +289,8 @@ Persistência local:
   sem `window.location.reload()` como padrao.
 - [x] O acionamento exige estar no topo e soltar apos limiar visual claro.
 - [x] O indicador usa tokens Lectum, copy PT-BR e nenhuma tag `<img>`.
-- [x] Campos, controles, modais, rotas de formulario/checkout/setup e scroll interno fora do topo nao
-  disparam refresh.
+- [x] Campos/editaveis, modais, rotas de formulario/checkout/setup e scroll interno fora do topo nao
+  disparam refresh; cards, links e botoes de listas permitem o arrasto vertical convencional.
 - [x] Nenhum pacote novo, backend, admin, env, schema ou migration foi adicionado.
 - [x] ADR criado: `adrs/0482-pull-to-refresh-convencional-frontend.md`.
 
@@ -300,13 +300,24 @@ Persistência local:
 - [x] `pnpm --dir frontend exec tsc --noEmit --pretty false`
 - [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/pull-to-refresh.test.mjs`
 - [x] `pnpm --dir frontend check`
-- [x] `pnpm --dir frontend build` reexecutado apos o bump para validar o estado `0.1.265`.
+- [x] `pnpm --dir frontend build` reexecutado apos o bump para validar o estado `0.1.266`.
 - [x] `pnpm --dir video check` passou apos integrar `homolog` remoto e ajustar testes de caminho do
   novo servico de video para Windows/Linux.
 - [x] `pnpm check` passou apos corrigir encoding de comentario detectado na primeira tentativa e
   revalidar o estado rebaseado.
-- [x] Browser local/headless no build final, viewport mobile 390x844, validou `/psicologos` com indicador "Solte para atualizar", estado "Atualizando..." apos soltar e retorno para idle; `/auth/login` permaneceu sem texto/estado de pull-to-refresh; `/version` retornou frontend `0.1.265`.
+- [x] Browser local/headless no build final, viewport mobile 390x844, validou `/psicologos` com indicador "Solte para atualizar", estado "Atualizando..." apos soltar e retorno para idle; `/auth/login` permaneceu sem texto/estado de pull-to-refresh; `/version` retornou frontend `0.1.266`.
 - [x] `git diff --check`
 - [x] `pnpm check:adrs` e `pnpm check:tasks`
 - [x] `pnpm version:bump` e `pnpm check:version` antes do commit (`0.1.264` -> `0.1.265`).
 - [ ] Push em `homolog` e smoke de homologacao apos deploy automatico.
+
+### Complemento de homologacao do refinamento
+
+- O smoke remoto em `https://homolog.lectum.com.br/psicologos` mostrou que a tela publicada possui
+  botoes transparentes de video cobrindo a area do feed. Para preservar o comportamento mais
+  convencional, a protecao deixou de bloquear `button`/`a` genericos e passou a bloquear apenas
+  campos/editaveis, sliders/textboxes e alvos marcados explicitamente com
+  `data-lectum-pull-refresh-ignore="true"`.
+- [x] `pnpm version:bump` adicional para o complemento (`0.1.265` -> `0.1.266`).
+- [x] Revalidado localmente com `pnpm --dir frontend check`, `pnpm --dir frontend build`, browser
+  local/headless e `pnpm check` completo na versao `0.1.266`.

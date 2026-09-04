@@ -24,15 +24,13 @@ const PULL_TO_REFRESH_DISABLED_ROUTE_PATTERNS = [
   /\/(?:suggest|sugerir)(?:\/|$)/u,
 ];
 
-const PULL_TO_REFRESH_INTERACTIVE_TARGET_SELECTOR = [
-  "a",
-  "button",
+const PULL_TO_REFRESH_INPUT_TARGET_SELECTOR = [
   'input:not([type="hidden"])',
   "select",
   "textarea",
   "[contenteditable]",
-  '[role="button"]',
   '[role="slider"]',
+  '[role="spinbutton"]',
   '[role="textbox"]',
   '[data-lectum-pull-refresh-ignore="true"]',
 ].join(",");
@@ -91,7 +89,7 @@ export const getPullToRefreshSnapshot = (distancePx: number): PullToRefreshSnaps
 export const shouldIgnorePullToRefreshTarget = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return true;
 
-  return Boolean(target.closest(PULL_TO_REFRESH_INTERACTIVE_TARGET_SELECTOR));
+  return Boolean(target.closest(PULL_TO_REFRESH_INPUT_TARGET_SELECTOR));
 };
 
 export const hasBlockingPullToRefreshSurface = () => {

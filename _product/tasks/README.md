@@ -1253,6 +1253,6 @@ Uma task só pode ser marcada como concluída quando:
 
 - Ajuste pos-feedback da TASK-37: arrastar a tela para baixo no topo passa a atualizar o conteudo da tela atual no navegador mobile e no PWA, seguindo o comportamento convencional de apps/listas.
 - O refresh usa `router.refresh()`, invalida queries ativas do TanStack Query e tenta atualizar o registro PWA quando o navegador suportar; nao usa hard refresh nem limpa storage/cache/sessao.
-- O gesto fica protegido contra acionamento em campos, controles, modais, scroll interno fora do topo e rotas de login/cadastro, configuracoes/conta, assinatura/checkout/WhatsApp, setup/edicao e criacao/sugestao de conteudo.
+- O gesto fica protegido contra acionamento em campos/editaveis, modais, scroll interno fora do topo e rotas de login/cadastro, configuracoes/conta, assinatura/checkout/WhatsApp, setup/edicao e criacao/sugestao de conteudo; cards, links e botoes de listas podem iniciar o arrasto vertical convencional.
 - Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao; foram consultados o inventario `_product/tasks/PROTO-INVENTORY.md`, o shell mobile existente e a modal PWA atual.
 - Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, seed, reset ou dados publicados. Rollback simples reverte o commit.

@@ -1,6 +1,6 @@
 {
   "name": "@lectum/video-service",
-  "version": "0.1.265",
+  "version": "0.1.266",
   "private": true,
   "type": "module",
   "description": "Serviço isolado de processamento assíncrono de vídeos da Lectum",

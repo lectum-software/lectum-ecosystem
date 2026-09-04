@@ -6,6 +6,7 @@ const {
   isPullToRefreshRouteEnabled,
   PULL_TO_REFRESH_MAX_DISTANCE_PX,
   PULL_TO_REFRESH_TRIGGER_PX,
+  shouldIgnorePullToRefreshTarget,
 } = await import("./pull-to-refresh.ts");
 
 test("calcula progresso ate o ponto de soltar para atualizar", () => {
@@ -57,5 +58,43 @@ test("desabilita pull-to-refresh em rotas de formulario e configuracao", () => {
     "/psychologist/cfp",
   ]) {
     assert.equal(isPullToRefreshRouteEnabled(pathname), false, pathname);
+  }
+});
+
+test("permite arrasto convencional em cards clicaveis e protege campos", () => {
+  const previousElement = globalThis.Element;
+
+  class FakeElement {
+    constructor(matchClosest) {
+      this.matchClosest = matchClosest;
+    }
+
+    closest(selector) {
+      return this.matchClosest(selector) ? this : null;
+    }
+  }
+
+  Object.defineProperty(globalThis, "Element", {
+    configurable: true,
+    value: FakeElement,
+    writable: true,
+  });
+
+  try {
+    const buttonCard = new FakeElement((selector) => selector.split(",").includes("button"));
+    const inputField = new FakeElement((selector) => selector.includes("input"));
+
+    assert.equal(shouldIgnorePullToRefreshTarget(buttonCard), false);
+    assert.equal(shouldIgnorePullToRefreshTarget(inputField), true);
+  } finally {
+    if (previousElement === undefined) {
+      delete globalThis.Element;
+    } else {
+      Object.defineProperty(globalThis, "Element", {
+        configurable: true,
+        value: previousElement,
+        writable: true,
+      });
+    }
   }
 });
