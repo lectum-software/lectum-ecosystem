@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 173 tasks: `TASK-00` a `TASK-166`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 174 tasks: `TASK-00` a `TASK-167`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -264,6 +264,7 @@ ou cortesia manual.
 | 164 | [TASK-164 - Serviço isolado de processamento de vídeos](TASK-164-servico-isolado-processamento-videos.md) | Completed | 42, 158, 159, 163 |
 | 165 | [TASK-165 - Migração segura de vídeos legados do R2 para Cloudflare Stream](TASK-165-migracao-segura-videos-r2-cloudflare-stream.md) | Completed | 157, 163, 164 |
 | 166 | [TASK-166 - Estabilizar origem pública da migração R2 para Stream](TASK-166-estabilizar-origem-migracao-r2-stream.md) | Completed | 157, 163, 165 |
+| 167 | [TASK-167 - Restaurar playback público seguro no Cloudflare Stream](TASK-167-restaurar-playback-publico-stream.md) | Completed | 40, 163, 165, 166 |
 
 ## Ordem operacional recomendada sem bloqueios
 

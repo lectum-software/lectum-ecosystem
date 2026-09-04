@@ -208,8 +208,8 @@ somente que o limite foi preenchido e outro lote deve ser executado.
 3. No terminal do container, executar `cd /app`.
 4. Rodar o `dry-run` com lote `5` e revisar todos os itens.
 5. Rodar `--apply --confirm=homolog --limit=1` no primeiro vídeo.
-6. Abrir a superfície correspondente com usuário autorizado e validar imagem, play, seek e HLS.
-7. Confirmar que usuário sem autorização não recebe playback.
+6. Abrir a superfície pública correspondente sem login e validar imagem, play, seek e HLS.
+7. Confirmar que ativo sem associação pública ou removido não recebe playback.
 8. Confirmar no R2 que a origem continua presente, sem executar limpeza.
 9. Avançar em lotes de `5`; repetir comandos após `processing` e parar diante de `failed`.
 10. Encerrar quando o dry-run retornar zero candidatos e registrar contagens por finalidade.

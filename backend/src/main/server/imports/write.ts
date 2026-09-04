@@ -91,6 +91,7 @@ import apiPublicSeoCommunityPost from "@/modules/api/public/seo/community-post";
 import apiPublicSeoMetadata from "@/modules/api/public/seo/metadata";
 import apiPublicSeoPsychologist from "@/modules/api/public/seo/psychologist";
 import apiPublicUser from "@/modules/api/public/user";
+import apiPublicVideoAssets from "@/modules/api/public/video-assets";
 import apiPublicVideoStreamWebhook from "@/modules/api/public/video-stream/webhook";
 import {
   listPrivateRoutePolicyViolations,
@@ -117,6 +118,12 @@ const mountRoute = (path: string, ...handlers: MountHandler[]) => {
 const mountAuthOnlyRoute = (path: string, router: ExpressRouter) => {
   mountedRoutes.push({ authOnly: true, path });
   endpointUse(path, privateAuth, router);
+};
+
+const mountLegacyPublicVideoPlaybackRoute = (router: ExpressRouter) => {
+  const path = "/api/private/video-assets";
+  mountedRoutes.push({ legacyPublicPlayback: true, path });
+  endpointUse(path, optionalAuth, router);
 };
 
 const mountRoleGuardedRoute = (path: string, role: PrivateRoleGuard, router: ExpressRouter) => {
@@ -179,6 +186,7 @@ mountRoute("/api/public/seo/community-post", apiPublicSeoCommunityPost);
 mountRoute("/api/public/seo/metadata", apiPublicSeoMetadata);
 mountRoute("/api/public/seo/psychologist", apiPublicSeoPsychologist);
 mountRoute("/api/public/user", apiPublicUser);
+mountRoute("/api/public/video-assets", optionalAuth, apiPublicVideoAssets);
 mountRoute("/api/public/video-stream/webhook", apiPublicVideoStreamWebhook);
 mountRoute("/api/admin/public/auth/login", apiAdminPublicAuthLogin);
 mountRoute("/api/admin/private/auth/hidrate", apiAdminPrivateAuthHidrate);
@@ -219,6 +227,10 @@ mountRoute("/api/admin/private/traffic/export", apiAdminPrivateTrafficExport);
 mountRoute("/api/admin/private/video-assets", apiAdminPrivateVideoAssets);
 mountAuthOnlyRoute("/api/private/user/favorites", apiPrivatePatientFavorites);
 mountAuthOnlyRoute("/api/private/user/reviews", apiPrivatePatientReviews);
+// Compatibilidade de rollout: versões anteriores do frontend tratam esta
+// referência opaca como endpoint. O router compatível contém somente GET playback;
+// uploads, status e exclusão continuam caindo no mount autenticado logo abaixo.
+mountLegacyPublicVideoPlaybackRoute(apiPublicVideoAssets);
 mountAuthOnlyRoute("/api/private/video-assets", apiPrivateVideoAssets);
 mountRoleGuardedRoute("/api/private/patient/favorites", "paciente", apiPrivatePatientFavorites);
 mountRoleGuardedRoute("/api/private/patient/follows", "paciente", apiPrivatePatientFollows);

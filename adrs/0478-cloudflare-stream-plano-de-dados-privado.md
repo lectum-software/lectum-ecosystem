@@ -32,8 +32,9 @@ Separar controle e transporte:
   `/api/private/video-assets/:id/playback`; URLs R2 antigas continuam aceitas;
 - cada ativo nasce com `requiresignedurls`, duração máxima, expiração do upload e `allowedorigins`
   definidos pelo servidor;
-- reprodução de usuário exige sessão Lectum e ownership ou associação a conteúdo publicável;
-  moderação usa endpoint e sessão Admin separados;
+- reprodução exige autorização Lectum: associação a conteúdo público basta para qualquer
+  visitante; a sessão é usada para a prévia do dono. Moderação usa endpoint Admin separado. Esta
+  regra foi corrigida e detalhada pela ADR-0482;
 - o token de reprodução é JWT RS256 curto, mantido apenas em memória/cache do TanStack Query. O
   payload é assinado, não criptografado: o UID técnico pode ser lido no cliente, mas não constitui
   credencial nem decisão de autorização;
@@ -86,8 +87,8 @@ As versões e finalidades ficam registradas em `_product/tasks/PACKAGES.md`.
 - Cloudflare passa a processar e cobrar minutos armazenados/entregues.
 - A reprodução depende da disponibilidade do provider, mas falha de configuração não derruba o
   boot enquanto a flag estiver desativada.
-- Conteúdo anônimo não recebe playback nesta versão; perfil/post/resposta Stream exige login,
-  conforme a política privada solicitada.
+- O ativo continua privado no provider, mas perfil/post/resposta publicamente associado recebe
+  playback assinado também para visitante anônimo, conforme a correção da ADR-0482.
 - Um serviço independente de transformação (compressão, marca d'água etc.) pode existir depois,
   sem entrar no caminho crítico do Stream.
 

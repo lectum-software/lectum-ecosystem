@@ -67,12 +67,19 @@ server.use((req, res, next) => {
     "/api/public/auth/",
     "/api/public/google/",
     "/api/public/user",
+    "/api/public/video-assets/",
     "/api/public/video-stream/",
   ];
 
   if (sensitivePrefixes.some((prefix) => req.path.startsWith(prefix))) {
     res.setHeader("Cache-Control", "private, no-store");
     res.setHeader("Pragma", "no-cache");
+  }
+
+  if (req.path.startsWith("/api/public/video-assets/")) {
+    res.setHeader("CDN-Cache-Control", "no-store");
+    res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
   }
 
   next();

@@ -5,8 +5,10 @@ import {
   isVideoPlaybackFresh,
   selectAdaptiveVideoPlaybackAdapter,
   shouldCleanupVideoAssetAfterFailure,
+  shouldFallbackToLegacyVideoPlayback,
   TUS_CHUNK_SIZE_BYTES,
   videoAssetIdFromReference,
+  videoAssetPlaybackApiPaths,
 } from "./video-stream.ts";
 
 describe("Cloudflare Stream frontend contract", () => {
@@ -17,8 +19,25 @@ describe("Cloudflare Stream frontend contract", () => {
       videoAssetIdFromReference(`https://homolog-api.lectum.com.br${path}`),
       "asset_12345678",
     );
+    assert.equal(
+      videoAssetIdFromReference("/api/public/video-assets/asset_12345678/playback"),
+      "asset_12345678",
+    );
     assert.equal(isVideoAssetReference(`${path}?token=secret`), false);
     assert.equal(isVideoAssetReference("https://example.com/video.mp4"), false);
+  });
+
+  it("prioriza o endpoint público e preserva o alias legado durante o rollout", () => {
+    assert.deepEqual(videoAssetPlaybackApiPaths("asset_12345678"), {
+      legacy: "/api/private/video-assets/asset_12345678/playback",
+      public: "/api/public/video-assets/asset_12345678/playback",
+    });
+    assert.equal(shouldFallbackToLegacyVideoPlayback({ status: 404 }), true);
+    assert.equal(
+      shouldFallbackToLegacyVideoPlayback({ code: "video_asset_not_found", status: 404 }),
+      false,
+    );
+    assert.equal(shouldFallbackToLegacyVideoPlayback({ status: 401 }), false);
   });
 
   it("seleciona HLS nativo no Safari e HLS.js em navegadores MSE", () => {

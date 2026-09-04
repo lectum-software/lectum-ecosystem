@@ -1,3 +1,4 @@
+import { getApiErrorCode, getApiErrorStatus } from "@/api/errors";
 import { callEndpoint } from "@/api/generator";
 import type {
   VideoAssetPlaybackResponse,
@@ -6,7 +7,11 @@ import type {
   VideoAssetUploadResponse,
 } from "@/api/generator/types/video-assets";
 import { handleReq } from "@/api/handle";
-import { videoAssetIdFromReference } from "@/utils/video-stream";
+import {
+  shouldFallbackToLegacyVideoPlayback,
+  videoAssetIdFromReference,
+  videoAssetPlaybackApiPaths,
+} from "@/utils/video-stream";
 
 const route = "/api/private/video-assets";
 
@@ -48,12 +53,26 @@ export const cleanupDetachedVideoAsset = async (reference?: string | null) => {
   await deleteVideoAsset(assetId).catch(() => undefined);
 };
 
-export const getVideoAssetPlayback = (assetId: string) =>
+const requestVideoAssetPlayback = (path: string) =>
   handleReq<VideoAssetPlaybackResponse>({
-    ...callEndpoint({
-      params: { id: assetId },
-      route: `${route}/:id/playback`,
-    }),
+    ...callEndpoint({ route: path }),
     hideError: true,
     signOutOnUnauthorized: false,
   });
+
+export const getVideoAssetPlayback = async (assetId: string) => {
+  const paths = videoAssetPlaybackApiPaths(assetId);
+
+  try {
+    return await requestVideoAssetPlayback(paths.public);
+  } catch (requestError) {
+    const endpointDoesNotExist = shouldFallbackToLegacyVideoPlayback({
+      code: getApiErrorCode(requestError),
+      status: getApiErrorStatus(requestError),
+    });
+    if (!endpointDoesNotExist) throw requestError;
+
+    // Compatibilidade temporária com backend anterior ao endpoint público.
+    return requestVideoAssetPlayback(paths.legacy);
+  }
+};

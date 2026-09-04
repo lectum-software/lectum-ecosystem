@@ -287,7 +287,7 @@ export class VideoAssetRepository {
     return Boolean(asset);
   }
 
-  async isPlaybackAuthorized(asset: VideoAssetRecord, userId: string) {
+  async isPlaybackAuthorized(asset: VideoAssetRecord, userId?: string | null) {
     if (
       canViewVideoAsset({
         hasPublishedAssociation: false,

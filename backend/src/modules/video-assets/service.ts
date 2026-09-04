@@ -289,7 +289,10 @@ const playbackResponse = async (asset: VideoAssetRecord) => {
   };
 };
 
-export const authorizeVideoAssetPlayback = async (assetId: string, userId: string) => {
+export const authorizePublicVideoAssetPlayback = async (
+  assetId: string,
+  userId?: string | null,
+) => {
   const repository = new VideoAssetRepository();
   const asset = await repository.findById(assetId);
   if (
@@ -300,7 +303,9 @@ export const authorizeVideoAssetPlayback = async (assetId: string, userId: strin
     return assetNotFound();
   }
   if (!(await repository.isPlaybackAuthorized(asset, userId))) {
-    return { status: 403, ...error("video_playback_forbidden", {}) };
+    // O mesmo 404 de um ativo inexistente evita transformar a rota pública em
+    // um oráculo de IDs para vídeos privados, removidos ou ainda não associados.
+    return assetNotFound();
   }
 
   return playbackResponse(asset);

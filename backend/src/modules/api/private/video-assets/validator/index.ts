@@ -1,15 +1,6 @@
 import { VIDEO_ASSET_PURPOSES } from "@/infra/video-stream";
+import { videoAssetActionValidator } from "@/modules/video-assets/http-validation";
 import { type IValidatorRequest, validator } from "@/utils/validator";
-
-const assetParams = [
-  {
-    key: "id",
-    coerse: "string",
-    method: "string",
-    min: 8,
-    max: 64,
-  },
-] satisfies NonNullable<IValidatorRequest["params"]>;
 
 export const uploadValidator = validator({
   body: [
@@ -45,6 +36,4 @@ export const uploadValidator = validator({
   ],
 } satisfies IValidatorRequest);
 
-export const actionValidator = validator({
-  params: assetParams,
-} satisfies IValidatorRequest);
+export const actionValidator = videoAssetActionValidator;

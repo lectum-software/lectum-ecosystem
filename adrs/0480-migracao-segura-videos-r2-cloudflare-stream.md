@@ -68,7 +68,8 @@ permite observar custo, falhas e reprodução antes de continuar.
 
 ## Consequências
 
-- Vídeos migrados passam a usar o mesmo playback privado/HLS dos uploads novos.
+- Vídeos migrados passam a usar o mesmo HLS assinado dos uploads novos; a visibilidade pública ou
+  restrita continua sendo decidida pela associação de domínio, conforme ADR-0482.
 - O banco mantém evidência suficiente para auditoria e uma eventual estratégia de rollback.
 - Durante a retenção, R2 e Stream armazenam temporariamente o mesmo vídeo e geram custo duplicado.
 - Itens alterados pelo usuário durante o processamento são pulados e podem deixar um ativo Stream

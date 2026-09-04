@@ -2,7 +2,6 @@
 
 import { LoaderCircle } from "lucide-react";
 import { type RefObject, useEffect, useState } from "react";
-import { getApiErrorStatus } from "@/api/errors";
 import { useAttachVideoSource, useVideoPlaybackSource } from "@/hooks/video-stream";
 import { isVideoAssetReference } from "@/utils/video-stream";
 
@@ -72,9 +71,7 @@ export const VerticalVideoStreamStatus = ({
 
   return (
     <div className="absolute inset-0 z-[4] grid place-items-center bg-media-background/75 px-6 text-center text-sm text-media-foreground">
-      {getApiErrorStatus(error) === 401
-        ? "Entre na sua conta para assistir a este vídeo."
-        : "Não foi possível reproduzir este vídeo agora."}
+      Não foi possível reproduzir este vídeo agora.
     </div>
   );
 };

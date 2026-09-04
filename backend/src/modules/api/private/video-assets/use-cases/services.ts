@@ -1,7 +1,6 @@
 import { error } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 import {
-  authorizeVideoAssetPlayback,
   cancelOwnedVideoAsset,
   provisionVideoAssetUpload,
   showOwnedVideoAssetStatus,
@@ -66,6 +65,3 @@ export const showStatus = (data: IVideoAssetActionDTO) =>
 
 export const destroy = (data: IVideoAssetActionDTO) =>
   cancelOwnedVideoAsset(data.p.id, data.auth.id!);
-
-export const playback = (data: IVideoAssetActionDTO) =>
-  authorizeVideoAssetPlayback(data.p.id, data.auth.id!);

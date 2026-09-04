@@ -5,5 +5,5 @@ export const canViewVideoAsset = ({
 }: {
   hasPublishedAssociation: boolean;
   ownerId: string;
-  viewerId: string;
-}) => ownerId === viewerId || hasPublishedAssociation;
+  viewerId?: string | null;
+}) => Boolean((viewerId && ownerId === viewerId) || hasPublishedAssociation);

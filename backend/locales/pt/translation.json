@@ -238,7 +238,6 @@
     "video_upload_rate_limited": "Há muitos envios de vídeo em andamento. Aguarde e tente novamente.",
     "video_upload_not_allowed": "Seu perfil não pode enviar este vídeo.",
     "video_asset_attached": "Remova o vídeo do conteúdo antes de cancelar o envio.",
-    "video_playback_forbidden": "Você não tem permissão para assistir a este vídeo.",
     "video_webhook_invalid": "Notificação de vídeo inválida."
   },
   "message": {

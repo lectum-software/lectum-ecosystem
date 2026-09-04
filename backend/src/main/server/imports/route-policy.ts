@@ -3,6 +3,7 @@ export type PrivateRoleGuard = "paciente" | "psicologo";
 export type MountedRoutePolicyRecord = {
   adminProtected?: boolean;
   authOnly?: boolean;
+  legacyPublicPlayback?: boolean;
   path: string;
   role?: PrivateRoleGuard;
 };
@@ -15,6 +16,9 @@ const userAuthOnlyPrivateRoutes = [
 
 export const isUserAuthOnlyPrivateRoute = (path: string) =>
   userAuthOnlyPrivateRoutes.some((route) => route === path);
+
+export const isAuditedLegacyPublicPlaybackRoute = (route: MountedRoutePolicyRecord) =>
+  route.path === "/api/private/video-assets" && route.legacyPublicPlayback === true;
 
 export const getExpectedPrivateRole = (path: string): PrivateRoleGuard | null => {
   if (path.startsWith("/api/private/patient/")) return "paciente";
@@ -31,7 +35,10 @@ export const listPrivateRoutePolicyViolations = (routes: readonly MountedRoutePo
   });
 
   const userAuthOnlyViolations = routes.filter(
-    (route) => isUserAuthOnlyPrivateRoute(route.path) && !route.authOnly,
+    (route) =>
+      isUserAuthOnlyPrivateRoute(route.path) &&
+      !route.authOnly &&
+      !isAuditedLegacyPublicPlaybackRoute(route),
   );
 
   const unprotectedAdminRoutes = routes.filter(

@@ -1,4 +1,5 @@
-const VIDEO_ASSET_REFERENCE = /^\/api\/private\/video-assets\/([a-z0-9_-]{8,64})\/playback$/i;
+const VIDEO_ASSET_REFERENCE =
+  /^\/api\/(?:private|public)\/video-assets\/([a-z0-9_-]{8,64})\/playback$/i;
 
 export const TUS_CHUNK_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -20,6 +21,23 @@ export const videoAssetIdFromReference = (value?: string | null) => {
 
 export const isVideoAssetReference = (value?: string | null) =>
   Boolean(videoAssetIdFromReference(value));
+
+export const videoAssetPlaybackApiPaths = (assetId: string) => {
+  const encodedAssetId = encodeURIComponent(assetId);
+
+  return {
+    legacy: `/api/private/video-assets/${encodedAssetId}/playback`,
+    public: `/api/public/video-assets/${encodedAssetId}/playback`,
+  };
+};
+
+export const shouldFallbackToLegacyVideoPlayback = ({
+  code,
+  status,
+}: {
+  code?: string;
+  status?: number;
+}) => status === 404 && !code;
 
 export const shouldCleanupVideoAssetAfterFailure = (uploadCompleted: boolean, error: unknown) =>
   !uploadCompleted || (error instanceof DOMException && error.name === "AbortError");

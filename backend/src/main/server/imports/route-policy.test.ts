@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   getExpectedPrivateRole,
+  isAuditedLegacyPublicPlaybackRoute,
   isUserAuthOnlyPrivateRoute,
   listPrivateRoutePolicyViolations,
 } from "./route-policy";
@@ -23,6 +24,33 @@ describe("private route policy", () => {
       ["/api/private/user/favorites"],
     );
     assert.deepEqual(violations.roleGuardViolations, []);
+  });
+
+  it("abre somente o adaptador legado auditado de playback público", () => {
+    const legacyPlayback = {
+      legacyPublicPlayback: true,
+      path: "/api/private/video-assets",
+    } as const;
+
+    assert.equal(isAuditedLegacyPublicPlaybackRoute(legacyPlayback), true);
+    assert.equal(
+      isAuditedLegacyPublicPlaybackRoute({
+        legacyPublicPlayback: true,
+        path: "/api/private/user/favorites",
+      }),
+      false,
+    );
+
+    const violations = listPrivateRoutePolicyViolations([
+      legacyPlayback,
+      { path: "/api/private/video-assets" },
+      { authOnly: true, path: "/api/private/video-assets" },
+    ]);
+
+    assert.deepEqual(
+      violations.userAuthOnlyViolations.map((route) => route.path),
+      ["/api/private/video-assets"],
+    );
   });
 
   it("mantem namespaces patient e psychologist fail-closed por role", () => {

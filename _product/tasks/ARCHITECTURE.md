@@ -359,13 +359,18 @@ Templates/shells devem viver em `frontend/src/templates`.
 - `CLOUDFLARE_STREAM_API_TOKEN`, signing private key e webhook secret existem somente no backend.
   A URL TUS é uma capability temporária devolvida apenas ao dono e nunca é persistida/logada.
 - Todo vídeo Stream nasce com `requiresignedurls` e `allowedorigins`. O player solicita uma URL
-  assinada em endpoint autenticado; URL assinada fica apenas em memória/cache curto e nunca em
-  banco, Redux, storage, analytics, export ou toast.
+  assinada no endpoint público com autenticação opcional: associação a conteúdo público autoriza
+  qualquer visitante; a sessão autoriza a prévia do dono. Rascunho, conteúdo removido/inativo e
+  ativo sem vínculo público falham como `404`. A URL assinada fica apenas em memória/cache curto e
+  nunca em banco, Redux, storage, analytics, export ou toast.
 - O token Cloudflare é um JWT assinado, não criptografado. Portanto, seu payload técnico pode ser
   decodificado pelo cliente; o UID do provider não é uma credencial e jamais deve ser usado como
   autorização. A segurança vem da assinatura RS256, expiração, allowed origins e decisão do backend.
 - Campos legados (`video_url`, `media_url`) armazenam somente a referência estável Lectum
   `/api/private/video-assets/:id/playback`. Vídeos R2 antigos seguem legíveis durante rollout.
+- O endpoint canônico de emissão é `GET /api/public/video-assets/:id/playback`. O path privado
+  persistido é tratado como identificador opaco e alias read-only temporário para compatibilidade;
+  uploads, status e exclusão permanecem sob autenticação obrigatória.
 - Safari/iPhone usa HLS nativo; Chrome/Android/Admin usa `hls.js` quando MSE está disponível. Em
   nenhum caso o download/original é habilitado pelo token.
 - A feature flag pública e a flag backend começam desativadas. Rollout: migration/backend →

@@ -629,9 +629,10 @@ Contratos derivados:
 - Antes da chamada externa, uma linha transitória reserva atomicamente a cota do dono (três uploads
   abertos e vinte criações por hora). O UID definitivo substitui a referência de reserva antes que a
   URL TUS seja devolvida; reservas falhas são canceladas logicamente.
-- Dono pode assistir ao próprio ativo pronto. Terceiros autenticados somente quando a referência
-  estiver em perfil publicado/ativo ou conteúdo publicado de comunidade ativa; Admin usa endpoint
-  autenticado separado. Usuário anônimo não recebe token.
+- Dono autenticado pode assistir ao próprio ativo pronto. Terceiros e visitantes anônimos recebem
+  token somente quando a referência estiver em perfil publicado/ativo ou conteúdo publicado de
+  comunidade ativa; Admin usa endpoint autenticado separado. Ativo sem associação pública retorna
+  `404` para não revelar sua existência.
 - Vídeos R2 anteriores e seus campos nullable continuam válidos. Não houve backfill, cópia, reset
   ou remoção de objeto no rollout da TASK-163. A TASK-165 adiciona uma operação manual: copia em
   lotes, associa somente depois de `ready`, preserva as referências de origem e nunca remove o

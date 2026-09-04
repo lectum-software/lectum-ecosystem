@@ -33,10 +33,11 @@ existentes são preservadas e validadas mobile-first. A referência ativa contin
 
 ## Objetivo
 
-Entregar upload e reprodução privados de ponta a ponta para as três finalidades de vídeo, com
+Entregar upload e reprodução assinada de ponta a ponta para as três finalidades de vídeo, com
 progresso/cancelamento, processamento assíncrono, webhook autenticado, fallback de rollout e player
-HLS compatível com Safari, Chrome e Android. Usuários anônimos não recebem token de reprodução;
-usuários autenticados recebem apenas uma URL assinada curta depois da autorização do backend.
+HLS compatível com Safari, Chrome e Android. O ativo permanece privado no provider; a visibilidade
+de produto segue a associação com perfil/post/resposta. A TASK-167 corrige a exigência histórica de
+sessão para permitir leitura anônima quando essa associação é pública.
 
 ## Pré-requisitos e bloqueios
 
@@ -83,8 +84,10 @@ interno, nunca o UID Cloudflare. Registros R2 antigos permanecem legíveis duran
 - `GET /api/private/video-assets/:id/status`: owner-only; reconcilia processamento de forma
   limitada e devolve referência somente quando pronta.
 - `DELETE /api/private/video-assets/:id`: owner-only; cancela/aposenta em best effort.
-- `GET /api/private/video-assets/:id/playback`: autenticação obrigatória; autoriza dono ou vídeo
-  associado a perfil/post/resposta publicável e devolve HLS/thumbnail assinados e expiração.
+- `GET /api/public/video-assets/:id/playback` (TASK-167): autenticação opcional; autoriza associação
+  pública ou o dono autenticado e devolve HLS/thumbnail assinados e expiração.
+- `GET /api/private/video-assets/:id/playback`: alias de rollout da TASK-167, restrito ao mesmo GET e
+  à mesma autorização; upload/status/exclusão continuam autenticados.
 - `GET /api/admin/private/video-assets/:id/playback`: sessão admin para moderação.
 - `POST /api/public/video-stream/webhook`: corpo cru, assinatura obrigatória e processamento
   idempotente.
@@ -104,11 +107,11 @@ vídeo funcional recém-associado.
   retry limitado, cancelamento real e polling até `ready`; imagens continuam no R2.
 - A configuração pública `NEXT_PUBLIC_CLOUDFLARE_STREAM_ENABLED=false` permite ativação depois que
   o backend/Cloudflare estiverem prontos. Quando desativada, o upload legado continua operacional.
-- O player compartilhado reconhece referências Lectum, solicita playback com cookie HttpOnly +
-  `x-device`, mantém token apenas em memória/cache curto e usa HLS nativo quando confiável ou
+- O player compartilhado reconhece referências Lectum, solicita playback público com sessão
+  opcional, mantém token apenas em memória/cache curto e usa HLS nativo quando confiável ou
   `hls.js` em navegadores MSE.
-- Estado anônimo/401 mostra orientação controlada sem deslogar sessão inexistente. Processamento,
-  indisponibilidade e retry não exibem mensagem técnica do provider.
+- Estado indisponível mostra orientação controlada sem exigir login para conteúdo público.
+  Processamento, indisponibilidade e retry não exibem mensagem técnica do provider.
 - URLs assinadas não são persistidas em Redux, storage, campos de banco, analytics ou artefatos de
   compartilhamento.
 - Prévia local antes do upload e capas/imagens existentes continuam funcionais.
@@ -121,9 +124,10 @@ precisar reproduzir referência Stream. Nenhuma URL assinada é persistida ou in
 ## Segurança e autorização
 
 - Todo ativo nasce com `requireSignedURLs` e allowlist explícita de origens.
-- Playback de usuário exige sessão válida. Dono pode inspecionar seu ativo; terceiros somente se a
-  referência estiver ligada a perfil publicado/ativo ou post/resposta publicado em comunidade
-  ativa. Admin usa namespace e cookie administrativos separados.
+- Playback exige autorização de domínio, não necessariamente sessão. Dono autenticado pode
+  inspecionar seu ativo; qualquer visitante recebe token somente se a referência estiver ligada a
+  perfil publicado/ativo ou post/resposta publicado em comunidade ativa. Admin usa namespace e
+  cookie administrativos separados.
 - A URL assinada curta aparece na aba Network enquanto válida. Seu JWT pode revelar o UID técnico ao
   ser decodificado, mas não a chave privada; assinatura, expiração e allowed origins reduzem reuso.
 - Não usar URL assinada como prova de autorização, não cachear manifesto no backend e não fazer
@@ -138,8 +142,10 @@ precisar reproduzir referência Stream. Nenhuma URL assinada é persistida ou in
 - Download do original, DRM, geoblocking/IP binding, live streaming ou armazenamento de token.
 - Reset/seed/limpeza em homologação ou produção.
 
-> Complemento posterior: a cópia operacional dos vídeos legados foi especificada na TASK-165, sem
-> alterar o escopo histórico nem executar limpeza do R2.
+> Complementos posteriores: a cópia operacional dos vídeos legados foi especificada na TASK-165,
+> sem limpeza do R2. A TASK-167 substitui apenas a regra equivocada de login obrigatório: o ativo
+> continua assinado/privado no provider, mas conteúdo publicamente associado pode ser visto sem
+> conta.
 
 ## Impacto em produção e plano de rollout
 
@@ -168,8 +174,8 @@ precisar reproduzir referência Stream. Nenhuma URL assinada é persistida ou in
 - [x] Webhook usa corpo cru, janela temporal, HMAC-SHA256 e comparação constante; replay/assinatura
   inválida não altera ativo.
 - [x] Status e cancelamento são owner-only, idempotentes e não retornam UID/erro cru.
-- [x] Playback exige autenticação/autorização de conteúdo e retorna token curto não persistido;
-  acesso anônimo ou a conteúdo removido é negado.
+- [x] Playback exige autorização de conteúdo e retorna token curto não persistido; após a TASK-167,
+  associação pública permite visitante anônimo e conteúdo removido/privado continua negado.
 - [x] Perfil, post e resposta usam Stream quando ativado e continuam aceitando R2 legado durante o
   rollout.
 - [x] Upload do browser vai direto ao Cloudflare via TUS, com progresso, retries e cancelamento, sem
@@ -194,7 +200,7 @@ precisar reproduzir referência Stream. Nenhuma URL assinada é persistida ou in
 - `pnpm --dir admin check && pnpm --dir admin build` se o contrato admin for alterado
 - `pnpm --dir backend audit --prod && pnpm --dir frontend audit --prod`
 - `pnpm check`
-- Browser local: fallback legado, estado bloqueado anônimo, player HLS com contrato controlado.
+- Browser local: fallback legado, estado anônimo público e player HLS com contrato controlado.
 - Homologação após provisionamento: vídeo real em perfil, post e resposta; Safari/iPhone e
   Chrome/Android; cancelamento; `/health`, `/ready`, `/ping`, `/version`.
 
