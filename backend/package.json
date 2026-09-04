@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.260",
+  "version": "0.1.261",
   "private": true,
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -35,7 +35,6 @@
     "@aws-sdk/client-s3": "^3.1059.0",
     "@babel/parser": "^7.29.7",
     "@babel/traverse": "^7.29.7",
-    "@mediabunny/aac-encoder": "1.55.1",
     "@paralleldrive/cuid2": "^3.3.0",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
@@ -55,7 +54,6 @@
     "i18next-http-middleware": "^3.9.7",
     "jsonwebtoken": "^9.0.3",
     "libphonenumber-js": "^1.13.4",
-    "mediabunny": "1.55.1",
     "mercadopago": "^3.1.0",
     "multer": "^2.2.0",
     "nodemailer": "^9.0.5",
@@ -64,7 +62,6 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.21.0",
-    "playwright-core": "1.60.0",
     "prisma": "^7.9.1",
     "socket.io": "^4.8.3",
     "swagger-ui-express": "^5.0.1",

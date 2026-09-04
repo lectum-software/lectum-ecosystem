@@ -10,17 +10,16 @@ import {
   isMediaUploadApiSizeLimitError,
   resolveMediaUploadSourceLimitBytes,
   resolveVideoUploadSourceLimitBytes,
-  VIDEO_UPLOAD_SOURCE_ABSOLUTE_LIMIT_BYTES,
 } from "./media-upload-limits.ts";
 
 const MEBIBYTE = 1024 * 1024;
 const fileWithSize = (size) => ({ size });
 
-test("mantém imagens no limite final e expande apenas a entrada de vídeo", () => {
+test("mantém imagens e vídeos no limite final do endpoint", () => {
   const finalLimit = 200 * MEBIBYTE;
 
   assert.equal(resolveMediaUploadSourceLimitBytes("image", finalLimit), finalLimit);
-  assert.equal(resolveMediaUploadSourceLimitBytes("video", finalLimit), 400 * MEBIBYTE);
+  assert.equal(resolveMediaUploadSourceLimitBytes("video", finalLimit), finalLimit);
   assert.equal(getMediaUploadSourceSizeError(fileWithSize(finalLimit), "image", finalLimit), null);
 
   const imageError = getMediaUploadSourceSizeError(
@@ -32,31 +31,26 @@ test("mantém imagens no limite final e expande apenas a entrada de vídeo", () 
   assert.equal(imageError?.limitBytes, finalLimit);
 });
 
-test("aceita vídeo convertido acima do limite final até o teto defensivo", () => {
+test("recusa vídeo bruto acima do limite final antes do transporte", () => {
   const finalLimit = 200 * MEBIBYTE;
-  const sourceLimit = 400 * MEBIBYTE;
 
   assert.doesNotThrow(() =>
-    assertMediaUploadSourceSize(fileWithSize(finalLimit + 1), "video", finalLimit),
-  );
-  assert.doesNotThrow(() =>
-    assertMediaUploadSourceSize(fileWithSize(sourceLimit), "video", finalLimit),
+    assertMediaUploadSourceSize(fileWithSize(finalLimit), "video", finalLimit),
   );
 
   const sourceError = getMediaUploadSourceSizeError(
-    fileWithSize(sourceLimit + 1),
+    fileWithSize(finalLimit + 1),
     "video",
     finalLimit,
   );
   assert.equal(sourceError?.stage, "source");
-  assert.equal(sourceError?.actualBytes, sourceLimit + 1);
-  assert.equal(sourceError?.limitBytes, sourceLimit);
+  assert.equal(sourceError?.actualBytes, finalLimit + 1);
+  assert.equal(sourceError?.limitBytes, finalLimit);
 });
 
-test("limita a folga de apresentação a 500 MB sem ficar abaixo do limite final", () => {
-  assert.equal(resolveVideoUploadSourceLimitBytes(300 * MEBIBYTE), 500 * MEBIBYTE);
+test("não cria folga para compressão client-side", () => {
+  assert.equal(resolveVideoUploadSourceLimitBytes(300 * MEBIBYTE), 300 * MEBIBYTE);
   assert.equal(resolveVideoUploadSourceLimitBytes(600 * MEBIBYTE), 600 * MEBIBYTE);
-  assert.equal(VIDEO_UPLOAD_SOURCE_ABSOLUTE_LIMIT_BYTES, 500 * MEBIBYTE);
 });
 
 test("valida o arquivo preparado no limite final antes do transporte", () => {

@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const applicationRoots = ["admin/src/", "backend/src/", "frontend/src/"];
+const applicationRoots = ["admin/src/", "backend/src/", "frontend/src/", "video/src/"];
 const sourceExtensionPattern = /\.(?:cjs|css|js|mjs|ts|tsx)$/u;
 const forbiddenPatterns = [
   { label: "elemento <img> cru", pattern: /<img(?:\s|>)/u },
@@ -52,7 +52,6 @@ const rawUiColorWholeFileExceptions = new Set([
   "frontend/src/app/app/community/[slug]/modules/palette.ts",
   "frontend/src/app/globals.css",
   "frontend/src/app/manifest.ts",
-  "frontend/src/utils/lectum-share-media/layout.ts",
 ]);
 const rawUiColorLineExceptions = new Map([
   [
@@ -81,6 +80,10 @@ const typecheckCompatibilityExceptions = new Set([
   "backend/src/packages/validator/web.ts",
 ]);
 const executableFileExceptions = new Set(["backend/scripts/docker-entrypoint.sh"]);
+const childProcessExceptions = new Set(["video/src/infra/ffmpeg/process.ts"]);
+// `ioredis.eval` executa scripts Lua dentro do Redis para reservar capacidade de disco de forma
+// atômica; não é o `eval` JavaScript proibido. A exceção fica limitada ao adapter de reservas.
+const redisLuaScriptExceptions = new Set(["video/src/infra/storage/reservations.ts"]);
 const pinnedToolConfigurationFiles = new Set([
   ".builderrules",
   ".codex/config.toml",
@@ -156,6 +159,16 @@ for (const relativePath of files) {
       // Testes de normalização precisam conter os próprios vetores maliciosos como texto.
       // O check continua ativo em todo código que é empacotado para runtime.
       if (check.label === "JavaScript em URL" && isTestSource(relativePath)) continue;
+      if (check.label === "processo filho em runtime" && childProcessExceptions.has(relativePath)) {
+        continue;
+      }
+      if (
+        check.label === "execução dinâmica" &&
+        redisLuaScriptExceptions.has(relativePath) &&
+        line.includes("connection.eval(")
+      ) {
+        continue;
+      }
 
       if (check.pattern.test(line)) {
         failures.push(`${relativePath}:${index + 1}: ${check.label}`);

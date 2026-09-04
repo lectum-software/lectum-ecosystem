@@ -23,7 +23,6 @@ import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
-import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
@@ -242,15 +241,8 @@ export const PostHeader = ({
   );
 };
 
-export const PostBody = ({
-  onOpenSocialVideoPreview,
-  post,
-}: {
-  onOpenSocialVideoPreview?: () => void;
-  post: PostDetail;
-}) => {
+export const PostBody = ({ post }: { post: PostDetail }) => {
   const [contentExpanded, setContentExpanded] = useState(false);
-  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const showAuthorWhatsapp = post.author.role === "psicologo" && Boolean(post.author.whatsapp_url);
   const postImageMediaItems = (post.media_items ?? []).filter(
     (item) => item.media_type === "image",
@@ -260,13 +252,6 @@ export const PostBody = ({
   const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
   const displayThumbnailUrl = singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const shouldShowPostCarousel = postImageMediaItems.length > 1;
-  const canOpenSocialVideoPreview =
-    Boolean(onOpenSocialVideoPreview) &&
-    Boolean(currentUserId) &&
-    post.author.role === "psicologo" &&
-    post.author.id === currentUserId &&
-    displayMediaType === "video" &&
-    Boolean(displayMediaUrl);
   const authorWhatsappCta = showAuthorWhatsapp ? (
     <CommunityWhatsAppCta
       attached={Boolean(shouldShowPostCarousel || displayMediaUrl)}
@@ -310,15 +295,6 @@ export const PostBody = ({
           footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
-          overlayAction={
-            canOpenSocialVideoPreview
-              ? {
-                  ariaLabel: "Abrir prévia para redes sociais",
-                  icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-                  onClick: () => onOpenSocialVideoPreview?.(),
-                }
-              : undefined
-          }
           thumbnailUrl={displayThumbnailUrl}
           variant="detail"
         />
@@ -328,16 +304,9 @@ export const PostBody = ({
   );
 };
 
-export const ThreadOriginalPostCard = ({
-  onOpenSocialVideoPreview,
-  post,
-}: {
-  onOpenSocialVideoPreview?: () => void;
-  post: PostDetail;
-}) => {
+export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const router = useRouter();
   const [contentExpanded, setContentExpanded] = useState(false);
-  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
@@ -351,13 +320,6 @@ export const ThreadOriginalPostCard = ({
   const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
   const displayThumbnailUrl = singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const shouldShowPostCarousel = postImageMediaItems.length > 1;
-  const canOpenSocialVideoPreview =
-    Boolean(onOpenSocialVideoPreview) &&
-    Boolean(currentUserId) &&
-    post.author.role === "psicologo" &&
-    post.author.id === currentUserId &&
-    displayMediaType === "video" &&
-    Boolean(displayMediaUrl);
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (
       event.defaultPrevented ||
@@ -467,15 +429,6 @@ export const ThreadOriginalPostCard = ({
             className="mt-3"
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
-            overlayAction={
-              canOpenSocialVideoPreview
-                ? {
-                    ariaLabel: "Abrir prévia para redes sociais",
-                    icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-                    onClick: () => onOpenSocialVideoPreview?.(),
-                  }
-                : undefined
-            }
             roundedClassName="rounded-[18px]"
             thumbnailUrl={displayThumbnailUrl}
             variant="reply"

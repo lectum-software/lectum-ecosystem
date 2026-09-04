@@ -66,6 +66,21 @@ pre-commit:
         - "**/*.{ts,tsx}"
       run: pnpm typecheck
 
+    video-biome:
+      root: video/
+      glob:
+        - "*.{js,ts,json,jsonc}"
+        - "**/*.{js,ts,json,jsonc}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    video-typecheck:
+      root: video/
+      glob:
+        - "*.ts"
+        - "**/*.ts"
+      run: pnpm typecheck
+
 commit-msg:
   commands:
     commitlint:
@@ -113,3 +128,14 @@ pre-push:
         - "admin/eslint.config.*"
         - "admin/postcss.config.*"
       run: pnpm check:admin
+
+    video-check:
+      glob:
+        - "video/**/*.{js,ts,json,jsonc}"
+        - "video/package.json"
+        - "video/pnpm-lock.yaml"
+        - "video/tsconfig.json"
+        - "video/biome.json"
+        - "video/Dockerfile"
+        - "video/docker-compose.yml"
+      run: pnpm check:video

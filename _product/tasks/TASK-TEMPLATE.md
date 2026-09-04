@@ -50,9 +50,9 @@ Ambientes publicados desde 2026-08-07: `homolog` → homologação e `main` → 
 - Compatibilidade com dados existentes: explicar como registros antigos continuam válidos.
 - Banco: declarar “sem alteração” ou descrever expandir → backfill retomável → contrair, volume, verificação e rollback. Migration aplicada nunca é editada.
 - Envs: listar somente nomes, app afetado, fallback e ordem de provisionamento. Se alguma for obrigatória, abrir **ALERTA DE DEPLOY** antes da implementação.
-- Contratos: explicar como frontend/backend/admin em versões diferentes continuam compatíveis durante o rollout.
+- Contratos: explicar como frontend/backend/admin/video em versões diferentes continuam compatíveis durante o rollout.
 - Jobs/providers: efeitos externos, idempotência, limites e chave de ativação/desativação.
-- Ordem de deploy: backend/frontend/admin e eventuais ações manuais.
+- Ordem de deploy: backend/frontend/admin/video e eventuais ações manuais.
 - Rollback: como reverter código sem corromper ou perder dados.
 - Smoke de homologação: rotas e jornadas reais que devem ser validadas antes de promover para `main`.
 
@@ -117,7 +117,7 @@ Regras de UI obrigatórias (ver `ARCHITECTURE.md` › "Regras de UI"):
 - [ ] Builder/Quick Copy foi usado quando disponível, ou as imagens locais de `_product/proto` foram citadas quando houver UI.
 - [ ] Checks/builds relevantes foram executados sem erros.
 - [ ] ADR criado ou atualizado em `adrs/`.
-- [ ] Versão dos quatro manifests foi incrementada uma vez e permanece sincronizada.
+- [ ] Versão dos cinco manifests foi incrementada uma vez e permanece sincronizada.
 - [ ] Commit criado com mensagem convencional.
 - [ ] Commit e push ocorreram em `homolog`; o deploy de homologação foi comunicado e não houve push direto em `main`.
 

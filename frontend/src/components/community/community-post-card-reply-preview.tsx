@@ -11,7 +11,6 @@ import {
 } from "@/components/community/community-whatsapp-cta";
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorBadge } from "@/components/community/mentor-badge";
-import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/utils";
 import {
@@ -22,16 +21,12 @@ import {
 import { AuthorAvatar } from "./community-post-card-author";
 
 export const ProfessionalReplyPreview = ({
-  currentUserId,
-  onOpenSocialVideoPreview,
   postHref,
   presentation = "default",
   profilePublicationMode,
   reply,
   showWhatsappCta = true,
 }: {
-  currentUserId?: string | null;
-  onOpenSocialVideoPreview?: (replyId: string) => void;
   postHref?: string;
   presentation?: "default" | "feed";
   profilePublicationMode?: boolean;
@@ -52,13 +47,6 @@ export const ProfessionalReplyPreview = ({
 
   const isFeedPresentation = presentation === "feed";
   const profileHref = `/psicologos/${reply.author.id}`;
-  const canOpenSocialVideoPreview =
-    Boolean(onOpenSocialVideoPreview) &&
-    Boolean(currentUserId) &&
-    reply.author.role === "psicologo" &&
-    reply.author.id === currentUserId &&
-    reply.media_type === "video" &&
-    Boolean(reply.media_url);
   const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
   const whatsappCta =
     showWhatsappCta && reply.author.whatsapp_url ? (
@@ -150,15 +138,6 @@ export const ProfessionalReplyPreview = ({
               footer={whatsappCta}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
-              overlayAction={
-                canOpenSocialVideoPreview
-                  ? {
-                      ariaLabel: "Abrir prévia para redes sociais",
-                      icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-                      onClick: () => onOpenSocialVideoPreview?.(reply.id),
-                    }
-                  : undefined
-              }
               roundedClassName="rounded-[18px]"
               thumbnailUrl={reply.thumbnail_url}
               variant="reply"
@@ -247,15 +226,6 @@ export const ProfessionalReplyPreview = ({
           footer={whatsappCta}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
-          overlayAction={
-            canOpenSocialVideoPreview
-              ? {
-                  ariaLabel: "Abrir prévia para redes sociais",
-                  icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-                  onClick: () => onOpenSocialVideoPreview?.(reply.id),
-                }
-              : undefined
-          }
           roundedClassName="rounded-[18px]"
           thumbnailUrl={reply.thumbnail_url}
           variant="reply"

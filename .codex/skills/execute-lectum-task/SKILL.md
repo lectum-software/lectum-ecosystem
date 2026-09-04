@@ -38,7 +38,7 @@ Use esta skill quando o usuário pedir para executar a próxima task, uma task e
    - browser local para interface.
 14. Criar ou atualizar ADR em `adrs/` para decisões e execuções importantes.
 15. Marcar critérios de aceite concluídos no arquivo da task, trocando `[ ]` por `[x]`.
-16. Antes do novo commit, executar uma única vez `pnpm version:bump`, preparar os quatro `package.json` sincronizados e validar `pnpm check:version`. Se a tentativa desse mesmo commit falhar, corrigir e tentar novamente sem outro bump.
+16. Antes do novo commit, executar uma única vez `pnpm version:bump`, preparar os cinco `package.json` sincronizados e validar `pnpm check:version`. Se a tentativa desse mesmo commit falhar, corrigir e tentar novamente sem outro bump.
 17. Fazer commit com mensagem convencional e escopo da task.
 18. Confirmar novamente que a branch é `homolog`, avisar que o push inicia deploy automático e executar `git push`. Se falhar por credenciais, rede ou permissão, registrar o bloqueio explicitamente. Após o deploy, validar smoke, versões publicadas e `/health`/`/ready` quando aplicável.
 
@@ -50,7 +50,7 @@ Quando o usuário disser para colocar a versão homologada em produção:
 2. Validar `gh auth status` e procurar PR aberto `homolog` → `main`; reutilizá-lo ou criar um novo.
 3. Aguardar checks obrigatórios do PR e interromper/reportar se algum falhar.
 4. Fazer merge pelo PR sem usar `--delete-branch`; `homolog` é permanente.
-5. Acompanhar o deploy de produção e validar backend `/health`, `/ready`, `/ping` e frontend/admin `/version`, além dos fluxos afetados.
+5. Acompanhar o deploy de produção e validar backend `/health`, `/ready`, `/ping` e frontend/admin/video `/version`, além dos fluxos afetados.
 6. Se `gh`, permissões ou proteção de branch bloquearem a ação, reportar o bloqueio; nunca contornar com push em `main`.
 
 ## Proibições

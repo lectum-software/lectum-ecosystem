@@ -1,10 +1,5 @@
 const MEBIBYTE = 1024 * 1024;
 
-export const VIDEO_UPLOAD_SOURCE_LIMIT_MULTIPLIER = 2;
-export const VIDEO_UPLOAD_SOURCE_ABSOLUTE_LIMIT_MB = 500;
-export const VIDEO_UPLOAD_SOURCE_ABSOLUTE_LIMIT_BYTES =
-  VIDEO_UPLOAD_SOURCE_ABSOLUTE_LIMIT_MB * MEBIBYTE;
-
 export type MediaUploadLimitStage = "final" | "source";
 export type MediaUploadLimitKind = "image" | "video";
 
@@ -63,13 +58,7 @@ export const isMediaUploadApiSizeLimitError = ({
   message.trim().toLowerCase().startsWith("arquivo excede o limite de");
 
 export const resolveVideoUploadSourceLimitBytes = (finalLimitBytes: number) => {
-  const safeFinalLimit = requirePositiveByteLimit(finalLimitBytes);
-  const expandedLimit = safeFinalLimit * VIDEO_UPLOAD_SOURCE_LIMIT_MULTIPLIER;
-
-  return Math.max(
-    safeFinalLimit,
-    Math.min(expandedLimit, VIDEO_UPLOAD_SOURCE_ABSOLUTE_LIMIT_BYTES),
-  );
+  return requirePositiveByteLimit(finalLimitBytes);
 };
 
 export const resolveMediaUploadSourceLimitBytes = (

@@ -34,35 +34,6 @@ import {
   vote as voteService,
 } from "./services";
 
-type ShareArtifactRenderResponseData = {
-  buffer: Buffer;
-  contentType: string;
-  fileName: string;
-  sizeBytes: number;
-};
-
-const isShareArtifactRenderResponseData = (
-  value: unknown,
-): value is ShareArtifactRenderResponseData =>
-  Boolean(
-    value &&
-      typeof value === "object" &&
-      Buffer.isBuffer((value as ShareArtifactRenderResponseData).buffer) &&
-      typeof (value as ShareArtifactRenderResponseData).contentType === "string" &&
-      typeof (value as ShareArtifactRenderResponseData).fileName === "string" &&
-      typeof (value as ShareArtifactRenderResponseData).sizeBytes === "number",
-  );
-
-const contentDispositionForFileName = (fileName: string) => {
-  const fallback =
-    fileName
-      .replace(/[^\x20-\x7E]/g, "")
-      .replace(/["\\]/g, "_")
-      .trim() || "lectum-video.mp4";
-
-  return `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(fileName)}`;
-};
-
 export const mine = async (req: Request, res: Response) => {
   try {
     const resolve = await mineService(req as unknown as Parameters<typeof mineService>[0]);
@@ -291,16 +262,6 @@ export const renderShareArtifact = async (req: Request, res: Response) => {
       p: req.params as unknown as Parameters<typeof renderShareArtifactService>[0]["p"],
     });
 
-    if (resolve.success && isShareArtifactRenderResponseData(resolve.data)) {
-      res.setHeader("Cache-Control", "private, no-store");
-      res.setHeader("Content-Disposition", contentDispositionForFileName(resolve.data.fileName));
-      res.setHeader("Content-Length", String(resolve.data.sizeBytes));
-      res.setHeader("Content-Type", resolve.data.contentType);
-      res.setHeader("X-Content-Type-Options", "nosniff");
-
-      return res.status(200).send(resolve.data.buffer);
-    }
-
     return send(res, resolve);
   } catch (err) {
     return error500(res, "post_share_artifact_render", err);
@@ -339,16 +300,6 @@ export const getRenderShareArtifactJobFile = async (req: Request, res: Response)
       auth: req.auth,
       p: req.params as unknown as Parameters<typeof getRenderShareArtifactJobFileService>[0]["p"],
     });
-
-    if (resolve.success && isShareArtifactRenderResponseData(resolve.data)) {
-      res.setHeader("Cache-Control", "private, no-store");
-      res.setHeader("Content-Disposition", contentDispositionForFileName(resolve.data.fileName));
-      res.setHeader("Content-Length", String(resolve.data.sizeBytes));
-      res.setHeader("Content-Type", resolve.data.contentType);
-      res.setHeader("X-Content-Type-Options", "nosniff");
-
-      return res.status(200).send(resolve.data.buffer);
-    }
 
     return send(res, resolve);
   } catch (err) {

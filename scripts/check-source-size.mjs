@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const baselinePath = path.join(repositoryRoot, "scripts/source-size-baseline.json");
-const sourceRoots = ["backend/src", "frontend/src", "admin/src"];
+const sourceRoots = ["backend/src", "frontend/src", "admin/src", "video/src"];
 const sourceExtensions = new Set([".cjs", ".js", ".mjs", ".ts", ".tsx"]);
 const ignoredSegments = new Set(["generated"]);
 const defaultMaximumLines = 700;

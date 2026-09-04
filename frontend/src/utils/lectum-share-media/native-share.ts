@@ -1,4 +1,7 @@
-import type { ShareNavigator } from "./layout";
+export type ShareNavigator = Navigator & {
+  canShare?: (data?: ShareData) => boolean;
+  share?: (data?: ShareData) => Promise<void>;
+};
 
 const nativeShareErrorName = (error: unknown) =>
   typeof error === "object" && error !== null && "name" in error
@@ -7,12 +10,6 @@ const nativeShareErrorName = (error: unknown) =>
 
 export const isNativeShareAbortError = (error: unknown) =>
   nativeShareErrorName(error) === "AbortError";
-
-export const isNativeShareActivationError = (error: unknown) => {
-  const errorName = nativeShareErrorName(error);
-
-  return errorName === "NotAllowedError" || errorName === "SecurityError";
-};
 
 const canUseNativeShareData = (nav: ShareNavigator, shareData: ShareData) => {
   if (!nav.share) return false;
@@ -23,21 +20,6 @@ const canUseNativeShareData = (nav: ShareNavigator, shareData: ShareData) => {
   } catch {
     return false;
   }
-};
-
-export const resolveLectumFileShareData = (
-  nav: ShareNavigator,
-  shareData: ShareData,
-): ShareData | null => {
-  if (canUseNativeShareData(nav, shareData)) return shareData;
-
-  if (!shareData.files?.length) return null;
-
-  const filesOnlyShareData: ShareData = {
-    files: shareData.files,
-  };
-
-  return canUseNativeShareData(nav, filesOnlyShareData) ? filesOnlyShareData : null;
 };
 
 export const resolveLectumLinkShareData = (

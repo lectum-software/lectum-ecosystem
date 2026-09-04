@@ -108,7 +108,6 @@ export const ProfessionalProfileSetupLogic = () => {
     videoUploadBusy,
     videoUploadPhase,
     videoUploadProgress,
-    videoUploadSummary,
     whatsappUrl,
   } = controller;
 
@@ -303,7 +302,6 @@ export const ProfessionalProfileSetupLogic = () => {
                         onCancel={cancelVideoUpload}
                         phase={videoUploadPhase}
                         progress={videoUploadProgress}
-                        summary={videoUploadSummary}
                       />
                     ) : null}
 

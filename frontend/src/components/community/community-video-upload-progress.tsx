@@ -9,8 +9,8 @@ type CommunityVideoUploadProgressProps = {
 };
 
 const PHASE_TITLES = {
-  analyzing: "Analisando vídeo",
-  optimizing: "Otimizando vídeo",
+  analyzing: "Preparando arquivo",
+  optimizing: "Preparando arquivo",
   uploading: "Enviando vídeo",
 } as const;
 

@@ -218,10 +218,7 @@ export const PostDetailLogic = ({
     isLoadingMoreReplies,
     isMobile,
     loadMoreRepliesRef,
-    lectumDownloadDialog,
     mediaPermission,
-    openPostSocialVideoPreview,
-    openReplySocialVideoPreview,
     post,
     postError,
     postQuery,
@@ -240,7 +237,6 @@ export const PostDetailLogic = ({
     setReportTarget,
     setReplyError,
     setShowPsychologistReplyTip,
-    shareDestinationDialog,
     shareFeedback,
     sharePost,
     shareReply,
@@ -372,7 +368,7 @@ export const PostDetailLogic = ({
                 }}
                 post={post}
               />
-              <PostBody onOpenSocialVideoPreview={openPostSocialVideoPreview} post={post} />
+              <PostBody post={post} />
               <PostVoteBar
                 currentVote={post.current_user_vote}
                 disabled={voteMutation.isPending || saveMutation.isPending}
@@ -449,7 +445,6 @@ export const PostDetailLogic = ({
                   setReportError(null);
                   setReportTarget({ reply, type: "reply" });
                 }}
-                onOpenSocialVideoPreview={openReplySocialVideoPreview}
                 onShare={shareReply}
                 onSubmitReply={(values, parentReplyId, mediaFile, videoUploadOperation) =>
                   submitReply(values, parentReplyId, mediaFile, videoUploadOperation)
@@ -514,9 +509,6 @@ export const PostDetailLogic = ({
           </>
         ) : null}
       </section>
-
-      {shareDestinationDialog}
-      {lectumDownloadDialog}
     </PrivateTemplate>
   );
 };

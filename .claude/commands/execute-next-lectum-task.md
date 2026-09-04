@@ -15,7 +15,7 @@ Obrigatório:
 9. Rode checks/builds.
 10. Marque critérios concluídos.
 11. Registre riscos de dados/env/rollout/rollback; env obrigatória nova exige alerta sem valor.
-12. Antes do novo commit, rode uma única vez `pnpm version:bump`, inclua os quatro manifests e valide `pnpm check:version`; não repita o bump ao tentar novamente o mesmo commit.
+12. Antes do novo commit, rode uma única vez `pnpm version:bump`, inclua os cinco manifests e valide `pnpm check:version`; não repita o bump ao tentar novamente o mesmo commit.
 13. Faça commit e push somente em `homolog`, avisando que o push publica homologação.
 14. Se o usuário pedir produção, use `gh` para PR `homolog` → `main`, checks, merge sem excluir `homolog` e smoke; nunca faça push direto em `main`.
 

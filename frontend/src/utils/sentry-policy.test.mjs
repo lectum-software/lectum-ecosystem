@@ -503,9 +503,9 @@ test("reconstrói somente metadata técnica validada", () => {
     tags: {
       "lectum.browser": "Chrome",
       "lectum.destination": "download?token=secret",
-      "lectum.feature": "share-video-artifact",
+      "lectum.feature": "video-stream",
       "lectum.profile": "720x1280",
-      "lectum.stage": "mediabunny-can-encode",
+      "lectum.stage": "signed-playback",
       user_id: "patient-id",
     },
     timestamp: 12_345_678_900,
@@ -530,9 +530,9 @@ test("reconstrói somente metadata técnica validada", () => {
     release: undefined,
     tags: {
       "lectum.browser": "chrome",
-      "lectum.feature": "share-video-artifact",
+      "lectum.feature": "video-stream",
       "lectum.profile": "720x1280",
-      "lectum.stage": "mediabunny-can-encode",
+      "lectum.stage": "signed-playback",
     },
     timestamp: undefined,
     type: undefined,

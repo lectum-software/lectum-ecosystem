@@ -3,6 +3,7 @@ export const RELEASE_PACKAGE_PATHS = Object.freeze([
   "backend/package.json",
   "frontend/package.json",
   "admin/package.json",
+  "video/package.json",
 ]);
 
 const RELEASE_VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
@@ -51,4 +52,23 @@ export const assertSynchronizedVersions = (versionsByPath) => {
   }
 
   return expectedVersion;
+};
+
+export const assertAdvancedReleaseVersions = ({ headVersionsByPath, stagedVersionsByPath }) => {
+  const stagedVersion = assertSynchronizedVersions(stagedVersionsByPath);
+  const headEntries = Object.entries(headVersionsByPath);
+
+  if (headEntries.length === 0) return stagedVersion;
+
+  assertSynchronizedVersions(headVersionsByPath);
+  for (const [manifestPath, headVersion] of headEntries) {
+    const nextVersion = stagedVersionsByPath[manifestPath];
+    if (!nextVersion || compareReleaseVersions(nextVersion, headVersion) <= 0) {
+      throw new Error(
+        `${manifestPath} deve subir acima de ${headVersion}. Execute \`pnpm version:bump\` e prepare os cinco manifests.`,
+      );
+    }
+  }
+
+  return stagedVersion;
 };

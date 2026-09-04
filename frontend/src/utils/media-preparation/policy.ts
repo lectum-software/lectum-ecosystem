@@ -1,11 +1,10 @@
 import type { FrontendImagePreparationPurpose } from "../image-preparation";
-import type { VideoPreparationPurpose } from "../video-preparation";
 
 export const VIDEO_UPLOAD_PURPOSES = {
   "community-post-video": "community-post",
   "post-reply-video": "community-reply",
   "profile-presentation-video": "profile-presentation",
-} as const satisfies Record<string, VideoPreparationPurpose>;
+} as const;
 
 export type VideoUploadPurpose = keyof typeof VIDEO_UPLOAD_PURPOSES;
 export type MediaPreparationPurpose = FrontendImagePreparationPurpose | VideoUploadPurpose;
@@ -36,10 +35,6 @@ export const resolveMediaPreparationAdapter = (
 
   return "image";
 };
-
-export const resolveVideoPreparationPurpose = (
-  purpose: VideoUploadPurpose,
-): VideoPreparationPurpose => VIDEO_UPLOAD_PURPOSES[purpose];
 
 export const resolvePublicMediaKind = (
   file: Pick<File, "name" | "type">,

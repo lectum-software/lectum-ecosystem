@@ -1,0 +1,45 @@
+{
+  "name": "@lectum/video-service",
+  "version": "0.1.261",
+  "private": true,
+  "type": "module",
+  "description": "Serviço isolado de processamento assíncrono de vídeos da Lectum",
+  "main": "dist/api.js",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev:api": "tsx watch --clear-screen=false src/api.ts",
+    "dev:worker": "tsx watch --clear-screen=false src/worker.ts",
+    "clean": "node -e \"import('node:fs').then(({ rmSync }) => rmSync('dist', { recursive: true, force: true }))\"",
+    "build": "pnpm clean && tsc",
+    "start": "pnpm start:api",
+    "start:api": "node --enable-source-maps dist/api.js",
+    "start:worker": "node --enable-source-maps dist/worker.js",
+    "typecheck": "tsc --noEmit --pretty false",
+    "biome:check": "biome check --error-on-warnings .",
+    "biome:fix": "biome check --write .",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "check": "pnpm biome:check && pnpm typecheck && pnpm test",
+    "test:e2e": "node scripts/e2e.mjs"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@paralleldrive/cuid2": "3.3.0",
+    "bullmq": "6.3.4",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "helmet": "8.3.0",
+    "ioredis": "6.0.0",
+    "multer": "2.3.0",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@types/express": "5.0.6",
+    "@types/multer": "2.2.0",
+    "@types/node": "26.4.1",
+    "tsx": "4.23.13",
+    "typescript": "7.0.2"
+  }
+}

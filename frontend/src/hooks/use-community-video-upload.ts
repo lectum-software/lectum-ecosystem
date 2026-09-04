@@ -45,9 +45,9 @@ export const useCommunityVideoUpload = () => {
     const controller = new AbortController();
     activeControllerRef.current = controller;
     setVideoUploadProgress({
-      percentage: null,
-      phase: "preparing",
-      stage: "analyzing",
+      percentage: 0,
+      phase: "uploading",
+      stage: "uploading",
     });
 
     return createCommunityVideoUploadOperation({

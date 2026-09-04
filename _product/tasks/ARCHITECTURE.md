@@ -4,7 +4,8 @@ Este documento é obrigatório para qualquer task de produto. Ele existe para im
 
 ## Princípio
 
-Frontend, backend e admin estão no mesmo repositório apenas para desenvolvimento. Em código, decisões, deploy e validação, trate-os como aplicações separadas.
+Frontend, backend, admin e o serviço de vídeo estão no mesmo repositório apenas para
+desenvolvimento. Em código, decisões, deploy e validação, trate-os como aplicações separadas.
 
 ## Operação em ambientes publicados
 
@@ -17,15 +18,17 @@ Desde **2026-08-07**, `frontend/`, `backend/` e `admin/` possuem homologação e
 - Toda mudança nasce e é publicada primeiro em `homolog`. Se o trabalho estiver em `main`, interromper antes de editar/commitar e orientar o usuário a trocar de branch.
 - Push direto em `main` é proibido. A promoção ocorre por merge revisado após checks, builds e smoke test de homologação.
 - O desenvolvedor não técnico permanece em `homolog`. Uma solicitação explícita para colocar em produção é executada pelo agente como PR `homolog` → `main` via `gh`, espera dos checks, merge sem excluir `homolog` e smoke de produção; não há commit/push direto em `main` nem etapa manual delegada ao usuário salvo bloqueio real de acesso.
-- Backend, frontend e admin podem permanecer temporariamente em versões diferentes. Contratos novos devem ser aditivos, consumidores devem tolerar campos ausentes e remoções só podem ocorrer depois que nenhum consumidor antigo depender delas.
+- Backend, frontend, admin e video podem permanecer temporariamente em versões diferentes. Contratos novos devem ser aditivos, consumidores devem tolerar campos ausentes e remoções só podem ocorrer depois que nenhum consumidor antigo depender delas.
 - Um push em `homolog` já é uma operação de deploy e deve ser comunicado como tal.
 
 ### Versão dos artefatos
 
-- `package.json`, `backend/package.json`, `frontend/package.json` e `admin/package.json` mantêm a mesma versão SemVer.
+- `package.json`, `backend/package.json`, `frontend/package.json`, `admin/package.json` e
+  `video/package.json` mantêm a mesma versão SemVer.
 - Cada novo commit criado por agente deve executar `pnpm version:bump` exatamente uma vez antes de ser preparado; uma repetição do mesmo commit após falha não recebe outro bump.
 - O Lefthook bloqueia commit sem incremento ou com manifests dessincronizados; `pnpm check:version` valida a sincronização.
-- Backend expõe sua versão de forma aditiva em `/ping`; frontend e admin expõem `/version` sem autenticação, cache ou indexação e sem links/sitemap.
+- Backend expõe sua versão de forma aditiva em `/ping`; frontend, admin e video expõem `/version`
+  sem autenticação, cache ou indexação e sem links/sitemap.
 - A versão é incorporada por cada build. Divergência temporária entre aplicações durante rollout é esperada e observável; não usar env manual para sobrescrever a versão.
 
 ### Evolução segura do banco
@@ -276,7 +279,7 @@ Templates/shells devem viver em `frontend/src/templates`.
 
 - `pnpm check:source-size` limita novas raízes de composição (`page.tsx`, `logic.tsx`, `client.tsx`, `controller.ts` e `services.ts`) a **600 linhas** e demais fontes a **700 linhas**. O objetivo recomendado é manter raízes perto de 300 linhas; 600 é teto, não meta.
 - Arquivo legado acima do teto só pode permanecer no baseline no tamanho atual ou menor. Ao cair abaixo do teto, sua entrada deve ser removida; nunca aumente o baseline para acomodar código novo.
-- `pnpm check:cycles` impede ciclos de imports locais em backend, frontend e admin.
+- `pnpm check:cycles` impede ciclos de imports locais em backend, frontend, admin e video.
 - Extrair apenas por contagem não basta: cada arquivo novo deve ter responsabilidade nomeável, direção de dependência clara e contrato tipado.
 - `index.ts` pode expor a API pública de uma pasta, mas não deve ocultar dependências circulares nem virar implementação central.
 
@@ -370,6 +373,23 @@ Templates/shells devem viver em `frontend/src/templates`.
   Stream for associado, rollback de escrita desliga somente a flag pública; o backend/configuração
   Stream deve continuar ativo para reproduzir referências existentes. Nunca apagar ativos Stream
   ou objetos R2 no rollback.
+
+
+### Serviço isolado de processamento de vídeo
+
+- `video/` é uma quarta aplicação Node independente; não importa código nem lockfile de
+  `backend/`, `frontend/` ou `admin/` e não participa do caminho crítico do Cloudflare Stream.
+- A API privada recebe uploads autenticados de serviços internos, grava bytes em volume não
+  público e enfileira somente metadados opacos no BullMQ/Redis. O browser nunca recebe sua chave.
+- Workers executam FFmpeg/ffprobe por `spawn` com argumentos fechados e `shell: false`. MediaBunny,
+  FFmpeg no browser, Chromium e execução de shell interpolado não são permitidos.
+- API, worker e Redis são processos separados. Redis fica em rede privada com persistência; API e
+  worker compartilham o mesmo volume no deployment inicial e usam concorrência `1` por worker.
+- A saída de compressão é MP4 H.264/AAC validada e publicada por rename atômico. Download exige
+  Bearer interno, suporta Range único e nunca usa `express.static`.
+- Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
+  limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
+- `pnpm --dir video check` e `pnpm --dir video build` são obrigatórios quando a aplicação mudar.
 
 ## Anti-recriação
 

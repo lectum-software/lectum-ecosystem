@@ -5,13 +5,12 @@ import {
   resolveImageFileMimeType,
   withCanonicalImageFileType,
 } from "../image-preparation";
-import { isVideoUploadCanceled, type PreparedVideo, prepareVideo } from "../video-preparation";
+import { isMediaUploadCanceled, throwIfMediaUploadCanceled } from "../upload-lifecycle";
 import {
   isVideoUploadPurpose,
   type MediaPreparationPurpose,
   requireMediaPreparationFileKind,
   resolveMediaPreparationAdapter,
-  resolveVideoPreparationPurpose,
   UnsupportedPublicMediaTypeError,
 } from "./policy";
 
@@ -42,11 +41,10 @@ export type PrepareUploadInput = {
 };
 
 const toPreparedUpload = (
-  prepared: PreparedImage | PreparedVideo,
+  prepared: PreparedImage,
   purpose: MediaPreparationPurpose,
   kind: PreparedUpload["kind"],
 ): PreparedUpload => ({
-  ...(kind === "video" ? { cleanup: (prepared as PreparedVideo).cleanup } : {}),
   file: prepared.file,
   kind,
   optimized: prepared.optimized,
@@ -80,13 +78,15 @@ export const prepareUpload = async ({
   }
 
   if (isVideoUploadPurpose(purpose)) {
-    const prepared = await prepareVideo(file, {
-      onProgress,
-      purpose: resolveVideoPreparationPurpose(purpose),
-      signal,
-    });
-
-    return toPreparedUpload(prepared, purpose, "video");
+    throwIfMediaUploadCanceled(signal);
+    return {
+      file,
+      kind: "video",
+      optimized: false,
+      originalSize: file.size,
+      preparedSize: file.size,
+      purpose,
+    };
   }
 
   const prepared = await prepareImageUpload(file, {
@@ -98,4 +98,4 @@ export const prepareUpload = async ({
 };
 
 export const isUploadPreparationCanceled = (error: unknown) =>
-  isImagePreparationCanceled(error) || isVideoUploadCanceled(error);
+  isImagePreparationCanceled(error) || isMediaUploadCanceled(error);

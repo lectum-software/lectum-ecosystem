@@ -17,6 +17,7 @@ const ignoredFiles = new Set([
   "backend/pnpm-lock.yaml",
   "frontend/pnpm-lock.yaml",
   "pnpm-lock.yaml",
+  "video/pnpm-lock.yaml",
 ]);
 const binaryExtensions = new Set([
   ".gif",

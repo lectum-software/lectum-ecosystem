@@ -16,7 +16,6 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
@@ -216,7 +215,6 @@ export const ReplyCard = ({
   onDeleteReply,
   onReply,
   onReportReply,
-  onOpenSocialVideoPreview,
   onShare,
   onSubmitReply,
   onVote,
@@ -243,7 +241,6 @@ export const ReplyCard = ({
   onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
   onReportReply: (reply: PostReply) => void;
-  onOpenSocialVideoPreview?: (reply: PostReply) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
     values: ReplyComposerForm,
@@ -297,13 +294,6 @@ export const ReplyCard = ({
     !childrenHiddenByCollapse && (visibleChildren.length > 0 || hiddenRepliesCount > 0);
   const avatarSize = isProfessional ? "reply" : "sm";
   const hasReplyMedia = Boolean(reply.media_url);
-  const canOpenSocialVideoPreview =
-    Boolean(onOpenSocialVideoPreview) &&
-    isOwnReply &&
-    isProfessional &&
-    reply.media_type === "video" &&
-    hasReplyMedia;
-
   const toggleRootTreeCollapse = () => {
     setTreeCollapsed((current) => !current);
   };
@@ -472,15 +462,6 @@ export const ReplyCard = ({
               footer={hasReplyMedia ? replyWhatsappCta : undefined}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
-              overlayAction={
-                canOpenSocialVideoPreview
-                  ? {
-                      ariaLabel: "Abrir prévia para redes sociais",
-                      icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-                      onClick: () => onOpenSocialVideoPreview?.(reply),
-                    }
-                  : undefined
-              }
               roundedClassName="rounded-[18px]"
               thumbnailUrl={reply.thumbnail_url}
               variant="reply"
@@ -606,7 +587,6 @@ export const ReplyCard = ({
                 onDeleteReply={onDeleteReply}
                 onReply={onReply}
                 onReportReply={onReportReply}
-                onOpenSocialVideoPreview={onOpenSocialVideoPreview}
                 onShare={onShare}
                 onSubmitReply={onSubmitReply}
                 onVote={onVote}

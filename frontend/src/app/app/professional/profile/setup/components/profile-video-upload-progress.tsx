@@ -1,22 +1,12 @@
 import { Loader2, X } from "lucide-react";
-import { formatProfileVideoSize } from "@/utils/profile-video-optimization";
 
 type ProfileVideoUploadProgressProps = {
   onCancel: () => void;
-  phase: "analyzing" | "optimizing" | "uploading";
+  phase: "uploading";
   progress: number | null;
-  summary: { originalSize: number; preparedSize: number } | null;
 };
 
 const PHASE_CONTENT = {
-  analyzing: {
-    description: "Verificando o formato e a qualidade do arquivo.",
-    title: "Analisando vídeo",
-  },
-  optimizing: {
-    description: "Preparando o vídeo para carregar mais rápido sem bloquear esta tela.",
-    title: "Otimizando vídeo",
-  },
   uploading: {
     description: "Mantenha esta tela aberta até o envio terminar.",
     title: "Enviando vídeo",
@@ -27,7 +17,6 @@ export const ProfileVideoUploadProgress = ({
   onCancel,
   phase,
   progress,
-  summary,
 }: ProfileVideoUploadProgressProps) => {
   const content = PHASE_CONTENT[phase];
   const normalizedProgress = progress === null ? null : Math.max(0, Math.min(100, progress));
@@ -72,12 +61,6 @@ export const ProfileVideoUploadProgress = ({
         />
       </div>
       <p className="mt-2 text-xs leading-5 text-muted">{content.description}</p>
-      {summary && phase === "uploading" ? (
-        <p className="mt-1 text-xs font-semibold leading-5 text-primary">
-          Arquivo reduzido de {formatProfileVideoSize(summary.originalSize)} para{" "}
-          {formatProfileVideoSize(summary.preparedSize)}.
-        </p>
-      ) : null}
     </div>
   );
 };

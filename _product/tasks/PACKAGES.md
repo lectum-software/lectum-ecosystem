@@ -11,8 +11,9 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 - Preferir pacotes já instalados e padrões locais.
 - Registrar em ADR quando uma task adicionar dependência.
 - Para integrações externas, escolher provedor na TASK-03 antes de instalar SDK definitivo.
-- Manter frontend e backend com dependências separadas.
-- Manter também o `admin/` como aplicação e lockfile separados; compartilhar decisões e contratos, não instalação/runtime.
+- Manter frontend, backend, admin e video com dependências separadas.
+- Manter `admin/` e `video/` como aplicações e lockfiles separados; compartilhar decisões e
+  contratos, não instalação/runtime.
 - Não trocar Next App Router por TanStack Router neste projeto.
 - Não trocar React Hook Form por TanStack Form sem ADR forte; a fundação de forms deve seguir `TASK-02`.
 - Pacotes TanStack adicionais devem ser adotados por problema concreto: tabela, virtualização, lint/devtools ou server state.
@@ -33,8 +34,6 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 | `react-hook-form` | `^7.77.0` | `7.77.0` | Formulários |
 | `@hookform/resolvers` | `^5.4.0` | `5.4.0` | Zod resolver |
 | `zod` | `^4.4.3` | `4.4.3` | Schema validation |
-| `mediabunny` | `^1.55.1` | `1.55.1` | Leitura e otimização client-side best effort de vídeos públicos em Web Worker (TASK-158/TASK-159) |
-| `@mediabunny/aac-encoder` | `^1.55.1` | `1.55.1` | Fallback AAC carregado no worker somente quando o navegador não oferece encoder nativo (TASK-158/TASK-159) |
 | `@mercadopago/sdk-react` | `^1.0.7` | `1.0.7` | Checkout Bricks/Card Payment Brick |
 | `@reduxjs/toolkit` | `^2.12.0` | `2.12.0` | Client state |
 | `react-redux` | `^9.3.0` | `9.3.0` | Redux bindings |
@@ -148,12 +147,10 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `dotenv` | `^17.4.2` | `17.4.2` | Carregamento de env no processo backend |
 | `uuid` | `^14.0.0` | `14.0.0` | Identificadores de correlação |
 | `@sentry/node` | `10.70.0` | `10.70.0` | Captura sanitizada de falhas operacionais e Express 5 |
-| `playwright-core` | `1.60.0` | `1.60.0` | Acionamento programático do Chromium do sistema no backend para POC de renderização social (TASK-42) |
-| `mediabunny` | `1.55.1` | `1.55.1` | Bundle browser servido em origem local ao Chromium backend para exportar MP4 fast-start experimental (TASK-42) |
-| `@mediabunny/aac-encoder` | `1.55.1` | `1.55.1` | Encoder AAC auxiliar dentro do Chromium backend; não adota `@mediabunny/server`/NodeAV nesta POC (TASK-42) |
-
 O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnly`; `express-session` foi removido por não ser necessário para esse fluxo. O verificador mantém transição temporária para states assinados pela versão anterior durante o rollout.
-Para a POC Chromium + MediaBunny da TASK-42, o backend usa `playwright-core` sem download de browser e instala o pacote Debian `chromium` no Docker runner. A escolha evita `@mediabunny/server`/NodeAV e mantém FFmpeg fora do runtime.
+
+MediaBunny, seu encoder AAC e a POC Playwright/Chromium foram removidos pela TASK-164. Novos vídeos
+usam Cloudflare Stream; transformações offline pertencem à aplicação `video/`.
 
 ## Admin já instalado
 
@@ -171,6 +168,33 @@ Para a POC Chromium + MediaBunny da TASK-42, o backend usa `playwright-core` sem
 | `@sentry/nextjs` | `10.70.0` | `10.70.0` | Captura de erros client/server/edge e upload condicional de source maps |
 | `lucide-react` | `^1.17.0` | `1.17.0` | Ícones |
 
+## Aplicação de processamento de vídeo
+
+`video/` é uma aplicação Node independente. Ela não integra o caminho crítico de upload/playback
+Cloudflare Stream e não compartilha instalação/runtime com o backend. Versões verificadas em
+2026-09-03 para a TASK-164:
+
+| Pacote/binário | Versão instalada | Última verificada | Uso |
+|---|---:|---:|---|
+| `express` | `5.2.1` | `5.2.1` | API HTTP service-to-service |
+| `bullmq` | `6.3.4` | `6.3.4` | Fila, retry, progresso e worker persistentes |
+| `ioredis` | `6.0.0` | `6.0.0` | Conexão Redis explícita para API/worker BullMQ |
+| `multer` | `2.3.0` | `2.3.0` | Multipart limitado com escrita direta no volume |
+| `zod` | `4.5.4` | `4.5.4` | Env e contratos internos tipados |
+| `helmet` | `8.3.0` | `8.3.0` | Headers defensivos da API privada |
+| `@paralleldrive/cuid2` | `3.3.0` | `3.3.0` | IDs opacos de jobs e traces |
+| `dotenv` | `17.4.2` | `17.4.2` | Env local; deploy usa secrets de runtime |
+| FFmpeg/ffprobe CLI | imagem Debian | `5.1.9` na imagem; `8.1.2` no host E2E | Probe e compressão MP4 H.264/AAC |
+
+Decisões obrigatórias:
+
+- não armazenar bytes no Redis; somente IDs, parâmetros fechados e estado;
+- não usar `fluent-ffmpeg`, MediaBunny, Chromium, WASM ou comando shell interpolado;
+- executar FFmpeg por adapter com `spawn`, argumentos fixos e `shell: false`;
+- manter Redis privado com persistência AOF e volume compartilhado entre API/worker;
+- concorrência padrão `1` por worker porque transcodificação é CPU-bound;
+- adicionar nova operação somente em task/ADR com validação de autorização, recursos e output.
+
 ## Candidatos condicionais
 
 | Pacote | Versão verificada | Condição |
@@ -181,7 +205,9 @@ Para a POC Chromium + MediaBunny da TASK-42, o backend usa `playwright-core` sem
 
 ## Overrides transitivos de segurança
 
-Aplicados no manifest de cada aplicação porque raiz, frontend, backend e admin têm instalações separadas. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo operacional nem invalidar overrides por aplicação.
+Aplicados no manifest de cada aplicação porque raiz, frontend, backend, admin e video têm instalações
+separadas. O `pnpm-workspace.yaml` raiz foi removido para não transformar o repositório em monorepo
+operacional nem invalidar overrides por aplicação.
 
 O postinstall oficial de `@sentry/cli` é permitido apenas nos manifests Next (`frontend/` e
 `admin/`) por `pnpm.onlyBuiltDependencies`. A lista preserva também `sharp` e `unrs-resolver`, já
@@ -204,7 +230,9 @@ não recebe credenciais no bundle.
 | Admin | `form-data@4.0.6`, `brace-expansion@5.0.9`, `browserslist@4.28.7`, `fast-uri@3.1.6`, `postcss@8.5.26`, `sharp@0.35.3`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
 | Raiz | `fast-uri@3.1.6`, `js-yaml@4.3.1` | Correções transitivas das ferramentas de commit/hook. |
 
-Validação obrigatória após alteração de dependências de produção: `pnpm audit --prod`, `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`, `pnpm --dir admin audit --prod`, `pnpm check` e os três builds.
+Validação obrigatória após alteração de dependências de produção: `pnpm audit --prod`,
+`pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`,
+`pnpm --dir admin audit --prod`, `pnpm --dir video audit --prod`, `pnpm check` e os quatro builds.
 
 ## Testes e qualidade candidatos
 

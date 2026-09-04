@@ -7,7 +7,6 @@ import {
   resolveMediaPreparationAdapter,
   resolvePostReplyPreparationPurpose,
   resolvePublicMediaKind,
-  resolveVideoPreparationPurpose,
 } from "./media-preparation/policy.ts";
 import {
   isAllowedProfileVideo,
@@ -15,10 +14,8 @@ import {
   withProfileVideoFileType,
 } from "./profile-video-upload.ts";
 
-test("resolve adapter e purpose de vídeo somente pela finalidade fechada", () => {
+test("resolve adapter de vídeo somente pela finalidade fechada", () => {
   assert.equal(resolveMediaPreparationAdapter("community-post-video"), "video");
-  assert.equal(resolveVideoPreparationPurpose("community-post-video"), "community-post");
-  assert.equal(resolveVideoPreparationPurpose("post-reply-video"), "community-reply");
   assert.equal(resolveMediaPreparationAdapter("community-post-image"), "image");
   assert.equal(resolveMediaPreparationAdapter("generated-video-thumbnail"), "passthrough");
 });

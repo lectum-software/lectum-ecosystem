@@ -509,3 +509,4 @@ Formato recomendado:
 - [ADR-0476 — Capas internas de videos sem arte social](0476-capas-internas-videos-sem-arte-social.md)
 - [ADR-0477 — Miniatura neutra de video anexado em novo post](0477-miniatura-neutra-video-anexado-novo-post.md)
 - [ADR-0478 — Cloudflare Stream como plano de dados privado de vídeo](0478-cloudflare-stream-plano-de-dados-privado.md)
+- [ADR-0479 — Serviço isolado de processamento de vídeo com BullMQ e FFmpeg](0479-servico-isolado-processamento-video-bullmq-ffmpeg.md)

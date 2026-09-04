@@ -8,9 +8,14 @@
 | Prioridade | P1 |
 | Esforço | M |
 | Fase | Operação e mídia pública |
-| Status | In Progress |
+| Status | Superseded |
 | Dependências | TASK-157, TASK-158, TASK-159 |
 | ADR alvo | ADR-0467 |
+
+> **Substituída em 2026-09-03 pela TASK-164.** A adoção de Cloudflare Stream na TASK-163 tornou a
+> transcodificação obrigatória no navegador desnecessária. A TASK-164 remove MediaBunny, Web Worker
+> e temporários OPFS do caminho de upload. Os limites finais e a validação backend continuam
+> válidos; processamento futuro ocorre fora do dispositivo, em serviço Node isolado.
 
 ## Contexto
 

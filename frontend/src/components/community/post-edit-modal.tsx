@@ -22,7 +22,6 @@ import { useAppSelector } from "@/hooks/redux";
 import { useCommunityVideoUpload } from "@/hooks/use-community-video-upload";
 import { cn } from "@/lib/utils";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
-import { scheduleLectumSharePostArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
 import { mapWithConcurrency } from "@/utils/map-with-concurrency";
 import { isUploadPreparationCanceled, resolvePublicMediaKind } from "@/utils/media-preparation";
 import {
@@ -97,9 +96,6 @@ export function PostEditModal({ onClose, onUpdated, open, post }: PostEditModalP
   });
   const updateMutation = useUpdatePost({
     onSuccess: (updatedPost) => {
-      scheduleLectumSharePostArtifactPrewarm(updatedPost, {
-        authenticated: Boolean(storedUser?.id),
-      });
       toast.success("Post atualizado!");
       onUpdated?.(updatedPost);
       handleClose();

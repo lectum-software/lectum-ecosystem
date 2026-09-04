@@ -8,27 +8,18 @@ import { prepareUpload } from "@/utils/media-preparation";
 import { resolveMediaUploadError } from "@/utils/media-upload-error";
 import {
   assertMediaUploadFinalSize,
-  assertMediaUploadSourceSize,
   getMediaUploadSourceSizeError,
   isMediaUploadSizeError,
 } from "@/utils/media-upload-limits";
-import {
-  isProfileVideoUploadCanceled,
-  throwIfProfileVideoUploadCanceled,
-} from "@/utils/profile-video-optimization";
 import { isAllowedProfileVideo } from "@/utils/profile-video-upload";
+import { isMediaUploadCanceled, throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 
-export type ProfileVideoUploadPhase = "analyzing" | "optimizing" | "uploading";
+export type ProfileVideoUploadPhase = "uploading";
 
 type ProfileVideoUploadOptions = {
   maxSizeMb: number;
   onFileSelected: () => void;
   startUpload: (input: PsychologistProfileVideoUploadInput) => Promise<unknown>;
-};
-
-type VideoUploadSummary = {
-  originalSize: number;
-  preparedSize: number;
 };
 
 export const useProfileVideoUpload = ({
@@ -40,7 +31,6 @@ export const useProfileVideoUpload = ({
   const mountedRef = useRef(true);
   const [videoUploadPhase, setVideoUploadPhase] = useState<ProfileVideoUploadPhase | null>(null);
   const [videoUploadProgress, setVideoUploadProgress] = useState<number | null>(null);
-  const [videoUploadSummary, setVideoUploadSummary] = useState<VideoUploadSummary | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -56,34 +46,20 @@ export const useProfileVideoUpload = ({
       let uploadStarted = false;
       let prepared: Awaited<ReturnType<typeof prepareUpload>> | null = null;
       activeControllerRef.current = controller;
-      setVideoUploadPhase("analyzing");
-      setVideoUploadProgress(null);
-      setVideoUploadSummary(null);
+      setVideoUploadPhase("uploading");
+      setVideoUploadProgress(0);
 
       try {
         const finalLimitBytes = maxSizeMb * 1024 * 1024;
-        assertMediaUploadSourceSize(file, "video", finalLimitBytes);
+        assertMediaUploadFinalSize(file, "video", finalLimitBytes);
         prepared = await prepareUpload({
           file,
-          onProgress: ({ percentage, stage }) => {
-            if (!mountedRef.current || controller.signal.aborted) return;
-            setVideoUploadPhase(stage);
-            setVideoUploadProgress(percentage);
-          },
           purpose: "profile-presentation-video",
           signal: controller.signal,
         });
-        throwIfProfileVideoUploadCanceled(controller.signal);
+        throwIfMediaUploadCanceled(controller.signal);
         assertMediaUploadFinalSize(prepared.file, "video", finalLimitBytes);
 
-        if (prepared.optimized) {
-          setVideoUploadSummary({
-            originalSize: prepared.originalSize,
-            preparedSize: prepared.preparedSize,
-          });
-        }
-        setVideoUploadPhase("uploading");
-        setVideoUploadProgress(0);
         uploadStarted = true;
         await startUpload({
           file: prepared.file,
@@ -95,12 +71,12 @@ export const useProfileVideoUpload = ({
           signal: controller.signal,
         });
       } catch (error) {
-        if (isProfileVideoUploadCanceled(error)) return;
+        if (isMediaUploadCanceled(error)) return;
         if (!uploadStarted) {
           toast.error(
             isMediaUploadSizeError(error)
               ? resolveMediaUploadError(error)
-              : "Não foi possível preparar o vídeo. Escolha outro arquivo e tente novamente.",
+              : "Não foi possível validar o vídeo. Escolha outro arquivo e tente novamente.",
           );
         }
         // Erros após o início do transporte usam a mensagem pública centralizada da mutation.
@@ -110,7 +86,6 @@ export const useProfileVideoUpload = ({
         if (mountedRef.current) {
           setVideoUploadPhase(null);
           setVideoUploadProgress(null);
-          setVideoUploadSummary(null);
         }
       }
     },
@@ -153,6 +128,5 @@ export const useProfileVideoUpload = ({
     videoUploadBusy: videoUploadPhase !== null,
     videoUploadPhase,
     videoUploadProgress,
-    videoUploadSummary,
   };
 };

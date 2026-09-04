@@ -25,9 +25,7 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
-import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useAppSelector } from "@/hooks/redux";
 import {
   formatCommunityPostTime as formatPostTimeLabel,
   getCommunityAuthorDisplayName,
@@ -46,17 +44,7 @@ import {
 } from "../modules/feed-support";
 import { AuthorAvatar, AuthorIdentityLine } from "./feed-controls";
 
-export const PostMedia = ({
-  currentUserId,
-  footer,
-  onOpenSocialVideoPreview,
-  post,
-}: {
-  currentUserId?: string | null;
-  footer?: ReactNode;
-  onOpenSocialVideoPreview?: () => void;
-  post: CommunityPost;
-}) => {
+export const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }) => {
   const imageMediaItems = (post.media_items ?? []).filter((item) => item.media_type === "image");
   const shouldShowCarousel = imageMediaItems.length > 1;
 
@@ -75,14 +63,6 @@ export const PostMedia = ({
   const displayMediaUrl = singleMediaItem?.media_url ?? post.media_url;
   const displayMediaType = singleMediaItem?.media_type ?? post.media_type;
   const displayThumbnailUrl = singleMediaItem?.thumbnail_url ?? post.thumbnail_url;
-  const canOpenSocialVideoPreview =
-    Boolean(onOpenSocialVideoPreview) &&
-    Boolean(currentUserId) &&
-    post.author.role === "psicologo" &&
-    post.author.id === currentUserId &&
-    displayMediaType === "video" &&
-    Boolean(displayMediaUrl);
-
   return (
     <CommunityMediaBlock
       alt={post.title}
@@ -92,15 +72,6 @@ export const PostMedia = ({
       footer={footer}
       mediaType={displayMediaType}
       mediaUrl={displayMediaUrl}
-      overlayAction={
-        canOpenSocialVideoPreview
-          ? {
-              ariaLabel: "Abrir prévia para redes sociais",
-              icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-              onClick: () => onOpenSocialVideoPreview?.(),
-            }
-          : undefined
-      }
       thumbnailUrl={displayThumbnailUrl}
       variant="post"
     />
@@ -108,24 +79,13 @@ export const PostMedia = ({
 };
 
 export const ProfessionalReplyMedia = ({
-  currentUserId,
   footer,
-  onOpenSocialVideoPreview,
   reply,
 }: {
-  currentUserId?: string | null;
   footer?: ReactNode;
-  onOpenSocialVideoPreview?: (replyId: string) => void;
   reply: NonNullable<CommunityPost["highlighted_professional_reply"]>;
 }) => {
   if (!reply.media_url) return null;
-
-  const canOpenSocialVideoPreview =
-    Boolean(onOpenSocialVideoPreview) &&
-    Boolean(currentUserId) &&
-    reply.author.role === "psicologo" &&
-    reply.author.id === currentUserId &&
-    reply.media_type === "video";
 
   return (
     <CommunityMediaBlock
@@ -136,15 +96,6 @@ export const ProfessionalReplyMedia = ({
       footer={footer}
       mediaType={reply.media_type}
       mediaUrl={reply.media_url}
-      overlayAction={
-        canOpenSocialVideoPreview
-          ? {
-              ariaLabel: "Abrir prévia para redes sociais",
-              icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-              onClick: () => onOpenSocialVideoPreview?.(reply.id),
-            }
-          : undefined
-      }
       roundedClassName="rounded-[18px]"
       thumbnailUrl={reply.thumbnail_url}
       variant="reply"
@@ -152,15 +103,7 @@ export const ProfessionalReplyMedia = ({
   );
 };
 
-export const ProfessionalReplyPreview = ({
-  currentUserId,
-  onOpenSocialVideoPreview,
-  post,
-}: {
-  currentUserId?: string | null;
-  onOpenSocialVideoPreview?: (replyId: string) => void;
-  post: CommunityPost;
-}) => {
+export const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
   const reply = post.highlighted_professional_reply;
   const [replyExpanded, setReplyExpanded] = useState(false);
   const postHref = communityPostDetailHref(post);
@@ -250,12 +193,7 @@ export const ProfessionalReplyPreview = ({
         </div>
         {reply.media_url ? (
           <div className="pointer-events-auto mt-3">
-            <ProfessionalReplyMedia
-              currentUserId={currentUserId}
-              footer={replyWhatsappCta}
-              onOpenSocialVideoPreview={onOpenSocialVideoPreview}
-              reply={reply}
-            />
+            <ProfessionalReplyMedia footer={replyWhatsappCta} reply={reply} />
           </div>
         ) : replyWhatsappCta ? (
           <div className="pointer-events-auto mt-3">{replyWhatsappCta}</div>
@@ -267,17 +205,14 @@ export const ProfessionalReplyPreview = ({
 
 export const PostCard = ({
   onShare,
-  onOpenSocialVideoPreview,
   post,
   showCommunityHeader = true,
 }: {
-  onOpenSocialVideoPreview?: (post: CommunityPost, replyId?: string | null) => void;
   onShare: (post: CommunityPost) => void;
   post: CommunityPost;
   showCommunityHeader?: boolean;
 }) => {
   const router = useRouter();
-  const currentUserId = useAppSelector((state) => state.user?.id ?? null);
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const [voteSnapshot, setVoteSnapshot] = useState<VoteSnapshot>({
@@ -539,23 +474,8 @@ export const PostCard = ({
       </div>
 
       <div className="mt-4 grid gap-3">
-        <PostMedia
-          currentUserId={currentUserId}
-          footer={hasPostMedia ? authorWhatsappCta : undefined}
-          onOpenSocialVideoPreview={
-            onOpenSocialVideoPreview ? () => onOpenSocialVideoPreview(post) : undefined
-          }
-          post={post}
-        />
-        <ProfessionalReplyPreview
-          currentUserId={currentUserId}
-          onOpenSocialVideoPreview={
-            onOpenSocialVideoPreview
-              ? (replyId) => onOpenSocialVideoPreview(post, replyId)
-              : undefined
-          }
-          post={post}
-        />
+        <PostMedia footer={hasPostMedia ? authorWhatsappCta : undefined} post={post} />
+        <ProfessionalReplyPreview post={post} />
         {hasPostMedia ? null : authorWhatsappCta}
       </div>
 

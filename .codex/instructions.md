@@ -1,7 +1,7 @@
 # Regras do projeto
 
-- Este repositório reúne `backend/`, `frontend/` e `admin/` apenas para facilitar o desenvolvimento local.
-- Em produção, as três aplicações devem ser tratadas separadamente.
+- Este repositório reúne `backend/`, `frontend/`, `admin/` e `video/` apenas para facilitar o desenvolvimento local.
+- Em produção, as quatro aplicações devem ser tratadas separadamente.
 - O desenvolvimento do produto Lectum deve seguir spec-driven development.
 - A fonte de verdade das próximas execuções é `_product/tasks/README.md`.
 - A arquitetura obrigatória está em `_product/tasks/ARCHITECTURE.md`.
@@ -45,5 +45,5 @@
 - Se `prisma migrate dev` falhar por conflito com dados/estado do banco de desenvolvimento, pergunte ao usuário antes de resetar o banco ou rodar comando destrutivo.
 - Para o admin, execute `pnpm --dir admin check` e `pnpm --dir admin build` quando houver alteração de UI/rota.
 - Commit e push de tasks ocorrem em `homolog`; nunca deixe uma automação publicar `main` sem validação prévia do ambiente de homologação.
-- Antes de cada novo commit do agente, execute uma vez `pnpm version:bump`, inclua os quatro manifests sincronizados e rode `pnpm check:version`. Não repita o bump ao apenas tentar novamente um commit que falhou.
-- A versão publicada é verificada em backend `/ping` e frontend/admin `/version`; mantenha `/version` público, sem cache, noindex e fora da navegação/sitemap.
+- Antes de cada novo commit do agente, execute uma vez `pnpm version:bump`, inclua os cinco manifests sincronizados e rode `pnpm check:version`. Não repita o bump ao apenas tentar novamente um commit que falhou.
+- A versão publicada é verificada em backend `/ping` e frontend/admin/video `/version`; mantenha `/version` público, sem cache, noindex e fora da navegação/sitemap.

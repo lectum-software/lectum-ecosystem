@@ -1,7 +1,7 @@
 # Lectum Ecosystem
 
-Este repositório reúne `backend/`, `frontend/` e `admin/` apenas para desenvolvimento local. Nos
-ambientes publicados, trate as três aplicações e seus deploys separadamente.
+Este repositório reúne `backend/`, `frontend/`, `admin/` e `video/` apenas para desenvolvimento local. Nos
+ambientes publicados, trate as quatro aplicações e seus deploys separadamente.
 
 ## Ambientes publicados
 
@@ -20,7 +20,7 @@ em [`_product/AUDITORIA-CORRECOES-2026-08-07.md`](_product/AUDITORIA-CORRECOES-2
 
 ## Versão publicada
 
-Cada commit criado por agente incrementa e sincroniza a versão dos quatro `package.json`. O hook de
+Cada commit criado por agente incrementa e sincroniza a versão dos cinco `package.json`. O hook de
 commit impede publicação sem bump. Para preparar manualmente um novo commit:
 
 ```bash
@@ -34,7 +34,8 @@ Depois do deploy, consulte:
 
 - backend: `GET /ping`;
 - frontend: `GET /version`;
-- admin: `GET /version`.
+- admin: `GET /version`;
+- video: `GET /version`.
 
 As rotas `/version` são públicas somente para verificação interna, sem cache, noindex e sem links na
 interface ou sitemap.
@@ -53,6 +54,10 @@ O comando sobe:
 - opcionalmente, um tunnel Cloudflare ou ngrok quando `DEV_TUNNEL_ENABLED=1`.
 
 Para rodar só backend + frontend sem o painel administrativo, defina `DEV_ADMIN_ENABLED=0`.
+
+O serviço independente de processamento de vídeo não sobe no `pnpm dev`, pois depende de Redis,
+FFmpeg e volume próprios. Consulte [`video/README.md`](video/README.md) e execute API e worker em
+processos separados somente quando estiver desenvolvendo esse pipeline.
 
 ## Tunnel local para integrações externas
 

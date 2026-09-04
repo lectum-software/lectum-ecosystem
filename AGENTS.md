@@ -4,8 +4,8 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 
 ## Contexto do Projeto
 
-- O repositório reúne `backend/`, `frontend/` e `admin/` apenas para facilitar o desenvolvimento.
-- Em produção, as três aplicações devem continuar separadas.
+- O repositório reúne `backend/`, `frontend/`, `admin/` e `video/` apenas para facilitar o desenvolvimento.
+- Em produção, as quatro aplicações devem continuar separadas.
 - O produto Lectum é uma plataforma web responsiva para psicólogos e pacientes.
 - O desenvolvimento deve seguir spec-driven development: a IA executa uma task bem definida, valida, registra decisões e só então avança.
 
@@ -47,8 +47,8 @@ Estas instruções valem para agentes de IA trabalhando neste workspace.
 - Cada task concluída deve criar ou atualizar pelo menos um ADR quando houver decisão arquitetural, integração, regra de domínio, fluxo crítico ou trade-off relevante.
 - Cada task concluída deve gerar commit próprio e executar `git push` para publicar a branch/remoto correspondente; não deixe commits apenas locais. Se o push falhar por credenciais, rede ou permissão, reporte o bloqueio explicitamente.
 - O commit e o push da task devem ocorrer em `homolog`; lembre que o push dispara deploy automático de homologação.
-- Antes de cada novo commit criado por agente, execute uma única vez `pnpm version:bump`, prepare `package.json`, `backend/package.json`, `frontend/package.json` e `admin/package.json` no mesmo commit e confirme `pnpm check:version`. Se uma tentativa de commit falhar, corrija e tente novamente sem outro bump. O hook bloqueia versão não incrementada ou dessincronizada.
-- A versão dos artefatos é consultável em `GET /ping` no backend e `GET /version` no frontend/admin. Essas rotas são públicas, sem cache e não indexáveis; não as vincule na navegação ou sitemap.
+- Antes de cada novo commit criado por agente, execute uma única vez `pnpm version:bump`, prepare `package.json`, `backend/package.json`, `frontend/package.json`, `admin/package.json` e `video/package.json` no mesmo commit e confirme `pnpm check:version`. Se uma tentativa de commit falhar, corrija e tente novamente sem outro bump. O hook bloqueia versão não incrementada ou dessincronizada.
+- A versão dos artefatos é consultável em `GET /ping` no backend e `GET /version` no frontend, admin e video. Essas rotas são públicas, sem cache e não indexáveis; não as vincule na navegação ou sitemap.
 - Não usar a pasta `sample/` como fonte ativa de implementação futura, exceto quando a task citar expressamente uma referência técnica específica, como a `TASK-02`.
 - Antes de criar estrutura nova, verificar `_product/tasks/ARCHITECTURE.md`.
 - Antes de instalar pacote novo, verificar `_product/tasks/PACKAGES.md` e registrar ADR.
@@ -64,6 +64,7 @@ Use estes comandos como baseline:
 - Backend com mudança de banco: `pnpm --dir backend db:migrate`
 - Frontend: `pnpm --dir frontend check` e, quando houver mudança visual/rota, `pnpm --dir frontend build`
 - Admin: `pnpm --dir admin check` e, quando houver mudança visual/rota, `pnpm --dir admin build`
+- Video: `pnpm --dir video check` e `pnpm --dir video build` quando a aplicação for alterada
 
 Para mudanças de interface, também validar manualmente no browser local depois de subir o dev server apropriado.
 
@@ -71,4 +72,5 @@ Para mudanças de interface, também validar manualmente no browser local depois
 
 - Backend: Express 5, Prisma 7, PostgreSQL adapter, Passport/JWT/Google OAuth, Biome, TypeScript.
 - Frontend: Next.js 16, React 19, Tailwind CSS 4, TanStack Query 5, Redux Toolkit, Biome, ESLint, TypeScript.
+- Video: Node 24, Express 5, BullMQ/Redis, FFmpeg/ffprobe, Biome e TypeScript.
 - Package manager: pnpm.

@@ -4,6 +4,9 @@
 
 Accepted
 
+Complemento: a decisão de preparação client-side permanece válida para imagens. O trecho de vídeo
+foi substituído por Cloudflare Stream + ADR-0479; vídeo passa por passthrough validado no cliente.
+
 ## Task relacionada
 
 TASK-159

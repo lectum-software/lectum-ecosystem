@@ -21,7 +21,6 @@ export {
   resolveMediaPreparationAdapter,
   resolvePostReplyPreparationPurpose,
   resolvePublicMediaKind,
-  resolveVideoPreparationPurpose,
   UnsupportedPublicMediaTypeError,
   VIDEO_UPLOAD_PURPOSES,
 } from "./policy";

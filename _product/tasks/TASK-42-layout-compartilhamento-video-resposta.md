@@ -12,6 +12,11 @@
 | Dependências | TASK-23, TASK-26, TASK-28, TASK-29B |
 | ADR alvo | ADR-0191 |
 
+> **Estado atual após TASK-164:** esta task registra o histórico da solução e continua concluída,
+> mas a geração/download social de **vídeo** foi retirada do runtime ativo. O compartilhamento atual
+> usa link privado; reintroduzir o arquivo 9:16 exige processador assíncrono em `video/` e nova task.
+> Compartilhamento social de imagem não foi removido.
+
 ## Contexto
 
 A Lectum será fonte de criação de conteúdo para psicólogos. Vídeos-resposta feitos para responder perguntas ou comentários na comunidade precisam poder sair da Lectum com um layout social padronizado, parecido com resposta de caixinha do Instagram, sem aparência institucional.

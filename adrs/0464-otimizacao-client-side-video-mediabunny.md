@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-0479
 
 ## Task relacionada
 

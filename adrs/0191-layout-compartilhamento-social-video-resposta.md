@@ -2,7 +2,11 @@
 
 ## Status
 
-Accepted
+Partially superseded by ADR-0479
+
+O histórico visual permanece válido como referência, mas a geração/exportação de artefato social
+em vídeo no browser ou no backend principal foi retirada. O produto atual compartilha vídeo por
+link privado; qualquer retorno da arte 9:16 deve ser um novo processador assíncrono em `video/`.
 
 ## Task relacionada
 

@@ -26,7 +26,7 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 13. Rodar checks/builds relevantes.
 14. Criar ou atualizar ADR em `adrs/`.
 15. Marcar critérios de aceite concluídos no arquivo da task.
-16. Antes do novo commit, executar uma única vez `pnpm version:bump`, incluir os quatro `package.json` sincronizados e validar `pnpm check:version`; não repetir o bump ao apenas tentar novamente o mesmo commit.
+16. Antes do novo commit, executar uma única vez `pnpm version:bump`, incluir os cinco `package.json` sincronizados e validar `pnpm check:version`; não repetir o bump ao apenas tentar novamente o mesmo commit.
 17. Fazer commit com mensagem convencional.
 18. Confirmar `homolog`, avisar que o push inicia deploy automático e executar `git push`. Validar smoke, versões publicadas e `/health`/`/ready` quando aplicável.
 
@@ -34,7 +34,7 @@ Use esta skill no Claude Code quando o usuário pedir para executar a próxima t
 
 Quando o usuário pedir para colocar em produção, confirmar homologação, usar `gh` para criar ou
 reutilizar PR `homolog` → `main`, aguardar checks, fazer merge sem excluir `homolog` e validar
-`/health`, `/ready`, `/ping`, frontend/admin `/version` e os fluxos afetados em produção. Se acesso ou
+`/health`, `/ready`, `/ping`, frontend/admin/video `/version` e os fluxos afetados em produção. Se acesso ou
 checks bloquearem, reportar; nunca fazer push direto em `main`.
 
 ## Proibições

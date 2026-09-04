@@ -17,8 +17,8 @@ import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-prof
 import { useAppSelector } from "@/hooks/redux";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { resolvePublicMediaKind } from "@/utils/media-preparation";
-import { isProfileVideoUploadCanceled } from "@/utils/profile-video-optimization";
 import { PROFILE_VIDEO_DEFAULT_LIMIT_MB } from "@/utils/profile-video-upload";
+import { isMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { CITY_OPTIONS_BY_STATE } from "../brazil-cities";
 import {
   AVATAR_MAX_SIZE_BYTES,
@@ -120,7 +120,7 @@ export const useProfessionalProfileSetupController = () => {
       video: {
         onSuccess: () => toast.success("Vídeo de apresentação atualizado"),
         onError: (error) => {
-          if (!isProfileVideoUploadCanceled(error)) toast.error(resolveApiError(error));
+          if (!isMediaUploadCanceled(error)) toast.error(resolveApiError(error));
         },
       },
       videoCover: {

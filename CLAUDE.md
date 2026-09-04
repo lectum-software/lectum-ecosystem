@@ -4,8 +4,8 @@ Use este arquivo como memória de projeto para Claude Code.
 
 ## Contexto
 
-- Este repositório reúne `backend/`, `frontend/` e `admin/` apenas para desenvolvimento local.
-- Em produção, as três aplicações devem ser tratadas separadamente.
+- Este repositório reúne `backend/`, `frontend/`, `admin/` e `video/` apenas para desenvolvimento local.
+- Em produção, as quatro aplicações devem ser tratadas separadamente.
 - O produto Lectum é uma plataforma responsiva para psicólogos e pacientes.
 - O desenvolvimento deve seguir spec-driven development: uma task por vez, com validação, ADR, commit e push.
 
@@ -58,8 +58,8 @@ Leia antes de executar qualquer task:
 - Se `prisma migrate dev` falhar por dados ou estado preexistente no banco de desenvolvimento, pare e pergunte se pode resetar o banco antes de rodar comandos destrutivos como `pnpm --dir backend exec prisma migrate reset`.
 - Toda task concluída deve gerar commit próprio e executar `git push` para publicar a branch/remoto correspondente. Se o push falhar por credenciais, rede ou permissão, reporte o bloqueio explicitamente.
 - O push deve ser feito em `homolog` e informado como início de deploy automático; valide o ambiente antes de qualquer solicitação de promoção.
-- Antes de cada novo commit criado por agente, rode uma única vez `pnpm version:bump`, inclua os quatro `package.json` sincronizados e valide `pnpm check:version`. Não faça novo bump apenas porque uma tentativa do mesmo commit falhou.
-- Backend expõe versão em `/ping`; frontend e admin expõem `/version` publicamente, sem cache, noindex e sem links de navegação/sitemap.
+- Antes de cada novo commit criado por agente, rode uma única vez `pnpm version:bump`, inclua os cinco `package.json` sincronizados e valide `pnpm check:version`. Não faça novo bump apenas porque uma tentativa do mesmo commit falhou.
+- Backend expõe versão em `/ping`; frontend, admin e video expõem `/version` publicamente, sem cache, noindex e sem links de navegação/sitemap.
 
 ## Validação
 
@@ -73,6 +73,7 @@ Use como baseline:
 - frontend build quando mudar rota/UI: `pnpm --dir frontend build`
 - admin: `pnpm --dir admin check`
 - admin build quando mudar rota/UI: `pnpm --dir admin build`
+- video: `pnpm --dir video check` e `pnpm --dir video build`
 
 ## Execução
 

@@ -1,0 +1,139 @@
+x-video-environment: &video-environment
+  NODE_ENV: ${NODE_ENV:-production}
+  HOST: ${HOST:-0.0.0.0}
+  PORT: ${PORT:-3003}
+  REDIS_URL: ${REDIS_URL:?Defina REDIS_URL nos secrets de runtime}
+  VIDEO_SERVICE_API_KEY: ${VIDEO_SERVICE_API_KEY:?Defina VIDEO_SERVICE_API_KEY nos secrets de runtime}
+  VIDEO_STORAGE_ROOT: ${VIDEO_STORAGE_ROOT:?Defina VIDEO_STORAGE_ROOT no volume persistente}
+  VIDEO_REQUIRE_WORKER_READY: ${VIDEO_REQUIRE_WORKER_READY:-true}
+  VIDEO_MAX_INPUT_MB: ${VIDEO_MAX_INPUT_MB:-500}
+  VIDEO_MAX_OUTPUT_MB: ${VIDEO_MAX_OUTPUT_MB:-500}
+  VIDEO_MAX_DURATION_SECONDS: ${VIDEO_MAX_DURATION_SECONDS:-1800}
+  VIDEO_MAX_QUEUED_JOBS: ${VIDEO_MAX_QUEUED_JOBS:-100}
+  VIDEO_MIN_FREE_SPACE_MB: ${VIDEO_MIN_FREE_SPACE_MB:-1024}
+  VIDEO_UPLOAD_REQUEST_TIMEOUT_MS: ${VIDEO_UPLOAD_REQUEST_TIMEOUT_MS:-1800000}
+  VIDEO_STORAGE_RESERVATION_TTL_SECONDS: ${VIDEO_STORAGE_RESERVATION_TTL_SECONDS:-604800}
+  VIDEO_WORKER_CONCURRENCY: ${VIDEO_WORKER_CONCURRENCY:-1}
+  VIDEO_JOB_ATTEMPTS: ${VIDEO_JOB_ATTEMPTS:-3}
+  VIDEO_JOB_TIMEOUT_MS: ${VIDEO_JOB_TIMEOUT_MS:-7200000}
+  VIDEO_CANCELLATION_POLL_MS: ${VIDEO_CANCELLATION_POLL_MS:-750}
+  VIDEO_GRACEFUL_SHUTDOWN_MS: ${VIDEO_GRACEFUL_SHUTDOWN_MS:-30000}
+  VIDEO_FFMPEG_PATH: ${VIDEO_FFMPEG_PATH:-ffmpeg}
+  VIDEO_FFPROBE_PATH: ${VIDEO_FFPROBE_PATH:-ffprobe}
+  VIDEO_FFMPEG_PRESET: ${VIDEO_FFMPEG_PRESET:-medium}
+  VIDEO_FFMPEG_CRF: ${VIDEO_FFMPEG_CRF:-23}
+  VIDEO_MAX_WIDTH: ${VIDEO_MAX_WIDTH:-1080}
+  VIDEO_MAX_HEIGHT: ${VIDEO_MAX_HEIGHT:-1920}
+  VIDEO_MAX_FPS: ${VIDEO_MAX_FPS:-30}
+  VIDEO_AUDIO_BITRATE_KBPS: ${VIDEO_AUDIO_BITRATE_KBPS:-128}
+  VIDEO_OUTPUT_TTL_SECONDS: ${VIDEO_OUTPUT_TTL_SECONDS:-86400}
+  VIDEO_STALE_INPUT_TTL_SECONDS: ${VIDEO_STALE_INPUT_TTL_SECONDS:-21600}
+  VIDEO_CLEANUP_INTERVAL_SECONDS: ${VIDEO_CLEANUP_INTERVAL_SECONDS:-900}
+
+services:
+  redis:
+    image: redis:8.2-alpine
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --maxmemory-policy
+      - noeviction
+      - --requirepass
+      - ${REDIS_PASSWORD:?Defina REDIS_PASSWORD nas variáveis de runtime}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Defina REDIS_PASSWORD nas variáveis de runtime}
+    networks:
+      - video-private
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - video-redis:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "--enable-source-maps", "dist/api.js"]
+    environment: *video-environment
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    cap_drop:
+      - ALL
+    networks:
+      - video-edge
+      - video-private
+    ports:
+      - "${PORT:-3003}:${PORT:-3003}"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 45s
+    tmpfs:
+      - /tmp:mode=1770,size=64m
+    volumes:
+      - video-storage:/var/lib/lectum-video
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch(`http://127.0.0.1:$${process.env.PORT}/health`).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "--enable-source-maps", "dist/worker.js"]
+    environment: *video-environment
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    cap_drop:
+      - ALL
+    networks:
+      - video-private
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 45s
+    tmpfs:
+      - /tmp:mode=1770,size=64m
+    volumes:
+      - video-storage:/var/lib/lectum-video
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch(`http://api:$${process.env.PORT}/ready`).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 15s
+      timeout: 8s
+      retries: 10
+
+volumes:
+  video-redis:
+  video-storage:
+
+networks:
+  video-edge:
+  video-private:
+    internal: true

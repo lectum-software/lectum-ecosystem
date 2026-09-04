@@ -20,7 +20,6 @@ import {
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { MentorBadge } from "@/components/community/mentor-badge";
-import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { getCommunityInitials as getInitials } from "@/utils/community-display";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
@@ -120,7 +119,6 @@ export const SavedReplyMedia = ({
   footer,
   mediaType,
   mediaUrl,
-  onOpenSocialVideoPreview,
   replyId,
   thumbnailUrl,
   title,
@@ -128,15 +126,11 @@ export const SavedReplyMedia = ({
   footer?: ReactNode;
   mediaType: string | null;
   mediaUrl: string | null;
-  onOpenSocialVideoPreview?: () => void;
   replyId: string;
   thumbnailUrl?: string | null;
   title: string;
 }) => {
   if (!mediaUrl) return null;
-
-  const canOpenSocialVideoPreview =
-    Boolean(onOpenSocialVideoPreview) && mediaType === "video" && Boolean(mediaUrl);
 
   return (
     <CommunityMediaBlock
@@ -147,15 +141,6 @@ export const SavedReplyMedia = ({
       footer={footer}
       mediaType={mediaType}
       mediaUrl={mediaUrl}
-      overlayAction={
-        canOpenSocialVideoPreview
-          ? {
-              ariaLabel: "Abrir prévia para redes sociais",
-              icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-              onClick: () => onOpenSocialVideoPreview?.(),
-            }
-          : undefined
-      }
       thumbnailUrl={thumbnailUrl}
       variant="reply"
     />
@@ -163,16 +148,12 @@ export const SavedReplyMedia = ({
 };
 
 export const SavedReplyCard = ({
-  currentUserId,
   item,
-  onOpenSocialVideoPreview,
   onRemove,
   onShare,
   removePending,
 }: {
-  currentUserId?: string | null;
   item: UserPostListItem;
-  onOpenSocialVideoPreview?: (post: PostListPost, replyId: string) => void;
   onRemove: (postId: string, replyId: string) => void;
   onShare: (post: PostListPost, replyId?: string) => void;
   removePending?: boolean;
@@ -227,13 +208,6 @@ export const SavedReplyCard = ({
   };
 
   const replyLink = savedReplyHref(item.post, reply.id);
-  const canOpenSocialVideoPreview =
-    Boolean(currentUserId) &&
-    reply.author.role === "psicologo" &&
-    reply.author.id === currentUserId &&
-    reply.media_type === "video" &&
-    Boolean(reply.media_url) &&
-    Boolean(onOpenSocialVideoPreview);
   const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
   const professionalWhatsappCta = hasProfessionalWhatsapp ? (
     <CommunityWhatsAppCta
@@ -305,11 +279,6 @@ export const SavedReplyCard = ({
           footer={reply.media_url ? professionalWhatsappCta : undefined}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
-          onOpenSocialVideoPreview={
-            canOpenSocialVideoPreview
-              ? () => onOpenSocialVideoPreview?.(item.post, reply.id)
-              : undefined
-          }
           replyId={reply.id}
           thumbnailUrl={reply.thumbnail_url}
           title={reply.title ?? "Mídia da resposta salva"}

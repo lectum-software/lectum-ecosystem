@@ -18,7 +18,7 @@ Regras:
 - se a migration falhar por dados/estado preexistente, pergunte antes de resetar o banco de desenvolvimento;
 - rode checks/builds;
 - marque critérios concluídos;
-- antes do novo commit, rode uma única vez `pnpm version:bump`, inclua os quatro manifests e valide `pnpm check:version`; não repita o bump ao tentar novamente o mesmo commit;
+- antes do novo commit, rode uma única vez `pnpm version:bump`, inclua os cinco manifests e valide `pnpm check:version`; não repita o bump ao tentar novamente o mesmo commit;
 - faça commit ao final;
 - quando o usuário pedir produção, use `gh` para criar/reutilizar PR `homolog` → `main`, aguardar checks, fazer merge sem excluir `homolog` e validar produção; nunca faça push direto em `main`.
 - registre impacto em dados existentes, envs, rollout e rollback; env obrigatória nova exige alerta explícito sem valor.

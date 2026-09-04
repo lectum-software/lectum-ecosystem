@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 170 tasks: `TASK-00` a `TASK-163`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 171 tasks: `TASK-00` a `TASK-164`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -257,10 +257,11 @@ ou cortesia manual.
 | 157 | [TASK-157 - Upload multipart do vídeo de apresentação](TASK-157-upload-multipart-video-apresentacao.md) | Completed | 03, 18A, 26, 146 |
 | 158 | [TASK-158 - Otimização client-side do vídeo de apresentação](TASK-158-otimizacao-video-apresentacao-mediabunny.md) | Completed | 18A, 146, 157 |
 | 159 | [TASK-159 - Preparação transversal de mídia antes dos uploads](TASK-159-preparacao-transversal-midia-uploads.md) | Completed | 26, 144, 157, 158 |
-| 160 | [TASK-160 - Limites em duas etapas para vídeos no Safari Photos](TASK-160-limites-video-safari-photos-opfs.md) | In Progress | 157, 158, 159 |
+| 160 | [TASK-160 - Limites em duas etapas para vídeos no Safari Photos](TASK-160-limites-video-safari-photos-opfs.md) | Superseded | 157, 158, 159 |
 | 161 | [TASK-161 - Loop circular dos videos da pagina de psicologos](TASK-161-loop-circular-videos-psicologos.md) | Completed | 13, 40, 75, 145 |
 | 162 | [TASK-162 - Corrigir bug visual do loop de videos de psicologos](TASK-162-corrigir-loop-videos-psicologos.md) | Completed | 13, 40, 75, 145, 161 |
 | 163 | [TASK-163 - Streaming privado de vídeos com Cloudflare Stream](TASK-163-streaming-privado-cloudflare-stream.md) | Completed | 03, 13, 15, 23, 24, 26, 29B, 157, 159 |
+| 164 | [TASK-164 - Serviço isolado de processamento de vídeos](TASK-164-servico-isolado-processamento-videos.md) | Completed | 42, 158, 159, 163 |
 
 ## Ordem operacional recomendada sem bloqueios
 

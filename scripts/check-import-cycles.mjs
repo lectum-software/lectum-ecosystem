@@ -8,7 +8,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const requireFromBackend = createRequire(path.join(repositoryRoot, "backend/package.json"));
 const ts = requireFromBackend("typescript");
 
-const applications = ["backend", "frontend", "admin"];
+const applications = ["backend", "frontend", "admin", "video"];
 const sourceExtensions = [".cjs", ".js", ".jsx", ".mjs", ".ts", ".tsx"];
 const ignoredSegments = new Set(["generated"]);
 
@@ -167,5 +167,5 @@ if (failures.length > 0) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log("[import-cycles] OK: backend, frontend e admin sem ciclos entre módulos locais.");
+  console.log("[import-cycles] OK: backend, frontend, admin e video sem ciclos entre módulos locais.");
 }

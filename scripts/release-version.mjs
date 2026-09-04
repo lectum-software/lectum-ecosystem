@@ -4,9 +4,9 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import {
+  assertAdvancedReleaseVersions,
   assertSynchronizedVersions,
   bumpPatchVersion,
-  compareReleaseVersions,
   RELEASE_PACKAGE_PATHS,
 } from "./release-version-policy.mjs";
 
@@ -39,6 +39,14 @@ const readGitManifest = (revision, manifestPath) => {
     return parseManifest(content, manifestPath);
   } catch {
     throw new Error(`Não foi possível ler ${manifestPath} em ${revision}.`);
+  }
+};
+
+const tryReadGitManifest = (revision, manifestPath) => {
+  try {
+    return readGitManifest(revision, manifestPath);
+  } catch {
+    return null;
   }
 };
 
@@ -76,32 +84,23 @@ const checkStagedVersions = () => {
       readGitManifest("", manifestPath),
     ]),
   );
-  const stagedVersion = assertSynchronizedVersions(versionsFromManifests(stagedManifests));
+  const headManifests = Object.fromEntries(
+    RELEASE_PACKAGE_PATHS.flatMap((manifestPath) => {
+      const manifest = tryReadGitManifest("HEAD", manifestPath);
+      return manifest ? [[manifestPath, manifest]] : [];
+    }),
+  );
+  const stagedVersion = assertAdvancedReleaseVersions({
+    headVersionsByPath: versionsFromManifests(headManifests),
+    stagedVersionsByPath: versionsFromManifests(stagedManifests),
+  });
 
-  let headManifests;
-  try {
-    headManifests = Object.fromEntries(
-      RELEASE_PACKAGE_PATHS.map((manifestPath) => [
-        manifestPath,
-        readGitManifest("HEAD", manifestPath),
-      ]),
-    );
-  } catch {
-    console.log(`[release-version] Commit inicial preparado com versão ${stagedVersion}.`);
-    return;
-  }
-
-  for (const manifestPath of RELEASE_PACKAGE_PATHS) {
-    const headVersion = headManifests[manifestPath].version;
-    const nextVersion = stagedManifests[manifestPath].version;
-    if (compareReleaseVersions(nextVersion, headVersion) <= 0) {
-      throw new Error(
-        `${manifestPath} deve subir acima de ${headVersion}. Execute \`pnpm version:bump\` e prepare os quatro manifests.`,
-      );
-    }
-  }
-
-  console.log(`[release-version] OK: commit preparado com versão ${stagedVersion}.`);
+  const additionCount = RELEASE_PACKAGE_PATHS.length - Object.keys(headManifests).length;
+  console.log(
+    `[release-version] OK: commit preparado com versão ${stagedVersion}${
+      additionCount > 0 ? ` e ${additionCount} novo(s) manifest(s)` : ""
+    }.`,
+  );
 };
 
 const command = process.argv[2];

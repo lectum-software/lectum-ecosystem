@@ -19,12 +19,12 @@ import { handleReq } from "@/api/handle";
 import { deleteVideoAsset } from "@/api/req/video-assets";
 import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 import { uploadFileMultipart } from "@/utils/multipart-upload";
-import { throwIfProfileVideoUploadCanceled } from "@/utils/profile-video-optimization";
 import {
   PROFILE_VIDEO_MULTIPART_THRESHOLD_BYTES,
   PROFILE_VIDEO_SIMPLE_LIMIT_MB,
   withProfileVideoFileType,
 } from "@/utils/profile-video-upload";
+import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { uploadVideoAsset } from "@/utils/video-asset-upload";
 import { isCloudflareStreamUploadEnabled, videoAssetIdFromReference } from "@/utils/video-stream";
 
@@ -71,7 +71,7 @@ const uploadPsychologistFreeProfileVideoSingle = async (
   onProgress?: (percentage: number) => void,
   signal?: AbortSignal,
 ) => {
-  throwIfProfileVideoUploadCanceled(signal);
+  throwIfMediaUploadCanceled(signal);
   const body = new FormData();
   const { file: uploadFile } = withProfileVideoFileType(file);
   body.append("video", uploadFile);
@@ -230,7 +230,7 @@ export const uploadPsychologistFreeProfileVideo = async (
   try {
     return await uploadPsychologistFreeProfileVideoMultipart(file, onProgress, signal);
   } catch (uploadError) {
-    throwIfProfileVideoUploadCanceled(signal);
+    throwIfMediaUploadCanceled(signal);
     const status = getApiErrorStatus(uploadError);
     const legacyLimitBytes = PROFILE_VIDEO_SIMPLE_LIMIT_MB * 1024 * 1024;
     if ((status === 404 || status === 405) && file.size <= legacyLimitBytes) {

@@ -20,9 +20,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
-import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
-import { scheduleLectumShareArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
@@ -52,7 +50,6 @@ import {
   useReplyMediaPermission,
 } from "../modules/reply-support";
 import type { ReplyComposerForm } from "../use-form";
-import { usePostDetailSocialVideoPreview } from "./social-video-preview";
 
 export const usePostDetailController = ({
   initialFocusReplyId = null,
@@ -107,13 +104,12 @@ export const usePostDetailController = ({
   );
   const voteMutation = useVotePost(postId);
   const saveMutation = useSavePost(postId);
-  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
+  const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ?? "post");
       window.setTimeout(() => setShareFeedback(null), 2400);
     },
   });
-  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyPublishError(error)),
@@ -315,15 +311,6 @@ export const usePostDetailController = ({
     );
   };
 
-  const { openPostSocialVideoPreview, openReplySocialVideoPreview } =
-    usePostDetailSocialVideoPreview({
-      currentUserId,
-      isPsychologistUser,
-      openLectumDownloadDialog,
-      post,
-      replies,
-    });
-
   const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
     inlineReplyHasDraftRef.current = hasDraft;
   }, []);
@@ -491,14 +478,6 @@ export const usePostDetailController = ({
       values,
       videoUploadOperation,
     });
-    const parentReply = findPostReplyInTree(replies, createdReply.parent_reply_id);
-    scheduleLectumShareArtifactPrewarm(
-      createLectumShareVideoTarget(post, createdReply, {
-        parentContent: parentReply?.content ?? null,
-      }),
-      { authenticated: Boolean(currentUserId && mediaFile) },
-    );
-
     resetReplyFocusHighlight();
     setActiveFocusReplyId(createdReply.id);
     setFocusLookupReplyId(createdReply.id);
@@ -663,10 +642,7 @@ export const usePostDetailController = ({
     isLoadingMoreReplies,
     isMobile,
     loadMoreRepliesRef,
-    lectumDownloadDialog,
     mediaPermission,
-    openPostSocialVideoPreview,
-    openReplySocialVideoPreview,
     post,
     postError,
     postQuery,
@@ -685,7 +661,6 @@ export const usePostDetailController = ({
     setReportTarget,
     setReplyError,
     setShowPsychologistReplyTip,
-    shareDestinationDialog,
     shareFeedback,
     sharePost,
     shareReply,

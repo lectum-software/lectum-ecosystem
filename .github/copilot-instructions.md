@@ -18,11 +18,11 @@ Hard rules:
 - For visual work, use `_product/tasks/PROTO-INVENTORY.md`.
 - Use Builder/Quick Copy when available in the client; otherwise use exported `_product/proto` images and register the tool limitation.
 - Before closing a task, mark acceptance criteria, create/update ADRs, run checks/builds, and commit.
-- Before every new agent-created commit, run `pnpm version:bump` exactly once, include all four synchronized package manifests, and run `pnpm check:version`. A retry of the same failed commit must not bump again.
-- Verify published versions through backend `/ping` and frontend/admin `/version`; `/version` stays public, uncached, noindex, and unlinked.
+- Before every new agent-created commit, run `pnpm version:bump` exactly once, include all five synchronized package manifests, and run `pnpm check:version`. A retry of the same failed commit must not bump again.
+- Verify published versions through backend `/ping` and frontend/admin/video `/version`; `/version` stays public, uncached, noindex, and unlinked.
 - If a task changes `backend/prisma/schema.prisma` or `backend/prisma/migrations`, run `pnpm --dir backend db:migrate` during execution.
 - If `prisma migrate dev` fails because of existing development data/state, ask the user before resetting the database or running destructive commands.
-- Treat `backend/`, `frontend/`, and `admin/` as separate apps that share this repository only for development.
+- Treat `backend/`, `frontend/`, `admin/`, and `video/` as separate apps that share this repository only for development.
 
 Validation baseline:
 
@@ -31,3 +31,4 @@ Validation baseline:
 - Backend database changes: `pnpm --dir backend db:migrate`
 - Frontend: `pnpm --dir frontend check`
 - Admin: `pnpm --dir admin check`
+- Video: `pnpm --dir video check`

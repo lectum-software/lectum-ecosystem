@@ -308,35 +308,6 @@ export type PostShareArtifactResponse = {
   size_bytes: number | null;
 };
 
-export type PostShareRenderProfessionalDTO = {
-  name: string;
-  roleLabel: "Psicóloga" | "Psicólogo";
-  verified: boolean;
-};
-
-export type PostShareRenderTargetDTO = {
-  cardLabel: "Postado na Lectum" | "Respondido na Lectum";
-  mediaUrl: string;
-  postId: string;
-  professional: PostShareRenderProfessionalDTO;
-  replyId: string | null;
-  responseText: string | null;
-  shareTitle: string;
-  sourceText: string;
-};
-
-export type PostShareRenderJobStatus = "completed" | "expired" | "failed" | "processing";
-
-export type PostShareRenderJobResponse = {
-  created_at: Date;
-  expires_at: Date;
-  job_id: string;
-  ready: boolean;
-  retry_after_ms: number;
-  size_bytes: number | null;
-  status: PostShareRenderJobStatus;
-};
-
 export type PostReplyDeleteResponse = {
   post_id: string;
   reply_ids: string[];

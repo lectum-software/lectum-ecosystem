@@ -1,4 +1,3 @@
-import api from "@/api";
 import { getApiErrorStatus } from "@/api/errors";
 import { callEndpoint } from "@/api/generator";
 import type {
@@ -21,7 +20,6 @@ import type {
   PostReportResponse,
   PostSaveResponse,
   PostSharePayload,
-  PostShareRenderJobResponse,
   PostShareResponse,
   PostUpdateResponse,
   PostVotePayload,
@@ -42,53 +40,8 @@ import { withReplyMediaFileType } from "./reply-media-file";
 import { uploadReplyVideoToStreamWhenEnabled } from "./reply-stream-upload";
 
 const REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
-const SHARE_VIDEO_RENDER_DIRECT_TIMEOUT_MS = 20_000;
-const SHARE_VIDEO_RENDER_JOB_FILE_TIMEOUT_MS = 60_000;
-const SHARE_VIDEO_RENDER_JOB_START_TIMEOUT_MS = 20_000;
-const SHARE_VIDEO_RENDER_JOB_STATUS_TIMEOUT_MS = 15_000;
 const shouldUseMultipartReplyUpload = (file: File) =>
   file.size > REPLY_MEDIA_MULTIPART_THRESHOLD_BYTES;
-
-type RenderPostShareVideoArtifactInput = {
-  fileName: string;
-  postId: string;
-  replyId?: string | null;
-  signal?: AbortSignal;
-  timeoutMs?: number;
-};
-
-type PostShareVideoArtifactRenderJobInput = {
-  jobId?: string;
-  postId: string;
-  replyId?: string | null;
-  signal?: AbortSignal;
-  timeoutMs?: number;
-};
-
-const requestShareRenderBlobFile = async (
-  handle: ReturnType<typeof callEndpoint>,
-  fileName: string,
-) => {
-  const response = await api.request<Blob>({
-    ...handle.config,
-    data: undefined,
-    headers: { Accept: "video/mp4" },
-    method: handle.method,
-    responseType: "blob",
-    url: handle.url,
-  });
-  const blob = response.data;
-
-  if (!blob || blob.size === 0) {
-    throw new Error("Video indisponivel para download.");
-  }
-
-  const contentType =
-    String(response.headers["content-type"] || blob.type || "video/mp4").split(";", 1)[0] ||
-    "video/mp4";
-
-  return new File([blob], fileName || "lectum-video.mp4", { type: contentType });
-};
 
 export const getMyPosts = async (query: UserPostsQuery = {}) => {
   const handle = callEndpoint({
@@ -136,98 +89,6 @@ export const getPostReplyThread = async (id: string, replyId: string) => {
   const reply = await handleReq<PostReply>(handle);
 
   return { reply } satisfies PostReplyThreadResponse;
-};
-
-export const renderPostShareVideoArtifact = async ({
-  fileName,
-  postId,
-  replyId,
-  signal,
-  timeoutMs,
-}: RenderPostShareVideoArtifactInput) => {
-  const handle = callEndpoint({
-    route: replyId
-      ? "/api/private/posts/:id/replies/:replyId/share-artifact/render"
-      : "/api/private/posts/:id/share-artifact/render",
-    method: "POST",
-    params: { id: postId, replyId },
-    config: {
-      signal,
-      timeout: timeoutMs ?? SHARE_VIDEO_RENDER_DIRECT_TIMEOUT_MS,
-    },
-  });
-
-  return requestShareRenderBlobFile(handle, fileName);
-};
-
-export const startPostShareVideoArtifactRenderJob = async ({
-  postId,
-  replyId,
-  signal,
-  timeoutMs,
-}: PostShareVideoArtifactRenderJobInput) => {
-  const handle = callEndpoint({
-    route: replyId
-      ? "/api/private/posts/:id/replies/:replyId/share-artifact/render-jobs"
-      : "/api/private/posts/:id/share-artifact/render-jobs",
-    method: "POST",
-    params: { id: postId, replyId },
-    config: {
-      signal,
-      timeout: timeoutMs ?? SHARE_VIDEO_RENDER_JOB_START_TIMEOUT_MS,
-    },
-  });
-
-  return handleReq<PostShareRenderJobResponse>({
-    ...handle,
-    hideError: true,
-  });
-};
-
-export const getPostShareVideoArtifactRenderJob = async ({
-  jobId,
-  postId,
-  replyId,
-  signal,
-  timeoutMs,
-}: PostShareVideoArtifactRenderJobInput & { jobId: string }) => {
-  const handle = callEndpoint({
-    route: replyId
-      ? "/api/private/posts/:id/replies/:replyId/share-artifact/render-jobs/:jobId"
-      : "/api/private/posts/:id/share-artifact/render-jobs/:jobId",
-    params: { id: postId, jobId, replyId },
-    config: {
-      signal,
-      timeout: timeoutMs ?? SHARE_VIDEO_RENDER_JOB_STATUS_TIMEOUT_MS,
-    },
-  });
-
-  return handleReq<PostShareRenderJobResponse>({
-    ...handle,
-    hideError: true,
-  });
-};
-
-export const downloadPostShareVideoArtifactRenderJobFile = async ({
-  fileName,
-  jobId,
-  postId,
-  replyId,
-  signal,
-  timeoutMs,
-}: RenderPostShareVideoArtifactInput & { jobId: string }) => {
-  const handle = callEndpoint({
-    route: replyId
-      ? "/api/private/posts/:id/replies/:replyId/share-artifact/render-jobs/:jobId/file"
-      : "/api/private/posts/:id/share-artifact/render-jobs/:jobId/file",
-    params: { id: postId, jobId, replyId },
-    config: {
-      signal,
-      timeout: timeoutMs ?? SHARE_VIDEO_RENDER_JOB_FILE_TIMEOUT_MS,
-    },
-  });
-
-  return requestShareRenderBlobFile(handle, fileName);
 };
 
 export const createPostReply = async (id: string, body: CreatePostReplyPayload) => {

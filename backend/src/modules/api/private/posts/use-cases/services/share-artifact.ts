@@ -53,5 +53,6 @@ export const uploadShareArtifact = async (data: IPostUploadShareArtifactDTO) => 
   };
 };
 
+// Mantidos durante o rollout para expirar com segurança objetos criados por versões anteriores.
 export const deleteExpiredShareArtifactObject = deleteShareArtifactObject;
 export const isShareArtifactKey = isShareArtifactStorageKey;

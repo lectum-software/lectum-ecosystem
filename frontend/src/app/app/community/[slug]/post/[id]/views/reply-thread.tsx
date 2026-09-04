@@ -21,16 +21,12 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
-import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
 import { DEFAULT_COMMUNITY_FEED_HREF } from "@/utils/community";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
-import { scheduleLectumShareArtifactPrewarm } from "@/utils/lectum-share-artifact-cache";
 import {
   createLectumShareLinkTarget,
-  createLectumSharePostVideoDownloadTarget,
-  createLectumShareVideoDownloadTarget,
   createLectumShareVideoTarget,
   findPostReplyInTree,
 } from "@/utils/lectum-share-target";
@@ -71,7 +67,6 @@ export const PostReplyThreadLogic = ({
   const isMobile = useIsPostDetailMobile();
   const currentUser = useAppSelector((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
-  const isPsychologistUser = currentUser?.role === "psicologo";
   const conversion = useProgressiveConversion();
   const [activeFocusReplyId, setActiveFocusReplyId] = useState<string | null>(null);
   const [composerFocusReplyId, setComposerFocusReplyId] = useState<string | null>(null);
@@ -91,7 +86,7 @@ export const PostReplyThreadLogic = ({
   const postQuery = usePostDetail(postId);
   const threadQuery = usePostReplyThread(postId, replyId, Boolean(postId && replyId));
   const voteMutation = useVotePost(postId);
-  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
+  const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       if (!target.replyId) return;
 
@@ -99,7 +94,6 @@ export const PostReplyThreadLogic = ({
       window.setTimeout(() => setShareFeedback(null), 2400);
     },
   });
-  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const createReplyMutation = useCreatePostReply({
     onSuccess: () => setReplyError(null),
     onError: (error) => setReplyError(resolveReplyPublishError(error)),
@@ -172,28 +166,6 @@ export const PostReplyThreadLogic = ({
       }),
     );
   };
-
-  const openPostSocialVideoPreview = useCallback(() => {
-    if (!post || typeof window === "undefined") return;
-    if (!isPsychologistUser || post.author.id !== currentUserId) return;
-
-    const socialTarget = createLectumSharePostVideoDownloadTarget(post);
-    if (socialTarget) openLectumDownloadDialog(socialTarget);
-  }, [currentUserId, isPsychologistUser, openLectumDownloadDialog, post]);
-
-  const openReplySocialVideoPreview = useCallback(
-    (reply: PostReply) => {
-      if (!post || !rootReply || typeof window === "undefined") return;
-      if (!isPsychologistUser || reply.author.id !== currentUserId) return;
-
-      const parentReply = findPostReplyInTree([rootReply], reply.parent_reply_id);
-      const socialTarget = createLectumShareVideoDownloadTarget(post, reply, {
-        parentContent: parentReply?.content ?? null,
-      });
-      if (socialTarget) openLectumDownloadDialog(socialTarget);
-    },
-    [currentUserId, isPsychologistUser, openLectumDownloadDialog, post, rootReply],
-  );
 
   const setInlineReplyDraftState = useCallback((hasDraft: boolean) => {
     inlineReplyHasDraftRef.current = hasDraft;
@@ -313,16 +285,6 @@ export const PostReplyThreadLogic = ({
       values,
       videoUploadOperation,
     });
-    const parentReply = rootReply
-      ? findPostReplyInTree([rootReply], createdReply.parent_reply_id)
-      : null;
-    scheduleLectumShareArtifactPrewarm(
-      createLectumShareVideoTarget(post, createdReply, {
-        parentContent: parentReply?.content ?? null,
-      }),
-      { authenticated: Boolean(currentUserId && mediaFile) },
-    );
-
     resetReplyFocusHighlight();
     setActiveFocusReplyId(createdReply.id);
 
@@ -459,10 +421,7 @@ export const PostReplyThreadLogic = ({
 
         {post && rootReply ? (
           <div className="grid gap-4 px-5 pt-4 pb-36 sm:px-0 sm:pb-6">
-            <ThreadOriginalPostCard
-              onOpenSocialVideoPreview={openPostSocialVideoPreview}
-              post={post}
-            />
+            <ThreadOriginalPostCard post={post} />
 
             {shareFeedback ? (
               <InlineAlert title="Link preparado" variant="success">
@@ -495,7 +454,6 @@ export const PostReplyThreadLogic = ({
                 setReportError(null);
                 setReportTarget({ reply, type: "reply" });
               }}
-              onOpenSocialVideoPreview={openReplySocialVideoPreview}
               onShare={shareReply}
               onSubmitReply={(values, parentReplyId, mediaFile, videoUploadOperation) =>
                 submitReply(values, parentReplyId, mediaFile, videoUploadOperation)
@@ -559,9 +517,6 @@ export const PostReplyThreadLogic = ({
           </div>
         ) : null}
       </section>
-
-      {shareDestinationDialog}
-      {lectumDownloadDialog}
     </PrivateTemplate>
   );
 };

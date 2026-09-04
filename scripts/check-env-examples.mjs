@@ -35,6 +35,11 @@ const applicationDefinitions = [
     name: "admin",
     roots: ["admin"],
   },
+  {
+    example: "video/.env.example",
+    name: "video",
+    roots: ["video"],
+  },
 ];
 
 const walk = async (entryPath) => {

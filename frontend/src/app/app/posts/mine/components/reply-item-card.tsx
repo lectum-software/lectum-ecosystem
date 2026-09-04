@@ -13,7 +13,6 @@ import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
-import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { cn } from "@/lib/utils";
 import { formatCommunityRelativeTime as formatRelativeTime } from "@/utils/community-display";
 
@@ -27,18 +26,14 @@ import { ProfessionalAnsweredBadge } from "./header";
 
 export const ReplyItemCard = ({
   interactionCopy,
-  currentUserId,
   item,
   onChanged,
-  onDownloadVideo,
   onShare,
   showProfessionalAnsweredBadge,
 }: {
   interactionCopy: InteractionCopy;
-  currentUserId?: string | null;
   item: UserPostListItem;
   onChanged?: () => void;
-  onDownloadVideo?: (post: PostListPost, replyId: string) => void;
   onShare: (post: PostListPost, replyId: string) => void;
   showProfessionalAnsweredBadge: boolean;
 }) => {
@@ -66,13 +61,6 @@ export const ReplyItemCard = ({
   const hasVerifiedProfessionalReply =
     showProfessionalAnsweredBadge && Boolean(reply.has_verified_professional_reply);
   const isPsychologistReply = reply.author.role === "psicologo";
-  const canDownloadVideo =
-    isPsychologistReply &&
-    Boolean(currentUserId) &&
-    reply.author.id === currentUserId &&
-    reply.media_type === "video" &&
-    Boolean(reply.media_url) &&
-    Boolean(onDownloadVideo);
   const voteState =
     voteOverride?.replyId === reply.id
       ? voteOverride
@@ -262,15 +250,6 @@ export const ReplyItemCard = ({
             className={cn(hasReplyText ? "mt-1" : undefined)}
             mediaType={reply.media_type}
             mediaUrl={reply.media_url}
-            overlayAction={
-              canDownloadVideo
-                ? {
-                    ariaLabel: "Abrir prévia para redes sociais",
-                    icon: <InstagramIcon className="h-5 w-5" aria-hidden="true" />,
-                    onClick: () => onDownloadVideo?.(item.post, reply.id),
-                  }
-                : undefined
-            }
             roundedClassName="rounded-[18px]"
             thumbnailUrl={reply.thumbnail_url}
             variant="reply"

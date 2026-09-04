@@ -18,9 +18,7 @@ import { useProgressiveConversion } from "@/components/conversion/progressive-co
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
-import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDialog } from "@/hooks/use-lectum-share-dialog";
-import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { PrivateTemplate } from "@/templates/private";
@@ -33,8 +31,6 @@ import {
 import {
   createLectumShareLinkTarget,
   createLectumSharePostMediaTarget,
-  createLectumSharePostVideoDownloadTarget,
-  createLectumShareVideoDownloadTarget,
 } from "@/utils/lectum-share-target";
 import { FeedCommunitySelect, FeedSearchMenu, FilterMenu } from "../components/feed-controls";
 import { InfinitePostLoader, PostCard } from "../components/post-card";
@@ -53,7 +49,6 @@ export const CommunityFeedLogic = ({
   const params = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
   const conversion = useProgressiveConversion();
-  const currentUser = useAppSelector((state) => state.user);
   const routeSlug = typeof params.slug === "string" ? params.slug : COMMUNITY_FEED_SLUG;
   const communityFromQuery = getCommunityFeedChip(searchParams.get("community"));
   const communityFromLegacySlug =
@@ -69,7 +64,6 @@ export const CommunityFeedLogic = ({
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
-  const currentPsychologistUserId = currentUser?.role === "psicologo" ? currentUser.id : null;
   const createPostHref = selectedCommunitySlug
     ? `${COMMUNITY_CREATE_POST_HREF}?community=${encodeURIComponent(selectedCommunitySlug)}`
     : COMMUNITY_CREATE_POST_HREF;
@@ -83,13 +77,12 @@ export const CommunityFeedLogic = ({
     [deferredSearch, scope, selectedCommunitySlug],
   );
   const feed = useInfiniteCommunityFeedPosts(query);
-  const { shareDestinationDialog, shareLectumTarget } = useLectumShareDialog({
+  const { shareLectumTarget } = useLectumShareDialog({
     onShared: (target) => {
       setShareFeedback(target.replyId ?? target.postId);
       window.setTimeout(() => setShareFeedback(null), 2400);
     },
   });
-  const { lectumDownloadDialog, openLectumDownloadDialog } = useLectumShareDownloadDialog();
   const posts = useMemo(() => flattenCommunityPostPages(feed.data?.pages), [feed.data?.pages]);
   const errorMessage = feed.isError ? resolveFeedError(feed.error) : null;
   const firstFeedPage = feed.data?.pages[0];
@@ -181,34 +174,6 @@ export const CommunityFeedLogic = ({
     const socialTarget = createLectumSharePostMediaTarget(post);
     await shareLectumTarget(socialTarget ?? createLectumShareLinkTarget(post));
   };
-
-  const openSocialVideoPreview = useCallback(
-    (post: CommunityPost, replyId?: string | null) => {
-      if (typeof window === "undefined") return;
-      if (!currentPsychologistUserId) return;
-
-      if (replyId) {
-        const replyTarget =
-          post.highlighted_professional_reply?.id === replyId
-            ? post.highlighted_professional_reply
-            : null;
-
-        if (!replyTarget || replyTarget.author.id !== currentPsychologistUserId) return;
-
-        const socialTarget = createLectumShareVideoDownloadTarget(post, replyTarget, {
-          parentContent: replyTarget.parent_content ?? null,
-        });
-        if (socialTarget) openLectumDownloadDialog(socialTarget);
-        return;
-      }
-
-      if (post.author.id !== currentPsychologistUserId) return;
-
-      const socialTarget = createLectumSharePostVideoDownloadTarget(post);
-      if (socialTarget) openLectumDownloadDialog(socialTarget);
-    },
-    [currentPsychologistUserId, openLectumDownloadDialog],
-  );
 
   return (
     <PrivateTemplate
@@ -302,12 +267,7 @@ export const CommunityFeedLogic = ({
         {posts.length > 0 ? (
           <div className="grid gap-4">
             {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                onOpenSocialVideoPreview={openSocialVideoPreview}
-                onShare={sharePost}
-                post={post}
-              />
+              <PostCard key={post.id} onShare={sharePost} post={post} />
             ))}
           </div>
         ) : null}
@@ -353,9 +313,6 @@ export const CommunityFeedLogic = ({
           onCloseComplete={() => setCreatePostModalOpen(false)}
         />
       ) : null}
-
-      {shareDestinationDialog}
-      {lectumDownloadDialog}
 
       <style>{`
         @keyframes lectum-desktop-create-float {
