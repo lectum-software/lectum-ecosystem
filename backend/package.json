@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "Lectum backend",
   "main": "dist/index.js",
-  "version": "0.1.274",
+  "version": "0.1.275",
   "packageManager": "pnpm@10.33.0",
   "private": true,
   "prisma": {
@@ -26,6 +26,7 @@
     "gen:vapid": "npx web-push generate-vapid-keys",
     "admin:bootstrap": "tsx src/operations/admin/bootstrap-admin.ts",
     "subscription:grant": "tsx src/operations/subscriptions/grant-professional-subscription.ts",
+    "video:check-processing-service": "node --enable-source-maps dist/operations/video-processing/check-video-processing-service.js",
     "video:migrate-r2-to-stream": "node --enable-source-maps dist/operations/video-assets/migrate-r2-to-stream.js",
     "test": "node --import tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.mjs\""
   },

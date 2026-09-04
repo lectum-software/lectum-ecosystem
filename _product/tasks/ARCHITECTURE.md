@@ -413,6 +413,12 @@ Templates/shells devem viver em `frontend/src/templates`.
   Bearer interno, suporta Range único e nunca usa `express.static`.
 - Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
   limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
+- O backend acessa essa aplicação somente por cliente server-to-server, usando origem IP privada
+  configurada e Bearer exclusivo de runtime. Redirects são recusados para impedir encaminhamento
+  da credencial, respostas operacionais têm tamanho/contrato limitados e a URL nunca vai ao browser.
+- A conectividade autenticada é validada por operação compilada sem criar jobs. Enquanto nenhum
+  fluxo de produto depender do serviço, ele não participa do boot nem do `/ready` do backend;
+  indisponibilidade de processamento offline não pode derrubar login, feed ou playback Stream.
 - `pnpm --dir video check` e `pnpm --dir video build` são obrigatórios quando a aplicação mudar.
 
 ## Anti-recriação
