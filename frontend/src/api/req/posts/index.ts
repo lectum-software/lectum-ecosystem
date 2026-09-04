@@ -36,6 +36,8 @@ import {
   MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS,
   throwIfMediaUploadCanceled,
 } from "@/utils/upload-lifecycle";
+import { isVideoAssetUploadProvisionError } from "@/utils/video-asset-upload";
+import { shouldFallbackToLegacyVideoUploadAfterProvisionError } from "@/utils/video-stream";
 import { withReplyMediaFileType } from "./reply-media-file";
 import { uploadReplyVideoToStreamWhenEnabled } from "./reply-stream-upload";
 
@@ -315,31 +317,43 @@ export const uploadPostReplyMedia = async (
   signal?: AbortSignal,
 ) => {
   const { file: uploadFile, mimeType } = withReplyMediaFileType(file);
-  const streamUpload = await uploadReplyVideoToStreamWhenEnabled({
-    file: uploadFile,
-    mimeType,
-    onProgress,
-    postId: id,
-    signal,
-  });
-  if (streamUpload) return streamUpload;
+  try {
+    const streamUpload = await uploadReplyVideoToStreamWhenEnabled({
+      file: uploadFile,
+      mimeType,
+      onProgress,
+      postId: id,
+      signal,
+    });
+    if (streamUpload) return streamUpload;
+  } catch (streamError) {
+    throwIfMediaUploadCanceled(signal);
+    if (
+      !shouldFallbackToLegacyVideoUploadAfterProvisionError({
+        isProvisionError: isVideoAssetUploadProvisionError(streamError),
+        status: getApiErrorStatus(streamError),
+      })
+    ) {
+      throw streamError;
+    }
+  }
 
-  if (shouldUseMultipartReplyUpload(file)) {
+  if (shouldUseMultipartReplyUpload(uploadFile)) {
     try {
-      return await uploadPostReplyMediaMultipart(id, file, onProgress, signal);
+      return await uploadPostReplyMediaMultipart(id, uploadFile, onProgress, signal);
     } catch (error) {
       throwIfMediaUploadCanceled(signal);
       const status = getApiErrorStatus(error);
 
       if (status === 404 || status === 405) {
-        return uploadPostReplyMediaSingle(id, file, onProgress, signal);
+        return uploadPostReplyMediaSingle(id, uploadFile, onProgress, signal);
       }
 
       throw error;
     }
   }
 
-  return uploadPostReplyMediaSingle(id, file, onProgress, signal);
+  return uploadPostReplyMediaSingle(id, uploadFile, onProgress, signal);
 };
 
 export const reportPost = async (id: string, body: PostReportPayload) => {

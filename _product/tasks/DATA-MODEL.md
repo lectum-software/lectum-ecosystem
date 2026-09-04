@@ -246,9 +246,9 @@ Complemento TASK-171: se a provisão inicial do Stream para `profile_presentatio
 indisponível antes de qualquer upload TUS, a troca do vídeo de apresentação pode usar
 temporariamente o caminho legado multipart/R2 da TASK-157. Nesse caso `video_url` volta a armazenar
 uma URL pública R2 legada já suportada por leitura/limpeza/migração; a exceção não cria novo schema,
-não vale para posts/respostas e não mascara validação, autenticação, autorização ou limite de
-arquivo. Uploads Stream que já começaram ou chegaram ao processamento não caem para R2 para evitar
-dois candidatos concorrentes de vídeo.
+não mascara validação, autenticação, autorização ou limite de arquivo, e segue a mesma fronteira
+operacional estendida a posts/respostas na TASK-173. Uploads Stream que já começaram ou chegaram ao
+processamento não caem para R2 para evitar dois candidatos concorrentes de vídeo.
 
 Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `crp_status="aprovado"` ou `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
 
@@ -688,6 +688,14 @@ vídeo único usa upload TUS direto e `community_post.media_url` recebe a refer�
 `video_asset` pronto, do autor e do contexto da comunidade; `thumbnail_url=null`, pois a capa
 assinada é derivada no playback. O backend continua aceitando as URLs R2 legadas durante o rollout.
 
+Complemento TASK-173: se a provisão inicial do Stream para `community_post` estiver indisponível
+antes de qualquer upload TUS, a criação/edição de post pode usar temporariamente o upload legado
+multipart/R2 já existente. Nesse caso `community_post.media_url` volta a armazenar uma URL pública
+R2 válida de `/public/files/posts/media/` e `thumbnail_url` pode receber a miniatura gerada no
+navegador. A exceção não cria schema, endpoint, provider ou bucket novo, não mascara validação,
+autenticação, autorização ou limite de arquivo, e não vale para falhas depois que o upload TUS já
+começou.
+
 Complemento 2026-06-21: na comunidade, `author.verified` para psicologos considera `cfp_verified_at` preenchido **ou** cortesia administrativa ativa (`professional_subscription.source="admin_grant"` com entitlement profissional ativo). A URL derivada `author.whatsapp_url` deve ser exposta para posts e respostas de qualquer psicologo com WhatsApp publico cadastrado, inclusive no plano gratuito, sem depender de selo ou assinatura profissional. `highlighted_professional_reply` e flags como `has_verified_professional_reply` passam a tratar cortesia administrativa ativa como equivalencia publica de psicologo verificado.
 
 Complemento 2026-07-26: posts raiz de pacientes classificados como `block` ou `safety_hold` pela moderacao textual deterministica passam a ser persistidos como `community_post.status="bloqueado"` para auditoria e detalhe protegido no Admin. Esses registros nao entram nos endpoints publicos/privados de feed/detalhe, nao geram notificacao de nova postagem e nao devem receber interacoes publicas. Respostas/comentarios bloqueados continuam snapshot-only em `content_moderation_event` ate existir status proprio em `post_reply`.
@@ -729,6 +737,14 @@ Complemento TASK-163: novos vídeos de resposta podem usar referência interna d
 é emitida de forma assinada no playback e não é persistida em `thumbnail_url`; objetos R2 antigos
 seguem aceitos. Remover o conteúdo e remover o ativo são operações separadas para não apagar um
 vídeo ainda associado por engano.
+
+Complemento TASK-173: se a provisão inicial do Stream para `community_reply` estiver indisponível
+antes de qualquer upload TUS, comentários/respostas com vídeo podem usar temporariamente o upload
+legado single/multipart em R2. Nesse caso `post_reply.media_url` volta a armazenar uma URL pública
+R2 válida de `/public/files/posts/media/` e `thumbnail_url` pode receber a miniatura gerada no
+navegador. A exceção não cria schema, endpoint, provider ou bucket novo, não mascara validação,
+autenticação, autorização ou limite de arquivo, e não vale para falhas depois que o upload TUS já
+começou.
 
 Complemento 2026-07-01: autoações autenticadas do autor sobre o próprio `community_post` ou
 `post_reply` (comentar no próprio post/comentário, upvote ativo, salvamento ou compartilhamento do

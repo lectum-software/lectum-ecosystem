@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   isVideoAssetReference,
   isVideoPlaybackFresh,
@@ -7,10 +10,14 @@ import {
   shouldCleanupVideoAssetAfterFailure,
   shouldFallbackToLegacyVideoPlayback,
   shouldFallbackToLegacyVideoUpload,
+  shouldFallbackToLegacyVideoUploadAfterProvisionError,
   TUS_CHUNK_SIZE_BYTES,
   videoAssetIdFromReference,
   videoAssetPlaybackApiPaths,
 } from "./video-stream.ts";
+
+const readSource = (...segments) =>
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), ...segments), "utf8");
 
 describe("Cloudflare Stream frontend contract", () => {
   it("reconhece somente a referência interna estável", () => {
@@ -55,6 +62,55 @@ describe("Cloudflare Stream frontend contract", () => {
     assert.equal(shouldFallbackToLegacyVideoUpload({ status: 403 }), false);
     assert.equal(shouldFallbackToLegacyVideoUpload({ status: 413 }), false);
     assert.equal(shouldFallbackToLegacyVideoUpload({ status: 422 }), false);
+  });
+
+  it("restringe fallback legado a erro de provisao antes do envio TUS", () => {
+    assert.equal(
+      shouldFallbackToLegacyVideoUploadAfterProvisionError({
+        isProvisionError: true,
+      }),
+      true,
+    );
+    assert.equal(
+      shouldFallbackToLegacyVideoUploadAfterProvisionError({
+        isProvisionError: true,
+        status: 503,
+      }),
+      true,
+    );
+
+    assert.equal(
+      shouldFallbackToLegacyVideoUploadAfterProvisionError({
+        isProvisionError: false,
+        status: 503,
+      }),
+      false,
+    );
+    assert.equal(
+      shouldFallbackToLegacyVideoUploadAfterProvisionError({
+        isProvisionError: true,
+        status: 413,
+      }),
+      false,
+    );
+  });
+
+  it("posts e respostas preservam upload de video quando a provisao Stream falha", () => {
+    const communitySource = readSource("../api/req/community/index.ts");
+    const postsSource = readSource("../api/req/posts/index.ts");
+
+    assert.match(communitySource, /catch \(streamError\)/);
+    assert.match(communitySource, /isVideoAssetUploadProvisionError\(streamError\)/);
+    assert.match(communitySource, /shouldFallbackToLegacyVideoUploadAfterProvisionError/);
+    assert.match(communitySource, /uploadCommunityPostMediaSingle\(slug, uploadFile/);
+    assert.match(communitySource, /uploadCommunityPostMediaMultipart\(slug, uploadFile/);
+
+    assert.match(postsSource, /catch \(streamError\)/);
+    assert.match(postsSource, /isVideoAssetUploadProvisionError\(streamError\)/);
+    assert.match(postsSource, /shouldFallbackToLegacyVideoUploadAfterProvisionError/);
+    assert.match(postsSource, /shouldUseMultipartReplyUpload\(uploadFile\)/);
+    assert.match(postsSource, /uploadPostReplyMediaSingle\(id, uploadFile/);
+    assert.match(postsSource, /uploadPostReplyMediaMultipart\(id, uploadFile/);
   });
 
   it("seleciona HLS nativo no Safari e HLS.js em navegadores MSE", () => {

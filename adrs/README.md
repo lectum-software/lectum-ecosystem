@@ -519,3 +519,4 @@ Formato recomendado:
 - [ADR-0486 — Restauração instantânea do feed de vídeos de psicólogos](0486-retorno-instantaneo-feed-videos-psicologos.md)
 - [ADR-0487 — Fallback restrito na provisão do vídeo de apresentação](0487-troca-video-apresentacao-fallback-provisao-stream.md)
 - [ADR-0488 — Vídeo expandido em portal acima do feed](0488-video-expandido-portal-sobre-feed.md)
+- [ADR-0489 — Fallback restrito na provisão de vídeos de posts e respostas](0489-upload-video-posts-respostas-fallback-provisao-stream.md)

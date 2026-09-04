@@ -47,6 +47,14 @@ export const shouldFallbackToLegacyVideoUpload = ({ status }: { status?: number 
   status === 429 ||
   (typeof status === "number" && status >= 500);
 
+export const shouldFallbackToLegacyVideoUploadAfterProvisionError = ({
+  isProvisionError,
+  status,
+}: {
+  isProvisionError: boolean;
+  status?: number;
+}) => isProvisionError && shouldFallbackToLegacyVideoUpload({ status });
+
 export const shouldCleanupVideoAssetAfterFailure = (uploadCompleted: boolean, error: unknown) =>
   !uploadCompleted || (error instanceof DOMException && error.name === "AbortError");
 

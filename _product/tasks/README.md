@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 179 tasks: `TASK-00` a `TASK-172`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 180 tasks: `TASK-00` a `TASK-173`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -270,6 +270,7 @@ ou cortesia manual.
 | 170 | [TASK-170 - Retorno instantâneo ao vídeo anterior de psicólogos](TASK-170-retorno-instantaneo-video-psicologos.md) | Completed | 13, 15, 168 |
 | 171 | [TASK-171 - Corrigir troca do vídeo de apresentação do psicólogo](TASK-171-corrigir-troca-video-apresentacao-psicologo.md) | Completed | 157, 163, 167 |
 | 172 | [TASK-172 - Corrigir vazamento visual abaixo do vídeo expandido no feed](TASK-172-corrigir-video-expandido-feed-inferior.md) | Completed | 23, 42, 169 |
+| 173 | [TASK-173 - Corrigir upload de vídeos nos posts e respostas](TASK-173-corrigir-upload-video-posts-respostas.md) | Completed | 23, 24, 26, 163, 171 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1345,3 +1346,24 @@ Uma task só pode ser marcada como concluída quando:
 - Alteracao frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration,
   endpoint, env obrigatoria, package novo, provider, mock, seed, reset ou dados publicados. Rollback
   simples reverte o commit.
+
+## Correcao operacional em 2026-09-04: upload de videos em posts e respostas
+
+- Ajuste pos-feedback das TASK-23/TASK-24/TASK-26/TASK-163: videos anexados em posts de comunidade
+  e comentarios/respostas deixam de ficar bloqueados quando a provisao inicial do upload TUS no
+  Stream retorna indisponibilidade ou quando frontend/backend estao desalinhados em rollout.
+- O frontend agora diferencia erro de provisao de erro de transporte/processamento. Fallback para o
+  upload legado single/multipart em R2 so ocorre antes de qualquer byte TUS e apenas para status sem
+  resposta, 404, 405, 408, 429 e 5xx; 400/401/403/413/422 continuam bloqueantes.
+- Posts e respostas reutilizam o arquivo normalizado por MIME/extensao no caminho Stream e no caminho
+  legado, preservando os fluxos existentes de miniatura para videos R2.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como
+  ferramenta callable nesta sessao.
+- Alteracao frontend-only com documentacao de arquitetura/modelo; sem alteracao funcional de
+  backend, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider, mock,
+  seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado de Stream frontend, `pnpm --dir frontend check`, `pnpm --dir frontend
+  build`, `pnpm check`, browser/local HTTP em `/version` e `/comunidades`, `pnpm version:bump` e
+  `pnpm check:version` em `0.1.273`; upload autenticado real nao foi executado localmente por falta
+  de sessao/credenciais no ambiente do agente, sem uso de mocks.

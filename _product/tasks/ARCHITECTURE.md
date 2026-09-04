@@ -368,11 +368,12 @@ Templates/shells devem viver em `frontend/src/templates`.
   autorização. A segurança vem da assinatura RS256, expiração, allowed origins e decisão do backend.
 - Campos legados (`video_url`, `media_url`) armazenam somente a referência estável Lectum
   `/api/private/video-assets/:id/playback`. Vídeos R2 antigos seguem legíveis durante rollout.
-- Exceção operacional da TASK-171: enquanto os endpoints legados de vídeo de apresentação
-  existirem, a autogestão do perfil pode cair para upload multipart/R2 somente quando a provisão
-  inicial da URL TUS do Stream falhar antes de qualquer byte ser enviado ao provider. A exceção não
-  vale para posts/respostas, não mascara erros 400/401/403/413/422 e deve ser removida após a
-  provisão Stream ficar estável.
+- Exceção operacional das TASK-171/TASK-173: enquanto os endpoints legados de vídeo de
+  apresentação, posts e respostas existirem, o frontend pode cair para upload multipart/R2 somente
+  quando a provisão inicial da URL TUS do Stream falhar antes de qualquer byte ser enviado ao
+  provider. A exceção vale para `profile_presentation`, `community_post` e `community_reply`, não
+  mascara erros 400/401/403/413/422 nem falhas de upload/processamento TUS, e deve ser removida
+  após a provisão Stream ficar estável.
 - O endpoint canônico de emissão é `GET /api/public/video-assets/:id/playback`. O path privado
   persistido é tratado como identificador opaco e alias read-only temporário para compatibilidade;
   uploads, status e exclusão permanecem sob autenticação obrigatória.

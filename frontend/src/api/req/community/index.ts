@@ -32,8 +32,11 @@ import {
   MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS,
   throwIfMediaUploadCanceled,
 } from "@/utils/upload-lifecycle";
-import { uploadVideoAsset } from "@/utils/video-asset-upload";
-import { isCloudflareStreamUploadEnabled } from "@/utils/video-stream";
+import { isVideoAssetUploadProvisionError, uploadVideoAsset } from "@/utils/video-asset-upload";
+import {
+  isCloudflareStreamUploadEnabled,
+  shouldFallbackToLegacyVideoUploadAfterProvisionError,
+} from "@/utils/video-stream";
 
 const COMMUNITY_POST_MEDIA_MULTIPART_THRESHOLD_BYTES = MULTIPART_DEFAULT_CHUNK_BYTES;
 const COMMUNITY_POST_MEDIA_ALLOWED_MIME_TYPES = new Set([
@@ -347,31 +350,46 @@ export const uploadCommunityPostMedia = async (
 ) => {
   const { file: uploadFile, mimeType } = withCommunityPostMediaFileType(file);
   if (isCloudflareStreamUploadEnabled() && mimeType.startsWith("video/")) {
-    const uploaded = await uploadVideoAsset({
-      contextId: slug,
-      file: uploadFile,
-      onProgress,
-      purpose: "community_post",
-      signal,
-    });
-    return {
-      media_type: "video" as const,
-      media_url: uploaded.media_url,
-    };
+    try {
+      const uploaded = await uploadVideoAsset({
+        contextId: slug,
+        file: uploadFile,
+        onProgress,
+        purpose: "community_post",
+        signal,
+      });
+      return {
+        media_type: "video" as const,
+        media_url: uploaded.media_url,
+      };
+    } catch (streamError) {
+      throwIfMediaUploadCanceled(signal);
+      if (
+        !shouldFallbackToLegacyVideoUploadAfterProvisionError({
+          isProvisionError: isVideoAssetUploadProvisionError(streamError),
+          status: getApiErrorStatus(streamError),
+        })
+      ) {
+        throw streamError;
+      }
+    }
   }
 
-  if (file.size <= COMMUNITY_POST_MEDIA_MULTIPART_THRESHOLD_BYTES) {
-    return uploadCommunityPostMediaSingle(slug, file, onProgress, signal);
+  if (uploadFile.size <= COMMUNITY_POST_MEDIA_MULTIPART_THRESHOLD_BYTES) {
+    return uploadCommunityPostMediaSingle(slug, uploadFile, onProgress, signal);
   }
 
   try {
-    return await uploadCommunityPostMediaMultipart(slug, file, onProgress, signal);
+    return await uploadCommunityPostMediaMultipart(slug, uploadFile, onProgress, signal);
   } catch (uploadError) {
     throwIfMediaUploadCanceled(signal);
     const status = getApiErrorStatus(uploadError);
 
-    if ((status === 404 || status === 405) && file.size <= COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES) {
-      return uploadCommunityPostMediaSingle(slug, file, onProgress, signal);
+    if (
+      (status === 404 || status === 405) &&
+      uploadFile.size <= COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES
+    ) {
+      return uploadCommunityPostMediaSingle(slug, uploadFile, onProgress, signal);
     }
     if (status === 404 || status === 405) {
       throw new Error(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
