@@ -16,6 +16,31 @@ const RETRY_DELAYS_MS = [0, 1_000, 3_000, 5_000, 10_000];
 
 const canceledError = () => new DOMException("Envio cancelado.", "AbortError");
 
+export class VideoAssetUploadProvisionError extends Error {
+  public readonly data: unknown;
+  public readonly originalError: unknown;
+  public readonly response: unknown;
+
+  constructor(error: unknown) {
+    super(error instanceof Error ? error.message : "Não foi possível iniciar o envio do vídeo.");
+    this.name = "VideoAssetUploadProvisionError";
+    Object.setPrototypeOf(this, VideoAssetUploadProvisionError.prototype);
+    this.originalError = error;
+    this.data =
+      error && typeof error === "object" && "data" in error
+        ? (error as { data?: unknown }).data
+        : undefined;
+    this.response =
+      error && typeof error === "object" && "response" in error
+        ? (error as { response?: unknown }).response
+        : undefined;
+  }
+}
+
+export const isVideoAssetUploadProvisionError = (
+  error: unknown,
+): error is VideoAssetUploadProvisionError => error instanceof VideoAssetUploadProvisionError;
+
 const wait = (milliseconds: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     if (signal?.aborted) {
@@ -139,7 +164,9 @@ export const uploadVideoAsset = async ({
       size: file.size,
     },
     signal,
-  );
+  ).catch((error) => {
+    throw new VideoAssetUploadProvisionError(error);
+  });
 
   let uploadCompleted = false;
   try {

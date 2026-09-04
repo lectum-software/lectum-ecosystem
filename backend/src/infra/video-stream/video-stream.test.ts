@@ -126,7 +126,7 @@ describe("Cloudflare Stream direct upload", () => {
 
     const metadata = headers.get("upload-metadata") ?? "";
     assert.match(metadata, /requiresignedurls/);
-    assert.match(metadata, /maxDurationSeconds NjAw/);
+    assert.match(metadata, /maxdurationseconds NjAw/);
     assert.match(metadata, /expiry MjAzMC0wMS0wMlQwMzowNDowNS4wMDBa/);
     assert.match(
       metadata,

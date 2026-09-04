@@ -25,8 +25,12 @@ import {
   withProfileVideoFileType,
 } from "@/utils/profile-video-upload";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
-import { uploadVideoAsset } from "@/utils/video-asset-upload";
-import { isCloudflareStreamUploadEnabled, videoAssetIdFromReference } from "@/utils/video-stream";
+import { isVideoAssetUploadProvisionError, uploadVideoAsset } from "@/utils/video-asset-upload";
+import {
+  isCloudflareStreamUploadEnabled,
+  shouldFallbackToLegacyVideoUpload,
+  videoAssetIdFromReference,
+} from "@/utils/video-stream";
 
 const route = "/api/private/psychologist/free-profile";
 
@@ -202,27 +206,11 @@ const uploadPsychologistFreeProfileVideoMultipart = async (
   });
 };
 
-export const uploadPsychologistFreeProfileVideo = async (
+const uploadPsychologistFreeProfileVideoLegacy = async (
   file: File,
   onProgress?: (percentage: number) => void,
   signal?: AbortSignal,
 ) => {
-  if (isCloudflareStreamUploadEnabled()) {
-    const { file: uploadFile } = withProfileVideoFileType(file);
-    const uploaded = await uploadVideoAsset({
-      file: uploadFile,
-      onProgress,
-      purpose: "profile_presentation",
-      signal,
-    });
-    const profile = await getPsychologistFreeProfile();
-
-    return {
-      profile,
-      video_url: uploaded.media_url,
-    } satisfies FreeProfessionalProfileVideoUpload;
-  }
-
   if (file.size <= PROFILE_VIDEO_MULTIPART_THRESHOLD_BYTES) {
     return uploadPsychologistFreeProfileVideoSingle(file, onProgress, signal);
   }
@@ -242,6 +230,42 @@ export const uploadPsychologistFreeProfileVideo = async (
 
     throw uploadError;
   }
+};
+
+export const uploadPsychologistFreeProfileVideo = async (
+  file: File,
+  onProgress?: (percentage: number) => void,
+  signal?: AbortSignal,
+) => {
+  if (isCloudflareStreamUploadEnabled()) {
+    const { file: uploadFile } = withProfileVideoFileType(file);
+    try {
+      const uploaded = await uploadVideoAsset({
+        file: uploadFile,
+        onProgress,
+        purpose: "profile_presentation",
+        signal,
+      });
+      const profile = await getPsychologistFreeProfile();
+
+      return {
+        profile,
+        video_url: uploaded.media_url,
+      } satisfies FreeProfessionalProfileVideoUpload;
+    } catch (streamError) {
+      throwIfMediaUploadCanceled(signal);
+      if (
+        !isVideoAssetUploadProvisionError(streamError) ||
+        !shouldFallbackToLegacyVideoUpload({ status: getApiErrorStatus(streamError) })
+      ) {
+        throw streamError;
+      }
+
+      return uploadPsychologistFreeProfileVideoLegacy(uploadFile, onProgress, signal);
+    }
+  }
+
+  return uploadPsychologistFreeProfileVideoLegacy(file, onProgress, signal);
 };
 
 export const uploadPsychologistFreeProfileVideoCover = async (file: File) => {

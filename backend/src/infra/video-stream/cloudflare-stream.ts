@@ -74,7 +74,7 @@ const encodeMetadataValue = (value: string) => Buffer.from(value, "utf8").toStri
 const buildUploadMetadata = (input: ProvisionVideoUploadInput, allowedOrigins: readonly string[]) =>
   [
     `name ${encodeMetadataValue(`lectum-${input.purpose}-${input.assetId}`)}`,
-    `maxDurationSeconds ${encodeMetadataValue(String(input.maxDurationSeconds))}`,
+    `maxdurationseconds ${encodeMetadataValue(String(input.maxDurationSeconds))}`,
     "requiresignedurls",
     `allowedorigins ${encodeMetadataValue(JSON.stringify(allowedOrigins))}`,
     `thumbnailtimestamppct ${encodeMetadataValue("0.1")}`,

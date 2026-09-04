@@ -6,6 +6,7 @@ import {
   selectAdaptiveVideoPlaybackAdapter,
   shouldCleanupVideoAssetAfterFailure,
   shouldFallbackToLegacyVideoPlayback,
+  shouldFallbackToLegacyVideoUpload,
   TUS_CHUNK_SIZE_BYTES,
   videoAssetIdFromReference,
   videoAssetPlaybackApiPaths,
@@ -38,6 +39,22 @@ describe("Cloudflare Stream frontend contract", () => {
       false,
     );
     assert.equal(shouldFallbackToLegacyVideoPlayback({ status: 401 }), false);
+  });
+
+  it("usa upload legado apenas quando a provisao Stream fica indisponivel", () => {
+    assert.equal(shouldFallbackToLegacyVideoUpload({}), true);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 404 }), true);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 405 }), true);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 408 }), true);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 429 }), true);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 500 }), true);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 503 }), true);
+
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 400 }), false);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 401 }), false);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 403 }), false);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 413 }), false);
+    assert.equal(shouldFallbackToLegacyVideoUpload({ status: 422 }), false);
   });
 
   it("seleciona HLS nativo no Safari e HLS.js em navegadores MSE", () => {

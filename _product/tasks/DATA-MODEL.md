@@ -242,6 +242,14 @@ durante o rollout. Ao concluir a troca, os outros `video_assets` de apresentaç�
 aposentados logicamente na mesma transação; a exclusão física no Stream e a remoção da mídia R2
 substituída são best effort posteriores ao commit.
 
+Complemento TASK-171: se a provisão inicial do Stream para `profile_presentation` estiver
+indisponível antes de qualquer upload TUS, a troca do vídeo de apresentação pode usar
+temporariamente o caminho legado multipart/R2 da TASK-157. Nesse caso `video_url` volta a armazenar
+uma URL pública R2 legada já suportada por leitura/limpeza/migração; a exceção não cria novo schema,
+não vale para posts/respostas e não mascara validação, autenticação, autorização ou limite de
+arquivo. Uploads Stream que já começaram ou chegaram ao processamento não caem para R2 para evitar
+dois candidatos concorrentes de vídeo.
+
 Regra complementar de identidade profissional (TASK-34, atualizada em 2026-07-11): CPF e CRP permanecem editáveis em perfis gratuitos ou sem validação profissional usada para entitlement. A API privada de perfil deve expor o campo derivado `profile.identity_fields_locked=true` quando houver assinatura profissional ativa não gratuita com `crp_status="aprovado"` ou `cfp_verified_at` preenchido por consulta real autorizada e CPF/CRP persistidos. Complemento de cortesia: uma cortesia administrativa ativa (`professional_subscription.source="admin_grant"`, plano não gratuito, status vigente) também bloqueia CPF, Regional do CRP e Nº de registro CRP na edição do psicólogo, mesmo sem preencher artificialmente `cfp_verified_at`, porque o Admin passa a ser a fonte operacional desses campos durante a cortesia. Quando essa flag estiver ativa, o backend ignora qualquer tentativa de alterar CPF/CRP pelo perfil e o frontend renderiza os campos bloqueados.
 
 Complemento TASK-66 (2026-07-11): na etapa `/api/private/psychologist/cfp/search`, um CPF válido informado pelo psicólogo é persistido em `psychologist_profile.cpf` antes da chamada externa, mesmo quando a API automática falha, fica indisponível ou retorna erro operacional. Essa persistência não aprova o registro, não preenche `cfp_verified_at`, não altera CRP/data e não sobrescreve identidades já bloqueadas por aprovação profissional ou cortesia administrativa ativa; serve para a triagem do Admin na aba Perfil e cadastro. Tentativas históricas com CPF em `professional_registry_check` podem ser usadas como fallback de exibição no Admin sem copiar dados retroativamente.

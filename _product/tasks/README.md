@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 177 tasks: `TASK-00` a `TASK-170`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 178 tasks: `TASK-00` a `TASK-171`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -268,6 +268,7 @@ ou cortesia manual.
 | 168 | [TASK-168 - Preservar vídeo ao voltar do perfil do psicólogo](TASK-168-preservar-video-ao-voltar-perfil-psicologo.md) | Completed | 13, 15, 145, 161, 162 |
 | 169 | [TASK-169 - Remover tag nativa no vídeo expandido](TASK-169-video-expandido-sem-tag-nativa-fullscreen.md) | Completed | 13, 23, 42, 161 |
 | 170 | [TASK-170 - Retorno instantâneo ao vídeo anterior de psicólogos](TASK-170-retorno-instantaneo-video-psicologos.md) | Completed | 13, 15, 168 |
+| 171 | [TASK-171 - Corrigir troca do vídeo de apresentação do psicólogo](TASK-171-corrigir-troca-video-apresentacao-psicologo.md) | Completed | 157, 163, 167 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1315,3 +1316,13 @@ Uma task só pode ser marcada como concluída quando:
   frontend build`, `pnpm check` e browser local mobile em `/psicologos` com retorno ao slide 4
   (`scrollTop=3376`, `targetTop=3376`, `activeIndexByScroll=4`) sem amostras intermediarias de
   scroll; `version:bump`/`check:version` em `0.1.270`.
+
+## Correcao operacional em 2026-09-04: troca do video de apresentacao do psicologo
+
+- Ajuste pos-feedback das TASK-157/TASK-163: a troca do **Video de Apresentacao** deixa de ficar bloqueada quando a provisao inicial do upload TUS no Stream retorna indisponibilidade ou quando frontend/backend estao desalinhados em rollout.
+- O adapter Cloudflare Stream passa a enviar `maxdurationseconds` no `Upload-Metadata`, mantendo `requiresignedurls` e origens permitidas sem expor credenciais ou detalhes do provider.
+- O frontend diferencia erro de provisao de erro de transporte/processamento. Fallback para o upload legado multipart/R2 so ocorre em `profile_presentation` antes de qualquer byte TUS e apenas para status sem resposta, 404, 405, 408, 429 e 5xx; 400/401/403/413/422 continuam bloqueantes.
+- O video anterior permanece funcional ate o novo upload ser persistido. A excecao operacional de R2 foi documentada em arquitetura/modelo e deve ser removida depois que a provisao Stream estiver estavel.
+- A imagem anexada em 2026-09-04 foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao esta exposto como ferramenta callable nesta sessao.
+- Alteracao frontend+backend; admin/video apenas manifests de versao. Sem schema, migration, endpoint novo, env obrigatoria, package novo, provider novo, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: testes focados de Stream frontend/backend, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser local mobile sem sessao com redirect seguro para login, `pnpm version:bump` e `pnpm check:version` em `0.1.271`.

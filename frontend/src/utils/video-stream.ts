@@ -39,6 +39,14 @@ export const shouldFallbackToLegacyVideoPlayback = ({
   status?: number;
 }) => status === 404 && !code;
 
+export const shouldFallbackToLegacyVideoUpload = ({ status }: { status?: number }) =>
+  status === undefined ||
+  status === 404 ||
+  status === 405 ||
+  status === 408 ||
+  status === 429 ||
+  (typeof status === "number" && status >= 500);
+
 export const shouldCleanupVideoAssetAfterFailure = (uploadCompleted: boolean, error: unknown) =>
   !uploadCompleted || (error instanceof DOMException && error.name === "AbortError");
 
