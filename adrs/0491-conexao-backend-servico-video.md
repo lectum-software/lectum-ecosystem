@@ -69,8 +69,8 @@ IP literal desabilita a feature mesmo com serviço saudável.
 
 ## Compatibilidade e rollout
 
-1. No backend de homologação, cadastrar a URL WireGuard privada e a mesma API key da app `video/`;
-   como o código anterior não lê essas envs, não é necessário um redeploy isolado.
+1. No backend de homologação, cadastrar a URL privada ou HTTPS dedicada e a mesma API key da app
+   `video/`; como o código anterior não lê essas envs, não é necessário um redeploy isolado.
 2. Publicar o backend com configuração opcional; comportamento atual permanece idêntico.
 3. Aguardar o deploy automático e executar `pnpm --dir backend video:check-processing-service` no
    container, ou chamar diretamente o artefato compilado da operação.

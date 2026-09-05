@@ -97,5 +97,5 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] Smoke local HTTP do frontend (`/version` 200 em `0.1.277` e `/comunidades` 200)
 - [x] Commit e push em `homolog`
 - [x] Smoke de homologação após deploy da versão `0.1.277` (`/health`, `/ready`, `/ping` backend e `/version` frontend/admin)
-- [x] Validações pós-feedback `0.1.278`: testes focados backend/video, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir video check`, `pnpm --dir video build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version`
-- Smoke de homologação da correção `0.1.278` será registrado após `git push` em `homolog`.
+- [x] Validações pós-feedback `0.1.279`: testes focados backend/video, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir video check`, `pnpm --dir video build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version`
+- Smoke de homologação da correção `0.1.279` será registrado após `git push` em `homolog`.
