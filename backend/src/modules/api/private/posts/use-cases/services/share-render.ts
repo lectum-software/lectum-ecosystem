@@ -104,6 +104,7 @@ const requestVideoService = async (
     return await fetch(`${config.baseUrl}${path}`, {
       ...init,
       headers,
+      redirect: "error",
       signal: AbortSignal.timeout(timeoutMs ?? config.requestTimeoutMs),
     });
   } catch {

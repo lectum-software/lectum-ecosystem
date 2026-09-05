@@ -33,7 +33,7 @@ vídeo sem executar qualquer mutação.
 
 ## Escopo backend
 
-- configuração opcional e fail-closed para URL privada, chave e timeout;
+- configuração opcional e fail-closed para URL server-to-server segura, chave e timeout;
 - cliente HTTP com timeout, redirects desabilitados e leitura limitada de JSON;
 - validação de `/ready`, `/version` e de uma rota privada com ID deliberadamente inválido;
 - comando operacional compilado com logs sanitizados e exit code confiável;
@@ -64,15 +64,18 @@ vídeo sem executar qualquer mutação.
 
 ### ALERTA DE DEPLOY
 
-No backend de homologação, cadastrar `VIDEO_PROCESSING_SERVICE_URL` como configuração privada e
-`VIDEO_SERVICE_API_KEY` como secret de runtime com o mesmo valor da aplicação `video/`. Não usar
-build args, `NEXT_PUBLIC_*`, IP público nem copiar valores para logs/chat. A ausência não impede o
-backend de iniciar; apenas o check operacional falha como `configuration_missing`.
+No backend de homologação, cadastrar `VIDEO_PROCESSING_SERVICE_URL` como configuração privada ou
+HTTPS dedicado e `VIDEO_SERVICE_API_KEY` como secret de runtime com o mesmo valor da aplicação
+`video/`. Não usar build args, `NEXT_PUBLIC_*`, HTTP público nem copiar valores para logs/chat. A
+ausência não impede o backend de iniciar; apenas o check operacional falha como
+`configuration_missing`.
 
 ## Contrato técnico detalhado
 
 - A URL deve ser uma origem HTTP(S) sem credenciais, path, query, fragmento ou wildcard.
-- Em runtime publicado, somente IP literal RFC1918/ULA é aceito; loopback, IP público e DNS falham.
+- Em runtime publicado, HTTP é aceito somente para IP privado RFC1918/ULA ou DNS interno
+  controlado; loopback e HTTP público falham. Quando o app `video/` estiver fora da rede privada,
+  usar somente origem HTTPS dedicada, sem path/query e protegida pelo Bearer.
 - O header Bearer é enviado somente ao path fixo privado e redirects são recusados.
 - Respostas precisam ser JSON de até 16 KiB e seguir o envelope da aplicação `video/`.
 - A autenticação é provada por `GET /api/private/jobs/connection-check`: Bearer válido chega ao
@@ -87,7 +90,7 @@ Referências: `ARCHITECTURE.md` › “Serviço isolado de processamento de víd
 ## Critérios de aceite
 
 - [x] Configuração é opcional no boot e falha fechada quando parcial/inválida.
-- [x] Runtime publicado aceita a origem WireGuard privada e rejeita IP público, DNS e loopback.
+- [x] Runtime publicado aceita origem WireGuard privada, DNS interno e HTTPS dedicado; rejeita HTTP público e loopback.
 - [x] Cliente recusa redirects, aplica timeout e limita/valida respostas JSON.
 - [x] Readiness, versão e Bearer são verificados sem criar ou alterar jobs.
 - [x] Operação compilada retorna exit code confiável e logs sem segredo/URL/body remoto.
@@ -122,3 +125,12 @@ Referências: `ARCHITECTURE.md` › “Serviço isolado de processamento de víd
   `authentication: valid`, `readiness: ready`, versão `0.1.275` do serviço e transporte
   `private_network`. Nenhum job foi criado durante o probe.
 - Nenhum reset, migration, seed, job ou alteração de mídia faz parte desta task.
+
+## Atualização pós-feedback em 2026-09-05
+
+- A configuração da URL foi ampliada sem abrir HTTP público: além de IP privado literal, o backend
+  aceita DNS interno (`video`, `.internal`, `.svc`, etc.) e HTTPS dedicado server-to-server. Isso
+  cobre deployments em fila/servidor dedicado que expõem a API do app `video/` por ingress seguro em
+  vez de WireGuard/IP literal.
+- Redirects continuam recusados e a URL segue backend-only; chave, URL e respostas remotas não são
+  expostas ao browser, UI, logs públicos ou documentação.

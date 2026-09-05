@@ -53,12 +53,36 @@ describe("video processing service configuration", () => {
     );
   });
 
-  it("aceita somente endpoint privado em runtime publicado", () => {
+  it("aceita endpoint dedicado seguro em runtime publicado", () => {
     assert.equal(
       parseVideoProcessingServiceUrl("http://192.168.250.2:3003", {
         publishedRuntime: true,
       }),
       "http://192.168.250.2:3003",
+    );
+    assert.equal(
+      parseVideoProcessingServiceUrl("http://video:3003", {
+        publishedRuntime: true,
+      }),
+      "http://video:3003",
+    );
+    assert.equal(
+      parseVideoProcessingServiceUrl("http://video.internal:3003", {
+        publishedRuntime: true,
+      }),
+      "http://video.internal:3003",
+    );
+    assert.equal(
+      parseVideoProcessingServiceUrl("http://video.svc.cluster.local:3003", {
+        publishedRuntime: true,
+      }),
+      "http://video.svc.cluster.local:3003",
+    );
+    assert.equal(
+      parseVideoProcessingServiceUrl("https://video.lectum.com.br", {
+        publishedRuntime: true,
+      }),
+      "https://video.lectum.com.br",
     );
     assert.equal(
       parseVideoProcessingServiceUrl("http://45.140.193.89:3003", {
@@ -67,13 +91,21 @@ describe("video processing service configuration", () => {
       null,
     );
     assert.equal(
-      parseVideoProcessingServiceUrl("http://video.internal:3003", {
+      parseVideoProcessingServiceUrl("http://video.lectum.com.br", {
         publishedRuntime: true,
       }),
       null,
     );
     assert.equal(
       parseVideoProcessingServiceUrl("http://127.0.0.1:3003", { publishedRuntime: true }),
+      null,
+    );
+    assert.equal(
+      parseVideoProcessingServiceUrl("https://169.254.169.254", { publishedRuntime: true }),
+      null,
+    );
+    assert.equal(
+      parseVideoProcessingServiceUrl("https://[::ffff:a9fe:a9fe]", { publishedRuntime: true }),
       null,
     );
     assert.equal(

@@ -40,6 +40,7 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-filter_complex/);
     assert.match(command, /scale=1080:1920/);
     assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
+    assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans\.ttf'/);
     assert.match(command, /drawtext=text='lectum'/);
     assert.match(command, /-c:v libx264/);
     assert.match(command, /-crf 18/);

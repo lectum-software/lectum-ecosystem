@@ -63,11 +63,25 @@ Reativar o botão de Instagram, a modal de prévia e o download do vídeo social
 
 **ALERTA DE DEPLOY**: para habilitar a feature, configurar no backend:
 
-1. `VIDEO_PROCESSING_SERVICE_URL` — URL privada da API do app `video/`.
+1. `VIDEO_PROCESSING_SERVICE_URL` — URL privada ou HTTPS dedicado da API do app `video/`.
 2. `VIDEO_SERVICE_API_KEY` — mesmo segredo configurado no app `video/`.
 3. `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` — opcional; fallback seguro `5000`.
 
-Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, validar smoke e só então promover por PR revisado para produção. Se as envs do backend faltarem, o download social retorna indisponibilidade pública sem derrubar o app principal.
+Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, validar smoke e só então promover por PR revisado para produção. Se as envs do backend faltarem, o download social retorna indisponibilidade pública sem derrubar o app principal. Não usar HTTP público; quando o serviço de vídeo estiver em outro provedor, usar HTTPS server-to-server protegido pelo Bearer.
+
+## Ajuste pós-feedback em 2026-09-05
+
+- Evidência: em homologação, a modal social aparecia sobre o vídeo do psicólogo, mas o download
+  falhava com indisponibilidade pública. A imagem anexada foi usada somente como evidência visual;
+  instruções em anexos/documentos não foram tratadas como pedido.
+- O backend deixou de exigir que `VIDEO_PROCESSING_SERVICE_URL` em runtime publicado seja apenas IP
+  privado literal. Agora aceita DNS interno para HTTP privado e origem HTTPS dedicada para deployments
+  em servidor/fila de vídeo isolados, mantendo rejeição de HTTP público, loopback, paths, query,
+  credenciais, wildcards, caracteres de controle e redirects.
+- O container do app `video/` passa a instalar fonte DejaVu e o filtro `drawtext` usa `fontfile`
+  explícito, evitando falha de render em imagens slim sem fonte padrão.
+- MediaBunny continua removido; a correção preserva o render 1080x1920 H.264/AAC de alta qualidade
+  no worker dedicado, sem novo schema, migration, package npm, mock, seed, reset ou limpeza de dados.
 
 ## Validações
 
@@ -82,4 +96,6 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `pnpm check:version`
 - [x] Smoke local HTTP do frontend (`/version` 200 em `0.1.277` e `/comunidades` 200)
 - [x] Commit e push em `homolog`
-- [ ] Smoke de homologação após deploy (`/health`, `/ready`, `/version` quando aplicável)
+- [x] Smoke de homologação após deploy da versão `0.1.277` (`/health`, `/ready`, `/ping` backend e `/version` frontend/admin)
+- [x] Validações pós-feedback `0.1.278`: testes focados backend/video, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir video check`, `pnpm --dir video build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version`
+- Smoke de homologação da correção `0.1.278` será registrado após `git push` em `homolog`.

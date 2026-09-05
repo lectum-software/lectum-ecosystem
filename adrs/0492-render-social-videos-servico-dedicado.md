@@ -22,6 +22,8 @@ Agora existe um servidor dedicado para processamento de vídeo, com BullMQ/Redis
 - O backend resolve a origem de vídeo a partir de `video_asset`/Cloudflare Stream assinado ou mídia legada pública do prefixo `posts/media/`, sem expor segredo ao frontend.
 - O app `video/` passa a aceitar operação `social_share`, validando URL HTTPS, DNS público, container/duração e saída MP4.
 - O worker renderiza 1080x1920 H.264/AAC com preset `slow`, CRF 18, áudio mínimo 192 kbps, `+faststart`, overlay Lectum e arquivo efêmero do job.
+- O runtime do app `video/` empacota fonte DejaVu e o filtro `drawtext` usa `fontfile` explícito
+  para evitar falhas em imagens slim sem fonte padrão.
 - `post_share_artifacts` permanece legado: o fluxo novo não cria registro, não renova TTL e não envia arquivo do browser para storage.
 
 ## Alternativas consideradas
@@ -45,6 +47,14 @@ Rejeitada nesta etapa. O requisito é download owner-only sob demanda; persistê
 - O serviço `video/` precisa de worker/Redis saudáveis para concluir jobs; `/ready` continua sendo o smoke operacional.
 - O download social não contabiliza `post_share` porque não há confirmação confiável de publicação em app externo; os compartilhamentos de link continuam usando a contagem existente.
 - Rollback simples reverte o commit e remove a chamada backend→video; nenhum dado novo precisa ser contraído.
+
+## Atualização em 2026-09-05
+
+Após feedback de homologação com erro público na modal de download, a validação da URL
+backend→`video/` foi ampliada: HTTP continua restrito a IP/DNS internos, mas HTTPS dedicado
+server-to-server passa a ser aceito para deployments fora da rede privada. Redirects seguem
+recusados e a URL permanece backend-only. O worker também passou a fixar a fonte DejaVu no
+`drawtext`, tornando a geração do overlay determinística no container.
 
 ## Validação
 

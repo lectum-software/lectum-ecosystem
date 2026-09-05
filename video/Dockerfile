@@ -32,7 +32,7 @@ FROM base AS runner
 ENV NODE_ENV=production
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates ffmpeg tini \
+  && apt-get install -y --no-install-recommends ca-certificates ffmpeg fonts-dejavu-core tini \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /var/lib/lectum-video \
   && chown -R node:node /var/lib/lectum-video /app

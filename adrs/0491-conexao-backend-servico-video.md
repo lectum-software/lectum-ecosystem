@@ -21,8 +21,9 @@ ou disparar um job apenas para testar ampliaria o risco sem benefício.
 
 - Criar cliente HTTP backend-only para a API `video/`, sem imports cruzados entre aplicações.
 - Configurar por `VIDEO_PROCESSING_SERVICE_URL`, `VIDEO_SERVICE_API_KEY` e timeout opcional.
-- Em runtime publicado, aceitar apenas origem com IP privado literal RFC1918/ULA. A comunicação
-  atual usa HTTP dentro do túnel WireGuard; IP público, DNS e loopback são recusados.
+- Em runtime publicado, aceitar HTTP apenas para IP privado RFC1918/ULA ou DNS interno controlado.
+  Quando o app `video/` estiver fora da rede privada, aceitar somente origem HTTPS dedicada
+  server-to-server. HTTP público e loopback são recusados.
 - Recusar redirects para impedir que o Bearer seja encaminhado a outro destino.
 - Limitar respostas JSON a 16 KiB e validar o envelope mínimo de readiness, versão e erro privado.
 - Provar autenticação com GET sobre um ID inválido fixo. O `404 job_not_found` confirma que o Bearer
@@ -46,10 +47,16 @@ Rejeitada porque consome CPU/disco/fila, produz estado e transforma smoke em mut
 Rejeitada neste estágio: uma pane de processamento offline não deve retirar login, feed, pagamentos
 ou playback Cloudflare Stream do ar.
 
-### Usar domínio público/Cloudflare Proxy
+### Usar HTTP público sem túnel
 
-Rejeitada porque a comunicação entre os dois hosts já possui WireGuard e não precisa ampliar a
-superfície pública da API nem transportar a chave pela internet aberta.
+Rejeitada porque transportaria a chave Bearer fora de canal protegido. Quando o deployment exigir
+ingress público para o app `video/`, a origem deve ser HTTPS dedicada e sem redirects.
+
+### Exigir apenas IP privado literal
+
+Rejeitada após o rollout inicial porque deployments com servidor/fila dedicada podem usar DNS
+interno (`video`, `.internal`, `.svc`) ou HTTPS server-to-server seguro em outro provedor. Manter só
+IP literal desabilita a feature mesmo com serviço saudável.
 
 ## Segurança e estabilidade
 
@@ -72,6 +79,13 @@ superfície pública da API nem transportar a chave pela internet aberta.
 
 Rollback remove as envs ou reverte o cliente. Não há schema, migration, Redis/job, volume, R2 ou
 Cloudflare Stream alterado.
+
+## Atualização em 2026-09-05
+
+O feedback de homologação mostrou que a integração precisava tolerar endpoints dedicados que não
+são IP literal WireGuard. A validação passou a aceitar DNS interno para HTTP privado e HTTPS público
+server-to-server, mantendo rejeição de HTTP público, loopback, credenciais na URL, path/query,
+fragmento, wildcard e redirects.
 
 ## Packages
 

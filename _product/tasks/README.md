@@ -1389,3 +1389,12 @@ Uma task só pode ser marcada como concluída quando:
 - Alteração frontend+backend+video, sem schema/migration, package novo, seed, reset, limpeza de bucket ou criação/renovação de `post_share_artifacts`. Rollback simples reverte o commit e, se necessário, remove as envs de conexão backend→video.
 - ALERTA DE DEPLOY: para habilitar a feature, configurar no backend `VIDEO_PROCESSING_SERVICE_URL` e `VIDEO_SERVICE_API_KEY`; `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` é opcional. Se ausentes, o download social retorna indisponibilidade pública e o restante do app segue funcionando.
 - Validações: `pnpm --dir video check`, `pnpm --dir video build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version` em `0.1.277`; smoke local HTTP em `/version` e `/comunidades`. Smoke de homologação será registrado após o push/deploy em `homolog`.
+
+## Correção operacional em 2026-09-05: render social em servidor de vídeo dedicado
+
+- Ajuste pós-feedback da TASK-176: a modal de prévia social estava abrindo em homologação, mas o download retornava indisponibilidade pública mesmo com o botão sobre o vídeo do psicólogo.
+- A imagem anexada foi usada apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido. Builder/Quick Copy não está exposto como ferramenta callable nesta sessão.
+- O backend mantém `VIDEO_PROCESSING_SERVICE_URL` backend-only e passa a aceitar HTTP apenas para IP/DNS internos ou HTTPS dedicado server-to-server. HTTP público, loopback, URL com credenciais/path/query/fragmento/wildcard e redirects continuam recusados.
+- O app `video/` empacota fonte DejaVu e usa `fontfile` explícito no `drawtext`, evitando falhas de overlay em container slim. MediaBunny continua removido e toda geração pesada permanece na fila BullMQ/Redis/FFmpeg dedicada.
+- Alteração backend+video com documentação de arquitetura/ADR; frontend/admin apenas manifests de versão. Sem schema/migration, package npm novo, env obrigatória nova, mock, seed, reset ou limpeza de dados/buckets publicados. Rollback simples reverte o commit e mantém os dados intactos.
+- Validações: focados backend/video, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir video check`, `pnpm --dir video build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version` em `0.1.278`; smoke de homologação após `git push` em `homolog`.

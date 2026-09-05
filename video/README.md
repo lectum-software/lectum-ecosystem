@@ -68,7 +68,7 @@ unset VIDEO_SERVICE_API_KEY
 
 - input/output nunca entram no Redis;
 - paths não usam nome original;
-- FFmpeg roda sem shell: compressão aceita somente `file,pipe`; render social aceita origem HTTPS validada pelo backend/worker com whitelist `file,http,https,tcp,tls,crypto` para HLS remoto e não herda segredos da aplicação;
+- FFmpeg roda sem shell: compressão aceita somente `file,pipe`; render social aceita origem HTTPS validada pelo backend/worker com whitelist `file,http,https,tcp,tls,crypto` para HLS remoto, usa fonte DejaVu empacotada no container para `drawtext` e não herda segredos da aplicação;
 - arquivo inválido/cancelado não recebe retry;
 - falha transitória recebe retry exponencial limitado;
 - outputs expiram conforme `VIDEO_OUTPUT_TTL_SECONDS`;

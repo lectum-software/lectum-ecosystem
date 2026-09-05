@@ -11,6 +11,7 @@ const SOCIAL_OUTPUT_HEIGHT = 1920;
 const SOCIAL_RENDER_CRF = 18;
 const SOCIAL_RENDER_PRESET = "slow";
 const SOCIAL_OUTPUT_FPS = 30;
+const SOCIAL_DRAW_TEXT_FONT_FILE = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
 
 type SocialShareSource =
   | {
@@ -85,6 +86,7 @@ const drawText = ({
 }) =>
   `drawtext=${[
     `text='${escapeDrawText(text)}'`,
+    `fontfile='${escapeDrawText(SOCIAL_DRAW_TEXT_FONT_FILE)}'`,
     `x=${x}`,
     `y=${y}`,
     `fontsize=${fontSize}`,
