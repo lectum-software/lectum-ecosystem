@@ -224,7 +224,7 @@ export const getCommunityMediaSizes = (
   orientation: CommunityMediaOrientation,
 ) => mediaFrameSizes[variant][orientation];
 
-type CommunityMediaOverlayAction = {
+export type CommunityMediaOverlayAction = {
   ariaLabel: string;
   disabled?: boolean;
   icon: ReactNode;

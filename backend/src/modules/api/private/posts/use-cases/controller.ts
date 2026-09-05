@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import type { NextFunction, Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
 import {
@@ -33,6 +35,7 @@ import {
   uploadShareArtifact as uploadShareArtifactService,
   vote as voteService,
 } from "./services";
+import { isRenderShareArtifactJobFileResult } from "./services/share-render";
 
 export const mine = async (req: Request, res: Response) => {
   try {
@@ -296,10 +299,25 @@ export const getRenderShareArtifactJob = async (req: Request, res: Response) => 
 
 export const getRenderShareArtifactJobFile = async (req: Request, res: Response) => {
   try {
-    const resolve = await getRenderShareArtifactJobFileService({
+    const input: Parameters<typeof getRenderShareArtifactJobFileService>[0] = {
       auth: req.auth,
       p: req.params as unknown as Parameters<typeof getRenderShareArtifactJobFileService>[0]["p"],
-    });
+    };
+    if (typeof req.headers.range === "string") {
+      input.range = req.headers.range;
+    }
+    const resolve = await getRenderShareArtifactJobFileService(input);
+
+    if (isRenderShareArtifactJobFileResult(resolve)) {
+      Object.entries(resolve.headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+      });
+      res.status(resolve.status);
+      Readable.fromWeb(resolve.body as NodeReadableStream<Uint8Array>)
+        .on("error", () => res.destroy())
+        .pipe(res);
+      return;
+    }
 
     return send(res, resolve);
   } catch (err) {

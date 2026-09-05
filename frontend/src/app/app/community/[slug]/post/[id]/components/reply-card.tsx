@@ -15,11 +15,18 @@ import {
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { ReplyEditModal } from "@/components/community/reply-edit-modal";
+import {
+  canShowSocialVideoPreviewAction,
+  createSocialVideoPreviewOverlayAction,
+} from "@/components/community/social-video-preview-action";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { useAppSelector } from "@/hooks/redux";
 import type { CommunityVideoUploadOperation } from "@/hooks/use-community-video-upload";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
 import { getCommunityAuthorDisplayName } from "@/utils/community-display";
+import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import {
   countReplyTreeDescendants,
   findReplyInTree,
@@ -34,6 +41,14 @@ import type { ReplyComposerForm } from "../use-form";
 import { AuthorAvatar } from "./post-content";
 
 import { ReplyComposer } from "./reply-composer";
+
+const createFocusedReplyRelativeUrl = (threadHrefBase: string | undefined, replyId: string) => {
+  const postHref = threadHrefBase?.replace(/\/resposta\/?$/u, "");
+
+  if (!postHref) return `#reply-${replyId}`;
+
+  return `${postHref}?focusReplyId=${encodeURIComponent(replyId)}#reply-${replyId}`;
+};
 
 export type ReplyOverflowMenuProps = {
   deletePending?: boolean;
@@ -261,6 +276,9 @@ export const ReplyCard = ({
   threadHrefBase?: string;
   votePending?: boolean;
 }) => {
+  const currentUser = useAppSelector((state) => state.user);
+  const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
+    useLectumShareDownloadDialog();
   const isProfessional = reply.author.role === "psicologo";
   const isVerifiedProfessional = isProfessional && reply.author.verified;
   const authorDisplayName = getCommunityAuthorDisplayName(reply.author);
@@ -288,6 +306,7 @@ export const ReplyCard = ({
   const canCollapseRootTree = depth === 0 && collapsedRepliesCount > 0;
   const canToggleRootTree = canCollapseRootTree && !hasFocusedDescendant;
   const threadHref = threadHrefBase ? `${threadHrefBase}/${reply.id}` : null;
+  const replyRelativeUrl = createFocusedReplyRelativeUrl(threadHrefBase, reply.id);
   const childrenHiddenByCollapse = canCollapseRootTree && treeCollapsed && !hasFocusedDescendant;
 
   const hasTreeContinuation =
@@ -346,6 +365,28 @@ export const ReplyCard = ({
         }}
       />
     ) : null;
+  const replySocialTarget = canShowSocialVideoPreviewAction({
+    author: reply.author,
+    currentUser,
+    mediaType: reply.media_type,
+    mediaUrl: reply.media_url,
+  })
+    ? createLectumShareVideoDownloadTarget(
+        {
+          id: postId,
+          title: postSourceText,
+        },
+        reply,
+        {
+          relativeUrl: replyRelativeUrl,
+        },
+      )
+    : null;
+  const replyOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: replySocialTarget,
+  });
 
   return (
     <article
@@ -462,6 +503,7 @@ export const ReplyCard = ({
               footer={hasReplyMedia ? replyWhatsappCta : undefined}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
+              overlayAction={replyOverlayAction}
               roundedClassName="rounded-[18px]"
               thumbnailUrl={reply.thumbnail_url}
               variant="reply"
@@ -620,6 +662,7 @@ export const ReplyCard = ({
           ) : null}
         </div>
       ) : null}
+      {lectumDownloadDialog}
     </article>
   );
 };

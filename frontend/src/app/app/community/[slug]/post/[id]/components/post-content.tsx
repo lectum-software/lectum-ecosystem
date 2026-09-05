@@ -23,8 +23,13 @@ import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
 import { PostOwnerActionMenu } from "@/components/community/post-owner-action-menu";
+import {
+  canShowSocialVideoPreviewAction,
+  createSocialVideoPreviewOverlayAction,
+} from "@/components/community/social-video-preview-action";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
@@ -32,6 +37,7 @@ import {
   getCommunityAuthorDisplayName,
   getCommunityInitials as getInitials,
 } from "@/utils/community-display";
+import { createLectumSharePostVideoDownloadTarget } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { isReplyTreeInteractiveTarget } from "../modules/reply-support";
 
@@ -242,8 +248,12 @@ export const PostHeader = ({
 };
 
 export const PostBody = ({ post }: { post: PostDetail }) => {
+  const currentUser = useAppSelector((state) => state.user);
+  const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
+    useLectumShareDownloadDialog();
   const [contentExpanded, setContentExpanded] = useState(false);
   const showAuthorWhatsapp = post.author.role === "psicologo" && Boolean(post.author.whatsapp_url);
+  const postHref = `/comunidades/${post.community.slug}/publicacao/${post.id}`;
   const postImageMediaItems = (post.media_items ?? []).filter(
     (item) => item.media_type === "image",
   );
@@ -259,12 +269,25 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
       stopPropagation
       trackingContext={{
         pageKind: "community_post",
-        path: `/comunidades/${post.community.slug}/publicacao/${post.id}`,
+        path: postHref,
         targetId: post.id,
         targetType: "community_post",
       }}
     />
   ) : null;
+  const postSocialTarget = canShowSocialVideoPreviewAction({
+    author: post.author,
+    currentUser,
+    mediaType: displayMediaType,
+    mediaUrl: displayMediaUrl,
+  })
+    ? createLectumSharePostVideoDownloadTarget(post, { relativeUrl: postHref })
+    : null;
+  const postOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: postSocialTarget,
+  });
 
   return (
     <div className="grid gap-3 px-5 py-4">
@@ -295,17 +318,22 @@ export const PostBody = ({ post }: { post: PostDetail }) => {
           footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
           mediaType={displayMediaType}
           mediaUrl={displayMediaUrl}
+          overlayAction={postOverlayAction}
           thumbnailUrl={displayThumbnailUrl}
           variant="detail"
         />
       )}
       {shouldShowPostCarousel || displayMediaUrl ? null : authorWhatsappCta}
+      {lectumDownloadDialog}
     </div>
   );
 };
 
 export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const router = useRouter();
+  const currentUser = useAppSelector((state) => state.user);
+  const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
+    useLectumShareDownloadDialog();
   const [contentExpanded, setContentExpanded] = useState(false);
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
@@ -320,6 +348,19 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
   const displayMediaUrl = singlePostMediaItem?.media_url ?? post.media_url;
   const displayThumbnailUrl = singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
   const shouldShowPostCarousel = postImageMediaItems.length > 1;
+  const postSocialTarget = canShowSocialVideoPreviewAction({
+    author: post.author,
+    currentUser,
+    mediaType: displayMediaType,
+    mediaUrl: displayMediaUrl,
+  })
+    ? createLectumSharePostVideoDownloadTarget(post, { relativeUrl: postHref })
+    : null;
+  const postOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: postSocialTarget,
+  });
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (
       event.defaultPrevented ||
@@ -429,11 +470,13 @@ export const ThreadOriginalPostCard = ({ post }: { post: PostDetail }) => {
             className="mt-3"
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
+            overlayAction={postOverlayAction}
             roundedClassName="rounded-[18px]"
             thumbnailUrl={displayThumbnailUrl}
             variant="reply"
           />
         )}
+        {lectumDownloadDialog}
       </div>
     </article>
   );

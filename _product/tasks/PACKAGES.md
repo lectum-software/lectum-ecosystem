@@ -150,7 +150,9 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 O OAuth Google usa `state` autenticado e criptografado, com nonce curto `HttpOnly`; `express-session` foi removido por não ser necessário para esse fluxo. O verificador mantém transição temporária para states assinados pela versão anterior durante o rollout.
 
 MediaBunny, seu encoder AAC e a POC Playwright/Chromium foram removidos pela TASK-164. Novos vídeos
-usam Cloudflare Stream; transformações offline pertencem à aplicação `video/`.
+usam Cloudflare Stream; transformações offline pertencem à aplicação `video/`. A reativação do
+download social 9:16 não reinstala pacotes no frontend: o browser apenas abre a prévia e solicita
+um job `social_share` ao backend, e o `video/` usa BullMQ/Redis/FFmpeg já aprovados.
 
 A migração manual R2 → Stream da TASK-165 não adiciona dependência. O adapter usa `fetch` nativo;
 identidade usa `node:crypto`; lock usa o `pg` já instalado; inspeção de origem usa o
@@ -195,7 +197,7 @@ Cloudflare Stream e não compartilha instalação/runtime com o backend. Versõe
 | `helmet` | `8.3.0` | `8.3.0` | Headers defensivos da API privada |
 | `@paralleldrive/cuid2` | `3.3.0` | `3.3.0` | IDs opacos de jobs e traces |
 | `dotenv` | `17.4.2` | `17.4.2` | Env local; deploy usa secrets de runtime |
-| FFmpeg/ffprobe CLI | imagem Debian | `5.1.9` na imagem; `8.1.2` no host E2E | Probe e compressão MP4 H.264/AAC |
+| FFmpeg/ffprobe CLI | imagem Debian | `5.1.9` na imagem; `8.1.2` no host E2E | Probe, compressão e render social MP4 H.264/AAC |
 
 Decisões obrigatórias:
 

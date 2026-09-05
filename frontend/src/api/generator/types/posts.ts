@@ -265,6 +265,29 @@ export type PostShareResponse = {
   shared: boolean;
 };
 
+export type PostShareVideoArtifactRenderJobStatus =
+  | "queued"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "cancel_requested"
+  | "canceled";
+
+export type PostShareVideoArtifactRenderJobResponse = {
+  completed_at: string | null;
+  created_at: string;
+  download_url: string | null;
+  failed_at: string | null;
+  failure_code: "canceled" | "invalid_video" | "processing_failed" | null;
+  job_id: string;
+  output_size_bytes: number | null;
+  progress: number;
+  ready: boolean;
+  retry_after_ms: number;
+  started_at: string | null;
+  status: PostShareVideoArtifactRenderJobStatus;
+};
+
 export type PostSaveResponse = {
   target_type: "post" | "reply";
   post_id: string;

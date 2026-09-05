@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import type { PostProfessionalReply } from "@/api/generator/types/posts";
 import { useContentAttentionTracking } from "@/components/analytics/content-attention-tracker";
-import { CommunityMediaBlock } from "@/components/community/community-media-frame";
+import {
+  CommunityMediaBlock,
+  type CommunityMediaOverlayAction,
+} from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
@@ -22,11 +25,13 @@ import { AuthorAvatar } from "./community-post-card-author";
 
 export const ProfessionalReplyPreview = ({
   postHref,
+  overlayAction,
   presentation = "default",
   profilePublicationMode,
   reply,
   showWhatsappCta = true,
 }: {
+  overlayAction?: CommunityMediaOverlayAction;
   postHref?: string;
   presentation?: "default" | "feed";
   profilePublicationMode?: boolean;
@@ -138,6 +143,7 @@ export const ProfessionalReplyPreview = ({
               footer={whatsappCta}
               mediaType={reply.media_type}
               mediaUrl={reply.media_url}
+              overlayAction={overlayAction}
               roundedClassName="rounded-[18px]"
               thumbnailUrl={reply.thumbnail_url}
               variant="reply"
@@ -226,6 +232,7 @@ export const ProfessionalReplyPreview = ({
           footer={whatsappCta}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
+          overlayAction={overlayAction}
           roundedClassName="rounded-[18px]"
           thumbnailUrl={reply.thumbnail_url}
           variant="reply"

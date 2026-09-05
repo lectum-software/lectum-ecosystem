@@ -411,6 +411,11 @@ Templates/shells devem viver em `frontend/src/templates`.
   worker compartilham o mesmo volume no deployment inicial e usam concorrência `1` por worker.
 - A saída de compressão é MP4 H.264/AAC validada e publicada por rename atômico. Download exige
   Bearer interno, suporta Range único e nunca usa `express.static`.
+- A operação `social_share` reativa o vídeo social 9:16 sem MediaBunny: o backend continua sendo o
+  plano de controle owner-only, resolve uma origem HTTPS segura (playback assinado Cloudflare Stream
+  ou mídia pública legada de `posts/media/`) e chama a API privada do `video/`; o worker valida DNS
+  público, probe remoto, renderiza 1080x1920 com FFmpeg H.264/AAC de alta qualidade e mantém o
+  arquivo apenas como saída efêmera do job.
 - Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
   limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
 - O backend acessa essa aplicação somente por cliente server-to-server, usando origem IP privada

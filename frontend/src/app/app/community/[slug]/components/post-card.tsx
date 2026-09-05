@@ -16,7 +16,10 @@ import { useSavePost, useVotePost } from "@/api/callers/posts";
 import type { CommunityPost } from "@/api/generator/types/community";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityFollowToggle } from "@/components/community/community-follow-toggle";
-import { CommunityMediaBlock } from "@/components/community/community-media-frame";
+import {
+  CommunityMediaBlock,
+  type CommunityMediaOverlayAction,
+} from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
@@ -24,12 +27,22 @@ import {
 import { InlineExpandableText } from "@/components/community/inline-expandable-text";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
+import {
+  canShowSocialVideoPreviewAction,
+  createSocialVideoPreviewOverlayAction,
+} from "@/components/community/social-video-preview-action";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LoadingState } from "@/components/ui/loading-state";
+import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import {
   formatCommunityPostTime as formatPostTimeLabel,
   getCommunityAuthorDisplayName,
 } from "@/utils/community-display";
+import {
+  createLectumSharePostVideoDownloadTarget,
+  createLectumShareVideoDownloadTarget,
+} from "@/utils/lectum-share-target";
 import {
   isCommunityPostDetailNavigationTarget,
   rememberCommunityFeedScrollPosition,
@@ -44,7 +57,15 @@ import {
 } from "../modules/feed-support";
 import { AuthorAvatar, AuthorIdentityLine } from "./feed-controls";
 
-export const PostMedia = ({ footer, post }: { footer?: ReactNode; post: CommunityPost }) => {
+export const PostMedia = ({
+  footer,
+  overlayAction,
+  post,
+}: {
+  footer?: ReactNode;
+  overlayAction?: CommunityMediaOverlayAction;
+  post: CommunityPost;
+}) => {
   const imageMediaItems = (post.media_items ?? []).filter((item) => item.media_type === "image");
   const shouldShowCarousel = imageMediaItems.length > 1;
 
@@ -72,6 +93,7 @@ export const PostMedia = ({ footer, post }: { footer?: ReactNode; post: Communit
       footer={footer}
       mediaType={displayMediaType}
       mediaUrl={displayMediaUrl}
+      overlayAction={overlayAction}
       thumbnailUrl={displayThumbnailUrl}
       variant="post"
     />
@@ -80,9 +102,11 @@ export const PostMedia = ({ footer, post }: { footer?: ReactNode; post: Communit
 
 export const ProfessionalReplyMedia = ({
   footer,
+  overlayAction,
   reply,
 }: {
   footer?: ReactNode;
+  overlayAction?: CommunityMediaOverlayAction;
   reply: NonNullable<CommunityPost["highlighted_professional_reply"]>;
 }) => {
   if (!reply.media_url) return null;
@@ -96,6 +120,7 @@ export const ProfessionalReplyMedia = ({
       footer={footer}
       mediaType={reply.media_type}
       mediaUrl={reply.media_url}
+      overlayAction={overlayAction}
       roundedClassName="rounded-[18px]"
       thumbnailUrl={reply.thumbnail_url}
       variant="reply"
@@ -103,7 +128,13 @@ export const ProfessionalReplyMedia = ({
   );
 };
 
-export const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
+export const ProfessionalReplyPreview = ({
+  overlayAction,
+  post,
+}: {
+  overlayAction?: CommunityMediaOverlayAction;
+  post: CommunityPost;
+}) => {
   const reply = post.highlighted_professional_reply;
   const [replyExpanded, setReplyExpanded] = useState(false);
   const postHref = communityPostDetailHref(post);
@@ -193,7 +224,11 @@ export const ProfessionalReplyPreview = ({ post }: { post: CommunityPost }) => {
         </div>
         {reply.media_url ? (
           <div className="pointer-events-auto mt-3">
-            <ProfessionalReplyMedia footer={replyWhatsappCta} reply={reply} />
+            <ProfessionalReplyMedia
+              footer={replyWhatsappCta}
+              overlayAction={overlayAction}
+              reply={reply}
+            />
           </div>
         ) : replyWhatsappCta ? (
           <div className="pointer-events-auto mt-3">{replyWhatsappCta}</div>
@@ -213,6 +248,9 @@ export const PostCard = ({
   showCommunityHeader?: boolean;
 }) => {
   const router = useRouter();
+  const currentUser = useAppSelector((state) => state.user);
+  const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
+    useLectumShareDownloadDialog();
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
   const [voteSnapshot, setVoteSnapshot] = useState<VoteSnapshot>({
@@ -229,6 +267,7 @@ export const PostCard = ({
   const saveMutation = useSavePost(post.id);
   const conversion = useProgressiveConversion();
   const postDetailHref = communityPostDetailHref(post);
+  const highlightedReply = post.highlighted_professional_reply;
   const hasPostMedia = Boolean(post.media_url || (post.media_items ?? []).length > 0);
   const psychologistProfileHref = isPsychologistPost ? `/psicologos/${post.author.id}` : undefined;
   const authorWhatsappCta =
@@ -248,6 +287,40 @@ export const PostCard = ({
   const rememberPostNavigation = useCallback(() => {
     rememberCommunityFeedScrollPosition(post.id);
   }, [post.id]);
+  const postSocialTarget = canShowSocialVideoPreviewAction({
+    author: post.author,
+    currentUser,
+    mediaType: post.media_type,
+    mediaUrl: post.media_url,
+  })
+    ? createLectumSharePostVideoDownloadTarget(post, { relativeUrl: postDetailHref })
+    : null;
+  const postOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: postSocialTarget,
+  });
+  const highlightedReplyHref = highlightedReply
+    ? `${postDetailHref}?focusReplyId=${encodeURIComponent(highlightedReply.id)}#reply-${highlightedReply.id}`
+    : postDetailHref;
+  const highlightedReplySocialTarget =
+    highlightedReply &&
+    canShowSocialVideoPreviewAction({
+      author: highlightedReply.author,
+      currentUser,
+      mediaType: highlightedReply.media_type,
+      mediaUrl: highlightedReply.media_url,
+    })
+      ? createLectumShareVideoDownloadTarget(post, highlightedReply, {
+          parentContent: highlightedReply.parent_content,
+          relativeUrl: highlightedReplyHref,
+        })
+      : null;
+  const highlightedReplyOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: highlightedReplySocialTarget,
+  });
 
   const handleVote = (value: 1 | -1) => {
     if (!conversion.isAuthenticated) {
@@ -474,8 +547,12 @@ export const PostCard = ({
       </div>
 
       <div className="mt-4 grid gap-3">
-        <PostMedia footer={hasPostMedia ? authorWhatsappCta : undefined} post={post} />
-        <ProfessionalReplyPreview post={post} />
+        <PostMedia
+          footer={hasPostMedia ? authorWhatsappCta : undefined}
+          overlayAction={postOverlayAction}
+          post={post}
+        />
+        <ProfessionalReplyPreview overlayAction={highlightedReplyOverlayAction} post={post} />
         {hasPostMedia ? null : authorWhatsappCta}
       </div>
 
@@ -502,6 +579,7 @@ export const PostCard = ({
         }}
         upvotesCount={voteSnapshot.upvotes}
       />
+      {lectumDownloadDialog}
     </article>
   );
 };

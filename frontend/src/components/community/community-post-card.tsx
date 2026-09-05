@@ -23,14 +23,24 @@ import { InlineExpandableText } from "@/components/community/inline-expandable-t
 import { MentorBadge } from "@/components/community/mentor-badge";
 import { PostMediaCarousel } from "@/components/community/post-media-carousel";
 import { PostMutedBadge } from "@/components/community/post-muted-badge";
+import {
+  canShowSocialVideoPreviewAction,
+  createSocialVideoPreviewOverlayAction,
+} from "@/components/community/social-video-preview-action";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
+import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
 import {
   formatCommunityPostTime as formatPostTimeLabel,
   formatCommunityRelativeTime as formatRelativeTime,
   getCommunityAuthorDisplayName,
 } from "@/utils/community-display";
+import {
+  createLectumSharePostVideoDownloadTarget,
+  createLectumShareVideoDownloadTarget,
+} from "@/utils/lectum-share-target";
 import { AuthorAvatar } from "./community-post-card-author";
 import { ProfessionalReplyPreview } from "./community-post-card-reply-preview";
 import {
@@ -66,6 +76,9 @@ export const CommunityPostCard = ({
   statusBadge,
 }: CommunityPostCardProps) => {
   const router = useRouter();
+  const currentUser = useAppSelector((state) => state.user);
+  const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
+    useLectumShareDownloadDialog();
   const contributionType = (post as ProfileContributionPost).contribution_type;
   const primaryReply =
     profilePublicationMode && contributionType === "reply"
@@ -90,6 +103,13 @@ export const CommunityPostCard = ({
     primaryReply?.media_url ?? singlePostMediaItem?.media_url ?? post.media_url;
   const displayThumbnailUrl =
     primaryReply?.thumbnail_url ?? singlePostMediaItem?.thumbnail_url ?? post.thumbnail_url;
+  const displayMediaAnalyticsTarget =
+    displayMediaType === "video"
+      ? ({
+          targetId: primaryReply?.id ?? post.id,
+          targetType: primaryReply ? "reply" : "post",
+        } as const)
+      : undefined;
   const shouldShowPostCarousel = !primaryReply && postImageMediaItems.length > 1;
   const displayFeaturedBadge =
     primaryReply?.author.featured_badge ?? displayAuthor.featured_badge ?? post.featured_badge;
@@ -274,6 +294,45 @@ export const CommunityPostCard = ({
     ? ((post as PostWithOptionalSortMetrics).sort_metrics?.shares_count ?? 0)
     : undefined;
   const postHref = postDetailHref(post, focusedReplyId);
+  const displayMediaSocialTarget = canShowSocialVideoPreviewAction({
+    author: displayAuthor,
+    currentUser,
+    mediaType: displayMediaType,
+    mediaUrl: displayMediaUrl,
+  })
+    ? primaryReply
+      ? createLectumShareVideoDownloadTarget(post, primaryReply, {
+          parentContent: primaryReply.parent_content,
+          relativeUrl: postHref,
+        })
+      : createLectumSharePostVideoDownloadTarget(post, { relativeUrl: postHref })
+    : null;
+  const displayMediaOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: displayMediaSocialTarget,
+  });
+  const highlightedReplyHref = highlightedProfessionalReply
+    ? postDetailHref(post, highlightedProfessionalReply.id)
+    : postHref;
+  const highlightedReplySocialTarget =
+    highlightedProfessionalReply &&
+    canShowSocialVideoPreviewAction({
+      author: highlightedProfessionalReply.author,
+      currentUser,
+      mediaType: highlightedProfessionalReply.media_type,
+      mediaUrl: highlightedProfessionalReply.media_url,
+    })
+      ? createLectumShareVideoDownloadTarget(post, highlightedProfessionalReply, {
+          parentContent: highlightedProfessionalReply.parent_content,
+          relativeUrl: highlightedReplyHref,
+        })
+      : null;
+  const highlightedReplyOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: highlightedReplySocialTarget,
+  });
   const isFeedPresentation = presentation === "feed";
   const handleCardClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (
@@ -502,17 +561,17 @@ export const CommunityPostCard = ({
         ) : (
           <CommunityMediaBlock
             alt={displayTitle ?? "Mídia da publicação"}
-            analyticsTarget={
-              displayMediaType === "video" ? { targetId: post.id, targetType: "post" } : undefined
-            }
+            analyticsTarget={displayMediaAnalyticsTarget}
             footer={authorWhatsappCta && displayMediaUrl ? authorWhatsappCta : undefined}
             mediaType={displayMediaType}
             mediaUrl={displayMediaUrl}
+            overlayAction={displayMediaOverlayAction}
             thumbnailUrl={displayThumbnailUrl}
             variant={shouldCompactProfileReplyMedia ? "reply" : "post"}
           />
         )}
         <ProfessionalReplyPreview
+          overlayAction={highlightedReplyOverlayAction}
           postHref={postHref}
           presentation={isFeedPresentation ? "feed" : "default"}
           profilePublicationMode={profilePublicationMode}
@@ -560,6 +619,7 @@ export const CommunityPostCard = ({
         voteLabel={actionBarVoteLabel}
         votePresentation={actionBarVotePresentation}
       />
+      {lectumDownloadDialog}
     </article>
   );
 };

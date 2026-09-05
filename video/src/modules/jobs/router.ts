@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { json, Router } from "express";
 import type { VideoJobControllerDependencies } from "./service.js";
 import {
   deleteVideoJob,
@@ -6,6 +6,7 @@ import {
   finishCompressionUpload,
   prepareCompressionUpload,
   showVideoJob,
+  startSocialShareRenderJob,
 } from "./service.js";
 import { createVideoUploadMiddleware } from "./upload.js";
 
@@ -18,6 +19,11 @@ export const createVideoJobsRouter = (dependencies: VideoJobControllerDependenci
     prepareCompressionUpload(dependencies),
     upload,
     finishCompressionUpload(dependencies),
+  );
+  router.post(
+    "/social-share",
+    json({ limit: "16kb", strict: true }),
+    startSocialShareRenderJob(dependencies),
   );
   router.get("/:id", showVideoJob(dependencies));
   router.get("/:id/output", downloadVideoJobOutput(dependencies));

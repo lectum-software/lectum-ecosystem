@@ -1,11 +1,32 @@
 export const VIDEO_QUEUE_NAME = "lectum-video-processing";
 export const VIDEO_JOB_NAME = "compress";
 
-export type VideoJobData = {
+export type VideoJobOperation = "compress" | "social_share";
+
+export type SocialShareRenderMetadata = {
+  cardLabel: string;
+  professionalName: string;
+  professionalRoleLabel: string;
+  professionalVerified: boolean;
+  responseText: string | null;
+  sourceText: string;
+};
+
+export type CompressionVideoJobData = {
   cancelRequested: boolean;
   createdAt: string;
   operation: "compress";
 };
+
+export type SocialShareVideoJobData = {
+  cancelRequested: boolean;
+  createdAt: string;
+  metadata: SocialShareRenderMetadata;
+  operation: "social_share";
+  sourceUrl: string;
+};
+
+export type VideoJobData = CompressionVideoJobData | SocialShareVideoJobData;
 
 export type VideoJobResult = {
   durationSeconds: number;

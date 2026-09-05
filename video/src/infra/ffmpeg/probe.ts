@@ -105,8 +105,43 @@ export const probeVideo = async (
   }
 };
 
+export const probeRemoteVideo = async (
+  config: VideoServiceConfig,
+  sourceUrl: string,
+  signal?: AbortSignal,
+): Promise<VideoProbe> => {
+  try {
+    const stdout = await runManagedProcess({
+      args: [
+        "-v",
+        "error",
+        "-protocol_whitelist",
+        "file,http,https,tcp,tls,crypto",
+        "-allowed_extensions",
+        "ALL",
+        "-show_entries",
+        "format=format_name,duration:stream=codec_type,codec_name,width,height,duration",
+        "-of",
+        "json",
+        sourceUrl,
+      ],
+      command: config.ffprobePath,
+      maxStdoutBytes: 1_048_576,
+      ...(signal ? { signal } : {}),
+      timeoutMs: Math.min(120_000, config.jobTimeoutMs),
+    });
+    return parseProbe(stdout);
+  } catch (error) {
+    if (error instanceof ManagedProcessError && error.kind === "aborted") {
+      throw new VideoProcessingError("canceled", { cause: error });
+    }
+    throw new VideoProcessingError("invalid_video", { cause: error });
+  }
+};
+
 export const validateInputProbe = (config: VideoServiceConfig, probe: VideoProbe) => {
   const supportedContainer =
+    probe.formatNames.has("hls") ||
     probe.formatNames.has("mov") ||
     probe.formatNames.has("mp4") ||
     probe.formatNames.has("matroska") ||

@@ -26,7 +26,7 @@ test("cancelamento nativo permanece silencioso", () => {
   assert.equal(isNativeShareAbortError({ name: "NotAllowedError" }), false);
 });
 
-test("vídeos são compartilhados por link sem transformação ou download social", () => {
+test("vídeos sociais usam render server-side sem MediaBunny no frontend", () => {
   const targetSource = readFileSync(new URL("./lectum-share-target.ts", import.meta.url), "utf8");
   const mediaSource = readFileSync(new URL("./lectum-share-media.ts", import.meta.url), "utf8");
   const hookSource = readFileSync(
@@ -37,12 +37,17 @@ test("vídeos são compartilhados por link sem transformação ou download socia
 
   assert.match(targetSource, /createLectumShareVideoTarget[\s\S]*createLectumShareLinkTarget/);
   assert.match(targetSource, /createLectumSharePostMediaTarget[\s\S]*createLectumShareLinkTarget/);
-  assert.doesNotMatch(targetSource, /VideoDownloadTarget|LectumShareSocialTarget/);
-  assert.doesNotMatch(mediaSource, /video|canvas|artifact|download/i);
-  assert.doesNotMatch(hookSource, /prepareLectumShareFile|renderPostShareVideoArtifact/);
+  assert.match(targetSource, /LectumShareSocialTarget/);
+  assert.match(targetSource, /createLectumShareVideoDownloadTarget/);
+  assert.match(mediaSource, /startPostShareVideoArtifactRenderJob/);
+  assert.match(mediaSource, /downloadPostShareVideoArtifactRenderJobFile/);
+  assert.match(hookSource, /prepareLectumShareFileWithServerRender/);
   const removedRuntimePattern = new RegExp(
     [["media", "bunny"].join(""), ["playwright", "core"].join("-")].join("|"),
     "i",
   );
+  assert.doesNotMatch(targetSource, removedRuntimePattern);
+  assert.doesNotMatch(mediaSource, removedRuntimePattern);
+  assert.doesNotMatch(hookSource, removedRuntimePattern);
   assert.doesNotMatch(packageSource, removedRuntimePattern);
 });

@@ -1,13 +1,18 @@
 import { createReadStream } from "node:fs";
 import type { NextFunction, Request, Response } from "express";
 import type { Redis } from "ioredis";
+import { z } from "zod";
 import type { VideoServiceConfig } from "../../config/env.js";
+import type { SocialShareRenderMetadata } from "../../domain/jobs/contracts.js";
 import { sendPublicError, sendSuccess } from "../../http/responses.js";
+import { sanitizeSocialShareMetadata } from "../../infra/ffmpeg/social-share.js";
+import { assertSafeRemoteVideoSourceUrl } from "../../infra/ffmpeg/source-url.js";
 import type { VideoQueue } from "../../infra/queue/client.js";
 import {
   countOpenVideoJobs,
   createVideoJobId,
   enqueueCompressionJob,
+  enqueueSocialShareJob,
   removeOrCancelVideoJob,
 } from "../../infra/queue/jobs.js";
 import { toPublicVideoJob } from "../../infra/queue/snapshot.js";
@@ -32,6 +37,19 @@ export type VideoJobControllerDependencies = {
 };
 
 const JOB_OUTPUT_FILE_NAME = "lectum-video-comprimido.mp4";
+const SOCIAL_SHARE_OUTPUT_FILE_NAME = "lectum-video-redes-sociais.mp4";
+
+const socialShareRequestSchema = z.object({
+  metadata: z.object({
+    cardLabel: z.string().trim().min(1).max(80),
+    professionalName: z.string().trim().min(1).max(90),
+    professionalRoleLabel: z.string().trim().min(1).max(48),
+    professionalVerified: z.boolean().default(false),
+    responseText: z.string().trim().max(180).nullable().optional(),
+    sourceText: z.string().trim().min(1).max(180),
+  }),
+  source_url: z.string().trim().min(1).max(4_096),
+});
 
 export const prepareCompressionUpload =
   (dependencies: VideoJobControllerDependencies) =>
@@ -127,6 +145,70 @@ export const finishCompressionUpload =
     }
   };
 
+export const startSocialShareRenderJob =
+  (dependencies: VideoJobControllerDependencies) =>
+  async (request: Request, response: Response) => {
+    const parsed = socialShareRequestSchema.safeParse(request.body);
+    if (!parsed.success) {
+      sendPublicError(response, 400, "invalid_request", "Envie dados válidos para o vídeo.");
+      return;
+    }
+
+    const openJobs = await countOpenVideoJobs(dependencies.queue);
+    if (openJobs >= dependencies.config.maxQueuedJobs) {
+      sendPublicError(response, 429, "queue_full", "O serviço está ocupado. Tente novamente.");
+      return;
+    }
+
+    let sourceUrl: string;
+    try {
+      sourceUrl = await assertSafeRemoteVideoSourceUrl(parsed.data.source_url);
+    } catch {
+      sendPublicError(response, 422, "invalid_video", "A origem do vídeo não está disponível.");
+      return;
+    }
+
+    const jobId = createVideoJobId();
+    let reservationHeld = false;
+    let enqueued = false;
+
+    try {
+      await acquireVideoStorageReservation({
+        config: dependencies.config,
+        connection: dependencies.connection,
+        expectedInputBytes: 1,
+        jobId,
+      });
+      reservationHeld = true;
+      await retainVideoOutputReservation(dependencies.connection, dependencies.config, jobId);
+
+      const metadata = sanitizeSocialShareMetadata({
+        ...parsed.data.metadata,
+        responseText: parsed.data.metadata.responseText ?? null,
+      } satisfies SocialShareRenderMetadata);
+      const job = await enqueueSocialShareJob(dependencies.queue, {
+        jobId,
+        metadata,
+        sourceUrl,
+      });
+      enqueued = true;
+      sendSuccess(response, 202, await toPublicVideoJob(job));
+    } catch (error) {
+      if (enqueued) {
+        await removeOrCancelVideoJob({
+          config: dependencies.config,
+          connection: dependencies.connection,
+          jobId,
+          queue: dependencies.queue,
+        }).catch(() => undefined);
+      } else if (reservationHeld) {
+        await releaseVideoStorageReservation(dependencies.connection, jobId).catch(() => undefined);
+      }
+      await removeVideoJobStorage(dependencies.config, jobId).catch(() => undefined);
+      throw error;
+    }
+  };
+
 export const showVideoJob =
   (dependencies: VideoJobControllerDependencies) =>
   async (request: Request, response: Response) => {
@@ -195,7 +277,9 @@ export const downloadVideoJobOutput =
     const range = parseSingleByteRange(request.header("range"), output.size);
     response.setHeader("Accept-Ranges", "bytes");
     response.setHeader("Cache-Control", "private, no-store, max-age=0");
-    response.setHeader("Content-Disposition", `attachment; filename="${JOB_OUTPUT_FILE_NAME}"`);
+    const fileName =
+      job.data.operation === "social_share" ? SOCIAL_SHARE_OUTPUT_FILE_NAME : JOB_OUTPUT_FILE_NAME;
+    response.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     response.setHeader("Content-Type", "video/mp4");
     response.setHeader("X-Content-Type-Options", "nosniff");
 

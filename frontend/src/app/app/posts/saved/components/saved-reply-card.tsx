@@ -14,13 +14,23 @@ import { useVotePost } from "@/api/callers/posts";
 import type { CommunityAuthor } from "@/api/generator/types/community";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
-import { CommunityMediaBlock } from "@/components/community/community-media-frame";
+import {
+  CommunityMediaBlock,
+  type CommunityMediaOverlayAction,
+} from "@/components/community/community-media-frame";
 import {
   CommunityWhatsAppCta,
   toCommunityWhatsAppIdentity,
 } from "@/components/community/community-whatsapp-cta";
 import { MentorBadge } from "@/components/community/mentor-badge";
+import {
+  canShowSocialVideoPreviewAction,
+  createSocialVideoPreviewOverlayAction,
+} from "@/components/community/social-video-preview-action";
+import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { getCommunityInitials as getInitials } from "@/utils/community-display";
+import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 
 import { formatAuthorMeta, isSavedCardInteractiveTarget, savedReplyHref } from "../modules/support";
@@ -119,6 +129,7 @@ export const SavedReplyMedia = ({
   footer,
   mediaType,
   mediaUrl,
+  overlayAction,
   replyId,
   thumbnailUrl,
   title,
@@ -126,6 +137,7 @@ export const SavedReplyMedia = ({
   footer?: ReactNode;
   mediaType: string | null;
   mediaUrl: string | null;
+  overlayAction?: CommunityMediaOverlayAction;
   replyId: string;
   thumbnailUrl?: string | null;
   title: string;
@@ -141,6 +153,7 @@ export const SavedReplyMedia = ({
       footer={footer}
       mediaType={mediaType}
       mediaUrl={mediaUrl}
+      overlayAction={overlayAction}
       thumbnailUrl={thumbnailUrl}
       variant="reply"
     />
@@ -159,6 +172,9 @@ export const SavedReplyCard = ({
   removePending?: boolean;
 }) => {
   const router = useRouter();
+  const currentUser = useAppSelector((state) => state.user);
+  const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
+    useLectumShareDownloadDialog();
   const reply = item.reply;
   const voteMutation = useVotePost(item.post.id);
   const [voteOverride, setVoteOverride] = useState<{
@@ -208,6 +224,22 @@ export const SavedReplyCard = ({
   };
 
   const replyLink = savedReplyHref(item.post, reply.id);
+  const replySocialTarget = canShowSocialVideoPreviewAction({
+    author: reply.author,
+    currentUser,
+    mediaType: reply.media_type,
+    mediaUrl: reply.media_url,
+  })
+    ? createLectumShareVideoDownloadTarget(item.post, reply, {
+        parentContent: reply.parent_content,
+        relativeUrl: replyLink,
+      })
+    : null;
+  const replyOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: replySocialTarget,
+  });
   const hasProfessionalWhatsapp = Boolean(reply.author.whatsapp_url);
   const professionalWhatsappCta = hasProfessionalWhatsapp ? (
     <CommunityWhatsAppCta
@@ -279,6 +311,7 @@ export const SavedReplyCard = ({
           footer={reply.media_url ? professionalWhatsappCta : undefined}
           mediaType={reply.media_type}
           mediaUrl={reply.media_url}
+          overlayAction={replyOverlayAction}
           replyId={reply.id}
           thumbnailUrl={reply.thumbnail_url}
           title={reply.title ?? "Mídia da resposta salva"}
@@ -311,6 +344,7 @@ export const SavedReplyCard = ({
         upvotesCount={voteState.upvotes}
         voteLabel="Marcar resposta como útil"
       />
+      {lectumDownloadDialog}
     </article>
   );
 };

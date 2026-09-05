@@ -13,8 +13,15 @@ import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts
 import { CommunityActionBar } from "@/components/community/community-action-bar";
 import { CommunityMediaBlock } from "@/components/community/community-media-frame";
 import { ReplyOwnerActionMenu } from "@/components/community/reply-owner-action-menu";
+import {
+  canShowSocialVideoPreviewAction,
+  createSocialVideoPreviewOverlayAction,
+} from "@/components/community/social-video-preview-action";
+import { useAppSelector } from "@/hooks/redux";
+import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
 import { formatCommunityRelativeTime as formatRelativeTime } from "@/utils/community-display";
+import { createLectumShareVideoDownloadTarget } from "@/utils/lectum-share-target";
 
 import {
   focusedReplyHref,
@@ -38,6 +45,9 @@ export const ReplyItemCard = ({
   showProfessionalAnsweredBadge: boolean;
 }) => {
   const router = useRouter();
+  const currentUser = useAppSelector((state) => state.user);
+  const { isDownloadingShareVideo, lectumDownloadDialog, openLectumDownloadDialog } =
+    useLectumShareDownloadDialog();
   const reply = item.reply;
   const voteMutation = useVotePost(item.post.id);
   const saveMutation = useSaveReply(item.post.id, reply?.id ?? "");
@@ -56,6 +66,22 @@ export const ReplyItemCard = ({
   if (!reply) return null;
 
   const replyHref = focusedReplyHref(item.post, reply.id);
+  const replySocialTarget = canShowSocialVideoPreviewAction({
+    author: reply.author,
+    currentUser,
+    mediaType: reply.media_type,
+    mediaUrl: reply.media_url,
+  })
+    ? createLectumShareVideoDownloadTarget(item.post, reply, {
+        parentContent: reply.parent_content,
+        relativeUrl: replyHref,
+      })
+    : null;
+  const replyOverlayAction = createSocialVideoPreviewOverlayAction({
+    disabled: isDownloadingShareVideo,
+    onOpen: openLectumDownloadDialog,
+    target: replySocialTarget,
+  });
   const hasReplyMedia = Boolean(reply.media_url && reply.media_type);
   const hasReplyText = Boolean(reply.content.trim());
   const hasVerifiedProfessionalReply =
@@ -250,6 +276,7 @@ export const ReplyItemCard = ({
             className={cn(hasReplyText ? "mt-1" : undefined)}
             mediaType={reply.media_type}
             mediaUrl={reply.media_url}
+            overlayAction={replyOverlayAction}
             roundedClassName="rounded-[18px]"
             thumbnailUrl={reply.thumbnail_url}
             variant="reply"
@@ -289,6 +316,7 @@ export const ReplyItemCard = ({
         voteLabel={`Marcar ${interactionCopy.singular} como útil`}
         votePresentation="inline"
       />
+      {lectumDownloadDialog}
     </article>
   );
 };

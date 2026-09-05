@@ -3,6 +3,7 @@ import type { Job } from "bullmq";
 import type { Redis } from "ioredis";
 import type { VideoServiceConfig } from "../../config/env.js";
 import {
+  type SocialShareRenderMetadata,
   VIDEO_JOB_NAME,
   type VideoJobData,
   type VideoJobResult,
@@ -35,6 +36,26 @@ export const enqueueCompressionJob = async (
     { jobId },
   );
 
+export const enqueueSocialShareJob = async (
+  queue: VideoQueue,
+  input: {
+    jobId: string;
+    metadata: SocialShareRenderMetadata;
+    sourceUrl: string;
+  },
+): Promise<Job<VideoJobData, VideoJobResult, typeof VIDEO_JOB_NAME>> =>
+  queue.add(
+    VIDEO_JOB_NAME,
+    {
+      cancelRequested: false,
+      createdAt: new Date().toISOString(),
+      metadata: input.metadata,
+      operation: "social_share",
+      sourceUrl: input.sourceUrl,
+    },
+    { jobId: input.jobId },
+  );
+
 export const activeVideoJobIds = async (queue: VideoQueue) => {
   const jobs = await queue.getJobs(["active", "delayed", "prioritized", "waiting"]);
   return new Set(jobs.map((job) => String(job.id)));
@@ -65,7 +86,6 @@ export const removeOrCancelVideoJob = async (input: {
       input.jobId,
       Math.ceil(input.config.jobTimeoutMs / 1000) + 300,
     );
-    await job.updateData({ ...job.data, cancelRequested: true });
     return "cancel_requested";
   }
 

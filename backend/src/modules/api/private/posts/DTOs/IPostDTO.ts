@@ -400,6 +400,7 @@ export type IPostRenderShareArtifactDTO = {
 export type IPostRenderShareArtifactJobDTO = {
   p: PostParams & { jobId?: string; replyId?: string };
   auth: user;
+  range?: string;
 };
 
 export type IPostUploadShareArtifactDTO = {

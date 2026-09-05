@@ -52,11 +52,23 @@ unset VIDEO_SERVICE_API_KEY
 
 Consulte `job_id` no endpoint retornado. O download exige o mesmo header e aceita somente um Range.
 
+Para iniciar a renderização social via URL assinada/validada pelo backend:
+
+```bash
+read -s VIDEO_SERVICE_API_KEY
+curl --fail-with-body \
+  -H "Authorization: Bearer ${VIDEO_SERVICE_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"source_url":"https://customer-code.cloudflarestream.com/eyJhbGci.eyJzdWIi.assinatura/manifest/video.m3u8","metadata":{"cardLabel":"Perguntaram na Lectum","sourceText":"Como lidar com ansiedade antes de dormir?","professionalName":"Ana Martins","professionalRoleLabel":"Psicóloga","professionalVerified":true,"responseText":null}}' \
+  http://localhost:3003/api/private/jobs/social-share
+unset VIDEO_SERVICE_API_KEY
+```
+
 ## Contrato operacional
 
 - input/output nunca entram no Redis;
 - paths não usam nome original;
-- FFmpeg roda sem shell, aceita somente protocolos `file,pipe` e não herda segredos da aplicação;
+- FFmpeg roda sem shell: compressão aceita somente `file,pipe`; render social aceita origem HTTPS validada pelo backend/worker com whitelist `file,http,https,tcp,tls,crypto` para HLS remoto e não herda segredos da aplicação;
 - arquivo inválido/cancelado não recebe retry;
 - falha transitória recebe retry exponencial limitado;
 - outputs expiram conforme `VIDEO_OUTPUT_TTL_SECONDS`;

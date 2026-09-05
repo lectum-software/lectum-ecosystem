@@ -96,6 +96,11 @@ export const createVideoApi = (dependencies: VideoApiDependencies) => {
       return;
     }
 
+    if (error instanceof SyntaxError) {
+      sendPublicError(response, 400, "invalid_request", "Envie dados válidos.");
+      return;
+    }
+
     if (error instanceof Error && error.message === "video_storage_capacity_exhausted") {
       sendPublicError(
         response,

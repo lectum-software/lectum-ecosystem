@@ -1,3 +1,4 @@
+import api from "@/api";
 import { getApiErrorStatus } from "@/api/errors";
 import { callEndpoint } from "@/api/generator";
 import type {
@@ -21,6 +22,7 @@ import type {
   PostSaveResponse,
   PostSharePayload,
   PostShareResponse,
+  PostShareVideoArtifactRenderJobResponse,
   PostUpdateResponse,
   PostVotePayload,
   PostVoteResponse,
@@ -416,6 +418,120 @@ export const shareReply = async (
     ...handle,
     hideError: true,
   });
+};
+
+type PostShareVideoArtifactRenderJobRequest = {
+  jobId?: string;
+  postId: string;
+  replyId?: string | null;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+};
+
+const normalizePostShareVideoArtifactRenderJob = (
+  data: Omit<PostShareVideoArtifactRenderJobResponse, "ready" | "retry_after_ms"> &
+    Partial<Pick<PostShareVideoArtifactRenderJobResponse, "ready" | "retry_after_ms">>,
+): PostShareVideoArtifactRenderJobResponse => ({
+  ...data,
+  ready: data.ready ?? data.status === "completed",
+  retry_after_ms:
+    typeof data.retry_after_ms === "number" && Number.isFinite(data.retry_after_ms)
+      ? data.retry_after_ms
+      : data.status === "queued"
+        ? 2_000
+        : 3_500,
+});
+
+const renderJobRoute = (replyId?: string | null) =>
+  replyId
+    ? "/api/private/posts/:id/replies/:replyId/share-artifact/render-jobs"
+    : "/api/private/posts/:id/share-artifact/render-jobs";
+
+const renderJobStatusRoute = (replyId?: string | null) =>
+  replyId
+    ? "/api/private/posts/:id/replies/:replyId/share-artifact/render-jobs/:jobId"
+    : "/api/private/posts/:id/share-artifact/render-jobs/:jobId";
+
+const renderJobFileRoute = (replyId?: string | null) =>
+  replyId
+    ? "/api/private/posts/:id/replies/:replyId/share-artifact/render-jobs/:jobId/file"
+    : "/api/private/posts/:id/share-artifact/render-jobs/:jobId/file";
+
+export const startPostShareVideoArtifactRenderJob = async ({
+  postId,
+  replyId,
+  signal,
+  timeoutMs,
+}: PostShareVideoArtifactRenderJobRequest) => {
+  const handle = callEndpoint({
+    route: renderJobRoute(replyId),
+    method: "POST",
+    params: { id: postId, replyId: replyId ?? undefined },
+    config: { signal, timeout: timeoutMs },
+  });
+
+  const data = await handleReq<
+    Omit<PostShareVideoArtifactRenderJobResponse, "ready" | "retry_after_ms"> &
+      Partial<Pick<PostShareVideoArtifactRenderJobResponse, "ready" | "retry_after_ms">>
+  >({
+    ...handle,
+    hideError: true,
+  });
+
+  return normalizePostShareVideoArtifactRenderJob(data);
+};
+
+export const getPostShareVideoArtifactRenderJob = async ({
+  jobId,
+  postId,
+  replyId,
+  signal,
+  timeoutMs,
+}: PostShareVideoArtifactRenderJobRequest & { jobId: string }) => {
+  const handle = callEndpoint({
+    route: renderJobStatusRoute(replyId),
+    params: { id: postId, jobId, replyId: replyId ?? undefined },
+    config: { signal, timeout: timeoutMs },
+  });
+
+  const data = await handleReq<
+    Omit<PostShareVideoArtifactRenderJobResponse, "ready" | "retry_after_ms"> &
+      Partial<Pick<PostShareVideoArtifactRenderJobResponse, "ready" | "retry_after_ms">>
+  >({
+    ...handle,
+    hideError: true,
+  });
+
+  return normalizePostShareVideoArtifactRenderJob(data);
+};
+
+export const downloadPostShareVideoArtifactRenderJobFile = async ({
+  fileName,
+  jobId,
+  postId,
+  replyId,
+  signal,
+  timeoutMs,
+}: PostShareVideoArtifactRenderJobRequest & { fileName: string; jobId: string }) => {
+  const handle = callEndpoint({
+    route: renderJobFileRoute(replyId),
+    params: { id: postId, jobId, replyId: replyId ?? undefined },
+  });
+  const response = await api.request<Blob>({
+    responseType: "blob",
+    signal,
+    timeout: timeoutMs ?? 120_000,
+    url: handle.url,
+  });
+  const headerContentType = response.headers["content-type"];
+  const contentType = typeof headerContentType === "string" ? headerContentType : "video/mp4";
+  const blob = response.data;
+
+  if (!blob || blob.size <= 0) {
+    throw new Error("Vídeo indisponível para download.");
+  }
+
+  return new File([blob], fileName, { type: contentType });
 };
 
 export const votePost = async (id: string, body: PostVotePayload) => {

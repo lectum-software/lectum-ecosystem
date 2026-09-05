@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 182 tasks: `TASK-00` a `TASK-175`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 183 tasks: `TASK-00` a `TASK-176`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -273,6 +273,7 @@ ou cortesia manual.
 | 173 | [TASK-173 - Corrigir upload de vídeos nos posts e respostas](TASK-173-corrigir-upload-video-posts-respostas.md) | Completed | 23, 24, 26, 163, 171 |
 | 174 | [TASK-174 - Fixar barra de comentários no detalhe do post](TASK-174-fixar-barra-comentarios-detalhe-post.md) | Completed | 23, 24, 26, 45 |
 | 175 | [TASK-175 - Conexão autenticada do backend ao serviço de vídeo](TASK-175-conexao-backend-servico-video.md) | Completed | 164 |
+| 176 | [TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado](TASK-176-reativar-preview-social-video-service.md) | Completed | 42, 164, 167, 173, 175 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1378,3 +1379,13 @@ Uma task só pode ser marcada como concluída quando:
 - A imagem anexada em 2026-09-04 foi usada apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido. Builder/Quick Copy não está exposto como ferramenta callable nesta sessão; foram consultados o inventário `_product/tasks/PROTO-INVENTORY.md` e o fallback local `_product/proto/Dentro do Post.jpg`.
 - Alteração frontend-only, mobile-first; sem backend funcional, admin UI, schema, migration, endpoint, env obrigatória, package novo, provider, mock, seed, reset ou dados publicados. Rollback simples reverte o commit.
 - Validações: teste focado do layout do composer, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, browser/local HTTP em `/version` e `/comunidades`, `pnpm version:bump` e `pnpm check:version` em `0.1.274`; deploy/smoke de homologação após `git push`.
+
+## Correção operacional em 2026-09-05: prévia social de vídeo pelo serviço dedicado
+
+- Ajuste pós-feedback das TASK-42/TASK-164/TASK-173: o botão de Instagram volta a aparecer sobre vídeos próprios de psicólogos em posts e respostas, abrindo a prévia social vertical antes do download.
+- MediaBunny continua removido. O frontend só monta a prévia e solicita render; o backend valida psicólogo dono e delega a geração de MP4 9:16 para o app `video/`, que usa fila BullMQ/Redis e FFmpeg/ffprobe em worker dedicado.
+- O render social usa fonte HTTPS segura (playback assinado Cloudflare Stream ou mídia legada pública permitida), valida DNS público, sonda o vídeo remoto, gera H.264/AAC em alta qualidade (`slow`, CRF 18, áudio mínimo 192 kbps) e entrega arquivo efêmero por proxy autenticado.
+- Builder/Quick Copy não está exposto como ferramenta callable nesta sessão; foram usados `PROTO-INVENTORY.md` e a referência local `_product/proto/Compartilhamento Lectum - video-resposta stories referencia.png`.
+- Alteração frontend+backend+video, sem schema/migration, package novo, seed, reset, limpeza de bucket ou criação/renovação de `post_share_artifacts`. Rollback simples reverte o commit e, se necessário, remove as envs de conexão backend→video.
+- ALERTA DE DEPLOY: para habilitar a feature, configurar no backend `VIDEO_PROCESSING_SERVICE_URL` e `VIDEO_SERVICE_API_KEY`; `VIDEO_PROCESSING_SERVICE_REQUEST_TIMEOUT_MS` é opcional. Se ausentes, o download social retorna indisponibilidade pública e o restante do app segue funcionando.
+- Validações: `pnpm --dir video check`, `pnpm --dir video build`, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version` em `0.1.277`; smoke local HTTP em `/version` e `/comunidades`. Smoke de homologação será registrado após o push/deploy em `homolog`.

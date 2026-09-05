@@ -522,3 +522,4 @@ Formato recomendado:
 - [ADR-0489 — Fallback restrito na provisão de vídeos de posts e respostas](0489-upload-video-posts-respostas-fallback-provisao-stream.md)
 - [ADR-0490 — Composer de comentários fixo no rodapé mobile](0490-composer-comentarios-fixo-rodape-mobile.md)
 - [ADR-0491 — Conexão privada e autenticada do backend ao serviço de vídeo](0491-conexao-backend-servico-video.md)
+- [ADR-0492 — Render social de vídeos no serviço dedicado](0492-render-social-videos-servico-dedicado.md)
