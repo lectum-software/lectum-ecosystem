@@ -1555,3 +1555,25 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
   `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.289`. Smoke de homologacao sera
   registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: diagnostico seguro do FFmpeg social
+
+- Ajuste pos-feedback da TASK-176: apos a versao `0.1.289`, os logs confirmaram
+  `stage=render_initialization` e `progress=3`, mas ainda sem causa operacional suficiente. Isso
+  preserva o diagnostico de falha no FFmpeg antes de emitir progresso do render.
+- Correcao: `runManagedProcess` captura apenas a cauda do stderr em memoria e a converte para
+  `diagnostic_code` controlado (`ffmpeg_filter_drawtext_unavailable`,
+  `ffmpeg_encoder_h264_unavailable`, `ffmpeg_font_unavailable`, `process_output_no_space` etc.),
+  descartando stderr bruto, URL, segredo, stack, SQL, PII e payload tecnico dos logs.
+- O worker registra `video_job_processing_diagnostic` por tentativa com tentativa, retry, etapa,
+  progresso e `diagnostic_code`. O `/ready` do app `video/` passa a validar capacidades minimas do
+  render social (`drawtext`, `scale`, `overlay`, `drawbox`, `libx264` e `aac`) alem de binarios,
+  storage, Redis e worker.
+- Para reduzir a superficie de falha antes de sair progresso, o render social tambem remove a
+  dependencia do filtro de blur `gblur`; o video continua 1080x1920 H.264/AAC com overlay Lectum.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.290`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.

@@ -241,6 +241,22 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de diagnostico FFmpeg em 2026-09-08
+
+- Evidencia: apos a versao `0.1.289`, os logs confirmaram `stage=render_initialization` e
+  `progress=3` em todas as tentativas, mas ainda sem causa classificada. Isso confirma falha antes
+  de qualquer progresso emitido pelo FFmpeg do overlay.
+- Correcao: `runManagedProcess` passa a capturar somente a cauda do stderr em memoria e transforma a
+  causa em `diagnostic_code` controlado, sem registrar stderr bruto, URL, segredo, stack, SQL, PII,
+  payload tecnico ou detalhe de provider.
+- O worker registra `video_job_processing_diagnostic` por tentativa com `attempt`, `will_retry`,
+  `stage`, `progress` e `diagnostic_code`; o `/ready` do app `video/` valida capacidades minimas do
+  render social (`drawtext`, `scale`, `overlay`, `drawbox`, `libx264` e `aac`).
+- Correcao adicional: o render social remove a dependencia do filtro `gblur`, preservando MP4
+  1080x1920 H.264/AAC com overlay Lectum e reduzindo incompatibilidade entre builds FFmpeg.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -299,4 +315,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.289` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de diagnostico FFmpeg `0.1.290`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.290` serao registrados apos `git push` em
   `homolog` e deploy.

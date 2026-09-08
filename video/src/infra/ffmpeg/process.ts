@@ -2,18 +2,130 @@ import { spawn } from "node:child_process";
 
 export type ManagedProcessFailure = "aborted" | "failed" | "output_limit" | "timeout";
 
+export type ManagedProcessDiagnosticCode =
+  | "ffmpeg_encoder_aac_unavailable"
+  | "ffmpeg_encoder_h264_unavailable"
+  | "ffmpeg_encoder_open_failed"
+  | "ffmpeg_encoder_unavailable"
+  | "ffmpeg_filter_drawtext_unavailable"
+  | "ffmpeg_filter_unavailable"
+  | "ffmpeg_filtergraph_invalid"
+  | "ffmpeg_font_unavailable"
+  | "ffmpeg_input_decode_failed"
+  | "ffmpeg_muxer_failed"
+  | "ffmpeg_protocol_unavailable"
+  | "process_aborted"
+  | "process_binary_not_executable"
+  | "process_binary_unavailable"
+  | "process_failed"
+  | "process_output_limit"
+  | "process_output_no_space"
+  | "process_permission_denied"
+  | "process_spawn_failed"
+  | "process_timeout";
+
+const DEFAULT_DIAGNOSTIC_BY_FAILURE = {
+  aborted: "process_aborted",
+  failed: "process_failed",
+  output_limit: "process_output_limit",
+  timeout: "process_timeout",
+} as const satisfies Record<ManagedProcessFailure, ManagedProcessDiagnosticCode>;
+
+const STDERR_DIAGNOSTIC_BYTES = 16_384;
+
 export class ManagedProcessError extends Error {
+  readonly diagnosticCode: ManagedProcessDiagnosticCode;
   readonly kind: ManagedProcessFailure;
 
-  constructor(kind: ManagedProcessFailure, options: { cause?: unknown } = {}) {
+  constructor(
+    kind: ManagedProcessFailure,
+    options: { cause?: unknown; diagnosticCode?: ManagedProcessDiagnosticCode } = {},
+  ) {
     super(
       `video_process_${kind}`,
       options.cause === undefined ? undefined : { cause: options.cause },
     );
     this.name = "ManagedProcessError";
+    this.diagnosticCode = options.diagnosticCode ?? DEFAULT_DIAGNOSTIC_BY_FAILURE[kind];
     this.kind = kind;
   }
 }
+
+export const classifyManagedProcessDiagnostic = (stderr: string): ManagedProcessDiagnosticCode => {
+  const normalized = stderr.toLowerCase();
+
+  if (!normalized.trim()) return "process_failed";
+  if (normalized.includes("no such filter") && normalized.includes("drawtext")) {
+    return "ffmpeg_filter_drawtext_unavailable";
+  }
+  if (
+    normalized.includes("cannot find a valid font") ||
+    normalized.includes("could not load font") ||
+    normalized.includes("error loading font") ||
+    normalized.includes("fontconfig")
+  ) {
+    return "ffmpeg_font_unavailable";
+  }
+  if (normalized.includes("no such filter")) return "ffmpeg_filter_unavailable";
+  if (normalized.includes("unknown encoder") && normalized.includes("libx264")) {
+    return "ffmpeg_encoder_h264_unavailable";
+  }
+  if (normalized.includes("unknown encoder") && normalized.includes("aac")) {
+    return "ffmpeg_encoder_aac_unavailable";
+  }
+  if (normalized.includes("unknown encoder")) return "ffmpeg_encoder_unavailable";
+  if (
+    normalized.includes("error while opening encoder") ||
+    normalized.includes("encoder not found")
+  ) {
+    return "ffmpeg_encoder_open_failed";
+  }
+  if (normalized.includes("no space left on device")) return "process_output_no_space";
+  if (normalized.includes("permission denied")) return "process_permission_denied";
+  if (
+    normalized.includes("protocol not found") ||
+    normalized.includes("protocol not on whitelist")
+  ) {
+    return "ffmpeg_protocol_unavailable";
+  }
+  if (
+    normalized.includes("moov atom not found") ||
+    normalized.includes("invalid data found") ||
+    normalized.includes("could not find codec parameters")
+  ) {
+    return "ffmpeg_input_decode_failed";
+  }
+  if (
+    normalized.includes("error initializing filter") ||
+    normalized.includes("error initializing complex filters") ||
+    normalized.includes("failed to configure output pad") ||
+    normalized.includes("invalid argument")
+  ) {
+    return "ffmpeg_filtergraph_invalid";
+  }
+  if (
+    normalized.includes("error writing trailer") ||
+    normalized.includes("could not write header")
+  ) {
+    return "ffmpeg_muxer_failed";
+  }
+
+  return "process_failed";
+};
+
+const classifySpawnDiagnostic = (error: NodeJS.ErrnoException): ManagedProcessDiagnosticCode => {
+  if (error.code === "ENOENT") return "process_binary_unavailable";
+  if (error.code === "EACCES") return "process_binary_not_executable";
+  return "process_spawn_failed";
+};
+
+export const managedProcessDiagnosticCode = (
+  error: unknown,
+): ManagedProcessDiagnosticCode | undefined => {
+  if (error instanceof ManagedProcessError) return error.diagnosticCode;
+  if (error instanceof Error) return managedProcessDiagnosticCode(error.cause);
+  return undefined;
+};
 
 type RunManagedProcessInput = {
   args: readonly string[];
@@ -45,6 +157,7 @@ export const runManagedProcess = ({
     let failure: ManagedProcessFailure | null = null;
     let killTimeout: NodeJS.Timeout | null = null;
     let settled = false;
+    let stderrTail = "";
     let stdout = "";
     let stdoutBytes = 0;
 
@@ -86,15 +199,23 @@ export const runManagedProcess = ({
       onStdout?.(chunk);
     });
 
-    child.stderr.resume();
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", (chunk: string) => {
+      stderrTail = `${stderrTail}${chunk}`.slice(-STDERR_DIAGNOSTIC_BYTES);
+    });
 
-    child.once("error", (error) => {
+    child.once("error", (error: NodeJS.ErrnoException) => {
       if (settled) return;
       settled = true;
       clearTimeout(processTimeout);
       if (killTimeout) clearTimeout(killTimeout);
       signal?.removeEventListener("abort", handleAbort);
-      reject(new ManagedProcessError(failure ?? "failed", { cause: error }));
+      reject(
+        new ManagedProcessError(failure ?? "failed", {
+          cause: error,
+          diagnosticCode: classifySpawnDiagnostic(error),
+        }),
+      );
     });
 
     child.once("close", (code) => {
@@ -109,7 +230,11 @@ export const runManagedProcess = ({
         return;
       }
       if (code !== 0) {
-        reject(new ManagedProcessError("failed"));
+        reject(
+          new ManagedProcessError("failed", {
+            diagnosticCode: classifyManagedProcessDiagnostic(stderrTail),
+          }),
+        );
         return;
       }
 

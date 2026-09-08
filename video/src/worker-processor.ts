@@ -7,6 +7,7 @@ import {
   type VideoJobResult,
   VideoProcessingError,
 } from "./domain/jobs/contracts.js";
+import { logWarning } from "./http/logging.js";
 import { compressVideo } from "./infra/ffmpeg/compress.js";
 import {
   probeRemoteVideo,
@@ -15,6 +16,7 @@ import {
   validateOutputProbe,
   validatePublishedOutput,
 } from "./infra/ffmpeg/probe.js";
+import { managedProcessDiagnosticCode } from "./infra/ffmpeg/process.js";
 import { downloadRemoteVideoSourceFile } from "./infra/ffmpeg/remote-source.js";
 import { renderSocialShareVideo } from "./infra/ffmpeg/social-share.js";
 import {
@@ -50,6 +52,38 @@ const normalizeProcessingError = (error: unknown) =>
 const attemptsRemaining = (job: Job<VideoJobData, VideoJobResult, string>) => {
   const attempts = typeof job.opts.attempts === "number" ? job.opts.attempts : 1;
   return job.attemptsMade + 1 < attempts;
+};
+
+const safeJobProgress = (job: Job<VideoJobData, VideoJobResult, string>): number | undefined =>
+  typeof job.progress === "number" ? job.progress : undefined;
+
+const safeJobOperation = (job: Job<VideoJobData, VideoJobResult, string>) => {
+  const operation = job.data.operation;
+  return operation === "compress" || operation === "social_share" ? operation : "unknown";
+};
+
+const safeFailureStage = (job: Job<VideoJobData, VideoJobResult, string>) => {
+  const operation = safeJobOperation(job);
+  const progress = safeJobProgress(job);
+
+  if (progress === undefined) return "unknown";
+  if (operation === "social_share") {
+    if (progress < 1) return "queued";
+    if (progress < 2) return "source_validation";
+    if (progress < 3) return "source_download";
+    if (progress < 4) return "render_initialization";
+    if (progress < 100) return "render_processing";
+    return "publishing";
+  }
+
+  if (operation === "compress") {
+    if (progress < 1) return "queued";
+    if (progress < 3) return "source_validation";
+    if (progress < 100) return "processing";
+    return "publishing";
+  }
+
+  return "unknown";
 };
 
 const processCompressionJob = async (input: {
@@ -273,6 +307,17 @@ export const createVideoJobProcessor =
     } catch (error) {
       const processingError = normalizeProcessingError(error);
       const shouldRetry = processingError.retryable && attemptsRemaining(job);
+
+      logWarning("video_job_processing_diagnostic", {
+        attempt: job.attemptsMade + 1,
+        diagnostic_code: managedProcessDiagnosticCode(processingError) ?? "processing_error",
+        error_code: processingError.code,
+        job_id: jobId,
+        operation: safeJobOperation(job),
+        progress: safeJobProgress(job),
+        stage: safeFailureStage(job),
+        will_retry: shouldRetry,
+      });
 
       await removeVideoOutput(dependencies.config, jobId);
       if (!shouldRetry) {

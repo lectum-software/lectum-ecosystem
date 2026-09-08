@@ -45,8 +45,8 @@ describe("FFmpeg social share command", () => {
 
     assert.match(command, /-filter_complex/);
     assert.match(command, /scale=1080:1920/);
-    assert.match(command, /gblur=sigma=22,eq=brightness=-0\.16/);
-    assert.doesNotMatch(command, /gblur=sigma=22:steps=2/);
+    assert.match(command, /eq=brightness=-0\.16:saturation=0\.92/);
+    assert.equal(command.includes("gblur="), false);
     assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans\.ttf'/);
     assert.match(command, /drawtext=text='lectum'/);

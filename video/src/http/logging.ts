@@ -1,4 +1,6 @@
 type SafeLogDetails = {
+  attempt?: number | undefined;
+  diagnostic_code?: string | undefined;
   elapsed_ms?: number | undefined;
   error_code?: string | undefined;
   job_id?: string | undefined;
@@ -7,6 +9,7 @@ type SafeLogDetails = {
   stage?: string | undefined;
   status?: string | undefined;
   trace_id?: string | undefined;
+  will_retry?: boolean | undefined;
 };
 
 const write = (level: "error" | "info" | "warn", event: string, details: SafeLogDetails = {}) => {

@@ -146,7 +146,7 @@ export const buildSocialShareFilter = (
   const outputFps = Math.min(SOCIAL_OUTPUT_FPS, maxFps);
 
   return [
-    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT},gblur=sigma=22,eq=brightness=-0.16:saturation=0.92,format=rgba[bg]`,
+    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT},eq=brightness=-0.16:saturation=0.92,format=rgba[bg]`,
     `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1[fg]`,
     "[bg][fg]overlay=(W-w)/2:(H-h)/2[v0]",
     [

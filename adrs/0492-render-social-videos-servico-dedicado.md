@@ -223,6 +223,29 @@ do overlay como ponto fraco de compatibilidade entre runtimes FFmpeg sem mudar a
 A mudanca permanece video-only, sem env nova, schema, pacote, provider, persistencia de artefato,
 mock, seed, reset ou limpeza de dados publicados.
 
+## Atualizacao de diagnostico FFmpeg em 2026-09-08
+
+Depois da versao `0.1.289`, os logs do worker confirmaram `stage=render_initialization` e
+`progress=3` em todas as tentativas. A decisao foi preservar mensagens publicas seguras e ampliar a
+observabilidade backend-only com codigos controlados:
+
+- `runManagedProcess` mantem somente a cauda do stderr em memoria e nunca grava stderr bruto em log;
+- falhas conhecidas sao classificadas em `diagnostic_code` como
+  `ffmpeg_filter_drawtext_unavailable`, `ffmpeg_encoder_h264_unavailable`,
+  `ffmpeg_encoder_aac_unavailable`, `ffmpeg_font_unavailable`, `process_output_no_space`,
+  `process_permission_denied` ou `process_failed`;
+- o worker registra um evento `video_job_processing_diagnostic` por tentativa, contendo somente
+  job opaco, operacao, etapa, progresso, tentativa, decisao de retry e codigo diagnostico;
+- `/ready` do app `video/` passa a validar capacidades minimas do render social (`drawtext`,
+  `scale`, `overlay`, `drawbox`, `libx264` e `aac`) alem de Redis, storage, worker e existencia dos
+  binarios;
+- o render social remove a dependencia de `gblur`, pois blur de fundo e detalhe visual secundario e
+  nao deve impedir o download com overlay Lectum quando o build FFmpeg nao empacota esse filtro.
+
+Essa decisao nao altera contrato publico, nao cria env, schema, pacote, provider, persistencia de
+artefato, mock, seed, reset ou limpeza de dados publicados. Logs continuam proibidos de conter URL,
+segredo, PII, stack, SQL, stderr bruto, payload tecnico ou detalhe de provider.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -266,3 +289,6 @@ mock, seed, reset ou limpeza de dados publicados.
 - Atualizacao de compatibilidade FFmpeg 2026-09-08: `pnpm --dir video test`,
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check` em `0.1.289`.
+- Atualizacao de diagnostico FFmpeg 2026-09-08: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check` em `0.1.290`.

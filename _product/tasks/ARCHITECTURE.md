@@ -432,9 +432,10 @@ Templates/shells devem viver em `frontend/src/templates`.
   privado efemero com `fetch`, redirects proibidos e headers seguros, valida assinatura/tamanho e
   entao roda `ffprobe`/FFmpeg sobre arquivo local. O render social gera 1080x1920 com FFmpeg
   H.264/AAC em preset rapido, executa processos com locale UTF-8, escapa textos livres antes do
-  `drawtext`, resolve `fontfile` DejaVu somente quando a fonte existe no runtime, evita opcoes de
-  filtro pouco portaveis e mantem o arquivo apenas como saida efemera do job. Para posts, a
-  associacao de video
+  `drawtext`, resolve `fontfile` DejaVu somente quando a fonte existe no runtime, evita filtros de
+  blur dependentes de build e mantem o arquivo apenas como saida efemera do job. As falhas de
+  processo sao classificadas em `diagnostic_code` seguro a partir de stderr em memoria, sem expor
+  stderr bruto, URLs, stack, segredos, SQL, PII ou payload tecnico. Para posts, a associacao de video
   considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend
   pode repetir chamadas transitorias de start/status/download, aguardar videos maiores e reutilizar o
   job em andamento na mesma sessao, exibindo ao usuario apenas diagnostico publico controlado

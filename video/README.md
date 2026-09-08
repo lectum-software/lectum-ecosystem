@@ -74,6 +74,8 @@ unset VIDEO_SERVICE_API_KEY
 - FFmpeg roda sem shell: compressão aceita somente `file,pipe`; render social aceita origem HTTPS validada pelo backend/worker com whitelist `file,http,https,tcp,tls,crypto` para HLS remoto, roda com locale UTF-8, resolve uma fonte DejaVu local quando disponível, omite `fontfile` se a imagem não tiver o caminho Debian, evita opções de filtro pouco portáveis e não herda segredos da aplicação;
 - arquivo inválido/cancelado não recebe retry;
 - falha transitória recebe retry exponencial limitado;
+- falhas de processo registram `diagnostic_code` classificado a partir de stderr em memória, sem
+  expor stderr bruto, URLs, stack, segredos ou payloads de mídia;
 - outputs expiram conforme `VIDEO_OUTPUT_TTL_SECONDS`;
 - reserva atômica no Redis evita que uploads simultâneos prometam mais disco do que o disponível;
 - worker padrão processa um job por vez;
@@ -96,7 +98,9 @@ Para escalar horizontalmente, use a mesma imagem em servicos separados:
 No `docker-compose`, o `worker` fica tanto na rede `video-private` quanto na `video-edge`. Ele nao
 publica portas, mas precisa de egresso HTTPS para baixar/sondar midias first-party ou Stream durante
 jobs `social_share`. O Redis permanece somente em `video-private`, que continua `internal: true`, e
-nao deve ter porta publica.
+nao deve ter porta publica. A rota `/ready` valida não só binários FFmpeg/ffprobe, mas também
+capacidades mínimas do render social (`drawtext`, `scale`, `overlay`, `drawbox`, `libx264` e
+`aac`), registrando apenas códigos diagnósticos controlados quando algo faltar.
 
 Cadastre `VIDEO_SERVICE_API_KEY` e `REDIS_URL` como secrets de runtime. Nenhuma variável desta app é
 build-time. Em produção, a URL Redis precisa incluir autenticação e `VIDEO_STORAGE_ROOT` precisa ser

@@ -4,9 +4,10 @@ import type { Redis } from "ioredis";
 import multer from "multer";
 import type { VideoServiceConfig } from "./config/env.js";
 import { VIDEO_SERVICE_VERSION } from "./config/version.js";
-import { logError } from "./http/logging.js";
+import { logError, logWarning } from "./http/logging.js";
 import { assertVideoApiReady } from "./http/readiness.js";
 import { disableCaching, sendPublicError, sendSuccess } from "./http/responses.js";
+import { managedProcessDiagnosticCode } from "./infra/ffmpeg/process.js";
 import type { VideoQueue } from "./infra/queue/client.js";
 import { releaseVideoStorageReservation } from "./infra/storage/reservations.js";
 import { removeVideoJobStorage } from "./infra/storage/storage.js";
@@ -26,6 +27,18 @@ const multerErrorResponse = (error: multer.MulterError) => {
   }
 
   return { code: "invalid_upload", message: "Envie um único vídeo válido.", status: 400 };
+};
+
+const readinessDiagnosticCode = (error: unknown) => {
+  const processDiagnostic = managedProcessDiagnosticCode(error);
+  if (processDiagnostic) return processDiagnostic;
+  if (error instanceof Error && error.message === "video_worker_unavailable") {
+    return "worker_unavailable";
+  }
+  if (error instanceof Error && error.message === "readiness_timeout") {
+    return "readiness_timeout";
+  }
+  return "readiness_failed";
 };
 
 export const createVideoApi = (dependencies: VideoApiDependencies) => {
@@ -55,7 +68,12 @@ export const createVideoApi = (dependencies: VideoApiDependencies) => {
     try {
       await assertVideoApiReady(dependencies);
       sendSuccess(response, 200, { status: "ready" });
-    } catch {
+    } catch (error) {
+      logWarning("video_api_readiness_failed", {
+        diagnostic_code: readinessDiagnosticCode(error),
+        error_code: "service_unavailable",
+        operation: "ready",
+      });
       sendPublicError(
         response,
         503,
