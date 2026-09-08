@@ -431,8 +431,10 @@ Templates/shells devem viver em `frontend/src/templates`.
   nunca a MP4/MOV/WebM direto; para midia remota direta, o worker baixa primeiro para storage
   privado efemero com `fetch`, redirects proibidos e headers seguros, valida assinatura/tamanho e
   entao roda `ffprobe`/FFmpeg sobre arquivo local. O render social gera 1080x1920 com FFmpeg
-  H.264/AAC em preset rapido, escapam textos livres antes do `drawtext` e mantem o arquivo apenas
-  como saida efemera do job. Para posts, a associacao de video
+  H.264/AAC em preset rapido, executa processos com locale UTF-8, escapa textos livres antes do
+  `drawtext`, resolve `fontfile` DejaVu somente quando a fonte existe no runtime, evita opcoes de
+  filtro pouco portaveis e mantem o arquivo apenas como saida efemera do job. Para posts, a
+  associacao de video
   considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend
   pode repetir chamadas transitorias de start/status/download, aguardar videos maiores e reutilizar o
   job em andamento na mesma sessao, exibindo ao usuario apenas diagnostico publico controlado

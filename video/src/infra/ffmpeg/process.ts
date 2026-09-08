@@ -25,7 +25,7 @@ type RunManagedProcessInput = {
 };
 
 const childEnvironment = (): NodeJS.ProcessEnv => {
-  const environment: NodeJS.ProcessEnv = { LANG: "C", LC_ALL: "C" };
+  const environment: NodeJS.ProcessEnv = { LANG: "C.UTF-8", LC_ALL: "C.UTF-8" };
   for (const key of ["HOME", "LD_LIBRARY_PATH", "PATH", "TEMP", "TMP", "TMPDIR"]) {
     const value = process.env[key];
     if (value) environment[key] = value;

@@ -1537,3 +1537,21 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
   `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.288`. Smoke de homologacao sera
   registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: compatibilidade do render social no FFmpeg
+
+- Ajuste pos-feedback da TASK-176: os logs do servidor de video passaram a mostrar `SR-05` com
+  progresso `3%`. Isso confirma que a validacao da URL, o download local e o `ffprobe` da entrada
+  foram vencidos; a falha restante ocorre na inicializacao/processamento do FFmpeg do overlay.
+- Correcao: o app `video/` remove a opcao menos portavel `steps` do filtro `gblur`, executa
+  processos FFmpeg/ffprobe com locale UTF-8, resolve `fontfile` DejaVu somente quando a fonte existe
+  no runtime e tenta novamente sem `fontfile` explicito se o FFmpeg falhar antes de emitir progresso
+  do render.
+- Diagnostico operacional: logs seguros de falha do worker agora incluem `progress` e `stage`
+  normalizados, sem stack, URL, segredo, PII, SQL, payload tecnico ou detalhe de provider.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.289`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.

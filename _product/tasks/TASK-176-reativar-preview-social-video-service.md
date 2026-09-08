@@ -228,6 +228,19 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de compatibilidade FFmpeg em 2026-09-08
+
+- Evidencia: os logs do servidor de video passaram a mostrar `SR-05`, job `falhou` e progresso
+  `3%`. Isso indica que a origem, o download local e o probe da entrada passaram; a falha restante
+  fica na inicializacao/processamento do FFmpeg que desenha o overlay.
+- Correcao: `video/` executa FFmpeg/ffprobe com locale UTF-8, remove a opcao `steps` do `gblur`,
+  resolve `fontfile` DejaVu somente quando a fonte existe no runtime e tenta novamente sem
+  `fontfile` explicito se o FFmpeg falhar antes de emitir progresso do render.
+- Diagnostico: logs seguros de falha do worker incluem `progress` e `stage` normalizados, sem URL,
+  segredo, PII, stack, SQL, payload tecnico ou detalhe de provider.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -281,4 +294,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.288` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de compatibilidade FFmpeg `0.1.289`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.289` serao registrados apos `git push` em
   `homolog` e deploy.

@@ -1,4 +1,4 @@
-import { stat } from "node:fs/promises";
+import { access, stat } from "node:fs/promises";
 import type { VideoServiceConfig } from "../../config/env.js";
 import {
   type SocialShareRenderMetadata,
@@ -12,7 +12,12 @@ const SOCIAL_OUTPUT_HEIGHT = 1920;
 const SOCIAL_RENDER_CRF = 20;
 const SOCIAL_RENDER_PRESET = "veryfast";
 const SOCIAL_OUTPUT_FPS = 30;
-const SOCIAL_DRAW_TEXT_FONT_FILE = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+const SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES = [
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+] as const;
+const SOCIAL_DRAW_TEXT_FONT_FILE = SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES[0];
 
 type SocialShareSource =
   | {
@@ -24,6 +29,10 @@ type SocialShareSource =
       requestOrigin?: string | null;
       sourceUrl: string;
     };
+
+type SocialShareRenderOptions = {
+  fontFile?: string | null;
+};
 
 const normalizeText = (value: string | null | undefined, fallback: string, maxLength: number) => {
   const normalized = String(value ?? "")
@@ -77,12 +86,14 @@ const escapeDrawText = (value: string) =>
 
 const drawText = ({
   color,
+  fontFile,
   fontSize,
   text,
   x,
   y,
 }: {
   color: string;
+  fontFile?: string | null;
   fontSize: number;
   text: string;
   x: string | number;
@@ -90,7 +101,7 @@ const drawText = ({
 }) =>
   `drawtext=${[
     `text='${escapeDrawText(text)}'`,
-    `fontfile='${escapeDrawText(SOCIAL_DRAW_TEXT_FONT_FILE)}'`,
+    ...(fontFile ? [`fontfile='${escapeDrawText(fontFile)}'`] : []),
     `x=${x}`,
     `y=${y}`,
     `fontsize=${fontSize}`,
@@ -111,12 +122,18 @@ export const sanitizeSocialShareMetadata = (
   sourceText: normalizeText(metadata.sourceText, "Conteúdo na Lectum", 180),
 });
 
-export const buildSocialShareFilter = (metadata: SocialShareRenderMetadata, maxFps: number) => {
+export const buildSocialShareFilter = (
+  metadata: SocialShareRenderMetadata,
+  maxFps: number,
+  options: SocialShareRenderOptions = {},
+) => {
+  const fontFile = options.fontFile === undefined ? SOCIAL_DRAW_TEXT_FONT_FILE : options.fontFile;
   const sanitized = sanitizeSocialShareMetadata(metadata);
   const sourceLines = wrapText(sanitized.sourceText, 29, 3);
   const sourceTextFilters = sourceLines.map((line, index) =>
     drawText({
       color: "black",
+      fontFile,
       fontSize: sourceLines.length > 2 ? 52 : 58,
       text: line,
       x: "(w-text_w)/2",
@@ -129,7 +146,7 @@ export const buildSocialShareFilter = (metadata: SocialShareRenderMetadata, maxF
   const outputFps = Math.min(SOCIAL_OUTPUT_FPS, maxFps);
 
   return [
-    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT},gblur=sigma=22:steps=2,eq=brightness=-0.16:saturation=0.92,format=rgba[bg]`,
+    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT},gblur=sigma=22,eq=brightness=-0.16:saturation=0.92,format=rgba[bg]`,
     `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1[fg]`,
     "[bg][fg]overlay=(W-w)/2:(H-h)/2[v0]",
     [
@@ -138,6 +155,7 @@ export const buildSocialShareFilter = (metadata: SocialShareRenderMetadata, maxF
       "drawbox=x=104:y=96:w=864:h=342:color=white@0.94:t=fill",
       drawText({
         color: "0x1f6fff",
+        fontFile,
         fontSize: 39,
         text: sanitized.cardLabel,
         x: "(w-text_w)/2",
@@ -146,6 +164,7 @@ export const buildSocialShareFilter = (metadata: SocialShareRenderMetadata, maxF
       ...sourceTextFilters,
       drawText({
         color: "white",
+        fontFile,
         fontSize: 38,
         text: name,
         x: 72,
@@ -153,6 +172,7 @@ export const buildSocialShareFilter = (metadata: SocialShareRenderMetadata, maxF
       }),
       drawText({
         color: "white",
+        fontFile,
         fontSize: 31,
         text: sanitized.professionalRoleLabel,
         x: 72,
@@ -160,6 +180,7 @@ export const buildSocialShareFilter = (metadata: SocialShareRenderMetadata, maxF
       }),
       drawText({
         color: "white",
+        fontFile,
         fontSize: 68,
         text: "lectum",
         x: "w-text_w-72",
@@ -171,12 +192,30 @@ export const buildSocialShareFilter = (metadata: SocialShareRenderMetadata, maxF
   ].join(";");
 };
 
-export const buildSocialShareVideoArguments = (input: {
-  config: VideoServiceConfig;
-  metadata: SocialShareRenderMetadata;
-  outputPath: string;
-  source: SocialShareSource;
-}) => {
+export const resolveSocialShareFontFile = async (
+  candidates: readonly string[] = SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES,
+) => {
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      // Try the next portable font location before letting FFmpeg use its default.
+    }
+  }
+
+  return null;
+};
+
+export const buildSocialShareVideoArguments = (
+  input: {
+    config: VideoServiceConfig;
+    metadata: SocialShareRenderMetadata;
+    outputPath: string;
+    source: SocialShareSource;
+  },
+  options: SocialShareRenderOptions = {},
+) => {
   const inputArguments = (() => {
     if (input.source.kind !== "remote") {
       return ["-protocol_whitelist", "file,pipe", "-i", input.source.inputPath];
@@ -208,7 +247,7 @@ export const buildSocialShareVideoArguments = (input: {
     "-y",
     ...inputArguments,
     "-filter_complex",
-    buildSocialShareFilter(input.metadata, input.config.maxFps),
+    buildSocialShareFilter(input.metadata, input.config.maxFps, options),
     "-map",
     "[v]",
     "-map",
@@ -302,14 +341,41 @@ export const renderSocialShareVideo = async (input: {
   outputMonitor.unref();
 
   try {
-    await runManagedProcess({
-      args: buildSocialShareVideoArguments(input),
-      command: input.config.ffmpegPath,
-      maxStdoutBytes: 4_194_304,
-      onStdout: createProgressParser(input.durationSeconds, input.onProgress),
-      signal,
-      timeoutMs: input.config.jobTimeoutMs,
-    });
+    const resolvedFontFile = await resolveSocialShareFontFile();
+    let emittedRenderProgress = false;
+
+    const runRenderProcess = (fontFile: string | null) => {
+      const progressParser = createProgressParser(input.durationSeconds, (percentage) => {
+        emittedRenderProgress = true;
+        input.onProgress(percentage);
+      });
+
+      return runManagedProcess({
+        args: buildSocialShareVideoArguments(input, { fontFile }),
+        command: input.config.ffmpegPath,
+        maxStdoutBytes: 4_194_304,
+        onStdout: progressParser,
+        signal,
+        timeoutMs: input.config.jobTimeoutMs,
+      });
+    };
+
+    try {
+      await runRenderProcess(resolvedFontFile);
+    } catch (error) {
+      if (
+        resolvedFontFile &&
+        !emittedRenderProgress &&
+        !signal.aborted &&
+        error instanceof ManagedProcessError &&
+        error.kind === "failed"
+      ) {
+        await runRenderProcess(null);
+        return;
+      }
+
+      throw error;
+    }
   } catch (error) {
     if (exceededOutputLimit) {
       throw new VideoProcessingError("processing_failed", { cause: error });

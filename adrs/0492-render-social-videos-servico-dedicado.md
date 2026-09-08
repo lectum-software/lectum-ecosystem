@@ -204,6 +204,25 @@ permanece exclusivamente em `video-private` e a superficie publica segue limitad
 de video. A mudanca nao cria env, schema, pacote, provider, persistencia de artefato, mock, seed,
 reset ou limpeza de dados publicados.
 
+## Atualizacao de compatibilidade FFmpeg em 2026-09-08
+
+Novo feedback do servidor de video mostrou `SR-05` com progresso `3%`. Esse progresso ocorre depois
+da validacao de URL, download local e `ffprobe` da entrada, portanto a decisao foi tratar o render
+do overlay como ponto fraco de compatibilidade entre runtimes FFmpeg sem mudar a arquitetura:
+
+- processos FFmpeg/ffprobe passam a usar locale `C.UTF-8`, preservando metadados de overlay com
+  acentos e simbolos sem depender do locale `C` puro;
+- o filtro de fundo remove `steps` de `gblur`, mantendo blur mas evitando opcao menos portavel em
+  builds FFmpeg diferentes;
+- o worker resolve caminhos DejaVu conhecidos no runtime e so envia `fontfile` quando a fonte
+  existe; se uma tentativa com `fontfile` falhar antes de qualquer progresso do render, repete sem
+  `fontfile` explicito para permitir fallback do FFmpeg/fontconfig;
+- logs seguros de falha do worker passam a incluir `progress` e `stage` normalizados, sem stack,
+  URL, segredo, PII, SQL, payload tecnico ou detalhe de provider.
+
+A mudanca permanece video-only, sem env nova, schema, pacote, provider, persistencia de artefato,
+mock, seed, reset ou limpeza de dados publicados.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -244,3 +263,6 @@ reset ou limpeza de dados publicados.
 - Atualizacao de egresso do worker Docker 2026-09-08: `pnpm --dir video test`,
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check` em `0.1.288`.
+- Atualizacao de compatibilidade FFmpeg 2026-09-08: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check` em `0.1.289`.

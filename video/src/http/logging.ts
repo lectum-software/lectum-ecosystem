@@ -3,6 +3,8 @@ type SafeLogDetails = {
   error_code?: string | undefined;
   job_id?: string | undefined;
   operation?: string | undefined;
+  progress?: number | undefined;
+  stage?: string | undefined;
   status?: string | undefined;
   trace_id?: string | undefined;
 };

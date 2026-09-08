@@ -45,6 +45,8 @@ describe("FFmpeg social share command", () => {
 
     assert.match(command, /-filter_complex/);
     assert.match(command, /scale=1080:1920/);
+    assert.match(command, /gblur=sigma=22,eq=brightness=-0\.16/);
+    assert.doesNotMatch(command, /gblur=sigma=22:steps=2/);
     assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans\.ttf'/);
     assert.match(command, /drawtext=text='lectum'/);
@@ -55,6 +57,25 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-allowed_extensions ALL/);
     assert.equal(args.at(-1), "/safe/outputs/video.partial.mp4");
     assert.equal(args.includes("-nostdin"), true);
+  });
+
+  it("permite renderizar overlay sem fontfile explicito quando a imagem nao tem a fonte Debian", () => {
+    const args = buildSocialShareVideoArguments(
+      {
+        config,
+        metadata,
+        outputPath: "/safe/outputs/video.partial.mp4",
+        source: {
+          inputPath: "/safe/inputs/source",
+          kind: "file",
+        },
+      },
+      { fontFile: null },
+    );
+    const command = args.join(" ");
+
+    assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
+    assert.equal(command.includes("fontfile="), false);
   });
 
   it("omite allowed_extensions para MP4 publico porque o demuxer mov rejeita a opcao", () => {

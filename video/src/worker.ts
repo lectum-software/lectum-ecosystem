@@ -19,6 +19,33 @@ const safeJobOperation = (job: { data?: Partial<VideoJobData> } | null | undefin
   return operation === "compress" || operation === "social_share" ? operation : "unknown";
 };
 
+const safeJobProgress = (job: { progress?: unknown } | null | undefined): number | undefined =>
+  typeof job?.progress === "number" ? job.progress : undefined;
+
+const safeFailureStage = (job: { data?: Partial<VideoJobData>; progress?: unknown }) => {
+  const operation = safeJobOperation(job);
+  const progress = safeJobProgress(job);
+
+  if (progress === undefined) return "unknown";
+  if (operation === "social_share") {
+    if (progress < 1) return "queued";
+    if (progress < 2) return "source_validation";
+    if (progress < 3) return "source_download";
+    if (progress < 4) return "render_initialization";
+    if (progress < 100) return "render_processing";
+    return "publishing";
+  }
+
+  if (operation === "compress") {
+    if (progress < 1) return "queued";
+    if (progress < 3) return "source_validation";
+    if (progress < 100) return "processing";
+    return "publishing";
+  }
+
+  return "unknown";
+};
+
 export type StartedVideoWorkerRuntime = {
   shutdown: () => Promise<void>;
 };
@@ -74,6 +101,8 @@ export const startVideoWorkerRuntime = async (
           : "processing_failed",
       job_id: job?.id ? String(job.id) : undefined,
       operation: safeJobOperation(job),
+      progress: safeJobProgress(job),
+      stage: job ? safeFailureStage(job) : undefined,
     });
   });
   worker.on("error", () => {
