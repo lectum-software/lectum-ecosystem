@@ -8,6 +8,8 @@ import {
   downloadPreparedLectumShareFile,
   getPreparedLectumShareFile,
   isNativeShareAbortError,
+  LectumShareRenderError,
+  type LectumShareRenderErrorDiagnostic,
   prepareLectumShareFileWithServerRender,
   type ShareExportResult,
   shareLectumLinkTarget,
@@ -44,6 +46,68 @@ const MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE =
 const DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE =
   "Não conseguimos gerar o vídeo com arte agora. Tente novamente em instantes.";
 const MOBILE_DOWNLOAD_QUALITY_GUIDANCE_USER_AGENT_PATTERN = /\b(Android|iPhone|iPad|iPod)\b/i;
+const SHARE_RENDER_DIAGNOSTIC_CODE_FALLBACK = "SR-00";
+
+type ShareRenderDiagnosticCopy = {
+  description: string;
+  reference: string;
+};
+
+const SHARE_RENDER_STAGE_LABELS = {
+  download: "download do arquivo pronto",
+  processing: "processamento do vídeo",
+  start: "início da geração",
+  status: "acompanhamento da fila",
+  timeout: "tempo de geração",
+} satisfies Record<LectumShareRenderErrorDiagnostic["stage"], string>;
+
+const SHARE_RENDER_JOB_STATUS_LABELS = {
+  canceled: "cancelado",
+  cancel_requested: "cancelamento solicitado",
+  completed: "concluído",
+  failed: "falhou",
+  processing: "processando",
+  queued: "na fila",
+} satisfies Record<NonNullable<LectumShareRenderErrorDiagnostic["jobStatus"]>, string>;
+
+const SHARE_RENDER_DIAGNOSTIC_COPY: Record<string, ShareRenderDiagnosticCopy> = {
+  canceled: {
+    description: "a geração foi cancelada antes de concluir",
+    reference: "SR-06",
+  },
+  empty_file: {
+    description: "o arquivo gerado veio vazio",
+    reference: "SR-09",
+  },
+  invalid_video: {
+    description: "o vídeo de origem não pôde ser lido",
+    reference: "SR-04",
+  },
+  post_share_artifact_render_media_invalid: {
+    description: "a mídia de origem não está disponível para gerar a arte",
+    reference: "SR-02",
+  },
+  post_share_artifact_render_target_invalid: {
+    description: "a publicação ou resposta não pode gerar este vídeo",
+    reference: "SR-03",
+  },
+  post_share_artifact_render_unavailable: {
+    description: "o serviço de geração não respondeu como esperado",
+    reference: "SR-01",
+  },
+  processing_failed: {
+    description: "o processamento do vídeo falhou",
+    reference: "SR-05",
+  },
+  render_timeout: {
+    description: "o tempo limite foi atingido antes de concluir",
+    reference: "SR-08",
+  },
+  request_failed: {
+    description: "houve falha temporária de comunicação",
+    reference: "SR-07",
+  },
+};
 
 const shouldShowDownloadQualityGuidance = () => {
   if (typeof window === "undefined") return false;
@@ -58,6 +122,33 @@ const shouldShowDownloadQualityGuidance = () => {
     MOBILE_DOWNLOAD_QUALITY_GUIDANCE_USER_AGENT_PATTERN.test(userAgent) ||
     (platform === "MacIntel" && maxTouchPoints > 1)
   );
+};
+
+const buildShareRenderDiagnosticDescription = (error: unknown) => {
+  if (!(error instanceof LectumShareRenderError)) return undefined;
+
+  const { code, jobStatus, progress, stage, status } = error.diagnostic;
+  const copy = SHARE_RENDER_DIAGNOSTIC_COPY[code] ?? {
+    description: "falha não classificada no preparo do vídeo",
+    reference: SHARE_RENDER_DIAGNOSTIC_CODE_FALLBACK,
+  };
+  const parts = [
+    `Etapa: ${SHARE_RENDER_STAGE_LABELS[stage]}.`,
+    `Motivo: ${copy.description}.`,
+    `Ref.: ${copy.reference}.`,
+  ];
+
+  if (typeof status === "number") {
+    parts.push(`Status: ${status}.`);
+  }
+
+  if (jobStatus) {
+    const progressLabel =
+      typeof progress === "number" ? `, progresso ${Math.round(progress)}%` : "";
+    parts.push(`Job: ${SHARE_RENDER_JOB_STATUS_LABELS[jobStatus]}${progressLabel}.`);
+  }
+
+  return parts.join(" ");
 };
 
 const socialTargetAsLinkTarget = (target: LectumShareSocialTarget): LectumShareLinkTarget => ({
@@ -161,13 +252,17 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
 
         if (isNativeShareAbortError(error)) return null;
 
-        toast.error(
-          target.kind === "link"
-            ? "Não foi possível abrir o compartilhamento. Tente copiar o link novamente."
-            : shouldShowDownloadQualityGuidance()
+        if (target.kind === "link" || destination !== "download") {
+          toast.error("Não foi possível abrir o compartilhamento. Tente copiar o link novamente.");
+        } else {
+          const diagnosticDescription = buildShareRenderDiagnosticDescription(error);
+          toast.error(
+            shouldShowDownloadQualityGuidance()
               ? MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE
               : DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE,
-        );
+            diagnosticDescription ? { description: diagnosticDescription } : undefined,
+          );
+        }
         return null;
       } finally {
         sharingRef.current = false;

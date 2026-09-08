@@ -148,6 +148,21 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de diagnostico publico em 2026-09-08
+
+- Evidencia: novo relato informou que o erro continuava em iPhone, Android e computador, e o usuario
+  pediu uma mensagem detalhada para identificar onde a falha acontece. A captura anexada foi usada
+  apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o frontend passa a exibir, abaixo do toast publico ja existente, uma descricao segura
+  com etapa, motivo em PT-BR, referencia publica `SR-xx`, status HTTP quando existir e estado do job
+  quando a fila retornar falha terminal. Isso diferencia inicio da geracao, acompanhamento da fila,
+  processamento, timeout e download sem exigir DevTools do usuario.
+- Privacidade: a mensagem nao usa `error.message` bruto nem exibe stack, URLs, segredo, SQL, PII,
+  payload tecnico ou detalhe de provider. Codigos internos sao normalizados e mapeados para
+  referencias publicas estaveis, suficientes para triagem via print.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -176,4 +191,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   legada, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm version:bump`,
   `pnpm check:version` e `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.283` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de diagnostico publico `0.1.284`: teste focado frontend de
+  compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.284` serao registrados apos `git push` em
   `homolog` e deploy.

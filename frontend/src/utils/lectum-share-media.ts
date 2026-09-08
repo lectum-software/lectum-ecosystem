@@ -1,4 +1,4 @@
-import { isRetryableApiError } from "@/api/errors";
+import { getApiErrorCode, getApiErrorStatus, isRetryableApiError } from "@/api/errors";
 import {
   downloadPostShareVideoArtifactRenderJobFile,
   getPostShareVideoArtifactRenderJob,
@@ -20,7 +20,36 @@ export type ShareExportResult = {
 type PreparedShareFileCacheValue = File | Promise<File>;
 type PreparedShareRenderJob = Awaited<ReturnType<typeof startPostShareVideoArtifactRenderJob>>;
 
+export type LectumShareRenderErrorStage =
+  | "download"
+  | "processing"
+  | "start"
+  | "status"
+  | "timeout";
+
+export type LectumShareRenderErrorDiagnostic = {
+  code: string;
+  jobStatus?: PreparedShareRenderJob["status"];
+  progress?: number;
+  stage: LectumShareRenderErrorStage;
+  status?: number;
+};
+
+export class LectumShareRenderError extends Error {
+  readonly cause?: unknown;
+  readonly diagnostic: LectumShareRenderErrorDiagnostic;
+
+  constructor(diagnostic: LectumShareRenderErrorDiagnostic, cause?: unknown) {
+    super("Não foi possível gerar o vídeo com arte.");
+    this.name = "LectumShareRenderError";
+    this.diagnostic = diagnostic;
+    this.cause = cause;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 const DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000;
+const SAFE_SHARE_RENDER_ERROR_CODE_PATTERN = /^[a-z][a-z0-9_]{1,80}$/u;
 const SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 900_000;
 const SERVER_SHARE_RENDER_JOB_CACHE_TTL_MS = 30 * 60_000;
 const SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS = 120_000;
@@ -132,6 +161,46 @@ const isShareRenderAbortError = (error: unknown, signal: AbortSignal) =>
     error instanceof DOMException &&
     error.name === "AbortError");
 
+const normalizeShareRenderDiagnosticCode = (code: string | null | undefined, fallback: string) => {
+  const normalized = code?.trim();
+
+  return normalized && SAFE_SHARE_RENDER_ERROR_CODE_PATTERN.test(normalized)
+    ? normalized
+    : fallback;
+};
+
+const normalizeShareRenderDiagnosticStatus = (error: unknown) => {
+  const status = getApiErrorStatus(error);
+
+  return typeof status === "number" && status >= 100 && status <= 599 ? status : undefined;
+};
+
+const normalizeShareRenderDiagnosticProgress = (progress: number) => {
+  if (!Number.isFinite(progress)) return undefined;
+
+  return Math.min(100, Math.max(0, Math.round(progress)));
+};
+
+const createShareRenderRequestError = (
+  stage: Exclude<LectumShareRenderErrorStage, "processing">,
+  error: unknown,
+  signal: AbortSignal,
+  fallbackCode = "request_failed",
+) => {
+  if (isShareRenderAbortError(error, signal)) {
+    return new LectumShareRenderError({ code: "render_timeout", stage: "timeout" }, error);
+  }
+
+  return new LectumShareRenderError(
+    {
+      code: normalizeShareRenderDiagnosticCode(getApiErrorCode(error), fallbackCode),
+      stage,
+      status: normalizeShareRenderDiagnosticStatus(error),
+    },
+    error,
+  );
+};
+
 const retryTransientShareRenderRequest = async <Result>(
   request: () => Promise<Result>,
   signal: AbortSignal,
@@ -160,19 +229,26 @@ const prepareLectumShareFileWithServerRenderJob = async (
 ) => {
   const deadlineAt = Date.now() + SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS;
   const cacheKey = createPreparedShareFileCacheKey(target);
-  const job =
-    getCachedShareRenderJob(cacheKey) ??
-    (await retryTransientShareRenderRequest(
-      () =>
-        startPostShareVideoArtifactRenderJob({
-          postId: target.postId,
-          replyId: target.replyId,
-          signal,
-          timeoutMs: SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS,
-        }),
-      signal,
-      deadlineAt,
-    ));
+  let job = getCachedShareRenderJob(cacheKey);
+
+  if (!job) {
+    try {
+      job = await retryTransientShareRenderRequest(
+        () =>
+          startPostShareVideoArtifactRenderJob({
+            postId: target.postId,
+            replyId: target.replyId,
+            signal,
+            timeoutMs: SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS,
+          }),
+        signal,
+        deadlineAt,
+      );
+    } catch (error) {
+      throw createShareRenderRequestError("start", error, signal);
+    }
+  }
+
   cacheShareRenderJob(cacheKey, job);
   let status = job;
   let pollIntervalMs = SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS;
@@ -191,24 +267,38 @@ const prepareLectumShareFileWithServerRenderJob = async (
 
     await waitForShareRenderPoll(retryAfterMs, signal);
 
-    status = await retryTransientShareRenderRequest(
-      () =>
-        getPostShareVideoArtifactRenderJob({
-          jobId: status.job_id,
-          postId: target.postId,
-          replyId: target.replyId,
-          signal,
-          timeoutMs: SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS,
-        }),
-      signal,
-      deadlineAt,
-    );
+    try {
+      status = await retryTransientShareRenderRequest(
+        () =>
+          getPostShareVideoArtifactRenderJob({
+            jobId: status.job_id,
+            postId: target.postId,
+            replyId: target.replyId,
+            signal,
+            timeoutMs: SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS,
+          }),
+        signal,
+        deadlineAt,
+      );
+    } catch (error) {
+      throw createShareRenderRequestError("status", error, signal);
+    }
+
     cacheShareRenderJob(cacheKey, status);
     pollIntervalMs = Math.min(pollIntervalMs + 500, SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS);
   }
 
   if (!status.ready || status.status !== "completed") {
-    throw new Error("Vídeo indisponível para download.");
+    const terminalFailed = status.status === "failed" || status.status === "canceled";
+
+    throw new LectumShareRenderError({
+      code: terminalFailed
+        ? normalizeShareRenderDiagnosticCode(status.failure_code, "processing_failed")
+        : "render_timeout",
+      jobStatus: status.status,
+      progress: normalizeShareRenderDiagnosticProgress(status.progress),
+      stage: terminalFailed ? "processing" : "timeout",
+    });
   }
 
   try {
@@ -229,10 +319,9 @@ const prepareLectumShareFileWithServerRenderJob = async (
     return file;
   } catch (error) {
     preparedShareRenderJobCache.delete(cacheKey);
-    throw error;
+    throw createShareRenderRequestError("download", error, signal);
   }
 };
-
 export const prepareLectumShareFileWithServerRender = async (target: LectumShareSocialTarget) => {
   if (target.mediaType !== "video") {
     throw new Error("Somente vídeos podem ser preparados para download social.");
@@ -262,6 +351,9 @@ export const prepareLectumShareFileWithServerRender = async (target: LectumShare
     },
     (error) => {
       preparedShareFileCache.delete(cacheKey);
+      if (isShareRenderAbortError(error, controller.signal)) {
+        throw new LectumShareRenderError({ code: "render_timeout", stage: "timeout" }, error);
+      }
       throw error;
     },
   );
@@ -270,6 +362,16 @@ export const prepareLectumShareFileWithServerRender = async (target: LectumShare
 
   try {
     return await pendingFile;
+  } catch (error) {
+    if (error instanceof LectumShareRenderError) {
+      throw error;
+    }
+
+    if (isShareRenderAbortError(error, controller.signal)) {
+      throw new LectumShareRenderError({ code: "render_timeout", stage: "timeout" }, error);
+    }
+
+    throw error;
   } finally {
     window.clearTimeout(fallbackTimeout);
   }

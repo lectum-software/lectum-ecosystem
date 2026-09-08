@@ -425,8 +425,11 @@ Templates/shells devem viver em `frontend/src/templates`.
   `drawtext` e mantem o arquivo apenas como saida efemera do job. Para posts, a associacao de video
   considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend
   pode repetir chamadas transitorias de start/status/download, aguardar videos maiores e reutilizar o
-  job em andamento na mesma sessao, mas nunca volta a gerar video no browser nem baixa o original
-  sem arte quando o job falha.
+  job em andamento na mesma sessao, exibindo ao usuario apenas diagnostico publico controlado
+  (etapa, motivo em PT-BR, referencia `SR-xx`, status HTTP e estado/progresso do job quando
+  existirem), mas nunca volta a gerar video no browser nem baixa o original sem arte quando o job
+  falha. A UI nao pode expor mensagem crua de erro, stack, SQL, URL, segredo, PII, payload tecnico ou
+  detalhe de provider.
 - Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
   limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
 - O backend acessa essa aplicação somente por cliente server-to-server, usando origem privada

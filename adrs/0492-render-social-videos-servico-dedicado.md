@@ -124,6 +124,21 @@ decisao foi manter o render social no app `video/` e corrigir apenas a resolucao
 Isso evita quebrar respostas reais publicadas antes de trocas de hostname/base, sem criar nova env,
 schema, persistencia, mock ou fallback para baixar o original sem arte.
 
+## Atualizacao de diagnostico publico em 2026-09-08
+
+Com novo relato de falha em iPhone, Android e computador, a decisao foi tornar o toast acionavel sem
+abrir detalhes tecnicos ao publico. O frontend agora encapsula falhas do render server-side em um
+diagnostico controlado e exibe somente:
+
+- etapa da cadeia (`start`, `status`, `processing`, `timeout` ou `download`) traduzida em PT-BR;
+- motivo mapeado em linguagem de produto;
+- referencia publica `SR-xx` para triagem por print;
+- status HTTP e estado/progresso do job quando esses campos ja existem no contrato.
+
+Mensagens cruas, stack, URLs, secrets, SQL, PII, payloads tecnicos e nomes/detalhes de provider
+continuam proibidos na UI. O mapeamento evita que a triagem dependa do DevTools do usuario e nao muda
+o contrato backend/video, nao cria env, schema, pacote ou persistencia de artefato.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -149,3 +164,6 @@ schema, persistencia, mock ou fallback para baixar o original sem arte.
 - Atualizacao de midia legada 2026-09-08: teste backend focado em render social/midia legada,
   `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm version:bump`,
   `pnpm check:version` e `pnpm check` em `0.1.283`.
+- Atualizacao de diagnostico publico 2026-09-08: teste focado frontend de compartilhamento,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check` em `0.1.284`.

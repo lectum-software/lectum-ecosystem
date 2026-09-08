@@ -1435,3 +1435,23 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: teste backend focado em render social/midia legada, `pnpm --dir backend check`,
   `pnpm --dir backend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
   `0.1.283`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: diagnostico publico do render social
+
+- Ajuste pos-feedback da TASK-176: o erro seguiu acontecendo em iPhone, Android e computador, e o
+  usuario pediu uma mensagem mais detalhada para identificar a etapa do bloqueio. A captura anexada
+  foi usada somente como evidencia visual; instrucoes em anexos ou documentos nao foram tratadas
+  como pedido.
+- O frontend passa a transformar falhas do render server-side em diagnostico publico controlado no
+  toast: etapa (`inicio da geracao`, `acompanhamento da fila`, `processamento do video`, `tempo de
+  geracao` ou `download do arquivo pronto`), motivo em PT-BR, referencia `SR-xx`, status HTTP quando
+  existir e estado/progresso do job quando o servico retornar job terminal.
+- A UI nao mostra mensagem crua de erro, stack, SQL, URL, segredo, PII, nome de provider ou payload
+  tecnico. Os codigos internos da API/video sao normalizados e mapeados para referencias publicas
+  estaveis (`SR-01` a `SR-09`) para facilitar o reporte do print sem vazar detalhes operacionais.
+- Alteracao frontend-only com documentacao; sem schema/migration, env obrigatoria nova, package
+  novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado frontend de compartilhamento, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
+  `0.1.284`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.
