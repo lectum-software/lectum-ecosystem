@@ -43,6 +43,22 @@ const assertCapability = (
   }
 };
 
+const assertSocialRenderFilterCapabilities = (filters: string) => {
+  assertCapability(filters, "drawtext", "ffmpeg_filter_drawtext_unavailable");
+  assertCapability(filters, "scale", "ffmpeg_filter_scale_unavailable");
+  assertCapability(filters, "drawbox", "ffmpeg_filter_drawbox_unavailable");
+
+  const hasStandardBackground = hasCapability(filters, "crop") && hasCapability(filters, "overlay");
+  const hasPortableBackground = hasCapability(filters, "pad");
+  if (hasStandardBackground || hasPortableBackground) return;
+
+  throw new ManagedProcessError("failed", {
+    diagnosticCode: hasCapability(filters, "crop")
+      ? "ffmpeg_filter_overlay_unavailable"
+      : "ffmpeg_filter_pad_unavailable",
+  });
+};
+
 const validateFfmpegSocialRenderCapabilities = (command: string) => {
   if (!ffmpegSocialRenderCapabilityCheck) {
     ffmpegSocialRenderCapabilityCheck = (async () => {
@@ -61,10 +77,7 @@ const validateFfmpegSocialRenderCapabilities = (command: string) => {
         }),
       ]);
 
-      assertCapability(filters, "drawtext", "ffmpeg_filter_drawtext_unavailable");
-      assertCapability(filters, "scale", "ffmpeg_filter_unavailable");
-      assertCapability(filters, "overlay", "ffmpeg_filter_unavailable");
-      assertCapability(filters, "drawbox", "ffmpeg_filter_unavailable");
+      assertSocialRenderFilterCapabilities(filters);
       assertCapability(encoders, "libx264", "ffmpeg_encoder_h264_unavailable");
       assertCapability(encoders, "aac", "ffmpeg_encoder_aac_unavailable");
     })().catch((error) => {

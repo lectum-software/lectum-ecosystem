@@ -7,7 +7,16 @@ export type ManagedProcessDiagnosticCode =
   | "ffmpeg_encoder_h264_unavailable"
   | "ffmpeg_encoder_open_failed"
   | "ffmpeg_encoder_unavailable"
+  | "ffmpeg_filter_crop_unavailable"
+  | "ffmpeg_filter_drawbox_unavailable"
   | "ffmpeg_filter_drawtext_unavailable"
+  | "ffmpeg_filter_eq_unavailable"
+  | "ffmpeg_filter_format_unavailable"
+  | "ffmpeg_filter_fps_unavailable"
+  | "ffmpeg_filter_overlay_unavailable"
+  | "ffmpeg_filter_pad_unavailable"
+  | "ffmpeg_filter_scale_unavailable"
+  | "ffmpeg_filter_setsar_unavailable"
   | "ffmpeg_filter_unavailable"
   | "ffmpeg_filtergraph_invalid"
   | "ffmpeg_font_unavailable"
@@ -33,6 +42,19 @@ const DEFAULT_DIAGNOSTIC_BY_FAILURE = {
 
 const STDERR_DIAGNOSTIC_BYTES = 16_384;
 
+const SPECIFIC_FILTER_DIAGNOSTIC: Readonly<Record<string, ManagedProcessDiagnosticCode>> = {
+  crop: "ffmpeg_filter_crop_unavailable",
+  drawbox: "ffmpeg_filter_drawbox_unavailable",
+  drawtext: "ffmpeg_filter_drawtext_unavailable",
+  eq: "ffmpeg_filter_eq_unavailable",
+  format: "ffmpeg_filter_format_unavailable",
+  fps: "ffmpeg_filter_fps_unavailable",
+  overlay: "ffmpeg_filter_overlay_unavailable",
+  pad: "ffmpeg_filter_pad_unavailable",
+  scale: "ffmpeg_filter_scale_unavailable",
+  setsar: "ffmpeg_filter_setsar_unavailable",
+} as const;
+
 export class ManagedProcessError extends Error {
   readonly diagnosticCode: ManagedProcessDiagnosticCode;
   readonly kind: ManagedProcessFailure;
@@ -55,9 +77,12 @@ export const classifyManagedProcessDiagnostic = (stderr: string): ManagedProcess
   const normalized = stderr.toLowerCase();
 
   if (!normalized.trim()) return "process_failed";
-  if (normalized.includes("no such filter") && normalized.includes("drawtext")) {
-    return "ffmpeg_filter_drawtext_unavailable";
+  const filterMatch = /no such filter:\s*'?(?<filter>[a-z0-9_]+)'?/iu.exec(normalized);
+  const filterName = filterMatch?.groups?.filter;
+  if (filterName) {
+    return SPECIFIC_FILTER_DIAGNOSTIC[filterName] ?? "ffmpeg_filter_unavailable";
   }
+  if (/no such filter:\s*''/iu.test(normalized)) return "ffmpeg_filtergraph_invalid";
   if (
     normalized.includes("cannot find a valid font") ||
     normalized.includes("could not load font") ||

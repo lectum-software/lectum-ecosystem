@@ -1577,3 +1577,28 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
   `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.290`. Smoke de homologacao sera
   registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: filtergraph portatil do render social
+
+- Ajuste pos-feedback da TASK-176: apos o diagnostico seguro, os logs do app `video/` passaram a
+  mostrar `diagnostic_code="ffmpeg_filter_unavailable"` em `stage="render_initialization"` e
+  `progress=3`, confirmando que URL, download local e `ffprobe` foram vencidos e que o bloqueio
+  restante estava no `filter_complex` do FFmpeg.
+- Diagnostico: o grafo do overlay social podia gerar uma cadeia invalida com separador extra antes
+  dos filtros de arte, alem de depender de filtros secundarios de fundo (`eq`, `fps`, `format` e
+  `setsar`) que nao sao essenciais para entregar o MP4 9:16. Esse padrao aparece como filtro
+  indisponivel/malformado em builds FFmpeg diferentes.
+- Correcao: o grafo padrao deixa de inserir cadeia vazia, remove os filtros secundarios e move o
+  controle de FPS para opcao de saida `-r`; se o runtime falhar antes de emitir progresso, o worker
+  tenta uma variante portatil baseada em `scale+pad+drawbox+drawtext`, sem `crop`, `overlay`, `eq`,
+  `fps`, `format`, `setsar` ou `gblur`.
+- Observabilidade segura: a classificacao de stderr continua descartando o texto bruto, mas agora
+  reconhece filtros conhecidos em codigos allowlist (`ffmpeg_filter_crop_unavailable`,
+  `ffmpeg_filter_pad_unavailable`, `ffmpeg_filter_overlay_unavailable`, etc.) e classifica
+  `No such filter: ''` como `ffmpeg_filtergraph_invalid`.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.291`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.

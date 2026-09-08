@@ -246,6 +246,26 @@ Essa decisao nao altera contrato publico, nao cria env, schema, pacote, provider
 artefato, mock, seed, reset ou limpeza de dados publicados. Logs continuam proibidos de conter URL,
 segredo, PII, stack, SQL, stderr bruto, payload tecnico ou detalhe de provider.
 
+## Atualizacao de filtergraph portatil em 2026-09-08
+
+Depois do deploy `0.1.290`, os logs seguros do worker passaram a mostrar
+`diagnostic_code="ffmpeg_filter_unavailable"`, `stage="render_initialization"` e `progress=3` em
+jobs `social_share`. Como a cadeia ja havia passado por validacao de URL, download local e
+`ffprobe`, a decisao foi corrigir o proprio `filter_complex` e diminuir a dependencia de filtros
+secundarios do runtime FFmpeg:
+
+- a cadeia do overlay nao cria mais um filtro vazio entre o label `[v0]` e o primeiro `drawbox`;
+- `eq`, `fps`, `format` e `setsar` deixam de fazer parte do filtergraph social; FPS agora e opcao
+  de saida `-r`, e o pixel format continua controlado por `-pix_fmt yuv420p`;
+- quando o grafo padrao falha antes de emitir progresso, o worker tenta uma variante portatil
+  `scale+pad+drawbox+drawtext`, sem `crop`, `overlay`, `eq`, `fps`, `format`, `setsar` ou `gblur`;
+- `No such filter` passa a ser normalizado para codigos allowlist de filtro especifico quando o
+  stderr informa o nome, e `No such filter: ''` vira `ffmpeg_filtergraph_invalid`.
+
+A decisao continua video-only e nao cria env, schema, pacote, provider, persistencia de artefato,
+mock, seed, reset ou limpeza de dados publicados. Logs e UI permanecem sem stderr bruto, URL,
+segredo, PII, stack, SQL ou payload tecnico.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -292,3 +312,6 @@ segredo, PII, stack, SQL, stderr bruto, payload tecnico ou detalhe de provider.
 - Atualizacao de diagnostico FFmpeg 2026-09-08: `pnpm --dir video test`,
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check` em `0.1.290`.
+- Atualizacao de filtergraph portatil 2026-09-08: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check` em `0.1.291`.

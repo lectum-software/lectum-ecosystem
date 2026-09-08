@@ -45,7 +45,11 @@ describe("FFmpeg social share command", () => {
 
     assert.match(command, /-filter_complex/);
     assert.match(command, /scale=1080:1920/);
-    assert.match(command, /eq=brightness=-0\.16:saturation=0\.92/);
+    assert.match(command, /crop=1080:1920/);
+    assert.match(command, /overlay=\(W-w\)\/2:\(H-h\)\/2/);
+    assert.equal(command.includes("eq="), false);
+    assert.equal(command.includes("fps="), false);
+    assert.equal(command.includes("[v0],drawbox"), false);
     assert.equal(command.includes("gblur="), false);
     assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans\.ttf'/);
@@ -57,6 +61,32 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-allowed_extensions ALL/);
     assert.equal(args.at(-1), "/safe/outputs/video.partial.mp4");
     assert.equal(args.includes("-nostdin"), true);
+    assert.equal(args.at(args.indexOf("-r") + 1), "30");
+  });
+
+  it("oferece filtergraph portatil sem filtros secundarios do fundo", () => {
+    const args = buildSocialShareVideoArguments(
+      {
+        config,
+        metadata,
+        outputPath: "/safe/outputs/video.partial.mp4",
+        source: {
+          inputPath: "/safe/inputs/source",
+          kind: "file",
+        },
+      },
+      { filterMode: "portable", fontFile: null },
+    );
+    const command = args.join(" ");
+
+    assert.match(command, /pad=1080:1920:\(ow-iw\)\/2:\(oh-ih\)\/2:color=black/);
+    assert.match(command, /\[v0\]drawbox=/);
+    assert.equal(command.includes("overlay="), false);
+    assert.equal(command.includes("crop="), false);
+    assert.equal(command.includes("eq="), false);
+    assert.equal(command.includes("fps="), false);
+    assert.equal(command.includes("gblur="), false);
+    assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
   });
 
   it("permite renderizar overlay sem fontfile explicito quando a imagem nao tem a fonte Debian", () => {

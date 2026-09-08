@@ -13,6 +13,22 @@ describe("managed FFmpeg process diagnostics", () => {
       "ffmpeg_filter_drawtext_unavailable",
     );
     assert.equal(
+      classifyManagedProcessDiagnostic("No such filter: 'crop'"),
+      "ffmpeg_filter_crop_unavailable",
+    );
+    assert.equal(
+      classifyManagedProcessDiagnostic("No such filter: pad"),
+      "ffmpeg_filter_pad_unavailable",
+    );
+    assert.equal(
+      classifyManagedProcessDiagnostic("No such filter: ''"),
+      "ffmpeg_filtergraph_invalid",
+    );
+    assert.equal(
+      classifyManagedProcessDiagnostic("No such filter: 'custom_filter'"),
+      "ffmpeg_filter_unavailable",
+    );
+    assert.equal(
       classifyManagedProcessDiagnostic("Unknown encoder 'libx264'"),
       "ffmpeg_encoder_h264_unavailable",
     );

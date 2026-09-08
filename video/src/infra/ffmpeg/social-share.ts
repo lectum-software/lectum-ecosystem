@@ -4,7 +4,11 @@ import {
   type SocialShareRenderMetadata,
   VideoProcessingError,
 } from "../../domain/jobs/contracts.js";
-import { ManagedProcessError, runManagedProcess } from "./process.js";
+import {
+  type ManagedProcessDiagnosticCode,
+  ManagedProcessError,
+  runManagedProcess,
+} from "./process.js";
 import { isRemoteVideoHlsSource, remoteVideoRequestHeaders } from "./source-url.js";
 
 const SOCIAL_OUTPUT_WIDTH = 1080;
@@ -30,9 +34,28 @@ type SocialShareSource =
       sourceUrl: string;
     };
 
+type SocialShareFilterMode = "portable" | "standard";
+
 type SocialShareRenderOptions = {
+  filterMode?: SocialShareFilterMode;
   fontFile?: string | null;
 };
+
+type SocialShareRenderVariant = {
+  filterMode: SocialShareFilterMode;
+  fontFile: string | null;
+};
+
+const NON_RETRYABLE_RENDER_DIAGNOSTICS = new Set<ManagedProcessDiagnosticCode>([
+  "ffmpeg_encoder_aac_unavailable",
+  "ffmpeg_encoder_h264_unavailable",
+  "ffmpeg_encoder_open_failed",
+  "ffmpeg_encoder_unavailable",
+  "process_binary_not_executable",
+  "process_binary_unavailable",
+  "process_output_no_space",
+  "process_permission_denied",
+]);
 
 const normalizeText = (value: string | null | undefined, fallback: string, maxLength: number) => {
   const normalized = String(value ?? "")
@@ -111,6 +134,9 @@ const drawText = ({
     "shadowy=2",
   ].join(":")}`;
 
+const filterChain = (inputLabel: string, filters: readonly string[], outputLabel: string) =>
+  `${inputLabel}${filters.join(",")}${outputLabel}`;
+
 export const sanitizeSocialShareMetadata = (
   metadata: SocialShareRenderMetadata,
 ): SocialShareRenderMetadata => ({
@@ -124,9 +150,10 @@ export const sanitizeSocialShareMetadata = (
 
 export const buildSocialShareFilter = (
   metadata: SocialShareRenderMetadata,
-  maxFps: number,
+  _maxFps: number,
   options: SocialShareRenderOptions = {},
 ) => {
+  const filterMode = options.filterMode ?? "standard";
   const fontFile = options.fontFile === undefined ? SOCIAL_DRAW_TEXT_FONT_FILE : options.fontFile;
   const sanitized = sanitizeSocialShareMetadata(metadata);
   const sourceLines = wrapText(sanitized.sourceText, 29, 3);
@@ -143,52 +170,56 @@ export const buildSocialShareFilter = (
   const name = sanitized.professionalVerified
     ? `${sanitized.professionalName} ✓`
     : sanitized.professionalName;
-  const outputFps = Math.min(SOCIAL_OUTPUT_FPS, maxFps);
+  const overlayFilters = [
+    "drawbox=x=116:y=116:w=864:h=342:color=black@0.14:t=fill",
+    "drawbox=x=104:y=96:w=864:h=342:color=white@0.94:t=fill",
+    drawText({
+      color: "0x1f6fff",
+      fontFile,
+      fontSize: 39,
+      text: sanitized.cardLabel,
+      x: "(w-text_w)/2",
+      y: 138,
+    }),
+    ...sourceTextFilters,
+    drawText({
+      color: "white",
+      fontFile,
+      fontSize: 38,
+      text: name,
+      x: 72,
+      y: "h-204",
+    }),
+    drawText({
+      color: "white",
+      fontFile,
+      fontSize: 31,
+      text: sanitized.professionalRoleLabel,
+      x: 72,
+      y: "h-152",
+    }),
+    drawText({
+      color: "white",
+      fontFile,
+      fontSize: 68,
+      text: "lectum",
+      x: "w-text_w-72",
+      y: "h-176",
+    }),
+  ];
+
+  if (filterMode === "portable") {
+    return [
+      `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black[v0]`,
+      filterChain("[v0]", overlayFilters, "[v]"),
+    ].join(";");
+  }
 
   return [
-    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT},eq=brightness=-0.16:saturation=0.92,format=rgba[bg]`,
-    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1[fg]`,
+    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}[bg]`,
+    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2[fg]`,
     "[bg][fg]overlay=(W-w)/2:(H-h)/2[v0]",
-    [
-      "[v0]",
-      "drawbox=x=116:y=116:w=864:h=342:color=black@0.14:t=fill",
-      "drawbox=x=104:y=96:w=864:h=342:color=white@0.94:t=fill",
-      drawText({
-        color: "0x1f6fff",
-        fontFile,
-        fontSize: 39,
-        text: sanitized.cardLabel,
-        x: "(w-text_w)/2",
-        y: 138,
-      }),
-      ...sourceTextFilters,
-      drawText({
-        color: "white",
-        fontFile,
-        fontSize: 38,
-        text: name,
-        x: 72,
-        y: "h-204",
-      }),
-      drawText({
-        color: "white",
-        fontFile,
-        fontSize: 31,
-        text: sanitized.professionalRoleLabel,
-        x: 72,
-        y: "h-152",
-      }),
-      drawText({
-        color: "white",
-        fontFile,
-        fontSize: 68,
-        text: "lectum",
-        x: "w-text_w-72",
-        y: "h-176",
-      }),
-      `fps=${outputFps}`,
-      "format=yuv420p[v]",
-    ].join(","),
+    filterChain("[v0]", overlayFilters, "[v]"),
   ].join(";");
 };
 
@@ -252,6 +283,8 @@ export const buildSocialShareVideoArguments = (
     "[v]",
     "-map",
     "0:a:0?",
+    "-r",
+    String(Math.min(SOCIAL_OUTPUT_FPS, input.config.maxFps)),
     "-map_metadata",
     "-1",
     "-map_chapters",
@@ -314,6 +347,32 @@ const createProgressParser = (
   };
 };
 
+const socialShareRenderVariants = (fontFile: string | null): SocialShareRenderVariant[] => [
+  { filterMode: "standard", fontFile },
+  { filterMode: "portable", fontFile },
+  ...(fontFile
+    ? ([
+        { filterMode: "standard", fontFile: null },
+        { filterMode: "portable", fontFile: null },
+      ] satisfies SocialShareRenderVariant[])
+    : []),
+];
+
+const shouldTryNextRenderVariant = ({
+  emittedRenderProgress,
+  error,
+  signal,
+}: {
+  emittedRenderProgress: boolean;
+  error: unknown;
+  signal: AbortSignal;
+}) => {
+  if (emittedRenderProgress || signal.aborted) return false;
+  if (!(error instanceof ManagedProcessError) || error.kind !== "failed") return false;
+
+  return !NON_RETRYABLE_RENDER_DIAGNOSTICS.has(error.diagnosticCode);
+};
+
 export const renderSocialShareVideo = async (input: {
   config: VideoServiceConfig;
   durationSeconds: number;
@@ -342,40 +401,39 @@ export const renderSocialShareVideo = async (input: {
 
   try {
     const resolvedFontFile = await resolveSocialShareFontFile();
-    let emittedRenderProgress = false;
+    let lastError: unknown;
+    const renderVariants = socialShareRenderVariants(resolvedFontFile);
 
-    const runRenderProcess = (fontFile: string | null) => {
+    for (const [index, variant] of renderVariants.entries()) {
+      let emittedRenderProgress = false;
       const progressParser = createProgressParser(input.durationSeconds, (percentage) => {
         emittedRenderProgress = true;
         input.onProgress(percentage);
       });
 
-      return runManagedProcess({
-        args: buildSocialShareVideoArguments(input, { fontFile }),
-        command: input.config.ffmpegPath,
-        maxStdoutBytes: 4_194_304,
-        onStdout: progressParser,
-        signal,
-        timeoutMs: input.config.jobTimeoutMs,
-      });
-    };
-
-    try {
-      await runRenderProcess(resolvedFontFile);
-    } catch (error) {
-      if (
-        resolvedFontFile &&
-        !emittedRenderProgress &&
-        !signal.aborted &&
-        error instanceof ManagedProcessError &&
-        error.kind === "failed"
-      ) {
-        await runRenderProcess(null);
+      try {
+        await runManagedProcess({
+          args: buildSocialShareVideoArguments(input, variant),
+          command: input.config.ffmpegPath,
+          maxStdoutBytes: 4_194_304,
+          onStdout: progressParser,
+          signal,
+          timeoutMs: input.config.jobTimeoutMs,
+        });
         return;
+      } catch (error) {
+        lastError = error;
+        const hasNextVariant = index < renderVariants.length - 1;
+        if (
+          !hasNextVariant ||
+          !shouldTryNextRenderVariant({ emittedRenderProgress, error, signal })
+        ) {
+          throw error;
+        }
       }
-
-      throw error;
     }
+
+    throw lastError;
   } catch (error) {
     if (exceededOutputLimit) {
       throw new VideoProcessingError("processing_failed", { cause: error });

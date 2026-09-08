@@ -257,6 +257,24 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de filtergraph portatil em 2026-09-08
+
+- Evidencia: novo log do app `video/` trouxe
+  `diagnostic_code="ffmpeg_filter_unavailable"`, `stage="render_initialization"` e `progress=3` em
+  tentativas repetidas do job social. Isso confirma falha no `filter_complex`, depois de origem,
+  download local e probe da entrada.
+- Diagnostico: o grafo do overlay podia inserir um separador extra antes dos filtros de arte e ainda
+  usava filtros secundarios (`eq`, `fps`, `format`, `setsar`) dispensaveis para o arquivo social.
+- Correcao: a cadeia passa a anexar corretamente o label de entrada ao primeiro filtro, `fps` vira
+  opcao de saida `-r`, e o worker passa a tentar uma variante portatil `scale+pad+drawbox+drawtext`
+  quando o grafo padrao falha antes de emitir progresso. A variante portatil evita `crop`,
+  `overlay`, `eq`, `fps`, `format`, `setsar` e `gblur`.
+- Observabilidade: erros `No such filter` agora identificam filtros conhecidos por codigo allowlist
+  (`ffmpeg_filter_crop_unavailable`, `ffmpeg_filter_pad_unavailable`, etc.) e `No such filter: ''`
+  vira `ffmpeg_filtergraph_invalid`, sem expor stderr bruto.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -320,4 +338,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.290` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de filtergraph portatil `0.1.291`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.291` serao registrados apos `git push` em
   `homolog` e deploy.
