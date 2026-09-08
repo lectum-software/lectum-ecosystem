@@ -214,6 +214,20 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de egresso do worker Docker em 2026-09-08
+
+- Evidencia: apos a versao `0.1.287`, novo print mostrou `SR-05`, etapa `processamento do video`,
+  job `falhou` com progresso `1%`. Isso indica que a URL ja passou pela validacao e que a falha
+  virou erro operacional antes do download/probe local avancar.
+- Diagnostico: no `docker-compose`, o `worker` isolado estava apenas na rede `video-private`, marcada
+  como `internal: true`. Nesse modo, ele consegue falar com Redis/API privados, mas nao possui
+  egresso para buscar a midia HTTPS first-party/Stream usada pelo render social.
+- Correcao: o `worker` agora tambem entra na rede `video-edge`, sem publicar portas. O Redis continua
+  somente em `video-private`, que permanece interna. Assim, o worker ganha egresso para ler as midias
+  remotas, mas a superficie publica continua limitada a API do servico de video.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -262,4 +276,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.287` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de egresso do worker Docker `0.1.288`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.288` serao registrados apos `git push` em
   `homolog` e deploy.

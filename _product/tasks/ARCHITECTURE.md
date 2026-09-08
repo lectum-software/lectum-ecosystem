@@ -410,7 +410,10 @@ Templates/shells devem viver em `frontend/src/templates`.
 - O runtime padrão de `video/` sobe API e worker no mesmo processo Node via `dist/all.js`, mantendo
   BullMQ/Redis e volume local único para evitar job social sem consumidor ou output em volume
   diferente. Quando escalar, API e worker podem voltar a processos/serviços separados desde que
-  compartilhem storage persistente equivalente.
+  compartilhem storage persistente equivalente. Em `docker-compose`, o worker isolado tambem deve
+  participar de uma rede de egresso nao-internal para buscar midias HTTPS first-party/Stream antes
+  do `ffprobe`/FFmpeg; ele continua sem porta publicada, enquanto o Redis permanece apenas na rede
+  privada interna.
 - A saída de compressão é MP4 H.264/AAC validada e publicada por rename atômico. Download exige
   Bearer interno, suporta Range único e nunca usa `express.static`.
 - A operacao `social_share` reativa o video social 9:16 sem MediaBunny: o backend continua sendo o

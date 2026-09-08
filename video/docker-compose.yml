@@ -108,6 +108,10 @@ services:
     cap_drop:
       - ALL
     networks:
+      # The worker does not publish ports, but it needs outbound access to read
+      # first-party media/Stream HTTPS sources before ffprobe/FFmpeg can render
+      # social-share jobs. Redis remains isolated on video-private.
+      - video-edge
       - video-private
     read_only: true
     security_opt:

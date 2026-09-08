@@ -93,6 +93,11 @@ Para escalar horizontalmente, use a mesma imagem em servicos separados:
 3. Redis privado com senha/TLS quando suportado e AOF persistente;
 4. volume persistente montado em `VIDEO_STORAGE_ROOT` nos dois serviços.
 
+No `docker-compose`, o `worker` fica tanto na rede `video-private` quanto na `video-edge`. Ele nao
+publica portas, mas precisa de egresso HTTPS para baixar/sondar midias first-party ou Stream durante
+jobs `social_share`. O Redis permanece somente em `video-private`, que continua `internal: true`, e
+nao deve ter porta publica.
+
 Cadastre `VIDEO_SERVICE_API_KEY` e `REDIS_URL` como secrets de runtime. Nenhuma variável desta app é
 build-time. Em produção, a URL Redis precisa incluir autenticação e `VIDEO_STORAGE_ROOT` precisa ser
 um caminho absoluto dedicado ao volume (nunca `/`). Não publique a porta do Redis. O Compose injeta

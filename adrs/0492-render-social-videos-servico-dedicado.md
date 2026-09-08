@@ -189,6 +189,21 @@ o estado terminal; HLS continua reservando apenas output. O arquivo de input efe
 concluir ou ao falhar sem retry. A mudanca nao cria env, schema, pacote, provider, persistencia de
 artefato, mock, seed, reset ou limpeza de dados publicados.
 
+## Atualizacao de egresso do worker Docker em 2026-09-08
+
+Depois da versao `0.1.287`, o feedback mostrou `SR-05` com progresso `1%`. Isso confirma que o
+worker deixou de classificar a origem como invalida, mas ainda falha operacionalmente antes de
+baixar/provar a entrada.
+
+A causa compativel com a topologia documentada era o `worker` isolado do `docker-compose` conectado
+somente a `video-private`, rede marcada como `internal: true`. Essa rede e adequada para Redis, mas
+impede egresso HTTPS necessario para buscar midias first-party/Stream no `social_share`.
+
+A decisao e conectar o `worker` tambem a `video-edge`, sem publicar portas no servico. Redis
+permanece exclusivamente em `video-private` e a superficie publica segue limitada a API do servico
+de video. A mudanca nao cria env, schema, pacote, provider, persistencia de artefato, mock, seed,
+reset ou limpeza de dados publicados.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -226,3 +241,6 @@ artefato, mock, seed, reset ou limpeza de dados publicados.
 - Atualizacao de download local para MP4 remoto 2026-09-08: `pnpm --dir video test`,
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check` em `0.1.287`.
+- Atualizacao de egresso do worker Docker 2026-09-08: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check` em `0.1.288`.

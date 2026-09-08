@@ -1518,3 +1518,22 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
   `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.287`. Smoke de homologacao sera
   registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: egresso do worker Docker do render social
+
+- Ajuste pos-feedback da TASK-176: apos a versao `0.1.287`, novo print mostrou `SR-05`, etapa
+  `processamento do video`, job `falhou` com progresso `1%`. A captura anexada foi usada somente
+  como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: o progresso `1%` com `SR-05` mostra que a validacao da origem passou e que a falha
+  ocorre como erro operacional no worker antes de concluir download/probe. No `docker-compose`, o
+  worker isolado estava apenas em `video-private`, uma rede `internal: true`, portanto sem egresso
+  para baixar midias HTTPS first-party/Stream.
+- Correcao: o worker passa a participar tambem da rede `video-edge`, mantendo zero portas publicadas.
+  Redis permanece somente em `video-private`, que continua interna. Assim, o worker consegue buscar
+  a midia remota necessaria ao `social_share` sem ampliar a superficie publica do Redis/worker.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.288`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.
