@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { VideoServiceConfig } from "../../config/env.js";
 import { VideoProcessingError } from "../../domain/jobs/contracts.js";
 import { ManagedProcessError, runManagedProcess } from "./process.js";
+import { remoteVideoRequestHeaders } from "./source-url.js";
 
 const probePayloadSchema = z.object({
   format: z
@@ -31,6 +32,16 @@ export type VideoProbe = {
   videoCodec: string;
   width: number;
 };
+
+type RemoteVideoProbeSource =
+  | string
+  | {
+      requestOrigin?: string | null;
+      sourceUrl: string;
+    };
+
+const normalizeRemoteVideoProbeSource = (source: RemoteVideoProbeSource) =>
+  typeof source === "string" ? { requestOrigin: null, sourceUrl: source } : source;
 
 const durationFrom = (payload: z.infer<typeof probePayloadSchema>) => {
   const formatDuration = Number(payload.format?.duration);
@@ -107,30 +118,14 @@ export const probeVideo = async (
 
 export const probeRemoteVideo = async (
   config: VideoServiceConfig,
-  sourceUrl: string,
+  source: RemoteVideoProbeSource,
   signal?: AbortSignal,
 ): Promise<VideoProbe> => {
+  const args = buildRemoteVideoProbeArguments(source);
+
   try {
     const stdout = await runManagedProcess({
-      args: [
-        "-v",
-        "error",
-        "-protocol_whitelist",
-        "file,http,https,tcp,tls,crypto",
-        "-allowed_extensions",
-        "ALL",
-        "-reconnect",
-        "1",
-        "-reconnect_streamed",
-        "1",
-        "-reconnect_delay_max",
-        "5",
-        "-show_entries",
-        "format=format_name,duration:stream=codec_type,codec_name,width,height,duration",
-        "-of",
-        "json",
-        sourceUrl,
-      ],
+      args,
       command: config.ffprobePath,
       maxStdoutBytes: 1_048_576,
       ...(signal ? { signal } : {}),
@@ -143,6 +138,32 @@ export const probeRemoteVideo = async (
     }
     throw new VideoProcessingError("invalid_video", { cause: error });
   }
+};
+
+export const buildRemoteVideoProbeArguments = (source: RemoteVideoProbeSource) => {
+  const normalized = normalizeRemoteVideoProbeSource(source);
+  const requestHeaders = remoteVideoRequestHeaders(normalized.requestOrigin);
+
+  return [
+    "-v",
+    "error",
+    "-protocol_whitelist",
+    "file,http,https,tcp,tls,crypto",
+    "-allowed_extensions",
+    "ALL",
+    "-reconnect",
+    "1",
+    "-reconnect_streamed",
+    "1",
+    "-reconnect_delay_max",
+    "5",
+    "-show_entries",
+    "format=format_name,duration:stream=codec_type,codec_name,width,height,duration",
+    "-of",
+    "json",
+    ...(requestHeaders ? ["-headers", requestHeaders] : []),
+    normalized.sourceUrl,
+  ];
 };
 
 export const validateInputProbe = (config: VideoServiceConfig, probe: VideoProbe) => {

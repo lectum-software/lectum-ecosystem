@@ -206,6 +206,9 @@ Decisões obrigatórias:
 - executar FFmpeg por adapter com `spawn`, argumentos fixos e `shell: false`;
 - manter Redis privado com persistência AOF; no runtime padrão `dist/all.js`, API e worker rodam
   no mesmo processo/volume, e em escala separada devem compartilhar storage persistente equivalente;
+- para HLS privado do Cloudflare Stream, `ffprobe` e FFmpeg podem receber `Origin`/`Referer`
+  derivados de uma origem publica HTTPS permitida pelo backend; a validacao continua sem shell,
+  sem headers arbitrarios do cliente e sem novo pacote;
 - concorrência padrão `1` por worker porque transcodificação é CPU-bound;
 - adicionar nova operação somente em task/ADR com validação de autorização, recursos e output.
 

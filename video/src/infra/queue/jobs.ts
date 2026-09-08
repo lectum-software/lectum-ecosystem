@@ -41,6 +41,7 @@ export const enqueueSocialShareJob = async (
   input: {
     jobId: string;
     metadata: SocialShareRenderMetadata;
+    sourceOrigin: string | null;
     sourceUrl: string;
   },
 ): Promise<Job<VideoJobData, VideoJobResult, typeof VIDEO_JOB_NAME>> =>
@@ -51,6 +52,7 @@ export const enqueueSocialShareJob = async (
       createdAt: new Date().toISOString(),
       metadata: input.metadata,
       operation: "social_share",
+      sourceOrigin: input.sourceOrigin,
       sourceUrl: input.sourceUrl,
     },
     { jobId: input.jobId },

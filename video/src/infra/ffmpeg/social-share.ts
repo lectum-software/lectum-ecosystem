@@ -5,6 +5,7 @@ import {
   VideoProcessingError,
 } from "../../domain/jobs/contracts.js";
 import { ManagedProcessError, runManagedProcess } from "./process.js";
+import { remoteVideoRequestHeaders } from "./source-url.js";
 
 const SOCIAL_OUTPUT_WIDTH = 1080;
 const SOCIAL_OUTPUT_HEIGHT = 1920;
@@ -20,6 +21,7 @@ type SocialShareSource =
     }
   | {
       kind: "remote";
+      requestOrigin?: string | null;
       sourceUrl: string;
     };
 
@@ -175,23 +177,29 @@ export const buildSocialShareVideoArguments = (input: {
   outputPath: string;
   source: SocialShareSource;
 }) => {
-  const inputArguments =
-    input.source.kind === "remote"
-      ? [
-          "-protocol_whitelist",
-          "file,http,https,tcp,tls,crypto",
-          "-allowed_extensions",
-          "ALL",
-          "-reconnect",
-          "1",
-          "-reconnect_streamed",
-          "1",
-          "-reconnect_delay_max",
-          "5",
-          "-i",
-          input.source.sourceUrl,
-        ]
-      : ["-protocol_whitelist", "file,pipe", "-i", input.source.inputPath];
+  const inputArguments = (() => {
+    if (input.source.kind !== "remote") {
+      return ["-protocol_whitelist", "file,pipe", "-i", input.source.inputPath];
+    }
+
+    const requestHeaders = remoteVideoRequestHeaders(input.source.requestOrigin);
+
+    return [
+      "-protocol_whitelist",
+      "file,http,https,tcp,tls,crypto",
+      "-allowed_extensions",
+      "ALL",
+      "-reconnect",
+      "1",
+      "-reconnect_streamed",
+      "1",
+      "-reconnect_delay_max",
+      "5",
+      ...(requestHeaders ? ["-headers", requestHeaders] : []),
+      "-i",
+      input.source.sourceUrl,
+    ];
+  })();
 
   return [
     "-hide_banner",

@@ -113,9 +113,14 @@ const processSocialShareJob = async (input: {
   } catch (error) {
     throw new VideoProcessingError("invalid_video", { cause: error });
   }
+  const sourceOrigin = input.job.data.sourceOrigin ?? null;
 
   await input.job.updateProgress(1);
-  const source = await probeRemoteVideo(input.config, sourceUrl, input.signal);
+  const source = await probeRemoteVideo(
+    input.config,
+    { requestOrigin: sourceOrigin, sourceUrl },
+    input.signal,
+  );
   validateInputProbe(input.config, source);
   await input.job.updateProgress(3);
   await prepareVideoOutput(input.config, input.jobId);
@@ -132,7 +137,7 @@ const processSocialShareJob = async (input: {
     },
     outputPath: input.paths.temporaryOutputPath,
     signal: input.signal,
-    source: { kind: "remote", sourceUrl },
+    source: { kind: "remote", requestOrigin: sourceOrigin, sourceUrl },
   });
   await progressPromise;
 

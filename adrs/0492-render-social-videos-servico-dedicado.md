@@ -91,6 +91,23 @@ duas dependências operacionais frágeis sem voltar processamento pesado para ba
 
 Essa mudança continua sem schema/migration, env nova, pacote novo ou persistência de artefato R2.
 
+## Atualizacao emergencial em 2026-09-08
+
+Novo feedback confirmou a mesma indisponibilidade no iPhone, Android e computador, indicando falha
+server-side no caminho backend->`video/`->Cloudflare Stream, nao uma limitacao de aparelho. A decisao
+foi preservar o fluxo privado e adicionar somente dados operacionais seguros:
+
+- o backend envia ao app `video/` uma `source_origin` HTTPS derivada de `WEB_URL`/origens permitidas
+  do Cloudflare Stream quando a midia e Stream assinada;
+- o app `video/` valida essa origem, nunca aceita headers arbitrarios do cliente e injeta apenas
+  `Origin` e `Referer` no `ffprobe`/FFmpeg para que manifestos/segmentos HLS privados respeitem
+  `allowedorigins`;
+- a autorizacao e a deteccao de associacao de `video_asset` de post passam a considerar
+  `community_post_media`, alem do campo legado `community_post.media_url`.
+
+A mudanca e aditiva e tolera rollout em versoes diferentes: backend novo conversa com `video/` antigo
+porque o campo extra e ignorado, e `video/` novo aceita jobs antigos sem `sourceOrigin`.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -108,7 +125,8 @@ Essa mudança continua sem schema/migration, env nova, pacote novo ou persistên
   `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`,
   `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
   `0.1.280`.
-- Atualização complementar 2026-09-08: `pnpm check:version`, `pnpm check`,
+- Atualização complementar 2026-09-08: `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
   `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e
   `pnpm --dir video build` em `0.1.281`.
 - Smoke de homologação pendente após push/deploy.
+- Atualizacao emergencial 2026-09-08: `pnpm --dir video test`, teste backend focado em render social/associacao de midia, `pnpm --dir video check`, `pnpm --dir backend check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build` em `0.1.282`.

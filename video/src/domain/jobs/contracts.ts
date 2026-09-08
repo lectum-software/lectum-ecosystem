@@ -23,6 +23,7 @@ export type SocialShareVideoJobData = {
   createdAt: string;
   metadata: SocialShareRenderMetadata;
   operation: "social_share";
+  sourceOrigin?: string | null;
   sourceUrl: string;
 };
 

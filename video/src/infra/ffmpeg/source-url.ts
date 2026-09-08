@@ -1,5 +1,7 @@
 import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 
+const MAX_REMOTE_SOURCE_ORIGIN_LENGTH = 2_048;
 const MAX_REMOTE_SOURCE_URL_LENGTH = 4_096;
 const REMOTE_VIDEO_EXTENSIONS = [".m3u8", ".mov", ".mp4", ".webm"] as const;
 
@@ -62,6 +64,21 @@ const isSafeResolvedAddress = (address: string, family: number) => {
   return false;
 };
 
+const isPrivateOrReservedHostname = (hostname: string) => {
+  const normalized = hostname
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.+$/g, "");
+
+  if (!normalized || normalized === "localhost" || normalized.endsWith(".localhost")) {
+    return true;
+  }
+
+  const family = isIP(normalized);
+  return family !== 0 && !isSafeResolvedAddress(normalized, family);
+};
+
 const hasAllowedVideoPath = (url: URL) => {
   const pathName = decodeURIComponent(url.pathname).toLowerCase();
 
@@ -116,4 +133,43 @@ export const assertSafeRemoteVideoSourceUrl = async (value: string) => {
   }
 
   return url.toString();
+};
+
+export const parseRemoteVideoRequestOrigin = (value?: string | null) => {
+  const raw = value?.trim();
+
+  if (
+    !raw ||
+    raw.length > MAX_REMOTE_SOURCE_ORIGIN_LENGTH ||
+    raw.includes("\\") ||
+    raw.startsWith("//") ||
+    hasControlCharacter(raw)
+  ) {
+    return null;
+  }
+
+  try {
+    const url = new URL(raw);
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      !url.hostname ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash ||
+      isPrivateOrReservedHostname(url.hostname)
+    ) {
+      return null;
+    }
+
+    return url.origin;
+  } catch {
+    return null;
+  }
+};
+
+export const remoteVideoRequestHeaders = (origin?: string | null) => {
+  const safeOrigin = parseRemoteVideoRequestOrigin(origin);
+  return safeOrigin ? `Origin: ${safeOrigin}\r\nReferer: ${safeOrigin}/\r\n` : null;
 };

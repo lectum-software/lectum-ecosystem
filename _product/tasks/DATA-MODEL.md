@@ -696,6 +696,12 @@ navegador. A exceção não cria schema, endpoint, provider ou bucket novo, não
 autenticação, autorização ou limite de arquivo, e não vale para falhas depois que o upload TUS já
 começou.
 
+Complemento TASK-176 (2026-09-08): o render social owner-only resolve videos de posts pelo primeiro
+`community_post_media` ativo quando houver carrossel/colecao retornada no post; o fallback legado
+`community_post.media_url`/`media_type` permanece valido. A autorizacao publica de playback de
+`video_asset` com `purpose="community_post"` e a deteccao de ativo anexado tambem consideram
+`community_post_media` ativo para nao invalidar videos ja associados fora do campo legado.
+
 Complemento 2026-06-21: na comunidade, `author.verified` para psicologos considera `cfp_verified_at` preenchido **ou** cortesia administrativa ativa (`professional_subscription.source="admin_grant"` com entitlement profissional ativo). A URL derivada `author.whatsapp_url` deve ser exposta para posts e respostas de qualquer psicologo com WhatsApp publico cadastrado, inclusive no plano gratuito, sem depender de selo ou assinatura profissional. `highlighted_professional_reply` e flags como `has_verified_professional_reply` passam a tratar cortesia administrativa ativa como equivalencia publica de psicologo verificado.
 
 Complemento 2026-07-26: posts raiz de pacientes classificados como `block` ou `safety_hold` pela moderacao textual deterministica passam a ser persistidos como `community_post.status="bloqueado"` para auditoria e detalhe protegido no Admin. Esses registros nao entram nos endpoints publicos/privados de feed/detalhe, nao geram notificacao de nova postagem e nao devem receber interacoes publicas. Respostas/comentarios bloqueados continuam snapshot-only em `content_moderation_event` ate existir status proprio em `post_reply`.

@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { selectSharePostVideoMediaUrl } from "./share-render-media";
+
+const shareRenderServiceSource = () =>
+  readFile("src/modules/api/private/posts/use-cases/services/share-render.ts", "utf8");
 
 describe("post share render media selection", () => {
   it("usa o primeiro item de midia do post quando ele e video", () => {
@@ -39,5 +43,12 @@ describe("post share render media selection", () => {
       }),
       null,
     );
+  });
+
+  it("envia origem web segura ao servico de video para HLS privado", async () => {
+    const source = await shareRenderServiceSource();
+
+    assert.match(source, /source_origin:\s*target\.sourceOrigin/);
+    assert.match(source, /streamPlaybackRequestOrigin/);
   });
 });

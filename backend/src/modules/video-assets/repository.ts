@@ -324,10 +324,20 @@ export class VideoAssetRepository {
     if (asset.purpose === "community_post") {
       const post = await prisma.community_post.findFirst({
         where: {
+          OR: [
+            { media_type: "video", media_url: reference },
+            {
+              media_items: {
+                some: {
+                  deleted: false,
+                  media_type: "video",
+                  media_url: reference,
+                },
+              },
+            },
+          ],
           author_id: asset.owner_id,
           deleted: false,
-          media_type: "video",
-          media_url: reference,
           status: "publicado",
           author: { active: true, deleted: false },
           community: {
@@ -380,7 +390,13 @@ export class VideoAssetRepository {
         select: { id: true },
       }),
       prisma.community_post.findFirst({
-        where: { deleted: false, media_url: reference },
+        where: {
+          OR: [
+            { media_url: reference },
+            { media_items: { some: { deleted: false, media_url: reference } } },
+          ],
+          deleted: false,
+        },
         select: { id: true },
       }),
       prisma.post_reply.findFirst({

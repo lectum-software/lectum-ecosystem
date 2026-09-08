@@ -6,7 +6,11 @@ import {
   buildSocialShareVideoArguments,
   sanitizeSocialShareMetadata,
 } from "./social-share.js";
-import { parseRemoteVideoSourceUrl } from "./source-url.js";
+import {
+  parseRemoteVideoRequestOrigin,
+  parseRemoteVideoSourceUrl,
+  remoteVideoRequestHeaders,
+} from "./source-url.js";
 
 const config = parseVideoServiceConfig({
   NODE_ENV: "test",
@@ -49,6 +53,26 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-allowed_extensions ALL/);
     assert.equal(args.at(-1), "/safe/outputs/video.partial.mp4");
     assert.equal(args.includes("-nostdin"), true);
+  });
+
+  it("envia Origin e Referer seguros ao ler HLS remoto privado", () => {
+    const args = buildSocialShareVideoArguments({
+      config,
+      metadata,
+      outputPath: "/safe/outputs/video.partial.mp4",
+      source: {
+        kind: "remote",
+        requestOrigin: "https://homolog.lectum.com.br",
+        sourceUrl:
+          "https://customer-code_123.cloudflarestream.com/eyJhbGci.eyJzdWIi.signature/manifest/video.m3u8",
+      },
+    });
+    const headersIndex = args.indexOf("-headers");
+
+    assert.notEqual(headersIndex, -1);
+    assert.equal(args[headersIndex + 1]?.includes("Origin: https://homolog.lectum.com.br"), true);
+    assert.equal(args[headersIndex + 1]?.includes("Referer: https://homolog.lectum.com.br/"), true);
+    assert.ok(headersIndex < args.indexOf("-i"));
   });
 
   it("sanitiza textos do overlay antes de montar o filtro", () => {
@@ -101,5 +125,23 @@ describe("FFmpeg social share command", () => {
     );
     assert.equal(parseRemoteVideoSourceUrl("https://api.example.com/internal/secret"), null);
     assert.equal(parseRemoteVideoSourceUrl("https://user:pass@example.com/video.mp4"), null);
+  });
+
+  it("aceita somente origem HTTPS publica para requisitar video remoto", () => {
+    assert.equal(
+      parseRemoteVideoRequestOrigin("https://homolog.lectum.com.br"),
+      "https://homolog.lectum.com.br",
+    );
+    assert.equal(
+      remoteVideoRequestHeaders("https://homolog.lectum.com.br"),
+      "Origin: https://homolog.lectum.com.br\r\nReferer: https://homolog.lectum.com.br/\r\n",
+    );
+    assert.equal(parseRemoteVideoRequestOrigin("http://homolog.lectum.com.br"), null);
+    assert.equal(parseRemoteVideoRequestOrigin("https://localhost"), null);
+    assert.equal(parseRemoteVideoRequestOrigin("https://127.0.0.1"), null);
+    assert.equal(parseRemoteVideoRequestOrigin("https://homolog.lectum.com.br/path"), null);
+    assert.equal(parseRemoteVideoRequestOrigin("https://homolog.lectum.com.br?token=x"), null);
+    assert.equal(parseRemoteVideoRequestOrigin("https://homolog.lectum.com.br/\nX-Test: x"), null);
+    assert.equal(remoteVideoRequestHeaders("https://localhost"), null);
   });
 });

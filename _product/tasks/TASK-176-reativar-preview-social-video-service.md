@@ -118,6 +118,21 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, persistência de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix emergencial em 2026-09-08
+
+- Evidencia: novo relato informou que o erro continuava no iPhone, Android e computador em
+  homologacao; a imagem anexada foi tratada apenas como evidencia visual, nao como instrucao.
+- Diagnostico: a previa tocava no navegador, mas o worker do app `video/` buscava o HLS assinado do
+  Cloudflare Stream sem `Origin`/`Referer`. Com `requiresignedurls` e `allowedorigins`, isso pode
+  falhar server-side mesmo quando o player do browser funciona.
+- Correcao: o backend passa a enviar uma origem web HTTPS segura (`source_origin`) para jobs de
+  Stream privado, e o app `video/` valida essa origem antes de repassa-la como `Origin`/`Referer` ao
+  `ffprobe` e ao FFmpeg. Jobs antigos sem origem continuam aceitos.
+- Correcao complementar: playback/autorizacao de `video_asset` de post e deteccao de ativo anexado
+  agora consideram `community_post_media` ativo, alem do campo legado `media_url/media_type`.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -136,7 +151,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Smoke de homologação da correção `0.1.279` será registrado após `git push` em `homolog`.
 - [x] Validações pós-feedback `0.1.280`: teste focado frontend de compartilhamento, `pnpm --dir video test`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`
 - Commit/push e smoke de homologação da correção `0.1.280` serão registrados após `git push` em `homolog` e deploy.
-- [x] Validações do hotfix `0.1.281`: `pnpm check:version`, `pnpm check`, `pnpm --dir backend
+- [x] Validações do hotfix `0.1.281`: `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend
   build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build`.
 - Commit/push e smoke de homologação da correção `0.1.281` serão registrados após `git push` em
   `homolog` e deploy.
+- [x] Validacoes do hotfix emergencial `0.1.282`: `pnpm --dir video test`, teste backend focado em render social/associacao de midia, `pnpm --dir video check`, `pnpm --dir backend check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build`.
+- Commit/push e smoke de homologacao da correcao `0.1.282` serao registrados apos `git push` em `homolog` e deploy.

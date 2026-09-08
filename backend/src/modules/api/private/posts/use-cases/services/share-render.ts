@@ -3,13 +3,19 @@ import { error, msg } from "@/helpers/translate";
 import prisma from "@/infra/database/prisma";
 import { getVideoProcessingServiceConfig } from "@/infra/video-processing";
 import {
+  getVideoStreamConfig,
   getVideoStreamProvider,
   isCloudflareStreamVideoUid,
   videoAssetIdFromReference,
 } from "@/infra/video-stream";
 import { VideoAssetRepository } from "@/modules/video-assets/repository";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
-import { publicFileKeyFromUrl, publicFileUrl } from "@/utils/public-origin";
+import {
+  getPrimaryPublicWebOrigin,
+  parsePublicHttpOrigin,
+  publicFileKeyFromUrl,
+  publicFileUrl,
+} from "@/utils/public-origin";
 import type {
   IPostRenderShareArtifactDTO,
   IPostRenderShareArtifactJobDTO,
@@ -60,6 +66,11 @@ type ShareRenderTarget = {
   replyId: string | null;
   responseText: string | null;
   sourceText: string;
+};
+
+type ShareRenderSource = {
+  sourceOrigin: string | null;
+  sourceUrl: string;
 };
 
 export type RenderShareArtifactJobFileResult =
@@ -234,20 +245,39 @@ const ensureOwnerPsychologistTarget = (
   return null;
 };
 
-const absoluteLegacyMediaSourceUrl = (mediaUrl: string) => {
+const absoluteLegacyMediaSourceUrl = (mediaUrl: string): ShareRenderSource | null => {
   const key = publicFileKeyFromUrl(mediaUrl, POST_MEDIA_PREFIXES);
   if (!key) return null;
 
   const sourceUrl = publicFileUrl(key);
   try {
     const parsed = new URL(sourceUrl);
-    return parsed.protocol === "https:" ? parsed.toString() : null;
+    return parsed.protocol === "https:"
+      ? { sourceOrigin: null, sourceUrl: parsed.toString() }
+      : null;
   } catch {
     return null;
   }
 };
 
-const streamMediaSourceUrl = async (mediaUrl: string, ownerId: string) => {
+const streamPlaybackRequestOrigin = () => {
+  const streamConfig = getVideoStreamConfig();
+  const webOrigin = getPrimaryPublicWebOrigin({ productionRuntime: true });
+
+  if (streamConfig && webOrigin && streamConfig.allowedOrigins.includes(new URL(webOrigin).host)) {
+    return webOrigin;
+  }
+
+  const firstAllowedOrigin = streamConfig?.allowedOrigins[0];
+  return firstAllowedOrigin
+    ? parsePublicHttpOrigin(`https://${firstAllowedOrigin}`, { productionRuntime: true })
+    : null;
+};
+
+const streamMediaSourceUrl = async (
+  mediaUrl: string,
+  ownerId: string,
+): Promise<ShareRenderSource | null> => {
   const assetId = videoAssetIdFromReference(mediaUrl);
   if (!assetId) return null;
 
@@ -263,7 +293,10 @@ const streamMediaSourceUrl = async (mediaUrl: string, ownerId: string) => {
   const provider = getVideoStreamProvider();
   if (!provider) return null;
 
-  return provider.createPlayback(asset.provider_uid).hlsUrl;
+  return {
+    sourceOrigin: streamPlaybackRequestOrigin(),
+    sourceUrl: provider.createPlayback(asset.provider_uid).hlsUrl,
+  };
 };
 
 const resolveSourceUrl = async (target: ShareRenderTarget, ownerId: string) =>
@@ -317,7 +350,7 @@ const replyTargetSelect = {
 
 const resolveShareRenderTarget = async (
   data: IPostRenderShareArtifactDTO | IPostRenderShareArtifactJobDTO,
-): Promise<Resolve | (ShareRenderTarget & { sourceUrl: string })> => {
+): Promise<Resolve | (ShareRenderTarget & ShareRenderSource)> => {
   const unauthorized = ensureCommunityActor(data);
   if (unauthorized) return unauthorized;
 
@@ -357,8 +390,8 @@ const resolveShareRenderTarget = async (
       responseText: normalizeText(reply.content, "Resposta profissional", 180),
       sourceText,
     };
-    const sourceUrl = await resolveSourceUrl(target, reply.author.id);
-    return sourceUrl ? { ...target, sourceUrl } : invalidRenderMedia();
+    const source = await resolveSourceUrl(target, reply.author.id);
+    return source ? { ...target, ...source } : invalidRenderMedia();
   }
 
   const post = await prisma.community_post.findFirst({
@@ -388,13 +421,13 @@ const resolveShareRenderTarget = async (
     responseText: normalizeText(post.content, "Conteúdo profissional", 180),
     sourceText,
   };
-  const sourceUrl = await resolveSourceUrl(target, post.author.id);
-  return sourceUrl ? { ...target, sourceUrl } : invalidRenderMedia();
+  const source = await resolveSourceUrl(target, post.author.id);
+  return source ? { ...target, ...source } : invalidRenderMedia();
 };
 
 const isResolvedTarget = (
   value: Awaited<ReturnType<typeof resolveShareRenderTarget>>,
-): value is ShareRenderTarget & { sourceUrl: string } =>
+): value is ShareRenderTarget & ShareRenderSource =>
   !(typeof value === "object" && value !== null && "success" in value && value.success === false);
 
 export const renderShareArtifact = async (data: IPostRenderShareArtifactDTO): Promise<Resolve> =>
@@ -416,6 +449,7 @@ export const startRenderShareArtifactJob = async (
         responseText: target.responseText,
         sourceText: target.sourceText,
       },
+      source_origin: target.sourceOrigin,
       source_url: target.sourceUrl,
     }),
     headers: { "Content-Type": "application/json" },

@@ -6,7 +6,10 @@ import type { VideoServiceConfig } from "../../config/env.js";
 import type { SocialShareRenderMetadata } from "../../domain/jobs/contracts.js";
 import { sendPublicError, sendSuccess } from "../../http/responses.js";
 import { sanitizeSocialShareMetadata } from "../../infra/ffmpeg/social-share.js";
-import { assertSafeRemoteVideoSourceUrl } from "../../infra/ffmpeg/source-url.js";
+import {
+  assertSafeRemoteVideoSourceUrl,
+  parseRemoteVideoRequestOrigin,
+} from "../../infra/ffmpeg/source-url.js";
 import type { VideoQueue } from "../../infra/queue/client.js";
 import {
   countOpenVideoJobs,
@@ -48,6 +51,7 @@ const socialShareRequestSchema = z.object({
     responseText: z.string().trim().max(180).nullable().optional(),
     sourceText: z.string().trim().min(1).max(180),
   }),
+  source_origin: z.string().trim().max(2_048).nullable().optional(),
   source_url: z.string().trim().min(1).max(4_096),
 });
 
@@ -160,6 +164,13 @@ export const startSocialShareRenderJob =
       return;
     }
 
+    const rawSourceOrigin = parsed.data.source_origin ?? null;
+    const sourceOrigin = parseRemoteVideoRequestOrigin(rawSourceOrigin);
+    if (rawSourceOrigin && !sourceOrigin) {
+      sendPublicError(response, 400, "invalid_request", "Envie dados válidos para o vídeo.");
+      return;
+    }
+
     let sourceUrl: string;
     try {
       sourceUrl = await assertSafeRemoteVideoSourceUrl(parsed.data.source_url);
@@ -189,6 +200,7 @@ export const startSocialShareRenderJob =
       const job = await enqueueSocialShareJob(dependencies.queue, {
         jobId,
         metadata,
+        sourceOrigin,
         sourceUrl,
       });
       enqueued = true;
