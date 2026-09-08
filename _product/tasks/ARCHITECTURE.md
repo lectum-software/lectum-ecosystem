@@ -420,9 +420,13 @@ Templates/shells devem viver em `frontend/src/templates`.
   `Referer` seguros no `ffprobe`/FFmpeg. Midias legadas absolutas ja persistidas podem manter uma
   origem HTTPS publica anterior mesmo quando a `BASE` atual diverge, desde que continuem sob
   `/public/files/posts/media/`, sem credenciais, query ou fragmento; isso evita invalidar posts e
-  respostas reais por troca de hostname. O worker valida DNS publico, probe remoto com reconexao,
-  renderiza 1080x1920 com FFmpeg H.264/AAC em preset rapido, escapa textos livres antes do
-  `drawtext` e mantem o arquivo apenas como saida efemera do job. Para posts, a associacao de video
+  respostas reais por troca de hostname. O worker valida DNS publico para origens externas; a unica
+  excecao first-party e midia publica Lectum em `homolog-api.lectum.com.br` ou `api.lectum.com.br`,
+  sempre HTTPS e no prefixo exato `/public/files/posts/media/`, que pode resolver por rota
+  privada/overlay do proprio ambiente sem virar SSRF generico. `ffprobe`/FFmpeg usam `User-Agent`
+  controlado, probe remoto com reconexao, renderizam 1080x1920 com FFmpeg H.264/AAC em preset
+  rapido, escapam textos livres antes do `drawtext` e mantem o arquivo apenas como saida efemera do
+  job. Para posts, a associacao de video
   considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend
   pode repetir chamadas transitorias de start/status/download, aguardar videos maiores e reutilizar o
   job em andamento na mesma sessao, exibindo ao usuario apenas diagnostico publico controlado

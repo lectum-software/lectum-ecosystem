@@ -139,6 +139,28 @@ Mensagens cruas, stack, URLs, secrets, SQL, PII, payloads tecnicos e nomes/detal
 continuam proibidos na UI. O mapeamento evita que a triagem dependa do DevTools do usuario e nao muda
 o contrato backend/video, nao cria env, schema, pacote ou persistencia de artefato.
 
+## Atualizacao de leitura de midia publica Lectum em 2026-09-08
+
+O diagnostico publico do usuario retornou `SR-04`, etapa de processamento e progresso `0%`, o que
+isolou a falha antes do `ffprobe`, na validacao segura de URL remota do app `video`. A midia concreta
+era um MP4 legado publico em `homolog-api.lectum.com.br/public/files/posts/media/`, respondendo
+`HEAD 200` e `Range 206`.
+
+A decisao foi manter o render no app `video`, sem fallback para browser/original, e ajustar a
+fronteira anti-SSRF:
+
+- URLs remotas externas continuam exigindo HTTPS, caminho/extensao permitidos, ausencia de
+  credenciais/query/fragmento e DNS publico.
+- A unica excecao de DNS e first-party: `homolog-api.lectum.com.br` e `api.lectum.com.br` sob o
+  prefixo exato `/public/files/posts/media/`. Esses hostnames sao controlados pela Lectum e podem
+  resolver por rota privada/overlay no runtime publicado sem representar uma URL arbitraria interna.
+- Query string passa a ser recusada para fontes remotas.
+- `ffprobe` e FFmpeg passam a enviar `User-Agent` controlado em leituras remotas; `Origin` e
+  `Referer` continuam condicionados a origem web segura enviada pelo backend.
+
+Essa decisao preserva seguranca de SSRF para destinos externos, evita invalidar midias reais legadas
+por topologia interna de deploy e nao cria env, schema, pacote, persistencia ou limpeza de dados.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -167,3 +189,6 @@ o contrato backend/video, nao cria env, schema, pacote ou persistencia de artefa
 - Atualizacao de diagnostico publico 2026-09-08: teste focado frontend de compartilhamento,
   `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm version:bump`,
   `pnpm check:version` e `pnpm check` em `0.1.284`.
+- Atualizacao de leitura de midia publica Lectum 2026-09-08: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check` em `0.1.285`.

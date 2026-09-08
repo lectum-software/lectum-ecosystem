@@ -163,6 +163,25 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de leitura de midia publica Lectum em 2026-09-08
+
+- Evidencia: apos o diagnostico publico, o novo print mostrou `SR-04`, etapa `processamento do
+  video`, job `falhou`, progresso `0%`. A captura anexada foi usada apenas como evidencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: progresso `0%` indica falha antes do `ffprobe`, durante a validacao segura de origem
+  remota do app `video`. A midia real do relato e um MP4 legado publico em
+  `homolog-api.lectum.com.br/public/files/posts/media/`, com `HEAD 200`, `Range 206`, `Content-Type`
+  `video/mp4` e aproximadamente 21,7 MB.
+- Correcao: o app `video` passa a reconhecer como origem first-party confiavel somente
+  `homolog-api.lectum.com.br` e `api.lectum.com.br`, sempre HTTPS, sem credenciais/query/fragmento e
+  sob o prefixo exato `/public/files/posts/media/`. Esse caso pode seguir para leitura mesmo quando
+  o DNS do runtime aponta para rota privada/overlay do ambiente; qualquer outra URL continua exigindo
+  DNS publico e extensao/prefixo permitido.
+- Correcao complementar: `ffprobe` e FFmpeg passam a enviar um `User-Agent` controlado nas leituras
+  remotas. `Origin`/`Referer` continuam restritos ao caso de origem segura enviada pelo backend.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -196,4 +215,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm version:bump`,
   `pnpm check:version` e `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.284` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de leitura de midia publica Lectum `0.1.285`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.285` serao registrados apos `git push` em
   `homolog` e deploy.

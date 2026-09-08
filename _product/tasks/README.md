@@ -1455,3 +1455,25 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: teste focado frontend de compartilhamento, `pnpm --dir frontend check`,
   `pnpm --dir frontend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
   `0.1.284`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: leitura de midia publica Lectum no worker de video
+
+- Ajuste pos-feedback da TASK-176: o diagnostico publico mostrou `SR-04`, etapa `processamento do
+  video`, job `falhou` com progresso `0%`. Isso isolou a falha antes do `ffprobe`, na validacao de
+  origem remota do app `video`, nao no browser.
+- A midia concreta do relato e um MP4 legado publico de post em
+  `homolog-api.lectum.com.br/public/files/posts/media/`, com `HEAD 200`, `Range 206`, `Content-Type`
+  `video/mp4` e tamanho aproximado de 21,7 MB.
+- O app `video` passa a tratar somente os hostnames first-party `homolog-api.lectum.com.br` e
+  `api.lectum.com.br`, sempre em HTTPS e no prefixo exato `/public/files/posts/media/`, como origem
+  publica Lectum confiavel mesmo quando o DNS do runtime resolva por uma rota privada/overlay do
+  ambiente. Todas as demais URLs continuam exigindo DNS publico e formato fechado, e query string
+  passa a ser recusada.
+- `ffprobe` e FFmpeg passam a enviar um `User-Agent` controlado nas leituras remotas; `Origin` e
+  `Referer` seguem sendo enviados apenas quando a origem segura for fornecida para HLS privado.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.285`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.

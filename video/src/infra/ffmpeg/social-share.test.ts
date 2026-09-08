@@ -7,6 +7,8 @@ import {
   sanitizeSocialShareMetadata,
 } from "./social-share.js";
 import {
+  assertSafeRemoteVideoSourceUrl,
+  isFirstPartyLectumPublicPostMediaUrl,
   parseRemoteVideoRequestOrigin,
   parseRemoteVideoSourceUrl,
   remoteVideoRequestHeaders,
@@ -124,6 +126,10 @@ describe("FFmpeg social share command", () => {
       null,
     );
     assert.equal(parseRemoteVideoSourceUrl("https://api.example.com/internal/secret"), null);
+    assert.equal(
+      parseRemoteVideoSourceUrl("https://api.example.com/public/files/posts/media/a.mp4?token=x"),
+      null,
+    );
     assert.equal(parseRemoteVideoSourceUrl("https://user:pass@example.com/video.mp4"), null);
   });
 
@@ -134,14 +140,48 @@ describe("FFmpeg social share command", () => {
     );
     assert.equal(
       remoteVideoRequestHeaders("https://homolog.lectum.com.br"),
-      "Origin: https://homolog.lectum.com.br\r\nReferer: https://homolog.lectum.com.br/\r\n",
+      "User-Agent: LectumVideoService/1.0\r\nOrigin: https://homolog.lectum.com.br\r\nReferer: https://homolog.lectum.com.br/\r\n",
     );
+    assert.equal(remoteVideoRequestHeaders(null), "User-Agent: LectumVideoService/1.0\r\n");
     assert.equal(parseRemoteVideoRequestOrigin("http://homolog.lectum.com.br"), null);
     assert.equal(parseRemoteVideoRequestOrigin("https://localhost"), null);
     assert.equal(parseRemoteVideoRequestOrigin("https://127.0.0.1"), null);
     assert.equal(parseRemoteVideoRequestOrigin("https://homolog.lectum.com.br/path"), null);
     assert.equal(parseRemoteVideoRequestOrigin("https://homolog.lectum.com.br?token=x"), null);
     assert.equal(parseRemoteVideoRequestOrigin("https://homolog.lectum.com.br/\nX-Test: x"), null);
-    assert.equal(remoteVideoRequestHeaders("https://localhost"), null);
+    assert.equal(
+      remoteVideoRequestHeaders("https://localhost"),
+      "User-Agent: LectumVideoService/1.0\r\n",
+    );
+  });
+
+  it("preserva midia publica Lectum mesmo quando o DNS do ambiente usa rota privada", async () => {
+    const homologUrl = new URL(
+      "https://homolog-api.lectum.com.br/public/files/posts/media/l4gcubbiqb4i6wldhkq0keyk.mp4",
+    );
+    const productionUrl = new URL(
+      "https://api.lectum.com.br/public/files/posts/media/l4gcubbiqb4i6wldhkq0keyk.mp4",
+    );
+
+    assert.equal(isFirstPartyLectumPublicPostMediaUrl(homologUrl), true);
+    assert.equal(isFirstPartyLectumPublicPostMediaUrl(productionUrl), true);
+    assert.equal(
+      isFirstPartyLectumPublicPostMediaUrl(
+        new URL("https://homolog-api.lectum.com.br/internal/video.mp4"),
+      ),
+      false,
+    );
+    assert.equal(
+      isFirstPartyLectumPublicPostMediaUrl(
+        new URL("https://api.example.com/public/files/posts/media/l4gcubbiqb4i6wldhkq0keyk.mp4"),
+      ),
+      false,
+    );
+    assert.equal(
+      await assertSafeRemoteVideoSourceUrl(
+        "https://homolog-api.lectum.com.br/public/files/posts/media/l4gcubbiqb4i6wldhkq0keyk.mp4",
+      ),
+      "https://homolog-api.lectum.com.br/public/files/posts/media/l4gcubbiqb4i6wldhkq0keyk.mp4",
+    );
   });
 });

@@ -3,7 +3,12 @@ import { isIP } from "node:net";
 
 const MAX_REMOTE_SOURCE_ORIGIN_LENGTH = 2_048;
 const MAX_REMOTE_SOURCE_URL_LENGTH = 4_096;
+const REMOTE_VIDEO_REQUEST_USER_AGENT = "LectumVideoService/1.0";
 const REMOTE_VIDEO_EXTENSIONS = [".m3u8", ".mov", ".mp4", ".webm"] as const;
+const FIRST_PARTY_LECTUM_PUBLIC_MEDIA_HOSTNAMES = new Set([
+  "api.lectum.com.br",
+  "homolog-api.lectum.com.br",
+]);
 
 const CLOUDFLARE_STREAM_SIGNED_HLS =
   /^https:\/\/customer-[a-zA-Z0-9_-]{1,128}\.cloudflarestream\.com\/eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\/manifest\/video\.m3u8$/;
@@ -88,6 +93,18 @@ const hasAllowedVideoPath = (url: URL) => {
   return REMOTE_VIDEO_EXTENSIONS.some((extension) => pathName.endsWith(extension));
 };
 
+const hasLectumPublicPostMediaPath = (url: URL) =>
+  decodeURIComponent(url.pathname).toLowerCase().startsWith("/public/files/posts/media/");
+
+export const isFirstPartyLectumPublicPostMediaUrl = (url: URL) =>
+  url.protocol === "https:" &&
+  FIRST_PARTY_LECTUM_PUBLIC_MEDIA_HOSTNAMES.has(url.hostname.toLowerCase()) &&
+  !url.username &&
+  !url.password &&
+  !url.search &&
+  !url.hash &&
+  hasLectumPublicPostMediaPath(url);
+
 export const parseRemoteVideoSourceUrl = (value: string) => {
   const raw = value.trim();
 
@@ -107,6 +124,7 @@ export const parseRemoteVideoSourceUrl = (value: string) => {
       url.protocol !== "https:" ||
       url.username ||
       url.password ||
+      url.search ||
       url.hash ||
       !url.hostname ||
       !hasAllowedVideoPath(url)
@@ -123,6 +141,8 @@ export const parseRemoteVideoSourceUrl = (value: string) => {
 export const assertSafeRemoteVideoSourceUrl = async (value: string) => {
   const url = parseRemoteVideoSourceUrl(value);
   if (!url) throw new Error("remote_video_source_invalid");
+
+  if (isFirstPartyLectumPublicPostMediaUrl(url)) return url.toString();
 
   const addresses = await lookup(url.hostname, { all: true, verbatim: true }).catch(() => []);
   if (
@@ -171,5 +191,11 @@ export const parseRemoteVideoRequestOrigin = (value?: string | null) => {
 
 export const remoteVideoRequestHeaders = (origin?: string | null) => {
   const safeOrigin = parseRemoteVideoRequestOrigin(origin);
-  return safeOrigin ? `Origin: ${safeOrigin}\r\nReferer: ${safeOrigin}/\r\n` : null;
+  const headers = [`User-Agent: ${REMOTE_VIDEO_REQUEST_USER_AGENT}`];
+  if (safeOrigin) {
+    headers.push(`Origin: ${safeOrigin}`);
+    headers.push(`Referer: ${safeOrigin}/`);
+  }
+
+  return `${headers.join("\r\n")}\r\n`;
 };
