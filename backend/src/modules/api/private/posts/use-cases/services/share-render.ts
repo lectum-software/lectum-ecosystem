@@ -21,6 +21,7 @@ import {
   isProfessionalVerified,
 } from "../../repositories/support/post-response";
 import { ensureCommunityActor } from "./post-support";
+import { selectSharePostVideoMediaUrl } from "./share-render-media";
 
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
 const POST_MEDIA_PREFIXES = ["posts/media/"] as const;
@@ -275,6 +276,14 @@ const postTargetSelect = {
   content: true,
   media_url: true,
   media_type: true,
+  media_items: {
+    orderBy: { position: "asc" },
+    select: {
+      media_type: true,
+      media_url: true,
+    },
+    where: { deleted: false },
+  },
   status: true,
   author: {
     select: authorSelect,
@@ -364,7 +373,8 @@ const resolveShareRenderTarget = async (
   if (!post) return invalidRenderTarget(404);
   const forbidden = ensureOwnerPsychologistTarget(data, post.author);
   if (forbidden) return forbidden;
-  if (post.media_type !== "video" || !post.media_url) return invalidRenderMedia();
+  const postMediaUrl = selectSharePostVideoMediaUrl(post);
+  if (!postMediaUrl) return invalidRenderMedia();
 
   const sourceText = normalizeText(post.title, post.content, 180);
   const info = professionalInfo(post.author);
@@ -372,7 +382,7 @@ const resolveShareRenderTarget = async (
     ...info,
     cardLabel: "Postado na Lectum",
     fileName: buildShareFileName(info.professionalName, sourceText),
-    mediaUrl: post.media_url,
+    mediaUrl: postMediaUrl,
     postId: post.id,
     replyId: null,
     responseText: normalizeText(post.content, "Conteúdo profissional", 180),

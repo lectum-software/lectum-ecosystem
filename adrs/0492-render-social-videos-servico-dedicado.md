@@ -21,7 +21,7 @@ Agora existe um servidor dedicado para processamento de vídeo, com BullMQ/Redis
 - Transformar as rotas `share-artifact/render-jobs` do backend em proxy privado para o app `video/`.
 - O backend resolve a origem de vídeo a partir de `video_asset`/Cloudflare Stream assinado ou mídia legada pública do prefixo `posts/media/`, sem expor segredo ao frontend.
 - O app `video/` passa a aceitar operação `social_share`, validando URL HTTPS, DNS público, container/duração e saída MP4.
-- O worker renderiza 1080x1920 H.264/AAC com preset `slow`, CRF 18, áudio mínimo 192 kbps, `+faststart`, overlay Lectum e arquivo efêmero do job.
+- O worker renderiza 1080x1920 H.264/AAC com preset `veryfast`, CRF 20, áudio mínimo 192 kbps, `+faststart`, overlay Lectum e arquivo efêmero do job.
 - O runtime do app `video/` empacota fonte DejaVu e o filtro `drawtext` usa `fontfile` explícito
   para evitar falhas em imagens slim sem fonte padrão.
 - `post_share_artifacts` permanece legado: o fluxo novo não cria registro, não renova TTL e não envia arquivo do browser para storage.
@@ -74,6 +74,23 @@ Se o problema restante for operacional — por exemplo `VIDEO_PROCESSING_SERVICE
 `video/` não atualizado, worker/Redis indisponível ou falha específica de mídia — a UI continuará
 mostrando mensagem pública genérica, mas os logs passam a indicar a classe segura do bloqueio.
 
+## Atualização complementar em 2026-09-08
+
+Novo relato indicou que a falha ainda ocorria depois da versão `0.1.280`. A decisão foi remover
+duas dependências operacionais frágeis sem voltar processamento pesado para backend/frontend:
+
+- `video/` agora tem runtime padrão `dist/all.js`, usado pelo Dockerfile e por `pnpm start`, que
+  inicia API e worker no mesmo processo Node. Os comandos `start:api` e `start:worker` continuam
+  existindo para escala separada, desde que o storage persistente seja compartilhado.
+- O preset do render social passa a ser `veryfast` com CRF 20 para diminuir timeouts em aparelhos
+  móveis e servidores pequenos, mantendo saída 1080x1920 H.264/AAC.
+- O frontend amplia a janela de espera para 15 minutos e reaproveita o job em andamento em memória,
+  evitando que cliques repetidos recriem a fila enquanto o primeiro render ainda está processando.
+- Posts com mídia em `community_post_media` usam o primeiro item ordenado por `position` quando ele é
+  vídeo; posts legados seguem usando `media_url/media_type`.
+
+Essa mudança continua sem schema/migration, env nova, pacote novo ou persistência de artefato R2.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -91,4 +108,7 @@ mostrando mensagem pública genérica, mas os logs passam a indicar a classe seg
   `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`,
   `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
   `0.1.280`.
+- Atualização complementar 2026-09-08: `pnpm check:version`, `pnpm check`,
+  `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e
+  `pnpm --dir video build` em `0.1.281`.
 - Smoke de homologação pendente após push/deploy.

@@ -44,4 +44,4 @@ COPY --from=builder /app/dist ./dist
 
 USER node
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["node", "--enable-source-maps", "dist/api.js"]
+CMD ["node", "--enable-source-maps", "dist/all.js"]

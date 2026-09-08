@@ -1,12 +1,28 @@
 import "dotenv/config";
 import { createServer } from "node:http";
+import { pathToFileURL } from "node:url";
 import { createVideoApi } from "./app.js";
 import { parseVideoServiceConfig } from "./config/env.js";
 import { logError, logInfo } from "./http/logging.js";
 import { createRedisConnection, createVideoQueue } from "./infra/queue/client.js";
 import { ensureVideoStorage } from "./infra/storage/storage.js";
 
-const main = async () => {
+export type StartedVideoApiRuntime = {
+  shutdown: () => Promise<void>;
+};
+
+type StartVideoApiRuntimeOptions = {
+  registerSignals?: boolean;
+};
+
+const isDirectEntrypoint = () => {
+  const entrypoint = process.argv[1];
+  return entrypoint ? import.meta.url === pathToFileURL(entrypoint).href : false;
+};
+
+export const startVideoApiRuntime = async (
+  options: StartVideoApiRuntimeOptions = {},
+): Promise<StartedVideoApiRuntime> => {
   const config = parseVideoServiceConfig(process.env);
   const connection = createRedisConnection(config, "api");
   await connection.connect();
@@ -38,15 +54,29 @@ const main = async () => {
     logInfo("video_api_shutdown_completed");
   };
 
-  process.once("SIGINT", () => void shutdown());
-  process.once("SIGTERM", () => void shutdown());
+  if (options.registerSignals ?? true) {
+    process.once("SIGINT", () => void shutdown());
+    process.once("SIGTERM", () => void shutdown());
+  }
 
-  server.listen(config.port, config.host, () => {
-    logInfo("video_api_started", { operation: "listen", status: "ready" });
+  await new Promise<void>((resolve, reject) => {
+    const onListenError = () => {
+      reject(new Error("listen_failed"));
+    };
+    server.once("error", onListenError);
+    server.listen(config.port, config.host, () => {
+      server.off("error", onListenError);
+      logInfo("video_api_started", { operation: "listen", status: "ready" });
+      resolve();
+    });
   });
+
+  return { shutdown };
 };
 
-main().catch(() => {
-  logError("video_api_start_failed", { error_code: "startup_failed" });
-  process.exitCode = 1;
-});
+if (isDirectEntrypoint()) {
+  startVideoApiRuntime().catch(() => {
+    logError("video_api_start_failed", { error_code: "startup_failed" });
+    process.exitCode = 1;
+  });
+}

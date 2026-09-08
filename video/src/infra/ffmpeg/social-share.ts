@@ -8,8 +8,8 @@ import { ManagedProcessError, runManagedProcess } from "./process.js";
 
 const SOCIAL_OUTPUT_WIDTH = 1080;
 const SOCIAL_OUTPUT_HEIGHT = 1920;
-const SOCIAL_RENDER_CRF = 18;
-const SOCIAL_RENDER_PRESET = "slow";
+const SOCIAL_RENDER_CRF = 20;
+const SOCIAL_RENDER_PRESET = "veryfast";
 const SOCIAL_OUTPUT_FPS = 30;
 const SOCIAL_DRAW_TEXT_FONT_FILE = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
 

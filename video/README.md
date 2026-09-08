@@ -6,8 +6,11 @@ browser: backend/jobs internos autorizados usam Bearer secret.
 
 ## Processos
 
-- API: `pnpm start:api` (`dist/api.js`)
-- Worker: `pnpm start:worker` (`dist/worker.js`)
+- Runtime padrao: `pnpm start` / `pnpm start:all` (`dist/all.js`) sobe API e worker no mesmo
+  processo Node, garantindo que jobs sociais tenham consumidor ativo e o mesmo volume local da API
+  em deployments de um unico servico.
+- API isolada: `pnpm start:api` (`dist/api.js`)
+- Worker isolado: `pnpm start:worker` (`dist/worker.js`)
 - Redis privado com AOF
 - Volume privado igual na API e no worker
 
@@ -78,7 +81,12 @@ unset VIDEO_SERVICE_API_KEY
 
 ## Deploy em servidor dedicado
 
-Use a mesma imagem em dois serviços:
+O deploy padrao usa um servico/container `video` com o comando
+`node --enable-source-maps dist/all.js` e dominio/ingress apenas para a API. Esse entrypoint inicia
+API e worker no mesmo processo Node, preservando shutdown gracioso e evitando jobs enfileirados sem
+consumidor ou output em volume diferente.
+
+Para escalar horizontalmente, use a mesma imagem em servicos separados:
 
 1. `api`: comando `node --enable-source-maps dist/api.js`, domínio/ingress e porta `PORT`;
 2. `worker`: comando `node --enable-source-maps dist/worker.js`, sem domínio nem porta pública;

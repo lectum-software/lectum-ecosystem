@@ -849,6 +849,12 @@ silenciamento do post. A identidade de quem compartilhou nao e exposta na centra
 
 Regras desde 2026-09-05: a previa social de video e owner-only e o proprio psicologo baixa o arquivo personalizado sob demanda. O frontend nao consulta, nao envia, nao preaquece, nao persiste e nao renova cache remoto/R2 de `post_share_artifacts`; reaproveita somente o arquivo preparado em memoria durante a mesma interacao. O backend mantem as rotas `share-artifact` por compatibilidade e reativa apenas os render-jobs efemeros: valida o dono, resolve a origem HTTPS do video, delega o processamento ao app `video/` e faz proxy do download sem criar objeto R2 ou registro novo. A rotina existente de limpeza remove objetos expirados e marca registros legados como `deleted`, sem reset, seed, `db push`, lifecycle destrutivo manual ou env obrigatoria. `POST_SHARE_ARTIFACT_TTL_DAYS` foi removida do exemplo de env porque nao ha mais criacao/renovacao de TTL para novos artefatos.
 
+Regras desde 2026-09-08: para posts com `community_post_media`, o render social usa o primeiro item
+ordenado por `position` quando ele e video, alinhado ao frontend; se nao houver carrossel, preserva
+o legado `community_post.media_url/media_type`. Jobs em andamento podem ser reaproveitados somente
+em memoria na sessao do navegador para evitar duplicacao quando o render demora; nenhum novo campo,
+registro persistido ou cache R2 e criado.
+
 ### Ranking de mentores (TASK-27 - derivado)
 
 Nao ha modelo persistido obrigatorio nesta etapa. O ranking e **derivado** de eventos persistidos por comunidade e do entitlement profissional ativo (`professional_subscription`, PRD secao 10: so Plano Profissional). A formula foi aprovada, ajustada pelo PDF local `Sistema de Ranking de Mentores.pdf` em ADR-0070 e recalibrada em 2026-07-30 para priorizar relacionamento util e cobertura real:

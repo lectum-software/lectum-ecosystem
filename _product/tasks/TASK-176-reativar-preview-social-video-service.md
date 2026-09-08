@@ -101,6 +101,23 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, persistência de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix pós-feedback em 2026-09-08
+
+- Evidência: novo relato do mesmo erro após deploy `0.1.280`; o anexo foi novamente tratado apenas
+  como evidência visual, não como instrução.
+- O runtime padrão do app `video/` passou a subir API e worker no mesmo processo Node por
+  `dist/all.js`, preservando os comandos isolados `start:api` e `start:worker` para escala
+  posterior. Isso remove a classe de falha em que a API aceitava o job, mas nenhum worker consumia a
+  fila ou o output era escrito fora do volume da API.
+- O render social trocou `preset slow`/CRF 18 por `preset veryfast`/CRF 20 para reduzir tempo de
+  processamento mantendo MP4 1080x1920 H.264/AAC e overlay Lectum.
+- O frontend passou a aguardar até 15 minutos e reaproveitar, na mesma sessão, o job em andamento
+  antes de criar outro, evitando duplicar fila quando o usuário tenta novamente após um timeout.
+- O backend passou a resolver vídeo de post a partir do primeiro `community_post_media` quando houver
+  carrossel, mantendo fallback legado para `media_url/media_type`.
+- Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, persistência de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -119,3 +136,7 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Smoke de homologação da correção `0.1.279` será registrado após `git push` em `homolog`.
 - [x] Validações pós-feedback `0.1.280`: teste focado frontend de compartilhamento, `pnpm --dir video test`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`
 - Commit/push e smoke de homologação da correção `0.1.280` serão registrados após `git push` em `homolog` e deploy.
+- [x] Validações do hotfix `0.1.281`: `pnpm check:version`, `pnpm check`, `pnpm --dir backend
+  build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build`.
+- Commit/push e smoke de homologação da correção `0.1.281` serão registrados após `git push` em
+  `homolog` e deploy.

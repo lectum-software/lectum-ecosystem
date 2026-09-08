@@ -43,8 +43,8 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans\.ttf'/);
     assert.match(command, /drawtext=text='lectum'/);
     assert.match(command, /-c:v libx264/);
-    assert.match(command, /-crf 18/);
-    assert.match(command, /-preset slow/);
+    assert.match(command, /-crf 20/);
+    assert.match(command, /-preset veryfast/);
     assert.match(command, /-protocol_whitelist file,http,https,tcp,tls,crypto/);
     assert.match(command, /-allowed_extensions ALL/);
     assert.equal(args.at(-1), "/safe/outputs/video.partial.mp4");

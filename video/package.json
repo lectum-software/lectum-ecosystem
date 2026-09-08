@@ -1,6 +1,6 @@
 {
   "name": "@lectum/video-service",
-  "version": "0.1.280",
+  "version": "0.1.281",
   "private": true,
   "type": "module",
   "description": "Serviço isolado de processamento assíncrono de vídeos da Lectum",
@@ -11,7 +11,8 @@
     "dev:worker": "tsx watch --clear-screen=false src/worker.ts",
     "clean": "node -e \"import('node:fs').then(({ rmSync }) => rmSync('dist', { recursive: true, force: true }))\"",
     "build": "pnpm clean && tsc",
-    "start": "pnpm start:api",
+    "start": "pnpm start:all",
+    "start:all": "node --enable-source-maps dist/all.js",
     "start:api": "node --enable-source-maps dist/api.js",
     "start:worker": "node --enable-source-maps dist/worker.js",
     "typecheck": "tsc --noEmit --pretty false",

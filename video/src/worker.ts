@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { pathToFileURL } from "node:url";
 import { Worker } from "bullmq";
 import { parseVideoServiceConfig } from "./config/env.js";
 import {
@@ -18,7 +19,22 @@ const safeJobOperation = (job: { data?: Partial<VideoJobData> } | null | undefin
   return operation === "compress" || operation === "social_share" ? operation : "unknown";
 };
 
-const main = async () => {
+export type StartedVideoWorkerRuntime = {
+  shutdown: () => Promise<void>;
+};
+
+type StartVideoWorkerRuntimeOptions = {
+  registerSignals?: boolean;
+};
+
+const isDirectEntrypoint = () => {
+  const entrypoint = process.argv[1];
+  return entrypoint ? import.meta.url === pathToFileURL(entrypoint).href : false;
+};
+
+export const startVideoWorkerRuntime = async (
+  options: StartVideoWorkerRuntimeOptions = {},
+): Promise<StartedVideoWorkerRuntime> => {
   const config = parseVideoServiceConfig(process.env);
   const workerConnection = createRedisConnection(config, "worker");
   const controlConnection = createRedisConnection(config, "worker");
@@ -120,12 +136,18 @@ const main = async () => {
     logInfo("video_worker_shutdown_completed");
   };
 
-  process.once("SIGINT", () => void shutdown());
-  process.once("SIGTERM", () => void shutdown());
+  if (options.registerSignals ?? true) {
+    process.once("SIGINT", () => void shutdown());
+    process.once("SIGTERM", () => void shutdown());
+  }
   logInfo("video_worker_started", { operation: "worker", status: "ready" });
+
+  return { shutdown };
 };
 
-main().catch(() => {
-  logError("video_worker_start_failed", { error_code: "startup_failed" });
-  process.exitCode = 1;
-});
+if (isDirectEntrypoint()) {
+  startVideoWorkerRuntime().catch(() => {
+    logError("video_worker_start_failed", { error_code: "startup_failed" });
+    process.exitCode = 1;
+  });
+}

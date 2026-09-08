@@ -18,9 +18,11 @@ export type ShareExportResult = {
 };
 
 type PreparedShareFileCacheValue = File | Promise<File>;
+type PreparedShareRenderJob = Awaited<ReturnType<typeof startPostShareVideoArtifactRenderJob>>;
 
 const DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000;
-const SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 390_000;
+const SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 900_000;
+const SERVER_SHARE_RENDER_JOB_CACHE_TTL_MS = 30 * 60_000;
 const SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS = 120_000;
 const SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS = 2_500;
 const SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS = 6_000;
@@ -28,6 +30,10 @@ const SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS = 45_000;
 const SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS = 30_000;
 const SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS = [1_000, 2_000, 4_000] as const;
 const preparedShareFileCache = new Map<string, PreparedShareFileCacheValue>();
+const preparedShareRenderJobCache = new Map<
+  string,
+  { cachedAt: number; job: PreparedShareRenderJob }
+>();
 
 const copyShareUrl = async (url: string) => {
   if (!navigator.clipboard?.writeText) return false;
@@ -58,6 +64,35 @@ const createPreparedShareFileCacheKey = (target: LectumShareSocialTarget) =>
   [target.kind, target.postId, target.replyId ?? "post", target.mediaUrl, target.sourceText].join(
     "::",
   );
+
+const isReusableShareRenderJobStatus = (status: PreparedShareRenderJob["status"]) =>
+  status === "queued" ||
+  status === "processing" ||
+  status === "cancel_requested" ||
+  status === "completed";
+
+const getCachedShareRenderJob = (cacheKey: string) => {
+  const cached = preparedShareRenderJobCache.get(cacheKey);
+  if (!cached) return null;
+  if (
+    Date.now() - cached.cachedAt > SERVER_SHARE_RENDER_JOB_CACHE_TTL_MS ||
+    !isReusableShareRenderJobStatus(cached.job.status)
+  ) {
+    preparedShareRenderJobCache.delete(cacheKey);
+    return null;
+  }
+
+  return cached.job;
+};
+
+const cacheShareRenderJob = (cacheKey: string, job: PreparedShareRenderJob) => {
+  if (isReusableShareRenderJobStatus(job.status)) {
+    preparedShareRenderJobCache.set(cacheKey, { cachedAt: Date.now(), job });
+    return;
+  }
+
+  preparedShareRenderJobCache.delete(cacheKey);
+};
 
 export const getPreparedLectumShareFile = (target: LectumShareSocialTarget) => {
   const cached = preparedShareFileCache.get(createPreparedShareFileCacheKey(target));
@@ -124,17 +159,21 @@ const prepareLectumShareFileWithServerRenderJob = async (
   signal: AbortSignal,
 ) => {
   const deadlineAt = Date.now() + SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS;
-  const job = await retryTransientShareRenderRequest(
-    () =>
-      startPostShareVideoArtifactRenderJob({
-        postId: target.postId,
-        replyId: target.replyId,
-        signal,
-        timeoutMs: SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS,
-      }),
-    signal,
-    deadlineAt,
-  );
+  const cacheKey = createPreparedShareFileCacheKey(target);
+  const job =
+    getCachedShareRenderJob(cacheKey) ??
+    (await retryTransientShareRenderRequest(
+      () =>
+        startPostShareVideoArtifactRenderJob({
+          postId: target.postId,
+          replyId: target.replyId,
+          signal,
+          timeoutMs: SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS,
+        }),
+      signal,
+      deadlineAt,
+    ));
+  cacheShareRenderJob(cacheKey, job);
   let status = job;
   let pollIntervalMs = SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS;
 
@@ -164,6 +203,7 @@ const prepareLectumShareFileWithServerRenderJob = async (
       signal,
       deadlineAt,
     );
+    cacheShareRenderJob(cacheKey, status);
     pollIntervalMs = Math.min(pollIntervalMs + 500, SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS);
   }
 
@@ -171,19 +211,26 @@ const prepareLectumShareFileWithServerRenderJob = async (
     throw new Error("Vídeo indisponível para download.");
   }
 
-  return retryTransientShareRenderRequest(
-    () =>
-      downloadPostShareVideoArtifactRenderJobFile({
-        fileName: safeFileName(target, "mp4"),
-        jobId: status.job_id,
-        postId: target.postId,
-        replyId: target.replyId,
-        signal,
-        timeoutMs: SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS,
-      }),
-    signal,
-    deadlineAt,
-  );
+  try {
+    const file = await retryTransientShareRenderRequest(
+      () =>
+        downloadPostShareVideoArtifactRenderJobFile({
+          fileName: safeFileName(target, "mp4"),
+          jobId: status.job_id,
+          postId: target.postId,
+          replyId: target.replyId,
+          signal,
+          timeoutMs: SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS,
+        }),
+      signal,
+      deadlineAt,
+    );
+    preparedShareRenderJobCache.delete(cacheKey);
+    return file;
+  } catch (error) {
+    preparedShareRenderJobCache.delete(cacheKey);
+    throw error;
+  }
 };
 
 export const prepareLectumShareFileWithServerRender = async (target: LectumShareSocialTarget) => {
