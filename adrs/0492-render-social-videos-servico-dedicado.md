@@ -56,6 +56,24 @@ server-to-server passa a ser aceito para deployments fora da rede privada. Redir
 recusados e a URL permanece backend-only. O worker também passou a fixar a fonte DejaVu no
 `drawtext`, tornando a geração do overlay determinística no container.
 
+## Atualização em 2026-09-08
+
+Novo feedback de homologação mostrou a modal social funcionando no iPhone, mas o CTA de download
+seguindo para indisponibilidade pública. A decisão foi manter a arquitetura server-side dedicada e
+endurecer os pontos frágeis, sem fallback para render/browser nem download do original sem arte:
+
+- o frontend pode repetir, com backoff curto e dentro do prazo total já existente, chamadas
+  transitórias de criação, consulta e download do job;
+- `ffprobe` remoto usa as mesmas opções de reconexão do render FFmpeg;
+- metadados livres usados no overlay escapam vírgula e ponto-e-vírgula, além dos caracteres já
+  tratados, antes de entrar em `drawtext`;
+- logs seguros distinguem indisponibilidade backend→`video/` e jobs `social_share`, sem registrar
+  URL, segredo, PII, stack, SQL ou detalhe de provider.
+
+Se o problema restante for operacional — por exemplo `VIDEO_PROCESSING_SERVICE_URL`/Bearer ausente,
+`video/` não atualizado, worker/Redis indisponível ou falha específica de mídia — a UI continuará
+mostrando mensagem pública genérica, mas os logs passam a indicar a classe segura do bloqueio.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -68,4 +86,9 @@ recusados e a URL permanece backend-only. O worker também passou a fixar a font
 - `pnpm version:bump`
 - `pnpm check:version`
 - Smoke local HTTP do frontend em `/version` e `/comunidades`.
+- Atualização 2026-09-08: teste focado frontend de compartilhamento, `pnpm --dir video test`,
+  `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`,
+  `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`,
+  `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
+  `0.1.280`.
 - Smoke de homologação pendente após push/deploy.

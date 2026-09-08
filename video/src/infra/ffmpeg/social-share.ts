@@ -66,6 +66,8 @@ const escapeDrawText = (value: string) =>
   value
     .replace(/\\/gu, "\\\\")
     .replace(/:/gu, "\\:")
+    .replace(/,/gu, "\\,")
+    .replace(/;/gu, "\\;")
     .replace(/'/gu, "\\'")
     .replace(/\[/gu, "\\[")
     .replace(/\]/gu, "\\]")

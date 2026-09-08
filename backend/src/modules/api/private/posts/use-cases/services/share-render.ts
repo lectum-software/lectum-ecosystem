@@ -25,6 +25,7 @@ import { ensureCommunityActor } from "./post-support";
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
 const POST_MEDIA_PREFIXES = ["posts/media/"] as const;
 const JOB_ID_PATTERN = /^[a-z][a-z0-9]{23,31}$/;
+const VIDEO_SERVICE_CODE_PATTERN = /^[a-z][a-z0-9_]{1,64}$/;
 
 type VideoServiceJobData = {
   completed_at: string | null;
@@ -89,13 +90,26 @@ const invalidRenderMedia = (): Resolve => ({
   ...error("post_share_artifact_render_media_invalid", {}),
 });
 
+const logShareRenderServiceWarning = (
+  reason: string,
+  details: { code?: string | null; status?: number } = {},
+) => {
+  const payload: { code?: string; reason: string; status?: number } = { reason };
+  if (details.code) payload.code = details.code;
+  if (typeof details.status === "number") payload.status = details.status;
+  console.warn("[POST_SHARE_RENDER_SERVICE]", payload);
+};
+
 const requestVideoService = async (
   path: string,
   init: RequestInit = {},
   timeoutMs?: number,
 ): Promise<Response | null> => {
   const config = getVideoProcessingServiceConfig();
-  if (!config) return null;
+  if (!config) {
+    logShareRenderServiceWarning("config_missing");
+    return null;
+  }
 
   try {
     const headers = new Headers(init.headers);
@@ -108,6 +122,7 @@ const requestVideoService = async (
       signal: AbortSignal.timeout(timeoutMs ?? config.requestTimeoutMs),
     });
   } catch {
+    logShareRenderServiceWarning("request_failed");
     return null;
   }
 };
@@ -147,7 +162,12 @@ const mapVideoServiceFailure = async (response: Response | null): Promise<Resolv
   if (!response) return renderUnavailable();
 
   const envelope = await readVideoServiceEnvelope(response);
-  const code = typeof envelope?.code === "string" ? envelope.code : null;
+  const code =
+    typeof envelope?.code === "string" && VIDEO_SERVICE_CODE_PATTERN.test(envelope.code)
+      ? envelope.code
+      : null;
+
+  logShareRenderServiceWarning("response_not_ok", { code, status: response.status });
 
   if (response.status === 401 || response.status === 403) return renderUnavailable();
   if (response.status === 404) return invalidRenderTarget(404);

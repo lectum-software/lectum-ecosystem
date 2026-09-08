@@ -414,8 +414,10 @@ Templates/shells devem viver em `frontend/src/templates`.
 - A operação `social_share` reativa o vídeo social 9:16 sem MediaBunny: o backend continua sendo o
   plano de controle owner-only, resolve uma origem HTTPS segura (playback assinado Cloudflare Stream
   ou mídia pública legada de `posts/media/`) e chama a API privada do `video/`; o worker valida DNS
-  público, probe remoto, renderiza 1080x1920 com FFmpeg H.264/AAC de alta qualidade e mantém o
-  arquivo apenas como saída efêmera do job.
+  público, probe remoto com reconexão, renderiza 1080x1920 com FFmpeg H.264/AAC de alta qualidade,
+  escapa textos livres antes do `drawtext` e mantém o arquivo apenas como saída efêmera do job. O
+  frontend pode repetir chamadas transitórias de start/status/download dentro do prazo total, mas
+  nunca volta a gerar vídeo no browser nem baixa o original sem arte quando o job falha.
 - Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
   limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
 - O backend acessa essa aplicação somente por cliente server-to-server, usando origem privada

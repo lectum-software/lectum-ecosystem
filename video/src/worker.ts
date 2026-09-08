@@ -13,6 +13,11 @@ import { activeVideoJobIds } from "./infra/queue/jobs.js";
 import { cleanupExpiredVideoStorage, ensureVideoStorage } from "./infra/storage/storage.js";
 import { createVideoJobProcessor } from "./worker-processor.js";
 
+const safeJobOperation = (job: { data?: Partial<VideoJobData> } | null | undefined) => {
+  const operation = job?.data?.operation;
+  return operation === "compress" || operation === "social_share" ? operation : "unknown";
+};
+
 const main = async () => {
   const config = parseVideoServiceConfig(process.env);
   const workerConnection = createRedisConnection(config, "worker");
@@ -40,10 +45,10 @@ const main = async () => {
   );
 
   worker.on("completed", (job) => {
-    logInfo("video_job_completed", { job_id: String(job.id), operation: "compress" });
+    logInfo("video_job_completed", { job_id: String(job.id), operation: safeJobOperation(job) });
   });
   worker.on("active", (job) => {
-    logInfo("video_job_started", { job_id: String(job.id), operation: "compress" });
+    logInfo("video_job_started", { job_id: String(job.id), operation: safeJobOperation(job) });
   });
   worker.on("failed", (job) => {
     logWarning("video_job_failed", {
@@ -52,7 +57,7 @@ const main = async () => {
           ? job.failedReason
           : "processing_failed",
       job_id: job?.id ? String(job.id) : undefined,
-      operation: "compress",
+      operation: safeJobOperation(job),
     });
   });
   worker.on("error", () => {
@@ -117,7 +122,7 @@ const main = async () => {
 
   process.once("SIGINT", () => void shutdown());
   process.once("SIGTERM", () => void shutdown());
-  logInfo("video_worker_started", { operation: "compress", status: "ready" });
+  logInfo("video_worker_started", { operation: "worker", status: "ready" });
 };
 
 main().catch(() => {

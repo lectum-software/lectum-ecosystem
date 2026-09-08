@@ -83,6 +83,24 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - MediaBunny continua removido; a correção preserva o render 1080x1920 H.264/AAC de alta qualidade
   no worker dedicado, sem novo schema, migration, package npm, mock, seed, reset ou limpeza de dados.
 
+## Ajuste pós-feedback em 2026-09-08
+
+- Evidência: print de iPhone em homologação às 11:16 com a modal `Publique nas redes sociais` aberta
+  e toast público `Não conseguimos gerar o vídeo com arte neste aparelho agora`. O anexo foi usado
+  apenas como evidência visual; instruções em anexos/documentos não foram tratadas como pedido.
+- A investigação mostrou que `/version`, `/ping`, `/health` e `/ready` públicos estavam saudáveis,
+  mas isso não prova a cadeia de render social porque o job depende do `video/` dedicado e do
+  proxy backend→video.
+- O frontend passou a repetir falhas transitórias de start/status/download dentro do timeout total
+  já existente, preservando a regra de não baixar original sem arte quando o job falha.
+- O app `video/` passou a escapar vírgula e ponto-e-vírgula em textos livres do `drawtext`, usar
+  reconexão também no `ffprobe` remoto e registrar a operação real `social_share` nos logs do
+  worker.
+- O backend passou a registrar diagnóstico operacional seguro de indisponibilidade do serviço de
+  vídeo, sem expor URLs, segredos, PII, stack, SQL ou detalhes de provider.
+- Sem schema/migration, env obrigatória nova, package novo, mock, seed, reset, persistência de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -99,3 +117,5 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] Smoke de homologação após deploy da versão `0.1.277` (`/health`, `/ready`, `/ping` backend e `/version` frontend/admin)
 - [x] Validações pós-feedback `0.1.279`: testes focados backend/video, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir video check`, `pnpm --dir video build`, `pnpm check`, `pnpm version:bump` e `pnpm check:version`
 - Smoke de homologação da correção `0.1.279` será registrado após `git push` em `homolog`.
+- [x] Validações pós-feedback `0.1.280`: teste focado frontend de compartilhamento, `pnpm --dir video test`, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`
+- Commit/push e smoke de homologação da correção `0.1.280` serão registrados após `git push` em `homolog` e deploy.

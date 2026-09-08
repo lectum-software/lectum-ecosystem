@@ -41,6 +41,9 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(targetSource, /createLectumShareVideoDownloadTarget/);
   assert.match(mediaSource, /startPostShareVideoArtifactRenderJob/);
   assert.match(mediaSource, /downloadPostShareVideoArtifactRenderJobFile/);
+  assert.match(mediaSource, /retryTransientShareRenderRequest/);
+  assert.match(mediaSource, /isRetryableApiError/);
+  assert.match(mediaSource, /SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS/);
   assert.match(hookSource, /prepareLectumShareFileWithServerRender/);
   const removedRuntimePattern = new RegExp(
     [["media", "bunny"].join(""), ["playwright", "core"].join("-")].join("|"),

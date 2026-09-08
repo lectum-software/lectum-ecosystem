@@ -1,3 +1,4 @@
+import { isRetryableApiError } from "@/api/errors";
 import {
   downloadPostShareVideoArtifactRenderJobFile,
   getPostShareVideoArtifactRenderJob,
@@ -25,6 +26,7 @@ const SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS = 2_500;
 const SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS = 6_000;
 const SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS = 45_000;
 const SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS = 30_000;
+const SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS = [1_000, 2_000, 4_000] as const;
 const preparedShareFileCache = new Map<string, PreparedShareFileCacheValue>();
 
 const copyShareUrl = async (url: string) => {
@@ -73,26 +75,66 @@ const waitForShareRenderPoll = (durationMs: number, signal: AbortSignal) =>
       return;
     }
 
-    const timeout = window.setTimeout(resolve, durationMs);
-    const abort = () => {
+    let timeout = 0;
+    const cleanup = () => signal.removeEventListener("abort", abort);
+    function abort() {
       window.clearTimeout(timeout);
+      cleanup();
       reject(new DOMException("Operação cancelada.", "AbortError"));
-    };
+    }
+    timeout = window.setTimeout(() => {
+      cleanup();
+      resolve();
+    }, durationMs);
 
     signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
   });
+
+const isShareRenderAbortError = (error: unknown, signal: AbortSignal) =>
+  signal.aborted ||
+  (typeof DOMException !== "undefined" &&
+    error instanceof DOMException &&
+    error.name === "AbortError");
+
+const retryTransientShareRenderRequest = async <Result>(
+  request: () => Promise<Result>,
+  signal: AbortSignal,
+  deadlineAt: number,
+): Promise<Result> => {
+  let attempt = 0;
+
+  while (true) {
+    try {
+      return await request();
+    } catch (error) {
+      if (isShareRenderAbortError(error, signal) || !isRetryableApiError(error)) throw error;
+
+      const delayMs = SERVER_SHARE_RENDER_TRANSIENT_RETRY_DELAYS_MS[attempt];
+      if (delayMs === undefined || Date.now() + delayMs >= deadlineAt) throw error;
+
+      attempt += 1;
+      await waitForShareRenderPoll(delayMs, signal);
+    }
+  }
+};
 
 const prepareLectumShareFileWithServerRenderJob = async (
   target: LectumShareSocialTarget,
   signal: AbortSignal,
 ) => {
   const deadlineAt = Date.now() + SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS;
-  const job = await startPostShareVideoArtifactRenderJob({
-    postId: target.postId,
-    replyId: target.replyId,
+  const job = await retryTransientShareRenderRequest(
+    () =>
+      startPostShareVideoArtifactRenderJob({
+        postId: target.postId,
+        replyId: target.replyId,
+        signal,
+        timeoutMs: SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS,
+      }),
     signal,
-    timeoutMs: SERVER_SHARE_RENDER_JOB_START_TIMEOUT_MS,
-  });
+    deadlineAt,
+  );
   let status = job;
   let pollIntervalMs = SERVER_SHARE_RENDER_JOB_POLL_INITIAL_INTERVAL_MS;
 
@@ -110,13 +152,18 @@ const prepareLectumShareFileWithServerRenderJob = async (
 
     await waitForShareRenderPoll(retryAfterMs, signal);
 
-    status = await getPostShareVideoArtifactRenderJob({
-      jobId: status.job_id,
-      postId: target.postId,
-      replyId: target.replyId,
+    status = await retryTransientShareRenderRequest(
+      () =>
+        getPostShareVideoArtifactRenderJob({
+          jobId: status.job_id,
+          postId: target.postId,
+          replyId: target.replyId,
+          signal,
+          timeoutMs: SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS,
+        }),
       signal,
-      timeoutMs: SERVER_SHARE_RENDER_JOB_STATUS_TIMEOUT_MS,
-    });
+      deadlineAt,
+    );
     pollIntervalMs = Math.min(pollIntervalMs + 500, SERVER_SHARE_RENDER_JOB_POLL_MAX_INTERVAL_MS);
   }
 
@@ -124,14 +171,19 @@ const prepareLectumShareFileWithServerRenderJob = async (
     throw new Error("Vídeo indisponível para download.");
   }
 
-  return downloadPostShareVideoArtifactRenderJobFile({
-    fileName: safeFileName(target, "mp4"),
-    jobId: status.job_id,
-    postId: target.postId,
-    replyId: target.replyId,
+  return retryTransientShareRenderRequest(
+    () =>
+      downloadPostShareVideoArtifactRenderJobFile({
+        fileName: safeFileName(target, "mp4"),
+        jobId: status.job_id,
+        postId: target.postId,
+        replyId: target.replyId,
+        signal,
+        timeoutMs: SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS,
+      }),
     signal,
-    timeoutMs: SERVER_SHARE_RENDER_JOB_FILE_TIMEOUT_MS,
-  });
+    deadlineAt,
+  );
 };
 
 export const prepareLectumShareFileWithServerRender = async (target: LectumShareSocialTarget) => {

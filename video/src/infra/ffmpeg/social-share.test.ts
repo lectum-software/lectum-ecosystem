@@ -68,6 +68,26 @@ describe("FFmpeg social share command", () => {
     assert.doesNotThrow(() => buildSocialShareFilter(sanitized, 30));
   });
 
+  it("escapa separadores do filtergraph em textos livres do overlay", () => {
+    const filter = buildSocialShareFilter(
+      {
+        cardLabel: "Pergunta, resposta; Lectum",
+        professionalName: "Ana, Martins; Silva",
+        professionalRoleLabel: "Psicóloga, supervisora; clínica",
+        professionalVerified: false,
+        responseText: null,
+        sourceText: "Ansiedade, sono; rotina: 'teste' [100%]",
+      },
+      30,
+    );
+
+    assert.match(filter, /Pergunta\\, resposta\\; Lectum/);
+    assert.match(filter, /Ana\\, Martins\\; Silva/);
+    assert.match(filter, /Psicóloga\\, supervisora\\; clínica/);
+    assert.match(filter, /Ansiedade\\, sono\\; rotina\\:/);
+    assert.equal(filter.includes("\\'teste\\' \\[100\\%\\]"), true);
+  });
+
   it("aceita somente origens HTTPS de video e rejeita hosts locais ou caminhos inesperados", () => {
     assert.ok(
       parseRemoteVideoSourceUrl(
