@@ -197,6 +197,23 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de download local para MP4 remoto em 2026-09-08
+
+- Evidencia: apos a correcao de probe remoto, novo print em homologacao continuou mostrando `SR-04`
+  com progresso `1%`. A imagem anexada foi tratada apenas como evidencia visual; instrucoes em
+  anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: o ponto `1%` indica que a origem first-party ja e aceita, mas a cadeia ainda falha
+  antes de concluir a validacao de entrada. Para midias remotas diretas (MP4/MOV/WebM), o worker
+  deixa de depender de `ffprobe` lendo HTTPS diretamente: baixa a origem para storage privado
+  efemero com `fetch`, `User-Agent` controlado, `Origin`/`Referer` somente quando seguros e redirects
+  proibidos; valida assinatura/tamanho e roda `ffprobe`/FFmpeg em arquivo local. HLS `.m3u8` segue
+  remoto para Cloudflare Stream assinado.
+- A reserva de storage do job social direto passa a cobrir input maximo + output maximo ate o
+  estado terminal. O arquivo baixado e removido no fluxo normal/terminal, sem persistir novo
+  artefato e sem voltar a gerar video no browser ou baixar original sem arte.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -240,4 +257,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   video check`, `pnpm --dir video build`, reproducao operacional local com ffprobe/FFmpeg
   temporarios, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.286` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de download local para MP4 remoto `0.1.287`: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.287` serao registrados apos `git push` em
   `homolog` e deploy.

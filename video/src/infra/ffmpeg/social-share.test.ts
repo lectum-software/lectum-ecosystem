@@ -74,6 +74,24 @@ describe("FFmpeg social share command", () => {
     assert.equal(args.at(args.indexOf("-i") + 1), sourceUrl);
   });
 
+  it("usa entrada local quando o worker baixa MP4 remoto direto antes do render", () => {
+    const inputPath = "/safe/inputs/source";
+    const args = buildSocialShareVideoArguments({
+      config,
+      metadata,
+      outputPath: "/safe/outputs/video.partial.mp4",
+      source: {
+        inputPath,
+        kind: "file",
+      },
+    });
+
+    assert.equal(args.includes("-reconnect"), false);
+    assert.equal(args.includes("-allowed_extensions"), false);
+    assert.equal(args.at(args.indexOf("-i") + 1), inputPath);
+    assert.equal(args.at(args.indexOf("-protocol_whitelist") + 1), "file,pipe");
+  });
+
   it("envia Origin e Referer seguros ao ler HLS remoto privado", () => {
     const args = buildSocialShareVideoArguments({
       config,

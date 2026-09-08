@@ -1475,11 +1475,7 @@ Uma task só pode ser marcada como concluída quando:
   provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
   publicados. Rollback simples reverte o commit.
 - Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
-  reproducao operacional local com ffprobe/FFmpeg temporarios, `pnpm version:bump`,
-  `pnpm check:version` e `pnpm check` em `0.1.286`. Smoke de homologacao sera registrado apos
-  `git push` em `homolog` e deploy.
-- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
-  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.285`. Smoke de homologacao sera
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.285`. Smoke de homologacao foi
   registrado apos `git push` em `homolog` e deploy.
 
 ## Hotfix em 2026-09-08: probe MP4 remoto sem opcao HLS
@@ -1497,3 +1493,28 @@ Uma task só pode ser marcada como concluída quando:
 - Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
   provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
   publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  reproducao operacional local com ffprobe/FFmpeg temporarios, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check` em `0.1.286`. Smoke de homologacao foi registrado apos
+  `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: download local de MP4 remoto antes do render social
+
+- Ajuste pos-feedback da TASK-176: apos a versao `0.1.286`, o print ainda mostrou `SR-04`, etapa
+  `processamento do video`, job `falhou` com progresso `1%`. A captura anexada foi usada somente
+  como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Diagnostico: progresso `1%` confirma que a validacao da origem passou e que o bloqueio segue na
+  leitura remota de MP4 pelo worker. Para reduzir dependencia de `ffprobe` lendo HTTPS diretamente
+  em topologias publicadas, o worker agora baixa MP4/MOV/WebM remoto direto para storage privado
+  efemero usando `fetch` com headers seguros e redirects proibidos, valida assinatura/tamanho e so
+  entao executa `ffprobe`/FFmpeg sobre arquivo local. HLS `.m3u8` continua remoto para preservar
+  Cloudflare Stream assinado.
+- A reserva de storage do job social direto passa a considerar input maximo + output maximo ate o
+  terminal do job; HLS conserva reserva apenas de output. Outputs continuam efemeros, com download
+  autenticado por proxy, e inputs sao removidos ao concluir/falhar sem retry.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.287`. Smoke de homologacao sera
+  registrado apos `git push` em `homolog` e deploy.

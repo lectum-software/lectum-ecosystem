@@ -198,13 +198,21 @@ export const parseRemoteVideoRequestOrigin = (value?: string | null) => {
   }
 };
 
-export const remoteVideoRequestHeaders = (origin?: string | null) => {
+export const remoteVideoRequestHeaderEntries = (origin?: string | null) => {
   const safeOrigin = parseRemoteVideoRequestOrigin(origin);
-  const headers = [`User-Agent: ${REMOTE_VIDEO_REQUEST_USER_AGENT}`];
+  const headers: [string, string][] = [["User-Agent", REMOTE_VIDEO_REQUEST_USER_AGENT]];
   if (safeOrigin) {
-    headers.push(`Origin: ${safeOrigin}`);
-    headers.push(`Referer: ${safeOrigin}/`);
+    headers.push(["Origin", safeOrigin]);
+    headers.push(["Referer", `${safeOrigin}/`]);
   }
+
+  return headers;
+};
+
+export const remoteVideoRequestHeaders = (origin?: string | null) => {
+  const headers = remoteVideoRequestHeaderEntries(origin).map(
+    ([name, value]) => `${name}: ${value}`,
+  );
 
   return `${headers.join("\r\n")}\r\n`;
 };

@@ -174,6 +174,21 @@ sem nova env, schema, pacote, persistencia ou fallback para baixar original sem 
 Essa decisao preserva seguranca de SSRF para destinos externos, evita invalidar midias reais legadas
 por topologia interna de deploy e nao cria env, schema, pacote, persistencia ou limpeza de dados.
 
+## Atualizacao de download local para MP4 remoto em 2026-09-08
+
+Depois da versao `0.1.286`, o feedback ainda mostrou `SR-04` com progresso `1%`. Como esse ponto
+fica apos a validacao de URL e antes da entrada validada, a decisao foi retirar MP4/MOV/WebM direto
+do caminho em que `ffprobe` precisa abrir HTTPS remoto. O app `video/` agora baixa midias remotas
+diretas para storage privado efemero com `fetch`, `User-Agent` controlado, `Origin`/`Referer`
+somente quando a origem segura ja foi validada e `redirect: "error"`. Depois valida tamanho,
+assinatura de container e sonda/processa o arquivo local. HLS `.m3u8` permanece remoto para manter
+Cloudflare Stream assinado e `-allowed_extensions ALL` restrito ao demuxer correto.
+
+Para nao subestimar disco, jobs sociais com midia direta reservam input maximo + output maximo ate
+o estado terminal; HLS continua reservando apenas output. O arquivo de input efemero e removido ao
+concluir ou ao falhar sem retry. A mudanca nao cria env, schema, pacote, provider, persistencia de
+artefato, mock, seed, reset ou limpeza de dados publicados.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -205,3 +220,9 @@ por topologia interna de deploy e nao cria env, schema, pacote, persistencia ou 
 - Atualizacao de leitura de midia publica Lectum 2026-09-08: `pnpm --dir video test`,
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check` em `0.1.285`.
+- Atualizacao de probe MP4 remoto 2026-09-08: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check` em `0.1.286`.
+- Atualizacao de download local para MP4 remoto 2026-09-08: `pnpm --dir video test`,
+  `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
+  `pnpm check` em `0.1.287`.

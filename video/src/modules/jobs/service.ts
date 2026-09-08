@@ -8,6 +8,7 @@ import { sendPublicError, sendSuccess } from "../../http/responses.js";
 import { sanitizeSocialShareMetadata } from "../../infra/ffmpeg/social-share.js";
 import {
   assertSafeRemoteVideoSourceUrl,
+  isRemoteVideoHlsSource,
   parseRemoteVideoRequestOrigin,
 } from "../../infra/ffmpeg/source-url.js";
 import type { VideoQueue } from "../../infra/queue/client.js";
@@ -187,11 +188,15 @@ export const startSocialShareRenderJob =
       await acquireVideoStorageReservation({
         config: dependencies.config,
         connection: dependencies.connection,
-        expectedInputBytes: 1,
+        expectedInputBytes: isRemoteVideoHlsSource(sourceUrl)
+          ? 1
+          : dependencies.config.maxInputBytes,
         jobId,
       });
       reservationHeld = true;
-      await retainVideoOutputReservation(dependencies.connection, dependencies.config, jobId);
+      if (isRemoteVideoHlsSource(sourceUrl)) {
+        await retainVideoOutputReservation(dependencies.connection, dependencies.config, jobId);
+      }
 
       const metadata = sanitizeSocialShareMetadata({
         ...parsed.data.metadata,

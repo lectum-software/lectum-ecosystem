@@ -15,14 +15,19 @@ import {
   validateOutputProbe,
   validatePublishedOutput,
 } from "./infra/ffmpeg/probe.js";
+import { downloadRemoteVideoSourceFile } from "./infra/ffmpeg/remote-source.js";
 import { renderSocialShareVideo } from "./infra/ffmpeg/social-share.js";
-import { assertSafeRemoteVideoSourceUrl } from "./infra/ffmpeg/source-url.js";
+import {
+  assertSafeRemoteVideoSourceUrl,
+  isRemoteVideoHlsSource,
+} from "./infra/ffmpeg/source-url.js";
 import {
   clearVideoJobCancellation,
   isVideoJobCancellationRequested,
 } from "./infra/queue/cancellation.js";
 import { videoStoragePaths } from "./infra/storage/paths.js";
 import { releaseVideoStorageReservation } from "./infra/storage/reservations.js";
+import { readSupportedVideoSignature } from "./infra/storage/signature.js";
 import {
   prepareVideoOutput,
   publishVideoOutput,
@@ -96,6 +101,41 @@ const processCompressionJob = async (input: {
   });
 };
 
+const ensureDownloadedSocialShareInput = async (input: {
+  config: VideoServiceConfig;
+  job: Job<VideoJobData, VideoJobResult, string>;
+  jobId: string;
+  paths: ReturnType<typeof videoStoragePaths>;
+  requestOrigin?: string | null;
+  signal: AbortSignal;
+  sourceUrl: string;
+}) => {
+  if (!(await videoInputExists(input.config, input.jobId))) {
+    await downloadRemoteVideoSourceFile({
+      config: input.config,
+      outputPath: input.paths.inputPath,
+      requestOrigin: input.requestOrigin,
+      signal: input.signal,
+      sourceUrl: input.sourceUrl,
+    });
+  }
+
+  const inputInformation = await stat(input.paths.inputPath);
+  const signature = await readSupportedVideoSignature(input.paths.inputPath);
+  if (
+    !signature ||
+    !inputInformation.isFile() ||
+    inputInformation.size <= 0 ||
+    inputInformation.size > input.config.maxInputBytes
+  ) {
+    throw new VideoProcessingError("invalid_video");
+  }
+
+  await input.job.updateProgress(2);
+
+  return probeVideo(input.config, input.paths.inputPath, input.signal);
+};
+
 const processSocialShareJob = async (input: {
   config: VideoServiceConfig;
   job: Job<VideoJobData, VideoJobResult, string>;
@@ -116,11 +156,18 @@ const processSocialShareJob = async (input: {
   const sourceOrigin = input.job.data.sourceOrigin ?? null;
 
   await input.job.updateProgress(1);
-  const source = await probeRemoteVideo(
-    input.config,
-    { requestOrigin: sourceOrigin, sourceUrl },
-    input.signal,
-  );
+  const sourceIsHls = isRemoteVideoHlsSource(sourceUrl);
+  const source = sourceIsHls
+    ? await probeRemoteVideo(input.config, { requestOrigin: sourceOrigin, sourceUrl }, input.signal)
+    : await ensureDownloadedSocialShareInput({
+        config: input.config,
+        job: input.job,
+        jobId: input.jobId,
+        paths: input.paths,
+        requestOrigin: sourceOrigin,
+        signal: input.signal,
+        sourceUrl,
+      });
   validateInputProbe(input.config, source);
   await input.job.updateProgress(3);
   await prepareVideoOutput(input.config, input.jobId);
@@ -137,7 +184,9 @@ const processSocialShareJob = async (input: {
     },
     outputPath: input.paths.temporaryOutputPath,
     signal: input.signal,
-    source: { kind: "remote", requestOrigin: sourceOrigin, sourceUrl },
+    source: sourceIsHls
+      ? { kind: "remote", requestOrigin: sourceOrigin, sourceUrl }
+      : { inputPath: input.paths.inputPath, kind: "file" },
   });
   await progressPromise;
 
