@@ -1416,3 +1416,22 @@ Uma task só pode ser marcada como concluída quando:
 - O backend tambem passa a considerar `community_post_media` ativo na autorizacao publica/deteccao de anexo de `video_asset` de post, mantendo o fallback legado `community_post.media_url`.
 - Alteracao backend+video com documentacao; sem frontend UI, admin UI, schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
 - Validacoes: `pnpm --dir video test`, teste backend focado em render social/associacao de midia, `pnpm --dir video check`, `pnpm --dir backend check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build` em `0.1.282`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: render social para midia publica legada
+
+- Ajuste pos-feedback da TASK-176: o erro persistiu na resposta em video do psicologo Tulio Rezende
+  em homologacao. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos ou
+  documentos nao foram tratadas como pedido.
+- Diagnostico: essa resposta usa midia legada publica em `/public/files/posts/media/`, nao HLS
+  Cloudflare Stream. O hotfix anterior autorizava HLS privado, mas o backend ainda podia invalidar
+  uma URL absoluta legada quando o hostname persistido no banco divergia da `BASE` atual.
+- O backend passa a resolver midias legadas absolutas ja persistidas em HTTPS publico, mantendo
+  obrigatorio o prefixo `/public/files/posts/media/` e recusando credenciais, HTTP, query, fragmento
+  e caminhos fora do contrato. O app `video/` continua fazendo a validacao final de DNS publico e
+  extensao antes do FFmpeg.
+- Alteracao backend/documentacao; sem frontend UI, admin UI, video runtime, schema/migration, env
+  obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou
+  limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: teste backend focado em render social/midia legada, `pnpm --dir backend check`,
+  `pnpm --dir backend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check` em
+  `0.1.283`. Smoke de homologacao sera registrado apos `git push` em `homolog` e deploy.

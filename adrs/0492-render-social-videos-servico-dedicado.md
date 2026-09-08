@@ -108,6 +108,22 @@ foi preservar o fluxo privado e adicionar somente dados operacionais seguros:
 A mudanca e aditiva e tolera rollout em versoes diferentes: backend novo conversa com `video/` antigo
 porque o campo extra e ignorado, e `video/` novo aceita jobs antigos sem `sourceOrigin`.
 
+## Atualizacao de midia legada em 2026-09-08
+
+Novo relato em homologacao mostrou que o caso concreto restante era uma resposta em video com URL
+publica legada em `/public/files/posts/media/`, nao uma referencia `video_asset`/HLS privado. A
+decisao foi manter o render social no app `video/` e corrigir apenas a resolucao backend da fonte:
+
+- quando `publicFileKeyFromUrl` nao reconhece a URL absoluta por divergencia entre o hostname
+  persistido e a `BASE` atual, o backend ainda pode repassar a propria URL HTTPS persistida;
+- a URL continua restrita ao prefixo publico de midia de post e sem credenciais, HTTP, query ou
+  fragmento;
+- o app `video/` permanece responsavel por validar DNS publico, caminho de video e probe antes de
+  chamar FFmpeg.
+
+Isso evita quebrar respostas reais publicadas antes de trocas de hostname/base, sem criar nova env,
+schema, persistencia, mock ou fallback para baixar o original sem arte.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -130,3 +146,6 @@ porque o campo extra e ignorado, e `video/` novo aceita jobs antigos sem `source
   `pnpm --dir video build` em `0.1.281`.
 - Smoke de homologação pendente após push/deploy.
 - Atualizacao emergencial 2026-09-08: `pnpm --dir video test`, teste backend focado em render social/associacao de midia, `pnpm --dir video check`, `pnpm --dir backend check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build` em `0.1.282`.
+- Atualizacao de midia legada 2026-09-08: teste backend focado em render social/midia legada,
+  `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check` em `0.1.283`.

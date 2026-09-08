@@ -133,6 +133,21 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de midia legada em 2026-09-08
+
+- Evidencia: novo relato mostrou o mesmo toast no computador em homologacao apos `0.1.282`. A imagem
+  anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas
+  como pedido.
+- Diagnostico: a resposta em video do psicologo Tulio Rezende do post relatado usa uma URL publica
+  legada em `/public/files/posts/media/`, nao uma referencia `video_asset`/Cloudflare Stream. Assim,
+  a autorizacao de `Origin`/`Referer` para HLS privado nao cobria esse caso.
+- Correcao: a resolucao backend de fonte legada passa a aceitar a URL absoluta HTTPS ja persistida
+  quando a `BASE` atual diverge, desde que o caminho continue no prefixo publico de midia de post e
+  sem credenciais, HTTP, query ou fragmento. A validacao final de DNS publico e arquivo de video
+  permanece no app `video/`.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -157,3 +172,8 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   `homolog` e deploy.
 - [x] Validacoes do hotfix emergencial `0.1.282`: `pnpm --dir video test`, teste backend focado em render social/associacao de midia, `pnpm --dir video check`, `pnpm --dir backend check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`, `pnpm --dir backend build`, `pnpm --dir frontend build`, `pnpm --dir admin build` e `pnpm --dir video build`.
 - Commit/push e smoke de homologacao da correcao `0.1.282` serao registrados apos `git push` em `homolog` e deploy.
+- [x] Validacoes do hotfix de midia legada `0.1.283`: teste backend focado em render social/midia
+  legada, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.283` serao registrados apos `git push` em
+  `homolog` e deploy.

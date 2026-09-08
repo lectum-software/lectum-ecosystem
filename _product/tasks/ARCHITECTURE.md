@@ -417,7 +417,10 @@ Templates/shells devem viver em `frontend/src/templates`.
   plano de controle owner-only, resolve uma origem HTTPS segura (playback assinado Cloudflare Stream
   ou midia publica legada de `posts/media/`) e chama a API privada do `video/`; quando a origem e
   Stream privado, tambem envia uma origem web publica permitida para que o worker use `Origin` e
-  `Referer` seguros no `ffprobe`/FFmpeg. O worker valida DNS publico, probe remoto com reconexao,
+  `Referer` seguros no `ffprobe`/FFmpeg. Midias legadas absolutas ja persistidas podem manter uma
+  origem HTTPS publica anterior mesmo quando a `BASE` atual diverge, desde que continuem sob
+  `/public/files/posts/media/`, sem credenciais, query ou fragmento; isso evita invalidar posts e
+  respostas reais por troca de hostname. O worker valida DNS publico, probe remoto com reconexao,
   renderiza 1080x1920 com FFmpeg H.264/AAC em preset rapido, escapa textos livres antes do
   `drawtext` e mantem o arquivo apenas como saida efemera do job. Para posts, a associacao de video
   considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend

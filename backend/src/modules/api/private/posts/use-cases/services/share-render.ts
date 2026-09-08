@@ -10,12 +10,7 @@ import {
 } from "@/infra/video-stream";
 import { VideoAssetRepository } from "@/modules/video-assets/repository";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
-import {
-  getPrimaryPublicWebOrigin,
-  parsePublicHttpOrigin,
-  publicFileKeyFromUrl,
-  publicFileUrl,
-} from "@/utils/public-origin";
+import { getPrimaryPublicWebOrigin, parsePublicHttpOrigin } from "@/utils/public-origin";
 import type {
   IPostRenderShareArtifactDTO,
   IPostRenderShareArtifactJobDTO,
@@ -28,9 +23,12 @@ import {
 } from "../../repositories/support/post-response";
 import { ensureCommunityActor } from "./post-support";
 import { selectSharePostVideoMediaUrl } from "./share-render-media";
+import {
+  resolveLegacyPostMediaSourceUrlForRender,
+  type ShareRenderSource,
+} from "./share-render-source";
 
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
-const POST_MEDIA_PREFIXES = ["posts/media/"] as const;
 const JOB_ID_PATTERN = /^[a-z][a-z0-9]{23,31}$/;
 const VIDEO_SERVICE_CODE_PATTERN = /^[a-z][a-z0-9_]{1,64}$/;
 
@@ -66,11 +64,6 @@ type ShareRenderTarget = {
   replyId: string | null;
   responseText: string | null;
   sourceText: string;
-};
-
-type ShareRenderSource = {
-  sourceOrigin: string | null;
-  sourceUrl: string;
 };
 
 export type RenderShareArtifactJobFileResult =
@@ -245,21 +238,6 @@ const ensureOwnerPsychologistTarget = (
   return null;
 };
 
-const absoluteLegacyMediaSourceUrl = (mediaUrl: string): ShareRenderSource | null => {
-  const key = publicFileKeyFromUrl(mediaUrl, POST_MEDIA_PREFIXES);
-  if (!key) return null;
-
-  const sourceUrl = publicFileUrl(key);
-  try {
-    const parsed = new URL(sourceUrl);
-    return parsed.protocol === "https:"
-      ? { sourceOrigin: null, sourceUrl: parsed.toString() }
-      : null;
-  } catch {
-    return null;
-  }
-};
-
 const streamPlaybackRequestOrigin = () => {
   const streamConfig = getVideoStreamConfig();
   const webOrigin = getPrimaryPublicWebOrigin({ productionRuntime: true });
@@ -301,7 +279,7 @@ const streamMediaSourceUrl = async (
 
 const resolveSourceUrl = async (target: ShareRenderTarget, ownerId: string) =>
   (await streamMediaSourceUrl(target.mediaUrl, ownerId)) ??
-  absoluteLegacyMediaSourceUrl(target.mediaUrl);
+  resolveLegacyPostMediaSourceUrlForRender(target.mediaUrl);
 
 const postTargetSelect = {
   id: true,
