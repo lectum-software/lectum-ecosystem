@@ -16,6 +16,7 @@ describe("FFprobe remote video command", () => {
     assert.equal(args[headersIndex + 1]?.includes("User-Agent: LectumVideoService/1.0"), true);
     assert.equal(args[headersIndex + 1]?.includes("Origin: https://homolog.lectum.com.br"), true);
     assert.equal(args[headersIndex + 1]?.includes("Referer: https://homolog.lectum.com.br/"), true);
+    assert.equal(args.includes("-allowed_extensions"), true);
     assert.ok(headersIndex < args.indexOf(sourceUrl));
     assert.equal(args.at(-1), sourceUrl);
   });
@@ -30,5 +31,6 @@ describe("FFprobe remote video command", () => {
     assert.equal(args[headersIndex + 1], "User-Agent: LectumVideoService/1.0\r\n");
     assert.ok(headersIndex < args.indexOf(sourceUrl));
     assert.equal(args.at(-1), sourceUrl);
+    assert.equal(args.includes("-allowed_extensions"), false);
   });
 });

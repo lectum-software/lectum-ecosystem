@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { VideoServiceConfig } from "../../config/env.js";
 import { VideoProcessingError } from "../../domain/jobs/contracts.js";
 import { ManagedProcessError, runManagedProcess } from "./process.js";
-import { remoteVideoRequestHeaders } from "./source-url.js";
+import { isRemoteVideoHlsSource, remoteVideoRequestHeaders } from "./source-url.js";
 
 const probePayloadSchema = z.object({
   format: z
@@ -149,14 +149,13 @@ export const buildRemoteVideoProbeArguments = (source: RemoteVideoProbeSource) =
     "error",
     "-protocol_whitelist",
     "file,http,https,tcp,tls,crypto",
-    "-allowed_extensions",
-    "ALL",
     "-reconnect",
     "1",
     "-reconnect_streamed",
     "1",
     "-reconnect_delay_max",
     "5",
+    ...(isRemoteVideoHlsSource(normalized.sourceUrl) ? ["-allowed_extensions", "ALL"] : []),
     "-show_entries",
     "format=format_name,duration:stream=codec_type,codec_name,width,height,duration",
     "-of",

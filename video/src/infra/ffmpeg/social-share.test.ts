@@ -57,6 +57,23 @@ describe("FFmpeg social share command", () => {
     assert.equal(args.includes("-nostdin"), true);
   });
 
+  it("omite allowed_extensions para MP4 publico porque o demuxer mov rejeita a opcao", () => {
+    const sourceUrl =
+      "https://homolog-api.lectum.com.br/public/files/posts/media/l4gcubbiqb4i6wldhkq0keyk.mp4";
+    const args = buildSocialShareVideoArguments({
+      config,
+      metadata,
+      outputPath: "/safe/outputs/video.partial.mp4",
+      source: {
+        kind: "remote",
+        sourceUrl,
+      },
+    });
+
+    assert.equal(args.includes("-allowed_extensions"), false);
+    assert.equal(args.at(args.indexOf("-i") + 1), sourceUrl);
+  });
+
   it("envia Origin e Referer seguros ao ler HLS remoto privado", () => {
     const args = buildSocialShareVideoArguments({
       config,

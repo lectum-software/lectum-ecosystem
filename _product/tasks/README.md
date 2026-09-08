@@ -1475,5 +1475,25 @@ Uma task só pode ser marcada como concluída quando:
   provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
   publicados. Rollback simples reverte o commit.
 - Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
+  reproducao operacional local com ffprobe/FFmpeg temporarios, `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check` em `0.1.286`. Smoke de homologacao sera registrado apos
+  `git push` em `homolog` e deploy.
+- Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
   `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.285`. Smoke de homologacao sera
   registrado apos `git push` em `homolog` e deploy.
+
+## Hotfix em 2026-09-08: probe MP4 remoto sem opcao HLS
+
+- Ajuste pos-feedback da TASK-176: novo print mostrou `SR-04`, etapa `processamento do video`, job
+  `falhou` com progresso `1%`. Isso confirma que a validacao de URL first-party passou e que a
+  falha agora ocorre no `ffprobe`/validacao de entrada.
+- Reproducao operacional local com binarios FFmpeg/ffprobe externos ao repositorio: o MP4 publico
+  concreto e lido com sucesso quando o comando remoto omite `-allowed_extensions ALL`, mas falha
+  imediatamente quando essa opcao de demuxer HLS e aplicada a um MP4 direto.
+- Correcao: `video/` continua usando `-allowed_extensions ALL` somente para fontes HLS `.m3u8`
+  (necessarias para Cloudflare Stream), e passa a omitir a opcao em MP4/MOV/WebM remotos. O
+  restante do contrato permanece igual: URL segura, `User-Agent` controlado, `Origin`/`Referer`
+  apenas quando houver origem web segura e processamento 9:16 no worker dedicado.
+- Alteracao video-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.

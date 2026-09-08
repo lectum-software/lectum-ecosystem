@@ -96,6 +96,15 @@ const hasAllowedVideoPath = (url: URL) => {
 const hasLectumPublicPostMediaPath = (url: URL) =>
   decodeURIComponent(url.pathname).toLowerCase().startsWith("/public/files/posts/media/");
 
+export const isRemoteVideoHlsSource = (value: string) => {
+  try {
+    const url = new URL(value);
+    return url.pathname.toLowerCase().endsWith(".m3u8");
+  } catch {
+    return false;
+  }
+};
+
 export const isFirstPartyLectumPublicPostMediaUrl = (url: URL) =>
   url.protocol === "https:" &&
   FIRST_PARTY_LECTUM_PUBLIC_MEDIA_HOSTNAMES.has(url.hostname.toLowerCase()) &&

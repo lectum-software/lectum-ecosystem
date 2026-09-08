@@ -5,7 +5,7 @@ import {
   VideoProcessingError,
 } from "../../domain/jobs/contracts.js";
 import { ManagedProcessError, runManagedProcess } from "./process.js";
-import { remoteVideoRequestHeaders } from "./source-url.js";
+import { isRemoteVideoHlsSource, remoteVideoRequestHeaders } from "./source-url.js";
 
 const SOCIAL_OUTPUT_WIDTH = 1080;
 const SOCIAL_OUTPUT_HEIGHT = 1920;
@@ -187,14 +187,13 @@ export const buildSocialShareVideoArguments = (input: {
     return [
       "-protocol_whitelist",
       "file,http,https,tcp,tls,crypto",
-      "-allowed_extensions",
-      "ALL",
       "-reconnect",
       "1",
       "-reconnect_streamed",
       "1",
       "-reconnect_delay_max",
       "5",
+      ...(isRemoteVideoHlsSource(input.source.sourceUrl) ? ["-allowed_extensions", "ALL"] : []),
       ...(requestHeaders ? ["-headers", requestHeaders] : []),
       "-i",
       input.source.sourceUrl,

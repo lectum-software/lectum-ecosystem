@@ -424,7 +424,8 @@ Templates/shells devem viver em `frontend/src/templates`.
   excecao first-party e midia publica Lectum em `homolog-api.lectum.com.br` ou `api.lectum.com.br`,
   sempre HTTPS e no prefixo exato `/public/files/posts/media/`, que pode resolver por rota
   privada/overlay do proprio ambiente sem virar SSRF generico. `ffprobe`/FFmpeg usam `User-Agent`
-  controlado, probe remoto com reconexao, renderizam 1080x1920 com FFmpeg H.264/AAC em preset
+  controlado, probe remoto com reconexao e aplicam `-allowed_extensions ALL` somente a HLS `.m3u8`,
+  nunca a MP4/MOV/WebM direto. O render social gera 1080x1920 com FFmpeg H.264/AAC em preset
   rapido, escapam textos livres antes do `drawtext` e mantem o arquivo apenas como saida efemera do
   job. Para posts, a associacao de video
   considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend

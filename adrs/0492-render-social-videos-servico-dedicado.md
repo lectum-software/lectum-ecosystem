@@ -158,6 +158,19 @@ fronteira anti-SSRF:
 - `ffprobe` e FFmpeg passam a enviar `User-Agent` controlado em leituras remotas; `Origin` e
   `Referer` continuam condicionados a origem web segura enviada pelo backend.
 
+## Atualizacao de probe MP4 remoto em 2026-09-08
+
+Novo feedback trouxe `SR-04` com progresso `1%`, indicando que a URL first-party ja passou pela
+fronteira anti-SSRF e que a falha restante ocorre no `ffprobe`/validacao da entrada remota. A
+reproducao operacional local com binarios temporarios FFmpeg/ffprobe mostrou que o MP4 publico e
+lido corretamente sem `-allowed_extensions ALL`, mas falha antes de abrir o arquivo quando essa
+opcao de HLS e aplicada a um MP4 direto.
+
+A decisao e condicionar `-allowed_extensions ALL` somente a URLs HLS `.m3u8`. MP4/MOV/WebM remotos
+continuam sob whitelist de protocolo, URL segura, reconexao e headers controlados, mas sem a opcao
+especifica do demuxer HLS. Isso preserva Stream privado assinado e destrava midias legadas publicas,
+sem nova env, schema, pacote, persistencia ou fallback para baixar original sem arte.
+
 Essa decisao preserva seguranca de SSRF para destinos externos, evita invalidar midias reais legadas
 por topologia interna de deploy e nao cria env, schema, pacote, persistencia ou limpeza de dados.
 

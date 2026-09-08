@@ -182,6 +182,21 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Hotfix de probe MP4 remoto em 2026-09-08
+
+- Evidencia: apos o deploy anterior, o novo print passou a mostrar `SR-04` com progresso `1%`. Isso
+  confirma que a origem first-party foi aceita e que o bloqueio agora ocorre no `ffprobe`/validacao
+  de entrada remota.
+- Reproducao local sem alterar dependencias do projeto: binarios FFmpeg/ffprobe temporarios
+  conseguiram ler o MP4 publico concreto quando `-allowed_extensions ALL` nao foi enviado; com a
+  opcao presente, o processo falhou antes de abrir o arquivo porque a opcao pertence ao demuxer HLS
+  e nao deve ser aplicada a MP4 direto.
+- Correcao: `video/` condiciona `-allowed_extensions ALL` a fontes HLS `.m3u8`; MP4/MOV/WebM
+  remotos mantem whitelist de protocolo, reconexao, headers seguros e probe/render dedicados sem a
+  opcao HLS.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -220,4 +235,9 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.285` serao registrados apos `git push` em
+  `homolog` e deploy.
+- [x] Validacoes do hotfix de probe MP4 remoto `0.1.286`: `pnpm --dir video test`, `pnpm --dir
+  video check`, `pnpm --dir video build`, reproducao operacional local com ffprobe/FFmpeg
+  temporarios, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.
+- Commit/push e smoke de homologacao da correcao `0.1.286` serao registrados apos `git push` em
   `homolog` e deploy.
