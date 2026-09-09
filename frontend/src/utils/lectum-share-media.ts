@@ -15,7 +15,7 @@ import {
 export type ShareExportResult = {
   channel: "clipboard" | "web_share" | null;
   file?: File;
-  mode: "clipboard" | "download" | "link" | "prepared";
+  mode: "clipboard" | "download" | "link";
 };
 
 type PreparedShareFileCacheValue = File | Promise<File>;
@@ -50,7 +50,6 @@ export class LectumShareRenderError extends Error {
 }
 
 const DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS = 60_000;
-const FILE_SHARE_PREVIEW_FALLBACK_USER_AGENT_PATTERN = /\b(Android|iPhone|iPad|iPod)\b/i;
 const SAFE_SHARE_RENDER_ERROR_CODE_PATTERN = /^[a-z][a-z0-9_]{1,80}$/u;
 const SERVER_SHARE_RENDER_QUALITY_TIMEOUT_MS = 900_000;
 const SERVER_SHARE_RENDER_JOB_CACHE_TTL_MS = 30 * 60_000;
@@ -393,31 +392,6 @@ const downloadFile = (file: File) => {
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), DOWNLOAD_OBJECT_URL_REVOKE_DELAY_MS);
 };
 
-type NavigatorWithUserActivation = Navigator & {
-  userActivation?: {
-    isActive?: boolean;
-  };
-};
-
-const shouldAvoidBrowserFilePreviewFallback = () => {
-  if (typeof navigator === "undefined") return false;
-
-  const userAgent = navigator.userAgent ?? "";
-  const platform = navigator.platform ?? "";
-  const maxTouchPoints = navigator.maxTouchPoints ?? 0;
-
-  return (
-    FILE_SHARE_PREVIEW_FALLBACK_USER_AGENT_PATTERN.test(userAgent) ||
-    (platform === "MacIntel" && maxTouchPoints > 1)
-  );
-};
-
-const hasFreshUserActivation = () => {
-  const activation = (navigator as NavigatorWithUserActivation).userActivation;
-
-  return activation?.isActive !== false;
-};
-
 export const downloadPreparedLectumShareFile = async (
   target: LectumShareSocialTarget,
   file: File,
@@ -430,23 +404,12 @@ export const downloadPreparedLectumShareFile = async (
   });
 
   if (nativeFileShareData) {
-    if (!hasFreshUserActivation()) {
-      return { channel: null, file, mode: "prepared" };
-    }
-
     try {
       await nav.share?.(nativeFileShareData);
       return { channel: null, file, mode: "download" };
     } catch (error) {
       if (isNativeShareAbortError(error)) throw error;
-      if (shouldAvoidBrowserFilePreviewFallback()) {
-        return { channel: null, file, mode: "prepared" };
-      }
     }
-  }
-
-  if (shouldAvoidBrowserFilePreviewFallback()) {
-    return { channel: null, file, mode: "prepared" };
   }
 
   downloadFile(file);

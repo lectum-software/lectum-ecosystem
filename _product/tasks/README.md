@@ -1677,3 +1677,11 @@ Uma task só pode ser marcada como concluída quando:
   `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.295` e rota publica
   do post 200), `pnpm version:bump`, `pnpm check:version`, `pnpm check` e `git diff --check`.
   Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: download automatico apos preparo social
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.295`, o usuario mostrou que, ao terminar o preparo, a UI ainda exibia `Video pronto` e exigia outro clique em `Baixar video`. A captura anexada foi usada somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- O fluxo continua iniciando o render apenas pelo clique/toque do usuario, mas, quando o arquivo fica pronto, o frontend tenta entregar o MP4 imediatamente: usa Web Share se o navegador aceitar naquele momento e, se a ativacao expirar ou a folha nativa nao abrir, aciona o download por objeto local sem voltar ao estado de segundo clique.
+- O toast `Video pronto / Toque novamente...` deixa de existir nesse caminho; sucesso passa a ser tratado como `Video baixado`, mantendo a orientacao de qualidade em mobile quando aplicavel.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.296`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.296` e rota publica do post 200), `pnpm version:bump`, `pnpm check:version` e `pnpm check`. Commit/push e smoke de homologacao serao registrados apos deploy.

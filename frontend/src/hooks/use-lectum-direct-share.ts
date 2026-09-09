@@ -245,10 +245,6 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
               ? { description: DOWNLOAD_QUALITY_GUIDANCE_MESSAGE }
               : undefined,
           );
-        } else if (result.mode === "prepared") {
-          toast.success("V\u00eddeo pronto.", {
-            description: "Toque novamente em Baixar v\u00eddeo para salvar ou compartilhar.",
-          });
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
         }

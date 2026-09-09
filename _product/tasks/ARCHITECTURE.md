@@ -451,10 +451,10 @@ Templates/shells devem viver em `frontend/src/templates`.
   sobreposta por CSS; o controle de audio fica como icone discreto, com fundo transparente, sobre o
   proprio video no canto inferior direito, sem botao textual separado. O arquivo baixado continua
   sendo o MP4 gerado pelo app `video/`, e a paridade exigida da previa e de layout/posicionamento,
-  nao de bytes. Em browsers
-  moveis que suportam Web Share de arquivo, o download exige um
-  novo toque com ativacao de usuario para abrir a folha nativa e evita navegar para a previa
-  intermediaria do arquivo; desktop sem Web Share segue com `download` por objeto local. A UI exibe
+  nao de bytes. Depois que o job conclui, o frontend dispara automaticamente a entrega do arquivo:
+  tenta Web Share quando permitido pelo navegador e, se a ativacao do usuario tiver expirado ou a
+  folha nativa nao puder abrir, cai para o download por objeto local sem exigir um segundo clique no
+  botao. A UI exibe
   ao usuario apenas diagnostico publico controlado (etapa, motivo em PT-BR, referencia `SR-xx`,
   status HTTP e estado/progresso do job quando existirem), mas nunca volta a gerar video no browser
   nem baixa o original sem arte quando o job falha. A UI nao pode expor mensagem crua de erro, stack,

@@ -80,15 +80,17 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(mediaSource, /preparedShareRenderJobCache/);
   assert.match(mediaSource, /900_000/);
   assert.match(mediaSource, /resolveLectumFileShareData/);
-  assert.match(mediaSource, /userActivation/);
-  assert.match(mediaSource, /mode:\s*"prepared"/);
-  assert.match(mediaSource, /shouldAvoidBrowserFilePreviewFallback/);
+  assert.match(mediaSource, /downloadFile\(file\)/);
+  assert.doesNotMatch(mediaSource, /mode:\s*"prepared"/);
+  assert.doesNotMatch(mediaSource, /userActivation/);
+  assert.doesNotMatch(mediaSource, /shouldAvoidBrowserFilePreviewFallback/);
   assert.match(hookSource, /prepareLectumShareFileWithServerRender/);
   assert.match(hookSource, /buildLectumShareRenderDiagnosticDescription/);
   assert.match(hookSource, /SHARE_RENDER_DIAGNOSTIC_COPY/);
   assert.match(hookSource, /description: diagnosticDescription/);
   assert.match(hookSource, /requestLectumScreenWakeLock/);
-  assert.match(hookSource, /result\.mode === "prepared"/);
+  assert.doesNotMatch(hookSource, /result\.mode === "prepared"/);
+  assert.doesNotMatch(hookSource, /Toque novamente em Baixar/);
   assert.match(hookSource, /Mantenha esta tela aberta enquanto o vídeo é preparado\./);
   assert.match(
     dialogHookSource,

@@ -350,6 +350,13 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Ajuste de download automatico apos preparo em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.295`, o usuario mostrou a modal no estado `Video pronto`, com instrucao para tocar novamente em `Baixar video`. A captura anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o frontend mantem o preparo sob demanda apenas no clique/toque inicial, mas, ao receber o `File` final do app `video/`, tenta entregar o arquivo imediatamente. Se Web Share estiver disponivel e permitido, usa a folha nativa; se a ativacao do usuario tiver expirado ou a chamada nativa falhar por restricao do navegador, cai para o download por objeto local sem exigir segundo clique.
+- O modo intermediario `prepared` e o toast `Toque novamente em Baixar video` foram removidos do caminho de download social. Falhas continuam usando diagnostico publico controlado; cancelamento nativo pelo usuario permanece silencioso.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -430,3 +437,8 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
   frontend (`/version` 200 em `0.1.295` e rota publica do post 200), `pnpm version:bump`,
   `pnpm check:version`, `pnpm check` e `git diff --check`.
+
+- [x] Validacoes do ajuste de download automatico apos preparo `0.1.296`: teste focado frontend
+  de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
+  frontend (`/version` 200 em `0.1.296` e rota publica do post 200), `pnpm version:bump`,
+  `pnpm check:version` e `pnpm check`.

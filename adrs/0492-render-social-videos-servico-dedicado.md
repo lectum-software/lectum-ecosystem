@@ -428,3 +428,24 @@ seed, reset ou limpeza de dados publicados. O rollback operacional segue por rev
 - pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.295.
 - pnpm check em 0.1.295.
 - Smoke local HTTP do frontend: /version 200 em 0.1.295 e rota publica do post 200.
+
+## Atualizacao de download automatico apos preparo em 2026-09-09
+
+Depois do deploy `0.1.295`, o usuario validou que o fluxo ainda pedia um segundo clique quando o arquivo ficava pronto. A decisao de UX foi preservar o preparo sob demanda, mas remover o estado intermediario `prepared` do download social:
+
+- o clique/toque em `Baixar video` continua sendo a unica acao que inicia start/status/download do job social;
+- quando o `File` final retorna, o frontend tenta entregar o arquivo imediatamente;
+- se Web Share nao puder abrir por ativacao expirada ou restricao do navegador, o fallback passa a ser o download por objeto local em vez de pedir novo clique;
+- o toast de sucesso volta a ser `Video baixado`; falhas continuam com diagnostico publico controlado e cancelamento nativo segue silencioso.
+
+A mudanca e frontend-only e nao cria env, schema, pacote, provider, persistencia de artefato, mock, seed, reset ou limpeza de dados publicados. O rollback operacional segue por reverter o commit.
+
+## Validacao da atualizacao de download automatico apos preparo
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.295 antes do bump.
+- pnpm --dir frontend check em 0.1.295 antes do bump.
+- pnpm --dir frontend build em 0.1.295 antes do bump.
+- pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.296.
+- pnpm check em 0.1.296.
+- pnpm --dir frontend build em 0.1.296.
+- Smoke local HTTP do frontend: /version 200 em 0.1.296 e rota publica do post 200.
