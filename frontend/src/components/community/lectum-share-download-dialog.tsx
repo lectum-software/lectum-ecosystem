@@ -122,7 +122,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         </div>
       </div>
 
-      <div className="absolute top-[75%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
+      <div className="absolute top-[72.9167%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
         <div className="inline-grid max-w-full justify-items-start text-left">
           <div className="flex max-w-full items-center justify-start gap-[0.7cqw]">
             <span className="truncate text-[3.15cqw] font-extrabold leading-none tracking-[-0.02em]">

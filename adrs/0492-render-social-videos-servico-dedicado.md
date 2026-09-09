@@ -609,3 +609,23 @@ A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, co
 - git diff --check em 0.1.301 antes do bump.
 - pnpm version:bump para 0.1.302.
 - pnpm check:version em 0.1.302.
+
+## Atualizacao por leitura corrigida da referencia das credenciais em 2026-09-09
+
+O feedback anterior foi reclassificado pelo usuario: a identificacao superior da comparacao era a do MP4 real e a inferior era a previa. A decisao de produto foi desfazer a compensacao para baixo e voltar a ancorar a previa na coordenada numerica do render:
+
+- previa CSS com nome em `top-[72.9167%]`, equivalente a `nameY=1400` no output 1080x1920;
+- profissao e selo mantidos em `mt-[0.55cqw]` e `2.41cqw x 2.22cqw`;
+- render FFmpeg e jobs existentes permanecem inalterados.
+
+A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, contrato publico, backend, video, env, provider, storage, package npm, seed ou dados publicados. Rollback: reverter o commit.
+
+## Validacao da atualizacao por leitura corrigida da referencia das credenciais
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.302 antes do bump.
+- pnpm --dir frontend check em 0.1.302 antes do bump.
+- pnpm --dir frontend build em 0.1.302 antes do bump.
+- pnpm check em 0.1.302 antes do bump.
+- git diff --check em 0.1.302 antes do bump.
+- pnpm version:bump para 0.1.303.
+- pnpm check:version em 0.1.303.

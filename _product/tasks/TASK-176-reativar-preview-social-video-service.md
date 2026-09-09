@@ -530,3 +530,19 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `git diff --check` em `0.1.301` antes do bump.
 - [x] `pnpm version:bump` para `0.1.302`.
 - [x] `pnpm check:version` em `0.1.302`.
+
+## Correcao de leitura da referencia das credenciais em 2026-09-09
+
+- Evidencia: o usuario corrigiu a leitura da captura e informou que a identificacao superior era a do MP4 real, enquanto a inferior era a da previa. A imagem anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a compensacao para baixo aplicada na previa foi removida. A previa volta a espelhar a coordenada do render MP4 (`nameY=1400` em 1080x1920), usando `top-[72.9167%]`, para subir o nome, profissao e selo ao mesmo ponto visual do artefato real.
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes da correcao de leitura da referencia das credenciais
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.302` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.302` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.302` antes do bump.
+- [x] `pnpm check` em `0.1.302` antes do bump.
+- [x] `git diff --check` em `0.1.302` antes do bump.
+- [x] `pnpm version:bump` para `0.1.303`.
+- [x] `pnpm check:version` em `0.1.303`.
