@@ -442,3 +442,41 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
   frontend (`/version` 200 em `0.1.296` e rota publica do post 200), `pnpm version:bump`,
   `pnpm check:version` e `pnpm check`.
+
+## Ajuste de fidelidade tipografica e assets da arte social em 2026-09-09
+
+- Evidencia: o usuario comparou a referencia visual com o modelo atual e apontou diferencas na logo
+  Lectum, centralizacao/tipografia do label, fonte/cor/margens/espacamento da pergunta e
+  identificacao do psicologo com selo. A imagem anexada foi usada apenas como referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao frontend: a previa instantanea troca a aproximacao inline da logo por asset PNG branco
+  recortado do logo oficial, usa Manrope explicitamente no overlay, reduz a densidade tipografica da
+  pergunta, usa tokens semanticos equivalentes na UI (`bg-primary`, `bg-media-foreground`,
+  `text-media-background`), 28 caracteres por linha, margens horizontais maiores e usa
+  `VerifiedBadgeIcon` real no nome do psicologo.
+- Correcao video: o render FFmpeg passa a instalar `fonts-manrope` no container, usar Manrope
+  Bold/Medium em `drawtext`, sobrepor os PNGs reais da logo e do selo verificado e aplicar os mesmos
+  tamanhos/coordenadas relativos da previa: label 38px, pergunta 50px/44px, nome 34px, profissao
+  21px e selo 26x24px.
+- Arquitetura: resolucao de fontes/assets foi isolada em `video/src/infra/ffmpeg/social-share-assets.ts`
+  para manter o render principal abaixo do limite de tamanho de fonte.
+- O fallback operacional permanece seguro: se os assets/fonte falharem antes de progresso do render,
+  o worker tenta variantes portateis e fallback sem assets, sem expor erro tecnico ao usuario.
+- Sem schema/migration, env obrigatoria nova, dependencia npm nova, mock, seed, reset, persistencia
+  de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de fidelidade tipografica e assets
+
+- [x] Medicao local do print de referencia: cartao x=60..528, y=252..445; cabecalho y=252..298;
+  texto/logo do cabecalho x=175..415; credenciais/selo x=223..366 no JPEG 590x1280.
+- [x] Teste focado frontend de compartilhamento social em `0.1.298` antes do bump.
+- [x] Teste focado video de render social FFmpeg em `0.1.298` antes do bump.
+- [x] `pnpm --dir video check` em `0.1.298` antes do bump.
+- [x] `pnpm --dir video build` em `0.1.298` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.298` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.298` antes do bump.
+- [x] `pnpm check:source-size` apos extrair o helper de assets/fontes.
+- [x] `pnpm check` em `0.1.298` antes do bump.
+- [x] `git diff --check`.
+- [x] `pnpm version:bump` para `0.1.299`.
+- [x] `pnpm check:version` em `0.1.299`.

@@ -32,7 +32,7 @@ FROM base AS runner
 ENV NODE_ENV=production
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates ffmpeg fonts-dejavu-core tini \
+  && apt-get install -y --no-install-recommends ca-certificates ffmpeg fonts-dejavu-core fonts-manrope tini \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /var/lib/lectum-video \
   && chown -R node:node /var/lib/lectum-video /app
@@ -41,6 +41,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --from=deps /app/node_modules ./node_modules
 RUN pnpm prune --prod
 COPY --from=builder /app/dist ./dist
+COPY assets ./assets
 
 USER node
 ENTRYPOINT ["/usr/bin/tini", "--"]

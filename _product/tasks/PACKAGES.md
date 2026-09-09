@@ -198,6 +198,7 @@ Cloudflare Stream e não compartilha instalação/runtime com o backend. Versõe
 | `@paralleldrive/cuid2` | `3.3.0` | `3.3.0` | IDs opacos de jobs e traces |
 | `dotenv` | `17.4.2` | `17.4.2` | Env local; deploy usa secrets de runtime |
 | FFmpeg/ffprobe CLI | imagem Debian | `5.1.9` na imagem; `8.1.2` no host E2E | Probe, compressão e render social MP4 H.264/AAC |
+| `fonts-manrope` | pacote Debian bookworm | `4.504+git20201211-2` | Fonte open-source Manrope no container `video/` para o render social combinar com a prévia/app |
 
 Decisões obrigatórias:
 

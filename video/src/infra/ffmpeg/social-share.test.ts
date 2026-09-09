@@ -6,6 +6,7 @@ import {
   buildSocialShareVideoArguments,
   sanitizeSocialShareMetadata,
 } from "./social-share.js";
+import { resolveSocialShareAssetFile } from "./social-share-assets.js";
 import {
   assertSafeRemoteVideoSourceUrl,
   isFirstPartyLectumPublicPostMediaUrl,
@@ -46,20 +47,23 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-filter_complex/);
     assert.match(command, /scale=1080:1920/);
     assert.match(command, /crop=1080:1920/);
-    assert.equal(command.includes("overlay="), false);
+    assert.match(command, /-loop 1 -i .*lectum-symbol-white\.png/);
+    assert.match(command, /-loop 1 -i .*verified-badge\.png/);
+    assert.match(command, /overlay=x=329:y=278:format=auto/);
+    assert.match(command, /scale=26:24:flags=lanczos\[verified_badge\]/);
+    assert.match(command, /overlay=x=628:y=1405:format=auto/);
     assert.equal(command.includes("eq="), false);
     assert.equal(command.includes("fps="), false);
     assert.equal(command.includes("[v0],drawbox"), false);
     assert.equal(command.includes("gblur="), false);
     assert.match(command, /drawbox=x=110:y=274:w=860:h=64:color=0x308ce8@0\.98:t=fill/);
-    assert.match(command, /drawbox=x=110:y=338:w=860:h=242:color=white@0\.96:t=fill/);
-    assert.match(command, /drawbox=x=321:y=286:w=13:h=1:color=white@0\.96:t=fill/);
+    assert.match(command, /drawbox=x=110:y=338:w=860:h=242:color=white@0\.98:t=fill/);
     assert.match(command, /drawtext=text='Respondido na Lectum'/);
-    assert.match(command, /drawtext=text='Respondido na Lectum':.*:x=366:y=271:fontsize=42/);
-    assert.match(command, /drawbox=x=640:y=1405:w=12:h=3:color=0x308ce8:t=fill/);
-    assert.match(command, /drawtext=text='✓':.*:x=637:y=1409:fontsize=19:fontcolor=white/);
-    assert.match(command, /drawtext=text='Psicóloga':.*:x=419:y=1445:fontsize=25/);
-    assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans-Bold\.ttf'/);
+    assert.match(command, /drawtext=text='Respondido na Lectum':.*:x=371:y=274:fontsize=38/);
+    assert.doesNotMatch(command, /drawtext=text='✓'/);
+    assert.match(command, /drawtext=text='Psicóloga':.*:x=427:y=1440:fontsize=21/);
+    assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/manrope\/Manrope-Bold\.ttf'/);
+    assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/manrope\/Manrope-Medium\.ttf'/);
     assert.doesNotMatch(command, /drawtext=text='lectum'/);
     assert.match(command, /-c:v libx264/);
     assert.match(command, /-crf 20/);
@@ -82,7 +86,7 @@ describe("FFmpeg social share command", () => {
           kind: "file",
         },
       },
-      { filterMode: "portable", fontFile: null },
+      { filterMode: "portable", fontFile: null, logoFile: null, verifiedBadgeFile: null },
     );
     const command = args.join(" ");
 
@@ -113,6 +117,15 @@ describe("FFmpeg social share command", () => {
 
     assert.match(command, /drawtext=text='Respondido na Lectum'/);
     assert.equal(command.includes("fontfile="), false);
+  });
+
+  it("resolve assets reais da marca usados no overlay social", () => {
+    assert.match(
+      resolveSocialShareAssetFile("lectum-symbol-white.png") ?? "",
+      /lectum-symbol-white\.png$/,
+    );
+    assert.match(resolveSocialShareAssetFile("verified-badge.png") ?? "", /verified-badge\.png$/);
+    assert.equal(resolveSocialShareAssetFile("missing-social-asset.png"), null);
   });
 
   it("omite allowed_extensions para MP4 publico porque o demuxer mov rejeita a opcao", () => {
@@ -197,9 +210,9 @@ describe("FFmpeg social share command", () => {
       30,
     );
 
-    assert.match(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=48/);
-    assert.match(filter, /drawtext=text='a sensacao de falta de ar\?':.*:fontsize=48/);
-    assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=52/);
+    assert.match(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=44/);
+    assert.match(filter, /drawtext=text='trouxer a sensacao de falta…':.*:fontsize=44/);
+    assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=50/);
   });
 
   it("normaliza o rótulo legado de pergunta para resposta", () => {

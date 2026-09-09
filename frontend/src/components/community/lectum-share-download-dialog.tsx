@@ -1,9 +1,10 @@
 "use client";
 
 import { Copy, Download, Volume2, VolumeX, X } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { LectumSymbolIcon } from "@/components/ui/lectum-symbol-icon";
+import { VerifiedBadgeIcon } from "@/components/ui/verified-badge";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
@@ -80,7 +81,7 @@ const wrapPreviewSourceText = (value: string, maxLineLength: number, maxLines: n
 
 const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
   const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
-  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 31, 3), [sourceText]);
+  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 28, 3), [sourceText]);
 
   return (
     <div
@@ -88,21 +89,31 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
       className="pointer-events-none absolute inset-0 z-[2] text-center text-primary-foreground"
       data-lectum-share-preview-art="true"
     >
-      <div className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.2cqw] drop-shadow-lg">
-        <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center gap-[1.1cqw] bg-primary px-[3.2cqw] text-[3.9cqw] font-black leading-none text-primary-foreground">
-          <LectumSymbolIcon
-            className="h-[3.05cqw] w-[3.05cqw] shrink-0 text-primary-foreground"
-            title="Lectum"
-          />
-          <span className="min-w-0 truncate">{target.cardLabel}</span>
+      <div
+        className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.2cqw] drop-shadow-lg"
+        style={{ fontFamily: "var(--font-manrope), Manrope, Arial, sans-serif" }}
+      >
+        <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center bg-primary px-[3.2cqw] text-[3.45cqw] font-extrabold leading-none text-primary-foreground">
+          <span className="flex min-w-0 items-center justify-center gap-[1.1cqw]">
+            <Image
+              alt=""
+              aria-hidden="true"
+              className="h-[2.85cqw] w-auto shrink-0"
+              height={252}
+              priority={false}
+              src="/images/social/lectum-symbol-white.png"
+              width={239}
+            />
+            <span className="min-w-0 truncate tracking-[-0.015em]">{target.cardLabel}</span>
+          </span>
         </div>
-        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.8cqw] text-media-background">
+        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[7.1cqw]">
           <p
             className={cn(
-              "line-clamp-3 whitespace-pre-line font-black tracking-[-0.035em]",
+              "line-clamp-3 whitespace-pre-line font-extrabold tracking-[-0.025em] text-media-background",
               sourceLines.length > 2
-                ? "text-[4.55cqw] leading-[1.18]"
-                : "text-[5.2cqw] leading-[1.22]",
+                ? "text-[4.05cqw] leading-[1.17]"
+                : "text-[4.65cqw] leading-[1.24]",
             )}
             data-lectum-share-preview-source-text="true"
           >
@@ -113,17 +124,15 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
 
       <div className="absolute top-[73%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
         <div className="inline-grid max-w-full justify-items-start text-left">
-          <div className="flex max-w-full items-center justify-start gap-[1cqw]">
-            <span className="truncate text-[3.7cqw] font-black leading-none tracking-[-0.02em]">
+          <div className="flex max-w-full items-center justify-start gap-[0.7cqw]">
+            <span className="truncate text-[3.15cqw] font-extrabold leading-none tracking-[-0.02em]">
               {target.professional.name}
             </span>
             {target.professional.verified ? (
-              <span className="grid size-[2.85cqw] min-h-2.5 min-w-2.5 place-items-center rounded-full bg-primary text-[1.9cqw] font-black leading-none text-primary-foreground">
-                ✓
-              </span>
+              <VerifiedBadgeIcon className="h-[2.45cqw] w-[2.6cqw] min-h-2 min-w-2 text-primary" />
             ) : null}
           </div>
-          <div className="mt-[0.55cqw] max-w-full truncate text-[2.35cqw] font-bold leading-none text-primary-foreground/95">
+          <div className="mt-[0.45cqw] max-w-full truncate text-[1.95cqw] font-medium leading-none text-primary-foreground/92">
             {target.professional.roleLabel}
           </div>
         </div>

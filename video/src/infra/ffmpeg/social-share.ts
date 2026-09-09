@@ -1,4 +1,4 @@
-import { access, stat } from "node:fs/promises";
+import { stat } from "node:fs/promises";
 import type { VideoServiceConfig } from "../../config/env.js";
 import {
   type SocialShareRenderMetadata,
@@ -10,6 +10,15 @@ import {
   ManagedProcessError,
   runManagedProcess,
 } from "./process.js";
+import {
+  resolveSocialShareAssetFile,
+  resolveSocialShareFontFile,
+  resolveSocialShareRegularFontFile,
+  SOCIAL_DRAW_TEXT_FONT_FILE,
+  SOCIAL_DRAW_TEXT_REGULAR_FONT_FILE,
+  SOCIAL_SHARE_LOGO_FILE_NAME,
+  SOCIAL_SHARE_VERIFIED_BADGE_FILE_NAME,
+} from "./social-share-assets.js";
 import { isRemoteVideoHlsSource, remoteVideoRequestHeaders } from "./source-url.js";
 
 const SOCIAL_OUTPUT_WIDTH = 1080;
@@ -17,29 +26,22 @@ const SOCIAL_OUTPUT_HEIGHT = 1920;
 const SOCIAL_RENDER_CRF = 20;
 const SOCIAL_RENDER_PRESET = "veryfast";
 const SOCIAL_OUTPUT_FPS = 30;
-const SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES = [
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf",
-  "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
-  "/usr/share/fonts/dejavu/DejaVuSans.ttf",
-] as const;
-const SOCIAL_DRAW_TEXT_FONT_FILE = SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES[0];
+
 const SOCIAL_SHARE_ART_LAYOUT = {
   card: {
     bodyHeight: 266,
-    bodyLineHeight: 68,
-    bodyTextTopMinOffset: 54,
+    bodyLineHeight: 60,
+    bodyTextTopMinOffset: 64,
     cornerRadius: 24,
-    headerFontSize: 42,
+    headerFontSize: 38,
     headerHeight: 88,
-    labelWidthFactor: 0.47,
+    labelWidthFactor: 0.5,
     logoGap: 12,
-    logoHeight: 29,
-    logoWidth: 34,
+    logoHeight: 32,
+    logoWidth: 30,
     shadowOffset: 8,
-    sourceFontSize: 56,
-    sourceFontSizeCompact: 48,
+    sourceFontSize: 50,
+    sourceFontSizeCompact: 44,
     width: 860,
     x: 110,
     y: 250,
@@ -49,19 +51,20 @@ const SOCIAL_SHARE_ART_LAYOUT = {
     header: "0x308ce8@0.98",
     headerText: "white",
     logo: "white@0.96",
-    sourceText: "0x111827",
-    surface: "white@0.96",
+    sourceText: "0x151922",
+    surface: "white@0.98",
     verified: "0x308ce8",
   },
   professional: {
-    checkGap: 10,
-    checkMarkFontSize: 19,
-    checkSize: 30,
-    nameFontSize: 40,
-    nameWidthFactor: 0.46,
+    badgeHeight: 24,
+    badgeWidth: 26,
+    checkGap: 7,
+    checkMarkFontSize: 17,
+    nameFontSize: 34,
+    nameWidthFactor: 0.52,
     nameY: 1400,
-    roleFontSize: 25,
-    roleY: 1445,
+    roleFontSize: 21,
+    roleY: 1440,
   },
 } as const;
 
@@ -81,11 +84,17 @@ type SocialShareFilterMode = "portable" | "standard";
 type SocialShareRenderOptions = {
   filterMode?: SocialShareFilterMode;
   fontFile?: string | null;
+  logoFile?: string | null;
+  regularFontFile?: string | null;
+  verifiedBadgeFile?: string | null;
 };
 
 type SocialShareRenderVariant = {
   filterMode: SocialShareFilterMode;
   fontFile: string | null;
+  logoFile: string | null;
+  regularFontFile: string | null;
+  verifiedBadgeFile: string | null;
 };
 
 const NON_RETRYABLE_RENDER_DIAGNOSTICS = new Set<ManagedProcessDiagnosticCode>([
@@ -203,9 +212,23 @@ export const buildSocialShareFilter = (
 ) => {
   const filterMode = options.filterMode ?? "standard";
   const fontFile = options.fontFile === undefined ? SOCIAL_DRAW_TEXT_FONT_FILE : options.fontFile;
+  const regularFontFile =
+    options.regularFontFile === undefined
+      ? options.fontFile === undefined
+        ? SOCIAL_DRAW_TEXT_REGULAR_FONT_FILE
+        : options.fontFile
+      : options.regularFontFile;
+  const logoFile =
+    options.logoFile === undefined
+      ? resolveSocialShareAssetFile(SOCIAL_SHARE_LOGO_FILE_NAME)
+      : options.logoFile;
+  const verifiedBadgeFile =
+    options.verifiedBadgeFile === undefined
+      ? resolveSocialShareAssetFile(SOCIAL_SHARE_VERIFIED_BADGE_FILE_NAME)
+      : options.verifiedBadgeFile;
   const sanitized = sanitizeSocialShareMetadata(metadata);
   const { card, colors, professional } = SOCIAL_SHARE_ART_LAYOUT;
-  const sourceLines = wrapText(sanitized.sourceText, 31, 3);
+  const sourceLines = wrapText(sanitized.sourceText, 28, 3);
   const sourceTextTop =
     card.y +
     card.headerHeight +
@@ -230,23 +253,25 @@ export const buildSocialShareFilter = (
   const labelLogoX = Math.round((SOCIAL_OUTPUT_WIDTH - labelGroupWidth) / 2);
   const labelLogoY = card.y + Math.round((card.headerHeight - card.logoHeight) / 2);
   const labelTextX = labelLogoX + card.logoWidth + card.logoGap;
-  const labelTextY = card.y + Math.round((card.headerHeight - card.headerFontSize) / 2) - 2;
+  const labelTextY = card.y + Math.round((card.headerHeight - card.headerFontSize) / 2) - 1;
   const estimatedNameWidth = Math.round(
     sanitized.professionalName.length * professional.nameFontSize * professional.nameWidthFactor,
   );
   const professionalGroupWidth =
     estimatedNameWidth +
-    (sanitized.professionalVerified ? professional.checkGap + professional.checkSize : 0);
+    (sanitized.professionalVerified ? professional.checkGap + professional.badgeWidth : 0);
   const professionalTextX = Math.max(
     64,
     Math.round((SOCIAL_OUTPUT_WIDTH - professionalGroupWidth) / 2),
   );
   const verifiedBadgeX = Math.min(
-    SOCIAL_OUTPUT_WIDTH - professional.checkSize - 64,
+    SOCIAL_OUTPUT_WIDTH - professional.badgeWidth - 64,
     professionalTextX + estimatedNameWidth + professional.checkGap,
   );
   const verifiedBadgeY =
-    professional.nameY + Math.round((professional.nameFontSize - professional.checkSize) / 2);
+    professional.nameY + Math.round((professional.nameFontSize - professional.badgeHeight) / 2);
+  const hasLogoAsset = Boolean(logoFile);
+  const hasVerifiedBadgeAsset = sanitized.professionalVerified && Boolean(verifiedBadgeFile);
   const overlayFilters = [
     ...roundedRectDrawBoxes({
       color: colors.cardShadow,
@@ -274,14 +299,16 @@ export const buildSocialShareFilter = (
       x: card.x,
       y: card.y + card.headerHeight,
     }),
-    ...lectumLogoMarkDrawBoxes({
-      backgroundColor: colors.verified,
-      color: colors.logo,
-      height: card.logoHeight,
-      width: card.logoWidth,
-      x: labelLogoX,
-      y: labelLogoY,
-    }),
+    ...(hasLogoAsset
+      ? []
+      : lectumLogoMarkDrawBoxes({
+          backgroundColor: colors.verified,
+          color: colors.logo,
+          height: card.logoHeight,
+          width: card.logoWidth,
+          x: labelLogoX,
+          y: labelLogoY,
+        })),
     drawText({
       color: colors.headerText,
       fontFile,
@@ -301,29 +328,31 @@ export const buildSocialShareFilter = (
       y: professional.nameY,
     }),
     ...(sanitized.professionalVerified
-      ? [
-          ...roundedRectDrawBoxes({
-            color: colors.verified,
-            height: professional.checkSize,
-            radius: Math.floor(professional.checkSize / 2),
-            sliceHeight: 3,
-            width: professional.checkSize,
-            x: verifiedBadgeX,
-            y: verifiedBadgeY,
-          }),
-          drawText({
-            color: "white",
-            fontFile,
-            fontSize: professional.checkMarkFontSize,
-            text: "\u2713",
-            x: verifiedBadgeX + 6,
-            y: verifiedBadgeY + 4,
-          }),
-        ]
+      ? hasVerifiedBadgeAsset
+        ? []
+        : [
+            ...roundedRectDrawBoxes({
+              color: colors.verified,
+              height: professional.badgeHeight,
+              radius: Math.floor(professional.badgeHeight / 2),
+              sliceHeight: 3,
+              width: professional.badgeWidth,
+              x: verifiedBadgeX,
+              y: verifiedBadgeY,
+            }),
+            drawText({
+              color: "white",
+              fontFile,
+              fontSize: professional.checkMarkFontSize,
+              text: "\u2713",
+              x: verifiedBadgeX + 5,
+              y: verifiedBadgeY + 3,
+            }),
+          ]
       : []),
     drawText({
-      color: "white",
-      fontFile,
+      color: "white@0.93",
+      fontFile: regularFontFile,
       fontSize: professional.roleFontSize,
       shadow: true,
       text: sanitized.professionalRoleLabel,
@@ -332,32 +361,37 @@ export const buildSocialShareFilter = (
     }),
   ];
 
-  if (filterMode === "portable") {
-    return [
-      `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black[v0]`,
-      filterChain("[v0]", overlayFilters, "[v]"),
-    ].join(";");
+  const baseFilters =
+    filterMode === "portable"
+      ? `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black[v0]`
+      : `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}[v0]`;
+  if (!hasLogoAsset && !hasVerifiedBadgeAsset) {
+    return [baseFilters, filterChain("[v0]", overlayFilters, "[v]")].join(";");
   }
 
-  return [
-    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}[v0]`,
-    filterChain("[v0]", overlayFilters, "[v]"),
-  ].join(";");
-};
+  const overlayStages: string[] = [baseFilters];
+  let currentLabel = "[art0]";
 
-export const resolveSocialShareFontFile = async (
-  candidates: readonly string[] = SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES,
-) => {
-  for (const candidate of candidates) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      // Try the next portable font location before letting FFmpeg use its default.
-    }
+  overlayStages.push(filterChain("[v0]", overlayFilters, currentLabel));
+
+  if (hasLogoAsset) {
+    const logoOutputLabel = hasVerifiedBadgeAsset ? "[art1]" : "[v]";
+    overlayStages.push(
+      `[1:v]scale=${card.logoWidth}:${card.logoHeight}:flags=lanczos[lectum_logo]`,
+      `${currentLabel}[lectum_logo]overlay=x=${labelLogoX}:y=${labelLogoY}:format=auto${logoOutputLabel}`,
+    );
+    currentLabel = logoOutputLabel;
   }
 
-  return null;
+  if (hasVerifiedBadgeAsset) {
+    const badgeInputIndex = hasLogoAsset ? 2 : 1;
+    overlayStages.push(
+      `[${badgeInputIndex}:v]scale=${professional.badgeWidth}:${professional.badgeHeight}:flags=lanczos[verified_badge]`,
+      `${currentLabel}[verified_badge]overlay=x=${verifiedBadgeX}:y=${verifiedBadgeY}:format=auto[v]`,
+    );
+  }
+
+  return overlayStages.join(";");
 };
 
 export const buildSocialShareVideoArguments = (
@@ -369,6 +403,19 @@ export const buildSocialShareVideoArguments = (
   },
   options: SocialShareRenderOptions = {},
 ) => {
+  const sanitizedMetadata = sanitizeSocialShareMetadata(input.metadata);
+  const logoFile =
+    options.logoFile === undefined
+      ? resolveSocialShareAssetFile(SOCIAL_SHARE_LOGO_FILE_NAME)
+      : options.logoFile;
+  const requestedVerifiedBadgeFile =
+    options.verifiedBadgeFile === undefined
+      ? resolveSocialShareAssetFile(SOCIAL_SHARE_VERIFIED_BADGE_FILE_NAME)
+      : options.verifiedBadgeFile;
+  const verifiedBadgeFile =
+    sanitizedMetadata.professionalVerified && requestedVerifiedBadgeFile
+      ? requestedVerifiedBadgeFile
+      : null;
   const inputArguments = (() => {
     if (input.source.kind !== "remote") {
       return ["-protocol_whitelist", "file,pipe", "-i", input.source.inputPath];
@@ -391,6 +438,10 @@ export const buildSocialShareVideoArguments = (
       input.source.sourceUrl,
     ];
   })();
+  const assetInputArguments = [
+    ...(logoFile ? ["-loop", "1", "-i", logoFile] : []),
+    ...(verifiedBadgeFile ? ["-loop", "1", "-i", verifiedBadgeFile] : []),
+  ];
 
   return [
     "-hide_banner",
@@ -399,8 +450,13 @@ export const buildSocialShareVideoArguments = (
     "error",
     "-y",
     ...inputArguments,
+    ...assetInputArguments,
     "-filter_complex",
-    buildSocialShareFilter(input.metadata, input.config.maxFps, options),
+    buildSocialShareFilter(input.metadata, input.config.maxFps, {
+      ...options,
+      logoFile,
+      verifiedBadgeFile,
+    }),
     "-map",
     "[v]",
     "-map",
@@ -469,13 +525,71 @@ const createProgressParser = (
   };
 };
 
-const socialShareRenderVariants = (fontFile: string | null): SocialShareRenderVariant[] => [
-  { filterMode: "standard", fontFile },
-  { filterMode: "portable", fontFile },
+const socialShareRenderVariants = ({
+  fontFile,
+  logoFile,
+  regularFontFile,
+  verifiedBadgeFile,
+}: {
+  fontFile: string | null;
+  logoFile: string | null;
+  regularFontFile: string | null;
+  verifiedBadgeFile: string | null;
+}): SocialShareRenderVariant[] => [
+  { filterMode: "standard", fontFile, logoFile, regularFontFile, verifiedBadgeFile },
+  { filterMode: "portable", fontFile, logoFile, regularFontFile, verifiedBadgeFile },
   ...(fontFile
     ? ([
-        { filterMode: "standard", fontFile: null },
-        { filterMode: "portable", fontFile: null },
+        {
+          filterMode: "standard",
+          fontFile: null,
+          logoFile,
+          regularFontFile: null,
+          verifiedBadgeFile,
+        },
+        {
+          filterMode: "portable",
+          fontFile: null,
+          logoFile,
+          regularFontFile: null,
+          verifiedBadgeFile,
+        },
+      ] satisfies SocialShareRenderVariant[])
+    : []),
+  ...(logoFile || verifiedBadgeFile
+    ? ([
+        {
+          filterMode: "standard",
+          fontFile,
+          logoFile: null,
+          regularFontFile,
+          verifiedBadgeFile: null,
+        },
+        {
+          filterMode: "portable",
+          fontFile,
+          logoFile: null,
+          regularFontFile,
+          verifiedBadgeFile: null,
+        },
+      ] satisfies SocialShareRenderVariant[])
+    : []),
+  ...(fontFile && (logoFile || verifiedBadgeFile)
+    ? ([
+        {
+          filterMode: "standard",
+          fontFile: null,
+          logoFile: null,
+          regularFontFile: null,
+          verifiedBadgeFile: null,
+        },
+        {
+          filterMode: "portable",
+          fontFile: null,
+          logoFile: null,
+          regularFontFile: null,
+          verifiedBadgeFile: null,
+        },
       ] satisfies SocialShareRenderVariant[])
     : []),
 ];
@@ -523,8 +637,18 @@ export const renderSocialShareVideo = async (input: {
 
   try {
     const resolvedFontFile = await resolveSocialShareFontFile();
+    const resolvedRegularFontFile = await resolveSocialShareRegularFontFile();
+    const resolvedLogoFile = resolveSocialShareAssetFile(SOCIAL_SHARE_LOGO_FILE_NAME);
+    const resolvedVerifiedBadgeFile = resolveSocialShareAssetFile(
+      SOCIAL_SHARE_VERIFIED_BADGE_FILE_NAME,
+    );
     let lastError: unknown;
-    const renderVariants = socialShareRenderVariants(resolvedFontFile);
+    const renderVariants = socialShareRenderVariants({
+      fontFile: resolvedFontFile,
+      logoFile: resolvedLogoFile,
+      regularFontFile: resolvedRegularFontFile,
+      verifiedBadgeFile: resolvedVerifiedBadgeFile,
+    });
 
     for (const [index, variant] of renderVariants.entries()) {
       let emittedRenderProgress = false;

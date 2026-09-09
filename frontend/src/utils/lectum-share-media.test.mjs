@@ -107,27 +107,29 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogSource, /data-lectum-share-preview-volume-button/);
   assert.match(dialogSource, /absolute right-3 bottom-3 z-\[3\]/);
   assert.match(dialogSource, /bg-transparent text-primary-foreground\/85/);
-  assert.match(dialogSource, /LectumSymbolIcon/);
+  assert.match(dialogSource, /next\/image/);
+  assert.match(dialogSource, /\/images\/social\/lectum-symbol-white\.png/);
+  assert.match(dialogSource, /VerifiedBadgeIcon/);
   assert.match(dialogSource, /top-\[13%\] left-\[10\.2%\] w-\[79\.7%\]/);
   assert.match(dialogSource, /rounded-\[2\.2cqw\]/);
   assert.match(dialogSource, /drop-shadow-lg/);
   assert.match(dialogSource, /bg-primary/);
   assert.match(dialogSource, /h-\[4\.6cqh\]/);
   assert.match(dialogSource, /h-\[13\.85cqh\]/);
-  assert.match(dialogSource, /text-\[5\.2cqw\]/);
+  assert.match(dialogSource, /text-\[4\.65cqw\]/);
   assert.match(
     dialogSource,
-    /sourceLines\.length > 2\s*\?\s*"text-\[4\.55cqw\] leading-\[1\.18\]"/,
+    /sourceLines\.length > 2\s*\?\s*"text-\[4\.05cqw\] leading-\[1\.17\]"/,
   );
   assert.match(dialogSource, /top-\[73%\]/);
-  assert.match(dialogSource, /size-\[2\.85cqw\]/);
+  assert.match(dialogSource, /h-\[2\.45cqw\] w-\[2\.6cqw\]/);
   assert.doesNotMatch(dialogSource, /bg-background\/85/);
   assert.doesNotMatch(dialogSource, /border-border\/70/);
   assert.match(
     dialogSource,
     /const downloadButtonLabel = preparing \? "Preparando\.\.\." : "Baixar v\\u00eddeo"/,
   );
-  assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 31, 3\)/);
+  assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 28, 3\)/);
   assert.match(dialogSource, /target\.cardLabel/);
   assert.match(dialogSource, /target\.sourceText/);
   assert.match(dialogSource, /poster=\{target\.posterUrl \?\? undefined\}/);

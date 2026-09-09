@@ -514,3 +514,37 @@ dados publicados. O rollback operacional segue por reverter o commit.
 - pnpm check em 0.1.298.
 - git diff --check.
 - Smoke local HTTP do frontend: /version 200 em 0.1.298 e /comunidades 200.
+
+## Atualizacao de fidelidade tipografica e assets da arte social em 2026-09-09
+
+Novo feedback visual comparou o print de referencia com o MP4 atual e apontou diferencas na logo,
+fonte do label, tipografia/margens da pergunta e credenciais/selo. A decisao foi substituir as
+aproximacoes desenhadas por assets reais e alinhar a fonte do worker com a UI:
+
+- a logo branca do cabecalho passa a ser um PNG recortado do asset oficial `frontend/public/logo-light.png`, usado tanto na previa quanto no `video/`;
+- o selo verificado do MP4 passa a usar asset PNG derivado do mesmo path do componente `VerifiedBadgeIcon`, e a previa volta a usar o componente real;
+- o container `video/` instala `fonts-manrope` do Debian bookworm para que `drawtext` use Manrope Bold/Medium, com fallback para DejaVu se a fonte nao existir;
+- o label do cabecalho diminui para 38px e continua centralizado como grupo com a logo; na previa, a escala equivalente usa `3.45cqw`;
+- no MP4, o texto da pergunta passa para `#151922`; na previa, usa tokens semanticos equivalentes para respeitar source-safety. Ambos usam limite de 28 caracteres por linha, Manrope bold 50px equivalente para 1-2 linhas e 44px equivalente para 3 linhas, com entrelinha proporcional a 60px;
+- as credenciais reduzem densidade para nome 34px, profissao 21px e selo 26x24px, mantendo grupo centralizado em `y=1400/1440`.
+- a resolucao de fontes e assets fica em `video/src/infra/ffmpeg/social-share-assets.ts`, mantendo o render principal abaixo do limite de 700 linhas.
+
+A mudanca toca frontend e video, nao altera contrato publico, schema, env obrigatoria, storage,
+provider, persistencia, seed, mock, reset ou limpeza de dados publicados. O novo pacote instalado no
+container e um pacote Debian de fonte, nao dependencia npm; rollback operacional segue por reverter o
+commit.
+
+## Validacao da atualizacao de fidelidade tipografica e assets
+
+- Medicao local do print de referencia: cartao x=60..528, y=252..445, cabecalho y=252..298, texto do cabecalho x=175..415 e credenciais/selo x=223..366 no JPEG 590x1280.
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.298 antes do bump.
+- pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts em 0.1.298 antes do bump.
+- pnpm --dir video check em 0.1.298 antes do bump.
+- pnpm --dir video build em 0.1.298 antes do bump.
+- pnpm --dir frontend check em 0.1.298 antes do bump.
+- pnpm --dir frontend build em 0.1.298 antes do bump.
+- pnpm check:source-size apos extrair o helper de assets/fontes.
+- pnpm check em 0.1.298 antes do bump.
+- git diff --check.
+- pnpm version:bump para 0.1.299.
+- pnpm check:version em 0.1.299.
