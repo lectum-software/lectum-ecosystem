@@ -89,16 +89,25 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(hookSource, /description: diagnosticDescription/);
   assert.match(hookSource, /requestLectumScreenWakeLock/);
   assert.match(hookSource, /result\.mode === "prepared"/);
-  assert.match(dialogHookSource, /preparePendingTarget/);
-  assert.match(dialogHookSource, /autoPreparedTargetRef/);
-  assert.match(dialogHookSource, /preparedFile/);
-  assert.match(dialogHookSource, /requestLectumScreenWakeLock/);
+  assert.match(hookSource, /Mantenha esta tela aberta enquanto o vídeo é preparado\./);
   assert.match(
     dialogHookSource,
-    /Mantenha esta tela aberta enquanto o v\\u00eddeo \\u00e9 preparado\./,
+    /shareLectumTarget\(pendingTarget, \{ destination: "download" \}\)/,
   );
+  assert.doesNotMatch(dialogHookSource, /preparePendingTarget/);
+  assert.doesNotMatch(dialogHookSource, /autoPreparedTargetRef/);
+  assert.doesNotMatch(dialogHookSource, /preparedFile/);
+  assert.doesNotMatch(dialogHookSource, /prepareLectumShareFileWithServerRender/);
+  assert.doesNotMatch(dialogHookSource, /requestLectumScreenWakeLock/);
+  assert.doesNotMatch(dialogHookSource, /toast\.loading/);
   assert.match(dialogSource, /const resolvedMediaUrl = target\.mediaUrl/);
   assert.match(dialogSource, /data-lectum-share-preview-art/);
+  assert.match(dialogSource, /data-lectum-share-preview-volume-button/);
+  assert.match(dialogSource, /absolute right-3 bottom-3 z-\[3\]/);
+  assert.match(
+    dialogSource,
+    /const downloadButtonLabel = preparing \? "Preparando\.\.\." : "Baixar v\\u00eddeo"/,
+  );
   assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 32, 3\)/);
   assert.match(dialogSource, /target\.cardLabel/);
   assert.match(dialogSource, /target\.sourceText/);
@@ -107,6 +116,8 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.doesNotMatch(dialogSource, /fit="contain"/);
   assert.doesNotMatch(dialogSource, /preparedPreviewUrl/);
   assert.doesNotMatch(dialogSource, /URL\.createObjectURL/);
+  assert.doesNotMatch(dialogSource, /Preparar v\\u00eddeo/);
+  assert.doesNotMatch(dialogSource, /Som ligado|Som desligado/);
   assert.match(wakeLockSource, /wakeLock\?\.request\("screen"\)/);
   const removedRuntimePattern = new RegExp(
     [["media", "bunny"].join(""), ["playwright", "core"].join("-")].join("|"),

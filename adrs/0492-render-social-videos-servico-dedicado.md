@@ -378,3 +378,30 @@ stack, SQL, payload tecnico ou detalhe de provider.
 - pnpm check em 0.1.293.
 - pnpm --dir frontend build em 0.1.293.
 - Smoke local HTTP do frontend: /version 200 em 0.1.293 e rota publica do post 200.
+
+## Atualizacao de preparo sob demanda e audio overlay em 2026-09-09
+
+Depois do deploy `0.1.293`, o usuario validou que o preparo do MP4 ainda era iniciado na abertura da
+modal. A decisao de UX foi tornar a abertura da modal puramente visual e adiar trabalho pesado ate a
+intencao explicita de download:
+
+- abrir a modal carrega apenas o video original e o overlay CSS da arte social;
+- nenhum start/status/download de job social e disparado antes do clique/toque em `Baixar video`;
+- o Wake Lock best-effort fica restrito ao periodo de preparo iniciado pelo clique;
+- o CTA inicial permanece `Baixar video` e muda para `Preparando...` somente durante a execucao;
+- o controle de audio sai da area inferior textual e passa a ser um icone sobreposto ao video, no
+  canto inferior direito, preservando `aria-label`.
+
+A mudanca e frontend-only e nao cria env, schema, pacote, provider, persistencia de artefato, mock,
+seed, reset ou limpeza de dados publicados. O rollback operacional segue por reverter o commit.
+Mensagens publicas continuam sem URL, segredo, PII, stack, SQL, payload tecnico ou detalhe de
+provider.
+
+## Validacao da atualizacao de preparo sob demanda e audio overlay
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.293 antes do bump.
+- pnpm --dir frontend check em 0.1.293 antes do bump.
+- pnpm --dir frontend build em 0.1.293 antes do bump.
+- pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.294.
+- pnpm check em 0.1.294.
+- Smoke local HTTP do frontend: /version 200 em 0.1.294 e rota publica do post 200.

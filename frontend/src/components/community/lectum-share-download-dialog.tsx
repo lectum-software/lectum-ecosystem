@@ -14,7 +14,6 @@ type LectumShareDownloadDialogProps = {
   onDownload: () => void;
   open: boolean;
   preparing?: boolean;
-  ready?: boolean;
   target: LectumShareSocialTarget | null;
 };
 
@@ -127,7 +126,6 @@ export const LectumShareDownloadDialog = ({
   onDownload,
   open,
   preparing = false,
-  ready = false,
   target,
 }: LectumShareDownloadDialogProps) => {
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -210,11 +208,7 @@ export const LectumShareDownloadDialog = ({
   const sheetMotionState = open ? "enter" : "exit";
   const resolvedMediaUrl = target.mediaUrl;
   const descriptionText = target.responseText?.trim() ?? "";
-  const downloadButtonLabel = preparing
-    ? "Preparando..."
-    : ready
-      ? "Baixar v\u00eddeo"
-      : "Preparar v\u00eddeo";
+  const downloadButtonLabel = preparing ? "Preparando..." : "Baixar v\u00eddeo";
 
   const copyDescription = async () => {
     if (!descriptionText) return;
@@ -323,25 +317,32 @@ export const LectumShareDownloadDialog = ({
               }}
             />
             <LectumSharePreviewArt target={target} />
+            <button
+              aria-label={
+                isPreviewMuted
+                  ? "Ativar \u00e1udio da pr\u00e9via"
+                  : "Mutar \u00e1udio da pr\u00e9via"
+              }
+              aria-pressed={isPreviewMuted}
+              className="absolute right-3 bottom-3 z-[3] grid h-10 w-10 place-items-center rounded-full border border-border/70 bg-background/85 text-foreground shadow-lg backdrop-blur-md transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50"
+              data-lectum-share-preview-volume-button="true"
+              disabled={!open}
+              onClick={handlePreviewMuteToggle}
+              title={
+                isPreviewMuted
+                  ? "Ativar \u00e1udio da pr\u00e9via"
+                  : "Mutar \u00e1udio da pr\u00e9via"
+              }
+              type="button"
+            >
+              {isPreviewMuted ? (
+                <VolumeX className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <Volume2 className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
           </div>
         </div>
-
-        <button
-          aria-label={isPreviewMuted ? "Ativar som da prévia do vídeo" : "Mutar prévia do vídeo"}
-          aria-pressed={isPreviewMuted}
-          className="mx-auto inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-muted-foreground text-xs font-bold transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50"
-          disabled={!open}
-          onClick={handlePreviewMuteToggle}
-          title={isPreviewMuted ? "Ativar som da prévia do vídeo" : "Mutar prévia do vídeo"}
-          type="button"
-        >
-          {isPreviewMuted ? (
-            <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
-          ) : (
-            <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
-          )}
-          {isPreviewMuted ? "Som desligado" : "Som ligado"}
-        </button>
 
         {descriptionText ? (
           <section className="flex items-start gap-3 px-1">

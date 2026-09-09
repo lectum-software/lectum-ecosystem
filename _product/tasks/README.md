@@ -1645,3 +1645,20 @@ Uma task só pode ser marcada como concluída quando:
   provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
   publicados. Rollback simples reverte o commit.
 - Validacoes locais em `0.1.293`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.293` e rota publica do post 200), `pnpm check:encoding`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`. Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: preparo do download somente no clique
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.293`, o usuario mostrou que a modal ainda
+  iniciava o preparo do arquivo automaticamente ao abrir. O frontend agora abre apenas a previa
+  instantanea e chama o render server-side somente quando o usuario clica/toca em `Baixar video`.
+- O CTA permanece `Baixar video`; enquanto o job acionado pelo clique estiver em curso, o estado
+  muda para `Preparando...` e o Wake Lock segue best-effort apenas nesse periodo.
+- O controle de som da previa deixou de ser botao textual abaixo do video e virou icone sobreposto
+  no canto inferior direito do proprio video, com `aria-label` para acessibilidade.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.294`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.294` e rota publica
+  do post 200), `pnpm version:bump`, `pnpm check:version`, `pnpm check` e `git diff --check`.
+  Commit/push e smoke de homologacao serao registrados apos deploy.

@@ -40,7 +40,7 @@ type NavigatorWithUserAgentData = Navigator & {
 
 const DOWNLOAD_TOAST_MESSAGE = "Preparando vídeo para baixar...";
 const DOWNLOAD_PREPARING_GUIDANCE_MESSAGE =
-  "Mantenha esta tela aberta; em vídeos maiores pode levar alguns minutos.";
+  "Mantenha esta tela aberta enquanto o vídeo é preparado.";
 const DOWNLOAD_QUALITY_GUIDANCE_MESSAGE = "Se a qualidade ficar baixa, tente pelo computador.";
 const MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE =
   "Não conseguimos gerar o vídeo com arte neste aparelho agora. Tente novamente em instantes ou pelo computador.";

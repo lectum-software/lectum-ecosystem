@@ -324,6 +324,21 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Ajuste de preparo sob demanda e audio overlay em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.293`, o usuario mostrou que a modal ainda iniciava o preparo do
+  arquivo ao abrir e exibia o estado `Preparando...` antes do clique. A captura anexada foi usada
+  apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o frontend remove o disparo automatico de render ao abrir a modal. O job server-side e
+  solicitado somente pelo clique/toque no botao `Baixar video`; ate esse clique, a modal exibe a
+  previa instantanea com `target.mediaUrl` e overlay CSS, sem chamar start/status/download do render.
+- O toast de preparo continua com a frase `Mantenha esta tela aberta enquanto o video e preparado.`
+  e o Wake Lock segue best-effort apenas enquanto o preparo acionado pelo usuario estiver em curso.
+- O controle de som deixa de ser um botao textual abaixo da previa e passa a ser um botao-icon sobre
+  o proprio video, no canto inferior direito, preservando acessibilidade por `aria-label`.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -396,3 +411,7 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] Validacoes do ajuste de UX/download e arte Reels `0.1.292`: teste focado frontend de compartilhamento, `pnpm --dir video test`, teste backend focado em render social, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, smoke local HTTP do frontend (`/version` 200 e rota publica do post 200), `pnpm check`, `pnpm version:bump` e `pnpm check:version`.
 - [x] Commit/push e smoke de homologacao da correcao `0.1.292`: frontend `/version`, backend `/ping`, backend `/health`, backend `/ready`, admin `/version` e rota publica do post retornaram sucesso em homologacao.
 - [x] Validacoes do ajuste de previa instantanea `0.1.293`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.293` e rota publica do post 200), `pnpm check:encoding`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.
+- [x] Validacoes do ajuste de preparo sob demanda e audio overlay `0.1.294`: teste focado frontend
+  de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
+  frontend (`/version` 200 em `0.1.294` e rota publica do post 200), `pnpm version:bump`,
+  `pnpm check:version`, `pnpm check` e `git diff --check`.
