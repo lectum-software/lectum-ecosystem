@@ -13,7 +13,6 @@ type LectumShareDownloadDialogProps = {
   onClose: () => void;
   onDownload: () => void;
   open: boolean;
-  preparedFile?: File | null;
   preparing?: boolean;
   ready?: boolean;
   target: LectumShareSocialTarget | null;
@@ -48,23 +47,91 @@ const applyPreviewMutedState = (video: HTMLVideoElement, muted: boolean) => {
   }
 };
 
+const wrapPreviewSourceText = (value: string, maxLineLength: number, maxLines: number) => {
+  const words = value.replace(/\s+/gu, " ").trim().split(/\s+/u).filter(Boolean);
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length <= maxLineLength) {
+      current = candidate;
+      continue;
+    }
+
+    if (current) lines.push(current);
+    current = word.slice(0, maxLineLength);
+    if (lines.length === maxLines) break;
+  }
+
+  if (current && lines.length < maxLines) lines.push(current);
+  if (lines.length === 0) lines.push("Conteúdo na Lectum");
+
+  const visible = lines.slice(0, maxLines);
+  if (visible.length === maxLines && words.join(" ").length > visible.join(" ").length) {
+    const lastLine = visible[maxLines - 1];
+    if (lastLine) {
+      visible[maxLines - 1] = `${lastLine.replace(/[.?!,\s]+$/u, "")}…`;
+    }
+  }
+
+  return visible;
+};
+
+const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
+  const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
+  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 32, 3), [sourceText]);
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 z-[2] text-center text-primary-foreground"
+      data-lectum-share-preview-art="true"
+    >
+      <div className="absolute top-[15.2%] left-[8.5%] w-[83%] drop-shadow-lg">
+        <div className="grid h-[3.75cqh] min-h-[0.875rem] place-items-center bg-primary px-[3cqw] text-[3.6cqw] font-black leading-none text-primary-foreground">
+          {target.cardLabel}
+        </div>
+        <div className="grid h-[11.875cqh] min-h-[2.75rem] place-items-center bg-background px-[4cqw] text-foreground">
+          <p
+            className="line-clamp-3 whitespace-pre-line text-[4.8cqw] font-black leading-[1.23] tracking-[-0.03em]"
+            data-lectum-share-preview-source-text="true"
+          >
+            {sourceLines.join("\n")}
+          </p>
+        </div>
+      </div>
+
+      <div className="absolute top-[65.6%] left-1/2 w-[72%] -translate-x-1/2 text-center drop-shadow-md">
+        <div className="inline-flex max-w-full items-center justify-center gap-[1.1cqw]">
+          <span className="truncate text-[3.7cqw] font-black leading-none tracking-[-0.02em]">
+            {target.professional.name}
+          </span>
+          {target.professional.verified ? (
+            <span className="grid size-[3.15cqw] min-h-2.5 min-w-2.5 place-items-center rounded-full bg-primary text-[2.1cqw] font-black leading-none text-primary-foreground">
+              ✓
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-[0.7cqw] truncate text-[2.6cqw] font-bold leading-none">
+          {target.professional.roleLabel}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const LectumShareDownloadDialog = ({
   disabled = false,
   onClose,
   onDownload,
   open,
-  preparedFile = null,
   preparing = false,
   ready = false,
   target,
 }: LectumShareDownloadDialogProps) => {
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isPreviewMuted, setIsPreviewMuted] = useState(false);
-  const preparedPreviewUrl = useMemo(() => {
-    if (!preparedFile || typeof URL === "undefined") return null;
-
-    return URL.createObjectURL(preparedFile);
-  }, [preparedFile]);
 
   const handlePreviewVideoReady = useCallback(
     (video: HTMLVideoElement | null) => {
@@ -76,14 +143,6 @@ export const LectumShareDownloadDialog = ({
     },
     [isPreviewMuted],
   );
-
-  useEffect(() => {
-    if (!preparedPreviewUrl || typeof URL === "undefined") return;
-
-    return () => {
-      URL.revokeObjectURL(preparedPreviewUrl);
-    };
-  }, [preparedPreviewUrl]);
 
   useEffect(() => {
     if (!target || typeof document === "undefined") return;
@@ -101,7 +160,7 @@ export const LectumShareDownloadDialog = ({
   }, [target]);
 
   useLayoutEffect(() => {
-    if (!open || !target || !preparedPreviewUrl || typeof document === "undefined") return;
+    if (!open || !target || typeof document === "undefined") return;
 
     pauseBackgroundMedia();
 
@@ -128,7 +187,7 @@ export const LectumShareDownloadDialog = ({
       previewVideo.removeEventListener("canplay", playPreviewVideo);
       previewVideo.pause();
     };
-  }, [open, preparedPreviewUrl, target]);
+  }, [open, target]);
 
   useEffect(() => {
     if (!open || disabled || typeof window === "undefined") return;
@@ -149,7 +208,7 @@ export const LectumShareDownloadDialog = ({
   if (!target) return null;
 
   const sheetMotionState = open ? "enter" : "exit";
-  const resolvedMediaUrl = preparedPreviewUrl;
+  const resolvedMediaUrl = target.mediaUrl;
   const descriptionText = target.responseText?.trim() ?? "";
   const downloadButtonLabel = preparing
     ? "Preparando..."
@@ -245,61 +304,44 @@ export const LectumShareDownloadDialog = ({
         </div>
 
         <div className="mx-auto w-[min(58vw,220px)] min-w-[190px]">
-          {resolvedMediaUrl ? (
-            <div className="relative aspect-[9/16] overflow-hidden bg-media-background [container-type:inline-size]">
-              <VerticalVideoPlayer
-                className="absolute inset-0 h-full w-full rounded-none border-0 shadow-none"
-                controls={false}
-                fit="cover"
-                fullscreenVariant="content"
-                poster={undefined}
-                preload="auto"
-                src={resolvedMediaUrl}
-                title={target.shareTitle}
-                onVideoElementReady={handlePreviewVideoReady}
-                videoProps={{
-                  autoPlay: true,
-                  "data-lectum-share-preview-video": "true",
-                  loop: true,
-                  muted: isPreviewMuted,
-                }}
-              />
-            </div>
-          ) : (
-            <div className="grid aspect-[9/16] place-items-center border border-border bg-surface-muted px-5 text-center text-muted text-sm">
-              {preparing
-                ? "Preparando prévia idêntica ao vídeo final..."
-                : "A prévia final aparece aqui quando o vídeo com arte estiver pronto."}
-            </div>
-          )}
+          <div className="relative aspect-[9/16] overflow-hidden bg-media-background [container-type:size]">
+            <VerticalVideoPlayer
+              className="absolute inset-0 h-full w-full rounded-none border-0 shadow-none"
+              controls={false}
+              fit="cover"
+              fullscreenVariant="content"
+              poster={target.posterUrl ?? undefined}
+              preload="auto"
+              src={resolvedMediaUrl}
+              title={target.shareTitle}
+              onVideoElementReady={handlePreviewVideoReady}
+              videoProps={{
+                autoPlay: true,
+                "data-lectum-share-preview-video": "true",
+                loop: true,
+                muted: isPreviewMuted,
+              }}
+            />
+            <LectumSharePreviewArt target={target} />
+          </div>
         </div>
 
-        {resolvedMediaUrl ? (
-          <button
-            aria-label={
-              isPreviewMuted
-                ? "Ativar som da pr\u00e9via do v\u00eddeo"
-                : "Mutar pr\u00e9via do v\u00eddeo"
-            }
-            aria-pressed={isPreviewMuted}
-            className="mx-auto inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-muted-foreground text-xs font-bold transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50"
-            disabled={!open}
-            onClick={handlePreviewMuteToggle}
-            title={
-              isPreviewMuted
-                ? "Ativar som da pr\u00e9via do v\u00eddeo"
-                : "Mutar pr\u00e9via do v\u00eddeo"
-            }
-            type="button"
-          >
-            {isPreviewMuted ? (
-              <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
-            ) : (
-              <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
-            )}
-            {isPreviewMuted ? "Som desligado" : "Som ligado"}
-          </button>
-        ) : null}
+        <button
+          aria-label={isPreviewMuted ? "Ativar som da prévia do vídeo" : "Mutar prévia do vídeo"}
+          aria-pressed={isPreviewMuted}
+          className="mx-auto inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-muted-foreground text-xs font-bold transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:pointer-events-none disabled:opacity-50"
+          disabled={!open}
+          onClick={handlePreviewMuteToggle}
+          title={isPreviewMuted ? "Ativar som da prévia do vídeo" : "Mutar prévia do vídeo"}
+          type="button"
+        >
+          {isPreviewMuted ? (
+            <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
+          ) : (
+            <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+          {isPreviewMuted ? "Som desligado" : "Som ligado"}
+        </button>
 
         {descriptionText ? (
           <section className="flex items-start gap-3 px-1">

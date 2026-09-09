@@ -93,11 +93,20 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogHookSource, /autoPreparedTargetRef/);
   assert.match(dialogHookSource, /preparedFile/);
   assert.match(dialogHookSource, /requestLectumScreenWakeLock/);
-  assert.match(dialogSource, /preparedPreviewUrl/);
-  assert.match(dialogSource, /A prévia final aparece aqui/);
+  assert.match(
+    dialogHookSource,
+    /Mantenha esta tela aberta enquanto o v\\u00eddeo \\u00e9 preparado\./,
+  );
+  assert.match(dialogSource, /const resolvedMediaUrl = target\.mediaUrl/);
+  assert.match(dialogSource, /data-lectum-share-preview-art/);
+  assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 32, 3\)/);
+  assert.match(dialogSource, /target\.cardLabel/);
+  assert.match(dialogSource, /target\.sourceText/);
+  assert.match(dialogSource, /poster=\{target\.posterUrl \?\? undefined\}/);
   assert.match(dialogSource, /fit="cover"/);
   assert.doesNotMatch(dialogSource, /fit="contain"/);
-  assert.doesNotMatch(dialogSource, /target\.cardLabel/);
+  assert.doesNotMatch(dialogSource, /preparedPreviewUrl/);
+  assert.doesNotMatch(dialogSource, /URL\.createObjectURL/);
   assert.match(wakeLockSource, /wakeLock\?\.request\("screen"\)/);
   const removedRuntimePattern = new RegExp(
     [["media", "bunny"].join(""), ["playwright", "core"].join("-")].join("|"),

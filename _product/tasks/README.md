@@ -1630,3 +1630,18 @@ Uma task só pode ser marcada como concluída quando:
   smoke local HTTP do frontend (`/version` 200 e rota publica do post 200), `pnpm check`,
   `pnpm version:bump` e `pnpm check:version` em `0.1.292`. Smoke de homologacao sera registrado apos
   `git push` em `homolog` e deploy.
+
+## Ajuste em 2026-09-09: previa instantanea com layout social
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.292`, o usuario pediu que a previa da modal
+  nao carregasse o MP4 final antes de exibir o conteudo. A previa agora usa o video original
+  imediatamente, com `posterUrl` real e overlay CSS nas mesmas proporcoes do render final.
+- O arquivo baixado continua sendo o MP4 gerado pelo app `video/`; a paridade exigida da previa e de
+  layout/posicionamento da arte, nao de bytes. Isso remove o placeholder visual durante o preparo e
+  mantem o download dependente do artefato com arte.
+- O texto do toast de preparo passa a ser `Mantenha esta tela aberta enquanto o vídeo é preparado.`.
+  A tentativa de Wake Lock segue best-effort e silenciosa.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.293`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.293` e rota publica do post 200), `pnpm check:encoding`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`. Commit/push e smoke de homologacao serao registrados apos deploy.

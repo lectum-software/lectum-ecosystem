@@ -348,3 +348,33 @@ stack, SQL, payload tecnico ou detalhe de provider.
   `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`,
   `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, smoke local HTTP
   do frontend, `pnpm check`, `pnpm version:bump` e `pnpm check:version` em `0.1.292`.
+
+## Atualizacao de previa instantanea em 2026-09-09
+
+Depois do deploy `0.1.292`, o usuario validou que a modal ficava com placeholder enquanto aguardava
+render server-side e pediu que a previa carregasse imediatamente. A decisao de UX foi separar bytes e
+layout:
+
+- a previa volta a usar o video original (`target.mediaUrl`) e o poster real, carregados pelo player
+  existente assim que a modal abre;
+- a arte social e desenhada por CSS sobre a previa com as mesmas coordenadas relativas do render
+  FFmpeg: cartao superior, label `Postado na Lectum`/`Respondido na Lectum`, texto, nome/cargo e
+  selo verificado;
+- o MP4 final continua sendo gerado exclusivamente pelo app `video/`; a garantia da modal passa a ser
+  layout equivalente, nao o mesmo arquivo binario;
+- o toast de preparo adota a frase curta `Mantenha esta tela aberta enquanto o vídeo é preparado.`,
+  sem prometer diretamente a disponibilidade de Wake Lock; o lock segue tentativa best-effort.
+
+A mudanca e frontend-only e nao cria env, schema, pacote, provider, persistencia de artefato, mock,
+seed, reset ou limpeza de dados publicados. As mensagens publicas seguem sem URL, segredo, PII,
+stack, SQL, payload tecnico ou detalhe de provider.
+
+## Validacao da atualizacao de previa instantanea
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.292.
+- pnpm --dir frontend check em 0.1.292 antes do bump.
+- pnpm check:encoding, pnpm check:tasks e pnpm check:adrs em 0.1.292 antes do bump.
+- pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.293.
+- pnpm check em 0.1.293.
+- pnpm --dir frontend build em 0.1.293.
+- Smoke local HTTP do frontend: /version 200 em 0.1.293 e rota publica do post 200.

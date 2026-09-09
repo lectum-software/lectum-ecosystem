@@ -304,6 +304,26 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Ajuste de previa instantanea em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.292`, o usuario mostrou a modal com placeholder `Preparando previa
+  identica ao video final...` durante o preparo e pediu que a previa nao esperasse o MP4 final,
+  apenas mantivesse o layout igual e carregasse o video instantaneamente. A captura anexada foi usada
+  apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a modal volta a carregar imediatamente o `target.mediaUrl` original com o player
+  existente, `posterUrl` real e `fit="cover"`, enquanto a geracao do arquivo final continua
+  server-side em segundo plano. Sobre essa previa, o frontend desenha a arte por CSS com as mesmas
+  proporcoes do render FFmpeg: cartao superior, texto do post/pergunta, rotulo `Postado na
+  Lectum`/`Respondido na Lectum`, nome, cargo e selo verificado.
+- A paridade exigida entre previa e download passa a ser de layout/posicionamento da arte; os bytes
+  da previa nao precisam ser o MP4 final, evitando tela branca/placeholder durante o preparo e
+  mantendo o botao de download dependente do artefato gerado pelo app `video/`.
+- Texto publico do toast simplificado para `Mantenha esta tela aberta enquanto o vídeo é preparado.`,
+  sem prometer explicitamente Wake Lock ao usuario; a tentativa de Wake Lock continua
+  best-effort e silenciosa.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -374,4 +394,5 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Commit/push e smoke de homologacao da correcao `0.1.291` serao registrados apos `git push` em
   `homolog` e deploy.
 - [x] Validacoes do ajuste de UX/download e arte Reels `0.1.292`: teste focado frontend de compartilhamento, `pnpm --dir video test`, teste backend focado em render social, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, smoke local HTTP do frontend (`/version` 200 e rota publica do post 200), `pnpm check`, `pnpm version:bump` e `pnpm check:version`.
-- Commit/push e smoke de homologacao da correcao `0.1.292` serao registrados apos `git push` em `homolog` e deploy.
+- [x] Commit/push e smoke de homologacao da correcao `0.1.292`: frontend `/version`, backend `/ping`, backend `/health`, backend `/ready`, admin `/version` e rota publica do post retornaram sucesso em homologacao.
+- [x] Validacoes do ajuste de previa instantanea `0.1.293`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.293` e rota publica do post 200), `pnpm check:encoding`, `pnpm check:tasks`, `pnpm check:adrs`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.

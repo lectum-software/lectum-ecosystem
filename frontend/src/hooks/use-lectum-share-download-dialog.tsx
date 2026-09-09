@@ -24,7 +24,7 @@ type UseLectumShareDownloadDialogOptions = {
 
 const PREPARE_DOWNLOAD_TOAST_MESSAGE = "Preparando v\u00eddeo para baixar...";
 const PREPARE_DOWNLOAD_TOAST_DESCRIPTION =
-  "Mantenha esta tela aberta; a Lectum vai evitar que o celular apague enquanto prepara.";
+  "Mantenha esta tela aberta enquanto o v\u00eddeo \u00e9 preparado.";
 const PREPARE_DOWNLOAD_READY_DESCRIPTION =
   "Toque em Baixar v\u00eddeo para salvar ou compartilhar sem abrir a pr\u00e9via do arquivo.";
 const PREPARE_DOWNLOAD_ERROR_MESSAGE =
@@ -165,7 +165,6 @@ export const useLectumShareDownloadDialog = (options: UseLectumShareDownloadDial
         onClose={closeLectumDownloadDialog}
         onDownload={downloadPendingTarget}
         open={isDownloadDialogOpen}
-        preparedFile={preparedFile}
         preparing={isPreparingShareVideo}
         ready={Boolean(
           preparedFile ?? (pendingTarget ? getPreparedLectumShareFile(pendingTarget) : null),
