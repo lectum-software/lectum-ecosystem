@@ -21,7 +21,7 @@ const config = parseVideoServiceConfig({
 });
 
 const metadata = {
-  cardLabel: "Perguntaram na Lectum",
+  cardLabel: "Respondido na Lectum",
   professionalName: "Ana Martins",
   professionalRoleLabel: "Psicóloga",
   professionalVerified: true,
@@ -30,7 +30,7 @@ const metadata = {
 };
 
 describe("FFmpeg social share command", () => {
-  it("gera MP4 9:16 de alta qualidade sem shell e com overlay Lectum", () => {
+  it("gera MP4 9:16 de alta qualidade sem shell e com arte Lectum", () => {
     const args = buildSocialShareVideoArguments({
       config,
       metadata,
@@ -46,14 +46,15 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-filter_complex/);
     assert.match(command, /scale=1080:1920/);
     assert.match(command, /crop=1080:1920/);
-    assert.match(command, /overlay=\(W-w\)\/2:\(H-h\)\/2/);
+    assert.equal(command.includes("overlay="), false);
     assert.equal(command.includes("eq="), false);
     assert.equal(command.includes("fps="), false);
     assert.equal(command.includes("[v0],drawbox"), false);
     assert.equal(command.includes("gblur="), false);
-    assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
-    assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans\.ttf'/);
-    assert.match(command, /drawtext=text='lectum'/);
+    assert.match(command, /drawbox=x=92:y=292:w=896:h=72:color=0x2f95ed@0\.98:t=fill/);
+    assert.match(command, /drawtext=text='Respondido na Lectum'/);
+    assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans-Bold\.ttf'/);
+    assert.doesNotMatch(command, /drawtext=text='lectum'/);
     assert.match(command, /-c:v libx264/);
     assert.match(command, /-crf 20/);
     assert.match(command, /-preset veryfast/);
@@ -86,7 +87,7 @@ describe("FFmpeg social share command", () => {
     assert.equal(command.includes("eq="), false);
     assert.equal(command.includes("fps="), false);
     assert.equal(command.includes("gblur="), false);
-    assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
+    assert.match(command, /drawtext=text='Respondido na Lectum'/);
   });
 
   it("permite renderizar overlay sem fontfile explicito quando a imagem nao tem a fonte Debian", () => {
@@ -104,7 +105,7 @@ describe("FFmpeg social share command", () => {
     );
     const command = args.join(" ");
 
-    assert.match(command, /drawtext=text='Perguntaram na Lectum'/);
+    assert.match(command, /drawtext=text='Respondido na Lectum'/);
     assert.equal(command.includes("fontfile="), false);
   });
 
@@ -173,11 +174,20 @@ describe("FFmpeg social share command", () => {
       sourceText: "uma pergunta ".repeat(40),
     });
 
-    assert.equal(sanitized.cardLabel, "Perguntaram na Lectum");
+    assert.equal(sanitized.cardLabel, "Respondido na Lectum");
     assert.equal(sanitized.professionalName, "Profissional Lectum");
     assert.equal(sanitized.responseText, null);
     assert.equal(sanitized.sourceText.length, 180);
     assert.doesNotThrow(() => buildSocialShareFilter(sanitized, 30));
+  });
+
+  it("normaliza o rótulo legado de pergunta para resposta", () => {
+    const sanitized = sanitizeSocialShareMetadata({
+      ...metadata,
+      cardLabel: "Perguntaram na Lectum",
+    });
+
+    assert.equal(sanitized.cardLabel, "Respondido na Lectum");
   });
 
   it("escapa separadores do filtergraph em textos livres do overlay", () => {
@@ -197,7 +207,8 @@ describe("FFmpeg social share command", () => {
     assert.match(filter, /Ana\\, Martins\\; Silva/);
     assert.match(filter, /Psicóloga\\, supervisora\\; clínica/);
     assert.match(filter, /Ansiedade\\, sono\\; rotina\\:/);
-    assert.equal(filter.includes("\\'teste\\' \\[100\\%\\]"), true);
+    assert.equal(filter.includes("\\'teste\\'"), true);
+    assert.equal(filter.includes("\\[100\\%\\]"), true);
   });
 
   it("aceita somente origens HTTPS de video e rejeita hosts locais ou caminhos inesperados", () => {

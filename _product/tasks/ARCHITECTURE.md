@@ -432,20 +432,28 @@ Templates/shells devem viver em `frontend/src/templates`.
   privado efemero com `fetch`, redirects proibidos e headers seguros, valida assinatura/tamanho e
   entao roda `ffprobe`/FFmpeg sobre arquivo local. O render social gera 1080x1920 com FFmpeg
   H.264/AAC em preset rapido, executa processos com locale UTF-8, escapa textos livres antes do
-  `drawtext`, resolve `fontfile` DejaVu somente quando a fonte existe no runtime, evita filtros de
-  blur e filtros secundarios de fundo dependentes de build (`eq`, `fps`, `format`, `setsar`) e
-  mantem o arquivo apenas como saida efemera do job. Se o grafo padrao falhar antes de emitir
-  progresso, o worker tenta uma variante portatil `scale+pad+drawbox+drawtext`, sem `crop` e
-  `overlay`. As falhas de processo sao classificadas em `diagnostic_code` seguro a partir de stderr
+  `drawtext`, resolve `fontfile` DejaVu somente quando a fonte existe no runtime e compoe a arte
+  Reels por `scale+crop+drawbox+drawtext`: video em tela cheia, cartao azul/branco no topo,
+  profissional centralizado, sem moldura de celular e sem watermark textual da Lectum. O rotulo do
+  cartao e `Postado na Lectum` para post e `Respondido na Lectum` para resposta; o rotulo legado
+  `Perguntaram na Lectum` e normalizado para resposta durante rollout. O grafo evita filtros de
+  blur e filtros secundarios de fundo dependentes de build (`overlay`, `eq`, `fps`, `format`,
+  `setsar`) e mantem o arquivo apenas como saida efemera do job. Se o grafo padrao falhar antes de
+  emitir progresso, o worker tenta uma variante portatil `scale+pad+drawbox+drawtext`, sem `crop`.
+  As falhas de processo sao classificadas em `diagnostic_code` seguro a partir de stderr
   em memoria, com codigos allowlist por filtro conhecido quando possivel, sem expor stderr bruto,
   URLs, stack, segredos, SQL, PII ou payload tecnico. Para posts, a associacao de video
   considera `community_post_media` ativo antes do fallback legado `media_url/media_type`. O frontend
   pode repetir chamadas transitorias de start/status/download, aguardar videos maiores e reutilizar o
-  job em andamento na mesma sessao, exibindo ao usuario apenas diagnostico publico controlado
-  (etapa, motivo em PT-BR, referencia `SR-xx`, status HTTP e estado/progresso do job quando
-  existirem), mas nunca volta a gerar video no browser nem baixa o original sem arte quando o job
-  falha. A UI nao pode expor mensagem crua de erro, stack, SQL, URL, segredo, PII, payload tecnico ou
-  detalhe de provider.
+  job em andamento na mesma sessao, manter a tela acordada por Wake Lock best-effort durante o
+  preparo e exibir na modal o MP4 gerado assim que estiver pronto, garantindo que a previa seja o
+  mesmo arquivo baixado. Em browsers moveis que suportam Web Share de arquivo, o download exige um
+  novo toque com ativacao de usuario para abrir a folha nativa e evita navegar para a previa
+  intermediaria do arquivo; desktop sem Web Share segue com `download` por objeto local. A UI exibe
+  ao usuario apenas diagnostico publico controlado (etapa, motivo em PT-BR, referencia `SR-xx`,
+  status HTTP e estado/progresso do job quando existirem), mas nunca volta a gerar video no browser
+  nem baixa o original sem arte quando o job falha. A UI nao pode expor mensagem crua de erro, stack,
+  SQL, URL, segredo, PII, payload tecnico ou detalhe de provider.
 - Novas operações, como marca d'água ou thumbnail, entram como job/processador explícito com ADR,
   limites e retenção próprios; não devem ser adicionadas ao backend HTTP.
 - O backend acessa essa aplicação somente por cliente server-to-server, usando origem privada

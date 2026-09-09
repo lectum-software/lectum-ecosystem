@@ -275,6 +275,35 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Ajuste de UX/download e arte Reels em 2026-09-09
+
+- Evidencia: o usuario anexou um print de Quick Look/preview de arquivo MP4 no iPhone e uma imagem
+  de referencia Reels para a arte. Os anexos foram usados apenas como evidencia e referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido. Os requisitos validos vieram da
+  lista numerada do usuario: remover a tela intermediaria de arquivo, manter a tela acordada durante
+  o preparo, alinhar a arte a referencia, diferenciar `Postado na Lectum`/`Respondido na Lectum` e
+  tornar a previa da modal identica ao artefato baixado.
+- Frontend: o fluxo de download social virou duas etapas quando o arquivo ainda nao esta pronto.
+  Ao abrir a modal, o MP4 server-side começa a ser preparado e a modal permanece aberta; depois de pronto, a modal passa
+  a reproduzir o proprio `File` gerado por `URL.createObjectURL`, entao a previa exibida e o arquivo
+  baixado sao identicos. Em mobile/iPad, quando o Web Share de arquivo esta disponivel, o segundo
+  toque exige ativacao recente do usuario para abrir a folha nativa e evita cair no fallback que
+  navega para a tela intermediaria do arquivo. Desktop sem Web Share mantem o fallback de `download`
+  por objeto local.
+- Frontend: durante o preparo do video, a UI solicita Wake Lock `screen` de forma best-effort,
+  reaquece ao voltar a aba para visivel e libera o lock no sucesso, erro ou cancelamento. A falta de
+  suporte do navegador nao bloqueia o download.
+- Contrato visual: posts usam `Postado na Lectum`; respostas usam `Respondido na Lectum`. O label
+  legado `Perguntaram na Lectum` e normalizado no worker para tolerar rollout entre frontend,
+  backend e app `video`.
+- Video: o render padrao passa a usar video em tela cheia 9:16 com `scale+crop` e arte desenhada por
+  `drawbox+drawtext` nas proporcoes da referencia Reels: cartao azul/branco superior, texto da
+  pergunta centralizado, nome/cargo centralizados e selo verificado. A moldura de celular, watermark
+  textual e filtros secundarios (`overlay`, `eq`, `fps`, `format`, `setsar`, `gblur`) nao entram no
+  grafo padrao. A variante portatil `scale+pad+drawbox+drawtext` permanece como fallback seguro.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -344,3 +373,5 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
   `pnpm check`.
 - Commit/push e smoke de homologacao da correcao `0.1.291` serao registrados apos `git push` em
   `homolog` e deploy.
+- [x] Validacoes do ajuste de UX/download e arte Reels `0.1.292`: teste focado frontend de compartilhamento, `pnpm --dir video test`, teste backend focado em render social, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, smoke local HTTP do frontend (`/version` 200 e rota publica do post 200), `pnpm check`, `pnpm version:bump` e `pnpm check:version`.
+- Commit/push e smoke de homologacao da correcao `0.1.292` serao registrados apos `git push` em `homolog` e deploy.

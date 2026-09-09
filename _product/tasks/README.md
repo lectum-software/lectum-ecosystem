@@ -1602,3 +1602,31 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes: `pnpm --dir video test`, `pnpm --dir video check`, `pnpm --dir video build`,
   `pnpm version:bump`, `pnpm check:version` e `pnpm check` em `0.1.291`. Smoke de homologacao sera
   registrado apos `git push` em `homolog` e deploy.
+
+## Ajuste em 2026-09-09: download sem Quick Look e arte Reels igual ao arquivo
+
+- Ajuste pos-feedback da TASK-176: o usuario relatou que o download ainda abria uma tela intermediaria
+  de arquivo MP4 no iPhone e pediu que a previa da modal fosse identica ao artefato baixado. O print
+  de Quick Look e a imagem Reels anexada foram usados somente como evidencia/referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Frontend: ao abrir a modal social, o MP4 server-side começa a ser preparado quando ele ainda
+  nao estiver pronto; a modal permanece aberta com Wake Lock `screen` best-effort para reduzir
+  apagamento de tela no celular. Quando o arquivo fica pronto, a modal reproduz o proprio `File`
+  gerado, garantindo paridade entre previa e download.
+- Download: em mobile/iPad com Web Share de arquivo, o segundo toque abre a folha nativa com ativacao
+  de usuario e evita o fallback que navegava para o blob/MP4 e exibia a tela intermediaria do
+  sistema. Desktop sem Web Share continua usando `download` por objeto local.
+- Arte: posts usam `Postado na Lectum`; respostas usam `Respondido na Lectum`. O app `video/`
+  normaliza o rotulo legado `Perguntaram na Lectum` para resposta durante rollout e renderiza a
+  referencia Reels sem moldura de celular/watermark textual: video 9:16 em tela cheia,
+  `scale+crop+drawbox+drawtext`, cartao azul/branco superior, texto centralizado e nome/cargo do
+  profissional centralizados. O fallback portatil permanece `scale+pad+drawbox+drawtext`.
+- Alteracao frontend+backend+video com documentacao; sem schema/migration, env obrigatoria nova,
+  package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de
+  dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes: teste focado frontend de compartilhamento, `pnpm --dir video test`, teste backend
+  focado em render social, `pnpm --dir frontend check`, `pnpm --dir backend check`, `pnpm --dir video check`,
+  `pnpm --dir frontend build`, `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`,
+  smoke local HTTP do frontend (`/version` 200 e rota publica do post 200), `pnpm check`,
+  `pnpm version:bump` e `pnpm check:version` em `0.1.292`. Smoke de homologacao sera registrado apos
+  `git push` em `homolog` e deploy.

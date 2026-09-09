@@ -48,14 +48,12 @@ const assertSocialRenderFilterCapabilities = (filters: string) => {
   assertCapability(filters, "scale", "ffmpeg_filter_scale_unavailable");
   assertCapability(filters, "drawbox", "ffmpeg_filter_drawbox_unavailable");
 
-  const hasStandardBackground = hasCapability(filters, "crop") && hasCapability(filters, "overlay");
+  const hasStandardBackground = hasCapability(filters, "crop");
   const hasPortableBackground = hasCapability(filters, "pad");
   if (hasStandardBackground || hasPortableBackground) return;
 
   throw new ManagedProcessError("failed", {
-    diagnosticCode: hasCapability(filters, "crop")
-      ? "ffmpeg_filter_overlay_unavailable"
-      : "ffmpeg_filter_pad_unavailable",
+    diagnosticCode: "ffmpeg_filter_pad_unavailable",
   });
 };
 

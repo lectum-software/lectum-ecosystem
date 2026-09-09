@@ -32,7 +32,7 @@ export type LectumShareMediaItem = {
 };
 
 export type LectumShareSocialTarget = LectumShareBaseTarget & {
-  cardLabel: "Postado na Lectum" | "Perguntaram na Lectum" | "Respondido na Lectum";
+  cardLabel: "Postado na Lectum" | "Respondido na Lectum";
   carouselCount: number;
   kind: "post_media" | "video_response";
   mediaItems: LectumShareMediaItem[];
@@ -293,7 +293,7 @@ export const createLectumShareVideoDownloadTarget = (
   const whatsappShareRelativeUrl = post.community
     ? publicCommunityReplyWhatsappShareHref(post.community.slug, post.id, reply.id)
     : relativeUrl;
-  const cardLabel = "Perguntaram na Lectum";
+  const cardLabel = "Respondido na Lectum";
   const professionalName =
     normalizeLectumShareProfessionalName(reply.author.name) || reply.author.name;
 

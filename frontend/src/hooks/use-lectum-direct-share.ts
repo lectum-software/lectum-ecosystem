@@ -20,6 +20,7 @@ import type {
   LectumShareSocialTarget,
   LectumShareVideoTarget,
 } from "@/utils/lectum-share-target";
+import { requestLectumScreenWakeLock } from "@/utils/screen-wake-lock";
 
 type UseLectumDirectShareOptions = {
   onShared?: (target: LectumShareVideoTarget, result: ShareExportResult) => void;
@@ -124,7 +125,7 @@ const shouldShowDownloadQualityGuidance = () => {
   );
 };
 
-const buildShareRenderDiagnosticDescription = (error: unknown) => {
+export const buildLectumShareRenderDiagnosticDescription = (error: unknown) => {
   if (!(error instanceof LectumShareRenderError)) return undefined;
 
   const { code, jobStatus, progress, stage, status } = error.diagnostic;
@@ -196,6 +197,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
       setIsSharing(true);
       const destination = shareOptions.destination ?? "social";
       let loadingToastId: string | number | null = null;
+      let screenWakeLock: Awaited<ReturnType<typeof requestLectumScreenWakeLock>> = null;
 
       try {
         let result: ShareExportResult;
@@ -214,6 +216,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
             loadingToastId = toast.loading(DOWNLOAD_TOAST_MESSAGE, {
               description: DOWNLOAD_PREPARING_GUIDANCE_MESSAGE,
             });
+            screenWakeLock = await requestLectumScreenWakeLock();
           }
 
           const file = cachedFile ?? (await prepareLectumShareFileWithServerRender(socialTarget));
@@ -230,8 +233,10 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
           toast.dismiss(loadingToastId);
         }
 
-        trackShare(target, result.channel);
-        onShared?.(target, result);
+        if (result.channel) {
+          trackShare(target, result.channel);
+          onShared?.(target, result);
+        }
 
         if (result.mode === "download") {
           toast.success(
@@ -240,6 +245,10 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
               ? { description: DOWNLOAD_QUALITY_GUIDANCE_MESSAGE }
               : undefined,
           );
+        } else if (result.mode === "prepared") {
+          toast.success("V\u00eddeo pronto.", {
+            description: "Toque novamente em Baixar v\u00eddeo para salvar ou compartilhar.",
+          });
         } else if (result.mode === "clipboard") {
           toast.success("Link copiado.");
         }
@@ -255,7 +264,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         if (target.kind === "link" || destination !== "download") {
           toast.error("Não foi possível abrir o compartilhamento. Tente copiar o link novamente.");
         } else {
-          const diagnosticDescription = buildShareRenderDiagnosticDescription(error);
+          const diagnosticDescription = buildLectumShareRenderDiagnosticDescription(error);
           toast.error(
             shouldShowDownloadQualityGuidance()
               ? MOBILE_DOWNLOAD_SERVER_RENDER_ERROR_MESSAGE
@@ -265,6 +274,7 @@ export const useLectumDirectShare = (options: UseLectumDirectShareOptions = {}) 
         }
         return null;
       } finally {
+        await screenWakeLock?.release();
         sharingRef.current = false;
         setIsSharing(false);
       }

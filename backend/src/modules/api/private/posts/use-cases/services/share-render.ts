@@ -360,7 +360,7 @@ const resolveShareRenderTarget = async (
     const info = professionalInfo(reply.author);
     const target: ShareRenderTarget = {
       ...info,
-      cardLabel: "Perguntaram na Lectum",
+      cardLabel: "Respondido na Lectum",
       fileName: buildShareFileName(info.professionalName, sourceText),
       mediaUrl: reply.media_url,
       postId: data.p.id,

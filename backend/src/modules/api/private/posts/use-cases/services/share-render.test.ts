@@ -53,6 +53,14 @@ describe("post share render media selection", () => {
     assert.match(source, /streamPlaybackRequestOrigin/);
   });
 
+  it("usa rotulos sociais diferenciados para posts e respostas", async () => {
+    const source = await shareRenderServiceSource();
+
+    assert.match(source, /cardLabel:\s*"Postado na Lectum"/);
+    assert.match(source, /cardLabel:\s*"Respondido na Lectum"/);
+    assert.doesNotMatch(source, /cardLabel:\s*"Perguntaram na Lectum"/);
+  });
+
   it("aceita URL absoluta legada de posts/media mesmo quando a BASE atual diverge", () => {
     const previousBase = process.env.BASE;
     process.env.BASE = "https://api-atual.example";

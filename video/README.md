@@ -62,7 +62,7 @@ read -s VIDEO_SERVICE_API_KEY
 curl --fail-with-body \
   -H "Authorization: Bearer ${VIDEO_SERVICE_API_KEY}" \
   -H "Content-Type: application/json" \
-  -d '{"source_url":"https://customer-code.cloudflarestream.com/eyJhbGci.eyJzdWIi.assinatura/manifest/video.m3u8","metadata":{"cardLabel":"Perguntaram na Lectum","sourceText":"Como lidar com ansiedade antes de dormir?","professionalName":"Ana Martins","professionalRoleLabel":"Psicóloga","professionalVerified":true,"responseText":null}}' \
+  -d '{"source_url":"https://customer-code.cloudflarestream.com/eyJhbGci.eyJzdWIi.assinatura/manifest/video.m3u8","metadata":{"cardLabel":"Respondido na Lectum","sourceText":"Como lidar com ansiedade antes de dormir?","professionalName":"Ana Martins","professionalRoleLabel":"Psicóloga","professionalVerified":true,"responseText":null}}' \
   http://localhost:3003/api/private/jobs/social-share
 unset VIDEO_SERVICE_API_KEY
 ```
@@ -71,7 +71,7 @@ unset VIDEO_SERVICE_API_KEY
 
 - input/output nunca entram no Redis;
 - paths não usam nome original;
-- FFmpeg roda sem shell: compressão aceita somente `file,pipe`; render social aceita origem HTTPS validada pelo backend/worker com whitelist `file,http,https,tcp,tls,crypto` para HLS remoto, roda com locale UTF-8, resolve uma fonte DejaVu local quando disponível, omite `fontfile` se a imagem não tiver o caminho Debian, usa filtergraph corrigido sem filtros secundários de fundo (`eq`, `fps`, `format`, `setsar`, `gblur`), tenta fallback portátil `scale+pad+drawbox+drawtext` quando o grafo padrão falha antes do progresso e não herda segredos da aplicação;
+- FFmpeg roda sem shell: compressão aceita somente `file,pipe`; render social aceita origem HTTPS validada pelo backend/worker com whitelist `file,http,https,tcp,tls,crypto` para HLS remoto, roda com locale UTF-8, resolve uma fonte DejaVu local quando disponível, omite `fontfile` se a imagem não tiver o caminho Debian, usa filtergraph 9:16 `scale+crop+drawbox+drawtext` sem filtros secundários de fundo (`overlay`, `eq`, `fps`, `format`, `setsar`, `gblur`), tenta fallback portátil `scale+pad+drawbox+drawtext` quando o grafo padrão falha antes do progresso e não herda segredos da aplicação;
 - arquivo inválido/cancelado não recebe retry;
 - falha transitória recebe retry exponencial limitado;
 - falhas de processo registram `diagnostic_code` classificado a partir de stderr em memória, sem
@@ -100,7 +100,7 @@ publica portas, mas precisa de egresso HTTPS para baixar/sondar midias first-par
 jobs `social_share`. O Redis permanece somente em `video-private`, que continua `internal: true`, e
 nao deve ter porta publica. A rota `/ready` valida não só binários FFmpeg/ffprobe, mas também
 capacidades mínimas do render social (`drawtext`, `scale`, `drawbox`, `libx264`, `aac` e ao menos
-um caminho de fundo: `crop+overlay` ou `pad`), registrando apenas códigos diagnósticos controlados
+um caminho de fundo: `crop` ou `pad`), registrando apenas códigos diagnósticos controlados
 quando algo faltar.
 
 Cadastre `VIDEO_SERVICE_API_KEY` e `REDIS_URL` como secrets de runtime. Nenhuma variável desta app é

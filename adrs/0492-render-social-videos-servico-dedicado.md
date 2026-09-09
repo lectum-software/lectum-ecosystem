@@ -266,6 +266,34 @@ A decisao continua video-only e nao cria env, schema, pacote, provider, persiste
 mock, seed, reset ou limpeza de dados publicados. Logs e UI permanecem sem stderr bruto, URL,
 segredo, PII, stack, SQL ou payload tecnico.
 
+## Atualizacao de UX/download e arte Reels em 2026-09-09
+
+Novo feedback do usuario trouxe duas evidencias distintas: a tela intermediaria de arquivo MP4 no
+Quick Look do iPhone apos o download e uma referencia visual Reels para a arte. A decisao foi
+preservar a geracao server-side dedicada, mas separar preparo e salvamento/compartilhamento:
+
+- ao abrir a modal social, o MP4 social começa a ser preparado no backend/video e a modal permanece aberta;
+- enquanto o job esta em preparo, o frontend solicita Wake Lock `screen` de forma best-effort para
+  reduzir a chance de o celular apagar;
+- quando o arquivo fica pronto, a modal troca a simulacao pelo proprio `File` gerado por
+  `URL.createObjectURL`; assim, a previa exibida e exatamente o artefato que sera baixado;
+- em mobile/iPad com Web Share de arquivo, o segundo toque usa a folha nativa sob ativacao de usuario
+  e evita o fallback de navegar para o blob/MP4, que abria a tela intermediaria do sistema;
+- desktop sem Web Share continua usando download por objeto local, sem upload para storage nem
+  persistencia nova.
+
+A arte do worker tambem foi alinhada ao contrato visual solicitado: video 9:16 em tela cheia,
+cartao superior azul/branco, pergunta centralizada, nome/cargo centralizados e selo verificado. O
+rotulo e `Postado na Lectum` para posts e `Respondido na Lectum` para respostas; o valor legado
+`Perguntaram na Lectum` e normalizado no worker para tolerar rollout entre apps. O grafo padrao
+remove moldura de celular, watermark textual e filtros secundarios (`overlay`, `eq`, `fps`,
+`format`, `setsar`, `gblur`), ficando em `scale+crop+drawbox+drawtext`; a variante portatil
+`scale+pad+drawbox+drawtext` permanece como fallback.
+
+A mudanca nao adiciona env, schema, pacote, provider, persistencia de artefato, mock, seed, reset ou
+limpeza de dados publicados. As mensagens publicas seguem sem stderr bruto, URL, segredo, PII,
+stack, SQL, payload tecnico ou detalhe de provider.
+
 ## Validação
 
 - `pnpm --dir video check`
@@ -315,3 +343,8 @@ segredo, PII, stack, SQL ou payload tecnico.
 - Atualizacao de filtergraph portatil 2026-09-08: `pnpm --dir video test`,
   `pnpm --dir video check`, `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version` e
   `pnpm check` em `0.1.291`.
+- Atualizacao de UX/download e arte Reels 2026-09-09: teste focado frontend de compartilhamento,
+  `pnpm --dir video test`, teste backend focado em render social, `pnpm --dir frontend check`,
+  `pnpm --dir backend check`, `pnpm --dir video check`, `pnpm --dir frontend build`,
+  `pnpm --dir backend build`, `pnpm --dir admin build`, `pnpm --dir video build`, smoke local HTTP
+  do frontend, `pnpm check`, `pnpm version:bump` e `pnpm check:version` em `0.1.292`.

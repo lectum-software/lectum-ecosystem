@@ -17,11 +17,46 @@ const SOCIAL_RENDER_CRF = 20;
 const SOCIAL_RENDER_PRESET = "veryfast";
 const SOCIAL_OUTPUT_FPS = 30;
 const SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES = [
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf",
+  "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
   "/usr/share/fonts/dejavu/DejaVuSans.ttf",
 ] as const;
 const SOCIAL_DRAW_TEXT_FONT_FILE = SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES[0];
+const SOCIAL_SHARE_ART_LAYOUT = {
+  card: {
+    bodyHeight: 228,
+    bodyLineHeight: 64,
+    bodyTextTopMinOffset: 40,
+    headerFontSize: 39,
+    headerHeight: 72,
+    labelY: 309,
+    shadowOffset: 10,
+    sourceFontSize: 52,
+    sourceFontSizeCompact: 48,
+    width: 896,
+    x: 92,
+    y: 292,
+  },
+  colors: {
+    cardShadow: "black@0.12",
+    header: "0x2f95ed@0.98",
+    headerText: "white",
+    sourceText: "black",
+    surface: "white@0.96",
+    verified: "0x2f95ed",
+  },
+  professional: {
+    checkGap: 12,
+    checkSize: 34,
+    nameFontSize: 40,
+    nameWidthFactor: 0.58,
+    nameY: 1260,
+    roleFontSize: 28,
+    roleY: 1310,
+  },
+} as const;
 
 type SocialShareSource =
   | {
@@ -63,6 +98,12 @@ const normalizeText = (value: string | null | undefined, fallback: string, maxLe
     .trim();
 
   return (normalized || fallback).slice(0, maxLength);
+};
+
+const normalizeCardLabel = (value: string | null | undefined) => {
+  const normalized = normalizeText(value, "Respondido na Lectum", 80);
+
+  return normalized === "Perguntaram na Lectum" ? "Respondido na Lectum" : normalized;
 };
 
 const wrapText = (value: string, maxLineLength: number, maxLines: number) => {
@@ -140,7 +181,7 @@ const filterChain = (inputLabel: string, filters: readonly string[], outputLabel
 export const sanitizeSocialShareMetadata = (
   metadata: SocialShareRenderMetadata,
 ): SocialShareRenderMetadata => ({
-  cardLabel: normalizeText(metadata.cardLabel, "Perguntaram na Lectum", 80),
+  cardLabel: normalizeCardLabel(metadata.cardLabel),
   professionalName: normalizeText(metadata.professionalName, "Profissional Lectum", 90),
   professionalRoleLabel: normalizeText(metadata.professionalRoleLabel, "Psicólogo(a)", 48),
   professionalVerified: Boolean(metadata.professionalVerified),
@@ -156,55 +197,74 @@ export const buildSocialShareFilter = (
   const filterMode = options.filterMode ?? "standard";
   const fontFile = options.fontFile === undefined ? SOCIAL_DRAW_TEXT_FONT_FILE : options.fontFile;
   const sanitized = sanitizeSocialShareMetadata(metadata);
-  const sourceLines = wrapText(sanitized.sourceText, 29, 3);
+  const { card, colors, professional } = SOCIAL_SHARE_ART_LAYOUT;
+  const sourceLines = wrapText(sanitized.sourceText, 32, 3);
+  const sourceTextTop =
+    card.y +
+    card.headerHeight +
+    Math.max(
+      card.bodyTextTopMinOffset,
+      Math.round((card.bodyHeight - sourceLines.length * card.bodyLineHeight) / 2),
+    );
   const sourceTextFilters = sourceLines.map((line, index) =>
     drawText({
-      color: "black",
+      color: colors.sourceText,
       fontFile,
-      fontSize: sourceLines.length > 2 ? 52 : 58,
+      fontSize: sourceLines.length > 2 ? card.sourceFontSizeCompact : card.sourceFontSize,
       text: line,
       x: "(w-text_w)/2",
-      y: 224 + index * 72,
+      y: sourceTextTop + index * card.bodyLineHeight,
     }),
   );
-  const name = sanitized.professionalVerified
-    ? `${sanitized.professionalName} ✓`
-    : sanitized.professionalName;
+  const estimatedNameWidth = Math.round(
+    sanitized.professionalName.length * professional.nameFontSize * professional.nameWidthFactor,
+  );
+  const verifiedCheckX = Math.min(
+    SOCIAL_OUTPUT_WIDTH - professional.checkSize - 64,
+    Math.round(
+      (SOCIAL_OUTPUT_WIDTH - estimatedNameWidth) / 2 + estimatedNameWidth + professional.checkGap,
+    ),
+  );
   const overlayFilters = [
-    "drawbox=x=116:y=116:w=864:h=342:color=black@0.14:t=fill",
-    "drawbox=x=104:y=96:w=864:h=342:color=white@0.94:t=fill",
+    `drawbox=x=${card.x + card.shadowOffset}:y=${card.y + card.shadowOffset}:w=${card.width}:h=${card.headerHeight + card.bodyHeight}:color=${colors.cardShadow}:t=fill`,
+    `drawbox=x=${card.x}:y=${card.y}:w=${card.width}:h=${card.headerHeight}:color=${colors.header}:t=fill`,
+    `drawbox=x=${card.x}:y=${card.y + card.headerHeight}:w=${card.width}:h=${card.bodyHeight}:color=${colors.surface}:t=fill`,
     drawText({
-      color: "0x1f6fff",
+      color: colors.headerText,
       fontFile,
-      fontSize: 39,
+      fontSize: card.headerFontSize,
       text: sanitized.cardLabel,
       x: "(w-text_w)/2",
-      y: 138,
+      y: card.labelY,
     }),
     ...sourceTextFilters,
     drawText({
       color: "white",
       fontFile,
-      fontSize: 38,
-      text: name,
-      x: 72,
-      y: "h-204",
+      fontSize: professional.nameFontSize,
+      text: sanitized.professionalName,
+      x: "(w-text_w)/2",
+      y: professional.nameY,
     }),
+    ...(sanitized.professionalVerified
+      ? [
+          drawText({
+            color: colors.verified,
+            fontFile,
+            fontSize: professional.checkSize,
+            text: "\u2713",
+            x: verifiedCheckX,
+            y: professional.nameY,
+          }),
+        ]
+      : []),
     drawText({
       color: "white",
       fontFile,
-      fontSize: 31,
+      fontSize: professional.roleFontSize,
       text: sanitized.professionalRoleLabel,
-      x: 72,
-      y: "h-152",
-    }),
-    drawText({
-      color: "white",
-      fontFile,
-      fontSize: 68,
-      text: "lectum",
-      x: "w-text_w-72",
-      y: "h-176",
+      x: "(w-text_w)/2",
+      y: professional.roleY,
     }),
   ];
 
@@ -216,9 +276,7 @@ export const buildSocialShareFilter = (
   }
 
   return [
-    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}[bg]`,
-    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease:force_divisible_by=2[fg]`,
-    "[bg][fg]overlay=(W-w)/2:(H-h)/2[v0]",
+    `[0:v]scale=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${SOCIAL_OUTPUT_WIDTH}:${SOCIAL_OUTPUT_HEIGHT}[v0]`,
     filterChain("[v0]", overlayFilters, "[v]"),
   ].join(";");
 };

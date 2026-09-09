@@ -30,3 +30,12 @@ export const resolveLectumLinkShareData = (
 
   return canUseNativeShareData(nav, shareData) ? shareData : null;
 };
+
+export const resolveLectumFileShareData = (
+  nav: ShareNavigator,
+  shareData: ShareData,
+): ShareData | null => {
+  if (!shareData.files?.length) return null;
+
+  return canUseNativeShareData(nav, shareData) ? shareData : null;
+};
