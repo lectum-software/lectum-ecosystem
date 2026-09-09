@@ -629,3 +629,24 @@ A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, co
 - git diff --check em 0.1.302 antes do bump.
 - pnpm version:bump para 0.1.303.
 - pnpm check:version em 0.1.303.
+
+
+## Atualizacao de calibracao visual final da previa contra o MP4 real em 2026-09-09
+
+O usuario confirmou que, na comparacao com dois textos sobrepostos, a identificacao superior era a arte gravada no MP4 real e a inferior era a previa CSS. A decisao foi parar de usar apenas equivalencia numerica de coordenadas e aplicar uma calibracao optica no frontend, mantendo o render FFmpeg intacto como referencia final:
+
+- credenciais da previa em `top-[69.35%]` para subir o grupo ate a posicao do MP4 baixado;
+- nome em Manrope Bold `2.95cqw`, profissao `1.8cqw`, gap `0.62cqw` e selo `2.22cqw x 2.05cqw`, reduzindo a densidade visual da previa para se sobrepor ao texto real;
+- cabecalho e pergunta da previa passam de `font-extrabold` para `font-bold`, alinhando o peso tipografico com a fonte Bold usada pelo FFmpeg.
+
+A mudanca e visual e frontend-only, compativel com jobs existentes e sem alteracao de schema, contrato publico, backend, video, env, provider, storage, package npm, seed ou dados publicados. Rollback: reverter o commit.
+
+## Validacao da atualizacao de calibracao visual final da previa
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.303 antes do bump.
+- pnpm --dir frontend check em 0.1.303 antes do bump.
+- pnpm --dir frontend build em 0.1.303 antes do bump.
+- pnpm check em 0.1.303 antes do bump.
+- git diff --check em 0.1.303 antes do bump.
+- pnpm version:bump para 0.1.304.
+- pnpm check:version em 0.1.304.

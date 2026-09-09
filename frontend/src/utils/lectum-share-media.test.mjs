@@ -117,14 +117,18 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogSource, /bg-primary/);
   assert.match(dialogSource, /h-\[4\.6cqh\]/);
   assert.match(dialogSource, /h-\[13\.85cqh\]/);
+  assert.match(dialogSource, /font-bold/);
   assert.match(dialogSource, /text-\[4\.65cqw\]/);
   assert.match(
     dialogSource,
     /sourceLines\.length > 2\s*\?\s*"text-\[4\.05cqw\] leading-\[1\.17\]"/,
   );
-  assert.match(dialogSource, /top-\[72\.9167%\]/);
+  assert.match(dialogSource, /top-\[69\.35%\]/);
+  assert.match(dialogSource, /gap-\[0\.62cqw\]/);
+  assert.match(dialogSource, /text-\[2\.95cqw\]/);
   assert.match(dialogSource, /mt-\[0\.55cqw\]/);
-  assert.match(dialogSource, /h-\[2\.22cqw\] w-\[2\.41cqw\]/);
+  assert.match(dialogSource, /text-\[1\.8cqw\]/);
+  assert.match(dialogSource, /h-\[2\.05cqw\] w-\[2\.22cqw\]/);
   assert.doesNotMatch(dialogSource, /bg-background\/85/);
   assert.doesNotMatch(dialogSource, /border-border\/70/);
   assert.match(

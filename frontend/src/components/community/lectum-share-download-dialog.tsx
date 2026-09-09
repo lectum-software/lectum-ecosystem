@@ -93,7 +93,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.2cqw] drop-shadow-lg"
         style={{ fontFamily: "var(--font-manrope), Manrope, Arial, sans-serif" }}
       >
-        <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center bg-primary px-[3.2cqw] text-[3.45cqw] font-extrabold leading-none text-primary-foreground">
+        <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center bg-primary px-[3.2cqw] text-[3.45cqw] font-bold leading-none text-primary-foreground">
           <span className="flex min-w-0 items-center justify-center gap-[1.1cqw]">
             <Image
               alt=""
@@ -110,7 +110,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[7.1cqw]">
           <p
             className={cn(
-              "line-clamp-3 whitespace-pre-line font-extrabold tracking-[-0.025em] text-media-background",
+              "line-clamp-3 whitespace-pre-line font-bold tracking-[-0.025em] text-media-background",
               sourceLines.length > 2
                 ? "text-[4.05cqw] leading-[1.17]"
                 : "text-[4.65cqw] leading-[1.24]",
@@ -122,17 +122,17 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         </div>
       </div>
 
-      <div className="absolute top-[72.9167%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
+      <div className="absolute top-[69.35%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
         <div className="inline-grid max-w-full justify-items-start text-left">
-          <div className="flex max-w-full items-center justify-start gap-[0.7cqw]">
-            <span className="truncate text-[3.15cqw] font-extrabold leading-none tracking-[-0.02em]">
+          <div className="flex max-w-full items-center justify-start gap-[0.62cqw]">
+            <span className="truncate text-[2.95cqw] font-bold leading-none tracking-[-0.02em]">
               {target.professional.name}
             </span>
             {target.professional.verified ? (
-              <VerifiedBadgeIcon className="h-[2.22cqw] w-[2.41cqw] min-h-2 min-w-2 text-primary" />
+              <VerifiedBadgeIcon className="h-[2.05cqw] w-[2.22cqw] min-h-2 min-w-2 text-primary" />
             ) : null}
           </div>
-          <div className="mt-[0.55cqw] max-w-full truncate text-[1.95cqw] font-medium leading-none text-primary-foreground/92">
+          <div className="mt-[0.55cqw] max-w-full truncate text-[1.8cqw] font-medium leading-none text-primary-foreground/92">
             {target.professional.roleLabel}
           </div>
         </div>

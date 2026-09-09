@@ -546,3 +546,21 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `git diff --check` em `0.1.302` antes do bump.
 - [x] `pnpm version:bump` para `0.1.303`.
 - [x] `pnpm check:version` em `0.1.303`.
+
+
+## Calibracao visual final da previa contra o MP4 real em 2026-09-09
+
+- Evidencia: o usuario confirmou que, na comparacao sobreposta, a identificacao superior e a arte gravada no MP4 real e a inferior e a previa CSS. A captura foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a previa deixa de tentar paridade puramente numerica e passa a usar calibracao optica contra a arte baixada: credenciais em `top-[69.35%]`, nome em `2.95cqw` com Manrope Bold, profissao em `1.8cqw`, gap `0.62cqw`, margem `0.55cqw` e selo `2.22cqw x 2.05cqw`. A intencao e fazer o texto inferior da previa cair sobre o texto superior gravado no MP4 durante a validacao por sobreposicao.
+- O cabecalho e o texto da pergunta da previa tambem deixam de usar `font-extrabold` e passam a `font-bold`, aproximando a renderizacao CSS da fonte Bold usada pelo FFmpeg no arquivo final.
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes da calibracao visual final da previa
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.303` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.303` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.303` antes do bump.
+- [x] `pnpm check` em `0.1.303` antes do bump.
+- [x] `git diff --check` em `0.1.303` antes do bump.
+- [x] `pnpm version:bump` para `0.1.304`.
+- [x] `pnpm check:version` em `0.1.304`.
