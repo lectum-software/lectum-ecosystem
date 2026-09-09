@@ -109,6 +109,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogSource, /bg-transparent text-primary-foreground\/85/);
   assert.match(dialogSource, /next\/image/);
   assert.match(dialogSource, /\/images\/social\/lectum-symbol-white\.png/);
+  assert.match(dialogSource, /-translate-y-\[0\.35cqw\]/);
   assert.match(dialogSource, /VerifiedBadgeIcon/);
   assert.match(dialogSource, /top-\[13%\] left-\[10\.2%\] w-\[79\.7%\]/);
   assert.match(dialogSource, /rounded-\[2\.2cqw\]/);

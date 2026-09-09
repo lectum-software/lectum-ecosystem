@@ -98,7 +98,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
             <Image
               alt=""
               aria-hidden="true"
-              className="h-[2.85cqw] w-auto shrink-0"
+              className="h-[2.85cqw] w-auto shrink-0 -translate-y-[0.35cqw]"
               height={252}
               priority={false}
               src="/images/social/lectum-symbol-white.png"

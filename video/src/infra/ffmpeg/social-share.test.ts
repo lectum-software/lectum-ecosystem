@@ -49,7 +49,7 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /crop=1080:1920/);
     assert.match(command, /-loop 1 -i .*lectum-symbol-white\.png/);
     assert.match(command, /-loop 1 -i .*verified-badge\.png/);
-    assert.match(command, /overlay=x=329:y=278:format=auto/);
+    assert.match(command, /overlay=x=329:y=274:format=auto/);
     assert.match(command, /scale=26:24:flags=lanczos\[verified_badge\]/);
     assert.match(command, /overlay=x=628:y=1405:format=auto/);
     assert.equal(command.includes("eq="), false);

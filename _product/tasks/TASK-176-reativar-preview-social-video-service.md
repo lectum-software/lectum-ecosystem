@@ -480,3 +480,22 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `git diff --check`.
 - [x] `pnpm version:bump` para `0.1.299`.
 - [x] `pnpm check:version` em `0.1.299`.
+
+## Ajuste de alinhamento vertical da logo no cabecalho social em 2026-09-09
+
+- Evidencia: o MP4 homologado `0.1.299` mostrou a logo branca da Lectum desalinhada verticalmente em relacao ao texto `Respondido na Lectum`. A captura do usuario foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a previa desloca o asset da logo `0.35cqw` para cima e o render FFmpeg aplica `logoOffsetY=-4`, mantendo o texto do label inalterado e alinhando a altura visual do simbolo com a linha do texto.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de alinhamento vertical da logo
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.299` antes do bump.
+- [x] `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts` em `0.1.299` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.299` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.299` antes do bump.
+- [x] `pnpm --dir video check` em `0.1.299` antes do bump.
+- [x] `pnpm --dir video build` em `0.1.299` antes do bump.
+- [x] `pnpm check` em `0.1.299` antes do bump.
+- [x] `git diff --check` em `0.1.299` antes do bump.
+- [x] `pnpm version:bump` para `0.1.300`.
+- [x] `pnpm check:version` em `0.1.300`.

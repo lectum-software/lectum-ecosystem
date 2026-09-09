@@ -548,3 +548,25 @@ commit.
 - git diff --check.
 - pnpm version:bump para 0.1.299.
 - pnpm check:version em 0.1.299.
+
+## Atualizacao de alinhamento vertical da logo social em 2026-09-09
+
+Novo feedback visual no MP4 gerado apontou que a logo da Lectum e o texto `Respondido na Lectum` ainda nao estavam na mesma altura. A decisao foi nao mexer na tipografia nem no label, apenas aplicar um deslocamento optico pequeno na logo:
+
+- previa frontend: `-translate-y-[0.35cqw]` no asset branco da logo;
+- render FFmpeg: `logoOffsetY=-4` no calculo de `labelLogoY`, fazendo o overlay da logo iniciar em `y=274`, alinhado ao topo calculado do drawtext do label.
+
+A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, contrato publico, env, provider, storage, package npm, seed ou dados publicados. Rollback: reverter o commit.
+
+## Validacao da atualizacao de alinhamento vertical da logo social
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.299 antes do bump.
+- pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts em 0.1.299 antes do bump.
+- pnpm --dir frontend check em 0.1.299 antes do bump.
+- pnpm --dir frontend build em 0.1.299 antes do bump.
+- pnpm --dir video check em 0.1.299 antes do bump.
+- pnpm --dir video build em 0.1.299 antes do bump.
+- pnpm check em 0.1.299 antes do bump.
+- git diff --check em 0.1.299 antes do bump.
+- pnpm version:bump para 0.1.300.
+- pnpm check:version em 0.1.300.

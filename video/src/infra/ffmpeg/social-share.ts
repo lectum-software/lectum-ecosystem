@@ -38,6 +38,7 @@ const SOCIAL_SHARE_ART_LAYOUT = {
     labelWidthFactor: 0.5,
     logoGap: 12,
     logoHeight: 32,
+    logoOffsetY: -4,
     logoWidth: 30,
     shadowOffset: 8,
     sourceFontSize: 50,
@@ -251,7 +252,8 @@ export const buildSocialShareFilter = (
   );
   const labelGroupWidth = card.logoWidth + card.logoGap + estimatedLabelWidth;
   const labelLogoX = Math.round((SOCIAL_OUTPUT_WIDTH - labelGroupWidth) / 2);
-  const labelLogoY = card.y + Math.round((card.headerHeight - card.logoHeight) / 2);
+  const labelLogoY =
+    card.y + Math.round((card.headerHeight - card.logoHeight) / 2) + card.logoOffsetY;
   const labelTextX = labelLogoX + card.logoWidth + card.logoGap;
   const labelTextY = card.y + Math.round((card.headerHeight - card.headerFontSize) / 2) - 1;
   const estimatedNameWidth = Math.round(

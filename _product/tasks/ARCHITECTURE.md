@@ -435,7 +435,8 @@ Templates/shells devem viver em `frontend/src/templates`.
   `drawtext`, usa `fonts-manrope` no container para aproximar a tipografia da previa/app e compoe a
   arte Reels por `scale+crop+drawbox+drawtext+overlay`: video em tela cheia, cartao superior sem
   moldura de celular/watermark, largura 860px, x=110, y=250, raio 24px, cabecalho azul `#308ce8`
-  com 88px, simbolo Lectum branco recortado do asset oficial `logo-light.png` a esquerda do label,
+  com 88px, simbolo Lectum branco recortado do asset oficial `logo-light.png` a esquerda do label e
+  deslocado 4px para cima para alinhamento optico com o texto,
   corpo branco com 266px, texto preto `#151922` centralizado em ate 3 linhas de 28 caracteres, fonte
   Manrope bold 50px e compacta 44px quando a pergunta ocupar 3 linhas, com entrelinha 60px para
   evitar vazamento horizontal. As credenciais ficam sobre o video em y=1400/y=1440, grupo
