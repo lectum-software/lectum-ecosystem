@@ -104,6 +104,10 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogSource, /data-lectum-share-preview-art/);
   assert.match(dialogSource, /data-lectum-share-preview-volume-button/);
   assert.match(dialogSource, /absolute right-3 bottom-3 z-\[3\]/);
+  assert.match(dialogSource, /bg-transparent text-primary-foreground\/85/);
+  assert.match(dialogSource, /drop-shadow-lg/);
+  assert.doesNotMatch(dialogSource, /bg-background\/85/);
+  assert.doesNotMatch(dialogSource, /border-border\/70/);
   assert.match(
     dialogSource,
     /const downloadButtonLabel = preparing \? "Preparando\.\.\." : "Baixar v\\u00eddeo"/,

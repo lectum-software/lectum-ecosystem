@@ -448,9 +448,10 @@ Templates/shells devem viver em `frontend/src/templates`.
   job em andamento na mesma sessao, iniciar o preparo do arquivo somente apos clique/toque no botao
   de download, manter a tela acordada por Wake Lock best-effort durante esse preparo acionado pelo
   usuario e exibir na modal uma previa instantanea do video original com a mesma arte visual
-  sobreposta por CSS; o controle de audio fica como icone sobre o proprio video, no canto inferior
-  direito, sem botao textual separado. O arquivo baixado continua sendo o MP4 gerado pelo app
-  `video/`, e a paridade exigida da previa e de layout/posicionamento, nao de bytes. Em browsers
+  sobreposta por CSS; o controle de audio fica como icone discreto, com fundo transparente, sobre o
+  proprio video no canto inferior direito, sem botao textual separado. O arquivo baixado continua
+  sendo o MP4 gerado pelo app `video/`, e a paridade exigida da previa e de layout/posicionamento,
+  nao de bytes. Em browsers
   moveis que suportam Web Share de arquivo, o download exige um
   novo toque com ativacao de usuario para abrir a folha nativa e evita navegar para a previa
   intermediaria do arquivo; desktop sem Web Share segue com `download` por objeto local. A UI exibe

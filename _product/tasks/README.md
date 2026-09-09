@@ -1662,3 +1662,18 @@ Uma task só pode ser marcada como concluída quando:
   `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.294` e rota publica
   do post 200), `pnpm version:bump`, `pnpm check:version`, `pnpm check` e `git diff --check`.
   Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: volume discreto na previa social
+
+- Ajuste pos-feedback da TASK-176: apos o deploy `0.1.294`, o usuario pediu que o botao de volume
+  sobreposto ao video ficasse mais discreto e com fundo transparente.
+- O controle agora fica menor, sem borda e com `bg-transparent`; somente o icone permanece visivel
+  com sombra discreta para contraste sobre o video, mantendo `aria-label` e a posicao inferior
+  direita.
+- Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.295`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.295` e rota publica
+  do post 200), `pnpm version:bump`, `pnpm check:version`, `pnpm check` e `git diff --check`.
+  Commit/push e smoke de homologacao serao registrados apos deploy.

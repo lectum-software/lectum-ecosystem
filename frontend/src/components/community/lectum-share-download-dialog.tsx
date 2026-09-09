@@ -324,7 +324,7 @@ export const LectumShareDownloadDialog = ({
                   : "Mutar \u00e1udio da pr\u00e9via"
               }
               aria-pressed={isPreviewMuted}
-              className="absolute right-3 bottom-3 z-[3] grid h-10 w-10 place-items-center rounded-full border border-border/70 bg-background/85 text-foreground shadow-lg backdrop-blur-md transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50"
+              className="absolute right-3 bottom-3 z-[3] grid h-8 w-8 place-items-center rounded-full bg-transparent text-primary-foreground/85 drop-shadow-lg transition hover:bg-transparent hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50"
               data-lectum-share-preview-volume-button="true"
               disabled={!open}
               onClick={handlePreviewMuteToggle}
@@ -336,9 +336,9 @@ export const LectumShareDownloadDialog = ({
               type="button"
             >
               {isPreviewMuted ? (
-                <VolumeX className="h-5 w-5" aria-hidden="true" />
+                <VolumeX className="h-4 w-4" aria-hidden="true" />
               ) : (
-                <Volume2 className="h-5 w-5" aria-hidden="true" />
+                <Volume2 className="h-4 w-4" aria-hidden="true" />
               )}
             </button>
           </div>

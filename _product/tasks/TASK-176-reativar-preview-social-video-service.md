@@ -339,6 +339,17 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
   artefatos ou limpeza de dados/buckets publicados.
 
+## Ajuste visual do volume transparente em 2026-09-09
+
+- Evidencia: apos o deploy `0.1.294`, o usuario mostrou que o icone de volume sobreposto ainda
+  chamava muita atencao por causa do fundo preenchido. A captura anexada foi usada apenas como
+  evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: o botao de volume da previa social fica menor, sem borda, com `bg-transparent` e apenas
+  o icone com sombra discreta para legibilidade sobre o video. O alvo continua acessivel por
+  `aria-label` e mantem a mesma posicao no canto inferior direito da previa.
+- Sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de
+  artefatos ou limpeza de dados/buckets publicados.
+
 ## Validações
 
 - [x] `pnpm --dir video check`
@@ -414,4 +425,8 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] Validacoes do ajuste de preparo sob demanda e audio overlay `0.1.294`: teste focado frontend
   de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
   frontend (`/version` 200 em `0.1.294` e rota publica do post 200), `pnpm version:bump`,
+  `pnpm check:version`, `pnpm check` e `git diff --check`.
+- [x] Validacoes do ajuste visual do volume transparente `0.1.295`: teste focado frontend de
+  compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do
+  frontend (`/version` 200 em `0.1.295` e rota publica do post 200), `pnpm version:bump`,
   `pnpm check:version`, `pnpm check` e `git diff --check`.

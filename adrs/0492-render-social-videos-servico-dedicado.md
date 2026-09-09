@@ -405,3 +405,26 @@ provider.
 - pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.294.
 - pnpm check em 0.1.294.
 - Smoke local HTTP do frontend: /version 200 em 0.1.294 e rota publica do post 200.
+
+## Atualizacao visual do volume transparente em 2026-09-09
+
+Depois do deploy `0.1.294`, o usuario validou que o controle de audio sobreposto ainda parecia um
+botao destacado por causa do fundo preenchido. A decisao de UI foi preservar o controle sobre o video
+sem competir visualmente com a arte social:
+
+- reduzir o alvo visual do botao para um icone menor no canto inferior direito;
+- remover borda, superficie preenchida e blur do controle;
+- manter `bg-transparent`, icone claro e sombra discreta para legibilidade sobre frames escuros;
+- preservar `aria-label`, estado `aria-pressed` e comportamento de mutar/ativar audio.
+
+A mudanca e frontend-only e nao cria env, schema, pacote, provider, persistencia de artefato, mock,
+seed, reset ou limpeza de dados publicados. O rollback operacional segue por reverter o commit.
+
+## Validacao da atualizacao visual do volume transparente
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.294 antes do bump.
+- pnpm --dir frontend check em 0.1.294 antes do bump.
+- pnpm --dir frontend build em 0.1.294 antes do bump.
+- pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.295.
+- pnpm check em 0.1.295.
+- Smoke local HTTP do frontend: /version 200 em 0.1.295 e rota publica do post 200.
