@@ -122,17 +122,17 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         </div>
       </div>
 
-      <div className="absolute top-[73%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
+      <div className="absolute top-[72.9167%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
         <div className="inline-grid max-w-full justify-items-start text-left">
           <div className="flex max-w-full items-center justify-start gap-[0.7cqw]">
             <span className="truncate text-[3.15cqw] font-extrabold leading-none tracking-[-0.02em]">
               {target.professional.name}
             </span>
             {target.professional.verified ? (
-              <VerifiedBadgeIcon className="h-[2.45cqw] w-[2.6cqw] min-h-2 min-w-2 text-primary" />
+              <VerifiedBadgeIcon className="h-[2.22cqw] w-[2.41cqw] min-h-2 min-w-2 text-primary" />
             ) : null}
           </div>
-          <div className="mt-[0.45cqw] max-w-full truncate text-[1.95cqw] font-medium leading-none text-primary-foreground/92">
+          <div className="mt-[0.55cqw] max-w-full truncate text-[1.95cqw] font-medium leading-none text-primary-foreground/92">
             {target.professional.roleLabel}
           </div>
         </div>

@@ -499,3 +499,19 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `git diff --check` em `0.1.299` antes do bump.
 - [x] `pnpm version:bump` para `0.1.300`.
 - [x] `pnpm check:version` em `0.1.300`.
+
+## Ajuste de altura das credenciais na previa social em 2026-09-09
+
+- Evidencia: o usuario comparou o MP4 baixado com a modal e apontou que nome, profissao e selo do psicologo estavam em altura diferente na previa. As capturas foram usadas apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido. Builder/Quick Copy nao estava exposto como ferramenta neste ambiente, entao a correcao usou o inventario local e as capturas da conversa.
+- Correcao: a previa deixa de usar o arredondamento `top-[73%]` para as credenciais e passa a espelhar a coordenada do MP4 (`nameY=1400` em 1080x1920) com `top-[72.9167%]`. A distancia visual da profissao passa a `0.55cqw`, equivalente aos 40px entre `nameY=1400` e `roleY=1440`, e o selo volta para a escala do render (`26x24px`, representado por `2.41cqw x 2.22cqw`).
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de altura das credenciais na previa social
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.300` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.300` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.300` antes do bump.
+- [x] `pnpm check` em `0.1.300` antes do bump.
+- [x] `git diff --check` em `0.1.300` antes do bump.
+- [x] `pnpm version:bump` para `0.1.301`.
+- [x] `pnpm check:version` em `0.1.301`.

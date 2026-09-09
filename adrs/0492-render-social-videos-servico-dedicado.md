@@ -570,3 +570,23 @@ A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, co
 - git diff --check em 0.1.299 antes do bump.
 - pnpm version:bump para 0.1.300.
 - pnpm check:version em 0.1.300.
+
+## Atualizacao de paridade das credenciais na previa social em 2026-09-09
+
+Novo feedback visual indicou que a identificacao do psicologo na modal de previa ainda nao estava na mesma altura do MP4 baixado. A decisao foi manter o render FFmpeg intacto e ajustar apenas a previa CSS para espelhar numericamente as coordenadas do artefato final:
+
+- nome da previa em `top-[72.9167%]`, equivalente a `nameY=1400` no output 1080x1920;
+- profissao com margem `0.55cqw`, equivalente aos 40px entre `nameY=1400` e `roleY=1440`;
+- selo em `2.41cqw x 2.22cqw`, equivalente ao PNG 26x24px do render.
+
+A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, contrato publico, backend, video, env, provider, storage, package npm, seed ou dados publicados. Rollback: reverter o commit.
+
+## Validacao da atualizacao de paridade das credenciais na previa social
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.300 antes do bump.
+- pnpm --dir frontend check em 0.1.300 antes do bump.
+- pnpm --dir frontend build em 0.1.300 antes do bump.
+- pnpm check em 0.1.300 antes do bump.
+- git diff --check em 0.1.300 antes do bump.
+- pnpm version:bump para 0.1.301.
+- pnpm check:version em 0.1.301.
