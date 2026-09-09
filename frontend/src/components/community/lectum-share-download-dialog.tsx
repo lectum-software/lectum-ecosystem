@@ -3,6 +3,7 @@
 import { Copy, Download, Volume2, VolumeX, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { LectumSymbolIcon } from "@/components/ui/lectum-symbol-icon";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
 import { playVideoWithSound } from "@/lib/video-playback";
@@ -79,7 +80,7 @@ const wrapPreviewSourceText = (value: string, maxLineLength: number, maxLines: n
 
 const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
   const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
-  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 32, 3), [sourceText]);
+  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 31, 3), [sourceText]);
 
   return (
     <div
@@ -87,13 +88,17 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
       className="pointer-events-none absolute inset-0 z-[2] text-center text-primary-foreground"
       data-lectum-share-preview-art="true"
     >
-      <div className="absolute top-[15.2%] left-[8.5%] w-[83%] drop-shadow-lg">
-        <div className="grid h-[3.75cqh] min-h-[0.875rem] place-items-center bg-primary px-[3cqw] text-[3.6cqw] font-black leading-none text-primary-foreground">
-          {target.cardLabel}
+      <div className="absolute top-[13%] left-[10.2%] w-[79.7%] overflow-hidden rounded-[2.2cqw] drop-shadow-lg">
+        <div className="flex h-[4.6cqh] min-h-[1.05rem] items-center justify-center gap-[1.1cqw] bg-primary px-[3.2cqw] text-[3.9cqw] font-black leading-none text-primary-foreground">
+          <LectumSymbolIcon
+            className="h-[3.05cqw] w-[3.05cqw] shrink-0 text-primary-foreground"
+            title="Lectum"
+          />
+          <span className="min-w-0 truncate">{target.cardLabel}</span>
         </div>
-        <div className="grid h-[11.875cqh] min-h-[2.75rem] place-items-center bg-background px-[4cqw] text-foreground">
+        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.8cqw] text-media-background">
           <p
-            className="line-clamp-3 whitespace-pre-line text-[4.8cqw] font-black leading-[1.23] tracking-[-0.03em]"
+            className="line-clamp-3 whitespace-pre-line text-[5.2cqw] font-black leading-[1.22] tracking-[-0.035em]"
             data-lectum-share-preview-source-text="true"
           >
             {sourceLines.join("\n")}
@@ -101,19 +106,21 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         </div>
       </div>
 
-      <div className="absolute top-[65.6%] left-1/2 w-[72%] -translate-x-1/2 text-center drop-shadow-md">
-        <div className="inline-flex max-w-full items-center justify-center gap-[1.1cqw]">
-          <span className="truncate text-[3.7cqw] font-black leading-none tracking-[-0.02em]">
-            {target.professional.name}
-          </span>
-          {target.professional.verified ? (
-            <span className="grid size-[3.15cqw] min-h-2.5 min-w-2.5 place-items-center rounded-full bg-primary text-[2.1cqw] font-black leading-none text-primary-foreground">
-              ✓
+      <div className="absolute top-[69.7%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
+        <div className="inline-grid max-w-full justify-items-start text-left">
+          <div className="flex max-w-full items-center justify-start gap-[1cqw]">
+            <span className="truncate text-[3.7cqw] font-black leading-none tracking-[-0.02em]">
+              {target.professional.name}
             </span>
-          ) : null}
-        </div>
-        <div className="mt-[0.7cqw] truncate text-[2.6cqw] font-bold leading-none">
-          {target.professional.roleLabel}
+            {target.professional.verified ? (
+              <span className="grid size-[2.85cqw] min-h-2.5 min-w-2.5 place-items-center rounded-full bg-primary text-[1.9cqw] font-black leading-none text-primary-foreground">
+                ✓
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-[0.55cqw] max-w-full truncate text-[2.35cqw] font-bold leading-none text-primary-foreground/95">
+            {target.professional.roleLabel}
+          </div>
         </div>
       </div>
     </div>

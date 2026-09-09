@@ -1685,3 +1685,25 @@ Uma task só pode ser marcada como concluída quando:
 - O toast `Video pronto / Toque novamente...` deixa de existir nesse caminho; sucesso passa a ser tratado como `Video baixado`, mantendo a orientacao de qualidade em mobile quando aplicavel.
 - Alteracao frontend com documentacao; sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
 - Validacoes locais em `0.1.296`: teste focado frontend de compartilhamento, `pnpm --dir frontend check`, `pnpm --dir frontend build`, smoke local HTTP do frontend (`/version` 200 em `0.1.296` e rota publica do post 200), `pnpm version:bump`, `pnpm check:version` e `pnpm check`. Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: refinamento detalhado da arte social
+
+- Ajuste pos-feedback da TASK-176: o novo print Reels foi usado somente como referencia visual;
+  instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A arte passa a usar as proporcoes medidas da referencia: cartao superior com ~79,7% da largura,
+  margem lateral ~10,2%, topo em 13%, raio equivalente a 24px no MP4 1080x1920, cabecalho azul
+  `#308ce8` com simbolo Lectum branco, corpo branco, pergunta centralizada em ate 3 linhas de
+  31 caracteres, fonte bold e sombra curta.
+- As credenciais foram reposicionadas para baixo e centralizadas em grupo: nome branco bold,
+  profissao menor alinhada ao inicio do nome e selo azul preenchido com check branco.
+- A previa CSS e o render server-side do app `video/` compartilham a mesma grade visual; a previa
+  continua instantanea sobre o video original e o MP4 final continua sendo gerado sem filtros
+  secundarios frageis (`overlay`, `eq`, `fps`, `format`, `setsar`, `gblur`).
+- Alteracao frontend+video com documentacao; sem schema/migration, env obrigatoria nova, package
+  novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.297`: teste focado frontend de compartilhamento, `pnpm --dir video test`,
+  `pnpm --dir frontend check`, `pnpm --dir video check`, `pnpm --dir frontend build`,
+  `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
+  `git diff --check` e smoke local HTTP do frontend (`/version` 200 em `0.1.297` e
+  `/comunidades` 200). Commit/push e smoke de homologacao serao registrados apos deploy.

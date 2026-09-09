@@ -449,3 +449,37 @@ A mudanca e frontend-only e nao cria env, schema, pacote, provider, persistencia
 - pnpm check em 0.1.296.
 - pnpm --dir frontend build em 0.1.296.
 - Smoke local HTTP do frontend: /version 200 em 0.1.296 e rota publica do post 200.
+
+## Atualizacao de refinamento visual Reels em 2026-09-09
+
+Novo print de referencia foi usado apenas como evidencia visual, nao como instrucoes externas. A
+decisao foi fixar os detalhes da arte social em proporcoes mensuraveis e manter a mesma composicao
+na previa CSS e no MP4 gerado:
+
+- cartao superior com 79,7% da largura, margem lateral aproximada de 10,2%, y visual de 13%, raio
+  equivalente a 24px em 1080x1920, sombra curta e superficie sem borda;
+- cabecalho azul `#308ce8`, altura equivalente a 88px, label branco bold e simbolo Lectum branco a
+  esquerda do texto;
+- corpo branco semitranslucido, altura equivalente a 266px, padding horizontal de ~6,8% da largura
+  e pergunta centralizada em ate 3 linhas de 31 caracteres, com fonte bold;
+- credenciais mais baixas no video, com grupo centralizado: nome branco bold, profissao menor
+  alinhada ao inicio do nome e selo azul preenchido com check branco.
+
+No frontend, a previa continua instantanea sobre o video original e aplica essas proporcoes com
+unidades de container (`cqw/cqh`) e o componente real `LectumSymbolIcon`. No app `video/`, a mesma
+grade foi traduzida para constantes 1080x1920 e renderizada somente com `drawbox`/`drawtext`, sem
+reintroduzir `overlay`, `eq`, `fps`, `format`, `setsar`, `gblur`, pacote novo, env nova, schema,
+persistencia, mock, seed, reset ou limpeza de dados publicados.
+
+## Validacao da atualizacao de refinamento visual Reels
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.297.
+- pnpm --dir video test em 0.1.297.
+- pnpm --dir frontend check em 0.1.297.
+- pnpm --dir video check em 0.1.297.
+- pnpm --dir frontend build em 0.1.297.
+- pnpm --dir video build em 0.1.297.
+- pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.297.
+- pnpm check em 0.1.297.
+- git diff --check.
+- Smoke local HTTP do frontend: /version 200 em 0.1.297 e /comunidades 200.

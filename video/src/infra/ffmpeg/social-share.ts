@@ -4,6 +4,7 @@ import {
   type SocialShareRenderMetadata,
   VideoProcessingError,
 } from "../../domain/jobs/contracts.js";
+import { lectumLogoMarkDrawBoxes, roundedRectDrawBoxes } from "./drawbox-art.js";
 import {
   type ManagedProcessDiagnosticCode,
   ManagedProcessError,
@@ -26,35 +27,41 @@ const SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES = [
 const SOCIAL_DRAW_TEXT_FONT_FILE = SOCIAL_DRAW_TEXT_FONT_FILE_CANDIDATES[0];
 const SOCIAL_SHARE_ART_LAYOUT = {
   card: {
-    bodyHeight: 228,
-    bodyLineHeight: 64,
-    bodyTextTopMinOffset: 40,
-    headerFontSize: 39,
-    headerHeight: 72,
-    labelY: 309,
-    shadowOffset: 10,
-    sourceFontSize: 52,
-    sourceFontSizeCompact: 48,
-    width: 896,
-    x: 92,
-    y: 292,
+    bodyHeight: 266,
+    bodyLineHeight: 68,
+    bodyTextTopMinOffset: 54,
+    cornerRadius: 24,
+    headerFontSize: 42,
+    headerHeight: 88,
+    labelWidthFactor: 0.47,
+    logoGap: 12,
+    logoHeight: 29,
+    logoWidth: 34,
+    shadowOffset: 8,
+    sourceFontSize: 56,
+    sourceFontSizeCompact: 52,
+    width: 860,
+    x: 110,
+    y: 250,
   },
   colors: {
-    cardShadow: "black@0.12",
-    header: "0x2f95ed@0.98",
+    cardShadow: "black@0.18",
+    header: "0x308ce8@0.98",
     headerText: "white",
-    sourceText: "black",
+    logo: "white@0.96",
+    sourceText: "0x111827",
     surface: "white@0.96",
-    verified: "0x2f95ed",
+    verified: "0x308ce8",
   },
   professional: {
-    checkGap: 12,
-    checkSize: 34,
+    checkGap: 10,
+    checkMarkFontSize: 19,
+    checkSize: 30,
     nameFontSize: 40,
-    nameWidthFactor: 0.58,
-    nameY: 1260,
-    roleFontSize: 28,
-    roleY: 1310,
+    nameWidthFactor: 0.46,
+    nameY: 1340,
+    roleFontSize: 25,
+    roleY: 1389,
   },
 } as const;
 
@@ -152,6 +159,7 @@ const drawText = ({
   color,
   fontFile,
   fontSize,
+  shadow = false,
   text,
   x,
   y,
@@ -159,6 +167,7 @@ const drawText = ({
   color: string;
   fontFile?: string | null;
   fontSize: number;
+  shadow?: boolean;
   text: string;
   x: string | number;
   y: string | number;
@@ -170,9 +179,7 @@ const drawText = ({
     `y=${y}`,
     `fontsize=${fontSize}`,
     `fontcolor=${color}`,
-    "shadowcolor=black@0.18",
-    "shadowx=0",
-    "shadowy=2",
+    ...(shadow ? ["shadowcolor=black@0.28", "shadowx=0", "shadowy=2"] : []),
   ].join(":")}`;
 
 const filterChain = (inputLabel: string, filters: readonly string[], outputLabel: string) =>
@@ -198,7 +205,7 @@ export const buildSocialShareFilter = (
   const fontFile = options.fontFile === undefined ? SOCIAL_DRAW_TEXT_FONT_FILE : options.fontFile;
   const sanitized = sanitizeSocialShareMetadata(metadata);
   const { card, colors, professional } = SOCIAL_SHARE_ART_LAYOUT;
-  const sourceLines = wrapText(sanitized.sourceText, 32, 3);
+  const sourceLines = wrapText(sanitized.sourceText, 31, 3);
   const sourceTextTop =
     card.y +
     card.headerHeight +
@@ -216,45 +223,101 @@ export const buildSocialShareFilter = (
       y: sourceTextTop + index * card.bodyLineHeight,
     }),
   );
+  const estimatedLabelWidth = Math.round(
+    sanitized.cardLabel.length * card.headerFontSize * card.labelWidthFactor,
+  );
+  const labelGroupWidth = card.logoWidth + card.logoGap + estimatedLabelWidth;
+  const labelLogoX = Math.round((SOCIAL_OUTPUT_WIDTH - labelGroupWidth) / 2);
+  const labelLogoY = card.y + Math.round((card.headerHeight - card.logoHeight) / 2);
+  const labelTextX = labelLogoX + card.logoWidth + card.logoGap;
+  const labelTextY = card.y + Math.round((card.headerHeight - card.headerFontSize) / 2) - 2;
   const estimatedNameWidth = Math.round(
     sanitized.professionalName.length * professional.nameFontSize * professional.nameWidthFactor,
   );
-  const verifiedCheckX = Math.min(
-    SOCIAL_OUTPUT_WIDTH - professional.checkSize - 64,
-    Math.round(
-      (SOCIAL_OUTPUT_WIDTH - estimatedNameWidth) / 2 + estimatedNameWidth + professional.checkGap,
-    ),
+  const professionalGroupWidth =
+    estimatedNameWidth +
+    (sanitized.professionalVerified ? professional.checkGap + professional.checkSize : 0);
+  const professionalTextX = Math.max(
+    64,
+    Math.round((SOCIAL_OUTPUT_WIDTH - professionalGroupWidth) / 2),
   );
+  const verifiedBadgeX = Math.min(
+    SOCIAL_OUTPUT_WIDTH - professional.checkSize - 64,
+    professionalTextX + estimatedNameWidth + professional.checkGap,
+  );
+  const verifiedBadgeY =
+    professional.nameY + Math.round((professional.nameFontSize - professional.checkSize) / 2);
   const overlayFilters = [
-    `drawbox=x=${card.x + card.shadowOffset}:y=${card.y + card.shadowOffset}:w=${card.width}:h=${card.headerHeight + card.bodyHeight}:color=${colors.cardShadow}:t=fill`,
-    `drawbox=x=${card.x}:y=${card.y}:w=${card.width}:h=${card.headerHeight}:color=${colors.header}:t=fill`,
-    `drawbox=x=${card.x}:y=${card.y + card.headerHeight}:w=${card.width}:h=${card.bodyHeight}:color=${colors.surface}:t=fill`,
+    ...roundedRectDrawBoxes({
+      color: colors.cardShadow,
+      height: card.headerHeight + card.bodyHeight,
+      radius: card.cornerRadius,
+      width: card.width,
+      x: card.x + card.shadowOffset,
+      y: card.y + card.shadowOffset,
+    }),
+    ...roundedRectDrawBoxes({
+      color: colors.header,
+      corners: "top",
+      height: card.headerHeight,
+      radius: card.cornerRadius,
+      width: card.width,
+      x: card.x,
+      y: card.y,
+    }),
+    ...roundedRectDrawBoxes({
+      color: colors.surface,
+      corners: "bottom",
+      height: card.bodyHeight,
+      radius: card.cornerRadius,
+      width: card.width,
+      x: card.x,
+      y: card.y + card.headerHeight,
+    }),
+    ...lectumLogoMarkDrawBoxes({
+      backgroundColor: colors.verified,
+      color: colors.logo,
+      height: card.logoHeight,
+      width: card.logoWidth,
+      x: labelLogoX,
+      y: labelLogoY,
+    }),
     drawText({
       color: colors.headerText,
       fontFile,
       fontSize: card.headerFontSize,
       text: sanitized.cardLabel,
-      x: "(w-text_w)/2",
-      y: card.labelY,
+      x: labelTextX,
+      y: labelTextY,
     }),
     ...sourceTextFilters,
     drawText({
       color: "white",
       fontFile,
       fontSize: professional.nameFontSize,
+      shadow: true,
       text: sanitized.professionalName,
-      x: "(w-text_w)/2",
+      x: professionalTextX,
       y: professional.nameY,
     }),
     ...(sanitized.professionalVerified
       ? [
-          drawText({
+          ...roundedRectDrawBoxes({
             color: colors.verified,
+            height: professional.checkSize,
+            radius: Math.floor(professional.checkSize / 2),
+            sliceHeight: 3,
+            width: professional.checkSize,
+            x: verifiedBadgeX,
+            y: verifiedBadgeY,
+          }),
+          drawText({
+            color: "white",
             fontFile,
-            fontSize: professional.checkSize,
+            fontSize: professional.checkMarkFontSize,
             text: "\u2713",
-            x: verifiedCheckX,
-            y: professional.nameY,
+            x: verifiedBadgeX + 6,
+            y: verifiedBadgeY + 4,
           }),
         ]
       : []),
@@ -262,8 +325,9 @@ export const buildSocialShareFilter = (
       color: "white",
       fontFile,
       fontSize: professional.roleFontSize,
+      shadow: true,
       text: sanitized.professionalRoleLabel,
-      x: "(w-text_w)/2",
+      x: professionalTextX,
       y: professional.roleY,
     }),
   ];

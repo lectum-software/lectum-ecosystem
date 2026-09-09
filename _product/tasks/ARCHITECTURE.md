@@ -433,9 +433,13 @@ Templates/shells devem viver em `frontend/src/templates`.
   entao roda `ffprobe`/FFmpeg sobre arquivo local. O render social gera 1080x1920 com FFmpeg
   H.264/AAC em preset rapido, executa processos com locale UTF-8, escapa textos livres antes do
   `drawtext`, resolve `fontfile` DejaVu somente quando a fonte existe no runtime e compoe a arte
-  Reels por `scale+crop+drawbox+drawtext`: video em tela cheia, cartao azul/branco no topo,
-  profissional centralizado, sem moldura de celular e sem watermark textual da Lectum. O rotulo do
-  cartao e `Postado na Lectum` para post e `Respondido na Lectum` para resposta; o rotulo legado
+  Reels por `scale+crop+drawbox+drawtext`: video em tela cheia, cartao superior sem moldura de
+  celular/watermark, largura 860px, x=110, y=250, raio 24px, cabecalho azul `#308ce8` com 88px,
+  simbolo Lectum branco a esquerda do label, corpo branco com 266px, texto preto centralizado em ate
+  3 linhas de 31 caracteres, fonte bold 56px/52px compacta e entrelinha 68px. As credenciais ficam
+  sobre o video em y=1340/y=1389, grupo centralizado com nome branco bold 40px, profissao 25px
+  alinhada ao inicio do nome e selo azul preenchido de 30px com check branco. O rotulo do cartao e
+  `Postado na Lectum` para post e `Respondido na Lectum` para resposta; o rotulo legado
   `Perguntaram na Lectum` e normalizado para resposta durante rollout. O grafo evita filtros de
   blur e filtros secundarios de fundo dependentes de build (`overlay`, `eq`, `fps`, `format`,
   `setsar`) e mantem o arquivo apenas como saida efemera do job. Se o grafo padrao falhar antes de
@@ -448,8 +452,9 @@ Templates/shells devem viver em `frontend/src/templates`.
   job em andamento na mesma sessao, iniciar o preparo do arquivo somente apos clique/toque no botao
   de download, manter a tela acordada por Wake Lock best-effort durante esse preparo acionado pelo
   usuario e exibir na modal uma previa instantanea do video original com a mesma arte visual
-  sobreposta por CSS; o controle de audio fica como icone discreto, com fundo transparente, sobre o
-  proprio video no canto inferior direito, sem botao textual separado. O arquivo baixado continua
+  sobreposta por CSS em proporcoes equivalentes (`cqw/cqh`) e usando o `LectumSymbolIcon` real no
+  cabecalho; o controle de audio fica como icone discreto, com fundo transparente, sobre o proprio
+  video no canto inferior direito, sem botao textual separado. O arquivo baixado continua
   sendo o MP4 gerado pelo app `video/`, e a paridade exigida da previa e de layout/posicionamento,
   nao de bytes. Depois que o job conclui, o frontend dispara automaticamente a entrega do arquivo:
   tenta Web Share quando permitido pelo navegador e, se a ativacao do usuario tiver expirado ou a
