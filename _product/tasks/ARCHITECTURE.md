@@ -456,8 +456,9 @@ Templates/shells devem viver em `frontend/src/templates`.
   de download, manter a tela acordada por Wake Lock best-effort durante esse preparo acionado pelo
   usuario e exibir na modal uma previa instantanea do video original com a mesma arte visual
   sobreposta por CSS em proporcoes equivalentes (`cqw/cqh`), usando o asset branco oficial da logo
-  no cabecalho e espelhando as credenciais do MP4 com nome em `top:72.9167%`, profissao a
-  `0.55cqw` abaixo da linha do nome e selo em `2.41cqw x 2.22cqw`; o controle de audio fica como
+  no cabecalho e aplicando compensacao optica nas credenciais da previa com nome em `top:75%`,
+  profissao a `0.55cqw` abaixo da linha do nome e selo em `2.41cqw x 2.22cqw`; o controle de audio
+  fica como
   icone discreto, com fundo transparente, sobre o proprio video no canto inferior direito, sem
   botao textual separado. O arquivo baixado continua
   sendo o MP4 gerado pelo app `video/`, e a paridade exigida da previa e de layout/posicionamento,

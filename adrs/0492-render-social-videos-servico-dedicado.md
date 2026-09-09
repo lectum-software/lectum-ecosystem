@@ -590,3 +590,22 @@ A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, co
 - git diff --check em 0.1.300 antes do bump.
 - pnpm version:bump para 0.1.301.
 - pnpm check:version em 0.1.301.
+
+## Atualizacao de compensacao optica das credenciais na previa social em 2026-09-09
+
+Novo feedback visual indicou que, mesmo apos igualar numericamente a coordenada do MP4, a identificacao do psicologo na modal ainda parecia mais alta do que no artefato baixado. A decisao foi manter o render FFmpeg intacto e ajustar somente a previa CSS com uma compensacao optica:
+
+- nome da previa em `top-[75%]`, deslocando o grupo de credenciais para baixo na modal;
+- profissao e selo preservam a mesma escala/espacamento ja validados (`mt-[0.55cqw]` e `2.41cqw x 2.22cqw`);
+- o MP4 server-side continua com `nameY=1400` e `roleY=1440`, sem alterar jobs existentes ou contrato publico.
+
+A mudanca e visual, compativel com jobs existentes e sem alteracao de schema, contrato publico, backend, video, env, provider, storage, package npm, seed ou dados publicados. Rollback: reverter o commit.
+
+## Validacao da atualizacao de compensacao optica das credenciais na previa social
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.301 antes do bump.
+- pnpm --dir frontend check em 0.1.301 antes do bump.
+- pnpm --dir frontend build em 0.1.301 antes do bump.
+- pnpm check em 0.1.301 antes do bump.
+- git diff --check em 0.1.301 antes do bump.
+- pnpm version:bump para 0.1.302.
+- pnpm check:version em 0.1.302.

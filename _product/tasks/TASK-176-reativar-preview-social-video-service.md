@@ -515,3 +515,18 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `git diff --check` em `0.1.300` antes do bump.
 - [x] `pnpm version:bump` para `0.1.301`.
 - [x] `pnpm check:version` em `0.1.301`.
+
+## Compensacao optica das credenciais na previa social em 2026-09-09
+
+- Evidencia: novo print mostrou que, na modal, o nome do psicologo ainda aparece mais acima do que a posicao percebida no MP4 baixado. A imagem anexada foi usada apenas como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: somente a previa frontend desloca o grupo de credenciais para baixo, de `top-[72.9167%]` para `top-[75%]`, mantendo MP4/render FFmpeg, nome, profissao, selo, tipografia, espacos internos e fluxo de download automatico intactos.
+- A mudanca e somente frontend/documentacao: sem schema/migration, env obrigatoria nova, package novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes da compensacao optica das credenciais na previa social
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.301` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.301` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.301` antes do bump.
+- [x] `pnpm check` em `0.1.301` antes do bump.
+- [x] `git diff --check` em `0.1.301` antes do bump.
+- [x] `pnpm version:bump` para `0.1.302`.
+- [x] `pnpm check:version` em `0.1.302`.
