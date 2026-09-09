@@ -564,3 +564,23 @@ Ordem: configurar app `video/` e Redis/worker, depois backend em homologação, 
 - [x] `git diff --check` em `0.1.303` antes do bump.
 - [x] `pnpm version:bump` para `0.1.304`.
 - [x] `pnpm check:version` em `0.1.304`.
+
+## Ajuste de margens laterais da pergunta social em 2026-09-09
+
+- Evidencia: o usuario comparou a referencia com o modelo atual e apontou que a caixinha de pergunta ainda tinha margens laterais internas maiores, fazendo a pergunta truncar com reticencias. As capturas foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- Correcao: a previa CSS e o render FFmpeg passam a quebrar a pergunta em ate 3 linhas de 31 caracteres, permitindo o trecho `ansiedade bate forte? E trouxer` na mesma linha, como na referencia. Na previa, o padding lateral do corpo branco foi reduzido de `7.1cqw` para `5.1cqw` para dar mais largura util sem alterar o card, cabecalho, credenciais, selo, fluxo de preparo sob demanda ou download automatico.
+- A mudanca e visual em frontend+video, sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados.
+
+## Validacoes do ajuste de margens laterais da pergunta social
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs` em `0.1.304` antes do bump.
+- [x] `pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts` em `0.1.304` antes do bump.
+- [x] `pnpm --dir frontend check` em `0.1.304` antes do bump.
+- [x] `pnpm --dir video check` em `0.1.304` antes do bump.
+- [x] `pnpm --dir frontend build` em `0.1.304` antes do bump.
+- [x] `pnpm --dir video build` em `0.1.304` antes do bump.
+- [x] `pnpm check` em `0.1.304` antes do bump.
+- [x] `git diff --check` em `0.1.304` antes do bump.
+- [x] `pnpm version:bump` para `0.1.305`.
+- [x] `pnpm check:version` em `0.1.305`.
+- [x] Smoke local HTTP do frontend em `0.1.305`: `/version` 200 e rota publica do post 200.

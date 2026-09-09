@@ -210,9 +210,10 @@ describe("FFmpeg social share command", () => {
       30,
     );
 
-    assert.match(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=44/);
-    assert.match(filter, /drawtext=text='trouxer a sensacao de falta…':.*:fontsize=44/);
-    assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E':.*:fontsize=50/);
+    assert.match(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=44/);
+    assert.match(filter, /drawtext=text='a sensacao de falta de ar\?':.*:fontsize=44/);
+    assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=50/);
+    assert.doesNotMatch(filter, /drawtext=text='trouxer a sensacao de falta…'/);
   });
 
   it("normaliza o rótulo legado de pergunta para resposta", () => {

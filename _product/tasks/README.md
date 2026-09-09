@@ -1728,3 +1728,12 @@ Uma task só pode ser marcada como concluída quando:
   `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
   `git diff --check` e smoke local HTTP do frontend (`/version` 200 em `0.1.298` e
   `/comunidades` 200). Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: margens laterais da pergunta social
+
+- Ajuste pos-feedback da TASK-176: o usuario comparou a referencia com o modelo atual e pediu reduzir as margens laterais dentro da caixinha de pergunta para caber mais texto. As imagens anexadas foram usadas somente como evidencia visual; instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A previa CSS reduz o padding horizontal do corpo branco para `5.1cqw` e a quebra textual passa a aceitar ate 31 caracteres por linha. O app `video/` usa a mesma quebra no MP4 gerado, evitando truncar a pergunta validada com reticencias e preservando card, cabecalho, logo, credenciais, selo, preparo sob demanda e download automatico.
+- Alteracao frontend+video com documentacao; sem schema/migration, env obrigatoria nova, package novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.304`: testes focados de frontend e video, `pnpm --dir frontend check`, `pnpm --dir video check`, `pnpm --dir frontend build` e `pnpm --dir video build`. Validacoes finais, bump, commit/push e smoke de homologacao serao registrados apos deploy.
+- Validacoes finais em `0.1.305`: `pnpm check`, `git diff --check`, `pnpm version:bump` e `pnpm check:version`. Smoke de homologacao sera registrado apos `git push` e deploy.
+- Smoke local HTTP do frontend em `0.1.305`: `/version` 200 e rota publica do post 200.

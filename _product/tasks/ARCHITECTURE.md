@@ -437,9 +437,9 @@ Templates/shells devem viver em `frontend/src/templates`.
   moldura de celular/watermark, largura 860px, x=110, y=250, raio 24px, cabecalho azul `#308ce8`
   com 88px, simbolo Lectum branco recortado do asset oficial `logo-light.png` a esquerda do label e
   deslocado 4px para cima para alinhamento optico com o texto,
-  corpo branco com 266px, texto preto `#151922` centralizado em ate 3 linhas de 28 caracteres, fonte
-  Manrope bold 50px e compacta 44px quando a pergunta ocupar 3 linhas, com entrelinha 60px para
-  evitar vazamento horizontal. As credenciais ficam sobre o video em y=1400/y=1440, grupo
+  corpo branco com 266px, margens laterais internas reduzidas, texto preto `#151922` centralizado em
+  ate 3 linhas de 31 caracteres, fonte Manrope bold 50px e compacta 44px quando a pergunta ocupar 3
+  linhas, com entrelinha 60px para caber mais texto sem vazamento horizontal. As credenciais ficam sobre o video em y=1400/y=1440, grupo
   centralizado com nome branco Manrope bold 34px, profissao Manrope medium 21px alinhada ao inicio
   do nome e selo verificado azul em asset PNG de 26x24px. O rotulo do cartao e `Postado na Lectum` para
   post e `Respondido na Lectum` para resposta; o rotulo legado `Perguntaram na Lectum` e normalizado

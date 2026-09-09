@@ -117,6 +117,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
   assert.match(dialogSource, /bg-primary/);
   assert.match(dialogSource, /h-\[4\.6cqh\]/);
   assert.match(dialogSource, /h-\[13\.85cqh\]/);
+  assert.match(dialogSource, /px-\[5\.1cqw\]/);
   assert.match(dialogSource, /font-bold/);
   assert.match(dialogSource, /text-\[4\.65cqw\]/);
   assert.match(
@@ -135,7 +136,7 @@ test("vídeos sociais usam render server-side sem MediaBunny no frontend", () =>
     dialogSource,
     /const downloadButtonLabel = preparing \? "Preparando\.\.\." : "Baixar v\\u00eddeo"/,
   );
-  assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 28, 3\)/);
+  assert.match(dialogSource, /wrapPreviewSourceText\(sourceText, 31, 3\)/);
   assert.match(dialogSource, /target\.cardLabel/);
   assert.match(dialogSource, /target\.sourceText/);
   assert.match(dialogSource, /poster=\{target\.posterUrl \?\? undefined\}/);

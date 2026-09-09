@@ -229,7 +229,7 @@ export const buildSocialShareFilter = (
       : options.verifiedBadgeFile;
   const sanitized = sanitizeSocialShareMetadata(metadata);
   const { card, colors, professional } = SOCIAL_SHARE_ART_LAYOUT;
-  const sourceLines = wrapText(sanitized.sourceText, 28, 3);
+  const sourceLines = wrapText(sanitized.sourceText, 31, 3);
   const sourceTextTop =
     card.y +
     card.headerHeight +

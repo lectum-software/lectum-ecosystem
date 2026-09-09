@@ -650,3 +650,24 @@ A mudanca e visual e frontend-only, compativel com jobs existentes e sem alterac
 - git diff --check em 0.1.303 antes do bump.
 - pnpm version:bump para 0.1.304.
 - pnpm check:version em 0.1.304.
+
+## Atualizacao de margens internas da pergunta social em 2026-09-09
+
+Novo feedback visual comparou a referencia com o modelo atual e mostrou que a caixinha de pergunta ainda perdia texto por margens laterais internas excessivas. A decisao foi preservar a geometria do card e ajustar somente a area util do texto:
+
+- o limite de quebra da pergunta sobe de 28 para 31 caracteres por linha no frontend e no app `video/`, suficiente para manter `ansiedade bate forte? E trouxer` na segunda linha e evitar reticencias no caso validado;
+- o corpo branco da previa reduz padding horizontal de `7.1cqw` para `5.1cqw`, aumentando a largura util sem alterar cabecalho, logo, credenciais, selo, fluxo de render server-side ou download automatico;
+- o render FFmpeg acompanha a mesma quebra textual para manter paridade entre previa e MP4 baixado.
+
+A mudanca e visual e compativel com jobs existentes, sem alteracao de schema, contrato publico, backend, env, provider, storage, package npm, seed, mock, reset ou dados publicados. Rollback: reverter o commit.
+
+## Validacao da atualizacao de margens internas da pergunta social
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.304 antes do bump.
+- pnpm --dir video exec node --enable-source-maps --import tsx --test src/infra/ffmpeg/social-share.test.ts em 0.1.304 antes do bump.
+- pnpm --dir frontend check em 0.1.304 antes do bump.
+- pnpm --dir video check em 0.1.304 antes do bump.
+- pnpm --dir frontend build em 0.1.304 antes do bump.
+- pnpm --dir video build em 0.1.304 antes do bump.
+- pnpm check, git diff --check, pnpm version:bump para 0.1.305 e pnpm check:version em 0.1.305.
+- Smoke local HTTP do frontend em 0.1.305: /version 200 e rota publica do post 200.

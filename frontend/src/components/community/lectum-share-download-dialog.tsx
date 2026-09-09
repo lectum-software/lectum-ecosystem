@@ -81,7 +81,7 @@ const wrapPreviewSourceText = (value: string, maxLineLength: number, maxLines: n
 
 const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) => {
   const sourceText = target.sourceText.trim() || "Conteúdo na Lectum";
-  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 28, 3), [sourceText]);
+  const sourceLines = useMemo(() => wrapPreviewSourceText(sourceText, 31, 3), [sourceText]);
 
   return (
     <div
@@ -107,7 +107,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
             <span className="min-w-0 truncate tracking-[-0.015em]">{target.cardLabel}</span>
           </span>
         </div>
-        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[7.1cqw]">
+        <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[5.1cqw]">
           <p
             className={cn(
               "line-clamp-3 whitespace-pre-line font-bold tracking-[-0.025em] text-media-background",
