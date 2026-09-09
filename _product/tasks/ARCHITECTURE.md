@@ -436,8 +436,9 @@ Templates/shells devem viver em `frontend/src/templates`.
   Reels por `scale+crop+drawbox+drawtext`: video em tela cheia, cartao superior sem moldura de
   celular/watermark, largura 860px, x=110, y=250, raio 24px, cabecalho azul `#308ce8` com 88px,
   simbolo Lectum branco a esquerda do label, corpo branco com 266px, texto preto centralizado em ate
-  3 linhas de 31 caracteres, fonte bold 56px/52px compacta e entrelinha 68px. As credenciais ficam
-  sobre o video em y=1340/y=1389, grupo centralizado com nome branco bold 40px, profissao 25px
+  3 linhas de 31 caracteres, fonte bold 56px e compacta 48px quando a pergunta ocupar 3 linhas,
+  com entrelinha 68px para evitar vazamento horizontal. As credenciais ficam
+  sobre o video em y=1400/y=1445, grupo centralizado com nome branco bold 40px, profissao 25px
   alinhada ao inicio do nome e selo azul preenchido de 30px com check branco. O rotulo do cartao e
   `Postado na Lectum` para post e `Respondido na Lectum` para resposta; o rotulo legado
   `Perguntaram na Lectum` e normalizado para resposta durante rollout. O grafo evita filtros de

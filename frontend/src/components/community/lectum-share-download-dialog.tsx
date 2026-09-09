@@ -98,7 +98,12 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         </div>
         <div className="grid h-[13.85cqh] min-h-[3.15rem] place-items-center bg-media-foreground/95 px-[6.8cqw] text-media-background">
           <p
-            className="line-clamp-3 whitespace-pre-line text-[5.2cqw] font-black leading-[1.22] tracking-[-0.035em]"
+            className={cn(
+              "line-clamp-3 whitespace-pre-line font-black tracking-[-0.035em]",
+              sourceLines.length > 2
+                ? "text-[4.55cqw] leading-[1.18]"
+                : "text-[5.2cqw] leading-[1.22]",
+            )}
             data-lectum-share-preview-source-text="true"
           >
             {sourceLines.join("\n")}
@@ -106,7 +111,7 @@ const LectumSharePreviewArt = ({ target }: { target: LectumShareSocialTarget }) 
         </div>
       </div>
 
-      <div className="absolute top-[69.7%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
+      <div className="absolute top-[73%] left-1/2 max-w-[72%] -translate-x-1/2 drop-shadow-md">
         <div className="inline-grid max-w-full justify-items-start text-left">
           <div className="flex max-w-full items-center justify-start gap-[1cqw]">
             <span className="truncate text-[3.7cqw] font-black leading-none tracking-[-0.02em]">

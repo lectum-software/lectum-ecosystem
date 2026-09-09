@@ -483,3 +483,34 @@ persistencia, mock, seed, reset ou limpeza de dados publicados.
 - pnpm check em 0.1.297.
 - git diff --check.
 - Smoke local HTTP do frontend: /version 200 em 0.1.297 e /comunidades 200.
+
+## Atualizacao de paridade fina da arte social em 2026-09-09
+
+Depois do deploy `0.1.297`, a captura do MP4 gerado evidenciou dois desvios contra o print de
+referencia: texto de pergunta com 3 linhas ainda podia ultrapassar visualmente o cartao, e as
+credenciais estavam alguns pontos acima da posicao esperada. A decisao foi manter a geometria do
+cartao ja medida e refinar apenas comportamento tipografico/posicional:
+
+- perguntas de 1 ou 2 linhas continuam em 56px no render 1080x1920;
+- perguntas com 3 linhas usam 48px no MP4 e escala compacta equivalente na previa CSS, mantendo o
+  limite de 31 caracteres por linha sem vazar para fora da superficie branca;
+- nome e selo descem para `y=1400`; profissao desce para `y=1445`, alinhados a area util do video
+  de referencia;
+- a previa passa a posicionar o bloco de credenciais em `top: 73%`, preservando paridade visual com
+  o artefato baixado.
+
+A mudanca continua sem env, schema, pacote, provider, persistencia, mock, seed, reset ou limpeza de
+dados publicados. O rollback operacional segue por reverter o commit.
+
+## Validacao da atualizacao de paridade fina da arte social
+
+- pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/lectum-share-media.test.mjs em 0.1.297 antes do bump.
+- pnpm --dir video test em 0.1.297 antes do bump.
+- pnpm --dir frontend check em 0.1.298.
+- pnpm --dir video check em 0.1.298.
+- pnpm --dir frontend build em 0.1.298.
+- pnpm --dir video build em 0.1.298.
+- pnpm version:bump e pnpm check:version, sincronizando os cinco manifests em 0.1.298.
+- pnpm check em 0.1.298.
+- git diff --check.
+- Smoke local HTTP do frontend: /version 200 em 0.1.298 e /comunidades 200.

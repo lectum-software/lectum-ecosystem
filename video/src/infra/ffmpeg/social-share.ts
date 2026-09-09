@@ -39,7 +39,7 @@ const SOCIAL_SHARE_ART_LAYOUT = {
     logoWidth: 34,
     shadowOffset: 8,
     sourceFontSize: 56,
-    sourceFontSizeCompact: 52,
+    sourceFontSizeCompact: 48,
     width: 860,
     x: 110,
     y: 250,
@@ -59,9 +59,9 @@ const SOCIAL_SHARE_ART_LAYOUT = {
     checkSize: 30,
     nameFontSize: 40,
     nameWidthFactor: 0.46,
-    nameY: 1340,
+    nameY: 1400,
     roleFontSize: 25,
-    roleY: 1389,
+    roleY: 1445,
   },
 } as const;
 

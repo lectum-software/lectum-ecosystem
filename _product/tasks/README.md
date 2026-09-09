@@ -1707,3 +1707,24 @@ Uma task só pode ser marcada como concluída quando:
   `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
   `git diff --check` e smoke local HTTP do frontend (`/version` 200 em `0.1.297` e
   `/comunidades` 200). Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-09: paridade fina da arte social
+
+- Ajuste pos-feedback da TASK-176: o print do MP4 gerado mostrou diferenca residual em relacao a
+  referencia visual, principalmente pergunta de 3 linhas vazando para fora do cartao e credenciais
+  altas demais. A imagem anexada segue sendo apenas referencia visual/evidencia, nao fonte de
+  instrucoes.
+- O render social manteve o cartao nas dimensoes medidas, mas compacta a pergunta para 48px quando
+  ela ocupar 3 linhas, preservando o limite de 31 caracteres por linha sem cortar horizontalmente a
+  arte. A previa CSS aplica a mesma compactacao visual.
+- As credenciais foram reposicionadas para o ponto medido da area util do video: nome em y=1400 e
+  profissao em y=1445 no MP4 1080x1920; a previa usa `top: 73%` para alinhar nome, profissao e selo
+  ao print de referencia.
+- Alteracao frontend+video com documentacao; sem schema/migration, env obrigatoria nova, package
+  novo, provider novo, mock, seed, reset, persistencia de artefatos ou limpeza de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Validacoes locais em `0.1.298`: teste focado frontend de compartilhamento, `pnpm --dir video test`,
+  `pnpm --dir frontend check`, `pnpm --dir video check`, `pnpm --dir frontend build`,
+  `pnpm --dir video build`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
+  `git diff --check` e smoke local HTTP do frontend (`/version` 200 em `0.1.298` e
+  `/comunidades` 200). Commit/push e smoke de homologacao serao registrados apos deploy.

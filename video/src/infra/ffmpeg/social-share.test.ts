@@ -56,9 +56,9 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /drawbox=x=321:y=286:w=13:h=1:color=white@0\.96:t=fill/);
     assert.match(command, /drawtext=text='Respondido na Lectum'/);
     assert.match(command, /drawtext=text='Respondido na Lectum':.*:x=366:y=271:fontsize=42/);
-    assert.match(command, /drawbox=x=640:y=1345:w=12:h=3:color=0x308ce8:t=fill/);
-    assert.match(command, /drawtext=text='✓':.*:x=637:y=1349:fontsize=19:fontcolor=white/);
-    assert.match(command, /drawtext=text='Psicóloga':.*:x=419:y=1389:fontsize=25/);
+    assert.match(command, /drawbox=x=640:y=1405:w=12:h=3:color=0x308ce8:t=fill/);
+    assert.match(command, /drawtext=text='✓':.*:x=637:y=1409:fontsize=19:fontcolor=white/);
+    assert.match(command, /drawtext=text='Psicóloga':.*:x=419:y=1445:fontsize=25/);
     assert.match(command, /fontfile='\/usr\/share\/fonts\/truetype\/dejavu\/DejaVuSans-Bold\.ttf'/);
     assert.doesNotMatch(command, /drawtext=text='lectum'/);
     assert.match(command, /-c:v libx264/);
@@ -185,6 +185,21 @@ describe("FFmpeg social share command", () => {
     assert.equal(sanitized.responseText, null);
     assert.equal(sanitized.sourceText.length, 180);
     assert.doesNotThrow(() => buildSocialShareFilter(sanitized, 30));
+  });
+
+  it("compacta perguntas longas antes de vazar para fora da caixa", () => {
+    const filter = buildSocialShareFilter(
+      {
+        ...metadata,
+        sourceText:
+          "O que fazer qdo a crise de ansiedade bate forte? E trouxer a sensacao de falta de ar?",
+      },
+      30,
+    );
+
+    assert.match(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=48/);
+    assert.match(filter, /drawtext=text='a sensacao de falta de ar\?':.*:fontsize=48/);
+    assert.doesNotMatch(filter, /drawtext=text='ansiedade bate forte\? E trouxer':.*:fontsize=52/);
   });
 
   it("normaliza o rótulo legado de pergunta para resposta", () => {
