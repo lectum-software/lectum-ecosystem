@@ -5,25 +5,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { PsychologistProfileVideoUploadInput } from "@/api/callers/psychologist-free-profile";
 import { prepareUpload } from "@/utils/media-preparation";
-import { resolveMediaUploadError } from "@/utils/media-upload-error";
-import {
-  assertMediaUploadFinalSize,
-  getMediaUploadSourceSizeError,
-  isMediaUploadSizeError,
-} from "@/utils/media-upload-limits";
 import { isAllowedProfileVideo } from "@/utils/profile-video-upload";
 import { isMediaUploadCanceled, throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
 
 export type ProfileVideoUploadPhase = "uploading";
 
 type ProfileVideoUploadOptions = {
-  maxSizeMb: number;
   onFileSelected: () => void;
   startUpload: (input: PsychologistProfileVideoUploadInput) => Promise<unknown>;
 };
 
 export const useProfileVideoUpload = ({
-  maxSizeMb,
   onFileSelected,
   startUpload,
 }: ProfileVideoUploadOptions) => {
@@ -50,15 +42,12 @@ export const useProfileVideoUpload = ({
       setVideoUploadProgress(0);
 
       try {
-        const finalLimitBytes = maxSizeMb * 1024 * 1024;
-        assertMediaUploadFinalSize(file, "video", finalLimitBytes);
         prepared = await prepareUpload({
           file,
           purpose: "profile-presentation-video",
           signal: controller.signal,
         });
         throwIfMediaUploadCanceled(controller.signal);
-        assertMediaUploadFinalSize(prepared.file, "video", finalLimitBytes);
 
         uploadStarted = true;
         await startUpload({
@@ -73,11 +62,7 @@ export const useProfileVideoUpload = ({
       } catch (error) {
         if (isMediaUploadCanceled(error)) return;
         if (!uploadStarted) {
-          toast.error(
-            isMediaUploadSizeError(error)
-              ? resolveMediaUploadError(error)
-              : "Não foi possível validar o vídeo. Escolha outro arquivo e tente novamente.",
-          );
+          toast.error("Não foi possível validar o vídeo. Escolha outro arquivo e tente novamente.");
         }
         // Erros após o início do transporte usam a mensagem pública centralizada da mutation.
       } finally {
@@ -89,7 +74,7 @@ export const useProfileVideoUpload = ({
         }
       }
     },
-    [maxSizeMb, startUpload],
+    [startUpload],
   );
 
   const handleVideoChange = useCallback(
@@ -105,15 +90,9 @@ export const useProfileVideoUpload = ({
         return;
       }
 
-      const sizeError = getMediaUploadSourceSizeError(file, "video", maxSizeMb * 1024 * 1024);
-      if (sizeError) {
-        toast.error(resolveMediaUploadError(sizeError));
-        return;
-      }
-
       void uploadFile(file);
     },
-    [maxSizeMb, onFileSelected, uploadFile],
+    [onFileSelected, uploadFile],
   );
 
   const cancelVideoUpload = useCallback(() => {

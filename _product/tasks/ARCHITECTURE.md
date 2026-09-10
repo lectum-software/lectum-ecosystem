@@ -357,6 +357,16 @@ Templates/shells devem viver em `frontend/src/templates`.
 - Cloudflare Stream é o **plano de dados** dos novos vídeos: o navegador envia por TUS diretamente
   para `upload.videodelivery.net` e reproduz HLS diretamente de `cloudflarestream.com`. Next e
   Express não transportam partes nem fazem proxy de manifestos/segmentos.
+- O limite total de cada vídeo tem fonte única no backend: apresentação usa
+  `UPLOAD_LIMIT_PSYCHOLOGIST_VIDEO_MULTIPART_MB`, post usa
+  `UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB` e resposta usa
+  `UPLOAD_LIMIT_POST_REPLY_MEDIA_MULTIPART_MB`. O frontend não compara o tamanho do vídeo com teto
+  numérico próprio; envia finalidade, MIME e bytes declarados ao plano de controle, que responde
+  `413/exceeded_file_limit` antes de emitir a URL TUS. A UI pode exibir o limite devolvido com
+  segurança pelo backend, sem substituir por valor compilado no bundle.
+- As envs `*_SIMPLE_MB` e `*_MULTIPART_CHUNK_MB` são proteções dos transportes R2 legados e não
+  definem o total aceito pelo Stream. Limites client-side de imagens continuam independentes desta
+  política, e os hard caps defensivos do backend não podem ser removidos por configuração.
 - `CLOUDFLARE_STREAM_API_TOKEN`, signing private key e webhook secret existem somente no backend.
   A URL TUS é uma capability temporária devolvida apenas ao dono e nunca é persistida/logada.
 - Todo vídeo Stream nasce com `requiresignedurls` e `allowedorigins`. O player solicita uma URL

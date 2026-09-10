@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
-import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { error, msg } from "@/helpers/translate";
 import {
   getVideoStreamConfig,
@@ -20,17 +19,9 @@ import { deleteRetiredProviderVideos } from "./lifecycle";
 import { isR2MigrationAsset } from "./r2-migration/policy";
 import { VideoAssetRepository } from "./repository";
 import type { VideoAssetProviderUpdate, VideoAssetRecord } from "./types";
+import { getVideoAssetUploadFailure, validateVideoAssetUploadMetadata } from "./upload-policy";
 
-const VIDEO_MIME_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm"]);
 const PROVIDER_SYNC_INTERVAL_MS = 10_000;
-
-const maxBytesByPurpose: Record<VideoAssetPurpose, number> = {
-  community_post: UPLOAD_LIMITS.community.postMediaMultipartTotalMb * 1024 * 1024,
-  community_reply: UPLOAD_LIMITS.postReply.multipartTotalMb * 1024 * 1024,
-  profile_presentation: UPLOAD_LIMITS.psychologist.videoMultipartTotalMb * 1024 * 1024,
-};
-
-const normalizeMimeType = (value: string) => value.trim().toLowerCase().split(";", 1)[0] ?? "";
 
 const streamUnavailable = () => ({
   status: 503,
@@ -80,22 +71,26 @@ export const provisionVideoAssetUpload = async ({
   purpose: VideoAssetPurpose;
   size: number;
 }) => {
+  if (!ownerId || !contextId) return invalidUpload();
+
+  const uploadValidation = validateVideoAssetUploadMetadata({
+    mimeType: rawMimeType,
+    purpose,
+    size,
+  });
+  if (!uploadValidation.accepted) {
+    const failure = getVideoAssetUploadFailure(uploadValidation);
+    return {
+      status: failure.status,
+      ...error(failure.code, failure.data),
+    };
+  }
+
   const config = getVideoStreamConfig();
   const provider = getVideoStreamProvider();
   if (!config || !provider) return streamUnavailable();
 
-  const mimeType = normalizeMimeType(rawMimeType);
-  if (
-    !VIDEO_MIME_TYPES.has(mimeType) ||
-    !Number.isSafeInteger(size) ||
-    size <= 0 ||
-    size > maxBytesByPurpose[purpose]
-  ) {
-    return invalidUpload();
-  }
-
-  if (!ownerId || !contextId) return invalidUpload();
-
+  const { limitBytes, mimeType } = uploadValidation;
   const repository = new VideoAssetRepository();
   const assetId = createId();
   const traceId = randomUUID();
@@ -157,7 +152,7 @@ export const provisionVideoAssetUpload = async ({
       data: {
         asset_id: assetId,
         expires_at: expiresAt.toISOString(),
-        max_file_size: maxBytesByPurpose[purpose],
+        max_file_size: limitBytes,
         status: "uploading",
         upload_url: provisioned.uploadUrl,
       },

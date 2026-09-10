@@ -17,7 +17,7 @@ import { usePsychologistFreeProfile } from "@/api/callers/psychologist-free-prof
 import { useAppSelector } from "@/hooks/redux";
 import { isPublicMediaUrl, resolvePublicMediaUrl } from "@/utils/media";
 import { resolvePublicMediaKind } from "@/utils/media-preparation";
-import { PROFILE_VIDEO_DEFAULT_LIMIT_MB } from "@/utils/profile-video-upload";
+import { resolveMediaUploadError } from "@/utils/media-upload-error";
 import { isMediaUploadCanceled } from "@/utils/upload-lifecycle";
 import { CITY_OPTIONS_BY_STATE } from "../brazil-cities";
 import {
@@ -120,7 +120,7 @@ export const useProfessionalProfileSetupController = () => {
       video: {
         onSuccess: () => toast.success("Vídeo de apresentação atualizado"),
         onError: (error) => {
-          if (!isMediaUploadCanceled(error)) toast.error(resolveApiError(error));
+          if (!isMediaUploadCanceled(error)) toast.error(resolveMediaUploadError(error));
         },
       },
       videoCover: {
@@ -162,10 +162,8 @@ export const useProfessionalProfileSetupController = () => {
   const videoSrc = resolvePublicMediaUrl(profile.data?.profile.video_url);
   const videoCoverSrc = resolvePublicMediaUrl(profile.data?.profile.video_cover_url);
   const canUploadVideo = Boolean(profile.data?.plan.can_upload_video);
-  const videoUploadLimitMb =
-    profile.data?.upload_limits?.presentation_video_mb ?? PROFILE_VIDEO_DEFAULT_LIMIT_MB;
+  const videoUploadLimitMb = profile.data?.upload_limits?.presentation_video_mb ?? null;
   const videoUpload = useProfileVideoUpload({
-    maxSizeMb: videoUploadLimitMb,
     onFileSelected: () => setVideoActionsOpen(false),
     startUpload: (input) => uploadVideo.mutateAsync(input),
   });

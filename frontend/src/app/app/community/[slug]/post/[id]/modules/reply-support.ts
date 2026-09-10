@@ -4,10 +4,7 @@ import type { PostReply } from "@/api/generator/types/posts";
 import { useAppSelector } from "@/hooks/redux";
 import { formatCommunityRelativeTime as formatRelativeTime } from "@/utils/community-display";
 import { getCommunityMediaPermission } from "@/utils/community-media-permission";
-import {
-  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
-  resolveMediaUploadError,
-} from "@/utils/media-upload-error";
+import { resolveMediaUploadError } from "@/utils/media-upload-error";
 
 export const REPLIES_LIMIT = 8;
 
@@ -312,11 +309,8 @@ export const resolveReplyError = (error: unknown) => {
 };
 
 export const resolveReplyMediaUploadError = (error: unknown) => {
-  const status = getApiErrorStatus(error);
   const message = resolveMediaUploadError(error);
   const normalized = message.toLowerCase();
-
-  if (status === 413) return COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE;
 
   if (
     normalized.includes("conectar") ||

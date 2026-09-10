@@ -32,7 +32,10 @@ import type {
   UserPostsResponse,
 } from "@/api/generator/types/posts";
 import { handleReq } from "@/api/handle";
-import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
+import {
+  COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES,
+  COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS,
+} from "@/utils/media-upload-error";
 import { MULTIPART_DEFAULT_CHUNK_BYTES, uploadFileMultipart } from "@/utils/multipart-upload";
 import {
   MEDIA_UPLOAD_CLEANUP_TIMEOUT_MS,
@@ -347,8 +350,15 @@ export const uploadPostReplyMedia = async (
       throwIfMediaUploadCanceled(signal);
       const status = getApiErrorStatus(error);
 
-      if (status === 404 || status === 405) {
+      if (
+        (status === 404 || status === 405) &&
+        mimeType.startsWith("image/") &&
+        uploadFile.size <= COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES
+      ) {
         return uploadPostReplyMediaSingle(id, uploadFile, onProgress, signal);
+      }
+      if (status === 404 || status === 405) {
+        throw new Error("O envio desta mídia está sendo atualizado. Tente novamente em instantes.");
       }
 
       throw error;

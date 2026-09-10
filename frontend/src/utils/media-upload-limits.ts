@@ -55,19 +55,19 @@ export const isMediaUploadApiSizeLimitError = ({
 }: MediaUploadApiErrorMetadata) =>
   status === 413 ||
   code === "exceeded_file_limit" ||
-  message.trim().toLowerCase().startsWith("arquivo excede o limite de");
+  /^(?:o\s+)?arquivo excede o limite de\b/.test(message.trim().toLowerCase());
 
-export const resolveVideoUploadSourceLimitBytes = (finalLimitBytes: number) => {
-  return requirePositiveByteLimit(finalLimitBytes);
+export const resolveMediaUploadApiSizeLimitMessage = (metadata: MediaUploadApiErrorMetadata) => {
+  if (!isMediaUploadApiSizeLimitError(metadata)) return null;
+
+  const message = metadata.message.trim();
+  if (!/^(?:o\s+)?arquivo excede o limite de\b/i.test(message)) {
+    return "O arquivo excede o limite configurado para este envio.";
+  }
+
+  const normalized = `${message.charAt(0).toLocaleUpperCase("pt-BR")}${message.slice(1)}`;
+  return /[.!?]$/.test(normalized) ? normalized : `${normalized}.`;
 };
-
-export const resolveMediaUploadSourceLimitBytes = (
-  kind: MediaUploadLimitKind,
-  finalLimitBytes: number,
-) =>
-  kind === "video"
-    ? resolveVideoUploadSourceLimitBytes(finalLimitBytes)
-    : requirePositiveByteLimit(finalLimitBytes);
 
 const createSizeError = (
   file: FileSize,
@@ -84,13 +84,18 @@ export const getMediaUploadSourceSizeError = (
   kind: MediaUploadLimitKind,
   finalLimitBytes: number,
 ) =>
-  createSizeError(file, kind, resolveMediaUploadSourceLimitBytes(kind, finalLimitBytes), "source");
+  kind === "video"
+    ? null
+    : createSizeError(file, kind, requirePositiveByteLimit(finalLimitBytes), "source");
 
 export const getMediaUploadFinalSizeError = (
   file: FileSize,
   kind: MediaUploadLimitKind,
   finalLimitBytes: number,
-) => createSizeError(file, kind, requirePositiveByteLimit(finalLimitBytes), "final");
+) =>
+  kind === "video"
+    ? null
+    : createSizeError(file, kind, requirePositiveByteLimit(finalLimitBytes), "final");
 
 export const assertMediaUploadSourceSize = (
   file: FileSize,

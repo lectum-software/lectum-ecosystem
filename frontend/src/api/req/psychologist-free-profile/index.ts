@@ -21,7 +21,6 @@ import { COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS } from "@/utils/media-upload-error";
 import { uploadFileMultipart } from "@/utils/multipart-upload";
 import {
   PROFILE_VIDEO_MULTIPART_THRESHOLD_BYTES,
-  PROFILE_VIDEO_SIMPLE_LIMIT_MB,
   withProfileVideoFileType,
 } from "@/utils/profile-video-upload";
 import { throwIfMediaUploadCanceled } from "@/utils/upload-lifecycle";
@@ -220,10 +219,6 @@ const uploadPsychologistFreeProfileVideoLegacy = async (
   } catch (uploadError) {
     throwIfMediaUploadCanceled(signal);
     const status = getApiErrorStatus(uploadError);
-    const legacyLimitBytes = PROFILE_VIDEO_SIMPLE_LIMIT_MB * 1024 * 1024;
-    if ((status === 404 || status === 405) && file.size <= legacyLimitBytes) {
-      return uploadPsychologistFreeProfileVideoSingle(file, onProgress, signal);
-    }
     if (status === 404 || status === 405) {
       throw new Error("O envio deste vídeo está sendo atualizado. Tente novamente em instantes.");
     }

@@ -1,5 +1,3 @@
-export const PROFILE_VIDEO_DEFAULT_LIMIT_MB = 300;
-export const PROFILE_VIDEO_SIMPLE_LIMIT_MB = 50;
 export const PROFILE_VIDEO_MULTIPART_THRESHOLD_BYTES = 5 * 1024 * 1024;
 
 const PROFILE_VIDEO_ALLOWED_MIME_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm"]);

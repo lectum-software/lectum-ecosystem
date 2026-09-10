@@ -18,7 +18,7 @@ Cada task é auto-suficiente e deve ser executada isoladamente por uma IA usando
 - A referência visual ativa é Builder Quick Copy + imagens exportadas em `_product/proto`.
 - O Builder está autenticado no espaço `Lectum` e o Quick Copy foi validado via `builder.io code`.
 - Existem 63 JPEGs exportados em `_product/proto`: 61 telas de produto, 1 referência social e 1 ícone isolado.
-- A fila operacional agora possui 183 tasks: `TASK-00` a `TASK-176`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
+- A fila operacional agora possui 184 tasks: `TASK-00` a `TASK-177`, incluindo complementos `TASK-18A`, `TASK-29A`/`TASK-29B`, `TASK-31A` a `TASK-31C` e `TASK-101A`.
 
 ## Gate obrigatório de publicação
 
@@ -274,6 +274,7 @@ ou cortesia manual.
 | 174 | [TASK-174 - Fixar barra de comentários no detalhe do post](TASK-174-fixar-barra-comentarios-detalhe-post.md) | Completed | 23, 24, 26, 45 |
 | 175 | [TASK-175 - Conexão autenticada do backend ao serviço de vídeo](TASK-175-conexao-backend-servico-video.md) | Completed | 164 |
 | 176 | [TASK-176 - Reativar prévia social de vídeos pelo serviço dedicado](TASK-176-reativar-preview-social-video-service.md) | Completed | 42, 164, 167, 173, 175 |
+| 177 | [TASK-177 - Backend como fonte única dos limites de vídeo](TASK-177-backend-fonte-unica-limites-video.md) | Completed | 157, 159, 163, 171, 173 |
 
 ## Ordem operacional recomendada sem bloqueios
 
@@ -1814,3 +1815,25 @@ Uma task só pode ser marcada como concluída quando:
   sem overflow horizontal (`scrollWidth=390`), mas exibiu estado indisponível porque a API local
   configurada não conectou. A conferência visual do post real fica para homologação após o push.
 - Commit/push e smoke de homologação serão registrados após deploy.
+
+## Ajuste em 2026-09-10: backend como fonte única dos limites de vídeo
+
+- A TASK-177 remove os tetos numéricos de vídeo compilados no frontend. Apresentação, post e resposta
+  passam a respeitar somente a env total da respectiva finalidade no backend.
+- O backend valida os metadados antes de emitir a URL TUS do Cloudflare Stream e responde excesso
+  com `413/exceeded_file_limit` e o limite efetivo. A UI preserva essa mensagem segura e usa texto
+  genérico quando um proxy responde 413 sem o contrato da aplicação.
+- Imagens mantêm a proteção client-side; thresholds de 5 MiB continuam apenas escolhendo o transporte
+  legado e não representam limite máximo de produto.
+- A env ausente na configuração apresentada era
+  `UPLOAD_LIMIT_COMMUNITY_POST_MEDIA_MULTIPART_MB`; sua ausência explica o fallback de 200 MB em
+  vídeos de posts. As envs `*_SIMPLE_MB` e `*_MULTIPART_CHUNK_MB` não substituem esse total.
+- Alteração backend+frontend com documentação e ADR; sem schema/migration, env obrigatória nova,
+  package novo, mock, seed, reset, backfill ou alteração de dados/buckets publicados.
+- Validações locais em `0.1.309`: 283 testes backend, 117 testes frontend,
+  `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`,
+  `pnpm --dir frontend build`, `pnpm version:bump`, `pnpm check:version` e `pnpm check`.
+- Backend e frontend foram compilados novamente depois do bump. Smoke local HTTP/Chrome mobile do
+  frontend confirmou `/version` público, sem cache, não indexável e em `0.1.309`; a rota privada
+  de perfil redirecionou para autenticação.
+- Commit/push e smoke de homologação são concluídos no fechamento operacional da task.

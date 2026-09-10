@@ -22,7 +22,7 @@ import {
   requireMediaPreparationFileKind,
   resolveCommunityPostPreparationPurpose,
 } from "@/utils/media-preparation";
-import { COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES } from "@/utils/media-upload-error";
+import { COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES } from "@/utils/media-upload-error";
 import {
   assertMediaUploadFinalSize,
   assertMediaUploadSourceSize,
@@ -212,7 +212,9 @@ export const useUploadCommunityPostMedia = (callbacks?: {
     }) => {
       const resolvedPurpose = purpose ?? resolveCommunityPostPreparationPurpose(file);
       const kind = requireMediaPreparationFileKind(file, resolvedPurpose);
-      assertMediaUploadSourceSize(file, kind, COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES);
+      if (kind === "image") {
+        assertMediaUploadSourceSize(file, kind, COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES);
+      }
       const prepared = await prepareUpload({
         file,
         onProgress: (progress) => onProgress?.({ ...progress, phase: "preparing" }),
@@ -220,11 +222,13 @@ export const useUploadCommunityPostMedia = (callbacks?: {
         signal,
       });
       try {
-        assertMediaUploadFinalSize(
-          prepared.file,
-          prepared.kind,
-          COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES,
-        );
+        if (prepared.kind === "image") {
+          assertMediaUploadFinalSize(
+            prepared.file,
+            prepared.kind,
+            COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES,
+          );
+        }
         return await api.uploadCommunityPostMedia(
           slug,
           prepared.file,

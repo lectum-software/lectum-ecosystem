@@ -3,20 +3,20 @@ import { resolvePublicMediaKind } from "@/utils/media-preparation/policy";
 import {
   formatMediaUploadSize,
   getMediaUploadSourceSizeError,
-  isMediaUploadApiSizeLimitError,
   isMediaUploadSizeError,
   type MediaUploadLimitKind,
+  resolveMediaUploadApiSizeLimitMessage,
 } from "@/utils/media-upload-limits";
 
-export const COMMUNITY_MEDIA_UPLOAD_LIMIT_MB = 200;
-export const COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES = COMMUNITY_MEDIA_UPLOAD_LIMIT_MB * 1024 * 1024;
+export const COMMUNITY_IMAGE_SELECTION_LIMIT_MB = 200;
+export const COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES =
+  COMMUNITY_IMAGE_SELECTION_LIMIT_MB * 1024 * 1024;
 export const COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS = 600_000;
-export const COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE = `A mídia precisa ter até ${COMMUNITY_MEDIA_UPLOAD_LIMIT_MB}MB.`;
 
 export const getCommunityMediaSelectionSizeError = (
   file: Pick<File, "size">,
   kind: MediaUploadLimitKind,
-) => getMediaUploadSourceSizeError(file, kind, COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES);
+) => getMediaUploadSourceSizeError(file, kind, COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES);
 
 export const getCommunityMediaFileSelectionSizeError = (
   file: Pick<File, "name" | "size" | "type">,
@@ -27,21 +27,13 @@ export const getCommunityMediaFileSelectionSizeError = (
 };
 
 export const resolveMediaUploadSizeErrorMessage = (error: unknown) => {
-  if (!isMediaUploadSizeError(error)) return null;
+  if (!isMediaUploadSizeError(error) || error.kind === "video") return null;
 
   const actualSize = formatMediaUploadSize(error.actualBytes);
   const limitSize = formatMediaUploadSize(error.limitBytes);
 
   if (error.stage === "final") {
-    if (error.kind === "video") {
-      return `O iPhone pode ter entregue uma cópia maior para o site. Mesmo após a preparação, o vídeo ficou com ${actualSize}; o limite é ${limitSize}. Tente “Escolher Arquivo” para usar o arquivo original.`;
-    }
-
     return `Após a preparação, a imagem ficou com ${actualSize}. O limite de envio é ${limitSize}.`;
-  }
-
-  if (error.kind === "video") {
-    return `O vídeo recebido do aparelho tem ${actualSize} e excede o limite de preparação de ${limitSize}. No iPhone, a Galeria pode criar uma cópia maior; tente “Escolher Arquivo” para usar o original.`;
   }
 
   return `A imagem selecionada tem ${actualSize}. O limite de envio é ${limitSize}.`;
@@ -51,17 +43,19 @@ export const resolveMediaUploadError = (error: unknown) => {
   const sizeErrorMessage = resolveMediaUploadSizeErrorMessage(error);
   if (sizeErrorMessage) return sizeErrorMessage;
 
-  const message = getSafeApiErrorMessage(
-    error,
-    "Não foi possível anexar a mídia agora. Tente novamente.",
-  );
-  const normalized = message.toLowerCase();
+  const safeApiMessage = getSafeApiErrorMessage(error, "");
   const status = getApiErrorStatus(error);
   const code = getApiErrorCode(error);
+  const apiSizeLimitMessage = resolveMediaUploadApiSizeLimitMessage({
+    code,
+    message: safeApiMessage,
+    status,
+  });
 
-  if (isMediaUploadApiSizeLimitError({ code, message: normalized, status })) {
-    return COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE;
-  }
+  if (apiSizeLimitMessage) return apiSizeLimitMessage;
+
+  const message = safeApiMessage || "Não foi possível anexar a mídia agora. Tente novamente.";
+  const normalized = message.toLowerCase();
 
   if (normalized.includes("tipo") || normalized.includes("permit")) {
     return "Envie uma imagem ou vídeo em formato permitido.";

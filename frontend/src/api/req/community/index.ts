@@ -23,8 +23,7 @@ import type {
 } from "@/api/generator/types/community";
 import { handleReq } from "@/api/handle";
 import {
-  COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE,
-  COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES,
+  COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES,
   COMMUNITY_MEDIA_UPLOAD_TIMEOUT_MS,
 } from "@/utils/media-upload-error";
 import { MULTIPART_DEFAULT_CHUNK_BYTES, uploadFileMultipart } from "@/utils/multipart-upload";
@@ -387,12 +386,13 @@ export const uploadCommunityPostMedia = async (
 
     if (
       (status === 404 || status === 405) &&
-      uploadFile.size <= COMMUNITY_MEDIA_UPLOAD_LIMIT_BYTES
+      mimeType.startsWith("image/") &&
+      uploadFile.size <= COMMUNITY_IMAGE_SELECTION_LIMIT_BYTES
     ) {
       return uploadCommunityPostMediaSingle(slug, uploadFile, onProgress, signal);
     }
     if (status === 404 || status === 405) {
-      throw new Error(COMMUNITY_MEDIA_SIZE_ERROR_MESSAGE);
+      throw new Error("O envio desta mídia está sendo atualizado. Tente novamente em instantes.");
     }
 
     throw uploadError;

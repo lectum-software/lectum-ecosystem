@@ -1,17 +1,11 @@
 import { HeadObjectCommand, type HeadObjectCommandOutput } from "@aws-sdk/client-s3";
-import { UPLOAD_LIMITS } from "@/config/multer/limits";
 import { isR2Configured, PUBLIC_BUCKET, S3 } from "@/config/multer/s3";
 import { videoStreamImportSourceUrl } from "@/utils/video-stream-import-source";
-import type { InspectedLegacyVideoSource, LegacyVideoCandidate, R2MigrationPurpose } from "./types";
+import { getVideoAssetUploadLimitBytes } from "../upload-policy";
+import type { InspectedLegacyVideoSource, LegacyVideoCandidate } from "./types";
 
 const VIDEO_MIME_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm"]);
 const SOURCE_PROBE_TIMEOUT_MS = 30_000;
-
-const maxBytesByPurpose: Record<R2MigrationPurpose, number> = {
-  community_post: UPLOAD_LIMITS.community.postMediaMultipartTotalMb * 1024 * 1024,
-  community_reply: UPLOAD_LIMITS.postReply.multipartTotalMb * 1024 * 1024,
-  profile_presentation: UPLOAD_LIMITS.psychologist.videoMultipartTotalMb * 1024 * 1024,
-};
 
 const mimeTypeByExtension: Record<string, string> = {
   mov: "video/quicktime",
@@ -152,7 +146,7 @@ export const inspectLegacyVideoSource = async (
   if (
     !Number.isSafeInteger(sizeBytes) ||
     sizeBytes <= 0 ||
-    sizeBytes > maxBytesByPurpose[candidate.purpose]
+    sizeBytes > getVideoAssetUploadLimitBytes(candidate.purpose)
   ) {
     throw new R2MigrationSourceError("r2_object_size_invalid");
   }

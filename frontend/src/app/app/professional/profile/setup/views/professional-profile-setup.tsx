@@ -293,8 +293,10 @@ export const ProfessionalProfileSetupLogic = () => {
                     </div>
 
                     <p className="mt-3 w-full text-xs leading-5 text-muted">
-                      Envie um vídeo vertical de até {videoUploadLimitMb}MB. Ele é obrigatório para
-                      publicar o perfil e aparecer na área pública da Lectum.
+                      {videoUploadLimitMb
+                        ? `Envie um vídeo vertical de até ${videoUploadLimitMb}MB. `
+                        : "Envie um vídeo vertical. "}
+                      Ele é obrigatório para publicar o perfil e aparecer na área pública da Lectum.
                     </p>
 
                     {videoUploadPhase ? (

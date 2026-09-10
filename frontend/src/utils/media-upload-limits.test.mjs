@@ -8,18 +8,15 @@ import {
   getMediaUploadFinalSizeError,
   getMediaUploadSourceSizeError,
   isMediaUploadApiSizeLimitError,
-  resolveMediaUploadSourceLimitBytes,
-  resolveVideoUploadSourceLimitBytes,
+  resolveMediaUploadApiSizeLimitMessage,
 } from "./media-upload-limits.ts";
 
 const MEBIBYTE = 1024 * 1024;
 const fileWithSize = (size) => ({ size });
 
-test("mantém imagens e vídeos no limite final do endpoint", () => {
+test("mantém a validação client-side de imagens", () => {
   const finalLimit = 200 * MEBIBYTE;
 
-  assert.equal(resolveMediaUploadSourceLimitBytes("image", finalLimit), finalLimit);
-  assert.equal(resolveMediaUploadSourceLimitBytes("video", finalLimit), finalLimit);
   assert.equal(getMediaUploadSourceSizeError(fileWithSize(finalLimit), "image", finalLimit), null);
 
   const imageError = getMediaUploadSourceSizeError(
@@ -29,57 +26,32 @@ test("mantém imagens e vídeos no limite final do endpoint", () => {
   );
   assert.equal(imageError?.stage, "source");
   assert.equal(imageError?.limitBytes, finalLimit);
-});
 
-test("recusa vídeo bruto acima do limite final antes do transporte", () => {
-  const finalLimit = 200 * MEBIBYTE;
-
-  assert.doesNotThrow(() =>
-    assertMediaUploadSourceSize(fileWithSize(finalLimit), "video", finalLimit),
-  );
-
-  const sourceError = getMediaUploadSourceSizeError(
+  const finalImageError = getMediaUploadFinalSizeError(
     fileWithSize(finalLimit + 1),
-    "video",
+    "image",
     finalLimit,
   );
-  assert.equal(sourceError?.stage, "source");
-  assert.equal(sourceError?.actualBytes, finalLimit + 1);
-  assert.equal(sourceError?.limitBytes, finalLimit);
-});
-
-test("não cria folga para compressão client-side", () => {
-  assert.equal(resolveVideoUploadSourceLimitBytes(300 * MEBIBYTE), 300 * MEBIBYTE);
-  assert.equal(resolveVideoUploadSourceLimitBytes(600 * MEBIBYTE), 600 * MEBIBYTE);
-});
-
-test("valida o arquivo preparado no limite final antes do transporte", () => {
-  const finalLimit = 200 * MEBIBYTE;
-
-  assert.doesNotThrow(() =>
-    assertMediaUploadFinalSize(fileWithSize(finalLimit), "video", finalLimit),
-  );
-  assert.equal(
-    getMediaUploadFinalSizeError(fileWithSize(80 * MEBIBYTE), "video", finalLimit),
-    null,
-  );
-
-  const fallbackError = getMediaUploadFinalSizeError(
-    fileWithSize(220 * MEBIBYTE),
-    "video",
-    finalLimit,
-  );
-  assert.equal(fallbackError?.stage, "final");
-  assert.equal(fallbackError?.limitBytes, finalLimit);
+  assert.equal(finalImageError?.stage, "final");
   assert.throws(
-    () => assertMediaUploadFinalSize(fileWithSize(finalLimit + 1), "video", finalLimit),
+    () => assertMediaUploadFinalSize(fileWithSize(finalLimit + 1), "image", finalLimit),
     { name: "MediaUploadSizeError" },
   );
 });
 
-test("recusa limites inválidos em vez de desativar o guard silenciosamente", () => {
-  assert.throws(() => resolveVideoUploadSourceLimitBytes(0), TypeError);
-  assert.throws(() => resolveVideoUploadSourceLimitBytes(Number.NaN), TypeError);
+test("não aplica limite numérico de vídeo no frontend", () => {
+  const finalLimit = 200 * MEBIBYTE;
+  const oversizedVideo = fileWithSize(5 * 1024 * MEBIBYTE);
+
+  assert.equal(getMediaUploadSourceSizeError(oversizedVideo, "video", finalLimit), null);
+  assert.equal(getMediaUploadFinalSizeError(oversizedVideo, "video", finalLimit), null);
+  assert.doesNotThrow(() => assertMediaUploadSourceSize(oversizedVideo, "video", finalLimit));
+  assert.doesNotThrow(() => assertMediaUploadFinalSize(oversizedVideo, "video", finalLimit));
+});
+
+test("limite inválido continua falhando para imagem e não interfere em vídeo", () => {
+  assert.throws(() => getMediaUploadSourceSizeError(fileWithSize(1), "image", 0), TypeError);
+  assert.equal(getMediaUploadSourceSizeError(fileWithSize(1), "video", 0), null);
 });
 
 test("arredonda tamanho excedente para cima sem aparentar igualdade com o limite", () => {
@@ -117,5 +89,31 @@ test("classifica limite da API sem inferir por palavras ou números incidentais"
   assert.equal(
     isMediaUploadApiSizeLimitError({ message: "Falha de tamanho temporária.", status: 400 }),
     false,
+  );
+});
+
+test("preserva o limite efetivo informado com segurança pela API", () => {
+  assert.equal(
+    resolveMediaUploadApiSizeLimitMessage({
+      code: "exceeded_file_limit",
+      message: "arquivo excede o limite de 1000MB",
+      status: 413,
+    }),
+    "Arquivo excede o limite de 1000MB.",
+  );
+  assert.equal(
+    resolveMediaUploadApiSizeLimitMessage({ message: "", status: 413 }),
+    "O arquivo excede o limite configurado para este envio.",
+  );
+  assert.equal(
+    resolveMediaUploadApiSizeLimitMessage({
+      message: "Content Too Large",
+      status: 413,
+    }),
+    "O arquivo excede o limite configurado para este envio.",
+  );
+  assert.equal(
+    resolveMediaUploadApiSizeLimitMessage({ message: "Falha temporária.", status: 400 }),
+    null,
   );
 });
