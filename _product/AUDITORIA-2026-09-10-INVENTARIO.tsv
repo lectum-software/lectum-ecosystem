@@ -2667,7 +2667,7 @@ frontend/src/app/app/professional/whatsapp/verify/page.tsx	frontend	codigo	b9dea
 frontend/src/app/app/professional/whatsapp/verify/use-form.tsx	frontend	codigo	6b512089a4232275ef34eddc8693e94c1342fff6	2608	inventariado_nao_revisado
 frontend/src/app/app/profile/edit/logic.tsx	frontend	codigo	e696c1472122814a157f7c21681c61d8b30ff53c	13360	inventariado_nao_revisado
 frontend/src/app/app/profile/edit/page.tsx	frontend	codigo	07841e8b5765c8e70e2e479197ba9d3bea5762a4	122	inventariado_nao_revisado
-frontend/src/app/app/profile/edit/use-form.tsx	frontend	codigo	ccc36c7d54e25ecd37b3ef831cf7ad66f00287fb	7505	inventariado_nao_revisado
+frontend/src/app/app/profile/edit/use-form.tsx	frontend	codigo	ccc36c7d54e25ecd37b3ef831cf7ad66f00287fb	7505	lido_revisao_inicial
 frontend/src/app/app/profile/logic.tsx	frontend	codigo	078d6c5f041f1b914b8d8024f46d4c40d3de0fb2	12648	inventariado_nao_revisado
 frontend/src/app/app/profile/page.tsx	frontend	codigo	6fa8d023da05d181b509cedd9de0c3267d8ca8a1	110	inventariado_nao_revisado
 frontend/src/app/app/profissional/assinatura/cartao/page.tsx	frontend	codigo	057483d5ca8bd583b41944667f5da493d2abbbd1	386	inventariado_nao_revisado
@@ -2877,7 +2877,7 @@ frontend/src/components/controllers/phone/index.tsx	frontend	codigo	e57a23b54e73
 frontend/src/components/controllers/select/index.tsx	frontend	codigo	19c1b48465f17fad1e9e65bcaca5c0e9d7aca515	19902	lido_revisao_inicial
 frontend/src/components/controllers/switch/index.tsx	frontend	codigo	fc078dd665167b912f8ac9d9a91742413e9b0722	2125	inventariado_nao_revisado
 frontend/src/components/controllers/textarea/index.tsx	frontend	codigo	336e57e21d5485947d47ca4a70aebdb560c569cc	3578	inventariado_nao_revisado
-frontend/src/components/controllers/utils.ts	frontend	codigo	1fa8a69d27ef4d0e2758bdeff826a6e034b18098	3690	leitura_inicial_manual_sem_certificacao_integral
+frontend/src/components/controllers/utils.ts	frontend	codigo	1fa8a69d27ef4d0e2758bdeff826a6e034b18098	3690	lido_revisao_inicial
 frontend/src/components/conversion/progressive-conversion-boundary.tsx	frontend	codigo	7087fd0f496276cc18de6625651ef389730e0316	1414	inventariado_nao_revisado
 frontend/src/components/conversion/progressive-conversion-core.tsx	frontend	codigo	8336f91faff14c647974429499dbde2899d3384e	14257	inventariado_nao_revisado
 frontend/src/components/conversion/progressive-conversion-provider.tsx	frontend	codigo	9b8ca670eaab7e2f8f4627a9ccd889c451e7bea4	299	inventariado_nao_revisado

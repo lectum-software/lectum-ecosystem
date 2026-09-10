@@ -147,3 +147,18 @@ Sem migration, env obrigatória, mudança de provider ou reset. Um único bump s
 Validação 0.1.312: `pnpm check` aprovado (127 frontend, 293 backend, 35 Admin, 32 video;
 487 testes), frontend build aprovado, `check:version` aprovado. Tipos temporários do harness
 foram removidos de `.next/dev` antes da repetição limpa; rota não está no artefato final.
+
+## Continuação — seletores 0.1.313
+
+- [x] Enter e Escape sem efeito no select do perfil reproduzidos em homolog, sem salvar dados.
+- [x] Opções passaram a usar click nativo; Escape fecha somente o dropdown focado e devolve foco.
+- [x] Campos customizados registram ref RHF para foco de validação.
+- [x] Browser local confirmou Enter/Espaço, Escape, busca e cidade dependente nas variantes
+  customizada, busca em dropdown e busca no input; hooks reais, nenhum envio à API.
+- [x] Check agregado: 489 testes aprovados; frontend build aprovado; bump único 0.1.313.
+- [ ] Repetir seleção no Browser publicado após deploy de 0.1.313.
+
+0.1.312: frontend/Admin publicados; backend /ping 0.1.312 e /ready 200 às 23:56 UTC.
+Respostas transitórias 502 durante substituição do backend registradas; repetir smoke completo.
+Conta confirmada chegou ao perfil via retorno da verificação no Browser publicado. Novo cadastro
+com código real após patch ainda pendente. Capturas mobile variam entre 375px e 390px.

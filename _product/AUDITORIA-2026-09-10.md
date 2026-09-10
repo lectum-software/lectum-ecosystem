@@ -19,13 +19,15 @@
 13. Rótulos de campos separados dos botões, descrições e erros para não confundir leitores de tela.
 14. Apagar um dígito do código de confirmação não desloca mais os números seguintes.
 15. Confirmação de e-mail descarta o estado antigo da navegação, que podia devolver a pessoa à verificação.
+16. Opções de seleção respondem a Enter/Espaço, não apenas ao pressionar o mouse.
+17. Escape fecha a lista e devolve o foco ao campo, preservando a escolha.
 
 Correções 1–11 publicadas em `0.1.311` (`fa6a6dce`). **Smoke de 10/09, 22:50 UTC:**
 backend, frontend e Admin confirmados nessa versão; 16 verificações HTTP passaram, incluindo
 `/health`, `/ready`, mensagens PT-BR, imagens e bloqueio de rotas privadas. Video privado não
 consultado remotamente. Nenhum reset, limpeza de dados ou cobrança foi feito.
 
-Correções 12–15 preparadas em `0.1.312`. Senha e código validados no Browser local e por 10
+Correções 12–15 enviadas em `389b72c3`, versão `0.1.312`. Senha e código validados no Browser local e por 10
 regressões. O novo ciclo completo de cadastro/confirmação em homolog ainda precisa ser repetido
 após o deploy; teste isolado de controller não equivale a confirmação real por e-mail.
 
@@ -110,7 +112,7 @@ Detalhes técnicos e fontes: [ADR-0496](../adrs/0496-auditoria-pre-producao-e-de
 
 ## Evidências de interação — complemento 0.1.312
 
-- Dashboard Admin: desktop e 390px; menu abre, fecha por Escape e restaura foco.
+- Dashboard Admin: desktop e 375px; menu abre, fecha por Escape e restaura foco.
 - Login e cadastro paciente: erros vazios em PT-BR; foco no primeiro campo inválido.
 - Antes: Tab saltava o botão de senha; nome acessível do input incluía “Mostrar senha”.
   Depois: Tab/Enter alternam a visibilidade; rótulo contém só o nome do campo.
@@ -123,10 +125,25 @@ Detalhes técnicos e fontes: [ADR-0496](../adrs/0496-auditoria-pre-producao-e-de
   mantendo guard e destino interno normalizado. Repetição completa pós-deploy ainda pendente.
 - Capturas locais em `/tmp/lectum-audit-178-ui/` (01–10); antes/depois 07, 09 e 10 conferidos
   novamente a partir dos arquivos salvos. Capturas e credenciais não serão versionadas.
-- Diretório de psicólogos mostrou falhas de reprodução em parte dos vídeos no Browser; causa
-  ainda não determinada. Não desativar assinaturas/permissões para contornar o erro.
-- Select customizado: código usa `onMouseDown` nas opções; falta reproduzir seleção por teclado
-  e toque antes de corrigir. Acessibilidade completa ainda não certificada.
+- A árvore de acessibilidade do diretório anunciou “Unable to play media” em players; podem
+  estar inativos/fora da tela. Reprodução e visibilidade ainda precisam ser cruzadas antes de
+  considerar falha real. Não desativar assinaturas/permissões para investigar.
+- Select customizado: Enter e Escape sem efeito reproduzidos em homolog. Corrigidos em 0.1.313;
+  testes de teclado passaram localmente nas três variantes customizadas. Setas, leitor de tela e
+  toque em iOS/Android reais continuam pendentes; não é certificação completa WAI-ARIA.
 
 **Validação local 0.1.312:** check agregado aprovado (487 testes), build do frontend aprovado,
 cinco manifests sincronizados. Sem a rota temporária no artefato. Publicação/smoke a acompanhar.
+
+## Continuação — seletores e publicação
+
+- 0.1.312: frontend/Admin publicados; backend alcançou a mesma versão às 23:56 UTC. Houve
+  três respostas 502 durante a substituição do backend; smoke final deve ser repetido após ready.
+  No Browser, conta já confirmada retornou da verificação ao perfil, sem o loop anterior.
+- 0.1.313: Enter/Espaço selecionam, Escape fecha e restaura foco. Busca do estado e dependência
+  da cidade preservadas; escolha testada somente em formulário local sem envio, com hooks reais.
+- 12 regressões dos controllers passaram; `pnpm check` passou com 489 testes; build frontend
+  aprovado. Harness e seus tipos gerados removidos antes do build; sem mudança de banco/env.
+- Dimensões verificadas nos arquivos: Admin/cadastro/OTP antes em 375×812; login local e
+  controllers depois em 390×844; desktop 1280×720 e 1320×953. Não são dispositivos móveis reais.
+- Capturas 11/12 registram o select antes/depois; 12 inspecionada do arquivo salvo.

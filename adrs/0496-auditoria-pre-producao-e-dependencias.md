@@ -118,3 +118,20 @@ Builder MCP só retornou MUI nesta retomada, sem Quick Copy Lectum utilizável; 
 Deploy: somente código frontend, compatível com backend anterior; cinco manifests sincronizados.
 Sem env nova, migrations, dados removidos ou alteração de provider. Smoke 0.1.311 aprovado antes
 deste complemento; publicação 0.1.312 e novo ciclo de confirmação ainda pendentes no registro.
+
+## Complemento — seleção por teclado (0.1.313)
+
+Enter/Espaço não selecionavam porque as opções disparavam somente em mousedown. Usar click nativo
+mantém ativação por teclado e mouse; mousedown apenas preserva foco até o clique. Escape é tratado
+somente enquanto a lista está aberta e o foco pertence ao componente; devolver foco antes de fechar
+impede que o onFocus da variante de busca reabra a lista. Refs RHF adicionadas aos dois triggers.
+Não trocar biblioteca, controles nativos, contrato de formulário, permissões ou dados.
+
+Fonte consultada: [WAI-ARIA APG / Combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/).
+Correção focal, não declaração de conformidade completa: navegação por setas/aria-activedescendant,
+leitores de tela e toque em dispositivos reais ainda precisam de revisão na TASK-178.
+
+Browser local testou o formulário de perfil real em harness temporário sem API; Enter/Espaço,
+Escape/restauração de foco, busca e campo dependente passaram. Duas regressões adicionais cobrem
+markup e wiring; não substituem interação. Check 489 testes e build frontend aprovados.
+Sem migration/env nova. Versão sincronizada 0.1.313, publicação/smoke pendentes neste registro.

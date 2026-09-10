@@ -37,6 +37,7 @@ registerHooks({
 const { InputController } = await import("./input/index.tsx");
 const { OtpController } = await import("./otp/index.tsx");
 const { Container } = await import("./container.tsx");
+const { SelectController } = await import("./select/index.tsx");
 
 function PasswordField(props) {
   const { control } = useForm({ defaultValues: { password: "" } });
@@ -150,4 +151,49 @@ test("confirmação descarta caches de sessão sem afrouxar o guard", () => {
   assert.ok(
     setter.indexOf("resolveAuthRedirect(data") < setter.indexOf("window.location.replace(target)"),
   );
+});
+
+function SelectField(props) {
+  const { control } = useForm({ defaultValues: { selection: null } });
+  return createElement(SelectController, {
+    control,
+    name: "selection",
+    label: "Opção",
+    description: "Escolha uma opção",
+    ...props,
+  });
+}
+
+test("select mantém nome e descrição separados em todas as variantes", () => {
+  for (const props of [
+    {},
+    { useCustomSelect: true },
+    { searchable: true },
+    { searchable: true, searchMode: "dropdown" },
+  ]) {
+    const html = renderToStaticMarkup(createElement(SelectField, props));
+    const label = html.match(/<label\b[^>]*>(.*?)<\/label>/)?.[1] ?? "";
+    assert.match(label, /Opção/);
+    assert.doesNotMatch(label, /Escolha uma opção|button|input|select/);
+    assert.match(html, /aria-describedby="selection-description"/);
+    assert.match(
+      renderToStaticMarkup(createElement(SelectField, { ...props, disabled: true })),
+      /disabled=""/,
+    );
+  }
+});
+
+test("opções usam click nativo para teclado/toque e Escape devolve o foco", () => {
+  const source = readFileSync(new URL("select/index.tsx", import.meta.url), "utf8");
+  const mouseHandlers = [...source.matchAll(/onMouseDown=\{([^}]+)\}/g)];
+  assert.equal(mouseHandlers.length, 2);
+  for (const [, handler] of mouseHandlers) {
+    assert.match(handler, /event.preventDefault\(\)/);
+    assert.doesNotMatch(handler, /field.onChange/);
+  }
+  assert.match(source, /onClick=\{\(\) => \{\s*field.onChange\(option.value\)/);
+  assert.match(source, /onClick=\{\(\) => \{\s*field.onChange\(null\)/);
+  assert.match(source, /event.key !== "Escape"/);
+  assert.match(source, /querySelector<HTMLElement>\('\[role="combobox"\]'\)\?\.focus\(\)/);
+  assert.match(source, /removeEventListener\("keydown", handleEscape, true\)/);
 });
