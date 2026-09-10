@@ -884,3 +884,44 @@ Validacoes executadas:
 - `pnpm --dir frontend build`.
 - `pnpm check`.
 - Browser local/HTTP em `http://127.0.0.1:3010/psicologos` e `http://127.0.0.1:3010/psicologos/cmtalyodj008v01k96xpx42eo`, ambos com 200; captura headless foi tentada, mas o Chrome permaneceu em processo sem gerar screenshot, entao a verificacao visual ficou coberta por build, rota local e teste estatico da ordem Bio/chips.
+
+## Registro de ajuste complementar em 2026-09-10 - Numero CRP publico sem zero artificial
+
+- Pedido do usuario: o perfil publico estava mostrando `CRP 07/029112`, mas o numero correto do
+  registro publico e `29112`, como exibido no Admin.
+- Causa confirmada: o formatter compartilhado do frontend (`formatCrpNumber`) aplicava
+  `padStart(6, "0")` ao numero do registro, criando zero visual que nao existe no dado informado.
+- Regra aplicada: a regional numerica continua normalizada para 2 digitos, mas o numero do registro
+  passa a ser exibido sem padding artificial. Assim, `7/29112` renderiza `CRP 07/29112`.
+- A deduplicacao de prefixo `CRP` foi preservada para modal/CTA de WhatsApp, perfil publico, perfil
+  privado e avaliacoes.
+- Alteracao frontend-only, mobile-first, restrita ao formatter compartilhado e sua cobertura de
+  teste; sem backend, admin UI, schema, migration, endpoint, env obrigatoria, package novo, provider,
+  mock, seed, reset ou alteracao de dados publicados.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; a validacao visual usou o print do usuario e a
+  referencia local `_product/proto/Perfil Profissional - Sobre.jpg`.
+- ADR criado: `adrs/0493-crp-publico-sem-zero-artificial.md`; ADR complementar atualizado:
+  `adrs/0078-transicao-whatsapp-psicologo.md`.
+
+### Criterios complementares
+
+- [x] `formatCrpNumber("7/29112")` retorna `07/29112`, sem gerar `07/029112`.
+- [x] `formatCrpLabel("07/29112")` retorna `CRP 07/29112`.
+- [x] Prefixos `CRP` repetidos continuam removidos antes da exibicao.
+- [x] Nenhum mock, endpoint simulado, package novo, `<img>` cru, migration ou dado fake permanente
+  foi usado.
+
+### Validacoes do complemento
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm check:version`.
+- `pnpm check`.
+- Smoke local HTTP do frontend buildado em `0.1.306`: `/version` 200 e
+  `/psicologos/cmtvlnjf400ef01p85lh98bcw` 200.
+- Chrome headless local mobile 390px carregou a rota publica sem overflow horizontal
+  (`scrollWidth=390`); os dados do perfil nao hidrataram no ambiente local, entao a conferencia
+  visual do CRP real fica para o smoke de homologacao apos o deploy.
+- Commit/push e smoke de homologacao serao registrados apos deploy.

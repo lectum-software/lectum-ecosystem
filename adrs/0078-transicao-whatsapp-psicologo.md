@@ -69,3 +69,30 @@ A modal de transicao para WhatsApp exibia `Psicologa • CRP CRP DEMO/00005` qua
 - `git diff --check`
 - Smoke do formatter: `CRP DEMO/00005` e `CRP CRP DEMO/00005` renderizam como `CRP DEMO/00005`.
 - HTTP local com cookie de sessao de desenvolvimento em `/app/psychologists`, `/app/favorites`, `/app/community/feed`, `/app/community/top-mentors`, `/app/profile` e `/app/psychologist/demo` respondeu `200`.
+
+## Atualizacao em 2026-09-10: numero CRP sem padding artificial
+
+### Contexto
+
+O perfil publico exibia `CRP 07/029112` para um registro cujo numero correto, conferido no Admin,
+era `29112`. O problema vinha do `formatCrpNumber`, que preenchia o numero do registro com zero a
+esquerda por regra visual.
+
+### Decisao
+
+- Ver ADR-0493 para a regra vigente de exibicao do CRP publico.
+- A regional numerica continua normalizada para 2 digitos.
+- O numero do registro nao recebe mais `padStart`; a exibicao publica preserva o numero recebido no
+  contrato, sem criar zero artificial.
+- A deduplicacao de prefixo `CRP` permanece centralizada em `formatCrpLabel`.
+
+### Consequencias
+
+- CTAs/modal de WhatsApp, perfil publico, perfil privado e avaliacoes passam a exibir o registro
+  publico sem zero inventado quando usarem o formatter compartilhado.
+- Nao ha alteracao de backend, contrato de API, schema Prisma, migration, package, env ou dado
+  persistido.
+
+### Validacoes
+
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`

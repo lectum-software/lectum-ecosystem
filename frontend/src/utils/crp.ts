@@ -11,7 +11,8 @@ export const formatCrpNumber = (value?: string | null) => {
   const numberDigits = onlyDigits(rawNumberParts.join("/")).slice(0, 6);
 
   if (regionDigits && numberDigits) {
-    return `${regionDigits.padStart(2, "0")}/${numberDigits.padStart(6, "0")}`;
+    // Regional usa 2 digitos, mas o numero publico do registro nao deve ganhar zeros artificiais.
+    return `${regionDigits.padStart(2, "0")}/${numberDigits}`;
   }
 
   return normalized;

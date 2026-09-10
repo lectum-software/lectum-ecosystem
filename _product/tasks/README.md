@@ -1737,3 +1737,27 @@ Uma task só pode ser marcada como concluída quando:
 - Validacoes locais em `0.1.304`: testes focados de frontend e video, `pnpm --dir frontend check`, `pnpm --dir video check`, `pnpm --dir frontend build` e `pnpm --dir video build`. Validacoes finais, bump, commit/push e smoke de homologacao serao registrados apos deploy.
 - Validacoes finais em `0.1.305`: `pnpm check`, `git diff --check`, `pnpm version:bump` e `pnpm check:version`. Smoke de homologacao sera registrado apos `git push` e deploy.
 - Smoke local HTTP do frontend em `0.1.305`: `/version` 200 e rota publica do post 200.
+
+## Ajuste em 2026-09-10: CRP publico sem zero artificial
+
+- Ajuste pos-feedback da TASK-15: o usuario mostrou que o perfil publico exibia `CRP 07/029112`,
+  enquanto o numero correto do registro profissional era `29112`, conforme a aba Admin de registro.
+- Causa confirmada: o formatter compartilhado do frontend (`formatCrpNumber`) aplicava padding no
+  numero do registro. A regional continua normalizada para 2 digitos, mas o numero passa a preservar
+  o valor recebido, sem zero artificial.
+- A regra tambem preserva a deduplicacao do prefixo `CRP` na modal/CTA de WhatsApp, perfil publico,
+  perfil privado e avaliacoes, porque todos usam `formatCrpLabel`.
+- Alteracao frontend-only com documentacao; sem schema/migration, env obrigatoria nova, package novo,
+  provider novo, mock, seed, reset, backfill, endpoint novo ou alteracao de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; a validacao visual usa o print do usuario e
+  `_product/proto/Perfil Profissional - Sobre.jpg`.
+- Validacao focada: `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`.
+- Validacoes finais locais em `0.1.306`: `pnpm --dir frontend check`, `pnpm --dir frontend build`,
+  `pnpm check:version`, `pnpm check` e smoke HTTP do frontend buildado (`/version` 200 e rota
+  publica do perfil 200).
+- Chrome headless local mobile 390px carregou a rota publica sem overflow horizontal; a conferencia
+  visual do dado real `CRP 07/29112` fica para homologacao porque os dados do perfil nao hidrataram
+  no ambiente local.
+- Commit/push e smoke de homologacao serao registrados apos deploy.
