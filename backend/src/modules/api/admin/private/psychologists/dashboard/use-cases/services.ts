@@ -2,6 +2,7 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { ADMIN_PROFILE_CONVERSION_SOURCE } from "@/utils/admin-profile-conversion";
 import { summarizeConversionCohort } from "@/utils/admin-psychologist-analytics";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import type {
   AdminPsychologistsDashboardQuery,
@@ -332,7 +333,7 @@ export const buildPsychologistsDashboard = async (
       items: rankedPsychologists.slice(0, 5).map(({ item, ranking }, index) => ({
         avatar: item.user.avatar,
         base_score: roundRankingScore(ranking.baseScore),
-        crp: item.crp,
+        crp: normalizeStoredCrp(item.crp),
         id: item.user.id,
         name: normalizeName(profileNameByUserId.get(item.user.id) ?? "Psicólogo"),
         position: index + 1,

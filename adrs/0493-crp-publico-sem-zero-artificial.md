@@ -1,4 +1,4 @@
-# ADR-0493: CRP público sem zero artificial no registro
+# ADR-0493: CRP sem zero artificial no registro
 
 ## Status
 
@@ -6,63 +6,81 @@ Accepted
 
 ## Task relacionada
 
-TASK-15
+TASK-15, TASK-55
 
 ## Contexto
 
-Em 2026-09-10, o usuário identificou que o perfil público de uma psicóloga exibia
-`CRP 07/029112`, enquanto o registro profissional correto e exibido no Admin era `29112`.
+Em 2026-09-10, o usuario identificou primeiro que o perfil publico de uma
+psicologa exibia `CRP 07/029112`, enquanto o registro profissional correto era
+`29112`. No ajuste seguinte, apontou que a regra precisava ser geral: o Admin
+tambem exibia `21/03324` no header e `03324` nos cards de assinatura/cortesia,
+mas o registro correto desse perfil era `3324`.
 
-A causa estava no formatter compartilhado do frontend (`formatCrpNumber`), que preenchia o número
-do registro com zeros à esquerda até 6 dígitos. Essa regra era apenas visual e podia inventar um
-zero não existente no registro público. A regional `07` continua sendo uma normalização esperada,
-mas o número do registro deve refletir o valor real armazenado/informado.
+A causa deixou de ser apenas visual no frontend. Havia pontos do Admin que ainda
+preenchiam ou preservavam zeros a esquerda no numero do registro, e respostas do
+backend podiam repassar CRPs legados ja armazenados com zero artificial para
+superficies publicas, privadas e administrativas.
 
-## Decisão
+## Decisao
 
-- Manter a normalização da regional numérica para 2 dígitos.
-- Remover o `padStart` do número do registro público.
-- Preservar o valor do registro quando ele já vier armazenado com zero à esquerda; o formatter não
-  faz limpeza destrutiva de dado persistido.
-- Manter a remoção de prefixos duplicados `CRP`, inclusive nos CTAs/modal de WhatsApp, perfil
-  público, perfil privado e telas de avaliações que usam `formatCrpLabel`.
+- Centralizar no backend a normalizacao de saida de CRP em
+  `backend/src/utils/professional-registry.ts`.
+- Manter a regional numerica com 2 digitos (`7a Regiao - RS` continua
+  renderizando `07` quando exibida como numero curto).
+- Nao aplicar padding no numero do registro.
+- Remover zeros artificiais a esquerda do numero do registro em contratos de
+  leitura e em gravacoes administrativas/CFP feitas a partir deste deploy.
+- Manter guards de compatibilidade no frontend e no Admin para tolerar, durante o
+  rollout, respostas antigas do backend ou dados legados ja persistidos com zero
+  artificial.
+- Nao fazer backfill ou migration agora: dados publicados permanecem intactos, e
+  a correcao e aplicada na borda de leitura/escrita segura.
 
-## Consequências
+## Consequencias
 
-- `7/29112` passa a ser exibido como `CRP 07/29112`, sem virar `CRP 07/029112`.
-- A UI pública deixa de divergir do dado operacional exibido no Admin para registros com 5 dígitos.
-- Registros que realmente estiverem persistidos com zero inicial continuam exibindo esse zero; se
-  houver dado persistido incorreto, a correção deve ser operacional/auditada, não mascarada no
-  formatter público.
-- Não há alteração de backend, contrato de API, Prisma, migration, pacote, env, storage, provider,
-  seed, mock ou backfill.
+- `7a Regiao - RS/029112`, `7/029112` e `07/029112` passam a ser exibidos como
+  `07/29112`.
+- `21a Regiao - PI/03324` e `21/03324` passam a ser exibidos como `21/3324`.
+- Header publico, header Admin, aba `Perfil e cadastro`, aba `Assinatura`,
+  cortesia ativa, revisao de CRP, rankings/comunidades, favoritos/seguindo,
+  avaliacoes e dashboards/financeiro recebem a mesma regra.
+- APIs continuam com os mesmos campos (`crp`, `regional_crp`,
+  `registration_number`), sem mudanca quebravel de contrato.
+- Se for necessario preservar algum registro que legalmente comece com zero, a
+  origem devera passar a armazenar esse numero como decisao operacional auditada
+  especifica; a regra geral atual trata zeros a esquerda como artificiais, em
+  linha com os casos reais reportados.
 
-## Produção e rollout
+## Producao e rollout
 
-- Compatibilidade com dados existentes: alteração frontend-only e tolerante a versões diferentes do
-  backend/admin, pois o contrato `crp: string | null` permanece idêntico.
-- Banco/migration: sem alteração.
-- Envs: nenhuma env nova ou obrigatória; sem **ALERTA DE DEPLOY**.
-- Ordem de deploy: push em `homolog` publica o frontend em homologação; validar `/version` e o
-  perfil público afetado antes de recomendar promoção.
-- Rollback: reverter o commit restaura o padding visual anterior, sem migração reversa.
+- Compatibilidade com dados existentes: aditiva/tolerante; o backend novo limpa
+  respostas legadas e frontend/admin novos tambem protegem contra backend antigo.
+- Banco/migration: sem alteracao de schema, migration, seed, reset ou backfill.
+- Envs: nenhuma env nova ou obrigatoria; sem **ALERTA DE DEPLOY**.
+- Ordem de deploy: push em `homolog` publica backend, frontend e admin em
+  homologacao. Validar `/ping`, `/health`, `/ready`, `/version` e os perfis
+  reais reportados antes de recomendar promocao.
+- Rollback: reverter o commit restaura a regra anterior de exibicao/escrita sem
+  migracao reversa.
 
-## Validação
+## Validacao
 
-- `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/` falhou por cache local `ENOENT`;
-  a evidência visual usou o print do usuário e a referência local
-  `_product/proto/Perfil Profissional - Sobre.jpg`.
+- `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/` falhou por
+  cache local `ENOENT`; a evidencia visual usou os prints do usuario e as
+  referencias locais de `_product/proto`.
+- `pnpm --dir backend exec node --import tsx --test src/utils/professional-registry.test.ts`
 - `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`
+- `pnpm --dir admin exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/crp-formatters.test.mjs`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
 - `pnpm --dir frontend check`
 - `pnpm --dir frontend build`
+- `pnpm --dir admin check`
+- `pnpm --dir admin build`
+- `pnpm version:bump`
 - `pnpm check:version`
 - `pnpm check`
-- Smoke local HTTP do frontend buildado em `0.1.306`: `/version` 200 e
-  `/psicologos/cmtvlnjf400ef01p85lh98bcw` 200.
-- Chrome headless local mobile 390px carregou a rota pública sem overflow horizontal
-  (`scrollWidth=390`); os dados do perfil não hidrataram no ambiente local, então a conferência
-  visual do CRP real fica para o smoke de homologação após o deploy.
 
-## Pendências
+## Pendencias
 
-- Nenhuma pendência externa nova.
+- Nenhuma pendencia externa nova.

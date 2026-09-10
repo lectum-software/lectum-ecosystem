@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -86,7 +87,7 @@ export class ReviewRepository implements IReviewRepository {
         }),
         psychologist_avatar: item.psychologist.avatar,
         psychologist_headline: item.psychologist.psychologist_profile?.headline ?? null,
-        psychologist_crp: item.psychologist.psychologist_profile?.crp ?? null,
+        psychologist_crp: normalizeStoredCrp(item.psychologist.psychologist_profile?.crp),
         psychologist_gender: item.psychologist.psychologist_profile?.gender ?? null,
         psychologist_verified: isVerifiedProfessionalEntitlement(
           item.psychologist.psychologist_profile,
@@ -158,7 +159,7 @@ export class ReviewRepository implements IReviewRepository {
       }),
       psychologist_avatar: psychologist?.avatar ?? null,
       psychologist_headline: psychologist?.psychologist_profile?.headline ?? null,
-      psychologist_crp: psychologist?.psychologist_profile?.crp ?? null,
+      psychologist_crp: normalizeStoredCrp(psychologist?.psychologist_profile?.crp),
       psychologist_gender: psychologist?.psychologist_profile?.gender ?? null,
       psychologist_verified: isVerifiedProfessionalEntitlement(psychologist?.psychologist_profile),
       contact_request_id: null,

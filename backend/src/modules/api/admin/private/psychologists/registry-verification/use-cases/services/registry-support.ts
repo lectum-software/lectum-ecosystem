@@ -1,5 +1,5 @@
 import type { admin } from "@/interfaces/objects";
-import { parseStoredCrp } from "@/utils/professional-registry";
+import { normalizeCrpRegistrationNumber, parseStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistRegistryVerificationAttempt,
   AdminRegistryVerificationActor,
@@ -78,7 +78,9 @@ export const maskCpf = (value?: string | null) => {
 };
 
 export const buildCrp = (regionalCrp: string, registrationNumber: string) =>
-  [regionalCrp.trim(), registrationNumber.trim()].filter(Boolean).join("/") || null;
+  [regionalCrp.trim(), normalizeCrpRegistrationNumber(registrationNumber)]
+    .filter(Boolean)
+    .join("/") || null;
 
 export const splitCrp = (crp: string | null) => {
   const { crp_number, crp_region } = parseStoredCrp(crp);
@@ -166,7 +168,7 @@ export const mapAttempt = (
     notes: getString(raw, "notes") ?? getString(raw, "observation"),
     reason: getString(raw, "reason"),
     regional_crp: trimOrNull(check.uf),
-    registration_number: trimOrNull(check.registro),
+    registration_number: normalizeCrpRegistrationNumber(check.registro),
     result_label: resultLabel(check),
     source: manual ? "manual_admin" : "api_automatica",
     source_label: manual ? "Aprovação manual" : "API automática",

@@ -2,7 +2,10 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_registry_check, psychologist_profile } from "@/interfaces/objects";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
-import { buildCrpFromRegistryResult } from "@/utils/professional-registry";
+import {
+  buildCrpFromRegistryResult,
+  normalizeCrpRegistrationNumber,
+} from "@/utils/professional-registry";
 import { activeProfessionalCourtesyEntitlementWhere } from "@/utils/subscription-entitlement";
 import type { CfpResult, CfpSearchBody, StoredRegistryCheckRaw } from "../DTOs/ICfpDTO";
 import type { ICfpRepository } from "./interfaces/ICfpRepository";
@@ -106,7 +109,10 @@ export class CfpRepository implements ICfpRepository {
     const raw = props.check.raw as StoredRegistryCheckRaw | null;
     const confirmedAt = new Date();
     const cpf = normalizeDigits(props.check.cpf) || null;
-    const crp = buildCrpFromRegistryResult(props.result) || props.check.registro || null;
+    const crp =
+      buildCrpFromRegistryResult(props.result) ||
+      normalizeCrpRegistrationNumber(props.check.registro) ||
+      null;
     const crpRegistrationDate = parseCrpRegistrationDate(props.result.data_inscricao);
 
     return prisma.$transaction(async (tx) => {

@@ -13,6 +13,7 @@ import {
 } from "@/utils/admin-profile-received-engagement";
 import { daysBetweenInclusive, startOfDate } from "@/utils/date-range";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistsListItem,
   AdminPsychologistsListProfileConversionCategoryId,
@@ -192,7 +193,7 @@ export const buildItem = (
     avatar: profile.user.avatar,
     city: profile.professional_address_city,
     created_at: profile.user.createdAt,
-    crp: profile.crp,
+    crp: normalizeStoredCrp(profile.crp),
     detail_url: `/psicologos/${userId}`,
     discount_first_session: profile.discount_first_session,
     email: profile.user.email,

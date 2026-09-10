@@ -2,6 +2,7 @@ import {
   summarizePlatformUsage,
   summarizePsychologistWhatsappTrafficOrigins,
 } from "@/utils/admin-psychologist-analytics";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistsDashboardDateRange,
   AdminPsychologistsDashboardPeriod,
@@ -296,7 +297,7 @@ export const buildPsychologistsList = (
       avatar: profile.user.avatar,
       city: profile.professional_address_city,
       created_at: profile.user.createdAt,
-      crp: profile.crp,
+      crp: normalizeStoredCrp(profile.crp),
       email: profile.user.email,
       id: profile.user.id,
       name: normalizeName(profile.user.name),

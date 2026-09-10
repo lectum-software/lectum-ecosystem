@@ -6,6 +6,7 @@ import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import { rankPsychologistCandidates } from "@/utils/psychologist-public-ranking";
 import {
   activeProfessionalEntitlementWhere,
@@ -458,7 +459,7 @@ export class IndexRepository implements IIndexRepository {
           bio: item.bio,
           video_url: item.video_url,
           video_cover_url: item.video_cover_url,
-          crp: item.crp,
+          crp: normalizeStoredCrp(item.crp),
           gender: item.gender,
           modality: item.modality,
           languages: normalizeLanguages(item.languages),

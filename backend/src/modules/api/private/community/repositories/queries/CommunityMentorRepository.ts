@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getProfessionalWhatsappDisplayName } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
 import type { ICommunityTopMentorsDTO } from "../../DTOs/ICommunityDTO";
 import {
@@ -565,7 +566,7 @@ export class CommunityMentorRepository extends CommunityRepositoryContext {
           name: displayName,
           avatar: item.mentor.avatar,
           headline: profile?.headline ?? null,
-          crp: profile?.crp ?? null,
+          crp: normalizeStoredCrp(profile?.crp),
           rating_avg: profile?.rating_avg ?? 0,
           rating_count: profile?.rating_count ?? 0,
           profile_url: `/psicologos/${item.mentor.id}`,

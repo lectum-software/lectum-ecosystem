@@ -6,6 +6,11 @@ import type {
   AdminPsychologistEngagementMetric,
   AdminPsychologistStatistics,
 } from "@/api/req/psychologists";
+import {
+  formatAdminCrpNumber,
+  formatCrpRegistrationNumber,
+  normalizeCrpRegistrationDisplay,
+} from "@/lib/crp-formatters";
 import type { StatisticsMetricComparison } from "./config";
 import {
   currencyFormatter,
@@ -17,6 +22,8 @@ import {
 } from "./config";
 import { formatDayMonth, formatDayShortMonth } from "./date-period";
 import { onlyDigits } from "./schemas";
+
+export { formatCrpRegistrationNumber, normalizeCrpRegistrationDisplay };
 
 export const formatDateTime = (value?: string | null) => {
   if (!value) return "Não informado";
@@ -38,17 +45,16 @@ export const formatCrpRegion = (value?: string | null) =>
 
 export const formatAdminHeaderCrp = (detail: AdminPsychologistDetail) => {
   const professional = detail.profile.professional;
-  const [fallbackRegion, ...fallbackRegistrationParts] = String(detail.header.crp ?? "").split("/");
-  const regionDigits = onlyDigits(professional.regional_crp || fallbackRegion).slice(0, 2);
-  const registrationDigits = onlyDigits(
-    professional.registration_number || fallbackRegistrationParts.join("/"),
-  ).slice(0, 5);
 
-  if (regionDigits && registrationDigits) {
-    return `${regionDigits.padStart(2, "0")}/${registrationDigits.padStart(5, "0")}`;
-  }
-
-  return detail.header.crp || "CRP não informado";
+  return (
+    formatAdminCrpNumber({
+      crp: detail.header.crp,
+      regionalCrp: professional.regional_crp,
+      registrationNumber: professional.registration_number,
+    }) ||
+    detail.header.crp ||
+    "CRP não informado"
+  );
 };
 
 export const getPsychologistTitle = (gender?: string | null) => {

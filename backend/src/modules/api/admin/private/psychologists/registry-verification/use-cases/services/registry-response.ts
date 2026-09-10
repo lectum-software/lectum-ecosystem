@@ -2,6 +2,7 @@ import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 import { parseGrantCrpRegistrationDate } from "@/operations/subscriptions/grant-professional-subscription-service";
 import { crpExperienceYears } from "@/utils/professional-experience";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistRegistryVerificationDTO,
   AdminRegistryVerificationSource,
@@ -146,7 +147,7 @@ export const buildResponse = (
     identity: {
       cpf: trimOrNull(profile.cpf),
       cpf_masked: maskCpf(profile.cpf),
-      crp: trimOrNull(profile.crp),
+      crp: normalizeStoredCrp(profile.crp),
       crp_registration_date: profile.crp_registration_date,
       experience_years: crpExperienceYears(profile.crp_registration_date),
       regional_crp,
@@ -180,7 +181,7 @@ export const parseRegistrationDate = (value: string): Date => {
 export const toAuditProfile = (profile: AdminPsychologistRegistryVerificationPreviousRecord) => ({
   cfp_verified_at: profile.cfp_verified_at?.toISOString() ?? null,
   cpf: trimOrNull(profile.cpf),
-  crp: trimOrNull(profile.crp),
+  crp: normalizeStoredCrp(profile.crp),
   crp_registration_date: profile.crp_registration_date?.toISOString() ?? null,
   crp_status: profile.crp_status,
   id: profile.id,

@@ -13,7 +13,12 @@ import {
   getProfessionalWhatsappDisplayName,
   normalizeProfessionalNamePart,
 } from "@/utils/professional-name";
-import { parseStoredCrp, resolveCrpFromRegistryChecks } from "@/utils/professional-registry";
+import {
+  normalizeCrpRegistrationNumber,
+  normalizeStoredCrp,
+  parseStoredCrp,
+  resolveCrpFromRegistryChecks,
+} from "@/utils/professional-registry";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
 import type {
@@ -105,7 +110,7 @@ export const buildWhatsappUrl = (
 
 export const buildCrp = (region?: string | null, number?: string | null) => {
   const normalizedRegion = region?.trim();
-  const normalizedNumber = number?.trim();
+  const normalizedNumber = normalizeCrpRegistrationNumber(number);
 
   if (normalizedRegion && normalizedNumber) return `${normalizedRegion}/${normalizedNumber}`;
   return normalizedRegion || normalizedNumber || null;
@@ -395,7 +400,9 @@ export const toResponse = async (
   const specialtyLimit = isFree ? 3 : 10;
   const serviceLimit = isFree ? 1 : Math.max(catalogs.services.length, 1);
   const approachLimit = isFree ? 1 : Math.max(catalogs.approaches.length, 1);
-  const displayCrp = resolveCrpFromRegistryChecks(profile.registry_checks) || profile.crp;
+  const displayCrp = normalizeStoredCrp(
+    resolveCrpFromRegistryChecks(profile.registry_checks) || profile.crp,
+  );
   const crp = parseStoredCrp(displayCrp);
   const identityFieldsLocked = isProfessionalIdentityLocked({
     cfpVerifiedAt: profile.cfp_verified_at,

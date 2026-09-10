@@ -17,12 +17,15 @@ import Link from "next/link";
 import type { AdminCommunityContentAuthor, AdminCommunityContentItem } from "@/api/req/communities";
 import { VerifiedBadgeIcon, WhatsAppIcon } from "@/components/admin-icons";
 import { isAdminPublicMediaUrl, renderableImageSrc } from "@/lib/admin-media";
+import { formatRankingCrp } from "@/lib/crp-formatters";
 import { toPublicFrontendHref } from "@/lib/public-frontend-url";
 import { cn } from "@/lib/utils";
 
 import { formatDateTime, initials, numberFormatter } from "../modules/detail-support";
 import { ContentMediaThumbnail } from "./content-media";
 import { adminContentDetailHref, StatusBadge } from "./content-shared";
+
+export { formatRankingCrp };
 
 export const ContentMetrics = ({ item }: { item: AdminCommunityContentItem }) => {
   const hasWhatsappMetric = item.author.role === "psicologo";
@@ -115,66 +118,6 @@ export const ContentItemBody = ({ item }: { item: AdminCommunityContentItem }) =
   if (!hasText) return null;
 
   return <p className="text-sm leading-6 text-muted">{item.excerpt}</p>;
-};
-
-export const crpRegionByUf: Record<string, string> = {
-  AC: "20",
-  AL: "15",
-  AM: "20",
-  AP: "10",
-  BA: "03",
-  CE: "11",
-  DF: "01",
-  ES: "16",
-  GO: "09",
-  MA: "22",
-  MG: "04",
-  MS: "14",
-  MT: "18",
-  PA: "10",
-  PB: "13",
-  PE: "02",
-  PI: "21",
-  PR: "08",
-  RJ: "05",
-  RN: "17",
-  RO: "20",
-  RR: "20",
-  RS: "07",
-  SC: "12",
-  SE: "19",
-  SP: "06",
-  TO: "23",
-};
-
-export const formatRankingCrp = (crp: string | null) => {
-  const value = crp?.trim();
-
-  if (!value) return null;
-
-  const normalized = value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase();
-  const slashIndex = normalized.lastIndexOf("/");
-  const regionSource = slashIndex >= 0 ? normalized.slice(0, slashIndex) : normalized;
-  const registrationSource = slashIndex >= 0 ? normalized.slice(slashIndex + 1) : normalized;
-  const regionDigits = regionSource.match(/\d{1,2}/)?.[0];
-  const regionUf = regionSource.match(/\b[A-Z]{2}\b/)?.[0];
-  const fallbackRegionDigits = normalized.match(/\d{1,2}/)?.[0];
-  const region = (
-    regionDigits ??
-    (regionUf ? crpRegionByUf[regionUf] : null) ??
-    fallbackRegionDigits
-  )
-    ?.padStart(2, "0")
-    .slice(-2);
-  const registrationDigits = registrationSource.replace(/\D/g, "");
-  const registration = (registrationDigits.replace(/^0+/, "") || "0").padStart(4, "0").slice(-4);
-
-  if (!region || !registrationDigits) return null;
-
-  return `${region}/${registration}`;
 };
 
 export const psychologistRoleLabel = (gender?: string | null) =>

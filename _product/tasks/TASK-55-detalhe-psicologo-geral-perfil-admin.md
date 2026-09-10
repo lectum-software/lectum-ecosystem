@@ -549,3 +549,50 @@ Criar o shell de detalhe do psicólogo e as abas Geral e Perfil/Cadastro com dad
 - `pnpm check:version`
 - `git diff --check`
 - Smoke de homologacao apos push em `homolog`: backend `/ping`, `/health`, `/ready`, frontend `/version` e Admin `/version`.
+
+## Ajuste pos-feedback 2026-09-10 - CRP sem zero artificial no Admin
+
+- Pedido direto do usuário: a regra deve ser geral e o painel administrativo não deve acrescentar
+  zero ao número do CRP; no caso reportado, o correto é `21/3324`, não `21/03324`.
+- O header do detalhe Admin, o resumo `Situação do registro`, a aba `Perfil e cadastro > Registro
+  profissional`, a aba `Assinatura`/`Cortesia ativa` e o ranking administrativo de comunidades
+  passaram a usar helper comum que normaliza a regional para 2 dígitos e não aplica padding no
+  número do registro.
+- O backend também normaliza as respostas administrativas relacionadas a detalhe, lista,
+  dashboard, revisão de registro, cortesia, comunidades e financeiro para impedir que dados legados
+  com zero artificial continuem vazando para a UI.
+- Novas aprovações manuais e concessões de cortesia gravam o número normalizado, sem alterar schema
+  nem executar backfill em dados publicados.
+- A UI permanece mobile-first por reutilizar os cards/linhas existentes e não introduz `<img>` cru.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; a evidência visual usada foi o print do usuário
+  e os PNGs locais de `_product/proto/admin/Psicologos/Detalhes do psicologo/`.
+- ADR atualizado: `adrs/0493-crp-publico-sem-zero-artificial.md`.
+
+### Critérios do ajuste pos-feedback
+
+- [x] O header Admin exibe `21/3324`, sem `21/03324`.
+- [x] O card `Cortesia ativa` exibe `CRP 3324`, sem `03324`.
+- [x] A aba de registro e novas ações administrativas usam a mesma regra sem padding.
+- [x] Contratos de API permanecem aditivos e tolerantes a rollout com frontend/backend/admin em
+  versões diferentes.
+- [x] Nenhum mock, seed artificial, endpoint simulado, package novo, migration ou backfill foi
+  criado.
+- [x] Nenhum `<img>` cru foi usado.
+
+### Validação complementar planejada/executada
+
+- `pnpm --dir backend exec node --import tsx --test src/utils/professional-registry.test.ts`.
+- `pnpm --dir admin exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/crp-formatters.test.mjs`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`, `pnpm check:version`, commit/push e smoke de homologação serão registrados após o
+  bump de versão e deploy.
+
+### Validacao final do ajuste antes do commit
+
+- Versao sincronizada para `0.1.307` com `pnpm version:bump`.
+- `pnpm check:version` executado com sucesso.
+- `pnpm check` executado com sucesso apos as validacoes focadas e builds.

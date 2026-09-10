@@ -35,14 +35,25 @@ const toRegistryResult = (value: unknown): ProfessionalRegistryResult | null => 
 
 export const buildCrpFromRegistryResult = (result: ProfessionalRegistryResult) => {
   const regional = toText(result.nome_regional);
-  const registro = toText(result.registro);
+  const registro = normalizeCrpRegistrationNumber(result.registro);
 
   if (regional && registro) return `${regional}/${registro}`;
 
   return registro || regional;
 };
 
-export const parseStoredCrp = (value?: string | null) => {
+export const normalizeCrpRegistrationNumber = (value?: string | null) => {
+  const normalized = toText(value);
+  if (!normalized) return null;
+
+  if (/^\d+$/.test(normalized)) {
+    return normalized.replace(/^0+(?=\d)/, "");
+  }
+
+  return normalized;
+};
+
+const parseStoredCrpParts = (value?: string | null) => {
   const normalized = value?.trim();
   if (!normalized) {
     return {
@@ -63,6 +74,23 @@ export const parseStoredCrp = (value?: string | null) => {
   const crp_number = normalized.slice(separatorIndex + 1).trim() || null;
 
   return { crp_region, crp_number };
+};
+
+export const parseStoredCrp = (value?: string | null) => {
+  const { crp_number, crp_region } = parseStoredCrpParts(value);
+
+  return {
+    crp_region,
+    crp_number: normalizeCrpRegistrationNumber(crp_number),
+  };
+};
+
+export const normalizeStoredCrp = (value?: string | null) => {
+  const { crp_number, crp_region } = parseStoredCrp(value);
+
+  if (crp_region && crp_number) return `${crp_region}/${crp_number}`;
+
+  return crp_number || crp_region;
 };
 
 export const getConfirmedRegistryResult = (raw: unknown) => {

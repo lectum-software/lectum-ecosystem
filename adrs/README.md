@@ -523,4 +523,4 @@ Formato recomendado:
 - [ADR-0490 — Composer de comentários fixo no rodapé mobile](0490-composer-comentarios-fixo-rodape-mobile.md)
 - [ADR-0491 — Conexão privada e autenticada do backend ao serviço de vídeo](0491-conexao-backend-servico-video.md)
 - [ADR-0492 — Render social de vídeos no serviço dedicado](0492-render-social-videos-servico-dedicado.md)
-- [ADR-0493 — CRP público sem zero artificial no registro](0493-crp-publico-sem-zero-artificial.md)
+- [ADR-0493 — CRP sem zero artificial no registro](0493-crp-publico-sem-zero-artificial.md)

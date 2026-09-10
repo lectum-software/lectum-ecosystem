@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { error, msg } from "@/helpers/translate";
 import type { professional_registry_check } from "@/interfaces/objects";
+import { normalizeCrpRegistrationNumber } from "@/utils/professional-registry";
 import type {
   CfpResult,
   CfpSearchAttempts,
@@ -113,12 +114,21 @@ const asStoredRaw = (value: unknown): StoredRegistryCheckRaw | null => {
   return raw as StoredRegistryCheckRaw;
 };
 
+const normalizeResultRegistrationNumber = (result: CfpResult): CfpResult => ({
+  ...result,
+  registro: normalizeCrpRegistrationNumber(result.registro),
+});
+
 const extractStoredResults = (check: professional_registry_check): CfpResult[] => {
   const raw = asStoredRaw(check.raw);
-  if (Array.isArray(raw?.normalized_results)) return raw.normalized_results;
+  if (Array.isArray(raw?.normalized_results)) {
+    return raw.normalized_results.map(normalizeResultRegistrationNumber);
+  }
 
   if (raw?.response && typeof raw.response === "object") {
-    return normalizeCfpResults(raw.response as Parameters<typeof normalizeCfpResults>[0]);
+    return normalizeCfpResults(raw.response as Parameters<typeof normalizeCfpResults>[0]).map(
+      normalizeResultRegistrationNumber,
+    );
   }
 
   return [];

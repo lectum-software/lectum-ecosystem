@@ -1761,3 +1761,31 @@ Uma task só pode ser marcada como concluída quando:
   visual do dado real `CRP 07/29112` fica para homologacao porque os dados do perfil nao hidrataram
   no ambiente local.
 - Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-10: regra geral de CRP sem zero artificial
+
+- Complemento pos-feedback da TASK-15/TASK-55: depois da correção do perfil público `07/029112`, o
+  usuário mostrou o mesmo problema no Admin, onde `21/03324` deveria aparecer como `21/3324`.
+- A regra passa a ser geral: a regional curta continua com 2 dígitos, mas o número do registro não
+  ganha padding e zeros artificiais legados são removidos nas respostas de leitura e nas novas
+  gravações administrativas/CFP.
+- Cobertura: backend público/privado/admin, frontend público, Admin detalhe/listas/dashboards,
+  Registro profissional, Cortesia ativa, comunidades/rankings, favoritos/seguindo, avaliações e
+  financeiro.
+- Alteração backend+frontend+admin com documentação e ADR; sem schema/migration, env obrigatória
+  nova, package novo, provider novo, mock, seed, reset, backfill ou alteração em massa de dados
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validação visual baseada nos prints do usuário
+  e em `_product/proto`.
+- Validações locais em `0.1.306`: testes focados de backend, frontend e admin; `pnpm --dir backend
+  check`; `pnpm --dir backend build`; `pnpm --dir frontend check`; `pnpm --dir frontend build`;
+  `pnpm --dir admin check`; `pnpm --dir admin build`.
+- `pnpm check`, bump, commit/push e smoke de homologação serão registrados após a validação final.
+
+### Validacao final 0.1.307
+
+- `pnpm version:bump` sincronizou os cinco manifests em `0.1.307`.
+- `pnpm check:version` executado com sucesso.
+- `pnpm check` executado com sucesso apos as validacoes focadas e builds de backend, frontend e Admin.
+- Commit/push e smoke de homologacao serao registrados apos deploy.

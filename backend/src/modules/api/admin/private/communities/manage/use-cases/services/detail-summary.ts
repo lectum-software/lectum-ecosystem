@@ -1,5 +1,6 @@
 import { error } from "@/helpers/translate";
 import { toDateKey as dateKey } from "@/utils/date-range";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminCommunityHighlightCountersDTO,
   AdminCommunityReportItemDTO,
@@ -155,7 +156,7 @@ export const buildMentors = (
     const profile = reply.author.psychologist_profile;
     const current = mentors.get(reply.author.id) ?? {
       avatar: reply.author.avatar,
-      crp: profile?.crp ?? null,
+      crp: normalizeStoredCrp(profile?.crp),
       id: reply.author.id,
       name: reply.author.name,
       rating_avg: Number(profile?.rating_avg ?? 0),

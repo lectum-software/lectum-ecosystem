@@ -8,6 +8,7 @@ import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type { LectumWhatsappMessageSource } from "@/utils/whatsapp-contact";
 
 import {
@@ -85,7 +86,7 @@ export const toPostAuthorResponse = (
     avatar: shouldMaskAuthor ? null : author.avatar,
     role: author.role,
     type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
-    crp: isPsychologist ? (profile?.crp ?? null) : null,
+    crp: isPsychologist ? normalizeStoredCrp(profile?.crp) : null,
     verified: isPsychologist && isProfessionalVerified(profile),
     featured_badge: isPsychologist ? featuredBadge : null,
     whatsapp_name: isPsychologist ? whatsappDisplayName : null,

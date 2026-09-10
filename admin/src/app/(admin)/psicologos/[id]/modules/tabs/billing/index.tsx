@@ -24,9 +24,11 @@ import { formatDateOnly } from "../../support/date-period";
 import {
   formatCpfInput,
   formatCrpRegion,
+  formatCrpRegistrationNumber,
   formatInputDate,
   limitDateInputToFourDigitYear,
   normalizeCpfInput,
+  normalizeCrpRegistrationDisplay,
 } from "../../support/formatters";
 import type { CourtesyConfirmationFormValues, CourtesyFormValues } from "../../support/schemas";
 import { courtesyConfirmationSchema, courtesyDetailsSchema } from "../../support/schemas";
@@ -49,7 +51,10 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
   const form = useForm<CourtesyFormValues>({
     defaultValues: {
       cpf: formatCpfInput(billing.courtesy.cpf),
-      crp: billing.courtesy.registration_number || billing.courtesy.crp || "",
+      crp:
+        normalizeCrpRegistrationDisplay(
+          billing.courtesy.registration_number || billing.courtesy.crp,
+        ) || "",
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
@@ -74,7 +79,10 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
   useEffect(() => {
     form.reset({
       cpf: formatCpfInput(billing.courtesy.cpf),
-      crp: billing.courtesy.registration_number || billing.courtesy.crp || "",
+      crp:
+        normalizeCrpRegistrationDisplay(
+          billing.courtesy.registration_number || billing.courtesy.crp,
+        ) || "",
       crp_registration_date: formatInputDate(billing.courtesy.crp_registration_date),
       notes: "",
       period_days: String(billing.courtesy.period_options[1]?.days ?? 90),
@@ -95,7 +103,7 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
       await mutation.mutateAsync({
         confirmation: values.confirmation.trim().toUpperCase(),
         cpf: normalizeCpfInput(pendingCourtesyValues.cpf),
-        crp: pendingCourtesyValues.crp.trim(),
+        crp: normalizeCrpRegistrationDisplay(pendingCourtesyValues.crp) || "",
         crp_registration_date: pendingCourtesyValues.crp_registration_date.trim(),
         notes: pendingCourtesyValues.notes.trim(),
         period_days: Number(pendingCourtesyValues.period_days),
@@ -260,7 +268,10 @@ const CourtesyGrantForm = ({ billing, id }: { billing: AdminPsychologistBilling;
                 label="Regional CRP"
                 value={formatCrpRegion(pendingCourtesyValues.regional_crp)}
               />
-              <FieldRow label="CRP" value={pendingCourtesyValues.crp} />
+              <FieldRow
+                label="CRP"
+                value={formatCrpRegistrationNumber(pendingCourtesyValues.crp)}
+              />
               <FieldRow
                 label="Data inscrição CRP"
                 value={formatDateOnly(pendingCourtesyValues.crp_registration_date)}

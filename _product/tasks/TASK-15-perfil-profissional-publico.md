@@ -925,3 +925,53 @@ Validacoes executadas:
   (`scrollWidth=390`); os dados do perfil nao hidrataram no ambiente local, entao a conferencia
   visual do CRP real fica para o smoke de homologacao apos o deploy.
 - Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Registro de ajuste complementar em 2026-09-10 - Regra geral de CRP sem zero artificial
+
+- Complemento ao ajuste anterior: a regra deixou de ser apenas do perfil público e passou a valer
+  para as bordas de leitura/escrita de CRP usadas por frontend, Admin e backend.
+- Pedido do usuário: exibir somente o número real do registro, sem zeros adicionados pela UI ou por
+  serialização legada. Exemplos reais: `07/029112` passa a `07/29112` e `21/03324` passa a
+  `21/3324`.
+- O backend centraliza a normalização em `professional-registry`, devolvendo `crp` e
+  `registration_number` sem zero artificial em diretório público, perfil público, posts,
+  comunidades, favoritos/seguindo, avaliações, painel Admin, cortesia/assinaturas, revisão de CRP e
+  financeiro.
+- O frontend mantém guarda compatível no formatter compartilhado para não depender da ordem de
+  deploy entre frontend e backend.
+- O Admin removeu o padding próprio do header, cards de Registro/Cortesia e ranking de comunidades,
+  além de normalizar novas gravações manuais de CRP/cortesia.
+- Não houve alteração de schema Prisma, migration, package novo, env obrigatória, seed, mock,
+  reset, backfill ou alteração em massa de dados publicados.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; as evidências visuais usadas foram os prints do
+  usuário e as referências locais de `_product/proto`.
+- ADR atualizado: `adrs/0493-crp-publico-sem-zero-artificial.md`.
+
+### Critérios complementares
+
+- [x] Perfil público exibe `CRP 07/29112`, sem `CRP 07/029112`, quando recebe CRP legado com zero.
+- [x] Perfis com regional 21 e registro legado `03324` exibem `21/3324`.
+- [x] Frontend e backend são tolerantes a versões diferentes durante o rollout.
+- [x] Nenhum mock, endpoint simulado, package novo, `<img>` cru, migration ou dado fake permanente
+  foi usado.
+
+### Validações do complemento
+
+- `pnpm --dir backend exec node --import tsx --test src/utils/professional-registry.test.ts`.
+- `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/crp.test.mjs`.
+- `pnpm --dir admin exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/lib/crp-formatters.test.mjs`.
+- `pnpm --dir backend check`.
+- `pnpm --dir backend build`.
+- `pnpm --dir frontend check`.
+- `pnpm --dir frontend build`.
+- `pnpm --dir admin check`.
+- `pnpm --dir admin build`.
+- `pnpm check`, `pnpm check:version`, commit/push e smoke de homologação serão registrados após o
+  bump de versão e deploy.
+
+### Validacao final do complemento antes do commit
+
+- Versao sincronizada para `0.1.307` com `pnpm version:bump`.
+- `pnpm check:version` executado com sucesso.
+- `pnpm check` executado com sucesso apos as validacoes focadas e builds.

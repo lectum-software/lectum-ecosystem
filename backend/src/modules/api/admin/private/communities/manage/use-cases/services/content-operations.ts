@@ -1,5 +1,6 @@
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminCommunityContentAnalyticsDetailDTO,
   AdminCommunityContentDTO,
@@ -401,7 +402,7 @@ export const listRanking = async (data: IAdminCommunityRankingDTO): Promise<Reso
         membership_created_at: item.member.createdAt,
         mentor: {
           avatar: item.member.user.avatar,
-          crp: profile?.crp ?? null,
+          crp: normalizeStoredCrp(profile?.crp),
           headline: profile?.headline ?? null,
           id: item.member.user.id,
           name,

@@ -20,6 +20,7 @@ import { CARD, numberFormatter, SUBSCRIPTION_CANCEL_CONFIRMATION } from "../../s
 import { formatDate } from "../../support/date-period";
 import {
   formatCrpRegion,
+  formatCrpRegistrationNumber,
   formatGrantedByName,
   formatMoney,
   formatPaymentMethod,
@@ -345,7 +346,9 @@ export const ActiveCourtesyCard = ({
         <FieldRow label="Regional CRP" value={formatCrpRegion(billing.courtesy.regional_crp)} />
         <FieldRow
           label="CRP"
-          value={billing.courtesy.registration_number || billing.courtesy.crp || "Não informado"}
+          value={formatCrpRegistrationNumber(
+            billing.courtesy.registration_number || billing.courtesy.crp,
+          )}
         />
         <FieldRow
           label="Data inscrição CRP"

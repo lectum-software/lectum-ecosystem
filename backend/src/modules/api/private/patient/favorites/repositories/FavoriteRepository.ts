@@ -7,6 +7,7 @@ import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -370,7 +371,7 @@ export class FavoriteRepository implements IFavoriteRepository {
             cover_image_url: profile.cover_image_url,
             video_url: profile.video_url,
             video_cover_url: profile.video_cover_url,
-            crp: profile.crp,
+            crp: normalizeStoredCrp(profile.crp),
             gender: profile.gender,
             modality: profile.modality,
             languages: normalizeStringArray(profile.languages),

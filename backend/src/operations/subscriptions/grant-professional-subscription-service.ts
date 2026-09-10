@@ -1,5 +1,6 @@
 import prisma from "@/infra/database/prisma";
 import { parseCrpRegistrationDate } from "@/utils/professional-experience";
+import { normalizeCrpRegistrationNumber } from "@/utils/professional-registry";
 
 const SOURCE_ADMIN_GRANT = "admin_grant";
 
@@ -60,7 +61,7 @@ const normalizeCpfForOverride = (value?: string | null) => {
 
 const buildCrp = (region?: string | null, number?: string | null) => {
   const normalizedRegion = trimToNull(region);
-  const normalizedNumber = trimToNull(number);
+  const normalizedNumber = normalizeCrpRegistrationNumber(number);
 
   if (normalizedRegion && normalizedNumber) return `${normalizedRegion}/${normalizedNumber}`;
   return normalizedRegion || normalizedNumber || null;
@@ -75,7 +76,7 @@ const normalizeIdentityOverride = (args: GrantProfessionalSubscriptionArgs) => {
   return {
     cpf: normalizeCpfForOverride(args.cpf),
     crp: hasCrpOverride ? buildCrp(args.crpRegion, args.crpNumber) : undefined,
-    crpNumber: hasCrpOverride ? trimToNull(args.crpNumber) : undefined,
+    crpNumber: hasCrpOverride ? normalizeCrpRegistrationNumber(args.crpNumber) : undefined,
     crpRegion: hasCrpOverride ? trimToNull(args.crpRegion) : undefined,
     hasCpfOverride,
     hasCrpOverride,

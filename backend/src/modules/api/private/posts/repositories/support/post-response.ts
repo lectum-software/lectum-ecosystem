@@ -4,6 +4,7 @@ import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -366,7 +367,7 @@ export const toAuthorResponse = (
         : "Paciente"
       : authorTypeLabel(author.role, profile?.gender, anonymous),
     anonymous: shouldMaskAuthor,
-    crp: isPsychologist && !isDeletedAuthor ? (profile?.crp ?? null) : null,
+    crp: isPsychologist && !isDeletedAuthor ? normalizeStoredCrp(profile?.crp) : null,
     verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
     featured_badge:
       isPsychologist && !isDeletedAuthor ? mentorBadgeForScore(profile, mentorScore) : null,

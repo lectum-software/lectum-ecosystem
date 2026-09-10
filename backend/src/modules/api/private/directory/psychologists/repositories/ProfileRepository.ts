@@ -8,7 +8,7 @@ import {
   buildProfessionalFullDisplayName,
   getProfessionalWhatsappDisplayName,
 } from "@/utils/professional-name";
-import { parseStoredCrp } from "@/utils/professional-registry";
+import { normalizeStoredCrp, parseStoredCrp } from "@/utils/professional-registry";
 import { activeProfessionalEntitlementWhere } from "@/utils/subscription-entitlement";
 import type {
   DirectoryPsychologistPost,
@@ -213,6 +213,7 @@ export class ProfileRepository implements IProfileRepository {
     const profile = item?.psychologist_profile;
     if (!item || !profile) return null;
     if (!hasPublishedProfileRequirements(item, profile)) return null;
+    const normalizedCrp = normalizeStoredCrp(profile.crp);
     const { crp_number, crp_region } = parseStoredCrp(profile.crp);
     const displayName = buildProfessionalFullDisplayName({
       fallbackName: item.name,
@@ -239,7 +240,7 @@ export class ProfileRepository implements IProfileRepository {
       cover_image_url: profile.cover_image_url,
       video_url: profile.video_url,
       video_cover_url: profile.video_cover_url,
-      crp: profile.crp,
+      crp: normalizedCrp,
       crp_registration_date: profile.crp_registration_date,
       gender: profile.gender,
       modality: profile.modality,

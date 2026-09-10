@@ -2,6 +2,7 @@ import type { Prisma } from "@/external/generated/prisma/client";
 import prisma, { type ORM } from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import {
   activeProfessionalEntitlementWhere,
   isVerifiedProfessionalEntitlement,
@@ -207,7 +208,7 @@ export class FollowRepository implements IFollowRepository {
             avatar: item.psychologist.avatar,
             headline: profile.headline,
             bio: profile.bio,
-            crp: profile.crp,
+            crp: normalizeStoredCrp(profile.crp),
             modality: profile.modality,
             languages: normalizeStringArray(profile.languages),
             rating_avg: profile.rating_avg,

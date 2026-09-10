@@ -1,5 +1,6 @@
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 import { startOfDate } from "@/utils/date-range";
+import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminFinancePaymentHealth,
   AdminFinancePaymentHistory,
@@ -533,7 +534,7 @@ export const mapSubscription = (
       slug: subscription.plan.slug,
     },
     psychologist: {
-      crp: subscription.psychologist.crp,
+      crp: normalizeStoredCrp(subscription.psychologist.crp),
       email: subscription.psychologist.user.email,
       id: subscription.psychologist.id,
       name: subscription.psychologist.user.name,

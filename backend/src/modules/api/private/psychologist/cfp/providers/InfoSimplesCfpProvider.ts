@@ -1,3 +1,4 @@
+import { normalizeCrpRegistrationNumber } from "@/utils/professional-registry";
 import type { CfpResult, CfpSearchBody } from "../DTOs/ICfpDTO";
 
 const INFOSIMPLES_CFP_ENDPOINT = "https://api.infosimples.com/api/v2/consultas/cfp/cadastro";
@@ -164,7 +165,7 @@ export const normalizeCfpResults = (payload: InfoSimplesPayload): CfpResult[] =>
       const partial = {
         nome: toText(record.nome),
         nome_regional: toText(record.nome_regional),
-        registro: toText(record.registro),
+        registro: normalizeCrpRegistrationNumber(toText(record.registro)),
         situacao: toText(record.situacao),
         data_inscricao: toText(record.data_inscricao),
       };

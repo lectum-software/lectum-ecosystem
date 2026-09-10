@@ -9,7 +9,7 @@ import {
   grantProfessionalSubscription,
   parseGrantCrpRegistrationDate,
 } from "@/operations/subscriptions/grant-professional-subscription-service";
-import { parseStoredCrp } from "@/utils/professional-registry";
+import { normalizeStoredCrp, parseStoredCrp } from "@/utils/professional-registry";
 import type {
   AdminPsychologistBillingDTO,
   AdminPsychologistBillingPaymentHistory,
@@ -179,7 +179,7 @@ const buildCourtesy = (
     can_grant: !externalBillingActive && !hasActiveCourtesy,
     can_revoke: hasActiveCourtesy,
     cpf: trimOrNull(profile.cpf),
-    crp: trimOrNull(profile.crp),
+    crp: normalizeStoredCrp(profile.crp),
     crp_registration_date: profile.crp_registration_date,
     period_options: COURTESY_PERIOD_OPTIONS,
     regional_crp,

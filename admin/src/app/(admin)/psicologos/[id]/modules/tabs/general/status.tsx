@@ -14,8 +14,8 @@ import { numberFormatter } from "../../support/config";
 import { formatDateOnly } from "../../support/date-period";
 import {
   formatCrpRegion,
+  formatCrpRegistrationNumber,
   formatDateTime,
-  formatNullable,
   getHeaderAccountStatus,
 } from "../../support/formatters";
 
@@ -167,7 +167,7 @@ export const RegistryStatusCard = ({ id }: { id: string }) => {
   if (!registry) return null;
   const summaryItems = [
     { label: "Regional CRP", value: formatCrpRegion(registry.identity.regional_crp) },
-    { label: "Nº CRP", value: formatNullable(registry.identity.registration_number) },
+    { label: "Nº CRP", value: formatCrpRegistrationNumber(registry.identity.registration_number) },
     {
       label: "Data de inscrição",
       value: formatDateOnly(registry.identity.crp_registration_date),

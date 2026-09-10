@@ -30,11 +30,12 @@ import { formatDateOnly } from "../../support/date-period";
 import {
   formatCpfInput,
   formatCrpRegion,
+  formatCrpRegistrationNumber,
   formatDateTime,
   formatInputDate,
-  formatNullable,
   limitDateInputToFourDigitYear,
   normalizeCpfInput,
+  normalizeCrpRegistrationDisplay,
 } from "../../support/formatters";
 import type {
   RegistryApproveFormValues,
@@ -107,8 +108,9 @@ export const RegistryAttemptItem = ({
       <div className="mt-3 grid gap-2 text-xs font-bold text-muted sm:grid-cols-2">
         <span>
           CRP:{" "}
-          {[attempt.regional_crp, attempt.registration_number].filter(Boolean).join(" / ") ||
-            "Não informado"}
+          {[attempt.regional_crp, normalizeCrpRegistrationDisplay(attempt.registration_number)]
+            .filter(Boolean)
+            .join(" / ") || "Não informado"}
         </span>
       </div>
       {attempt.responsible_admin ? (
@@ -192,7 +194,7 @@ export const RegistryIdentityForm = ({
 }) => {
   const form = useForm<RegistryIdentityFormValues>({
     defaultValues: {
-      crp: registry.identity.registration_number || "",
+      crp: normalizeCrpRegistrationDisplay(registry.identity.registration_number) || "",
       crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
       regional_crp: resolveCrpRegionFieldValue(registry.identity.regional_crp),
     },
@@ -206,7 +208,7 @@ export const RegistryIdentityForm = ({
 
   useEffect(() => {
     form.reset({
-      crp: registry.identity.registration_number || "",
+      crp: normalizeCrpRegistrationDisplay(registry.identity.registration_number) || "",
       crp_registration_date: formatInputDate(registry.identity.crp_registration_date),
       regional_crp: resolveCrpRegionFieldValue(registry.identity.regional_crp),
     });
@@ -220,7 +222,7 @@ export const RegistryIdentityForm = ({
   );
 
   const normalizeValues = (values: RegistryIdentityFormValues): RegistryIdentityFormValues => ({
-    crp: values.crp.trim(),
+    crp: normalizeCrpRegistrationDisplay(values.crp) || "",
     crp_registration_date: values.crp_registration_date.trim(),
     regional_crp: values.regional_crp.trim(),
   });
@@ -325,7 +327,7 @@ export const RegistrySaveIdentityForm = ({
 
   const registrySummaryItems = [
     { label: "Regional CRP", value: formatCrpRegion(identityDraft.regional_crp) },
-    { label: "Nº CRP", value: formatNullable(identityDraft.crp) },
+    { label: "Nº CRP", value: formatCrpRegistrationNumber(identityDraft.crp) },
     { label: "Data de inscrição", value: formatDateOnly(identityDraft.crp_registration_date) },
   ];
 
@@ -417,7 +419,10 @@ export const RegistryApproveForm = ({
 }) => {
   const identityDefaults = useMemo(
     () => ({
-      crp: identityDraft?.crp ?? registry.identity.registration_number ?? "",
+      crp:
+        normalizeCrpRegistrationDisplay(identityDraft?.crp) ??
+        normalizeCrpRegistrationDisplay(registry.identity.registration_number) ??
+        "",
       crp_registration_date:
         identityDraft?.crp_registration_date ??
         formatInputDate(registry.identity.crp_registration_date),
@@ -461,7 +466,7 @@ export const RegistryApproveForm = ({
       await mutation.mutateAsync({
         confirmation: values.confirmation.trim(),
         cpf: normalizeCpfInput(values.cpf),
-        crp: values.crp.trim(),
+        crp: normalizeCrpRegistrationDisplay(values.crp) || "",
         crp_registration_date: values.crp_registration_date.trim(),
         regional_crp: values.regional_crp.trim(),
         situation_confirmed: values.situation_confirmed === "sim",
