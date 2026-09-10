@@ -15,15 +15,28 @@
 9. Corrigido texto de campos alternativos que mostrava um marcador de tradução quebrado.
 10. Campos com tamanho fixo informam a quantidade exata, sem sugerir apenas mínimo/máximo.
 11. Corrigido o build do backend no servidor: traduções faltavam durante a compilação.
+12. Botão de mostrar/ocultar senha acessível por teclado, com foco visível e respeito ao campo desabilitado.
+13. Rótulos de campos separados dos botões, descrições e erros para não confundir leitores de tela.
+14. Apagar um dígito do código de confirmação não desloca mais os números seguintes.
+15. Confirmação de e-mail descarta o estado antigo da navegação, que podia devolver a pessoa à verificação.
 
-Correções 1–9 enviadas em `1e10422a` (`0.1.310`). Frontend/Admin publicaram, mas o build
-do backend falhou. Correções 10–11 compõem `0.1.311`; nova publicação pendente deste registro.
+Correções 1–11 publicadas em `0.1.311` (`fa6a6dce`). **Smoke de 10/09, 22:50 UTC:**
+backend, frontend e Admin confirmados nessa versão; 16 verificações HTTP passaram, incluindo
+`/health`, `/ready`, mensagens PT-BR, imagens e bloqueio de rotas privadas. Video privado não
+consultado remotamente. Nenhum reset, limpeza de dados ou cobrança foi feito.
 
-**Smoke de 10/09, 22:36 UTC:** frontend/Admin em `0.1.310`; páginas de login, redirecionamento
-privado, imagens e versões passaram. Backend saudável (`/health` e `/ready` 200), mas ainda
-em `0.1.309`: mensagens novas não apareceram. Deploy do backend ainda não confirmado;
-log do Dokploy confirmou traduções ausentes na etapa de compilação. Leituras públicas de comunidades/psicólogos mantiveram 200.
-Não há aprovação para produção. Video privado não foi consultado remotamente. Nenhum reset, limpeza de dados ou cobrança foi feito.
+Correções 12–15 preparadas em `0.1.312`. Senha e código validados no Browser local e por 10
+regressões. O novo ciclo completo de cadastro/confirmação em homolog ainda precisa ser repetido
+após o deploy; teste isolado de controller não equivale a confirmação real por e-mail.
+
+### Pendência impeditiva para promoção: documentos legais
+
+- Cadastro exige aceite, mas não oferece links para ler os documentos.
+- TASK-41 e ADR-0440 já registravam o bloqueio; as minutas de `_product/legal` não estão aprovadas.
+- Versões de aceite nos cadastros ainda dizem `pending-legal-copy`.
+- É necessário aprovar os textos, responsável/controlador, contatos, idade mínima e política
+  comercial com revisão jurídica. Não publicar placeholders nem tratar esta auditoria técnica
+  como parecer jurídico. Não existe edição jurídica pelo Admin implementada nesta task.
 
 ## Cobertura real até aqui
 
@@ -49,7 +62,7 @@ Não há aprovação para produção. Video privado não foi consultado remotame
 - Homologação: `/health`, `/ready` e `/ping` responderam 200 em `0.1.309`; três rotas privadas
   recusaram acesso anônimo com 401; rota inexistente respondeu 404 sem stack.
 - Login vazio de usuário/Admin retornou 400 com termos técnicos nos campos: achado confirmado,
-  corrigido localmente e coberto por teste HTTP do validador real; smoke pós-deploy pendente.
+  corrigido e coberto por teste HTTP do validador real; smoke `0.1.311` confirmou as mensagens novas.
 - Requisições Python receberam bloqueio 1010 na borda; a mesma verificação com curl chegou ao app.
   Bloqueio de borda não foi confundido com autorização do backend.
 
@@ -57,8 +70,8 @@ Não há aprovação para produção. Video privado não foi consultado remotame
 
 | Fluxo | Superfícies | Evidência atual | Falta validar |
 | --- | --- | --- | --- |
-| Cadastro/login/recuperação | Frontend, Admin, API, e-mail/Google | Rotas e sessão em revisão; negativos HTTP | Cadastro próprio, OTP, expiração, troca de identidade |
-| Paciente/perfil/favoritos | Frontend e API privada | Inventário estático | Permissões entre duas contas, formulários e upload |
+| Cadastro/login/recuperação | Frontend, Admin, API, e-mail/Google | Cadastro paciente próprio, e-mail confirmado, negativos, teclado e OTP; loop de navegação reproduzido | Repetir confirmação após patch, recuperação, Google, expiração e troca de identidade |
+| Paciente/perfil/favoritos | Frontend e API privada | Perfil próprio e edição abriram após navegação completa | Permissões entre duas contas, salvar formulários e upload |
 | Psicólogo/CRP/onboarding | Frontend, Admin, API, CFP/WhatsApp | Inventário estático | Conta dedicada, aprovação e falhas externas |
 | Descoberta/perfis públicos | Frontend e API de leitura | Inventário estático | Anônimo vs dono, mobile e acessibilidade |
 | Comunidades/posts/respostas | Frontend, Admin, API | Leitura inicial dos routers | IDOR, moderação, conteúdo anônimo, paginação, estados |
@@ -67,7 +80,7 @@ Não há aprovação para produção. Video privado não foi consultado remotame
 | Assinaturas/pagamentos | Frontend, Admin, backend, gateway | Inventário estático | Contas/cartões exclusivamente de teste, webhooks/idempotência |
 | Conta/privacidade/exclusão | Frontend, Admin, backend | Inventário estático | Revogação/exportação e exclusão somente da conta de auditoria |
 | Notificações/analytics | Frontend, Admin, API/jobs/socket | Inventário estático | Preferências e acessos; sem campanha para terceiros |
-| Administração/catálogos/SEO | Admin, API administrativa | Anônimo recusado no dashboard | Permissões de ações, validação de formulários, exportação |
+| Administração/catálogos/SEO | Admin, API administrativa | Dashboard autenticado desktop/mobile; menu fecha com Escape e devolve foco | Permissões de ações, validação de formulários, exportação |
 | Infraestrutura/deploy | Quatro apps, manifests, Docker | Atualização focal de dependências | Builds/smoke novos, CSP, cache e headers por superfície |
 
 ## Próximos achados para reprodução
@@ -85,10 +98,35 @@ Não há aprovação para produção. Video privado não foi consultado remotame
 
 ## Dependências externas
 
-- Usuário informou Admin autenticado. Browser ainda não descoberto pela ferramenta (lista vazia).
-- Aguardando endereço dedicado para verificar e-mail das contas que serão criadas pelo cadastro.
+- Browser conectado; Admin autenticado e conta paciente dedicada criada pelo cadastro normal.
+- Aceite autorizado apenas para auditoria; confirmação recebida por e-mail e concluída. Credenciais
+  não entram no relatório, logs ou repositório. Conta profissional e segunda identidade pendentes.
 - Safari/iPhone e Android reais não validados. Viewport pequeno em Chrome não equivale a Safari.
-- Builder indisponível como ferramenta; referência `proto/Login.jpg` (390px) conferida, sem mudança
-  de layout. Comparação visual do app renderizado continua pendente do Browser.
+- Builder MCP passou a responder, mas só listou MUI, não o design Lectum, e não expõe o Quick Copy
+  ativo por esta interface. Fallback: `proto/Login.jpg` e `proto/Verificação de E-mail com Código.jpg`.
+  Browser local em 390px e desktop validou o patch; sem redesenhar as telas ou adotar MUI.
 
 Detalhes técnicos e fontes: [ADR-0496](../adrs/0496-auditoria-pre-producao-e-dependencias.md).
+
+## Evidências de interação — complemento 0.1.312
+
+- Dashboard Admin: desktop e 390px; menu abre, fecha por Escape e restaura foco.
+- Login e cadastro paciente: erros vazios em PT-BR; foco no primeiro campo inválido.
+- Antes: Tab saltava o botão de senha; nome acessível do input incluía “Mostrar senha”.
+  Depois: Tab/Enter alternam a visibilidade; rótulo contém só o nome do campo.
+- Antes: `123456`, apagar terceiro dígito, resultado `12456_`. Depois: `12_456`; repor
+  dígito não altera os demais. Colagem, zero inicial, limpeza e bloqueio de envio incompleto passaram.
+- OTP: interação local com controller/RHF/schema reais em página temporária sem API, removida
+  antes do build. Nenhum endpoint simulado e nenhuma verificação inventada.
+- Confirmação real em homolog: conta confirmada, mas links retornavam à tela de confirmação;
+  navegação completa ao mesmo destino abriu o perfil. Correção opt-in apenas nessa transição,
+  mantendo guard e destino interno normalizado. Repetição completa pós-deploy ainda pendente.
+- Capturas locais em `/tmp/lectum-audit-178-ui/` (01–10); antes/depois 07, 09 e 10 conferidos
+  novamente a partir dos arquivos salvos. Capturas e credenciais não serão versionadas.
+- Diretório de psicólogos mostrou falhas de reprodução em parte dos vídeos no Browser; causa
+  ainda não determinada. Não desativar assinaturas/permissões para contornar o erro.
+- Select customizado: código usa `onMouseDown` nas opções; falta reproduzir seleção por teclado
+  e toque antes de corrigir. Acessibilidade completa ainda não certificada.
+
+**Validação local 0.1.312:** check agregado aprovado (487 testes), build do frontend aprovado,
+cinco manifests sincronizados. Sem a rota temporária no artefato. Publicação/smoke a acompanhar.

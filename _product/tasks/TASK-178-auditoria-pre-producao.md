@@ -121,3 +121,29 @@ exigir restauração de banco; manter contratos antigos durante rollout. Não al
   Imagem Docker completa Linux amd64 aprovada. 13 testes de parser/validador passaram na imagem
   final com usuário não root, rede externa bloqueada e filesystem somente leitura, sem iniciar
   o entrypoint/migrations ou conectar a banco.
+
+## Continuação: Browser e formulários — 0.1.312
+
+- [x] Backend/frontend/Admin `0.1.311` confirmados; 16 smokes de homolog passaram às 22:50 UTC.
+- [x] Browser conectado: dashboard Admin e cadastro paciente exercitados em 390px/desktop.
+- [x] Conta de auditoria criada e confirmada por e-mail real, com aceite expressamente autorizado.
+- [x] Corrigidos foco da senha, semântica do label e deslocamento de dígitos OTP; 10 regressões
+  com helpers reais e render React/RHF, sem instalação de dependências.
+- [x] Browser local confirmou senha por Tab/Enter e OTP mantendo casas vazias; formulário
+  temporário sem API removido antes do build. Não equivale a teste ponta a ponta do e-mail.
+- [x] Loop de navegação depois da confirmação reproduzido: hard navigation passa, link client-side
+  retorna à confirmação. Opt-in de navegação completa descarta cache antigo nessa transição.
+- [ ] Repetir cadastro/confirmação real após publicar `0.1.312`, com nova conta dedicada.
+- [ ] Concluir todos os demais fluxos e arquivos; auditoria continua aberta.
+
+TASK-41 continua bloqueada: minutas jurídicas sem aprovação e links ausentes nos cadastros.
+Não publicar texto inventado nem considerar aceite provisório regularizado. Esta pendência impede
+recomendar promoção, mas não impede corrigir os demais defeitos técnicos na TASK-178.
+
+Builder MCP disponível nesta retomada, porém só listou MUI; Quick Copy Lectum não acessível pelas
+operações expostas. Conferidos protótipos locais de login/OTP e preservada fundação TASK-02.
+Sem migration, env obrigatória, mudança de provider ou reset. Um único bump sincronizado para 0.1.312.
+
+Validação 0.1.312: `pnpm check` aprovado (127 frontend, 293 backend, 35 Admin, 32 video;
+487 testes), frontend build aprovado, `check:version` aprovado. Tipos temporários do harness
+foram removidos de `.next/dev` antes da repetição limpa; rota não está no artefato final.

@@ -88,3 +88,33 @@ Validação complementar concluída: `pnpm check` (477 testes), quatro builds e 
 `linux/amd64` aprovados em `0.1.311`. Na imagem final, 13 testes compilados de multipart e
 mensagens passaram com `--network none --read-only --cap-drop ALL` e entrypoint Node explícito,
 sem banco ou migrations. A validação Docker cobre a diferença que o build local não detectou.
+
+## Complemento — formulários e confirmação (0.1.312)
+
+A conta dedicada foi criada pelo cadastro real, com autorização expressa para aceite e código do
+usuário. Foram reproduzidos: botão de senha fora da ordem de Tab; label englobando botão/erro;
+OTP deslocando casas após apagar um dígito; retorno indevido à confirmação após confirmação real.
+
+Decisões:
+
+- Corrigir a fundação existente: Container com label somente no título, descrição/erro associados
+  por ID, preservando layout e reserva de erro. Senha respeita disabled/readOnly, tem foco visível.
+- RHF guarda espaços apenas como casas vazias transitórias no OTP; schema continua exigindo seis
+  dígitos. Botão de envio também valida completude, sem enviar espaços ou mudar contrato da API.
+- Confirmação opta por `reloadAfterSet` no hook existente: persiste sessão antes de navegar para
+  destino normalizado, descartando redirects/cache de hidratação antigos. Os demais fluxos mantêm
+  router client-side. Não remover o guard nem confiar no cookie como autorização de backend.
+- Testes Node usam React/RHF reais em render estático e TypeScript já instalado para TSX; nenhum
+  pacote novo. Interação local de OTP usa controller e schema reais, sem API, em harness descartável.
+- O novo cadastro ponta a ponta após patch ainda deve ser repetido; teste de wiring não certifica
+  a integração. A auditoria não está encerrada nem autoriza produção.
+- TASK-41/ADR-0440 permanecem bloqueados por texto jurídico aprovado ausente. Não publicar minutas
+  ou substituir versões de aceite por uma aprovação fictícia. Escopo técnico não é parecer jurídico.
+
+Fontes: código atual; documentação Next local `use-router.md` (Client Cache/prefetch/refresh);
+proto/Login e Verificação de E-mail com Código; interação real em homolog e Browser local.
+Builder MCP só retornou MUI nesta retomada, sem Quick Copy Lectum utilizável; não adotá-lo.
+
+Deploy: somente código frontend, compatível com backend anterior; cinco manifests sincronizados.
+Sem env nova, migrations, dados removidos ou alteração de provider. Smoke 0.1.311 aprovado antes
+deste complemento; publicação 0.1.312 e novo ciclo de confirmação ainda pendentes no registro.

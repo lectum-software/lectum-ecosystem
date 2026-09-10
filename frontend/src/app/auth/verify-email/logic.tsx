@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/api/callers/auth";
 import { getSafeApiErrorMessage } from "@/api/errors";
 import type { user } from "@/api/generator/types";
+import { isCompleteOtpValue } from "@/components/controllers/otp/value";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
@@ -109,7 +110,7 @@ const formatCooldown = (seconds: number) => {
 };
 
 export const VerifyEmailLogic = () => {
-  const { setter } = useUserSet("/app");
+  const { setter } = useUserSet("/app", { reloadAfterSet: true });
   const searchParams = useSearchParams();
   const { Form, formProps, hook } = useForm();
   const storedUser = useAppSelector((state) => state.user);
@@ -173,7 +174,7 @@ export const VerifyEmailLogic = () => {
   const currentEmail = maskEmail(currentUser?.email);
   const isConfirmed = Boolean(currentUser?.confirmed) || alreadyConfirmed;
   const isHydrating = hidrate.isLoading || hidrate.isPending;
-  const canSubmit = code.length === CODE_LENGTH && !verifyCode.isPending && !isConfirmed;
+  const canSubmit = isCompleteOtpValue(code, CODE_LENGTH) && !verifyCode.isPending && !isConfirmed;
   const canResend =
     cooldown === 0 && !sendConfirmCode.isPending && !verifyCode.isPending && !isConfirmed;
 

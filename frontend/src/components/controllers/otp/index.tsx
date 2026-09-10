@@ -6,9 +6,7 @@ import { Container } from "@/components/controllers/container";
 import { describedBy, fieldId } from "@/components/controllers/utils";
 import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
-
-const normalizeDigits = (value: string, length: number) =>
-  value.replace(/\D/g, "").slice(0, length);
+import { editOtpValue, normalizeOtpValue } from "./value";
 
 export function OtpController<FormType extends FieldValues>({
   name,
@@ -44,7 +42,7 @@ export function OtpController<FormType extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => {
         const error = fieldState.error?.message;
-        const value = normalizeDigits(String(field.value ?? ""), length);
+        const value = normalizeOtpValue(String(field.value ?? ""), length);
         const characters = value.padEnd(length, " ").split("");
         const isDisabled = disabled || readOnly;
 
@@ -53,7 +51,7 @@ export function OtpController<FormType extends FieldValues>({
         };
 
         const updateValue = (nextValue: string, focusTo?: number) => {
-          const normalized = normalizeDigits(nextValue, length);
+          const normalized = normalizeOtpValue(nextValue, length);
           field.onChange(normalized);
           onChangeCallback?.(normalized);
 
@@ -63,23 +61,8 @@ export function OtpController<FormType extends FieldValues>({
         };
 
         const applyInputValue = (index: number, rawValue: string) => {
-          const digits = normalizeDigits(rawValue, length);
-          const nextCharacters = value.padEnd(length, " ").split("");
-
-          if (!digits) {
-            nextCharacters[index] = " ";
-            updateValue(nextCharacters.join("").replace(/\s/g, ""), index);
-            return;
-          }
-
-          digits.split("").forEach((digit, offset) => {
-            const nextIndex = index + offset;
-            if (nextIndex < length) {
-              nextCharacters[nextIndex] = digit;
-            }
-          });
-
-          updateValue(nextCharacters.join("").replace(/\s/g, ""), index + digits.length);
+          const digitCount = rawValue.replace(/\D/g, "").length;
+          updateValue(editOtpValue(value, index, rawValue, length), index + digitCount);
         };
 
         return (
@@ -124,9 +107,7 @@ export function OtpController<FormType extends FieldValues>({
                     onKeyDown={(event) => {
                       if (event.key === "Backspace" && !digit && index > 0) {
                         event.preventDefault();
-                        const nextCharacters = value.padEnd(length, " ").split("");
-                        nextCharacters[index - 1] = " ";
-                        updateValue(nextCharacters.join("").replace(/\s/g, ""), index - 1);
+                        updateValue(editOtpValue(value, index - 1, "", length), index - 1);
                       }
 
                       if (event.key === "ArrowLeft" && index > 0) {

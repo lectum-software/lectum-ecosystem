@@ -111,10 +111,12 @@ export function InputController<FormType extends FieldValues>({
 
               {type === "password" ? (
                 <button
+                  aria-controls={inputId}
                   aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
-                  className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
+                  className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={disabled || readOnly}
                   onClick={() => setVisible((current) => !current)}
-                  tabIndex={-1}
+                  tabIndex={tabIndex}
                   type="button"
                 >
                   {visible ? (

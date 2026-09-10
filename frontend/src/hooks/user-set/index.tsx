@@ -11,6 +11,7 @@ import { rememberCreatePostAuthReturnTarget } from "@/utils/community-post-auth-
 type RedirectTarget = string | null | ((data: user) => string | null);
 type UserSetOptions = {
   skipOnboardingRedirect?: boolean;
+  reloadAfterSet?: boolean;
 };
 
 export const useUserSet = (
@@ -41,10 +42,22 @@ export const useUserSet = (
 
       if (target) {
         rememberCreatePostAuthReturnTarget(target);
-        router.replace(target);
+        if (options.reloadAfterSet) {
+          // Uma mudança de confirmação invalida também redirects e hidratações em memória.
+          window.location.replace(target);
+        } else {
+          router.replace(target);
+        }
       }
     },
-    [dispatch, options.skipOnboardingRedirect, redirect, router, searchParams],
+    [
+      dispatch,
+      options.reloadAfterSet,
+      options.skipOnboardingRedirect,
+      redirect,
+      router,
+      searchParams,
+    ],
   );
 
   return { setter };
