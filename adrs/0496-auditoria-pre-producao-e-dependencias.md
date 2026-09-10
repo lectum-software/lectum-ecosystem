@@ -66,3 +66,25 @@ Baseline e `pnpm check` final aprovados (476 testes das apps); quatro builds apr
 `0.1.310`, sem mudanças de schema. Audit repetido com zero avisos conhecidos nos cinco escopos.
 Smoke HTTP local das builds Next passou. Push/smoke publicado e execução no Browser permanecem
 pendentes deste registro; a auditoria integral não está concluída.
+
+## Complemento — limites exatos e smoke inicial
+
+O teste ampliado de mensagens cobre agora `string.length` e `array.length`: a mensagem
+precisa informar valor exato, não mínimo/máximo. Preservado o indicador tipado `issue.exact`
+sem afrouxar a validação. Mudança aditiva apenas de mensagem, sem env/migration.
+
+Commit inicial `1e10422a` enviado. Smoke de 10/09, 22:36 UTC confirmou frontend/Admin
+`0.1.310`, rotas privadas redirecionadas, imagens e leitura pública funcionais. O backend
+continuava saudável, mas em `0.1.309`; não considerar as mensagens antigas uma regressão
+do código novo nem certificar deploy sem versão. Estado/log do Dokploy solicitado.
+
+O log real do Dokploy confirmou uma falha introduzida no build inicial: importação de JSON
+pelo teste novo sem `locales/` no estágio builder. O runtime já copiava esses arquivos.
+A correção copia o mesmo catálogo no builder, preservando testes no typecheck e traduções reais.
+Validar imagem completa `linux/amd64` (Node 22, pnpm fixo e sem env local) antes do novo push;
+não iniciar o entrypoint da imagem nesse teste, pois ele aplica migrations em runtime.
+
+Validação complementar concluída: `pnpm check` (477 testes), quatro builds e Docker completo
+`linux/amd64` aprovados em `0.1.311`. Na imagem final, 13 testes compilados de multipart e
+mensagens passaram com `--network none --read-only --cap-drop ALL` e entrypoint Node explícito,
+sem banco ou migrations. A validação Docker cobre a diferença que o build local não detectou.

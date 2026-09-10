@@ -100,3 +100,24 @@ exigir restauração de banco; manter contratos antigos durante rollout. Não al
 - `pnpm check:version`: cinco manifests sincronizados, um único bump por commit.
 - Sem alteração de Prisma/schema/migrations, env obrigatória ou exclusão de dados.
 - Push comunicado ao usuário; smoke pós-deploy será registrado após publicação real.
+
+## Smoke e complemento de validação
+
+- Commit `1e10422a` enviado a `homolog`; hooks repetiram checks com sucesso.
+- Em 10/09/2026, 22:36 UTC: frontend/Admin `0.1.310`, `/version` sem cache/noindex,
+  imagens PNG 200 e páginas privadas 307 para login. Backend `/health` e `/ready` 200,
+  porém `/ping` ainda `0.1.309`: não certificar deploy das correções do backend.
+- Leitura pública de feed e diretório continuou acessível sem sessão (200);
+  rotas privadas mantiveram 401. Sem ler/expor dados pessoais nos registros do smoke.
+- Estado/log de deploy do backend solicitado ao usuário; video privado não consultado.
+- Regressão complementar: comprimentos fixos (`string.length`/`array.length`) devem informar
+  quantidade exata em ambos os lados do limite. O mapeamento tipado preserva `issue.exact`,
+  sem alterar quais valores são aceitos. Nova versão preparada: `0.1.311` (um bump).
+
+- Usuário trouxe log do Dokploy: build `0.1.310` falhou porque o teste novo importa JSON de
+  `locales/`, copiado anteriormente apenas no runner. Corrigido Dockerfile para copiar o mesmo
+  catálogo real também no builder; sem excluir testes do typecheck nem simular traduções.
+- Check agregado `0.1.311`: 477 testes passaram (117/293/35/32); quatro builds locais passaram.
+  Imagem Docker completa Linux amd64 aprovada. 13 testes de parser/validador passaram na imagem
+  final com usuário não root, rede externa bloqueada e filesystem somente leitura, sem iniciar
+  o entrypoint/migrations ou conectar a banco.

@@ -53,6 +53,21 @@ test("mensagem específica de domínio continua com precedência", () => {
   assert.equal(firstMessage(z.string().min(2, "Informe seu nome."), ""), "Informe seu nome.");
 });
 
+test("comprimento fixo informa valor exato, não apenas mínimo ou máximo", () => {
+  for (const value of ["a", "aaaa"]) {
+    assert.equal(
+      firstMessage(z.string().length(3), value),
+      "Texto deve conter exatamente 3 caracter(es)",
+    );
+  }
+  for (const value of [[1], [1, 2, 3]]) {
+    assert.equal(
+      firstMessage(z.array(z.number()).length(2), value),
+      "Lista deve conter exatamente 2 elemento(s)",
+    );
+  }
+});
+
 test("validador HTTP real devolve erro inline PT-BR para login vazio", async () => {
   const app = express();
   app.use(express.json());

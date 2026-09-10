@@ -36,6 +36,9 @@ ENV DATABASE_URL=${DATABASE_URL}
 COPY tsconfig.json prisma.config.ts biome.json ./
 COPY prisma ./prisma
 COPY src ./src
+# O typecheck também cobre testes que importam os catálogos reais de tradução.
+# Manter os mesmos recursos na compilação isolada e na imagem final.
+COPY locales ./locales
 
 RUN pnpm build
 

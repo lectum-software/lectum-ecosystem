@@ -36,13 +36,13 @@ z.setErrorMap((issue) => {
       break;
     }
     case "too_small": {
-      const mode = issue.inclusive ? "inclusive" : "not_inclusive";
+      const mode = issue.exact ? "exact" : issue.inclusive ? "inclusive" : "not_inclusive";
       key = `errors.too_small.${issue.origin}.${mode}`;
       vars.minimum = issue.minimum;
       break;
     }
     case "too_big": {
-      const mode = issue.inclusive ? "inclusive" : "not_inclusive";
+      const mode = issue.exact ? "exact" : issue.inclusive ? "inclusive" : "not_inclusive";
       key = `errors.too_big.${issue.origin}.${mode}`;
       vars.maximum = issue.maximum;
       break;

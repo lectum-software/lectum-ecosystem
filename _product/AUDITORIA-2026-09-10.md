@@ -13,9 +13,17 @@
 7. Retiradas referências técnicas das mensagens de sessão, SMS e sugestões.
 8. Falha de verificação profissional não atribui mais indisponibilidade ao Conselho sem evidência.
 9. Corrigido texto de campos alternativos que mostrava um marcador de tradução quebrado.
+10. Campos com tamanho fixo informam a quantidade exata, sem sugerir apenas mínimo/máximo.
+11. Corrigido o build do backend no servidor: traduções faltavam durante a compilação.
 
-Publicação/smoke pós-deploy ainda pendentes. `pnpm check` e builds das quatro apps passaram
-em `0.1.310`; frontend revalidado após preservar o reset completo da sessão Google. Nenhum reset, limpeza de dados ou cobrança foi feito.
+Correções 1–9 enviadas em `1e10422a` (`0.1.310`). Frontend/Admin publicaram, mas o build
+do backend falhou. Correções 10–11 compõem `0.1.311`; nova publicação pendente deste registro.
+
+**Smoke de 10/09, 22:36 UTC:** frontend/Admin em `0.1.310`; páginas de login, redirecionamento
+privado, imagens e versões passaram. Backend saudável (`/health` e `/ready` 200), mas ainda
+em `0.1.309`: mensagens novas não apareceram. Deploy do backend ainda não confirmado;
+log do Dokploy confirmou traduções ausentes na etapa de compilação. Leituras públicas de comunidades/psicólogos mantiveram 200.
+Não há aprovação para produção. Video privado não foi consultado remotamente. Nenhum reset, limpeza de dados ou cobrança foi feito.
 
 ## Cobertura real até aqui
 
@@ -26,7 +34,9 @@ em `0.1.310`; frontend revalidado após preservar o reset completo da sessão Go
 - [Entradas de rotas](AUDITORIA-2026-09-10-ROTAS.tsv): 449 entradas estáticas; caminhos de Express
   ainda precisam ser compostos com seus mounts e routers filhos. Não é lista certificada de endpoints.
 - Baseline e check final aprovados: frontend 117, backend 292, Admin 35 e video 32 testes
-  (476 testes, sem falhas ou skips). Builds das quatro apps aprovadas em `0.1.310`.
+  (476 testes, sem falhas ou skips) em `0.1.310`. Complemento `0.1.311`: 477 testes
+  (backend 293) e quatro builds aprovados; build Docker completo Linux amd64 aprovado. Mais 13 testes executados na imagem final,
+  sem rede externa, volume publicado ou conexão de banco.
 - `pnpm check:dependencies`: zero avisos conhecidos nos cinco escopos.
 - Dependências de produção: baseline com 8 ocorrências no backend e 4 em cada app Next;
   após atualização, zero avisos conhecidos nos cinco escopos. Não demonstra ausência de todas as falhas.
@@ -64,6 +74,9 @@ em `0.1.310`; frontend revalidado após preservar o reset completo da sessão Go
 
 - Mapeamento Zod atualizado para a versão 4, preservando mensagens de domínio e sem ecoar valores.
   Conferir ainda todo o restante das mensagens client-side e validações de formulários no navegador.
+- Verificar imposição server-side de confirmação de e-mail e troca obrigatória de senha;
+  leitura inicial dos guards não mostrou essas condições, mas o cadastro completo ainda não foi
+  exercitado. Também rastrear vínculo Google com conta manual pré-existente. Não é exploração confirmada.
 - Callback assíncrono de autenticação opcional não tem captura local de falhas; investigar rejeição
   de persistência depois de validar JWT, sem derrubar o banco publicado para reproduzir.
 - Modais e formulários ainda precisam de teclado/foco/leitor de tela e medidas mobile reais.
