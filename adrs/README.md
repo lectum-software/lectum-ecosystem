@@ -524,3 +524,4 @@ Formato recomendado:
 - [ADR-0491 — Conexão privada e autenticada do backend ao serviço de vídeo](0491-conexao-backend-servico-video.md)
 - [ADR-0492 — Render social de vídeos no serviço dedicado](0492-render-social-videos-servico-dedicado.md)
 - [ADR-0493 — CRP sem zero artificial no registro](0493-crp-publico-sem-zero-artificial.md)
+- [ADR-0494 — Topo do post com botão Seguindo inline](0494-topo-post-com-botao-seguindo-inline.md)

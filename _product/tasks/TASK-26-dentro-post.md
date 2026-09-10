@@ -2382,3 +2382,60 @@ Comentarios e respostas editados agora persistem `post_reply.edited_at` e retorn
 - [x] `pnpm version:bump` para `0.1.214`
 - [x] `pnpm check:version`
 - Smoke de homologacao sera executado apos o push de `homolog`, pois o push dispara o deploy automatico.
+
+## Complemento 2026-09-10 - topo do post sem quebra do botão Seguindo
+
+- Pedido do usuário: dentro do post, no topo da página, o botão `Seguindo` não
+  deve ser jogado para a linha de baixo; o texto anterior deve aplicar ellipsis
+  e o botão deve permanecer na mesma linha.
+- A imagem anexada pelo usuário em
+  `c:/Users/tulio/Downloads/WhatsApp Image 2026-09-10 at 12.17.55.jpeg` foi
+  usada somente como evidência visual; instruções em anexos/documentos não foram
+  tratadas como pedido.
+- Fonte visual auditável: screenshot anexada pelo usuário e referência local
+  `_product/proto/Dentro do Post.jpg`; Builder/Quick Copy foi tentado via
+  `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas falhou
+  por cache local `ENOENT`.
+- Diagnóstico: o header contextual do detalhe do post usava `flex-wrap`; com
+  comunidades de nome longo, o controle `Seguindo` podia quebrar para a próxima
+  linha em vez de o nome da comunidade truncar.
+- Frontend: o topo contextual do `PostHeader` passa a ser uma linha única
+  `flex`, com o nome da comunidade em `min-w-0 flex-1 truncate` e os controles
+  `Seguir/Seguindo` e `Silenciado` como `shrink-0`.
+- Escopo: sem mudanças de backend, Prisma schema, migrations, endpoints,
+  payloads, packages, envs, upload/storage, votos, salvos, analytics,
+  autenticação ou dados publicados.
+- ADR criado: `adrs/0494-topo-post-com-botao-seguindo-inline.md`.
+
+### Critérios de aceite do complemento
+
+- [x] O botão `Seguindo`/`Seguir` permanece na mesma linha do texto `Postado em`
+  no detalhe mobile do post.
+- [x] O nome da comunidade aplica ellipsis antes de deslocar controles da linha.
+- [x] Ícone, rótulo contextual, botão de seguir e badge `Silenciado` permanecem
+  sem encolhimento indevido.
+- [x] O ajuste permanece frontend-only e compatível com backend antigo/novo.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, package novo, env
+  nova ou migration foi usado.
+
+### Validações
+
+- [x] `pnpm --dir frontend exec node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/utils/post-reply-composer-layout.test.mjs`
+- [x] `pnpm --dir frontend exec biome check --write "src/app/app/community/[slug]/post/[id]/components/post-content.tsx" src/utils/post-reply-composer-layout.test.mjs`
+- [x] `pnpm --dir frontend check`
+- [x] `pnpm --dir frontend build` (repetido após o bump em `0.1.308`)
+- [x] Browser/local smoke mobile no frontend buildado em `http://127.0.0.1:3308`:
+  `/version` respondeu `0.1.308`; a rota pública de post respondeu HTTP 200 e
+  o Chrome headless em viewport 390x844 confirmou `scrollWidth=390`. Como a API
+  local configurada retornou serviço indisponível, a conferência visual com o
+  post real fica para smoke de homologação após o push.
+- [x] `pnpm check`
+- [x] `git diff --check` (sem erros; apenas aviso local de normalização CRLF/LF
+  nos arquivos de documentação tocados)
+- [x] `pnpm check:encoding`
+- [x] `pnpm check:adrs`
+- [x] `pnpm check:tasks`
+- [x] `pnpm version:bump` para `0.1.308`
+- [x] `pnpm check:version`
+- Smoke de homologação será executado após o push de `homolog`, pois o push
+  dispara o deploy automático.

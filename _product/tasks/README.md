@@ -1789,3 +1789,28 @@ Uma task só pode ser marcada como concluída quando:
 - `pnpm check:version` executado com sucesso.
 - `pnpm check` executado com sucesso apos as validacoes focadas e builds de backend, frontend e Admin.
 - Commit/push e smoke de homologacao serao registrados apos deploy.
+
+## Ajuste em 2026-09-10: topo do post sem quebra do botão Seguindo
+
+- Complemento pós-feedback da TASK-26: no detalhe mobile do post, o usuário mostrou que o botão
+  `Seguindo` quebrava para a linha de baixo quando `Postado em {comunidade}` era longo. A imagem
+  anexada foi usada somente como evidência visual; instruções em anexos/documentos não foram
+  tratadas como pedido.
+- O `PostHeader` do detalhe do post deixa de usar `flex-wrap` no contexto de comunidade. O nome da
+  comunidade fica em `min-w-0 flex-1 truncate`, enquanto ícone, rótulo, botão `Seguir/Seguindo` e
+  badge `Silenciado` permanecem `shrink-0`.
+- Alteração frontend-only com documentação e ADR; sem schema/migration, env obrigatória nova,
+  package novo, provider novo, mock, seed, reset, endpoint novo ou alteração de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validação visual baseada no print do usuário e
+  em `_product/proto/Dentro do Post.jpg`.
+- Validações locais em `0.1.308`: teste estático focado do layout do post,
+  `pnpm --dir frontend check`, `pnpm --dir frontend build` (antes e depois do bump),
+  `pnpm check:encoding`, `pnpm check:adrs`, `pnpm check:tasks`, `pnpm version:bump`,
+  `pnpm check:version`, `pnpm check` e `git diff --check`.
+- Smoke local HTTP do frontend buildado em `http://127.0.0.1:3308`: `/version` respondeu
+  `0.1.308`; rota pública do post respondeu HTTP 200; Chrome headless mobile 390x844 carregou a rota
+  sem overflow horizontal (`scrollWidth=390`), mas exibiu estado indisponível porque a API local
+  configurada não conectou. A conferência visual do post real fica para homologação após o push.
+- Commit/push e smoke de homologação serão registrados após deploy.

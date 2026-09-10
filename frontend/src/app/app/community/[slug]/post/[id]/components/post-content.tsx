@@ -181,21 +181,23 @@ export const PostHeader = ({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2 text-[11px] font-semibold text-muted">
+      <div className="flex min-w-0 items-center gap-1 text-[11px] font-semibold text-muted">
         <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="shrink-0">Postado em</span>
-        <Link
-          className="block min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap font-bold text-muted no-underline hover:text-muted hover:no-underline dark:text-muted dark:hover:text-muted"
-          href={`/comunidades/${post.community.slug}`}
-        >
-          {post.community.name}
-        </Link>
-        <CommunityFollowToggle
-          className="ml-1"
-          initialFollowing={Boolean(post.community.following)}
-          slug={post.community.slug}
-        />
-        {post.muted_by_current_user ? <PostMutedBadge className="ml-1" /> : null}
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <Link
+            className="block min-w-0 flex-1 cursor-pointer truncate font-bold text-muted no-underline hover:text-muted hover:no-underline dark:text-muted dark:hover:text-muted"
+            href={`/comunidades/${post.community.slug}`}
+          >
+            {post.community.name}
+          </Link>
+          <CommunityFollowToggle
+            className="shrink-0"
+            initialFollowing={Boolean(post.community.following)}
+            slug={post.community.slug}
+          />
+        </div>
+        {post.muted_by_current_user ? <PostMutedBadge className="shrink-0" /> : null}
       </div>
 
       <div className="flex items-start gap-3">

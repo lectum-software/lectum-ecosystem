@@ -28,3 +28,20 @@ test("detalhe e arvore reservam espaco inferior para o composer fixo", () => {
   assert.match(detailSource, /pb-36 sm:px-0 sm:pb-6/);
   assert.match(threadSource, /pb-36 sm:px-0 sm:pb-6/);
 });
+
+test("topo do detalhe do post mantem botao de seguir na mesma linha", () => {
+  const postContentSource = readSource(
+    "../app/app/community/[slug]/post/[id]/components/post-content.tsx",
+  );
+
+  assert.match(
+    postContentSource,
+    /<div className="flex min-w-0 items-center gap-1 text-\[11px\] font-semibold text-muted">/,
+  );
+  assert.match(
+    postContentSource,
+    /<div className="flex min-w-0 flex-1 items-center gap-1\.5">\s*<Link\s*className="block min-w-0 flex-1 cursor-pointer truncate/s,
+  );
+  assert.match(postContentSource, /<CommunityFollowToggle\s*className="shrink-0"/);
+  assert.doesNotMatch(postContentSource, /flex-wrap items-center gap-x-1 gap-y-2/);
+});
