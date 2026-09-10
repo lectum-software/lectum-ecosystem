@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.309",
+  "version": "0.1.310",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -28,7 +28,7 @@
     "hls.js": "1.7.2",
     "js-cookie": "^3.0.8",
     "lucide-react": "^1.17.0",
-    "next": "16.2.11",
+    "next": "16.3.3",
     "next-themes": "^0.4.6",
     "nprogress": "^0.2.0",
     "react": "19.2.4",
@@ -50,7 +50,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.11",
+    "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
@@ -61,13 +61,14 @@
       "unrs-resolver"
     ],
     "overrides": {
+      "baseline-browser-mapping": "2.11.0",
       "brace-expansion@>=3.0.0 <5.0.9": "5.0.9",
       "browserslist": "4.28.7",
       "fast-uri": "3.1.6",
       "form-data": "4.0.6",
       "nanoid@<3.3.17": "3.3.17",
       "postcss": "8.5.26",
-      "sharp": "0.35.3",
+      "sharp": "0.35.4",
       "socket.io-parser": "4.2.7",
       "ws": "8.21.0"
     }

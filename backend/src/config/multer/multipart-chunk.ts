@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import multer from "multer";
 import { resolve } from "@/helpers/translate/resolve";
-import { toMulterExclusiveThreshold } from "./limits";
+import { MULTIPART_FIELD_STRUCTURE_LIMITS, toMulterExclusiveThreshold } from "./limits";
 import { logMultipartUpload, type MultipartUploadLogReason } from "./multipart-logging";
 
 type MultipartChunkMiddlewareOptions = {
@@ -35,11 +35,12 @@ export const createMultipartChunkMiddleware = ({
   const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
   const upload = multer({
     limits: {
+      ...MULTIPART_FIELD_STRUCTURE_LIMITS,
       fieldNameSize: 100,
       fieldSize: toMulterExclusiveThreshold(4096),
       fields: maxTextFields,
       files: 1,
-      fileSize: toMulterExclusiveThreshold(maxFileSizeBytes),
+      fileSize: maxFileSizeBytes,
       parts: toMulterExclusiveThreshold(maxTextFields + 1),
     },
     storage: multer.memoryStorage(),

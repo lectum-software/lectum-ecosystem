@@ -1,0 +1,102 @@
+# TASK-178: Auditoria integral antes da produção
+
+## Metadata
+
+| Campo | Valor |
+| --- | --- |
+| ID | TASK-178 |
+| Prioridade | P0 |
+| Esforço | XL |
+| Fase | Segurança e qualidade antes da produção |
+| Status | In Progress |
+| Dependências | TASK-177 |
+| ADR alvo | ADR-0496 |
+
+## Objetivo
+
+Inventariar as quatro aplicações, rastrear fluxos e limites de confiança, corrigir defeitos
+demonstráveis e produzir um relatório simples com evidência e lacunas explícitas. Inventário
+automatizado, leitura de código e teste funcional são evidências diferentes; nenhum substitui outro.
+
+## Escopo e regras operacionais
+
+- Backend, frontend, admin, video, configuração de deploy, dependências e documentação vigente.
+- Autenticação, autorização por objeto/função, sessões, uploads, playback, jobs, billing,
+  notificações, privacidade, formulários, idioma, estados de loading/erro e mobile-first.
+- Homologação somente; não promover para produção durante esta task.
+- Não resetar, excluir dados em massa, limpar buckets ou disparar campanhas/pagamentos reais.
+- Mutação funcional somente com contas e conteúdo dedicados à auditoria, rastreáveis e autorizados.
+- Corrigir por mudanças compatíveis e commits coesos; preservar rollout independente das apps.
+- Não adicionar dependências nem alterar schema sem decisão/validação específica.
+- Safari real não é equivalente a emulação de viewport ou teste em Chromium.
+
+## Critérios de aceite
+
+- [x] Inventário de todos os arquivos versionados com classificação, hash e estado de revisão.
+- [ ] Mapa dos fluxos, rotas, permissões, formulários e integrações das quatro aplicações.
+- [ ] Revisão manual dos arquivos próprios registrada, sem contar varredura como leitura manual.
+- [ ] Achados de segurança confirmados possuem correção e teste de regressão.
+- [ ] Formulários e mensagens PT-BR revisados com estados vazio, inválido, pendente e falha.
+- [ ] Fluxos autenticados e públicos testados em homologação com contas próprias da auditoria.
+- [ ] Mobile-first, Chrome e Safari validados com evidência e limites do ambiente registrados.
+- [x] Checks, dependências e builds das quatro apps passam; sem mocks como evidência de integração.
+- [ ] Cada push informado e seguido de smoke de homologação; versões registradas.
+- [ ] Relatório final simples enumera correções, riscos residuais e pendências.
+
+## Dependências externas e situação inicial
+
+- Branch confirmada: `homolog`, árvore limpa, base `70d6b726` / versão `0.1.309`.
+- Usuário informou Admin autenticado em `https://homolog.admin.lectum.com.br/dashboard` e autorizou
+  criação de contas no frontend. Em 10/09, a descoberta do Browser retornou lista vazia;
+  reconexão solicitada, sem extrair cookies ou credenciais do navegador.
+- Endereço de e-mail dedicado solicitado para cadastro/verificação real no frontend.
+- Acesso a Safari/iPhone e Android reais ainda não confirmado.
+- Builder não está disponível como ferramenta nesta sessão; referência visual local em
+  `PROTO-INVENTORY.md` e `_product/proto`, a conferir por fluxo antes de alterar UI.
+
+## Plano de execução
+
+1. Registrar inventário e baseline de testes/dependências.
+2. Rastrear entradas, permissões, saídas e efeitos de cada domínio.
+3. Reproduzir achados, corrigir na fundação existente e adicionar regressões.
+4. Validar código/build/browser; publicar correções compatíveis em homologação.
+5. Repetir os fluxos afetados, completar cobertura e relatório, sem declarar pronto o não testado.
+
+## Deploy e rollback
+
+Nenhuma env obrigatória, migration, novo provider ou package previsto inicialmente. Qualquer
+necessidade posterior deve ser registrada antes da mudança. Reverter commits de correção não deve
+exigir restauração de banco; manter contratos antigos durante rollout. Não alterar segredos no chat.
+
+## Evidências iniciais
+
+- Inventário base de 3.121 arquivos e 449 entradas estáticas de rotas no relatório
+  `../AUDITORIA-2026-09-10.md`. Leitura manual completa e resolução dos mounts continuam pendentes.
+- Baseline `pnpm check` passou. Dependências corrigidas segundo ADR-0496; novo
+  `pnpm check:dependencies` oferece repetição explícita nos cinco escopos, sem alterar runtime.
+- Nova versão Multer já inclui o limite inclusivo: teste existente encontrou aceitação indevida
+  do primeiro byte excedente após upgrade; removido `+1` somente de `fileSize`.
+- Habilitados limites de profundidade/índice do parser; cinco casos HTTP locais passaram.
+- Next novo trouxe avisos de navegação: router nos dois destinos do convite de cadastro/login,
+  fechando o convite antes de navegar. Rejeição de sessão Admin e falha de sessão Google mantêm
+  recarregamento completo por segurança, com exceção de lint local documentada.
+
+- Login vazio em homolog revelou tipos internos (`string`/`undefined`) na resposta. Mapeamento
+  da versão antiga do Zod foi substituído pelo contrato tipado Zod 4, com catálogo PT-BR e
+  sem ecoar entrada, enum ou nomes de campos extras. Teste HTTP usa o validador real, sem banco
+  ou autenticação simulada. Também corrigidas sete mensagens com acentos perdidos no catálogo.
+
+- Removidos detalhes de tokens/dispositivo/provider SMS nas mensagens ao usuário; indisponibilidade
+  da consulta profissional não culpa mais o Conselho sem evidência. Corrigido marcador de tradução
+  em campos alternativos. Sete regressões do validador/catálogo passaram.
+- Smoke HTTP local das builds Next passou (login, rotas privadas, versão/no-cache/noindex e imagem
+  otimizada PNG). Browser real/mobile/Safari permanecem pendentes; não equivaler HTTP a UX.
+
+## Validação da correção inicial — versão 0.1.310
+
+- `pnpm check`: aprovado (117 frontend, 292 backend, 35 Admin, 32 video).
+- Builds das quatro apps: aprovadas; frontend revalidado após ajuste de reset de sessão.
+- `pnpm check:dependencies`: zero avisos conhecidos nos cinco escopos.
+- `pnpm check:version`: cinco manifests sincronizados, um único bump por commit.
+- Sem alteração de Prisma/schema/migrations, env obrigatória ou exclusão de dados.
+- Push comunicado ao usuário; smoke pós-deploy será registrado após publicação real.

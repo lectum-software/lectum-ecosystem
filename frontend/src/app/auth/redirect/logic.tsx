@@ -34,6 +34,8 @@ export const RedirectLogic = () => {
             "Não foi possível concluir o login com o Google.",
           );
           toast.error(message);
+          // Falha de sessão exige descartar também os caches em memória antes da revogação.
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
           window.location.href = `/auth/error?error=${encodeURIComponent(message)}&clearSession=1`;
         },
       },

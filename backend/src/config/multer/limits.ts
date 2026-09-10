@@ -27,9 +27,16 @@ const MULTIPART_LIMIT_MIN_MB = 5;
 const MULTIPART_CHUNK_LIMIT_MAX_MB = 50;
 const MULTIPART_CHUNK_LIMIT_MIN_MB = 5;
 
-// O Busboy dispara alguns limites quando o valor configurado e alcancado,
-// nao apenas quando ele e ultrapassado. O threshold interno precisa ficar
-// uma unidade acima do maximo de produto para manter a regra publica inclusiva.
+// Multer 2.3 oferece estes limites antes de materializar arrays/objetos dos campos.
+// Os contratos atuais usam campos simples e listas curtas; não aceitar índices ou
+// profundidades arbitrários mesmo quando o corpo HTTP é pequeno.
+export const MULTIPART_FIELD_STRUCTURE_LIMITS = {
+  fieldArrayIndexLimit: 100,
+  fieldNestingDepth: 4,
+} as const;
+
+// Busboy ainda trata fieldSize/parts como thresholds exclusivos. Multer >=2.3
+// já torna fileSize inclusivo: NÃO aplicar este ajuste ao tamanho do arquivo.
 export const toMulterExclusiveThreshold = (inclusiveLimit: number) => inclusiveLimit + 1;
 
 const imageLimit = (value: unknown, fallback = 5) =>

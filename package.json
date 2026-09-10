@@ -1,6 +1,6 @@
 {
   "name": "lectum-ecosystem",
-  "version": "0.1.309",
+  "version": "0.1.310",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
@@ -28,7 +28,8 @@
     "dev:admin": "pnpm --dir admin dev",
     "dev:video": "pnpm --dir video dev:api",
     "version:bump": "node scripts/release-version.mjs bump",
-    "version:check-commit": "node scripts/release-version.mjs check-staged"
+    "version:check-commit": "node scripts/release-version.mjs check-staged",
+    "check:dependencies": "pnpm audit --prod && pnpm --dir backend audit --prod && pnpm --dir frontend audit --prod && pnpm --dir admin audit --prod && pnpm --dir video audit --prod"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",

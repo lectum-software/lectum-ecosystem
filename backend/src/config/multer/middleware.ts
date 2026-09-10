@@ -5,7 +5,7 @@ import { sanitizePublicErrorMessage } from "@/utils/public-error";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { UploadInfrastructureError, UploadValidationError } from "./errors";
 import { fileFilter } from "./fileFilter";
-import { toMulterExclusiveThreshold } from "./limits";
+import { MULTIPART_FIELD_STRUCTURE_LIMITS, toMulterExclusiveThreshold } from "./limits";
 import { storage } from "./storage";
 import type { PublicUploadOption } from "./types";
 
@@ -14,7 +14,7 @@ export default (mode: PublicUploadOption) => (req: Request, res: Response, next:
   req.uploadCacheControl = mode.cacheControl;
   req.uploadFeature = mode.feature;
   let middleware: RequestHandler;
-  const max = mode.size ? toMulterExclusiveThreshold(mode.size * 1024 * 1024) : undefined;
+  const max = mode.size ? mode.size * 1024 * 1024 : undefined;
   const maxFiles =
     "fields" in mode && mode.fields
       ? mode.fields.reduce((total, field) => total + field.maxCount, 0)
@@ -37,6 +37,7 @@ export default (mode: PublicUploadOption) => (req: Request, res: Response, next:
     storage,
     fileFilter,
     limits: {
+      ...MULTIPART_FIELD_STRUCTURE_LIMITS,
       fieldNameSize: 100,
       fieldSize: toMulterExclusiveThreshold(64 * 1024),
       fields: maxTextFields,

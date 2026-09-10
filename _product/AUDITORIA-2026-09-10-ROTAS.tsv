@@ -1,0 +1,450 @@
+arquivo	tipo	rota_estatica	estado
+frontend/src/app/api/og/comunidades/[slug]/route.tsx	handler_next	/api/og/comunidades/[slug]	execucao_pendente
+frontend/src/app/api/og/psicologos/[id]/route.tsx	handler_next	/api/og/psicologos/[id]	execucao_pendente
+frontend/src/app/app/account/need-reset/page.tsx	pagina	/app/account/need-reset	execucao_pendente
+frontend/src/app/app/avaliacoes/nova/page.tsx	pagina	/app/avaliacoes/nova	execucao_pendente
+frontend/src/app/app/avaliacoes/page.tsx	pagina	/app/avaliacoes	execucao_pendente
+frontend/src/app/app/avaliacoes/sucesso/page.tsx	pagina	/app/avaliacoes/sucesso	execucao_pendente
+frontend/src/app/app/community/[slug]/@modal/(.)post/new/page.tsx	pagina	/app/community/[slug]/@modal/new	execucao_pendente
+frontend/src/app/app/community/[slug]/@modal/(.)post/success/page.tsx	pagina	/app/community/[slug]/@modal/success	execucao_pendente
+frontend/src/app/app/community/[slug]/page.tsx	pagina	/app/community/[slug]	execucao_pendente
+frontend/src/app/app/community/[slug]/post/[id]/page.tsx	pagina	/app/community/[slug]/post/[id]	execucao_pendente
+frontend/src/app/app/community/[slug]/post/[id]/thread/[replyId]/page.tsx	pagina	/app/community/[slug]/post/[id]/thread/[replyId]	execucao_pendente
+frontend/src/app/app/community/[slug]/post/new/page.tsx	pagina	/app/community/[slug]/post/new	execucao_pendente
+frontend/src/app/app/community/[slug]/post/success/page.tsx	pagina	/app/community/[slug]/post/success	execucao_pendente
+frontend/src/app/app/community/page.tsx	pagina	/app/community	execucao_pendente
+frontend/src/app/app/community/post/new/page.tsx	pagina	/app/community/post/new	execucao_pendente
+frontend/src/app/app/community/suggest/page.tsx	pagina	/app/community/suggest	execucao_pendente
+frontend/src/app/app/community/suggest/success/page.tsx	pagina	/app/community/suggest/success	execucao_pendente
+frontend/src/app/app/community/top-mentors/page.tsx	pagina	/app/community/top-mentors	execucao_pendente
+frontend/src/app/app/comunidades/[slug]/@modal/(.)publicacao/nova/page.tsx	pagina	/app/comunidades/[slug]/@modal/nova	execucao_pendente
+frontend/src/app/app/comunidades/[slug]/@modal/(.)publicacao/sucesso/page.tsx	pagina	/app/comunidades/[slug]/@modal/sucesso	execucao_pendente
+frontend/src/app/app/comunidades/[slug]/page.tsx	pagina	/app/comunidades/[slug]	execucao_pendente
+frontend/src/app/app/comunidades/[slug]/publicacao/[id]/page.tsx	pagina	/app/comunidades/[slug]/publicacao/[id]	execucao_pendente
+frontend/src/app/app/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/page.tsx	pagina	/app/comunidades/[slug]/publicacao/[id]/resposta/[replyId]	execucao_pendente
+frontend/src/app/app/comunidades/[slug]/publicacao/nova/page.tsx	pagina	/app/comunidades/[slug]/publicacao/nova	execucao_pendente
+frontend/src/app/app/comunidades/[slug]/publicacao/sucesso/page.tsx	pagina	/app/comunidades/[slug]/publicacao/sucesso	execucao_pendente
+frontend/src/app/app/comunidades/page.tsx	pagina	/app/comunidades	execucao_pendente
+frontend/src/app/app/comunidades/publicacao/nova/page.tsx	pagina	/app/comunidades/publicacao/nova	execucao_pendente
+frontend/src/app/app/comunidades/sugerir/page.tsx	pagina	/app/comunidades/sugerir	execucao_pendente
+frontend/src/app/app/comunidades/sugerir/sucesso/page.tsx	pagina	/app/comunidades/sugerir/sucesso	execucao_pendente
+frontend/src/app/app/comunidades/top-mentores/page.tsx	pagina	/app/comunidades/top-mentores	execucao_pendente
+frontend/src/app/app/comunidades-seguidas/page.tsx	pagina	/app/comunidades-seguidas	execucao_pendente
+frontend/src/app/app/configuracoes/conta/page.tsx	pagina	/app/configuracoes/conta	execucao_pendente
+frontend/src/app/app/configuracoes/notificacoes/page.tsx	pagina	/app/configuracoes/notificacoes	execucao_pendente
+frontend/src/app/app/conta/redefinir-senha/page.tsx	pagina	/app/conta/redefinir-senha	execucao_pendente
+frontend/src/app/app/favorites/page.tsx	pagina	/app/favorites	execucao_pendente
+frontend/src/app/app/favoritos/page.tsx	pagina	/app/favoritos	execucao_pendente
+frontend/src/app/app/following/page.tsx	pagina	/app/following	execucao_pendente
+frontend/src/app/app/notificacoes/page.tsx	pagina	/app/notificacoes	execucao_pendente
+frontend/src/app/app/notifications/page.tsx	pagina	/app/notifications	execucao_pendente
+frontend/src/app/app/page.tsx	pagina	/app	execucao_pendente
+frontend/src/app/app/perfil/editar/page.tsx	pagina	/app/perfil/editar	execucao_pendente
+frontend/src/app/app/perfil/page.tsx	pagina	/app/perfil	execucao_pendente
+frontend/src/app/app/posts/mine/page.tsx	pagina	/app/posts/mine	execucao_pendente
+frontend/src/app/app/posts/saved/page.tsx	pagina	/app/posts/saved	execucao_pendente
+frontend/src/app/app/professional/analytics/page.tsx	pagina	/app/professional/analytics	execucao_pendente
+frontend/src/app/app/professional/billing/address/page.tsx	pagina	/app/professional/billing/address	execucao_pendente
+frontend/src/app/app/professional/billing/card/page.tsx	pagina	/app/professional/billing/card	execucao_pendente
+frontend/src/app/app/professional/billing/checkout/page.tsx	pagina	/app/professional/billing/checkout	execucao_pendente
+frontend/src/app/app/professional/billing/page.tsx	pagina	/app/professional/billing	execucao_pendente
+frontend/src/app/app/professional/billing/plans/page.tsx	pagina	/app/professional/billing/plans	execucao_pendente
+frontend/src/app/app/professional/billing/subscription/page.tsx	pagina	/app/professional/billing/subscription	execucao_pendente
+frontend/src/app/app/professional/cfp/page.tsx	pagina	/app/professional/cfp	execucao_pendente
+frontend/src/app/app/professional/profile/setup/page.tsx	pagina	/app/professional/profile/setup	execucao_pendente
+frontend/src/app/app/professional/reviews/page.tsx	pagina	/app/professional/reviews	execucao_pendente
+frontend/src/app/app/professional/whatsapp/verify/page.tsx	pagina	/app/professional/whatsapp/verify	execucao_pendente
+frontend/src/app/app/profile/edit/page.tsx	pagina	/app/profile/edit	execucao_pendente
+frontend/src/app/app/profile/page.tsx	pagina	/app/profile	execucao_pendente
+frontend/src/app/app/profissional/assinatura/cartao/page.tsx	pagina	/app/profissional/assinatura/cartao	execucao_pendente
+frontend/src/app/app/profissional/assinatura/endereco/page.tsx	pagina	/app/profissional/assinatura/endereco	execucao_pendente
+frontend/src/app/app/profissional/assinatura/gerenciar/page.tsx	pagina	/app/profissional/assinatura/gerenciar	execucao_pendente
+frontend/src/app/app/profissional/assinatura/pagamento/page.tsx	pagina	/app/profissional/assinatura/pagamento	execucao_pendente
+frontend/src/app/app/profissional/assinatura/page.tsx	pagina	/app/profissional/assinatura	execucao_pendente
+frontend/src/app/app/profissional/assinatura/planos/page.tsx	pagina	/app/profissional/assinatura/planos	execucao_pendente
+frontend/src/app/app/profissional/avaliacoes/page.tsx	pagina	/app/profissional/avaliacoes	execucao_pendente
+frontend/src/app/app/profissional/cfp/page.tsx	pagina	/app/profissional/cfp	execucao_pendente
+frontend/src/app/app/profissional/estatisticas/page.tsx	pagina	/app/profissional/estatisticas	execucao_pendente
+frontend/src/app/app/profissional/perfil/configurar/page.tsx	pagina	/app/profissional/perfil/configurar	execucao_pendente
+frontend/src/app/app/profissional/whatsapp/verificar/page.tsx	pagina	/app/profissional/whatsapp/verificar	execucao_pendente
+frontend/src/app/app/psicologo/[id]/contato/page.tsx	pagina	/app/psicologo/[id]/contato	execucao_pendente
+frontend/src/app/app/psicologo/[id]/page.tsx	pagina	/app/psicologo/[id]	execucao_pendente
+frontend/src/app/app/psicologos/page.tsx	pagina	/app/psicologos	execucao_pendente
+frontend/src/app/app/psychologist/[id]/contact/page.tsx	pagina	/app/psychologist/[id]/contact	execucao_pendente
+frontend/src/app/app/psychologist/[id]/page.tsx	pagina	/app/psychologist/[id]	execucao_pendente
+frontend/src/app/app/psychologists/page.tsx	pagina	/app/psychologists	execucao_pendente
+frontend/src/app/app/publicacoes/minhas/page.tsx	pagina	/app/publicacoes/minhas	execucao_pendente
+frontend/src/app/app/publicacoes/salvas/page.tsx	pagina	/app/publicacoes/salvas	execucao_pendente
+frontend/src/app/app/reviews/new/page.tsx	pagina	/app/reviews/new	execucao_pendente
+frontend/src/app/app/reviews/page.tsx	pagina	/app/reviews	execucao_pendente
+frontend/src/app/app/reviews/success/page.tsx	pagina	/app/reviews/success	execucao_pendente
+frontend/src/app/app/settings/account/page.tsx	pagina	/app/settings/account	execucao_pendente
+frontend/src/app/app/settings/notifications/page.tsx	pagina	/app/settings/notifications	execucao_pendente
+frontend/src/app/auth/admin-view-as/page.tsx	pagina	/auth/admin-view-as	execucao_pendente
+frontend/src/app/auth/error/page.tsx	pagina	/auth/error	execucao_pendente
+frontend/src/app/auth/login/page.tsx	pagina	/auth/login	execucao_pendente
+frontend/src/app/auth/profile-selection/page.tsx	pagina	/auth/profile-selection	execucao_pendente
+frontend/src/app/auth/recovery/page.tsx	pagina	/auth/recovery	execucao_pendente
+frontend/src/app/auth/redirect/page.tsx	pagina	/auth/redirect	execucao_pendente
+frontend/src/app/auth/register/patient/page.tsx	pagina	/auth/register/patient	execucao_pendente
+frontend/src/app/auth/register/psychologist/page.tsx	pagina	/auth/register/psychologist	execucao_pendente
+frontend/src/app/auth/reset-password/page.tsx	pagina	/auth/reset-password	execucao_pendente
+frontend/src/app/auth/verify-email/page.tsx	pagina	/auth/verify-email	execucao_pendente
+frontend/src/app/community/[slug]/page.tsx	pagina	/community/[slug]	execucao_pendente
+frontend/src/app/community/[slug]/post/[id]/page.tsx	pagina	/community/[slug]/post/[id]	execucao_pendente
+frontend/src/app/community/[slug]/post/[id]/thread/[replyId]/page.tsx	pagina	/community/[slug]/post/[id]/thread/[replyId]	execucao_pendente
+frontend/src/app/community/page.tsx	pagina	/community	execucao_pendente
+frontend/src/app/community/top-mentors/page.tsx	pagina	/community/top-mentors	execucao_pendente
+frontend/src/app/comunidades/[slug]/page.tsx	pagina	/comunidades/[slug]	execucao_pendente
+frontend/src/app/comunidades/[slug]/publicacao/[id]/page.tsx	pagina	/comunidades/[slug]/publicacao/[id]	execucao_pendente
+frontend/src/app/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/page.tsx	pagina	/comunidades/[slug]/publicacao/[id]/resposta/[replyId]	execucao_pendente
+frontend/src/app/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp/page.tsx	pagina	/comunidades/[slug]/publicacao/[id]/resposta/[replyId]/whatsapp	execucao_pendente
+frontend/src/app/comunidades/[slug]/publicacao/[id]/whatsapp/page.tsx	pagina	/comunidades/[slug]/publicacao/[id]/whatsapp	execucao_pendente
+frontend/src/app/comunidades/page.tsx	pagina	/comunidades	execucao_pendente
+frontend/src/app/comunidades/top-mentores/page.tsx	pagina	/comunidades/top-mentores	execucao_pendente
+frontend/src/app/dashboard/page.tsx	pagina	/dashboard	execucao_pendente
+frontend/src/app/llms.txt/route.ts	handler_next	/llms.txt	execucao_pendente
+frontend/src/app/paciente/boas-vindas/page.tsx	pagina	/paciente/boas-vindas	execucao_pendente
+frontend/src/app/page.tsx	pagina	/	execucao_pendente
+frontend/src/app/patient/welcome/page.tsx	pagina	/patient/welcome	execucao_pendente
+frontend/src/app/psicologos/[id]/contato/page.tsx	pagina	/psicologos/[id]/contato	execucao_pendente
+frontend/src/app/psicologos/[id]/page.tsx	pagina	/psicologos/[id]	execucao_pendente
+frontend/src/app/psicologos/page.tsx	pagina	/psicologos	execucao_pendente
+frontend/src/app/psychologist/cfp/page.tsx	pagina	/psychologist/cfp	execucao_pendente
+frontend/src/app/psychologists/[id]/contact/page.tsx	pagina	/psychologists/[id]/contact	execucao_pendente
+frontend/src/app/psychologists/[id]/page.tsx	pagina	/psychologists/[id]	execucao_pendente
+frontend/src/app/psychologists/page.tsx	pagina	/psychologists	execucao_pendente
+frontend/src/app/version/route.ts	handler_next	/version	execucao_pendente
+admin/src/app/(admin)/comunidades/[slug]/conteudo/[type]/[id]/page.tsx	pagina	/comunidades/[slug]/conteudo/[type]/[id]	execucao_pendente
+admin/src/app/(admin)/comunidades/[slug]/page.tsx	pagina	/comunidades/[slug]	execucao_pendente
+admin/src/app/(admin)/comunidades/lista/page.tsx	pagina	/comunidades/lista	execucao_pendente
+admin/src/app/(admin)/comunidades/nova/page.tsx	pagina	/comunidades/nova	execucao_pendente
+admin/src/app/(admin)/comunidades/page.tsx	pagina	/comunidades	execucao_pendente
+admin/src/app/(admin)/configuracoes/assinatura/page.tsx	pagina	/configuracoes/assinatura	execucao_pendente
+admin/src/app/(admin)/configuracoes/page.tsx	pagina	/configuracoes	execucao_pendente
+admin/src/app/(admin)/configuracoes/seo-metadados/page.tsx	pagina	/configuracoes/seo-metadados	execucao_pendente
+admin/src/app/(admin)/dashboard/page.tsx	pagina	/dashboard	execucao_pendente
+admin/src/app/(admin)/financeiro/assinaturas/page.tsx	pagina	/financeiro/assinaturas	execucao_pendente
+admin/src/app/(admin)/financeiro/cobrancas/page.tsx	pagina	/financeiro/cobrancas	execucao_pendente
+admin/src/app/(admin)/financeiro/page.tsx	pagina	/financeiro	execucao_pendente
+admin/src/app/(admin)/moderacao/alertas-operacionais/page.tsx	pagina	/moderacao/alertas-operacionais	execucao_pendente
+admin/src/app/(admin)/moderacao/compliance/page.tsx	pagina	/moderacao/compliance	execucao_pendente
+admin/src/app/(admin)/moderacao/conteudo-sensivel/page.tsx	pagina	/moderacao/conteudo-sensivel	execucao_pendente
+admin/src/app/(admin)/moderacao/denuncias/page.tsx	pagina	/moderacao/denuncias	execucao_pendente
+admin/src/app/(admin)/moderacao/denuncias-compliance/page.tsx	pagina	/moderacao/denuncias-compliance	execucao_pendente
+admin/src/app/(admin)/moderacao/operacionais/page.tsx	pagina	/moderacao/operacionais	execucao_pendente
+admin/src/app/(admin)/moderacao/page.tsx	pagina	/moderacao	execucao_pendente
+admin/src/app/(admin)/moderacao/sugestoes-comunidades/page.tsx	pagina	/moderacao/sugestoes-comunidades	execucao_pendente
+admin/src/app/(admin)/moderacao/textual/page.tsx	pagina	/moderacao/textual	execucao_pendente
+admin/src/app/(admin)/notificacoes/page.tsx	pagina	/notificacoes	execucao_pendente
+admin/src/app/(admin)/pacientes/[id]/page.tsx	pagina	/pacientes/[id]	execucao_pendente
+admin/src/app/(admin)/pacientes/lista/page.tsx	pagina	/pacientes/lista	execucao_pendente
+admin/src/app/(admin)/pacientes/page.tsx	pagina	/pacientes	execucao_pendente
+admin/src/app/(admin)/psicologos/[id]/page.tsx	pagina	/psicologos/[id]	execucao_pendente
+admin/src/app/(admin)/psicologos/lista/page.tsx	pagina	/psicologos/lista	execucao_pendente
+admin/src/app/(admin)/psicologos/page.tsx	pagina	/psicologos	execucao_pendente
+admin/src/app/(admin)/settings/page.tsx	pagina	/settings	execucao_pendente
+admin/src/app/(admin)/trafego/page.tsx	pagina	/trafego	execucao_pendente
+admin/src/app/login/page.tsx	pagina	/login	execucao_pendente
+admin/src/app/page.tsx	pagina	/	execucao_pendente
+admin/src/app/version/route.ts	handler_next	/version	execucao_pendente
+backend/src/config/multer/filesRoute.ts	HEAD	/public/files/*file	path_local_compor_mount_e_revisar
+backend/src/config/multer/filesRoute.ts	GET	/public/files/*file	path_local_compor_mount_e_revisar
+backend/src/config/multer/filesRoute.ts	HEAD	/public/video-stream-import/v1/:source	path_local_compor_mount_e_revisar
+backend/src/config/multer/filesRoute.ts	GET	/public/video-stream-import/v1/:source	path_local_compor_mount_e_revisar
+backend/src/main/server/app.ts	GET	/health	path_local_compor_mount_e_revisar
+backend/src/main/server/app.ts	GET	/ready	path_local_compor_mount_e_revisar
+backend/src/main/server/routes.ts	GET	/ping	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/auth/hidrate/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/auth/logout/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/dashboard/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	POST	/	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	PUT	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	PATCH	/:id/status	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id/statistics	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id/content	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id/content/:targetType/:targetId/detail	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	POST	/:id/content/:targetType/:targetId/remove	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id/ranking	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	POST	/:id/reports/:targetType/:targetId/resolve	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id/reports	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id/activities	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	POST	/:id/avatar	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	GET	/:id/rules	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	POST	/:id/rules	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	PUT	/:id/rules/:ruleId	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/communities/manage/index.ts	DELETE	/:id/rules/:ruleId	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/dashboard/export/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/dashboard/summary/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/finance/dashboard/index.ts	GET	/export	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/finance/dashboard/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/finance/lists/index.ts	GET	/charges	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/finance/lists/index.ts	GET	/subscriptions	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	GET	/summary	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	GET	/operational-alerts	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	POST	/reports/:reportId/resolve	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	GET	/community-suggestions	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	POST	/community-suggestion-blocks	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	PUT	/community-suggestion-blocks/:blockId	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	POST	/community-suggestions/:suggestionId/move	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	POST	/community-suggestions/:suggestionId/archive	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	GET	/events	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	GET	/events/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	POST	/events/:id/review	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/moderation/index.ts	POST	/events/:id/resolve	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	GET	/metrics	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	GET	/push-status	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	GET	/email-status	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	GET	/automatic-logs	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	GET	/campaigns	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	POST	/campaigns	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	GET	/campaigns/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	PUT	/campaigns/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	POST	/campaigns/:id/send	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	POST	/campaigns/:id/schedule	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/notifications/index.ts	POST	/campaigns/:id/cancel	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	GET	/:id/account	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/change-email	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/send-email-confirmation	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/send-password-reset	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/set-temporary-password	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/suspend	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/deactivate	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/delete	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/revoke-sessions	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/account/index.ts	POST	/:id/account/view-as	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/activities/index.ts	GET	/:id/activities	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/dashboard/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/detail/index.ts	GET	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/list/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/profile-edit/index.ts	PUT	/:id/personal-data	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/patients/reports/index.ts	GET	/:id/reports	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	GET	/:id/account	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/change-email	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/send-email-confirmation	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/send-password-reset	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/set-temporary-password	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/suspend	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/deactivate	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/delete	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/revoke-sessions	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/account/index.ts	POST	/:id/account/view-as	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/activities/index.ts	GET	/:id/activities	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/billing/index.ts	GET	/:id/billing	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/billing/index.ts	POST	/:id/billing/grant-courtesy	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/billing/index.ts	POST	/:id/billing/revoke-courtesy	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/billing/index.ts	POST	/:id/billing/subscription/cancel	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/dashboard/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/detail/index.ts	GET	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/engagement/index.ts	GET	/:id/statistics	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/engagement/index.ts	GET	/:id/publications	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/feedback/index.ts	GET	/:id/reviews	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/feedback/index.ts	GET	/:id/reports	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/feedback/index.ts	POST	/:id/reports/:reportId/resolve	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/list/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/profile-edit/index.ts	PUT	/:id/personal-data	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/profile-edit/index.ts	PUT	/:id/professional-data	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/registry-verification/index.ts	GET	/:id/registry-verification	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/registry-verification/index.ts	PUT	/:id/registry-verification/identity	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/registry-verification/index.ts	POST	/:id/registry-verification/approve	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/psychologists/registry-verification/index.ts	POST	/:id/registry-verification/reject	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	GET	/	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/restore-defaults	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/reorder	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/specialty-categories	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/specialty-categories/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/specialty-categories/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/specialties	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/specialties/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/specialties/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/approaches	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/approaches/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/approaches/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/services	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/services/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/services/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/languages	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/languages/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/languages/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/target-audiences	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/target-audiences/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/target-audiences/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/genders	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/genders/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/genders/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/race-colors	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/race-colors/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/race-colors/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	POST	/religions	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	PUT	/religions/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/catalogs/index.ts	DELETE	/religions/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/seo/index.ts	GET	/	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/seo/index.ts	POST	/:page_key/og-image	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/seo/index.ts	PUT	/:page_key	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/settings/subscription-plan/index.ts	GET	/	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/traffic/export/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/traffic/summary/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/private/video-assets/index.ts	GET	/:id/playback	path_local_compor_mount_e_revisar
+backend/src/modules/api/admin/public/auth/login/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	GET	/security	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	GET	/tips	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	POST	/logout	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	POST	/delete/google-intent	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	POST	/delete	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	PUT	/email	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	PUT	/password	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/account/index.ts	PUT	/tips	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/auth/code/index.ts	PUT	/:code	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/auth/confirm/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/auth/hidrate/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/auth/need_reset/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/auth/reset/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	GET	/feed/posts	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	GET	/top-mentors	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	POST	/suggestions	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	POST	/:slug/members	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	DELETE	/:slug/members	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	POST	/:slug/posts/media/multipart/initiate	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	POST	/:slug/posts/media/multipart/part	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	POST	/:slug/posts/media/multipart/complete	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	DELETE	/:slug/posts/media/multipart	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	POST	/:slug/posts/media	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	POST	/:slug/posts	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	GET	/:slug/posts	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/community/index.ts	GET	/:slug	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	POST	/:id/contact	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	POST	/:id/contact-click	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	POST	/:id/view	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	POST	/:id/search-impression	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	POST	/:id/video-watch	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	GET	/:id/posts	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	GET	/:id/reviews	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/directory/psychologists/index.ts	GET	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification/clean/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification/click/index.ts	POST	/:id/click	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification/index/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification/update/index.ts	PUT	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification_preference/show/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification_preference/update/index.ts	PUT		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification_subscription/key/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/notification_subscription/store/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/favorites/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/favorites/index.ts	POST	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/favorites/index.ts	DELETE	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/follows/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/follows/index.ts	POST	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/follows/index.ts	DELETE	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/onboarding/index.ts	PUT		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/profile/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/profile/index.ts	PUT		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/profile/index.ts	POST	/avatar	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/profile/index.ts	DELETE	/avatar	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/reviews/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/reviews/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/patient/reviews/index.ts	GET	/eligibility/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/mine	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/saved	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/replies	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/replies/:replyId/thread	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/media	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/media/multipart/initiate	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/media/multipart/part	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/media/multipart/complete	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	DELETE	/:id/replies/media/multipart	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/share-artifact	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/share-artifact/render-jobs	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/share-artifact/render-jobs/:jobId	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/share-artifact/render-jobs/:jobId/file	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/share-artifact/render	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/share-artifact	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/replies/:replyId/share-artifact	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/:replyId/share-artifact/render-jobs	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/replies/:replyId/share-artifact/render-jobs/:jobId	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id/replies/:replyId/share-artifact/render-jobs/:jobId/file	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/:replyId/share-artifact/render	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/:replyId/share-artifact	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/:replyId/save	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	DELETE	/:id/replies/:replyId/save	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/:replyId/share	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/replies/:replyId/report	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	PUT	/:id/replies/:replyId	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	DELETE	/:id/replies/:replyId	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/vote	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/save	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	DELETE	/:id/save	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/share	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/mute	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	DELETE	/:id/mute	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	POST	/:id/report	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	PUT	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	DELETE	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/posts/index.ts	GET	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/analytics/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/address/index.ts	PUT		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/checkout/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/current/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/payment-method/session/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/plans/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/select-free/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/subscription/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/subscription/index.ts	POST	/cancel	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/billing/sync/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/cfp/index.ts	POST	/search	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/cfp/index.ts	POST	/confirm	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	PUT		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	POST	/avatar	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	DELETE	/avatar	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	POST	/cover-image	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	DELETE	/cover-image	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	POST	/video/multipart/initiate	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	POST	/video/multipart/part	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	POST	/video/multipart/complete	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	DELETE	/video/multipart	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	POST	/video	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	POST	/video/cover	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/free-profile/index.ts	DELETE	/video	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/reviews/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/reviews/index.ts	POST	/:id/response	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/whatsapp-verification/index.ts	POST	/request	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/psychologist/whatsapp-verification/index.ts	POST	/confirm	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/video-assets/index.ts	POST	/uploads	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/video-assets/index.ts	GET	/:id/status	path_local_compor_mount_e_revisar
+backend/src/modules/api/private/video-assets/index.ts	DELETE	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/analytics/action/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/analytics/content-attention/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/analytics/content-video-watch/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/analytics/location-capture/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/analytics/page-view/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/analytics/page-view/index.ts	POST	/:id/duration	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/auth/login/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/auth/recovery/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/auth/reset/index.ts	POST	/:code	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/billing/webhook/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/google/callback/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/google/link/index.ts	POST	/intent	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/google/link/index.ts	DELETE		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/google/login/index.ts	GET	/	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/google/login/index.ts	GET	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/google/me/index.ts	GET		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/seo/community/index.ts	GET	/:slug	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/seo/community-post/index.ts	GET	/:slug/:id/replies/:replyId	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/seo/community-post/index.ts	GET	/:slug/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/seo/metadata/index.ts	GET	/	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/seo/psychologist/index.ts	GET	/:id	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/user/store/index.ts	POST		path_local_compor_mount_e_revisar
+backend/src/modules/api/public/video-assets/index.ts	GET	/:id/playback	path_local_compor_mount_e_revisar
+backend/src/modules/api/public/video-stream/webhook/index.ts	POST		path_local_compor_mount_e_revisar
+video/src/app.ts	GET	/health	path_local_compor_mount_e_revisar
+video/src/app.ts	GET	/version	path_local_compor_mount_e_revisar
+video/src/app.ts	GET	/ready	path_local_compor_mount_e_revisar
+video/src/modules/jobs/router.ts	POST	/compress	path_local_compor_mount_e_revisar
+video/src/modules/jobs/router.ts	POST	/social-share	path_local_compor_mount_e_revisar
+video/src/modules/jobs/router.ts	GET	/:id	path_local_compor_mount_e_revisar
+video/src/modules/jobs/router.ts	GET	/:id/output	path_local_compor_mount_e_revisar
+video/src/modules/jobs/router.ts	DELETE	/:id	path_local_compor_mount_e_revisar

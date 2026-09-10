@@ -526,3 +526,5 @@ Formato recomendado:
 - [ADR-0493 — CRP sem zero artificial no registro](0493-crp-publico-sem-zero-artificial.md)
 - [ADR-0494 — Topo do post com botão Seguindo inline](0494-topo-post-com-botao-seguindo-inline.md)
 - [ADR-0495 — Backend como fonte única dos limites de vídeo](0495-backend-fonte-unica-limites-video.md)
+
+- [ADR-0496 — Auditoria pré-produção e correções de dependências](0496-auditoria-pre-producao-e-dependencias.md)

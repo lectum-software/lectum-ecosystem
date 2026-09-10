@@ -10,6 +10,7 @@ import {
   Sparkles,
   UserPlus,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import { normalizeTrustedWhatsAppUrl } from "@/utils/external-url";
@@ -52,6 +53,7 @@ export const ProgressiveConversionProvider = ({
   isAuthenticated,
   pathname,
 }: ProgressiveConversionProviderProps) => {
+  const router = useRouter();
   const [prompt, setPrompt] = useState<ConversionPromptState | null>(null);
   const pathnameRef = useRef(pathname);
 
@@ -262,12 +264,14 @@ export const ProgressiveConversionProvider = ({
 
   const startSignup = () => {
     const returnTo = prompt?.intent?.returnTo ?? getCurrentReturnTo();
-    window.location.href = `/auth/profile-selection?redirectTo=${encodeURIComponent(returnTo)}`;
+    setPrompt(null);
+    router.push(`/auth/profile-selection?redirectTo=${encodeURIComponent(returnTo)}`);
   };
 
   const startLogin = () => {
     const returnTo = prompt?.intent?.returnTo ?? getCurrentReturnTo();
-    window.location.href = `/auth/login?redirectTo=${encodeURIComponent(returnTo)}`;
+    setPrompt(null);
+    router.push(`/auth/login?redirectTo=${encodeURIComponent(returnTo)}`);
   };
 
   const value = useMemo(

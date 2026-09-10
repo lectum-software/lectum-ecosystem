@@ -1,7 +1,9 @@
 # Packages e Política de Dependências
 
-Última auditoria dos manifests/lockfiles: **2026-08-29**, com `pnpm audit --prod` separado na raiz, backend, frontend e admin.
-Resultado: **zero vulnerabilidades conhecidas** nos quatro escopos. React Hook Form permanece como
+Última consulta dos manifests/lockfiles: **2026-09-10**, com `pnpm audit --prod` separado na raiz, backend, frontend, admin e video.
+Após atualização focal da TASK-178: **zero vulnerabilidades conhecidas** nos cinco escopos.
+O baseline anterior tinha 8 ocorrências no backend e 4 em cada app Next; versões corrigidas e
+limitações de evidência estão no ADR-0496. Isso não equivale à conclusão do pentest funcional. React Hook Form permanece como
 padrão de formulários; TanStack Query permanece como padrão de server state.
 
 ## Política
@@ -22,7 +24,7 @@ padrão de formulários; TanStack Query permanece como padrão de server state.
 
 | Pacote | Versão instalada | Última verificada | Uso |
 |---|---:|---:|---|
-| `next` | `16.2.11` | `16.2.11` | App Router, SSR, build |
+| `next` | `16.3.3` | `16.3.3` | App Router, SSR, build |
 | `react` | `19.2.4` | `19.2.7` | UI |
 | `react-dom` | `19.2.4` | `19.2.7` | UI |
 | `tailwindcss` | `^4` | `4.3.0` | Estilo |
@@ -129,14 +131,14 @@ Instalar somente na `TASK-02` ou em task que realmente precise do campo.
 | `bcrypt` | `^6.0.0` | `6.0.0` | Compat senha |
 | `zod` | `^4.4.3` | `4.4.3` | Validation |
 | `i18next` | `^26.3.0` | `26.3.0` | i18n |
-| `nodemailer` | `^9.0.5` | `9.0.5` | E-mail transacional via Resend SMTP |
+| `nodemailer` | `9.1.1` | `9.1.1` | E-mail transacional via Resend SMTP |
 | `twilio` | `^6.0.2` | `6.0.2` | SMS/OTP para verificação de telefone/WhatsApp |
 | `web-push` | `^3.6.7` | `3.6.7` | Push web |
 | `socket.io` | `^4.8.3` | `4.8.3` | Tempo real |
 | `helmet` | `^8.2.0` | `8.2.0` | Segurança HTTP |
 | `cors` | `^2.8.6` | `2.8.6` | CORS |
 | `cookie-parser` | `^1.4.7` | `1.4.7` | Cookies |
-| `multer` | `^2.2.0` | `2.2.0` | Upload |
+| `multer` | `2.3.0` | `2.3.0` | Upload |
 | `@aws-sdk/client-s3` | `^3.1059.0` | `3.1060.0` | Cloudflare R2 via API S3-compatible |
 | `mercadopago` | `^3.1.0` | `3.1.0` | Gateway Mercado Pago via adapter backend |
 | `date-fns` | `^4.4.0` | `4.4.0` | Datas |
@@ -169,7 +171,7 @@ o terminal do container baixe/atualize pnpm ou reinstale `node_modules` em runti
 
 | Pacote | Versão instalada | Última verificada | Uso |
 |---|---:|---:|---|
-| `next` | `16.2.11` | `16.2.11` | App Router e build do painel separado |
+| `next` | `16.3.3` | `16.3.3` | App Router e build do painel separado |
 | `react` / `react-dom` | `19.2.4` | `19.2.4` | UI |
 | `tailwindcss` | `^4` | `4.x` | Estilo |
 | `@tanstack/react-query` | `^5.101.0` | `5.101.0` | Server state |
@@ -238,19 +240,24 @@ não recebe credenciais no bundle.
 | Frontend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io-client > engine.io-client > ws`. |
 | Frontend | `form-data@4.0.6`, `brace-expansion@5.0.9` | Corrige advisories transitivos em `axios > form-data` e no tooling Sentry. |
 | Frontend | `postcss@8.5.26` | Mantém a correção de advisories transitivos do pipeline CSS/Next. |
-| Frontend | `sharp@0.35.3`, `socket.io-parser@4.2.7`, `nanoid@3.3.17` | Correções transitivas preservando as majors exigidas pela aplicação. |
+| Frontend | `sharp@0.35.4`, `socket.io-parser@4.2.7`, `nanoid@3.3.17` | Correções transitivas preservando as majors exigidas pela aplicação. |
 | Backend | `ws@8.21.0` | Corrige advisory de DoS transitivo em `socket.io > engine.io > ws`. |
 | Backend | `form-data@4.0.6` | Corrige advisory de CRLF injection transitivo em `twilio > axios > form-data`. |
 | Backend | `hono@4.12.34`, `@hono/node-server@2.0.5` | Corrige advisories transitivos do tooling Prisma. |
 | Backend | `deepmerge-ts@8.0.0` | Corrige CVE-2026-40345 em `prisma > @prisma/config`; o CLI/config foi revalidado sem alterar banco. |
 | Frontend | `browserslist@4.28.7`, `fast-uri@3.1.6` | Corrige advisories transitivos do pipeline Sentry/Babel/webpack. |
 | Backend | `axios@1.19.0`, `body-parser@2.3.0`, `brace-expansion@5.0.9`, `fast-uri@3.1.6`, `mysql2@3.23.1`, `nanoid@5.1.16`, `qs@6.16.0`, `socket.io-parser@4.2.7`, `valibot@1.4.2` | Patches transitivos fixados após auditoria; `mysql2` permanece apenas dependência transitiva do CLI Prisma, não datasource da aplicação. |
-| Admin | `form-data@4.0.6`, `brace-expansion@5.0.9`, `browserslist@4.28.7`, `fast-uri@3.1.6`, `postcss@8.5.26`, `sharp@0.35.3`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
+| Admin | `form-data@4.0.6`, `brace-expansion@5.0.9`, `browserslist@4.28.7`, `fast-uri@3.1.6`, `postcss@8.5.26`, `sharp@0.35.4`, `ws@8.21.0`, `nanoid@3.3.17` | Patches transitivos equivalentes ao frontend. |
 | Raiz | `fast-uri@3.1.6`, `js-yaml@4.3.1` | Correções transitivas das ferramentas de commit/hook. |
 
 Validação obrigatória após alteração de dependências de produção: `pnpm audit --prod`,
 `pnpm --dir frontend audit --prod`, `pnpm --dir backend audit --prod`,
 `pnpm --dir admin audit --prod`, `pnpm --dir video audit --prod`, `pnpm check` e os quatro builds.
+
+A TASK-178 fixa também `baseline-browser-mapping@2.11.0` nos overrides independentes do
+frontend/Admin para corrigir encerramento de processo por entrada inválida. Multer `2.3.0` já
+aplica `fileSize` inclusivo: o ajuste `+1` fica apenas em `fieldSize` e `parts`. Parsers públicos
+limitam também profundidade e índice de campos antes de materializar objetos.
 
 ## Testes e qualidade candidatos
 
