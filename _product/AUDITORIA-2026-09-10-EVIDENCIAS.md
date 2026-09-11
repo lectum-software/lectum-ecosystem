@@ -835,3 +835,49 @@ Recursos próprios H1 removidos por labels, inclusive rede/PG/Admin auxiliar e c
 locais; cleanup precisou path canônico /private/tmp por guard CLI do auxiliar. Não tocar
 contas, volumes, serviços ou credenciais publicados. Build final frontend .331 exit0 e
 version6/6; bump único feito. Publicação/smoke ainda pendentes.
+
+Publicação .331 concluída: c56c6ca4, push exit0, terceiro smoke16/16. Backend/frontend/Admin
+confirmados .331; health/ready200 e versões sem cache/noindex. Os dois smokes anteriores
+registraram somente publicação parcial, não falha funcional nova. Browser publicado:
+- /psicologos com sessão existente: recarga390×844 e1280×720, sem novo erro de hidratação.
+- Vídeo ativo visível reproduziu; isso não valida todos os vídeos/formatos/controles.
+- /app/perfil: SPA e recarga390px exibiram somente a conta profissional da auditoria.
+- Capturas77–79. Nenhum dado de perfil foi editado; sessão e aba profissional pausada preservadas.
+
+Leituras adicionais sem runtime: Tesla154 arquivos completos de upload/Stream/R2, Euclid31
+arquivos de feed/conversão. Proveniência/SHA integrados ao ledger, sem contar imports apenas
+inventariados. Riscos M1–M7 e T1–T6/G1–G2 descritos nos relatórios locais respectivos. Não são
+correções nem reproduções de perda física no provider: cancelamento/associação e hidratação
+pós-commit precisam provas dirigidas. Na aba publicada existiam48 elementos de vídeo (3 ciclos);
+alguns inativos anunciavam erro de mídia no AX, mas o ativo funcionou. Não generalizar esse
+sinal para falha visível de todos os vídeos nem para tempo de carregamento medido.
+
+A04/SEO: Goodall reproduziu11 verificações na imagem .330 e PG descartável, sem provider/env
+publicado:7 controles passaram e4 falhas confirmadas (inicialização pública concorrente,
+GET escrevendo legado, perda de customização e alteração de tombstone durante lock). Provas
+experimentais de primitivas SQL não contam como regressão do patch:15 controles adicionais
+orientam a decisão, mas a imagem corrigida deve executar os métodos reais novamente.
+
+A04 fechado localmente na imagem .332:18/18 cenários dos repositórios/serviços compilados reais.
+Comando permanente: `node backend/scripts/seo-metadata-integration.mjs --image=lectum-backend:audit-0.1.332`.
+Imagem Linuxamd64 sha256:608c3b669635c201d1c9ecc8926e954a77bcbf9f8db5c75c4498d5a7b9577807.
+PG recusa toda gravação durante GET, barreiras reais coordenam2 inicializações e corridas de
+manutenção/customização/remoção; repositório Admin com auditoria também ganha a disputa sem
+perder sua edição. Colisão de ID desconhecido recusa e reverte a inicialização completa.
+Datas/IDs reais, aliases exatos, campos editoriais, ausência/tombstone e upload autorizado sem
+provider foram cobertos. HTTP/Browser não são substituídos por chamadas de serviço nessa prova.
+
+Artefatos em /tmp/lectum-task178-a04-seo-pg/permanent-{332.log,result.json,freeze.json}; cleanup
+verificado sem containers/redes/diretórios privados remanescentes. Baseline final ampliada foi
+7/12 com5 falhas (a quinta envolve edição pelo repositório Admin auditado); versão inicial11
+permanece em baseline-v1. Nenhum runtime substituído, provider/credencial publicada usado.
+
+Buildhost e imagem final com pnpm build passaram. Primeira imagem .332 foi substituída localmente
+antes de testar, para incluir transação de rollback total e ordem determinística dos locks;
+nenhum deploy dessa imagem preliminar. Quatro testes puros complementam18 integrações, sem
+alegar cobertura do gateway, outros uploads ou todos os metadados dinâmicos. Bump único .332.
+Cobertura inicial1115/3121,7 parciais,1999 pendentes;1036 entradas adicionais com proveniência.
+Check agregado final .332 aprovado:671 testes (frontend176/backend393/Admin53/video43 +versão6),
+Biome/TypeScript/Prisma e guards sem falhas. Duas fontes de probe permanentes foram revisadas
+pelo principal, incluindo cleanup exclusivo, transações, barreiras e asserts de preservação.
+Nenhum reset/backfill publicado. Publicação ainda pendente até commit/push/smoke reais.

@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { managedSeoRouteDefaults } from "../managed-route-defaults";
 import {
   SEO_METADATA_DEFAULTS,
   type SeoMetadataPageKey,
@@ -11,18 +12,6 @@ import {
 const settingsOrder = SEO_METADATA_DEFAULTS.map((setting) => setting.page_key);
 
 const asJsonArray = (value?: string[] | null): Prisma.InputJsonValue => value ?? [];
-
-const legacyRouteDataByPageKey: Partial<
-  Record<SeoMetadataPageKey, { canonical_url?: string | null; route_path?: string | null }>
-> = {
-  community: { canonical_url: "/community", route_path: "/community" },
-  community_detail: { route_path: "/community/[slug]" },
-  community_post: { route_path: "/community/[slug]/post/[id]" },
-  community_post_reply: { route_path: "/community/[slug]/post/[id]/thread/[replyId]" },
-  psychologist_profile: { route_path: "/psychologists/[id]" },
-  psychologists: { canonical_url: "/psychologists", route_path: "/psychologists" },
-  top_mentors: { canonical_url: "/community/top-mentors", route_path: "/community/top-mentors" },
-};
 
 const defaultCreateData = (setting: (typeof SEO_METADATA_DEFAULTS)[number]) => ({
   canonical_url: setting.canonical_url,
@@ -50,9 +39,6 @@ export type SeoMetadataAuditInput = {
 
 export class SeoMetadataRepository {
   private async syncManagedRouteDefaults() {
-    const defaultsByKey = new Map(
-      SEO_METADATA_DEFAULTS.map((setting) => [setting.page_key, setting]),
-    );
     const settings = await prisma.site_seo_setting.findMany({
       select: {
         canonical_url: true,
@@ -61,38 +47,27 @@ export class SeoMetadataRepository {
         route_path: true,
       },
       where: { deleted: false, page_key: { in: [...settingsOrder] } },
+      orderBy: { id: "asc" },
     });
-    const operations: Array<ReturnType<typeof prisma.site_seo_setting.update>> = [];
+    const operations: Array<ReturnType<typeof prisma.site_seo_setting.updateMany>> = [];
 
     for (const setting of settings) {
-      const pageKey = setting.page_key as SeoMetadataPageKey;
-      const defaultSetting = defaultsByKey.get(pageKey);
-      if (!defaultSetting) continue;
-
-      const legacyRouteData = legacyRouteDataByPageKey[pageKey];
-      const data: Prisma.site_seo_settingUpdateInput = {};
-
-      if (setting.route_path !== defaultSetting.route_path) {
-        data.route_path = defaultSetting.route_path;
+      const data = managedSeoRouteDefaults(setting);
+      if (data.route_path === setting.route_path && data.canonical_url === setting.canonical_url) {
+        continue;
       }
 
-      const shouldSyncCanonical =
-        typeof defaultSetting.canonical_url === "string" &&
-        (setting.canonical_url === legacyRouteData?.canonical_url ||
-          setting.canonical_url === legacyRouteData?.route_path);
-
-      if (shouldSyncCanonical) {
-        data.canonical_url = defaultSetting.canonical_url;
-      }
-
-      if (Object.keys(data).length > 0) {
-        operations.push(
-          prisma.site_seo_setting.update({
-            data,
-            where: { id: setting.id },
-          }),
-        );
-      }
+      operations.push(
+        prisma.site_seo_setting.updateMany({
+          data,
+          where: {
+            id: setting.id,
+            deleted: false,
+            route_path: setting.route_path,
+            canonical_url: setting.canonical_url,
+          },
+        }),
+      );
     }
 
     if (operations.length > 0) {
@@ -111,21 +86,26 @@ export class SeoMetadataRepository {
     );
 
     if (missingDefaults.length > 0) {
-      await prisma.$transaction(
-        missingDefaults.map((setting) =>
-          prisma.site_seo_setting.create({
-            data: defaultCreateData(setting),
-          }),
-        ),
-      );
+      await prisma.$transaction(async (tx) => {
+        await tx.site_seo_setting.createMany({
+          data: missingDefaults.map(defaultCreateData),
+          skipDuplicates: true,
+        });
+        // ON CONFLICT também pode ignorar colisão de ID com outra chave: não ocultar ausência.
+        const initialized = await tx.site_seo_setting.findMany({
+          select: { page_key: true },
+          where: { page_key: { in: missingDefaults.map((setting) => setting.page_key) } },
+        });
+        if (initialized.length !== missingDefaults.length) {
+          throw new Error("SEO_DEFAULT_INITIALIZATION_INCOMPLETE");
+        }
+      });
     }
 
     await this.syncManagedRouteDefaults();
   }
 
   async list(): Promise<SeoMetadataSettingsDTO> {
-    await this.ensureDefaults();
-
     const settings = await prisma.site_seo_setting.findMany({
       where: { deleted: false },
       orderBy: [{ createdAt: "asc" }],
@@ -142,7 +122,9 @@ export class SeoMetadataRepository {
     const allSettings = [...orderedSettings, ...customSettings];
 
     return {
-      settings: allSettings.map(toSeoMetadataSettingDTO),
+      settings: allSettings.map((setting) =>
+        toSeoMetadataSettingDTO({ ...setting, ...managedSeoRouteDefaults(setting) }),
+      ),
       updated_at: allSettings.reduce<Date | null>((latest, setting) => {
         if (!latest || setting.updatedAt > latest) return setting.updatedAt;
         return latest;
@@ -151,8 +133,6 @@ export class SeoMetadataRepository {
   }
 
   async findByKey(pageKey: SeoMetadataPageKey) {
-    await this.ensureDefaults();
-
     return prisma.site_seo_setting.findFirst({
       where: { deleted: false, page_key: pageKey },
     });

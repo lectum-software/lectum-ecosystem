@@ -34,6 +34,9 @@ registra ações executadas e lacunas. Testes isolados não substituem o ambient
 | Favoritos/busca/avaliações | Inventário e revisão parcial | Jornada completa entre paciente e profissional verificado |
 | Termos/privacidade | Falta de links identificada; documentação a confirmar | Conteúdo oficialmente aprovado; bloqueia recomendação de produção |
 
+| Hidratação da sessão | .331: SSR real + Browser local com PG/sessão/revogação; homolog390/1280 público e privado390 sem mismatch | Outros guards/replay de intents e dispositivos reais não cobertos |
+| Metadados de SEO | Baseline .330 confirma concorrência defeituosa;18 cenários PG reais da .332 passam; .331 Admin lista9 páginas sem salvar | Publicação .332, UI completa e regra de canônico/global pendentes |
+
 ## Limites operacionais
 
 - Somente homologação e dados de auditoria; nenhuma exclusão em massa, reset ou cobrança real.

@@ -119,6 +119,7 @@ const invalid = (model = "seo_metadata") => ({
 
 export const index = async (): Promise<Resolve> => {
   const repository = new SeoMetadataRepository();
+  await repository.ensureDefaults();
 
   return {
     status: 200,
@@ -131,6 +132,7 @@ const findSetting = async (pageKey?: SeoMetadataPageKey | string) => {
   if (!isSeoMetadataPageKey(pageKey)) return null;
 
   const repository = new SeoMetadataRepository();
+  await repository.ensureDefaults();
 
   return repository.findByKey(pageKey);
 };
@@ -192,6 +194,7 @@ export const update = async (data: IAdminSettingsSeoDTO): Promise<Resolve> => {
   if (!title || !description) return invalid();
 
   const repository = new SeoMetadataRepository();
+  await repository.ensureDefaults();
   const current = await repository.findByKey(pageKey);
   if (!current) {
     return {

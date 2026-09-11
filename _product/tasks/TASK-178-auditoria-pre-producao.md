@@ -447,8 +447,27 @@ neutra existente, sem afrouxar autorização ou esconder o aviso.
 - [x] Boundary e template compartilham assinatura, timer e cleanup; sem imports entre features.
 - [x] Cinco testes SSR reais incluídos no runner; checkglobal667 e build otimizado local aprovados.
 - [x] Browser local: público/privado, com/sem sessão, falha de rede, retry e revogação real.
-- [ ] Bump/commit/push e smoke .331; repetir cenário em homologação.
+- [x] Bump/commit/push c56c6ca4 e smoke16/16 .331; recargas públicas390/1280 e perfil privado390 em homologação sem novo erro de hidratação.
 
 Nenhuma env, migration ou dependência nova. Checklist não certifica Safari/iOS/Android reais,
 cleanup cliente sob todas as camadas nem replay de intents. Configurações/SEO e conversão têm
 novos riscos estáticos no registro de evidências; permanecem em execução, não corrigidos por H1.
+
+## Continuação — leitura e manutenção segura de metadados
+
+Controle real na imagem .330/PG descartável confirmou quatro falhas: duas leituras frias
+concorrentes conflitam ao criar defaults; GET público modifica dados legados; sincronização
+atrasada sobrescreve canônico recém-editado e altera registro removido enquanto aguardava lock.
+
+Direção: leitura pública sem escrita e projeção PT-BR dos aliases conhecidos, sem inventar
+registros/datas; provisionamento explícito nos serviços Admin, idempotente e com verificação de
+colisões; manutenção usa comparação atômica dos valores lidos e recusa registros removidos.
+Preservar campos editoriais, IDs, defaults existentes e contrato JSON. Sem migration/env/package
+novo, sem reparação em massa de dados publicados. Réplicas antigas mantêm risco até fim do deploy;
+rollback somente de código, sem apagar metadados já criados.
+
+- [x] GET público e findByKey não escrevem nem criam defaults, mesmo com PostgreSQL recusando gravações.
+- [x] Inicializações administrativas concorrentes não geram conflito nem substituem IDs.
+- [x] Manutenção não sobrescreve customização concorrente nem modifica tombstone.
+- [x] Controles de aliases, timestamps, auditoria administrativa e colisão de ID passam no PG real:18/18 na imagem final .332; colisão provoca rollback total.
+- [ ] Checks/build/imagem, commit/push e smoke publicados registrados.

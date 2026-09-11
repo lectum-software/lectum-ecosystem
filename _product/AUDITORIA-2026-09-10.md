@@ -104,10 +104,17 @@
 85. Atualizações simultâneas não diminuem o tempo já registrado de uma visita.
 86. Visita removida não recebe nova duração enquanto outra atualização aguarda.
 
-### Correções validadas localmente para 0.1.331
+### Correções publicadas na 0.1.331
 
 87. Páginas com sessão ativa não começam mais com uma renderização diferente da enviada pelo servidor.
 88. Presença da sessão usa uma única fundação compartilhada, sem duplicar temporizadores.
+
+### Correções validadas localmente para 0.1.332
+
+89. Consultar metadados públicos não altera mais configurações no banco.
+90. Aberturas simultâneas do painel não conflitam ao preparar configurações iniciais.
+91. Atualização automática de rotas não sobrescreve uma edição feita ao mesmo tempo.
+92. Configurações removidas, identificadores existentes e datas reais são preservados.
 
 ## Ainda pendente
 
@@ -118,7 +125,7 @@
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **984 arquivos com leitura inicial**, 9 parciais e 2128 ainda não revisados.
+Cobertura da base: **1115 arquivos com leitura inicial**, 7 parciais e 1999 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

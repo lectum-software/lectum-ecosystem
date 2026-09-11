@@ -612,3 +612,40 @@ backend.330; cinco testes SSR reais complementam, não substituem Browser. Artef
 compila; API localhost é rejeitada em NODE_ENV production por política existente, portanto não
 relaxar CSP/validação de origem para testes. Autenticação end-to-end local usa dev e módulos
 reais; deploy em homolog precisa reteste separado. Rollback apenas frontend reintroduz H1.
+
+### Metadados públicos sem manutenção implícita — .332
+
+`list` e `findByKey` tornam-se leituras: o tráfego público não deve criar registros nem
+normalizar dados persistidos. O consumidor Next já possui fallback real por página; lista
+vazia retorna `settings: []` e `updated_at: null`, sem simular linhas/data de criação. Serviços
+administrativos inicializam explicitamente os defaults antes de listar/editar/autorizar upload,
+preservando o comportamento do painel sem novo bootstrap obrigatório.
+
+A mesma função pura resolve rotas gerenciadas na projeção DTO e na manutenção: somente aliases
+canônicos exatos conhecidos mudam. Canônico customizado/nulo e campos editoriais/IDs/datas reais
+permanecem; rotas dinâmicas mantêm placeholders. Projeção pública não altera `updated_at` nem
+transforma mudança de apresentação em edição de banco. Chaves desconhecidas conservam o
+mapeamento DTO legado; corrigir esse contrato é outra análise, não apagar registros existentes.
+
+Inicialização usa `createMany` com `skipDuplicates`; verificar presença das chaves esperadas
+após o comando, pois colisão de ID com outra chave também é ignorada pelo banco. Não escolher
+novo ID aleatório nem sobrescrever linha conflitante silenciosamente. Em caso de conflito real,
+recusar a manutenção e preservar os dados para diagnóstico interno. Soft-delete continua
+contando como chave existente e nunca é ressuscitado por defaults.
+
+Sincronização usa `updateMany` condicionado a id, deleted=false, rota e canônico observados.
+Se edição/remoção ganhar a disputa, a manutenção não escreve por cima dela; próxima manutenção
+pode tratar a rota ainda antiga, preservando o canônico escolhido. Campos editoriais e auditoria
+do Admin não são atualizados pela projeção pública. Testar PostgreSQL real com barreiras de lock,
+sem substituir métodos de repositório; primitivas experimentais são apenas prova da proposta.
+
+Não há schema/migration, package, env obrigatória, provider ou reparação em massa. Implantação
+independente de backend; clientes antigos continuam entendendo o DTO. Réplicas backend antigas
+ainda podem executar manutenção no GET durante rollout; smoke só certifica depois da versão
+publicada. Rollback de código reintroduz o risco, mas não exige reversão de banco.
+
+CreateMany e verificação ficam na mesma transação: colisão preserva também a ausência dos
+outros defaults, sem inicialização parcial. Manutenção ordena IDs antes de adquirir locks.
+Imagem final .332 passou18 controles PG reais, inclusive edição pelo repositório administrativo
+com trilha de auditoria; baseline final .330 falhou5/12. Regressão permanente reutiliza o runner
+isolado; triggers/locks reais coordenam falhas/concorrência, nunca substituem métodos do app.
