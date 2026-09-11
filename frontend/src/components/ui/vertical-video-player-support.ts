@@ -58,16 +58,18 @@ export const clampNumber = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
 export const shouldHidePersistentVideoControls = ({
+  controlsFocused = false,
   controlsRevealed,
   enabled,
   isPaused,
   visibility,
 }: {
+  controlsFocused?: boolean;
   controlsRevealed: boolean;
   enabled: boolean;
   isPaused: boolean;
   visibility: PersistentControlsVisibility;
-}) => enabled && visibility === "auto" && !isPaused && !controlsRevealed;
+}) => enabled && visibility === "auto" && !isPaused && !controlsRevealed && !controlsFocused;
 
 export const shouldUseInlineContentVideoExpansion = ({
   controlsEnabled,

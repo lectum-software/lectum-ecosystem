@@ -332,4 +332,31 @@ categoria; contagens permaneceram 16 categorias/98 especialidades. Viewport temp
 Na aba antiga do feed, algumas mídias apareceram indisponíveis. A causa ainda não foi isolada
 (expiração/estado antigo/rede/codec não diferenciados); não atribuir ao patch de autenticação nem
 marcar vídeo como aprovado apenas pelo HTTP. Nenhum vídeo/post publicado foi alterado.
-Publicação e smoke de 0.1.321 ainda pendentes neste registro.
+0.1.321 publicada em `78c14408`: smoke 16/16 às 02:17 UTC de 11/09, backend/frontend/Admin
+na versão esperada, health/ready 200. Nenhuma env nova ou migração necessária.
+
+
+## Continuação — foco do player 0.1.322
+
+A investigação da aba antiga distinguiu carregamento adiado de erro real: os vídeos fora da tela
+estavam sem source/metadados, sem MediaError. Ao entrar na área visível, a segunda mídia carregou
+2:01 e reproduziu até 0:40 sem erro (capturas 27/28). Não confirma todos os vídeos nem codecs.
+Nenhuma URL assinada, token ou mídia remota foi extraída/baixada para contornar o navegador.
+
+No detalhe público, a navegação Tab focou mute durante reprodução. Após 2,2 segundos o controle
+ficou dentro de `aria-hidden=true` e invisível, mantendo o foco (captura 29). Defeito reproduzido
+na interface real; não é apenas hipótese de inspeção estática. O hook existente passa a preservar
+controles enquanto houver foco `:focus-visible` no player. Sair por Tab restaura o comportamento
+imersivo; cliques/toques continuam permitindo ocultação. Shell comum cobre portal e layout empilhado.
+
+Browser local com MP4 real de validação gerado por FFmpeg, sem API ou provider simulado: Enter
+iniciou reprodução, mute permaneceu visível/focado após 16 segundos, Enter alternou som, seta avançou
+a mídia e Tab fora do player devolveu o modo imersivo (captura 30, 390×844). Não equivale a teste
+ponta a ponta do Stream nem a Safari/iPhone/Android reais. Layout/cores/medidas não foram alterados;
+proto `Feed Comunidade.jpg` inspecionado, Quick Copy continua indisponível como descrito acima.
+
+Check final 0.1.322: 524 testes (133 frontend, 321 backend, 38 Admin, 32 video), mais seis
+da política de versão; build frontend aprovado e sem source maps publicados. Página/MP4 temporários
+removidos antes do build, servidor dev encerrado e regra AGENTS gerada restaurada. Inventário
+agora registra 222 leituras iniciais, 12 parciais e 2.887 não revisados. Sessões publicadas Admin
+e paciente confirmadas por navegação real após 0.1.321, sem usar/gravar a nova senha fornecida.

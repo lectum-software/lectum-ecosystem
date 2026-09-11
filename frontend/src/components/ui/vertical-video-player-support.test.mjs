@@ -143,3 +143,14 @@ test("video expandido sai de cards com overflow e cobre o feed inferior", () => 
   assert.match(expansionSource, /documentElement\.style\.overflow = "hidden"/);
   assert.match(expansionSource, /document\.body\.style\.overscrollBehavior = "none"/);
 });
+
+test("controles focados pelo teclado não desaparecem durante a reprodução", () => {
+  const state = {
+    controlsRevealed: false,
+    enabled: true,
+    isPaused: false,
+    visibility: "auto",
+  };
+  assert.equal(shouldHidePersistentVideoControls({ ...state, controlsFocused: true }), false);
+  assert.equal(shouldHidePersistentVideoControls({ ...state, controlsFocused: false }), true);
+});

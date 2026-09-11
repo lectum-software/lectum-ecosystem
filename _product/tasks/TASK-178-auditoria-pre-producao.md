@@ -268,7 +268,7 @@ apresentada como criação/edição real de catálogo nem certificação de Safa
 - [x] Guarda central aplica confirmação/troca obrigatória sem bloquear bootstrap de autenticação.
 - [x] 17 cenários de conta, oito de recuperação e onze de privacidade aprovados com banco real isolado.
 - [x] Check agregado: 523 testes; build backend e Docker Linux amd64 finais aprovados.
-- [ ] Publicação homolog e smoke final aprovados.
+- [x] Publicação `78c14408` e smoke 16/16 aprovados em 11/09, 02:17 UTC; três apps na 0.1.321.
 
 Sem nova env, schema, reset publicado ou mudança do contrato de sucesso. Contas pendentes recebem
 403 com orientação PT-BR; login/hidratação/confirmação e segurança da própria conta continuam
@@ -277,3 +277,15 @@ acessíveis, com sessão válida. Não confundir este teste com registro SMTP re
 A rota de senha usada pelo painel Conta e a troca de e-mail também invalidam recovery anterior,
 com helper central e transação movida para o módulo de sessões existente. A entrega SMTP da troca
 de e-mail não foi simulada: essa parte foi testada no repositório real, não como envio ponta a ponta.
+
+## Continuação — foco do player 0.1.322
+
+- [x] Controle de som ficava invisível/aria-hidden mesmo mantendo foco de teclado em homolog.
+- [x] Guarda de visibilidade do player protege foco visível, sem mudar acesso aos vídeos.
+- [x] Browser local 390×844 validou Enter, mute, avanço e saída por Tab com componente/vídeo reais.
+- [x] Check agregado: 524 testes; build frontend aprovado; harness local removido.
+- [ ] Publicação 0.1.322 com smoke e repetição de foco no Browser após rollout.
+
+Sem API, schema, env ou pacote novo; não muda o design do player, upload ou URLs assinadas.
+A reprodução real de um vídeo fora da tela funcionou após carregar; o texto inglês da árvore
+acessível com source vazio não demonstrou falha do Stream. Não alterar segurança por essa hipótese.

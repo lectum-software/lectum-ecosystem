@@ -211,6 +211,7 @@ export const VerticalVideoPlayer = ({
   }, [usesMinimalControls, usesPersistentControls, videoElementVersion]);
 
   const {
+    controlsFocusProps,
     controlsHidden: persistentControlsHidden,
     handleContentClick,
     handleControlsInteraction,
@@ -550,6 +551,7 @@ export const VerticalVideoPlayer = ({
 
   return (
     <VerticalVideoPlayerShell
+      {...controlsFocusProps}
       className={className}
       isContentExpanded={isContentExpanded}
       style={style}

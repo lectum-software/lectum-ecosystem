@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, FocusEventHandler, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,8 @@ type VerticalVideoPlayerShellProps = {
   children: ReactNode;
   className?: string;
   isContentExpanded: boolean;
+  onBlurCapture?: FocusEventHandler<HTMLDivElement>;
+  onFocusCapture?: FocusEventHandler<HTMLDivElement>;
   style?: CSSProperties;
 };
 
@@ -18,6 +20,8 @@ export const VerticalVideoPlayerShell = ({
   children,
   className,
   isContentExpanded,
+  onBlurCapture,
+  onFocusCapture,
   style,
 }: VerticalVideoPlayerShellProps) => {
   const rootClassName = cn(
@@ -42,6 +46,8 @@ export const VerticalVideoPlayerShell = ({
       data-lectum-video-expanded={isContentExpanded ? "true" : undefined}
       data-lectum-video-expanded-portal={isContentExpanded ? "true" : undefined}
       data-lectum-video-player-root="true"
+      onBlurCapture={onBlurCapture}
+      onFocusCapture={onFocusCapture}
       role={isContentExpanded ? "dialog" : undefined}
       style={rootStyle}
     >

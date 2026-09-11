@@ -1,6 +1,6 @@
 "use client";
 
-import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { type FocusEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { requestVideoFullscreen } from "@/lib/video-fullscreen";
 import { toggleVideoElementPlayback } from "@/lib/video-interactions";
 import {
@@ -32,6 +32,16 @@ export const useVerticalVideoPlayerImmersiveControls = ({
 }: UseVerticalVideoPlayerImmersiveControlsInput) => {
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [controlsRevealed, setControlsRevealed] = useState(false);
+  const [controlsFocused, setControlsFocused] = useState(false);
+
+  const handleFocusCapture = useCallback((event: FocusEvent<HTMLDivElement>) => {
+    // Preserva a navegação por teclado sem retirar o modo imersivo de cliques/toques.
+    setControlsFocused(event.target.matches(":focus-visible"));
+  }, []);
+
+  const handleBlurCapture = useCallback((event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setControlsFocused(false);
+  }, []);
 
   const clearAutoHideTimer = useCallback(() => {
     if (!autoHideTimerRef.current) return;
@@ -115,6 +125,7 @@ export const useVerticalVideoPlayerImmersiveControls = ({
   }, [controlsVisibility, enabled, isVideoPlaying, scheduleAutoHide]);
 
   const controlsHidden = shouldHidePersistentVideoControls({
+    controlsFocused,
     controlsRevealed,
     enabled,
     isPaused,
@@ -122,6 +133,10 @@ export const useVerticalVideoPlayerImmersiveControls = ({
   });
 
   return {
+    controlsFocusProps: {
+      onBlurCapture: handleBlurCapture,
+      onFocusCapture: handleFocusCapture,
+    },
     controlsHidden,
     controlsVisible: !controlsHidden,
     handleContentClick,

@@ -42,6 +42,7 @@
 36. Trocar a senha não confirma mais o e-mail indevidamente.
 37. Senhas temporárias precisam ser trocadas antes de usar recursos privados.
 38. Trocar o e-mail invalida links de recuperação enviados ao endereço anterior.
+39. Controles de vídeo não desaparecem enquanto são usados pelo teclado.
 
 ## Ainda pendente
 
@@ -50,6 +51,6 @@
 - Repetir cadastro completo e testar perfil profissional, Google e dispositivos reais.
 - Avaliar senhas antigas e concluir verificações de permissão, pagamentos e vídeos.
 
-Cobertura da base: **211 arquivos com leitura inicial**, 11 parciais e 2899 ainda não revisados.
+Cobertura da base: **222 arquivos com leitura inicial**, 12 parciais e 2887 ainda não revisados.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv)

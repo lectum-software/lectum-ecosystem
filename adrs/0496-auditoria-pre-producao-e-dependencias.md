@@ -377,3 +377,18 @@ Validação final 0.1.321: 523 testes automatizados de apps + seis da política 
 isolado real. Build backend e imagem Linux amd64 aprovados. Relações do validador legadas são
 ativadas nos probes por `x-refine=true`, como no cliente, sem ignorar diferenças do ambiente test.
 Sem alterações de dados publicados. Gate de publicação/smoke continua sendo registrado à parte.
+
+
+## Foco de teclado nos controles de vídeo — continuação 0.1.322
+
+O timer imersivo ocultava controles focados por Tab durante reprodução, mantendo o foco em um
+ancestral aria-hidden. Reproduzido em homolog. Reutilizar hook, shell e predicado existentes:
+visibilidade protege `:focus-visible` e volta ao modo automático ao sair do player. Captura de foco
+na raiz cobre botão central, controles inferiores e o portal, sem criar player/layout paralelo.
+Foco de mouse/toque não fixa controles; pausa e opção `always` continuam soberanas.
+
+Sem mudanças de acesso, HLS, API, dados, env ou package. Patch exclusivamente frontend e rollback
+somente de código (reintroduz o defeito de acessibilidade). Teste de política e browser local com
+vídeo real, sem mocks de API. Rótulos/medidas/proto preservados; certificação de dispositivos reais
+permanece pendente. A observação anterior de mídia inglesa na árvore acessível não foi confirmada
+como falha de reprodução e não justifica enfraquecer a autorização ou renovar links sem diagnóstico.
