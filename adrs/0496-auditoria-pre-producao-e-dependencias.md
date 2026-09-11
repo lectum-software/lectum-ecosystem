@@ -1094,3 +1094,16 @@ Reutilizar harness isolado PostgreSQL/imagem imutável, sem testes em ambiente p
 isolado existente,sem fonte sobreposta/imagem simulada. Campos e relações não alterados
 não integram a escrita;null/arrayvazio explícitos preservam intenção de limpar. Sem
 HTTP de conflito em homologação,sem nova env/dependência/schema. Buildbackend/Dockeraprovados.
+
+
+### Agregação de origens355 — requisito prévio
+
+Autor/outros é partição de contagens, não soma de percentuais por origem. Exibir agregado
+somente com contagens válidas que expliquem todos os cliques; origem sem breakdown e
+zero cliques não introduz lacuna. Se todas as origens omitem a classificação, conservar
+a ausência. Usar fonte pública engajamento; nunca proveniência técnica. Não alterar
+API/backend,ordenação ou filhos. Componente/formatação existentes e casos locais puros.
+
+355: classificação incompleta observada no dashboard global real; preservar todos os
+cliques e filhos sem atribuir o clique do ranking a um ator desconhecido. Contratos12/12,
+Browserlocal móvel/desktop e buildAdmin aprovados; sem alteração de formato da API.

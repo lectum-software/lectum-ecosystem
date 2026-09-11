@@ -249,10 +249,14 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 142. **Deixar de seguir:** remover a própria relação não depende mais de o perfil continuar publicado. Dez cenários passaram em PostgreSQL local; publicada e verificada em homologação na353.
 
-143. **Edição administrativa:** salvar um campo não reaplica os dados e seleções omitidos.
-144. **Edições simultâneas:** o backend recusa uma gravação baseada em dados que mudaram durante o processamento, sem alterar o histórico.
+143. **Edição de psicólogos no Admin:** salvar um campo não reaplica os dados e seleções omitidos.
+144. **Edições simultâneas de psicólogos:** o backend recusa uma gravação baseada em dados que mudaram durante o processamento, sem alterar o histórico.
 
-354: testes locais e build aprovados; publicação pendente.
+354: publicada e verificada. Edição real na conta de teste funcionou; valor original restaurado.
+
+145. **Origem dos cliques no Admin:** o resumo soma as origens corretamente e não mostra uma divisão incompleta como se representasse o total.
+
+355: testes e comparação local aprovados; aguardando publicação.
 
 ## Ainda pendente
 

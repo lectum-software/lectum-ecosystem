@@ -2010,3 +2010,32 @@ aprovados. Um bump354,cincomanifests,check:version aprovado. Publicação ainda 
 Limite: comparação é entre leitura e escrita no backend. Não detecta formulário já
 antigo antes da requisição nem SQL externo que omita atualização de updatedAt. Rollout
 com backend antigo ainda pode gravar pela regra antiga; não prometer proteção retroativa.
+
+
+354 publicado7a28912f;hookpush66,52s aprovado. Smoke5/5às23:25:47UTC11/09/2026:trêsapps354,
+health/ready200,no-store/noindexNext. Log:/tmp/lectum-audit-354-smoke-curl-homolog.json.
+Admin autenticado354:contaQA profissional,complemento de endereço inicialmente vazio.
+Marcador temporário sem dados pessoais foi salvo e persistiu apósreload; depois apagado
+com justificativa de restauração. Outroreload/formaberto confirmou18campos idênticos ao
+estado original, incluindo complemento vazio. Cancelar encerrou sem edição pendente.
+Duas gravações deliberadas na própria conta,ambas com “Dados pessoais atualizados.”.
+Primeira leitura logo apósreload estava em loading; só o estado carregado foi usado como
+prova. Nenhuma alteração emCPF/CRP/registro/assinatura/aprovação ou conta alheia.
+Não equivale a teste HTTP negativo/concorrente. Serviço privado de vídeo não consultado.
+
+## Origem de cliques355 — validação local e baseline publicado
+
+- Fonte real do Admin: grupo somava cliques, mas herdava autor/outros da primeira origem.
+- Em homolog354, leitura do dashboard global mostrou total22 com outros10 no resumo.
+  Filhos: posts com vídeo0, sem vídeo2, respostas com vídeo9, sem vídeo10, ranking1.
+  Ranking não traz classificação; resultado correto é omitir breakdown agregado, não inventar22 atribuídos.
+- 12 contratos contra módulos reais/React: baseline2pass10fail; final12pass.
+- Browser local usa componente de produção e entradas unitárias, sem API, login ou persistência simulados.
+  Todos3/7 de10; Gratuitos11 sem breakdown, preservando filhos10+1; zero conhecido0%; Cortesia vazia.
+  Filtros e expansão reais. Pares390×844 e991×964 inspecionados: sem mudanças de layout.
+- Primeiro harness teve ReferenceError por compilação genérica sem fileName; corrigido no loader local,
+  sem alterar fontes de negócio para mascarar erro. Build de produção aprovado.
+- Artefatos: /tmp/lectum-task178-traffic-group-355 (baseline/final, capturas local/desktop/homolog-before).
+- Check global1192tests,1186pass,6skips drawtext; Admin check/build aprovados.
+- Sem env, migration, nova dependência, novo endpoint ou alteração de aprovação/analytics.
+- Publicação355 e reteste real ainda pendentes neste registro.

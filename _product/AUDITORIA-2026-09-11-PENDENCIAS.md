@@ -26,7 +26,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C17-B | Confirmação por outro caminho pode substituir CPF/CRP protegido. | Fonte; P2 proposto. Preservar trava transacional e idempotência sem revogar aprovações existentes. |
 | C20 | Normalização estrutural deve evitar acesso a propriedades herdadas. | Fonte; impacto HTTP não comprovado. Nenhum teste/receita de exploração executado. Restrições operacionais anteriores permanecem. |
 | C9/C10 | Decisões concorrentes de moderação podem reutilizar contador/snapshot antigo. | Fonte; planejar escrita atômica e coerência da auditoria, sem remover conteúdo real para testar. |
-| C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Corrigido354;22contratos,11cenários PG real;publicação pendente. Não cobre formulário já obsoleto antes de chegar ao backend. |
+| C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Corrigido/publicado354;22contratos,11cenários PG real;smoke5/5 e ediçãoQA restaurada. Não cobre formulário já obsoleto antes de chegar ao backend. |
 | C13 | Campo chamado cpf_masked retornava todos os dígitos. | Corrigido345 com máscara compartilhada; contratos/build aprovados. Endpoint administrativo; nenhum vazamento público demonstrado. |
 | C15 | Numerador e denominador de taxa de ação usam conjuntos diferentes de sessões. | Fonte; uniformizar universo, não apenas limitar percentual. |
 | C4 | Zero eventos no período pode virar contagem acumulada de comentários/salvamentos. | Fonte; confirmar semântica e usar fallback coerente. |
@@ -196,3 +196,6 @@ C17-B: nova pergunta enviada sobre rejeição humana versus reconfirmação CFP;
 A349-02: publicado351; região PT-BR no frontend apósreload e aviso real de sucesso noAdmin
 com Fechar notificação. Teste local confirmou fechamento;smoke5/5. Sem alteração funcional
 adicional no registro352. Lista C17 e demais lacunas continuam abertas, sem promessa KYC.
+
+A342-09: correção355 implementada;12contratos e Browserlocal móvel/desktop aprovados.
+Baseline real354:22cliques e breakdown herdado de10. Reteste publicado pendente.

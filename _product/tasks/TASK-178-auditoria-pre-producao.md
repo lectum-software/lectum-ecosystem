@@ -993,8 +993,29 @@ backend isolado, sem reset e sem manipular perfil real para provocar concorrênc
 - [x] Snapshots concorrentes são recusados antes de relações/logs; somente escrita válida auditada.
 - [x] Contratos e PostgreSQL real isolado validam sucesso, conflito, limpeza e atomicidade.
 - [x] Check global, build backend e imagem Docker aprovados.
-- [ ] Commit/push e smoke de homologação354 registrados.
+- [x] Commit/push e smoke de homologação354 registrados.
 
 353 publicado be689c56:smoke5/5 às23:10:32UTC de11/09;3apps353,health/ready200.
 354:22contratos puros e11cenários PG,sem mocks. Baseline PG353:2pass/6fail;final354
 8anteriores+3relações:11/11. Checkglobal1180,1174pass/6skips;buildbackend/imagem aprovados.
+
+354/7a28912f:smoke5/5às23:25:47UTC11/09;3appspúblicos354,health/ready200.
+Edição real da contaQA:complemento temporário salvo,confirmado apósreload e restaurado
+ao vazio com nova justificativa. Os18campos da UI coincidem com a leitura original.
+Não editouCPF/CRP,aprovação,assinatura ou outroperfil;sem concorrência provocada no ar.
+
+### Continuação355 — composição das origens de cliques
+
+A342-09: grupo herda discriminação autor/outros da primeira origem apesar de somar total.
+Somar contagens e recalcular percentuais somente quando cobertura dos cliques é completa.
+Na ausência/inconsistência, omitir apenas breakdown agregado; preservar filhos e totais.
+Reusar componente e formatação;sem redesenho/env/API/package/migration. Mobilefirst390px.
+
+- [x] Grupos exibem breakdown correto ou omitem classificação incompleta, nunca herdando a primeira origem.
+- [x] Fontes/filhos,ordenação,totais e indicadores preservados;sem mutação de dados.
+- [x] Contratos,build e comparação no Browser local registrados.
+- [ ] Smoke e conferência publicada de homologação355 registrados.
+
+355:12/12 contratos, baseline2pass/10fail. Check global1192/1186pass/6skips drawtext;
+buildAdmin aprovado. Browser componente real:390×844 e991×964; comparação pareada sem
+redesenho, filtros/expansão/zero/ausência preservados. Harness sem API/persistência; não E2E.

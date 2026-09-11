@@ -334,6 +334,44 @@ export const sumTrafficSourceValue = (
   key: "percentage" | "profile_views" | "sessions" | "whatsapp_clicks",
 ) => sources.reduce((total, source) => total + (source[key] ?? 0), 0);
 
+export const aggregateTrafficClickActors = (
+  sources: TrafficSourceItem[],
+): TrafficSourceItem["whatsapp_click_actor_breakdown"] => {
+  let hasBreakdown = false;
+  let authorClicks = 0;
+  let otherClicks = 0;
+  for (const source of sources) {
+    const clicks = source.whatsapp_clicks;
+    if (!Number.isSafeInteger(clicks) || clicks < 0) return null;
+    const breakdown = source.whatsapp_click_actor_breakdown;
+    if (!breakdown) {
+      if (clicks > 0) return null;
+      continue;
+    }
+    const { author_clicks: author, other_users_clicks: other } = breakdown;
+    if (
+      !Number.isSafeInteger(author) ||
+      !Number.isSafeInteger(other) ||
+      author < 0 ||
+      other < 0 ||
+      author + other !== clicks
+    )
+      return null;
+    hasBreakdown = true;
+    authorClicks += author;
+    otherClicks += other;
+  }
+  const total = authorClicks + otherClicks;
+  if (!hasBreakdown || !Number.isSafeInteger(total)) return null;
+  return {
+    author_clicks: authorClicks,
+    author_percentage: total > 0 ? toOneDecimal((authorClicks / total) * 100) : 0,
+    other_users_clicks: otherClicks,
+    other_users_percentage: total > 0 ? toOneDecimal((otherClicks / total) * 100) : 0,
+    source: "engajamento",
+  };
+};
+
 export const buildTrafficSourceDisplayRows = (
   sources: TrafficSourceItem[],
 ): TrafficSourceDisplayItem[] => {
@@ -398,6 +436,7 @@ export const buildTrafficSourceDisplayRows = (
       profile_views: sumTrafficSourceValue(communitySources, "profile_views"),
       sessions: sumTrafficSourceValue(communitySources, "sessions"),
       whatsapp_clicks: sumTrafficSourceValue(communitySources, "whatsapp_clicks"),
+      whatsapp_click_actor_breakdown: aggregateTrafficClickActors(communitySources),
     };
 
     displayCandidates.push({ index: communitySortIndex, source: communityGroup });
@@ -423,6 +462,7 @@ export const buildTrafficSourceDisplayRows = (
       profile_views: sumTrafficSourceValue(presentationVideoSources, "profile_views"),
       sessions: sumTrafficSourceValue(presentationVideoSources, "sessions"),
       whatsapp_clicks: sumTrafficSourceValue(presentationVideoSources, "whatsapp_clicks"),
+      whatsapp_click_actor_breakdown: aggregateTrafficClickActors(presentationVideoSources),
     };
 
     displayCandidates.push({ index: presentationVideoSortIndex, source: presentationVideoGroup });
