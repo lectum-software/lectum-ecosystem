@@ -430,8 +430,8 @@ admin/src/app/(admin)/comunidades/lista/page.tsx	admin	codigo	f0e7e665942f9d792a
 admin/src/app/(admin)/comunidades/modules/period-support.ts	admin	codigo	0879cf27293f9bba6793c00eba543bd8c0ddff6e	3748	inventariado_nao_revisado
 admin/src/app/(admin)/comunidades/modules/statistics-builders.ts	admin	codigo	942f26207b329961c796db8f703e893a75837e6d	7964	inventariado_nao_revisado
 admin/src/app/(admin)/comunidades/modules/statistics-config.ts	admin	codigo	cd01881294ea282afa10507d5303094bd74d66ca	7141	inventariado_nao_revisado
-admin/src/app/(admin)/comunidades/nova/client.tsx	admin	codigo	ad84fd25bf1d57e24e417ccb1808ae1d6c5eaf59	10254	inventariado_nao_revisado
-admin/src/app/(admin)/comunidades/nova/page.tsx	admin	codigo	4c0f98fedca094fb845cbb4221a2a2cdfa42a383	132	inventariado_nao_revisado
+admin/src/app/(admin)/comunidades/nova/client.tsx	admin	codigo	ad84fd25bf1d57e24e417ccb1808ae1d6c5eaf59	10254	lido_revisao_inicial
+admin/src/app/(admin)/comunidades/nova/page.tsx	admin	codigo	4c0f98fedca094fb845cbb4221a2a2cdfa42a383	132	lido_revisao_inicial
 admin/src/app/(admin)/comunidades/page.tsx	admin	codigo	ebabf505f36bd9de12a7f2d69ca3f424bcc41d58	124	inventariado_nao_revisado
 admin/src/app/(admin)/comunidades/views/dashboard-content.tsx	admin	codigo	ba9f9d7d5df79b24de8ee4014604386e495f6e4b	4871	inventariado_nao_revisado
 admin/src/app/(admin)/configuracoes/assinatura/client.tsx	admin	codigo	5ba22fb454050731e8e91fd08d322cb30b925de5	7965	inventariado_nao_revisado
@@ -1371,7 +1371,7 @@ backend/src/interfaces/pagination/index.ts	backend	codigo	8ce704757f0c1ae456ae77
 backend/src/main/billing/dunning.ts	backend	codigo	3043dfc7449975f9823ef73f093e9e7bfc929087	2155	inventariado_nao_revisado
 backend/src/main/notification/campaigns.ts	backend	codigo	02c46c882be5d6e987cd0d6b385e987fcf43abfd	1992	inventariado_nao_revisado
 backend/src/main/notification/constants.test.ts	backend	teste	1c6ab28e0b146aec66bb0531e5c5a58dd4696738	1551	inventariado_nao_revisado
-backend/src/main/notification/constants.ts	backend	codigo	adc6c91aa1412c3e2115b19db9d618e9e30cd6fa	3431	inventariado_nao_revisado
+backend/src/main/notification/constants.ts	backend	codigo	adc6c91aa1412c3e2115b19db9d618e9e30cd6fa	3431	lido_revisao_inicial
 backend/src/main/notification/deliveries.ts	backend	codigo	f20647505d47eb081074dfd4b1278174cd898c9c	3253	inventariado_nao_revisado
 backend/src/main/notification/digests.ts	backend	codigo	4468c9c9fd01e2d3ea8a1374044596283ea626ca	144	inventariado_nao_revisado
 backend/src/main/notification/digests/community.ts	backend	codigo	c7eab3dded3e4e16b8c8d34a597ce0bbf0d09bb6	6608	inventariado_nao_revisado
@@ -1382,8 +1382,8 @@ backend/src/main/notification/digests/state.ts	backend	codigo	03da2979bafab08cda
 backend/src/main/notification/digests/temporal-support.test.ts	backend	teste	0af516d69835f7ba39d1a53af5b9e90ba011f379	1890	inventariado_nao_revisado
 backend/src/main/notification/digests/temporal-support.ts	backend	codigo	56e4d4f2570788fc4a59a4c2426e9c45644ee508	3182	inventariado_nao_revisado
 backend/src/main/notification/digests/temporal.ts	backend	codigo	6f8ac66d09fed8ded65fa262d0f798d4b33a96e4	3698	inventariado_nao_revisado
-backend/src/main/notification/domain-events.ts	backend	codigo	e3698f13c3c0b2b88968610f2d3124e111252bd5	12383	inventariado_nao_revisado
-backend/src/main/notification/index.ts	backend	codigo	2c64eaa38a4b283fdacbacebb18dc3eb87dad863	8708	inventariado_nao_revisado
+backend/src/main/notification/domain-events.ts	backend	codigo	e3698f13c3c0b2b88968610f2d3124e111252bd5	12383	lido_revisao_inicial
+backend/src/main/notification/index.ts	backend	codigo	2c64eaa38a4b283fdacbacebb18dc3eb87dad863	8708	lido_revisao_inicial
 backend/src/main/notification/preferences.ts	backend	codigo	e8bac3f628ab9253375400a1562129e2074cddee	5362	inventariado_nao_revisado
 backend/src/main/notification/push-policy.test.ts	backend	teste	a514493bd21a7747f03563385e39f7d6244aac68	1771	inventariado_nao_revisado
 backend/src/main/notification/push-policy.ts	backend	codigo	f38f7770bc710372bb04e2fdb9861dcdcc6838f4	1601	inventariado_nao_revisado
@@ -2306,9 +2306,9 @@ backend/src/packages/validator/schema/_internal/conditions/mutual.ts	backend	cod
 backend/src/packages/validator/schema/_internal/conditions/oneOfRequired.ts	backend	codigo	aaec7a522998a738b142e282bfa64f66cc233605	935	leitura_inicial_manual_sem_certificacao_integral
 backend/src/packages/validator/schema/_internal/conditions/reverse.ts	backend	codigo	ce7fdd866e34906ab58ba926ee3304edbaeaf8c0	934	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/conditions/types.ts	backend	codigo	5c2f26e346100fe5ddba03657c22afaaacb517cd	204	inventariado_nao_revisado
-backend/src/packages/validator/schema/_internal/fines/prefine.ts	backend	codigo	7a794355fac41fc401c632a97a3cbf29cc83fb92	1030	inventariado_nao_revisado
+backend/src/packages/validator/schema/_internal/fines/prefine.ts	backend	codigo	7a794355fac41fc401c632a97a3cbf29cc83fb92	1030	lido_revisao_inicial
 backend/src/packages/validator/schema/_internal/fines/refines.ts	backend	codigo	0188547614c549ec40cae4ac5caf7ab9734bed25	465	inventariado_nao_revisado
-backend/src/packages/validator/schema/_internal/handlers/custom.ts	backend	codigo	ff8e94d3a6e1da001860ff661928787502b9c3c3	389	leitura_inicial_manual_sem_certificacao_integral
+backend/src/packages/validator/schema/_internal/handlers/custom.ts	backend	codigo	ff8e94d3a6e1da001860ff661928787502b9c3c3	389	lido_revisao_inicial
 backend/src/packages/validator/schema/_internal/handlers/error.ts	backend	codigo	ebcdcf3dfdeeef312e0176c6c78669d88edcdc48	1886	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/validations/functions/boolean.ts	backend	codigo	af7132b5331bdc39f5a9532de980ace044209d96	484	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/validations/functions/cep.ts	backend	codigo	a6b250654abb44d9b742108ad90cd3553e55e4a8	287	inventariado_nao_revisado

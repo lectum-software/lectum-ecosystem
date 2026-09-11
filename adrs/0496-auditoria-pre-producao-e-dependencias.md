@@ -225,3 +225,27 @@ Não há mocks de autenticação/banco, chamadas de e-mail/OAuth ou alegação d
 
 Smoke 0.1.315: 16/16, backend/frontend/Admin confirmados às 00:39 UTC de 11/09.
 Build backend e imagem Linux amd64 0.1.316 aprovados; publicação ainda pendente neste registro.
+
+## Complemento — formato de e-mail (0.1.317)
+
+A expressão do pacote de validators impunha TLD de 2–6 letras e excluía `+`/apóstrofo, divergindo
+de `z.email` usado nos formulários atuais. Testes HTTP também demonstraram aceitação indevida de
+ponto inicial ou duplo. Centralizar o formato no Zod já instalado, sem outro regex ou package.
+Manter o wrapper declarativo e seu tratamento de vazio/optional/nullable; minúsculas continuam
+sendo a normalização existente. Recusar espaços periféricos/controles, sem trim silencioso,
+remoção de sufixos ou união de contas. Mensagem usa catálogo PT-BR (`invalid_string.email`).
+
+Referência primária: [formatos de e-mail do Zod](https://zod.dev/api#emails).
+Não prometer RFC completo, existência de caixa, domínio/MX ou confirmação do endereço. A política
+fica alinhada ao frontend, não pretende redefinir identidade conforme regras de um provedor.
+Dados existentes não são alterados; endereço malformado aceito pelo backend antigo exigirá
+correção individual se houver caso real. Não migrar automaticamente nem apagar conta.
+
+Quatro regressões HTTP reais (três falhas antes), 511 testes no check agregado, build backend e
+imagem Docker Linux amd64 aprovados. Erro de tipagem do corpo JSON no teste foi corrigido antes
+da aprovação das builds, sem ignorar typecheck. Sem schema/env/dependência nova, bump único .317.
+Smoke .316 confirmado 16/16 às 00:57 UTC; não certificar deploy durante divergência de versões.
+
+Validação final 0.1.317: onze cenários HTTP/PostgreSQL repetidos com aliases/domínio longo
+passaram; recursos isolados removidos. Quatro testes de formato passaram dentro da imagem final
+não root, somente leitura e sem rede externa. Nenhuma mensagem de e-mail foi enviada no teste.

@@ -202,7 +202,7 @@ Sem alteração de schema, env obrigatória ou dependências. Parâmetros Argon2
 - [x] Quatro cálculos repetidos de apelido substituídos por helper HMAC centralizado.
 - [x] Oito regressões adicionais passaram; build backend e Docker Linux amd64 aprovados.
 - [x] Onze verificações HTTP com banco e autenticação reais passaram na imagem final.
-- [ ] Smoke publicado de 0.1.316.
+- [x] Smoke publicado de 0.1.316: 16/16 às 00:57 UTC de 11/09, após fim do rollout.
 
 Sem alteração do schema, novos segredos/envs ou dados publicados. Apelidos recalculados no rollout;
 rotação da chave JWT também muda o pseudônimo. IDs reais somente para o próprio dono/guard Admin,
@@ -211,3 +211,15 @@ Teste inicial com domínio longo foi recusado pelo validador legado; usar domín
 permitiu exercitar autenticação, sem e-mail enviado. Corrigir aliases/TLDs em mudança separada.
 
 Check agregado 0.1.316: 507 testes aprovados, sem falha/skip; check:version aprovado.
+
+## Continuação — e-mails 0.1.317
+
+- [x] Divergência de formato entre frontend/backend reproduzida com HTTP real do validador.
+- [x] Substituída expressão legada por Zod existente, mantendo caixa normalizada e identidade.
+- [x] Quatro regressões de aliases/TLD, estrutura inválida, obrigatório/opcional passaram.
+- [x] Check agregado: 511 testes; build backend e imagem Docker Linux amd64 aprovados.
+- [x] Integração de login com aliases no banco isolado real: onze cenários passaram.
+- [ ] Smoke publicado de 0.1.317.
+
+Sem banco/env/dependência nova. Não corrigir em massa e-mails inválidos anteriormente admitidos.
+Browser publicado validou formulário vazio de posts em mobile sem publicar dados.

@@ -28,6 +28,8 @@
 22. Publicações anônimas não entregam mais o identificador interno do autor a outros leitores.
 23. Comentários do autor anônimo continuam anônimos também na lista de itens salvos.
 24. Apelidos anônimos usam uma regra centralizada, sem cálculo público baseado no usuário.
+25. E-mails com `+` ou domínio longo não são mais recusados apenas pelo backend.
+26. Endereços malformados recebem mensagem de e-mail inválido em português.
 
 Correções 1–11 publicadas em `0.1.311` (`fa6a6dce`). **Smoke de 10/09, 22:50 UTC:**
 backend, frontend e Admin confirmados nessa versão; 16 verificações HTTP passaram, incluindo
@@ -236,3 +238,25 @@ Cobertura da auditoria permanece parcial; não liberar produção com base nesse
 Validação 0.1.316: `pnpm check` aprovado, 507 testes (132/308/35/32), além dos seis testes
 da política de versão. Build backend, imagem Docker e onze cenários de integração aprovados.
 Inventário: 146 arquivos com leitura inicial, 11 parciais e 2.964 ainda não revisados na base.
+
+## Continuação — validação de e-mail 0.1.317
+
+- 0.1.316 publicada em `d7db1934`; smoke final 16/16 às 00:57 UTC de 11/09.
+  Frontend/Admin chegaram antes do backend; a verificação inicial detectou a versão anterior
+  ainda ativa e foi repetida após `/ping` confirmar o novo artefato.
+- Expressão legada recusava `+`, apóstrofo e sufixos acima de seis letras, mas aceitava alguns
+  endereços malformados. Frontend/Admin já usam a validação de e-mail do Zod.
+- Backend passou a usar o mesmo formato, preservando normalização para minúsculas e tratamento
+  de campo obrigatório/opcional. Não remove pontos/sufixos nem combina identidades.
+- Quatro regressões HTTP passaram; três falhavam antes da correção. Banco/contas não são
+  alterados. Validação sintática não substitui a confirmação real do endereço.
+- Formulário de post em homolog: campos vazios recusados em PT-BR e foco na comunidade.
+  Capturas 18/19 em 390×844 conferidas; nenhum conteúdo foi publicado.
+
+Endereços malformados admitidos pela API antiga, se existirem, exigem atendimento individual;
+não reescrever cadastros, inventar e-mails nem disparar redefinições em massa.
+Sem nova env, package ou migration. Auditoria integral e fluxos com outra identidade permanecem abertos.
+
+Validação final 0.1.317: onze cenários HTTP/PostgreSQL repetidos com aliases/domínio longo
+passaram; recursos isolados removidos. Quatro testes de formato passaram dentro da imagem final
+não root, somente leitura e sem rede externa. Nenhuma mensagem de e-mail foi enviada no teste.
