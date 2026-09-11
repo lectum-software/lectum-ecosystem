@@ -1911,3 +1911,29 @@ C17-B foi novamente rastreado em fonte, sem chamada CFP ou mudança de aprovaç�
 somente perfil não basta pois o raw confirmado também é fonte da UI. Pergunta específica
 sobre precedência de rejeição humana enviada; não reabrir KYC nem aprovar automaticamente
 uma reconfirmação enquanto a regra não estiver definida. Achado permanece aberto.
+
+
+### Publicação351 — validação final desta entrega
+
+Commit7bb9f140 enviado; hook de push60,62s aprovado. CincoGETs públicos às22:45:15UTC,
+11/09/2026: backend/frontend/Admin351;health/ready200 e versõesNextno-store/noindex.
+Registro local: /tmp/lectum-audit-351-smoke-curl-homolog.json. Vídeo privado não consultado;
+o último resultado fornecido pelo operador continua338, sem inferir a versão atual.
+
+Frontend após reload publicou região Notificações alt+T. Admin351, na comunidade própria:
+Salvar sem alteração de campos produziu “Comunidade atualizada.” com botão “Fechar
+notificação” e região PT-BR. Três gravações idênticas foram realizadas: as duas primeiras
+não capturaram o aviso transitório a tempo; a terceira foi observada dentro da mesma
+interação, com leituras AX limitadas. Não foram falhas da operação nem três novos bugs.
+Nome e descrição originais permaneceram. A aba separada aguardando teste manual de avatar
+não foi recarregada/manipulada. Imagem nativa homolog-toast.jpg em
+/tmp/lectum-task178-toasts-351/admin foi inspecionada; não contém segredo ou registro alheio.
+Fechamento por teclado/clique validado localmente; não foi repetido no toast remoto transitório.
+
+Nova consulta pnpm check:dependencies em11/09/2026:zero vulnerabilidades conhecidas nos
+cincoescopos (raiz/backend/frontend/Admin/video). Log:/tmp/lectum-351-dependencies.log.
+Isso não certifica ausência de falhas de negócio/autorização nem conclui o pentest.
+
+Registro352: somente documentação e cinco versões; sem mudança de código funcional,
+contrato, dependência, banco, env ou configuração de infraestrutura. Mantém todos os gates
+publicados desta entrega sem fechar os critérios gerais da TASK178 ou recomendar produção.

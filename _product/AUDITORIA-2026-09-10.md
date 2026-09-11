@@ -241,11 +241,11 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 139. Gráfico de tráfego mantém a mesma cor da legenda quando uma categoria está zerada.
 
-349: seis testes e comparação visual local passaram; publicação pendente.
+349: publicada; seis testes, comparação local e conferência móvel em homologação aprovados.
 
 140. **Cliques por conteúdo:** publicações não somam mais os cliques das respostas. Validado e publicado em homologação na350.
 
-141. **Avisos acessíveis:** nomes da região e do botão de fechar em português no frontend e Admin. Testes e builds aprovados; publicação351 pendente.
+141. **Avisos acessíveis:** nomes da região e do botão de fechar em português no frontend e Admin. Validado e publicado em homologação na351.
 
 ## Ainda pendente
 
@@ -261,3 +261,5 @@ Inclui leitura textual, PDFs com páginas inspecionadas e seis SVGs com XML estr
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)
+
+Última verificação de dependências (11/09): nenhuma vulnerabilidade conhecida nos cinco escopos. Isso não encerra as pendências funcionais e de segurança acima.

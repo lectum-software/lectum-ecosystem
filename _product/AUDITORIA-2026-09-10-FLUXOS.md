@@ -186,3 +186,18 @@ reclassificar como erro de dados ou incluir correção não implementada neste c
   semerro global. Todooperíodo restaurado; contatestelivre/semvídeo,nãocertificarplaybackpago.
 - Smoke343:18/18, trêsappspúblicas343,health/ready200;últimaprova privada vídeo338.
 - Base1944/3121leiturasiniciais,1177pendentes. Fonte/SSR/Browser/pós-deploy separados.
+
+
+## Conferências348–351 publicadas
+
+- ComunidadeQA: Salvar normaliza o nome, bloqueia os campos durante envio; Cancelar restaura
+  últimos valores e limpa erro. Nome original restaurado. Upload de avatar + rascunho
+  continua aguardando teste manual; a aba reservada não foi recarregada.
+- Tráfego349:0pacientes/4psicólogos com arco e legenda coerentes; nativo375×812/1265×889.
+- Formatos350: cliques Posts/Respostas separados;8regressões reais,comparação local;
+  reteste autenticado da contaQA1post/2respostas com0cliques sem regressão. Caso nãozero
+  não foi fabricado no ambiente publicado.
+- Avisos351: região PT-BR no frontend e região/botão no toast de sucesso realAdmin.
+  Teclado e clique para fechamento comprovados localmente em991×964/390×844; nãoSafari.
+- Gates públicos de348–351: backend/frontend/Admin alinhados em cada release,health/ready200.
+  Nenhuma inferência sobre versão de vídeo privado, assinatura, CFP ou dados de terceiros.

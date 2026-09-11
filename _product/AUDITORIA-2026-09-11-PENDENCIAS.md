@@ -191,3 +191,8 @@ Sonner para PT-BR, sem tratar idioma do controle nativo do navegador como copy d
 
 A349-02 corrigido351 em amboslayouts:3testesporapp,SSR e BrowserlocalAdmin/front. Publicação pendente.
 C17-B: nova pergunta enviada sobre rejeição humana versus reconfirmação CFP; nenhuma mudança em aprovação.
+
+
+A349-02: publicado351; região PT-BR no frontend apósreload e aviso real de sucesso noAdmin
+com Fechar notificação. Teste local confirmou fechamento;smoke5/5. Sem alteração funcional
+adicional no registro352. Lista C17 e demais lacunas continuam abertas, sem promessa KYC.

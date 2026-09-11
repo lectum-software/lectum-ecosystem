@@ -946,10 +946,17 @@ Sem env/API/migration; rollout e rollback Next independentes, sem dados persiste
 
 - [x] Região e botão de fechar têm nome PT-BR no componente real.
 - [x] Posição, richColors, closeButton de cada app e duração/atalho padrão preservados.
-- [ ] Checks/builds/Browser local e publicação verificados com limites explícitos.
+- [x] Checks/builds/Browser local e publicação verificados com limites explícitos.
 
 
 350 publicada b230217e:smoke5/5,3apps350,health/ready200. ContaQA1post/2respostas,0cliques:
 reteste preservou contagens/layout; caso nãozero validado somente no componente real local.
 351:3/3testesporapp,1158globais(1152pass/6skips),buildsNext aprovados. BrowserlocalAdmin991×964
 com teclado,front390×844 com clique. Sem promessa de teste físico/Safari. Deploy pendente.
+
+
+351 publicada7bb9f140:5/5GETspúblicos;3apps351,health/ready200. Região frontend e aviso
+real Admin emPT-BR, sem alteração nos campos da comunidadeQA. Fechamento permanece prova
+local. Consulta de advisories11/09:cincoescopos sem vulnerabilidades conhecidas.
+Registro352 somente documental/versões. TASK178 segue InProgress: achados ainda abertos,
+requisitos legais/profissionais/integrações e dispositivos reais não certificados.
