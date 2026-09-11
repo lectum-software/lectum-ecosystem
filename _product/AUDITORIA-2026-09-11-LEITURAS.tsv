@@ -1,8 +1,8 @@
 arquivo	proveniencia	sha256_integracao	presente_inventario_base
-.codex/skills/execute-lectum-task/SKILL.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Euclid;hidratacao;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral	1ff706db6e53b6198e016a649ff3182279852ee362b4f14dc0ece4d9e0fafe3e	true
-AGENTS.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral	db6f3ceaefbd27b0e24b8e7b3a0d6dad07104882f0e773a990bb13833fc7d937	true
-_product/tasks/ARCHITECTURE.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral	6ecb0ac36eb1652301667981227afd029862b2dd356ddf8b4fe1d40950c10652	true
-_product/tasks/PACKAGES.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral	f376b3ac6bebf0272c2d2d85990a697a7d864daa6e93915258593a9dc9a33cf6	true
+.codex/skills/execute-lectum-task/SKILL.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Euclid;hidratacao;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	1ff706db6e53b6198e016a649ff3182279852ee362b4f14dc0ece4d9e0fafe3e	true
+AGENTS.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	db6f3ceaefbd27b0e24b8e7b3a0d6dad07104882f0e773a990bb13833fc7d937	true
+_product/tasks/ARCHITECTURE.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	6ecb0ac36eb1652301667981227afd029862b2dd356ddf8b4fe1d40950c10652	true
+_product/tasks/PACKAGES.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	f376b3ac6bebf0272c2d2d85990a697a7d864daa6e93915258593a9dc9a33cf6	true
 _product/tasks/PROTO-INVENTORY.md	Euclid;denuncias;integral | Tesla;notificacoes;integral | Goodall;configuracoesSEO;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch	52207cf11d6bf46c3b107048de2a4bba8fc2efb0a59094290bfb202efdb2b778	true
 _product/tasks/TASK-144-upload-imagem-open-graph-admin.md	Goodall;configuracoesSEO;integral_inicial	297b2a1df89285bf6db4f9a556dd8630cc31789c8183a9b132c2430caba53b50	true
 _product/tasks/TASK-153-permissao-nativa-direta-notificacoes.md	Tesla;notificacoes;integral	7f86c0da39e627a371e7dc568357947286deb784bef118747b57779878adeeb9	true
@@ -144,7 +144,7 @@ adrs/0489-upload-video-posts-respostas-fallback-provisao-stream.md	Tesla;uploads
 backend/.dockerignore	Lagrange;estado_posts;integral	1320d4f988e2f5428bcd2e47d7896cdf43bcf3ccd97b2db43bf43c518b1399f9	true
 backend/Dockerfile	Tesla;concorrencia;integral | principal;integracao;integral | Lagrange;estado_posts;integral | principal;duracao330;integral	1dfd1c3db486e1333859d02ba3bda47cf6b00dfe4e16bb2bfb4692855fe72291	true
 backend/biome.json	Lagrange;estado_posts;integral | Lagrange;perfil328;integral	b18d9e3b34ea13858684e4638be0df6f2b1ccea34b1df0d2f4273bae6d56efdf	true
-backend/package.json	Tesla;concorrencia;integral | Tesla;vocabulario337;integral_dos_ranges	5f3f35fa5591a598f558f39d2c9ca65cf38725959c04b4a85e73970919fb72a0	true
+backend/package.json	Tesla;concorrencia;integral | Tesla;vocabulario337;integral_dos_ranges | principal;video_votos339;integral_original_e_diff_bump339	f11bad7d4b899344de3828da980df4607a479cd1b9e66a2394a040b1b4c4954a	true
 backend/prisma.config.ts	Tesla;concorrencia;integral | principal;duracao330;integral	3182888f9d8533b5efaca15386e2a52763a99b99104a5d55ef79f644d5eb5b9d	true
 backend/scripts/analytics-duration-integration.mjs	principal;duracao330;integral | Tesla;consumidores_midia;integral_inicial	41eb37fba615822b991d9de2fe2fcec1e542acc779c811316121f1db96a4ec61	false
 backend/scripts/analytics-duration-probe.cjs	principal;duracao330;integral	ecfae7313c2c3aeca8d720338deecbfa36b79983317c721fec25ded287a6915e	false
@@ -363,12 +363,12 @@ backend/src/modules/api/admin/private/patients/account/use-cases/services.ts	Tes
 backend/src/modules/api/admin/private/patients/account/validator/index.ts	Tesla;backend_admin336;integral_inicial	5dbcab343e1ad7e3b73d2fe2a23dd97e914a14f072994b648fc1fa6400da4dd1	true
 backend/src/modules/api/admin/private/patients/activities/DTOs/IAdminPatientActivitiesDTO.ts	Tesla;backend_admin336;integral_inicial	bff540b2fa5aaf31fbc0d419db81ed1df4c15aba74fd7ffbfe48310e44432a4e	true
 backend/src/modules/api/admin/private/patients/activities/index.ts	Tesla;backend_admin336;integral_inicial	80b75c0a75da9e3f9bbdb2d6a9f614812fd39778bbcc3f530fadc217ae367c18	true
-backend/src/modules/api/admin/private/patients/activities/repositories/AdminPatientActivitiesRepository.ts	Tesla;backend_admin336;integral_inicial	7d018be8e9825a656ae2380e67417072d9e25311e7b4254d5bcbdf311bfb3059	true
+backend/src/modules/api/admin/private/patients/activities/repositories/AdminPatientActivitiesRepository.ts	Tesla;backend_admin336;integral_inicial | principal;video_votos339;integral	7d018be8e9825a656ae2380e67417072d9e25311e7b4254d5bcbdf311bfb3059	true
 backend/src/modules/api/admin/private/patients/activities/use-cases/controller.ts	Tesla;backend_admin336;integral_inicial	8302f5adaf900371a42626f1ed3f049ade4b54e1ca72ab647e8b5e26eec1ff69	true
 backend/src/modules/api/admin/private/patients/activities/use-cases/services.ts	Tesla;backend_admin336;integral_inicial	f7b48bf4d6821f5ae801772d14333551e5426311948566acd90008fbe6a009f4	true
-backend/src/modules/api/admin/private/patients/activities/use-cases/services/activity-builder.ts	Tesla;backend_admin336;integral_inicial	f5eef570c92513eb1e42b4b768221204ea59bdb87135c0ebf6aca207e53db103	true
+backend/src/modules/api/admin/private/patients/activities/use-cases/services/activity-builder.ts	Tesla;backend_admin336;integral_inicial | principal;video_votos339;integral	f5eef570c92513eb1e42b4b768221204ea59bdb87135c0ebf6aca207e53db103	true
 backend/src/modules/api/admin/private/patients/activities/use-cases/services/activity-query.ts	Tesla;backend_admin336;integral_inicial	5424f5eda349fe0da96ed72e437d5ec20193aba31d9892f9c1c29a96c370433c	true
-backend/src/modules/api/admin/private/patients/activities/use-cases/services/activity-support.ts	Tesla;backend_admin336;integral_inicial	337374ef033dea951ba8b1754b3720c26b63766e7e97a7023632fed4827dfd7c	true
+backend/src/modules/api/admin/private/patients/activities/use-cases/services/activity-support.ts	Tesla;backend_admin336;integral_inicial | principal;video_votos339;integral	337374ef033dea951ba8b1754b3720c26b63766e7e97a7023632fed4827dfd7c	true
 backend/src/modules/api/admin/private/patients/activities/validator/index.ts	Tesla;backend_admin336;integral_inicial	ae9142288ec844170a8b1d671e3c3afeb0b982ee8587fe7eace724b466b19fa3	true
 backend/src/modules/api/admin/private/patients/list/DTOs/IAdminPatientsListDTO.ts	Tesla;backend_admin336;integral_inicial	a6b576a2209bce7db9fa6cca6e8662001f0eb725d3260611d6d40c3d3e4eda94	true
 backend/src/modules/api/admin/private/patients/list/index.ts	Tesla;backend_admin336;integral_inicial	0687163bc0014f2ff2f10cd54eef2d022eccdfb9ffae925ddb857e7dd82599ec	true
@@ -400,7 +400,7 @@ backend/src/modules/api/admin/private/psychologists/account/validator/index.ts	T
 backend/src/modules/api/admin/private/psychologists/activities/DTOs/IAdminPsychologistActivitiesDTO.ts	Tesla;backend_admin336;integral_inicial | Tesla;historico_notificacoes338;integral | principal;diagnostico_historico338;integral	492fb28cfda9b3591adcdaf1afac2a0e61e7a24ad05c83f7e95eba283a4dfbdc	true
 backend/src/modules/api/admin/private/psychologists/activities/index.ts	Tesla;backend_admin336;integral_inicial | Tesla;historico_notificacoes338;integral | principal;diagnostico_historico338;integral	80b75c0a75da9e3f9bbdb2d6a9f614812fd39778bbcc3f530fadc217ae367c18	true
 backend/src/modules/api/admin/private/psychologists/activities/repositories/AdminPsychologistActivitiesRepository.ts	Tesla;backend_admin336;integral_inicial | principal;diagnostico_historico338;integral | principal;historico338;original_integral_e_diff	c6fb0530d04bde8e00bcb4e20b4b3629665cef5a5919f0dcc7cce5b6ab482055	true
-backend/src/modules/api/admin/private/psychologists/activities/repositories/activity-profile-where.test.ts	Tesla;historico_notificacoes338;integral	73786ecaf09a283091a3aef7e5147beeacfc1641bbbc406bf60be529d08fa816	false
+backend/src/modules/api/admin/private/psychologists/activities/repositories/activity-profile-where.test.ts	Tesla;historico_notificacoes338;integral | principal;video_votos339;integral	73786ecaf09a283091a3aef7e5147beeacfc1641bbbc406bf60be529d08fa816	false
 backend/src/modules/api/admin/private/psychologists/activities/repositories/activity-profile-where.ts	Tesla;historico_notificacoes338;integral	70a1ac705d8237b2c5ed0de6d823b3036dd5c998cf5a7a263bd588e67243a125	false
 backend/src/modules/api/admin/private/psychologists/activities/use-cases/controller.ts	Tesla;backend_admin336;integral_inicial | Tesla;historico_notificacoes338;integral | principal;diagnostico_historico338;integral	f1688b400ed6bc16a83ea1e769197d7336cdbdd6d859a75f40435ad65be944aa	true
 backend/src/modules/api/admin/private/psychologists/activities/use-cases/services.ts	Tesla;backend_admin336;integral_inicial | Tesla;historico_notificacoes338;integral | principal;diagnostico_historico338;integral	fa3352ca6fb808a1f9d8557ffe5f760198a3b72fa9d310832c713d5ce10c3571	true
@@ -556,11 +556,11 @@ backend/src/modules/api/private/patient/favorites/validator/index.ts	Tesla;comun
 backend/src/modules/api/private/patient/profile/DTOs/IProfileDTO.ts	Tesla;vocabulario337;integral_dos_ranges	754a395cc01f4d51b678d164202d64e04279cf5b5f5d398871ad41aa75eaf410	true
 backend/src/modules/api/private/patient/profile/validator/index.ts	Tesla;vocabulario337;integral_dos_ranges	430278d244bc6d479d32a582384f2e7a06a0e87eeec9ae786f7de637a06b1f48	true
 backend/src/modules/api/private/posts/DTOs/IPostDTO.ts	Tesla;comunidades;integral | Lagrange;estado_posts;integral	9bcaf6c40b3834002a1e204bbb089092e1ba4a5f6fe63008b822445a6d44cca5	true
-backend/src/modules/api/private/posts/index.ts	Tesla;comunidades;integral	75f3d6e8d8437fec421fafda4731b3e78f37506d6840d879e1f0fcf5160d725f	true
+backend/src/modules/api/private/posts/index.ts	Tesla;comunidades;integral | principal;video_votos339;integral	75f3d6e8d8437fec421fafda4731b3e78f37506d6840d879e1f0fcf5160d725f	true
 backend/src/modules/api/private/posts/repositories/PostRepository.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Tesla;consumidores_midia;integral_inicial	8cedcd81dca46d17f40f65b505dbc9250c1641cbbd16e1e1da63a0b6107ec9a8	true
 backend/src/modules/api/private/posts/repositories/interfaces/IPostRepository.ts	Tesla;comunidades;integral	9e12885cd2d56de7fbca30bf88e0e462efcdf72adf56b7aceabc8700d4a0faaf	true
 backend/src/modules/api/private/posts/repositories/queries/PostCoreRepository.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Lagrange;estado_posts;integral | principal;integracao329;integral | Tesla;consumidores_midia;integral_inicial | Tesla;associacao333;integral_final	66666fc77ee5f973ef684f8cf61d3ba218edf8b433d2267a3ab2245d6d012b38	true
-backend/src/modules/api/private/posts/repositories/queries/PostEngagementRepository.ts	Tesla;comunidades;integral	197bb4b3eb6ad0a7b5b437b4710bd02aefb80d9f7e9870318b35d665a2adc0b2	true
+backend/src/modules/api/private/posts/repositories/queries/PostEngagementRepository.ts	Tesla;comunidades;integral | principal;video_votos339;integral	197bb4b3eb6ad0a7b5b437b4710bd02aefb80d9f7e9870318b35d665a2adc0b2	true
 backend/src/modules/api/private/posts/repositories/queries/PostListRepository.ts	Tesla;comunidades;integral | Lagrange;estado_posts;integral	22d4afe591b058434f15bbf7e56e567560e9c9cd3b7de61bc6052f95072eb9c3	true
 backend/src/modules/api/private/posts/repositories/queries/PostReplyRepository.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Tesla;associacao333;integral_final	718b0f73f7e85f2f16c684fb9325b2eb5cc5fd668dc66bf418860a3b1d73acb0	true
 backend/src/modules/api/private/posts/repositories/queries/PostReplyStateRepository.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Lagrange;estado_posts;integral	7a99bce78b3780b99ac2916fccd3732465a5414e52390024493a40554810ebf2	true
@@ -570,11 +570,11 @@ backend/src/modules/api/private/posts/repositories/queries/PostStateRepository.t
 backend/src/modules/api/private/posts/repositories/queries/PostUpdateRepository.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Tesla;associacao333;integral_final	0dab2db8c85cf612bffcde9c0270f7204fc81d1b0ebd0a0d24046e74a9f0e17f	true
 backend/src/modules/api/private/posts/repositories/support/post-media-url.test.ts	Tesla;comunidades;integral	d589aefbec34610888e3503ce0cd8d03f2aae8cfb6d0e4796f920482c7162b5a	false
 backend/src/modules/api/private/posts/repositories/support/post-media-url.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | principal;integracao;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Tesla;associacao333;integral_final	30588ddc863d1762207bcd6b6ca934790a2e60b8ddb5efcec6c0ee22d9b612c9	false
-backend/src/modules/api/private/posts/repositories/support/post-response.ts	Tesla;comunidades;integral | Lagrange;estado_posts;integral	fad27ef4ab6c7177189ef300c08dc2525d3b425353c72201759e3e5969522339	true
+backend/src/modules/api/private/posts/repositories/support/post-response.ts	Tesla;comunidades;integral | Lagrange;estado_posts;integral | principal;video_votos339;integral	fad27ef4ab6c7177189ef300c08dc2525d3b425353c72201759e3e5969522339	true
 backend/src/modules/api/private/posts/repositories/support/reply-tree.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Tesla;associacao333;integral_final	186425f8050cd7e08bce1418432b455c429d1b6242be207b7813ab8c7c3d9193	true
 backend/src/modules/api/private/posts/use-cases/controller.ts	Tesla;comunidades;integral	dec20df9472529f8c2cfad336512e05ad44dc03c55873742b5dc5dc891a3c290	true
-backend/src/modules/api/private/posts/use-cases/services.ts	Tesla;comunidades;integral	c04d5707c92138485bff005048344ddad7d037e54ba7d74a8f17f579abf97037	true
-backend/src/modules/api/private/posts/use-cases/services/media-actions.ts	Tesla;comunidades;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	0a9e852c25fd393f90b554158834158305a8657d571f2efa654c180491b8f5e2	true
+backend/src/modules/api/private/posts/use-cases/services.ts	Tesla;comunidades;integral | principal;video_votos339;integral	c04d5707c92138485bff005048344ddad7d037e54ba7d74a8f17f579abf97037	true
+backend/src/modules/api/private/posts/use-cases/services/media-actions.ts	Tesla;comunidades;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | principal;video_votos339;integral	0a9e852c25fd393f90b554158834158305a8657d571f2efa654c180491b8f5e2	true
 backend/src/modules/api/private/posts/use-cases/services/post-support.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Tesla;vocabulario337;integral_dos_ranges	ae9a141cfb16c70b0b42c10096a9221aecbf78752a23dc83229d9b0d67d17147	true
 backend/src/modules/api/private/posts/use-cases/services/queries-replies.ts	Tesla;comunidades;integral	a37db613e9bebafc4606245b86f8a992285a12d18489578398cbe6a0a37c0389	true
 backend/src/modules/api/private/posts/use-cases/services/reply-media-multipart.ts	Tesla;comunidades;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	12550c391b56e4bbe7ffd18e073cac502b00417da48234a296747190c357d024	true
@@ -589,7 +589,7 @@ backend/src/modules/api/private/posts/use-cases/services/share-render.test.ts	Te
 backend/src/modules/api/private/posts/use-cases/services/share-render.ts	Tesla;comunidades;integral | principal;integracao;integral	835e6a080744917f5464c6ed4e0b4f77c7ee63c71d48effaaa6d614dd3eb74e2	true
 backend/src/modules/api/private/posts/use-cases/services/state-actions.ts	Tesla;comunidades;integral	52ac7f428418c64650566fefedbc4c4ef24fa3a2c0480c963eb83cd22105efbe	true
 backend/src/modules/api/private/posts/use-cases/services/update.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	dcb315a63c4e4af702f62befe91b54092b4f3127264f1686830c566df8504e92	true
-backend/src/modules/api/private/posts/validator/index.ts	Tesla;comunidades;integral	b3fb9c4160272c48c273a78edc7dff6b1416399e80db442afeafd438da0d731b	true
+backend/src/modules/api/private/posts/validator/index.ts	Tesla;comunidades;integral | principal;video_votos339;integral	b3fb9c4160272c48c273a78edc7dff6b1416399e80db442afeafd438da0d731b	true
 backend/src/modules/api/private/psychologist/billing/address/DTOs/IAddressDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	702f0df26aaa68b86d728472c72cad5cb947d3448ee9f9d645d4abfcb3991aef	true
 backend/src/modules/api/private/psychologist/billing/address/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	0982024e67d175b1c42288de436be3a92ff6fa56a8274e99b8be6030beab6035	true
 backend/src/modules/api/private/psychologist/billing/address/repositories/AddressRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	cf7b33d7167d3304db62aa5001c8df13288ba0309cf1f95e20d72a35889de74b	true
@@ -1322,38 +1322,41 @@ frontend/src/utils/upload-lifecycle.ts	Lagrange;perfil;integral | Lagrange;perfi
 frontend/src/utils/urlToBase64.ts	Euclid;sessao331;integral_inicial	2018c55204f3e10951ee05a8535ed38d8e5de46636e11ba988ea4a74453f8ccf	true
 frontend/src/utils/video-asset-upload.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | principal;associacao333;integral	35237a625ceb6db73579bdd1ac680f4a96786631cdd161ebac1aca6d3df124fd	true
 frontend/src/utils/video-stream.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	c1646ad9c98ec3b711e54658801310a353e4c846e93e5a2262a957716bdcb1e5	true
+package.json	principal;video_votos339;integral_original_e_diff_bump339	4538e821409abf510ee4dbf9926bf617d4b7dd51fb45300ce3cbb61a3bc4101d	true
 scripts/check-env-examples.mjs	Lagrange;estado_posts;integral | Euclid;denuncias;integral	2f224ebf1268b3439be5df0728d9f9a3f4a07aa870bf4b3d7d5beb34f50c4dcf	true
 scripts/check-source-safety.mjs	Lagrange;estado_posts;integral | Euclid;denuncias;integral | Tesla;notificacoes;integral | Tesla;notificacoes328;integral	25b771003c26d68eeb1bacf3087e7fdb5ff93d9c99a6906cbbed58b4476cd7de	true
 scripts/check-source-size.mjs	principal;analytics330;integral | Tesla;associacao333;integral_final	7d9be6fcc24b0b45d686e366081d5a54301eda8ee7d540e8d5749e041603b249	true
-video/.dockerignore	Lagrange;video;integral	8f8fc6d3182fe337e0e7be0ebf109e3d3f4b10c1701c5c01f816a3bf2f3fc6f5	true
+video/.dockerignore	Lagrange;video;integral | principal;video_votos339;integral	8f8fc6d3182fe337e0e7be0ebf109e3d3f4b10c1701c5c01f816a3bf2f3fc6f5	true
 video/.gitignore	Lagrange;video;integral	f4c16b55118034eed191514a959d7c7252021c9a0ab91366cbb3c927640c41e9	true
-video/Dockerfile	Lagrange;video;integral | principal;integracao;integral | principal;diagnostico_historico338;integral	f847073fd876462938ca359e10985edcda897bd084241124d784e1d70d512840	true
-video/README.md	Lagrange;video;integral	855afb09cb580f38a21f62f71550cd738a5d88a734110fd15fae423a6b2488a9	true
-video/biome.json	Lagrange;video;integral	2588307b62efbd1d355858640a29646913c03155db0e6e11eacbfda738834d8b	true
+video/Dockerfile	Lagrange;video;integral | principal;integracao;integral | principal;diagnostico_historico338;integral | principal;video_votos339;integral	f847073fd876462938ca359e10985edcda897bd084241124d784e1d70d512840	true
+video/README.md	Lagrange;video;integral | principal;video_votos339;integral_original_e_diff	17874aa45e0616de792caac7a488b934f1fa54d3d96e1ee28d4c08a6d89a4d9b	true
+video/biome.json	Lagrange;video;integral | principal;video_votos339;integral	2588307b62efbd1d355858640a29646913c03155db0e6e11eacbfda738834d8b	true
 video/docker-compose.yml	Lagrange;video;integral	1252681c2e9b6eb9aa74c4a05dc0130fd9a9f46a27ace0b5ec758c34e0a5ef8f	true
-video/package.json	principal;diagnostico_historico338;integral	b504e443ca98ef9d0aa4396e74c27878cd730dbd38a82de9f263f75c9ffac2b2	true
+video/package.json	principal;diagnostico_historico338;integral | principal;video_votos339;integral_original_e_diff_bump339	0f5f1c4de37c0f09355f0f8d60c0f7a2a9d14edef5d3c501e5028e21437c9f80	true
 video/pnpm-workspace.yaml	Lagrange;video;integral	656f65bc79ff251877d3e92e63174c805311b9ae91e8eeaf6e0b6ecf04941520	true
 video/scripts/audit-ffmpeg.mjs	Lagrange;video;integral	3a9022f36ce1a138ef861a88ce1b049e5946c8debd35215d8f8d101fe0034081	false
 video/scripts/audit-local.mjs	Lagrange;video;integral	02a96027b85a8da18d67c8863886fa79962d554e09b0f41ee2b325b3a13cf859	false
-video/scripts/e2e.mjs	Lagrange;video;integral	4524780f92047648170e06428d8ac53b6dc348d7b5a818281fa325e507f12589	true
+video/scripts/e2e-summary.mjs	principal;video_votos339;integral	3bc273d86d06e2f7799f0368e002c1f7ebd507228d9c025cc399a3364459f71a	false
+video/scripts/e2e-summary.test.mjs	principal;video_votos339;integral	df0de7d509a7b65f08c15ca8a093a5bd7852d8e627d689f946ab68009bd076e9	false
+video/scripts/e2e.mjs	Lagrange;video;integral | principal;video_votos339;integral_original_e_diff	a1b162c08d6df85069ac3563599a3aac37465eaab8a9bfeb4185daa2ccc9ad51	true
 video/src/all.ts	Lagrange;video;integral	790c4a8e41d10cdaa97114cfd44c930ae9b56bf44f3c0d350418c72b5abb10d6	true
 video/src/api.ts	Lagrange;video;integral	bd448f528219f4b084a9ef0ef142ee06842fa2c564e61e40a0e06ee89975bc30	true
 video/src/app.ts	Lagrange;video;integral	d4d6d11555f362dbda9c03619da45fea6ff430eaae74155091aa38f270377abb	true
 video/src/config/env.test.ts	Lagrange;video;integral	6db10c80add1c1a9f7afd30cfeb8277ea32e0a9ae9718d3ae0c32cfb2cdd4b76	true
 video/src/config/env.ts	Lagrange;video;integral	e35072803bb893abfe9ca2c7c5577f4919372f25f8bf95d764ce0411dc2d768b	true
 video/src/config/version.ts	Lagrange;video;integral	f9bc527fe32fc2cce11cd1e7d591f9d47dc4388712b8c7a51410786cf50235cd	true
-video/src/domain/jobs/contracts.ts	Lagrange;video;integral	0a0beda77fdba9c559719d0e55a27090f99a22aed49aa190f4bfee13a72419c5	true
+video/src/domain/jobs/contracts.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	0a0beda77fdba9c559719d0e55a27090f99a22aed49aa190f4bfee13a72419c5	true
 video/src/http/logging.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral	5a0a03fceaedcd9fc464d3c69071de2bc4a10f446cc285747b318eaf420a30e2	true
 video/src/http/readiness.ts	Lagrange;video;integral	29403e5136e0b79cf038943ddda874bf47f8679f64fb38c6713031ec99896db5	true
 video/src/http/responses.ts	Lagrange;video;integral	909001b16cb7a9d6239662a14974e2969382f25bb03e87a801f730cfb2316da1	true
-video/src/infra/ffmpeg/compress.test.ts	Lagrange;video;integral	e046d395064c378410239ea015e67805f59ee94da56324272f9839d03514a7fd	true
-video/src/infra/ffmpeg/compress.ts	Lagrange;video;integral	a9eb9bd1e604249aefa74be91eea30c1624d8d5840f80791ecf45d80e421c3ff	true
+video/src/infra/ffmpeg/compress.test.ts	Lagrange;video;integral | Hubble;probe339;integral	e046d395064c378410239ea015e67805f59ee94da56324272f9839d03514a7fd	true
+video/src/infra/ffmpeg/compress.ts	Lagrange;video;integral | Hubble;probe339;integral	a9eb9bd1e604249aefa74be91eea30c1624d8d5840f80791ecf45d80e421c3ff	true
 video/src/infra/ffmpeg/drawbox-art.ts	Lagrange;video;integral	0dc8213eaf0068c6dbe1ed0694a18195035b42d648d9eda08d9ea9d1de6890c0	true
 video/src/infra/ffmpeg/drawtext.ts	Lagrange;video;integral	c3904c5f04a1b258d725ba75b3d343385e96a510f8663e5f37356380f4562f45	false
-video/src/infra/ffmpeg/probe.test.ts	Lagrange;video;integral	bc96bdf155971d3b0e6d55f99ed1920ed3c7db57eab73e44fa8fd6846ac88a33	true
-video/src/infra/ffmpeg/probe.ts	Lagrange;video;integral	0bfc61d919284264f992f4bffddadd7573b9ff890fec6ad25578dcef0510bce8	true
-video/src/infra/ffmpeg/process.test.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral	b93669b079aed7807f77fef58b173c28c98c7a856ff50da7fd908aa73a5fcb91	true
-video/src/infra/ffmpeg/process.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral	b493ec38225e3a41d4741c1f69fbf5041985c88a7e5f3feb7d84213a9dd8181f	true
+video/src/infra/ffmpeg/probe.test.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	4dce0f8ef2202fddc7ed033a65b03d16970e629e5da5e168df33e23c66fb291c	true
+video/src/infra/ffmpeg/probe.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	76843ec0f91f8c880dbd7022b2298af4b8f2c04cab3a8203b235482374000e56	true
+video/src/infra/ffmpeg/process.test.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral | Hubble;probe339;integral	b93669b079aed7807f77fef58b173c28c98c7a856ff50da7fd908aa73a5fcb91	true
+video/src/infra/ffmpeg/process.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral | Hubble;probe339;integral	b493ec38225e3a41d4741c1f69fbf5041985c88a7e5f3feb7d84213a9dd8181f	true
 video/src/infra/ffmpeg/remote-fetch.ts	Lagrange;video;integral	eba32759bf3e4a2b17cb5f412025052e86668a807bb121c00194d647734f6bac	false
 video/src/infra/ffmpeg/remote-source-local.test.ts	Lagrange;video;integral	0b729251bbddae343c886f41b0aafa5973c380c3f82fdb046428e4ba33df4097	false
 video/src/infra/ffmpeg/remote-source.test.ts	Lagrange;video;integral	6e19de8528ffbfa86c1d387ded0f1215b8023380386c3470b1e0c9da5592ea4f	true
@@ -1364,7 +1367,7 @@ video/src/infra/ffmpeg/social-share.ts	Lagrange;video;integral	e5c8cbc0e1581fcbd
 video/src/infra/ffmpeg/source-url.test.ts	Lagrange;video;integral	8ec2670602d0b62fe135664cd65280ee6f5bdc7da1c061cf2a7aea50ce1610fb	false
 video/src/infra/ffmpeg/source-url.ts	Lagrange;video;integral	1b62947215497cf2279741e23e018370e26c0d0c1ca1c184df912381592b9ba3	true
 video/src/infra/queue/cancellation.ts	Lagrange;video;integral	33361369a6aab2f094543d7c3742bbccc12f417dbf236400e68c5a48842cd1f7	true
-video/src/infra/queue/client.ts	Lagrange;video;integral	b75fb454d6d725a3099e0ebc42004fa087c1d1bc829a63e26e1016f270d27b70	true
+video/src/infra/queue/client.ts	Lagrange;video;integral | principal;video_votos339;integral	b75fb454d6d725a3099e0ebc42004fa087c1d1bc829a63e26e1016f270d27b70	true
 video/src/infra/queue/jobs.ts	Lagrange;video;integral	85594a45715515f7478433f32aa56aa836e424274776c3add5d3a0e46918b5ff	true
 video/src/infra/queue/progress.ts	Lagrange;video;integral	138a510cd931ceec393405cbb61dc00b8c78c79f434b1541885da697b76a15bb	false
 video/src/infra/queue/snapshot.ts	Lagrange;video;integral	ceefcc52457e8e65f067c5fbfab4436c3f3d9479046accddbd1ecab96c6250c9	true
@@ -1380,8 +1383,8 @@ video/src/middleware/trace.ts	Lagrange;video;integral	0c03f17848221a1545c0a86148
 video/src/modules/jobs/router.ts	Lagrange;video;integral	39c1070a34fdc0dbbcb118c422c815800296c246a31f594bfb37d491c6b232a9	true
 video/src/modules/jobs/service.ts	Lagrange;video;integral	867983956fe38c335cdf27976675dee3564dcfa778099010e3eda5891b5be7c5	true
 video/src/modules/jobs/upload.ts	Lagrange;video;integral	9dac68815983db42ab996fd57852f715ed0f6cca87cded4f3314fd76135cddfd	true
-video/src/runtime-startup.test.ts	Lagrange;video;integral	13a58d9eeb80735655fde85dc3963497642406b8ab7fb78e3468eee1f6d12b10	true
+video/src/runtime-startup.test.ts	Lagrange;video;integral | principal;video_votos339;integral	13a58d9eeb80735655fde85dc3963497642406b8ab7fb78e3468eee1f6d12b10	true
 video/src/types.d.ts	Lagrange;video;integral	b419888db11a26a87f2cc795bfa47ba60a76dd8a3acdd1df2fdad9bd1f319460	true
-video/src/worker-processor.ts	Lagrange;video;integral	48ed48759bb0f77e9afe4d509c8857f49ff668786dfd0d55ac6d28a612dc7284	true
+video/src/worker-processor.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	48ed48759bb0f77e9afe4d509c8857f49ff668786dfd0d55ac6d28a612dc7284	true
 video/src/worker.ts	Lagrange;video;integral	aeb00f9ccf61b4cdd0e3b92b17d3ebb1c94565724e76d8a6dd3bfdbb6388fa5e	true
-video/tsconfig.json	Lagrange;video;integral | principal;diagnostico_historico338;integral	e35f1bbb697fdfc6555cc2f2325a13bbb1500661d0461fe59e25b36bdf4d8bec	true
+video/tsconfig.json	Lagrange;video;integral | principal;diagnostico_historico338;integral | principal;video_votos339;integral	e35f1bbb697fdfc6555cc2f2325a13bbb1500661d0461fe59e25b36bdf4d8bec	true

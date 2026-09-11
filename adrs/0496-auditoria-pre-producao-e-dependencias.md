@@ -785,3 +785,25 @@ No título de log automático, extrair resolução existente para helper puro ju
 consultar somente chaves próprias do catálogo. Metadata salva continua prioritária e120caracteres
 continuam o teto. Não normalizar eventos desconhecidos nem alterar envio/campanha/dados.
 Sem schema/env/package ou contrato deAPI novo; rollback de código preserva persistência.
+
+### Relatório do E2E de vídeo339
+
+O sucesso do script só pode anunciar o que foi executado. Um booleano local é marcado após
+a asserção terminal do cancelamento opcional; o formatter puro ao lado do script lista
+controles obrigatórios e indica explicitamente caso omitido. O script de integração não roda
+na suíte unitária; só o formatter e composição são testados, sem mocks de API/fila/provider.
+Testes de scripts entram no runner Node nativo existente. Sem package/env novo, mudança de
+contratoHTTP ou dados. Rollback é somente código/imagem do video;releases continuam separados.
+
+### Timeout de sondagem de vídeo339
+
+Falha de prazo do processo não demonstra arquivo inválido. Reutilizar as classes existentes
+e classificar ManagedProcessError(timeout) como processing_failed com retryable=true,
+compartilhando o tratamento entre sondagem local/remota e validação da saída. O encapsulamento
+da saída conserva essa classificação; cancelamento continua terminal e falhas de mídia/JSON
+continuam permanentes. Não inferir timeout por texto da mensagem.
+
+Preservados os tetos de60/120segundos do probe, AbortSignal, deadline por tentativa do worker
+e orçamento de tentativas/backoff da fila. Não há loop novo nem aumento de limites. Pode haver
+mais tentativas para sondagens lentas, sempre dentro da configuração vigente. Sem env nova,
+contratoHTTP novo ou migration. Testes puros não comprovam retry real do BullMQ ou provider.

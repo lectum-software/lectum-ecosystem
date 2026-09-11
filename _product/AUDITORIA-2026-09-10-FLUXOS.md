@@ -118,3 +118,11 @@ Teste do where não é consulta real de banco nem autorização nova para sessõ
 Na lista com1registro apareceu concordância plural “1 psicólogos encontrados”; detalhe de
 assinatura gratuita repete “Plano Plano Gratuito”. Achados visuais menores registrados, sem
 reclassificar como erro de dados ou incluir correção não implementada neste commit.
+
+### Continuação339 — evidência de processamento
+
+-338:quatro versões alinhadas,smokeHTTP18/18 e conexão privada autenticada/pronta; nãoencodeE2E.
+-V06:relatório de execução distingue cancelamento opcional não executado, sem remover asserções.
+-BR08:serviço de voto já restringe±1;risco de dado legado0 não demonstrado,nenhuma mutação feita.
+- V02: timeout interno da análise passa a falha operacional repetível; fluxo conserva cancelamento,
+  rejeição de mídia inválida e validação de saída. Contratos puros aprovados, retry real pendente.

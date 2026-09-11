@@ -41,6 +41,9 @@ pnpm test:e2e
 ```
 
 Essas três envs `VIDEO_E2E_*` são exclusivas do teste local e não pertencem ao deploy.
+Sem `VIDEO_E2E_CANCEL_FILE`, o resumo informa cancelamento como **não testado**. O `pnpm check`
+valida também o formato desse resumo, mas não executa o E2E nem comprova processamento ou
+cancelamento real de jobs.
 
 Envie um vídeo sem imprimir o segredo no histórico:
 

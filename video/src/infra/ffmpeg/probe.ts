@@ -84,6 +84,22 @@ const parseProbe = (stdout: string): VideoProbe => {
   };
 };
 
+export const classifyVideoProbeError = (
+  error: unknown,
+  fallbackCode: "invalid_video" | "processing_failed" = "invalid_video",
+): VideoProcessingError => {
+  if (error instanceof VideoProcessingError && (error.code === "canceled" || error.retryable)) {
+    return error;
+  }
+  if (error instanceof ManagedProcessError && error.kind === "aborted") {
+    return new VideoProcessingError("canceled", { cause: error });
+  }
+  if (error instanceof ManagedProcessError && error.kind === "timeout") {
+    return new VideoProcessingError("processing_failed", { cause: error, retryable: true });
+  }
+  return new VideoProcessingError(fallbackCode, { cause: error });
+};
+
 export const probeVideo = async (
   config: VideoServiceConfig,
   filePath: string,
@@ -109,10 +125,7 @@ export const probeVideo = async (
     });
     return parseProbe(stdout);
   } catch (error) {
-    if (error instanceof ManagedProcessError && error.kind === "aborted") {
-      throw new VideoProcessingError("canceled", { cause: error });
-    }
-    throw new VideoProcessingError("invalid_video", { cause: error });
+    throw classifyVideoProbeError(error);
   }
 };
 
@@ -133,10 +146,7 @@ export const probeRemoteVideo = async (
     });
     return parseProbe(stdout);
   } catch (error) {
-    if (error instanceof ManagedProcessError && error.kind === "aborted") {
-      throw new VideoProcessingError("canceled", { cause: error });
-    }
-    throw new VideoProcessingError("invalid_video", { cause: error });
+    throw classifyVideoProbeError(error);
   }
 };
 
@@ -201,8 +211,7 @@ export const validateOutputProbe = async (input: {
       stat(input.filePath),
     ]);
   } catch (error) {
-    if (error instanceof VideoProcessingError && error.code === "canceled") throw error;
-    throw new VideoProcessingError("processing_failed", { cause: error });
+    throw classifyVideoProbeError(error, "processing_failed");
   }
   const durationDelta = Math.abs(output.durationSeconds - input.source.durationSeconds);
   const durationTolerance = Math.max(2, input.source.durationSeconds * 0.03);
@@ -239,8 +248,7 @@ export const validatePublishedOutput = async (
       stat(filePath),
     ]);
   } catch (error) {
-    if (error instanceof VideoProcessingError && error.code === "canceled") throw error;
-    throw new VideoProcessingError("processing_failed", { cause: error });
+    throw classifyVideoProbeError(error, "processing_failed");
   }
 
   if (

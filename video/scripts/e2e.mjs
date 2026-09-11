@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { formatE2eSummary } from "./e2e-summary.mjs";
 
 const baseUrl = process.env.VIDEO_E2E_BASE_URL ?? "http://127.0.0.1:3003";
 const apiKey = process.env.VIDEO_SERVICE_API_KEY;
@@ -145,6 +146,7 @@ try {
   await rm(temporaryDirectory, { force: true, recursive: true });
 }
 
+let cancellationValidated = false;
 if (cancelSourcePath) {
   const cancelJob = await upload(cancelSourcePath);
   const active = await waitFor(cancelJob.job_id, new Set(["processing", "completed"]), 30_000);
@@ -156,6 +158,7 @@ if (cancelSourcePath) {
   assert.equal(canceledResponse.status, 202);
   const canceled = await waitFor(cancelJob.job_id, new Set(["canceled", "failed"]), 30_000);
   assert.equal(canceled.status, "canceled", JSON.stringify(canceled));
+  cancellationValidated = true;
 }
 
 const removed = await fetch(`${baseUrl}/api/private/jobs/${created.job_id}`, {
@@ -177,6 +180,4 @@ assert.equal(
   200,
 );
 
-console.log(
-  "[video-e2e] OK: autenticação, recusas, fila, FFmpeg, Range, cancelamento e remoção validados.",
-);
+for (const line of formatE2eSummary(cancellationValidated)) console.log(line);

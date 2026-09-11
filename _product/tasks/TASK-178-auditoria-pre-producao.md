@@ -608,5 +608,21 @@ nenhuma env, migration, pacote ou reparo de dados. Video mantém deploy independ
 - [x] Filtro do histórico mantém exclusão/IDs/papel sem exigir conta ativa; contrato6/6, sem simular banco.
 - [x] Resolução de títulos e diagnósticos usa chaves próprias/fallback seguro;16/16 e9/9 focais.
 - [x] Regressões, check758, builds e imagens backend/video aprovados; limites de prova registrados.
-- [ ] Publicação338 e smoke; versão privada de video confirmada pelo operador.
+- [x] Publicação338:18/18 smoke, três apps públicas338; operador confirmou vídeo338 autenticado/pronto via rede privada.
 - [ ] Histórico de uma conta inativa dedicada validado emHTTP, sem suspender usuários reais.
+
+### Continuação339 — falhas operacionais de vídeo e precisão do E2E
+
+Recorte V02/V06: confirmar a classificação do timeout interno de ffprobe, preservando
+cancelamento e rejeição permanente de arquivo inválido; o relatório do script E2E deve
+distinguir cancelamento realmente executado de etapa opcional não testada. Sem alterações
+de API/banco/credenciais/env/dependências ou recursos publicados. Não executar M1.
+
+- [x] Classificador do timeout preserva falha operacional/retry;22/22 focais e política da fila revisada por fonte.
+- [x] Sumário do E2E distingue cancelamento omitido;5/5 testes de relatório/composição, sem executar E2E.
+- [x] Check774, build/imagem de video e22testes compilados aprovados, sem equivaler a job real publicado.
+- [ ] Publicação339 e smoke de homologação; conexão/versão privada de vídeo confirmadas.
+
+BR08 reanalisado: writer vigente persiste apenas±1 e marca voto desfeito como deleted=true.
+A hipótese de registro0 ativo segue sem ocorrência demonstrada; não alterar dados nem
+classificar como incidente confirmado a partir apenas da ausência de filtro na leitura.

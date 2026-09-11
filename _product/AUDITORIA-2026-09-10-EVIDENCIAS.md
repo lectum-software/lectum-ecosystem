@@ -1199,3 +1199,63 @@ leitura integral com SHA coincidente (ou original integral+diff do repository) e
 Ledger1386; base3121:1437lidos inicialmente/5parciais/1679não revisados.13entradas novas no
 ledger não equivalem a13novos arquivos base:4sãohelpers/testes recém-criados e há arquivos
 previamente classificados integralmente na base mas ausentes do ledger adicional.
+
+### Pós-deploy338 e reanálise de votos
+
+Commitc1228c2c publicado emhomolog. Versões backend/frontend/Admin338 confirmadas às17:08:58UTC
+em11/09;smoke final18/18 às17:10:25UTC. Health/ready200, gates401 e redirecionamentos,
+feed/diretório público, imagem otimizada, versão semcache/noindex e loginvazioPT-BR. Operador
+confirmou pelo backend VIDEO_PROCESSING_SERVICE_CHECK_OK:authvalid,readinessready,
+serviceVersion0.1.338,transportprivate_network. Não equivale a encode/download/reprodução.
+Logs/JSON:/tmp/lectum-338-smoke-final.log e/tmp/lectum-audit-338-smoke-homolog.json.
+Primeiro smoke15/18 era versão337 em rollout, não falha funcional. Auditoria de dependências
+--prod nos5escopos sem avisos conhecidos, sem garantir ausência total de vulnerabilidades.
+
+Admin após338:reload da conta dedicada ativa,10eventos e filtroConta criada1preservados.
+Capturas100native e101legacy diferem em mecanismo/dimensões; não usar para afirmar paridade
+pixel-a-pixel nem atribuir scrollbars a338. Não alteramos status de conta nem testamos inativa.
+
+BR08:leitura completa do writer PostEngagementRepository e serviço media-actions confirmou
+que vote rejeita qualquer valor diferente de±1 antes do repository;desfazer conserva valor e
+marca deleted=true. Validator aceita inteiro genericamente, mas serviço exige±1. Leitura Admin
+sem filtrovalue teria descrição errada se existisse registro0ativo; ocorrência não demonstrada.
+Nenhum voto/banco acessado para inventar caso. Não classificar como incidente reproduzido.
+
+### V06 — cobertura anunciada pelo script de vídeo
+
+Mensagem final constante extraída mecanicamente;2falhas de formato/3controles no baseline.
+Após patch5/5:4testes de formatter real e1regressão de composição estática. Marca de cancelamento
+só muda após a asserção de estado canceled no ramo opcional. Ausência do caso imprime
+NÃO TESTADO, não OK. Demais asserções e requisições do E2E preservadas. ScriptE2E NÃO executado;
+não afirmar teste de Redis, FFmpeg, HTTP ou cancelamento real por estes cinco testes.
+Artefatos:/tmp/lectum-task178-v06-339. Runner video inclui novos testes de script no check.
+
+### V02 — timeout de sondagem,339
+
+Confirmada classificação incorreta nos catches locais/remotos de probe. Baseline original
+11/11 existente; depois da extração mecânica,3regressões falham e19controles passam. Helper
+classifyVideoProbeError reutiliza classes reais: timeout vira processing_failed/retryable;
+aborted continua canceled; erros de mídia, JSON, schema e output inválido seguem permanentes.
+As duas validações de saída preservam retryable ao encapsular o erro, sem alterar validação
+de codec, tamanho, dimensões, headers, protocolo ou prazos. Resultado focal22/22.
+
+Parent revisou os dois arquivos completos, classe de erro, worker e fila. Freeze dos dois
+arquivos confere com início dos checks. No worker, prazo global é por tentativa e continua
+com precedência própria; fila mantém attempts/backoff existentes. Isso é rastreamento de
+código, não execução BullMQ/Redis. Novos11testes são contratos puros com classes/JSON/Zod
+reais; controles de processo preexistentes executam Node, não FFmpeg/ffprobe. Nenhuma mídia,
+provider ou fila publicada foi manipulada. Fonte/testes em /tmp/lectum-task178-v02-339.
+
+Leituras consolidadas com SHA atual: ledger1389; base3121 com1438leituras iniciais,5parciais
+e1678não revisados. Só1arquivo adicional da base ganhou cobertura;2helpers novos não entram
+na base. Releituras não contadas como arquivos novos. Auditoria integral permanece aberta.
+
+Validação339: pnpm check passou774testes (6versão,216frontend,435backend,53Admin,64video),
+sem erros de Biome/TypeScript. Build video aprovado e imagem amd64 construída com lock
+congelado: sha256:c17770f1f16ad1ffe0227600a7515adc30515a2269799f00087f355c5f0451df.
+22/22 testes probe/process compilados passaram nessa imagem, rede none, filesystem read-only,
+/tmp efêmero, sem hostenv/volumes/banco/provider. E2E não executado. Source freeze conferido
+após checks; agente encerrado. Sóvideo possui mudanças de runtime; demais apps apenas bump.
+Sem UI/rotas alteradas, não há nova validação visual alegada.
+Logs:/tmp/lectum-339-{root-check,video-build,video-docker,video-container-tests}.log.
+Bump339 único. Publicação/smoke a executar depois do push; última prova privada338.
