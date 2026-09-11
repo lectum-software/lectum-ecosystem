@@ -25,6 +25,9 @@
 19. Erros padrão de validação em inglês são substituídos por orientação segura em português.
 20. Aviso de conexão Google não expõe mais configuração interna da integração.
 21. Novas senhas longas passam a considerar todos os caracteres, inclusive acentos e o final da senha.
+22. Publicações anônimas não entregam mais o identificador interno do autor a outros leitores.
+23. Comentários do autor anônimo continuam anônimos também na lista de itens salvos.
+24. Apelidos anônimos usam uma regra centralizada, sem cálculo público baseado no usuário.
 
 Correções 1–11 publicadas em `0.1.311` (`fa6a6dce`). **Smoke de 10/09, 22:50 UTC:**
 backend, frontend e Admin confirmados nessa versão; 16 verificações HTTP passaram, incluindo
@@ -208,3 +211,28 @@ build backend e imagem Docker Linux amd64 aprovados. Os seis testes de hash tamb
 artefato final, não root, sem rede, somente leitura, limitado a 768 MiB/2 CPUs. Nenhum entrypoint,
 migration ou banco foi iniciado. Publicação/smoke pendentes. Sessão Admin solicitou novo login;
 usuário reautenticou e a lista de comunidades abriu. Paciente permaneceu conectado.
+
+## Continuação — anonimato 0.1.316
+
+- Smoke de 0.1.315: 16/16 em 11/09, 00:39 UTC; backend/frontend/Admin na mesma versão.
+- Reproduzida exposição do identificador de autoria anônima com a imagem anterior e PostgreSQL
+  temporário real. Não foi necessário consultar identidades de usuários publicados.
+- O dono conserva a edição; outro leitor recebe um pseudônimo. Identificação administrativa
+  depende do guard autenticado, não de um campo enviado pelo cliente.
+- Listas de comentários próprios/salvos agora respeitam o anonimato herdado da publicação.
+- Onze verificações HTTP com banco, JWT, login, guards e repositórios reais passaram: visitante,
+  leitor, dono, administrador, feed, comentários, salvos, edição e recusa de exclusão alheia.
+  O banco foi criado em rede Docker interna, sem portas públicas/credenciais reais, e removido
+  ao final. Não representa teste de OAuth, notificações enviadas ou cadastro por e-mail.
+- O número do apelido anônimo muda com este deploy e em futuras rotações da chave JWT. Continua
+  estável por usuário com a mesma chave. Não muda a autoria armazenada nem apaga conteúdo.
+- O novo cálculo reaproveita segredo existente; sem chave, a apresentação fica genérica.
+  Nenhuma env nova, migration, dependência ou reset é necessário.
+
+Durante o teste, um validador legado recusou endereço com sufixo longo; a mesma expressão também
+recusa aliases com `+`. Achado separado para correção seguinte, ainda não corrigido em 0.1.316.
+Cobertura da auditoria permanece parcial; não liberar produção com base nesses onze cenários.
+
+Validação 0.1.316: `pnpm check` aprovado, 507 testes (132/308/35/32), além dos seis testes
+da política de versão. Build backend, imagem Docker e onze cenários de integração aprovados.
+Inventário: 146 arquivos com leitura inicial, 11 parciais e 2.964 ainda não revisados na base.

@@ -95,3 +95,26 @@ test("preserva indicador booleano has_password sem transportar segredo", async (
     success: true,
   });
 });
+
+test("pipeline HTTP não entrega o ID interno nem nome real de autoria anônima", async () => {
+  const result = await requestResolve({
+    data: {
+      id: "audit-post-id",
+      anonymous: true,
+      author: {
+        id: "audit-author-id",
+        role: "paciente",
+        name: "Identidade de teste",
+        avatar: "/identity-avatar.png",
+      },
+    },
+    status: 200,
+    success: true,
+  });
+  assert.equal(result.status, 200);
+  const serialized = JSON.stringify(result.body);
+  assert.equal(serialized.includes("audit-author-id"), false);
+  assert.equal(serialized.includes("Identidade de teste"), false);
+  assert.equal(serialized.includes("identity-avatar.png"), false);
+  assert.equal(serialized.includes("audit-post-id"), true);
+});

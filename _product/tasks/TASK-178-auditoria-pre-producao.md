@@ -186,10 +186,28 @@ com sessão persistida real. Não declarar toda a autenticação ou o pentest in
 - [x] Seis testes de hash real passaram com bcrypt, argon e parâmetros de ambiente publicado.
 - [x] Check agregado (499 testes), build backend e imagem Docker Linux amd64 aprovados.
 - [x] Seis testes de hash na imagem final, sem rede, filesystem somente leitura e usuário não root.
-- [ ] Smoke publicado de 0.1.315.
+- [x] Smoke publicado de 0.1.315: 16/16 em 11/09, 00:39 UTC, três apps na versão esperada.
 - [ ] Avaliar redefinição controlada de senhas legadas; sem reset ou regravação automática.
 
 Admin: formulário vazio de comunidade validado em mobile sem mutação. Ampliada a leitura de
 guards/routers de comunidades e posts; não equivale a validação IDOR com segunda identidade.
 Sem alteração de schema, env obrigatória ou dependências. Parâmetros Argon2 publicados existentes
 (128 MiB por operação) mantidos; capacidade do servidor sob concorrência ainda precisa de validação.
+
+## Continuação — anonimato 0.1.316
+
+- [x] Exposição de ID anônimo reproduzida na imagem anterior com PostgreSQL isolado real.
+- [x] Sanitizador central diferencia visitante/leitor, dono autenticado e guard administrativo.
+- [x] Anonimato herdado preservado nos comentários próprios e salvos.
+- [x] Quatro cálculos repetidos de apelido substituídos por helper HMAC centralizado.
+- [x] Oito regressões adicionais passaram; build backend e Docker Linux amd64 aprovados.
+- [x] Onze verificações HTTP com banco e autenticação reais passaram na imagem final.
+- [ ] Smoke publicado de 0.1.316.
+
+Sem alteração do schema, novos segredos/envs ou dados publicados. Apelidos recalculados no rollout;
+rotação da chave JWT também muda o pseudônimo. IDs reais somente para o próprio dono/guard Admin,
+preservando clientes antigos. Rede e banco temporários removidos ao fim dos testes.
+Teste inicial com domínio longo foi recusado pelo validador legado; usar domínio reservado curto
+permitiu exercitar autenticação, sem e-mail enviado. Corrigir aliases/TLDs em mudança separada.
+
+Check agregado 0.1.316: 507 testes aprovados, sem falha/skip; check:version aprovado.

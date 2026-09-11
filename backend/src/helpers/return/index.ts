@@ -36,6 +36,10 @@ export const send = (res: Response, resolve: Resolve) => {
         allowSignedMediaUrls,
         removeAuthTokens: !allowAuthTokens,
       }),
+      {
+        viewerId: res.req.auth?.id,
+        revealAnonymousAuthors: Boolean(res.req.admin?.id),
+      },
     ),
   };
 

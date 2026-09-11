@@ -1,3 +1,4 @@
+import { anonymousDisplayNameForAuthor } from "@/utils/anonymous-author";
 //Client
 
 import { endOfDay, startOfDay } from "date-fns";
@@ -63,16 +64,6 @@ const getStringProp = (value: unknown, key: string) => {
 
   const prop = value[key];
   return typeof prop === "string" ? prop : undefined;
-};
-
-const anonymousDisplayNameForAuthor = (authorId: string) => {
-  let hash = 0;
-
-  for (const character of authorId) {
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
-  }
-
-  return `Membro Anônimo #${1000 + (hash % 9000)}`;
 };
 
 const professionalLabelForGender = (gender?: string | null) => {

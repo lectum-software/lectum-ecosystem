@@ -311,7 +311,7 @@ export class PostListRepository extends PostRepositoryContext {
         author: toAuthorResponse(
           reply.author,
           reply.upvotes_count,
-          false,
+          reply.post.anonymous && reply.post.author.id === reply.author.id,
           undefined,
           "community_reply",
         ),
@@ -571,7 +571,7 @@ export class PostListRepository extends PostRepositoryContext {
         author: toAuthorResponse(
           item.reply.author,
           item.reply.upvotes_count,
-          false,
+          item.reply.post.anonymous && item.reply.post.author.id === item.reply.author.id,
           undefined,
           "community_reply",
         ),

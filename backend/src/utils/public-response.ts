@@ -1,3 +1,5 @@
+import { anonymousIdentityForAuthor } from "./anonymous-author";
+
 export type PublicProvenanceSource =
   | "contas"
   | "conteudo"
@@ -107,24 +109,49 @@ export const sanitizePublicProvenanceSource = (value: unknown): unknown => {
   return value;
 };
 
-export const sanitizePublicResponseData = <T = unknown>(value: T): T => {
+type PublicResponseOptions = {
+  viewerId?: string | null;
+  revealAnonymousAuthors?: boolean;
+};
+
+export const sanitizePublicResponseData = <T = unknown>(
+  value: T,
+  options: PublicResponseOptions = {},
+): T => {
   const stack = new WeakSet<object>();
 
-  const visit = (entry: unknown): unknown => {
+  const visit = (entry: unknown, isAuthor = false, parentAnonymous = false): unknown => {
     if (entry === null || entry === undefined || typeof entry !== "object") return entry;
     if (entry instanceof Date || entry instanceof Buffer) return entry;
     if (stack.has(entry)) return "[REDACTED]";
     stack.add(entry);
 
     try {
-      if (Array.isArray(entry)) return entry.map(visit);
+      if (Array.isArray(entry)) return entry.map((item) => visit(item));
 
       const sanitized: Record<string, unknown> = {};
+      const record = entry as Record<string, unknown>;
       for (const [key, entryValue] of Object.entries(entry)) {
         sanitized[key] =
           key.toLowerCase() === "source"
             ? sanitizePublicProvenanceSource(entryValue)
-            : visit(entryValue);
+            : visit(entryValue, key === "author" || key === "actor", record.anonymous === true);
+      }
+
+      if (
+        !options.revealAnonymousAuthors &&
+        isAuthor &&
+        record.role === "paciente" &&
+        (parentAnonymous || record.anonymous === true) &&
+        typeof record.id === "string"
+      ) {
+        const identity = anonymousIdentityForAuthor(record.id);
+        // Somente o dono autenticado conserva o ID necessário aos clientes antigos.
+        // Outros leitores recebem um pseudônimo sem relação pública com o user.id.
+        sanitized.id = options.viewerId === record.id ? record.id : identity.id;
+        sanitized.name = identity.name;
+        sanitized.avatar = null;
+        sanitized.anonymous = true;
       }
 
       return sanitized;

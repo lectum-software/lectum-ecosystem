@@ -196,3 +196,32 @@ Smoke 0.1.314 confirmado 16/16 em 11/09, 00:23 UTC; nova publicação ainda pend
 Validação final: `pnpm check` aprovado, 499 testes; build backend e Docker Linux amd64 aprovados.
 Seis testes reais de hash passaram dentro da imagem final não root, rede bloqueada, filesystem
 somente leitura, 768 MiB e 2 CPUs. Sem boot/migration/banco. Bump único sincronizado 0.1.315.
+
+## Complemento — autoria anônima (0.1.316)
+
+Os mappers mascaravam nome/avatar, mas conservavam `author.id`; quatro helpers calculavam o
+apelido com hash público previsível do mesmo ID. A lista de respostas salvas também desativava
+expressamente o anonimato, mesmo para o autor do post anônimo. Reprodução feita em banco isolado.
+
+Preservar ADR-0167 (apelido estável por usuário), autoria persistida e compatibilidade de edição
+com frontend anterior. O sanitizador existente de resposta aplica a identidade anônima quando
+o objeto `author`/`actor` paciente ou sua publicação indica anonimato. Recebe somente contexto
+autenticado do servidor: o dono conserva seu próprio ID; outros leitores recebem pseudônimo;
+guard Admin pode preservar identidade. Nenhuma opção de bypass vem do request body/query.
+Papéis profissionais e publicações identificadas não mudam. Rotas privadas usam no-store existente.
+
+Centralizar em `anonymous-author.ts`: HMAC-SHA256 com chave JWT existente e domínio próprio,
+identificador opaco de 128 bits e número visual de quatro dígitos. Este número não é identificador
+único nem credencial; pode coincidir. Não criar env obrigatória nem hash público como fallback:
+sem chave, apresentação genérica. Trade-off explícito: apelido muda neste rollout e ao rotacionar
+a chave JWT. Não atualizar registros nem expor a chave. Rollback reabre o problema de privacidade.
+
+Oito regressões novas cobrem resposta HTTP, estabilidade/separação, ausência/rotação de chave,
+dono, outro leitor, admin e papéis preservados. Imagem anterior falha no cenário de ocultação;
+imagem nova passa onze cenários com PostgreSQL 17, login/JWT/Passport/guards/repositórios reais.
+Fixtures são temporárias em banco criado só para o teste, rede interna e nenhum volume publicado.
+Migrações existentes aplicadas somente nesse banco; todos os recursos temporários removidos.
+Não há mocks de autenticação/banco, chamadas de e-mail/OAuth ou alegação de pentest completo.
+
+Smoke 0.1.315: 16/16, backend/frontend/Admin confirmados às 00:39 UTC de 11/09.
+Build backend e imagem Linux amd64 0.1.316 aprovados; publicação ainda pendente neste registro.

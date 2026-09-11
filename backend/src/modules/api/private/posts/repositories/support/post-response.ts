@@ -1,4 +1,5 @@
 import type { Prisma } from "@/external/generated/prisma/client";
+import { anonymousDisplayNameForAuthor } from "@/utils/anonymous-author";
 import type { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 import {
   buildProfessionalFullDisplayName,
@@ -245,15 +246,7 @@ export const toCommunityResponse = (
   ...(typeof following === "boolean" ? { following } : {}),
 });
 
-export const anonymousDisplayNameForAuthor = (authorId: string) => {
-  let hash = 0;
-
-  for (const character of authorId) {
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
-  }
-
-  return `Membro Anônimo #${1000 + (hash % 9000)}`;
-};
+export { anonymousDisplayNameForAuthor } from "@/utils/anonymous-author";
 
 export const isProfessionalVerified = (
   profile?: {
