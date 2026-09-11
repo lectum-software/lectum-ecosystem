@@ -496,4 +496,22 @@ separados até prova/correção própria; não chamar este recorte de conclusão
 - [x] Frontend não usa DELETE destrutivo como fallback de cleanup durante rollout.
 - [x] Admissão por dono/contexto/finalidade, controles R2 e payloads existentes preservados.
 - [x] Checks673, builds/imagem, PG28+16HTTP+16concorrência+48post-state e Browser local registrados.
-- [ ] Commit/push .333 e smoke da versão publicada registrados.
+- [x] Commit8dc679b9/push .333 e smoke17/17 publicados; backend/front/Admin.333, health/ready200.
+
+## Continuação — recuperação usa o endereço realmente enviado
+
+AF4: onSuccess lê o campo mutável do formulário, enquanto a requisição já carrega outro valor.
+Corrigir estado de confirmação/reenvio para usar as variáveis da mutation; contrato do caller
+pode expor esse argumento sem quebrar callbacks antigos. Reenvio valida o mesmo schema e nunca
+recorre ao campo editável. Fundação Form só-leitura durante envio, sem novo controller/package.
+Não alterar tokens, prazo, respostas anti-enumeração, API nem envio no backend. Sem migration/env.
+
+- [x] Confirmação vincula-se ao payload submetido, não ao campo alterado depois.
+- [x] Reenvio usa somente endereço confirmado e passa pelo schema existente.
+- [x] Campo/ações bloqueados durante envio e erro permite corrigir/tentar novamente.
+- [x] Checks/build e Browser local/mobile executados; entrega de e-mail não presumida.
+- [ ] Commit/push e smoke da versão publicada registrados.
+
+Validação .334:679 testes do workspace, build frontend, Browser390/1280 com vazio/inválido
+e falha real de transporte. Pending em Form/controller SSR reais; vínculo da mutation e
+reenvio têm contratos estáticos explícitos. Não afirmar entrega, sucesso ou reset concluídos.

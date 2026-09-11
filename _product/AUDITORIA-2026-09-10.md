@@ -116,12 +116,16 @@
 91. Atualização automática de rotas não sobrescreve uma edição feita ao mesmo tempo.
 92. Configurações removidas, identificadores existentes e datas reais são preservados.
 
-### Correções validadas localmente para 0.1.333
+### Correções publicadas na 0.1.333
 
 93. Cancelamento e publicação simultâneos não deixam um vídeo salvo apontando para um arquivo cancelado.
 94. Abandonar um envio não é mais confundido com remover o vídeo já salvo no perfil.
 95. Limpeza só pede exclusão remota após confirmação segura no banco.
 96. Um envio antigo não substitui o mais recente; a migração respeita alterações feitas no vídeo e na capa.
+
+### Correção validada localmente na 0.1.334
+
+97. Recuperação de senha mantém o endereço realmente enviado; reenvio não usa outro valor do campo.
 
 ## Ainda pendente
 
@@ -132,7 +136,7 @@
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1219 arquivos com leitura inicial**, 5 parciais e 1897 ainda não revisados.
+Cobertura da base: **1276 arquivos com leitura inicial**, 5 parciais e 1840 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

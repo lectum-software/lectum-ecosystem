@@ -690,3 +690,18 @@ Prova final:28 invariantes PG,16 HTTP/JWT/cookie/dispositivo,16 regressões de c
 de estado de posts/respostas aprovadas na imagem .333. Os4 controles adicionais preservam newest
 e CAS de origem/capa da migração; nenhum objeto R2 é lido/removido. Regressões frontend178,
 backend393, Admin53, video43 e versão6 passam. Build frontend repetido após mudar abort parafalse.
+
+### Recuperação — identidade do envio (AF4, validada localmente .334)
+
+O callback de recuperação recebe o payload da mutation real, em vez de consultar campos que
+podem ter mudado durante a rede. Reenvio não busca fallback no formulário: usa a identidade do
+envio concluído e revalida o mesmo schema. Expansão somente de tipo de callback no cliente,
+compatível com consumidores que ignoram argumentos. `onlyRead` da fundação Form desabilita campos
+durante a operação; botão e handler recusam novo envio pendente. Sem nova camada de formulário.
+Não alterar o contrato anti-enumeração/TTL/revogação/env nem alegar entrega de mensagem a partir
+da resposta HTTP; integração com caixa de entrada depende de evidência separada.
+
+Nos testes de AF4, o loader TS/TSX nativo antes copiado em quatro suítes foi centralizado em
+`frontend/scripts/register-source-modules.mjs`. Mantém módulos reais, aliases restritos a src
+e SSR React, sem mocks de requests/hooks/providers; não é enviado ao bundle. Testes de callbacks
+são contratos estáticos explícitos, distintos dos testes reais de schema/Form e do Browser.

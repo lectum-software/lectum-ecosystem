@@ -8,7 +8,7 @@ import { getSafeApiErrorMessage } from "@/api/errors";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/registry/new-york-v4/ui/button";
-import { type RecoveryForm, useForm } from "./use-form";
+import { type RecoveryForm, recoverySchema, useForm } from "./use-form";
 
 const resolveRecoveryErrorMessage = (error: unknown) =>
   getSafeApiErrorMessage(
@@ -24,9 +24,8 @@ export const RecoveryLogic = () => {
   const { recovery } = useAuth({
     callbacks: {
       recovery: {
-        onSuccess: () => {
-          const currentEmail = hook.getValues("email");
-          setSentEmail(currentEmail);
+        onSuccess: (_result, variables) => {
+          setSentEmail(variables.email);
           setApiError(null);
         },
         onError: (error) => {
@@ -37,20 +36,23 @@ export const RecoveryLogic = () => {
   });
 
   const handleSubmit = (data: RecoveryForm) => {
+    if (recovery.isPending) return;
     setApiError(null);
     recovery.mutate(data);
   };
 
   const handleResend = () => {
-    const email = sentEmail || hook.getValues("email");
+    if (recovery.isPending) return;
+    const submitted = recoverySchema.safeParse({ email: sentEmail });
 
-    if (!email) {
+    if (!submitted.success) {
       setSentEmail(null);
+      setApiError("Informe um e-mail válido para continuar.");
       return;
     }
 
     setApiError(null);
-    recovery.mutate({ email });
+    recovery.mutate(submitted.data);
   };
 
   if (sentEmail) {
@@ -124,7 +126,12 @@ export const RecoveryLogic = () => {
           </p>
         </div>
 
-        <Form className="mt-7 grid gap-2" {...formProps} onSubmit={hook.handleSubmit(handleSubmit)}>
+        <Form
+          className="mt-7 grid gap-2"
+          {...formProps}
+          onlyRead={recovery.isPending}
+          onSubmit={hook.handleSubmit(handleSubmit)}
+        >
           {apiError ? <InlineAlert variant="error">{apiError}</InlineAlert> : null}
 
           <Button className="mt-2 w-full" disabled={recovery.isPending} type="submit">

@@ -78,6 +78,8 @@ nenhum conteúdo de terceiros foi alterado.
 
 ### Novas lacunas estáticas rastreadas
 
-AF1–AF5 (conta/avaliações/recuperação) e C01–C07 (moderação/comunidades) estão no registro de
-evidências, ainda sem correção certificada. Associação/cancelamento de mídia M2/M3 está em
-validação .333 com banco isolado; upload físico e dispositivos reais continuam pendentes.
+AF1–AF3/AF5 (conta/avaliações) e C01–C07 (moderação/comunidades) permanecem pendentes.
+M2/M3 foi publicado .333 com108 verificações PG/HTTP; upload físico e dispositivos reais
+continuam pendentes. AF4 tem correção local .334: schema/Form reais e Browser390/1280,
+sem afirmar recebimento do e-mail ou reset completo. PF1–PF3 (WhatsApp/CFP/modalidade)
+têm novas evidências estáticas, sem confirmação de dados persistidos/provider.

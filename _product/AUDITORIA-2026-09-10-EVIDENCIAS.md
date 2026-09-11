@@ -957,3 +957,45 @@ Browser repetido no build frontend final após o ajuste TUS: login vazio390×844
 alertas PT-BR, scrollWidth390, console sem erro/warning. Captura84 é byte a byte idêntica à83
 (SHA `5246b48f6233220f5ebcb8998c7c810d74b77a9c2d392823f0065cb2288e4008`), sem mudança visual.
 Servidor local temporário encerrado e viewport restaurado; abas/sessões do usuário preservadas.
+
+Limitação operacional: o teste específico M1 de falha controlada no PG não chegou a executar;
+a ferramenta recusou a operação do subagente. Não foi repetida por outro canal nem contada
+como prova. O caminho estático pós-commit continua pendente de validação/correção própria;
+nenhum banco ou objeto R2 publicado foi tocado. A revisão normal de fontes e demais validações
+permitidas continua, sem simular resultado desse teste.
+
+Publicação .333 confirmada: commit8dc679b9, pushorigin/homolog, pre-push aprovado. Primeira
+consulta ainda viu.332; segunda passou17/17, com backend/front/Admin.333 e health/ready200.
+Endpoint de cleanup recusa visitante401; isso não substitui os16 testes HTTP autenticados locais.
+Logs: `/tmp/lectum-333-push.log`, `/tmp/lectum-333-smoke-second.log` e
+`/tmp/lectum-audit-333-smoke-homolog.json`. Serviço privado de vídeo não foi acessado nesta prova.
+
+### Recuperação AF4 — validação .334
+
+- Callback usa variáveis efetivamente submetidas; reenvio valida apenas sentEmail pelo schema
+  existente. Form/controller ficam somente-leitura durante pending, sem duplicar fundação.
+- Loader TS/TSX para fontes reais compartilhado entre cinco arquivos de testes; removidas
+  quatro cópias anteriores. Sem mock de módulo/API, package ou código de produção paralelo.
+- `pnpm check`:679 (frontend184/backend393/Admin53/video43/versão6), zero falha. Frontend build
+  aprovado; logs `/tmp/lectum-334-root-check.log` e `/tmp/lectum-334-frontend-build.log`.
+- Seis novos testes: schema e SSR de RHF/Form/controller reais; vínculo callback/reenvio é
+  contrato estático, não sucesso de mutation/entrega de e-mail simulados.
+- Browser local otimizado390×844 e1280×900: validação vazia/inválida PT-BR, foco no e-mail,
+  sem overflow horizontal. Uma tentativa com endereço autorizado retornou erro real de
+  conexão do destino local/tunnel já configurado; UI segura e campo editável depois da falha.
+  Nenhum novo token/código foi solicitado ao usuário, nenhum e-mail dado como entregue.
+- Capturas86–89 em `/tmp/lectum-audit-178-ui/`. A captura85 de homolog não é recuperação:
+  sessão já autenticada redirecionou para diretório. Não foi tomada como prova do formulário.
+- Sucesso/reenvio/consumo do link em homolog e Safari/iOS/dispositivos continuam pendentes.
+  Nenhuma mudança de API, banco, migrations, envs, tokens ou política anti-enumeração.
+
+### Profissional — novas fontes e lacunas PF1–PF3
+
+Euclid leu57 fontes inéditas/4455 linhas com SHA estável, sem runtime, Browser ou provider.
+Evidências `/tmp/lectum-task178-professional-forms-readonly/reading.json` e `report.md`.
+PF1: extração repetida de DDI pode remover DDD igual ao país no WhatsApp. PF2: reiniciar CFP
+ainda permitido durante confirmação; payload antigo correto, não prova de bypass/CPF novo.
+PF3: modalidade apenas presencial recebe rótulo híbrido no perfil. Próximas correções exigem
+provas próprias; não afirmar número salvo errado, consulta CFP real ou perfil publicado afetado.
+Ledger integrado1204; base3121:1276 leitura inicial,5parciais,1840não lidos. Dois imports de
+perfil/mídia adiados estão explícitos; nenhuma cobertura por simples grep/listagem.

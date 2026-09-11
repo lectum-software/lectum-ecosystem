@@ -14,7 +14,7 @@ export interface UseAuthProps {
       onError?: (error: unknown) => void;
     };
     recovery?: {
-      onSuccess?: (data: boolean) => void;
+      onSuccess?: (data: boolean, variables: api.RecoveryPayload) => void;
       onError?: (error: unknown) => void;
     };
     resetPassword?: {

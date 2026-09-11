@@ -1,38 +1,11 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { registerHooks } from "node:module";
+import { readFileSync } from "node:fs";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useForm } from "react-hook-form";
-import ts from "typescript";
+import { sourceRoot } from "../../../scripts/register-source-modules.mjs";
 import { editOtpValue, isCompleteOtpValue, normalizeOtpValue } from "./otp/value.ts";
-
-const sourceRoot = new URL("../../", import.meta.url);
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    const base = specifier.startsWith("@/") ? sourceRoot : context.parentURL;
-    const path = specifier.startsWith("@/") ? specifier.slice(2) : specifier;
-    if (specifier.startsWith("@/") || specifier.startsWith(".")) {
-      for (const suffix of [".ts", ".tsx", "/index.ts", "/index.tsx"]) {
-        const url = new URL(`${path}${suffix}`, base);
-        if (existsSync(url)) return { shortCircuit: true, url: url.href };
-      }
-    }
-    return nextResolve(specifier, context);
-  },
-  load(url, context, nextLoad) {
-    if (url.startsWith(sourceRoot.href) && url.endsWith(".tsx")) {
-      const source = ts.transpileModule(readFileSync(new URL(url), "utf8"), {
-        fileName: fileURLToPath(url),
-        compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.ESNext },
-      }).outputText;
-      return { format: "module", shortCircuit: true, source };
-    }
-    return nextLoad(url, context);
-  },
-});
 
 const { InputController } = await import("./input/index.tsx");
 const { OtpController } = await import("./otp/index.tsx");
