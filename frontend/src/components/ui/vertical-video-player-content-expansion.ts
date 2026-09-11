@@ -87,12 +87,19 @@ export const useMobileContentFullscreenStyles = ({
 export const useInlineContentVideoExpansion = ({
   effectiveSource,
   enabled,
+  onBeforeClose,
 }: {
   effectiveSource: string;
   enabled: boolean;
+  onBeforeClose?: () => void;
 }) => {
+  const beforeCloseRef = useRef(onBeforeClose);
   const [expandedContentSource, setExpandedContentSource] = useState<string | null>(null);
   const isContentExpanded = enabled && expandedContentSource === effectiveSource;
+
+  useEffect(() => {
+    beforeCloseRef.current = onBeforeClose;
+  }, [onBeforeClose]);
 
   const handleInlineContentExpansion = useCallback(() => {
     if (!enabled) return;
@@ -101,6 +108,7 @@ export const useInlineContentVideoExpansion = ({
   }, [effectiveSource, enabled]);
 
   const closeInlineContentExpansion = useCallback(() => {
+    beforeCloseRef.current?.();
     setExpandedContentSource(null);
   }, []);
 
@@ -116,7 +124,7 @@ export const useInlineContentVideoExpansion = ({
       "data-lectum-inline-video-expanded",
     );
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setExpandedContentSource(null);
+      if (event.key === "Escape") closeInlineContentExpansion();
     };
 
     documentElement.setAttribute("data-lectum-inline-video-expanded", "true");
@@ -141,7 +149,7 @@ export const useInlineContentVideoExpansion = ({
       document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isContentExpanded]);
+  }, [closeInlineContentExpansion, isContentExpanded]);
 
   return {
     closeInlineContentExpansion,

@@ -392,3 +392,17 @@ somente de código (reintroduz o defeito de acessibilidade). Teste de política 
 vídeo real, sem mocks de API. Rótulos/medidas/proto preservados; certificação de dispositivos reais
 permanece pendente. A observação anterior de mídia inglesa na árvore acessível não foi confirmada
 como falha de reprodução e não justifica enfraquecer a autorização ou renovar links sem diagnóstico.
+
+
+## Escape e continuidade do vídeo — continuação 0.1.323
+
+Reproduzido em homolog: Escape pausava e zerava o vídeo ampliado. O botão já usava snapshot,
+mas a tecla removia diretamente o portal. Decisão: única função de fechamento, com callback
+anterior à desmontagem, reutilizando useVideoPlaybackContinuity. Ref atualizado por efeito evita
+recriar locks de scroll por timeupdate; não adiciona novo player ou persistência. Snapshot mantém
+posição, pausa, mute, volume e taxa conforme o contrato já existente.
+
+Validação local real confirmou reprodução contínua e caso pausado/mutado em 4,5s. Sem API, env,
+schema ou pacote novo; frontend compatível com backend antigo. Rollback de código reintroduz
+a perda de posição por teclado, sem efeito em dados. Continuidade em renovação de URL HLS e
+gestão completa de foco no portal são pontos separados ainda não certificados.

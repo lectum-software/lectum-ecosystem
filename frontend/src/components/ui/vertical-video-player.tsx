@@ -111,6 +111,7 @@ export const VerticalVideoPlayer = ({
     useInlineContentVideoExpansion({
       effectiveSource,
       enabled: usesInlineContentExpansion,
+      onBeforeClose: capturePlaybackSnapshot,
     });
 
   useMobileContentFullscreenStyles({ fullscreenVariant, videoRef });
@@ -119,11 +120,6 @@ export const VerticalVideoPlayer = ({
     capturePlaybackSnapshot();
     handleInlineContentExpansion();
   }, [capturePlaybackSnapshot, handleInlineContentExpansion]);
-
-  const handleInlineContentClose = useCallback(() => {
-    capturePlaybackSnapshot();
-    closeInlineContentExpansion();
-  }, [capturePlaybackSnapshot, closeInlineContentExpansion]);
 
   useLayoutEffect(() => {
     latestSourceRef.current = effectiveSource;
@@ -599,7 +595,7 @@ export const VerticalVideoPlayer = ({
           aria-label={`Sair do vídeo ampliado: ${title}`}
           className="absolute right-3 z-[3] grid h-11 w-11 place-items-center rounded-full border border-media-foreground/20 bg-media-background/40 text-primary-foreground shadow-lectum-soft backdrop-blur-md transition hover:bg-media-background/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground/70 active:scale-95"
           data-lectum-inline-video-exit="true"
-          onClick={handleInlineContentClose}
+          onClick={closeInlineContentExpansion}
           onPointerDown={(event) => event.stopPropagation()}
           style={{
             top: "calc(env(safe-area-inset-top) + 12px)",

@@ -360,3 +360,31 @@ da política de versão; build frontend aprovado e sem source maps publicados. P
 removidos antes do build, servidor dev encerrado e regra AGENTS gerada restaurada. Inventário
 agora registra 222 leituras iniciais, 12 parciais e 2.887 não revisados. Sessões publicadas Admin
 e paciente confirmadas por navegação real após 0.1.321, sem usar/gravar a nova senha fornecida.
+
+0.1.322 publicada em `c54e98c9`: 16/16 checks em 2026-09-11T02:27:55Z; backend/frontend/Admin na
+versão esperada e health/ready 200.
+
+## Continuação — saída do vídeo ampliado 0.1.323
+
+Em homolog, um vídeo ampliado reproduzia em 9,48s; Escape o devolveu a 0s, pausado (capturas 31/32).
+O botão de saída capturava snapshot; o listener de Escape removia diretamente o portal. Agora
+ambos compartilham o fechamento existente com captura anterior à desmontagem. Callback mantido
+em ref atualizado por efeito, sem reinstalar locks de scroll a cada timeupdate.
+
+Componente local e MP4 reais: saída de reprodução em 13,97s continuou tocando, chegando a 26,20s
+(captura 33). Caso pausado/mutado manteve exatamente 4,5s, pausa e mute depois de Escape.
+Página/arquivo temporários removidos e servidor dev encerrado; integração Cloudflare publicada
+ainda será repetida. A regressão automática verifica o fluxo comum de fechamento; não equivale
+a execução de DOM/navegador, para a qual a evidência é o teste real descrito acima.
+
+Leitura complementar: bloqueio de zoom é decisão explícita do ADR-0442, não modificado nesta
+correção; o trade-off de acessibilidade exige revisão de produto e teste real de baixa visão.
+
+Repetição publicada 0.1.322: foco de mute permaneceu visível, fora de aria-hidden, aos 11,92s
+de reprodução (capturas 34/35). O conteúdo de vídeo avançou normalmente. Verificação de teclado
+aprovada; diferenças temporárias de viewport das capturas são registradas, não usadas como prova
+de equivalência pixel a pixel. A mudança não altera classes/medidas do layout.
+
+Check 0.1.323: 525 testes (134 frontend, 321 backend, 38 Admin, 32 video), mais seis da versão;
+build frontend aprovado. Artefato não contém rota/MP4 de auditoria nem source maps públicos.
+Inventário: 226 leituras iniciais, 12 parciais, 2.883 não revisados; auditoria continua em andamento.

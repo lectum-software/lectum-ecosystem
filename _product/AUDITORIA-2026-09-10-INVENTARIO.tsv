@@ -1131,7 +1131,7 @@ adrs/0438-seo-metadados-admin.md	adrs	documentacao	31fda6be4ee76bf6654b1b8b1d3f3
 adrs/0439-hardening-residual-auditoria-publicada.md	adrs	documentacao	92543db1e2ae697cd96d0ac713e8d258c9c8f4db	14208	inventariado_nao_revisado
 adrs/0440-bloqueio-publicacao-paginas-legais.md	adrs	documentacao	815d0795fafa4dc3f0eb3be7b10307582ce03f3e	1510	lido_revisao_inicial
 adrs/0441-versionamento-rastreavel-promocao-producao.md	adrs	documentacao	9490836e14fc758d6b86c14659540605c52763b3	5827	inventariado_nao_revisado
-adrs/0442-bloqueio-zoom-mobile-frontend.md	adrs	documentacao	85adb001bcdbdd329719d56554689c228e773bc5	3093	inventariado_nao_revisado
+adrs/0442-bloqueio-zoom-mobile-frontend.md	adrs	documentacao	85adb001bcdbdd329719d56554689c228e773bc5	3093	lido_revisao_inicial
 adrs/0443-confirmacao-exclusao-conteudo-comunidade.md	adrs	documentacao	e22800a315abbc0a98c03492ce394095603b93f6	2820	inventariado_nao_revisado
 adrs/0444-safe-area-ios-pwa-elementos-inferiores.md	adrs	documentacao	fe70e104d5e1fc51d630cdd0f1f137214856b39c	3757	inventariado_nao_revisado
 adrs/0445-blocos-demanda-sugestoes-comunidades-admin.md	adrs	documentacao	326586654f1bad5fe56ad44ec5987a9b6e2a7146	4479	inventariado_nao_revisado
@@ -2882,7 +2882,7 @@ frontend/src/components/conversion/progressive-conversion-boundary.tsx	frontend	
 frontend/src/components/conversion/progressive-conversion-core.tsx	frontend	codigo	8336f91faff14c647974429499dbde2899d3384e	14257	inventariado_nao_revisado
 frontend/src/components/conversion/progressive-conversion-provider.tsx	frontend	codigo	9b8ca670eaab7e2f8f4627a9ccd889c451e7bea4	299	inventariado_nao_revisado
 frontend/src/components/conversion/progressive-conversion-state.ts	frontend	codigo	b2fbea020cfbb8a024bed77ecc36e233c50fe510	7695	inventariado_nao_revisado
-frontend/src/components/mobile-zoom-guard.tsx	frontend	codigo	89e333e13eb9de7cbd1e56b732545ebb3dbffacc	2210	inventariado_nao_revisado
+frontend/src/components/mobile-zoom-guard.tsx	frontend	codigo	89e333e13eb9de7cbd1e56b732545ebb3dbffacc	2210	lido_revisao_inicial
 frontend/src/components/onboarding/actionable-coach-mark.tsx	frontend	codigo	c19e504f5765e0d8e85590a9b3533277e5cae031	5524	inventariado_nao_revisado
 frontend/src/components/psychologists/psychologist-card-actions.tsx	frontend	codigo	c4d40f1593ea64608cefcc79f1abd016352c1c93	4664	inventariado_nao_revisado
 frontend/src/components/psychologists/psychologist-card-support.ts	frontend	codigo	c966ff6897316aea72ee0e31947590f5e5c8becd	3800	inventariado_nao_revisado
@@ -2908,7 +2908,7 @@ frontend/src/components/ui/page-shell.tsx	frontend	codigo	0f0ddd4d3198120b561b03
 frontend/src/components/ui/secondary-page-header.tsx	frontend	codigo	805339d9b34a1a304f61e71b10bf4cab4949b22a	1225	inventariado_nao_revisado
 frontend/src/components/ui/theme-switch.tsx	frontend	codigo	25b9c8f359502a1e0f513cf63c870191fdb3e326	1486	inventariado_nao_revisado
 frontend/src/components/ui/verified-badge.tsx	frontend	codigo	7f971899bd378e3b5b406248dbec98c53d849601	856	inventariado_nao_revisado
-frontend/src/components/ui/vertical-video-player-content-expansion.ts	frontend	codigo	a4256fbcaf26dc24654671f2a3f29b88722b6130	5394	inventariado_nao_revisado
+frontend/src/components/ui/vertical-video-player-content-expansion.ts	frontend	codigo	a4256fbcaf26dc24654671f2a3f29b88722b6130	5394	lido_revisao_inicial
 frontend/src/components/ui/vertical-video-player-immersive-controls.ts	frontend	codigo	cd59c53b5362b41a56998e1161ec800ae4ea1461	3885	lido_revisao_inicial
 frontend/src/components/ui/vertical-video-player-persistent-controls.tsx	frontend	codigo	68da84bc5380a5aebeaa16cd5ce28ec7910636fd	7643	lido_revisao_inicial
 frontend/src/components/ui/vertical-video-player-playback-continuity.ts	frontend	codigo	19fb2987567b58a4f5f3ee7f87a43b59583c35fb	3685	lido_revisao_inicial
@@ -2942,7 +2942,7 @@ frontend/src/lib/seo-metadata.ts	frontend	codigo	e2577b2b3222d542a9340f48e9ac196
 frontend/src/lib/seo.ts	frontend	codigo	6b9f28ec3b74b291a381f07a91bdcef6aabb3b41	2780	inventariado_nao_revisado
 frontend/src/lib/square-og-image.tsx	frontend	codigo	a2dfed6e5ce3dc284f2318767ed98b41ddf2771d	1052	inventariado_nao_revisado
 frontend/src/lib/utils.ts	frontend	codigo	365058cebd7d2bdb327ca1c081b16e4937e11050	169	inventariado_nao_revisado
-frontend/src/lib/video-fullscreen.ts	frontend	codigo	b5b432eca61af7f9ba299f54c19d898050e9a1f6	2601	inventariado_nao_revisado
+frontend/src/lib/video-fullscreen.ts	frontend	codigo	b5b432eca61af7f9ba299f54c19d898050e9a1f6	2601	lido_revisao_inicial
 frontend/src/lib/video-interactions.ts	frontend	codigo	fae53017cc4e0f94ad6b1f9602bfa3968cfb3c44	287	lido_revisao_inicial
 frontend/src/lib/video-playback.ts	frontend	codigo	5067a4e9fd24af11efd5451e454d8d27aa4b315a	554	inventariado_nao_revisado
 frontend/src/providers/progress/.css	frontend	configuracao	15c78d933de80c61e5b82c57f091e7605d1cdde3	184	inventariado_nao_revisado

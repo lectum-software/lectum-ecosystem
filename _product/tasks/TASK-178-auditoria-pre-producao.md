@@ -284,8 +284,19 @@ de e-mail não foi simulada: essa parte foi testada no repositório real, não c
 - [x] Guarda de visibilidade do player protege foco visível, sem mudar acesso aos vídeos.
 - [x] Browser local 390×844 validou Enter, mute, avanço e saída por Tab com componente/vídeo reais.
 - [x] Check agregado: 524 testes; build frontend aprovado; harness local removido.
-- [ ] Publicação 0.1.322 com smoke e repetição de foco no Browser após rollout.
+- [x] Publicação `c54e98c9` e smoke 16/16 em 2026-09-11T02:27:55Z; três apps na 0.1.322.
+- [x] Browser publicado confirmou foco de mute visível durante reprodução; sem aria-hidden.
 
 Sem API, schema, env ou pacote novo; não muda o design do player, upload ou URLs assinadas.
 A reprodução real de um vídeo fora da tela funcionou após carregar; o texto inglês da árvore
 acessível com source vazio não demonstrou falha do Stream. Não alterar segurança por essa hipótese.
+
+## Continuação — saída do vídeo ampliado 0.1.323
+
+- [x] Escape perdia a posição e pausava a reprodução: reproduzido no vídeo real em homolog.
+- [x] Teclado e botão compartilham fechamento que captura o estado antes de remover o portal.
+- [x] Browser local validou saída em reprodução e saída pausada/mutada no mesmo instante.
+- [x] Check agregado 525 testes e build frontend aprovados; harness removido.
+- [ ] Publicação e smoke 0.1.323.
+
+Sem mudanças em permissões, HLS, APIs, packages, migrations ou envs. Vídeos publicados não alterados.

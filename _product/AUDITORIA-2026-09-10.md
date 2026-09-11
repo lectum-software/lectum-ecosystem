@@ -43,6 +43,7 @@
 37. Senhas temporárias precisam ser trocadas antes de usar recursos privados.
 38. Trocar o e-mail invalida links de recuperação enviados ao endereço anterior.
 39. Controles de vídeo não desaparecem enquanto são usados pelo teclado.
+40. Escape sai do vídeo ampliado sem voltar ao início ou pausar indevidamente.
 
 ## Ainda pendente
 
@@ -51,6 +52,6 @@
 - Repetir cadastro completo e testar perfil profissional, Google e dispositivos reais.
 - Avaliar senhas antigas e concluir verificações de permissão, pagamentos e vídeos.
 
-Cobertura da base: **222 arquivos com leitura inicial**, 12 parciais e 2887 ainda não revisados.
+Cobertura da base: **226 arquivos com leitura inicial**, 12 parciais e 2883 ainda não revisados.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv)

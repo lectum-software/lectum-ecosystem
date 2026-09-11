@@ -154,3 +154,15 @@ test("controles focados pelo teclado não desaparecem durante a reprodução", (
   assert.equal(shouldHidePersistentVideoControls({ ...state, controlsFocused: true }), false);
   assert.equal(shouldHidePersistentVideoControls({ ...state, controlsFocused: false }), true);
 });
+
+test("Escape e botão de saída preservam a reprodução antes de desmontar o portal", () => {
+  const expansion = readFileSync(
+    new URL("./vertical-video-player-content-expansion.ts", import.meta.url),
+    "utf8",
+  );
+  const player = readFileSync(new URL("./vertical-video-player.tsx", import.meta.url), "utf8");
+  assert.match(player, /onBeforeClose: capturePlaybackSnapshot/);
+  assert.match(player, /onClick=\{closeInlineContentExpansion\}/);
+  assert.match(expansion, /beforeCloseRef\.current\?\.\(\);\s*setExpandedContentSource\(null\)/);
+  assert.match(expansion, /if \(event\.key === "Escape"\) closeInlineContentExpansion\(\)/);
+});
