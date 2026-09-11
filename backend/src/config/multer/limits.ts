@@ -35,8 +35,8 @@ export const MULTIPART_FIELD_STRUCTURE_LIMITS = {
   fieldNestingDepth: 4,
 } as const;
 
-// Busboy ainda trata fieldSize/parts como thresholds exclusivos. Multer >=2.3
-// já torna fileSize inclusivo: NÃO aplicar este ajuste ao tamanho do arquivo.
+// Busboy/Multer na versão em uso trata alguns limites como thresholds exclusivos.
+// Aplique no call site quando o contrato público anunciar um limite inclusivo.
 export const toMulterExclusiveThreshold = (inclusiveLimit: number) => inclusiveLimit + 1;
 
 const imageLimit = (value: unknown, fallback = 5) =>

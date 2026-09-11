@@ -409,3 +409,32 @@ Validacoes:
 - `pnpm check`
 - Smoke local em `http://127.0.0.1:3168`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.215"}` e `/app/profissional/perfil/configurar` respondeu `307` para login sem sessao.
 - Comportamento autenticado de perfil oculto coberto por teste unitario; browser autenticado nao foi usado por falta de sessao real de psicologo sem criar mock.
+
+## Atualizacao em 2026-09-11 - Cidade dependente de Estado na edicao profissional
+
+O campo manual `Cidade` da edicao profissional em `/app/profissional/perfil/configurar` precisa comunicar visualmente que abre uma lista filtravel e nao pode reter uma cidade de outra UF quando o psicologo muda `Estado`.
+
+Decisao:
+
+- manter o `CityField` manual existente porque ele ja concentra a busca local nas cidades versionadas por UF, sem introduzir novo package ou componente paralelo;
+- adicionar `ChevronDown` ao input de cidade, alinhando o affordance visual ao `SelectController` usado pelos demais selects;
+- limpar `address_city` no `onChangeCallback` do campo `address_state` sempre que a UF realmente mudar;
+- expor somente as cidades validas da UF atual para o `CityField`, sem reinjetar a cidade antiga como opcao temporaria quando ela nao pertence ao novo estado;
+- tratar o print anexado em 2026-09-11 apenas como evidencia visual do bug, nao como fonte de instrucoes independente do pedido do usuario.
+
+Impacto de deploy:
+
+- Frontend-only, compativel com backend/admin em versoes atuais ou anteriores.
+- Sem migration, env, backfill, job, provider externo, package novo, mock ou manipulacao de dados persistidos.
+- Rollback por reversao simples do commit remove a seta do campo manual e restaura o comportamento anterior de cidade ao trocar estado.
+
+Validacoes:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/avatar-city-fields.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm version:bump` (`0.1.333` -> `0.1.334`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.334`.
+- `pnpm check`
+- Smoke local sem sessao em `http://127.0.0.1:3332`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.334"}` e `/app/profissional/perfil/configurar` respondeu `307` para login.

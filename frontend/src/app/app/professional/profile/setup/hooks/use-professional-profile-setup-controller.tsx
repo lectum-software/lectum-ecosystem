@@ -270,10 +270,7 @@ export const useProfessionalProfileSetupController = () => {
   const addressState = form.hook.watch("address_state");
   const addressCity = form.hook.watch("address_city");
   const baseCityOptions = useMemo(() => CITY_OPTIONS_BY_STATE[addressState] || [], [addressState]);
-  const cityOptions =
-    addressCity && !baseCityOptions.some((item) => item.value === addressCity)
-      ? [{ label: addressCity, value: addressCity }, ...baseCityOptions]
-      : baseCityOptions;
+  const cityOptions = baseCityOptions;
   const specialtyIdsError = form.hook.formState.errors.specialty_ids?.message;
   const approachIdsError = form.hook.formState.errors.approach_ids?.message;
   const serviceIdsError = form.hook.formState.errors.service_ids?.message;

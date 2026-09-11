@@ -99,7 +99,7 @@ describe("video storage contracts", () => {
       const sentinel = path.join(outside, jobId, "keep");
       await writeFile(sentinel, "isolated audit sentinel");
       await rm(path.join(storageRoot, "outputs"), { recursive: true });
-      await symlink(outside, path.join(storageRoot, "outputs"));
+      await symlink(outside, path.join(storageRoot, "outputs"), "junction");
       await assert.rejects(removeVideoOutput(config, jobId));
       await access(sentinel);
     } finally {
