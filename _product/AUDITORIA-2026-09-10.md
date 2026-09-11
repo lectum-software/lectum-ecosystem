@@ -178,7 +178,15 @@ Sem alteração de banco ou novas variáveis.
 
 Testes de cache106/106 e render real17/17 aprovados; sem alterar banco nem criar variáveis.
 Minutas legais foram localizadas, mas não estão aprovadas; as duas páginas previstas retornam404.
-Publicação340 e teste funcional dos fluxos completos ainda pendentes.
+Publicação340 confirmada:18/18 smoke e três apps públicas340. Voto/salvamento reais nos
+cards de auditoria validados em390px. Vídeo privado e demais fluxos completos ainda pendentes.
+
+### Correção local na 0.1.341
+
+117. Convite para criar conta não permanece aberto após reconhecer uma pessoa já autenticada.
+
+Regressões locais e build aprovados; publicação e repetição em homologação ainda pendentes.
+Mais97 arquivos de migrations lidos, sem executar mudanças no banco.
 
 ## Ainda pendente
 
@@ -189,7 +197,7 @@ Publicação340 e teste funcional dos fluxos completos ainda pendentes.
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1461 arquivos com leitura inicial**, 5 parciais e 1655 ainda não revisados.
+Cobertura da base: **1561 arquivos com leitura inicial**, 5 parciais e 1555 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

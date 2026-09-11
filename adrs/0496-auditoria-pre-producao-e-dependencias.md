@@ -849,3 +849,28 @@ externo; nenhum texto foi inventado, publicado ou considerado aprovado nesta aud
 
 Referências técnicas para CP2/CP3: [React — ajuste por mudança de props](https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
 e [TanStack Query — optimistic updates](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates).
+
+### Conversão e hidratação autenticada341
+
+CP4 foi observado no Browser publicado340: convite de cadastro persistia após reconhecer a
+conta. Callback estável de abertura não consultava autenticação atual e timers0/250ms podiam
+sobreviver ao cleanup; prompt aberto não era descartado. Não interpretar isso como perda de
+sessão nem relaxar autorização. Boundary mantém a combinação atual de identidade/marcador.
+
+Extrair lifecycle e modal adjacentes permite testar React/callbacks reais sem substituir
+Router, DOM ou provider. Opener consulta referência atual antes de analytics/estado; efeitos
+cancelam timers; ajuste condicional de estado no próprio render descarta a oferta autenticada
+antes do commit, e a view também a oculta. Somente esconder não bastaria: logout ressuscitaria
+a oferta antiga. JSX/textos/tokens/handlers e contrato público permanecem iguais por AST.
+
+Callbacks locais e SSR não comprovam ordem real de hidratação/scroll/cookies. Teste ReactDOM
+controlado cobre6transições de componente; repetir fluxo publicado antes de fechar o aceite.
+Nenhum package, migration, env ou contrato remoto novo. Frontend pode ser revertido isoladamente.
+
+### Leitura histórica de migrations341
+
+97arquivos remanescentes lidos sem executar SQL. Nenhuma correção vigente nova comprovada;
+não editar migrations aplicadas para resolver riscos hipotéticos de um upgrade antigo.
+Qualquer novo writer/backfill deve preservar: FKs distintas de usuário/perfil, chaves únicas
+que incluem soft-delete, correspondência de alvo validada pela aplicação e cascatas/retenção.
+Não tratar arquivos presentes como prova de checksums aplicados ou consistência do banco.

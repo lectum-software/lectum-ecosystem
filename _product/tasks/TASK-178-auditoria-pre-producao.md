@@ -646,7 +646,7 @@ interface; usar proto local de Feed Comunidade/Posts Salvos, preservando layout 
 - [x] CP3 rollback limita-se ao alvo/campos da operação e preserva atualização mais recente.
 - [x] V03 respeita limites configurados sem relaxar inspeção da saída nem mudar o default visual.
 - [x] Checks/builds e provas locais aprovados; leitura registrada sem contar duplicatas.
-- [ ] Publicação/smoke340 registrados; limites funcionais restantes explícitos.
+- [x] Publicação/smoke340 registrados; limites funcionais restantes explícitos.
 
 Atualização da publicação339: em11/09 às17:35UTC, backend/frontend/Admin339 e18/18smoke,
 health/ready200. Serviço privado de vídeo ainda tem como última prova do operador a338;
@@ -662,3 +662,29 @@ conexão após hidratação; não contar como integração local bem-sucedida ne
 Minutas e versões provisórias do aceite localizadas; URLs previstas de termos/privacidade
 retornaram404 em homologação. Aprovação dos textos solicitada ao responsável, sem publicar
 minutas nem modificar aceites antigos. Base:1461 leituras iniciais,5parciais,1655pendentes.
+
+### Continuação341 — convite de cadastro após recuperar sessão
+
+CP4 reproduzido no Browser em390px após publicar frontend340: voto/salvamento na comunidade
+dedicada persistiram, mas reload abriu convite de criar conta; depois de fechar o convite,
+Perfil confirmou a mesma conta autenticada sem novo login. Rastrear hidratação/conversão,
+sem desligar autorização nem presumir que cookie/sessão deixaram de existir.
+
+- [x] Causa demonstrada por fonte e contrato real, mantendo gates de ações privadas.
+- [ ] Correção testada localmente e repetida em homologação; sem mocks como prova de integração.
+- [ ] Publicação340/341, ações da auditoria e limites restantes registrados com precisão.
+
+Sem migration/env/package previsto; não operar M1, produção, dados de terceiros ou credenciais.
+
+CP4: callbacks antigos ignoravam autenticação atual; timeouts0/250ms não eram cancelados e
+o prompt aberto sobrevivia à hidratação autenticada. Guard atual, limpeza dos timers e
+descarte/ocultação da oferta corrigidos sem mudar boundary, autorização, intents ou textos.
+Baseline36:16pass/20fail; final36/36 (34contratos reais locais +2checks estáticos).
+ReactDOM/StrictMode no Browser:6transições locais aprovadas, não equivalentes a login real.
+Frontend check371/371 e build otimizado aprovados. Publicação341 ainda exige smoke/Browser.
+
+Leitura lateral:97arquivos de migrations/lock,3061linhas, todos integrais e hashes conferidos;
+nenhum novo defeito vigente demonstrado, nenhuma operação de banco. Preservar distinção
+users.id/perfil.id, reativação de vínculos soft-deleted e validação de alvo no writer.
+Pré-condições históricas de upgrade não comprovam incidente publicado nem autorizam reset.
+Ledger integrado por path+hash:1561leituras iniciais,5parciais,1555pendentes na base3121.

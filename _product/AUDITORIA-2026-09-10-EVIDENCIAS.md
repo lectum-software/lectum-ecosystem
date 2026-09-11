@@ -1339,3 +1339,58 @@ check:dependencies nos cinco escopos sem vulnerabilidade conhecida. Uma execuç�
 frontend encontrou2warnings de estilo, corrigidos; não foram suprimidos checks. Recibos dos
 cards também conferem os identificadores. Bump340 único, sem segunda execução em retry.
 Smoke340 somente após publicação; não concluir essa etapa por intenção.
+
+
+Pós-deploy340 (11/09,18:23UTC):18/18smoke aprovados; backend/frontend/Admin340 ehealth/ready200.
+ChecksVercel frontend/Admin concluídos. Vídeo privado não consultado pelo integrador.
+Browser390x844, conta profissional de auditoria: post anônimo dedicado útil0→1/save0→1,
+reload eSalvos conservaramambos; resposta salva útil0→1 eMeus posts/Respostas confirmou1.
+Desfeito voto da resposta pela segunda lista, mantendo seu savepreexistente. Isso éfluxo
+normalreal, não prova defalha concorrenteHTTP, múltiplasabas ouSafari/aparelhosreais.
+
+Novo CP4: apósreload authed, conviteCriesuaconta permaneceu;fechar→Perfilconfirmoumesmaconta
+semnovo login. Captura03 em/tmp/lectum-audit-340-browser, investigação341 aberta antesdefecho.
+Falha local de conexão: GETpúblicocomOriginlocalhost:3000 não recebeuallow-origin;
+mesmoGETcomOriginhomologrecebeuallow-origincorreto. CompatívelcombloqueioCORS local;
+nãoampliadapolítica publicada para permitirtestesnematribuídocomcertezaerrononavegador.
+
+Estado final das mutações de teste340: post anônimo restaurado a útil0/salvo0 e recarregado;
+resposta própria restaurada a útil0. Salvos preexistentes preservados; nenhum post/resposta
+ou histórico apagado. Screenshot05 confirma post restaurado. Evidências temporárias em
+/tmp/lectum-audit-340-browser/NOTES.md e capturas02–05, sem credenciais/documentos pessoais.
+
+### Continuação341 — CP4 e leitura das migrations
+
+CP4 demonstrado por fonte e contratos reais: convite antigo podia sobreviver à recuperação
+anônimo→autenticado; callbacks0/250ms não tinham cleanup completo nem guard de identidade atual.
+Não foi demonstrado qual trigger exato originou a captura340, nem perda de sessão.
+Modal/lifecycle extraídos preservam JSX/copy/handlers, gates, redirects e intents por AST.
+Opener consulta authref; timers são cancelados; prompt obsoleto é descartado e oculto.
+
+Baseline36:16pass/20fail; final36/36. São34 contratos locais (SSR, callbacks e timers reais)
+e2 verificações estáticas de wiring, não36fluxos de Browser. Hook/view reais sob ReactDOM
+StrictMode passaram6transições no Browser local: oferta anônima, autenticação, descarte,
+logout sem ressuscitar oferta, nova ação anônima protegida, autenticação novamente.
+Captura real salva e inspecionada:/tmp/lectum-task178-cp4-341/browser/result.png.
+Harness usa estados controlados, não simula auth/API/provider nem equivale ao fluxo completo.
+Frontend check371/371 e build otimizado aprovados; hashes dos4arquivos conferidos após build.
+Relatório/baseline/final/AST:/tmp/lectum-task178-cp4-341/. Publicação341 ainda não creditada.
+
+Leitura lateral Socrates:96migrationsSQL +migration_lock,3061linhas em20chunks sem truncamento.
+97/97hashes conferidos. Relatório/readlist:/tmp/lectum-task178-migrations-341/.
+Nenhum novo defeito vigente confirmado. Invariantes: IDs usuário/perfil não intercambiáveis;
+unique inclui soft-delete; target/FKs não substituem validação de domínio; cascatas físicas
+não equivalem à exclusão lógica. Backfills históricos não devem ser reexecutados como rotina
+retomável. Fonte não prova migrations aplicadas, ausência de duplicatas, locks ou banco íntegro.
+Sem SQL/Prisma/rede/DB/reset; histórico Latin-1 preservado sem editar migration aplicada.
+
+Integração341 de leitura:121paths atuais conferidos,100novas leituras da base (97migrations
++3outros), ledger1534linhas. Base3121:1561integrais iniciais,5parciais,1555pendentes.
+Revisões antigas e manifests alterados não creditados por hash desatualizado; parciais e
+saídas truncadas não promovidas a integrais. Não equivale a cobertura funcional integral.
+
+Validação integrada341: pnpm check aprovado,946testes (940pass/6skips drawtext do host).
+Os6renders já executados com sucesso na imagem340; vídeo não mudou neste patch de runtime.
+O guard inicial sinalizou a palavra em dois comentários de teste; redação esclarecida sem
+alterar testes, relaxar scanner ou introduzir substituições. Verificação AST final aprovada.
+Bump341 executado uma única vez. Sem nova env/migration ou publicação de produção.
