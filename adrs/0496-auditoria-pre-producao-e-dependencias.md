@@ -940,3 +940,23 @@ não virar indisponibilidade global de dados. Rótulo dos dados usa período apl
 SemnovaUI,controller,package,migration/env/contratoHTTP; rollbackAdmin independente. Browser
 local testa hook+controles reais, não consultaautenticada; publicação deve repetir baseline.
 Preservar cálculo dos seis meses fixos e métricas; nenhuma alteração de domínio neste patch.
+
+### Busca estável e CPF minimizado345
+
+A342-04: remover a key derivada da URL nas listas de pacientes e psicólogos. Preservar
+a identidade do input, draft imediato, trim/debounce350ms e replaceParams existente.
+Reconciliar mudanças externas de URL sem apagar digitação posterior no eco da própria
+busca. Cancelar debounce no histórico/desmontagem; isso não cancela navegação já entregue
+ao Next. Reusar admin/src/hooks para uma única política de busca, com os rótulos/markup
+das duas rotas preservados. Sem foco imperativo ou dependência entre módulos de pacientes
+e psicólogos. Contratos de estado/SSR não certificam efeitos/foco: repetir no Browser.
+
+C13: usar a máscara efetiva já adotada pela auditoria pessoal também em cpf_masked da
+verificação. Centralizar helper puro em backend/src/utils/cpf-mask.ts evita importar
+serviços com efeitos só para formatar documento. Ocultar dígitos centrais; entrada inválida
+nunca retorna bruta. Não é validador de CPF nem prova de identidade. O campo CPF completo
+do formulário privado autorizado continua disponível; não alterar permissões/aprovações.
+
+Sem nova env, package, migration ou reset; rollback independente Admin/backend. Contratos
+HTTP permanecem com os mesmos campos/tipos. Tratar C17 em decisão separada: KYC não consta
+do requisito atual, e nome editável não é prova de titularidade.

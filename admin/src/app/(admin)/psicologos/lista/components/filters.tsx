@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, ChevronRight, Search, X } from "lucide-react";
+import { Check, ChevronRight, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 import type {
   AdminPsychologistsList,
   PsychologistsListOption,
@@ -24,7 +23,6 @@ import {
   PROFILE_CONVERSION_FILTER_OPTIONS,
   PROFILE_STATUS_FILTER_OPTIONS,
   REGISTRY_STATUS_FILTER_OPTIONS,
-  SEARCH_DEBOUNCE_MS,
 } from "../modules/list-support";
 
 export const Avatar = ({ name, src }: { name: string; src: string | null }) => {
@@ -424,47 +422,4 @@ export const ActiveFiltersSummary = ({
   );
 };
 
-export const SearchBox = ({
-  onSearch,
-  value,
-}: {
-  onSearch: (value: string) => void;
-  value?: string;
-}) => {
-  const [draft, setDraft] = useState(value || "");
-  const onSearchRef = useRef(onSearch);
-
-  useEffect(() => {
-    onSearchRef.current = onSearch;
-  }, [onSearch]);
-
-  useEffect(() => {
-    const normalized = draft.trim();
-    const current = value || "";
-
-    if (normalized === current) return;
-
-    const timer = window.setTimeout(() => {
-      onSearchRef.current(normalized);
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [draft, value]);
-
-  return (
-    <label className="relative block h-12 w-full min-w-0 text-sm font-medium text-foreground">
-      <span className="sr-only">Buscar por nome, e-mail ou CRP</span>
-      <Search
-        aria-hidden
-        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-      />
-      <input
-        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-medium text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary"
-        onChange={(event) => setDraft(event.target.value)}
-        placeholder="Nome, e-mail ou CRP..."
-        type="search"
-        value={draft}
-      />
-    </label>
-  );
-};
+export { SearchBox } from "./search-box";

@@ -770,7 +770,7 @@ junto ao hook useDateRangeCommitOnBlur existente. Extrair somente coordenação 
 
 - [x] Digitar data incompleta/invertida conserva dashboard, consulta e campos para correção (prova local).
 - [x] Commit válido troca consulta uma vez; presets e rótulos usam o período aplicado correto (estado local).
-- [ ] Contratos de estado React real, Browser local, admin check/build e smoke de publicação.
+- [x] Contratos de estado React real, Browser local, admin check/build e smoke de publicação.
 
 Sem nova env/package/migration ou mudança remota; UI/tokens e conteúdo existentes preservados.
 Não usar mocks/API substituída para concluir integração nem alterar dados reais nesse teste.
@@ -790,3 +790,21 @@ LeituraSocrates dos275alvosAdmin/58.723linhas completa,1suporte; hashcongelado e
 concorrentes separados. Parent releucliente e diff344, sem creditar fonte antiga comhashnovo.
 Base1944leiturasiniciais,0parciais,1177pendentes;ledger1927. NoveachadosAdmin documentados;
 A342-03corrigido localmente, demais emtriagem/execução. TASK178segue emandamento.
+
+### Continuação345 — busca estável e minimização de documento
+
+A342-04: Browser Admin343 confirmou busca pacientes perdendo foco após debounce/URL;
+input remontado por key=query.q. Corrigir pacientes e psicólogos mantendo navegação/rascunho.
+C13: helper cpf_masked da verificação retornava documento inteiro, enquanto auditoria pessoal
+já usava máscara real. Centralizar a política existente sem importar serviços com efeitos.
+
+- [x] Busca mantém identidade/foco, sincroniza valor externo e cancela callbacks obsoletos (contrato/Browser local).
+- [x] cpf_masked oculta dígitos nos consumidores atuais e nunca devolve entrada inválida bruta (fonte/contratos).
+- [ ] Contratos reais, Browser de busca, checks/builds e publicação registrados.
+
+Não mudar CPF completo do formulário privado autorizado nem aprovações/identidade (C17 em
+triagem de requisito separada). Sem env/package/migration/reset/provider; nenhum teste de M1.
+
+345: hook compartilhado elimina duplicação de coordenação nas buscas. 17 contratos focais
+aprovados; root1078 (1072pass/6skips drawtext), Admin79/79+build otimizado, backend439/439+
+build aprovados. Sem migração/env/package. Publicação e reteste autenticado ainda pendentes.

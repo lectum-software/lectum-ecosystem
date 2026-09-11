@@ -1,9 +1,9 @@
 "use client";
 
-import { ChevronRight, Search, UsersRound } from "lucide-react";
+import { ChevronRight, UsersRound } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useMemo } from "react";
 import { useAdminPatientsList } from "@/api/callers/patients/list";
 import { resolveApiError } from "@/api/handle";
 import type {
@@ -18,6 +18,7 @@ import { AdminPagination } from "@/components/admin-shell/pagination";
 import { AdminQueryErrorState } from "@/components/admin-shell/query-error-state";
 import { canRenderImage } from "@/lib/admin-media";
 import { cn } from "@/lib/utils";
+import { SearchBox } from "./search-box";
 
 const SORT_OPTIONS: Array<{ id: PatientsListSort; label: string }> = [
   { id: "recent", label: "Cadastro recente" },
@@ -58,7 +59,6 @@ const listStatuses = new Set(STATUS_OPTIONS.map((item) => item.id));
 const listProviders = new Set(PROVIDER_OPTIONS.map((item) => item.id));
 const listIntentEngagementQuadrants = new Set(INTENT_ENGAGEMENT_QUADRANTS);
 const LOADING_ROWS = ["loading-1", "loading-2", "loading-3", "loading-4", "loading-5"];
-const SEARCH_DEBOUNCE_MS = 350;
 
 const numberFormatter = new Intl.NumberFormat("pt-BR");
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -144,40 +144,6 @@ const Avatar = ({ name, src }: { name: string; src: string | null }) => {
       src={src ?? ""}
       width={48}
     />
-  );
-};
-
-const SearchBox = ({ onSearch, value }: { onSearch: (value: string) => void; value?: string }) => {
-  const [draft, setDraft] = useState(value || "");
-
-  useEffect(() => {
-    const normalized = draft.trim();
-    const current = value || "";
-
-    if (normalized === current) return;
-
-    const timer = window.setTimeout(() => {
-      onSearch(normalized);
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [draft, onSearch, value]);
-
-  return (
-    <label className="relative block h-12 w-full min-w-0 text-sm font-medium text-foreground">
-      <span className="sr-only">Buscar por nome ou e-mail</span>
-      <Search
-        aria-hidden
-        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-      />
-      <input
-        className="h-full w-full appearance-none rounded-full border border-border bg-surface py-0 pl-10 pr-4 text-sm font-medium text-foreground shadow-control outline-none transition placeholder:text-subtle focus:border-primary"
-        onChange={(event) => setDraft(event.target.value)}
-        placeholder="Nome ou e-mail..."
-        type="search"
-        value={draft}
-      />
-    </label>
   );
 };
 
@@ -477,11 +443,7 @@ export const AdminPatientsListClient = () => {
       <div className="min-w-0 space-y-4">
         <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0 xl:w-full xl:max-w-[520px]">
-            <SearchBox
-              key={query.q ?? ""}
-              onSearch={(value) => replaceParams({ q: value || null })}
-              value={query.q}
-            />
+            <SearchBox onSearch={(value) => replaceParams({ q: value || null })} value={query.q} />
           </div>
           <div className="flex min-w-0 flex-col gap-2 text-sm font-medium text-foreground sm:flex-row sm:flex-wrap sm:items-end xl:flex-nowrap xl:justify-end">
             <SelectField

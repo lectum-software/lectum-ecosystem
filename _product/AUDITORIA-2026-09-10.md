@@ -212,8 +212,13 @@ backend,frontend eAdmin343. Período personalizado repetido na conta de auditori
 
 126. Alterar datas no dashboard de comunidades não remove mais os próprios campos.
 
-Nove regressões e Browser local aprovados; publicação344 ainda pendente.
+Nove regressões, Browser local e repetição em homologação aprovados;344 com18/18smoke.
 Concluída leitura lateral de275fontes do Admin; demais problemas encontrados seguem em correção.
+
+[Fila de achados e decisões](AUDITORIA-2026-09-11-PENDENCIAS.md)
+
+127. Busca de pacientes e psicólogos mantém o foco após atualizar os resultados.
+128. Campos de CPF mascarado passam a ocultar os dígitos também na verificação administrativa.
 
 ## Ainda pendente
 
@@ -224,7 +229,7 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1944 arquivos com leitura inicial**, sem leituras parciais pendentes e 1177 ainda não revisados.
+Cobertura da base: **2299 arquivos com leitura inicial**, sem leituras parciais pendentes e 822 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

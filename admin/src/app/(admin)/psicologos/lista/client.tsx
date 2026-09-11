@@ -190,11 +190,7 @@ export const AdminPsychologistsListClient = () => {
       <div className="min-w-0 space-y-4">
         <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 lg:w-full lg:max-w-[560px]">
-            <SearchBox
-              key={query.q ?? ""}
-              onSearch={(value) => replaceParams({ q: value || null })}
-              value={query.q}
-            />
+            <SearchBox onSearch={(value) => replaceParams({ q: value || null })} value={query.q} />
           </div>
           <button
             className="inline-flex h-12 w-full min-w-0 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-control transition hover:border-primary hover:text-primary sm:w-auto"

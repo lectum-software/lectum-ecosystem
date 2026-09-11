@@ -1542,3 +1542,58 @@ Prioridadeproposta efonteexata no relatório; nenhumP1 confirmado nestaleitura. 
 sucessoparcial de mutations,idiomas,fallbacks deestatísticas e semanticscores dependemcontrato;
 nãopromover aincidenteprovado. Documentoslegais aprovados,aparelhos reais efluxosrestantes
 continuam pendentes; nãohá liberação paraproprodução.
+
+## Publicação344 / leitura backend339
+
+466897df13ff4fcb266c18cccbe582b11528ae6e enviadohomolog. Segundo smoke344:18/18,
+backend/frontend/Admin344,health/ready200. Primeiro:Admin344 eoutros343 durante rollout.
+Arquivo /tmp/lectum-audit-344-smoke-homolog.json contém timestamp exato. Adminpublicado:
+all→AtéUp comDe vazio mantémcontroles/dados; após sairdogrupo aparece erro local. Presetmês
+recupera semreload; custom01–10/09aplica e carrega; Todooperíodo restaurado ao final.
+Captura homolog-invalid.png em /tmp/lectum-task178-admin-period-344 salva/vista. A largura
+capturada doAdmin foi aproximadamente991px, não390: override do contrato local não deve ser
+atribuído a essa aba. Browserlocal390/1280 é prova mobile separada; aparelhos reais pendentes.
+
+Bacon:339fontes backend/61.372linhas e15suportes/1.120linhas integralmente lidos;600eventos
+manuais com recuperação de saídas truncadas, ranges/hashes conferidos. AST/index não foram
+contabilizados como leitura; nenhum módulo operacional/provider/DB/HTTP executado. Freeze342,
+verificaçãofinal344 às20:01:35UTC,339hashsinalterados; report mencionava conferência343 anterior.
+Parent integrou354paths porhash antes de iniciar C13:339novasleiturasbase,ledger2269;
+base2283iniciais/0parciais/838pendentes. /tmp/lectum-task178-backend-pending-342 contémREPORT,
+readlist,not-read,final-verification efile-flow-map; relatório longo lido emsegmentos após
+truncamento inicial. Não fazer passar exemplos de fórmulas/interleavings por testes executados.
+
+C17 requer distinguir registro ativo e identidade do titular, não explorar conta alheia nem
+aplicar mudança arbitrária de aprovação. Triagem de specs/ADRs separada emcurso. C20 permanece
+somente fonte, sem operação/payload de exploração ou execução/reconstrução de M1.
+C13 local345 centraliza máscara já existente na auditoria pessoal; não copia CPF de ninguém,
+não altera CPF completo do formulário autorizado nem decideaprovação.4testespuros aprovados,
+sequências repetidas intencionalmente inválidas/sem documentos de pessoas. Build/check pendentes.
+Fila rastreável em AUDITORIA-2026-09-11-PENDENCIAS.md; nenhum dos demais mecanismos vira
+correção concluída por estar listado. Auditoria permanece emandamento.
+
+Triagem C17: 27 arquivos/5.417 linhas completos com hashes conferidos; 16 novas leituras
+na base após deduplicação global. Base 2.299 iniciais, 822 pendentes; ledger 2.287 com os
+helpers C13. Relatório /tmp/lectum-task178-cfp-trust-345/REPORT.md distingue aprovação do
+registro de prova de titularidade: não há KYC especificado. C17-A (compatibilidade) e C17-B
+(trava de identidade em outra escrita) são mecanismos de fonte, P2 proposto, sem exploração
+remota ou alteração de aprovação. Fila atualizada; matching/ambiguidade exige decisão.
+
+345: o primeiro check/build identificou import.meta no novo teste CPF incompatível com o
+backend CommonJS. Corrigido para resolve(__dirname, ...), sem excluir testes do build.
+Bump 0.1.344 → 0.1.345 executado uma única vez; validações finais em andamento.
+
+345 validação local final: rootcheck1078 =1072pass/6skips drawtext conhecidos; frontend441,
+backend439, Admin79 e video81 (75pass/6skips). Builds backend e Admin otimizados aprovados,
+30 manifests de route groups sincronizados. Os 17 contratos de busca importam React/hook
+reais e timers nativos; não substituem DOM/API. O primeiro patch duplicava coordenação;
+revisão parent pediu hook em admin/src/hooks e wrappers adjacentes só de markup. Essa é a
+versão validada. Readlist final contém7fontes completas, histórico de versões rejeitado
+por SHA na integração; ledger2291, base2299/822 inalterada.
+
+Browser local final de busca: viewport390, pacientes mantém AX17 após debounce e continua
+digitação sem reclicar, limpar aplica vazio. URLs externas sincronizam campo; voltar/avançar
+com draft pendente e histórico de mesmo q não dispara busca tardia (count3 preservado).
+Desmontar antes do debounce também conserva count3. Psicólogos em1280 mantém AX21 e aceita
+continuação sem reclicar. Capturas em /tmp/lectum-task178-admin-search-345. Harness usa os
+componentes reais/histórico nativo, sem API; não equivale à navegação Next autenticada.

@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
+import { maskCpf } from "@/utils/cpf-mask";
 import type { IAdminPsychologistDetailDTO } from "../../../detail/DTOs/IAdminPsychologistDetailDTO";
 import { showAdminPsychologist } from "../../../detail/use-cases/services";
 import type { AdminPsychologistPersonalDataInput } from "../../DTOs/IAdminPsychologistProfileEditDTO";
@@ -8,6 +9,8 @@ import type {
   AdminPsychologistProfileEditAudit,
   AdminPsychologistProfileEditRecord,
 } from "../../repositories/AdminPsychologistProfileEditRepository";
+
+export { maskCpf } from "@/utils/cpf-mask";
 
 export const APPROVED_REGISTRY_STATUS = "aprovado";
 
@@ -128,14 +131,6 @@ export const isValidCpf = (value?: string | null) => {
     calcCpfDigit(cpf.slice(0, 9), 10) === Number(cpf[9]) &&
     calcCpfDigit(cpf.slice(0, 10), 11) === Number(cpf[10])
   );
-};
-
-export const maskCpf = (value?: string | null) => {
-  const digits = normalizeCpf(value);
-  if (!digits) return null;
-  if (digits.length !== 11) return "CPF informado";
-
-  return `${digits.slice(0, 3)}.***.***-${digits.slice(9)}`;
 };
 
 export const maskPhone = (value?: string | null) => {
