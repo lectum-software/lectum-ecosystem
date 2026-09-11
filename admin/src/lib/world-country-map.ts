@@ -5,8 +5,11 @@ import worldCountryMapPaths from "./world-country-map.json";
 export type WorldCountryMapPath = {
   d: string;
   id: string;
+  mapKey: string;
   name: string;
 };
 
-export const WORLD_COUNTRY_MAP_PATHS =
-  worldCountryMapPaths satisfies readonly WorldCountryMapPath[];
+// Algumas geometrias não possuem ID cartográfico; o nome as distingue sem inventar ISO.
+export const WORLD_COUNTRY_MAP_PATHS: readonly WorldCountryMapPath[] = worldCountryMapPaths.map(
+  (country) => ({ ...country, mapKey: `${country.id}:${country.name}` }),
+);

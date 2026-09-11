@@ -1107,3 +1107,15 @@ API/backend,ordenação ou filhos. Componente/formatação existentes e casos lo
 355: classificação incompleta observada no dashboard global real; preservar todos os
 cliques e filhos sem atribuir o clique do ranking a um ator desconhecido. Contratos12/12,
 Browserlocal móvel/desktop e buildAdmin aprovados; sem alteração de formato da API.
+
+### Malha cartográfica356 — decisão prévia
+
+Separar identidade de renderização da identidade cartográfica. mapKey = id + nome,
+calculado na biblioteca existente; não editar o JSON cartográfico nem inventar ISO para
+geometrias sem identificador. Os consumidores continuam resolvendo por códigos/nomes,
+mas associam valores e key React pela identidade interna distinta. Testes com dataset e
+componentes reais; a colisão reproduzida localmente não comprova dados afetados em homolog.
+
+356:base de176geometrias preservada,12testes passados,pares móveis/desktop revisados.
+QuickCopy listado pelo Builder,mas leitura do recurso recusada por espaço divergente;
+fallback de protótipos locais documentado. Zero mudanças territoriais/de negócio/API.

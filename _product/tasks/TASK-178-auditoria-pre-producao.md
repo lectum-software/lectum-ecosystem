@@ -1014,8 +1014,29 @@ Reusar componente e formatação;sem redesenho/env/API/package/migration. Mobile
 - [x] Grupos exibem breakdown correto ou omitem classificação incompleta, nunca herdando a primeira origem.
 - [x] Fontes/filhos,ordenação,totais e indicadores preservados;sem mutação de dados.
 - [x] Contratos,build e comparação no Browser local registrados.
-- [ ] Smoke e conferência publicada de homologação355 registrados.
+- [x] Smoke e conferência publicada de homologação355 registrados.
 
 355:12/12 contratos, baseline2pass/10fail. Check global1192/1186pass/6skips drawtext;
 buildAdmin aprovado. Browser componente real:390×844 e991×964; comparação pareada sem
 redesenho, filtros/expansão/zero/ausência preservados. Harness sem API/persistência; não E2E.
+
+### Continuação356 — chave interna da malha de países
+
+DATA01: três geometrias carregam id literal "undefined" e compartilham chave React/lookup.
+Criar mapKey interno distinto na biblioteca existente e usá-lo nos dois mapas. Preservar
+id, nome, contorno, lookup nominal e toda informação da API; não atribuir novo código ISO
+nem alterar interpretação territorial. Sem env, migration, dependência ou redeploy backend
+funcional. UI existente, mobile-first390, protótipos de Pacientes/Tráfego consultados;
+QuickCopy consultado via Builder: resources/read recusou por espaço divergente;
+referências locais e componentes reais usados, sem código gerado como fonte final.
+
+- [x] Cada uma das176geometrias possui chave interna não vazia e única.
+- [x] Contagem nominal destaca somente a região correspondente nos dois mapas.
+- [x] Geometria, identificadores originais e origem desconhecida preservados.
+- [x] Contratos, Browser local móvel/desktop e check/build registrados.
+- [ ] Smoke e conferência publicada356 registrados.
+
+355/5f595dac:smoke5/5 às23:51:58UTC11/09;backend/front/Admin355,health/ready200.
+Admin móvel publicado:resumo22sem classificação incompleta,filhos0/2/9/10/1 preservados.
+356:12contratos aprovados (baseline5pass/7fail),check1204/1198pass/6skips,buildAdmin aprovado.
+Pares Browser390×844/991×964:mesma geometria/layout,somente duasmarcações indevidas removidas.

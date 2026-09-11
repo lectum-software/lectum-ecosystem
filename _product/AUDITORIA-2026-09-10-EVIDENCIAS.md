@@ -2039,3 +2039,31 @@ Não equivale a teste HTTP negativo/concorrente. Serviço privado de vídeo não
 - Check global1192tests,1186pass,6skips drawtext; Admin check/build aprovados.
 - Sem env, migration, nova dependência, novo endpoint ou alteração de aprovação/analytics.
 - Publicação355 e reteste real ainda pendentes neste registro.
+
+### Publicação355 concluída
+
+5f595dac emhomolog; cinco GETs públicos aprovados em11/09/2026 às23:51:58UTC. Backend,
+frontend eAdmin0.1.355,health/ready200;Nextno-store/noindex. Capturas móveis375×812
+pareadas do Admin: resumo22sem a atribuição herdada de10; filhos0/2/9/10/1 mantidos.
+Ranking1continua sem atribuição,sem inventar ator. Não foram gerados novos cliques WhatsApp.
+Artefato:/tmp/lectum-audit-355-smoke-curl-homolog.json. Serviço privado de vídeo não consultado.
+
+## Malha de países356
+
+- Leitura integral dos dois componentes de mapa e biblioteca; dataset original preservado.
+- JSON traz176geometrias, três com id literal "undefined":N.Cyprus,Somaliland,Kosovo.
+  Lookup por nome seguido de keyid reaplicava a mesma contagem nas três.
+- mapKey interno combina id/nome; lookup cartográfico e contornos não mudam.
+- Doze testes compilam módulos reais e renderizam React/SSR com o JSON real:baseline5pass7fail,
+  final12pass. Cobrem três colisões em ambosmapas, Brasil, desconhecido, unicidade e geometria.
+- Browserlocal390×844 e991×964,paresantes/depois dos componentes reais: somente Somaliland
+  destacado quando é a única entrada; antes também apareciam duasregiões indevidas.
+  Sem API/contagens persistidas simuladas,não equivale a geolocalização real de visitantes.
+- Primeiro check apontou require proibido no novo testeCJS; convertido ao padrãoESM,
+  reruncompleto aprovado:1204tests1198pass6skipsdrawtext,Adminbuild aprovado.
+- Builderplan chamado com QuickCopyativo; leitura real de resource recusada por Wrong space.
+  Protótipos locais de Pacientes/Tráfego e UI vigente usados; não houve acesso viaFigma.
+- Baseline publicado do mapa por país de tráfego355capturado: Brasil86/EUA27/DE6/GB1/AR1.
+  Nenhuma dessasorigens sofre a colisão; não afirmar que dados afetados foram vistos no ar.
+- Artefatos:/tmp/lectum-task178-world-map-356. Sem schema/env/package/API alterado.
+- Publicação356 ainda pendente neste registro.

@@ -238,11 +238,11 @@ export const resolveWorldCountryMapPath = (item: PatientsDashboardBreakdownItem)
 
 export const WorldCountryMap = ({ countries }: { countries: PatientsDashboardBreakdownItem[] }) => {
   const { max, min } = getLocationCountRange(countries);
-  const countriesByMapId = new Map<string, PatientsDashboardBreakdownItem>();
+  const countriesByMapKey = new Map<string, PatientsDashboardBreakdownItem>();
 
   for (const item of countries) {
     const countryPath = resolveWorldCountryMapPath(item);
-    if (countryPath) countriesByMapId.set(countryPath.id, item);
+    if (countryPath) countriesByMapKey.set(countryPath.mapKey, item);
   }
 
   const highlightedCountries = countries
@@ -262,7 +262,7 @@ export const WorldCountryMap = ({ countries }: { countries: PatientsDashboardBre
         viewBox="0 0 520 270"
       >
         {WORLD_COUNTRY_MAP_PATHS.map((country) => {
-          const item = countriesByMapId.get(country.id);
+          const item = countriesByMapKey.get(country.mapKey);
           const intensity = item ? getLocationIntensity(item.count, min, max) : 0;
           const fill = item
             ? hexToRgba("var(--admin-primary)", 0.32 + intensity * 0.6)
@@ -273,7 +273,7 @@ export const WorldCountryMap = ({ countries }: { countries: PatientsDashboardBre
             <path
               d={country.d}
               fill={fill}
-              key={country.id}
+              key={country.mapKey}
               stroke={stroke}
               strokeLinejoin="round"
               strokeWidth={item ? "0.85" : "0.45"}
@@ -287,7 +287,7 @@ export const WorldCountryMap = ({ countries }: { countries: PatientsDashboardBre
           );
         })}
       </svg>
-      {countries.length > 0 && countriesByMapId.size === 0 ? (
+      {countries.length > 0 && countriesByMapKey.size === 0 ? (
         <figcaption className="mt-2 text-center text-xs font-bold leading-5 text-muted">
           Países não encontrados na malha continuam no ranking agregado.
         </figcaption>

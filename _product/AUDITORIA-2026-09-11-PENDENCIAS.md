@@ -199,3 +199,6 @@ adicional no registro352. Lista C17 e demais lacunas continuam abertas, sem prom
 
 A342-09: correção355 implementada;12contratos e Browserlocal móvel/desktop aprovados.
 Baseline real354:22cliques e breakdown herdado de10. Reteste publicado pendente.
+
+A342-09: publicado e conferido355. DATA01: corrigido356nos dois mapas,12testes reais de
+componentes/dataset e comparação local aprovados;reteste publicado pendente,semdados afetados confirmados no ar.

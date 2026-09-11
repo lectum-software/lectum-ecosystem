@@ -256,7 +256,11 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 145. **Origem dos cliques no Admin:** o resumo soma as origens corretamente e não mostra uma divisão incompleta como se representasse o total.
 
-355: testes e comparação local aprovados; aguardando publicação.
+355: publicada e verificada no Admin, preservando os totais e detalhes.
+
+146. **Mapas do Admin:** corrigida uma chave repetida que podia mostrar a contagem de uma região em outras duas.
+
+356: testes e comparação local aprovados; aguardando publicação.
 
 ## Ainda pendente
 
