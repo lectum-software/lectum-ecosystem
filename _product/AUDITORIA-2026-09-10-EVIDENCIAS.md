@@ -440,3 +440,11 @@ base: 236 leituras iniciais, 12 parciais e 2.873 não revisados. Não certificar
 - Check/build Admin limpos passaram; build inicial com `.next/dev` residual foi recusado corretamente
   pela política de source maps. Nenhum script foi enfraquecido. Harness removido antes do build final.
 - Smoke e repetição em homologação da 0.1.325 ainda pendentes no momento do commit.
+
+### Ajuste da validação e publicação 0.1.326
+
+O pre-push bloqueou 0.1.325: a primeira versão do teste SSR usava execução dinâmica de código,
+proibida pela guarda do repositório mesmo em teste. Nenhum deploy ocorreu nessa tentativa.
+O teste foi refeito com o loader nativo Node, limitado aos controllers e utilitário local reais;
+não foi criada exceção nem desabilitada a guarda. A correção visual permanece a mesma. Novo commit
+recebe novo bump conforme a política; publicação efetiva esperada em 0.1.326, ainda a verificar.

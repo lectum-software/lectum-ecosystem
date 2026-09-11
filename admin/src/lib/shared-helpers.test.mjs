@@ -129,29 +129,47 @@ test("controllers separam rótulo, controle e mensagem de erro", async () => {
   }
 });
 
-test("controllers mantêm IDs e mensagens únicos entre formulários reais simultâneos", async () => {
+test("controllers mantêm IDs e mensagens únicos entre formulários reais simultâneos", async (t) => {
   const { readFileSync } = await import("node:fs");
-  const { createRequire } = await import("node:module");
+  const { createRequire, registerHooks } = await import("node:module");
+  const { fileURLToPath } = await import("node:url");
   const { default: ts } = await import("typescript");
   const require = createRequire(import.meta.url);
   const { createElement } = require("react");
   const { renderToStaticMarkup } = require("react-dom/server");
   const { FormProvider, useForm } = require("react-hook-form");
-  const loadSource = (relativePath) => {
-    const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
-    const { outputText } = ts.transpileModule(source, {
-      compilerOptions: {
-        jsx: ts.JsxEmit.ReactJSX,
-        module: ts.ModuleKind.CommonJS,
-        target: ts.ScriptTarget.ES2022,
-      },
-    });
-    const exports = {};
-    const resolve = (specifier) =>
-      specifier === "@/lib/utils" ? loadSource("./utils.ts") : require(specifier);
-    new Function("require", "exports", outputText)(resolve, exports);
-    return exports;
-  };
+  const sourceFiles = new Set(
+    [
+      "./utils.ts",
+      ...["input", "textarea", "select", "checkbox-group"].map(
+        (name) => `../components/controllers/${name}.tsx`,
+      ),
+    ].map((path) => new URL(path, import.meta.url).href),
+  );
+  const loader = registerHooks({
+    resolve(specifier, context, nextResolve) {
+      return nextResolve(
+        specifier === "@/lib/utils"
+          ? fileURLToPath(new URL("./utils.ts", import.meta.url))
+          : specifier,
+        context,
+      );
+    },
+    load(url, context, nextLoad) {
+      if (!sourceFiles.has(url)) return nextLoad(url, context);
+      const { outputText } = ts.transpileModule(readFileSync(new URL(url), "utf8"), {
+        compilerOptions: {
+          jsx: ts.JsxEmit.ReactJSX,
+          module: ts.ModuleKind.CommonJS,
+          target: ts.ScriptTarget.ES2022,
+        },
+      });
+      return { format: "commonjs", source: outputText, shortCircuit: true };
+    },
+  });
+  t.after(() => loader.deregister());
+  const loadSource = (relativePath) =>
+    require(fileURLToPath(new URL(relativePath, import.meta.url)));
   const controls = [
     ["input", "InputController", "text", {}],
     ["textarea", "TextareaController", "description", {}],

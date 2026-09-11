@@ -437,3 +437,9 @@ erro do mesmo identificador, sem alterar `name`, payload ou espaço reservado. A
 entre formulário da página e modal é legítima; a repetição de IDs DOM não. Não criar um segundo
 form engine nem corrigir só o modal específico. React/RHF reais, renderização SSR repetida e Browser
 local móvel/desktop validaram os vínculos. Rollout independente do backend; rollback só de código.
+
+O teste SSR carrega somente a lista explícita dos controllers e `utils.ts` pelo
+[loader nativo do Node](https://nodejs.org/api/module.html#moduleregisterhooksoptions), compilados
+pelo TypeScript já instalado; o hook é removido no teardown. Sem execução por string de função,
+sem relaxar a guarda de código e sem substituir React/RHF por doubles. O pre-push recusou a primeira
+implementação de teste em 0.1.325; a publicação será retomada com correção na 0.1.326.
