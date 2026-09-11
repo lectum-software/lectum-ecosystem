@@ -388,3 +388,39 @@ de equivalência pixel a pixel. A mudança não altera classes/medidas do layout
 Check 0.1.323: 525 testes (134 frontend, 321 backend, 38 Admin, 32 video), mais seis da versão;
 build frontend aprovado. Artefato não contém rota/MP4 de auditoria nem source maps públicos.
 Inventário: 226 leituras iniciais, 12 parciais, 2.883 não revisados; auditoria continua em andamento.
+
+0.1.323 publicada em `a6ababbd`: 16/16 checks às 2026-09-11T02:38:31Z, backend/frontend/Admin
+na versão esperada. Browser com Stream real: ampliado em 31,36s, Escape desmonta a mídia e, após
+metadados, retoma reproduzindo; observado 60,85s na captura 37. A leitura imediata anterior aos
+metadados tinha readyState=0; não confundir essa transição com a perda definitiva de posição
+anterior. Vídeo pausado ao fim e abas Admin/paciente preservadas, sem utilizar a senha fornecida.
+
+## Continuação — credenciais administrativas e emissão concorrente 0.1.324
+
+Imagem anterior .321: seis cenários falharam. Nos dois perfis, link de recuperação antigo
+continuou retornando 200 depois da troca administrativa de e-mail, alterando senha e confirmação
+do novo endereço. Invalidação agora é parte da mesma transação de e-mail/sessões/auditoria,
+reutilizando o helper central já aplicado aos fluxos da própria conta.
+
+O primeiro patch não impedia emissão iniciada antes da troca e persistida depois. Reproduzido
+também nos fluxos público/privado: snapshots antigos conseguiam gravar códigos e recuperações
+retornavam 200. Atualizações condicionadas a e-mail/hash/deleted rejeitam o estado ultrapassado.
+Confirmação exige pendência atual; limpeza por falha de entrega compara também o código daquela
+tentativa, preservando qualquer emissão posterior. Público mantém 200 genérico/não enumerável;
+Admin e confirmação autenticada recebem conflito PT-BR sem detalhes internos.
+
+Integração manual usa a imagem final e PostgreSQL real com migrations aplicadas em rede interna,
+sem portas no host, sem .env local/publicado, usuário não root e filesystem somente leitura.
+Transações, snapshots, FK/rollback e HTTP de reset são reais; SMTP não é simulado nem declarado
+validado. A primeira ampliação da suíte atingiu o rate limit real (429), não um defeito do patch:
+as verificações de snapshot passaram a consultar o estado persistido, mantendo oito chamadas
+HTTP e a proteção real sem desabilitar/aumentar limite. Não contar falha por 429 como bypass.
+
+Imagem final: `lectum-backend:audit-0.1.324`,
+`sha256:fed653d279d3a9ce56390ef6467738707693fd27e87887bd1810228778e4eeef`.
+Suíte nova: 28 cenários aprovados; recursos descartáveis removidos ao final de cada execução.
+Check agregado: 527 testes (134 frontend, 323 backend, 38 Admin, 32 video), mais seis da versão;
+build backend e Docker Linux amd64 aprovados. Também repetidas as suítes reais de confirmação
+(17 cenários) e reset (8), sem regressões. Nenhuma migration/package/env nova, nenhum envio SMTP
+ou alteração de conta publicada. Dez arquivos administrativos adicionais lidos integralmente;
+base: 236 leituras iniciais, 12 parciais e 2.873 não revisados. Não certificar a auditoria completa.

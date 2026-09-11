@@ -128,7 +128,7 @@ export const sendAdminPsychologistAccountEmailConfirmation = async (
 
   if (!sent) return emailProviderUnavailable();
 
-  await repository.saveEmailConfirmation({
+  const saved = await repository.saveEmailConfirmation({
     audit: createAudit({
       action: "psychologist_account_email_confirmation_sent",
       adminId: admin.id,
@@ -149,7 +149,9 @@ export const sendAdminPsychologistAccountEmailConfirmation = async (
     }),
     confirmCode,
     userId: profile.user.id,
+    credentialSnapshot: { email: profile.user.email, password: profile.user.password },
   });
+  if (!saved) return { status: 409, ...error("account_credentials_changed", {}) };
 
   return accountResponse(data.p.id, "admin_psychologist_account_email_confirmation_sent");
 };
@@ -175,7 +177,7 @@ export const sendAdminPsychologistAccountPasswordReset = async (
 
   if (!sent) return emailProviderUnavailable();
 
-  await repository.savePasswordReset({
+  const saved = await repository.savePasswordReset({
     audit: createAudit({
       action: "psychologist_account_password_reset_sent",
       adminId: admin.id,
@@ -196,7 +198,9 @@ export const sendAdminPsychologistAccountPasswordReset = async (
     }),
     recoveryCode,
     userId: profile.user.id,
+    credentialSnapshot: { email: profile.user.email, password: profile.user.password },
   });
+  if (!saved) return { status: 409, ...error("account_credentials_changed", {}) };
 
   return {
     status: 200,

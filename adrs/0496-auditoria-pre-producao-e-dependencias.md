@@ -406,3 +406,26 @@ Validação local real confirmou reprodução contínua e caso pausado/mutado em
 schema ou pacote novo; frontend compatível com backend antigo. Rollback de código reintroduz
 a perda de posição por teclado, sem efeito em dados. Continuidade em renovação de URL HLS e
 gestão completa de foco no portal são pontos separados ainda não certificados.
+
+## Credenciais e emissão concorrente — continuação 0.1.324
+
+Os repositórios administrativos mantinham recovery ao alterar e-mail. Na imagem anterior, o
+link do endereço antigo redefiniu a senha e confirmou o endereço novo (HTTP 200), tanto para
+paciente quanto para psicólogo. Reutilizar `withInvalidatedRecovery` na transação já existente
+de e-mail, sessões e auditoria; não duplicar regra nem migrar dados.
+
+Também foi reproduzida gravação de código com snapshot antigo depois da troca: invalidar só os
+links já persistidos não basta. Emissão pública/privada/Admin passa a comparar e-mail, hash e
+conta não excluída no próprio update condicional. Confirmação requer ainda `confirmed=false`.
+Falha de entrega de recuperação só remove o código exato daquela tentativa, não um posterior.
+Helper puro centraliza o predicado; nenhum hash/credencial entra em resposta, log ou relatório.
+
+Admin devolve 409 seguro em português quando a conta mudou durante a entrega. Recuperação pública
+mantém resposta genérica 200, sem revelar existência/alteração da conta. Não se introduz provider,
+env, schema, dependência ou acoplamento ao deploy Next. Entrega real SMTP fica fora do teste:
+integração executa repositórios/transações e rota real de reset em PostgreSQL descartável, sem
+acesso externo, com rollback de FK verificado. A sequência intercalada usa snapshots reais,
+não relógio/provedor/banco simulado.
+
+Rollout compatível com clientes antigos. Rollback reintroduz a falha, mas não restaura links
+invalidados. Nenhuma conta ou sessão publicada foi alterada durante os testes.

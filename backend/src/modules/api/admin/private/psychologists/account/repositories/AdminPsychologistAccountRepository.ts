@@ -1,5 +1,10 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import {
+  type AccountCredentialSnapshot,
+  credentialSnapshotWhere,
+  withInvalidatedRecovery,
+} from "@/utils/account-credentials";
 
 const accountTokenSelect = {
   createdAt: true,
@@ -121,13 +126,13 @@ export class AdminPsychologistAccountRepository {
   }) {
     return prisma.$transaction(async (tx) => {
       await tx.user.update({
-        data: {
+        data: withInvalidatedRecovery({
           confirm_code: input.confirmCode,
           confirm_date: new Date(),
           confirmed: false,
           confirmed_date: null,
           email: input.email,
-        },
+        }),
         select: { id: true },
         where: { id: input.userId },
       });
@@ -146,18 +151,24 @@ export class AdminPsychologistAccountRepository {
     audit: AdminPsychologistAccountAudit;
     confirmCode: string;
     userId: string;
+    credentialSnapshot: AccountCredentialSnapshot;
   }) {
     return prisma.$transaction(async (tx) => {
-      await tx.user.update({
+      const result = await tx.user.updateMany({
         data: {
           confirm_code: input.confirmCode,
           confirm_date: new Date(),
         },
-        select: { id: true },
-        where: { id: input.userId },
+        where: {
+          id: input.userId,
+          ...credentialSnapshotWhere(input.credentialSnapshot),
+          confirmed: false,
+        },
       });
 
+      if (result.count !== 1) return false;
       await this.createAuditLog(tx, input.audit);
+      return true;
     });
   }
 
@@ -165,18 +176,23 @@ export class AdminPsychologistAccountRepository {
     audit: AdminPsychologistAccountAudit;
     recoveryCode: string;
     userId: string;
+    credentialSnapshot: AccountCredentialSnapshot;
   }) {
     return prisma.$transaction(async (tx) => {
-      await tx.user.update({
+      const result = await tx.user.updateMany({
         data: {
           recovery_code: input.recoveryCode,
           recovery_date: new Date(),
         },
-        select: { id: true },
-        where: { id: input.userId },
+        where: {
+          id: input.userId,
+          ...credentialSnapshotWhere(input.credentialSnapshot),
+        },
       });
 
+      if (result.count !== 1) return false;
       await this.createAuditLog(tx, input.audit);
+      return true;
     });
   }
 

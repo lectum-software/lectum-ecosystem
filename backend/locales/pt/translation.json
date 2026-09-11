@@ -88,6 +88,7 @@
     "account_password_login_unavailable": "Esta conta não possui senha cadastrada para confirmar a alteração.",
     "account_current_password_invalid": "A senha atual está incorreta.",
     "account_email_unchanged": "Informe um e-mail diferente do e-mail atual.",
+    "account_credentials_changed": "Os dados da conta mudaram. Atualize a página e tente novamente.",
     "account_email_already_exists": "Este e-mail já está em uso em outra conta.",
     "google_oauth_not_configured": "Login com Google indisponível neste ambiente.",
     "google_already_connected": "Sua conta já está conectada ao Google.",

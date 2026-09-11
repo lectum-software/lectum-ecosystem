@@ -44,6 +44,9 @@
 38. Trocar o e-mail invalida links de recuperação enviados ao endereço anterior.
 39. Controles de vídeo não desaparecem enquanto são usados pelo teclado.
 40. Escape sai do vídeo ampliado sem voltar ao início ou pausar indevidamente.
+41. Trocar o e-mail pelo Admin invalida links de recuperação enviados ao endereço antigo.
+42. Envios iniciados antes de uma troca de e-mail ou senha não conseguem reativar códigos antigos.
+43. Falha em um envio de recuperação não apaga o link de uma tentativa posterior.
 
 ## Ainda pendente
 
@@ -52,6 +55,6 @@
 - Repetir cadastro completo e testar perfil profissional, Google e dispositivos reais.
 - Avaliar senhas antigas e concluir verificações de permissão, pagamentos e vídeos.
 
-Cobertura da base: **226 arquivos com leitura inicial**, 12 parciais e 2883 ainda não revisados.
+Cobertura da base: **236 arquivos com leitura inicial**, 12 parciais e 2873 ainda não revisados.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv)

@@ -44,11 +44,13 @@ export default async (data: IRecoveryDTO): Promise<Resolve> => {
     res.replace(/\//g, ""),
   );
 
-  await _RECOVERY.recoveryCode({
+  const saved = await _RECOVERY.recoveryCode({
     ...find,
     recovery_code,
     recovery_date: new Date(),
   });
+  // Preserva a resposta não enumerável, sem entregar código de uma emissão ultrapassada.
+  if (!saved) return { status: 200, ...msg("recovery_code_success", {}), data: true };
 
   //
   if (find) {
@@ -58,11 +60,14 @@ export default async (data: IRecoveryDTO): Promise<Resolve> => {
       code: recovery_code,
     });
     if (!sent) {
-      await _RECOVERY.recoveryCode({
-        ...find,
-        recovery_code: null,
-        recovery_date: null,
-      });
+      await _RECOVERY.recoveryCode(
+        {
+          ...find,
+          recovery_code: null,
+          recovery_date: null,
+        },
+        recovery_code,
+      );
       // A resposta pública deve ser idêntica para contas existentes e inexistentes.
       // O provedor já registra a falha sem expor endereço ou detalhes técnicos.
       console.warn("[AUTH_RECOVERY] E-mail de recuperação não foi aceito pelo provedor.");

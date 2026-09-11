@@ -297,6 +297,26 @@ acessível com source vazio não demonstrou falha do Stream. Não alterar segura
 - [x] Teclado e botão compartilham fechamento que captura o estado antes de remover o portal.
 - [x] Browser local validou saída em reprodução e saída pausada/mutada no mesmo instante.
 - [x] Check agregado 525 testes e build frontend aprovados; harness removido.
-- [ ] Publicação e smoke 0.1.323.
+- [x] Publicação `a6ababbd` e smoke 16/16 em 2026-09-11T02:38:31Z; três apps na 0.1.323.
+- [x] Stream real em homolog: Escape em 31,36s retomou reprodução após metadados, sem voltar ao início.
 
 Sem mudanças em permissões, HLS, APIs, packages, migrations ou envs. Vídeos publicados não alterados.
+
+## Continuação — troca administrativa de e-mail e emissão concorrente 0.1.324
+
+- [x] Reproduzida manutenção indevida do link anterior nos dois repositórios administrativos.
+- [x] Invalidação central reutilizada, na mesma transação de e-mail, sessões e auditoria.
+- [x] 28 cenários de credenciais, emissão antiga, recuperação nova e rollback em PostgreSQL real isolado.
+- [x] Repetidas as suítes de confirmação (17) e reset (8), totalizando 53 cenários reais adicionais.
+- [x] Check agregado: 527 testes; build backend e imagem Docker Linux amd64 aprovados.
+- [ ] Smoke de homologação 0.1.324 após push comunicado.
+
+O rastreamento encontrou também emissão concorrente: uma entrega iniciada antes da troca podia
+persistir o código depois dela. Incluir emissão pública/privada e administrativa condicionada ao
+e-mail/hash de origem; falha de entrega antiga não pode apagar uma emissão mais recente. Manter
+resposta pública genérica sem enumeração e recusa PT-BR de conflito nos fluxos autenticados.
+
+Escopo: repositórios administrativos de paciente/psicólogo. Sem envio de e-mail real, alteração de
+contas publicadas, env nova, schema, package ou contrato incompatível. A correção deve impedir que
+um link enviado ao endereço antigo altere a senha e confirme o endereço novo. Rollback somente de
+código, reintroduzindo o risco; não restaura links já invalidados.

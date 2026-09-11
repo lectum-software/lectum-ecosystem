@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 const suites = {
   "password-reset": "password-reset-probe.cjs",
   "account-confirmation": "account-confirmation-probe.cjs",
+  "admin-credentials": "admin-credentials-probe.cjs",
 };
 const args = process.argv.slice(2);
 const suiteArgument = args.find((arg) => arg.startsWith("--suite="));
@@ -26,7 +27,7 @@ if (
   !/^--image=lectum-backend:audit-\d+\.\d+\.\d+$/.test(imageArgument[0])
 ) {
   console.error(
-    "Informe --image=lectum-backend:audit-VERSAO e --suite=password-reset|account-confirmation.",
+    "Informe --image=lectum-backend:audit-VERSAO e --suite=password-reset|account-confirmation|admin-credentials.",
   );
   process.exit(2);
 }
@@ -164,7 +165,7 @@ try {
   );
   for (const line of `${result.stdout || ""}\n${result.stderr || ""}`.split("\n")) {
     if (
-      /^(CHECK_OK|INTEGRATION_FAILED|RESET_POSTGRES_HTTP_OK|ACCOUNT_CONFIRMATION_POSTGRES_HTTP_OK)( |$)/.test(
+      /^(CHECK_OK|INTEGRATION_FAILED|RESET_POSTGRES_HTTP_OK|ACCOUNT_CONFIRMATION_POSTGRES_HTTP_OK|ADMIN_CREDENTIALS_POSTGRES_HTTP_OK)( |$)/.test(
         line,
       )
     )

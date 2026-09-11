@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { withInvalidatedRecovery } from "./account-credentials";
+import { credentialSnapshotWhere, withInvalidatedRecovery } from "./account-credentials";
 
 describe("invalidação da recuperação ao mudar credenciais", () => {
   it("remove vínculo de recuperação em troca de senha ou e-mail, incluindo updates Prisma", () => {
@@ -25,5 +25,28 @@ describe("invalidação da recuperação ao mudar credenciais", () => {
       withInvalidatedRecovery({ password: "new-hash", confirmed: false }).confirmed,
       false,
     );
+  });
+  it("preserva a nova confirmação administrativa ao invalidar a recuperação anterior", () => {
+    const issuedAt = new Date();
+    const input = {
+      email: "new@example.com",
+      confirm_code: "012345",
+      confirm_date: issuedAt,
+      confirmed: false,
+      confirmed_date: null,
+    };
+    assert.deepEqual(withInvalidatedRecovery(input), {
+      ...input,
+      recovery_code: null,
+      recovery_date: null,
+    });
+    assert.equal(Object.hasOwn(input, "recovery_code"), false);
+  });
+  it("vincula a emissão ao endereço, hash e conta não excluída, inclusive contas sem senha", () => {
+    for (const password of ["stored-hash", null]) {
+      const snapshot = { email: "audit@example.com", password };
+      assert.deepEqual(credentialSnapshotWhere(snapshot), { ...snapshot, deleted: false });
+      assert.equal(Object.hasOwn(snapshot, "deleted"), false);
+    }
   });
 });
