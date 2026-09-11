@@ -30,6 +30,10 @@ export const normalizeSeverityText = (value: string) =>
 export const deriveReportSeverity = (
   report: Pick<PendingReportRecord, "reason" | "target_type">,
 ) => {
+  // Razões canônicas do fluxo de denúncia; textos legados mantêm o fallback abaixo.
+  const reason = normalizeSeverityText(report.reason).trim();
+  if (reason === "self_harm" || reason === "abuse") return "alta" as const;
+
   const text = normalizeSeverityText(`${report.reason} ${report.target_type}`);
 
   if (

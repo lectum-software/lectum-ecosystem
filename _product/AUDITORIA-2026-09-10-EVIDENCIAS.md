@@ -1102,3 +1102,40 @@ Paginação24, ranking público/guard, copy resposta/comentário e curadoria por
 registrados no relatório. CP1/copy recebem recorte seguinte; CP2/3 exigem validação própria.
 PF4 observado no formatter PhoneController (máscaraBR em país internacional) permanece pendente,
 não corrigido nem certificado pelos helpers336. M1 bloqueado permanece sem retomada.
+
+### Publicação336 confirmada e verificação337 local
+
+bf18ba4c publicado via homolog. Primeiro smoke mostrou frontend/backend ainda335 e Admin336;
+uma consulta durante troca de container recebeu502 no backend. Nova consulta confirmou
+health/ready200 e ping336; segundo smoke16/16 com backend/frontend/Admin336. Sem reset ou
+mudança de env. O conjunto deste recorte não inclui DELETE; só GET e rejeição de login vazio.
+Logs `/tmp/lectum-336-smoke-{first,second}.log`, JSON `/tmp/lectum-audit-336-smoke-homolog.json`.
+
+337:731/731 no `pnpm check` (216front/413back/53Admin/43video/6versão), builds frontend e
+backend aprovados. Docker backend amd64 construído integralmente:
+`sha256:5fbecb06f090ca7d615be3b0ade5c3f02e7b42feb7385e46b65b2b9ef248134b`.
+17testes compilados de ranking/gênero/notas passaram nessa imagem com networknone,
+entrypointnode, sem volumes/env externos; container --rm removido.3testes TypeScript do DTO
+são source-only de desenvolvimento; não foram anunciados como testes da imagem.
+Logs `/tmp/lectum-337-{root-check,frontend-build,backend-build,docker-build,docker-pure-tests}.log`.
+
+PF4: controller real SSR baseline3falhas e controlesBR/legado passam; corrigido17/17 incluindo
+os12testes antigos de controllers. Campo nacional com DDI separado não ganha +55 nem mascara
+país estrangeiro, excesso continua visível paraZod. Mask sem seletor preservada; watch reativo
+segue padrão do SelectController. Logs `/tmp/lectum-337-phone-{baseline,final}.log`.
+
+CP1/copy: baseline após extração mecânica,6falhas/8controles; final14/14. Botão/handlers,
+RHF/schema/payload reais; detail0 em teste unitário não é execução de Tab/Space no navegador.
+Relatório `/tmp/lectum-task178-cp1-implementation/report.md` e ledgers/SHA de freeze verificados.
+BA02/04/05/07: baseline12falhas/5controles; BR05focal2falhas/4controles; final20/20, sem
+provider/DB/HTTP. Relatório `/tmp/lectum-task178-ba02457-a1ec8_y4/RELATORIO.md` e ledgers.
+Robustez de dicionário demonstrada, não exploit remoto. Não houve mudança em BA01/03/06,
+CP2/3, outros mapas ou M1. Hash dos15arquivos delegados conferido no freeze.
+
+Fonte visual: proto Criar Nova Postagem - Pacientes e Confirmação de WhatsApp - Inserir Número
+inspecionados. Tokens/layout anteriores mantidos; Builder indisponível nesta execução,
+não usado Figma. Browser local337reload, gate/login real sem sessão,1280×900 sem overflow,
+captura94 `/tmp/lectum-audit-178-ui/94-local337-login-desktop.png`. Não é prova visual do
+switch ou telefone autenticados. Teclado nativo, toque/Safari/iOS e submissão real continuam
+pendentes; não usar fixture de conta/CPF/provider para concluir. Ledger1373; base1430leituras
+iniciais,5parciais,1686ainda não lidas. Releituras/compilação de dependências não ampliam cobertura.

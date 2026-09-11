@@ -130,13 +130,25 @@
 
 Publicação0.1.335 confirmada com17 verificações aprovadas.
 
-### Correções locais na 0.1.336
+### Correções publicadas e verificadas na 0.1.336
 
 99. WhatsApp profissional preserva o DDD e usa a mesma conversão nas duas telas.
 100. Durante a confirmação do registro, seleção e reinício ficam bloqueados.
 101. Perfil presencial não anuncia atendimento online.
 
-Testes e build aprovados; confirmaçãoCFP real e publicação336 ainda pendentes.
+Publicação336 confirmada com16 verificações aprovadas; confirmaçãoCFP real ainda pendente.
+
+### Correções locais na 0.1.337
+
+102. Campo de telefone com seletor de país não esconde nem corta dígitos.
+103. Opção de postagem anônima volta à navegação por Tab.
+104. Avisos de respostas e comentários usam concordância correta.
+105. Resumo do Admin reconhece as categorias de denúncia de maior gravidade.
+106. Gênero informado usa rótulo legível, com proteção para valores antigos inesperados.
+107. Explicações das métricas de notificações estão em português.
+108. Tipo do comando administrativo de suspensão contém sua duração.
+
+Testes/builds aprovados; validação visual autenticada e publicação337 ainda pendentes.
 
 ## Ainda pendente
 
@@ -147,7 +159,7 @@ Testes e build aprovados; confirmaçãoCFP real e publicação336 ainda pendente
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1425 arquivos com leitura inicial**, 5 parciais e 1691 ainda não revisados.
+Cobertura da base: **1430 arquivos com leitura inicial**, 5 parciais e 1686 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

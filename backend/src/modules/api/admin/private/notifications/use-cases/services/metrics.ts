@@ -22,6 +22,7 @@ import {
   repository,
   resolveNotificationPeriod,
 } from "./campaign-support";
+import { notificationMetricsNotes } from "./metrics-notes";
 
 type AutomaticLogRecord = Awaited<ReturnType<typeof repository.listAutomaticLogs>>["data"][number];
 
@@ -204,12 +205,7 @@ export const metrics = async (data: IAdminNotificationsDTO): Promise<Resolve> =>
       skipped: skippedDeliveries,
       total: totalDeliveries,
     },
-    notes: [
-      "Email is available for manual campaigns only when SMTP is configured; reach counts accepted SMTP sends.",
-      "O alcance por push considera somente envios concluídos; dispositivos sem permissão ou assinatura ativa são ignorados.",
-      "Open/read and click rates use only persisted read_at/clicked_at events; email opens/clicks are not tracked yet.",
-      "Audience active users are defined as user.active=true and deleted=false.",
-    ],
+    notes: notificationMetricsNotes(),
     period: range.period,
     rates: {
       click_rate_percent: rate(clickedDeliveries, reachedDeliveries),

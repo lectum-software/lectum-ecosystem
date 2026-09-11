@@ -89,7 +89,6 @@ export type IAdminPsychologistAccountRevokeSessionsDTO = Request & {
   b: {
     confirmation: string;
     reason: string;
-    suspension_duration_days?: number;
   };
   p: {
     id: string;
@@ -101,6 +100,7 @@ export type IAdminPsychologistAccountStatusActionDTO = Request & {
   b: {
     confirmation: string;
     reason: string;
+    suspension_duration_days?: number;
   };
   p: {
     id: string;

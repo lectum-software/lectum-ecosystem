@@ -735,3 +735,32 @@ navegação Next no teste de apresentação. Nenhum stub de Next/provider. O tes
 fica em utils para não desaparecer da execução por glob com [id]; importa o helper real.
 Bump336 único, sem dependência/migration/env. Gate local de sessão foi observado, não contornado;
 SSR/composição não substituem uma confirmaçãoCFP real nem certificam titularidade do telefone.
+
+### Campo telefônico com DDI separado (PF4)
+
+Reprodução SSR do PhoneController real: máscara esconde dígitos estrangeiros e apresenta
++55 dentro de um campo já nacional. O controller passa a observar país pelo useWatch já
+usado no SelectController. MáscaraBR somente para nacionalBR até11dígitos; demais entradas
+ficam inteiras, sem máscara de país inventada. Sem slice no campo com seletor: Zod existente
+recusa tamanho inválido sem converter a entrada em outro contato. Exibição legada sem
+seletor/formatPhone permanece inalterada. Baseline3falhas, controleBR e legado passam;
+17testes controllers após correção. Não certifica número existente ou posse.
+
+
+### Anonimato, copy e vocabulário administrativo337
+
+Botão anônimo extraído da view sem novos estados/hooks; mantém Controller/RHF e autorização
+por papel. Tab nativo volta a alcançá-lo; clique com detail0 não devolve foco ao editor,
+ponteiro preserva comportamento móvel anterior. Sem handlers customizados de Space/Enter.
+Helper de copy apenas faz concordância resposta/comentário, sem novas condições de domínio.
+
+No backend, razões canônicas self_harm/abuse recebem alta no resumo; fallback legado e
+cutoff da consulta permanecem. Gênero mantém IDs e aliases, adiciona rótulo aprovado e
+Object.hasOwn com fallback textual. Notas de métricas continuam quatro e diferenciando
+aceite de envio de leitura; nenhuma afirmação de entrega ao destinatário. Duração é movida
+para o DTO de status, onde o serviço/validator já a esperavam. Sem env/migration/provider.
+Helpers puros próximos dos serviços evitam inicializar Prisma/configuração nos testes, sem
+substituir dependências. Teste semântico TypeScript do DTO evita Request.b:any mascarando o
+contrato. Na imagem de produção só os17 testes puros são executados;20unitários no source
+incluem3 testes de tipos dependentes do compilador de desenvolvimento. Nenhuma API remota
+ou banco simulado para concluir integração; o alcance da prova permanece explícito.

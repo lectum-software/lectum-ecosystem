@@ -551,7 +551,7 @@ real e conclusão de cadastro continuam dependendo de dados autorizados.
 - [ ] Confirmação pendente bloqueia ações conflitantes e recupera controles após erro.
 - [x] Modalidades online/presencial/híbrida e localização parcial mantêm significado correto.
 - [x] Testes/build/Browser e limites de prova documentados, sem provider simulado.
-- [ ] Commit/push e smoke da versão publicada registrados.
+- [x] bf18ba4c publicado;16/16 smoke336, backend/frontend/Admin alinhados, health/ready200.
 
 Validação336:692 testes do workspace (197frontend/393backend/53Admin/43video/6versão),
 build frontend final e gate real de sessão no Browser local390px, com validação de vazio
@@ -567,3 +567,32 @@ e CP1/copy resposta-comentário. Sem env/schema, pagamentos, provider, publicaç
 ou alteração de autorização. Escopos de escrita distintos; não incluir mudanças ainda não
 integradas no commit336. CP2/3, BA01/03/06 e demais achados continuam pendentes de validação
 focal; não declarar reprodução runtime a partir somente de fonte.
+
+### PF4 — máscara nacional com seletor de país
+
+O PhoneController aplica máscaraBR também a países estrangeiros e esconde dígitos longos;
+no campo com DDI separado, a entrada nacional não deve ser interpretada como internacional.
+Preservar todos os dígitos para validação, manter máscaraBR apenas quando compatível e
+apresentar número nacional sem máscara inventada nos demais países. Não alterar formatter
+legado de exibição usado fora do controller. Sem contato real, pacote, schema ou env.
+
+- [x] Regressão SSR demonstra perda de dígitos exibidos no controller real antes da correção.
+- [x] Campo com país preserva os dígitos e mantém feedback de tamanho no schema existente.
+- [x] Testes/componentes reais e limite do Browser documentados, sem certificar titularidade.
+
+
+### Integração337 — teclado, vocabulário e campos profissionais
+
+- [x] CP1 remove exclusão do Tab e mantém foco em cliques de teclado; ponteiro conserva retorno ao editor.
+- [x] Copy distingue resposta/comentário sem alterar permissão, exclusão ou silenciamento.
+- [x] BA02 reconhece self_harm/abuse em classificação derivada do resumo, preservando demais fallbacks.
+- [x] BA04/BR05 traduzem gênero permitido e garantem fallback textual para chaves não próprias/vazio.
+- [x] BA05 mantém ressalvas de métricas em PT-BR, sem nomes internos de colunas.
+- [x] BA07 alinha tipo de duração à suspensão, sem alterar o validator HTTP1..90 existente.
+- [x] 731testes/checks, builds frontend/backend e Docker real +17testes compilados aprovados.
+- [ ] Browser autenticado de paciente valida sequência Tab/Space/Enter e teclado móvel em CP1.
+- [ ] Publicação337 e smoke registrados; nenhuma recomendação de produção sem pendências resolvidas.
+
+Browser337local: gate/login observado em1280px após reload do build; sem sessão autenticada
+local, não certifica formulário privado. Prova do handler é unitária; não chamar input.detail=0
+em Node de uma tecla real do Browser. Para CF P/WhatsApp/provider continuam os limites336.

@@ -95,3 +95,13 @@ têm novas evidências estáticas, sem confirmação de dados persistidos/provid
   registrados, sem publicação/voto/save remoto neste recorte.
 - Admin:63 fontes novas de resumo, campanhas, pacientes/psicólogos; contratos/achados BA/BR
   registrados como fonte-only, sem e-mail, suspensão de conta ou alteração persistida.
+
+## Continuação337 — formulários e resumo administrativo
+
+- Telefone: preservação nacional com país e fallback legado; testes SSR reais, sem contato.
+- Anonimato: button/RHF/schema e handler preservam intenção; Tab/Space/toque reais pendentes.
+- Menu de resposta/comentário: copy corrigida; exclusão, silenciamento e restrições intactos.
+- Resumo Admin: categorias canônicas recebem gravidade prevista; não muda moderação automática.
+- Pacientes/notificações: rótulos/notas PT-BR, fallback textual robusto; sem mutação persistida.
+- Suspensão: tipo de entrada alinhado; regra HTTP e duração permitida inalteradas.
+- Health/ready336200 e16/16smoke confirmados;337local731testes e Docker17/17 sem rede aprovados.

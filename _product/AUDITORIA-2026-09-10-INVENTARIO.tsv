@@ -1313,7 +1313,7 @@ backend/scripts/package-manager-runtime.test.mjs	backend	teste	802677add1da15339
 backend/scripts/reset-database.mjs	backend	codigo	eeff8e2a2ef7b5433a53d0e21fb5bca9dc881618	18214	inventariado_nao_revisado
 backend/scripts/reset-safety.mjs	backend	codigo	3d04c9746eb383d86a0e01198ea39f64ecc48937	1518	inventariado_nao_revisado
 backend/scripts/reset-safety.test.mjs	backend	teste	f2775461f6f35936306c4ff31e08f5250cc990e1	2444	inventariado_nao_revisado
-backend/src/@types/express/index.d.ts	backend	codigo	48942a5c7d25babc9ff8b963f39ee4654c7a1d44	690	inventariado_nao_revisado
+backend/src/@types/express/index.d.ts	backend	codigo	48942a5c7d25babc9ff8b963f39ee4654c7a1d44	690	lido_revisao_inicial
 backend/src/config/dotenv.ts	backend	codigo	254eacc37b3e25c5187a42b19c64b60caa8226ac	62	lido_revisao_inicial
 backend/src/config/multer/buffer.test.ts	backend	teste	90c5db5ec2befa65b51857aa5bbab26bf0de00e6	1192	lido_revisao_inicial
 backend/src/config/multer/buffer.ts	backend	codigo	146f650880830d0c6dea3c0e6db274ef0e072b42	1680	lido_revisao_inicial
@@ -1957,13 +1957,13 @@ backend/src/modules/api/private/patient/onboarding/repositories/interfaces/IOnbo
 backend/src/modules/api/private/patient/onboarding/use-cases/controller.ts	backend	codigo	347b0f08d691922cdf0c9991b3eff0110f6a2bc0	408	lido_revisao_inicial
 backend/src/modules/api/private/patient/onboarding/use-cases/services.ts	backend	codigo	d4e49c572652531eda9196b19a4833a99c8caa75	555	lido_revisao_inicial
 backend/src/modules/api/private/patient/onboarding/validator/index.ts	backend	codigo	f39ceb375f4e9af44b873e1f3396e2f43e76b064	759	lido_revisao_inicial
-backend/src/modules/api/private/patient/profile/DTOs/IProfileDTO.ts	backend	codigo	74df085a09af5f43d55dffcd89db60dde7a6b3b7	1487	inventariado_nao_revisado
+backend/src/modules/api/private/patient/profile/DTOs/IProfileDTO.ts	backend	codigo	74df085a09af5f43d55dffcd89db60dde7a6b3b7	1487	lido_revisao_inicial
 backend/src/modules/api/private/patient/profile/index.ts	backend	codigo	a2dfaf8739682e0572a001d5697328e7277abdde	578	inventariado_nao_revisado
 backend/src/modules/api/private/patient/profile/repositories/ProfileRepository.ts	backend	codigo	b9644ee253d57b8a5ece25997d836579c7ac9afc	4598	inventariado_nao_revisado
 backend/src/modules/api/private/patient/profile/repositories/interfaces/IProfileRepository.ts	backend	codigo	e3edf881d7a0674faf1aed1cf5daa38a59ec5002	507	inventariado_nao_revisado
 backend/src/modules/api/private/patient/profile/use-cases/controller.ts	backend	codigo	dd5c9b1a38e51346f81a6a0d5e0afd824d91d522	1511	inventariado_nao_revisado
 backend/src/modules/api/private/patient/profile/use-cases/services.ts	backend	codigo	285c2753d6d54fc7536f6983a245fb4ed7316dd8	3727	inventariado_nao_revisado
-backend/src/modules/api/private/patient/profile/validator/index.ts	backend	codigo	3ad623830c37703c91189e9ed23ac67d1a90f2d4	1462	inventariado_nao_revisado
+backend/src/modules/api/private/patient/profile/validator/index.ts	backend	codigo	3ad623830c37703c91189e9ed23ac67d1a90f2d4	1462	lido_revisao_inicial
 backend/src/modules/api/private/patient/reviews/DTOs/IReviewDTO.ts	backend	codigo	8b65755a5f8ddadf8c9af23d09ee9caefd6e3b3b	1569	inventariado_nao_revisado
 backend/src/modules/api/private/patient/reviews/index.ts	backend	codigo	9b2b4a0ffc2e317071bf235aa0668dafec9cd4a8	383	inventariado_nao_revisado
 backend/src/modules/api/private/patient/reviews/repositories/ReviewRepository.ts	backend	codigo	1a409ea16b96072404f9b61377f40defc2e5bd83	8755	inventariado_nao_revisado
@@ -2334,7 +2334,7 @@ backend/src/query/login.ts	backend	codigo	ca5cdacfedd89a22d6719b1218f737e3505862
 backend/src/utils/account-status.ts	backend	codigo	c8c4a861dda35d3ae1e1ff4aae7115ffc3081450	1014	lido_revisao_inicial
 backend/src/utils/admin-community-engagement-diagnosis.ts	backend	codigo	946e1bf307735246fd299856106c6161f65527d8	8860	inventariado_nao_revisado
 backend/src/utils/admin-operating-system.ts	backend	codigo	be59ac5923b47390ca09eeba1e79dcfe844f2f58	1271	inventariado_nao_revisado
-backend/src/utils/admin-profile-conversion.ts	backend	codigo	0503fbe71eac67c1d5c009053b308e3671025214	10815	inventariado_nao_revisado
+backend/src/utils/admin-profile-conversion.ts	backend	codigo	0503fbe71eac67c1d5c009053b308e3671025214	10815	lido_revisao_inicial
 backend/src/utils/admin-profile-engagement-favorites.ts	backend	codigo	91c72a1f2062de52301ab7813a46acd6108d1016	11680	inventariado_nao_revisado
 backend/src/utils/admin-profile-exposure.ts	backend	codigo	934531d210302fe8c63e13b35ced8ddba74c8320	16497	inventariado_nao_revisado
 backend/src/utils/admin-profile-received-engagement.ts	backend	codigo	8322e96b80e0b523aa8b4fef0a045a3d4565af9e	5914	inventariado_nao_revisado
@@ -2362,7 +2362,7 @@ backend/src/utils/crypt/index.ts	backend	codigo	e435e9569876c76460b40def10934d81
 backend/src/utils/csv.test.ts	backend	teste	5514a8fcee90bc665d4805fb3f42f7ef75ec3958	865	lido_revisao_inicial
 backend/src/utils/csv.ts	backend	codigo	e7941b392604be4a89d1b92d00ab371c20744304	941	lido_revisao_inicial
 backend/src/utils/date-range.test.ts	backend	teste	c92e147a0230d40c3419c6c4f6054fe397c9aa5a	2777	inventariado_nao_revisado
-backend/src/utils/date-range.ts	backend	codigo	b96b9d329b9336162e9e0fe9085c4e81e52555f0	5486	inventariado_nao_revisado
+backend/src/utils/date-range.ts	backend	codigo	b96b9d329b9336162e9e0fe9085c4e81e52555f0	5486	lido_revisao_inicial
 backend/src/utils/jwt-cookie-ttl.ts	backend	codigo	0828c7ec1f5ae5239595a32fa6d6d312322440d5	651	lido_revisao_inicial
 backend/src/utils/local-database-safety.test.ts	backend	teste	8969d90ee11cfe4ac27cc2777a777267d6527206	1821	inventariado_nao_revisado
 backend/src/utils/local-database-safety.ts	backend	codigo	b7780ed215f176a8ee87c67190e4925391360b4f	1647	lido_revisao_inicial

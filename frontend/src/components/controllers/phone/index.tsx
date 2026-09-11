@@ -1,9 +1,15 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { Controller, type FieldValues } from "react-hook-form";
+import { Controller, type FieldValues, useWatch } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
-import { describedBy, fieldId, formatPhone, onlyDigits } from "@/components/controllers/utils";
+import {
+  describedBy,
+  fieldId,
+  formatNationalPhone,
+  formatPhone,
+  onlyDigits,
+} from "@/components/controllers/utils";
 import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 import { Input } from "@/registry/new-york-v4/ui/input";
@@ -30,6 +36,11 @@ export function PhoneController<FormType extends FieldValues>({
   onChangeCallback,
 }: ControllerFieldProps<FormType>) {
   const inputId = fieldId(name, id);
+  const countryCode = useWatch({
+    control,
+    name: countryCodeName ?? name,
+    disabled: !countryCodeName,
+  });
 
   return (
     <Controller
@@ -109,7 +120,8 @@ export function PhoneController<FormType extends FieldValues>({
                 name={field.name}
                 onBlur={field.onBlur}
                 onChange={(event) => {
-                  const nextValue = onlyDigits(event.target.value).slice(0, 15);
+                  const digits = onlyDigits(event.target.value);
+                  const nextValue = countryCodeName ? digits : digits.slice(0, 15);
                   field.onChange(nextValue);
                   onChangeCallback?.(nextValue);
                 }}
@@ -119,7 +131,11 @@ export function PhoneController<FormType extends FieldValues>({
                 required={false}
                 tabIndex={tabIndex}
                 type="tel"
-                value={formatPhone(field.value)}
+                value={
+                  countryCodeName
+                    ? formatNationalPhone(field.value, String(countryCode ?? ""))
+                    : formatPhone(field.value)
+                }
               />
             </div>
           </Container>

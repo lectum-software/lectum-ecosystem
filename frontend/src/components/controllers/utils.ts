@@ -79,6 +79,13 @@ export function formatPhone(value?: string | number | null): string {
   return `${prefix}(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
 }
 
+// Com DDI separado, não interpretar o campo nacional como número internacional.
+// Entradas longas ficam visíveis para o schema rejeitá-las, nunca são truncadas.
+export function formatNationalPhone(value: unknown, countryCode: string): string {
+  const digits = onlyDigits(String(value ?? ""));
+  return countryCode === "55" && digits.length <= 11 ? formatPhone(digits) : digits;
+}
+
 export function formatDatePtBr(value?: string | number | null): string {
   const digits = onlyDigits(value).slice(0, 8);
   return digits.replace(/^(\d{2})(\d)/, "$1/$2").replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3");

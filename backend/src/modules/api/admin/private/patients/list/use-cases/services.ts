@@ -23,6 +23,7 @@ import {
   type AdminPatientListRecord,
   AdminPatientsListRepository,
 } from "../repositories/AdminPatientsListRepository";
+import { normalizeGender, normalizeKey } from "./gender";
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -65,22 +66,6 @@ const INTENT_ENGAGEMENT_QUADRANTS = new Set<AdminPatientsListIntentEngagementQua
   ADMIN_PATIENTS_LIST_INTENT_ENGAGEMENT_QUADRANTS,
 );
 
-const GENDER_LABELS: Record<string, string> = {
-  female: "Feminino",
-  feminina: "Feminino",
-  feminino: "Feminino",
-  homem: "Masculino",
-  male: "Masculino",
-  masculina: "Masculino",
-  masculino: "Masculino",
-  mulher: "Feminino",
-  nao_binario: "Outro",
-  nao_informado: "Não informado",
-  não_binário: "Outro",
-  outro: "Outro",
-  other: "Outro",
-};
-
 const PROVIDER_LABELS: Record<AdminPatientsListProvider, string> = {
   email_password: "E-mail e senha",
   google: "Google",
@@ -122,14 +107,6 @@ const PATIENT_ENGAGEMENT_LABELS = {
   AdminPatientsListItem["engagement"]["label"]
 >;
 
-const normalizeKey = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-
 const normalizeSearchText = (value: string | null | undefined) =>
   (value ?? "")
     .normalize("NFD")
@@ -137,15 +114,6 @@ const normalizeSearchText = (value: string | null | undefined) =>
     .toLowerCase();
 
 const normalizeName = (name: string) => name.replace(/\s+/g, " ").trim() || "Paciente";
-
-const normalizeGender = (value?: string | null) => {
-  const key = normalizeKey(value || "nao_informado");
-
-  return {
-    id: key || "nao_informado",
-    label: GENDER_LABELS[key] ?? value?.trim() ?? "Não informado",
-  };
-};
 
 const hasDeclaredLocation = (profile: AdminPatientListRecord["patient_profile"]) =>
   Boolean(profile?.city?.trim() && profile?.state?.trim());

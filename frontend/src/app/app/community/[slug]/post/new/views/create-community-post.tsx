@@ -31,6 +31,8 @@ import {
   guidanceText,
 } from "../modules/create-post-support";
 
+import { AnonymousPostSwitch } from "./anonymous-post-switch";
+
 export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPostLogicProps) => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const touchScrollStateRef = useRef<CreatePostModalTouchScrollState>({
@@ -244,35 +246,17 @@ export const CreateCommunityPostLogic = ({ onCloseComplete }: CreateCommunityPos
               <span className="min-w-0 text-[0.78rem] font-bold leading-4 text-muted sm:text-sm">
                 Publicar anonimamente
               </span>
-              <button
-                aria-checked={checked}
-                aria-label="Publicar anonimamente"
-                className={cn(
-                  "relative h-7 w-12 shrink-0 rounded-full bg-surface-muted ring-1 ring-border transition focus:outline-none focus:ring-4 focus:ring-primary/15",
-                  checked && "bg-primary ring-primary/20",
-                )}
+              <AnonymousPostSwitch
+                checked={checked}
                 onBlur={field.onBlur}
-                onClick={() => {
-                  const nextChecked = !checked;
-
+                onChange={(nextChecked) => {
                   field.onChange(nextChecked);
                   if (!nextChecked) {
                     setIsAnonymousTipDismissed(false);
                   }
-                  focusLastEditor();
                 }}
-                onMouseDown={(event) => event.preventDefault()}
-                role="switch"
-                tabIndex={-1}
-                type="button"
-              >
-                <span
-                  className={cn(
-                    "absolute top-1 left-1 h-5 w-5 rounded-full bg-surface shadow-[var(--lectum-shadow-soft)] transition",
-                    checked && "translate-x-5",
-                  )}
-                />
-              </button>
+                restoreEditorFocus={focusLastEditor}
+              />
             </div>
           </div>
         );

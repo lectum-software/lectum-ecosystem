@@ -170,3 +170,58 @@ test("opções usam click nativo para teclado/toque e Escape devolve o foco", ()
   assert.match(source, /querySelector<HTMLElement>\('\[role="combobox"\]'\)\?\.focus\(\)/);
   assert.match(source, /removeEventListener\("keydown", handleEscape, true\)/);
 });
+
+const { PhoneController } = await import("./phone/index.tsx");
+
+function PhoneField({ countryCode, value, separateCountry = true, ...props }) {
+  const { control } = useForm({ defaultValues: { countryCode, phone: value } });
+  return createElement(PhoneController, {
+    control,
+    name: "phone",
+    label: "WhatsApp",
+    ...(separateCountry
+      ? {
+          countryCodeName: "countryCode",
+          countryCodeOptions: [
+            { value: "55", label: "Brasil (+55)" },
+            { value: "49", label: "Alemanha (+49)" },
+          ],
+        }
+      : {}),
+    ...props,
+  });
+}
+
+for (const [countryCode, value] of [
+  ["49", "1234567890123"],
+  ["55", "5512345678901"],
+  ["49", "1234567890123456"],
+]) {
+  test(`campo nacional com DDI ${countryCode} conserva os ${value.length} dígitos exibidos`, () => {
+    const html = renderToStaticMarkup(createElement(PhoneField, { countryCode, value }));
+    const input = html.match(/<input\b[^>]*name="phone"[^>]*>/)?.[0] ?? "";
+    const displayed = input.match(/value="([^"]*)"/)?.[1] ?? "";
+    assert.equal(displayed.replace(/\D/g, ""), value);
+    assert.doesNotMatch(displayed, /\+55/);
+  });
+}
+
+test("campo BR nacional mantém máscara conhecida sem confundir DDD55 com o país", () => {
+  const html = renderToStaticMarkup(
+    createElement(PhoneField, { countryCode: "55", value: "55999999999" }),
+  );
+  assert.match(html, /name="phone"[^>]*value="\(55\) 99999-9999"/);
+});
+
+test("controller sem seletor conserva contrato legado de exibição e bloqueio", () => {
+  const html = renderToStaticMarkup(
+    createElement(PhoneField, {
+      value: "5511999999999",
+      separateCountry: false,
+      disabled: true,
+    }),
+  );
+  assert.match(html, /value="\+55 \(11\) 99999-9999"/);
+  assert.match(html, /disabled=""/);
+  assert.doesNotMatch(html, /<select/);
+});
