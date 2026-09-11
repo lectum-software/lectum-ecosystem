@@ -12,9 +12,9 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { Logo, LogoIcon } from "@/components/ui/logo";
 import { PageShell } from "@/components/ui/page-shell";
 import { useSignOut } from "@/hooks/cookies/signout";
-import { getToken } from "@/hooks/cookies/token";
 import { NotificationManager } from "@/hooks/notification";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { useAuthTokenPresence } from "@/hooks/use-auth-token-presence";
 import { cn } from "@/lib/utils";
 import * as userActions from "@/store/modules/user/actions";
 import { recordAppNavigationPoint } from "@/utils/navigation-history";
@@ -64,11 +64,7 @@ export const PrivateTemplate = ({
   const dispatch = useAppDispatch();
   const storedUser = useAppSelector((state) => state.user);
   const { out } = useSignOut();
-  const [hasToken] = useState(() => {
-    if (typeof window === "undefined") return false;
-
-    return Boolean(getToken());
-  });
+  const hasToken = useAuthTokenPresence();
 
   const { hidrate } = useAuth({ enableHidrate: hasToken });
   const { hasUnread: hasUnreadNotifications } = useUnreadNotificationStatus(hasToken);

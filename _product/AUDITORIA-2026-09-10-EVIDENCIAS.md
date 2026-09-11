@@ -777,3 +777,61 @@ schema/migrations não mudaram; migrate deploy limitou-se aos bancos descartáve
 Cobertura inicial atualizada:870 integrais/10 parciais/2241 não revisados;769 entradas adicionais.
 Financeiro/analytics são correções de código, não recálculo de dados publicados. Sem env/package
 novo; nenhuma alteração de UI além dos manifests nesta versão. Publicação e smoke em andamento.
+
+
+Publicação .330 concluída: `056b09ab`; terceiro smoke16/16, backend/frontend/Admin .330,
+health/ready200. Primeiro/segundo capturaram deploy parcial; não foram marcados como sucesso.
+Último vídeo privado confirmado continua .327 pelo operador. Nenhuma nova cobrança ou backfill.
+
+Continuação .331 — H1 de hidratação:
+- Baseline Git056b09ab preservada em /tmp, sem .env copiado. Browser real390/1280 reproduziu
+  hydration mismatch de PrivateTemplate em /psicologos com sessões válidas de PSI e paciente;
+  /app/perfil também apresentou o mesmo contraste SSR restrito × loading cliente.
+  Capturas71/72 e logs com timestamp em /tmp/lectum-331-user-ui/.
+- Laboratório usa imagem integral backend .330 e PostgreSQL/contas descartáveis reais,
+  módulos reais de login/HttpOnly/hidrate/logout/diretório/perfil, sem endpoints simulados.
+  Não é boot integral de schedulers/providers. Imports de auth exigiram somente configuração
+  OAuth existente, mantida privada; rede Docker interna sem egresso, sem chamada Google/SMTP.
+- Rotas não montadas de push/plano retornam404 reais e não constituem defeito do deploy. O
+  erro adicional de VAPID no dev overlay foi separado de H1, não ignorado como teste aprovado.
+- Build otimizado local aprovado. Execução desse build com API localhost é recusada pela
+  política existente de origens de produção (api.invalid); mostra sessão indisponível. Não
+  relaxar CSP/origens para fazer teste passar. Regressão autenticada será validada no dev local;
+  resultado do build não equivale a sessão autenticada de produção local.
+- Goodall leu86 fontes de configurações/SEO (64 anteriormente pendentes); riscos A01–A10 são
+  achados estáticos, sem certificação visual/provider/DB: URL escrita × consumo, EXIF, upload
+  atrasado cruzando páginas, manutenção em GET, trilha administrativa/corridas de catálogos,
+  fallback global ignorado, teclado/reordenação e scroll modal. Relatório/ledger em
+  /tmp/lectum-task178-admin-config-seo/. Nenhum deles foi declarado corrigido.
+- Euclid acrescentou62 leituras de sessão/conversão; I1–I6 permanecem estáticos: replay antes
+  de sessão validada, intenção sem contexto/prazo, storage frágil, perda de query/hash no
+  retorno, lock de scroll fora do guard e zoom global bloqueado. H1 não deve alterar essas
+  regras silenciosamente. Artefatos /tmp/lectum-task178-session-hydration-followup/.
+
+
+H1 corrigido no dev local com os mesmos módulos reais/PG e sessão de paciente da baseline:
+- Capturas73 desktop1280 e74 mobile390: diretório vazio legítimo carregado, sem novo mismatch.
+- Navegação SPA e recarga de /app/perfil exibem apenas a identidade paciente esperada.
+- Relay TCP próprio parado: perfil substituído por sessão indisponível, sem dados privados.
+  Captura75. Relay reiniciado + Tentar novamente recuperou a identidade sem novo login.
+- Sessão da conta efêmera revogada pelo helper real, exclusivamente no PG descartável:
+  próxima recarga recusou sessão e voltou ao login com callback; nenhum mismatch novo.
+- Sem sessão, /psicologos continua público; rota privada continua restrita. Isso não valida
+  conteúdo de perfil publicado, streaming, OAuth, Safari nem dispositivos móveis reais.
+- Testes agregados667 (frontend176/backend389/Admin53/video43 +versão6). Primeiro check
+  acusou a palavra de comentário no teste como dado artificial; comentário corrigido, sem
+  relaxar guard/teste. Repetição completa exit0. Build Next local otimizado exit0.
+
+Usuário confirmou que pagamentos são exclusivamente sandbox e autorizou cartões de teste.
+Não foram fornecidos IDs de recursos existentes; antes de eventual operação, verificar conta
+vendedora/modo efetivo e usar apenas dados documentados de teste. Nenhuma cobrança criada aqui.
+Cobertura consolidada:984 integrais iniciais/9 parciais/2128 pendentes;894 entradas adicionais.
+
+
+Controle anônimo privado confirmado na captura76: /app/perfil mostra “Área restrita / Acesse
+sua conta”, sem identidade, com Criar conta/Fazer login. Não é redirect nessa rota; o redirect
+anterior foi consequência da revogação real. Browser local encerrado, viewport restaurada.
+Recursos próprios H1 removidos por labels, inclusive rede/PG/Admin auxiliar e credenciais
+locais; cleanup precisou path canônico /private/tmp por guard CLI do auxiliar. Não tocar
+contas, volumes, serviços ou credenciais publicados. Build final frontend .331 exit0 e
+version6/6; bump único feito. Publicação/smoke ainda pendentes.

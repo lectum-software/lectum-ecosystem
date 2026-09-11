@@ -590,3 +590,25 @@ O Financeiro passa a distinguir zero explícito válido de quantia ausente/malfo
 zero continua receita0, mas deixa de marcar valor indisponível. Ausência, negativo ou texto
 inválido continuam nulos, nunca convertidos em zero. Denominador do LTV, MRR, cortesia e dedupe
 legado permanecem; vínculo ambíguo é recusado por conta, inclusive no LTV agregado.
+
+
+### Hidratação de presença de sessão — .331
+
+Extrair a fundação já existente no boundary de conversão para hook neutro compartilhado;
+PrivateTemplate não deve importar uma feature para controlar sessão. `useSyncExternalStore`
+usa snapshot false no SSR e primeiro render cliente; cookie só é consultado após essa fase.
+Conforme [React — SSR de store externo](https://react.dev/reference/react/useSyncExternalStore#adding-support-for-server-rendering),
+o snapshot inicial precisa coincidir. Não suprimir erro, remover SSR nem persistir identidade
+no HTML. Timer/listeners têm uma assinatura compartilhada com cleanup por consumidor.
+
+Presença continua apenas sinal para autenticar: HttpOnly/bearer, reset obrigatório, onboarding,
+query de sessão e erro/retry não são modificados. Rotas públicas podem transicionar do conteúdo
+público inicial para validação; rotas privadas partem do estado restrito. Não reclassificar
+sessão indisponível como anônima. Replay de intenções da conversão é risco separado registrado,
+não usar cookie como autorização de nova operação. Nenhuma env/package/schema/contrato novo.
+
+Baseline real em390/1280 demonstrou mismatch com contas locais válidas e PG real na imagem
+backend.330; cinco testes SSR reais complementam, não substituem Browser. Artefato otimizado
+compila; API localhost é rejeitada em NODE_ENV production por política existente, portanto não
+relaxar CSP/validação de origem para testes. Autenticação end-to-end local usa dev e módulos
+reais; deploy em homolog precisa reteste separado. Rollback apenas frontend reintroduz H1.

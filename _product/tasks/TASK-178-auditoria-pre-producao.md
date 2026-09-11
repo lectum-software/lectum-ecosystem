@@ -430,8 +430,25 @@ Sem novos campos, envs ou serviços; sem reprocessamento de dados publicados.
 - [x] Duração de página só cresce, atomicamente; evento removido ou outro visitante/sessão não muda.
 - [x] Regressões concorrentes reais em PG isolado, baseline e imagem corrigida, cleanup verificado.
 - [x] Checkglobal662, buildbackend e imagem integral .330, integrações PG8+48 aprovados.
-- [ ] Publicação e smoke da .330 em homologação.
+- [x] Publicação056b09ab e smoke16/16 da .330 em homologação; health/ready200.
 
 Continuam P1 externos: tentativa durável de checkout e liquidação canônica/inbox. Série incompleta,
 CSV cortado e dedupe de tentativas precisam recorte próprio com semântica explicitada; não
 corrigir valores reais por inferência nem executar cobrança para preencher a lacuna.
+
+
+## Continuação — hidratação consistente da sessão
+
+H1 reproduzido em Browser390/1280 no source congelado056b09ab com sessões locais válidas.
+O primeiro render cliente produzia loading diferente do HTML do servidor. Reutilizar fundação
+neutra existente, sem afrouxar autorização ou esconder o aviso.
+
+- [x] Snapshot inicial coincide entre SSR e hidratação; cookie só participa depois.
+- [x] Boundary e template compartilham assinatura, timer e cleanup; sem imports entre features.
+- [x] Cinco testes SSR reais incluídos no runner; checkglobal667 e build otimizado local aprovados.
+- [x] Browser local: público/privado, com/sem sessão, falha de rede, retry e revogação real.
+- [ ] Bump/commit/push e smoke .331; repetir cenário em homologação.
+
+Nenhuma env, migration ou dependência nova. Checklist não certifica Safari/iOS/Android reais,
+cleanup cliente sob todas as camadas nem replay de intents. Configurações/SEO e conversão têm
+novos riscos estáticos no registro de evidências; permanecem em execução, não corrigidos por H1.

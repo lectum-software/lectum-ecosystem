@@ -95,7 +95,7 @@
 79. Escape fecha primeiro o seletor aberto; formulário e texto permanecem após falha de rede.
 80. Títulos/campos têm identificadores próprios; rolagem é liberada ao fechar a denúncia.
 
-### Correções locais em validação para 0.1.330
+### Correções publicadas na 0.1.330
 
 81. Status desconhecido ou recusado não é confundido com pagamento aprovado.
 82. Valores malformados não viram quantias financeiras; zero conhecido é distinto de valor ausente.
@@ -103,6 +103,11 @@
 84. Histórico financeiro não entrega explicações técnicas brutas do pagamento.
 85. Atualizações simultâneas não diminuem o tempo já registrado de uma visita.
 86. Visita removida não recebe nova duração enquanto outra atualização aguarda.
+
+### Correções validadas localmente para 0.1.331
+
+87. Páginas com sessão ativa não começam mais com uma renderização diferente da enviada pelo servidor.
+88. Presença da sessão usa uma única fundação compartilhada, sem duplicar temporizadores.
 
 ## Ainda pendente
 
@@ -113,7 +118,7 @@
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **870 arquivos com leitura inicial**, 10 parciais e 2241 ainda não revisados.
+Cobertura da base: **984 arquivos com leitura inicial**, 9 parciais e 2128 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)
