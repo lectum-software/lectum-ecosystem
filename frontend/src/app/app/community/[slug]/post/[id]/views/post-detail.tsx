@@ -197,6 +197,7 @@ export const PostDetailLogic = ({
   const floatingHeaderInteractionUntilRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const scrollFrameRef = useRef<number | null>(null);
+  const reportReturnFocusRef = useRef<HTMLButtonElement | null>(null);
   const {
     activeFocusReplyId,
     activeMobileReplyTarget,
@@ -362,7 +363,8 @@ export const PostDetailLogic = ({
               <PostHeader
                 onBack={handlePostBack}
                 onDeleted={() => router.replace(`/comunidades/${post.community.slug}`)}
-                onReport={() => {
+                onReport={(trigger) => {
+                  reportReturnFocusRef.current = trigger;
                   setReportError(null);
                   setReportTarget({ type: "post" });
                 }}
@@ -441,7 +443,8 @@ export const PostDetailLogic = ({
                   deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
                 }
                 onReply={handleReplyTarget}
-                onReportReply={(reply) => {
+                onReportReply={(reply, trigger) => {
+                  reportReturnFocusRef.current = trigger;
                   setReportError(null);
                   setReportTarget({ reply, type: "reply" });
                 }}
@@ -503,6 +506,7 @@ export const PostDetailLogic = ({
                 });
               }}
               open={Boolean(reportTarget)}
+              returnFocusRef={reportReturnFocusRef}
               subject={reportTarget?.type === "reply" ? reportTarget.reply.content : post.title}
               title={reportTarget?.type === "reply" ? "Denunciar comentário" : "Denunciar post"}
             />

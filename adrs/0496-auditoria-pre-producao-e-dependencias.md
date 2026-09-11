@@ -530,3 +530,32 @@ merge preserva categorias não renderizadas e controles ficam bloqueados durante
 confirmou preservação após falha de GET/restauração/retry. Inputs ocultos seguem o padrão já
 existente; abertura nativa confirmada, upload/cancelamento completo continuam na matriz.
 Não adicionar pacotes de modais ou mudar o fluxo de mídia nesta correção.
+
+### Foco de denúncias — decisão após .328
+
+Adotar uma primitive pequena de `<dialog>`/`showModal()` no frontend, começando somente na
+denúncia. Não instalar Radix nem criar outro motor de formulário. A revisão de29 fontes não
+localizou solução completa equivalente; os padrões existentes cobrem apenas partes do problema.
+Semântica ARIA sozinha não impede interação no fundo. O nativo fornece top layer e inércia;
+ciclo de foco/escape deve ser validado no Browser real, não apenas por SSR.
+
+O menuitem é desmontado ao abrir: capturar e encaminhar o botão persistente correto como alvo
+de retorno, sem transportar DOM em API/Redux. Não restaurar em nó removido ou roubar foco da
+rota seguinte. Título por instância, callbacks não devem reabrir o modal. Compartilhar aquisição
+idempotente do lock de scroll, preservando estilos anteriores; consumidores legados ainda não
+migrados não são cobertos por essa garantia. Política atual de fechamento durante envio não
+muda neste recorte. Rollback é de frontend, sem reset/env/migration.
+
+Referências: [W3C APG](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/),
+[W3C H102](https://www.w3.org/WAI/WCAG22/Techniques/html/H102.html) e
+[HTML dialog](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-dialog-element).
+Suporte e comportamento de teclado/scroll em dispositivos devem ser comprovados antes de
+classificar a matriz como completa; não usar polyfill ou fallback silencioso.
+
+Browser local validou mobile390/desktop1280, post/comentário/filha e rota dedicada com backend
+.328 real em PG descartável. Select consome seu primeiro Escape; fechamento normal e sucesso
+restauram gatilho persistente; erro real preserva dados. Foco perdido ao desabilitar Enviar é
+recuperado no alerta apenas se documento ativo e foco em BODY/dialog; não interromper edição
+em outro campo. Native Tab pode ir ao chrome do navegador, não aos controles do fundo do app.
+SSR/ownership puros complementam, não substituem essa prova. Outros modais/Safari/SPA/camadas
+permanecem em matriz, sem afirmar cobertura total. Runner permanente inclui os12 novos casos.

@@ -8,6 +8,7 @@ import {
   type MouseEvent,
   type MouseEventHandler,
   type KeyboardEvent as ReactKeyboardEvent,
+  useRef,
   useState,
 } from "react";
 import type { PostDetail, PostReply } from "@/api/generator/types/posts";
@@ -118,7 +119,7 @@ export const PostHeader = ({
 }: {
   onBack: () => void;
   onDeleted: () => void;
-  onReport: () => void;
+  onReport: (trigger: HTMLButtonElement | null) => void;
   post: PostDetail;
 }) => {
   const isPsychologistPost = post.author.role === "psicologo";
@@ -128,6 +129,7 @@ export const PostHeader = ({
   const currentUserId = useAppSelector((state) => state.user?.id);
   const isOwnPost = Boolean(currentUserId && post.author.id === currentUserId);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <header className="grid gap-4 px-5 pt-4 pb-3">
@@ -153,6 +155,7 @@ export const PostHeader = ({
               aria-label="Mais opções"
               className="grid h-10 w-10 place-items-center rounded-full text-muted transition hover:bg-surface-muted"
               onClick={() => setMenuOpen((current) => !current)}
+              ref={menuTriggerRef}
               type="button"
             >
               <MoreVertical className="h-5 w-5" aria-hidden="true" />
@@ -167,7 +170,7 @@ export const PostHeader = ({
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-muted transition hover:bg-surface-muted hover:text-foreground dark:text-muted dark:hover:bg-surface-muted dark:hover:text-foreground"
                   onClick={() => {
                     setMenuOpen(false);
-                    onReport();
+                    onReport(menuTriggerRef.current);
                   }}
                   role="menuitem"
                   type="button"

@@ -58,4 +58,17 @@ nenhum conteúdo de terceiros foi alterado.
 - Conteúdo Admin: oito filtros, vazio legítimo, erro real de rede e recuperação;390/1280px.
 - Perfil: limites PT-BR e link com DDD preservado; três seletores abertos por Enter sem upload.
   Capa de vídeo, processamento/render, publicação e dados profissionais reais ainda pendentes.
-- Modal de denúncia: foco sai para o fundo; confirmação visual59. Correção reutilizável em análise.
+- Modal de denúncia: falha visual59 corrigida localmente no recorte .329 descrito abaixo.
+
+### Atualização local — denúncias .329
+
+- Post, comentário, filha e tela dedicada da conversa: foco inicial, Escape/Cancelar/X e retorno
+  ao gatilho correto. Tab/Shift+Tab não alcançam controles do app ao fundo; o Chromium permite
+  passagem pelo chrome do navegador (activeElement BODY), não confundir com foco no fundo.
+- Select nativo: Space abre; primeiro Escape fecha apenas opções; segundo fecha denúncia.
+- Falha real de rede preserva texto/alerta; retorno da rede permite persistência real no PG.
+  Duas denúncias locais próprias (pai/filha), nenhuma denúncia publicada a terceiros.
+- Móvel390 e desktop1280 conferidos. Safari/iOS, teclado virtual, navegação SPA com modal
+  aberto e sobreposição de modais legados continuam pendentes; SSR não certifica esses casos.
+- Checkout: revisão somente-leitura confirmou riscos de tentativa incerta, recuperação sem ID
+  remoto e uso de evento bruto no histórico. Sem cobrança/HTTP ao gateway e sem patch financeiro.

@@ -391,7 +391,26 @@ não migrar contatos antigos nem alterar preferências de usuários como repara�
 - [x] Check agregado: 614 testes das apps + 6 de versão; backend359, frontend159, Admin53, video43.
 - [x] Imagem backend integral .328 e integração HTTP/PG23; Browser local real, erro e recuperação.
 - [x] Builds finais frontend/Admin, sem source maps de produção; Admin sincronizou30 manifests.
-- [ ] Publicação com smoke e repetição Browser da .328.
+- [x] Publicação2d1cb07b: smoke16/16, backend/frontend/Admin .328, health/ready200; filtros/preferências repetidos no Browser.
 
 Outros riscos permanecem registrados, não incluídos silenciosamente nesse recorte: compensação
 de upload após persistência incerta, checkout durável e confirmação canônica de eventos financeiros.
+
+## Continuação — foco das denúncias
+
+Bug reproduzido na .327: Tab alcança o fundo e fechamento perde o gatilho. Revisão de29 fontes
+não encontrou uma fundação modal completa; copiar apenas Escape/autoFocus mantém a falha.
+Implementar fundação pequena com dialog nativo, sem package, inicialmente somente denúncias de
+posts/respostas. Não migrar os demais modais sem validar suas camadas e fluxos particulares.
+
+- [x] Dialog modal com foco inicial, fundo inerte e navegação por teclado contida.
+- [x] Retorno explícito ao botão persistente correto antes de desmontar o menu de ações.
+- [x] IDs por instância; rerenders de campo, Escape, Cancelar, X e reabertura testados localmente.
+- [ ] Navegação SPA enquanto aberto, camadas simultâneas e teclado virtual real: repetir em dispositivo.
+- [x] Scroll lock compartilhável com cleanup e múltiplos donos; não prometer reparar locks legados.
+- [x] Preservar RHF/Zod, visual e política de envio/fechamento existente.
+- [x] Testes reais: frontend171/backend359/Admin53/video43 + versão6; build frontend e Browser local.
+- [ ] Publicação .329 e repetição do modal em homologação.
+
+Safari/iOS, camadas de terceiros e outros modais permanecem na matriz até teste específico.
+Nenhuma mudança de banco, API, env ou dependência prevista. Não enviar denúncias a terceiros.

@@ -82,6 +82,7 @@ export const PostReplyThreadLogic = ({
   const composerRef = useRef<HTMLElement | null>(null);
   const inlineReplyFormRef = useRef<HTMLElement | null>(null);
   const inlineReplyHasDraftRef = useRef(false);
+  const reportReturnFocusRef = useRef<HTMLButtonElement | null>(null);
   const mediaPermission = useReplyMediaPermission();
   const postQuery = usePostDetail(postId);
   const threadQuery = usePostReplyThread(postId, replyId, Boolean(postId && replyId));
@@ -450,7 +451,8 @@ export const PostReplyThreadLogic = ({
                 deleteReplyMutation.mutate({ postId: post.id, replyId: reply.id })
               }
               onReply={handleReplyTarget}
-              onReportReply={(reply) => {
+              onReportReply={(reply, trigger) => {
+                reportReturnFocusRef.current = trigger;
                 setReportError(null);
                 setReportTarget({ reply, type: "reply" });
               }}
@@ -511,6 +513,7 @@ export const PostReplyThreadLogic = ({
                 });
               }}
               open={reportTarget?.type === "reply"}
+              returnFocusRef={reportReturnFocusRef}
               subject={reportTarget?.type === "reply" ? reportTarget.reply.content : ""}
               title="Denunciar comentário"
             />

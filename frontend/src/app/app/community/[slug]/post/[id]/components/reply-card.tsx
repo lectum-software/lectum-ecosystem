@@ -2,7 +2,14 @@
 
 import { ChevronDown, ChevronUp, Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { type MouseEventHandler, type RefObject, useEffect, useMemo, useState } from "react";
+import {
+  type MouseEventHandler,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSaveReply } from "@/api/callers/posts";
 import type { PostReply } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
@@ -55,7 +62,7 @@ export type ReplyOverflowMenuProps = {
   isOwnReply: boolean;
   onDelete: () => void;
   onEdit: () => void;
-  onReport: () => void;
+  onReport: (trigger: HTMLButtonElement | null) => void;
   reply: PostReply;
 };
 
@@ -68,6 +75,7 @@ export const ReplyOverflowMenu = ({
   reply,
 }: ReplyOverflowMenuProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const replyKind = reply.parent_reply_id ? "resposta" : "comentário";
   const deleteDescription =
@@ -80,7 +88,8 @@ export const ReplyOverflowMenu = ({
       <button
         aria-expanded={menuOpen}
         aria-haspopup="menu"
-        aria-label={`Mais ações do ${replyKind}`}
+        aria-label={`Mais ações ${replyKind === "resposta" ? "da resposta" : "do comentário"}`}
+        ref={menuTriggerRef}
         className="grid h-7 w-7 place-items-center rounded-full text-muted transition hover:bg-surface-muted hover:text-foreground active:scale-[0.97] dark:text-muted dark:hover:text-foreground"
         onClick={(event) => {
           event.stopPropagation();
@@ -133,7 +142,7 @@ export const ReplyOverflowMenu = ({
               onClick={(event) => {
                 event.stopPropagation();
                 setMenuOpen(false);
-                onReport();
+                onReport(menuTriggerRef.current);
               }}
               role="menuitem"
               type="button"
@@ -255,7 +264,7 @@ export const ReplyCard = ({
   onInlineReplyDraftChange?: (hasDraft: boolean) => void;
   onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
-  onReportReply: (reply: PostReply) => void;
+  onReportReply: (reply: PostReply, trigger: HTMLButtonElement | null) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
     values: ReplyComposerForm,
@@ -477,7 +486,7 @@ export const ReplyCard = ({
               isOwnReply={isOwnReply}
               onDelete={() => onDeleteReply(reply)}
               onEdit={() => setEditModalOpen(true)}
-              onReport={() => onReportReply(reply)}
+              onReport={(trigger) => onReportReply(reply, trigger)}
               reply={reply}
             />
           </div>

@@ -58,7 +58,7 @@ export const RepliesList = ({
   onInlineReplyDraftChange?: (hasDraft: boolean) => void;
   onDeleteReply: (reply: PostReply) => void;
   onReply: (reply: PostReply) => void;
-  onReportReply: (reply: PostReply) => void;
+  onReportReply: (reply: PostReply, trigger: HTMLButtonElement | null) => void;
   onShare: (reply: PostReply) => void;
   onSubmitReply: (
     values: ReplyComposerForm,

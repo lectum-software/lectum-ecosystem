@@ -637,3 +637,78 @@ ou enviar notificações. Essa prova é do caminho de sucesso, não da correçã
   `/tmp/lectum-328-admin-build-clean.log`. Nenhum novo bump para essa retentativa.
 - Cobertura de base675 leituras integrais iniciais/10 parciais/2436 pendentes. Leitura de fonte
   não substitui testes de fluxo. Commit/push e repetição publicada ainda pendentes nesta anotação.
+
+
+Publicação .328: commit `2d1cb07b`, push em homolog com todos os hooks aprovado. Primeiro smoke
+após push manteve13/16 condições; os três serviços ainda anunciavam .327, mas health/ready e
+contratos de segurança estavam íntegros. Aguardando conclusão dos deploys, não tratar isso como
+versão .328 já publicada. Vídeo continua confirmado pelo operador na .327; alteração .328 nele
+é somente manifest e o filtro de watch pode não disparar deploy por esse arquivo.
+
+
+Smoke final .328 em 2026-09-11T13:24:12Z: **16/16**, backend/frontend/Admin0.1.328, health/ready200,
+versões públicas sem cache/noindex e contratos de segurança preservados. Browser publicado
+recuperou o post próprio no filtro de psicólogo não verificado (66); preferências salvaram
+opt-out de upvote após reload, e depois o valor original foi restaurado e conferido com
+Salvar desabilitado. Sem envio de canais nem modificação de usuários terceiros.
+
+## Denúncias — validação local para .329
+
+- Laboratório novo `aace328dcea34c63f625`: PG real descartável em rede Docker interna,
+  módulos reais da imagem backend .328 e frontend em dev; relay TCP sem respostas simuladas.
+  Apenas configuração construtora OAuth local existente foi montada, sem chamada OAuth ou
+  integração externa. Conta local própria, perfil não publicado e identidade profissional
+  não inventada. O módulo local não equivale ao boot integral do backend.
+- Corrigida preparação do laboratório: post do harness Admin usava `published`; rotas públicas
+  exigem `publicado`. Alterado somente esse post descartável. Também reproduzidos os guards reais
+  optionalAuth/posts/community, account e requireRole/profile. Seis checks de prontidão reais.
+  Isso não invalida a prova Admin .328, mas impede alegar que o fixture antigo já validava o feed.
+- Denúncia nativa em390×844 (67), erro real com relay interrompido (68), desktop1280×720 (69).
+  Visual comparado à captura59: mesma largura máxima430, tokens, campos e ações, agora sem
+  rolagem do fundo. Sem overflow horizontal em390. Nenhuma mídia foi enviada.
+- showModal/:modal conferidos no DOM, foco inicial Fechar denúncia, fundo ausente da árvore AX,
+  body/html overflow hidden e restauração ao fechar. Tab/Shift+Tab não focam controles do fundo;
+  Chromium admite passagem pelo chrome do navegador, refletida como BODY, antes de retomar.
+- Escape/Cancelar/X retornam ao botão específico do post, comentário ou filha. Texto digitado
+  permanece no rerender. Select aberto: primeiro Escape só fecha opções, segundo fecha modal.
+  Reaberturas não preservam erro/texto de denúncia anterior, mantendo reset do formulário.
+- Falha real de transporte mantém alerta PT-BR e detalhes, sem reset; botão temporariamente
+  disabled pode deixar foco no BODY do browser. role=alert anuncia falha e fundo segue inerte;
+  não alegar que o botão preserva foco durante disabled. Reenvio após relay restaurado persistiu
+  denúncia da filha; envio na rota dedicada persistiu a do pai. PG confirmou uma de cada.
+  Sucesso devolveu foco ao botão correto. Post report prévio do harness não contado como novo.
+- Doze testes de módulos reais (SSR, RHF/Zod e ownership puro), sem substituir React/hooks ou
+  simular DOM, passaram. SSR cobre marcação e contratos, não prova foco/teclado. Runner agregado
+  será atualizado para incluir o arquivo; check/build/publicação ainda em andamento.
+- Revisão de29 fontes de modais e66 de checkout incorporada por proveniência, sem contar81
+  arquivos financeiros ainda pendentes nem20 somente inventariados de modais. Cobertura inicial
+  da base:706 integrais/10 parciais/2405 não revisados. Relatório financeiro sem operação externa:
+  `/tmp/lectum-task178-checkout-readonly.7ffxsf5n/RELATORIO.md`.
+- Safari/iOS, teclado virtual e navegação SPA/camadas simultâneas continuam não certificados.
+  Aviso local de hydration de sessão antiga observado em Psicólogos: investigar separadamente;
+  não atribuído à denúncia, nem corrigido por ocultar warnings.
+
+Reteste final do foco em erro: após submit desabilitado perder foco, a denúncia agora foca o
+bloco de erro somente se documento ativo e foco em BODY/dialog. Novo erro real com relay
+parado confirmou activeElement=DIV com ID da mensagem, dentro do modal; Tab seguiu para
+Cancelar e Escape devolveu à reticência da filha. Texto preservado. Foco em campo já ativo
+não é redirecionado. Recursos próprios, relays e dev foram removidos/parados depois, com
+verificação de labels; credenciais temporárias apagadas, serviços preexistentes intactos.
+Bump único .328→.329 executado nos cinco manifests, check de versão6/6. Teste permanente de
+modal incluído no runner normal do frontend; build/check global em curso.
+
+Consulta documental financeira, sem API autenticada: a referência de
+[criação de assinatura](https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/create-preapproval/post)
+consultada em11/09 não explicita garantias de idempotência; isso **não prova ausência de suporte**.
+A página de [Webhooks](https://www.mercadopago.com.br/developers/en/docs/checkout-bricks/additional-content/your-integrations/notifications/webhooks)
+orienta consultar o recurso após receber o evento. A referência de
+[fatura](https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/get-authorized-payment/get)
+expõe vínculo com preapproval e pagamento. Filtros/garantias de busca por referência e retry
+continuam a confirmar antes da implementação. Solicitados IDs de recursos exclusivamente de
+sandbox preexistentes, sem tokens/cartões; não foram criadas cobranças nem chamadas sync/dunning.
+
+Validação final .329: `pnpm check` exit0,626 testes das apps +6 de versão (632), incluindo
+os12 novos do modal no runner normal. Frontend build exit0, sem source maps de produção.
+Source-safety2132 e source-size aprovados. Logs `/tmp/lectum-329-root-check.log` e
+`/tmp/lectum-329-frontend-build.log`. Sem schema/env/package novo; APIs continuam compatíveis.
+Backend/Admin/video mudam apenas a versão neste recorte; não alegar novo smoke privado do vídeo.
