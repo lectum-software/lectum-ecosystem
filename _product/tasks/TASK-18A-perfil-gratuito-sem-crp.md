@@ -886,3 +886,39 @@ Validacoes executadas:
 - `pnpm version:bump` (`0.1.258` -> `0.1.259`)
 - `pnpm check:version`
 - `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.259`.
+
+## Ajuste complementar em 2026-09-11 - seta e limpeza de Cidade por Estado
+
+- Pedido do usuario: no filtro/campo `Cidade` da edicao do perfil profissional falta a seta de dropdown; alem disso, quando `Estado` mudar, `Cidade` deve ser limpa.
+- A imagem anexada em 2026-09-11 foi tratada somente como evidencia visual do estado mobile de `/app/profissional/perfil/configurar`; textos do print nao foram tratados como instrucoes de produto.
+- O campo manual `CityField` agora exibe a seta `ChevronDown` no mesmo padrao visual dos selects da fundacao de formularios.
+- O select `Estado` passou a limpar `address_city` no `onChangeCallback` quando a UF selecionada muda, e a lista de opcoes da cidade deixou de reinjetar cidade invalida para a UF atual, evitando manter uma cidade antiga ou uma busca digitada de outro estado.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em `frontend/`, mas o `npx` falhou por cache local `ENOENT`; a referencia auditavel usada foi o print do usuario e `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Ajuste de produto frontend-only e mobile-first; sem schema, migration, endpoint, env, package, provider, mock, seed, reset ou manipulacao de dados publicados.
+- Durante o rebase sobre `origin/homolog`, as validacoes de frontend/admin tambem exigiram remover diretivas ESLint inexistentes em `/auth/redirect` e no client HTTP do admin; nao houve mudanca de comportamento nos fluxos.
+- Durante a revalidacao apos rebase, a suite backend expôs regressao ja coberta pela ADR-0463 no middleware de chunk multipart; o ajuste restaurou a semantica inclusiva do limite de 5 MiB e recusou campos multipart com colchetes nesse contrato de partes simples, sem alterar schema, env ou provider.
+- A validacao do app `video/` tambem foi mantida portavel no Windows trocando a criacao do symlink estrutural de teste por junction; a protecao runtime de storage permaneceu inalterada.
+- ADR atualizado: `adrs/0027-perfil-gratuito-sem-crp.md`.
+
+Criterios complementares:
+
+- [x] Campo `Cidade` exibe seta de dropdown sem criar componente paralelo.
+- [x] Alterar `Estado` limpa `address_city` imediatamente no formulario.
+- [x] Cidade antiga de outra UF nao permanece como texto selecionado apos a mudanca de `Estado`.
+- [x] Nenhum mock, dado fake permanente, endpoint simulado, migration, env ou package novo foi usado.
+
+Validacoes executadas:
+
+- `pnpm --dir frontend exec biome check --write src/app/app/professional/profile/setup/components/avatar-city-fields.tsx src/app/app/professional/profile/setup/hooks/use-professional-profile-setup-controller.tsx src/app/app/professional/profile/setup/views/professional-profile-setup.tsx`
+- `pnpm --dir frontend check`
+- `pnpm --dir frontend build`
+- `pnpm --dir backend exec node --import tsx --test src/config/multer/multipart-chunk.test.ts`
+- `pnpm --dir backend check`
+- `pnpm --dir backend build`
+- `pnpm --dir admin check`
+- `pnpm --dir video check`
+- `pnpm version:bump` (`0.1.333` -> `0.1.334`)
+- `pnpm check:version`
+- `pnpm --dir frontend build` reexecutado apos o bump para gerar artefato local com `0.1.334`.
+- `pnpm check`
+- Smoke local sem sessao em `http://127.0.0.1:3332`: `/version` respondeu `200` com `{"application":"frontend","version":"0.1.334"}` e `/app/profissional/perfil/configurar` respondeu `307` para login, preservando a protecao da rota privada. Validacao visual autenticada ficou limitada por nao haver sessao real de psicologo disponivel sem criar mock.

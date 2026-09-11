@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { Container } from "@/components/controllers/container";
@@ -152,33 +153,39 @@ export const CityField = ({
             required
             skipHtmlFor
           >
-            <input
-              aria-label="Filtrar cidades"
-              aria-describedby={describedBy({
-                id: inputId,
-                error,
-              })}
-              aria-invalid={Boolean(error)}
-              className={cn(
-                "h-12 rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 text-sm text-foreground shadow-sm outline-none transition placeholder:text-subtle focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
-                error && "border-danger focus:border-danger focus:ring-danger/10",
-              )}
-              disabled={!stateSelected}
-              id={inputId}
-              onBlur={field.onBlur}
-              onChange={(event) => {
-                const nextSearch = event.target.value;
-                setSearch(nextSearch);
+            <div className="relative">
+              <input
+                aria-label="Filtrar cidades"
+                aria-describedby={describedBy({
+                  id: inputId,
+                  error,
+                })}
+                aria-invalid={Boolean(error)}
+                className={cn(
+                  "h-12 w-full rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 pr-11 text-sm text-foreground shadow-sm outline-none transition placeholder:text-subtle focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+                  error && "border-danger focus:border-danger focus:ring-danger/10",
+                )}
+                disabled={!stateSelected}
+                id={inputId}
+                onBlur={field.onBlur}
+                onChange={(event) => {
+                  const nextSearch = event.target.value;
+                  setSearch(nextSearch);
 
-                if (selectedLabel && nextSearch !== String(selectedLabel)) {
-                  field.onChange("");
-                }
-              }}
-              placeholder={stateSelected ? "Buscar cidade" : "Selecione o estado"}
-              ref={field.ref}
-              type="search"
-              value={search}
-            />
+                  if (selectedLabel && nextSearch !== String(selectedLabel)) {
+                    field.onChange("");
+                  }
+                }}
+                placeholder={stateSelected ? "Buscar cidade" : "Selecione o estado"}
+                ref={field.ref}
+                type="search"
+                value={search}
+              />
+              <ChevronDown
+                aria-hidden="true"
+                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+              />
+            </div>
 
             {shouldShowOptions ? (
               <div className="max-h-56 overflow-y-auto rounded-2xl border border-border bg-surface p-2">

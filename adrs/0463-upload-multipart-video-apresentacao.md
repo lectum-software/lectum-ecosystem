@@ -148,3 +148,33 @@ o controller da parte ainda montava o DTO a partir de `req.body`.
 - W3C ISO BMFF byte stream format:
   `https://www.w3.org/TR/mse-byte-stream-format-isobmff/`.
 - ADR-0452: upload multipart de mídia grande em respostas.
+
+## Atualização em 2026-09-11 - semântica inclusiva e campos simples no parser de partes
+
+Durante rebase de `homolog`, a regressão HTTP real do middleware de chunk voltou a expor que a
+versão instalada de Multer/Busboy sinaliza `fileSize` ao alcançar o threshold configurado. O
+middleware de partes volta a aplicar o helper `toMulterExclusiveThreshold` ao tamanho máximo para
+preservar o contrato público inclusivo: um chunk de exatamente 5 MiB é aceito e 5 MiB + 1 byte é
+recusado.
+
+Como o contrato de upload de parte usa apenas campos textuais simples (`uploadSessionId` e
+`partNumber`), o parser desse middleware também passa a exigir `fieldNestingDepth: 0`. Isso rejeita
+nomes com colchetes antes de materializar estruturas profundas ou arrays esparsos, sem expor o nome
+malicioso na resposta pública e sem criar novo package, env, schema, migration ou provider.
+
+Validações: `pnpm --dir backend exec node --import tsx --test
+src/config/multer/multipart-chunk.test.ts`, `pnpm --dir backend check` e
+`pnpm --dir backend build`.
+
+### Retificação após integração com dependências travadas (0.1.335)
+
+O teste HTTP do merge foi repetido com Multer **2.3.0**, versão fixada no manifest/lock e
+instalada localmente. Com `fileSize = limite + 1`, o teste de5MiB+1 retornou200 em vez de400;
+4/5 passaram. Nesta versão o limite de arquivo já é inclusivo: restaura-se `fileSize = limite`.
+O helper permanece apenas em fieldSize/parts, cujos thresholds ainda exigem o ajuste.
+Mantém-se `fieldNestingDepth: 0` da atualização concorrente para o contrato de campos simples.
+
+Após corrigir:5/5 no HTTP local; prova no Docker integral é registrada na TASK178/evidências.
+Não se modificou teste para acomodar excesso, não se alterou env, migration ou dado publicado.
+O relato anterior preserva o histórico, mas não rege a semântica da dependência travada atual.
+Ambientes de validação precisam instalar o lock congelado antes de comparar esses resultados.

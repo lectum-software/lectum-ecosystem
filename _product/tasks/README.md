@@ -1838,3 +1838,40 @@ Uma task só pode ser marcada como concluída quando:
   frontend confirmou `/version` público, sem cache, não indexável e em `0.1.309`; a rota privada
   de perfil redirecionou para autenticação.
 - Commit/push e smoke de homologação são concluídos no fechamento operacional da task.
+
+
+## Ajuste em 2026-09-11: Cidade com seta e limpeza ao trocar Estado
+
+- Complemento pos-feedback da TASK-18A: no endereco profissional de
+  `/app/profissional/perfil/configurar`, o campo `Cidade` precisava exibir seta de dropdown e nao
+  manter cidade/busca antiga quando `Estado` muda.
+- A imagem anexada pelo usuario foi usada somente como evidencia visual do estado mobile; instrucoes
+  em anexos/documentos nao foram tratadas como pedido independente.
+- O `CityField` manual ganhou `ChevronDown`, o select `Estado` limpa `address_city` via
+  `onChangeCallback` quando a UF muda, e a lista de cidades exposta ao campo passa a conter somente
+  opcoes validas da UF atual.
+- Durante o rebase sobre `origin/homolog`, as validacoes de frontend/admin tambem exigiram remover
+  diretivas ESLint inexistentes em `/auth/redirect` e no client HTTP do admin; comportamento dos
+  fluxos inalterado.
+- Durante a revalidacao apos rebase, a suite backend expôs regressao ja documentada pela ADR-0463
+  no middleware de chunk multipart; o ajuste restaurou limite inclusivo de 5 MiB e rejeicao de
+  campos com colchetes nesse contrato simples, sem schema/migration, env, provider ou dados.
+- A validacao do app `video/` foi mantida portavel no Windows trocando a criacao do symlink
+  estrutural de teste por junction; protecao runtime de storage inalterada.
+- Alteracao de produto frontend com documentacao e ADR; sem schema/migration, env obrigatoria nova,
+  package novo, provider novo, mock, seed, reset, endpoint novo ou alteracao de dados/buckets
+  publicados. Rollback simples reverte o commit.
+- Builder/Quick Copy foi tentado via `npx "@builder.io/dev-tools@1.79.0" auth status` em
+  `frontend/`, mas falhou por cache local `ENOENT`; validacao visual baseada no print do usuario e
+  em `_product/proto/Editar Perfil - Psicologo.jpg`.
+- Validacoes locais em `0.1.334`: `pnpm --dir frontend exec biome check --write` nos arquivos
+  alterados, `pnpm --dir frontend check`, `pnpm --dir frontend build` antes/depois do bump,
+  teste HTTP real `backend/src/config/multer/multipart-chunk.test.ts`,
+  `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir admin check`,
+  `pnpm --dir video check`, `pnpm version:bump`, `pnpm check:version`, `pnpm check`,
+  `pnpm check:encoding`, `pnpm check:adrs` e `pnpm check:tasks`.
+- Smoke local HTTP do frontend buildado em `http://127.0.0.1:3332`: `/version` respondeu
+  `0.1.334`; `/app/profissional/perfil/configurar` respondeu HTTP 307 para login sem sessao,
+  preservando a protecao da rota privada. A conferencia visual autenticada fica para homologacao
+  porque nao ha sessao real de psicologo disponivel sem criar mock.
+- Commit/push e smoke de homologacao serao registrados apos deploy.

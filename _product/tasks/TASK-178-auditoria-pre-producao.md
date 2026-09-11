@@ -515,3 +515,19 @@ Não alterar tokens, prazo, respostas anti-enumeração, API nem envio no backen
 Validação .334:679 testes do workspace, build frontend, Browser390/1280 com vazio/inválido
 e falha real de transporte. Pending em Form/controller SSR reais; vínculo da mutation e
 reenvio têm contratos estáticos explícitos. Não afirmar entrega, sucesso ou reset concluídos.
+
+## Continuação — integração com atualização concorrente .334
+
+O push de2aa02fa9 foi recusado porque58b071e9 publicou outra.334 (campo Cidade e auxiliares).
+Integrar ambos por merge revisado, sem force/rebase destrutivo. Nova versão única.335 em novo
+commit de integração; o bump.334 anterior não será repetido naquele commit. Preservar ajustes
+Cidade/Estado, limpeza de diretivas e junction de teste, salvo regressão demonstrada.
+
+O merge revelou5MiB+1 aceito pelo middleware real com Multer2.3.0 fixado no lock. Restaurar
+fileSize inclusivo nativo; manter fieldNestingDepth0 para campos simples. Sem env/schema,
+provider ou dados publicados. Reexecutar checks/builds dos apps afetados e imagem backend.
+
+- [x] Merge preserva os dois históricos e mudanças de interface concorrentes.
+- [x] HTTP local aceita limite exato e recusa excesso de um byte com dependência travada.
+- [x] Checks, builds e Browser da integração executados e documentados.
+- [ ] Versões335/health/ready e push confirmados, sem atribuir smoke334 à correção não publicada.

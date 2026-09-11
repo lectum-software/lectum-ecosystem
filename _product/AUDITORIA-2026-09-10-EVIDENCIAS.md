@@ -999,3 +999,50 @@ PF3: modalidade apenas presencial recebe rótulo híbrido no perfil. Próximas c
 provas próprias; não afirmar número salvo errado, consulta CFP real ou perfil publicado afetado.
 Ledger integrado1204; base3121:1276 leitura inicial,5parciais,1840não lidos. Dois imports de
 perfil/mídia adiados estão explícitos; nenhuma cobertura por simples grep/listagem.
+
+### Integração concorrente .335 — origem das versões e regressões
+
+O push2aa02fa9 foi recusado sem force:58b071e9 chegou a origin/homolog com sua própria.334.
+O smoke17/17 em `/tmp/lectum-334-smoke-first.log` pertence a58b071e9, NÃO comprova AF4.
+O campo commit daquele JSON foi coletado do HEAD local, portanto não identifica o artefato
+remoto; preservar o log com esta ressalva, sem atribuição falsa de publicação da recuperação.
+
+Integração por merge de ambos os históricos; bump único.335 para este novo commit, distinto
+do commit de recuperação. Preservados Cidade/Estado, seta, opções porUF, fieldNestingDepth0
+e junction de teste. Sem force/reset, migration/env/package/provider ou reparo de dados.
+
+Duas incompatibilidades da atualização concorrente foram detectadas e corrigidas:
+1. Com Multer2.3.0 travado/instalado, limite+1 aceita5MiB+1. HTTP real baseline4/5, falha200
+   em vez de400. Restaurado fileSize inclusivo nativo;5/5 após correção, sem mudar teste.
+2. ESLint atual possui a regra de navegação interna: remover as diretivas específicas fez
+   o check falhar. Restauradas as exceções justificadas de descarte de sessão/cache; sem
+   trocar hard reload por navegaçãoSPA nem desabilitar a regra globalmente.
+
+Validações da integração:
+- `pnpm check` final679/679, frontend184/backend393/Admin53/video43/versão6.
+- Builds frontend/Admin/backend/video aprovados. Restauro posterior de duas diretivas é
+  comentário apenas, sem alteração de runtime; lint/check final aprovados nas fontes finais.
+- Docker backend integral `sha256:cf5a3c17f478187736d51df15b28e2880951bdf8277eb0ac8addfe7453332708`
+  construído amd64 com lock congelado.5/5 HTTP do chunk dentro da imagem, networknone, sem
+  hostenv, provider, banco ou overlay; container temporário removido com --rm.
+- Browser homolog334: conta PSI de auditoria, rascunho SP/Campinas→RJ limpa input/cidade;
+  Campinas deixa as opções e Rio aparece. Sem clicar Salvar. Reload confirma UF/cidade vazias,
+  cidade novamente desabilitada. Capturas90/91,390×844; não é prova de save/CPF/CFP.
+- Browser local335: formulário recuperação vazio, alerta PT-BR e foco, captura92; HTTP local
+  `/version`335. A navegação do Browser para JSON/version foi bloqueada pelo cliente; HTML
+  de recuperação carregou normalmente, sem contornar aviso/segurança ou instalar extensão.
+Logs `/tmp/lectum-335-{root-check-final,frontend-build,admin-build,backend-build,video-build,
+docker-build,docker-multipart,multipart-fixed,merge-multipart-baseline}.log`.
+
+### Reanálise video — não ampliar cobertura por releituras
+
+Tesla relê59 fontes já integrais no mesmoSHA por falha de deduplicação e reconhece o erro.
+Nenhum crédito novo por essas fontes. Relatório154linhas em
+`/tmp/lectum-task178-video-readonly.qa302s8c/RELATORIO.md`, acompanhado do ledger/imports.
+V01 status intermediário cancelamento;V02 timeout probe classificado inválido;V03 limite
+de dimensões incompatível com render social;V04 reserva sem renovação durante fila longa;
+V05 diagnóstico por propriedade herdada;V06 script anuncia cancelamento não executado.
+Todos são achados porfonte ainda sem nova reprodução/correção. R01–R04 (ordem conclusão,
+resultado incerto fila, startup/shutdown e tamanho payload) permanecem hipóteses explícitas.
+Não executar nem retomar a operaçãoM1 bloqueada. Nova seleção inédita passou a cruzar o TSV
+consolidado antes da abertura; revisão permitida de fontes prossegue em outros módulos.

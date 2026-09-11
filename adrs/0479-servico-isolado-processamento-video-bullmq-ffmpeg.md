@@ -128,3 +128,14 @@ impede somente a nova aplicação de iniciar; nenhum valor é armazenado neste A
   cancelamento/remoção e cleanup.
 - Checks/builds regressivos das três aplicações existentes e guardrails da raiz.
 - Busca de dependências/código ativo confirma ausência de MediaBunny/Playwright/Chromium social.
+
+## Atualizacao em 2026-09-11 - regressao de storage portavel no Windows
+
+A regressao que valida recusa de diretorio estrutural apontando para fora do `VIDEO_STORAGE_ROOT`
+continua criando uma entrada de filesystem real e verificando que `removeVideoOutput` falha antes de
+apagar o destino externo. Para permitir a mesma prova no Windows sem exigir privilegio local de
+symlink/Developer Mode, o teste passa a criar a entrada como `junction` via `fs.symlink`.
+
+Isso nao muda o runtime: `assertStorageDirectory` segue usando `lstat` e recusando symbolic links ou
+reparse points estruturais antes de qualquer remocao. Sem package, env, schema, migration, provider
+ou alteracao de dados publicados.

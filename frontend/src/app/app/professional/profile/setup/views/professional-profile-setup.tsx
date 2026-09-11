@@ -582,7 +582,16 @@ export const ProfessionalProfileSetupLogic = () => {
                   {renderField("address_district")}
                   {renderField("address_zip")}
                 </div>
-                {renderField("address_state")}
+                {renderField("address_state", {
+                  onChangeCallback: (nextValue) => {
+                    if (String(nextValue || "") === String(addressState || "")) return;
+
+                    form.hook.setValue("address_city", "", {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  },
+                })}
                 <div data-profile-field="address_city">
                   <CityField
                     control={form.hook.control}

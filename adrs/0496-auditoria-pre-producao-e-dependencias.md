@@ -705,3 +705,13 @@ Nos testes de AF4, o loader TS/TSX nativo antes copiado em quatro suítes foi ce
 `frontend/scripts/register-source-modules.mjs`. Mantém módulos reais, aliases restritos a src
 e SSR React, sem mocks de requests/hooks/providers; não é enviado ao bundle. Testes de callbacks
 são contratos estáticos explícitos, distintos dos testes reais de schema/Form e do Browser.
+
+### Integração .335 de duas branches homolog locais
+
+Recuperação2aa02fa9 e Cidade58b071e9 surgiram do mesmo8dc679b9 e ambos usaram.334. Push
+recusado preserva proteção fast-forward. Decisão: merge revisado com versão única335, sem
+forçar remoto, apagar commits ou modificar banco. Os registros334 indicam qual artefato
+foi testado; o smoke334 sozinho não certifica a correção ainda apenaslocal de recuperação.
+A integração conserva Cidade/Estado e parser plano, mas corrige a regressão HTTP de1byte
+com Multer2.3 e restaura exceções ESLint justificadas de hard reload. Lock congelado deve
+ser a base antes de alterar código por diferenças de dependências locais.

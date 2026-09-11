@@ -21,6 +21,11 @@ const multerReasonByCode: Partial<Record<multer.MulterError["code"], MultipartUp
   LIMIT_UNEXPECTED_FILE: "unexpected_file",
 };
 
+const MULTIPART_CHUNK_FIELD_STRUCTURE_LIMITS = {
+  ...MULTIPART_FIELD_STRUCTURE_LIMITS,
+  fieldNestingDepth: 0,
+} as const;
+
 const resolveParseFailureReason = (uploadError: unknown): MultipartUploadLogReason =>
   uploadError instanceof multer.MulterError
     ? multerReasonByCode[uploadError.code] || "parse"
@@ -35,7 +40,7 @@ export const createMultipartChunkMiddleware = ({
   const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
   const upload = multer({
     limits: {
-      ...MULTIPART_FIELD_STRUCTURE_LIMITS,
+      ...MULTIPART_CHUNK_FIELD_STRUCTURE_LIMITS,
       fieldNameSize: 100,
       fieldSize: toMulterExclusiveThreshold(4096),
       fields: maxTextFields,

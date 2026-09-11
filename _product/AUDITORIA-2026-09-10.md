@@ -123,9 +123,12 @@
 95. Limpeza só pede exclusão remota após confirmação segura no banco.
 96. Um envio antigo não substitui o mais recente; a migração respeita alterações feitas no vídeo e na capa.
 
-### Correção validada localmente na 0.1.334
+### Correções integradas e validadas localmente na 0.1.335
 
 97. Recuperação de senha mantém o endereço realmente enviado; reenvio não usa outro valor do campo.
+98. Preservado o ajuste paralelo de Cidade: trocar Estado limpa a cidade anterior e atualiza as opções.
+
+A publicação da recuperação aguarda o merge: a0.1.334 no ar pertence ao ajuste paralelo.
 
 ## Ainda pendente
 
