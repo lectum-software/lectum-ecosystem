@@ -268,20 +268,24 @@ export class LoginRepository implements ILoginRepository {
 
   async updateAndClearTokens(data: IUpdateDTO): Promise<user | null> {
     return prisma.$transaction(async (tx) => {
-      await tx.user_token.deleteMany({
-        where: { user_id: data.p.id },
-      });
-
       const user = await tx.user.update({
         where: { id: data.p.id },
-        data: data.b,
+        data: {
+          ...data.b,
+          // Uma senha nova invalida links emitidos antes da troca.
+          ...(data.b.password ? { recovery_code: null, recovery_date: null } : {}),
+        },
         include: {
           user_tokens: this.tokens,
           ...loginInclude(),
         },
       });
 
-      return user;
+      await tx.user_token.deleteMany({
+        where: { user_id: data.p.id },
+      });
+
+      return { ...user, user_tokens: [] };
     });
   }
 

@@ -231,9 +231,21 @@ Browser publicado validou formulário vazio de posts em mobile sem publicar dado
 - [x] Consumo condicionado e atômico impede replay concorrente ou confirmação de emissão substituída.
 - [x] Quatro regressões novas; check agregado 515 testes, build backend e Docker Linux amd64.
 - [x] Sete cenários PostgreSQL reais passaram; quatro testes também passaram na imagem final.
-- [ ] Smoke publicado de 0.1.318.
+- [x] Smoke publicado de 0.1.318: 16/16 às 01:20 UTC de 11/09, três apps na versão esperada.
 - [ ] Repetir novo cadastro/confirmação por e-mail real, sem dispensar autorização da nova identidade.
 
 Sem nova env, migration, reset, envio de e-mail ou alteração de contas publicadas nos testes.
 Prazo configurado já existente passa a ser aplicado estritamente; código vencido exige reenvio.
 Relatório leigo mantido curto em AUDITORIA-2026-09-10.md; detalhes movidos para o arquivo EVIDENCIAS.
+
+## Continuação — recuperação de senha 0.1.319
+
+- [x] Reproduzidos prazo excessivo, data futura, duas redefinições simultâneas e link antigo mantido.
+- [x] Consumo de link/transação e expiração validados com PostgreSQL real isolado: oito cenários.
+- [x] Troca autenticada invalida link anterior, mantendo contrato e sessões revogadas.
+- [x] Check agregado: 515 testes; build backend e Docker Linux amd64 aprovados.
+- [ ] Smoke publicado de 0.1.319.
+
+Sem schema, env ou package novo. Script manual de regressão cria e remove apenas seu próprio
+banco descartável; é proibido adaptar a execução para usar dados publicados. Cadastro real,
+SMTP e Google permanecem com evidências/pendências separadas.

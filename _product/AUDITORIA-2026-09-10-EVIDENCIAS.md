@@ -251,4 +251,28 @@ não root, somente leitura e sem rede externa. Nenhuma mensagem de e-mail foi en
 
 Quem tentar usar código depois da validade precisa pedir outro; não resetar contas confirmadas.
 Esta correção cobre confirmação de e-mail, não certifica recuperação de senha, SMS ou vínculo Google.
-Publicação/smoke de 0.1.318 ainda pendentes neste registro.
+0.1.318 publicada em `1661c14c`: smoke final 16/16 às 01:20 UTC de 11/09. Backend, frontend
+e Admin na versão esperada. Video privado não consultado; falha transitória da sondagem durante
+o rollout não foi confundida com validação completa de disponibilidade.
+
+## Continuação — recuperação de senha 0.1.319
+
+- Quatro falhas reproduzidas na imagem anterior com PostgreSQL isolado: prazo arredondado,
+  emissão futura, duas redefinições concorrentes e link mantido após trocar senha pela conta.
+- Oito cenários passaram na imagem corrigida; seis usam o endpoint HTTP real e dois o repositório
+  real. Validado também o formato de link já emitido, senha do vencedor, revogação das sessões e
+  ausência de mutação para link incorreto, data ausente ou emissão substituída.
+- `pnpm check`: 515 testes; build backend e Docker Linux amd64 aprovados. Oito cenários de banco
+  são adicionais e manuais, não estão incluídos nessa contagem nem no check automático.
+- Imagem testada: `fc163a0769d2f07627122528ef1fd3abe6f5898241d16210666f6938945ff814`.
+- Repetição local: `node backend/scripts/password-reset-integration.mjs --image=lectum-backend:audit-0.1.319`.
+  Requer Docker e imagens locais. Não passar credenciais/envs nem adaptar para banco publicado.
+- Recursos descartáveis removidos; não houve SMTP, reset de conta publicada ou alteração de schema.
+  Testes não certificam entrega por e-mail, rollback por falha entre comandos, todos os tipos de
+  concorrência, Google ou dispositivos reais. Auto-hidratação histórica preservada, a revisar.
+
+Browser Admin: categoria vazia recusada em PT-BR, foco no campo e retorno ao botão ao cancelar;
+capturas 21/22 em 390×844, sem criar categoria. Ao exceder 160 caracteres, a captura 23 mostrou
+`Invalid input`: achado reproduzido para correção de UI seguinte, não marcado como resolvido aqui.
+Inventário: 178 leituras iniciais, 10 parciais e 2.933 não revisados na base.
+Publicação e smoke de 0.1.319 pendentes neste registro.

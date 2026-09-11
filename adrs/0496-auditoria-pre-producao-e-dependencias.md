@@ -273,3 +273,37 @@ concorrentes com apenas um sucesso e snapshot de emissão substituída recusado 
 Fixture temporária em DB isolado, sem secrets publicados, envio SMTP ou mock de provider.
 Quatro testes novos; check 515 testes, build/Docker aprovados e quatro testes no artefato final.
 Smoke 0.1.317 aprovado 16/16 às 01:06 UTC; 0.1.318 ainda pendente de publicação.
+
+## Recuperação de senha — continuação 0.1.319
+
+Na imagem 0.1.318, banco PostgreSQL isolado demonstrou: link aceito após o prazo e com data
+futura; duas redefinições simultâneas concluíram; troca autenticada não apagou link anterior.
+Não houve alteração de senha publicada, SMTP simulado ou envio de mensagem.
+
+Decisão: reutilizar `isCodeWithinValidity` também antes/depois do hash de senha. O repositório
+existente consome o link por compare-and-set de usuário, código e data de emissão. A troca da
+senha, limpeza do link e revogação das sessões existentes ficam na mesma transação, somente para
+o vencedor. `updateAndClearTokens` invalida links quando recebe nova senha; mantém a ordem de
+locks usuário → tokens e não devolve tokens que acabou de revogar.
+
+Contratos, auto-hidratação e status de conta existentes são preservados nesta correção; não
+criar fluxo paralelo nem alterar e-mails/links já emitidos dentro da validade. Sem nova env,
+package, schema/migration ou reset. Um link vencido, usado ou anterior à troca de senha exige
+novo pedido. Rollback não exige banco, mas reintroduz a falha e não é recomendado.
+
+Referência primária: [OWASP Forgot Password](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html),
+consultada em 11/09/2026, sobre expiração/uso único e invalidação de sessões. A recomendação de
+login normal após reset difere da auto-hidratação histórica (TASK-05); essa decisão de UX/auth,
+a notificação de troca e a análise de timing/limites de envio permanecem para revisão, não são
+certificadas por este patch.
+
+Teste repetível manual em `backend/scripts/password-reset-integration.mjs` e probe separado,
+reaproveitando a pasta de scripts e runner Node existentes, sem dependências novas. Exige imagem
+local já construída, gera credenciais efêmeras e PostgreSQL em tmpfs/rede interna sem portas.
+Apenas containers/redes com label aleatório da execução são removidos. Não usa `.env` do
+workspace, não aceita URL externa de banco e não executa automaticamente no deploy/check normal.
+
+Validação 0.1.319: oito cenários no PostgreSQL real passaram (seis HTTP, dois de repositório),
+incluindo formato de link vigente e senha do vencedor. Check agregado 515 testes, build backend
+final e Docker Linux amd64 aprovados. Recursos temporários removidos. Falhas transacionais
+injetadas, envio SMTP e demais fluxos concorrentes não foram certificados por estes testes.

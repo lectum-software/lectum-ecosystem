@@ -1,11 +1,8 @@
-//Repository
-
-//Libs
-import { differenceInMinutes } from "date-fns";
 //Types
 import type { Resolve } from "@/helpers/return";
 import { error, msg } from "@/helpers/translate";
 //Utils
+import { isCodeWithinValidity } from "@/utils/code";
 import { encrypt } from "@/utils/crypt";
 import { getCodeValidityMinutes } from "@/utils/runtime-config";
 import { getDevice } from "../../../../middlewares/_auth/utils/device";
@@ -41,8 +38,7 @@ export default async (data: IResetDTO): Promise<Resolve> => {
     };
 
   //Verify if time is valid
-  const diff = find?.recovery_date ? differenceInMinutes(new Date(), find.recovery_date) : null;
-  if (diff === null || diff > _VALID)
+  if (!find.recovery_date || !isCodeWithinValidity(find.recovery_date, _VALID))
     return {
       status: 400,
       ...error("code_expired", {
@@ -52,20 +48,20 @@ export default async (data: IResetDTO): Promise<Resolve> => {
     };
 
   const password = await encrypt(data.b.password);
+  // O hash pode ser custoso: revalidar o prazo também depois de calculá-lo.
+  const verifiedAt = new Date();
+  if (!isCodeWithinValidity(find.recovery_date, _VALID, verifiedAt.getTime()))
+    return { status: 400, ...error("code_expired", {}), entity: "c" };
 
-  await _LOGIN.updateAndClearTokens({
-    p: { id: find.id! },
-    b: {
-      password,
-      password_confirm: null,
-      confirmed: true,
-      confirmed_date: new Date(),
-      recovery_code: null,
-      recovery_date: null,
-      need_reset: false,
-    },
-    auth: data.auth,
+  const consumed = await _RECOVERY.consume({
+    userId: find.id!,
+    code: data.p.code,
+    issuedAt: find.recovery_date,
+    verifiedAt,
+    validityMinutes: _VALID,
+    passwordHash: password,
   });
+  if (!consumed) return { status: 404, ...error("code_incorrect", {}), entity: "c" };
 
   const res = await _LOGIN.hidrate(find, device.id);
 

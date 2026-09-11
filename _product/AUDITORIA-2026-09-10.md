@@ -33,6 +33,9 @@
 27. Código de confirmação expira no prazo configurado, sem ganhar tempo por arredondamento.
 28. Confirmação aceita somente seis números e preserva zeros à esquerda.
 29. Duas tentativas simultâneas não conseguem reutilizar a mesma confirmação.
+30. Link de recuperação de senha também respeita o prazo configurado.
+31. Um link de recuperação não pode concluir duas trocas de senha simultâneas.
+32. Trocar a senha pela conta invalida os links de recuperação anteriores.
 
 ## Ainda pendente
 
@@ -41,6 +44,6 @@
 - Repetir cadastro completo e testar perfil profissional, Google e dispositivos reais.
 - Avaliar senhas antigas e concluir verificações de permissão, pagamentos e vídeos.
 
-Cobertura da base: **158 arquivos com leitura inicial**, 10 parciais e 2953 ainda não revisados.
+Cobertura da base: **178 arquivos com leitura inicial**, 10 parciais e 2933 ainda não revisados.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv)

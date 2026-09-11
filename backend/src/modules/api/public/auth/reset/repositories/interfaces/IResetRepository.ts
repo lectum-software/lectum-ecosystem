@@ -2,8 +2,9 @@
 import type { user } from "@/interfaces/objects";
 
 //DTOs
-import type { IResetDTO } from "../../DTOs/IResetDTO";
+import type { ConsumeRecoveryInput, IResetDTO } from "../../DTOs/IResetDTO";
 
 export interface IResetRepository {
   findByRecovery: (data: IResetDTO) => Promise<user | null>;
+  consume: (data: ConsumeRecoveryInput) => Promise<boolean>;
 }
