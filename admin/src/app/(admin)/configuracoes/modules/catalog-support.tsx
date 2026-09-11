@@ -8,7 +8,6 @@ import {
   VenusAndMars,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { z } from "zod";
 import { resolveApiError } from "@/api/handle";
 import type {
   AdminSettingsCatalogOption,
@@ -19,8 +18,6 @@ import type {
 
 export const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
-
-export const DELETE_CONFIRMATION = "EXCLUIR CATALOGO";
 
 export type MutableCatalogType = Exclude<AdminSettingsCatalogType, "specialty_category">;
 
@@ -147,22 +144,6 @@ export const singularLabel: Record<AdminSettingsCatalogType, string> = {
   target_audience: "público",
 };
 
-export const formSchema = z.object({
-  active: z.enum(["true", "false"]),
-  category_id: z.string().optional(),
-  name: z.string().trim().min(2, "Informe pelo menos 2 caracteres").max(160),
-});
-
-export type CatalogForm = z.infer<typeof formSchema>;
-
-export const deleteSchema = z.object({
-  confirmation: z.string().refine((value) => value.trim().toUpperCase() === DELETE_CONFIRMATION, {
-    message: `Digite ${DELETE_CONFIRMATION} para confirmar`,
-  }),
-});
-
-export type DeleteForm = z.infer<typeof deleteSchema>;
-
 export const orderedIds = (items: Array<{ id: string }>) => items.map((item) => item.id);
 
 export const reorderIds = (ids: string[], id: string, targetIndex: number) => {
@@ -269,3 +250,11 @@ export const resolveCatalogTargetIndex = (clientY: number, session: CatalogDragS
 
 export const getErrorMessage = (error: unknown) =>
   resolveApiError(error) || "Não foi possível salvar a configuração agora.";
+
+export {
+  type CatalogForm,
+  DELETE_CONFIRMATION,
+  type DeleteForm,
+  deleteSchema,
+  formSchema,
+} from "./catalog-schema";

@@ -244,8 +244,19 @@ Relatório leigo mantido curto em AUDITORIA-2026-09-10.md; detalhes movidos para
 - [x] Consumo de link/transação e expiração validados com PostgreSQL real isolado: oito cenários.
 - [x] Troca autenticada invalida link anterior, mantendo contrato e sessões revogadas.
 - [x] Check agregado: 515 testes; build backend e Docker Linux amd64 aprovados.
-- [ ] Smoke publicado de 0.1.319.
+- [x] Smoke publicado de 0.1.319: 16/16 às 01:35 UTC de 11/09, três apps na versão esperada.
 
 Sem schema, env ou package novo. Script manual de regressão cria e remove apenas seu próprio
 banco descartável; é proibido adaptar a execução para usar dados publicados. Cadastro real,
 SMTP e Google permanecem com evidências/pendências separadas.
+
+## Continuação — formulários Admin 0.1.320
+
+- [x] Mensagem inglesa reproduzida no Browser ao exceder o nome de uma categoria.
+- [x] Duas regressões de limites/PT-BR e confirmação forte aprovadas, sem simular API.
+- [x] Controllers com label separado, erro associado e indicação ARIA validados no browser local/estrutura.
+- [x] Check agregado: 518 testes; check/build Admin e browser local aprovados; regressão estrutural aprovada.
+- [ ] Smoke publicado de 0.1.320 e repetição do erro no Admin autenticado.
+
+Sem env, migration ou alteração de categorias. Uma validação isolada de componente não será
+apresentada como criação/edição real de catálogo nem certificação de Safari/dispositivo real.

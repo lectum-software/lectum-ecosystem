@@ -36,6 +36,8 @@
 30. Link de recuperação de senha também respeita o prazo configurado.
 31. Um link de recuperação não pode concluir duas trocas de senha simultâneas.
 32. Trocar a senha pela conta invalida os links de recuperação anteriores.
+33. Limite do nome de categoria explica o que corrigir em português.
+34. Campos do Admin separam rótulo e erro, sem mudar o espaço do formulário.
 
 ## Ainda pendente
 
@@ -44,6 +46,6 @@
 - Repetir cadastro completo e testar perfil profissional, Google e dispositivos reais.
 - Avaliar senhas antigas e concluir verificações de permissão, pagamentos e vídeos.
 
-Cobertura da base: **178 arquivos com leitura inicial**, 10 parciais e 2933 ainda não revisados.
+Cobertura da base: **185 arquivos com leitura inicial**, 11 parciais e 2925 ainda não revisados.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv)

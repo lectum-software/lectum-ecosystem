@@ -307,3 +307,27 @@ Validação 0.1.319: oito cenários no PostgreSQL real passaram (seis HTTP, dois
 incluindo formato de link vigente e senha do vencedor. Check agregado 515 testes, build backend
 final e Docker Linux amd64 aprovados. Recursos temporários removidos. Falhas transacionais
 injetadas, envio SMTP e demais fluxos concorrentes não foram certificados por estes testes.
+
+## Formulários Admin — continuação 0.1.320
+
+Browser autenticado reproduziu `Invalid input` no limite de 160 caracteres do catálogo.
+Decisão: mensagens explícitas no schema Zod existente. Schema/tipos de formulário extraídos para
+`modules/catalog-schema.ts`, como separação já usada em outras páginas do Admin, permitindo
+regressão com Node sem carregar JSX, API ou simular providers; reexports preservam consumidores.
+Limites, normalização e confirmação forte de exclusão não mudam.
+
+Os controllers Admin de input/select/textarea passam a separar label e slot de erro, seguindo a
+correção já aplicada na fundação frontend. Preservados componentes, estilos e altura reservada;
+obrigatoriedade agora é informada por ARIA sem introduzir validação nativa em inglês.
+Erro permanece associado por aria-describedby e ganha anúncio de alerta. Não há novo design
+system, package, env ou schema de banco. Apps continuam independentes, sem imports cruzados.
+
+Referência: `PROTO-INVENTORY.md` e `_product/proto/admin/Configurações.png` inspecionados.
+Builder disponível retornou apenas MUI global, não o Quick Copy Lectum; fallback local registrado.
+Capturas mobile reais do Admin preservam a comparação com o produto vigente, sem redesenho.
+
+Validação local: modal real com nome excessivo, seleção e textarea em 390×844; foco e slot
+preservados. Harness sem persistência removido, login restaurado, servidor local encerrado.
+Duas regressões de schema e uma estrutural aprovadas; build/check Admin aprovados. A diferença
+de cor local/homolog vem da configuração visual não carregada no teste isolado, não deste patch.
+Safari/dispositivo real e anúncio por leitor de tela não são equivalentes à árvore acessível.

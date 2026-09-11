@@ -35,16 +35,17 @@ export const SelectController = <TFormValues extends FieldValues>({
   const hasError = Boolean(fieldState.error?.message);
 
   return (
-    <label className="block w-full text-sm font-semibold text-foreground" htmlFor={String(name)}>
-      <span className="mb-2 block">
+    <div className="block w-full text-sm font-semibold text-foreground">
+      <label className="mb-2 block" htmlFor={String(name)}>
         {label}
         {required ? <span className="text-danger"> *</span> : null}
-      </span>
+      </label>
       <span className="relative block">
         <select
           {...field}
           aria-describedby={errorId}
           aria-invalid={hasError}
+          aria-required={required || undefined}
           className={cn(
             "h-12 w-full rounded-2xl border bg-surface px-4 text-base text-foreground shadow-control outline-none transition",
             "focus:border-primary focus:ring-4 focus:ring-primary-soft",
@@ -68,9 +69,13 @@ export const SelectController = <TFormValues extends FieldValues>({
           />
         ) : null}
       </span>
-      <span className="mt-1 block min-h-5 text-xs font-medium text-danger" id={errorId}>
+      <span
+        className="mt-1 block min-h-5 text-xs font-medium text-danger"
+        id={errorId}
+        role="alert"
+      >
         {fieldState.error?.message || ""}
       </span>
-    </label>
+    </div>
   );
 };

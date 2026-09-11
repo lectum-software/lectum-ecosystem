@@ -275,4 +275,27 @@ Browser Admin: categoria vazia recusada em PT-BR, foco no campo e retorno ao bot
 capturas 21/22 em 390×844, sem criar categoria. Ao exceder 160 caracteres, a captura 23 mostrou
 `Invalid input`: achado reproduzido para correção de UI seguinte, não marcado como resolvido aqui.
 Inventário: 178 leituras iniciais, 10 parciais e 2.933 não revisados na base.
-Publicação e smoke de 0.1.319 pendentes neste registro.
+0.1.319 publicada em `997f7c5d`: smoke final 16/16 às 01:35 UTC de 11/09, backend/frontend/Admin
+na versão esperada. Nenhuma recuperação por e-mail de conta publicada foi disparada.
+
+## Continuação — formulários Admin 0.1.320
+
+- Nome com 161 caracteres exibiu `Invalid input` em homolog (captura 23). Schema passou a
+  orientar o limite em PT-BR sem alterar o máximo de 160, o trim ou a confirmação forte.
+- Labels de input/select/textarea não englobam mais controle/erro. Estado de obrigatório e
+  slot de alerta são explícitos; cores, medidas e espaço reservado foram preservados.
+- Browser local em 390×844 exercitou os componentes reais, sem API simulada nem persistência.
+  Nome excessivo ficou com `Use no máximo 160 caracteres.`; foco permaneceu no campo.
+  Seleção Ativo/Inativo funcionou; textarea vazio mostrou erro e recebeu foco (capturas 24/25).
+- A página local temporária era apenas um teste de componentes: não autenticou administrador,
+  não criou catálogo e não validou um salvamento ponta a ponta. Ela foi removida, login original
+  restaurado e dev server encerrado antes do commit. Arquivos gerados pelo Next dev foram retirados.
+- Referência de configuração inspecionada no proto local; Builder retornou apenas MUI global.
+  Cores locais padrão diferem da configuração visual carregada em homolog, não alterada no patch.
+- Check agregado final: 518 testes (132 frontend, 316 backend, 38 Admin, 32 video), mais os
+  seis testes da política de versão. Build Admin e novo check Admin aprovados. A regressão
+  estrutural também detectou os três controllers na revisão anterior, sem modificar o workspace.
+- Teste de estrutura impede recolocar controles/erros dentro do label; não certifica anúncio
+  em leitor de tela nativo. Safari/iPhone/Android reais permanecem pendentes.
+
+Smoke de 0.1.320 e repetição no Admin publicado ainda pendentes neste registro.

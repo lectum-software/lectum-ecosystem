@@ -66,3 +66,62 @@ test("só encerra o Admin local quando a própria API rejeita a credencial", () 
     assert.equal(isConfirmedAdminSessionRejection(error), false);
   }
 });
+
+test("catálogo informa limites do nome em português sem alterar o tamanho permitido", async () => {
+  const { formSchema } = await import("../app/(admin)/configuracoes/modules/catalog-schema.ts");
+  assert.equal(formSchema.parse({ active: "true", name: "  AB  " }).name, "AB");
+  assert.equal(formSchema.safeParse({ active: "true", name: "A".repeat(160) }).success, true);
+  for (const [name, message] of [
+    ["", "Informe pelo menos 2 caracteres"],
+    ["A", "Informe pelo menos 2 caracteres"],
+    ["A".repeat(161), "Use no máximo 160 caracteres."],
+    [null, "Informe o nome."],
+  ]) {
+    const result = formSchema.safeParse({ active: "true", name });
+    assert.equal(result.success, false);
+    assert.equal(result.error.issues[0].message, message);
+  }
+});
+
+test("catálogo mantém confirmação forte e status inválido com mensagem compreensível", async () => {
+  const { formSchema, deleteSchema } = await import(
+    "../app/(admin)/configuracoes/modules/catalog-schema.ts"
+  );
+  const status = formSchema.safeParse({ active: "invalid", name: "Categoria" });
+  assert.equal(status.success, false);
+  assert.equal(status.error.issues[0].message, "Selecione um status válido.");
+  assert.equal(deleteSchema.safeParse({ confirmation: "  excluir catalogo  " }).success, true);
+  assert.equal(deleteSchema.safeParse({ confirmation: "EXCLUIR" }).success, false);
+});
+
+test("controllers separam rótulo, controle e mensagem de erro", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { default: ts } = await import("typescript");
+  for (const control of ["input", "select", "textarea"]) {
+    const source = readFileSync(
+      new URL(`../components/controllers/${control}.tsx`, import.meta.url),
+      "utf8",
+    );
+    const ast = ts.createSourceFile(
+      `${control}.tsx`,
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
+    const labels = [];
+    const visit = (node) => {
+      if (ts.isJsxElement(node) && node.openingElement.tagName.getText(ast) === "label")
+        labels.push(node);
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+    assert.equal(labels.length, 1);
+    assert.match(labels[0].openingElement.getText(ast), /htmlFor=\{String\(name\)\}/);
+    assert.doesNotMatch(labels[0].getText(ast), /<(input|select|textarea)\b|fieldState\.error/);
+    assert.match(source, /aria-describedby=\{errorId\}/);
+    assert.match(source, /aria-required=\{required \|\| undefined\}/);
+    assert.match(source, /role="alert"/);
+    assert.match(source, /min-h-5/);
+  }
+});
