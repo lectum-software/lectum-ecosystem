@@ -31,6 +31,7 @@ import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
+import { useInteractionSnapshot } from "@/components/community/use-interaction-snapshot";
 import { useProgressiveConversion } from "@/components/conversion/progressive-conversion-provider";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppSelector } from "@/hooks/redux";
@@ -253,16 +254,23 @@ export const PostCard = ({
     useLectumShareDownloadDialog();
   const isPsychologistPost = post.author.role === "psicologo";
   const isAnonymousPatient = !isPsychologistPost && post.anonymous;
-  const [voteSnapshot, setVoteSnapshot] = useState<VoteSnapshot>({
-    currentVote: post.current_user_vote,
-    downvotes: post.downvotes_count,
-    postId: post.id,
-    upvotes: post.upvotes_count,
-  });
-  const [saveSnapshot, setSaveSnapshot] = useState<SaveSnapshot>({
-    saved: post.saved,
-    saves: post.saves_count,
-  });
+  const interactionScope = `${currentUser?.id ?? "guest"}:${post.id}`;
+  const { snapshot: voteSnapshot, begin: beginVote } = useInteractionSnapshot<VoteSnapshot>(
+    interactionScope,
+    {
+      currentVote: post.current_user_vote,
+      downvotes: post.downvotes_count,
+      postId: post.id,
+      upvotes: post.upvotes_count,
+    },
+  );
+  const { snapshot: saveSnapshot, begin: beginSave } = useInteractionSnapshot<SaveSnapshot>(
+    interactionScope,
+    {
+      saved: post.saved,
+      saves: post.saves_count,
+    },
+  );
   const voteMutation = useVotePost(post.id);
   const saveMutation = useSavePost(post.id);
   const conversion = useProgressiveConversion();
@@ -336,20 +344,20 @@ export const PostCard = ({
       return;
     }
 
-    const previousSnapshot = voteSnapshot;
     const optimisticSnapshot = resolveVoteSnapshot(voteSnapshot, value);
 
-    setVoteSnapshot(optimisticSnapshot);
+    const operation = beginVote(optimisticSnapshot);
     voteMutation.mutate(
       { value },
       {
-        onError: () => {
-          setVoteSnapshot(previousSnapshot);
-        },
+        onError: operation.onError,
         onSuccess: (data) => {
-          if (data.target_type !== "post") return;
+          if (data.target_type !== "post" || data.post_id !== post.id || data.reply_id !== null) {
+            operation.onError();
+            return;
+          }
 
-          setVoteSnapshot({
+          operation.onSuccess({
             currentVote: data.value,
             downvotes: data.downvotes_count ?? optimisticSnapshot.downvotes,
             postId: post.id,
@@ -380,19 +388,21 @@ export const PostCard = ({
       saves: Math.max(0, previousSnapshot.saves + (nextSaved ? 1 : -1)),
     };
 
-    setSaveSnapshot(optimisticSnapshot);
+    const operation = beginSave(optimisticSnapshot);
     saveMutation.mutate(previousSnapshot.saved, {
-      onError: () => {
-        setSaveSnapshot(previousSnapshot);
-      },
+      onError: operation.onError,
       onSuccess: (data) => {
-        setSaveSnapshot({
+        if (data.target_type !== "post" || data.post_id !== post.id || data.reply_id !== null) {
+          operation.onError();
+          return;
+        }
+        operation.onSuccess({
           saved: data.saved,
           saves: data.saves_count ?? optimisticSnapshot.saves,
         });
       },
     });
-  }, [conversion, post.id, saveMutation, saveSnapshot]);
+  }, [beginSave, conversion, post.id, saveMutation, saveSnapshot]);
 
   useEffect(() => {
     if (!conversion.isAuthenticated || saveSnapshot.saved) return;

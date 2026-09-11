@@ -126,3 +126,18 @@ reclassificar como erro de dados ou incluir correção não implementada neste c
 -BR08:serviço de voto já restringe±1;risco de dado legado0 não demonstrado,nenhuma mutação feita.
 - V02: timeout interno da análise passa a falha operacional repetível; fluxo conserva cancelamento,
   rejeição de mídia inválida e validação de saída. Contratos puros aprovados, retry real pendente.
+
+
+### Continuação340 — interações, render e legal
+
+- CP2: cards de comunidade/minhas respostas/salvos reconciliam props e operação local;13contratos
+  e11transições reais de hook no Browser; cards inteiros autenticados ainda não comprovados aqui.
+- CP3: falhas concorrentes não repõem documento/lista inteira; query recriada e recibo de outro
+  alvo protegidos.106contratos reais de QueryClient, não tráfego autenticado ou persistência.
+- V03:17testes compilados na imagem340 com6renders reais respeitam limites da configuração.
+  Orçamento pids128 falhou em3assets;512 passou, sem inferir comportamento da máquina publicada.
+- Legal: minutas não aprovadas; aceite provisório existe; URLs previstas404. Não publicar texto
+  incompleto nem regravar histórico; requisito externo impede recomendar produção.
+- Comunidade no build local: SSR carregou título, hidratação terminou em falha de conexão.
+  Registrar limitação e validar publicação, sem desativar segurança para simular integração.
+- Homolog339:18/18smoke público. Vídeo privado ainda comprovado pelo operador somente na338.

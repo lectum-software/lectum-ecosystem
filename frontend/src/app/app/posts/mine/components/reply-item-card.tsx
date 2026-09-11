@@ -3,11 +3,7 @@
 import { Reply } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  type KeyboardEvent as ReactKeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
-  useState,
-} from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
 import { useSaveReply, useVotePost } from "@/api/callers/posts";
 import type { PostListPost, UserPostListItem } from "@/api/generator/types/posts";
 import { CommunityActionBar } from "@/components/community/community-action-bar";
@@ -17,6 +13,7 @@ import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
+import { useInteractionSnapshot } from "@/components/community/use-interaction-snapshot";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { cn } from "@/lib/utils";
@@ -51,17 +48,16 @@ export const ReplyItemCard = ({
   const reply = item.reply;
   const voteMutation = useVotePost(item.post.id);
   const saveMutation = useSaveReply(item.post.id, reply?.id ?? "");
-  const [voteOverride, setVoteOverride] = useState<{
-    currentVote: 1 | -1 | null;
-    downvotes: number;
-    replyId: string;
-    upvotes: number;
-  } | null>(null);
-  const [saveOverride, setSaveOverride] = useState<{
-    replyId: string;
-    saves: number;
-    saved: boolean;
-  } | null>(null);
+  const interactionScope = `${currentUser?.id ?? "guest"}:${item.post.id}:${reply?.id ?? ""}`;
+  const { snapshot: voteState, begin: beginVote } = useInteractionSnapshot(interactionScope, {
+    currentVote: reply?.current_user_vote ?? null,
+    downvotes: reply?.downvotes_count ?? 0,
+    upvotes: reply?.upvotes_count ?? 0,
+  });
+  const { snapshot: saveState, begin: beginSave } = useInteractionSnapshot(interactionScope, {
+    saves: reply?.saves_count ?? 0,
+    saved: reply?.saved ?? false,
+  });
 
   if (!reply) return null;
 
@@ -87,48 +83,36 @@ export const ReplyItemCard = ({
   const hasVerifiedProfessionalReply =
     showProfessionalAnsweredBadge && Boolean(reply.has_verified_professional_reply);
   const isPsychologistReply = reply.author.role === "psicologo";
-  const voteState =
-    voteOverride?.replyId === reply.id
-      ? voteOverride
-      : {
-          currentVote: reply.current_user_vote,
-          downvotes: reply.downvotes_count,
-          upvotes: reply.upvotes_count,
-        };
-  const saveState =
-    saveOverride?.replyId === reply.id
-      ? saveOverride
-      : {
-          replyId: reply.id,
-          saves: reply.saves_count,
-          saved: reply.saved,
-        };
   const openReplyLabel = `Abrir ${interactionCopy.singular} no post ${item.post.title}`;
 
   const handleVote = (value: 1 | -1) => {
-    const previousVoteOverride = voteOverride;
     const nextVote = voteState.currentVote === value ? null : value;
     const upDelta = (nextVote === 1 ? 1 : 0) - (voteState.currentVote === 1 ? 1 : 0);
     const downDelta = (nextVote === -1 ? 1 : 0) - (voteState.currentVote === -1 ? 1 : 0);
 
-    setVoteOverride({
+    const operation = beginVote({
       currentVote: nextVote,
       downvotes: Math.max(0, voteState.downvotes + downDelta),
-      replyId: reply.id,
       upvotes: Math.max(0, voteState.upvotes + upDelta),
     });
 
     voteMutation.mutate(
       { replyId: reply.id, value },
       {
-        onError: () => setVoteOverride(previousVoteOverride),
+        onError: operation.onError,
         onSuccess: (data) => {
-          if (data.target_type !== "reply" || data.reply_id !== reply.id) return;
+          if (
+            data.target_type !== "reply" ||
+            data.post_id !== item.post.id ||
+            data.reply_id !== reply.id
+          ) {
+            operation.onError();
+            return;
+          }
 
-          setVoteOverride({
+          operation.onSuccess({
             currentVote: data.value,
             downvotes: Math.max(0, data.downvotes_count ?? voteState.downvotes + downDelta),
-            replyId: reply.id,
             upvotes: Math.max(0, data.upvotes_count),
           });
         },
@@ -137,23 +121,27 @@ export const ReplyItemCard = ({
   };
 
   const handleToggleSave = () => {
-    const previousSaveOverride = saveOverride;
     const nextSaved = !saveState.saved;
     const nextSaves = Math.max(0, saveState.saves + (nextSaved ? 1 : -1));
 
-    setSaveOverride({
-      replyId: reply.id,
+    const operation = beginSave({
       saves: nextSaves,
       saved: nextSaved,
     });
 
     saveMutation.mutate(saveState.saved, {
-      onError: () => setSaveOverride(previousSaveOverride),
+      onError: operation.onError,
       onSuccess: (data) => {
-        if (data.target_type !== "reply" || data.reply_id !== reply.id) return;
+        if (
+          data.target_type !== "reply" ||
+          data.post_id !== item.post.id ||
+          data.reply_id !== reply.id
+        ) {
+          operation.onError();
+          return;
+        }
 
-        setSaveOverride({
-          replyId: reply.id,
+        operation.onSuccess({
           saves: data.saves_count ?? nextSaves,
           saved: data.saved,
         });

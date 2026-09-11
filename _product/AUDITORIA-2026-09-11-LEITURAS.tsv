@@ -1,8 +1,14 @@
 arquivo	proveniencia	sha256_integracao	presente_inventario_base
-.codex/skills/execute-lectum-task/SKILL.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Euclid;hidratacao;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	1ff706db6e53b6198e016a649ff3182279852ee362b4f14dc0ece4d9e0fafe3e	true
-AGENTS.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	db6f3ceaefbd27b0e24b8e7b3a0d6dad07104882f0e773a990bb13833fc7d937	true
-_product/tasks/ARCHITECTURE.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	6ecb0ac36eb1652301667981227afd029862b2dd356ddf8b4fe1d40950c10652	true
-_product/tasks/PACKAGES.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral	f376b3ac6bebf0272c2d2d85990a697a7d864daa6e93915258593a9dc9a33cf6	true
+.codex/skills/execute-lectum-task/SKILL.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Euclid;hidratacao;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral | Planck;legal340;integral | Carson;video340;integral | Bacon;cache340;integral	1ff706db6e53b6198e016a649ff3182279852ee362b4f14dc0ece4d9e0fafe3e	true
+AGENTS.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral | Planck;legal340;integral | Carson;video340;integral | Bacon;cache340;integral	db6f3ceaefbd27b0e24b8e7b3a0d6dad07104882f0e773a990bb13833fc7d937	true
+_product/PRIVACY-NOTES.md	Planck;legal340;integral	d71a6dd2dc542e6f2d8acc2f47dc1860aeac6d8571b219bd532e5312475465de	true
+_product/decisions.md	Planck;legal340;integral	9908ea7525a4cda7afc29c488ffd80593bcfc84cb59447484fd690d6ca702b75	true
+_product/legal/README.md	Planck;legal340;integral	ca13592072e1019bd7821fe71c95e326ab844dc932b95905126a51b61697b221	true
+_product/legal/politica-de-privacidade-v0.1.md	Planck;legal340;integral	8dbab30c87ca98fd358d1a90e1db31f55bfaa012342a4da3aaa8a1d13d26f969	true
+_product/legal/termos-de-servico-v0.1.md	Planck;legal340;integral	041129c1468736b0d13b00e3c78d726bc16b6da2a7b002ef35d15e9cf3a42da0	true
+_product/legal/textos-curtos-legais-v0.1.md	Planck;legal340;integral	341c9df6bcf2589cd510d72cc8ffa3cb06593bb149421a65ddce25852fb7439f	true
+_product/tasks/ARCHITECTURE.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral | Planck;legal340;integral | Carson;video340;integral | Bacon;cache340;integral	6ecb0ac36eb1652301667981227afd029862b2dd356ddf8b4fe1d40950c10652	true
+_product/tasks/PACKAGES.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Tesla;historico_notificacoes338;integral | Hubble;probe339;integral | Planck;legal340;integral | Carson;video340;integral | Bacon;cache340;integral	f376b3ac6bebf0272c2d2d85990a697a7d864daa6e93915258593a9dc9a33cf6	true
 _product/tasks/PROTO-INVENTORY.md	Euclid;denuncias;integral | Tesla;notificacoes;integral | Goodall;configuracoesSEO;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch	52207cf11d6bf46c3b107048de2a4bba8fc2efb0a59094290bfb202efdb2b778	true
 _product/tasks/TASK-144-upload-imagem-open-graph-admin.md	Goodall;configuracoesSEO;integral_inicial	297b2a1df89285bf6db4f9a556dd8630cc31789c8183a9b132c2430caba53b50	true
 _product/tasks/TASK-153-permissao-nativa-direta-notificacoes.md	Tesla;notificacoes;integral	7f86c0da39e627a371e7dc568357947286deb784bef118747b57779878adeeb9	true
@@ -19,6 +25,7 @@ _product/tasks/TASK-29a-notificacoes-fundacao.md	Tesla;notificacoes;integral	3b0
 _product/tasks/TASK-29b-notificacoes-eventos.md	Tesla;notificacoes;integral	9d0296e8b026ade730c317e741a1d8f6fe8d2731ef202a8670189a25dbc58b7b	true
 _product/tasks/TASK-32-checkout-assinatura.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	221f00df01a81fa27c84337bebf481375f7008077e4724e053b5173eda791d4e	true
 _product/tasks/TASK-38-permissao-contextual-notificacoes-navegador.md	Tesla;notificacoes;integral	77576978ad8307e3e151bd1e03a50764d02969512e45038fc9a6345ea0c21741	true
+_product/tasks/TASK-41-paginas-legais-termos-privacidade.md	Planck;legal340;integral	a81a64210ef7eedfe62fe43824e017fd458dcfea7580a4f819405a1d6a1d554e	true
 _product/tasks/TASK-59-detalhe-psicologo-atividades-admin.md	Tesla;historico_notificacoes338;integral	0157d7bb29fd23c3386f846c3d7b840b07cd3c4c514c80a4ecd9b7262834bfc6	true
 _product/tasks/TASK-63-fundacao-campanhas-logs-notificacoes-admin.md	Tesla;historico_notificacoes338;integral	87b89dea22b95176eeb837afec283740f9607d306dbd58b7ddda88c7bb1fb4ba	true
 _product/tasks/TASK-73-acoes-conta-psicologo-admin.md	Tesla;historico_notificacoes338;integral	eb519b3d76f9f49af13e585968f20f874fce93f612b71477935431bb97f4e8c1	true
@@ -46,13 +53,13 @@ admin/src/app/(admin)/comunidades/[slug]/views/content-tab.tsx	principal;conteud
 admin/src/app/(admin)/comunidades/[slug]/views/reports-tab.tsx	Euclid;denuncias;integral | principal;denunciasUI;integral | Euclid;conteudo328;integral	1149c7e8b1f67d38e25212ba47a67083476c986f010c8e9cd8fdf9d86467e71b	true
 admin/src/app/(admin)/configuracoes/assinatura/client.tsx	Goodall;configuracoesSEO;integral_inicial	d2f0b197c8ee035b17920cef4be8896c6cef192f139413df9c2ea354564f7243	true
 admin/src/app/(admin)/configuracoes/assinatura/page.tsx	Goodall;configuracoesSEO;integral_inicial	cda6e6ee91d79a22fcf51f4ecb29600a8762a173549c0ea5361ddb08934d2a6b	true
-admin/src/app/(admin)/configuracoes/client.tsx	Goodall;configuracoesSEO;integral_inicial	5c584b5244d2977ba0e05104c8792dff25fe6da09fbab32c1ef872e8c4a4a599	true
+admin/src/app/(admin)/configuracoes/client.tsx	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	5c584b5244d2977ba0e05104c8792dff25fe6da09fbab32c1ef872e8c4a4a599	true
 admin/src/app/(admin)/configuracoes/components/catalog-modals.tsx	Goodall;configuracoesSEO;integral_inicial	4c66dd959961d599e9673db5bac09c97a03c0a6f3fd34d0b5254aa2cd7218564	true
 admin/src/app/(admin)/configuracoes/components/catalog-row.tsx	Goodall;configuracoesSEO;integral_inicial	2389988670de1304e3cbb562ae7434a7b79b34d282276f307a8f7edba7ed5fdb	true
 admin/src/app/(admin)/configuracoes/hooks/use-admin-settings-controller.ts	Goodall;configuracoesSEO;integral_inicial	28ac67b4c18c9cc43b383f853786de275a3c74b3d4ce1c505bf11d588d06f852	true
 admin/src/app/(admin)/configuracoes/modules/catalog-schema.ts	Goodall;configuracoesSEO;integral_inicial	c872bcd5c4a407316242db99771503f4c6902783ad6b5c1a828c98c7319f7bad	false
-admin/src/app/(admin)/configuracoes/modules/catalog-support.tsx	Goodall;configuracoesSEO;integral_inicial	e4129e05b8c35a306ad102c64f2d6d275f3e9fb95f931f8b703a421a6206c52d	true
-admin/src/app/(admin)/configuracoes/page.tsx	Goodall;configuracoesSEO;integral_inicial	db9e4d51f0722b7df2c869e1b75012a2d6e7e4732bddb4d790ad4273b05d2ba1	true
+admin/src/app/(admin)/configuracoes/modules/catalog-support.tsx	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	e4129e05b8c35a306ad102c64f2d6d275f3e9fb95f931f8b703a421a6206c52d	true
+admin/src/app/(admin)/configuracoes/page.tsx	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	db9e4d51f0722b7df2c869e1b75012a2d6e7e4732bddb4d790ad4273b05d2ba1	true
 admin/src/app/(admin)/configuracoes/seo-metadados/client.tsx	Goodall;configuracoesSEO;integral_inicial	d809fe16402fb68abb5609730c7e52fe08e4d64f4bec0e7f46bfab0460fea7ae	true
 admin/src/app/(admin)/configuracoes/seo-metadados/components/open-graph-image-field.tsx	Goodall;configuracoesSEO;integral_inicial	0270fc67ede4d5d932acb3c6f1f19a45bf81e7a1d5b200467feab0994d9a0321	true
 admin/src/app/(admin)/configuracoes/seo-metadados/components/preview.tsx	Goodall;configuracoesSEO;integral_inicial	f10a8109360ee569317cd9cb8a9a1d51a325a26dfe9b5afb963ee68ff021e76f	true
@@ -60,8 +67,8 @@ admin/src/app/(admin)/configuracoes/seo-metadados/components/settings-overview.t
 admin/src/app/(admin)/configuracoes/seo-metadados/components/technical-notes.tsx	Goodall;configuracoesSEO;integral_inicial	3327b07d5cee2f8b6d7c77445ff90c1bb2e8a067ff51ee89892f36326e0c68d2	true
 admin/src/app/(admin)/configuracoes/seo-metadados/modules/seo-support.ts	Goodall;configuracoesSEO;integral_inicial	6dcf9df7b44ce0b98b610a936de873def3a52fda8f50d47e8ce559e0c42fcb7f	true
 admin/src/app/(admin)/configuracoes/seo-metadados/page.tsx	Goodall;configuracoesSEO;integral_inicial	01d2926a83a2deec45c0e22e29bf1613a04e9ef8a2871e593d3a0b5aed09108d	true
-admin/src/app/(admin)/configuracoes/seo-metadados/use-form.ts	Goodall;configuracoesSEO;integral_inicial	dca54566e89ca4563dafef89b60b55b26ecff76daae2afee18928ed0dd5e13f5	true
-admin/src/app/(admin)/configuracoes/views/admin-settings.tsx	Goodall;configuracoesSEO;integral_inicial	882b100acc7333ae50f2a5b5667d9727278defdcf0b20cb771cde141739776dc	true
+admin/src/app/(admin)/configuracoes/seo-metadados/use-form.ts	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	dca54566e89ca4563dafef89b60b55b26ecff76daae2afee18928ed0dd5e13f5	true
+admin/src/app/(admin)/configuracoes/views/admin-settings.tsx	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	882b100acc7333ae50f2a5b5667d9727278defdcf0b20cb771cde141739776dc	true
 admin/src/app/(admin)/financeiro/assinaturas/client.tsx	Tesla;financeiro330;integral_inicial	b632b3e29fdc250b330e290e43da28f376ecfe2e7cde687509a508a8e51e4d7b	true
 admin/src/app/(admin)/financeiro/assinaturas/components/filters.tsx	Tesla;financeiro330;integral_inicial	03e4380abd688bb700375cf1f244698546708209e5fa0d8ddfb962009649f3b4	true
 admin/src/app/(admin)/financeiro/assinaturas/components/payment-details.tsx	Tesla;financeiro330;integral_inicial	ec3c07b0837cf31ff7e45430dac67b82452939cd008cdd324341bf8319060499	true
@@ -83,7 +90,7 @@ admin/src/app/(admin)/financeiro/views/overview.tsx	Tesla;financeiro330;integral
 admin/src/app/(admin)/notificacoes/components/logs.tsx	Tesla;historico_notificacoes338;integral	7e16a8f64910e66ee3eedd28a8fccf51080f2e44614bf87cfd428c834eae5e4f	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/billing/cards.tsx	Tesla;financeiro330;integral_inicial	7d49e8ff9e877278b7c2b4d91c5a662e8f20e542e9ea80259b1b2c007506708e	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/billing/index.tsx	Tesla;financeiro330;integral_inicial	955ea10e1233a0e1e9e0d65d99b71cb65df35ff0b94d09a5ba4423d10f98dfa9	true
-admin/src/app/(admin)/settings/page.tsx	Goodall;configuracoesSEO;integral_inicial	48bd79eb117fddcf334a8d94369fcd5054e7ba5f89fc521671c5b6c0d4aeccce	true
+admin/src/app/(admin)/settings/page.tsx	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	48bd79eb117fddcf334a8d94369fcd5054e7ba5f89fc521671c5b6c0d4aeccce	true
 admin/src/components/controllers/checkbox-group.tsx	principal;integral	70a1fa7568891d2704f6a0d3bd9afbd4938b463bf359fe902353f4dfc235c16b	true
 admin/src/components/controllers/input.tsx	principal;integral	c88fc24c60a61a2d505c55b6c0834f3de8d5fa828d2cfa3676c1c17eabda5035	true
 admin/src/components/controllers/select.tsx	principal;integral	fc15a11cd2f93bb52b2015ade6fcf0416f1641fc3e9c8c7320ac02fbcf0b9e2d	true
@@ -106,6 +113,9 @@ admin/src/lib/shared-helpers.test.mjs	principal;integral | principal;integracao;
 admin/src/providers/query/index.tsx	Goodall;configuracoesSEO;integral_inicial	0855dfd8d4ac7e5fb29c5d56973d1adfce67b73ae14dd52e3a364e029472347f	true
 admin/tsconfig.json	Euclid;denuncias;integral	b9cb328ea433b25c54c8649aed5ef3e1d9874110789c6453d1b96181e5695740	true
 adrs/0003-gateway-pagamento-mercado-pago.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f9507a73435056b50bf393c21be4493a76026f9dab34fa73f30f0d8c44b5df51	true
+adrs/0012-cadastro-paciente-role-profile.md	Planck;legal340;integral	0495f0ed59ef3c76d5a08927d957c4d8593230fd9e7bcb59e1f96f2ebf917118	true
+adrs/0014-cadastro-inicial-psicologo-profile.md	Planck;legal340;integral	ccc718daf55ba037f99db8fa397e46bee22507ba7f9a9ef056cca40029908eb1	true
+adrs/0101-captura-localizacao-ip-analytics.md	Planck;legal340;integral	d6ea046af9553419f22fdd317ad1fabe629cc4bad937528f81b627ddbc6c77e2	true
 adrs/0145-edicao-post-publicado.md	Tesla;concorrencia;integral	263180188d44d46f76b1eb66d3f92967958a03617d40336c3ddc0ef6f2c8921a	true
 adrs/0169-autoria-notificacoes-profissionais.md	Tesla;notificacoes;integral	d65749c2a208e0c5612d437ace64111d873720d16eef8cb155f737a19c8265d2	true
 adrs/0172-bloqueio-checkout-mercado-pago-credenciais.md	Tesla;financeiro330;integral_inicial	c7dcea23288a290241e763d65ad4bc76b1825cb16870e4f466e5aeda13836542	true
@@ -129,6 +139,7 @@ adrs/0428-retry-payer-email-sandbox-mercado-pago.md	Tesla;financeiro330;integral
 adrs/0429-consulta-assinatura-mercado-pago-sem-scope-stage.md	Tesla;financeiro330;integral_inicial	e05f5ba9439995b14b5fe683c99c330664598b97050c1d53bd4aac7474103c16	true
 adrs/0430-checkout-mercado-pago-sandbox-com-tunnel-sem-fallback.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	845b7f332c0f9933d3c84755fb04fef06c85d9d2019cd50612adc788b3cb9064	true
 adrs/0433-reconciliacao-assinatura-mercado-pago-webhook-e-entitlement.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	9e17a5859f116f580594a6d34c16fe4f31b99a92d42c54c6948bc0a2dc21e2f8	true
+adrs/0440-bloqueio-publicacao-paginas-legais.md	Planck;legal340;integral	d86254edb6ef8c23b5f0f6e61bfc7c9d1b24d23b6ab1dd1e30690254ce19b9eb	true
 adrs/0446-sanitizacao-aliases-resposta-billing.md	Tesla;financeiro330;integral_inicial	08d343867e7e0128fdf8d11f7e91d5a5961746ce201f4e3873fe47caec334714	true
 adrs/0452-upload-multipart-midia-respostas.md	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	576916f0d6f2f50db3565c861b4a66c1576c8ffb56ed60308538cc5e68dece8c	true
 adrs/0454-csp-mercado-pago-cardpayment-checkout.md	Tesla;financeiro330;integral_inicial	889ff976d3e629b99678434c60bbdfee0e7315c7d4eba86daec70287406538d6	true
@@ -146,6 +157,7 @@ backend/Dockerfile	Tesla;concorrencia;integral | principal;integracao;integral |
 backend/biome.json	Lagrange;estado_posts;integral | Lagrange;perfil328;integral	b18d9e3b34ea13858684e4638be0df6f2b1ccea34b1df0d2f4273bae6d56efdf	true
 backend/package.json	Tesla;concorrencia;integral | Tesla;vocabulario337;integral_dos_ranges | principal;video_votos339;integral_original_e_diff_bump339	f11bad7d4b899344de3828da980df4607a479cd1b9e66a2394a040b1b4c4954a	true
 backend/prisma.config.ts	Tesla;concorrencia;integral | principal;duracao330;integral	3182888f9d8533b5efaca15386e2a52763a99b99104a5d55ef79f644d5eb5b9d	true
+backend/prisma/schema.prisma	Planck;legal340;integral	4432ebe17132211825d2a6aabaf0068c35a17c6c3c1bd2c08f72015fd5742777	true
 backend/scripts/analytics-duration-integration.mjs	principal;duracao330;integral | Tesla;consumidores_midia;integral_inicial	41eb37fba615822b991d9de2fe2fcec1e542acc779c811316121f1db96a4ec61	false
 backend/scripts/analytics-duration-probe.cjs	principal;duracao330;integral	ecfae7313c2c3aeca8d720338deecbfa36b79983317c721fec25ded287a6915e	false
 backend/scripts/auth-integration.mjs	Tesla;comunidades;integral | Tesla;concorrencia;integral	70616ca0a8f8f72019da6c55b912a2f0bb654f7e456722672f04d9e6291f2a3b	false
@@ -231,7 +243,7 @@ backend/src/main/notification/push.ts	Tesla;notificacoes;integral	626d56e39eda1c
 backend/src/main/server/environment.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | principal;duracao330;integral	7abaa3103464a0766cf6c68645e9b90b4e0811932fde4869db668c5801d39ab5	true
 backend/src/main/server/i18n.ts	Euclid;denuncias;integral | Tesla;concorrencia;integral | Lagrange;perfil328;integral | Tesla;historico_notificacoes338;integral	f95d8b1599e61ef86b9a19683e479ead6adf3fc1f250c6f8588f59a7092f3c1a	true
 backend/src/main/server/imports/route-policy.ts	principal;revisao332;integral	fece65bc14d8745599646ebe23a8979f8fd9caccef6a910c29170574f578a562	true
-backend/src/main/server/imports/write.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	b807f2d24a0d32eb36bd905ac716131d9c57233df121023857ffb1fef7c9a260	true
+backend/src/main/server/imports/write.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Planck;legal340;integral	b807f2d24a0d32eb36bd905ac716131d9c57233df121023857ffb1fef7c9a260	true
 backend/src/main/socket/clients.ts	Tesla;notificacoes;integral	0bb115d341541bed193b1ff05841b05387d32620d1c47555331f8d7980d4aa3c	true
 backend/src/main/socket/events/notification.ts	Tesla;notificacoes;integral	a5eb24bd7556d177c9c0b8209d4d36389ed4f4f0c94174d8193eb4d228516ac0	true
 backend/src/main/socket/index.ts	Tesla;notificacoes;integral	3866af87123f0534ed52d23e0ce026ec8c82f58ee2e1c40ec1f15a13ad1841fe	true
@@ -423,11 +435,11 @@ backend/src/modules/api/admin/private/settings/catalogs/repositories/interfaces/
 backend/src/modules/api/admin/private/settings/catalogs/use-cases/controller.ts	Goodall;configuracoesSEO;integral_inicial	42474db791ce12624a3d6b9a25426d4bcc7eedb6a31661778426fbe93d28f174	true
 backend/src/modules/api/admin/private/settings/catalogs/use-cases/services.ts	Goodall;configuracoesSEO;integral_inicial	01cc455ea924229f971ebe123af12f6ede231a35b9ec71c5e71c110e54594f94	true
 backend/src/modules/api/admin/private/settings/catalogs/validator/index.ts	Goodall;configuracoesSEO;integral_inicial	27a70e2c5dc9e902b7d2f7c6ec0df6171db7a067fb9f69a57d6ebbfeb18042dd	true
-backend/src/modules/api/admin/private/settings/seo/DTOs/IAdminSettingsSeoDTO.ts	Goodall;configuracoesSEO;integral_inicial	ef662b0e70f57e7f3600b44e408f8853601b6650caeda78c82c5c23faa2c4a39	true
-backend/src/modules/api/admin/private/settings/seo/index.ts	Goodall;configuracoesSEO;integral_inicial | principal;metadados332;integral	0d7e2a84d03c0ef963fba3ef13ecb841e4f343a8e30b5cde85d1696d9240fca1	true
+backend/src/modules/api/admin/private/settings/seo/DTOs/IAdminSettingsSeoDTO.ts	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	ef662b0e70f57e7f3600b44e408f8853601b6650caeda78c82c5c23faa2c4a39	true
+backend/src/modules/api/admin/private/settings/seo/index.ts	Goodall;configuracoesSEO;integral_inicial | principal;metadados332;integral | Planck;legal340;integral	0d7e2a84d03c0ef963fba3ef13ecb841e4f343a8e30b5cde85d1696d9240fca1	true
 backend/src/modules/api/admin/private/settings/seo/use-cases/controller.ts	Goodall;configuracoesSEO;integral_inicial	d7b0c06836ee10a975f1bd254e84c09ad7c4080e6d84dd8782eb295045f7c4f9	true
 backend/src/modules/api/admin/private/settings/seo/use-cases/services.ts	Goodall;configuracoesSEO;integral_inicial | principal;metadados332;integral	c42fce96cbdd02919d90b30aac2984668d304f70e6c21e700fc12004f3624cca	true
-backend/src/modules/api/admin/private/settings/seo/validator/index.ts	Goodall;configuracoesSEO;integral_inicial	2931efd5a20382dfe1b5f7b8e6c6f0e4b65d2c17ee932891a0228557bd13f765	true
+backend/src/modules/api/admin/private/settings/seo/validator/index.ts	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	2931efd5a20382dfe1b5f7b8e6c6f0e4b65d2c17ee932891a0228557bd13f765	true
 backend/src/modules/api/admin/private/settings/subscription-plan/DTOs/IAdminSettingsSubscriptionPlanDTO.ts	Euclid;billing;integral	e00bc41b14e9f50d19b675c18702bf2fbda1a15df06125d05cb65900bb2cd12b	true
 backend/src/modules/api/admin/private/settings/subscription-plan/index.ts	Euclid;billing;integral	9d5b4c8215e9083f7f6321471618a88e3f8281dbda5491b81e379666847fd1be	true
 backend/src/modules/api/admin/private/settings/subscription-plan/repositories/AdminSettingsSubscriptionPlanRepository.ts	Euclid;billing;integral	9a4b367d94c1d06068c0c73b6090834d48cd0ac43af52ea26aafa7d9df9965fd	true
@@ -448,7 +460,7 @@ backend/src/modules/api/middlewares/_auth/helpers/files.ts	principal;transversai
 backend/src/modules/api/middlewares/_auth/helpers/login.ts	Tesla;notificacoes;integral	fbb62c3b8832adce8a1bfa134ab6673fab3fc48a43e7acbbc9aaff095207099c	true
 backend/src/modules/api/middlewares/_auth/helpers/token.ts	Tesla;notificacoes;integral	a0f19385c931730b8cae5c600b4b12edc2d7fa5877ecde7ada767685de434556	true
 backend/src/modules/api/middlewares/_auth/index.ts	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral	fd799ee69c29ddf2c663d5392bcb853a9d34c7b33cb3c211e3610bb98a85273c	true
-backend/src/modules/api/middlewares/_auth/passport.ts	Tesla;notificacoes;integral	8d8576f7c46ef1b50959eece259229226a399af7dfb7ad59de208288417b867e	true
+backend/src/modules/api/middlewares/_auth/passport.ts	Tesla;notificacoes;integral | Planck;legal340;integral	8d8576f7c46ef1b50959eece259229226a399af7dfb7ad59de208288417b867e	true
 backend/src/modules/api/middlewares/_auth/utils/device.ts	Tesla;notificacoes;integral	3d7b218c0fd0bf32aa9edc700cfa2896c07402115461c4115b611c1afc4997ee	true
 backend/src/modules/api/middlewares/_auth/utils/generateToken.ts	Tesla;notificacoes;integral	a529cd027349a620eaac9a4e84ae937e9cb3c84486e3583c1d42779524daed83	true
 backend/src/modules/api/middlewares/index.ts	Tesla;notificacoes;integral | principal;revisao332;integral	ef0bcd5c91b3d1b6e4912d248974d646778ab08a3d2c87cec2d6a66771147a11	true
@@ -703,15 +715,19 @@ backend/src/modules/api/public/analytics/page-view/repositories/interfaces/IPage
 backend/src/modules/api/public/analytics/page-view/use-cases/controller.ts	principal;analytics330;integral	a4ff645c869608c9e2e13ab2aa32845c6aac2e17110fd4f8c6a4e2c435ad5969	true
 backend/src/modules/api/public/analytics/page-view/use-cases/services.ts	principal;duracao330;integral | principal;analytics330;integral	f15d49c60cbac720c7d49539fbb308d79862c3fc7f49b18a02450df1251ac906	true
 backend/src/modules/api/public/analytics/page-view/validator/index.ts	principal;duracao330;integral | principal;analytics330;integral	b79211c723a4d0153a849daabc70bd2a43ac8a637c980cb69e9227c097766573	true
+backend/src/modules/api/public/auth/login/DTOs/IStoreDTO.ts	Planck;legal340;integral	f37b2ca6d07065f71a025cdc1d7f2ef5902e9d6bc523994fa2eacecdc4da9fd9	true
 backend/src/modules/api/public/auth/login/index.ts	Tesla;notificacoes;integral | Tesla;notificacoes328;integral	ef62432e95b27ac20cd157cc0f8f7e453bf60a65563a151e9a083effafc3d137	true
-backend/src/modules/api/public/auth/login/repositories/LoginRepository.ts	Tesla;notificacoes;integral	81365bb2b4f8de595436212a56bf4dfa6fc167d548785d943323d0bd425adb2a	true
+backend/src/modules/api/public/auth/login/repositories/LoginRepository.ts	Tesla;notificacoes;integral | Planck;legal340;integral	81365bb2b4f8de595436212a56bf4dfa6fc167d548785d943323d0bd425adb2a	true
 backend/src/modules/api/public/billing/webhook/DTOs/IWebhookDTO.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	37d14b0bc065fd15c324e06d5ff39b607f992ce7db7f59515be5202acc044d9c	true
 backend/src/modules/api/public/billing/webhook/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	308ed2b814d750a5474c5c91e6699412e0e046c9ae9c7f017d3c20b909090300	true
 backend/src/modules/api/public/billing/webhook/repositories/WebhookRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	26798a770ec765691a40b1d8b1ca3edc60772f067fa7e311e5d5c0e1a31d72ef	true
 backend/src/modules/api/public/billing/webhook/repositories/interfaces/IWebhookRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	04f9e86d6996ff82a84aaf829488c024f86db6a1efc4083408eb5e8970f17748	true
 backend/src/modules/api/public/billing/webhook/use-cases/controller.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	e13696556cc4c8568464c4b51ec09eb210af6dbd8eefec8c74f8d4fce6fafcea	true
 backend/src/modules/api/public/billing/webhook/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f8415a2d1fa01ef37f35665a2e4260c58be465dbba7c8ebaaa8e15242260a56d	true
+backend/src/modules/api/public/google/callback/index.ts	Planck;legal340;integral	27f5495b2d53faaf87f94f6138a7aadb073b76c98d57047288cf65642529beec	true
+backend/src/modules/api/public/google/login/index.ts	Planck;legal340;integral	4650ca309483e54c088a1ec1e7451f6421ab0dc8ffc1588e9fa0671d6931135a	true
 backend/src/modules/api/public/google/utils/config.ts	Tesla;notificacoes;integral	bc07a8cd2ad662949c7174ea1166c40d25b0f4f1ca4749ec2b560e6ca319cfbd	true
+backend/src/modules/api/public/google/utils/state.ts	Planck;legal340;integral	44e1472c496404dd7e8490a3d61df2552379cc65bb6c4e128d8763c6f6969eb1	true
 backend/src/modules/api/public/seo/community-post/DTOs/IPublicCommunityPostSeoDTO.ts	Tesla;comunidades;integral	ec31d81584960b7f2ec0eeea7c3b01e0d38f415436340cea688a00bd003196e1	true
 backend/src/modules/api/public/seo/community-post/index.ts	Tesla;comunidades;integral	9ec10eaba22232a95d4d048adf23c054dc4257a690f535818627f14487347454	true
 backend/src/modules/api/public/seo/community-post/use-cases/controller.ts	Tesla;comunidades;integral	f02d893d46d337862da8550d999c40d8889caed31a44b3f9522688c76b381cee	true
@@ -731,6 +747,13 @@ backend/src/modules/api/public/seo/psychologist/index.ts	Goodall;configuracoesSE
 backend/src/modules/api/public/seo/psychologist/use-cases/controller.ts	Goodall;configuracoesSEO;integral_inicial	6e98ff297ce7509f96bf7dcd9480c795057ede28145adf775252956a0d9ca9f7	true
 backend/src/modules/api/public/seo/psychologist/use-cases/services.ts	Goodall;configuracoesSEO;integral_inicial	02b7b6d6bca61c292b1dc48a296924a23b30afe8576cac1b8a230e81cb322651	true
 backend/src/modules/api/public/seo/psychologist/validator/index.ts	Goodall;configuracoesSEO;integral_inicial	3e3c6f8787731d790177574da7e6b3357e2720f09e78a5ad492b57e81806bbcc	true
+backend/src/modules/api/public/user/index.ts	Planck;legal340;integral	180097c9320b525f03a5a228105a5d896d85ce43651d901f44ef1ea8c748b720	true
+backend/src/modules/api/public/user/store/DTOs/IStoreDTO.ts	Planck;legal340;integral	34914c8b37a1c57e0dc4a79cea682327fe3657e36b6e0b66fdffb78ee7c9d06f	true
+backend/src/modules/api/public/user/store/index.ts	Planck;legal340;integral	518ee527a4d5276d330c2e6e83d270eaf2fcf721e5d3400efc6bcdb61231fd88	true
+backend/src/modules/api/public/user/store/repositories/StoreRepository.ts	Planck;legal340;integral	bada145f6f3ff6351f78341b78c75611017a9c06f0482eff589a8ca3fcd20777	true
+backend/src/modules/api/public/user/store/use-cases/controller.ts	Planck;legal340;integral	0cd3b5081f78490e720b4508b76afff7ee68a3c5c061f03ff5e8b9a7a1433121	true
+backend/src/modules/api/public/user/store/use-cases/services.ts	Planck;legal340;integral	01758068e3637efd6424cefc6899f029487efce52f336b027a7320a74d13561b	true
+backend/src/modules/api/public/user/store/validator/index.ts	Planck;legal340;integral	4a36ba00f8b02657a9a1bc7066b9ea65cd1207e94b3d02f3dc87502aaa56bbad	true
 backend/src/modules/api/public/video-assets/index.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	6ff368e4a40f9d179d5cf9a64b631e0889c11298e03db38c959d56513a222b5a	true
 backend/src/modules/api/public/video-assets/use-cases/controller.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	389ec853beb3b21769beec63dffd5beb9cbcba6ed2c5d9f87de0648297ac5019	true
 backend/src/modules/api/public/video-assets/use-cases/services.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	0e61403f80a4f575836ec1411ffb2128b8c1fc794b2cd2b448a9642f90d0c5d1	true
@@ -762,7 +785,7 @@ backend/src/modules/catalogs/defaults.ts	Goodall;configuracoesSEO;integral_inici
 backend/src/modules/profile-media/public-storage.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	836a091b0e92f583c767e4d01a5a2f69e4f1a4c6be622e5126f649557cfc9769	true
 backend/src/modules/seo/managed-route-defaults.test.ts	principal;metadados332;integral	5d7a92c59cb5613edf39806babb2b1bb1ead90f136f3dde5fc975f21c5ce4cc6	false
 backend/src/modules/seo/managed-route-defaults.ts	principal;metadados332;integral	2ca1cad32b98af22a1a829ac2315c6f73c47e3d5382abaebe7da3add62dfb295	false
-backend/src/modules/seo/metadata-settings.ts	Goodall;configuracoesSEO;integral_inicial | principal;metadados332;integral	2ab6faffd9471c767efb8f22cd56c36f92bc94639e5db55da1977475127d2652	true
+backend/src/modules/seo/metadata-settings.ts	Goodall;configuracoesSEO;integral_inicial | principal;metadados332;integral | Planck;legal340;integral	2ab6faffd9471c767efb8f22cd56c36f92bc94639e5db55da1977475127d2652	true
 backend/src/modules/seo/repositories/SeoMetadataRepository.ts	Goodall;configuracoesSEO;integral_inicial | principal;metadados332;integral	67d53ba992496018d309bc871250fb14d14de13ca16c1ff6a5a3b3c4050a9a3a	true
 backend/src/modules/video-assets/association-guard.ts	principal;associacao333;integral | Tesla;associacao333;integral_final	2e70dead6128f3b169e03c7670f47e7df8a7ad2016e3aab562ac54cde45d0ee1	false
 backend/src/modules/video-assets/authorization.test.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | Tesla;associacao333;integral_final	566c1dd2b327df6c4e955eaa81a501e3c9b761338e15f82204ca53f47edf0509	true
@@ -824,13 +847,14 @@ backend/src/utils/subscription-entitlement.ts	Tesla;checkout;integral_inicial | 
 backend/src/utils/validator.ts	Euclid;denuncias;integral | Tesla;notificacoes;integral	52168fab9ef7baec62ff3453d3cd1f4a2e013ac4bf0b096e931fae8f526b35b3	true
 backend/src/utils/video-stream-import-source.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	0741d021a2e809bbaac6277640df629eda3f071910f735088239acfb6e21ee70	true
 backend/tsconfig.json	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Lagrange;perfil328;integral | Tesla;vocabulario337;integral_dos_ranges | Tesla;historico_notificacoes338;integral	8f863ae8f89b0e7faed1728c83434feb20f9db1bd5b641272907badaf21bc698	true
-frontend/AGENTS.md	Tesla;notificacoes;integral | Euclid;modais329;integral_inicial | Euclid;hidratacao;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch	e3447d84251880fb34cfae09131cb4c57471529bbfe60976a3245793cf621627	true
+frontend/AGENTS.md	Tesla;notificacoes;integral | Euclid;modais329;integral_inicial | Euclid;hidratacao;integral_inicial | Goodall;configuracoesSEO;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch | Bacon;cache340;integral	e3447d84251880fb34cfae09131cb4c57471529bbfe60976a3245793cf621627	true
 frontend/biome.json	Tesla;notificacoes;integral | Lagrange;perfil328;integral	8642db530904d3c3dec8f706276602e32a0c23c3e88a31bf158fe85d2171b9f2	true
+frontend/next.config.ts	Planck;legal340;integral	b5e2ddb811fef673ac9792bc387afec8fc92c19fb90fc42895655c5fe68d2365	true
 frontend/package.json	Tesla;notificacoes;integral | Euclid;modais329;integral_inicial	75839224df6f04b299ac78fa6ceefaec4a8bddaa08dd0e38d4f870eab3d0ddbe	true
 frontend/public/sw.js	Tesla;notificacoes;integral	9211267d985e453b85da84aecbe6653f6addaf5f719c79c99b37ad57603c5ccc	true
-frontend/scripts/register-source-modules.mjs	principal;recuperacao334;integral | Euclid;anonimato337;integral_inicial_e_patch	93555d2e01843665c11c233378fcbc613f873e4d0a9d984251debf401604059b	false
+frontend/scripts/register-source-modules.mjs	principal;recuperacao334;integral | Euclid;anonimato337;integral_inicial_e_patch | Bacon;cache340;integral | parent;cards340;integral	93555d2e01843665c11c233378fcbc613f873e4d0a9d984251debf401604059b	false
 frontend/src/api/auth-cookie.ts	Euclid;hidratacao;integral_inicial	28bf4e81ba910f01d9b2ff932c8c907cc7ce6358de5e59ecae380be270b66990	true
-frontend/src/api/cache/keys.ts	Lagrange;estado_posts;integral | Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	92be75a81b6febac0788f8401dc048877c2db2e34d89a749153db707f0695753	true
+frontend/src/api/cache/keys.ts	Lagrange;estado_posts;integral | Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial | Bacon;cache340;integral	92be75a81b6febac0788f8401dc048877c2db2e34d89a749153db707f0695753	true
 frontend/src/api/callers/account/index.tsx	Euclid;hidratacao;integral_inicial	8fc163cb8b3e2b75850d260020297f82a3fcecff98a9179fe994c78108f2cc9d	true
 frontend/src/api/callers/analytics/index.tsx	Euclid;sessao331;integral_inicial	3c84c9d7be34bb41e2a01cfeec178a233af46896765431c7433b6d32f4c846e0	true
 frontend/src/api/callers/auth/index.tsx	Euclid;hidratacao;integral_inicial | principal;hidratacao331;integral | principal;recuperacao334;integral	983da64b28f264fee4d115c8e8c859b46a741392b3d35a446421c90f173a96a3	true
@@ -840,10 +864,12 @@ frontend/src/api/callers/notification/index.tsx	Tesla;notificacoes;integral | Eu
 frontend/src/api/callers/notification_subscription/index.tsx	Tesla;notificacoes;integral | Euclid;sessao331;integral_inicial	e52c5273291210a7cf679100b9e6716fd0ca477d98cbad21600b1736fe6f188f	true
 frontend/src/api/callers/patient/index.tsx	Euclid;hidratacao;integral_inicial	7f122834228942893ab51da8579672bc8d84156c6a7d7bf8b5250f506bf82dd4	true
 frontend/src/api/callers/posts/index.tsx	Tesla;consumidores_midia;integral_inicial	849279feaf3e8a0cb10f145383febe8d758a3c302e23422bf8063f14aa823b42	true
-frontend/src/api/callers/posts/post-mutations.ts	Tesla;consumidores_midia;integral_inicial	7e6722601dc2f2025a08409e962ca4390af0fc5978e366cb9d182903c6e89a5e	true
-frontend/src/api/callers/posts/queries.ts	Lagrange;estado_posts;integral	4e16206b844718d3eef3d2601d0efa4c8993572da56ba93b8eda2a67ce274064	true
-frontend/src/api/callers/posts/reply-mutations.ts	Lagrange;estado_posts;integral | Tesla;consumidores_midia;integral_inicial	c14b6fd538db67ab14e7837ca86aa8856da57d4bd1b4404de6a20b3896bf60f0	true
-frontend/src/api/callers/posts/vote.ts	Euclid;posts_forms336;integral_inicial	3c216dea5621fb6a1dd46be10a1b9ae2df9bbfc732df0f894bd16a20f8fd24ba	true
+frontend/src/api/callers/posts/interaction-cache.test.mjs	Bacon;cache340;integral_freeze+parent_patch_recibo	8ce870a4f6698306b32cbf8d2ea169ae8e9f4bc2fa08ae6c0d5cb3a60d15d11f	false
+frontend/src/api/callers/posts/interaction-cache.ts	Bacon;cache340;integral_freeze+parent_patch_recibo	2aef12d7872ff2341fcda0c6abd9c1029334a6e3f2f71170c63e85a027a9d660	false
+frontend/src/api/callers/posts/post-mutations.ts	Tesla;consumidores_midia;integral_inicial | Bacon;cache340;integral_freeze+parent_patch_recibo	6f3f9b1e901ec29568bea2995d4f78e0681182cd06e736a449313dbcabc8a81c	true
+frontend/src/api/callers/posts/queries.ts	Lagrange;estado_posts;integral | Bacon;cache340;integral	4e16206b844718d3eef3d2601d0efa4c8993572da56ba93b8eda2a67ce274064	true
+frontend/src/api/callers/posts/reply-mutations.ts	Lagrange;estado_posts;integral | Tesla;consumidores_midia;integral_inicial | Bacon;cache340;integral_freeze+parent_patch_recibo	029d01ac8c0195483dec1b7eeae3b375265535f7d4e6abe7ef181f5a7e12edfe	true
+frontend/src/api/callers/posts/vote.ts	Euclid;posts_forms336;integral_inicial | Bacon;cache340;integral_freeze+parent_patch_recibo	3efc09ba0e9b4c5b0dccc2bacb0e1d3c9ef7064301bbbacf120bee839021128a	true
 frontend/src/api/callers/psychologist-billing/index.tsx	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	0f9678689292453fc7b3fd59c7276ed4513b3626022619ca0db20edb90730567	true
 frontend/src/api/callers/psychologist-cfp/index.tsx	Euclid;profissional_forms;integral_inicial	7255dc2ab149211fd9068018d3d36b4dab25b069ef6d6ee68e7816d37c545065	true
 frontend/src/api/callers/psychologist-free-profile/index.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	c1d87933d7c6726ccd6ebe030103f8b7992145e887e17f2b6a870b85aee09ecc	true
@@ -862,17 +888,17 @@ frontend/src/api/generator/types/free-profile.ts	Lagrange;perfil;integral | Lagr
 frontend/src/api/generator/types/index.ts	Euclid;sessao331;integral_inicial	e7c468126a48358d781c939270d4a0c968f058aed7efe4b65d1b9e4de3bcd2a8	true
 frontend/src/api/generator/types/notification.ts	Tesla;notificacoes;integral	495b9881513190bdc22eb96fdbdb51d437a91d22784120118cb1720632af4da5	true
 frontend/src/api/generator/types/patient-relations.ts	Euclid;profissional_forms;integral_inicial	47e5fd941f23d72f816cddc2c17269d852008427fdc3562503a1975d522c80ca	true
-frontend/src/api/generator/types/posts.ts	Lagrange;estado_posts;integral	908f5e8ed9054319d4cd4eea3a1a9e0ffe9f2ffa400d153284b9c979d52ee95e	true
+frontend/src/api/generator/types/posts.ts	Lagrange;estado_posts;integral | Bacon;cache340;integral	908f5e8ed9054319d4cd4eea3a1a9e0ffe9f2ffa400d153284b9c979d52ee95e	true
 frontend/src/api/generator/types/psychologist-reviews.ts	Euclid;forms_conta_avaliacoes;integral_inicial	d7d551f056bf2404223907f6a75719ddeb717347d0a336743d647634390b4ff3	true
 frontend/src/api/generator/types/reviews.ts	Euclid;forms_conta_avaliacoes;integral_inicial	60286cad40bfba2ceeb1538d1d8c41eeccc3842c72f16781e3a6452a03acd6dc	true
 frontend/src/api/generator/types/user.ts	Euclid;profissional_forms;integral_inicial	d5bf880531c5273455d23d1dda210cc967900f8b6f42e1b87b4f3476a8aff2cd	true
 frontend/src/api/generator/types/video-assets.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	cb15a409f4543e0a5dc5c4b4e7cb2d6e675c47ef07d3588a4af8b2edb6126683	true
 frontend/src/api/generator/types/whatsapp-verification.ts	Euclid;profissional_forms;integral_inicial	412b3712b5f83f682ab4491805a9d442c464ab1bd12ba94256e7dc13a62345b0	true
 frontend/src/api/handle.ts	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	a008172d977e8eb3484e78e397ebe1d5cddc7a22d8ebaf79cd3c72d474b4299c	true
-frontend/src/api/index.ts	Euclid;hidratacao;integral_inicial | principal;recuperacao334;integral	3beae9a40f1c42f51fb93c11c6fe38dc48495f6f1ff36765f641574662cf785f	true
+frontend/src/api/index.ts	Euclid;hidratacao;integral_inicial | principal;recuperacao334;integral | Bacon;cache340;integral	3beae9a40f1c42f51fb93c11c6fe38dc48495f6f1ff36765f641574662cf785f	true
 frontend/src/api/req/account/index.ts	Euclid;sessao331;integral_inicial	50c3cc0d9239a602fdb289ca4a27848390ad67b0706813e62ab9957611f12e8a	true
 frontend/src/api/req/analytics/index.ts	Euclid;sessao331;integral_inicial	b876590b829ae80499b654bb7ffbf21cc76fdd179d097bb30519fc6cb8c24263	true
-frontend/src/api/req/auth/index.ts	Tesla;notificacoes;integral | Tesla;notificacoes328;integral | Euclid;hidratacao;integral_inicial | principal;hidratacao331;integral | principal;recuperacao334;integral	65aa5afbead11de217f05e095a976e4a660dbffb3e08ff45ab6abbd961f6e65e	true
+frontend/src/api/req/auth/index.ts	Tesla;notificacoes;integral | Tesla;notificacoes328;integral | Euclid;hidratacao;integral_inicial | principal;hidratacao331;integral | principal;recuperacao334;integral | Planck;legal340;integral	65aa5afbead11de217f05e095a976e4a660dbffb3e08ff45ab6abbd961f6e65e	true
 frontend/src/api/req/community/index.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	424bb4014f09669562d1818a5820334a152c6f9011e8d4a601ebe43de2623607	true
 frontend/src/api/req/directory/index.ts	Euclid;hidratacao;integral_inicial	847b7270c36efc9d5181e404f078eebd981105d09062c6973921debf5589cf44	true
 frontend/src/api/req/notification-subscription/index.ts	Tesla;notificacoes;integral | Euclid;feed_e_conversao;integral_inicial	beb085635605ae63c8fab82eb533f2bcf9d5add8be0b2285ac4ed54f3e397955	true
@@ -902,7 +928,7 @@ frontend/src/app/app/community/[slug]/@modal/(.)post/success/page.tsx	Euclid;pos
 frontend/src/app/app/community/[slug]/@modal/default.tsx	Euclid;posts_forms336;integral_inicial	266f8c066e50c4ab16d7ff5dea71a22d3311fc210b24cae8249fa261a55844d5	true
 frontend/src/app/app/community/[slug]/components/community-header.tsx	Euclid;posts_forms336;integral_inicial	f19d6337a441e0416b03ed066af31e21fc6bdff0c23058f15934f60605c852e8	true
 frontend/src/app/app/community/[slug]/components/feed-controls.tsx	Euclid;posts_forms336;integral_inicial	897a1374044881606c50729b05ec6e2c2dd32a891ef99c019fb4ebbbde67581f	true
-frontend/src/app/app/community/[slug]/components/post-card.tsx	Euclid;posts_forms336;integral_inicial	4cdbd577a897cc8b492db702477ac4493814002f776aa2de271f4d1d8a9decb3	true
+frontend/src/app/app/community/[slug]/components/post-card.tsx	Euclid;posts_forms336;integral_inicial | parent;cards340;integral | parent;cards340;patch_recibo_revisado	ae1223585bfbc52b9ffc9ec7f296dd5bf75ff6f889238ec1071e9c60f3a9bd39	true
 frontend/src/app/app/community/[slug]/components/publish-onboarding.tsx	Euclid;posts_forms336;integral_inicial	ec1e2cab6b12fd032f3042f837b107ad90c1a7dcb2baa9cfdc8067b529ca1748	true
 frontend/src/app/app/community/[slug]/hooks/use-community-feed-scroll-restoration.ts	Euclid;posts_forms336;integral_inicial	11a4f73796596deca0dc9d0ed9bb1ac75ff4078560de24e864b7f113f2dbf4de	true
 frontend/src/app/app/community/[slug]/layout.tsx	Euclid;posts_forms336;integral_inicial	183d7e544299cbbdb1cbdf756159a51e53150d8945f35aee9f8b0c31a1aaec5b	true
@@ -976,12 +1002,12 @@ frontend/src/app/app/perfil/editar/page.tsx	Euclid;profissional_forms;integral_i
 frontend/src/app/app/perfil/page.tsx	Euclid;profissional_forms;integral_inicial	b1d042bb0275dbefe9a7475c430c61b3046d8ed2931d80093368d00570edc74e	true
 frontend/src/app/app/posts/mine/components/header.tsx	Euclid;posts_forms336;integral_inicial	a212b4b2d80e44f90e906c2a11ba838722b7793758b100122ad018d7cddbfd69	true
 frontend/src/app/app/posts/mine/components/infinite-loader.tsx	Euclid;posts_forms336;integral_inicial	fd2a2b5037f7fad667eeb248d6411efbd5980dc44c731a99c20f5193ab4fee6f	true
-frontend/src/app/app/posts/mine/components/reply-item-card.tsx	Euclid;posts_forms336;integral_inicial	d6203e2dbc163b58bf463fab8b4d31fb04e6ad542aa4d6bafbd9768f2ba43c40	true
+frontend/src/app/app/posts/mine/components/reply-item-card.tsx	Euclid;posts_forms336;integral_inicial | parent;cards340;integral | parent;cards340;patch_recibo_revisado	c520229d22ded40e713c25d93918a75a4d734ed2ee1aa6fbfea28ee62ee5405a	true
 frontend/src/app/app/posts/mine/logic.tsx	Euclid;posts_forms336;integral_inicial	c11ef7d085f7ddb15f88b24098c7ad7e199765df40302ee9518aaa5e2404daae	true
 frontend/src/app/app/posts/mine/modules/support.ts	Euclid;posts_forms336;integral_inicial	48dab83d0b6136fd7bd1535d14977dc0a92d76e8eb0111a1f42a381035530386	true
 frontend/src/app/app/posts/mine/page.tsx	Euclid;posts_forms336;integral_inicial	da54f2e09ea114bb98b8eba825cc70893264fc9cddd0e3c98a453505006cf30e	true
 frontend/src/app/app/posts/saved/components/pagination.tsx	Euclid;posts_forms336;integral_inicial	39c17a3610a655fed9a5249518475af8c1e46e6eff9eb646011fd65b84b8b10e	true
-frontend/src/app/app/posts/saved/components/saved-reply-card.tsx	Euclid;posts_forms336;integral_inicial	1c589d53b238f74226dbbf3a68418742cbd4c863641eb52415d3ec41a6b5e646	true
+frontend/src/app/app/posts/saved/components/saved-reply-card.tsx	Euclid;posts_forms336;integral_inicial | parent;cards340;integral | parent;cards340;patch_recibo_revisado	6d78fb1005d0698d577fc4869402c99cc826634b1eb3de5dff1077eaf4993c0a	true
 frontend/src/app/app/posts/saved/logic.tsx	Lagrange;estado_posts;integral	e2554cd867e8a3ec3f1d1b73b7c320ccf475b098f7de0fc48ed8ad42e444c1d2	true
 frontend/src/app/app/posts/saved/modules/support.ts	Lagrange;estado_posts;integral	fad5ea6879c2d78401fc3c0ac8aae70d5c029ae6ebeb8cf744c3582a19ed493e	true
 frontend/src/app/app/posts/saved/page.tsx	Euclid;posts_forms336;integral_inicial	6ee2222a19b04692876cef39d75d9a95637eb42df8ce9a59a2f9b297e72694fe	true
@@ -1104,6 +1130,7 @@ frontend/src/app/auth/admin-view-as/logic.tsx	Euclid;forms_conta_avaliacoes;inte
 frontend/src/app/auth/admin-view-as/page.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	633fcc426e5908b9e8e2188f4b5febdb4bd5b570851386af994ceb810cc936d9	true
 frontend/src/app/auth/error/session-reset.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	ba1b604219690948833ab74f6493b9ca5fca27dbab06359842f82ac651d2cbea	true
 frontend/src/app/auth/layout.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	e95bd19b2bca52eac962501b3172164b6516dc4a8913a35db41493e971c74ac5	true
+frontend/src/app/auth/login/logic.tsx	Planck;legal340;integral	bbf42582dc55cd12ea61466a5982a2b9b9a09fdcde09ee84eafee0fe5358ed33	true
 frontend/src/app/auth/profile-selection/logic.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	50caf6226fcb63ed186fccb4de20feadf41ff0ad9089cb154f206cac2c3aec1a	true
 frontend/src/app/auth/profile-selection/page.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	5675f4883c7dc0c7091c8d2683cefb6251e8d75c99017507fa01c251fdfff06d	true
 frontend/src/app/auth/recovery/logic.tsx	Euclid;forms_conta_avaliacoes;integral_inicial | principal;recuperacao334;integral	baf542c99af28a995f2908920680c3d1a703b4ac76bf8b339aeb17c8c0672658	true
@@ -1113,6 +1140,12 @@ frontend/src/app/auth/recovery/use-form.tsx	Euclid;forms_conta_avaliacoes;integr
 frontend/src/app/auth/redirect/logic.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	46b0a03f921b17d552206ecdbd09c63d04c2a69bcd12130005924a20363e14ab	true
 frontend/src/app/auth/redirect/page.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	feb1cfebeb77d7a5ce329008ca642db90ac30473128c9baf5a4e97a02a964bd3	true
 frontend/src/app/auth/register/error-message.ts	Euclid;forms_conta_avaliacoes;integral_inicial	dbd27bb2625de0d68150c29b009e320f527dcc5b41245223cc4569afb21d4b88	true
+frontend/src/app/auth/register/patient/logic.tsx	Planck;legal340;integral	16eed3e1a6a810f22e45fa726b92d3a9298ba11154da59e303f9fca3a93514ab	true
+frontend/src/app/auth/register/patient/page.tsx	Planck;legal340;integral	d828b3f16e0e661cbc261f3ec0c5f2761a8d03cf03ef0137e711ff198628387c	true
+frontend/src/app/auth/register/patient/use-form.tsx	Planck;legal340;integral	5c31c15141432164beff500a0394a24109437899a0b50943aa300b86f17ce0b2	true
+frontend/src/app/auth/register/psychologist/logic.tsx	Planck;legal340;integral	f98387f691a015031b0adfc4fd608231663d548ca6fbb4fe4144f9acbf2d199c	true
+frontend/src/app/auth/register/psychologist/page.tsx	Planck;legal340;integral	e42addd4550f0858be2f8ff7cc3bab58fa059815d8d9acad35e31f303434cd0a	true
+frontend/src/app/auth/register/psychologist/use-form.tsx	Planck;legal340;integral	4351c200373a1a978d9d69b5f4cf43283b094c58f3f16cb956161eaae1dca6df	true
 frontend/src/app/auth/reset-password/logic.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	cdce88334eff432b72c5b9c3a57ff5c2e78d050f5d78a23c414fcb69676512db	true
 frontend/src/app/auth/reset-password/page.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	f1e4168e45419e9400301b2f54caf2fe518c187eadce72db49808d1c0be8c5bd	true
 frontend/src/app/auth/reset-password/use-form.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	a9634cd99cfff41032f18ba7bf5f94e4b4a1df5515102d686bec33bb1bc4421e	true
@@ -1132,7 +1165,7 @@ frontend/src/app/globals.css	Euclid;feed_e_conversao;integral_inicial	41cfa6782b
 frontend/src/app/layout.tsx	Euclid;hidratacao;integral_inicial | Goodall;configuracoesSEO;integral_inicial	2434523a705775d282c9061ab95a1f02ea5d00fafb0bae7a5f0ef5bdf73ef422	true
 frontend/src/app/llms.txt/route.ts	Goodall;configuracoesSEO;integral_inicial	f2890355859190db4ba477b0b90d31be67f5583b321782b4974a60ca3ca8c0b0	true
 frontend/src/app/paciente/boas-vindas/page.tsx	Euclid;profissional_forms;integral_inicial	e21cf5dc7a86260031d7c41e07c5bcae5be832d82b1599cf84b7eec76eec9f54	true
-frontend/src/app/page.tsx	Goodall;configuracoesSEO;integral_inicial	9bd0979bcf0083ac2f9e73fd61c98fbac5de96ed2f8b21c04ded38bd1758275e	true
+frontend/src/app/page.tsx	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	9bd0979bcf0083ac2f9e73fd61c98fbac5de96ed2f8b21c04ded38bd1758275e	true
 frontend/src/app/patient/layout.tsx	Euclid;profissional_forms;integral_inicial	1eb64b097393bafd2eb18c370580811ae1b78fb63ad984a3a2374a01445085e8	true
 frontend/src/app/patient/welcome/logic.tsx	Euclid;profissional_forms;integral_inicial	664809c1489058b93c3f689a0b78a132d1a68ea7244ca3fb03bb5ac8d0633d13	true
 frontend/src/app/patient/welcome/page.tsx	Euclid;profissional_forms;integral_inicial	e5396af9ba6412a71aa101d70246d6a2d9d097a2db6dd50a279e8d9e6a62601b	true
@@ -1153,7 +1186,7 @@ frontend/src/app/psychologists/[id]/contact/page.tsx	Euclid;profissional_forms;i
 frontend/src/app/psychologists/[id]/page.tsx	Euclid;profissional_forms;integral_inicial	7e9d93351e0bc3c1dfb5922ae9c5bdab3c4d61bf9f33cc8c7e3cea3a09c7ec13	true
 frontend/src/app/psychologists/page.tsx	Euclid;profissional_forms;integral_inicial	b24d73f502ad63d11738ab21d2005a662355ce8f147b97e5f84a256295406c30	true
 frontend/src/app/robots.ts	Goodall;configuracoesSEO;integral_inicial	bd0cad065cb6e061ca21f534ecc0ec35c2fab482802867f74498ca98cbc0d76d	true
-frontend/src/app/sitemap.ts	Goodall;configuracoesSEO;integral_inicial	b85ea1b5b709bf07719e0c25e10b0fe214ba5bfdf0f66ade6b31b71b8db260f0	true
+frontend/src/app/sitemap.ts	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	b85ea1b5b709bf07719e0c25e10b0fe214ba5bfdf0f66ade6b31b71b8db260f0	true
 frontend/src/components/account/account-delete-section.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	48bc8019179b53e69bf2936d6d2b74ef78693ccf68a3c7a3d29e596ec821ba86	true
 frontend/src/components/account/use-delete-account-form.ts	Euclid;forms_conta_avaliacoes;integral_inicial	7c37d2750693f2dcdb80213e0b438b65c2e40c9e06764ccb64a860371c1c1fc9	true
 frontend/src/components/admin-view-as-banner.tsx	Euclid;sessao331;integral_inicial	f87818b9c157851bf588915c8d7f463561416c34563476b87888d20ede14bb66	true
@@ -1171,9 +1204,11 @@ frontend/src/components/community/community-post-card-author.tsx	Euclid;posts_fo
 frontend/src/components/community/community-post-card-reply-preview.tsx	Euclid;posts_forms336;integral_inicial	12d73f5d74f6af57ed34b12993ed596dd040e131dd0dc02755b7d8f52d233c55	true
 frontend/src/components/community/community-post-card-support.ts	Euclid;posts_forms336;integral_inicial	905b332a18dabd9559258cda47310338c1aeb7ae7569942091c0c2863604fd63	true
 frontend/src/components/community/community-post-card.tsx	Lagrange;estado_posts;integral	e71a23f4673c09983bd3856a3d151e01f5625b14ac37af1293e49a3a89ed25dc	true
-frontend/src/components/community/community-post-controls.test.mjs	Euclid;anonimato337;integral_inicial_e_patch | principal;integracao337;integral	a5f23ed441acd7391b4e3e4df1b26d57e4d4b8cccc9278b2f5622099baa9d2f3	false
+frontend/src/components/community/community-post-controls.test.mjs	Euclid;anonimato337;integral_inicial_e_patch | principal;integracao337;integral | Bacon;cache340;integral	a5f23ed441acd7391b4e3e4df1b26d57e4d4b8cccc9278b2f5622099baa9d2f3	false
 frontend/src/components/community/community-whatsapp-cta.tsx	Euclid;posts_forms336;integral_inicial	514803b993fdb3fe6091f52240ce661a22b9979a48d564abede11bf4dc45c7f4	true
 frontend/src/components/community/inline-expandable-text.tsx	Euclid;posts_forms336;integral_inicial	7cefa654c2ef00714399280fc4b570e3b1c32e58cd440863d941487d37aa8c59	true
+frontend/src/components/community/interaction-snapshot.test.mjs	parent;cards340;integral	6b83ace3f012d3988ebe506f516f9d09adf6c47b7366535779eeabbacc059ece	false
+frontend/src/components/community/interaction-snapshot.ts	parent;cards340;integral	b096fa43a3cc90a36b574d50c8608f839a0aaba54c06449ddff04a07bb822c7a	false
 frontend/src/components/community/lectum-share-download-dialog.tsx	Euclid;modais329;integral_inicial	8cb4ba6ca47fdbcd72223c96bb1d9306b12e828c0a7a0070c80ca87c3fefbb89	true
 frontend/src/components/community/mentor-badge.tsx	Euclid;posts_forms336;integral_inicial	365181eedd256e1ad176c5b217fdc73c7df8d876e9a565d87b7e71af60966500	true
 frontend/src/components/community/post-action-button.tsx	Euclid;posts_forms336;integral_inicial	560882bc94df9b94e6bbd71d0a555bbfdcb10a10c490cd9410d043c02e30fba6	true
@@ -1187,6 +1222,7 @@ frontend/src/components/community/reply-edit-modal.tsx	Euclid;modais329;integral
 frontend/src/components/community/reply-media-attachment-control.tsx	Lagrange;perfil328;integral	7337f64d9ac5b1ad1ad6fe0ce278013d96a969290303a7e02fb41902cf4eb64f	true
 frontend/src/components/community/reply-owner-action-copy.ts	Euclid;anonimato337;integral_inicial_e_patch | principal;integracao337;integral	db810ced34799787084ac9b8035bc770117ac84f9ccffc4727c5036b32d7a80b	false
 frontend/src/components/community/reply-owner-action-menu.tsx	Euclid;posts_forms336;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch	7f5506b0d454df5c95b4af85ef9a83664889e050f1815cf098f4e18dd46e45ad	true
+frontend/src/components/community/use-interaction-snapshot.ts	parent;cards340;integral	4364cc453fbd62ebad830da79a5424a53898393d7a79ecad952de9038a902060	false
 frontend/src/components/community/vote-action-button.tsx	Euclid;posts_forms336;integral_inicial	5dd85dd5e43dbdf3bc735c6a14419e1a8f4547751c0750db9fe6cb501b898d52	true
 frontend/src/components/controllers/calendar/index.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	5405f39d2350e9d68f482aec8474543bb75d549ab22ae0b5828a8152b57ef7ae	true
 frontend/src/components/controllers/cep/index.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	b7a2d0a0c30a672ae53bff0e4a5c32fb719638be5a75e9a8beb9244fa9b459ca	true
@@ -1214,6 +1250,7 @@ frontend/src/components/pull-to-refresh.tsx	Euclid;feed_e_conversao;integral_ini
 frontend/src/components/pwa-install-prompt.tsx	Euclid;sessao331;integral_inicial	907e454efc4395f80e1d397054d179a5fa9c96e150f5d1e126a2340f0959b7c6	true
 frontend/src/components/ui/app-error-state.tsx	Tesla;notificacoes;integral	a9e51df17b5a32edf116e7fde1961daceefcd4fba9ebdf8cefe57f33938db6e8	true
 frontend/src/components/ui/app-page-header.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	7404e9ac0fd600d99df61925023decdcd70602959e58779a1727b7d2aaf1ed5f	true
+frontend/src/components/ui/auth-card.tsx	Planck;legal340;integral	0edb55e5dd7c1de962e0774d8526f7f16bdba00cda44c5ac60406c209b2f4606	true
 frontend/src/components/ui/empty-state.tsx	Tesla;notificacoes;integral | Euclid;sessao331;integral_inicial	538dcd0b70e12da1b7adc62bcffb264ebf80068ed0f3174addadbe5666eca7c1	true
 frontend/src/components/ui/inline-alert.tsx	principal;integracao329;integral | Euclid;sessao331;integral_inicial	2cc2a3a45178e70dbd7a9fb82b855c6747035e5fb70a06fdeb9beeb42b998e70	true
 frontend/src/components/ui/loading-state.tsx	Euclid;sessao331;integral_inicial	dbd0eaf01039b3adaeffa1ced76471de201832e8ebbbebdee424d35348546ee9	true
@@ -1245,7 +1282,7 @@ frontend/src/hooks/use-modal-scroll-lock.ts	principal;integracao329;integral	4ce
 frontend/src/hooks/user-set/index.tsx	Euclid;hidratacao;integral_inicial	f3e65c1c3e03c312be97034206e313a8d62a136d7e54bffc7dc2bea860c84f11	true
 frontend/src/hooks/video-stream/index.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	1f342598e52ce79ab594c50cac6310969a87bc864b2e9d14e0900202eeaba4f5	true
 frontend/src/lib/seo-metadata.ts	Goodall;configuracoesSEO;integral_inicial | Euclid;sessao331;integral_inicial | principal;metadados332;integral	6c2bd747df81fc039c07e7a27301449c9278fe502253ed72f196a7023d3d8acb	true
-frontend/src/lib/seo.ts	Goodall;configuracoesSEO;integral_inicial | Euclid;sessao331;integral_inicial	44cd8c84d920676f4a666f1eae46218bb4c345558d28c787c71d40c135af7ab7	true
+frontend/src/lib/seo.ts	Goodall;configuracoesSEO;integral_inicial | Euclid;sessao331;integral_inicial | Planck;legal340;integral	44cd8c84d920676f4a666f1eae46218bb4c345558d28c787c71d40c135af7ab7	true
 frontend/src/lib/square-og-image.tsx	Goodall;configuracoesSEO;integral_inicial	b75cbc3e67a116738f33ad86e75ed49506d223fd4ed4080a9f99d61acf2677d8	true
 frontend/src/lib/utils.ts	Tesla;notificacoes;integral | Euclid;sessao331;integral_inicial | Euclid;anonimato337;integral_inicial_e_patch	4acbc7165a8d54738ff62b51414e772c08fe78434e524e6d8770180d3ba2925f	true
 frontend/src/lib/video-playback.ts	Euclid;imports14;integral_inicial	f164ad262be119ea787a3e2502934a04cfa75c7cddb8018808d8e393962a6661	true
@@ -1254,7 +1291,7 @@ frontend/src/providers/progress/index.tsx	Euclid;hidratacao;integral_inicial	7ce
 frontend/src/providers/query/index.tsx	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	b1c0641454d9523eda2c384e570f33b80f9420751838a243043f2b89b80c55c5	true
 frontend/src/providers/redux/index.tsx	Euclid;hidratacao;integral_inicial	55ba2aa4e6a9b81ce20dd21dbdac054f38d75d82d260ed05ba8ca990968b44fe	true
 frontend/src/providers/socket/index.tsx	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	e3dffa901f0ab0d40e785203494e2a2556e3e785ed3fb762f9df9d544ac37455	true
-frontend/src/proxy.ts	Tesla;notificacoes;integral	a1d3886c0444f5ee76fd3f8aba77e9e5782fd8c74084ef22d0576f517f08c9cb	true
+frontend/src/proxy.ts	Tesla;notificacoes;integral | Planck;legal340;integral	a1d3886c0444f5ee76fd3f8aba77e9e5782fd8c74084ef22d0576f517f08c9cb	true
 frontend/src/registry/new-york-v4/ui/button.tsx	Tesla;notificacoes;integral | Euclid;sessao331;integral_inicial	80867699fe403f0b3ccd8b1d429f37dc9cda289478838573fc188fea82797b60	true
 frontend/src/registry/new-york-v4/ui/input.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	12f01ecd0edfcea38fe9bbd9229b0b1946aefaa4c89f4343db108e190850660f	true
 frontend/src/registry/new-york-v4/ui/sonner.tsx	Euclid;sessao331;integral_inicial	f2d38c2901b0a429ba027d788ffcdf4cd810da9b33b4389383f4f47b79162e05	true
@@ -1267,12 +1304,13 @@ frontend/src/store/modules/socket/types.ts	Euclid;sessao331;integral_inicial	384
 frontend/src/store/modules/user/actions.ts	Euclid;hidratacao;integral_inicial	99bc00c7328c60ca31bb9624171e8b47f2b879bdf86446e09d4c691a29dba7a2	true
 frontend/src/store/modules/user/reducers.ts	Euclid;hidratacao;integral_inicial	2aca620624b8ed684a2724cba7a1c2921634eee70b039e6bb15a77a45b5657c9	true
 frontend/src/store/modules/user/types.ts	Euclid;hidratacao;integral_inicial	ddf246e3b37233956ad291aca127a03a70bba365fb013e3f49787c756be2fd95	true
-frontend/src/templates/auth/index.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	77994befc143d842db389897e85043bedf81a41a88e0475690b739e3a30e4218	true
+frontend/src/templates/auth/index.tsx	Euclid;forms_conta_avaliacoes;integral_inicial | Planck;legal340;integral	77994befc143d842db389897e85043bedf81a41a88e0475690b739e3a30e4218	true
 frontend/src/templates/center/index.tsx	Euclid;forms_conta_avaliacoes;integral_inicial	db3d5228f51049ba43dd299b2b881bc974eeb3fccccc6ef5bc39437c3fed6b28	true
 frontend/src/templates/center/styles.ts	Euclid;forms_conta_avaliacoes;integral_inicial	81083722289ff61b4d5f3f5cadb6e950f9f2021233ffd0820add4c6a241b2485	true
 frontend/src/templates/private/index.tsx	Euclid;hidratacao;integral_inicial | principal;hidratacao331;integral	6f2ad3416fa0ac28afdc4efa16de1698f68af4887adec546f3d4b5fc4f8457cc	true
 frontend/src/templates/private/navigation.tsx	Euclid;hidratacao;integral_inicial	9dd403c21a4c3d789b38e0ea43a5984537d3bb96b551715e87af9bfdb9854706	true
 frontend/src/templates/private/sidebar-preference.ts	Euclid;hidratacao;integral_inicial	f60cfbca104b765d7081f05aa1abba748f5063bd3779c442c08fbd87e150479b	true
+frontend/src/templates/public/index.tsx	Planck;legal340;integral	5c14e0bb4fb0d5477783f36bc8297e126bd272f0fc3096d222cb2450bcf68fc3	true
 frontend/src/utils/admin-view-as.ts	Euclid;sessao331;integral_inicial	f794c7e1ea3cc985251be09df4348e781fe5ced5952b859a51dacf906207a3b8	true
 frontend/src/utils/analytics-path.ts	Euclid;feed_e_conversao;integral_inicial	f9411ec148093df8aa0a565fbe0322ea9a028207d4886937fcd5e645e1afafec	true
 frontend/src/utils/analytics-session.ts	Euclid;sessao331;integral_inicial	641a4bb4bdcd499f3b85cc6df2e56847e5a69ac528cfa5339bfa19c3b02948fe	true
@@ -1309,8 +1347,8 @@ frontend/src/utils/prompt-cooldown.ts	Euclid;sessao331;integral_inicial	e02f1d00
 frontend/src/utils/prompt-coordinator.ts	Euclid;sessao331;integral_inicial	ed9fda761446bba8974a13ae314a61b3e19ffe3103fe38535e6c704cb86087fb	true
 frontend/src/utils/psychologist-onboarding.ts	Euclid;sessao331;integral_inicial	565104e8603d40c19ce43ac73eabb5c54d25d7e3092f6dbe8cc9cfd545656ce8	true
 frontend/src/utils/psychologists-feed-return-memory.ts	Euclid;hidratacao;integral_inicial	680e4cd059eeb675dd1ba2db9c60f78c75a795037b08735d49944763f150d0df	true
-frontend/src/utils/public-asset-sources.ts	Euclid;sessao331;integral_inicial | principal;recuperacao334;integral	b783f020057cbae7cf6f598089d4192b7f184a6fae096fdcc62fa875f76a7ce7	true
-frontend/src/utils/public-routes.ts	Euclid;sessao331;integral_inicial	f2a59b46fc8b1f365093aaf74beacc11c480360d426a185a436ae8ba3766dbc1	true
+frontend/src/utils/public-asset-sources.ts	Euclid;sessao331;integral_inicial | principal;recuperacao334;integral | parent;cards340;integral	b783f020057cbae7cf6f598089d4192b7f184a6fae096fdcc62fa875f76a7ce7	true
+frontend/src/utils/public-routes.ts	Euclid;sessao331;integral_inicial | Planck;legal340;integral	f2a59b46fc8b1f365093aaf74beacc11c480360d426a185a436ae8ba3766dbc1	true
 frontend/src/utils/pull-to-refresh.ts	Euclid;modais329;integral_inicial | Euclid;imports14;integral_inicial	c735d71fc9ce7d68f8af477d74e8434bd5bc2b48359c3a1d1ca8b523d9f6b188	true
 frontend/src/utils/push-subscription.ts	Tesla;notificacoes;integral | Euclid;sessao331;integral_inicial	5104a2a54a583f288b56d7531ba39552784f85a84101909cd830f894824f6613	true
 frontend/src/utils/pwa-install.ts	Euclid;feed_e_conversao;integral_inicial	0726d2be6ff024eb5dd16898a3fa280710dfb714ecdc4d8ec926a4fe6af1e667	true
@@ -1322,15 +1360,16 @@ frontend/src/utils/upload-lifecycle.ts	Lagrange;perfil;integral | Lagrange;perfi
 frontend/src/utils/urlToBase64.ts	Euclid;sessao331;integral_inicial	2018c55204f3e10951ee05a8535ed38d8e5de46636e11ba988ea4a74453f8ccf	true
 frontend/src/utils/video-asset-upload.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial | principal;associacao333;integral	35237a625ceb6db73579bdd1ac680f4a96786631cdd161ebac1aca6d3df124fd	true
 frontend/src/utils/video-stream.ts	Tesla;uploads_estados;integral_inicial | Tesla;consumidores_midia;integral_inicial	c1646ad9c98ec3b711e54658801310a353e4c846e93e5a2262a957716bdcb1e5	true
+frontend/tsconfig.json	Bacon;cache340;integral	b9cb328ea433b25c54c8649aed5ef3e1d9874110789c6453d1b96181e5695740	true
 package.json	principal;video_votos339;integral_original_e_diff_bump339	4538e821409abf510ee4dbf9926bf617d4b7dd51fb45300ce3cbb61a3bc4101d	true
 scripts/check-env-examples.mjs	Lagrange;estado_posts;integral | Euclid;denuncias;integral	2f224ebf1268b3439be5df0728d9f9a3f4a07aa870bf4b3d7d5beb34f50c4dcf	true
 scripts/check-source-safety.mjs	Lagrange;estado_posts;integral | Euclid;denuncias;integral | Tesla;notificacoes;integral | Tesla;notificacoes328;integral	25b771003c26d68eeb1bacf3087e7fdb5ff93d9c99a6906cbbed58b4476cd7de	true
 scripts/check-source-size.mjs	principal;analytics330;integral | Tesla;associacao333;integral_final	7d9be6fcc24b0b45d686e366081d5a54301eda8ee7d540e8d5749e041603b249	true
 video/.dockerignore	Lagrange;video;integral | principal;video_votos339;integral	8f8fc6d3182fe337e0e7be0ebf109e3d3f4b10c1701c5c01f816a3bf2f3fc6f5	true
 video/.gitignore	Lagrange;video;integral	f4c16b55118034eed191514a959d7c7252021c9a0ab91366cbb3c927640c41e9	true
-video/Dockerfile	Lagrange;video;integral | principal;integracao;integral | principal;diagnostico_historico338;integral | principal;video_votos339;integral	f847073fd876462938ca359e10985edcda897bd084241124d784e1d70d512840	true
+video/Dockerfile	Lagrange;video;integral | principal;integracao;integral | principal;diagnostico_historico338;integral | principal;video_votos339;integral | Carson;video340;integral	f847073fd876462938ca359e10985edcda897bd084241124d784e1d70d512840	true
 video/README.md	Lagrange;video;integral | principal;video_votos339;integral_original_e_diff	17874aa45e0616de792caac7a488b934f1fa54d3d96e1ee28d4c08a6d89a4d9b	true
-video/biome.json	Lagrange;video;integral | principal;video_votos339;integral	2588307b62efbd1d355858640a29646913c03155db0e6e11eacbfda738834d8b	true
+video/biome.json	Lagrange;video;integral | principal;video_votos339;integral | Carson;video340;integral	2588307b62efbd1d355858640a29646913c03155db0e6e11eacbfda738834d8b	true
 video/docker-compose.yml	Lagrange;video;integral	1252681c2e9b6eb9aa74c4a05dc0130fd9a9f46a27ace0b5ec758c34e0a5ef8f	true
 video/package.json	principal;diagnostico_historico338;integral | principal;video_votos339;integral_original_e_diff_bump339	0f5f1c4de37c0f09355f0f8d60c0f7a2a9d14edef5d3c501e5028e21437c9f80	true
 video/pnpm-workspace.yaml	Lagrange;video;integral	656f65bc79ff251877d3e92e63174c805311b9ae91e8eeaf6e0b6ecf04941520	true
@@ -1342,30 +1381,33 @@ video/scripts/e2e.mjs	Lagrange;video;integral | principal;video_votos339;integra
 video/src/all.ts	Lagrange;video;integral	790c4a8e41d10cdaa97114cfd44c930ae9b56bf44f3c0d350418c72b5abb10d6	true
 video/src/api.ts	Lagrange;video;integral	bd448f528219f4b084a9ef0ef142ee06842fa2c564e61e40a0e06ee89975bc30	true
 video/src/app.ts	Lagrange;video;integral	d4d6d11555f362dbda9c03619da45fea6ff430eaae74155091aa38f270377abb	true
-video/src/config/env.test.ts	Lagrange;video;integral	6db10c80add1c1a9f7afd30cfeb8277ea32e0a9ae9718d3ae0c32cfb2cdd4b76	true
-video/src/config/env.ts	Lagrange;video;integral	e35072803bb893abfe9ca2c7c5577f4919372f25f8bf95d764ce0411dc2d768b	true
+video/src/config/env.test.ts	Lagrange;video;integral | Carson;video340;integral	6db10c80add1c1a9f7afd30cfeb8277ea32e0a9ae9718d3ae0c32cfb2cdd4b76	true
+video/src/config/env.ts	Lagrange;video;integral | Carson;video340;integral	e35072803bb893abfe9ca2c7c5577f4919372f25f8bf95d764ce0411dc2d768b	true
 video/src/config/version.ts	Lagrange;video;integral	f9bc527fe32fc2cce11cd1e7d591f9d47dc4388712b8c7a51410786cf50235cd	true
-video/src/domain/jobs/contracts.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	0a0beda77fdba9c559719d0e55a27090f99a22aed49aa190f4bfee13a72419c5	true
+video/src/domain/jobs/contracts.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral | Carson;video340;integral	0a0beda77fdba9c559719d0e55a27090f99a22aed49aa190f4bfee13a72419c5	true
 video/src/http/logging.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral	5a0a03fceaedcd9fc464d3c69071de2bc4a10f446cc285747b318eaf420a30e2	true
 video/src/http/readiness.ts	Lagrange;video;integral	29403e5136e0b79cf038943ddda874bf47f8679f64fb38c6713031ec99896db5	true
 video/src/http/responses.ts	Lagrange;video;integral	909001b16cb7a9d6239662a14974e2969382f25bb03e87a801f730cfb2316da1	true
-video/src/infra/ffmpeg/compress.test.ts	Lagrange;video;integral | Hubble;probe339;integral	e046d395064c378410239ea015e67805f59ee94da56324272f9839d03514a7fd	true
-video/src/infra/ffmpeg/compress.ts	Lagrange;video;integral | Hubble;probe339;integral	a9eb9bd1e604249aefa74be91eea30c1624d8d5840f80791ecf45d80e421c3ff	true
-video/src/infra/ffmpeg/drawbox-art.ts	Lagrange;video;integral	0dc8213eaf0068c6dbe1ed0694a18195035b42d648d9eda08d9ea9d1de6890c0	true
-video/src/infra/ffmpeg/drawtext.ts	Lagrange;video;integral	c3904c5f04a1b258d725ba75b3d343385e96a510f8663e5f37356380f4562f45	false
+video/src/infra/ffmpeg/compress.test.ts	Lagrange;video;integral | Hubble;probe339;integral | Carson;video340;integral	e046d395064c378410239ea015e67805f59ee94da56324272f9839d03514a7fd	true
+video/src/infra/ffmpeg/compress.ts	Lagrange;video;integral | Hubble;probe339;integral | Carson;video340;integral	a9eb9bd1e604249aefa74be91eea30c1624d8d5840f80791ecf45d80e421c3ff	true
+video/src/infra/ffmpeg/drawbox-art.ts	Lagrange;video;integral | Carson;video340;integral	0dc8213eaf0068c6dbe1ed0694a18195035b42d648d9eda08d9ea9d1de6890c0	true
+video/src/infra/ffmpeg/drawtext.ts	Lagrange;video;integral | Carson;video340;integral	c3904c5f04a1b258d725ba75b3d343385e96a510f8663e5f37356380f4562f45	false
 video/src/infra/ffmpeg/probe.test.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	4dce0f8ef2202fddc7ed033a65b03d16970e629e5da5e168df33e23c66fb291c	true
-video/src/infra/ffmpeg/probe.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	76843ec0f91f8c880dbd7022b2298af4b8f2c04cab3a8203b235482374000e56	true
+video/src/infra/ffmpeg/probe.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral | Carson;video340;integral	76843ec0f91f8c880dbd7022b2298af4b8f2c04cab3a8203b235482374000e56	true
 video/src/infra/ffmpeg/process.test.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral | Hubble;probe339;integral	b93669b079aed7807f77fef58b173c28c98c7a856ff50da7fd908aa73a5fcb91	true
-video/src/infra/ffmpeg/process.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral | Hubble;probe339;integral	b493ec38225e3a41d4741c1f69fbf5041985c88a7e5f3feb7d84213a9dd8181f	true
+video/src/infra/ffmpeg/process.ts	Lagrange;video;integral | principal;diagnostico_historico338;integral | Hubble;probe339;integral | Carson;video340;integral	b493ec38225e3a41d4741c1f69fbf5041985c88a7e5f3feb7d84213a9dd8181f	true
 video/src/infra/ffmpeg/remote-fetch.ts	Lagrange;video;integral	eba32759bf3e4a2b17cb5f412025052e86668a807bb121c00194d647734f6bac	false
 video/src/infra/ffmpeg/remote-source-local.test.ts	Lagrange;video;integral	0b729251bbddae343c886f41b0aafa5973c380c3f82fdb046428e4ba33df4097	false
 video/src/infra/ffmpeg/remote-source.test.ts	Lagrange;video;integral	6e19de8528ffbfa86c1d387ded0f1215b8023380386c3470b1e0c9da5592ea4f	true
 video/src/infra/ffmpeg/remote-source.ts	Lagrange;video;integral	6cdbdcd47c661220780085648a77867ddb7e7e954212ed44f1bdff3e12183ae7	true
-video/src/infra/ffmpeg/social-share-assets.ts	Lagrange;video;integral	c5693273c1fe685ada0799f07f0e652dea9b26c797441f2709d459c8e15d0a60	true
-video/src/infra/ffmpeg/social-share.test.ts	Lagrange;video;integral	7f8720b567803d84d43ba8b494e1741f5d802e78a2c6494b69aa8fceec57482e	true
-video/src/infra/ffmpeg/social-share.ts	Lagrange;video;integral	e5c8cbc0e1581fcbdaa098a5bcc3d1d7747cf24bc28ad7b12516f8eb95b69677	true
+video/src/infra/ffmpeg/social-share-assets.ts	Lagrange;video;integral | Carson;video340;integral	c5693273c1fe685ada0799f07f0e652dea9b26c797441f2709d459c8e15d0a60	true
+video/src/infra/ffmpeg/social-share-local.test.ts	Carson;video340;integral	f39b5f74fffeba84bbdbfb33158f13319c5051f8ba2a05b2f66e63fa4eae3961	false
+video/src/infra/ffmpeg/social-share-output.test.ts	Carson;video340;integral	4e9923a1b378f2882766d9d503ff90da599b4bd89fc3707e3ee75e4b1c3693dc	false
+video/src/infra/ffmpeg/social-share-output.ts	Carson;video340;integral	e7c636f7bd90eb4744781c46519d6197231de0459884a6b2caaf79f637d6b82e	false
+video/src/infra/ffmpeg/social-share.test.ts	Lagrange;video;integral | Carson;video340;integral	7f8720b567803d84d43ba8b494e1741f5d802e78a2c6494b69aa8fceec57482e	true
+video/src/infra/ffmpeg/social-share.ts	Lagrange;video;integral | Carson;video340;integral	21d2b1fc105cd79b81c153d5164e38c2f69ec32de9779ee5038a023ab06ca320	true
 video/src/infra/ffmpeg/source-url.test.ts	Lagrange;video;integral	8ec2670602d0b62fe135664cd65280ee6f5bdc7da1c061cf2a7aea50ce1610fb	false
-video/src/infra/ffmpeg/source-url.ts	Lagrange;video;integral	1b62947215497cf2279741e23e018370e26c0d0c1ca1c184df912381592b9ba3	true
+video/src/infra/ffmpeg/source-url.ts	Lagrange;video;integral | Carson;video340;integral	1b62947215497cf2279741e23e018370e26c0d0c1ca1c184df912381592b9ba3	true
 video/src/infra/queue/cancellation.ts	Lagrange;video;integral	33361369a6aab2f094543d7c3742bbccc12f417dbf236400e68c5a48842cd1f7	true
 video/src/infra/queue/client.ts	Lagrange;video;integral | principal;video_votos339;integral	b75fb454d6d725a3099e0ebc42004fa087c1d1bc829a63e26e1016f270d27b70	true
 video/src/infra/queue/jobs.ts	Lagrange;video;integral	85594a45715515f7478433f32aa56aa836e424274776c3add5d3a0e46918b5ff	true
@@ -1380,11 +1422,11 @@ video/src/infra/storage/storage.ts	Lagrange;video;integral	a96a43b4ecdaa785c4a1d
 video/src/middleware/auth.test.ts	Lagrange;video;integral	e3e43b3ab6cc7303867b2f852659ed739fe17d2d42345f75a68c0db40e2bd96d	true
 video/src/middleware/auth.ts	Lagrange;video;integral	80b2917faefa376f7aede46be0c5b901dc850e998ff441ce82dcfb5278bff409	true
 video/src/middleware/trace.ts	Lagrange;video;integral	0c03f17848221a1545c0a86148149007125d9c026ac6166b86facd68c2a0fd22	true
-video/src/modules/jobs/router.ts	Lagrange;video;integral	39c1070a34fdc0dbbcb118c422c815800296c246a31f594bfb37d491c6b232a9	true
-video/src/modules/jobs/service.ts	Lagrange;video;integral	867983956fe38c335cdf27976675dee3564dcfa778099010e3eda5891b5be7c5	true
+video/src/modules/jobs/router.ts	Lagrange;video;integral | Carson;video340;integral	39c1070a34fdc0dbbcb118c422c815800296c246a31f594bfb37d491c6b232a9	true
+video/src/modules/jobs/service.ts	Lagrange;video;integral | Carson;video340;integral	867983956fe38c335cdf27976675dee3564dcfa778099010e3eda5891b5be7c5	true
 video/src/modules/jobs/upload.ts	Lagrange;video;integral	9dac68815983db42ab996fd57852f715ed0f6cca87cded4f3314fd76135cddfd	true
 video/src/runtime-startup.test.ts	Lagrange;video;integral | principal;video_votos339;integral	13a58d9eeb80735655fde85dc3963497642406b8ab7fb78e3468eee1f6d12b10	true
 video/src/types.d.ts	Lagrange;video;integral	b419888db11a26a87f2cc795bfa47ba60a76dd8a3acdd1df2fdad9bd1f319460	true
-video/src/worker-processor.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral	48ed48759bb0f77e9afe4d509c8857f49ff668786dfd0d55ac6d28a612dc7284	true
+video/src/worker-processor.ts	Lagrange;video;integral | principal;video_votos339;integral | Hubble;probe339;integral | Carson;video340;integral	48ed48759bb0f77e9afe4d509c8857f49ff668786dfd0d55ac6d28a612dc7284	true
 video/src/worker.ts	Lagrange;video;integral	aeb00f9ccf61b4cdd0e3b92b17d3ebb1c94565724e76d8a6dd3bfdbb6388fa5e	true
-video/tsconfig.json	Lagrange;video;integral | principal;diagnostico_historico338;integral | principal;video_votos339;integral	e35f1bbb697fdfc6555cc2f2325a13bbb1500661d0461fe59e25b36bdf4d8bec	true
+video/tsconfig.json	Lagrange;video;integral | principal;diagnostico_historico338;integral | principal;video_votos339;integral | Carson;video340;integral	e35f1bbb697fdfc6555cc2f2325a13bbb1500661d0461fe59e25b36bdf4d8bec	true

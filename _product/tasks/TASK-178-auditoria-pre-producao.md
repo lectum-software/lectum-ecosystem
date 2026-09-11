@@ -626,3 +626,39 @@ de API/banco/credenciais/env/dependências ou recursos publicados. Não executar
 BR08 reanalisado: writer vigente persiste apenas±1 e marca voto desfeito como deleted=true.
 A hipótese de registro0 ativo segue sem ocorrência demonstrada; não alterar dados nem
 classificar como incidente confirmado a partir apenas da ausência de filtro na leitura.
+
+### Continuação340 — consistência das interações e limites do render
+
+Escopo de fechamento: CP2 (props novas versus snapshots locais de votos/salvos), CP3
+(rollback preservando outros alvos/campos/operações) e V03 (dimensões do render social
+dentro da configuração vigente). Confirmar por contratos reais e processos locais; não
+equivaler teste puro/React/QueryClient a integração autenticada ou incidente publicado.
+Em paralelo, localizar documentos legais e registrar precisamente o requisito externo,
+sem inventar texto aprovado nem desbloquear produção por presunção.
+
+Branch homolog; preservados os arquivos locais do usuário em admin. Sem novos packages,
+schema/migrations, env obrigatória, reset ou alteração em dados publicados. Frontend e
+video mantêm publicação independente. Rollback de código não exige restaurar banco.
+Builder acessível lista somente MUI, sem referência Lectum/Quick Copy disponível por essa
+interface; usar proto local de Feed Comunidade/Posts Salvos, preservando layout mobile-first.
+
+- [x] CP2 reconcilia dados novos sem apagar interação pendente e sem reutilizar estado de outro alvo/usuário.
+- [x] CP3 rollback limita-se ao alvo/campos da operação e preserva atualização mais recente.
+- [x] V03 respeita limites configurados sem relaxar inspeção da saída nem mudar o default visual.
+- [x] Checks/builds e provas locais aprovados; leitura registrada sem contar duplicatas.
+- [ ] Publicação/smoke340 registrados; limites funcionais restantes explícitos.
+
+Atualização da publicação339: em11/09 às17:35UTC, backend/frontend/Admin339 e18/18smoke,
+health/ready200. Serviço privado de vídeo ainda tem como última prova do operador a338;
+isso não bloqueia os trabalhos locais independentes nem comprova encode/playback publicado.
+
+Complemento de integração340: commit/rollback exigem mesma instância Query; recibos devem
+corresponder ao post/tipo/resposta iniciado. CP3 tem106/106 contratos locais (88 do executor
++18 de recibos pelo integrador), não equivalentes a requisições autenticadas. 13 testes CP2
+e11 transições do hook real no Browser passaram; baseline de estado extraído dos três
+cards reproduziu valores antigos. Build local da comunidade retornou estado de falha de
+conexão após hidratação; não contar como integração local bem-sucedida nem contornar CORS.
+
+Minutas e versões provisórias do aceite localizadas; URLs previstas de termos/privacidade
+retornaram404 em homologação. Aprovação dos textos solicitada ao responsável, sem publicar
+minutas nem modificar aceites antigos. Base:1461 leituras iniciais,5parciais,1655pendentes.

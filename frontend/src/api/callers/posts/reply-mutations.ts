@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  type QueryClient,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   CreatePostReplyPayload,
@@ -29,6 +34,12 @@ import {
   assertMediaUploadFinalSize,
   assertMediaUploadSourceSize,
 } from "@/utils/media-upload-limits";
+
+import {
+  beginPostInteraction,
+  commitPostInteraction,
+  rollbackPostInteraction,
+} from "./interaction-cache";
 
 import { invalidateDirectoryPsychologistQueries } from "./queries";
 
@@ -256,84 +267,21 @@ export const useDeleteReply = (callbacks?: {
   });
 };
 
-export const useSaveReply = (postId: string, replyId: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+export const createSaveReplyOptions = (
+  queryClient: QueryClient,
+  postId: string,
+  replyId: string,
+) => {
+  return mutationOptions({
     mutationFn: (saved: boolean) =>
       saved ? api.unsaveReply(postId, replyId) : api.saveReply(postId, replyId),
-    onMutate: async (saved) => {
-      await queryClient.cancelQueries({ queryKey: ["posts", postId, "replies"] });
-      await queryClient.cancelQueries({ queryKey: ["posts", postId, "reply-thread"] });
-      const previousReplies = queryClient.getQueriesData<PostRepliesResponse>({
-        queryKey: ["posts", postId, "replies"],
-      });
-      const previousThreads = queryClient.getQueriesData<PostReplyThreadResponse>({
-        queryKey: ["posts", postId, "reply-thread"],
-      });
-      const nextSaved = !saved;
-
-      queryClient.setQueriesData<PostRepliesResponse>(
-        { queryKey: ["posts", postId, "replies"] },
-        (old) => {
-          if (!old) return old;
-
-          return {
-            ...old,
-            data: old.data.map((reply) => updateReplySaved(reply, replyId, nextSaved)),
-          };
-        },
-      );
-
-      queryClient.setQueriesData<PostReplyThreadResponse>(
-        { queryKey: ["posts", postId, "reply-thread"] },
-        (old) => {
-          if (!old) return old;
-
-          return {
-            ...old,
-            reply: updateReplySaved(old.reply, replyId, nextSaved),
-          };
-        },
-      );
-
-      return { previousReplies, previousThreads };
-    },
-    onError: (_error, _variables, context) => {
-      context?.previousReplies?.forEach(([queryKey, data]) => {
-        queryClient.setQueryData(queryKey, data);
-      });
-
-      context?.previousThreads?.forEach(([queryKey, data]) => {
-        queryClient.setQueryData(queryKey, data);
-      });
-    },
-    onSuccess: (data: PostSaveResponse) => {
-      if (data.target_type !== "reply" || !data.reply_id) return;
-      const replyId = data.reply_id;
-
-      queryClient.setQueriesData<PostRepliesResponse>(
-        { queryKey: ["posts", postId, "replies"] },
-        (old) => {
-          if (!old) return old;
-
-          return {
-            ...old,
-            data: old.data.map((reply) => updateReplySaved(reply, replyId, data.saved)),
-          };
-        },
-      );
-      queryClient.setQueriesData<PostReplyThreadResponse>(
-        { queryKey: ["posts", postId, "reply-thread"] },
-        (old) => {
-          if (!old) return old;
-
-          return {
-            ...old,
-            reply: updateReplySaved(old.reply, replyId, data.saved),
-          };
-        },
-      );
+    onMutate: (saved) =>
+      beginPostInteraction(queryClient, { postId, replyId, kind: "save" }, () => ({
+        saved: !saved,
+      })),
+    onError: (_error, _variables, context) => rollbackPostInteraction(queryClient, context),
+    onSuccess: (data: PostSaveResponse, _variables, context) => {
+      commitPostInteraction(queryClient, context, { saved: data.saved }, data);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["posts", postId, "replies"] });
@@ -341,6 +289,12 @@ export const useSaveReply = (postId: string, replyId: string) => {
       queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
       invalidateDirectoryPsychologistQueries(queryClient);
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
     },
   });
+};
+
+export const useSaveReply = (postId: string, replyId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation(createSaveReplyOptions(queryClient, postId, replyId));
 };

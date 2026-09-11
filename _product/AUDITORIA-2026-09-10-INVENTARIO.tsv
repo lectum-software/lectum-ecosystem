@@ -29,9 +29,9 @@ README.md	raiz	documentacao	744357ef8cb4b3b5cd48085bc15b6ae28fbfb4f6	7577	invent
 _product/AUDITORIA-CORRECOES-2026-08-07.md	_product	documentacao	0bcb7dc17a8f4c171240bd7bb3c446b26e23f920	12157	inventariado_nao_revisado
 _product/Fluxogramas do Produto.pdf	_product	visual_binario	86c56ae492b1893f10e7dc64ce346fd8942d8dd5	52578	inventariado_nao_revisado
 _product/Lectum PRD.pdf	_product	visual_binario	6d1498f8927a3e327a7e640ac6a5e151c86997c7	48502	inventariado_nao_revisado
-_product/PRIVACY-NOTES.md	_product	documentacao	67da935856d001e93cc62a08058983956c12f269	1453	inventariado_nao_revisado
+_product/PRIVACY-NOTES.md	_product	documentacao	67da935856d001e93cc62a08058983956c12f269	1453	lido_revisao_inicial
 _product/Prompt.md	_product	documentacao	ea3e0c6f49446e52891547e9c61fcbd4215bbf39	5424	inventariado_nao_revisado
-_product/decisions.md	_product	documentacao	ceb4e32d2f4c8352230979218b9eb91a672f953a	10801	inventariado_nao_revisado
+_product/decisions.md	_product	documentacao	ceb4e32d2f4c8352230979218b9eb91a672f953a	10801	lido_revisao_inicial
 _product/legal/README.md	_product	documentacao	8918652c0e1cad10324a954d404840b2ea7ab7ce	1035	lido_revisao_inicial
 _product/legal/politica-de-privacidade-v0.1.md	_product	documentacao	d74e321bb6c5f2ce13d6ce2af265be2996ef4f72	20034	lido_revisao_inicial
 _product/legal/termos-de-servico-v0.1.md	_product	documentacao	e2eede532651665b8c5cca5e8d440e3e646f1bcb	15032	lido_revisao_inicial
@@ -704,9 +704,9 @@ adrs/0008-fluxo-publico-auth-selecao-perfil-login.md	adrs	documentacao	c3b04d188
 adrs/0009-migrations-dev-obrigatorias-em-tasks-com-banco.md	adrs	documentacao	f4623fa4dac905b14b3226a815863b3b5a4c1af1	2062	inventariado_nao_revisado
 adrs/0010-recuperacao-senha-frontend.md	adrs	documentacao	d4f02f7b08d3f930aadf659c2cc74f77b2e7e140	3280	inventariado_nao_revisado
 adrs/0011-verificacao-email-codigo.md	adrs	documentacao	145db7ef33117a7c10973d50100ffeb7d88823f1	6359	inventariado_nao_revisado
-adrs/0012-cadastro-paciente-role-profile.md	adrs	documentacao	3241ab69d675cb57dc7f96500f136e23967545b7	6959	inventariado_nao_revisado
+adrs/0012-cadastro-paciente-role-profile.md	adrs	documentacao	3241ab69d675cb57dc7f96500f136e23967545b7	6959	lido_revisao_inicial
 adrs/0013-onboarding-boas-vindas-paciente.md	adrs	documentacao	2d032194614dcc6747636530baa4e714eb0abb8a	9195	inventariado_nao_revisado
-adrs/0014-cadastro-inicial-psicologo-profile.md	adrs	documentacao	8550cbfe057bbd350e4185242ddfd3525c5cbdc6	5254	inventariado_nao_revisado
+adrs/0014-cadastro-inicial-psicologo-profile.md	adrs	documentacao	8550cbfe057bbd350e4185242ddfd3525c5cbdc6	5254	lido_revisao_inicial
 adrs/0015-bloqueio-consulta-cfp-automatica.md	adrs	documentacao	1c6b7dbd59855a767b75c1800cd61d51c8e54ad5	3202	inventariado_nao_revisado
 adrs/0016-planos-apos-cadastro-psicologo.md	adrs	documentacao	e4b64710d00b1f45da2d2255734fdcffe92a62ad	12764	inventariado_nao_revisado
 adrs/0017-bloqueio-storage-privado-crp.md	adrs	documentacao	cde9d65bbe7c6aa495240f10d7be2975b43074e9	4641	inventariado_nao_revisado
@@ -793,7 +793,7 @@ adrs/0097-top-mentor-badge-premium.md	adrs	documentacao	3f8a61eeb77eaac77b338f02
 adrs/0098-notificacoes-eventos-dominio.md	adrs	documentacao	18d833b5a70951380c08696da85190d2e3731ba4	9254	inventariado_nao_revisado
 adrs/0099-upload-avatar-paciente.md	adrs	documentacao	50846de39d2b0c0f87e2fb08ca2e14366877956f	1956	inventariado_nao_revisado
 adrs/0100-prioridade-respostas-profissionais-comunidade.md	adrs	documentacao	13d28c1766c3487e9f002647881e67e34173c41e	1958	inventariado_nao_revisado
-adrs/0101-captura-localizacao-ip-analytics.md	adrs	documentacao	08760412a7e6b8b17eea2932a29acd2d9793821e	2266	inventariado_nao_revisado
+adrs/0101-captura-localizacao-ip-analytics.md	adrs	documentacao	08760412a7e6b8b17eea2932a29acd2d9793821e	2266	lido_revisao_inicial
 adrs/0102-arvore-comentarios-posts-comunidade.md	adrs	documentacao	10279d49c3a1820afe330c7d139b0687b71b6133	29321	inventariado_nao_revisado
 adrs/0103-player-video-vertical-unificado.md	adrs	documentacao	46ae67bcdba0ed90eba92908a7f3e8cb7e5ab204	13848	inventariado_nao_revisado
 adrs/0104-barra-acoes-comunidade-unificada.md	adrs	documentacao	21600f60323dfb0dc7bf78cb48d280a70aef3c8a	11426	inventariado_nao_revisado
@@ -1297,7 +1297,7 @@ backend/prisma/migrations/20260822183235_add_post_share_artifacts/migration.sql	
 backend/prisma/migrations/20260903214345_add_cloudflare_stream_video_assets/migration.sql	backend	banco	c4cf92567a05af4a301b30cb25da420771fb9aef	1604	inventariado_nao_revisado
 backend/prisma/migrations/20260904123000_add_video_asset_migration_audit/migration.sql	backend	banco	dde93e3ea6a23637e5be68ab1951ef7b6eb2959b	454	inventariado_nao_revisado
 backend/prisma/migrations/migration_lock.toml	backend	banco	044d57cdb0d5b5bff3475112359a4ee70439bf78	128	inventariado_nao_revisado
-backend/prisma/schema.prisma	backend	banco	64c5d9b1daa9963ba41ac1ac8bce06e4202252a8	71920	inventariado_nao_revisado
+backend/prisma/schema.prisma	backend	banco	64c5d9b1daa9963ba41ac1ac8bce06e4202252a8	71920	lido_revisao_inicial
 backend/public/community/icons/ansiedade.png	backend	visual_binario	d0ae18c410c74bd11aa0d485878662ded9a198ec	1055376	inventariado_nao_revisado
 backend/public/community/icons/autocuidado.png	backend	visual_binario	594025a5d96feaabbd8afa32a98518159d866297	988359	inventariado_nao_revisado
 backend/public/community/icons/depressao.png	backend	visual_binario	75634777498223864b81bea6266bf3db1e44a466	967842	inventariado_nao_revisado
@@ -2148,7 +2148,7 @@ backend/src/modules/api/public/analytics/page-view/validator/index.ts	backend	co
 backend/src/modules/api/public/auth/login/DTOs/IFindByEmailDTO.ts	backend	codigo	c2ad5212b0bcfa9fed3d97a82b62dd4ce4e1f107	68	inventariado_nao_revisado
 backend/src/modules/api/public/auth/login/DTOs/IFindToEmitDTO.ts	backend	codigo	6bc32fcebc112fe9d12f99ce3f5537bb1434d959	67	inventariado_nao_revisado
 backend/src/modules/api/public/auth/login/DTOs/ILoginDTO.ts	backend	codigo	703a7d81489140f96beb9ad45a76be23205857c8	157	inventariado_nao_revisado
-backend/src/modules/api/public/auth/login/DTOs/IStoreDTO.ts	backend	codigo	7f2741e839d2877fcf2abd9ec5d12b7c38f54f62	377	inventariado_nao_revisado
+backend/src/modules/api/public/auth/login/DTOs/IStoreDTO.ts	backend	codigo	7f2741e839d2877fcf2abd9ec5d12b7c38f54f62	377	lido_revisao_inicial
 backend/src/modules/api/public/auth/login/DTOs/ITokenByDeviceDTO.ts	backend	codigo	f3f04180341ae425866d5d092d65d416c278ee82	97	inventariado_nao_revisado
 backend/src/modules/api/public/auth/login/DTOs/IUpdateDTO.ts	backend	codigo	e96d00704974aeb5d458d88c5ecb083495b11dfd	455	lido_revisao_inicial
 backend/src/modules/api/public/auth/login/index.ts	backend	codigo	80eaab3a8f7ed200b8d90a85ffbc86ed062969be	410	lido_revisao_inicial
@@ -2177,20 +2177,20 @@ backend/src/modules/api/public/billing/webhook/repositories/WebhookRepository.ts
 backend/src/modules/api/public/billing/webhook/repositories/interfaces/IWebhookRepository.ts	backend	codigo	33e7c55a063a5097e978b2e029165598349285c0	826	lido_revisao_inicial
 backend/src/modules/api/public/billing/webhook/use-cases/controller.ts	backend	codigo	eaba78f2d0a6aa72d9979f148361aa2b99326721	471	lido_revisao_inicial
 backend/src/modules/api/public/billing/webhook/use-cases/services.ts	backend	codigo	412d544f89461d1af92176865185424ad92667a7	3875	lido_revisao_inicial
-backend/src/modules/api/public/google/callback/index.ts	backend	codigo	81552f7b5e2121839648c63de1e71bd1547ef097	5736	inventariado_nao_revisado
+backend/src/modules/api/public/google/callback/index.ts	backend	codigo	81552f7b5e2121839648c63de1e71bd1547ef097	5736	lido_revisao_inicial
 backend/src/modules/api/public/google/link/DTOs/IGoogleLinkDTO.ts	backend	codigo	ebfcce8f3612f6c5e57917a7a2358047469eab8d	217	inventariado_nao_revisado
 backend/src/modules/api/public/google/link/index.ts	backend	codigo	9ac63511fb71d4f2697bf288fcf3759cede5d5dd	298	inventariado_nao_revisado
 backend/src/modules/api/public/google/link/use-cases/controller.ts	backend	codigo	580ca1b2d3ba587eefa589115ddfc499fe49052a	774	inventariado_nao_revisado
 backend/src/modules/api/public/google/link/use-cases/services.test.ts	backend	teste	e1a1c2a6cfedab64eb8565f75fd3ba44260c8e8c	2619	inventariado_nao_revisado
 backend/src/modules/api/public/google/link/use-cases/services.ts	backend	codigo	05a74281ec5242dceafc191168c04a09ae2cf7aa	3156	inventariado_nao_revisado
-backend/src/modules/api/public/google/login/index.ts	backend	codigo	bfc8a693f31a07abd580e822a3e775161f2b8e89	1791	inventariado_nao_revisado
+backend/src/modules/api/public/google/login/index.ts	backend	codigo	bfc8a693f31a07abd580e822a3e775161f2b8e89	1791	lido_revisao_inicial
 backend/src/modules/api/public/google/me/index.ts	backend	codigo	c835100fea3f12db7f8442ce4880f944d7f28d83	2734	inventariado_nao_revisado
 backend/src/modules/api/public/google/utils/callback-error.test.ts	backend	teste	1a80827a5d88f179ae57934cb0ebad498666d6e5	941	inventariado_nao_revisado
 backend/src/modules/api/public/google/utils/callback-error.ts	backend	codigo	ac2bbd81cc549fe2997aeb494093f4a89a7af998	685	inventariado_nao_revisado
 backend/src/modules/api/public/google/utils/config.test.ts	backend	teste	b07bbc43fa12d574d6458d88a63515659f602e7e	4922	inventariado_nao_revisado
 backend/src/modules/api/public/google/utils/config.ts	backend	codigo	2b6b3e20e23a0197075c130a724acbf9bfe77d7a	3182	lido_revisao_inicial
 backend/src/modules/api/public/google/utils/state.test.ts	backend	teste	a45e9e38510527e9e799e74fafdd26af40346fff	3052	inventariado_nao_revisado
-backend/src/modules/api/public/google/utils/state.ts	backend	codigo	c74de807b313028a10c23429a1e9ac4d3b6aaf87	9752	inventariado_nao_revisado
+backend/src/modules/api/public/google/utils/state.ts	backend	codigo	c74de807b313028a10c23429a1e9ac4d3b6aaf87	9752	lido_revisao_inicial
 backend/src/modules/api/public/seo/community-post/DTOs/IPublicCommunityPostSeoDTO.ts	backend	codigo	2feff16cb42223243cb50c962f7276b8bb298df6	536	lido_revisao_inicial
 backend/src/modules/api/public/seo/community-post/index.ts	backend	codigo	fe18789fa1bd774d753e07958abc331d6e410cb1	345	lido_revisao_inicial
 backend/src/modules/api/public/seo/community-post/use-cases/controller.ts	backend	codigo	230b575ecd06651e7c740576d76a79ee2a813af0	899	lido_revisao_inicial
@@ -2210,14 +2210,14 @@ backend/src/modules/api/public/seo/psychologist/index.ts	backend	codigo	e49a2b41
 backend/src/modules/api/public/seo/psychologist/use-cases/controller.ts	backend	codigo	b3603271524640bcb6b6ad9937917d7fab6cf844	421	lido_revisao_inicial
 backend/src/modules/api/public/seo/psychologist/use-cases/services.ts	backend	codigo	d7c175c298c0f74aabd0eaeaa135594761327df8	3932	lido_revisao_inicial
 backend/src/modules/api/public/seo/psychologist/validator/index.ts	backend	codigo	5da5a8b4aeb9bb1e7d08af3078f16c14fa1f7f98	309	lido_revisao_inicial
-backend/src/modules/api/public/user/index.ts	backend	codigo	ace6b3cc67f3cabb443339967cf6dcbd32439786	155	inventariado_nao_revisado
-backend/src/modules/api/public/user/store/DTOs/IStoreDTO.ts	backend	codigo	b5df529e3c8e2306ad6bccb2d5f45159cd41eb6d	822	inventariado_nao_revisado
-backend/src/modules/api/public/user/store/index.ts	backend	codigo	e5f3319f1635942677b06d16b0ea6b50f853330f	376	inventariado_nao_revisado
-backend/src/modules/api/public/user/store/repositories/StoreRepository.ts	backend	codigo	d7812080eeee80f49e55db7a02ead1520634bd20	4367	inventariado_nao_revisado
+backend/src/modules/api/public/user/index.ts	backend	codigo	ace6b3cc67f3cabb443339967cf6dcbd32439786	155	lido_revisao_inicial
+backend/src/modules/api/public/user/store/DTOs/IStoreDTO.ts	backend	codigo	b5df529e3c8e2306ad6bccb2d5f45159cd41eb6d	822	lido_revisao_inicial
+backend/src/modules/api/public/user/store/index.ts	backend	codigo	e5f3319f1635942677b06d16b0ea6b50f853330f	376	lido_revisao_inicial
+backend/src/modules/api/public/user/store/repositories/StoreRepository.ts	backend	codigo	d7812080eeee80f49e55db7a02ead1520634bd20	4367	lido_revisao_inicial
 backend/src/modules/api/public/user/store/repositories/interfaces/IStoreRepository.ts	backend	codigo	68d7cbbc041667c4b993bc4517d7793bc5482f5d	284	inventariado_nao_revisado
-backend/src/modules/api/public/user/store/use-cases/controller.ts	backend	codigo	de5fc955de8d20d16e4d4ba8dffda6ce72ae2761	390	inventariado_nao_revisado
-backend/src/modules/api/public/user/store/use-cases/services.ts	backend	codigo	3e5a17a0c312ee3be4d5e3fc43d5cf4a9b15ca32	3049	inventariado_nao_revisado
-backend/src/modules/api/public/user/store/validator/index.ts	backend	codigo	a674d88d67525fa41371f98147aa6704f803f9be	1940	inventariado_nao_revisado
+backend/src/modules/api/public/user/store/use-cases/controller.ts	backend	codigo	de5fc955de8d20d16e4d4ba8dffda6ce72ae2761	390	lido_revisao_inicial
+backend/src/modules/api/public/user/store/use-cases/services.ts	backend	codigo	3e5a17a0c312ee3be4d5e3fc43d5cf4a9b15ca32	3049	lido_revisao_inicial
+backend/src/modules/api/public/user/store/validator/index.ts	backend	codigo	a674d88d67525fa41371f98147aa6704f803f9be	1940	lido_revisao_inicial
 backend/src/modules/api/public/video-assets/index.ts	backend	codigo	eaf908110bde761bd227d560b4eaf9bda2bcb259	286	lido_revisao_inicial
 backend/src/modules/api/public/video-assets/use-cases/controller.ts	backend	codigo	8bd02ea15cc8fd518b4e6ca331c336e6c3647cd0	384	lido_revisao_inicial
 backend/src/modules/api/public/video-assets/use-cases/services.ts	backend	codigo	53785d830b3346d49c8e6d727b13036793907481	216	lido_revisao_inicial
@@ -2423,7 +2423,7 @@ frontend/CLAUDE.md	frontend	documentacao	43c994c2d3617f947bcb5adf1933e21dabe46bb
 frontend/README.md	frontend	documentacao	e215bc4ccf138bbc38ad58ad57e92135484b3c0f	1450	inventariado_nao_revisado
 frontend/biome.json	frontend	configuracao	e8fbf8767067115b035e08d8ab75ed78489320ca	708	lido_revisao_inicial
 frontend/eslint.config.mjs	frontend	codigo	05e726d1b4201bc8c7716d2b058279676582e8c0	465	inventariado_nao_revisado
-frontend/next.config.ts	frontend	codigo	ba0d3bedaa4d20ae221697c3c9e9ed32b017449e	14246	inventariado_nao_revisado
+frontend/next.config.ts	frontend	codigo	ba0d3bedaa4d20ae221697c3c9e9ed32b017449e	14246	lido_revisao_inicial
 frontend/package.json	frontend	configuracao	8a9a74ec9affa52663e97dccce5e21e02ee6bc78	2935	lido_revisao_inicial
 frontend/pnpm-lock.yaml	frontend	lockfile	e09600fb356c4f774daa3e85332e7ffebd739e73	207843	inventariado_nao_revisado
 frontend/pnpm-workspace.yaml	frontend	configuracao	dd1b4fd58b1208ac3bc2302b4060b8c320c96628	49	inventariado_nao_revisado
@@ -2763,10 +2763,10 @@ frontend/src/app/auth/redirect/logic.tsx	frontend	codigo	f545dcb65b9d0dc0c153e6d
 frontend/src/app/auth/redirect/page.tsx	frontend	codigo	c8e22df294cef0a7eb2490d7f44f11bc3caea13f	105	lido_revisao_inicial
 frontend/src/app/auth/register/error-message.ts	frontend	codigo	5667c20e36d93a2b828d05e680cb344dc976af5f	1230	lido_revisao_inicial
 frontend/src/app/auth/register/patient/logic.tsx	frontend	codigo	d5983ec90d5f960640e04a816055268ef2300f40	8316	lido_revisao_inicial
-frontend/src/app/auth/register/patient/page.tsx	frontend	codigo	d049a188c37762003b40c48e6b2ba56a7dfebe34	119	inventariado_nao_revisado
+frontend/src/app/auth/register/patient/page.tsx	frontend	codigo	d049a188c37762003b40c48e6b2ba56a7dfebe34	119	lido_revisao_inicial
 frontend/src/app/auth/register/patient/use-form.tsx	frontend	codigo	0186e04a77a04796596b9de289294327860f7cc1	2651	lido_revisao_inicial
 frontend/src/app/auth/register/psychologist/logic.tsx	frontend	codigo	207059671168f002bc9cf0e04771ca71730038c3	9111	lido_revisao_inicial
-frontend/src/app/auth/register/psychologist/page.tsx	frontend	codigo	0ec03dcf1f0fb01ddd953a45176f5a642a7a1007	129	inventariado_nao_revisado
+frontend/src/app/auth/register/psychologist/page.tsx	frontend	codigo	0ec03dcf1f0fb01ddd953a45176f5a642a7a1007	129	lido_revisao_inicial
 frontend/src/app/auth/register/psychologist/use-form.tsx	frontend	codigo	bae2563e792548e8464a1b1e935276df281be069	3385	lido_revisao_inicial
 frontend/src/app/auth/reset-password/logic.tsx	frontend	codigo	341ca2c996102ec8a71d9abbc5084cd4dfb7db4a	7490	lido_revisao_inicial
 frontend/src/app/auth/reset-password/page.tsx	frontend	codigo	f7bb6974c4b2cd74612145cbba2900d5ae8b427f	115	lido_revisao_inicial
@@ -2895,7 +2895,7 @@ frontend/src/components/pwa-install-prompt.tsx	frontend	codigo	7a78368653458717c
 frontend/src/components/ui/animated-images-icon.tsx	frontend	codigo	ed2878183788648014c7718a470683c9a6e943e6	591	inventariado_nao_revisado
 frontend/src/components/ui/app-error-state.tsx	frontend	codigo	4b2a044d6b1db326643e03e86d80f7ce0573c45f	1075	lido_revisao_inicial
 frontend/src/components/ui/app-page-header.tsx	frontend	codigo	8c985b3c62ce39b3be762fe5e70180abb3c06bd7	1570	lido_revisao_inicial
-frontend/src/components/ui/auth-card.tsx	frontend	codigo	f00ae9d9cdba6c47ec8c74bdd2d490041d5805f7	782	inventariado_nao_revisado
+frontend/src/components/ui/auth-card.tsx	frontend	codigo	f00ae9d9cdba6c47ec8c74bdd2d490041d5805f7	782	lido_revisao_inicial
 frontend/src/components/ui/bottom-navigation.tsx	frontend	codigo	4ab413b74845993cea2e99f320745c20c5474e74	1949	inventariado_nao_revisado
 frontend/src/components/ui/checkbox.tsx	frontend	codigo	09b9c2718b5cdda1027bcfa8d15a960d31af1a6a	890	inventariado_nao_revisado
 frontend/src/components/ui/divider-with-label.tsx	frontend	codigo	6ae5453c85261ebb899ff1a62659cdc4f322ade3	512	inventariado_nao_revisado
@@ -2971,7 +2971,7 @@ frontend/src/templates/center/styles.ts	frontend	codigo	85fb748099642aa12669d639
 frontend/src/templates/private/index.tsx	frontend	codigo	1b02f52964b3a126e7a6ff8a653c680df83d5b8a	20828	lido_revisao_inicial
 frontend/src/templates/private/navigation.tsx	frontend	codigo	dedd271657fb766b45ea15c2d166ec267525227c	9038	lido_revisao_inicial
 frontend/src/templates/private/sidebar-preference.ts	frontend	codigo	72d21235261c39cd0769ace7d219685716a52949	1810	lido_revisao_inicial
-frontend/src/templates/public/index.tsx	frontend	codigo	14ee16c63e53dc475416d9858dc9276d8b2c3b41	208	inventariado_nao_revisado
+frontend/src/templates/public/index.tsx	frontend	codigo	14ee16c63e53dc475416d9858dc9276d8b2c3b41	208	lido_revisao_inicial
 frontend/src/utils/admin-view-as.ts	frontend	codigo	81d24ca4d7deb05de122f1ea8572e73132b7d847	7367	lido_revisao_inicial
 frontend/src/utils/analytics-path.ts	frontend	codigo	309a628bb8bae2489cbc72df788190f51760de06	536	lido_revisao_inicial
 frontend/src/utils/analytics-session.ts	frontend	codigo	d842e38bde6f3b1f0456334e60fa87c261f54e9b	1282	lido_revisao_inicial
@@ -3043,7 +3043,7 @@ frontend/src/utils/video-asset-upload.ts	frontend	codigo	5129dd5ad638707f1713064
 frontend/src/utils/video-stream.test.mjs	frontend	teste	a96bca6a352913560362dace26c379677c3fb276	6211	inventariado_nao_revisado
 frontend/src/utils/video-stream.ts	frontend	codigo	0686ac7d40f9bd58e7c6205357863acd440c5f69	2467	lido_revisao_inicial
 frontend/src/utils/video-thumbnail.ts	frontend	codigo	9ee9e903df1a6dd098687cf723ed65c2a99ec338	11294	inventariado_nao_revisado
-frontend/tsconfig.json	frontend	configuracao	ff082e9c36d0d9087cae94223e6f8b2c42259e32	670	inventariado_nao_revisado
+frontend/tsconfig.json	frontend	configuracao	ff082e9c36d0d9087cae94223e6f8b2c42259e32	670	lido_revisao_inicial
 lefthook.yml	raiz	configuracao	1a2a4402fe39f343e39fd10a2d82b99840363568	3644	inventariado_nao_revisado
 package.json	raiz	configuracao	3e46f5d222d1b2fa956e992dd0455b6da7878e26	1978	lido_revisao_inicial
 pnpm-lock.yaml	raiz	lockfile	fb9035ff51d471b3d062f8b52b1e442302768495	24397	inventariado_nao_revisado

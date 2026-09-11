@@ -1259,3 +1259,83 @@ após checks; agente encerrado. Sóvideo possui mudanças de runtime; demais app
 Sem UI/rotas alteradas, não há nova validação visual alegada.
 Logs:/tmp/lectum-339-{root-check,video-build,video-docker,video-container-tests}.log.
 Bump339 único. Publicação/smoke a executar depois do push; última prova privada338.
+
+
+## Continuação340 — CP2/CP3, dimensões e documentos legais
+
+Publicação339 confirmada pelo integrador em11/09 às17:35UTC:18/18smoke, backend/frontend/Admin339,
+health/ready200. Última confirmação do operador do vídeo privado continua338, não inferir339/340.
+
+### CP2 — snapshots dos cards
+
+Três cards reutilizam hook restrito a viewer/alvo, com reconciliação de campos escalares e
+identidade de operação. Props novas prevalecem sem ação pendente; recibos/callbacks de outro
+alvo não afetam o atual. Sem mudança de layout, autorização, transporte ou toggle do backend.
+13/13 testes reais de funções/SSR/composição e11transições ReactDOM/StrictMode no Browser local.
+Prova vermelha adicional: fragmentos exatos de estado extraídos mecanicamente dos três cards
+originais mantêm4/5/5 quando props mudam para9. Isso não equivale à montagem dos cards inteiros.
+Harness efêmero sem endpoints falsos, sem dados persistentes, usando React instalado e hook real.
+Builder retorna somente MUI por essa interface, sem QuickCopy Lectum acessível; consultadas as
+imagens locais Feed Comunidade/Posts Salvos, mantendo referência mobile-first, sem redesenho.
+Build local público da comunidade carregou título porSSR, mas exibiu falha de conexão após
+hidratação. Limite de prova registrado: não foi integração local autenticada bem-sucedida nem
+validação Safari/Android. Não houve desativação de controles do browser/servidor para prosseguir.
+Artefatos locais: /tmp/lectum-task178-cp2-340, Browser3340; build em /tmp/lectum-340-frontend-final-build.log.
+
+### CP3 — rollback e recibos por alvo
+
+Callbacks de produção extraídos para factories locais sem mudar mutationFn; AST compara
+baseline com código original. QueryClient real/caches efêmeros, sem rede/DB/provider mockado.
+Baseline original88testes:27passam/61falham. Primeiro helper:72passam/16falham em lifecycle.
+Após proteger identidade Query no commit e herança do rollback:88/88. Integrador adicionou18
+casos de recibo de outro post/tipo/resposta:18falharam antes do guard; final106/106 após patch.
+Um controle tinha recibo incompleto e passou a usar os identificadores já exigidos pelo DTO;
+não foi relaxada asserção. Recusa encerra a própria operação e preserva invalidação/refetch.
+
+Rollback altera só campos próprios e conserva outros votos/saves/conteúdo/paginação/descendentes.
+Operações antigas e caches recriados não recebem estado anterior. Quatro testes incluem192
+ordens de três operações; não contabilizar192 como testes separados. Sem protocolo novo de
+ordenação no servidor: refetch continua autoridade; não alegar sincronização entre abas/HTTP.
+Artefatos: /tmp/lectum-task178-cp3-340 e /tmp/lectum-340-cp3-{receipt-before,final}.log.
+
+### V03 — saída social dentro da configuração
+
+Baseline6renders:1passa/5falham; caso720x1280 gerava1080x1920 e o próprio probe o rejeitava.
+Escala final completa conserva9:16 em dimensões pares dentro dos tetos; defaults sem mudança.
+11contratos de argumentos ×8variantes e6renders FFmpeg/ffprobe reais com/sem áudio/assets,
+preset standard/portable e limites720x1280/720x1920/1080x1000/719x1279/240x240/default.
+Casos reais validam também rejeição por limites menores de dimensões e bytes; controles de
+segurança do probe preservados. Canvas intermediário continua1080x1920: não prometer redução
+proporcional de memória/CPU nem qualidade/SAR adicional não medida.
+
+Imagem integrada340 amd64 construída do source/lock:1043eba113410a8bf9be4b3cb475526ec08178e043d8d23f2d5f01ec0b98db08.
+17/17 testes compilados executados da própria imagem, sem montar dist externo; rede none,
+filesystem read-only, tmpfs256MiB, memória2GiB,2CPUs,pids512. Tentativa anterior com pids128:
+14/17passaram; três renders com assets falharam ao abrir encoder. A repetição mudou sópids;
+isola diferença de orçamento, não demonstra causa interna/thread exata. Não elevar limites
+de produção ou alterar runtime para esconder a falha. Compose vigente não define esse teto128.
+Host semdrawtext pula6renders; imagem340 executa os6, sem skips. Não éjob BullMQ/Redis/Stream.
+Logs:/tmp/lectum-340-video-{docker,container-tests,container-tests-512}.log.
+
+### Legal — requisito externo confirmado, não parecer jurídico
+
+Minutas v0.1 em _product/legal e checklists de aprovação pendentes. Cadastro registra aceite
+provisório em user_background; isso não comprova documento final publicado nem ausência total
+de aceite. TASK41 prevê páginas estáticas/links, não editor jurídico no Admin/SEO. GETs reais
+em /termos-de-servico e /politica-de-privacidade de homolog retornaram404. Podem existir textos
+aprovados fora do workspace; aprovação/URLs solicitadas ao responsável. Nenhuma minuta foi
+publicada nem versões históricas de aceite alteradas. Bloqueio de recomendação de produção.
+
+Leituras atuais deduplicadas por path+hash:99paths conferidos nesta integração,23novos da base.
+Inventário original3121:1461leitura inicial,5parcial,1655pendente. Ledger1431linhas. Revisões
+antigas/saída truncada/dados node_modules não contados como arquivos novos. Cinco fontes CP3:
+freeze integral do executor mais patch de recibo revisado pelo parent, proveniência explícita.
+As apps continuam independentes; sem migration/env/package novo, nenhum dado publicado tocado.
+
+Validação integrada340: pnpm check exit0,910testes (6versão,335frontend,435backend,53Admin,
+81video):904aprovados/6skipsdrawtext no host; esses6 executados com sucesso na imagem340.
+Frontend build otimizado e check finais aprovados; vídeo build/imagem integrado aprovado.
+check:dependencies nos cinco escopos sem vulnerabilidade conhecida. Uma execução inicial do
+frontend encontrou2warnings de estilo, corrigidos; não foram suprimidos checks. Recibos dos
+cards também conferem os identificadores. Bump340 único, sem segunda execução em retry.
+Smoke340 somente após publicação; não concluir essa etapa por intenção.

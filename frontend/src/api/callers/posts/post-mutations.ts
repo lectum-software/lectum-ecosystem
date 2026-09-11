@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  type QueryClient,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
 import type {
   PostDeleteResponse,
@@ -15,6 +20,12 @@ import type {
   UpdatePostPayload,
 } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
+
+import {
+  beginPostInteraction,
+  commitPostInteraction,
+  rollbackPostInteraction,
+} from "./interaction-cache";
 
 import { invalidateDirectoryPsychologistQueries } from "./queries";
 
@@ -92,60 +103,41 @@ export const useSharePost = (callbacks?: {
   });
 };
 
-export const useSavePost = (postId: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+export const createSavePostOptions = (queryClient: QueryClient, postId: string) => {
+  return mutationOptions({
     mutationFn: (saved: boolean) => (saved ? api.unsavePost(postId) : api.savePost(postId)),
-    onMutate: async (saved) => {
-      await queryClient.cancelQueries({ queryKey: keys.posts.detail(postId) });
-      const previousDetail = queryClient.getQueryData<PostDetailResponse>(
-        keys.posts.detail(postId),
+    onMutate: (saved) =>
+      beginPostInteraction(queryClient, { postId, kind: "save" }, (entity) => ({
+        saved: !saved,
+        saves_count: clampCount(
+          ("saves_count" in entity ? entity.saves_count : 0) + (saved ? -1 : 1),
+        ),
+      })),
+    onError: (_error, _variables, context) => rollbackPostInteraction(queryClient, context),
+    onSuccess: (data: PostSaveResponse, _variables, context) => {
+      commitPostInteraction(
+        queryClient,
+        context,
+        {
+          saved: data.saved,
+          ...(data.saves_count != null ? { saves_count: data.saves_count } : {}),
+        },
+        data,
       );
-
-      queryClient.setQueryData<PostDetailResponse>(keys.posts.detail(postId), (old) => {
-        if (!old) return old;
-
-        const nextSaved = !saved;
-        const delta = nextSaved ? 1 : -1;
-
-        return {
-          ...old,
-          post: {
-            ...old.post,
-            saved: nextSaved,
-            saves_count: clampCount(old.post.saves_count + delta),
-          },
-        };
-      });
-
-      return { previousDetail };
-    },
-    onError: (_error, _variables, context) => {
-      if (context?.previousDetail) {
-        queryClient.setQueryData(keys.posts.detail(postId), context.previousDetail);
-      }
-    },
-    onSuccess: (data: PostSaveResponse) => {
-      queryClient.setQueryData<PostDetailResponse>(keys.posts.detail(postId), (old) => {
-        if (!old) return old;
-
-        return {
-          ...old,
-          post: {
-            ...old.post,
-            saved: data.saved,
-            saves_count: data.saves_count ?? old.post.saves_count,
-          },
-        };
-      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(postId) });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
       invalidateDirectoryPsychologistQueries(queryClient);
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
     },
   });
+};
+
+export const useSavePost = (postId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation(createSavePostOptions(queryClient, postId));
 };
 
 export const useMutePost = (callbacks?: {

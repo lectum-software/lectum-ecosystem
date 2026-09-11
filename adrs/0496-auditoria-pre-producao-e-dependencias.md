@@ -807,3 +807,45 @@ Preservados os tetos de60/120segundos do probe, AbortSignal, deadline por tentat
 e orçamento de tentativas/backoff da fila. Não há loop novo nem aumento de limites. Pode haver
 mais tentativas para sondagens lentas, sempre dentro da configuração vigente. Sem env nova,
 contratoHTTP novo ou migration. Testes puros não comprovam retry real do BullMQ ou provider.
+
+### Interações consistentes340
+
+CP2: três cards passam a compartilhar um hook de snapshot de interação, restrito ao
+usuário/alvo. Props novas são autoridade quando não há ação pendente; durante a ação,
+otimismo é preservado. Recibo local não se sobrepõe indefinidamente a refetchs, e callbacks
+de uma geração anterior não alteram outro alvo/usuário. Reconciliar no render com guarda
+por campos escalares evita frame antigo e efeito que apagaria otimismo pendente. Não é
+novo store, API client ou regra de autorização. Layout e fundação visual permanecem.
+
+CP3: atualizar/reverter somente os campos de voto ou salvamento do alvo nas queries reais,
+nunca restaurar documento/lista inteira. A autoridade de operações sobrepostas fica
+limitada ao QueryClient/alvo/tipo; revalidação das listas próprias/salvas acompanha as
+famílias existentes. Testes usam callbacks reais e QueryClient real, sem substituir
+mutationFn/queryFn nem concluir integração com servidor a partir de inputs de cache.
+Snapshots/recibos exigem mesma identidade Query, não somente mesma chave após clear/remove;
+rollback não herda resposta de outra vida do cache. Recibos validam post_id/target_type/reply_id
+antes de aplicar campos; divergência desfaz somente a própria operação e mantém refetch.
+Ordenação local não prova ordem de commits no servidor; refetch segue autoritativo.
+
+### Dimensões do render social340
+
+V03: canvas de composição continua1080x1920, como a prévia e os assets atuais. Se os tetos
+VIDEO_MAX_WIDTH/VIDEO_MAX_HEIGHT exigirem menos, escalar a saída completa para múltiplos
+pares de9:16, preservando texto/arte/proporção. Defaults não recebem uma escala adicional.
+Não relaxar probe nem aumentar configuração; variantes standard/portable e com/sem assets
+compartilham o limite. Teste local FFmpeg/ffprobe não comprova upload/Stream/job publicado.
+
+Frontend/video são deploys independentes, sem env nova, package ou migration. Rollback é
+de código/imagem, sem remoção de dados. Homologação continua sem recomendação de promoção.
+
+### Dependência documental legal340
+
+Minutas v0.1 existentes são explicitamente pendentes de aprovação e têm placeholders.
+Cadastro já registra aceite provisório em user_background; não afirmar ausência total
+nem regravar esse histórico como aceite de documento final. TASK-41 requer publicação
+estática e links após pacote aprovado, não um CMS jurídico. Identificador SemVer da app
+não substitui versão legal. A confirmação do responsável/revisão especializada é requisito
+externo; nenhum texto foi inventado, publicado ou considerado aprovado nesta auditoria.
+
+Referências técnicas para CP2/CP3: [React — ajuste por mudança de props](https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes)
+e [TanStack Query — optimistic updates](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates).

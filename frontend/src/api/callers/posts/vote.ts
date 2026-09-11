@@ -1,16 +1,20 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  mutationOptions,
+  type QueryClient,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import keys from "@/api/cache/keys";
-import type {
-  PostDetailResponse,
-  PostRepliesResponse,
-  PostReply,
-  PostReplyThreadResponse,
-  PostVotePayload,
-  PostVoteResponse,
-} from "@/api/generator/types/posts";
+import type { PostReply, PostVotePayload, PostVoteResponse } from "@/api/generator/types/posts";
 import * as api from "@/api/req/posts";
+
+import {
+  beginPostInteraction,
+  commitPostInteraction,
+  rollbackPostInteraction,
+} from "./interaction-cache";
 
 import { invalidateDirectoryPsychologistQueries } from "./queries";
 
@@ -85,133 +89,36 @@ export const updateReplyVoteFromResponse = (
   };
 };
 
-export const useVotePost = (postId: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
+export const createVotePostOptions = (queryClient: QueryClient, postId: string) => {
+  return mutationOptions({
     mutationFn: (body: PostVotePayload) => api.votePost(postId, body),
-    onMutate: async (variables) => {
-      await Promise.all([
-        queryClient.cancelQueries({ queryKey: keys.posts.detail(postId) }),
-        queryClient.cancelQueries({ queryKey: ["posts", postId, "replies"] }),
-        queryClient.cancelQueries({ queryKey: ["posts", postId, "reply-thread"] }),
-      ]);
-
-      const previousDetail = queryClient.getQueryData<PostDetailResponse>(
-        keys.posts.detail(postId),
+    onMutate: (variables) =>
+      beginPostInteraction(
+        queryClient,
+        { postId, replyId: variables.replyId, kind: "vote" },
+        (entity) => {
+          const next = applyVoteToCounts(entity.current_user_vote, variables.value, entity);
+          return {
+            current_user_vote: next.nextVote,
+            upvotes_count: next.upvotes_count,
+            downvotes_count: next.downvotes_count,
+          };
+        },
+      ),
+    onError: (_error, _variables, context) => rollbackPostInteraction(queryClient, context),
+    onSuccess: (data: PostVoteResponse, _variables, context) => {
+      commitPostInteraction(
+        queryClient,
+        context,
+        {
+          current_user_vote: data.value,
+          upvotes_count: clampCount(data.upvotes_count),
+          ...(data.downvotes_count != null
+            ? { downvotes_count: clampCount(data.downvotes_count) }
+            : {}),
+        },
+        data,
       );
-      const previousReplies = queryClient.getQueriesData<PostRepliesResponse>({
-        queryKey: ["posts", postId, "replies"],
-      });
-      const previousThreads = queryClient.getQueriesData<PostReplyThreadResponse>({
-        queryKey: ["posts", postId, "reply-thread"],
-      });
-
-      if (variables.replyId) {
-        const replyId = variables.replyId;
-
-        queryClient.setQueriesData<PostRepliesResponse>(
-          { queryKey: ["posts", postId, "replies"] },
-          (old) => {
-            if (!old) return old;
-
-            return {
-              ...old,
-              data: old.data.map((reply) => updateReplyVote(reply, replyId, variables.value)),
-            };
-          },
-        );
-        queryClient.setQueriesData<PostReplyThreadResponse>(
-          { queryKey: ["posts", postId, "reply-thread"] },
-          (old) => {
-            if (!old) return old;
-
-            return {
-              ...old,
-              reply: updateReplyVote(old.reply, replyId, variables.value),
-            };
-          },
-        );
-      } else {
-        queryClient.setQueryData<PostDetailResponse>(keys.posts.detail(postId), (old) => {
-          if (!old) return old;
-
-          const next = applyVoteToCounts(old.post.current_user_vote, variables.value, {
-            upvotes_count: old.post.upvotes_count,
-            downvotes_count: old.post.downvotes_count,
-          });
-
-          return {
-            ...old,
-            post: {
-              ...old.post,
-              current_user_vote: next.nextVote,
-              upvotes_count: next.upvotes_count,
-              downvotes_count: next.downvotes_count,
-            },
-          };
-        });
-      }
-
-      return { previousDetail, previousReplies, previousThreads };
-    },
-    onError: (_error, _variables, context) => {
-      if (context?.previousDetail) {
-        queryClient.setQueryData(keys.posts.detail(postId), context.previousDetail);
-      }
-
-      context?.previousReplies?.forEach(([queryKey, data]) => {
-        queryClient.setQueryData(queryKey, data);
-      });
-
-      context?.previousThreads?.forEach(([queryKey, data]) => {
-        queryClient.setQueryData(queryKey, data);
-      });
-    },
-    onSuccess: (data: PostVoteResponse) => {
-      if (data.target_type === "post") {
-        queryClient.setQueryData<PostDetailResponse>(keys.posts.detail(postId), (old) => {
-          if (!old) return old;
-
-          return {
-            ...old,
-            post: {
-              ...old.post,
-              current_user_vote: data.value,
-              upvotes_count: data.upvotes_count,
-              downvotes_count: data.downvotes_count ?? old.post.downvotes_count,
-            },
-          };
-        });
-        return;
-      }
-
-      if (data.target_type === "reply" && data.reply_id) {
-        const replyId = data.reply_id;
-
-        queryClient.setQueriesData<PostRepliesResponse>(
-          { queryKey: ["posts", postId, "replies"] },
-          (old) => {
-            if (!old) return old;
-
-            return {
-              ...old,
-              data: old.data.map((reply) => updateReplyVoteFromResponse(reply, replyId, data)),
-            };
-          },
-        );
-        queryClient.setQueriesData<PostReplyThreadResponse>(
-          { queryKey: ["posts", postId, "reply-thread"] },
-          (old) => {
-            if (!old) return old;
-
-            return {
-              ...old,
-              reply: updateReplyVoteFromResponse(old.reply, replyId, data),
-            };
-          },
-        );
-      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: keys.posts.detail(postId) });
@@ -219,6 +126,13 @@ export const useVotePost = (postId: string) => {
       queryClient.invalidateQueries({ queryKey: ["posts", postId, "reply-thread"] });
       queryClient.invalidateQueries({ queryKey: keys.community.root() });
       invalidateDirectoryPsychologistQueries(queryClient);
+      queryClient.invalidateQueries({ queryKey: keys.posts.mine() });
+      queryClient.invalidateQueries({ queryKey: keys.posts.saved() });
     },
   });
+};
+
+export const useVotePost = (postId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation(createVotePostOptions(queryClient, postId));
 };

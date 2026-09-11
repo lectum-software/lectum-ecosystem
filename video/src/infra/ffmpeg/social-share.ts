@@ -20,10 +20,13 @@ import {
   SOCIAL_SHARE_LOGO_FILE_NAME,
   SOCIAL_SHARE_VERIFIED_BADGE_FILE_NAME,
 } from "./social-share-assets.js";
+import {
+  SOCIAL_OUTPUT_HEIGHT,
+  SOCIAL_OUTPUT_WIDTH,
+  socialShareOutputSizeArguments,
+} from "./social-share-output.js";
 import { isRemoteVideoHlsSource, remoteVideoRequestHeaders } from "./source-url.js";
 
-const SOCIAL_OUTPUT_WIDTH = 1080;
-const SOCIAL_OUTPUT_HEIGHT = 1920;
 const SOCIAL_RENDER_CRF = 20;
 const SOCIAL_RENDER_PRESET = "veryfast";
 const SOCIAL_OUTPUT_FPS = 30;
@@ -456,6 +459,7 @@ export const buildSocialShareVideoArguments = (
     "[v]",
     "-map",
     "0:a:0?",
+    ...socialShareOutputSizeArguments(input.config),
     "-r",
     String(Math.min(SOCIAL_OUTPUT_FPS, input.config.maxFps)),
     "-map_metadata",

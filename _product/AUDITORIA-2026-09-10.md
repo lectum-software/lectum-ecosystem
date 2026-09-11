@@ -166,8 +166,19 @@ aprovados. Quatro apps na338; conexão privada de vídeo confirmada pelo operado
 112. Demora na análise do vídeo não é mais confundida com arquivo inválido; permite tentativa limitada.
 113. Script de testes informa quando o cancelamento não foi testado, em vez de anunciar sucesso.
 
-774 testes locais, build e imagem de vídeo aprovados. Publicação desta versão pendente.
+774 testes locais, build e imagem de vídeo aprovados. Publicação339 confirmada:18/18 smoke;
+backend, frontend e Admin339. Última prova privada anterior:vídeo338.
 Sem alteração de banco ou novas variáveis.
+
+### Correções locais na 0.1.340
+
+114. Votos e itens salvos nos cards acompanham dados atualizados, sem apagar uma ação em andamento.
+115. Falha ao votar ou salvar não desfaz outras ações; respostas antigas ou de outro item são ignoradas.
+116. Vídeos de compartilhamento respeitam as dimensões configuradas, sem rejeitar a própria saída.
+
+Testes de cache106/106 e render real17/17 aprovados; sem alterar banco nem criar variáveis.
+Minutas legais foram localizadas, mas não estão aprovadas; as duas páginas previstas retornam404.
+Publicação340 e teste funcional dos fluxos completos ainda pendentes.
 
 ## Ainda pendente
 
@@ -178,7 +189,7 @@ Sem alteração de banco ou novas variáveis.
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1438 arquivos com leitura inicial**, 5 parciais e 1678 ainda não revisados.
+Cobertura da base: **1461 arquivos com leitura inicial**, 5 parciais e 1655 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

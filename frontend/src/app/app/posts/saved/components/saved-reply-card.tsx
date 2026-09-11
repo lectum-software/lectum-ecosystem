@@ -4,11 +4,10 @@ import { BadgeCheck, Reply } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  type KeyboardEvent as ReactKeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-  useState,
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  ReactNode,
 } from "react";
 import { useVotePost } from "@/api/callers/posts";
 import type { CommunityAuthor } from "@/api/generator/types/community";
@@ -27,6 +26,7 @@ import {
   canShowSocialVideoPreviewAction,
   createSocialVideoPreviewOverlayAction,
 } from "@/components/community/social-video-preview-action";
+import { useInteractionSnapshot } from "@/components/community/use-interaction-snapshot";
 import { useAppSelector } from "@/hooks/redux";
 import { useLectumShareDownloadDialog } from "@/hooks/use-lectum-share-download-dialog";
 import { getCommunityInitials as getInitials } from "@/utils/community-display";
@@ -177,45 +177,43 @@ export const SavedReplyCard = ({
     useLectumShareDownloadDialog();
   const reply = item.reply;
   const voteMutation = useVotePost(item.post.id);
-  const [voteOverride, setVoteOverride] = useState<{
-    currentVote: 1 | -1 | null;
-    replyId: string;
-    upvotes: number;
-  } | null>(null);
+  const interactionScope = `${currentUser?.id ?? "guest"}:${item.post.id}:${reply?.id ?? ""}`;
+  const { snapshot: voteState, begin: beginVote } = useInteractionSnapshot(interactionScope, {
+    currentVote: reply?.current_user_vote ?? null,
+    downvotes: reply?.downvotes_count ?? 0,
+    upvotes: reply?.upvotes_count ?? 0,
+  });
 
   if (!reply) return null;
 
-  const voteState =
-    voteOverride?.replyId === reply.id
-      ? voteOverride
-      : {
-          currentVote: reply.current_user_vote,
-          upvotes: reply.upvotes_count,
-        };
-
   const handleVote = (value: 1 | -1) => {
-    const previousVoteOverride = voteOverride;
     const nextVote = voteState.currentVote === value ? null : value;
     const upDelta = (nextVote === 1 ? 1 : 0) - (voteState.currentVote === 1 ? 1 : 0);
+    const downDelta = (nextVote === -1 ? 1 : 0) - (voteState.currentVote === -1 ? 1 : 0);
 
-    setVoteOverride({
+    const operation = beginVote({
       currentVote: nextVote,
-      replyId: reply.id,
+      downvotes: Math.max(0, voteState.downvotes + downDelta),
       upvotes: Math.max(0, voteState.upvotes + upDelta),
     });
 
     voteMutation.mutate(
       { replyId: reply.id, value },
       {
-        onError: () => {
-          setVoteOverride(previousVoteOverride);
-        },
+        onError: operation.onError,
         onSuccess: (data) => {
-          if (data.target_type !== "reply" || data.reply_id !== reply.id) return;
+          if (
+            data.target_type !== "reply" ||
+            data.post_id !== item.post.id ||
+            data.reply_id !== reply.id
+          ) {
+            operation.onError();
+            return;
+          }
 
-          setVoteOverride({
+          operation.onSuccess({
             currentVote: data.value,
-            replyId: reply.id,
+            downvotes: Math.max(0, data.downvotes_count ?? voteState.downvotes + downDelta),
             upvotes: Math.max(0, data.upvotes_count),
           });
         },
