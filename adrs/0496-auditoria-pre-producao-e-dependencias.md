@@ -249,3 +249,27 @@ Smoke .316 confirmado 16/16 às 00:57 UTC; não certificar deploy durante diverg
 Validação final 0.1.317: onze cenários HTTP/PostgreSQL repetidos com aliases/domínio longo
 passaram; recursos isolados removidos. Quatro testes de formato passaram dentro da imagem final
 não root, somente leitura e sem rede externa. Nenhuma mensagem de e-mail foi enviada no teste.
+
+## Complemento — validade e consumo de confirmação (0.1.318)
+
+TASK-06 define seis números e janela controlada por CODE_API_USER_VALID_MINUTES. O uso de
+`differenceInMinutes` com `>` aceitava quase um minuto adicional e timestamps futuros. Além disso,
+leitura e atualização incondicional permitiam confirmar uma emissão substituída/consumida.
+
+Decisão: reutilizar `utils/code.ts` para predicado temporal estrito (idade >= 0 e < validade),
+schema Zod customizado no validator existente e `updateMany` por ID com comparação de estado,
+código, emissão observada e intervalo. A atualização afeta no máximo um usuário e limpa o código;
+count=0 não hidrata outra sessão. Não criar tabela, lock distribuído, novo endpoint ou segredo.
+O filtro de emissão também impede que uma rara repetição numérica no reenvio valide snapshot antigo.
+
+Não mudar a geração, a env, o cooldown, as sessões de contas confirmadas nem o contrato de sucesso.
+Um código fora do prazo requer reenvio; essa é a diferença intencional no rollout. Relógios devem
+estar sincronizados: emissão no futuro falha fechada. Rollback restaura a tolerância indevida e
+a atualização incondicional, portanto não é correção de dados nem motivo para reset.
+
+Baseline PostgreSQL real: validade de um minuto aceitou 61 segundos (200). Imagem corrigida passou
+sete cenários: expirado/futuro/malformado/incorreto, sucesso seguido de replay, duas requisições
+concorrentes com apenas um sucesso e snapshot de emissão substituída recusado pelo repositório.
+Fixture temporária em DB isolado, sem secrets publicados, envio SMTP ou mock de provider.
+Quatro testes novos; check 515 testes, build/Docker aprovados e quatro testes no artefato final.
+Smoke 0.1.317 aprovado 16/16 às 01:06 UTC; 0.1.318 ainda pendente de publicação.

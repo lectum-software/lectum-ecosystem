@@ -2099,7 +2099,7 @@ backend/src/modules/api/private/psychologist/whatsapp-verification/repositories/
 backend/src/modules/api/private/psychologist/whatsapp-verification/repositories/interfaces/IWhatsappVerificationRepository.ts	backend	codigo	2ec66f6c6fe5cd3e4d4aedd097df525dc2e9754e	1373	inventariado_nao_revisado
 backend/src/modules/api/private/psychologist/whatsapp-verification/use-cases/controller.ts	backend	codigo	245b4071e400416fbe50663f774ccc97411612c7	945	inventariado_nao_revisado
 backend/src/modules/api/private/psychologist/whatsapp-verification/use-cases/services.ts	backend	codigo	0de2ff81fa7d665fef95bf4f15497e6cb302d7f7	2797	inventariado_nao_revisado
-backend/src/modules/api/private/psychologist/whatsapp-verification/validator/index.ts	backend	codigo	ceb8620deef10765126b0848dd10104c86436066	605	inventariado_nao_revisado
+backend/src/modules/api/private/psychologist/whatsapp-verification/validator/index.ts	backend	codigo	ceb8620deef10765126b0848dd10104c86436066	605	lido_revisao_inicial
 backend/src/modules/api/private/video-assets/DTOs/IVideoAssetsDTO.ts	backend	codigo	66f28636058d0a9c4d46272c8e87afb6e5daa8b4	370	inventariado_nao_revisado
 backend/src/modules/api/private/video-assets/index.ts	backend	codigo	e9af1b5f538f9657f34b0b4a351196d8c723bf0a	364	inventariado_nao_revisado
 backend/src/modules/api/private/video-assets/use-cases/controller.ts	backend	codigo	f1ae784d3606138b908fa89021ede34449a3edc0	933	inventariado_nao_revisado
@@ -2166,7 +2166,7 @@ backend/src/modules/api/public/auth/recovery/use-cases/services.ts	backend	codig
 backend/src/modules/api/public/auth/recovery/validator/index.ts	backend	codigo	69a956c5ea5f23b1b8e7a0b2144bb66d56402427	248	inventariado_nao_revisado
 backend/src/modules/api/public/auth/reset/DTOs/IResetDTO.ts	backend	codigo	467c881294d800a955d0fc2d27e38eefd8fcad73	262	inventariado_nao_revisado
 backend/src/modules/api/public/auth/reset/index.ts	backend	codigo	abb8698949d9722e95a6e9f2e447bf15c5777116	381	inventariado_nao_revisado
-backend/src/modules/api/public/auth/reset/repositories/ResetRepository.ts	backend	codigo	d165ffdb2f60ef328c82839ebdf6fa51c04a9633	1118	inventariado_nao_revisado
+backend/src/modules/api/public/auth/reset/repositories/ResetRepository.ts	backend	codigo	d165ffdb2f60ef328c82839ebdf6fa51c04a9633	1118	lido_revisao_inicial
 backend/src/modules/api/public/auth/reset/repositories/interfaces/IResetRepository.ts	backend	codigo	8cfb729cd27b1c038853dafd5ada3cd6e3c82a8b	223	inventariado_nao_revisado
 backend/src/modules/api/public/auth/reset/use-cases/controller.ts	backend	codigo	dc960e639ef6b0c666ae8ac1813b24a610e9ec2c	385	inventariado_nao_revisado
 backend/src/modules/api/public/auth/reset/use-cases/services.ts	backend	codigo	9b0567f688205ca3df9625534c8cbdd7db34adf8	2002	inventariado_nao_revisado
@@ -2297,7 +2297,7 @@ backend/src/packages/validator/mocks/functions/random.ts	backend	codigo	c801204e
 backend/src/packages/validator/mocks/index.test.ts	backend	teste	f0d31f58959ef1ca2f81c111d77ba8a94d081280	740	inventariado_nao_revisado
 backend/src/packages/validator/mocks/index.ts	backend	codigo	10ce8bdf39c4f84f086f6bc1c10b58bf266d8e0e	346	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/build-object-map.test.ts	backend	teste	355b4b5f009c01d3fe10554d4d09436eb8cb3bbe	717	inventariado_nao_revisado
-backend/src/packages/validator/schema/_internal/build-object-map.ts	backend	codigo	fae36e0a883958a1c86460887bb6d692c320ea37	1325	inventariado_nao_revisado
+backend/src/packages/validator/schema/_internal/build-object-map.ts	backend	codigo	fae36e0a883958a1c86460887bb6d692c320ea37	1325	lido_revisao_inicial
 backend/src/packages/validator/schema/_internal/conditions/equal.ts	backend	codigo	69b71aaa400243d2c7d762d85d29263aeb52da83	1009	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/conditions/index.ts	backend	codigo	4334164fa2716f558de1f69ac116a58d8f6691e7	303	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/conditions/major.ts	backend	codigo	e6062515221b6b875eb1bad46249e2d090b5fb46	969	inventariado_nao_revisado
@@ -2322,7 +2322,7 @@ backend/src/packages/validator/schema/_internal/validations/functions/number.ts	
 backend/src/packages/validator/schema/_internal/validations/functions/password.ts	backend	codigo	0e548dc69069eaea821ae8d78771f96bcb8d6fa9	404	lido_revisao_inicial
 backend/src/packages/validator/schema/_internal/validations/functions/phone.ts	backend	codigo	aab7eb6e55ef22c445ca5ac275d3073a2bc0abe0	513	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/validations/functions/prisma.ts	backend	codigo	4a6f84aabb6e442ade841fb43b036d096ba526e2	4236	inventariado_nao_revisado
-backend/src/packages/validator/schema/_internal/validations/functions/string.ts	backend	codigo	d1cbc076637347f2aadbd29e8d6c30df5551a1a4	561	inventariado_nao_revisado
+backend/src/packages/validator/schema/_internal/validations/functions/string.ts	backend	codigo	d1cbc076637347f2aadbd29e8d6c30df5551a1a4	561	lido_revisao_inicial
 backend/src/packages/validator/schema/_internal/validations/functions/string_array.ts	backend	codigo	aa09f9a15614eed21e8977ac6557e17a49ff0a4d	325	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/validations/functions/year.ts	backend	codigo	fce35cf48065d63afb5ce1cf94f2cb54a3589f0e	289	inventariado_nao_revisado
 backend/src/packages/validator/schema/_internal/validations/index.ts	backend	codigo	8033477da286da1f916c4a77f587ee7490555ca2	924	inventariado_nao_revisado
@@ -2345,7 +2345,7 @@ backend/src/utils/admin-psychologist-analytics/subscription-conversion.ts	backen
 backend/src/utils/admin-psychologist-analytics/traffic-origins.ts	backend	codigo	cbda04d6ec30215e0f70fb7894dbf8c7aa345a0e	4092	inventariado_nao_revisado
 backend/src/utils/admin-psychologist-analytics/whatsapp-origins.ts	backend	codigo	f267b0d30c3e4ef0074cb0b054d08eac762f3d09	12116	inventariado_nao_revisado
 backend/src/utils/admin-view-as.test.ts	backend	teste	939db7ca31c36e3510dcbe4dbcb48b925c3f7937	2883	inventariado_nao_revisado
-backend/src/utils/admin-view-as.ts	backend	codigo	8955c6eb4c337fb3ab06e70257123e6c6a078f5c	2422	inventariado_nao_revisado
+backend/src/utils/admin-view-as.ts	backend	codigo	8955c6eb4c337fb3ab06e70257123e6c6a078f5c	2422	lido_revisao_inicial
 backend/src/utils/analytics-traffic-path.ts	backend	codigo	05b30c73576ae1a06fd6b1feb7519c7e2f5bc37f	8910	inventariado_nao_revisado
 backend/src/utils/code.ts	backend	codigo	83d3734cf72d0e136b38d05383e1a89f3d01a636	223	lido_revisao_inicial
 backend/src/utils/community-media-entitlement.ts	backend	codigo	a566570103aee4b835ca7e7c26dcefec56070ae4	465	inventariado_nao_revisado

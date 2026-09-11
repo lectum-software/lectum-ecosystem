@@ -219,7 +219,21 @@ Check agregado 0.1.316: 507 testes aprovados, sem falha/skip; check:version apro
 - [x] Quatro regressões de aliases/TLD, estrutura inválida, obrigatório/opcional passaram.
 - [x] Check agregado: 511 testes; build backend e imagem Docker Linux amd64 aprovados.
 - [x] Integração de login com aliases no banco isolado real: onze cenários passaram.
-- [ ] Smoke publicado de 0.1.317.
+- [x] Smoke publicado de 0.1.317: 16/16 às 01:06 UTC de 11/09 e dois testes de formato de e-mail.
 
 Sem banco/env/dependência nova. Não corrigir em massa e-mails inválidos anteriormente admitidos.
 Browser publicado validou formulário vazio de posts em mobile sem publicar dados.
+
+## Continuação — confirmação de e-mail 0.1.318
+
+- [x] Aceitação após validade reproduzida na imagem anterior com banco isolado real.
+- [x] Janela sem arredondamento, recusa de emissão futura e formato exato de seis números.
+- [x] Consumo condicionado e atômico impede replay concorrente ou confirmação de emissão substituída.
+- [x] Quatro regressões novas; check agregado 515 testes, build backend e Docker Linux amd64.
+- [x] Sete cenários PostgreSQL reais passaram; quatro testes também passaram na imagem final.
+- [ ] Smoke publicado de 0.1.318.
+- [ ] Repetir novo cadastro/confirmação por e-mail real, sem dispensar autorização da nova identidade.
+
+Sem nova env, migration, reset, envio de e-mail ou alteração de contas publicadas nos testes.
+Prazo configurado já existente passa a ser aplicado estritamente; código vencido exige reenvio.
+Relatório leigo mantido curto em AUDITORIA-2026-09-10.md; detalhes movidos para o arquivo EVIDENCIAS.

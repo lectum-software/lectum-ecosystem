@@ -7,7 +7,7 @@ import type { user } from "@/interfaces/objects";
 import { getUserTokenLimit } from "@/utils/runtime-config";
 
 //DTOs
-import type { IConfirmDTO } from "../DTOs/IConfirmDTO";
+import type { ConsumeConfirmationInput, IConfirmDTO } from "../DTOs/IConfirmDTO";
 
 //Types
 import type { IConfirmRepository } from "./interfaces/IConfirmRepository";
@@ -39,5 +39,29 @@ export class ConfirmRepository implements IConfirmRepository {
       },
     });
     return res;
+  }
+
+  async consume(input: ConsumeConfirmationInput): Promise<boolean> {
+    const result = await this.repository.updateMany({
+      where: {
+        id: input.userId,
+        active: true,
+        deleted: false,
+        confirmed: false,
+        confirm_code: input.code,
+        confirm_date: {
+          equals: input.issuedAt,
+          gt: new Date(input.verifiedAt.getTime() - input.validityMinutes * 60_000),
+          lte: input.verifiedAt,
+        },
+      },
+      data: {
+        confirmed: true,
+        confirmed_date: input.verifiedAt,
+        confirm_code: null,
+      },
+    });
+    // Compare-and-set: reenvio ou outra confirmação invalida esta tentativa.
+    return result.count === 1;
   }
 }
