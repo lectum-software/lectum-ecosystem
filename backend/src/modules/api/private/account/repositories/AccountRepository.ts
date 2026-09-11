@@ -3,7 +3,11 @@ import prisma, { type ORM } from "@/infra/database/prisma";
 import type { professional_subscription, user } from "@/interfaces/objects";
 import { loginInclude } from "@/query/login";
 import { log } from "@/utils/logs";
-import { deleteAccountSession, deleteAllAccountSessions } from "./account-session-store";
+import {
+  deleteAccountSession,
+  deleteAllAccountSessions,
+  updateAccountAndClearSessions,
+} from "./account-session-store";
 import type { IAccountRepository } from "./interfaces/IAccountRepository";
 import {
   ACCOUNT_DELETE_TRANSACTION_OPTIONS,
@@ -17,11 +21,9 @@ import { buildLogoutSubscriptionFilter } from "./support/logout-subscription";
 
 export class AccountRepository implements IAccountRepository {
   readonly repository: ORM["user"];
-  readonly userTokenRepository: ORM["user_token"];
 
   constructor() {
     this.repository = prisma.user;
-    this.userTokenRepository = prisma.user_token;
   }
 
   async findById(id: string): Promise<user | null> {
@@ -111,22 +113,7 @@ export class AccountRepository implements IAccountRepository {
   }
 
   async updateUserAndClearTokens(userId: string, data: Prisma.userUpdateInput): Promise<user> {
-    const [updated] = await prisma.$transaction([
-      this.repository.update({
-        where: {
-          id: userId,
-        },
-        data,
-        include: loginInclude(),
-      }),
-      this.userTokenRepository.deleteMany({
-        where: {
-          user_id: userId,
-        },
-      }),
-    ]);
-
-    return updated;
+    return updateAccountAndClearSessions(userId, data);
   }
 
   async findBlockingSubscription(userId: string): Promise<professional_subscription | null> {

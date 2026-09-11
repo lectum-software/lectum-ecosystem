@@ -34,7 +34,7 @@ import apiAdminPrivateTrafficExport from "@/modules/api/admin/private/traffic/ex
 import apiAdminPrivateTrafficSummary from "@/modules/api/admin/private/traffic/summary";
 import apiAdminPrivateVideoAssets from "@/modules/api/admin/private/video-assets";
 import apiAdminPublicAuthLogin from "@/modules/api/admin/public/auth/login";
-import privateAuth from "@/modules/api/middlewares/_auth";
+import privateAuth, { authenticateUserSession } from "@/modules/api/middlewares/_auth";
 import optionalAuth from "@/modules/api/middlewares/optional-auth";
 import { requireRole } from "@/modules/api/middlewares/require-role";
 import apiPrivateAccount from "@/modules/api/private/account";
@@ -165,7 +165,8 @@ mountRoute("/api/private/auth/confirm", apiPrivateAuthConfirm);
 mountRoute("/api/private/auth/hidrate", apiPrivateAuthHidrate);
 mountRoute("/api/private/auth/need_reset", apiPrivateAuthNeedReset);
 mountRoute("/api/private/auth/reset", apiPrivateAuthReset);
-mountRoute("/api/private/account", privateAuth, apiPrivateAccount);
+// Segurança/logout da própria conta precisam continuar acessíveis antes da confirmação.
+mountRoute("/api/private/account", authenticateUserSession, apiPrivateAccount);
 mountRoute("/api/private/community", optionalAuth, apiPrivateCommunity);
 mountRoute("/api/private/posts", optionalAuth, apiPrivatePosts);
 mountRoute("/api/public/analytics/action", apiPublicAnalyticsAction);

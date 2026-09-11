@@ -53,7 +53,6 @@ export default async (data: IResetDTO): Promise<Resolve> => {
       password,
       password_confirm: null,
       need_reset: false,
-      confirmed: true,
     },
     auth: data.auth,
   });

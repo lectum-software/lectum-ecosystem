@@ -12,6 +12,7 @@ import {
 } from "@/utils/admin-view-as";
 import { toSafeErrorLog } from "@/utils/safe-error-log";
 import { getUserRequestToken } from "@/utils/user-auth-cookie";
+import { getPendingAccountRequirement } from "./helpers/account-requirements";
 import { passLogin } from "./helpers/login";
 import { passToken } from "./helpers/token";
 //Libs
@@ -27,7 +28,8 @@ type Not_Authorized = {
 const isAuthUnavailable = (authError?: Not_Authorized) =>
   authError?.status === 503 || authError?.message === "auth_unavailable";
 
-const privateRouteVerifier = async (req: Request, res: Response, next: NextFunction) => {
+// Somente bootstrap de autenticação e segurança da própria conta podem usar esta variante.
+export const authenticateUserSession = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req?.headers?.authorization;
   const requestToken = getUserRequestToken(req);
   if (!requestToken)
@@ -114,5 +116,17 @@ const privateRouteVerifier = async (req: Request, res: Response, next: NextFunct
     });
   }
 };
+
+export const requireReadyAccount = (req: Request, res: Response, next: NextFunction) => {
+  const requirement = getPendingAccountRequirement(req.auth);
+  if (requirement) return send(res, { status: 403, ...error(requirement, {}) });
+  return next();
+};
+
+const privateRouteVerifier = (req: Request, res: Response, next: NextFunction) =>
+  authenticateUserSession(req, res, (err) => {
+    if (err) return next(err);
+    return requireReadyAccount(req, res, next);
+  });
 
 export default privateRouteVerifier;

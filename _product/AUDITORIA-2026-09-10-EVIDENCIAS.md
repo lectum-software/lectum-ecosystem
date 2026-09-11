@@ -298,4 +298,38 @@ na versão esperada. Nenhuma recuperação por e-mail de conta publicada foi dis
 - Teste de estrutura impede recolocar controles/erros dentro do label; não certifica anúncio
   em leitor de tela nativo. Safari/iPhone/Android reais permanecem pendentes.
 
-Smoke de 0.1.320 e repetição no Admin publicado ainda pendentes neste registro.
+0.1.320 publicada em `2f4c58c0`: 16/16 checks às 01:46 UTC de 11/09, backend/frontend/Admin
+na versão esperada; `/health` e `/ready` em 200. Captura 26 do Admin autenticado em 390×844
+comparada à 23: mensagem PT-BR correta, foco e dimensões preservados. Cancelamento sem gravar
+categoria; contagens permaneceram 16 categorias/98 especialidades. Viewport temporário retirado.
+
+
+## Continuação — pré-requisitos da conta 0.1.321
+
+- Na imagem anterior, onboarding e leitura privada funcionavam com `confirmed=false`; troca
+  privada de senha atribuía confirmação indevida; senha temporária não impedia requisição direta.
+- Guarda `_auth` mantém a autenticação existente e agora exige estado confirmado/sem troca pendente.
+  Bootstrap e segurança da própria conta têm exceção explícita autenticada. Leitura pública intacta.
+- A primeira imagem candidata (não publicada) mostrou que o painel Conta usava outro repositório:
+  troca de senha/e-mail ainda mantinha recovery. Invalidação centralizada nos dois repositórios.
+- 17 cenários de conta passaram: 16 envolvendo HTTP real e um no repositório de troca de e-mail.
+  O último não certifica SMTP; provedor ausente retorna 503 real, sem simulação. A recusa de
+  senha/confirm divergentes foi testada com `x-refine=true`, que ativa as relações do validador
+  legado em NODE_ENV=test; a primeira expectativa sem esse header não representava produção.
+- Oito regressões de recuperação e onze de privacidade/autorização também passaram na imagem final.
+  Esses 36 cenários manuais usam PostgreSQL descartável, não estão incluídos no check automatizado.
+- Check agregado final: 523 testes (132 frontend, 321 backend, 38 Admin, 32 video), mais seis
+  testes da política de versão. Build backend, Prisma generate e Biome aprovados.
+- Imagem Linux amd64: `33c75b9d3d6391829e8a61817b7946c0cea1ed032985518eb546af34158ed63e`.
+  A primeira execução do check de tamanho apontou 701 linhas no repositório legado; a transação
+  foi extraída para account-session-store já existente, sem relaxar a política (686 linhas).
+- Runner manual: `node backend/scripts/auth-integration.mjs --image=lectum-backend:audit-0.1.321 --suite=account-confirmation`.
+  Wrapper de recuperação anterior preservado. Nenhum banco/segredo publicado foi usado.
+- Inventário da base: 211 leituras iniciais, 11 parciais e 2.899 ainda não revisados. Não equivale
+  a autorização para produção ou auditoria concluída. Cadastro profissional/Google/dispositivos
+  reais e documentos legais continuam pendentes.
+
+Na aba antiga do feed, algumas mídias apareceram indisponíveis. A causa ainda não foi isolada
+(expiração/estado antigo/rede/codec não diferenciados); não atribuir ao patch de autenticação nem
+marcar vídeo como aprovado apenas pelo HTTP. Nenhum vídeo/post publicado foi alterado.
+Publicação e smoke de 0.1.321 ainda pendentes neste registro.

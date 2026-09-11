@@ -8,7 +8,7 @@ import { hidrate } from "./use-cases/controller";
 const routes = Router();
 
 //Middlewares
-import middlewares from "../../../middlewares/_auth";
+import { authenticateUserSession as middlewares } from "../../../middlewares/_auth";
 
 routes.use(middlewares);
 

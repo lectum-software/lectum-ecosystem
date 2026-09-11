@@ -22,6 +22,8 @@
     "token_mal_formatted": "Sua sessão não é mais válida. Entre novamente.",
     "token_invalid": "Sua sessão não é mais válida. Entre novamente.",
     "token_device_not_authorized": "Sua sessão não é mais válida. Entre novamente.",
+    "email_confirmation_required": "Confirme seu e-mail para continuar.",
+    "password_reset_required": "Redefina sua senha para continuar.",
     "auth_unavailable": "Autenticação indisponível. Tente novamente em instantes.",
     "email_provider_unavailable": "Envio de e-mail temporariamente indisponível. Tente novamente em instantes.",
     "auth_inactive": "Usuário inativo",

@@ -16,6 +16,7 @@ import {
 } from "@/modules/api/public/analytics/helpers/signup-identity";
 //
 import { loginInclude } from "@/query/login";
+import { withInvalidatedRecovery } from "@/utils/account-credentials";
 import { isSuspensionExpired } from "@/utils/account-status";
 import { log } from "@/utils/logs";
 import { getUserTokenLimit } from "@/utils/runtime-config";
@@ -270,11 +271,7 @@ export class LoginRepository implements ILoginRepository {
     return prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id: data.p.id },
-        data: {
-          ...data.b,
-          // Uma senha nova invalida links emitidos antes da troca.
-          ...(data.b.password ? { recovery_code: null, recovery_date: null } : {}),
-        },
+        data: withInvalidatedRecovery(data.b),
         include: {
           user_tokens: this.tokens,
           ...loginInclude(),

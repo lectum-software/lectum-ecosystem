@@ -35,9 +35,13 @@
 29. Duas tentativas simultâneas não conseguem reutilizar a mesma confirmação.
 30. Link de recuperação de senha também respeita o prazo configurado.
 31. Um link de recuperação não pode concluir duas trocas de senha simultâneas.
-32. Trocar a senha pela conta invalida os links de recuperação anteriores.
+32. Trocar a senha pelas duas rotas da conta invalida os links de recuperação anteriores.
 33. Limite do nome de categoria explica o que corrigir em português.
 34. Campos do Admin separam rótulo e erro, sem mudar o espaço do formulário.
+35. Recursos privados exigem confirmação do e-mail também no servidor, sem depender da tela.
+36. Trocar a senha não confirma mais o e-mail indevidamente.
+37. Senhas temporárias precisam ser trocadas antes de usar recursos privados.
+38. Trocar o e-mail invalida links de recuperação enviados ao endereço anterior.
 
 ## Ainda pendente
 
@@ -46,6 +50,6 @@
 - Repetir cadastro completo e testar perfil profissional, Google e dispositivos reais.
 - Avaliar senhas antigas e concluir verificações de permissão, pagamentos e vídeos.
 
-Cobertura da base: **185 arquivos com leitura inicial**, 11 parciais e 2925 ainda não revisados.
+Cobertura da base: **211 arquivos com leitura inicial**, 11 parciais e 2899 ainda não revisados.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv)

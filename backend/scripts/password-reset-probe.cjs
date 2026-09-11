@@ -53,7 +53,7 @@ const failed = [];
     const r = await fetch(`${base}/api/public/auth/reset/${encodeURIComponent(c)}`, {
       method: "POST",
       signal: AbortSignal.timeout(15000),
-      headers: { "x-device": device, "content-type": "application/json" },
+      headers: { "x-device": device, "x-refine": "true", "content-type": "application/json" },
       body: JSON.stringify({ password, password_confirm: password }),
     });
     return { status: r.status, body: await r.json() };

@@ -256,7 +256,24 @@ SMTP e Google permanecem com evidências/pendências separadas.
 - [x] Duas regressões de limites/PT-BR e confirmação forte aprovadas, sem simular API.
 - [x] Controllers com label separado, erro associado e indicação ARIA validados no browser local/estrutura.
 - [x] Check agregado: 518 testes; check/build Admin e browser local aprovados; regressão estrutural aprovada.
-- [ ] Smoke publicado de 0.1.320 e repetição do erro no Admin autenticado.
+- [x] Smoke publicado de 0.1.320: 16/16 às 01:46 UTC de 11/09; erro PT-BR repetido no Admin em 390×844.
 
 Sem env, migration ou alteração de categorias. Uma validação isolada de componente não será
 apresentada como criação/edição real de catálogo nem certificação de Safari/dispositivo real.
+
+## Continuação — pré-requisitos da conta 0.1.321
+
+- [x] Bypass de confirmação reproduzido em HTTP com PostgreSQL real isolado.
+- [x] Troca de senha privada confirmava o e-mail sem código: reproduzido na imagem anterior.
+- [x] Guarda central aplica confirmação/troca obrigatória sem bloquear bootstrap de autenticação.
+- [x] 17 cenários de conta, oito de recuperação e onze de privacidade aprovados com banco real isolado.
+- [x] Check agregado: 523 testes; build backend e Docker Linux amd64 finais aprovados.
+- [ ] Publicação homolog e smoke final aprovados.
+
+Sem nova env, schema, reset publicado ou mudança do contrato de sucesso. Contas pendentes recebem
+403 com orientação PT-BR; login/hidratação/confirmação e segurança da própria conta continuam
+acessíveis, com sessão válida. Não confundir este teste com registro SMTP real ou revisão Google.
+
+A rota de senha usada pelo painel Conta e a troca de e-mail também invalidam recovery anterior,
+com helper central e transação movida para o módulo de sessões existente. A entrega SMTP da troca
+de e-mail não foi simulada: essa parte foi testada no repositório real, não como envio ponta a ponta.

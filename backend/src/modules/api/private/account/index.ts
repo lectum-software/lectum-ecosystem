@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireReadyAccount } from "@/modules/api/middlewares/_auth";
 import {
   deleteGoogleIntent,
   destroy,
@@ -20,12 +21,12 @@ import {
 const routes = Router();
 
 routes.get("/security", security);
-routes.get("/tips", onboardingTips);
+routes.get("/tips", requireReadyAccount, onboardingTips);
 routes.post("/logout", logout);
 routes.post("/delete/google-intent", deleteGoogleIntentValidator, deleteGoogleIntent);
 routes.post("/delete", deleteValidator, destroy);
 routes.put("/email", emailValidator, email);
 routes.put("/password", passwordValidator, password);
-routes.put("/tips", onboardingTipsValidator, updateTips);
+routes.put("/tips", requireReadyAccount, onboardingTipsValidator, updateTips);
 
 export default routes;

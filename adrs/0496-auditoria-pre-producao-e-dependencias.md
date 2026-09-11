@@ -331,3 +331,49 @@ preservados. Harness sem persistência removido, login restaurado, servidor loca
 Duas regressões de schema e uma estrutural aprovadas; build/check Admin aprovados. A diferença
 de cor local/homolog vem da configuração visual não carregada no teste isolado, não deste patch.
 Safari/dispositivo real e anúncio por leitor de tela não são equivalentes à árvore acessível.
+
+## Pré-requisitos da conta no backend — continuação 0.1.321
+
+Em HTTP real com banco descartável, a imagem 0.1.319 permitiu onboarding sem e-mail confirmado
+e leitura privada de posts próprios. O frontend orientava confirmação, mas `_auth` só exigia
+sessão ativa. A rota privada de troca de senha também gravava `confirmed=true` sem prova de e-mail.
+
+Decisão: reutilizar `_auth`, aplicando por padrão os pré-requisitos recarregados do banco:
+`need_reset` primeiro (senha temporária), depois `confirmed`. Orientações PT-BR em 403, sem vazar
+dados internos. Não depender do pathname, flags do cliente ou claims antigos do JWT. Provedores,
+roles, ownership, revogação, device e view-as somente leitura continuam nas guardas existentes.
+
+A variante nomeada `authenticateUserSession` preserva o mesmo JWT/device/estado ativo, sem liberar
+acesso anônimo, e é restrita aos cinco routers de bootstrap de auth e segurança da própria conta
+(security, logout, alteração de e-mail/senha e exclusão com reautenticação). Dicas da conta mantêm
+guarda completa. Rotas privadas de negócio herdam a guarda completa por import/mount já existente;
+leitura pública/optionalAuth não passa a exigir confirmação ou login. Trocar senha autenticada
+não altera mais o estado de confirmação; somente fluxos que provam o e-mail podem fazê-lo.
+
+Não há schema, env, nova dependência ou backfill. Contrato de sucesso permanece. Contas pendentes
+que burlavam o frontend passam a receber 403 até completar a etapa; não confirmar em massa nem
+redefinir senhas publicadas. Rollback de código reabre essas falhas e não é recomendado; correção
+progressiva é preferível. O ambiente antigo/novo permanece compatível com as telas já existentes.
+
+Runner Docker da recuperação reutilizado em `scripts/auth-integration.mjs`, com duas suites
+fechadas por nome; entrada antiga permanece como wrapper. Rede, banco e credenciais efêmeros,
+sem portas públicas/.env/provedores simulados, cleanup por label aleatório. Recursos do produto
+não são apagados. Envio SMTP e Google reais não são certificados por essa integração isolada.
+
+Referência primária: [OWASP Authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html),
+consultada em 11/09/2026: autorização em cada requisição e recusa por padrão, sem substituir a
+regra de produto de TASK-06/DATA-MODEL. Validações finais da mudança ainda em execução.
+
+A continuação encontrou o mesmo risco de recuperação em outra entrada: a rota usada pelo painel
+Conta chamava `AccountRepository`, não `LoginRepository` corrigido na 0.1.319. Os links também
+sobreviviam à troca de e-mail. Duas regressões adicionais reproduziram isso na primeira imagem
+candidata de 0.1.321 (não publicada). Centralizada a invalidação em `utils/account-credentials`
+para os dois repositórios, preservando o estado `confirmed`. A transação da conta foi movida
+para o `account-session-store` existente; não aumentar o repositório legado acima de 700 linhas
+nem relaxar o limite de arquitetura. A atomicidade com a revogação das sessões foi preservada.
+
+Validação final 0.1.321: 523 testes automatizados de apps + seis da política de versão;
+17 cenários de pré-requisitos/credenciais, oito de recuperação e onze de privacidade com banco
+isolado real. Build backend e imagem Linux amd64 aprovados. Relações do validador legadas são
+ativadas nos probes por `x-refine=true`, como no cliente, sem ignorar diferenças do ambiente test.
+Sem alterações de dados publicados. Gate de publicação/smoke continua sendo registrado à parte.

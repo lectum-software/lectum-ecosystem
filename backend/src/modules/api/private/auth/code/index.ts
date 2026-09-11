@@ -13,7 +13,7 @@ const routes = Router();
 const limiter = getLimiter({ window: 10, max: 10 });
 
 //Middlewares
-import middlewares from "../../../middlewares/_auth";
+import { authenticateUserSession as middlewares } from "../../../middlewares/_auth";
 
 //Routes
 routes.put("/:code", middlewares, limiter, validator, code);
