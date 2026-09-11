@@ -60,6 +60,7 @@ export const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: strin
     [appliedPeriod, appliedRange.from, appliedRange.to, query],
   );
   const result = useAdminCommunityContent(slug, contentQueryInput);
+  const contentData = result.isSuccess ? result.data : undefined;
 
   const updateQuery = (patch: Partial<ContentBaseQuery>) => {
     setQuery((current) => ({ ...current, ...patch, page: patch.page ?? 1 }));
@@ -202,10 +203,12 @@ export const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: strin
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-black text-foreground">Conteúdo da comunidade</h2>
-            <p className="mt-1 text-sm text-muted">
-              Mostrando {numberFormatter.format(result.data?.data.length ?? 0)} de{" "}
-              {numberFormatter.format(result.data?.count ?? 0)} registros.
-            </p>
+            {contentData ? (
+              <p className="mt-1 text-sm text-muted">
+                Mostrando {numberFormatter.format(contentData.data.length)} de{" "}
+                {numberFormatter.format(contentData.count)} registros.
+              </p>
+            ) : null}
           </div>
           <label
             className="relative flex h-11 w-full cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3 pr-10 text-xs font-black text-muted transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 sm:w-64"
@@ -240,20 +243,20 @@ export const ContentTab = ({ createdAt, slug }: { createdAt: string; slug: strin
             loading={result.isLoading}
             onRetry={() => void result.refetch()}
           />
-          {result.data?.data.length === 0 ? (
+          {contentData?.data.length === 0 ? (
             <p className="rounded-2xl bg-surface-muted p-4 text-sm text-muted">
               Nenhum conteúdo encontrado com os filtros atuais.
             </p>
           ) : null}
-          {result.data?.data.map((item) => (
+          {contentData?.data.map((item) => (
             <ContentItemCard item={item} key={`${item.type}-${item.content_id}`} slug={slug} />
           ))}
         </div>
-        {result.data ? (
+        {contentData ? (
           <div className="mt-5">
             <PaginationControls
-              page={result.data.page}
-              pages={result.data.pages}
+              page={contentData.page}
+              pages={contentData.pages}
               setPage={(page) => updateQuery({ page })}
             />
           </div>

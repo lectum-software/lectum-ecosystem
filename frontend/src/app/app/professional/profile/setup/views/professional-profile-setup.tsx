@@ -346,14 +346,14 @@ export const ProfessionalProfileSetupLogic = () => {
 
                     <input
                       accept="video/mp4,video/webm,video/quicktime"
-                      className="sr-only"
+                      className="hidden"
                       onChange={handleVideoChange}
                       ref={videoInputRef}
                       type="file"
                     />
                     <input
                       accept="image/jpeg,image/png,image/webp"
-                      className="sr-only"
+                      className="hidden"
                       onChange={handleVideoCoverChange}
                       ref={videoCoverInputRef}
                       type="file"

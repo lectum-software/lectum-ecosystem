@@ -558,3 +558,82 @@ Essas provas não autorizam declarar .327 publicada nem auditoria completa.
 - Build final Admin .327 aprovado com diretório gerado limpo e dev parado: source maps de
   produção ausentes, 30 manifests de route groups sincronizados. Check agregado repetido
   após todos os scripts novos: 578/578, sem falha; cinco manifests sincronizados em .327.
+
+### Publicação e repetição 0.1.327
+
+- Commit `4bcd50e6`, push em homolog concluído, sem bypass de hooks. Backend/frontend/Admin
+  responderam .327 no smoke público de 2026-09-11T12:29:33Z: **16/16**, incluindo health/ready
+  200, rotas de versão sem cache/noindex, recusa de acesso privado e leitura pública.
+  Evidência sanitizada: `/tmp/lectum-audit-327-smoke-homolog.json`.
+- Operador executou o diagnóstico dentro do backend homolog e informou
+  `VIDEO_PROCESSING_SERVICE_CHECK_OK`: versão .327, autenticação válida, ready, rede privada.
+  É evidência fornecida pelo operador, não uma sessão SSH do agente nem teste Stream/R2.
+- Browser publicado: denúncia de teste aparece no filtro de post de psicólogo não verificado
+  + Improcedentes (57); Salvos mantém Seguindo e resposta sem filha removida (58). Lista
+  Minhas respostas contém somente as duas respostas remanescentes da conta de auditoria.
+- Aba Conteúdo, distinta de Denúncias, ainda recusou filtro de psicólogo não verificado,
+  acompanhando o erro com zero registros (56). Reproduzido e atribuído à continuação .328.
+- Cobertura acumulada atualizada com proveniência: 647 leituras integrais da base, 10 parciais
+  e 2.464 pendentes. A publicação não conclui a auditoria nem remove os bloqueios de produção.
+
+### Pendência de teclado reproduzida após .327
+
+No post anônimo próprio da auditoria, profissional abriu Mais opções → Denunciar post. Foco
+permaneceu no documento; Tab alcançou o link da comunidade atrás do overlay, fora de `role=dialog`
+(screenshot59). Escape fechou, mas manteve foco nesse link. Nenhuma denúncia enviada. O componente
+não implementa foco inicial/contenção/restauração; inventário de padrões dos demais modais em
+revisão antes de escolher correção reutilizável. Não confundir `aria-modal` com contenção de foco.
+
+Preferências .327 publicadas: na conta profissional própria, desativado somente “Novos upvotes”,
+salvo e recarregado; opt-out persistiu, outros switches permaneceram ligados. Depois restaurado
+ao estado original, salvo/recarregado, botão Salvar desabilitado. Sem mudar permissão do Browser
+ou enviar notificações. Essa prova é do caminho de sucesso, não da correção para GET falho.
+
+### Validação .328 — módulos reais, não simulação de provider
+
+- Check agregado passou: raiz6, frontend159, backend359, Admin53, video43 (614 das apps +6).
+  Logs `/tmp/lectum-328-root-check.log`, checks focais e relatório dos agentes. Testes novos
+  de notificações executam o componente exportado usado pelo app com React Query/RHF reais;
+  sem extração AST/VM, substituição de hooks ou respostas interceptadas.
+- Imagem integral `lectum-backend:audit-0.1.328`, digest
+  `sha256:bba879cebb3f1fc8e66ace6c6c4b8c1471684560f4d2f65ecc7ac51da98a7dd4`.
+  Build Prisma/TypeScript aprovado; teste HTTP/PG de denúncias+conteúdo **23/23**, recursos
+  descartáveis removidos. Baseline .327 falhava em quatro tipos longos de conteúdo.
+- Laboratórios locais utilizaram Express, login/cookies, CORS, guards, Prisma/PostgreSQL e
+  módulos reais da imagem, com Next local das árvores .328. Não é boot global nem OAuth.
+  Dois parâmetros Google já existentes no env local foram usados apenas para construir a
+  strategy importada pelo módulo JWT; nenhum provider chamado e nenhum valor impresso.
+  Containers em rede Docker interna sem egress; relays TCP loopback encaminham bytes, não
+  alteram respostas. Usuários/registro de comunidade exclusivos do PG descartável.
+- Admin: oito tipos de Conteúdo conferidos no Browser390×844; tipo compatível trouxe o post
+  existente, demais trouxeram vazio legítimo. Relay interrompido provocou erro real sem
+  contagem/vazio/paginação; retry após restabelecer o relay recuperou consulta. Busca limpa
+  recuperou o post em1280×720, sem overflow horizontal. Screenshots60–62 em
+  `/tmp/lectum-audit-178-ui/`; 61 capturou viewport mobile ainda durante resize, não desktop.
+- Preferências: tabela do PG **exclusivo do laboratório** renomeada temporariamente para
+  provocar GET falho real; Browser exibiu só erro e retry, sem switches nem Salvar (63).
+  Nome da tabela restaurado em seguida; retry recuperou opt-outs reais. Alterada apenas
+  avaliação na conta local, salva e recarregada (64); cinco opt-outs anteriores, incluindo
+  `admin_campaign` não mostrado, foram conferidos no PG e preservados. Nenhum canal enviado.
+- Perfil390px: nome>80 recebeu mensagem PT-BR; campos obrigatórios focados sem salvar (65).
+  Valor nacional começando por55 gerou link WhatsApp com DDI+DDD preservados, sem abrir/enviar.
+  Todos os quatro inputs de arquivo tinham display:none/sem caixa. Enter abriu seletores de
+  capa do perfil, foto e menu Trocar vídeo. Nenhum arquivo selecionado ou enviado. Limitação:
+  API de chooser não aceita lista vazia; Escape/reload encerraram fluxo sem arquivo. Não
+  certificar cancelamento nativo por essa tentativa, nem capa de vídeo ainda inexistente.
+  Limite composto160 comprovado pelos testes RHF/Zod; formulário local não teve CPF/CRP/DOB
+  inventados para satisfazer requisitos profissionais. Não houve publicação de perfil.
+- Push nativo não está configurado no módulo local; mensagem segura indica indisponibilidade.
+  Rotas não montadas no laboratório podem responder404 (ex.: Dashboard e chave VAPID); não
+  contar isso como quebra do app publicado nem como teste de integração desses serviços.
+- Devs/relays parados, aba retornada à homologação. Containers, rede e arquivos de credenciais
+  próprios removidos após conferir labels de propriedade. Dados/serviços locais preexistentes
+  e toda homologação permaneceram intactos. Nenhuma migration/schema/env/package alterado.
+- Builds finais frontend/Admin .328 aprovados (exit0), sem source maps de produção e30
+  manifests Admin sincronizados. Primeiro build Admin após dev falhou por artefatos gerados
+  de desenvolvimento; repetido com apenas `.next` limpo e dev parado, sem relaxar o guard.
+  O wrapper inicial também usou nome reservado `status` do zsh; retentativa com `rc` confirmou
+  exit0 real. Logs finais `/tmp/lectum-328-frontend-build-final.log` e
+  `/tmp/lectum-328-admin-build-clean.log`. Nenhum novo bump para essa retentativa.
+- Cobertura de base675 leituras integrais iniciais/10 parciais/2436 pendentes. Leitura de fonte
+  não substitui testes de fluxo. Commit/push e repetição publicada ainda pendentes nesta anotação.

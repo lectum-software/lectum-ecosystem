@@ -343,7 +343,7 @@ Isso não certifica ainda publicação, moderação, pagamentos nem onboarding c
 
 ## Continuação — integrações de comunidades, billing e vídeo
 
-Correções compatíveis em integração, ainda não publicadas nesta seção. Sem alteração de schema,
+Correções compatíveis publicadas na .327 (`4bcd50e6`). Sem alteração de schema,
 migration, packages ou envs. Manter as quatro aplicações independentes.
 
 - [x] Histórico financeiro: 13 cenários HTTP/Prisma/PostgreSQL reais na imagem local integral .326.
@@ -356,8 +356,13 @@ migration, packages ou envs. Manter as quatro aplicações independentes.
   repetidos billing13, denúncias10, estado de posts48, concorrência16 e smoke da imagem video8.
 - [x] Browser local da aba de denúncias em 390×844/1280×720 com módulos Admin e PG reais;
   filtros, vazio legítimo, erro real de rede e recuperação por retry conferidos.
-- [ ] Publicação das correções de backend/video/Admin.
-- [ ] Smoke, versões e repetição dos fluxos em homologação após esse push.
+- [x] Publicação das correções de backend/video/Admin em `4bcd50e6`, push em homolog concluído.
+- [x] Smoke público 16/16 às 12:29:33 UTC de 11/09: backend/frontend/Admin .327, health/ready 200.
+- [x] Browser publicado repetiu denúncias, seguimento em Salvos e remoção da resposta filha da lista/contagem.
+- [x] Operador confirmou check privado pelo backend: vídeo .327, autenticação válida, ready e rede privada.
+
+O check privado confirma conectividade e autenticação; não equivale a testar upload/render com
+Cloudflare/R2 nessa versão. Esses fluxos continuam pendentes na matriz funcional.
 
 Riscos de rollout: handles antigos de render e tokens antigos de partes de upload são recusados
 por segurança; reiniciar somente operações em andamento. Réplicas backend antigas ainda aceitam
@@ -369,3 +374,24 @@ Próximas verificações dentro da auditoria: preferências não podem reativar 
 falho; documento estático e 109 leituras de notificações incorporados ao inventário, sem alegar
 reprodução visual ou envio de todos os canais. Dados profissionais reais autorizados ainda
 pendentes; WhatsApp foi salvo pelo fluxo real, mas perfil de auditoria não foi publicado.
+
+## Continuação — contatos, validação e preferências
+
+Recorte seguinte dentro da TASK-178, após push `4bcd50e6` da .327. Sem novo package, env ou schema;
+não migrar contatos antigos nem alterar preferências de usuários como reparação automática.
+
+- [x] Preservar DDD quando coincide com DDI; separar hidratação internacional e serialização nacional.
+- [x] Recusar telefone excedente no backend sem convertê-lo silenciosamente em outro contato.
+- [x] Limites do perfil profissional em PT-BR, incluindo tamanho do nome composto.
+- [x] Inputs nativos ocultos; abertura por Enter confirmada para capa do perfil, foto e Trocar vídeo.
+- [ ] Capa de vídeo existente e cancelamento nativo completo: dependem de mídia e suporte do Browser. Não confundir seletor aberto com upload concluído.
+- [x] Formulário de notificações só pode editar/salvar um snapshot carregado e válido; erro oferece retry.
+- [x] Alias inglês de preferências respeita o mesmo controle manual de permissão de push.
+- [x] Aba Conteúdo aceita todos os tipos oferecidos; erro/carregamento não se apresentam como zero registros.
+- [x] Check agregado: 614 testes das apps + 6 de versão; backend359, frontend159, Admin53, video43.
+- [x] Imagem backend integral .328 e integração HTTP/PG23; Browser local real, erro e recuperação.
+- [x] Builds finais frontend/Admin, sem source maps de produção; Admin sincronizou30 manifests.
+- [ ] Publicação com smoke e repetição Browser da .328.
+
+Outros riscos permanecem registrados, não incluídos silenciosamente nesse recorte: compensação
+de upload após persistência incerta, checkout durável e confirmação canônica de eventos financeiros.

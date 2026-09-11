@@ -382,7 +382,8 @@ export const NotificationManager = () => {
     if (isNativePromptRequesting) return;
 
     const isPrivateAppRoute = isPrivateAppPath(pathname);
-    const isNotificationsSettingsRoute = pathname === "/app/configuracoes/notificacoes";
+    const isNotificationsSettingsRoute =
+      pathname === "/app/configuracoes/notificacoes" || pathname === "/app/settings/notifications";
 
     if (
       !isPrivateAppRoute ||

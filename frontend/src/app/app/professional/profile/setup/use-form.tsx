@@ -66,7 +66,11 @@ export type FreeProfileForm = {
   available_days: string[];
 };
 
-const getNationalDigits = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
+// A resposta da API contém o contato internacional. Só a hidratação retira o DDI.
+export const toWhatsappPhoneInput = (
+  value?: string | null,
+  countryCode = DEFAULT_COUNTRY_CALLING_CODE,
+) => {
   const digits = onlyDigits(value);
 
   if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
@@ -77,14 +81,15 @@ const getNationalDigits = (value?: string | null, countryCode = DEFAULT_COUNTRY_
 };
 
 const isPhoneLengthValid = (value: string, countryCode: string) => {
-  const nationalDigits = getNationalDigits(value, countryCode);
+  const nationalDigits = onlyDigits(value);
   const totalLength = (countryCode + nationalDigits).length;
 
-  return nationalDigits.length >= 6 && totalLength <= 15;
+  return nationalDigits.length >= 6 && totalLength >= 8 && totalLength <= 15;
 };
 
 export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
-  const nationalDigits = getNationalDigits(value, countryCode);
+  // O campo RHF já é nacional: um DDD igual ao DDI também pertence ao contato.
+  const nationalDigits = onlyDigits(value);
 
   return nationalDigits ? `+${countryCode}${nationalDigits}` : null;
 };
@@ -137,9 +142,17 @@ const stringArray = (message: string) => z.array(z.string(), { error: message })
 
 export const freeProfileSchema = z
   .object({
-    professional_first_name: requiredText("Nome é obrigatório").min(2, "Informe seu nome").max(80),
-    professional_last_name: requiredText("Sobrenome é obrigatório").max(120),
-    gender: requiredText("Gênero é obrigatório").max(40),
+    professional_first_name: requiredText("Nome é obrigatório")
+      .min(2, "Informe seu nome")
+      .max(80, "O nome deve ter no máximo 80 caracteres"),
+    professional_last_name: requiredText("Sobrenome é obrigatório").max(
+      120,
+      "O sobrenome deve ter no máximo 120 caracteres",
+    ),
+    gender: requiredText("Gênero é obrigatório").max(
+      40,
+      "O gênero deve ter no máximo 40 caracteres",
+    ),
     race_color: optionalText(40, "Raça/cor deve ter no máximo 40 caracteres"),
     religion: optionalText(80, "Religião deve ter no máximo 80 caracteres"),
     cpf: requiredText("CPF é obrigatório").refine(
@@ -165,7 +178,7 @@ export const freeProfileSchema = z
     bio: z
       .string({ error: "Apresentação deve ser um texto válido" })
       .trim()
-      .max(2000)
+      .max(2000, "A apresentação deve ter no máximo 2000 caracteres")
       .refine((value) => value.length === 0 || value.length >= 20, {
         message: "Escreva uma apresentação com pelo menos 20 caracteres",
       }),
@@ -183,23 +196,49 @@ export const freeProfileSchema = z
     academic_formations: z
       .array(
         z.object({
-          title: z.string({ error: "Título deve ser um texto válido" }).trim().max(160),
-          institution: z.string({ error: "Instituição deve ser um texto válido" }).trim().max(160),
+          title: z
+            .string({ error: "Título deve ser um texto válido" })
+            .trim()
+            .max(160, "O título deve ter no máximo 160 caracteres"),
+          institution: z
+            .string({ error: "Instituição deve ser um texto válido" })
+            .trim()
+            .max(160, "A instituição deve ter no máximo 160 caracteres"),
           graduation_year: z
             .string({ error: "Ano de formação deve ser um texto válido" })
             .trim()
-            .max(20),
+            .max(20, "O ano de formação deve ter no máximo 20 caracteres"),
         }),
         { error: "Formações acadêmicas devem ser informadas em uma lista válida" },
       )
       .max(5, "Adicione no máximo 5 formações"),
-    address_street: z.string({ error: "Logradouro deve ser um texto válido" }).trim().max(160),
-    address_number: z.string({ error: "Número deve ser um texto válido" }).trim().max(40),
-    address_complement: z.string({ error: "Complemento deve ser um texto válido" }).trim().max(80),
-    address_district: z.string({ error: "Bairro deve ser um texto válido" }).trim().max(120),
-    address_zip: z.string({ error: "CEP deve ser um texto válido" }).trim().max(20),
-    address_city: requiredText("Cidade é obrigatória").max(120),
-    address_state: requiredText("Estado é obrigatório").min(2, "Estado é obrigatório").max(2),
+    address_street: z
+      .string({ error: "Logradouro deve ser um texto válido" })
+      .trim()
+      .max(160, "O logradouro deve ter no máximo 160 caracteres"),
+    address_number: z
+      .string({ error: "Número deve ser um texto válido" })
+      .trim()
+      .max(40, "O número deve ter no máximo 40 caracteres"),
+    address_complement: z
+      .string({ error: "Complemento deve ser um texto válido" })
+      .trim()
+      .max(80, "O complemento deve ter no máximo 80 caracteres"),
+    address_district: z
+      .string({ error: "Bairro deve ser um texto válido" })
+      .trim()
+      .max(120, "O bairro deve ter no máximo 120 caracteres"),
+    address_zip: z
+      .string({ error: "CEP deve ser um texto válido" })
+      .trim()
+      .max(20, "O CEP deve ter no máximo 20 caracteres"),
+    address_city: requiredText("Cidade é obrigatória").max(
+      120,
+      "A cidade deve ter no máximo 120 caracteres",
+    ),
+    address_state: requiredText("Estado é obrigatório")
+      .min(2, "Estado é obrigatório")
+      .max(2, "O estado deve ter no máximo 2 caracteres"),
     specialty_ids: stringArray("Especialidades devem estar em uma lista válida").min(
       1,
       "Especialidade é obrigatória",
@@ -216,6 +255,21 @@ export const freeProfileSchema = z
     available_days: stringArray("Dias disponíveis devem estar em uma lista válida"),
   })
   .superRefine((data, context) => {
+    const name = [
+      normalizeProfessionalNamePart(data.professional_first_name),
+      normalizeProfessionalNamePart(data.professional_last_name),
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    if (name.length > 160) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Nome e sobrenome devem ter juntos no máximo 160 caracteres",
+        path: ["professional_last_name"],
+      });
+    }
+
     if (!onlyDigits(data.whatsapp)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
@@ -414,9 +468,6 @@ export const createFields = ({
   ] satisfies Field<FreeProfileForm>[];
 
 export const fields = createFields();
-
-const toWhatsappPhoneInput = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) =>
-  getNationalDigits(value, countryCode).slice(0, 15);
 
 export const getLanguages = (value: string) => (value ? [value] : []);
 

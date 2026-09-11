@@ -503,3 +503,30 @@ reintroduz riscos corrigidos, não exige reset nem desfaz conteúdo publicado.
 - Filhas de replies contam somente registros ativos, assim como a árvore exibida. Mine/saved
   reutilizam a busca em lote de memberships por usuário/comunidade, encaminhando `following`
   como argumento opcional final ao mapper. Sem N+1, alteração de schema ou reordenação de flags.
+
+### Contatos, limites e preferências — continuação .328
+
+- Separar hidratação de contato internacional e serialização do valor nacional controlado por
+  RHF. DDD igual ao DDI não é prefixo removível nessa segunda etapa. O backend rejeita excesso de
+  dígitos em vez de salvar silenciosamente outro contato. Não reparar contatos legados em massa.
+- Mensagens dos limites existentes do perfil são PT-BR; nome composto usa o mesmo normalizador
+  do payload e respeita o limite160 já obrigatório no backend, sem truncamento.
+- Pickers usam o padrão local de input nativo oculto acionado pelo botão com rótulo. Preservar
+  handlers/ref/accept; validar teclado e abertura/cancelamento no Browser antes de concluir.
+- Preferências só podem ser editadas após leitura bem-sucedida; erro oferece retry, nunca defaults
+  editáveis como se fossem escolhas persistidas. Rota traduzida e alias mantêm permissão de push
+  manual. Não disparar pedido de permissão ou regravar opt-outs automaticamente.
+- Aba Conteúdo reutiliza política de Denúncias: tipos oferecidos cabem no contrato, contagem/vazio
+  e paginação dependem de sucesso, não da ausência temporária de dados ou de erro da consulta.
+
+Sem novo package, env, schema/migration ou mudanças em contatos/preferências publicadas como
+reparação. Rollout compatível entre versões; cliente anterior pode continuar com a falha visual
+até seu deploy. Reverter código reintroduz riscos, não exige reset de banco.
+
+
+Validação .328: formulário de preferências extraído como apresentação real consumida pela
+mesma lógica, para testar sem substituir hooks. Mantém `useFormList`, controllers e schemas;
+merge preserva categorias não renderizadas e controles ficam bloqueados durante PUT. PG real
+confirmou preservação após falha de GET/restauração/retry. Inputs ocultos seguem o padrão já
+existente; abertura nativa confirmada, upload/cancelamento completo continuam na matriz.
+Não adicionar pacotes de modais ou mudar o fluxo de mídia nesta correção.

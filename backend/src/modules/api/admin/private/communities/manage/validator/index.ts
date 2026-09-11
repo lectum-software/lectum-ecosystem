@@ -307,7 +307,7 @@ export const contentSchema: IValidatorRequest = {
       key: "type",
       coerse: "string",
       method: "string",
-      max: 20,
+      max: 32,
       optional: true,
     },
     {

@@ -80,6 +80,7 @@ const failed = [];
       author_id: author.id,
       title: "Disposable report target",
       content: "Discardable content for a database contract regression",
+      anonymous: false,
       status: "published",
     },
   });
@@ -171,6 +172,131 @@ const failed = [];
     token = undefined;
     try {
       assert.equal((await request(route)).status, 401);
+    } finally {
+      token = saved;
+    }
+  });
+  step = "fixture_content";
+  const psychologist = await prisma.user.create({
+    data: {
+      name: "Discardable Unverified Psychologist",
+      email: "content-psychologist@example.com",
+      role: "psicologo",
+      confirmed: true,
+    },
+  });
+  const oldDate = new Date(Date.now() - 120 * 86400000);
+  const psychologistPost = await prisma.community_post.create({
+    data: {
+      community_id: community.id,
+      author_id: psychologist.id,
+      title: "Discardable old psychologist post",
+      content: "Local content filter regression",
+      anonymous: false,
+      status: "published",
+      createdAt: oldDate,
+    },
+  });
+  const anonymousPost = await prisma.community_post.create({
+    data: {
+      community_id: community.id,
+      author_id: author.id,
+      title: "Discardable anonymous post",
+      content: "Local anonymous content filter regression",
+      anonymous: true,
+      status: "published",
+    },
+  });
+  const psychologistReply = await prisma.post_reply.create({
+    data: { post_id: post.id, author_id: psychologist.id, content: "Local psychologist reply" },
+  });
+  const patientComment = await prisma.post_reply.create({
+    data: { post_id: post.id, author_id: reporter.id, content: "Local patient comment" },
+  });
+  const otherCommunity = await prisma.community.create({
+    data: { name: "Discardable Other Content", slug: "discardable-other-content", active: true },
+  });
+  await prisma.community_post.create({
+    data: {
+      community_id: otherCommunity.id,
+      author_id: psychologist.id,
+      title: "Other community must not appear",
+      content: "Local isolation regression",
+      anonymous: false,
+      status: "published",
+    },
+  });
+  const contentRoute = `/api/admin/private/communities/${community.slug}/content`;
+  const allContentIds = [
+    post.id,
+    psychologistPost.id,
+    anonymousPost.id,
+    psychologistReply.id,
+    patientComment.id,
+  ];
+  const assertContentIds = (response, expected) => {
+    assert.equal(response.status, 200);
+    assert.equal(response.body.data.count, expected.length);
+    assert.deepEqual(
+      response.body.data.data.map((item) => item.content_id).sort(),
+      [...expected].sort(),
+    );
+  };
+  // Exact options from Admin detail-support.tsx:136-148; "comments" is DTO legacy compatibility.
+  for (const [type, expected] of [
+    ["all", allContentIds],
+    ["posts", [post.id, psychologistPost.id, anonymousPost.id]],
+    ["verified_psychologist_post", []],
+    ["unverified_psychologist_post", [psychologistPost.id]],
+    ["verified_psychologist_reply", []],
+    ["unverified_psychologist_reply", [psychologistReply.id]],
+    ["patient_comment", [patientComment.id]],
+    ["anonymous_post", [anonymousPost.id]],
+  ]) {
+    await check(`content_type_${type}`, async () => {
+      assertContentIds(
+        await request(`${contentRoute}?type=${type}&period=all&limit=10&page=1`),
+        expected,
+      );
+    });
+  }
+  await check("content_legacy_comments_alias", async () => {
+    assertContentIds(await request(`${contentRoute}?type=comments`), [
+      psychologistReply.id,
+      patientComment.id,
+    ]);
+  });
+  await check("content_default_all_and_explicit_period_contract_unchanged", async () => {
+    assertContentIds(await request(contentRoute), allContentIds);
+    assertContentIds(
+      await request(`${contentRoute}?period=90d`),
+      allContentIds.filter((id) => id !== psychologistPost.id),
+    );
+    const from = new Date(oldDate.getTime() - 86400000).toISOString().slice(0, 10);
+    const to = new Date(oldDate.getTime() + 86400000).toISOString().slice(0, 10);
+    assertContentIds(await request(`${contentRoute}?period=custom&from=${from}&to=${to}`), [
+      psychologistPost.id,
+    ]);
+  });
+  await check("content_custom_dates_still_require_complete_valid_range", async () => {
+    for (const query of [
+      "period=custom&from=2026-09-01",
+      "period=custom&to=2026-09-11",
+      "period=custom&from=2026-09-11&to=2026-09-01",
+      "period=custom&from=not-a-date&to=2026-09-11",
+    ])
+      assert.equal((await request(`${contentRoute}?${query}`)).status, 400);
+  });
+  await check("content_type_and_pagination_bounds_still_enforced", async () => {
+    for (const query of [`type=${"x".repeat(33)}`, "limit=51", "page=0"]) {
+      assert.equal((await request(`${contentRoute}?${query}`)).status, 400);
+    }
+  });
+  await check("content_unauthenticated_read_remains_denied", async () => {
+    const saved = token;
+    token = undefined;
+    try {
+      assert.equal((await request(contentRoute)).status, 401);
     } finally {
       token = saved;
     }

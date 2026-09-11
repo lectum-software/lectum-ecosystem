@@ -51,6 +51,11 @@ const loadSource = (relativePath) => require(fileURLToPath(new URL(relativePath,
 const { adminCommunitiesKeys } = loadSource("../api/cache/keys.ts");
 const { cleanReportsParams } = loadSource("../api/req/communities/params.ts");
 const { ReportsTab } = loadSource("../app/(admin)/comunidades/[slug]/views/reports-tab.tsx");
+const { ContentTab } = loadSource("../app/(admin)/comunidades/[slug]/views/content-tab.tsx");
+const { contentTypeOptions } = loadSource(
+  "../app/(admin)/comunidades/[slug]/modules/detail-support.tsx",
+);
+const { SearchParamsContext } = require("next/dist/shared/lib/hooks-client-context.shared-runtime");
 
 test("reports omit blank dates without changing pagination or filters", () => {
   assert.deepEqual(
@@ -150,4 +155,145 @@ test("only a successful empty response shows zero metrics and the empty result",
   assert.match(html, /Total de denúncias/);
   assert.match(html, /Nenhuma denúncia encontrada/);
   assert.doesNotMatch(html, /Tentar novamente/);
+});
+
+const emptyContent = { count: 0, data: [], page: 1, pages: 1, per_page: 10 };
+const populatedContent = {
+  ...emptyContent,
+  count: 1,
+  data: [
+    {
+      author: {
+        id: "discardable-author",
+        name: "Local render author",
+        role: "paciente",
+        avatar: null,
+        verified: false,
+        anonymous: false,
+      },
+      content_id: "discardable-post",
+      content_kind: "patient_post",
+      content_kind_label: "Post de paciente",
+      created_at: "2026-09-01T12:00:00.000Z",
+      excerpt: "Local render content",
+      media: null,
+      metrics: {
+        comments_count: 0,
+        downvotes_count: 0,
+        reports_count: 0,
+        saves_count: 0,
+        shares_count: 0,
+        upvotes_count: 0,
+        views_count: 0,
+        whatsapp_clicks_count: 0,
+      },
+      public_url: "/comunidades/discardable-content/publicacao/discardable-post",
+      status: "published",
+      title: "Discardable content title",
+      type: "post",
+    },
+  ],
+};
+
+const renderContentState = (status, data, type = "all") => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, retryOnMount: false, staleTime: Infinity } },
+  });
+  const queryKey = adminCommunitiesKeys.content("discardable-content", {
+    limit: 10,
+    page: 1,
+    period: "all",
+    q: "",
+    sort: "engagement",
+    type,
+  });
+  client
+    .getQueryCache()
+    .build(client, { queryKey })
+    .setState({
+      data,
+      dataUpdatedAt: data ? Date.now() : 0,
+      error: status === "error" ? new Error("Local content render-state regression") : null,
+      fetchStatus: status === "pending" ? "fetching" : "idle",
+      status,
+    });
+  try {
+    return renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client },
+        createElement(
+          SearchParamsContext.Provider,
+          { value: new URLSearchParams({ contentType: type }) },
+          createElement(ContentTab, {
+            createdAt: "2026-09-01T12:00:00.000Z",
+            slug: "discardable-content",
+          }),
+        ),
+      ),
+    );
+  } finally {
+    client.clear();
+  }
+};
+
+test("content renders every actual offered type selected through the real Next search context", () => {
+  assert.deepEqual(
+    contentTypeOptions.map(({ id }) => id),
+    [
+      "all",
+      "posts",
+      "verified_psychologist_post",
+      "unverified_psychologist_post",
+      "verified_psychologist_reply",
+      "unverified_psychologist_reply",
+      "patient_comment",
+      "anonymous_post",
+    ],
+  );
+  for (const { id } of contentTypeOptions) {
+    assert.match(
+      renderContentState("success", emptyContent, id),
+      new RegExp(`value="${id}" selected=""`),
+    );
+  }
+});
+
+test("a failed content query shows retry without inventing a zero count", () => {
+  const html = renderContentState("error");
+  assert.match(html, /Tentar novamente/);
+  assert.doesNotMatch(html, /Mostrando|Nenhum conteúdo encontrado|Página anterior/);
+});
+
+test("a failed content refresh hides stale empty data and pagination", () => {
+  const html = renderContentState("error", emptyContent);
+  assert.match(html, /Tentar novamente/);
+  assert.doesNotMatch(html, /Mostrando|Nenhum conteúdo encontrado|Página anterior/);
+});
+
+test("a failed content refresh hides stale populated cards and counts", () => {
+  const html = renderContentState("error", populatedContent);
+  assert.match(html, /Tentar novamente/);
+  assert.doesNotMatch(html, /Mostrando|Discardable content title|Página anterior/);
+});
+
+test("pending content shows loading without claiming an empty result", () => {
+  const html = renderContentState("pending");
+  assert.match(html, /Carregando dados/);
+  assert.doesNotMatch(html, /Mostrando|Nenhum conteúdo encontrado|Página anterior/);
+});
+
+test("successful empty content alone shows the genuine zero count and empty result", () => {
+  const html = renderContentState("success", emptyContent);
+  assert.match(html, /Mostrando 0 de 0 registros/);
+  assert.match(html, /Nenhum conteúdo encontrado/);
+  assert.doesNotMatch(html, /Tentar novamente|Carregando dados/);
+});
+
+test("successful populated content keeps real cards, count and pagination", () => {
+  const html = renderContentState("success", populatedContent);
+  assert.match(html, /Mostrando 1 de 1 registros/);
+  assert.match(html, /Discardable content title/);
+  assert.match(html, /Página anterior/);
+  assert.doesNotMatch(html, /Nenhum conteúdo encontrado|Tentar novamente|Carregando dados/);
 });

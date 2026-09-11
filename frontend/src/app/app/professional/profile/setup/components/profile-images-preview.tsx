@@ -227,14 +227,14 @@ export const ProfileImagesPreview = ({
 
       <input
         accept="image/jpeg,image/png,image/webp"
-        className="sr-only"
+        className="hidden"
         onChange={handleCoverImageChange}
         ref={coverImageInputRef}
         type="file"
       />
       <input
         accept="image/png,image/jpeg,image/webp"
-        className="sr-only"
+        className="hidden"
         onChange={handleAvatarChange}
         ref={avatarInputRef}
         type="file"

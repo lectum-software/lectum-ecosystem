@@ -28,7 +28,7 @@ export const normalizeCpf = (value?: string | null) => {
 export const normalizeWhatsapp = (value?: string | null) => {
   const digits = onlyDigits(value);
   if (!digits) return null;
-  return `+${digits.slice(0, 15)}`;
+  return `+${digits}`;
 };
 
 export const normalizeBirthdate = (value?: string | null) => {
@@ -148,7 +148,14 @@ export const updateSchema = z.object({
   religion: z.string().trim().max(80).nullable().optional(),
   crp_region: z.string().trim().max(120).nullable().optional(),
   crp_number: z.string().trim().max(40).nullable().optional(),
-  whatsapp: z.string().nullable().optional(),
+  whatsapp: z
+    .string()
+    .refine(
+      (value) => onlyDigits(value).length <= 15,
+      "Informe um WhatsApp com no máximo 15 dígitos",
+    )
+    .nullable()
+    .optional(),
   headline: z.preprocess(emptyTextToNull, z.string().trim().min(3).max(120).nullable().optional()),
   bio: z.preprocess(emptyTextToNull, z.string().trim().min(20).max(2000).nullable().optional()),
   modality: z.enum(["online", "presencial", "hibrido"]).nullable().optional(),
