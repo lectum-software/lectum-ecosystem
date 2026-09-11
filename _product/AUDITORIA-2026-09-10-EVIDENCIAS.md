@@ -424,3 +424,19 @@ build backend e Docker Linux amd64 aprovados. Também repetidas as suítes reais
 (17 cenários) e reset (8), sem regressões. Nenhuma migration/package/env nova, nenhum envio SMTP
 ou alteração de conta publicada. Dez arquivos administrativos adicionais lidos integralmente;
 base: 236 leituras iniciais, 12 parciais e 2.873 não revisados. Não certificar a auditoria completa.
+
+## Continuação funcional — 11/09 / campos 0.1.325
+
+- Paciente: edição vazia recusada com foco e texto PT-BR; logout confirmado.
+- Psicólogo: formulário vazio validado; cadastro e confirmação por e-mail reais; escolha grátis
+  encaminhou ao WhatsApp obrigatório. Próxima etapa aguarda número controlado pelo usuário.
+- Admin: criada comunidade de auditoria e regra pela UI. Formulário vazio não foi salvo.
+- Modal de regra reproduziu IDs duplicados e rótulo associado ao campo da página. Correção nos
+  controllers, com 39 testes Admin e Browser local real em 390×844/1280×720. Nenhum API mock.
+- Screenshots locais 38–46 em `/tmp/lectum-audit-178-ui`; 43 evidencia duplicação e 45–46 mostram
+  componente corrigido com erro/foco exclusivos. Não incluir credenciais nem OTP nos documentos.
+- Quick Copy acessível como recurso, mas leitura recusada por espaço errado; proto local de
+  detalhes da comunidade e screenshot publicado usados. Não foi usada fonte Figma alternativa.
+- Check/build Admin limpos passaram; build inicial com `.next/dev` residual foi recusado corretamente
+  pela política de source maps. Nenhum script foi enfraquecido. Harness removido antes do build final.
+- Smoke e repetição em homologação da 0.1.325 ainda pendentes no momento do commit.

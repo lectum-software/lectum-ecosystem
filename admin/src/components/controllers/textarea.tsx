@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -23,12 +24,13 @@ export const TextareaController = <TFormValues extends FieldValues>({
 }: TextareaControllerProps<TFormValues>) => {
   const { control } = useFormContext<TFormValues>();
   const { field, fieldState } = useController({ control, name });
-  const errorId = `${String(name)}-error`;
+  const controlId = useId();
+  const errorId = `${controlId}-error`;
   const hasError = Boolean(fieldState.error?.message);
 
   return (
     <div className="block w-full text-sm font-semibold text-foreground">
-      <label className="mb-2 block" htmlFor={String(name)}>
+      <label className="mb-2 block" htmlFor={controlId}>
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </label>
@@ -43,7 +45,7 @@ export const TextareaController = <TFormValues extends FieldValues>({
           hasError ? "border-danger" : "border-border",
         )}
         disabled={disabled}
-        id={String(name)}
+        id={controlId}
         placeholder={placeholder}
         rows={rows}
       />

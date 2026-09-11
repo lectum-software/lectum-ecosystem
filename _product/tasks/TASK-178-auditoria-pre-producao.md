@@ -309,7 +309,7 @@ Sem mudanças em permissões, HLS, APIs, packages, migrations ou envs. Vídeos p
 - [x] 28 cenários de credenciais, emissão antiga, recuperação nova e rollback em PostgreSQL real isolado.
 - [x] Repetidas as suítes de confirmação (17) e reset (8), totalizando 53 cenários reais adicionais.
 - [x] Check agregado: 527 testes; build backend e imagem Docker Linux amd64 aprovados.
-- [ ] Smoke de homologação 0.1.324 após push comunicado.
+- [x] Smoke de homologação 0.1.324: 16/16 em 11/09, 02:57 UTC; frontend, Admin e backend nessa versão.
 
 O rastreamento encontrou também emissão concorrente: uma entrega iniciada antes da troca podia
 persistir o código depois dela. Incluir emissão pública/privada e administrativa condicionada ao
@@ -320,3 +320,23 @@ Escopo: repositórios administrativos de paciente/psicólogo. Sem envio de e-mai
 contas publicadas, env nova, schema, package ou contrato incompatível. A correção deve impedir que
 um link enviado ao endereço antigo altere a senha e confirme o endereço novo. Rollback somente de
 código, reintroduzindo o risco; não restaura links já invalidados.
+
+## Continuação — campos simultâneos do Admin 0.1.325
+
+- [x] Modal real de regra reproduziu `description` e `description-error` duplicados.
+- [x] Input, textarea, select e grupo de checkboxes recebem IDs próprios com React `useId`.
+- [x] Regressão com React/RHF reais e dois formulários: 14 IDs únicos, associação e SSR estáveis.
+- [x] Componente real local validado em 390×844 e 1280×720: erro isolado, foco e Escape corretos.
+- [x] Admin check (39 testes) e build limpo aprovados; harness temporário removido.
+- [ ] Smoke publicado e repetição do modal em homologação após push.
+
+Nenhuma env, banco, contrato de API ou package alterado. IDs DOM não são nomes de campos; payloads
+permanecem iguais. Builder/Quick Copy foi tentado: resource recusou acesso por espaço diferente
+(`Wrong space detected`). Usado proto Admin Comunidades/Comunidades - Detalhes.png e tela real,
+sem redesenhar layout. Build inicial recusou source maps inline antigos em `.next/dev`; sem dev
+server e com build local limpo passou. Não reduzir a checagem de source maps para mascarar isso.
+
+Conta profissional de auditoria criada com aceite autorizado e confirmação real SMTP concluída;
+plano grátis levou ao WhatsApp obrigatório. Número controlado foi solicitado, não inventado.
+Comunidade `auditoria-lectum-178` e uma regra criadas pelo Admin para testes isolados de conteúdo.
+Isso não certifica ainda publicação, moderação, pagamentos nem onboarding completo.

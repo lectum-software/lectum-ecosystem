@@ -117,11 +117,88 @@ test("controllers separam rótulo, controle e mensagem de erro", async () => {
     };
     visit(ast);
     assert.equal(labels.length, 1);
-    assert.match(labels[0].openingElement.getText(ast), /htmlFor=\{String\(name\)\}/);
+    assert.match(labels[0].openingElement.getText(ast), /htmlFor=\{controlId\}/);
     assert.doesNotMatch(labels[0].getText(ast), /<(input|select|textarea)\b|fieldState\.error/);
+    assert.match(source, /const controlId = useId\(\)/);
+    assert.match(source, /id=\{controlId\}/);
+    assert.match(source, /const errorId = `\$\{controlId\}-error`/);
     assert.match(source, /aria-describedby=\{errorId\}/);
     assert.match(source, /aria-required=\{required \|\| undefined\}/);
     assert.match(source, /role="alert"/);
     assert.match(source, /min-h-5/);
   }
+});
+
+test("controllers mantêm IDs e mensagens únicos entre formulários reais simultâneos", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { createRequire } = await import("node:module");
+  const { default: ts } = await import("typescript");
+  const require = createRequire(import.meta.url);
+  const { createElement } = require("react");
+  const { renderToStaticMarkup } = require("react-dom/server");
+  const { FormProvider, useForm } = require("react-hook-form");
+  const loadSource = (relativePath) => {
+    const source = readFileSync(new URL(relativePath, import.meta.url), "utf8");
+    const { outputText } = ts.transpileModule(source, {
+      compilerOptions: {
+        jsx: ts.JsxEmit.ReactJSX,
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+      },
+    });
+    const exports = {};
+    const resolve = (specifier) =>
+      specifier === "@/lib/utils" ? loadSource("./utils.ts") : require(specifier);
+    new Function("require", "exports", outputText)(resolve, exports);
+    return exports;
+  };
+  const controls = [
+    ["input", "InputController", "text", {}],
+    ["textarea", "TextareaController", "description", {}],
+    ["select", "SelectController", "status", { options: [{ value: "active", label: "Ativo" }] }],
+    [
+      "checkbox-group",
+      "CheckboxGroupController",
+      "groups",
+      { options: [{ value: "test", label: "Teste" }] },
+    ],
+  ].map(([file, exported, name, props]) => ({
+    Component: loadSource(`../components/controllers/${file}.tsx`)[exported],
+    name,
+    props,
+  }));
+  const TestForm = ({ suffix }) => {
+    const form = useForm({
+      defaultValues: { text: "", description: "", status: "active", groups: [] },
+    });
+    return createElement(
+      FormProvider,
+      { ...form },
+      createElement(
+        "form",
+        null,
+        controls.map(({ Component, name, props }) =>
+          createElement(Component, { ...props, key: name, name, label: `${name} ${suffix}` }),
+        ),
+      ),
+    );
+  };
+  const render = () =>
+    renderToStaticMarkup(
+      createElement(
+        "main",
+        null,
+        createElement(TestForm, { suffix: "página" }),
+        createElement(TestForm, { suffix: "modal" }),
+      ),
+    );
+  const html = render();
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 14);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const [, id] of html.matchAll(/\b(?:for|aria-describedby)="([^"]+)"/g)) {
+    assert.equal(ids.filter((candidate) => candidate === id).length, 1);
+  }
+  assert.equal([...html.matchAll(/\bfor="/g)].length, 6);
+  assert.equal(render(), html, "IDs de SSR devem ser determinísticos");
 });

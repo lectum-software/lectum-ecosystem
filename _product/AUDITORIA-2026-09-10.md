@@ -48,6 +48,8 @@
 42. Envios iniciados antes de uma troca de e-mail ou senha não conseguem reativar códigos antigos.
 43. Falha em um envio de recuperação não apaga o link de uma tentativa posterior.
 
+44. Campos de formulários e modais simultâneos não confundem mais rótulos e mensagens de erro.
+
 ## Ainda pendente
 
 - Documentos legais aprovados e links no cadastro: **bloqueiam recomendação de produção**.

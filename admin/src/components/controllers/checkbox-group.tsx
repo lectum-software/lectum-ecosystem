@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,8 @@ export const CheckboxGroupController = <TFormValues extends FieldValues>({
   const { control } = useFormContext<TFormValues>();
   const { field, fieldState } = useController({ control, name });
   const values = Array.isArray(field.value) ? (field.value as string[]) : [];
-  const errorId = `${String(name)}-error`;
+  const controlId = useId();
+  const errorId = `${controlId}-error`;
   const hasError = Boolean(fieldState.error?.message);
 
   const toggleValue = (value: string, checked: boolean) => {

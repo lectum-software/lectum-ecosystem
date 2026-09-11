@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentPropsWithoutRef } from "react";
+import { type ComponentPropsWithoutRef, useId } from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -38,12 +38,13 @@ export const InputController = <TFormValues extends FieldValues>({
 }: InputControllerProps<TFormValues>) => {
   const { control } = useFormContext<TFormValues>();
   const { field, fieldState } = useController({ control, name });
-  const errorId = `${String(name)}-error`;
+  const controlId = useId();
+  const errorId = `${controlId}-error`;
   const hasError = Boolean(fieldState.error?.message);
 
   return (
     <div className="block w-full text-sm font-semibold text-foreground">
-      <label className="mb-2 block" htmlFor={String(name)}>
+      <label className="mb-2 block" htmlFor={controlId}>
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </label>
@@ -59,7 +60,7 @@ export const InputController = <TFormValues extends FieldValues>({
           hasError ? "border-danger" : "border-border",
         )}
         disabled={disabled}
-        id={String(name)}
+        id={controlId}
         inputMode={inputMode}
         max={max}
         maxLength={maxLength}

@@ -429,3 +429,11 @@ não relógio/provedor/banco simulado.
 
 Rollout compatível com clientes antigos. Rollback reintroduz a falha, mas não restaura links
 invalidados. Nenhuma conta ou sessão publicada foi alterada durante os testes.
+
+### Campos simultâneos no Admin — 0.1.325
+
+Usar `useId` por instância nos quatro controllers existentes. Derivar rótulo, controle e slot de
+erro do mesmo identificador, sem alterar `name`, payload ou espaço reservado. A repetição de nomes
+entre formulário da página e modal é legítima; a repetição de IDs DOM não. Não criar um segundo
+form engine nem corrigir só o modal específico. React/RHF reais, renderização SSR repetida e Browser
+local móvel/desktop validaram os vínculos. Rollout independente do backend; rollback só de código.

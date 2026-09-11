@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import { useId } from "react";
 import type { FieldPath, FieldValues } from "react-hook-form";
 import { useController, useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -31,12 +32,13 @@ export const SelectController = <TFormValues extends FieldValues>({
 }: SelectControllerProps<TFormValues>) => {
   const { control } = useFormContext<TFormValues>();
   const { field, fieldState } = useController({ control, name });
-  const errorId = `${String(name)}-error`;
+  const controlId = useId();
+  const errorId = `${controlId}-error`;
   const hasError = Boolean(fieldState.error?.message);
 
   return (
     <div className="block w-full text-sm font-semibold text-foreground">
-      <label className="mb-2 block" htmlFor={String(name)}>
+      <label className="mb-2 block" htmlFor={controlId}>
         {label}
         {required ? <span className="text-danger"> *</span> : null}
       </label>
@@ -54,7 +56,7 @@ export const SelectController = <TFormValues extends FieldValues>({
             selectClassName,
           )}
           disabled={disabled}
-          id={String(name)}
+          id={controlId}
         >
           {options.map((option) => (
             <option key={option.value} value={option.value}>
