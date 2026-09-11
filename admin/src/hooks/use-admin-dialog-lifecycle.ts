@@ -98,11 +98,16 @@ const releaseDocumentLock = () => {
 
 export const useAdminDialogLifecycle = (
   onClose: () => void,
-  { closeEnabled = true, enabled = true }: { closeEnabled?: boolean; enabled?: boolean } = {},
+  {
+    closeEnabled = true,
+    enabled = true,
+    onRestoreFocus,
+  }: { closeEnabled?: boolean; enabled?: boolean; onRestoreFocus?: () => void } = {},
 ) => {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef(onClose);
   const closeEnabledRef = useRef(closeEnabled);
+  const restoreFocusRef = useRef(onRestoreFocus);
 
   useEffect(() => {
     closeRef.current = onClose;
@@ -111,6 +116,10 @@ export const useAdminDialogLifecycle = (
   useEffect(() => {
     closeEnabledRef.current = closeEnabled;
   }, [closeEnabled]);
+
+  useEffect(() => {
+    restoreFocusRef.current = onRestoreFocus;
+  }, [onRestoreFocus]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -144,6 +153,9 @@ export const useAdminDialogLifecycle = (
             ? previouslyFocused
             : getFocusableElements(activeDialogElement)[0];
         (focusTarget ?? activeDialogElement).focus();
+      } else if (restoreFocusRef.current) {
+        // Responsive callers can choose a visible trigger without bypassing the dialog stack.
+        restoreFocusRef.current();
       } else if (previouslyFocused?.isConnected) {
         previouslyFocused.focus();
       }

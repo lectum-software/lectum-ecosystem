@@ -472,7 +472,8 @@ export const AdminPatientsListClient = () => {
         <CardShell className="overflow-hidden">
           <div className="border-b border-border px-4 py-4">
             <p className="text-sm font-semibold text-foreground">
-              {summary ? numberFormatter.format(summary.count) : "—"} pacientes encontrados
+              {summary ? numberFormatter.format(summary.count) : "—"}{" "}
+              {summary?.count === 1 ? "paciente encontrado" : "pacientes encontrados"}
             </p>
             {summary && summary.active_filters_count > 0 ? (
               <p className="mt-1 text-xs font-semibold text-muted">

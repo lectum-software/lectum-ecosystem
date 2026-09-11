@@ -960,3 +960,33 @@ do formulário privado autorizado continua disponível; não alterar permissões
 Sem nova env, package, migration ou reset; rollback independente Admin/backend. Contratos
 HTTP permanecem com os mesmos campos/tipos. Tratar C17 em decisão separada: KYC não consta
 do requisito atual, e nome editável não é prova de titularidade.
+
+### Significado do selo — decisão do responsável em11/09/2026
+
+O responsável confirmou: **registro ativo aprovado; sem promessa de comprovação de
+identidade**. Aprovação pode vir da consulta CFP ou revisão humana conforme os gates
+atuais. Não introduzir KYC, prova documental/liveness ou vínculo pessoal não especificado
+como requisito novo. Não chamar ausência desse processo de bypass de KYC. A decisão não
+remove as guardas contra consulta divergente/ambígua, sobrescrita de campos protegidos ou
+controle de acesso; não revoga aprovações nem redefine automaticamente as cortesias.
+Desambiguação, validade temporal e precedência de decisões continuam a exigir rastreio.
+
+### Menu, data civil e contagem346
+
+A342-08: o menu mobile passa a usar useAdminDialogLifecycle existente, sem novo trap,
+listener Escape ou lock de scroll paralelo. Drawer é dialog; fundo inert; backdrop fora
+do Tab. Retorno de foco opt-in escolhe gatilho visível após resize e mantém prioridade
+da pilha de diálogos e comportamento padrão dos outros consumidores. Fechar em mudança
+de rota/histórico/desktop e descartar estado da rota antiga impede reabertura ao voltar.
+Classes/tokens e conteúdo do sidebar preservados. Testes de fonte protegem wiring, mas
+não substituem Browser; harness local usa hook real e não simula sessão/API nem o shell.
+
+C24: inscrição é uma data civil, não um instante futuro por ser normalizada ao meio-dia.
+Comparar componentes em America/Sao_Paulo e capturar uma referência temporal por chamada;
+now opcional permite testes determinísticos sem falsificar relógio global. Manter formatos,
+normalização12h-03, limite anual e allowFuture. Nenhum registro existente é regravado,
+aprovação/identidade/CFP executado ou contrato HTTP alterado. C17 continua separado.
+
+A345-01: singular nas duas listas administrativas, sem novo helper ou mudança de layout.
+Sem env/package/migration/reset; rollback Admin e backend independente. Cinco manifests
+sincronizados346 em um único bump. Publicação deve repetir teclado e versões/health/ready.

@@ -96,3 +96,16 @@ problemática no código-fonte. Checks/builds dos três projetos e o smoke HTTP 
 
 - Tags Git e GitHub Releases podem ser avaliadas futuramente se houver necessidade de changelog
   externo; não são necessárias para rastrear o deploy atual.
+
+## Complemento de escopo — quarta aplicação (TASK-178)
+
+A decisão original acima descreve o momento em que havia três aplicações. O escopo vigente
+inclui também video, sem unificar builds/deploys: são quatro aplicações independentes e
+cinco manifests sincronizados (raiz, backend, frontend, admin e video). Cada novo commit
+do agente executa uma única vez version:bump e check:version; retry do mesmo commit não
+repete o bump. Além de backend /ping e frontend/admin /version, verificar video /version
+na rede privada autorizada. O número de versão por si só não comprova saúde, autenticação
+ou processamento da fila: manter os smokes específicos de cada serviço.
+
+A promoção continua exclusiva por PR revisado homolog → main, após validação de homolog.
+Este complemento corrige o checklist atual; não altera as evidências históricas acima.

@@ -210,7 +210,8 @@ export const AdminPsychologistsListClient = () => {
         <CardShell className="overflow-hidden">
           <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-semibold text-foreground">
-              {summary ? numberFormatter.format(summary.count) : "—"} psicólogos encontrados
+              {summary ? numberFormatter.format(summary.count) : "—"}{" "}
+              {summary?.count === 1 ? "psicólogo encontrado" : "psicólogos encontrados"}
             </p>
             <label className="flex w-full min-w-0 items-center justify-between gap-2 text-xs font-medium text-muted sm:w-auto sm:justify-end">
               <span className="shrink-0">Ordenar por</span>

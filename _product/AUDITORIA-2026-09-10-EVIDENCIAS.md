@@ -1597,3 +1597,60 @@ com draft pendente e histórico de mesmo q não dispara busca tardia (count3 pre
 Desmontar antes do debounce também conserva count3. Psicólogos em1280 mantém AX21 e aceita
 continuação sem reclicar. Capturas em /tmp/lectum-task178-admin-search-345. Harness usa os
 componentes reais/histórico nativo, sem API; não equivale à navegação Next autenticada.
+
+345: commit900b4454 publicado em homolog; hook pre-push aprovado (71,67s). Primeira sondagem
+pública encontrou versões frontend/Admin344 e HTTPError no backend sem registrar o status;
+não inferir causa. GETs curl posteriores /health e /ready devolveram200. Smokes em andamento.
+
+Gauss concluiu224/224 ADRs (17.427linhas), freeze11/09 20:03UTC e conferência20:21UTC sem
+drift. Parent leu relatório em segmentos após truncamento, integrou222 novas leituras na
+base (dois já cobertos): base2521/600, ledger2513. Fontes interpretadas como decisões históricas,
+não incidentes runtime. Conflitos/lacunas constam na fila, sem alterar aprovações ou cobranças.
+
+A342-08: BrowserAdmin344 em~991px, menu abre focandoFechar. Tab12 alcançaSair; Tab13 alcança
+Abrirmenu atrás; Tab14 chegaàbusca atrás dooverlay. Nenhuma ativação deSair/CRUD. Captura
+baseline-focus-escaped.png em /tmp/lectum-task178-admin-menu-346 salva/vista; Escape fechou.
+Gauss implementa correção focal346, enquanto parent valida publicação345.
+
+Publicação345 confirmada em 2026-09-11T20:31:48.797027+00:00: 5/5 GETs via curl padrão, semcookies/segredos,
+backend/frontend/Admin0.1.345; /health e /ready200; rotasdeversão semcache/noindex. Não
+confundir essa sondagem com suítefuncional18 anterior. Pythonurllib recebeu403 no backend,
+mas curl padrão200; diferença de cliente não foi diagnosticada como falha da aplicação nem
+contornada com credencial. Backend /ping também DYNAMIC/no-store e cache-bust345.
+
+Admin345 autenticado: psicólogos mantém AX9 após q=Auditoria e q=Auditoria Lectum; pacientes
+mantém AX8 após q=Auditoria Lectum e continuação Teste, sem reclicar. FiltroAuditoria restaurado.
+Captura homolog-psychologists-345.png salva/vista e comparada combaseline no mesmo viewport991:
+mesmo layout/dados, agora foco/caret permanecem. Primeiro screenshottimeoutCDP recuperou em
+uma repetição; não classificar como falha do produto. Navegação Next de histórico emvoo ainda
+não é integralmente certificada por esses testes. Serviço privado vídeo não foi sondado daqui.
+
+Mendel concluiu225/225 ADRs (24.771linhas), 74entregas completas e hashes conferidos.
+Parent leu relatório completo emdoissegmentos; integrou215 novas leituras na base após
+deduplicação. Base2736iniciais/0parciais/385pendentes; ledger2728. Decisões de identidade,
+privacidade, contatos, analytics e retenção são lacunas documentais, não incidentes provados.
+
+Responsável respondeu à pergunta de semântica do selo: registro ativo aprovado, sem
+promessa de comprovação de identidade. Decisão registrada no ADR0496 e na fila. Não é
+autorização para enfraquecer ownership, validação do resultado ou proteção cadastral.
+
+## 346 — menu, data civil e suporte documental
+
+Rootcheck1096 (1090pass/6skipsdrawtext), Admin86/86 e backend450/450; builds ambos passaram.
+Logs locais: /tmp/lectum-346-root-check.log, /tmp/lectum-346-admin-build.log e
+/tmp/lectum-346-backend-build.log. Não houve migration, nova env ou package.
+C24: /tmp/lectum-task178-registration-date-346/report.md, freeze/ranges finais; 11 testes
+em UTC, Asia/Tokyo e America/Sao_Paulo. Referência explícita, sem relógio global falso.
+Reprodução com comparador antigo:6/11falharam; manhã08h agora aceita data de hoje.
+
+A342-08: fonte anterior e patch preservam SidebarContent e51classNames;7testes são de
+wiring estático, não DOM. Browser local usa hook real isolado sem API/sessão nem shell
+completo: Tab/ShiftTab ciclam, Escape fecha apenas topo e devolve foco, busca atrás mantém
+preservar. Aninhado testado em1280; ciclo simples também390. Capturas vistas:
+/tmp/lectum-task178-admin-menu-346/local-focus-cycle.png e local-mobile-cycle.png.
+Prova completa de resize/navegação e comportamento publicado ainda pendente.
+
+Frontend suporteSocrates:26fontes integrais dos31alvos, incluindoJSON22340linhas. Cinco
+SVGs têm XML lido e raster base64 ainda sem inspeção visual nesta integração; não contar
+como leitura integral. Relatório /tmp/lectum-task178-frontend-support-345/report.md lido
+pelo parent. READMEtemplate divergente e limites dos contratos separados de bugs atuais.

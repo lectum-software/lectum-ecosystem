@@ -28,7 +28,7 @@ Descreva a decisão tomada de forma objetiva.
 - Compatibilidade com dados existentes.
 - Alteração de banco/migration e estratégia expandir → backfill → contrair, ou “sem alteração”.
 - Nomes das envs afetadas e ordem de provisionamento, sem valores; destacar env obrigatória como **ALERTA DE DEPLOY**.
-- Compatibilidade entre backend/frontend/admin em versões diferentes.
+- Compatibilidade entre backend/frontend/admin/video em versões diferentes.
 - Ordem de deploy, smoke de `homolog` e rollback.
 
 ## Validação

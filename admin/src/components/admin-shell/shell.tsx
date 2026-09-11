@@ -7,6 +7,7 @@ import type { PropsWithChildren } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAdminModerationSummary } from "@/api/callers/moderation";
+import { useAdminDialogLifecycle } from "@/hooks/use-admin-dialog-lifecycle";
 import { getSidebarCollapsed, setSidebarCollapsed } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useAdminAuth } from "@/providers/admin-auth";
@@ -426,11 +427,24 @@ const SidebarContent = ({
 
 export const AdminShell = ({ children }: PropsWithChildren) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const drawerCloseRef = useRef<HTMLButtonElement | null>(null);
+  const [drawerPathname, setDrawerPathname] = useState<string | null>(null);
   const drawerTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const desktopTriggerRef = useRef<HTMLButtonElement | null>(null);
   const pathname = usePathname();
+  const drawerOpen = drawerPathname !== null && drawerPathname === pathname;
   const premiumPilot = isPremiumPilotPath(pathname);
+  const closeDrawer = () => setDrawerPathname(null);
+  const drawerRef = useAdminDialogLifecycle(closeDrawer, {
+    enabled: drawerOpen,
+    onRestoreFocus: () => {
+      const trigger = drawerTriggerRef.current;
+      const target = trigger?.getClientRects().length ? trigger : desktopTriggerRef.current;
+      if (target?.isConnected) target.focus({ preventScroll: true });
+    },
+  });
+
+  // Discard the old route's drawer state before it can reopen on history navigation.
+  if (drawerPathname !== null && drawerPathname !== pathname) setDrawerPathname(null);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setCollapsed(getSidebarCollapsed()));
@@ -441,21 +455,22 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (!drawerOpen) return;
 
-    const previousBodyOverflow = document.body.style.overflow;
-    const drawerTrigger = drawerTriggerRef.current;
-    const focusFrame = window.requestAnimationFrame(() => drawerCloseRef.current?.focus());
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDrawerOpen(false);
+    // Keep this boundary aligned with the shell's lg:hidden / lg:block classes.
+    const desktopMedia = window.matchMedia("(min-width: 64rem)");
+    const closeOnDesktop = () => {
+      if (desktopMedia.matches) setDrawerPathname(null);
     };
-
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKeyDown);
+    const closeOnHistory = () => setDrawerPathname(null);
+    const frame = window.requestAnimationFrame(closeOnDesktop);
+    desktopMedia.addEventListener("change", closeOnDesktop);
+    window.addEventListener("popstate", closeOnHistory);
+    window.addEventListener("hashchange", closeOnHistory);
 
     return () => {
-      window.cancelAnimationFrame(focusFrame);
-      document.body.style.overflow = previousBodyOverflow;
-      document.removeEventListener("keydown", onKeyDown);
-      drawerTrigger?.focus();
+      window.cancelAnimationFrame(frame);
+      desktopMedia.removeEventListener("change", closeOnDesktop);
+      window.removeEventListener("popstate", closeOnHistory);
+      window.removeEventListener("hashchange", closeOnHistory);
     };
   }, [drawerOpen]);
 
@@ -484,12 +499,14 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
           premiumPilot ? "border-border shadow-admin-soft" : "border-sidebar-foreground/10",
           collapsed ? "w-20" : "w-64",
         )}
+        inert={drawerOpen}
       >
         <button
           aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
           aria-pressed={!collapsed}
           className="absolute top-9 right-0 z-20 inline-grid h-6 w-6 translate-x-1/2 place-items-center rounded-full border border-border/70 bg-surface/95 text-muted opacity-75 shadow-control transition-[background,color,opacity,transform,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-background hover:text-foreground hover:opacity-100 hover:shadow-admin-soft focus-visible:bg-background focus-visible:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-95"
           onClick={toggleCollapsed}
+          ref={desktopTriggerRef}
           title={collapsed ? "Expandir menu" : "Recolher menu"}
           type="button"
         >
@@ -510,20 +527,23 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
       </aside>
 
       {drawerOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div
+          aria-label="Menu administrativo"
+          aria-modal="true"
+          className="fixed inset-0 z-50 lg:hidden"
+          id="admin-mobile-navigation"
+          ref={drawerRef}
+          role="dialog"
+          tabIndex={-1}
+        >
           <button
             aria-label="Fechar menu administrativo"
             className="absolute inset-0 bg-overlay"
-            onClick={() => setDrawerOpen(false)}
+            onClick={closeDrawer}
+            tabIndex={-1}
             type="button"
           />
-          <aside
-            aria-label="Menu administrativo"
-            aria-modal="true"
-            className="relative h-full w-[min(80vw,300px)] shadow-admin"
-            id="admin-mobile-navigation"
-            role="dialog"
-          >
+          <aside className="relative h-full w-[min(80vw,300px)] shadow-admin">
             <button
               aria-label="Fechar menu administrativo"
               className={cn(
@@ -532,15 +552,14 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
                   ? "border border-border bg-surface text-foreground"
                   : "bg-sidebar-foreground/10 text-sidebar-foreground",
               )}
-              onClick={() => setDrawerOpen(false)}
-              ref={drawerCloseRef}
+              onClick={closeDrawer}
               type="button"
             >
               <X aria-hidden className="h-5 w-5" />
             </button>
             <SidebarContent
               collapsed={false}
-              onNavigate={() => setDrawerOpen(false)}
+              onNavigate={closeDrawer}
               premiumPilot={premiumPilot}
             />
           </aside>
@@ -552,6 +571,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
           "min-w-0 max-w-full overflow-x-clip transition-[padding] duration-200 lg:pl-64",
           collapsed && "lg:pl-20",
         )}
+        inert={drawerOpen}
       >
         <main className="mx-auto w-full min-w-0 max-w-full overflow-x-clip px-4 py-5 sm:px-6 lg:px-8 lg:py-8 xl:max-w-[1440px]">
           <div className="mb-4 flex lg:hidden">
@@ -560,7 +580,7 @@ export const AdminShell = ({ children }: PropsWithChildren) => {
               aria-expanded={drawerOpen}
               aria-label="Abrir menu administrativo"
               className="grid h-11 w-11 place-items-center rounded-2xl border border-border bg-surface text-foreground shadow-control transition hover:border-border-strong"
-              onClick={() => setDrawerOpen(true)}
+              onClick={() => setDrawerPathname(pathname)}
               ref={drawerTriggerRef}
               type="button"
             >

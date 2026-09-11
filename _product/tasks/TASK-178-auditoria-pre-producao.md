@@ -784,7 +784,7 @@ RestauradoTodooperíodo. Conta gratuita/semvídeo: não afirmar seek/playback pa
 hook reais. Up emAté quandoDe vazio mantém all aplicado; blur mostra erro; presetmês limpa;
 mover foco entre datas conserva mês; sair aplica custom01–10/09. SemAPI/substituições.
 Admincheck62/62,buildotimizado e rootcheck1057 (1051pass/6skipsdrawtext) aprovados.
-Bump344uma vez; publicação344 pendente. Nenhumenv/package/migration.
+Bump344uma vez; publicação344 validada posteriormente (18/18smoke). Nenhumenv/package/migration.
 
 LeituraSocrates dos275alvosAdmin/58.723linhas completa,1suporte; hashcongelado e versões
 concorrentes separados. Parent releucliente e diff344, sem creditar fonte antiga comhashnovo.
@@ -800,11 +800,40 @@ já usava máscara real. Centralizar a política existente sem importar serviço
 
 - [x] Busca mantém identidade/foco, sincroniza valor externo e cancela callbacks obsoletos (contrato/Browser local).
 - [x] cpf_masked oculta dígitos nos consumidores atuais e nunca devolve entrada inválida bruta (fonte/contratos).
-- [ ] Contratos reais, Browser de busca, checks/builds e publicação registrados.
+- [x] Contratos reais, Browser de busca, checks/builds e publicação registrados.
 
 Não mudar CPF completo do formulário privado autorizado nem aprovações/identidade (C17 em
 triagem de requisito separada). Sem env/package/migration/reset/provider; nenhum teste de M1.
 
 345: hook compartilhado elimina duplicação de coordenação nas buscas. 17 contratos focais
 aprovados; root1078 (1072pass/6skips drawtext), Admin79/79+build otimizado, backend439/439+
-build aprovados. Sem migração/env/package. Publicação e reteste autenticado ainda pendentes.
+build aprovados. Sem migração/env/package. Publicação345 validada depois: 5/5GETs públicos e busca autenticada nas duas listas.
+
+### Continuação346 — contenção do menu administrativo
+
+A342-08 reproduzido no menu recolhido do Admin344: Tab permite focar a página atrás do
+overlay. Usar fundação existente para conter foco, Escape/retorno e preservar sidebar
+desktop, mudança de rota e scroll. Sem redesenho, novo pacote, env ou migração.
+
+- [ ] Menu aberto mantém navegação de teclado dentro do conteúdo e fecha/restaura foco corretamente.
+- [ ] Contratos reais, Browser local/publicado e admin check/build aprovados.
+- [x] Template de ADR e complemento0441 incluem quatro apps/cinco manifests, preservando histórico.
+
+Decisão expressa do responsável11/09/2026: selo=registro ativo aprovado (CFP ou humano),
+sem promessa de comprovação de identidade. Registrada no ADR0496; não adicionar KYC.
+
+A345-01 observado na lista publicada: um resultado dizia “1 psicólogos encontrados”.
+Ajustar singular nas duas listas, preservando zero/plural e estado sem resumo.
+- [ ] Um resultado usa singular; zero e múltiplos usam plural (Browser e build).
+
+C24: parseCrpRegistrationDate comparava o instante normalizado ao meio-dia com agora e
+recusava a data civil de hoje pela manhã. Comparar dias em America/Sao_Paulo usando a
+mesma referência temporal; manter armazenamento12h-03, formatos e allowFuture existentes.
+- [x] Hoje é aceito durante todo o dia civil; amanhã continua recusado sem allowFuture.
+- [x] Casos de meia-noite/mês/ano/bissexto e legado passam sem relógio global falso.
+
+346 validação local: root1096 testes (1090pass/6skips drawtext conhecidos), backend450/450,
+Admin86/86; builds backend e Admin aprovados. C24:11/11 em3fusos; reprodução anterior6falhas.
+Menu:7 contratos estáticos e hook real no Browser em390/1280; ciclo Tab/ShiftTab, Escape,
+retorno, pilha aninhada e preservação da busca atrás. Não equivale ao shell completo;
+resize/navegação, plural e reteste do menu publicado ainda pendentes. Bump346já executado.
