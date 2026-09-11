@@ -1,3 +1,5 @@
+export { isPublicPostMediaUrl } from "../../repositories/support/post-media-url";
+
 import { error, msg } from "@/helpers/translate";
 import type { ModerationResult } from "@/utils/content-moderation";
 import type { IPostShowDTO, PostMutationResult } from "../../DTOs/IPostDTO";
@@ -112,16 +114,6 @@ export const normalizePostMediaType = (value?: string | null): "image" | "video"
   if (value === "image" || value === "video") return value;
 
   return null;
-};
-
-export const isPublicPostMediaUrl = (value?: string | null) => {
-  if (!value) return false;
-
-  try {
-    return new URL(value).pathname.startsWith("/public/files/posts/media/");
-  } catch (_err) {
-    return value.startsWith("/public/files/posts/media/");
-  }
 };
 
 export const hasOwnBodyKey = (body: object, key: string) => Object.hasOwn(body, key);

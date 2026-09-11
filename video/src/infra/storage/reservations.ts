@@ -1,9 +1,27 @@
 import type { Redis } from "ioredis";
 import type { VideoServiceConfig } from "../../config/env.js";
-import { requireVideoJobId } from "./paths.js";
+import { isVideoJobId, requireVideoJobId } from "./paths.js";
 import { availableStorageBytes } from "./storage.js";
 
 const RESERVATIONS_KEY = "{lectum-video}:storage-reservations";
+
+export const reservedVideoJobIds = async (connection: Redis, now = Date.now()) => {
+  const reservations = await connection.hgetall(RESERVATIONS_KEY);
+  return new Set(
+    Object.entries(reservations)
+      .filter(([jobId, value]) => {
+        const [bytes, expiration] = value.split("|").map(Number);
+        return (
+          isVideoJobId(jobId) &&
+          Number.isSafeInteger(bytes) &&
+          Number(bytes) > 0 &&
+          Number.isSafeInteger(expiration) &&
+          Number(expiration) > now
+        );
+      })
+      .map(([jobId]) => jobId),
+  );
+};
 
 const ACQUIRE_RESERVATION_SCRIPT = `
 local now = tonumber(ARGV[1])

@@ -58,6 +58,7 @@ export const professionalProfileSelect = {
 
 export const postAuthorSelect = {
   id: true,
+  deleted: true,
   name: true,
   avatar: true,
   role: true,

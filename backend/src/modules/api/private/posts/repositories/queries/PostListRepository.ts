@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { getFollowedCommunityIds } from "@/modules/api/private/community/repositories/support/community-ranking";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
 import { verifiedProfessionalProfileWhere } from "@/utils/subscription-entitlement";
@@ -253,9 +254,16 @@ export class PostListRepository extends PostRepositoryContext {
       }
     }
 
-    const [mutedPostIds, postsWithPsychologistReplies] = await Promise.all([
+    const communityIds = [
+      ...new Set([
+        ...posts.map((post) => post.community.id),
+        ...replies.map((reply) => reply.post.community.id),
+      ]),
+    ];
+    const [mutedPostIds, postsWithPsychologistReplies, followedCommunityIds] = await Promise.all([
       getMutedPostIds(data.auth.id!, contextPostIds),
       getPostIdsWithPsychologistReplies(contextPostIds),
+      getFollowedCommunityIds(data.auth.id!, communityIds),
     ]);
 
     const postItems = posts.map<PostListItemDTO>((post) => ({
@@ -272,6 +280,7 @@ export class PostListRepository extends PostRepositoryContext {
         savedReplyIds,
         mutedPostIds.has(post.id),
         postsWithPsychologistReplies.has(post.id),
+        followedCommunityIds.has(post.community.id),
       ),
       reply: null,
     }));
@@ -289,6 +298,7 @@ export class PostListRepository extends PostRepositoryContext {
         undefined,
         mutedPostIds.has(reply.post.id),
         postsWithPsychologistReplies.has(reply.post.id),
+        followedCommunityIds.has(reply.post.community.id),
       ),
       reply: {
         id: reply.id,
@@ -513,9 +523,16 @@ export class PostListRepository extends PostRepositoryContext {
         ...replySaves.map((item) => item.reply.post.id),
       ]),
     ];
-    const [mutedPostIds, postsWithPsychologistReplies] = await Promise.all([
+    const communityIds = [
+      ...new Set([
+        ...postSaves.map((item) => item.post.community.id),
+        ...replySaves.map((item) => item.reply.post.community.id),
+      ]),
+    ];
+    const [mutedPostIds, postsWithPsychologistReplies, followedCommunityIds] = await Promise.all([
       getMutedPostIds(data.auth.id!, contextPostIds),
       getPostIdsWithPsychologistReplies(contextPostIds),
+      getFollowedCommunityIds(data.auth.id!, communityIds),
     ]);
 
     const postItems = postSaves.map<PostListItemDTO>((item) => ({
@@ -532,6 +549,7 @@ export class PostListRepository extends PostRepositoryContext {
         undefined,
         mutedPostIds.has(item.post.id),
         postsWithPsychologistReplies.has(item.post.id),
+        followedCommunityIds.has(item.post.community.id),
       ),
       reply: null,
     }));
@@ -549,6 +567,7 @@ export class PostListRepository extends PostRepositoryContext {
         undefined,
         mutedPostIds.has(item.reply.post.id),
         postsWithPsychologistReplies.has(item.reply.post.id),
+        followedCommunityIds.has(item.reply.post.community.id),
       ),
       reply: {
         id: item.reply.id,

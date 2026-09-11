@@ -397,7 +397,7 @@ export const reportsSchema: IValidatorRequest = {
       key: "type",
       coerse: "string",
       method: "string",
-      max: 20,
+      max: 32,
       optional: true,
     },
     {
@@ -412,6 +412,7 @@ export const reportsSchema: IValidatorRequest = {
       coerse: "string",
       method: "string",
       max: 10,
+      nullable: true,
       optional: true,
     },
     {
@@ -419,6 +420,7 @@ export const reportsSchema: IValidatorRequest = {
       coerse: "string",
       method: "string",
       max: 10,
+      nullable: true,
       optional: true,
     },
   ],

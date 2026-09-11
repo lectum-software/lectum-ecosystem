@@ -64,7 +64,9 @@ export const resolvePaymentGatewayPublicError = (
   );
 
   for (const code of candidateCodes) {
-    const translation = PAYMENT_DETAIL_TO_TRANSLATION[code];
+    const translation = Object.hasOwn(PAYMENT_DETAIL_TO_TRANSLATION, code)
+      ? PAYMENT_DETAIL_TO_TRANSLATION[code]
+      : undefined;
 
     if (translation) {
       return {

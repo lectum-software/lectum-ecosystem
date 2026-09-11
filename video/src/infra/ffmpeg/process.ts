@@ -179,6 +179,10 @@ export const runManagedProcess = ({
   timeoutMs,
 }: RunManagedProcessInput): Promise<string> =>
   new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new ManagedProcessError("aborted"));
+      return;
+    }
     let failure: ManagedProcessFailure | null = null;
     let killTimeout: NodeJS.Timeout | null = null;
     let settled = false;

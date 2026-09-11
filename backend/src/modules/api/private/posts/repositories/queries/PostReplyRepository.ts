@@ -253,61 +253,63 @@ export class PostReplyRepository extends PostRepositoryContext {
       }
     }
 
-    if (data.b.parentReplyId) {
-      const parent = await prisma.post_reply.findFirst({
-        where: {
-          id: data.b.parentReplyId,
-          post_id: post.id,
-          deleted: false,
-        },
-        select: {
-          id: true,
-        },
-      });
+    return withSerializableTransaction(
+      async (transaction): Promise<PostMutationResult<PostReplyDTO>> => {
+        // Revalidar dentro de CADA tentativa: o post/pai pode ter sido excluído
+        // enquanto a mídia era validada ou antes de um retry por concorrência.
+        const currentPost = await findPublishedPost(data.p.id, transaction);
+        if (!currentPost) return { kind: "not_found" };
 
-      if (!parent) return { kind: "invalid_parent" };
-    }
+        if (data.b.parentReplyId) {
+          const parent = await transaction.post_reply.findFirst({
+            where: {
+              id: data.b.parentReplyId,
+              post_id: currentPost.id,
+              deleted: false,
+            },
+            select: { id: true },
+          });
+          if (!parent) return { kind: "invalid_parent" };
+        }
 
-    const reply = await withSerializableTransaction(async (transaction) => {
-      await ensureCommunityMembership({
-        client: transaction,
-        communityId: post.community_id,
-        userId: data.auth.id!,
-      });
+        await ensureCommunityMembership({
+          client: transaction,
+          communityId: currentPost.community_id,
+          userId: data.auth.id!,
+        });
 
-      const created = await transaction.post_reply.create({
-        data: {
-          post_id: post.id,
-          author_id: data.auth.id!,
-          parent_reply_id: data.b.parentReplyId || null,
-          content,
-          media_type: mediaType,
-          media_url: streamVideoReference || mediaUrl,
-          thumbnail_url: mediaType === "video" && !streamVideoReference ? thumbnailUrl : null,
-        },
-        select: replyBaseSelect,
-      });
-
-      await transaction.community_post.update({
-        where: {
-          id: post.id,
-        },
-        data: {
-          replies_count: {
-            increment: 1,
+        const created = await transaction.post_reply.create({
+          data: {
+            post_id: currentPost.id,
+            author_id: data.auth.id!,
+            parent_reply_id: data.b.parentReplyId || null,
+            content,
+            media_type: mediaType,
+            media_url: streamVideoReference || mediaUrl,
+            thumbnail_url: mediaType === "video" && !streamVideoReference ? thumbnailUrl : null,
           },
-        },
-      });
+          select: replyBaseSelect,
+        });
 
-      return created;
-    });
+        await transaction.community_post.update({
+          where: {
+            id: currentPost.id,
+          },
+          data: {
+            replies_count: {
+              increment: 1,
+            },
+          },
+        });
 
-    return {
-      kind: "ok",
-      data: toReplyResponse(reply, new Map(), undefined, {
-        postAnonymous: post.author.role !== "psicologo" && post.anonymous,
-        postAuthorId: post.author_id,
-      }),
-    };
+        return {
+          kind: "ok",
+          data: toReplyResponse(created, new Map(), undefined, {
+            postAnonymous: currentPost.author.role !== "psicologo" && currentPost.anonymous,
+            postAuthorId: currentPost.author_id,
+          }),
+        };
+      },
+    );
   }
 }

@@ -1,4 +1,3 @@
-import prisma from "@/infra/database/prisma";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
 import type {
   IPostReplyDeleteDTO,
@@ -128,119 +127,124 @@ export class PostReplyStateRepository extends PostRepositoryContext {
   async deleteReply(
     data: IPostReplyDeleteDTO,
   ): Promise<PostMutationResult<PostReplyDeleteResponse>> {
-    const post = await findPublishedPost(data.p.id);
-    if (!post) return { kind: "not_found" };
+    return withSerializableTransaction(
+      async (transaction): Promise<PostMutationResult<PostReplyDeleteResponse>> => {
+        // A autorização, a subárvore e o contador pertencem ao mesmo snapshot que
+        // a exclusão. Um retry não pode reaproveitar IDs/contagem de uma tentativa antiga.
+        const post = await findPublishedPost(data.p.id, transaction);
+        if (!post) return { kind: "not_found" };
 
-    const reply = await prisma.post_reply.findFirst({
-      where: {
-        id: data.p.replyId,
-        post_id: post.id,
-        deleted: false,
-      },
-      select: {
-        id: true,
-        author_id: true,
-        author: {
+        const reply = await transaction.post_reply.findFirst({
+          where: {
+            id: data.p.replyId,
+            post_id: post.id,
+            deleted: false,
+          },
           select: {
-            role: true,
+            id: true,
+            author_id: true,
+            author: {
+              select: {
+                role: true,
+              },
+            },
           },
-        },
-      },
-    });
+        });
 
-    if (!reply) return { kind: "invalid_target" };
-    if (reply.author_id !== data.auth.id) return { kind: "forbidden" };
+        if (!reply) return { kind: "invalid_target" };
+        if (reply.author_id !== data.auth.id) return { kind: "forbidden" };
 
-    const replies = await prisma.post_reply.findMany({
-      where: {
-        post_id: post.id,
-        deleted: false,
-      },
-      select: {
-        id: true,
-        parent_reply_id: true,
-        author: {
+        const replies = await transaction.post_reply.findMany({
+          where: {
+            post_id: post.id,
+            deleted: false,
+          },
           select: {
-            role: true,
+            id: true,
+            parent_reply_id: true,
+            author: {
+              select: {
+                role: true,
+              },
+            },
           },
-        },
+        });
+        const childrenByParent = new Map<string, string[]>();
+
+        for (const item of replies) {
+          if (!item.parent_reply_id) continue;
+          const children = childrenByParent.get(item.parent_reply_id) ?? [];
+          children.push(item.id);
+          childrenByParent.set(item.parent_reply_id, children);
+        }
+
+        const replyIds = new Set<string>();
+        const stack = [reply.id];
+
+        while (stack.length > 0) {
+          const currentId = stack.pop();
+          if (!currentId || replyIds.has(currentId)) continue;
+
+          replyIds.add(currentId);
+          for (const childId of childrenByParent.get(currentId) ?? []) {
+            stack.push(childId);
+          }
+        }
+
+        const ids = [...replyIds];
+        const shouldBlockProfessionalReplies = reply.author.role !== "psicologo";
+        const hasProfessionalDescendant =
+          shouldBlockProfessionalReplies &&
+          replies.some(
+            (item) =>
+              item.id !== reply.id && replyIds.has(item.id) && item.author.role === "psicologo",
+          );
+
+        if (hasProfessionalDescendant) {
+          return { kind: "professional_replies_block" };
+        }
+
+        const now = new Date();
+
+        const deletedReplies = await transaction.post_reply.updateMany({
+          where: {
+            id: {
+              in: ids,
+            },
+            post_id: post.id,
+            deleted: false,
+          },
+          data: {
+            deleted: true,
+            deletedAt: now,
+          },
+        });
+
+        const repliesCount = await transaction.post_reply.count({
+          where: { post_id: post.id, deleted: false },
+        });
+        const updatedPost = await transaction.community_post.update({
+          where: {
+            id: post.id,
+          },
+          data: {
+            replies_count: repliesCount,
+          },
+          select: {
+            replies_count: true,
+          },
+        });
+
+        return {
+          kind: "ok",
+          data: {
+            post_id: post.id,
+            reply_ids: ids,
+            deleted_count: deletedReplies.count,
+            replies_count: updatedPost.replies_count,
+          },
+        };
       },
-    });
-    const childrenByParent = new Map<string, string[]>();
-
-    for (const item of replies) {
-      if (!item.parent_reply_id) continue;
-      const children = childrenByParent.get(item.parent_reply_id) ?? [];
-      children.push(item.id);
-      childrenByParent.set(item.parent_reply_id, children);
-    }
-
-    const replyIds = new Set<string>();
-    const stack = [reply.id];
-
-    while (stack.length > 0) {
-      const currentId = stack.pop();
-      if (!currentId || replyIds.has(currentId)) continue;
-
-      replyIds.add(currentId);
-      for (const childId of childrenByParent.get(currentId) ?? []) {
-        stack.push(childId);
-      }
-    }
-
-    const ids = [...replyIds];
-    const shouldBlockProfessionalReplies = reply.author.role !== "psicologo";
-    const hasProfessionalDescendant =
-      shouldBlockProfessionalReplies &&
-      replies.some(
-        (item) => item.id !== reply.id && replyIds.has(item.id) && item.author.role === "psicologo",
-      );
-
-    if (hasProfessionalDescendant) {
-      return { kind: "professional_replies_block" };
-    }
-
-    const now = new Date();
-    const nextRepliesCount = Math.max(0, post.replies_count - ids.length);
-
-    const response = await withSerializableTransaction(async (transaction) => {
-      await transaction.post_reply.updateMany({
-        where: {
-          id: {
-            in: ids,
-          },
-          post_id: post.id,
-          deleted: false,
-        },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
-      });
-
-      const updatedPost = await transaction.community_post.update({
-        where: {
-          id: post.id,
-        },
-        data: {
-          replies_count: nextRepliesCount,
-        },
-        select: {
-          replies_count: true,
-        },
-      });
-
-      return {
-        post_id: post.id,
-        reply_ids: ids,
-        deleted_count: ids.length,
-        replies_count: updatedPost.replies_count,
-      };
-    });
-
-    return {
-      kind: "ok",
-      data: response,
-    };
+    );
   }
 }

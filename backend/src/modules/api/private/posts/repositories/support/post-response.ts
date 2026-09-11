@@ -166,7 +166,11 @@ export const replyBaseSelect = {
   },
   _count: {
     select: {
-      replies: true,
+      replies: {
+        where: {
+          deleted: false,
+        },
+      },
     },
   },
 } satisfies Prisma.post_replySelect;
@@ -534,12 +538,13 @@ export const toListPostResponse = (
   savedReplyIds?: Set<string>,
   mutedByCurrentUser = false,
   hasPsychologistReply = false,
+  communityFollowing?: boolean,
 ): PostListPostDTO => ({
   ...toPostResponse(
     item,
     currentUserVote,
     saved,
-    undefined,
+    communityFollowing,
     mutedByCurrentUser,
     hasPsychologistReply,
   ),

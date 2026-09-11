@@ -1,12 +1,54 @@
 import assert from "node:assert/strict";
+import { access, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, it } from "node:test";
 import {
   classifyManagedProcessDiagnostic,
   ManagedProcessError,
   managedProcessDiagnosticCode,
+  runManagedProcess,
 } from "./process.js";
 
 describe("managed FFmpeg process diagnostics", () => {
+  it("não inicia um processo quando o job já está cancelado", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "lectum-video-preabort-"));
+    const marker = path.join(directory, "must-not-exist");
+    try {
+      await assert.rejects(
+        runManagedProcess({
+          args: ["-e", "require('node:fs').writeFileSync(process.argv[1], 'started')", marker],
+          command: process.execPath,
+          signal: AbortSignal.abort(),
+          timeoutMs: 5000,
+        }),
+        (error) => error instanceof ManagedProcessError && error.kind === "aborted",
+      );
+      await assert.rejects(access(marker));
+    } finally {
+      await rm(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("encerra processos reais por prazo e limite de saída", async () => {
+    await assert.rejects(
+      runManagedProcess({
+        args: ["-e", "setInterval(() => {}, 1000)"],
+        command: process.execPath,
+        timeoutMs: 100,
+      }),
+      (error) => error instanceof ManagedProcessError && error.kind === "timeout",
+    );
+    await assert.rejects(
+      runManagedProcess({
+        args: ["-e", "process.stdout.write('x'.repeat(10000))"],
+        command: process.execPath,
+        maxStdoutBytes: 100,
+        timeoutMs: 5000,
+      }),
+      (error) => error instanceof ManagedProcessError && error.kind === "output_limit",
+    );
+  });
   it("classifica falhas conhecidas sem expor stderr bruto", () => {
     assert.equal(
       classifyManagedProcessDiagnostic("No such filter: 'drawtext'"),

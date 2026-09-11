@@ -55,6 +55,15 @@ describe("sanitizePublicResponseData", () => {
     }
   });
 
+  it("não interpreta propriedades herdadas como categorias de proveniência", () => {
+    for (const source of ["constructor", "__proto__", "hasOwnProperty"]) {
+      assert.equal(sanitizePublicProvenanceSource(source), source);
+      assert.deepEqual(JSON.parse(JSON.stringify(sanitizePublicResponseData({ source }))), {
+        source,
+      });
+    }
+  });
+
   it("não altera campos source relacionados, como traffic_source", () => {
     assert.deepEqual(
       sanitizePublicResponseData({ source: "page_view_event", traffic_source: "organic" }),

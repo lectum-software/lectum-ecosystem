@@ -8,6 +8,7 @@ import {
   isCloudflareStreamVideoUid,
   videoAssetIdFromReference,
 } from "@/infra/video-stream";
+import { getJwtSecret } from "@/modules/api/middlewares/_auth/utils/jwt-secret";
 import { VideoAssetRepository } from "@/modules/video-assets/repository";
 import { buildProfessionalFullDisplayName } from "@/utils/professional-name";
 import { getPrimaryPublicWebOrigin, parsePublicHttpOrigin } from "@/utils/public-origin";
@@ -22,6 +23,11 @@ import {
   isProfessionalVerified,
 } from "../../repositories/support/post-response";
 import { ensureCommunityActor } from "./post-support";
+import {
+  createShareRenderJobHandle,
+  resolveShareRenderJobId,
+  SHARE_RENDER_JOB_ID_PATTERN,
+} from "./share-render-job-access";
 import { selectSharePostVideoMediaUrl } from "./share-render-media";
 import {
   resolveLegacyPostMediaSourceUrlForRender,
@@ -29,7 +35,6 @@ import {
 } from "./share-render-source";
 
 const VIDEO_SERVICE_FILE_TIMEOUT_MS = 390_000;
-const JOB_ID_PATTERN = /^[a-z][a-z0-9]{23,31}$/;
 const VIDEO_SERVICE_CODE_PATTERN = /^[a-z][a-z0-9_]{1,64}$/;
 
 type VideoServiceJobData = {
@@ -148,7 +153,7 @@ const isVideoJobData = (value: unknown): value is VideoServiceJobData => {
 
   return (
     typeof data.job_id === "string" &&
-    JOB_ID_PATTERN.test(data.job_id) &&
+    SHARE_RENDER_JOB_ID_PATTERN.test(data.job_id) &&
     typeof data.status === "string" &&
     ["queued", "processing", "completed", "failed", "cancel_requested", "canceled"].includes(
       data.status,
@@ -157,10 +162,16 @@ const isVideoJobData = (value: unknown): value is VideoServiceJobData => {
   );
 };
 
-const jobResponse = (status: number, data: VideoServiceJobData): Resolve => ({
+const jobScope = (data: IPostRenderShareArtifactJobDTO) => ({
+  ownerId: data.auth.id ?? "",
+  postId: data.p.id,
+  replyId: data.p.replyId ?? null,
+});
+
+const jobResponse = (status: number, data: VideoServiceJobData, handle: string): Resolve => ({
   status,
   ...msg("post_share_artifact_rendered", {}),
-  data,
+  data: { ...data, job_id: handle, download_url: null },
 });
 
 const mapVideoServiceFailure = async (response: Response | null): Promise<Resolve> => {
@@ -342,6 +353,7 @@ const resolveShareRenderTarget = async (
           deleted: false,
           id: data.p.id,
           status: "publicado",
+          community: { active: true, deleted: false },
         },
       },
       select: replyTargetSelect,
@@ -377,6 +389,7 @@ const resolveShareRenderTarget = async (
       deleted: false,
       id: data.p.id,
       status: "publicado",
+      community: { active: true, deleted: false },
     },
     select: postTargetSelect,
   });
@@ -439,17 +452,20 @@ export const startRenderShareArtifactJob = async (
   const envelope = await readVideoServiceEnvelope(response);
   if (envelope?.success !== true || !isVideoJobData(envelope.data)) return renderUnavailable();
 
-  return jobResponse(response.status, envelope.data);
+  const handle = createShareRenderJobHandle(envelope.data.job_id, jobScope(data), getJwtSecret());
+  if (!handle) return renderUnavailable();
+  return jobResponse(response.status, envelope.data, handle);
 };
 
 export const getRenderShareArtifactJob = async (
   data: IPostRenderShareArtifactJobDTO,
 ): Promise<Resolve> => {
+  const handle = data.p.jobId?.trim() || "";
+  const jobId = resolveShareRenderJobId(handle, jobScope(data), getJwtSecret());
+  if (!jobId) return invalidRenderTarget(404);
+
   const target = await resolveShareRenderTarget(data);
   if (!isResolvedTarget(target)) return target;
-
-  const jobId = data.p.jobId?.trim() || "";
-  if (!JOB_ID_PATTERN.test(jobId)) return invalidRenderTarget(404);
 
   const response = await requestVideoService(`/api/private/jobs/${encodeURIComponent(jobId)}`, {
     method: "GET",
@@ -460,7 +476,8 @@ export const getRenderShareArtifactJob = async (
   const envelope = await readVideoServiceEnvelope(response);
   if (envelope?.success !== true || !isVideoJobData(envelope.data)) return renderUnavailable();
 
-  return jobResponse(response.status, envelope.data);
+  if (envelope.data.job_id !== jobId) return renderUnavailable();
+  return jobResponse(response.status, envelope.data, handle);
 };
 
 const fileHeaders = (target: ShareRenderTarget, response: Response) => {
@@ -483,11 +500,12 @@ const fileHeaders = (target: ShareRenderTarget, response: Response) => {
 export const getRenderShareArtifactJobFile = async (
   data: IPostRenderShareArtifactJobDTO,
 ): Promise<RenderShareArtifactJobFileResult> => {
+  const handle = data.p.jobId?.trim() || "";
+  const jobId = resolveShareRenderJobId(handle, jobScope(data), getJwtSecret());
+  if (!jobId) return invalidRenderTarget(404);
+
   const target = await resolveShareRenderTarget(data);
   if (!isResolvedTarget(target)) return target;
-
-  const jobId = data.p.jobId?.trim() || "";
-  if (!JOB_ID_PATTERN.test(jobId)) return invalidRenderTarget(404);
 
   const requestInit: RequestInit = { method: "GET" };
   if (data.range) {

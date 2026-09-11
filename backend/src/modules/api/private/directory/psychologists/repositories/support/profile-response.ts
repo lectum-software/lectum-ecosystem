@@ -61,7 +61,9 @@ export const toPostAuthorResponse = (
 ): CommunityAuthorDTO => {
   const profile = author.psychologist_profile;
   const isPsychologist = author.role === "psicologo";
+  const isDeletedAuthor = author.deleted;
   const shouldMaskAuthor = !isPsychologist && anonymous;
+  const shouldHideIdentity = isDeletedAuthor || shouldMaskAuthor;
   const displayName = isPsychologist
     ? buildProfessionalFullDisplayName({
         fallbackName: author.name,
@@ -82,22 +84,29 @@ export const toPostAuthorResponse = (
 
   return {
     id: author.id,
-    name: shouldMaskAuthor ? (anonymousDisplayName ?? "Membro Anônimo") : displayName,
-    avatar: shouldMaskAuthor ? null : author.avatar,
+    name: isDeletedAuthor
+      ? isPsychologist
+        ? "Psicólogo Excluído"
+        : "Membro Excluído"
+      : shouldMaskAuthor
+        ? (anonymousDisplayName ?? "Membro Anônimo")
+        : displayName,
+    avatar: shouldHideIdentity ? null : author.avatar,
     role: author.role,
     type_label: authorTypeLabel(author.role, profile?.gender, anonymous),
-    crp: isPsychologist ? normalizeStoredCrp(profile?.crp) : null,
-    verified: isPsychologist && isProfessionalVerified(profile),
-    featured_badge: isPsychologist ? featuredBadge : null,
-    whatsapp_name: isPsychologist ? whatsappDisplayName : null,
-    whatsapp_url: isPsychologist
-      ? buildProfessionalWhatsappUrl(
-          profile,
-          displayName,
-          whatsappDisplayName,
-          whatsappMessageSource,
-        )
-      : null,
+    crp: isPsychologist && !isDeletedAuthor ? normalizeStoredCrp(profile?.crp) : null,
+    verified: isPsychologist && !isDeletedAuthor && isProfessionalVerified(profile),
+    featured_badge: isPsychologist && !isDeletedAuthor ? featuredBadge : null,
+    whatsapp_name: isPsychologist && !isDeletedAuthor ? whatsappDisplayName : null,
+    whatsapp_url:
+      isPsychologist && !isDeletedAuthor
+        ? buildProfessionalWhatsappUrl(
+            profile,
+            displayName,
+            whatsappDisplayName,
+            whatsappMessageSource,
+          )
+        : null,
   };
 };
 

@@ -1,7 +1,7 @@
 import { adminApi } from "@/api/client";
 import { resolveApiData } from "@/api/handle";
 import type { ApiResponse } from "@/api/types";
-import { cleanContentDetailParams, cleanPaginationParams } from "./params";
+import { cleanContentDetailParams, cleanPaginationParams, cleanReportsParams } from "./params";
 import type {
   AdminCommunityContent,
   AdminCommunityContentAnalyticsDetail,
@@ -96,7 +96,7 @@ export const getAdminCommunityReports = async (id: string, input: AdminCommunity
   const response = await adminApi.get<ApiResponse<AdminCommunityReports>>(
     `/api/admin/private/communities/${encodeURIComponent(id)}/reports`,
     {
-      params: cleanPaginationParams(input),
+      params: cleanReportsParams(input),
     },
   );
 

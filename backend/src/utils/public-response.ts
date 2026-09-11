@@ -81,8 +81,10 @@ export const sanitizePublicProvenanceSource = (value: unknown): unknown => {
   const source = value.trim();
   if (!source) return source;
 
-  const simpleSource = SIMPLE_TECHNICAL_SOURCES[source.toLowerCase()];
-  if (simpleSource) return simpleSource;
+  const sourceKey = source.toLowerCase();
+  if (Object.hasOwn(SIMPLE_TECHNICAL_SOURCES, sourceKey)) {
+    return SIMPLE_TECHNICAL_SOURCES[sourceKey];
+  }
 
   const matchedGroups = (
     Object.entries(SOURCE_GROUPS) as Array<

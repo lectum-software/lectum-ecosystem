@@ -50,13 +50,44 @@
 
 44. Campos de formulários e modais simultâneos não confundem mais rótulos e mensagens de erro.
 
+### Correções em integração, ainda não publicadas
+
+45. Histórico financeiro não associa mais cobranças pelo simples aparecimento de um identificador no texto.
+46. Referências financeiras conflitantes não vinculam o mesmo evento a duas assinaturas.
+47. Parcela processada ou assinatura autorizada não são confundidas com pagamento confirmado.
+48. Valores monetários malformados não viram valores aparentemente válidos.
+49. Trocas diferentes de cartão não reutilizam a mesma identificação da operação.
+50. Webhooks recusam assinaturas malformadas ou cabeçalhos ambíguos.
+51. Plano externo precisa corresponder a preço, moeda, estado e periodicidade mensal esperados.
+52. Consulta/download de renderização exige vínculo assinado com autor e conteúdo.
+53. Mídias legadas não aceitam endereços arbitrários como se fossem arquivos da aplicação.
+54. Partes de upload precisam ter o tamanho esperado antes da conclusão.
+55. Perfil removido não continua expondo nome, imagem e contato no conteúdo público.
+56. Processamento de vídeo restringe playlists remotas e verifica certificados HTTPS.
+57. Download valida o endereço usado na conexão e recusa redirecionamentos inesperados.
+58. Limpeza de vídeos protege diretórios estruturais e uploads reservados ainda na fila de entrada.
+59. Textos com apóstrofos e separadores não quebram a renderização social.
+60. Processamento possui prazo total, cancelamento e retomada de saída válida após falha da fila.
+61. Respostas criadas ou excluídas ao mesmo tempo são revalidadas na transação, sem reutilizar permissões antigas.
+62. Exclusões concorrentes não descontam respostas duas vezes nem deixam contadores calculados antes da operação.
+63. Edição de publicação do paciente passa pela moderação; uma tentativa recusada preserva a versão anterior.
+64. Filtros de denúncias aceitam os valores oferecidos na tela; datas vazias não bloqueiam a consulta inicial.
+65. Falha ao consultar denúncias não aparece como zero denúncias ou lista vazia.
+66. Identificadores especiais não alteram o tipo dos dados de origem enviados pela API.
+67. Respostas excluídas não permanecem na contagem de filhas ou no link “Ver mais”.
+68. Comunidades seguidas mantêm o estado correto em posts próprios e itens salvos.
+
 ## Ainda pendente
 
 - Documentos legais aprovados e links no cadastro: **bloqueiam recomendação de produção**.
 - Concluir leitura de todos os arquivos e testes de todos os fluxos.
 - Repetir cadastro completo e testar perfil profissional, Google e dispositivos reais.
 - Avaliar senhas antigas e concluir verificações de permissão, pagamentos e vídeos.
+- Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
+- Publicar e repetir as correções de denúncias, comunidade seguida e contagem de respostas.
+- Impedir perda de preferências de notificações quando sua consulta falha.
 
-Cobertura da base: **236 arquivos com leitura inicial**, 12 parciais e 2873 ainda não revisados.
+Cobertura da base: **599 arquivos com leitura inicial**, 11 parciais e 2511 ainda não revisados.
+Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
-[Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv)
+[Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

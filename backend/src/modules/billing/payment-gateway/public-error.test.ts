@@ -3,6 +3,21 @@ import { test } from "node:test";
 import { sanitizePaymentGatewayError } from "./error-log";
 import { resolvePaymentGatewayPublicError } from "./public-error";
 
+test("public payment errors ignore inherited Object property names", () => {
+  for (const code of ["constructor", "__proto__"]) {
+    assert.deepEqual(
+      resolvePaymentGatewayPublicError(
+        { details: { status_detail: code } },
+        "billing_gateway_checkout_failed",
+      ),
+      {
+        status: 502,
+        code: "billing_gateway_checkout_failed",
+      },
+    );
+  }
+});
+
 test("resolvePaymentGatewayPublicError maps Mercado Pago status_detail to safe card copy", () => {
   const result = resolvePaymentGatewayPublicError(
     {

@@ -1,5 +1,6 @@
 import type { AdminCommunityContentDetailQuery } from "./types/content";
 import type { CommunitiesDashboardQuery } from "./types/dashboard";
+import type { AdminCommunityReportsQuery } from "./types/ranking-reports";
 import type { AdminCommunityStatisticsQuery } from "./types/statistics";
 
 export const cleanParams = (input: CommunitiesDashboardQuery) => ({
@@ -22,6 +23,12 @@ export const cleanPaginationParams = <T extends object>(input: T = {} as T) => {
     ),
   };
 };
+
+export const cleanReportsParams = ({ from, to, ...input }: AdminCommunityReportsQuery) => ({
+  ...cleanPaginationParams(input),
+  ...(from ? { from } : {}),
+  ...(to ? { to } : {}),
+});
 
 export const cleanStatisticsParams = (input: AdminCommunityStatisticsQuery) => ({
   ...(input.period ? { period: input.period } : {}),

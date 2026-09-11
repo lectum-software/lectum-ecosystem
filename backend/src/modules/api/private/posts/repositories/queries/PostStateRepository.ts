@@ -249,63 +249,62 @@ export class PostStateRepository extends PostRepositoryContext {
   }
 
   async deletePost(data: IPostDeleteDTO): Promise<PostMutationResult<PostDeleteResponse>> {
-    const post = await findPublishedPost(data.p.id);
-    if (!post) return { kind: "not_found" };
-    if (post.author_id !== data.auth.id) return { kind: "forbidden" };
+    return withSerializableTransaction(
+      async (transaction): Promise<PostMutationResult<PostDeleteResponse>> => {
+        const post = await findPublishedPost(data.p.id, transaction);
+        if (!post) return { kind: "not_found" };
+        if (post.author_id !== data.auth.id) return { kind: "forbidden" };
 
-    const now = new Date();
-    const response = await withSerializableTransaction(async (transaction) => {
-      const shouldBlockProfessionalReplies = post.author.role !== "psicologo";
-      const professionalRepliesCount = shouldBlockProfessionalReplies
-        ? await transaction.post_reply.count({
-            where: {
-              post_id: post.id,
-              deleted: false,
-              author: {
-                role: "psicologo",
+        const now = new Date();
+        const shouldBlockProfessionalReplies = post.author.role !== "psicologo";
+        const professionalRepliesCount = shouldBlockProfessionalReplies
+          ? await transaction.post_reply.count({
+              where: {
+                post_id: post.id,
+                deleted: false,
+                author: {
+                  role: "psicologo",
+                },
               },
-            },
-          })
-        : 0;
+            })
+          : 0;
 
-      if (shouldBlockProfessionalReplies && professionalRepliesCount > 0) {
-        return null;
-      }
+        if (shouldBlockProfessionalReplies && professionalRepliesCount > 0) {
+          return { kind: "professional_replies_block" };
+        }
 
-      const deletedReplies = await transaction.post_reply.updateMany({
-        where: {
-          post_id: post.id,
-          deleted: false,
-        },
-        data: {
-          deleted: true,
-          deletedAt: now,
-        },
-      });
+        const deletedReplies = await transaction.post_reply.updateMany({
+          where: {
+            post_id: post.id,
+            deleted: false,
+          },
+          data: {
+            deleted: true,
+            deletedAt: now,
+          },
+        });
 
-      await transaction.community_post.update({
-        where: {
-          id: post.id,
-        },
-        data: {
-          deleted: true,
-          deletedAt: now,
-          status: "removido",
-        },
-      });
+        await transaction.community_post.update({
+          where: {
+            id: post.id,
+          },
+          data: {
+            deleted: true,
+            deletedAt: now,
+            status: "removido",
+            replies_count: 0,
+          },
+        });
 
-      return {
-        post_id: post.id,
-        deleted: true,
-        replies_deleted_count: deletedReplies.count,
-      };
-    });
-
-    if (!response) return { kind: "professional_replies_block" };
-
-    return {
-      kind: "ok",
-      data: response,
-    };
+        return {
+          kind: "ok",
+          data: {
+            post_id: post.id,
+            deleted: true,
+            replies_deleted_count: deletedReplies.count,
+          },
+        };
+      },
+    );
   }
 }

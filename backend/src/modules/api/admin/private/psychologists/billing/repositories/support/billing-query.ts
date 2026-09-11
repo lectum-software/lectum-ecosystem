@@ -1,7 +1,15 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import type { payment_event, professional_subscription } from "@/interfaces/objects";
 import type { BillingPaymentHistoryItem } from "@/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository";
+import { findPayloadValue, toAmountCents } from "@/modules/billing/payment-event-values";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
+
+export {
+  findPayloadValue,
+  isConfirmedPaymentStatus,
+  toAmountCents,
+  valueContainsReference,
+} from "@/modules/billing/payment-event-values";
 
 export const ADMIN_GRANT_SOURCE = "admin_grant";
 
@@ -39,7 +47,9 @@ export const toPaymentMethodBrandLabel = (value: unknown) => {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-  return PAYMENT_METHOD_BRAND_LABELS[normalized] ?? raw.toUpperCase();
+  return Object.hasOwn(PAYMENT_METHOD_BRAND_LABELS, normalized)
+    ? PAYMENT_METHOD_BRAND_LABELS[normalized]
+    : null;
 };
 
 export const normalizeText = (value: unknown) =>
@@ -47,75 +57,6 @@ export const normalizeText = (value: unknown) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
-
-export const valueContainsReference = (
-  value: unknown,
-  references: string[],
-  depth = 0,
-): boolean => {
-  if (references.length === 0 || depth > 8) return false;
-
-  const stringValue = toSafeString(value);
-  if (stringValue) {
-    return references.some((reference) => stringValue.includes(reference));
-  }
-
-  if (Array.isArray(value)) {
-    return value.some((item) => valueContainsReference(item, references, depth + 1));
-  }
-
-  const record = asRecord(value);
-  if (!record) return false;
-
-  return Object.values(record).some((item) => valueContainsReference(item, references, depth + 1));
-};
-
-export const findPayloadValue = (value: unknown, keys: string[], depth = 0): unknown => {
-  if (depth > 8) return undefined;
-
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = findPayloadValue(item, keys, depth + 1);
-      if (found !== undefined) return found;
-    }
-
-    return undefined;
-  }
-
-  const record = asRecord(value);
-  if (!record) return undefined;
-
-  const normalizedKeys = keys.map((key) => key.toLowerCase());
-  for (const [key, entry] of Object.entries(record)) {
-    if (normalizedKeys.includes(key.toLowerCase())) return entry;
-  }
-
-  for (const entry of Object.values(record)) {
-    const found = findPayloadValue(entry, keys, depth + 1);
-    if (found !== undefined) return found;
-  }
-
-  return undefined;
-};
-
-export const toAmountCents = (value: unknown): number | null => {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-    return Math.round(value * 100);
-  }
-
-  if (typeof value !== "string") return null;
-
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  const normalized =
-    trimmed.includes(",") && !trimmed.includes(".") ? trimmed.replace(",", ".") : trimmed;
-  const parsed = Number(normalized.replace(/[^0-9.-]/g, ""));
-
-  if (!Number.isFinite(parsed) || parsed <= 0) return null;
-
-  return Math.round(parsed * 100);
-};
 
 export const extractPaymentAmountCents = (payload: unknown) => {
   const directAmount = findPayloadValue(payload, [
@@ -126,14 +67,6 @@ export const extractPaymentAmountCents = (payload: unknown) => {
   const fallbackAmount = directAmount ?? findPayloadValue(payload, ["amount"]);
 
   return toAmountCents(asRecord(fallbackAmount)?.value ?? fallbackAmount);
-};
-
-export const isConfirmedPaymentStatus = (payload: unknown) => {
-  const status = normalizeText(
-    findPayloadValue(payload, ["status", "status_detail", "action", "payment_status"]),
-  );
-
-  return ["approved", "accredited", "authorized", "paid"].some((term) => status.includes(term));
 };
 
 export const isPaymentEvent = (event: Pick<payment_event, "payload" | "type">) => {

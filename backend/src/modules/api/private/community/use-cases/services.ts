@@ -9,6 +9,7 @@ import {
   recordContentModerationEvent,
 } from "@/utils/content-moderation-events";
 import { publicFileUrl } from "@/utils/public-origin";
+import { isPublicPostMediaUrl } from "../../posts/repositories/support/post-media-url";
 import type {
   ICommunityCreatePostDTO,
   ICommunityFeedDTO,
@@ -122,16 +123,6 @@ const normalizePostMediaType = (value?: string | null): "image" | "video" | null
   if (value === "image" || value === "video") return value;
 
   return null;
-};
-
-const isPublicPostMediaUrl = (value?: string | null) => {
-  if (!value) return false;
-
-  try {
-    return new URL(value).pathname.startsWith("/public/files/posts/media/");
-  } catch (_err) {
-    return value.startsWith("/public/files/posts/media/");
-  }
 };
 
 const invalidPostMedia = () => ({

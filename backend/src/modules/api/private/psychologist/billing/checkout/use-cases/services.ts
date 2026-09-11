@@ -9,6 +9,7 @@ import type { PaymentGateway } from "@/modules/billing/payment-gateway/PaymentGa
 import { parseSafeExternalHttpsUrl } from "@/utils/safe-external-url";
 import type { ICheckoutDTO } from "../DTOs/ICheckoutDTO";
 import { CheckoutRepository } from "../repositories/CheckoutRepository";
+import { isCompatibleGatewayPlan, isValidLocalPaidPlan } from "./plan-compatibility";
 
 type ProfessionalPlan = NonNullable<Awaited<ReturnType<CheckoutRepository["findPlanBySlug"]>>>;
 type ActiveProfessionalSubscription = NonNullable<
@@ -68,9 +69,7 @@ const readCompatibleGatewayPlanId = async ({
   plan: ProfessionalPlan;
 }) => {
   const gatewayPlan = await gateway.getSubscriptionPlan(gatewayPlanId);
-  const expectedAmountCents = plan.price_cents ?? null;
-
-  if (gatewayPlan.amount_cents === expectedAmountCents) {
+  if (isCompatibleGatewayPlan(gatewayPlan, plan)) {
     return gatewayPlan.gateway_plan_id || gatewayPlanId;
   }
 
@@ -292,6 +291,13 @@ export default async (data: ICheckoutDTO) => {
     return {
       status: 404,
       ...error("not_found", { model: "subscription_plan" }),
+    };
+  }
+
+  if (!isValidLocalPaidPlan(professionalPlan)) {
+    return {
+      status: 503,
+      ...error("billing_gateway_config_error", {}),
     };
   }
 

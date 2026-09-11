@@ -1,10 +1,10 @@
 import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import { BlockList, isIP } from "node:net";
 
 const MAX_REMOTE_SOURCE_ORIGIN_LENGTH = 2_048;
 const MAX_REMOTE_SOURCE_URL_LENGTH = 4_096;
 const REMOTE_VIDEO_REQUEST_USER_AGENT = "LectumVideoService/1.0";
-const REMOTE_VIDEO_EXTENSIONS = [".m3u8", ".mov", ".mp4", ".webm"] as const;
+const REMOTE_VIDEO_EXTENSIONS = [".mov", ".mp4", ".webm"] as const;
 const FIRST_PARTY_LECTUM_PUBLIC_MEDIA_HOSTNAMES = new Set([
   "api.lectum.com.br",
   "homolog-api.lectum.com.br",
@@ -44,26 +44,18 @@ const isPrivateOrReservedIpv4 = (address: string) => {
   );
 };
 
-const isPrivateOrReservedIpv6 = (address: string) => {
-  const normalized = address.toLowerCase();
-  if (
-    normalized === "::" ||
-    normalized === "::1" ||
-    normalized.startsWith("fc") ||
-    normalized.startsWith("fd") ||
-    normalized.startsWith("fe8") ||
-    normalized.startsWith("fe9") ||
-    normalized.startsWith("fea") ||
-    normalized.startsWith("feb")
-  ) {
-    return true;
-  }
+const globalIpv6 = new BlockList();
+globalIpv6.addSubnet("2000::", 3, "ipv6");
+const reservedIpv6 = new BlockList();
+reservedIpv6.addSubnet("2001::", 23, "ipv6");
+reservedIpv6.addSubnet("2001:db8::", 32, "ipv6");
+reservedIpv6.addSubnet("2002::", 16, "ipv6");
+reservedIpv6.addSubnet("3fff::", 20, "ipv6");
 
-  const mappedIpv4 = normalized.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/)?.[1];
-  return mappedIpv4 ? isPrivateOrReservedIpv4(mappedIpv4) : false;
-};
+const isPrivateOrReservedIpv6 = (address: string) =>
+  !globalIpv6.check(address, "ipv6") || reservedIpv6.check(address, "ipv6");
 
-const isSafeResolvedAddress = (address: string, family: number) => {
+export const isSafeResolvedVideoAddress = (address: string, family: number) => {
   if (family === 4) return !isPrivateOrReservedIpv4(address);
   if (family === 6) return !isPrivateOrReservedIpv6(address);
   return false;
@@ -81,20 +73,23 @@ const isPrivateOrReservedHostname = (hostname: string) => {
   }
 
   const family = isIP(normalized);
-  return family !== 0 && !isSafeResolvedAddress(normalized, family);
+  return family !== 0 && !isSafeResolvedVideoAddress(normalized, family);
 };
 
 const hasAllowedVideoPath = (url: URL) => {
   const pathName = decodeURIComponent(url.pathname).toLowerCase();
 
   if (CLOUDFLARE_STREAM_SIGNED_HLS.test(url.toString())) return true;
-  if (pathName.startsWith("/public/files/posts/media/")) return true;
+  // A public playlist can delegate reads to private URLs or local files. Only the
+  // trusted Stream manifest is allowed to reach FFmpeg's network demuxer.
+  if (pathName.endsWith(".m3u8")) return false;
+  if (hasLectumPublicPostMediaPath(url)) return true;
 
   return REMOTE_VIDEO_EXTENSIONS.some((extension) => pathName.endsWith(extension));
 };
 
 const hasLectumPublicPostMediaPath = (url: URL) =>
-  decodeURIComponent(url.pathname).toLowerCase().startsWith("/public/files/posts/media/");
+  /^\/public\/files\/posts\/media\/[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/u.test(url.pathname);
 
 export const isRemoteVideoHlsSource = (value: string) => {
   try {
@@ -107,6 +102,7 @@ export const isRemoteVideoHlsSource = (value: string) => {
 
 export const isFirstPartyLectumPublicPostMediaUrl = (url: URL) =>
   url.protocol === "https:" &&
+  !url.port &&
   FIRST_PARTY_LECTUM_PUBLIC_MEDIA_HOSTNAMES.has(url.hostname.toLowerCase()) &&
   !url.username &&
   !url.password &&
@@ -131,11 +127,15 @@ export const parseRemoteVideoSourceUrl = (value: string) => {
     const url = new URL(raw);
     if (
       url.protocol !== "https:" ||
+      url.port ||
       url.username ||
       url.password ||
       url.search ||
       url.hash ||
       !url.hostname ||
+      isPrivateOrReservedHostname(url.hostname) ||
+      /%(?:2f|5c|2e|25)/iu.test(url.pathname) ||
+      hasControlCharacter(decodeURIComponent(url.pathname)) ||
       !hasAllowedVideoPath(url)
     ) {
       return null;
@@ -156,7 +156,7 @@ export const assertSafeRemoteVideoSourceUrl = async (value: string) => {
   const addresses = await lookup(url.hostname, { all: true, verbatim: true }).catch(() => []);
   if (
     addresses.length === 0 ||
-    addresses.some((address) => !isSafeResolvedAddress(address.address, address.family))
+    addresses.some((address) => !isSafeResolvedVideoAddress(address.address, address.family))
   ) {
     throw new Error("remote_video_source_invalid");
   }

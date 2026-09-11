@@ -5,6 +5,7 @@ import {
   VideoProcessingError,
 } from "../../domain/jobs/contracts.js";
 import { lectumLogoMarkDrawBoxes, roundedRectDrawBoxes } from "./drawbox-art.js";
+import { quoteDrawTextValue } from "./drawtext.js";
 import {
   type ManagedProcessDiagnosticCode,
   ManagedProcessError,
@@ -154,17 +155,6 @@ const wrapText = (value: string, maxLineLength: number, maxLines: number) => {
   return visible;
 };
 
-const escapeDrawText = (value: string) =>
-  value
-    .replace(/\\/gu, "\\\\")
-    .replace(/:/gu, "\\:")
-    .replace(/,/gu, "\\,")
-    .replace(/;/gu, "\\;")
-    .replace(/'/gu, "\\'")
-    .replace(/\[/gu, "\\[")
-    .replace(/\]/gu, "\\]")
-    .replace(/%/gu, "\\%");
-
 const drawText = ({
   color,
   fontFile,
@@ -183,8 +173,9 @@ const drawText = ({
   y: string | number;
 }) =>
   `drawtext=${[
-    `text='${escapeDrawText(text)}'`,
-    ...(fontFile ? [`fontfile='${escapeDrawText(fontFile)}'`] : []),
+    `text=${quoteDrawTextValue(text)}`,
+    ...(fontFile ? [`fontfile=${quoteDrawTextValue(fontFile)}`] : []),
+    "expansion=none",
     `x=${x}`,
     `y=${y}`,
     `fontsize=${fontSize}`,
@@ -427,7 +418,9 @@ export const buildSocialShareVideoArguments = (
 
     return [
       "-protocol_whitelist",
-      "file,http,https,tcp,tls,crypto",
+      "https,tcp,tls,crypto",
+      "-tls_verify",
+      "1",
       "-reconnect",
       "1",
       "-reconnect_streamed",

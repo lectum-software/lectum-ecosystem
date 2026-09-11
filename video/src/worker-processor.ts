@@ -16,7 +16,7 @@ import {
   validateOutputProbe,
   validatePublishedOutput,
 } from "./infra/ffmpeg/probe.js";
-import { managedProcessDiagnosticCode } from "./infra/ffmpeg/process.js";
+import { ManagedProcessError, managedProcessDiagnosticCode } from "./infra/ffmpeg/process.js";
 import { downloadRemoteVideoSourceFile } from "./infra/ffmpeg/remote-source.js";
 import { renderSocialShareVideo } from "./infra/ffmpeg/social-share.js";
 import {
@@ -27,6 +27,7 @@ import {
   clearVideoJobCancellation,
   isVideoJobCancellationRequested,
 } from "./infra/queue/cancellation.js";
+import { createVideoProgressWriter } from "./infra/queue/progress.js";
 import { videoStoragePaths } from "./infra/storage/paths.js";
 import { releaseVideoStorageReservation } from "./infra/storage/reservations.js";
 import { readSupportedVideoSignature } from "./infra/storage/signature.js";
@@ -112,20 +113,16 @@ const processCompressionJob = async (input: {
   await input.job.updateProgress(3);
   await prepareVideoOutput(input.config, input.jobId);
 
-  let progressPromise = Promise.resolve();
+  const progress = createVideoProgressWriter(input.job);
   await compressVideo({
     config: input.config,
     durationSeconds: source.durationSeconds,
     inputPath: input.paths.inputPath,
-    onProgress: (percentage) => {
-      progressPromise = progressPromise.then(() =>
-        input.job.updateProgress(Math.max(3, percentage)),
-      );
-    },
+    onProgress: progress.write,
     outputPath: input.paths.temporaryOutputPath,
     signal: input.signal,
   });
-  await progressPromise;
+  await progress.flush();
 
   return validateOutputProbe({
     config: input.config,
@@ -206,23 +203,19 @@ const processSocialShareJob = async (input: {
   await input.job.updateProgress(3);
   await prepareVideoOutput(input.config, input.jobId);
 
-  let progressPromise = Promise.resolve();
+  const progress = createVideoProgressWriter(input.job);
   await renderSocialShareVideo({
     config: input.config,
     durationSeconds: source.durationSeconds,
     metadata: input.job.data.metadata,
-    onProgress: (percentage) => {
-      progressPromise = progressPromise.then(() =>
-        input.job.updateProgress(Math.max(3, percentage)),
-      );
-    },
+    onProgress: progress.write,
     outputPath: input.paths.temporaryOutputPath,
     signal: input.signal,
     source: sourceIsHls
       ? { kind: "remote", requestOrigin: sourceOrigin, sourceUrl }
       : { inputPath: input.paths.inputPath, kind: "file" },
   });
-  await progressPromise;
+  await progress.flush();
 
   return validateOutputProbe({
     config: input.config,
@@ -240,6 +233,12 @@ export const createVideoJobProcessor =
     let cancellationCheckRunning = false;
     let cancellationInterval: NodeJS.Timeout | null = null;
     let reachedTerminalState = false;
+    let outputPublished = false;
+    const attemptTimeout = setTimeout(
+      () => controller.abort(new ManagedProcessError("timeout")),
+      dependencies.config.jobTimeoutMs,
+    );
+    attemptTimeout.unref();
 
     const requestCancellation = async () => {
       if (cancellationCheckRunning || controller.signal.aborted) return;
@@ -272,8 +271,9 @@ export const createVideoJobProcessor =
           existingOutput.path,
           controller.signal,
         );
-        await removeVideoInput(dependencies.config, jobId);
+        outputPublished = true;
         await job.updateProgress(100);
+        await removeVideoInput(dependencies.config, jobId);
         reachedTerminalState = true;
         return result;
       }
@@ -295,9 +295,12 @@ export const createVideoJobProcessor =
               signal: controller.signal,
             });
 
+      await requestCancellation();
+      if (controller.signal.aborted) throw new VideoProcessingError("canceled");
       await publishVideoOutput(dependencies.config, jobId);
-      await removeVideoInput(dependencies.config, jobId);
+      outputPublished = true;
       await job.updateProgress(100);
+      await removeVideoInput(dependencies.config, jobId);
       reachedTerminalState = true;
 
       return {
@@ -305,7 +308,14 @@ export const createVideoJobProcessor =
         outputSizeBytes: validated.outputSizeBytes,
       };
     } catch (error) {
-      const processingError = normalizeProcessingError(error);
+      const processingError =
+        controller.signal.reason instanceof ManagedProcessError &&
+        controller.signal.reason.kind === "timeout"
+          ? new VideoProcessingError("processing_failed", {
+              cause: controller.signal.reason,
+              retryable: true,
+            })
+          : normalizeProcessingError(error);
       const shouldRetry = processingError.retryable && attemptsRemaining(job);
 
       logWarning("video_job_processing_diagnostic", {
@@ -319,7 +329,7 @@ export const createVideoJobProcessor =
         will_retry: shouldRetry,
       });
 
-      await removeVideoOutput(dependencies.config, jobId);
+      if (!outputPublished || !shouldRetry) await removeVideoOutput(dependencies.config, jobId);
       if (!shouldRetry) {
         reachedTerminalState = true;
         await removeVideoInput(dependencies.config, jobId);
@@ -334,6 +344,7 @@ export const createVideoJobProcessor =
       }
       throw new Error("processing_failed");
     } finally {
+      clearTimeout(attemptTimeout);
       if (cancellationInterval) clearInterval(cancellationInterval);
       if (reachedTerminalState) {
         await Promise.allSettled([

@@ -448,3 +448,113 @@ proibida pela guarda do repositório mesmo em teste. Nenhum deploy ocorreu nessa
 O teste foi refeito com o loader nativo Node, limitado aos controllers e utilitário local reais;
 não foi criada exceção nem desabilitada a guarda. A correção visual permanece a mesma. Novo commit
 recebe novo bump conforme a política; publicação efetiva esperada em 0.1.326, ainda a verificar.
+
+### Publicação 0.1.326 confirmada e continuidade funcional
+
+- Push `ed855e03` concluído com as guardas, sem bypass. Smoke de 11/09 11:25:16 UTC:
+  **16/16**, backend/frontend/Admin em 0.1.326; `/health` e `/ready` aprovados.
+  Arquivo sanitizado: `/tmp/lectum-audit-326-smoke-homolog.json`.
+- Controller corrigido repetido no Admin publicado: nenhuma duplicação de ID; erro e foco
+  exclusivamente no modal vazio, sem invalidar a descrição da página. Screenshot 50.
+- Profissional seguiu a comunidade de auditoria, criou/editou post e comentário, salvou ambos,
+  criou uma filha e confirmou/cancelou exclusão. Somente a filha própria foi removida.
+- Contador geral voltou 2 → 1, porém o comentário manteve “Ver mais 1” após reload; salvo mostrou
+  “Seguir” apesar de comunidade seguida. Achados reproduzidos, não falha presumida de cache.
+- Paciente acessou o post profissional público, fez login com retorno e salvamento pendente,
+  alternou votos e removeu seu salvo, mantendo o da conta profissional.
+- Paciente enviou denúncia explicitamente de auditoria sobre o post da outra conta de teste.
+  No Admin geral, campos vazios bloquearam a resolução; justificativa e confirmação corretas
+  encerraram como Improcedente. Filtro confirmou persistência; ninguém foi penalizado.
+- Aba de denúncias da comunidade falhou na consulta e mostrou zeros indevidos (screenshot 49).
+  Patch compatível no request/validator e separação de erro/vazio em integração, não publicado ainda.
+- Paciente criou/editou publicação anônima. Comunidade e anonimato permaneceram bloqueados na edição;
+  após logout não houve nome nem link de perfil ou ações de proprietário (screenshot 51).
+  Denunciar sem sessão só pediu login após preenchimento; não foi certificado como boa UX.
+
+### Backend/video em integração local — não confundir versão da imagem com publicação
+
+Imagem local integral `lectum-backend:audit-0.1.326`,
+`sha256:f818a88f80bd09bc49be4dcd2448b016f9d76d72316ec0237e5fa8355296fc72`, contém
+patches de comunidades/billing ainda não publicados. A .326 pública contém a correção do Admin.
+
+- Billing: 13/13 HTTP/Prisma/PostgreSQL reais em rede isolada; baseline .324 reproduziu nove falhas.
+  Sem provider de pagamento, cobrança ou credencial real. Evidência em
+  `/tmp/lectum-task178-billing-history-6g7qv1m_/report.md`.
+- Concorrência/moderação: 16/16 serviços/repositórios/Prisma/PostgreSQL reais, repetidos em dois
+  bancos descartáveis. Baseline .324 reproduziu exatamente dez falhas; nenhuma montagem de runtime
+  corrigido sobre a imagem. **Não é teste HTTP**, nem Passport/JWT ou provider.
+  `/tmp/lectum-community178-artifact.SiRKJ1/RELATORIO.md`.
+- Video: parent repetiu check (43), build, 13 casos HTTP/Redis/BullMQ/filesystem/FFmpeg e nove casos
+  FFmpeg/TLS/rede. Sem mocks como prova de integração; imagem final/publicação ainda pendentes.
+- Helper de origem da resposta: regressão com propriedades herdadas reproduzida (5/6), corrigida
+  com checagem de propriedade própria (6/6). Mudança posterior à imagem .326 de laboratório.
+- Denúncias: imagem .326 anterior ao patch reproduziu duas falhas em dez casos HTTP/PG; sete testes
+  unitários do componente/QueryCache passaram após o patch. Teste unitário não substitui imagem final
+  nem Browser publicado. Novo validator ainda aguarda build integral para prova verde.
+- Leituras adicionais com proveniência e hash em `AUDITORIA-2026-09-11-LEITURAS.tsv`; base tem
+  480 leituras iniciais, 11 parciais e 2.630 pendentes. Isso não certifica os fluxos inteiros.
+- Nenhuma nova env, package, schema ou migration. Sem reset, backfill ou correção em massa de dados.
+  Referências antigas de renderização e partes de upload em curso serão recusadas após hardening;
+  reiniciar somente essas operações. Planos incompatíveis são recusados, nunca recriados/destruídos.
+  Checkout incerto e reconciliação canônica de webhooks seguem pendências financeiras explícitas.
+
+### Artefatos integrados locais 0.1.327 e continuidade funcional
+
+- Backend Linux amd64 integral: `lectum-backend:audit-0.1.327`,
+  `sha256:10a216abe21eb5bf668e94940e65073cb1c25d48aa9592ae39b07df6e03c8d66`.
+  Histórico financeiro repetido: 13/13 HTTP/Prisma/PostgreSQL reais; denúncias: 10/10 HTTP/PG;
+  estados de posts/salvos/respostas: 48/48 serviços/repositórios/PG. Sem mounts de runtime.
+- A consulta de seguimento foi medida: um SELECT de vínculos para doze itens, sem N+1.
+  Respostas removidas não entram na contagem de filhas. Baseline anterior reproduziu os defeitos.
+- Video Linux amd64 integral: `lectum-video:audit-0.1.327`,
+  `sha256:c9e16a6522e7a4f9faa26c0e2352acd2d4941bd06587f39f9111564642a9318a`.
+  Oito provas reais da imagem: API/worker prontos, rotas operacionais/versão, recusa sem token,
+  multipart → Redis/BullMQ → FFmpeg, saída Range 206, limpeza do job próprio e shutdown SIGTERM.
+  Volumes/rede/containers descartáveis removidos; não certifica Cloudflare/R2 publicado.
+- Check agregado inicial: 578 testes (134 frontend, 355 backend, 46 Admin, 43 video), além de
+  seis testes de versão. Build final do Admin e Browser local ainda a registrar antes do push.
+- WhatsApp autorizado salvo na conta profissional pelo fluxo real, sem solicitação/envio de OTP.
+  Perfil incompleto recusado em PT-BR, com foco no CPF e sem overflow em 390px. Visibilidade
+  desmarcada apenas no formulário não salvo; não declarar perfil persistido/publicado.
+  Dados profissionais autorizados solicitados para entrada direta, sem inventar CPF/CRP.
+- Profissional respondeu ao post anônimo da conta paciente. Paciente tentou excluir e foi
+  impedido pela preservação de contribuição profissional (screenshot 52); silenciar e reativar
+  notificações funcionaram. Nenhuma publicação/resposta foi excluída nesse teste.
+- Notificação real da resposta chegou ao paciente: abrir levou ao post correto e marcou como
+  lida, retirando o indicador. Preferências carregaram; push bloqueado pelo navegador foi
+  explicado. Permissão de push e preferências não foram alteradas nessa verificação.
+
+Logs locais: `/tmp/lectum-327-billing-pg.log`,
+`/tmp/lectum-task178-community-reports/corrected-0.1.327.txt`,
+`/tmp/lectum-task178-post-state/fixed.log`, `/tmp/lectum-327-video-image-smoke.log`.
+Essas provas não autorizam declarar .327 publicada nem auditoria completa.
+
+### Browser local de denúncias 0.1.327
+
+- Login/cookie/hidrate e módulos Admin reais da imagem final, com PostgreSQL descartável.
+  Não é o boot integral do backend: o router global exige configuração externa Google no
+  carregamento. Nenhum provider foi inventado para validar essa UI; montados apenas módulos
+  reais de Admin, com os guards de autenticação, origem, dispositivo e CORS preservados.
+- Docker manteve rede interna. Um relay TCP limitado a `127.0.0.1:4501` encaminhou bytes ao
+  container próprio, sem substituir respostas, inspecionar cookies ou liberar egress do container.
+- A consulta inicial trouxe uma denúncia persistida; filtros longos de post/resposta de psicólogo
+  não verificado trouxeram vazio legítimo, sem erro. Improcedentes recuperou o registro existente.
+- Período incompleto foi recusado em português; selecionar Hoje carregou ambas as datas válidas.
+  Browser: 390×844 sem overflow horizontal (53) e 1280×720 com filtros/resultado (54).
+- Interrompido apenas o relay local: a consulta falhou de verdade e mostrou mensagem de conexão
+  com Tentar novamente, sem cartões zerados, resultado vazio ou paginação (55). Após restaurar
+  o relay, o botão recuperou o resultado. Nenhuma rota simulada/interceptação de resposta.
+- Sessão local encerrada; aba retornada à homologação antes de parar dev/relay. Removidos somente
+  containers, rede, configs e credencial descartáveis de propriedade desse laboratório.
+- Catálogos no Admin publicado: abordagem/idioma vazios recusados, mínimo de dois caracteres
+  aplicado, foco no nome e Escape restaurando foco no botão de abertura. Nenhum catálogo salvo.
+  Placeholder “Nome do abordagem” é pendência de copy; não classificar como falha de validação.
+- Concorrência/moderação também repetida na imagem .327 final: **16/16** em PG real isolado;
+  evidência `/tmp/lectum-community178-artifact327.5htPyo/RELATORIO.md`.
+- Leitura adicional de notificações: 109 integrais com proveniência. Encontrado risco estático
+  de opt-outs sobrescritos por defaults após falha do GET; reprodução/correção em preparação.
+  Base acumulada: 599 leituras iniciais, 11 parciais, 2.511 ainda pendentes. Não confundir
+  notificações entregues pela jornada UI com certificação de todos os canais/digests/concorrência.
+- Build final Admin .327 aprovado com diretório gerado limpo e dev parado: source maps de
+  produção ausentes, 30 manifests de route groups sincronizados. Check agregado repetido
+  após todos os scripts novos: 578/578, sem falha; cinco manifests sincronizados em .327.

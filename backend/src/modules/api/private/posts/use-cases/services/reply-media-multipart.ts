@@ -28,6 +28,7 @@ import {
   notFound,
   publicFileUrl,
 } from "./post-support";
+import { isReplyMediaPartSizeValid } from "./reply-media-part-size";
 
 export const POST_REPLY_MEDIA_MULTIPART_CHUNK_BYTES = 5 * 1024 * 1024;
 const POST_REPLY_MEDIA_UPLOAD_LIMIT_MB = UPLOAD_LIMITS.postReply.multipartTotalMb;
@@ -74,6 +75,7 @@ type MultipartPartPayload = {
   key: string;
   kind: "post_reply_media_upload_part";
   partNumber: number;
+  size: number;
   postId: string;
   uploadId: string;
   userId: string;
@@ -124,6 +126,9 @@ const isPartPayload = (payload: unknown): payload is MultipartPartPayload =>
   typeof payload.uploadId === "string" &&
   typeof payload.key === "string" &&
   typeof payload.partNumber === "number" &&
+  typeof payload.size === "number" &&
+  Number.isSafeInteger(payload.size) &&
+  payload.size > 0 &&
   typeof payload.etag === "string";
 
 const getMultipartIdKey = () => createHash("sha256").update(getJwtSecret()).digest();
@@ -254,6 +259,10 @@ const verifyCompleteParts = (
 
   if (completedParts.length !== expectedParts) return null;
   if (completedParts.some((part) => !validatePartForSession(part, session))) return null;
+  if (
+    completedParts.some((part) => !isReplyMediaPartSizeValid(session, part.partNumber, part.size))
+  )
+    return null;
 
   const uniquePartNumbers = new Set(completedParts.map((part) => part.partNumber));
   if (uniquePartNumbers.size !== expectedParts) return null;
@@ -340,7 +349,10 @@ export const uploadReplyMediaMultipartPart = async (
     return invalidReplyMedia();
   }
 
-  if (chunk.length > POST_REPLY_MEDIA_MULTIPART_CHUNK_LIMIT_MB * 1024 * 1024) {
+  if (
+    chunk.length > POST_REPLY_MEDIA_MULTIPART_CHUNK_LIMIT_MB * 1024 * 1024 ||
+    !isReplyMediaPartSizeValid(session, partNumber, chunk.length)
+  ) {
     return invalidReplyMedia();
   }
 
@@ -367,6 +379,7 @@ export const uploadReplyMediaMultipartPart = async (
       key: session.key,
       kind: "post_reply_media_upload_part",
       partNumber,
+      size: chunk.length,
       postId: session.postId,
       uploadId: session.uploadId,
       userId: session.userId,

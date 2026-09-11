@@ -1,8 +1,11 @@
 import prisma from "@/infra/database/prisma";
 import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
 import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
+import { moderatePatientText } from "@/utils/content-moderation";
+import { recordContentModerationEvent } from "@/utils/content-moderation-events";
 import type { IPostUpdateDTO, IPostUpdateReplyDTO } from "../../DTOs/IPostDTO";
 import { PostRepository } from "../../repositories/PostRepository";
+import { findPublishedPost } from "../../repositories/support/reply-tree";
 
 import {
   ensureCommunityActor,
@@ -12,8 +15,11 @@ import {
   isPublicPostMediaUrl,
   MAX_POST_CAROUSEL_IMAGES,
   mediaNotAllowed,
+  moderationError,
   normalizePostMediaItems,
   normalizePostMediaType,
+  notFound,
+  postActionForbidden,
   postMediaNotAllowed,
   resolveMutationResult,
   resolveOwnerPostMutationResult,
@@ -26,6 +32,29 @@ export const updatePost = async (data: IPostUpdateDTO) => {
   const repository = new PostRepository();
   const title = data.b.title.trim();
   const content = data.b.content.trim();
+  const post = await findPublishedPost(data.p.id);
+  if (!post) return notFound();
+  if (post.author_id !== data.auth.id) return postActionForbidden();
+
+  const moderation = moderatePatientText({
+    authorRole: post.author.role,
+    content,
+    targetType: "post",
+    title,
+  });
+  if (moderation.decision === "block" || moderation.decision === "safety_hold") {
+    // ADR-0145: a edição não pode mudar o status ou apagar a versão publicada.
+    // Auditar somente a tentativa, sem transformar o post anterior em alvo bloqueado.
+    await recordContentModerationEvent({
+      authorId: post.author_id,
+      communityId: post.community_id,
+      content,
+      result: moderation,
+      targetType: "submitted_post",
+      title,
+    });
+    return moderationError(moderation);
+  }
   const mediaItemsChangeRequested = hasOwnBodyKey(data.b, "mediaItems");
   const mediaChangeRequested =
     hasOwnBodyKey(data.b, "mediaUrl") ||
@@ -136,6 +165,18 @@ export const updatePost = async (data: IPostUpdateDTO) => {
     ...data,
     b: body,
   });
+
+  if (res.kind === "ok" && moderation.decision === "allow_sensitive") {
+    await recordContentModerationEvent({
+      authorId: post.author_id,
+      communityId: post.community_id,
+      content,
+      result: moderation,
+      targetId: post.id,
+      targetType: "community_post",
+      title,
+    });
+  }
 
   return resolveOwnerPostMutationResult(res, 200, "post_updated");
 };

@@ -1,6 +1,6 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { MercadoPagoConfig, PreApproval, PreApprovalPlan } from "mercadopago";
 import type { PaymentGatewayErrorDetails } from "./error-log";
+import { buildCardUpdateIdempotencyKey } from "./idempotency";
 import type {
   BillingSubscriptionStatus,
   GatewayCancelSubscriptionInput,
@@ -16,6 +16,7 @@ import type {
   PaymentGateway,
   VerifyWebhookSignatureInput,
 } from "./PaymentGateway";
+import { verifyMercadoPagoWebhookSignature } from "./webhook-signature";
 
 type RecordBody = Record<string, unknown>;
 
@@ -44,26 +45,6 @@ const MERCADO_PAGO_CURRENT_USER_URL = "https://api.mercadopago.com/users/me";
 const MERCADO_PAGO_REQUEST_TIMEOUT_MS = 10_000;
 
 type MercadoPagoSafeErrorDetails = PaymentGatewayErrorDetails;
-
-const firstHeaderValue = (value?: string | string[]) => {
-  if (Array.isArray(value)) return value[0];
-  return value;
-};
-
-const parseSignatureHeader = (signature?: string | string[]) => {
-  const header = firstHeaderValue(signature);
-  if (!header) return null;
-
-  return header.split(/[;,]/).reduce<Record<string, string>>((acc, item) => {
-    const [rawKey, ...rawValue] = item.trim().split("=");
-    const key = rawKey?.trim();
-    const value = rawValue.join("=").trim();
-
-    if (key && value) acc[key] = value;
-
-    return acc;
-  }, {});
-};
 
 const normalizeStatus = (status?: string | null): BillingSubscriptionStatus => {
   switch (status) {
@@ -385,7 +366,7 @@ export class MercadoPagoAdapter implements PaymentGateway {
           card_token_id: cardToken,
         },
         requestOptions: {
-          idempotencyKey: `lectum-preapproval-card-${gatewaySubscriptionId}`,
+          idempotencyKey: buildCardUpdateIdempotencyKey({ gatewaySubscriptionId, cardToken }),
         },
       }),
     );
@@ -459,30 +440,8 @@ export class MercadoPagoAdapter implements PaymentGateway {
     };
   }
 
-  verifyWebhookSignature({ signature, requestId, dataId }: VerifyWebhookSignatureInput): boolean {
-    if (!this.webhookSecret || !dataId) return false;
-
-    const parsed = parseSignatureHeader(signature);
-    const ts = parsed?.ts;
-    const signatureV1 = parsed?.v1;
-    const requestIdValue = firstHeaderValue(requestId);
-
-    if (!ts || !signatureV1 || !requestIdValue) return false;
-
-    const manifest = `id:${dataId};request-id:${requestIdValue};ts:${ts};`;
-    const expected = createHmac("sha256", this.webhookSecret).update(manifest).digest("hex");
-
-    try {
-      const expectedBuffer = Buffer.from(expected, "hex");
-      const signatureBuffer = Buffer.from(signatureV1, "hex");
-
-      return (
-        expectedBuffer.length === signatureBuffer.length &&
-        timingSafeEqual(expectedBuffer, signatureBuffer)
-      );
-    } catch {
-      return false;
-    }
+  verifyWebhookSignature(input: VerifyWebhookSignatureInput): boolean {
+    return verifyMercadoPagoWebhookSignature({ ...input, secret: this.webhookSecret });
   }
 
   parseWebhookEvent(body: unknown): GatewayWebhookEvent | null {

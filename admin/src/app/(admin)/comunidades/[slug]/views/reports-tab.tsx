@@ -14,7 +14,6 @@ import {
   type CommunityReportResolveState,
   communityReportStatusFallback,
   communityReportTypeFallback,
-  emptyCommunityReportCards,
 } from "../components/report-cards";
 import {
   cardClass,
@@ -51,10 +50,11 @@ export const ReportsTab = ({ slug }: { slug: string }) => {
     [appliedRange, page, status, type],
   );
   const result = useAdminCommunityReports(slug, queryInput);
-  const reportCards = result.data?.cards ?? emptyCommunityReportCards;
-  const reportItems = result.data?.data ?? [];
-  const typeOptions = result.data?.filters.types ?? communityReportTypeFallback;
-  const statusOptions = result.data?.filters.statuses ?? communityReportStatusFallback;
+  const reportsData = result.isSuccess ? result.data : undefined;
+  const reportCards = reportsData?.cards ?? [];
+  const reportItems = reportsData?.data ?? [];
+  const typeOptions = reportsData?.filters.types ?? communityReportTypeFallback;
+  const statusOptions = reportsData?.filters.statuses ?? communityReportStatusFallback;
 
   const handlePeriodChange = (value: ReportPeriodPreset) => {
     const nextRange = getReportRangeForPeriod(value);
@@ -120,7 +120,8 @@ export const ReportsTab = ({ slug }: { slug: string }) => {
           >
             {typeOptions.map((option) => (
               <option key={option.id} value={option.id}>
-                {option.label} ({numberFormatter.format(option.count)})
+                {option.label}
+                {reportsData ? ` (${numberFormatter.format(option.count)})` : ""}
               </option>
             ))}
           </CommunityReportFilterSelect>
@@ -134,7 +135,8 @@ export const ReportsTab = ({ slug }: { slug: string }) => {
           >
             {statusOptions.map((option) => (
               <option key={option.id} value={option.id}>
-                {option.label} ({numberFormatter.format(option.count)})
+                {option.label}
+                {reportsData ? ` (${numberFormatter.format(option.count)})` : ""}
               </option>
             ))}
           </CommunityReportFilterSelect>
@@ -187,7 +189,7 @@ export const ReportsTab = ({ slug }: { slug: string }) => {
           onRetry={() => void result.refetch()}
         />
 
-        {reportItems.length === 0 && !result.isLoading ? (
+        {reportsData && reportItems.length === 0 ? (
           <div className={cn(cardClass, "p-6 text-sm font-bold text-muted")}>
             Nenhuma denúncia encontrada para os filtros atuais.
           </div>
@@ -206,11 +208,11 @@ export const ReportsTab = ({ slug }: { slug: string }) => {
           </div>
         ) : null}
 
-        {result.data ? (
+        {reportsData ? (
           <div className={cn(cardClass, "p-4")}>
             <PaginationControls
-              page={result.data.page}
-              pages={result.data.pages}
+              page={reportsData.page}
+              pages={reportsData.pages}
               setPage={setPage}
             />
           </div>

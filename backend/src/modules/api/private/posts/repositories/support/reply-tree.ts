@@ -1,3 +1,6 @@
+export { isPublicPostMediaUrl as isPublicReplyMediaUrl } from "./post-media-url";
+
+import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
 
@@ -232,8 +235,11 @@ export const sortRepliesForDisplay = async (communityId: string, items: ReplyBas
   return professionalReply ? [professionalReply, ...remainingReplies] : remainingReplies;
 };
 
-export const findPublishedPost = (id: string) => {
-  return prisma.community_post.findFirst({
+export const findPublishedPost = (
+  id: string,
+  client: Pick<Prisma.TransactionClient, "community_post"> = prisma,
+) => {
+  return client.community_post.findFirst({
     where: {
       id,
       deleted: false,
@@ -324,14 +330,4 @@ export const normalizeReplyMediaType = (value?: string | null): "image" | "video
   if (value === "image" || value === "video") return value;
 
   return null;
-};
-
-export const isPublicReplyMediaUrl = (value?: string | null) => {
-  if (!value) return false;
-
-  try {
-    return new URL(value).pathname.startsWith("/public/files/posts/media/");
-  } catch (_err) {
-    return value.startsWith("/public/files/posts/media/");
-  }
 };

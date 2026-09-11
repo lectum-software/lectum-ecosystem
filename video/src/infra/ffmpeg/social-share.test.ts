@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { parseVideoServiceConfig } from "../../config/env.js";
+import { quoteDrawTextValue } from "./drawtext.js";
 import {
   buildSocialShareFilter,
   buildSocialShareVideoArguments,
@@ -68,7 +69,8 @@ describe("FFmpeg social share command", () => {
     assert.match(command, /-c:v libx264/);
     assert.match(command, /-crf 20/);
     assert.match(command, /-preset veryfast/);
-    assert.match(command, /-protocol_whitelist file,http,https,tcp,tls,crypto/);
+    assert.match(command, /-protocol_whitelist https,tcp,tls,crypto/);
+    assert.equal(args.at(args.indexOf("-tls_verify") + 1), "1");
     assert.match(command, /-allowed_extensions ALL/);
     assert.equal(args.at(-1), "/safe/outputs/video.partial.mp4");
     assert.equal(args.includes("-nostdin"), true);
@@ -238,12 +240,15 @@ describe("FFmpeg social share command", () => {
       30,
     );
 
-    assert.match(filter, /Pergunta\\, resposta\\; Lectum/);
-    assert.match(filter, /Ana\\, Martins\\; Silva/);
-    assert.match(filter, /Psicóloga\\, supervisora\\; clínica/);
-    assert.match(filter, /Ansiedade\\, sono\\; rotina\\:/);
-    assert.equal(filter.includes("\\'teste\\'"), true);
-    assert.equal(filter.includes("\\[100\\%\\]"), true);
+    for (const text of [
+      "Pergunta, resposta; Lectum",
+      "Ana, Martins; Silva",
+      "Psicóloga, supervisora; clínica",
+    ]) {
+      assert.ok(filter.includes(`text=${quoteDrawTextValue(text)}`));
+    }
+    assert.ok(filter.includes(quoteDrawTextValue("'teste' [100%]")));
+    assert.ok(filter.includes("expansion=none"));
   });
 
   it("aceita somente origens HTTPS de video e rejeita hosts locais ou caminhos inesperados", () => {

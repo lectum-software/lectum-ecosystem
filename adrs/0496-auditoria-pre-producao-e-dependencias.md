@@ -443,3 +443,63 @@ O teste SSR carrega somente a lista explícita dos controllers e `utils.ts` pelo
 pelo TypeScript já instalado; o hook é removido no teardown. Sem execução por string de função,
 sem relaxar a guarda de código e sem substituir React/RHF por doubles. O pre-push recusou a primeira
 implementação de teste em 0.1.325; a publicação será retomada com correção na 0.1.326.
+
+### Limites de confiança de comunidades, billing e processamento de vídeo
+
+Decisão em integração na TASK-178: preservar os contratos do produto e fortalecer a admissão
+e autorização nas camadas já existentes, sem novo package, env ou schema.
+
+- Render social: o identificador interno do job não concede acesso. Emitir handle HMAC com
+  namespace, dono, post e resposta; verificar antes de consultar ou baixar o job. Continuar
+  verificando elegibilidade atual e comunidade ativa. Não devolver URL interna do serviço.
+- O handle permanece string opaca no campo existente. **Impacto de rollout:** jobs de render e
+  partes multipart emitidos no formato anterior precisam ser reiniciados; não aceitar tokens
+  legados sem vínculo/tamanho como fallback. Réplicas em versões distintas podem recusar uma
+  operação em andamento. Conteúdo persistido e arquivos existentes não são apagados.
+- Mídia R2 legada: reutilizar o resolvedor canônico de origem/chave, sem criar outra política
+  de URL. Isso valida admissão, não prova propriedade nem torna um bucket público privado.
+- Billing: centralizar leitura de referência/status/valor; texto livre e prefixos não provam
+  vínculo. Referências conflitantes falham fechadas. Estado do pagamento é diferente do estado
+  da assinatura/parcela. Eventos antigos continuam no banco; histórico/LTV podem diminuir pela
+  exclusão de associações falsas. A prova HTTP/PostgreSQL não substitui reconciliação no gateway.
+- Cartão: chave de idempotência por assinatura e token da operação, sem expor o token. Webhook:
+  digest completo e headers não ambíguos, preservando comparação constante. A guarda de plano
+  compara BRL, mês, estado e valor; não certifica trial, collector ou condições comerciais extras.
+- Vídeo: download HTTPS com resolução validada no socket, sem redirects; playlists remotas
+  limitadas ao formato assinado do Stream, protocolos remotos reduzidos e TLS verificado.
+  A exceção first-party continua estreita para mídia pública Lectum. O backend mantém a decisão
+  de acesso, sem converter todo conteúdo público em login obrigatório.
+- FFmpeg: texto passa pelas duas gramáticas de escape, sem expansão. Armazenamento verifica
+  diretórios estruturais e reservas; output publicado válido sobrevive à falha transitória de
+  progresso. Prazo cobre a tentativa inteira e retries continuam finitos.
+
+O formato de URL de manifesto com token substituindo UID é documentado pelo
+[Cloudflare Stream](https://developers.cloudflare.com/stream/viewing-videos/securing-your-stream/).
+A configuração de protocolos/TLS segue o [FFmpeg](https://ffmpeg.org/ffmpeg-protocols.html).
+Nenhuma credencial ou exemplo externo dessas páginas foi executado. Testes reais locais usam
+recursos descartáveis; a imagem WIP de laboratório .326 não equivale ao commit .326 publicado.
+
+Pendências financeiras bloqueiam recomendação de produção: intenção durável de checkout para
+resultado incerto/concorrência; inbox e reconciliação canônica de pagamento com validação de
+dono, ambiente, moeda e valor. Não improvisar cancelamento, backfill ou nova migration sem
+especificar transições e obter evidência de provider em conta autorizada. Rollback de código
+reintroduz riscos corrigidos, não exige reset nem desfaz conteúdo publicado.
+
+### Concorrência, edição e consultas administrativas
+
+- Criação/exclusão de replies revalida alvo, pai, subárvore e proteção de contribuições profissionais
+  dentro de cada tentativa serializável. A contagem é calculada no snapshot transacional; retries
+  não reutilizam IDs/contadores anteriores. Não há reparação em massa de registros legados.
+- Edição de post paciente passa pela mesma classificação textual da criação. Conforme ADR-0145,
+  uma tentativa bloqueada/retida é registrada sem substituir ou bloquear o conteúdo já publicado;
+  edição sensível permitida registra seu evento. Autorização precede moderação.
+- Consulta de denúncias omite datas vazias no Admin e as tolera no backend para clientes anteriores;
+  o limite do tipo comporta os identificadores oferecidos pelo endpoint. Não ampliar silenciosamente
+  a janela histórica padrão. Tela só exibe métricas/resultado vazio quando a consulta tiver sucesso.
+- Testes de UI usam componentes/controllers/React Query reais para regressão de estado. Isso é
+  prova unitária, distinta da suíte HTTP/PG isolada e da validação no Browser local/publicado.
+- Mapeamento de origem pública usa propriedade própria: chaves herdadas não podem mudar o tipo
+  serializado da resposta. Não há mudança de payload de sucesso para valores suportados.
+- Filhas de replies contam somente registros ativos, assim como a árvore exibida. Mine/saved
+  reutilizam a busca em lote de memberships por usuário/comunidade, encaminhando `following`
+  como argumento opcional final ao mapper. Sem N+1, alteração de schema ou reordenação de flags.

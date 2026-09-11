@@ -17,6 +17,8 @@ describe("FFprobe remote video command", () => {
     assert.equal(args[headersIndex + 1]?.includes("Origin: https://homolog.lectum.com.br"), true);
     assert.equal(args[headersIndex + 1]?.includes("Referer: https://homolog.lectum.com.br/"), true);
     assert.equal(args.includes("-allowed_extensions"), true);
+    assert.equal(args.at(args.indexOf("-tls_verify") + 1), "1");
+    assert.equal(args.at(args.indexOf("-protocol_whitelist") + 1), "https,tcp,tls,crypto");
     assert.ok(headersIndex < args.indexOf(sourceUrl));
     assert.equal(args.at(-1), sourceUrl);
   });

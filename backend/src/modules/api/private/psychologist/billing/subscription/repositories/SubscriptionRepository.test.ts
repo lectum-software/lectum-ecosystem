@@ -1,22 +1,13 @@
 import { strict as assert } from "node:assert";
-import { before, describe, it } from "node:test";
+import { describe, it } from "node:test";
 import type { payment_event, professional_subscription } from "@/interfaces/objects";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 
-let buildPaymentHistoryItemsForSubscription: typeof import("./SubscriptionRepository").buildPaymentHistoryItemsForSubscription;
-let buildGatewaySummaryPaymentHistoryItem: typeof import("./SubscriptionRepository").buildGatewaySummaryPaymentHistoryItem;
-let mergeGatewaySummaryPaymentHistory: typeof import("./SubscriptionRepository").mergeGatewaySummaryPaymentHistory;
-
-before(async () => {
-  process.env.DATABASE_URL ??= "postgresql://lectum:lectum@localhost:5432/lectum_test";
-  process.env.JWT_SECRET_KEY ??= "lectum-test-secret-key-with-minimum-length";
-
-  ({
-    buildGatewaySummaryPaymentHistoryItem,
-    buildPaymentHistoryItemsForSubscription,
-    mergeGatewaySummaryPaymentHistory,
-  } = await import("./SubscriptionRepository"));
-});
+import {
+  buildGatewaySummaryPaymentHistoryItem,
+  buildPaymentHistoryItemsForSubscription,
+  mergeGatewaySummaryPaymentHistory,
+} from "@/modules/billing/payment-history";
 
 const subscription = {
   gateway: "mercadopago",

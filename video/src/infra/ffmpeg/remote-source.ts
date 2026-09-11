@@ -3,6 +3,7 @@ import { mkdir, open, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import type { VideoServiceConfig } from "../../config/env.js";
 import { VideoProcessingError } from "../../domain/jobs/contracts.js";
+import { fetchRemoteVideo } from "./remote-fetch.js";
 import { remoteVideoRequestHeaderEntries } from "./source-url.js";
 
 type RemoteVideoSourceFetcher = typeof fetch;
@@ -34,6 +35,7 @@ const isAllowedVideoContentType = (value: string | null) => {
 };
 
 const abortableFetch = async (input: {
+  cancellationSignal?: AbortSignal | undefined;
   fetcher: RemoteVideoSourceFetcher;
   requestOrigin?: string | null | undefined;
   signal?: AbortSignal | undefined;
@@ -48,7 +50,7 @@ const abortableFetch = async (input: {
 
     return await input.fetcher(input.sourceUrl, init);
   } catch (error) {
-    if (input.signal?.aborted || (error instanceof Error && error.name === "AbortError")) {
+    if (input.cancellationSignal?.aborted) {
       throw new VideoProcessingError("canceled", { cause: error });
     }
     throw new VideoProcessingError("processing_failed", { cause: error, retryable: true });
@@ -73,10 +75,13 @@ export const downloadRemoteVideoSourceFile = async (input: {
   signal?: AbortSignal | undefined;
   sourceUrl: string;
 }) => {
+  const deadline = AbortSignal.timeout(input.config.jobTimeoutMs);
+  const signal = input.signal ? AbortSignal.any([input.signal, deadline]) : deadline;
   const response = await abortableFetch({
-    fetcher: input.fetcher ?? fetch,
+    cancellationSignal: input.signal,
+    fetcher: input.fetcher ?? fetchRemoteVideo,
     requestOrigin: input.requestOrigin,
-    signal: input.signal,
+    signal,
     sourceUrl: input.sourceUrl,
   });
 
@@ -100,14 +105,18 @@ export const downloadRemoteVideoSourceFile = async (input: {
     throw new VideoProcessingError("invalid_video");
   }
 
-  await mkdir(path.dirname(input.outputPath), { mode: 0o700, recursive: true });
   const temporaryPath = `${input.outputPath}.download-${process.pid}-${Date.now()}`;
   const reader = response.body.getReader();
-  let file: FileHandle | null = await open(temporaryPath, "wx", 0o600);
+  let file: FileHandle | null = null;
+  let createdTemporaryFile = false;
   let writtenBytes = 0;
 
   try {
+    await mkdir(path.dirname(input.outputPath), { mode: 0o700, recursive: true });
+    file = await open(temporaryPath, "wx", 0o600);
+    createdTemporaryFile = true;
     while (true) {
+      signal.throwIfAborted();
       const { done, value } = await reader.read();
       if (done) break;
       writtenBytes += value.byteLength;
@@ -115,7 +124,8 @@ export const downloadRemoteVideoSourceFile = async (input: {
         await reader.cancel().catch(() => undefined);
         throw new VideoProcessingError("invalid_video");
       }
-      await file.write(Buffer.from(value));
+      // write() is allowed to write fewer bytes than requested.
+      await file.writeFile(value);
     }
 
     await file.sync();
@@ -126,14 +136,15 @@ export const downloadRemoteVideoSourceFile = async (input: {
       throw new VideoProcessingError("invalid_video");
     }
 
-    await rm(input.outputPath, { force: true });
+    signal.throwIfAborted();
     await rename(temporaryPath, input.outputPath);
   } catch (error) {
+    await reader.cancel().catch(() => undefined);
     await file?.close().catch(() => undefined);
-    await rm(temporaryPath, { force: true }).catch(() => undefined);
+    if (createdTemporaryFile) await rm(temporaryPath, { force: true }).catch(() => undefined);
 
     if (error instanceof VideoProcessingError) throw error;
-    if (input.signal?.aborted || (error instanceof Error && error.name === "AbortError")) {
+    if (input.signal?.aborted) {
       throw new VideoProcessingError("canceled", { cause: error });
     }
     throw new VideoProcessingError("processing_failed", { cause: error, retryable: true });

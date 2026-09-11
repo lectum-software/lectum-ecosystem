@@ -328,7 +328,7 @@ código, reintroduzindo o risco; não restaura links já invalidados.
 - [x] Regressão com React/RHF reais e dois formulários: 14 IDs únicos, associação e SSR estáveis.
 - [x] Componente real local validado em 390×844 e 1280×720: erro isolado, foco e Escape corretos.
 - [x] Admin check (39 testes) e build limpo aprovados; harness temporário removido.
-- [ ] Smoke publicado e repetição do modal em homologação após push.
+- [x] Smoke publicado .326: 16/16 às 11:25 UTC de 11/09; modal com IDs únicos, erro/foco exclusivos repetidos no Browser publicado.
 
 Nenhuma env, banco, contrato de API ou package alterado. IDs DOM não são nomes de campos; payloads
 permanecem iguais. Builder/Quick Copy foi tentado: resource recusou acesso por espaço diferente
@@ -340,3 +340,32 @@ Conta profissional de auditoria criada com aceite autorizado e confirmação rea
 plano grátis levou ao WhatsApp obrigatório. Número controlado foi solicitado, não inventado.
 Comunidade `auditoria-lectum-178` e uma regra criadas pelo Admin para testes isolados de conteúdo.
 Isso não certifica ainda publicação, moderação, pagamentos nem onboarding completo.
+
+## Continuação — integrações de comunidades, billing e vídeo
+
+Correções compatíveis em integração, ainda não publicadas nesta seção. Sem alteração de schema,
+migration, packages ou envs. Manter as quatro aplicações independentes.
+
+- [x] Histórico financeiro: 13 cenários HTTP/Prisma/PostgreSQL reais na imagem local integral .326.
+- [x] Comunidades: 16 cenários reais de concorrência/moderação em PostgreSQL, sem mounts de runtime;
+  controles .324 reproduziram dez falhas. Não confundir retorno de serviço com HTTP.
+- [x] Vídeo: check/build e 13 casos HTTP/Redis/fila/arquivos/FFmpeg, mais nove casos TLS/FFmpeg, repetidos.
+- [x] Denúncia real entre contas próprias e resolução Improcedente no Admin geral, com confirmação forte.
+- [x] Anonimato preservado após edição e logout; ações de edição/exclusão não disponíveis à outra conta.
+- [x] Artefatos integrais .327 de backend/video, check agregado 578 e build Admin limpo;
+  repetidos billing13, denúncias10, estado de posts48, concorrência16 e smoke da imagem video8.
+- [x] Browser local da aba de denúncias em 390×844/1280×720 com módulos Admin e PG reais;
+  filtros, vazio legítimo, erro real de rede e recuperação por retry conferidos.
+- [ ] Publicação das correções de backend/video/Admin.
+- [ ] Smoke, versões e repetição dos fluxos em homologação após esse push.
+
+Riscos de rollout: handles antigos de render e tokens antigos de partes de upload são recusados
+por segurança; reiniciar somente operações em andamento. Réplicas backend antigas ainda aceitam
+os interleavings defeituosos até concluir o rollout. Nenhum dado antigo será apagado/backfillado.
+Checkout com resultado incerto e reconciliação canônica de eventos continuam pendências P1,
+assim como os documentos legais aprovados. Não recomendar produção.
+
+Próximas verificações dentro da auditoria: preferências não podem reativar opt-outs após GET
+falho; documento estático e 109 leituras de notificações incorporados ao inventário, sem alegar
+reprodução visual ou envio de todos os canais. Dados profissionais reais autorizados ainda
+pendentes; WhatsApp foi salvo pelo fluxo real, mas perfil de auditoria não foi publicado.

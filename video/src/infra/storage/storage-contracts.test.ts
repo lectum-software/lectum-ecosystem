@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
@@ -7,7 +7,7 @@ import { parseVideoServiceConfig } from "../../config/env.js";
 import { assertPathInsideStorage, isVideoJobId, videoStoragePaths } from "./paths.js";
 import { parseSingleByteRange } from "./range.js";
 import { detectSupportedVideoSignature } from "./signature.js";
-import { ensureVideoStorage } from "./storage.js";
+import { cleanupExpiredVideoStorage, ensureVideoStorage, removeVideoOutput } from "./storage.js";
 
 const jobId = "a12345678901234567890123";
 
@@ -54,6 +54,56 @@ describe("video storage contracts", () => {
       await Promise.all([ensureVideoStorage(config), ensureVideoStorage(config)]);
     } finally {
       await rm(storageRoot, { force: true, recursive: true });
+    }
+  });
+
+  it("cleanup remove apenas diretórios de jobs conhecidos, nunca outros dados do volume", async () => {
+    const storageRoot = await mkdtemp(path.join(os.tmpdir(), "lectum-video-cleanup-"));
+    const config = parseVideoServiceConfig({
+      NODE_ENV: "test",
+      REDIS_URL: "redis://localhost:6379/0",
+      VIDEO_SERVICE_API_KEY: "x".repeat(32),
+      VIDEO_STORAGE_ROOT: storageRoot,
+    });
+    try {
+      await ensureVideoStorage(config);
+      const unrelated = path.join(storageRoot, "outputs", "keep-other-data");
+      const expired = path.join(storageRoot, "outputs", jobId);
+      await mkdir(unrelated);
+      await mkdir(expired);
+      await cleanupExpiredVideoStorage({
+        activeJobIds: new Set(),
+        config,
+        now: Date.now() + config.outputTtlSeconds * 1000 + 1000,
+      });
+      await access(unrelated);
+      await assert.rejects(access(expired));
+    } finally {
+      await rm(storageRoot, { force: true, recursive: true });
+    }
+  });
+
+  it("recusa diretório estrutural symlink sem apagar o destino externo", async () => {
+    const temporary = await mkdtemp(path.join(os.tmpdir(), "lectum-video-symlink-"));
+    const storageRoot = path.join(temporary, "storage");
+    const config = parseVideoServiceConfig({
+      NODE_ENV: "test",
+      REDIS_URL: "redis://localhost:6379/0",
+      VIDEO_SERVICE_API_KEY: "x".repeat(32),
+      VIDEO_STORAGE_ROOT: storageRoot,
+    });
+    try {
+      await ensureVideoStorage(config);
+      const outside = path.join(temporary, "outside");
+      await mkdir(path.join(outside, jobId), { recursive: true });
+      const sentinel = path.join(outside, jobId, "keep");
+      await writeFile(sentinel, "isolated audit sentinel");
+      await rm(path.join(storageRoot, "outputs"), { recursive: true });
+      await symlink(outside, path.join(storageRoot, "outputs"));
+      await assert.rejects(removeVideoOutput(config, jobId));
+      await access(sentinel);
+    } finally {
+      await rm(temporary, { force: true, recursive: true });
     }
   });
 });

@@ -11,6 +11,7 @@ import {
 import { logError, logInfo, logWarning } from "./http/logging.js";
 import { createRedisConnection, createVideoQueue } from "./infra/queue/client.js";
 import { activeVideoJobIds } from "./infra/queue/jobs.js";
+import { reservedVideoJobIds } from "./infra/storage/reservations.js";
 import { cleanupExpiredVideoStorage, ensureVideoStorage } from "./infra/storage/storage.js";
 import { createVideoJobProcessor } from "./worker-processor.js";
 
@@ -116,8 +117,14 @@ export const startVideoWorkerRuntime = async (
     if (cleanupRunning) return;
     cleanupRunning = true;
     try {
-      const active = await activeVideoJobIds(queue);
-      const removed = await cleanupExpiredVideoStorage({ activeJobIds: active, config });
+      const [active, reserved] = await Promise.all([
+        activeVideoJobIds(queue),
+        reservedVideoJobIds(controlConnection),
+      ]);
+      const removed = await cleanupExpiredVideoStorage({
+        activeJobIds: new Set([...active, ...reserved]),
+        config,
+      });
       if (removed.incoming + removed.outputs > 0) {
         logInfo("video_storage_cleanup_completed", {
           operation: "cleanup",
