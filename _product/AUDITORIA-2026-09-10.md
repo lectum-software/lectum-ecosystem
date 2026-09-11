@@ -24,6 +24,7 @@
 18. Falha ao validar uma sessão não é mais confundida com navegação de visitante.
 19. Erros padrão de validação em inglês são substituídos por orientação segura em português.
 20. Aviso de conexão Google não expõe mais configuração interna da integração.
+21. Novas senhas longas passam a considerar todos os caracteres, inclusive acentos e o final da senha.
 
 Correções 1–11 publicadas em `0.1.311` (`fa6a6dce`). **Smoke de 10/09, 22:50 UTC:**
 backend, frontend e Admin confirmados nessa versão; 16 verificações HTTP passaram, incluindo
@@ -178,3 +179,32 @@ cinco manifests sincronizados. Sem a rota temporária no artefato. Publicação/
 Revisão de identidade ainda pendente: confirmar comportamento de contas manuais não verificadas
 quando o mesmo e-mail entra por Google e imposição de confirmação/troca obrigatória no servidor.
 Leitura de código não equivale à exploração confirmada nem autoriza alterar vínculo de contas reais.
+
+## Continuação — senhas e leitura de permissões 0.1.315
+
+- 0.1.314: backend/frontend/Admin confirmados; 16/16 smokes aprovados em 11/09, 00:23 UTC.
+  Browser publicado confirmou a mensagem PT-BR na página de erro. Video privado não consultado.
+- Admin: formulário vazio de nova comunidade recusado com mensagem PT-BR e foco no nome;
+  saída sem criar comunidade. Captura 17, 375×812, conferida do arquivo salvo.
+- Reproduzido localmente: com bcrypt, duas senhas diferentes depois do byte 72 eram aceitas
+  como iguais. Agora novas senhas maiores usam Argon2id já instalado. Limite de 128 caracteres,
+  espaços e acentos preservados; nenhuma conta foi alterada para este teste.
+- Seis testes reais de hash/comparação passaram com configuração bcrypt, argon e parâmetros
+  publicados; antes, os casos de sufixo ASCII e UTF-8 falhavam. Não usa hash/provider simulado.
+- **Limitação importante:** hashes bcrypt antigos não permitem recuperar o trecho que foi
+  descartado. A correção protege novos cadastros/trocas de senha; avaliar redefinição controlada
+  das contas legadas antes da produção. Não há reset automático nem regravação em login.
+- Routers de comunidades/posts e guard Admin lidos; criação/edição/exclusão exigem sessão,
+  com verificação de dono nos repositórios examinados. Isso não conclui testes entre identidades.
+- Revisão de confirmação de e-mail: formato exato, janela temporal e obrigatoriedade nas demais
+  ações ainda em análise; nenhuma regra de acesso público foi modificada nesta correção.
+
+Sem migration, package ou env nova. Argon2 em ambiente publicado já usa 128 MiB por operação;
+observar memória/concorrência ao testar cadastros reais. Medição local não certifica capacidade
+do servidor. Build, check agregado e publicação de 0.1.315 serão registrados após execução.
+
+Validação local 0.1.315: 499 testes passaram (132 frontend, 300 backend, 35 Admin, 32 video),
+build backend e imagem Docker Linux amd64 aprovados. Os seis testes de hash também passaram no
+artefato final, não root, sem rede, somente leitura, limitado a 768 MiB/2 CPUs. Nenhum entrypoint,
+migration ou banco foi iniciado. Publicação/smoke pendentes. Sessão Admin solicitou novo login;
+usuário reautenticou e a lista de comunidades abriu. Paciente permaneceu conectado.

@@ -164,3 +164,35 @@ aprovados. Browser na build final confirmou `/auth/error?error=Invalid%20field` 
 sem API simulada; screenshots 14–16 evidenciam antes/depois. Separados os testes de mensagens em
 `frontend/src/api/errors.test.mjs` para não aumentar arquivo de testes legado além de 700 linhas.
 Teste isolado não herda PATH ou outra env do host e não exige variáveis novas na aplicação.
+
+## Complemento — senhas longas (0.1.315)
+
+O produto aceita 10–128 caracteres (ADR-0176), mas o modo padrão bcrypt descarta tudo depois de
+72 bytes UTF-8. A reprodução com bcrypt real aceitou outro sufixo tanto em ASCII como em texto
+acentuado. Não basta limitar por caracteres nem alterar a UI; o hash deve preservar o contrato.
+
+Decisão: manter a escolha existente até 72 bytes e usar o Argon2id já instalado quando o valor
+exceder esse limite, mesmo com configuração bcrypt/vazia. `CRYPTO_ALGORITHM=argon` continua
+selecionando Argon2 em todos os novos hashes. Não criar pré-hash caseiro, novos parâmetros,
+dependências ou migração. Todos os pontos de gravação de senha encontrados usam este wrapper;
+o uso direto de bcrypt para tokens de recuperação não faz parte desta alteração.
+
+O comparador atual e versões anteriores já identificam ambos os formatos pelo hash, permitindo
+rollout/rollback sem interromper contas antigas. Não regravar automaticamente na autenticação:
+um bcrypt antigo não comprova o sufixo digitado nem informa o comprimento original. Senhas legadas
+continuam com a limitação e exigem decisão de redefinição controlada antes de certificar segurança
+desse conjunto. Não ler/expor hashes de contas publicadas nem resetar usuários da auditoria.
+
+Mantidos os parâmetros Argon2 existentes, inclusive 128 MiB por operação em ambiente publicado;
+o custo adicional atinge senhas novas longas no modo bcrypt. Testes locais verificam correção,
+não capacidade/concorrência do servidor. Nenhuma env nova é necessária. Exemplo de env documenta
+o comportamento; API e frontend não mudam de contrato.
+
+Fontes primárias: [limite documentado do bcrypt](https://github.com/kelektiv/node.bcrypt.js/)
+e [orientação OWASP para armazenamento de senhas](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+Seis regressões com hashes reais passaram nos modos bcrypt/argon e com NODE_ENV=homolog.
+Smoke 0.1.314 confirmado 16/16 em 11/09, 00:23 UTC; nova publicação ainda pendente.
+
+Validação final: `pnpm check` aprovado, 499 testes; build backend e Docker Linux amd64 aprovados.
+Seis testes reais de hash passaram dentro da imagem final não root, rede bloqueada, filesystem
+somente leitura, 768 MiB e 2 CPUs. Sem boot/migration/banco. Bump único sincronizado 0.1.315.

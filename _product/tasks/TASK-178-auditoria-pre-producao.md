@@ -171,9 +171,25 @@ com código real após patch ainda pendente. Capturas mobile variam entre 375px 
 - [x] Erros padrão de validação em inglês filtrados na API/frontend, preservando mensagens PT-BR.
 - [x] Mensagem técnica sobre configuração OAuth removida do painel de conta.
 - [x] Check agregado 495 testes; builds backend/frontend; Browser local de erro em 1280px e 390px.
-- [ ] Smoke publicado de 0.1.314.
+- [x] Smoke publicado de 0.1.314: 16/16 em 11/09, 00:23 UTC; backend/frontend/Admin na mesma versão.
 
 Contrato público/privado preservado. Sem migrations, dependências ou variáveis novas, sem reset.
 O teste isola Express/Passport/JWT/Prisma reais e catálogos reais; não simula um banco disponível.
 O callback interno recebeu catch por revisão de fluxo; falta exercitar queda entre duas consultas
 com sessão persistida real. Não declarar toda a autenticação ou o pentest integral certificados.
+
+## Continuação — proteção de novas senhas longas 0.1.315
+
+- [x] Reproduzida comparação incorreta de sufixos acima de 72 bytes, inclusive UTF-8.
+- [x] Reutilizado Argon2id existente para novos hashes que excedem a capacidade do bcrypt.
+- [x] Preservada compatibilidade de leitura de hashes antigos e política de 10–128 caracteres.
+- [x] Seis testes de hash real passaram com bcrypt, argon e parâmetros de ambiente publicado.
+- [x] Check agregado (499 testes), build backend e imagem Docker Linux amd64 aprovados.
+- [x] Seis testes de hash na imagem final, sem rede, filesystem somente leitura e usuário não root.
+- [ ] Smoke publicado de 0.1.315.
+- [ ] Avaliar redefinição controlada de senhas legadas; sem reset ou regravação automática.
+
+Admin: formulário vazio de comunidade validado em mobile sem mutação. Ampliada a leitura de
+guards/routers de comunidades e posts; não equivale a validação IDOR com segunda identidade.
+Sem alteração de schema, env obrigatória ou dependências. Parâmetros Argon2 publicados existentes
+(128 MiB por operação) mantidos; capacidade do servidor sob concorrência ainda precisa de validação.
