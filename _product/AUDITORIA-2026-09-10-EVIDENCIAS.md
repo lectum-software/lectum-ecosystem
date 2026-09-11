@@ -1937,3 +1937,38 @@ Isso não certifica ausência de falhas de negócio/autorização nem conclui o 
 Registro352: somente documentação e cinco versões; sem mudança de código funcional,
 contrato, dependência, banco, env ou configuração de infraestrutura. Mantém todos os gates
 publicados desta entrega sem fechar os critérios gerais da TASK178 ou recomendar produção.
+
+
+### Seguimento353 — integração local real
+
+C16 reproduzido no serviço original: sete de dez cenários falharam por 404 indevido.
+Correção limita hasPublishedPsychologist à criação; mantém ensurePatient, chave composta
+e transação serializável do repository original. DELETE não consulta nem devolve perfil
+privado; não modifica publicação, aprovação, outra relação ou catálogo.
+
+`backend/scripts/patient-follow.integration.mjs` executa service/repository/Prisma reais,
+com banco vazio `lectum_follow_audit`, exclusivamente 127.0.0.1 e porta explícita. Comando
+manual local: `pnpm --dir backend test:patient-follows-integration --port=PORTA_LOCAL`.
+Não usar contra o banco de desenvolvimento ou publicado; criar PostgreSQL descartável
+previamente e aplicar migrations existentes nele. Não recebe URL/segredo de ambiente nem
+introduz env runtime. Fixtures efêmeras não simulam provider, autenticação HTTP ou mídia.
+
+Dez cenários: follow publicado idempotente; unfollow após despublicação, inativação,
+remoção lógica de conta/perfil e vídeo nulo/vazio; inexistência idempotente; papel
+incorreto; remoções concorrentes. Relação de outro paciente preservada, novo follow
+indisponível segue404, catálogo não expõe perfil privado e DELETE repetido preserva data.
+Node conta11 testes incluindo contêiner dos dez cenários. Suite manual separada do check
+padrão, sem ignorar falhas por falta de banco. Hook final remove apenas IDs criados e
+confirma contagem zero antes de desconectar.
+
+Na primeira versão do harness, after global encerrou após o primeiro teste; guard de
+banco vazio bloqueou a segunda execução. Laboratório Docker próprio foi descartado e
+recriado; hook foi movido para o contêiner dos subtestes. Não houve reset nem alteração
+de qualquer banco existente. Logs locais em /tmp/lectum-task178-patient-follow-353.
+Nenhuma nova dependência, schema, migration ou variável de aplicação; rollback só backend.
+Smoke público não substitui teste HTTP autenticado do cenário de despublicação.
+
+353: check global aprovado (1158testes,1152pass/6skipsdrawtext) e build backend aprovado.
+Testes de integração manual são adicionais: dez cenários+contêiner,11pass. Limpeza dos
+IDs temporários validada pelo hook; container local próprio removido. Um bump353 e
+cinco manifests sincronizados, check:version aprovado. Publicação/smoke pendentes.

@@ -201,3 +201,9 @@ reclassificar como erro de dados ou incluir correção não implementada neste c
   Teclado e clique para fechamento comprovados localmente em991×964/390×844; nãoSafari.
 - Gates públicos de348–351: backend/frontend/Admin alinhados em cada release,health/ready200.
   Nenhuma inferência sobre versão de vídeo privado, assinatura, CFP ou dados de terceiros.
+
+
+C16/353: seguir/desseguir validado em service/repository/Prisma reais num PostgreSQL
+descartável local (dez cenários, incluindo concorrência e isolamento por paciente).
+Não foram alteradas publicações de profissionais reais para reproduzir o problema.
+Rota/middleware autenticado não substituídos: cobertura HTTP específica continua limitada.

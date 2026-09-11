@@ -247,6 +247,8 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 141. **Avisos acessíveis:** nomes da região e do botão de fechar em português no frontend e Admin. Validado e publicado em homologação na351.
 
+142. **Deixar de seguir:** remover a própria relação não depende mais de o perfil continuar publicado. Dez cenários passaram em PostgreSQL local; publicação pendente.
+
 ## Ainda pendente
 
 - Documentos legais aprovados e links no cadastro: **bloqueiam recomendação de produção**.

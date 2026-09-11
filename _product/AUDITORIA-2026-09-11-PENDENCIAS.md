@@ -33,7 +33,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C5 | Atividade pode incluir publicações anteriores ao intervalo. | Fonte; separar histórico de tráfego e atividade do período. |
 | C6 | Views por conteúdo podem incluir visitas ao perfil. | Fonte; filtrar pelo alvo correto preservando atribuição histórica. |
 | C18 | Limite de consultas CFP não reserva a tentativa antes do efeito externo. | Fonte; tratar concorrência sem chamadas pagas de teste. |
-| C16 | Despublicação de perfil impede remover a própria relação de follow. | Fonte; separar criar vínculo de remover vínculo próprio. |
+| C16 | Despublicação de perfil impede remover a própria relação de follow. | Corrigido353; dez cenários service/repository em PostgreSQL local real. Publicação pendente; sem E2E autenticado equivalente. |
 | C24 | Data de registro de hoje pode ser recusada pela manhã. | Corrigido346; comparação civil em São Paulo, 11 contratos em3fusos e build. |
 
 ## Hipóteses que exigem rastreio antes de mudar regras

@@ -1062,3 +1062,18 @@ Toaster sem modificações. Não criar wrapper comum entre aplicações nem subs
 de toast. Só nome acessível é traduzido: Notificações/Fechar notificação. Atalho e política
 de fechamento mantidos. Teste compila apenas o JSX original Toaster de cada layout e usa
 Sonner/React reais; providers de negócio não são carregados ou simulados.
+
+
+### Seguimento353 — requisito prévio
+
+Publicação autoriza criar a relação, mas não revoga o direito do paciente de removê-la.
+Conservar repository.unfollow com chave user_id/psychologist_id e transação serializável;
+DELETE repetido ou sem vínculo retorna followed=false sem consultar/expor o perfil privado.
+Nenhuma alteração do catálogo público, de aprovação ou de sessões. Testes usam somente
+PostgreSQL descartável local vazio e registros efêmeros, sem providers/autenticação falsos
+ou fixtures permanentes; prova de service/repository não equivale a HTTP autenticado.
+
+353 validado com dez cenários em PostgreSQL real local. Harness manual aceita somente
+porta loopback, nome fixo de banco vazio, limpa exclusivamente os IDs criados e verifica
+limpeza. Sem env nova: não acrescentar configuração de laboratório ao ambiente publicado.
+Não alterar repository nem ampliar leitura de profissional indisponível para remover vínculo.

@@ -960,3 +960,21 @@ real Admin emPT-BR, sem alteração nos campos da comunidadeQA. Fechamento perma
 local. Consulta de advisories11/09:cincoescopos sem vulnerabilidades conhecidas.
 Registro352 somente documental/versões. TASK178 segue InProgress: achados ainda abertos,
 requisitos legais/profissionais/integrações e dispositivos reais não certificados.
+
+
+### Continuação353 — remover o próprio seguimento indisponível
+
+C16: o requisito de publicação é aplicado também ao DELETE, impedindo desfazer a relação
+própria após despublicação/inativação. Aplicar esse requisito somente ao follow; manter
+papel paciente, autoria pela sessão, transação serializável e DELETE idempotente existente.
+Não liberar leitura de perfil privado/listagem nem modificar publicação, aprovação ou
+relação de terceiros. Sem env runtime, schema/migration/package; rollback backend isolado.
+
+- [x] Follow continua exigindo profissional publicado; unfollow só altera relação do ator.
+- [x] Despublicação/inativação/remoção lógica e repetição/concorrência testadas em PG local real.
+- [x] Backend check/build aprovados sem manipulação de perfis reais.
+- [ ] Smoke publicado da353 confirmado.
+
+353: dez cenários PG aprovados (11pass incluindo contêiner). Check global1158,1152pass/6skips
+drawtext, buildbackend aprovado. Laboratório próprio removido após limpeza validada; sem
+alteração de banco preexistente. Um bump353; publicação pendente.
