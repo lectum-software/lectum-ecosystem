@@ -231,7 +231,13 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 134. Mensagens de validação corrigem limites e substituições de campos em português.
 135. Avisos de indisponibilidade deixam de mostrar configurações internas do serviço.
 
-347: validação local e builds aprovados; reteste publicado pendente.
+347: checks, builds, publicação e retestes autenticados aprovados.
+
+136. Atualizar dados da comunidade preserva campos que ainda estão sendo editados.
+137. Cancelar descarta o rascunho mesmo quando a tela permanece aberta.
+138. Durante Salvar, campos e Cancelar ficam bloqueados para evitar perder uma nova edição.
+
+348: check geral, 15 regressões específicas e build passaram; reteste publicado pendente.
 
 ## Ainda pendente
 
@@ -242,8 +248,8 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **2999 arquivos com revisão inicial**, sem revisões parciais pendentes e 122 ainda não revisados.
-Inclui leitura textual e, para cinco SVGs, XML mais inspeção dos rasters; não leitura literal do base64.
+Cobertura da base: **3120 arquivos com revisão inicial** no critério semântico/visual adotado; resta a revisão audiovisual de um MP4. Decodificação técnica não equivale a assistir/ouvir todo o conteúdo.
+Inclui leitura textual, PDFs com páginas inspecionadas e seis SVGs com XML estrutural/rasters; não leitura literal do base64.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

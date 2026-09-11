@@ -38,14 +38,25 @@ export const CommunityEditForm = ({
   const updateMutation = useAdminCommunityUpdate(id);
   const avatarMutation = useAdminCommunityAvatarUpload(id);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const communityIdRef = useRef(community.id);
   const form = useForm<CommunityFormValues>({
     defaultValues: defaultCommunityValues(community),
     mode: "onSubmit",
     resolver: zodResolver(communityFormSchema),
   });
 
+  // Subscribe before background resets so RHF tracks the draft's dirty fields/state.
+  void form.formState.dirtyFields;
+  void form.formState.isDirty;
+  const isSaving = form.formState.isSubmitting || updateMutation.isPending;
+
   useEffect(() => {
-    form.reset(defaultCommunityValues(community));
+    const sameCommunity = communityIdRef.current === community.id;
+    form.reset(defaultCommunityValues(community), {
+      keepDirty: sameCommunity,
+      keepDirtyValues: sameCommunity,
+    });
+    communityIdRef.current = community.id;
   }, [community, form]);
 
   const selectedPrimaryColor = useWatch({
@@ -59,7 +70,10 @@ export const CommunityEditForm = ({
   const avatarSrc = renderableImageSrc(community.avatar_url);
   const onSubmit = async (values: CommunityFormValues) => {
     try {
-      await updateMutation.mutateAsync(toCommunityPayload(values));
+      const updatedCommunity = await updateMutation.mutateAsync(toCommunityPayload(values));
+      if (communityIdRef.current === updatedCommunity.id) {
+        form.reset(defaultCommunityValues(updatedCommunity));
+      }
       toast.success("Comunidade atualizada.");
       onDone();
     } catch (error) {
@@ -97,7 +111,13 @@ export const CommunityEditForm = ({
       <h2 className="text-lg font-black text-foreground">Editar identidade da comunidade</h2>
 
       <FormProvider {...form}>
-        <form className="mt-5 grid gap-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          className="mt-5 grid gap-4"
+          noValidate
+          onSubmit={(event) => {
+            void form.handleSubmit(onSubmit)(event);
+          }}
+        >
           <div className="flex justify-start">
             <input
               accept="image/jpeg,image/png,image/webp"
@@ -142,12 +162,14 @@ export const CommunityEditForm = ({
             </button>
           </div>
           <InputController<CommunityFormValues>
+            disabled={isSaving}
             label="Nome da comunidade"
             name="name"
             placeholder="Nome"
             required
           />
           <TextareaController<CommunityFormValues>
+            disabled={isSaving}
             label="Descrição"
             name="description"
             placeholder="Descreva o objetivo da comunidade"
@@ -157,6 +179,7 @@ export const CommunityEditForm = ({
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.75fr)]">
               <div>
                 <InputController<CommunityFormValues>
+                  disabled={isSaving}
                   label="Cor da comunidade"
                   name="visual_primary_color"
                   placeholder="#FF8A2A"
@@ -199,17 +222,22 @@ export const CommunityEditForm = ({
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               className="inline-flex h-11 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-black text-foreground"
-              onClick={onDone}
+              disabled={isSaving}
+              onClick={() => {
+                if (isSaving) return;
+                form.reset();
+                onDone();
+              }}
               type="button"
             >
               Cancelar
             </button>
             <button
               className="inline-flex h-11 items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-black text-primary-foreground transition hover:bg-primary-hover disabled:opacity-70"
-              disabled={updateMutation.isPending}
+              disabled={isSaving}
               type="submit"
             >
-              {updateMutation.isPending ? (
+              {isSaving ? (
                 <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
               ) : (
                 <Save aria-hidden className="h-4 w-4" />

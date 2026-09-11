@@ -845,8 +845,8 @@ acessível. Reusar nomes contextuais e padrão existente de paginação; sem red
 mudança de payload/RHF. FS345-01 e DOC-01: substituir READMEtemplate frontend e alinhar
 instruções Cursor/GitHub a quatro apps/cinco manifests, sem executar receitas históricas.
 
-- [ ] Expansores e paginação têm nome/estado acessível coerente; ações anteriores preservadas.
-- [ ] Browser local/publicado, checks e build Admin registrados com limites explícitos.
+- [x] Expansores e paginação têm nome/estado acessível coerente; ações anteriores preservadas.
+- [x] Browser local/publicado, checks e build Admin registrados com limites explícitos.
 - [x] READMEfrontend e regras de release citam pnpm, homolog, cinco manifests e gates vigentes.
 
 Sem nova env/package/migration/reset; rollback independente. Esta continuação não resolve
@@ -860,3 +860,33 @@ sem adivinhar regras Gratuito/Profissional ou alterar domínio/provider.
 Publicação346 a4fc2219:5/5smoke,3apps0.1.346,health/ready200; menu móvel/resize/histórico e filtro existente repetidos no Admin. Nenhum teste CFP remoto.
 
 347 local: root1123 testes (1117pass/6skips drawtext), Admin93/93, backend470/470; builds Admin/backend aprovados. Bump347executado uma vez. Browserlocal390/1280 e testes de controles reais; publicação ainda pendente.
+
+### Continuação348 — rascunho e Cancelar da comunidade
+
+A342-01: sincronização indiscriminada do formulário após atualização independente do
+avatar pode descartar campos dirty. A348-01: Cancelar apenas chama onDone, que é noop
+na aba Dados; reproduzido no Admin346 com rascunho exclusivo da comunidade de auditoria,
+sem Salvar. Reload confirmou o nome persistido original. Reusar RHF/controllers existentes,
+sem nova fundação, mudanças em upload/callers/limites, env, pacote ou migration.
+
+- [x] Refetch da mesma identidade mantém dirty (inclusive vazio) e atualiza campos limpos.
+- [x] Cancelar descarta rascunho/erros para os últimos dados persistidos, mesmo sem navegar.
+- [ ] Salvar aplica o retorno normalizado, limpa dirty e mantém mensagens/callbacks; falha preserva edição.
+- [x] Outra comunidade não herda rascunho; refetch/save não restaura valores já confirmados.
+- [ ] Estado RHF real, Browser local e publicado, Admin check/build e smoke registrados.
+
+A interface não possui revisão remota; não prometer controle de concorrência entre dois
+administradores. Não manipular dados de terceiros nem redefinir upload para demonstrar o bug.
+
+Adendo prévio348: durante Salvar, os campos ainda editáveis permitiriam digitação posterior
+ser descartada pelo reset da resposta. Reusar disabled dos três controllers e bloqueio de
+Cancelar durante submit, sem desregistrar valores RHF; falha mantém draft e libera controles.
+Upload de avatar independente não deve bloquear esses campos por si só.
+
+347 publicação e938f7a1: smoke5/5 às21:21:57UTC, trêsapps347; backendhealth/ready200. Reteste profissional/publicações autenticado e mobile nativo375×812 sem Salvar, nomes/expandido e paginação preservados. Não certifica leitor de tela físico ou Safari.
+
+348 local aprovado: root1138testes (1132pass/6skips drawtext),Admin108/108,buildAdmin
+aprovado. Submissão RHF passa a ser criada no evento, não no render: refs são lidas
+apenas em efeitos/handlers, sem desativar regra React. Reteste local da fonte final
+conserva dirty/refetch e Cancelar limpa estado. Salvar publicado/upload ainda pendentes.
+Sem env, migração ou pacote; cinco manifests348. Não repetir o bump neste commit.

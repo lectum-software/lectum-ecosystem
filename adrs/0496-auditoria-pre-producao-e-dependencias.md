@@ -1011,3 +1011,28 @@ ficam fora dessepatch. Sem migração/provider/alteração persistente/env/packa
 Documentação: READMEfrontend específico, pnpm e gates homolog/main; Cursor/GitHub e DoD
 com cinco manifests/quatro apps. TASK42 preserva histórico e aponta reintroduçãoTASK176,
 não autoriza restaurar pipeline antigo. Rollback independente Admin/backend/documentos.
+
+### Rascunho administrativo348 — requisito prévio
+
+Conservar a fundação RHF e limitar keepDirtyValues à sincronização da mesma comunidade,
+com assinatura explícita dos dirtyFields. Cancelar precisa resetar estado mesmo com onDone
+noop; Salvar usa identidade devolvida pelo endpoint, não o draft bruto. Evitar estado
+paralelo/reducer e remounts por referência de dados, que perderiam foco. Nenhuma promessa
+de abortar request já enviado ou resolver conflitos multiadministrador. Sem contrato novo,
+provider, migration, pacote ou env; rollback exclusivo Admin. Evidência remota de upload
+fica separada de testes de estado e Cancelar; seletor nativo não foi controlado por ferramenta.
+
+Proteção348 durante Salvar: impedir edição/Cancelar enquanto a escrita enviada ainda está
+pendente, reusando disabled dos controllers. Não simular cancelamento de request ou construir
+reducer de mesclagem concorrente. RHF mantém registro/valores; erro libera edição sem reset
+bem-sucedido. O bloqueio não se aplica ao simples refetch/upload independente do avatar.
+
+O harness348 de compilação AST fica em admin/scripts, fora das fontes de produto, usando
+o diretório de scripts existente. A regra source-safety do runtime permanece intacta;
+não há exceção nova para execução dinâmica ou cores na UI. O teste é executado
+explicitamente pelo check do Admin, com React/RHF/Zod/controllers reais; dados locais
+de transição não comprovam persistência remota, upload ou falha de rede.
+
+O handler RHF é composto dentro do evento submit, não durante render: o callback de
+sucesso verifica ref de identidade somente após await. Mantida a regra React de refs,
+sem lint-disable e sem ref sendo consumida no render. Check global e build confirmados.

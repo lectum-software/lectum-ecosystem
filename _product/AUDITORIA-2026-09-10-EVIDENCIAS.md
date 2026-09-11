@@ -1706,3 +1706,94 @@ Mutual/exactcompatibilidade não temcallerprodutoatualdemonstrado; teste nãofab
 Fonte /tmp/lectum-task178-public-messages-347/report.md, readlist,freeze.
 
 347 validação global:1123 testes,1117pass/6skips conhecidos drawtext. Admin93/93 (86+7), backend470/470. Builds Admin/backend aprovados; logs /tmp/lectum-347-{root-check,admin-build,backend-build}.log. Sem env/migration/package. Nova env não necessária. Publicação e reteste autenticado pendentes neste commit.
+
+Leituras documentais348: parent leu integralmente relatórioPDF de Bacon e validou hashes
+originais. PRD9/9páginas e Fluxos16/16, texto e visual pelo agente;25/25páginas,2fontes,
+sem crédito extra por extrações. Fonte /tmp/lectum-task178-product-pdfs-347/readlist.json.
+PRD é Draft; preço/fluxos históricos não substituem catálogo/regra atual. Seis tensões
+documentais registradas na fila, sem inferir incidente/garantia clínica ou conformidade.
+Parent leu Prompt58linhas e relatórioagosto159linhas; adicionou aviso histórico ao Prompt,
+sem executar receitas. Alegações de cobertura/segurança de agosto não viram evidência atual.
+
+Parent348: quatro configurações MCP,30linhas integrais, parsing JSON/TOML válido e versão
+Builder fixa consistente. Conteúdo foi verificado quanto a campos sensíveis antes de
+exibição; nenhum segredo encontrado. Nenhum comando declarado foi executado, ferramenta
+iniciada/conectada, pacote instalado ou compatibilidade remota inferida.
+
+Publicação347 e938f7a1: push/hook64s aprovados; cincoGETs públicos aprovados às21:21:57UTC
+em11/09/2026, trêsapps347 ebackendhealth/ready200. /tmp/lectum-audit-347-smoke-curl-homolog.json.
+Vídeo privado não consultado; última evidência operacional fornecida pelo usuário338.
+
+RepetiçãoAdmin347: Especialidades/Abordagens têm nomes estáveis e expanded coerente.
+Tab/Enter selecionou uma opção só no rascunho, Remover funcionou, Cancelar descartou e
+voltou a Não informado; nenhum Salvar/registro/CFP executado. Na primeira abertura durante
+rollout, catálogo mostrou falha de conexão com recuperação; Tentar novamente carregou
+opções reais. Título genérico dessa falha usa psicólogo em vez de catálogo (fila A348-02).
+
+Paginação dos3registros QA: Página anterior/Próxima página desabilitadas e Página1 nomeada,
+sem mudar filtros. Comparação nativa antes/depois976×949 é visualmente consistente; captura
+inicial ainda no topo foi descartada e refeita focando paginação. Tag antes/depois usa
+mesmo976×949, mas scroll difere128px; componente mantém estilo, sem alegar comparação de
+página pixel-a-pixel. Mobile solicitado390 pelo capability gerou375×812 na captura nativa;
+prova registrada como375×812, não390. Capturas /tmp/lectum-task178-admin-labels-347/
+homolog-{tag,pagination,mobile}-after.png, vistas com view_image e comparações pareadas.
+Multipágina foi testada somente em controle local real, pois conta QA tem uma página.
+
+Locks: Gauss leu5/5,19.364linhas/91chunks, hashes estáveis e relatório integral lido pelo
+parent. Não houve instalação/audit remoto, execução de scripts/tarballs ou certificação
+CVE/engine. Fonte /tmp/lectum-task178-lockfiles-347/{freeze,readlist,report}.json/md.
+Drift e engines condicionais entram na fila; diferenças entre apps independentes não
+foram convertidas automaticamente em incompatibilidade/vulnerabilidade.
+
+Assets348:23caminhos/12hashes únicos vistos individualmente (21PNG,1SVG,1ICO com6/6frames).
+RelatórioBacon integral lido pelo parent, tabela antes truncada relida em ranges86–108.
+Hashes originais conferidos. SVG logo-icon: revisão composta de toda marcação estrutural,
+render nativo e doisPNGs embutidos. Não equivale a ler305.310bytes base64 como texto;
+status raw parcial do agente preservado na proveniência. O critério de revisão inicial
+semântica/visual é o mesmo dos cincoSVGs anteriores; não declarar leitura literal integral.
+Fonte /tmp/lectum-task178-static-assets-348/readlist.json. Nenhumasseteditado/centralizado.
+Logos light/dark idênticos, rasters grandes duplicados entre apps, símbolos brancos em
+matte escuro e favicon em6tamanhos foram observados; não demonstram regressão UI/performance,
+nem licença para uso. Selo desenhado não comprova KYC. MP4/protótipos ainda não concluídos.
+
+### Fechamento de fontes visuais e validação348
+
+Mendel:85/85protótipos, incluindo19admin, vistos integralmente em resolução original.
+Parent leu relatório53linhas e todas as85notas, validou hashes/seleção contra a base atual
+e integrou sem atribuir leitura textual/OCR nem testes funcionais. Inventário foi alterado
+pelo trabalho concorrente do parent, mas os85originais permaneceram idênticos. Fonte
+/tmp/lectum-task178-proto-347/{freeze,readlist,report}.json/md. Base3121:3120revisões
+iniciais; restaMP4. Não é aprovação de todos os fluxos nem auditoria concluída.
+
+Protótipos não são contratos atuais: copy de privacidade/exclusão, sigilo, endereços,
+cortesia e métricas precisa da spec vigente; capturas de conversa não foram transcritas.
+A decisão do usuário já fecha o selo: registro ativo aprovado, sem KYC; referência visual
+não reabre essa decisão nem torna assinatura paga equivalente a aprovação profissional.
+
+Bacon interrompido antes de concluir relatórioMP4; freeze,probe e decode locais indicam
+47,147s,576×1024,H264/AAC,1413frames e decode estrito sem erro. Sem revisão audiovisual
+integral, não ampliar cobertura por metadados/decode. Outros agentes de revisão349
+interrompidos por limite de uso; nenhum patch/aceite adicional presumido.
+
+348:15/15testes React/RHF/Zod reais passaram, sem API simulada. Harness local AST usa
+a mesma fonte246linhas (sha4a41889434acf65da1135704e8499904ba542b7bba73963090df9815611189e3),
+controllers originais e estados locais explícitos: refetch conserva dirty/vazio, atualiza
+limpos; Cancelar usa defaults recentes; identidade nova limpa draft. Browser390×844
+e1280×900, capturas local-dirty-after-refetch.png e local-desktop-cancel.png em
+/tmp/lectum-task178-community-draft-348, visualizadas. Isso não comprova upload remoto
+em andamento, falha de rede ou o ciclo de Salvar publicado; reteste autenticado segue.
+
+O check inicial348 recusou o harness AST sob src (literais de teste/compilação); movido
+para admin/scripts, preservando guard de runtime sem novas exceções. Fifteen testes
+repetidos pelo parent no caminho final; build/check global em andamento. Bump348 foi
+executado uma única vez, antes da primeira tentativa de check; não houve novo bump.
+
+348final: root1138testes/1132pass/6skips drawtext;Admin108/108;buildAdminaprovado.
+Logs /tmp/lectum-348-root-check.log e /tmp/lectum-348-admin-build.log. Reactlint recusou
+passar closure com ref a handleSubmit durante render; wrapper de evento adia essa criação
+para submit sem desativar regra. Fonte final252linhas sha256:c0642d698599092355b49629ca3dd72b57aa617b3250df9adc57d8980a644242.
+Harness recompilado dessa fonte e repetido na aba24: mesma identidade preserva draft,
+atualiza descrição limpa e Cancelar devolve defaults/dirtyvazio. Fonte visual não mudou.
+Teste final em admin/scripts/community-edit-form.test.mjs: caminho/resolução e assertion
+de evento revisados pelo parent após leitura integral455linhas do original;15/15repetidos.
+Guard de fonte inalterado. Publicação e prova remota de Salvar ainda pendentes.

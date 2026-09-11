@@ -8,14 +8,14 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 
 | ID | Pendência | Evidência / estado |
 |---|---|---|
-| A342-01 | Upload de avatar pode apagar texto ainda não salvo da comunidade. | Fonte; validar ciclo RHF/refetch e corrigir. |
+| A342-01 | Upload de avatar pode apagar texto ainda não salvo da comunidade. | Corrigido348; RHF real e Browser local; upload remoto ainda pendente. |
 | A342-02 | Reordenação de regras não possui alternativa por teclado. | Fonte; corrigir mantendo persistência e bloqueios. |
 | A342-03 | Editar data incompleta removia os próprios filtros. | Corrigido344; repetido no Admin publicado. |
 | A342-04 | Busca perde foco após atualizar a URL. | Corrigido345; foco e continuação da digitação repetidos nas duas listas publicadas. |
-| A342-05 | Expansor de campo profissional e setas de publicações sem nome acessível. | Fonte; corrigir e conferir teclado/SSR. |
+| A342-05 | Expansor de campo profissional e setas de publicações sem nome acessível. | Corrigido347; nomes/expandido, teclado/seleção/Cancelar e paginação conferidos no Admin publicado e mobile. |
 | A342-06 | Contador de cliques de Posts inclui cliques das Respostas. | Fonte; separar universos. |
 | A342-07 | Cores de donut e legenda divergem quando há categorias zeradas. | Fonte; manter cor estável por categoria. |
-| A342-08 | Menu mobile permite Tab para conteúdo atrás do modal. | Reproduzido no Admin344: Tab atravessa o menu e alcança a busca atrás do overlay. Correção346 em curso. |
+| A342-08 | Menu mobile permite Tab para conteúdo atrás do modal. | Reproduzido no Admin344: Tab atravessa o menu e alcança a busca atrás do overlay. Corrigido346; contenção/Escape/retorno/resize/histórico repetidos no Admin publicado. |
 | A342-09 | Métrica agrupada herda detalhes apenas da primeira origem. | Fonte; agregar detalhes coerentemente com o total. |
 
 ## Backend
@@ -34,7 +34,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C6 | Views por conteúdo podem incluir visitas ao perfil. | Fonte; filtrar pelo alvo correto preservando atribuição histórica. |
 | C18 | Limite de consultas CFP não reserva a tentativa antes do efeito externo. | Fonte; tratar concorrência sem chamadas pagas de teste. |
 | C16 | Despublicação de perfil impede remover a própria relação de follow. | Fonte; separar criar vínculo de remover vínculo próprio. |
-| C24 | Data de registro de hoje pode ser recusada pela manhã. | Fonte; comparar datas civis no fuso contratado, não horário artificial. |
+| C24 | Data de registro de hoje pode ser recusada pela manhã. | Corrigido346; comparação civil em São Paulo, 11 contratos em3fusos e build. |
 
 ## Hipóteses que exigem rastreio antes de mudar regras
 
@@ -66,8 +66,7 @@ ADRs não são prova de incidente. Lote B completo (224 arquivos) apontou:
 | Operação | Confirmar limites de réplicas/schedulers, vídeo maior que200MB e QA real; histórico não prova deploy atual (ADR0418/0495). |
 | Notificações | Reconciliar preferências/consentimento e significado de sent com os fluxos atuais (ADR0304/0450). |
 
-Atualizar o template de ADR para incluir o quarto app de vídeo; registrar complemento ao
-ADR0441 sem apagar sua decisão histórica. Padrão atual: cinco manifests, quatro aplicações.
+Template de ADR e complemento0441 atualizados346 para incluir vídeo sem apagar sua decisão histórica. Padrão atual: cinco manifests, quatro aplicações.
 
 Outras tensões documentais do lote A (225 arquivos): política de exposição do telefone no
 link wa.me; identidade/pseudônimo por canal de notificação; retirada de conteúdo sensível
@@ -146,3 +145,41 @@ Todooperíodo pedecontratocanônico, não deduzir errofinanceiroatual. DOC5TASK7
 mostrado para atribuiçãoausente é decisãohistórica; nãoreconstruirtráfego, revisarsemântica
 viva. DOC6TASK74mantémpendênciaretençãodescarte/copycrise/validaçãoprofissionaljurídica,
 aindaqueCompleted. Registrar responsável/decisão, nãopresumiraprovação.
+
+## Fontes de produto PDF — leitura integral, não certificação
+
+PRD Draft e Fluxos completos em25páginas (Bacon/347, integrado348) reforçam seis distinções:
+1. Registro encontrado não equivale a registro ativo aprovado; selo atual CFP/humano, sem KYC.
+2. Notificação de downvote diverge entre fontes; não assumir permissão de expor votante.
+3. Ramos de plano/erros incompletos não autorizam cobrar gratuito ou aprovar por cartão válido.
+4. Reputação/ranking não certifica atendimento ou resultado clínico; fórmula atual precisa fonte.
+5. Enunciados LGPD/criptografia não demonstram consentimento, retenção ou conformidade jurídica.
+6. Metas de disponibilidade/busca/backup não têm protocolo completo de aceite nesses PDFs.
+Preços, gates e receitas históricas não serão restaurados a partir do Draft. Relatório de
+agosto também é evidência histórica, não conclusão da auditoria atual.
+
+A348-02: erro temporário ao carregar catálogos de edição profissional exibiu título
+“Não foi possível carregar o psicólogo”, embora o perfil já estivesse carregado. Retry
+recuperou opções reais; ajustar contexto do erro sem afirmar falha persistente ou perda de dados.
+
+## Lockfiles — leitura concluída, verificação operacional separada
+
+L347-01: alinhar documentação da matriz real Node/TS/Biome por app; engines transitivas
+podem ser mais restritas que o piso declarado de Next. Tipos Node não são runtime.
+L347-02: revisar intenção de overrides independentes (js-yaml, brace-expansion etc.); root
+não protege automaticamente instalações separadas. Drift sozinho não comprova CVE.
+L347-03: scmp transitivo de Twilio está marcado deprecated; manutenção, sem alegação de exploração.
+L347-04: locks não mostram execução de lifecycle, conteúdo de binários/bundles nem configuração
+de telemetria. Não concluir coleta de dados pela mera presença de um SDK.
+L347-05: metadado engines de concat-stream é não padronizado; efeito do gerenciador não validado.
+Nenhum pacote alterado nem recomendação de upgrade automático; relatório fonte347 congelado.
+
+## Referências visuais históricas (PV01–PV07)
+
+85imagens lidas; relatório /tmp/lectum-task178-proto-347/report.md. Garantias absolutas
+de privacidade/exclusão, audiência de denúncias, finalidade do endereço, cortesia e
+definições de métricas são insumos de comparação, não vulnerabilidades atuais comprovadas.
+Copy da aplicação deve obedecer à spec/política vigente, não copiar promessas da imagem.
+Selo já decidido: registro ativo aprovado, sem comprovação de titularidade. Conversas
+pessoais das referências não foram reproduzidas. MP4 tem inspeção técnica parcial,
+sem cobertura audiovisual integral; não há alegação de todos os arquivos/fluxos concluídos.
