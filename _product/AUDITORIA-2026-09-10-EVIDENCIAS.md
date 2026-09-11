@@ -1483,3 +1483,62 @@ DashboardContent inteiro, inclusive campos; só erro Selecione um período váli
 Tentar novamente recuperou all. A342-03 confirmado, pendente patch posterior; apenas estado
 local/consultasGET. Capturas /tmp/lectum-task178-admin-dates-343/{baseline,error}.png vistas.
 Separado do FE341-03 no frontend. Não operar M1, dados de terceiros ou testes destrutivos.
+
+## Publicação343 e regressão autenticada de342
+
+aaf0dddf9ebd08635c85bde3ce29a59e9cc1158d enviadohomolog.18/18smoke às19:53:57UTC11/09,
+backend/frontend/Admin343,health/ready200. Primeiroprobe após push:17/18, apenasbackend342;
+segundo confirmou convergência. Vídeo privado segue última prova338, não inferir343.
+Browser21em390, conta profissionaldedicada: estado Sessãoindisponível préreload; reload
+recuperou sessão semnovo login. Nãoatribuircausa ao deploy semtraces. Datas: apagar parte de
+Início+Aplicar manteve popover/erroPTBR/dados; cancelarcomTodooperíodo descarta; reabrir inicia
+válido;Aplicar mostra loading e conclui semerro; restauradoTodooperíodo. Captura343-empty
+em/tmp/lectum-task178-analytics-dates-342 salva/vista. Semmutação; contalivre semvídeo.
+Retenção agora exibeslider disabled coerente comsemvídeo; não éprova deplayback real.
+
+## Continuação344 — A342-03
+
+BaselineAdmin341registrada anteriormente; patch separa selected/applied nohook adjacente
+use-dashboard-period e ligaquery/rótulo/controlador nativo ao estado correto. Nada noJSX dos
+campos,API,cachekeys oumétricas mudou. Extrairhandlers permitiu8testes deestado comReactSSR
+real (atualização no própriorender para exercitar useState/handlers),mais1wiringestático.
+Não substituirReact,DOM,API/query ouvalidadores. Não chamar testesSSR deintegração/Browser.
+9/9 finais; primeiro loaderlocal falhou porfileURL passada aresolveCJS, corrigido parapath.
+Primeirotypecheck pegoureferênciaonRetry ao antigo handler após extração; corrigida e
+adicionada asserção dewiring. Ambosdiagnósticos eramlocais, nunca forampublicados.
+
+Browserlocal390: editarAté+blur comDe vazio mantém all query/valid=true, erro noscontroles;
+presetmês limpaerro/aplica mês; alterarAté e focarDe nãoaplica; sair dogrupo aplica01–10/09.
+Desktop1280 mantémtrêscontroles nalinha. Capturasexatas vistasem/tmp/lectum-task178-admin-period-344:
+mobile-invalid.png e desktop-final.png. desktop-valid.png écapturaintermediária comviewport
+antigo durante transição, não prova final nembugproduto. Apenascontrato semAPI; reteste
+remoto344 pendente. UsadosCSS/ícones/componentes reais, semnovo pacote, semBuilderdisponível.
+
+Admincheck62/62 ebuildotimizado aprovados,30manifests de rotas sincronizados,sem sourcemaps.
+Rootcheck1057:1051pass/6skipsdrawtext conhecidos. Logs /tmp/lectum-344-{admin-check-final,
+admin-build,root-check}.log. Bump344uma vez/check:versionOK; semenv/banco/package/provider.
+
+### Leitura lateralAdmin275 e triagem
+
+Socrates leu275alvos congelados em58.723linhas/229chunks e1suporte. Chunk75–78 inicialmente
+truncado/omitido foi relido integralmente;15entregas iniciais descartadas. Freeze05f1506d e
+SHA inicial preservados; cliente mudouparent344 e recebeu revisão dadiferença pelo parent.
+Report/readlist/ranges/notas:/tmp/lectum-task178-admin-pending-342. Hashs dosalvosinalterados
+conferidos antesintegração. Merge279pathscorrentes/275novasleiturasbase; clientcongeladoantigo
+recusado, fontefinalparent aceita separadamente. Ledger1927;base1944iniciais/1177pendentes.
+SemUI/remoto,provider ouM1 poragente; não creditar imports como leitura ou fontecomoautoridade.
+
+Achados pendentes, salvoA342-03 confirmadoBrowser/corrigidolocal:
+- A342-01/P2: resetcomunidade apósavatar apagadrafttextual; mecanismo fonte, uploadnãotestado.
+- A342-02/P2: regras sóreordenam porponteiro, semequivalente teclado; persistêncianãotestada.
+- A342-04/P2: SearchBox keyedporquery.q perde identidade/foco emlistas pacientes/psicólogos;
+  lateral de correção iniciada separada344, sem dar crédito antesvalidação.
+- A342-05/P2: expansorTagField/setasPublicationsPagination semnome acessível; SSR/Browserpendente.
+- A342-06/P2: badgePosts somacliquesReplies também; semafirmardados publicados incorretos.
+- A342-07/P3: donuttráfego coloreíndice pósfiltrozeros,legendapréfiltro; correspondênciaincorreta.
+- A342-08/P2: drawermobile semcontençãoTab/inert; confirmarBrowser e corrigirlifecycle existente.
+- A342-09/P3: agregadoComunidades/Vídeo soma total masherdabreakdown sóprimeirafonte.
+Prioridadeproposta efonteexata no relatório; nenhumP1 confirmado nestaleitura. Hipótesesde
+sucessoparcial de mutations,idiomas,fallbacks deestatísticas e semanticscores dependemcontrato;
+nãopromover aincidenteprovado. Documentoslegais aprovados,aparelhos reais efluxosrestantes
+continuam pendentes; nãohá liberação paraproprodução.

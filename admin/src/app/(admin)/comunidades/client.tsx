@@ -1,44 +1,20 @@
 "use client";
-import { useState } from "react";
 import { useAdminCommunitiesDashboard } from "@/api/callers/communities";
 import { resolveApiError } from "@/api/handle";
-import type { CommunitiesDashboardQuery } from "@/api/req/communities";
-import { useDateRangeCommitOnBlur } from "@/hooks/use-date-range-commit-on-blur";
 import { CommunitiesHeader, ErrorState, LoadingGrid } from "./components/common";
 
 import {
-  buildCommunityDashboardPeriodQuery,
   formatSelectedPeriod,
   getCommunityDashboardLastSixMonthsRange,
   getCommunityDashboardPeriodLabel,
-  getCommunityDashboardRangeForPeriod,
 } from "./modules/period-support";
 
-import { isValidCustomRange } from "./modules/statistics-builders";
-import type {
-  CommunityDashboardPeriodPreset,
-  CommunityDashboardPeriodValue,
-} from "./modules/statistics-config";
+import { useCommunityDashboardPeriod } from "./modules/use-dashboard-period";
 
 import { DashboardContent } from "./views/dashboard-content";
 
 export const AdminCommunitiesClient = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<CommunityDashboardPeriodValue>("all");
-  const {
-    appliedRange,
-    applyRange,
-    draftRange,
-    handleDateChange: handleDraftDateChange,
-    handleDateControlsBlur,
-    rangeError,
-  } = useDateRangeCommitOnBlur<CommunitiesDashboardQuery>({
-    errorMessage:
-      "Informe um período personalizado completo, com data inicial menor ou igual à final.",
-    initialRange: () => getCommunityDashboardRangeForPeriod("all"),
-    isValidRange: isValidCustomRange,
-  });
-  const validRange = selectedPeriod === "custom" ? isValidCustomRange(appliedRange) : true;
-  const queryInput = buildCommunityDashboardPeriodQuery(selectedPeriod, appliedRange);
+  const { appliedPeriod, periodControls, queryInput, validRange } = useCommunityDashboardPeriod();
   const fixedSixMonthQueryInput = getCommunityDashboardLastSixMonthsRange();
   const query = useAdminCommunitiesDashboard(queryInput, { enabled: validRange });
   const fixedSixMonthQuery = useAdminCommunitiesDashboard(fixedSixMonthQueryInput, {
@@ -48,14 +24,6 @@ export const AdminCommunitiesClient = () => {
   const fixedSixMonthQueryError = fixedSixMonthQuery.error
     ? resolveApiError(fixedSixMonthQuery.error)
     : null;
-  const handlePeriodChange = (nextPeriod: CommunityDashboardPeriodPreset) => {
-    setSelectedPeriod(nextPeriod);
-    applyRange(getCommunityDashboardRangeForPeriod(nextPeriod));
-  };
-  const handleDateChange = (field: "from" | "to", value: string) => {
-    setSelectedPeriod("custom");
-    handleDraftDateChange(field, value);
-  };
 
   return (
     <div className="min-w-0 overflow-x-hidden space-y-7">
@@ -64,7 +32,7 @@ export const AdminCommunitiesClient = () => {
       {!validRange ? (
         <ErrorState
           message="Selecione um período válido."
-          onRetry={() => handlePeriodChange("all")}
+          onRetry={() => periodControls.onPeriodChange("all")}
         />
       ) : null}
 
@@ -88,17 +56,10 @@ export const AdminCommunitiesClient = () => {
             "Últimos 6 meses",
           )}
           fixedSixMonthSummary={fixedSixMonthQuery.data}
-          periodControls={{
-            displayRange: draftRange,
-            onDateChange: handleDateChange,
-            onDateControlsBlur: handleDateControlsBlur,
-            onPeriodChange: handlePeriodChange,
-            period: selectedPeriod,
-            rangeError,
-          }}
+          periodControls={periodControls}
           periodLabel={formatSelectedPeriod(
             query.data.period,
-            getCommunityDashboardPeriodLabel(selectedPeriod),
+            getCommunityDashboardPeriodLabel(appliedPeriod),
           )}
           summary={query.data}
         />

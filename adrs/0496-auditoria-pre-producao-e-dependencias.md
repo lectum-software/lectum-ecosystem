@@ -923,3 +923,20 @@ estrutura; não criar componente ou pacote paralelo. Sem migration/env; rollback
 no frontend, APIs anteriores compatíveis. Contrato de componente local não substitui salvar
 uma publicação autenticada. Builder indisponível; fundação existente e protótipos exportados
 continuam referência, sem novo desenho de produto.
+
+### Período aplicado do dashboard de comunidades344
+
+A342-03: seleção visual custom não significa intervalo aceito. Manter selectedPeriod para
+controles e appliedPeriod para enabled/query/rótulo; a query all continua válida enquanto o
+rascunho ainda está incompleto. Reusar useDateRangeCommitOnBlur e o padrão selected/applied
+existente em Pacientes. Hook adjacente extrai só coordenação para exercitar estado React real.
+
+onApply aplica o período selecionado no commit. applyRange também chama onApply: no preset,
+fazer applyRange primeiro e setAppliedPeriod(nextPreset) por último no mesmo batch evita
+sobrescrever o preset com o custom anterior. Não alterar assinatura/comportamento do hook
+compartilhado nem todos os seus consumidores. Erro de rascunho permanece junto aos controles;
+não virar indisponibilidade global de dados. Rótulo dos dados usa período aplicado.
+
+SemnovaUI,controller,package,migration/env/contratoHTTP; rollbackAdmin independente. Browser
+local testa hook+controles reais, não consultaautenticada; publicação deve repetir baseline.
+Preservar cálculo dos seis meses fixos e métricas; nenhuma alteração de domínio neste patch.

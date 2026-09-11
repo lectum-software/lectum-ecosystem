@@ -174,3 +174,15 @@ reclassificar como erro de dados ou incluir correção não implementada neste c
   filtros e exige Tentar novamente. Restaurado all; nenhuma mutação persistida. Correção pendente.
 - Backend342 confirmado pelo /ping; interfaces341 ainda não comprovam regressões342 publicadas.
 - Leitura inicial1669/3121 não é cobertura funcional;1452arquivos ainda pendentes.
+
+### Continuação344 — Admin e confirmação343
+
+- Admin275fontes lidas: comunidades, moderação, campanhas/notificações, pacientes, psicólogos,
+  tráfego, callers/requests/types, shell/paginação/video e filtros. Não são275fluxos executados.
+- NovefindingsA342-01..09; apenas03 reproduzido remotamenteatéaqui, demais mecanismos de fonte.
+- DatasAdmin: teste local realpreservaappliedall durante custominválido, presetlimpaerro;
+  blurentreinputs nãoaplica, saída dogrupo aplica; guard/rótulo usadosnaclientreal porwiring.
+- Analyticsprofissional343 autenticado: inválido fica noeditor;cancelar/validar recuperam
+  semerro global. Todooperíodo restaurado; contatestelivre/semvídeo,nãocertificarplaybackpago.
+- Smoke343:18/18, trêsappspúblicas343,health/ready200;últimaprova privada vídeo338.
+- Base1944/3121leiturasiniciais,1177pendentes. Fonte/SSR/Browser/pós-deploy separados.

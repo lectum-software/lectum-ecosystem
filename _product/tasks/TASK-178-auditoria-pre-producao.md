@@ -708,7 +708,7 @@ sem afirmar existência de ciclos reais antes do grafo completo.
 - [x] Datas com RHF/Zod/controllers; inválidas mantêm editor/consulta e erro local PT-BR.
 - [x] Remoção de anexos acessível por Tab/Enter/Espaço, mantendo disabled/permissões/foco.
 - [x] Scanner resolve fontes de imports emitidos sem confundir tipos e dependências externas.
-- [ ] Baseline/final, Browser mobile, builds, leituras e publicação registrados.
+- [x] Baseline/final, Browser mobile, builds, leituras e publicação registrados (interfaces342 incorporadas343).
 
 Sem nova env/package/migration; não ampliar acesso nem editar dados de terceiros.
 
@@ -735,7 +735,7 @@ Sem envio à API ou mutação persistida. Screenshot e fonte original em /tmp/le
 
 - [x] CSS e handlers respeitam disabled/readOnly sem bloquear seleção/cópia/navegação.
 - [x] beforeinput tolera forma real do evento e mantém teto, exclusão, nova linha e colagem.
-- [ ] Contratos reais + Browser local com controles ativo/bloqueado, check/build e publicação.
+- [x] Contratos reais + Browser local com controles ativo/bloqueado, check/build e publicação.
 
 Reusar controller/fundação existentes; helper adjacente somente se necessário. Sem env,
 package, migration/reset ou regra remota nova. UI mobile-first/tokens preservados; rollback
@@ -761,3 +761,32 @@ Deploy342: operador mostrou Done do05f1506d. Backend342,health/ready200 confirma
 A342-03 confirmado no Admin publicado341: alterar Até com De vazio em Comunidades remove
 os controles e mostra período inválido. Tentar novamente restaurou all; sem mutação.
 Corrigir em patch próprio após343; não confundir com analytics profissional FE341-03.
+
+### Continuação344 — preservar dashboard durante edição de datas
+
+A342-03 confirmado no Admin homolog341 e rastreado ao período selecionado usado na query antes
+do commit de datas. Reusar separação selecionado/aplicado já presente no dashboard pacientes
+junto ao hook useDateRangeCommitOnBlur existente. Extrair somente coordenação local testável.
+
+- [x] Digitar data incompleta/invertida conserva dashboard, consulta e campos para correção (prova local).
+- [x] Commit válido troca consulta uma vez; presets e rótulos usam o período aplicado correto (estado local).
+- [ ] Contratos de estado React real, Browser local, admin check/build e smoke de publicação.
+
+Sem nova env/package/migration ou mudança remota; UI/tokens e conteúdo existentes preservados.
+Não usar mocks/API substituída para concluir integração nem alterar dados reais nesse teste.
+
+Publicação343: aaf0dddf emhomolog;18/18smoke11/09às19:53:57UTC,backend/frontend/Admin343,
+health/ready200. Analytics autenticado em390: data vazia+Aplicar mantém editor e mensagem
+Informe a data de início; cancelar descarta rascunho; intervalo válido carrega e volta sem erro.
+RestauradoTodooperíodo. Conta gratuita/semvídeo: não afirmar seek/playback pago ou salvarpost.
+
+344:9/9regressões (8estado ReactSSR +1wiring), Browserlocal390/1280 com componentes e
+hook reais. Up emAté quandoDe vazio mantém all aplicado; blur mostra erro; presetmês limpa;
+mover foco entre datas conserva mês; sair aplica custom01–10/09. SemAPI/substituições.
+Admincheck62/62,buildotimizado e rootcheck1057 (1051pass/6skipsdrawtext) aprovados.
+Bump344uma vez; publicação344 pendente. Nenhumenv/package/migration.
+
+LeituraSocrates dos275alvosAdmin/58.723linhas completa,1suporte; hashcongelado e versões
+concorrentes separados. Parent releucliente e diff344, sem creditar fonte antiga comhashnovo.
+Base1944leiturasiniciais,0parciais,1177pendentes;ledger1927. NoveachadosAdmin documentados;
+A342-03corrigido localmente, demais emtriagem/execução. TASK178segue emandamento.
