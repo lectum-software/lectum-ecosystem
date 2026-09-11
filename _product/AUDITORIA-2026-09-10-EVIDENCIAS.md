@@ -1654,3 +1654,55 @@ Frontend suporteSocrates:26fontes integrais dos31alvos, incluindoJSON22340linhas
 SVGs têm XML lido e raster base64 ainda sem inspeção visual nesta integração; não contar
 como leitura integral. Relatório /tmp/lectum-task178-frontend-support-345/report.md lido
 pelo parent. READMEtemplate divergente e limites dos contratos separados de bugs atuais.
+
+## Publicação346 e leituras adicionais
+
+Commit a4fc2219 publicado emhomolog; push/hook aprovados. Smoke5/5GETs públicos em
+11/09/2026às20:57:16UTC: backendhealth/ready200, backend/frontend/Admin0.1.346; Next
+no-store/noindex. /tmp/lectum-audit-346-smoke-curl-homolog.json. Serviço privado de vídeo
+não consultado nesta etapa; última evidência operacional fornecida pelo usuário0.1.338.
+
+BrowserAdmin346: Tab percorreu todos os14passos com retorno de Sair para Fechar; ShiftTab
+fez o inverso; fundo não aparece na árvore enquanto menu aberto. Escape devolve foco ao
+gatilho e mantém q=Auditoria. Resize1280 fecha menu/restaura gatilho desktop; voltar390não
+reabre. LinkVisãogeral fecha menu; voltar retorna à busca sem reabertura. Filtro existente
+preserva ciclo Fechar/Aplicar e Escape devolve ao botãoFiltros, sem aplicar alterações.
+Capturas /tmp/lectum-task178-admin-menu-346/homolog-mobile-before.png, after.png,
+after-375.png e homolog-desktop-resize.png. Antes375×812, primeirodepois390×844; refeita
+comparação375×812. Visual mantém tokens/conteúdo; a remoção da barra vertical pelo lock
+de documento libera15px antes ocupados no Browser desktop emulado. Não confundir com
+redesign; não é prova de Safari/iPhone/Android físico. Nenhuma conta ou aprovação editada.
+
+Leituras Gauss39backend/8.832linhas, Mendel25admin-raiz/2.530linhas e adendoSocrates5SVGs:
+relatórios lidos pelo parent e hashes conferidos. SVGs têm XML+11slotsPNG(9rastersúnicos)
+visualmente inspecionados; base64não lido literalmente e composiçãoSVG não renderizada.
+Arquivos alterados depois do freeze têm leitura anterior+diff parent separado. Metadados
+sozinhos nunca promovidos a leitura. Relatórios /tmp/lectum-task178-backend-support-346,
+/tmp/lectum-task178-admin-root-support-346 e /tmp/lectum-task178-frontend-support-345.
+
+LeituraBacon172tasks finalizada:54.419linhas/502chunks;172hashes preservados até20:59:55UTC.
+Parent leu REPORT.md integral e deduplicou com leiturasanteriores;168novosda base nesta
+integração. DoDREADME e avisoTASK42 foram corrigidos depois, com baseline+diff rastreado.
+Os seisachados são documentais, não prova de execução remota; statusCompletedhistórico
+não vira aprovação atual de TASK178. Fonte /tmp/lectum-task178-product-tasks-345/.
+
+## 347 — controles acessíveis e catálogos
+
+A342-05:7testes reais (SSR/estado/handlers +wiring) passaram; baseline3pass4fail.
+O testscriptAdmin executa o arquivo com[id] via node direto: --test nessepath havia
+selecionadozerotestes, que nãofoicontadocomoaprovação. Declarações originais extraídaspor
+AST, hooksReactreais, Lucide/cn, sem bootstrap/API/auth/provider. Browserlocal390/1280:
+Especialidades mantémnome ao abrir/fechar; TabEnterseleciona, Removernomeado, disabled
+ocultaopções e anunciacolapsado; páginas1→3limite→2 comnomes/estado/aplicação preservados.
+Dadosdasopções são entradasunitárias, não dadospersistidos nem integraçãomockada.
+Capturasvistas local-mobile.png e local-desktop.png em/tmp/lectum-task178-admin-labels-347.
+Primeiracapturaapósresize tinha bitmapantigo; descartada e refeita após estabilizar1280.
+
+D2: catálogos9valorescada, nenhumachave/serviço/contrato alterado. Tradutori18next/Zod/
+normalizadorreais20/20; baseline1pass19failincluiexpectativasdecopy,não19vulnerabilidades.
+Gateway já era filtrado; novacopyrecuperaorientaçãosegura. SMTP/scheduler/configuração/
+canalinternoe softdelete têmcallersrastreadosemfonte, nenhumarotaouaçãoexecutada.
+Mutual/exactcompatibilidade não temcallerprodutoatualdemonstrado; teste nãofabricaissue.
+Fonte /tmp/lectum-task178-public-messages-347/report.md, readlist,freeze.
+
+347 validação global:1123 testes,1117pass/6skips conhecidos drawtext. Admin93/93 (86+7), backend470/470. Builds Admin/backend aprovados; logs /tmp/lectum-347-{root-check,admin-build,backend-build}.log. Sem env/migration/package. Nova env não necessária. Publicação e reteste autenticado pendentes neste commit.

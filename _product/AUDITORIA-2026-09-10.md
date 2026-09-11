@@ -224,7 +224,14 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 130. Data de registro de hoje deixa de ser recusada antes do meio-dia.
 131. Listas administrativas usam o singular quando há apenas um resultado.
 
-346: checks e builds aprovados; reteste do menu publicado ainda pendente.
+346: checks, builds, publicação e reteste do menu aprovados.
+
+132. Seletores de especialidades e abordagens passam a ser identificados por leitores de tela.
+133. Paginação informa os nomes dos botões e a página atual.
+134. Mensagens de validação corrigem limites e substituições de campos em português.
+135. Avisos de indisponibilidade deixam de mostrar configurações internas do serviço.
+
+347: validação local e builds aprovados; reteste publicado pendente.
 
 ## Ainda pendente
 
@@ -235,7 +242,8 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **2762 arquivos com leitura inicial**, sem leituras parciais pendentes e 359 ainda não revisados.
+Cobertura da base: **2999 arquivos com revisão inicial**, sem revisões parciais pendentes e 122 ainda não revisados.
+Inclui leitura textual e, para cinco SVGs, XML mais inspeção dos rasters; não leitura literal do base64.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

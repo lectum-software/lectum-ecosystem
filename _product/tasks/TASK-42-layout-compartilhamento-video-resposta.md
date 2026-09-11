@@ -12,10 +12,11 @@
 | Dependências | TASK-23, TASK-26, TASK-28, TASK-29B |
 | ADR alvo | ADR-0191 |
 
-> **Estado atual após TASK-164:** esta task registra o histórico da solução e continua concluída,
-> mas a geração/download social de **vídeo** foi retirada do runtime ativo. O compartilhamento atual
-> usa link privado; reintroduzir o arquivo 9:16 exige processador assíncrono em `video/` e nova task.
-> Compartilhamento social de imagem não foi removido.
+> **Histórico após TASK-164:** geração/download social de vídeo foi retirada naquele momento.
+> **Fluxo posterior vigente:** a [TASK-176](TASK-176-reativar-preview-social-video-service.md)
+> reintroduziu a prévia e o download social pelo serviço dedicado `video/`. Esta TASK-42
+> preserva a referência visual e o histórico, não autoriza restaurar MediaBunny/Chromium ou
+> o pipeline antigo. Compartilhamento de link e de imagem devem seguir suas regras próprias.
 
 ## Contexto
 

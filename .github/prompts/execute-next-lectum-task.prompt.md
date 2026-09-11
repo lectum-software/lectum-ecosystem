@@ -20,7 +20,7 @@ Instructions:
 14. Run relevant checks/builds.
 15. Create/update ADRs.
 16. Mark completed acceptance criteria.
-17. Before the new commit, run `pnpm version:bump` exactly once, stage all four package manifests, and run `pnpm check:version`. Do not bump again when retrying the same failed commit.
+17. Before the new commit, run `pnpm version:bump` exactly once, stage all five package manifests (root, backend, frontend, admin and video), and run `pnpm check:version`. Do not bump again when retrying the same failed commit.
 18. Commit with a conventional commit message.
 19. Record data/env/rollout/rollback impact. A mandatory new env requires a deploy alert without its value.
 20. Confirm `homolog`, warn that push auto-deploys homologation, and run `git push`. Never push directly to `main`.

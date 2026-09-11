@@ -815,8 +815,8 @@ A342-08 reproduzido no menu recolhido do Admin344: Tab permite focar a página a
 overlay. Usar fundação existente para conter foco, Escape/retorno e preservar sidebar
 desktop, mudança de rota e scroll. Sem redesenho, novo pacote, env ou migração.
 
-- [ ] Menu aberto mantém navegação de teclado dentro do conteúdo e fecha/restaura foco corretamente.
-- [ ] Contratos reais, Browser local/publicado e admin check/build aprovados.
+- [x] Menu aberto mantém navegação de teclado dentro do conteúdo e fecha/restaura foco corretamente.
+- [x] Contratos reais, Browser local/publicado e admin check/build aprovados.
 - [x] Template de ADR e complemento0441 incluem quatro apps/cinco manifests, preservando histórico.
 
 Decisão expressa do responsável11/09/2026: selo=registro ativo aprovado (CFP ou humano),
@@ -837,3 +837,26 @@ Admin86/86; builds backend e Admin aprovados. C24:11/11 em3fusos; reprodução a
 Menu:7 contratos estáticos e hook real no Browser em390/1280; ciclo Tab/ShiftTab, Escape,
 retorno, pilha aninhada e preservação da busca atrás. Não equivale ao shell completo;
 resize/navegação, plural e reteste do menu publicado ainda pendentes. Bump346já executado.
+
+### Continuação347 — nomes acessíveis e onboarding de desenvolvimento
+
+A342-05: parent confirmou no Admin345 seletores de Especialidades/Abordagens sem nome
+acessível. Reusar nomes contextuais e padrão existente de paginação; sem redesenho ou
+mudança de payload/RHF. FS345-01 e DOC-01: substituir READMEtemplate frontend e alinhar
+instruções Cursor/GitHub a quatro apps/cinco manifests, sem executar receitas históricas.
+
+- [ ] Expansores e paginação têm nome/estado acessível coerente; ações anteriores preservadas.
+- [ ] Browser local/publicado, checks e build Admin registrados com limites explícitos.
+- [x] READMEfrontend e regras de release citam pnpm, homolog, cinco manifests e gates vigentes.
+
+Sem nova env/package/migration/reset; rollback independente. Esta continuação não resolve
+requisitos externos de documentos legais ou integração CFP/pagamento. KYC não faz parte da promessa do selo.
+
+D2 do suporte backend: revisar interpolação e limites em mensagens Zod, e rastrear copy
+excessivamente técnica até os consumidores. Corrigir apenas contrato textual estabelecido,
+sem adivinhar regras Gratuito/Profissional ou alterar domínio/provider.
+- [x] Mensagens alcançáveis e defeitos de interpolação corrigidos com contratos reais do tradutor.
+
+Publicação346 a4fc2219:5/5smoke,3apps0.1.346,health/ready200; menu móvel/resize/histórico e filtro existente repetidos no Admin. Nenhum teste CFP remoto.
+
+347 local: root1123 testes (1117pass/6skips drawtext), Admin93/93, backend470/470; builds Admin/backend aprovados. Bump347executado uma vez. Browserlocal390/1280 e testes de controles reais; publicação ainda pendente.

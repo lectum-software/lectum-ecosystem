@@ -98,3 +98,51 @@ persistidos sem fonte. CincoSVGs aguardam inspeção raster; não ler base64 com
 
 C24 corrigido346 e validado em11testes/3fusos; sem regravar registros ou executar CFP.
 A342-08 corrigido localmente346, aguardando reteste publicado; A345-01 singular idem.
+
+## Suporte346 integrado347
+
+- DOC01: duas instruções antigas omitiam vídeo; parent alinhou QUATROapps/CINCOmanifests.
+- DATA01: três formas no JSONdepaíses usam stringundefined como id. Rastrear consumidor
+  antes de inferir associação errada; não redefinir nomenclatura geopolítica automaticamente.
+- D1Swagger: catálogo parcial/desalinhado (securitynome/casos, AND/OR, pathsExpress,
+  OpenAPI3.1/nullable/required, corpos, transporteCookie, fluxosfaltantes). Não é prova
+  de falta de autorização atual; corrigir gerador/documento com escopo/teste próprios.
+- D2copybackend: defeitos Zod e texto técnico em triagem347; conflito vídeoGratuito/Pro
+  exige caller/regra vigente, não simplificar inventando entitlement.
+- D3templatee-mail: slotHTML/URL/fonteexterna exigem procedência/sanitização/privacidade;
+  nenhum payload/XSS comprovado nem envio executado. Testelogo não cobre esseslimites.
+- D4contratos: vídeoHTTPsubstituto,multipartparser,cookies/view-as/sanitização são unitários;
+  não certificar DB/providers/Browsers com sua contagem. D5legadosOAuth, preferência
+  selodeexperiência e docs operacionais pedem interpretação; receitas ficam inertes.
+
+A342-08 passou no BrowserAdmin346 (ciclo completo/Escape/resize/navegação/retorno e
+regressão do filtro existente). A342-05 confirmado também emBrowser345 para expansores
+Especialidades/Abordagens sem nome; correção347 emandamento, nenhuma edição salva.
+
+## Novas confirmações locais/Browser346 (sem edição persistida)
+
+A348-01/P2: Cancelar da identidade de comunidade não descarta rascunho. Parent abriu apenas
+Auditoria Lectum — Homologação, acrescentou texto no nome e clicou Cancelar; rascunho
+permaneceu no input e header continuou no valor persistido. Reload descartou a edição,
+nenhumSalvar/upload acionado. Fonte: DetailContent passa onDone noop emtabdados e
+CommunityEditForm delega Cancelar a esse callback semreset. Capturas em
+/tmp/lectum-task178-community-draft-348/cancel-before.png e cancel-draft-preserved.png.
+Tratar junto de A342-01resetapósavatar, preservando submit e sincronizaçãoRHF.
+
+DATA01 promovido de hipótese para mecanismo concreto de fonte: os dois WorldCountryMap
+(pacientes/location-map.tsx e trafego/components/location.tsx) usam id como key React e
+chavecountriesByMapId. A resolução por nome pode obter uma das trêsformasidundefined;
+o mesmo item pode então colorir as outrasduas. Não há evidência de dados afetados em
+homolog. Corrigir identificador interno de forma/associação sem alterar nomes, fronteiras,
+ISO de API ou dados persistidos; testar dataset real e componentes. Ainda não implementado.
+
+## Tasks históricas — fonte integral345 integrada347
+
+DOC1DoDREADME omitevídeo corrigido347; DOC2TASK42recebe apontadoràreintroduçãoTASK176,
+semrestaurarpipeline antigo. DOC3TASK70(espelhosem66/67/68): checkboxmutaçãopersistida
+excede evidência descrita de guards/checks; buscar evidência posterior semexecutarações
+proibidas e separar implementação deintegração. DOC4MRRTASK62 intervalodofiltro vsrótulo
+Todooperíodo pedecontratocanônico, não deduzir errofinanceiroatual. DOC5TASK72/91zero
+mostrado para atribuiçãoausente é decisãohistórica; nãoreconstruirtráfego, revisarsemântica
+viva. DOC6TASK74mantémpendênciaretençãodescarte/copycrise/validaçãoprofissionaljurídica,
+aindaqueCompleted. Registrar responsável/decisão, nãopresumiraprovação.

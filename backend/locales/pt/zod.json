@@ -6,7 +6,7 @@
     "invalid_type_not_empty": "Não pode ser vazio",
     "invalid_type_reverse_condition": "Os campos {{names}} {{conjugation}} {{last}} não podem ser preenchidos ao mesmo tempo",
     "invalid_type_major_or_equal_condition": "O valor de {{first}} deve ser maior ou igual a {{second}}",
-    "invalid_type_mutual_condition": "Os campos {names}} {{conjugation}} {{last}} devem ser preenchidos ao mesmo tempo",
+    "invalid_type_mutual_condition": "Os campos {{names}} {{conjugation}} {{last}} devem ser preenchidos ao mesmo tempo",
     "invalid_type_major_condition": "O valor de {{first}} deve ser maior que {{second}}",
     "invalid_type_one_of_required_condition": "Um dos campos {{names}} {{conjugation}} {{last}} deve ser preenchido",
     "invalid_type_equal_condition": "Os campos {{names}} {{conjugation}} {{last}} devem ser iguais",
@@ -53,7 +53,7 @@
         "not_inclusive": "Texto deve conter mais de {{minimum}} caracter(es)"
       },
       "number": {
-        "exact": "Número deve conter exatamente {{minimum}} caracter(es)",
+        "exact": "Número deve ser igual a {{minimum}}",
         "inclusive": "Número deve ser maior ou igual a {{minimum}}",
         "not_inclusive": "Número deve ser maior que {{minimum}}"
       },
@@ -63,9 +63,9 @@
         "not_inclusive": "Entrada inválida"
       },
       "date": {
-        "exact": "Data deve ser exatamente {{- maximum, datetime}}",
-        "inclusive": "Data deve ser maior ou igual a {{- minimum, datetime}}",
-        "not_inclusive": "Data deve ser maior que {{- minimum, datetime}}"
+        "exact": "Data deve ser igual a {{- minimum, datetime}}",
+        "inclusive": "Data deve ser igual ou posterior a {{- minimum, datetime}}",
+        "not_inclusive": "Data deve ser posterior a {{- minimum, datetime}}"
       }
     },
     "too_big": {
@@ -80,7 +80,7 @@
         "not_inclusive": "Texto deve conter menos que {{maximum}} caracter(es)"
       },
       "number": {
-        "exact": "Número deve conter exatamente {{maximum}} caracter(es)",
+        "exact": "Número deve ser igual a {{maximum}}",
         "inclusive": "Número deve ser menor ou igual a {{maximum}}",
         "not_inclusive": "Número deve ser menor que {{maximum}}"
       },
@@ -90,9 +90,9 @@
         "not_inclusive": "Entrada inválida"
       },
       "date": {
-        "exact": "Data deve ser exatamente {{- maximum, datetime}}",
-        "inclusive": "Data deve ser menor ou igual a {{- maximum, datetime}}",
-        "not_inclusive": "Data deve ser menor que {{- maximum, datetime}}"
+        "exact": "Data deve ser igual a {{- maximum, datetime}}",
+        "inclusive": "Data deve ser igual ou anterior a {{- maximum, datetime}}",
+        "not_inclusive": "Data deve ser anterior a {{- maximum, datetime}}"
       }
     }
   },

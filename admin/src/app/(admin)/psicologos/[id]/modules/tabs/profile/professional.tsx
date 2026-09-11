@@ -123,7 +123,8 @@ const AdminProfessionalTagField = ({
             <span className="text-sm font-bold text-subtle">{placeholder}</span>
           )}
           <button
-            aria-expanded={open}
+            aria-expanded={open && !disabled}
+            aria-label={label}
             className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:bg-surface-muted"
             disabled={disabled}
             onClick={() => setOpen((current) => !current)}

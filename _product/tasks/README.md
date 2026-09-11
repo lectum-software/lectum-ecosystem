@@ -600,7 +600,7 @@ Uma task só pode ser marcada como concluída quando:
 - UI tiver sido validada com Builder/Quick Copy quando disponível ou com imagem local registrada em `PROTO-INVENTORY.md`;
 - UI tiver sido validada no browser local quando houver tela;
 - houver commit próprio da task;
-- o commit tiver incremento sincronizado em `package.json`, `backend/package.json`, `frontend/package.json` e `admin/package.json`;
+- o commit tiver incremento sincronizado em `package.json`, `backend/package.json`, `frontend/package.json`, `admin/package.json` e `video/package.json`;
 - o commit tiver sido publicado com `git push`, ou o bloqueio de push tiver sido registrado explicitamente quando houver falha de credenciais, rede ou permissão.
 
 ## Templates

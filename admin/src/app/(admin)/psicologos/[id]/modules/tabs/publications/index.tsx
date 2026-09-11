@@ -42,6 +42,7 @@ export const PublicationsPagination = ({
       type="button"
     >
       <ChevronLeft aria-hidden className="h-4 w-4" />
+      <span className="sr-only">Página anterior</span>
     </button>
     {Array.from({ length: Math.min(5, pages) }, (_, index) => {
       const start = Math.min(Math.max(page - 2, 1), Math.max(pages - 4, 1));
@@ -50,6 +51,8 @@ export const PublicationsPagination = ({
 
       return (
         <button
+          aria-current={itemPage === page ? "page" : undefined}
+          aria-label={`Página ${itemPage}`}
           className={cn(
             "h-10 min-w-10 rounded-control border px-3 text-sm font-black",
             itemPage === page
@@ -71,6 +74,7 @@ export const PublicationsPagination = ({
       type="button"
     >
       <ChevronRight aria-hidden className="h-4 w-4" />
+      <span className="sr-only">Próxima página</span>
     </button>
   </div>
 );

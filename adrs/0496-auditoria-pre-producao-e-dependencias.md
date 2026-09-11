@@ -990,3 +990,24 @@ aprovação/identidade/CFP executado ou contrato HTTP alterado. C17 continua sep
 A345-01: singular nas duas listas administrativas, sem novo helper ou mudança de layout.
 Sem env/package/migration/reset; rollback Admin e backend independente. Cinco manifests
 sincronizados346 em um único bump. Publicação deve repetir teclado e versões/health/ready.
+
+### Semântica acessível e catálogos347
+
+A342-05: nome estável do campo no expansor e estado alinhado à visibilidade(open&&!disabled),
+sem rolelistboxinadequado nem redesenho. Paginação reusa texto sr-only das setas do padrão
+AdminPagination e marca página atual. Preservar seleção, callbacks, janela e flagsRHF.
+Testes extraem declaraçõesoriginais por AST para não carregar serviços; contratos SSR não
+certificam DOM/AX. Browserlocalcomcontrolesreais e repetição autenticada são evidências
+separadas. Arquivo de teste com[id] executado diretamente pelo Node evita zerotestes do
+runnerglob; contador7confirmado. Não criar framework/componentes paralelos.
+
+D2: ajustar valores dos catálogos existentes sem códigos/shape/status novos. Interpolação,
+igualdade e orientação temporal não mudam validação. Não expor instruções/configuração
+interna ao usuário; mensagens preservam indisponibilidade e não culpam credenciais.
+Trocar termo técnico de exclusão pela informação registro preservado sem prometer apagar
+fisicamente, reversibilidade ou política de retenção. Regras Gratuito/Profissional e KYC
+ficam fora dessepatch. Sem migração/provider/alteração persistente/env/package.
+
+Documentação: READMEfrontend específico, pnpm e gates homolog/main; Cursor/GitHub e DoD
+com cinco manifests/quatro apps. TASK42 preserva histórico e aponta reintroduçãoTASK176,
+não autoriza restaurar pipeline antigo. Rollback independente Admin/backend/documentos.
