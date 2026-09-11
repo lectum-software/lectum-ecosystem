@@ -33,7 +33,11 @@ export const DonutChart = ({
   total: number;
 }) => {
   const radius = 42;
-  const { circumference, segments } = buildDonutCircleSegments(items, total, radius);
+  const coloredItems = items.map((item, index) => ({
+    ...item,
+    color: CHART_COLORS[index % CHART_COLORS.length],
+  }));
+  const { circumference, segments } = buildDonutCircleSegments(coloredItems, total, radius);
 
   return (
     <figure className="mt-5">
@@ -52,14 +56,14 @@ export const DonutChart = ({
             stroke="var(--admin-surface-muted)"
             strokeWidth="18"
           />
-          {segments.map(({ dash, item, strokeDashoffset }, index) => (
+          {segments.map(({ dash, item, strokeDashoffset }) => (
             <circle
               cx="60"
               cy="60"
               fill="none"
               key={item.id}
               r={radius}
-              stroke={CHART_COLORS[index % CHART_COLORS.length]}
+              stroke={item.color}
               strokeDasharray={`${dash} ${circumference - dash}`}
               strokeDashoffset={strokeDashoffset}
               strokeWidth="18"
@@ -94,7 +98,7 @@ export const DonutChart = ({
               Nenhum dado foi encontrado no período.
             </p>
           ) : (
-            items.map((item, index) => (
+            coloredItems.map((item) => (
               <div
                 className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3"
                 key={item.id}
@@ -103,7 +107,7 @@ export const DonutChart = ({
                   <span
                     aria-hidden
                     className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                    style={{ backgroundColor: item.color }}
                   />
                   <span className="min-w-0">
                     <span

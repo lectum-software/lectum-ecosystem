@@ -1797,3 +1797,45 @@ atualiza descrição limpa e Cancelar devolve defaults/dirtyvazio. Fonte visual 
 Teste final em admin/scripts/community-edit-form.test.mjs: caminho/resolução e assertion
 de evento revisados pelo parent após leitura integral455linhas do original;15/15repetidos.
 Guard de fonte inalterado. Publicação e prova remota de Salvar ainda pendentes.
+
+### Publicação348 e reteste autenticado
+
+Commit c0eee4a6 enviado para homolog; hook de push passou em 71,19s. Cinco GETs públicos
+aprovados em 11/09/2026 às 22:05:04 UTC: backend/frontend/Admin 0.1.348, health/ready200,
+rotas Next no-store/noindex. Fonte: /tmp/lectum-audit-348-smoke-curl-homolog.json.
+Vídeo privado não foi consultado; último resultado operacional fornecido pelo usuário:338.
+
+Na comunidade exclusiva da auditoria, após reload da versão nova: Cancelar restaurou o
+nome sem navegação; Salvar com espaços normalizou o nome. Durante a operação os três
+campos, Cancelar e Salvar ficaram disabled na árvore de acessibilidade. Novo rascunho
+seguido de Cancelar voltou ao nome recém-salvo, não ao nome anterior ao teste. O nome
+original foi restaurado por nova gravação e confirmado após reload. Descrição e demais
+dados permaneceram originais. Nome vazio mostrou “Informe o nome.” sem gravação; Cancelar
+limpou erro e restaurou o nome. Nenhuma ação em comunidade de terceiros, moderação ou CFP.
+
+Capturas nativas homolog-before/after em /tmp/lectum-task178-community-draft-348:
+1265×712 e976×949, com scroll/contexto distintos. Não são comparação pixel-a-pixel.
+Sem alteração de classes/estrutura fora do wrapper do evento; cenários locais390/1280
+anteriores foram preservados. Upload/avatar remoto e falha de rede não foram simulados;
+foi solicitada confirmação manual do ciclo avatar+rascunho, sem bloquear outras correções.
+
+### A342-07 — cor do gráfico349
+
+Confirmado no Admin publicado (período Hoje): Cadastros por perfil tinha 0 pacientes e
+4 psicólogos; arco era azul, embora a legenda dos psicólogos fosse verde. Captura nativa
+/tmp/lectum-task178-traffic-donut-349/homolog-before.png. Mudança apenas visual: atribuir
+cor antes da filtragem de segmentos, reutilizando o padrão de pacientes/psicólogos.
+Geometria, totais, ordem e percentuais não mudaram; fonte de API preservada.
+
+Seis testes executam declaração original DonutChart, React, geometria e formatadores
+reais, isolando apenas imports sem carregar serviços. Baseline:3pass/3fail; correção:6pass.
+Cobrem zeros no início/meio, ciclo da paleta, total/legenda/descrições, ausência de dados
+e entradas congeladas. SSR/entradas locais não comprovam a integração publicada.
+Browser local antes/depois em991×964: somente cor do arco muda; legenda/layout/total4
+permanecem. Capturas nativas local-before/after comparadas lado a lado via view_image.
+Tentativa de viewport390 não atingiu essa aba; NÃO contabilizar teste mobile390 deste
+patch. Fonte não altera layout/breakpoints; reteste publicado após deploy ainda pendente.
+
+349: check global aprovado com1144testes (1138pass/6skips drawtext);Admin114/114.
+BuildAdmin aprovado; source-safety/ESLint/Biome/TypeScript preservados. Um único bump349
+sincronizou cinco manifests. Sem env/migração/pacote; publicação aguardando commit/push.

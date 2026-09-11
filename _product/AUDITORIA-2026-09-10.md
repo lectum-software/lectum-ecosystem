@@ -237,7 +237,11 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 137. Cancelar descarta o rascunho mesmo quando a tela permanece aberta.
 138. Durante Salvar, campos e Cancelar ficam bloqueados para evitar perder uma nova edição.
 
-348: check geral, 15 regressões específicas e build passaram; reteste publicado pendente.
+348: publicada e verificada. Salvar, Cancelar, bloqueio durante envio e validação passaram; nome da comunidade de teste restaurado. Upload de avatar ainda aguarda teste manual.
+
+139. Gráfico de tráfego mantém a mesma cor da legenda quando uma categoria está zerada.
+
+349: seis testes e comparação visual local passaram; publicação pendente.
 
 ## Ainda pendente
 

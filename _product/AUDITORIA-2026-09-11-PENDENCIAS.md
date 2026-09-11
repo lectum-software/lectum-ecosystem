@@ -14,7 +14,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | A342-04 | Busca perde foco após atualizar a URL. | Corrigido345; foco e continuação da digitação repetidos nas duas listas publicadas. |
 | A342-05 | Expansor de campo profissional e setas de publicações sem nome acessível. | Corrigido347; nomes/expandido, teclado/seleção/Cancelar e paginação conferidos no Admin publicado e mobile. |
 | A342-06 | Contador de cliques de Posts inclui cliques das Respostas. | Fonte; separar universos. |
-| A342-07 | Cores de donut e legenda divergem quando há categorias zeradas. | Fonte; manter cor estável por categoria. |
+| A342-07 | Cores de donut e legenda divergem quando há categorias zeradas. | Corrigido349; reproduzido em homolog, seis testes e comparação local; aguardando publicação. |
 | A342-08 | Menu mobile permite Tab para conteúdo atrás do modal. | Reproduzido no Admin344: Tab atravessa o menu e alcança a busca atrás do overlay. Corrigido346; contenção/Escape/retorno/resize/histórico repetidos no Admin publicado. |
 | A342-09 | Métrica agrupada herda detalhes apenas da primeira origem. | Fonte; agregar detalhes coerentemente com o total. |
 
@@ -183,3 +183,8 @@ Copy da aplicação deve obedecer à spec/política vigente, não copiar promess
 Selo já decidido: registro ativo aprovado, sem comprovação de titularidade. Conversas
 pessoais das referências não foram reproduzidas. MP4 tem inspeção técnica parcial,
 sem cobertura audiovisual integral; não há alegação de todos os arquivos/fluxos concluídos.
+
+A348-01: corrigido e repetido no Admin348; Cancelar/Salvar/normalização/pending e limpeza
+de erro passaram. Nome QA restaurado após gravação e reload. Avatar+rascunho pendente manual.
+A349-02: botão acessível de fechar toast usa “Close toast” no Admin; rastrear configuração
+Sonner para PT-BR, sem tratar idioma do controle nativo do navegador como copy de produto.

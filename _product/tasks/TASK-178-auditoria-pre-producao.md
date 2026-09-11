@@ -873,7 +873,7 @@ sem nova fundação, mudanças em upload/callers/limites, env, pacote ou migrati
 - [x] Cancelar descarta rascunho/erros para os últimos dados persistidos, mesmo sem navegar.
 - [ ] Salvar aplica o retorno normalizado, limpa dirty e mantém mensagens/callbacks; falha preserva edição.
 - [x] Outra comunidade não herda rascunho; refetch/save não restaura valores já confirmados.
-- [ ] Estado RHF real, Browser local e publicado, Admin check/build e smoke registrados.
+- [x] Estado RHF real, Browser local e publicado, Admin check/build e smoke registrados.
 
 A interface não possui revisão remota; não prometer controle de concorrência entre dois
 administradores. Não manipular dados de terceiros nem redefinir upload para demonstrar o bug.
@@ -890,3 +890,25 @@ aprovado. Submissão RHF passa a ser criada no evento, não no render: refs são
 apenas em efeitos/handlers, sem desativar regra React. Reteste local da fonte final
 conserva dirty/refetch e Cancelar limpa estado. Salvar publicado/upload ainda pendentes.
 Sem env, migração ou pacote; cinco manifests348. Não repetir o bump neste commit.
+
+### Continuação349 — coerência de cor do gráfico de tráfego
+
+A342-07: geometria remove categorias sem contagem, mas gráfico escolhe cores pelo índice
+filtrado e legenda pelo índice original. Reusar padrão de paciente/psicólogo: cor atribuída
+a cada item antes da geometria, usada tanto no arco como na legenda. Não alterar
+contagens, percentuais, ordem, filtro, geometria, API, env, pacote ou banco.
+
+- [x] Cores de arco e legenda coincidem com zeros no início/meio e ciclo da paleta.
+- [x] Total/ordem/descrições/estado vazio mantidos; entradas não são alteradas.
+- [ ] Componente real em SSR, Browser local/publicado, check/build e smoke registrados.
+
+Sem redesenho; evidência de fonte não implica incidente financeiro ou erro de contagem.
+
+348 publicada c0eee4a6: smoke5/5; Browser confirmou Salvar normalizado, bloqueio pending,
+Cancelar com defaults recentes e limpeza de validação. Nome QA restaurado e conferido
+após reload. Falha de rede e upload de avatar não foram executados; não marcar como E2E.
+349: baseline3pass/3fail e final6/6; Browser local991×964, sem comprovação de viewport390.
+
+349: check global aprovado com1144testes (1138pass/6skips drawtext);Admin114/114.
+BuildAdmin aprovado; source-safety/ESLint/Biome/TypeScript preservados. Um único bump349
+sincronizou cinco manifests. Sem env/migração/pacote; publicação aguardando commit/push.

@@ -1036,3 +1036,10 @@ de transição não comprovam persistência remota, upload ou falha de rede.
 O handler RHF é composto dentro do evento submit, não durante render: o callback de
 sucesso verifica ref de identidade somente após await. Mantida a regra React de refs,
 sem lint-disable e sem ref sendo consumida no render. Check global e build confirmados.
+
+### Cores do tráfego349 — requisito prévio
+
+Associar a cor da paleta existente ao item antes de filtrar segmentos vazios, como nos
+donuts de pacientes/psicólogos. Não mudar geometria compartilhada nem contratos dos
+callers; opção por cor no item evita índices incompatíveis e lookup quadrático.
+Preservar porcentagens/totais e identidades. Sem env/migration/package.
