@@ -78,6 +78,7 @@ export const PsychologistCfpLogic = () => {
   });
 
   const resetSearch = () => {
+    if (confirm.isPending || search.isPending) return;
     setSearchResult(null);
     setSelectedKey(null);
     setApiError(null);
@@ -85,6 +86,7 @@ export const PsychologistCfpLogic = () => {
   };
 
   const handleSubmit = (data: CfpSearchForm) => {
+    if (confirm.isPending || search.isPending) return;
     setApiError(null);
     setSearchResult(null);
     setSelectedKey(null);
@@ -92,7 +94,7 @@ export const PsychologistCfpLogic = () => {
   };
 
   const handleConfirm = () => {
-    if (!searchResult?.check_id || !selectedKey) return;
+    if (confirm.isPending || search.isPending || !searchResult?.check_id || !selectedKey) return;
 
     setApiError(null);
     confirm.mutate({
@@ -118,7 +120,9 @@ export const PsychologistCfpLogic = () => {
         isConfirming={confirm.isPending}
         onConfirm={handleConfirm}
         onRetry={resetSearch}
-        onSelect={setSelectedKey}
+        onSelect={(key) => {
+          if (!confirm.isPending) setSelectedKey(key);
+        }}
         result={searchResult}
         selectedKey={selectedKey}
       />

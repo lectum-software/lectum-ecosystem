@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, useFormList } from "@/hooks/form";
 import {
   COUNTRY_CALLING_CODE_OPTIONS,
@@ -7,45 +6,29 @@ import {
   findCountryCallingCode,
 } from "@/utils/country-calling-codes";
 
+import {
+  isNationalPhoneLengthValid,
+  toWhatsappPhoneE164 as serializePhone,
+  toWhatsappPhoneInput,
+} from "@/utils/phone-number";
+
 export type WhatsappPhoneForm = {
   countryCode: string;
   phone: string;
 };
 
-const getNationalDigits = (value?: string | null, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
-  const digits = onlyDigits(value);
+export { toWhatsappPhoneInput };
 
-  if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
-    return digits.slice(countryCode.length);
-  }
-
-  return digits;
-};
-
-const isPhoneLengthValid = (value: string, countryCode: string) => {
-  const nationalDigits = getNationalDigits(value, countryCode);
-  const totalLength = (countryCode + nationalDigits).length;
-
-  return nationalDigits.length >= 6 && totalLength <= 15;
-};
-
-export const toWhatsappPhoneInput = (
-  value?: string | null,
-  countryCode = DEFAULT_COUNTRY_CALLING_CODE,
-) => getNationalDigits(value, countryCode).slice(0, 15);
-
-export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
-  const nationalDigits = getNationalDigits(value, countryCode);
-
-  return nationalDigits ? `+${countryCode}${nationalDigits}` : "";
-};
+// Preserva o contrato legado de string vazia; o schema impede esse envio.
+export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) =>
+  serializePhone(value, countryCode) ?? "";
 
 export const whatsappPhoneSchema = z
   .object({
     countryCode: z.string().min(1, "Selecione o país"),
     phone: z.string(),
   })
-  .refine((data) => isPhoneLengthValid(data.phone, data.countryCode), {
+  .refine((data) => isNationalPhoneLengthValid(data.phone, data.countryCode), {
     message: "Informe um WhatsApp válido",
     path: ["phone"],
   });

@@ -715,3 +715,23 @@ foi testado; o smoke334 sozinho não certifica a correção ainda apenaslocal de
 A integração conserva Cidade/Estado e parser plano, mas corrige a regressão HTTP de1byte
 com Multer2.3 e restaura exceções ESLint justificadas de hard reload. Lock congelado deve
 ser a base antes de alterar código por diferenças de dependências locais.
+
+### Contato profissional e confirmação (PF1–PF3)
+
+O formulário de perfil já separa número internacional salvo de campo nacional. O onboarding
+WhatsApp mantinha outra implementação com remoção duplicada doDDI. Extrair apenas os helpers
+puros compartilhados para utils, mantendo RHF/Zod/controller e contratos de retorno existentes;
+não importar um formulário de página no outro. A validação de posse/telefone válido permanece
+no backend, sem presumir que teste de comprimento certifica um número ou contato WhatsApp.
+
+Confirmação de registro é uma operação em andamento, não uma tela cancelável sem efeito.
+Bloquear ações conflitantes enquanto pending mantém o payload e a intenção visíveis; não altera
+a autorização ou aprova/reprova pessoa automaticamente. Modalidade apenas presencial não pode
+anunciar disponibilidade online. Correções frontend compatíveis, sem env/API/schema/provider.
+
+ResultCard/ResultField foram separados da composição maior sem alterar marcação: reexport
+compatível e prop disabled opcional. Isso mantém o card reutilizável/testável sem importar
+navegação Next no teste de apresentação. Nenhum stub de Next/provider. O teste de modalidade
+fica em utils para não desaparecer da execução por glob com [id]; importa o helper real.
+Bump336 único, sem dependência/migration/env. Gate local de sessão foi observado, não contornado;
+SSR/composição não substituem uma confirmaçãoCFP real nem certificam titularidade do telefone.

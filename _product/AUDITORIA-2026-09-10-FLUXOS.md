@@ -83,3 +83,15 @@ M2/M3 foi publicado .333 com108 verificações PG/HTTP; upload físico e disposi
 continuam pendentes. AF4 tem correção local .334: schema/Form reais e Browser390/1280,
 sem afirmar recebimento do e-mail ou reset completo. PF1–PF3 (WhatsApp/CFP/modalidade)
 têm novas evidências estáticas, sem confirmação de dados persistidos/provider.
+
+## Continuação336 — controles profissionais e leituras de comunidades/Admin
+
+- Recuperação335 publicada, versões/gates17/17; envio/entrega de e-mail não comprovados.
+- Contato: conversor/schema compartilhados; testes reais locais, sem enviar WhatsApp.
+- CFP: gate local de sessão confirmado; card pending SSR e composição estática; confirmação
+  do registro real/erro ainda pendentes de identidade autorizada, sem bypass.
+- Modalidade presencial/híbrida/online: helper real coberto; não alterada publicação do perfil.
+- Comunidades/posts:86 fontes novas; CP1 teclado, CP2 sincronização props e CP3 rollback
+  registrados, sem publicação/voto/save remoto neste recorte.
+- Admin:63 fontes novas de resumo, campanhas, pacientes/psicólogos; contratos/achados BA/BR
+  registrados como fonte-only, sem e-mail, suspensão de conta ou alteração persistida.

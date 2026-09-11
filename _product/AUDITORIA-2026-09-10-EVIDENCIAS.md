@@ -1046,3 +1046,59 @@ Todos são achados porfonte ainda sem nova reprodução/correção. R01–R04 (o
 resultado incerto fila, startup/shutdown e tamanho payload) permanecem hipóteses explícitas.
 Não executar nem retomar a operaçãoM1 bloqueada. Nova seleção inédita passou a cruzar o TSV
 consolidado antes da abertura; revisão permitida de fontes prossegue em outros módulos.
+
+### Publicação335 confirmada
+
+c2daa015 publicado em homolog; segunda verificação17/17, backend/frontend/Admin0.1.335,
+health/ready200. Logs `/tmp/lectum-335-smoke-second.log` e
+`/tmp/lectum-audit-335-smoke-homolog.json`. Primeira consulta após push ainda retornava334;
+não foi atribuída à correção de recuperação. Servidor privado video: última prova fornecida
+pelo operador continua327; build local335 não é confirmação do deploy privado.
+
+### PF1–PF3 — contato, confirmação e modalidade336
+
+Baseline determinístico com módulos reais335:3 falhas (DDD removido, excesso aceito,
+presencial anunciado híbrido); online passa. `/tmp/lectum-336-whatsapp-baseline.log`.
+Correção: helpers compartilhados sem import entre formulários, hidratação separada de
+serialização, limites nacionais preservados; pending impede reinício e troca de resultado;
+rótulo segue modalidade real. Schema/backend/check_id/result_key inalterados.
+
+692 testes workspace aprovados:197front,393back,53Admin,43video,6versão. Build frontend
+final aprovado. Logs `/tmp/lectum-336-root-check-final.log` e
+`/tmp/lectum-336-frontend-build-final.log`. Treze testes adicionais:5 contato,4 modalidade,
+2 card SSR real e2 composição estática CFP. Fixtures de apresentação sem identidade/registro;
+nenhum provider ou resultado de busca simulado, nenhuma alegação de confirmação real.
+
+A primeira execução de novos testes expôs import de navegação Next fora do bundler e glob
+[id] que não selecionava teste. Separado card existente/reexport compatível e teste do helper
+em utils. Também corrigida expectativa de capitalização para o mapa canônico já existente;
+não alterado o contrato híbrido para satisfazer teste. Suíte final executa todos os13.
+
+Browser local336: reload do build, entrada /psychologist/cfp redireciona ao login real sem
+sessão.390×844 sem overflow; envio vazio mantém foco em e-mail e mensagens PT-BR. Captura93
+em `/tmp/lectum-audit-178-ui/93-local336-cfp-session-mobile.png` mostra **login**, não resultados
+CFP. Resultados/erro pós-confirmação e formulário profissional autenticado ainda não foram
+validados visualmente nesta versão. Não inserir CPF ou contornar o gate para completar prova.
+
+### Leituras inéditas incorporadas336
+
+Tesla:63 fontes/8857linhas integrais, ledger `/tmp/lectum-task178-backend-admin-readonly.k4kfyxfw/READLIST.json`;
+37 fontes selecionadas não lidas. Euclid:86 fontes/10318linhas integrais, sendo37 shells/aliases,
+ledger `/tmp/lectum-task178-community-posts-readonly/reading.json`. Parent revisou relatórios,
+contraprovas e metadados;149 fontes novas, hashes estáveis ao integrar. Fontes não lidas/riscos
+não executados não recebem crédito. Base1425integrais/5parciais/1691não lidas; ledger1358
+inclui novos testes/helpers fora da base. Isto não equivale a testar1425fluxos.
+
+Achados fonte-only: BA01 edição após transição de campanha;BA02 razões canônicas ignoradas
+na gravidade do resumo;BA03 histórico Admin de profissional inativo;BA04 rótulo gênero bruto;
+BA05 notas humanas inglesas;BA06 snapshot de auditoria fora da transação;BA07 duração no DTO
+errado. BR01–08 são contratos/riscos condicionais (bases históricas, ranking limitado, entrega
+incerta, paginação em memória, mapas legados, redirects, timezone e votoszero); nenhum ataque,
+provider, falha induzida ou mutação remota executados. BA02/04/05/07 recebem recorte focal seguinte.
+
+CP1 anonimato fora do Tab;CP2 snapshots de voto/salvo sobrepõem props novas;CP3 rollback global
+pode apagar atualização de outro alvo até refetch. Fonte-only, não incidente persistido.
+Paginação24, ranking público/guard, copy resposta/comentário e curadoria por slug têm limites
+registrados no relatório. CP1/copy recebem recorte seguinte; CP2/3 exigem validação própria.
+PF4 observado no formatter PhoneController (máscaraBR em país internacional) permanece pendente,
+não corrigido nem certificado pelos helpers336. M1 bloqueado permanece sem retomada.

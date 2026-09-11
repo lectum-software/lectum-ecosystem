@@ -510,7 +510,7 @@ Não alterar tokens, prazo, respostas anti-enumeração, API nem envio no backen
 - [x] Reenvio usa somente endereço confirmado e passa pelo schema existente.
 - [x] Campo/ações bloqueados durante envio e erro permite corrigir/tentar novamente.
 - [x] Checks/build e Browser local/mobile executados; entrega de e-mail não presumida.
-- [ ] Commit/push e smoke da versão publicada registrados.
+- [x] Commit/push e smoke registrados na integração0.1.335 (c2daa015,17/17).
 
 Validação .334:679 testes do workspace, build frontend, Browser390/1280 com vazio/inválido
 e falha real de transporte. Pending em Form/controller SSR reais; vínculo da mutation e
@@ -530,4 +530,40 @@ provider ou dados publicados. Reexecutar checks/builds dos apps afetados e image
 - [x] Merge preserva os dois históricos e mudanças de interface concorrentes.
 - [x] HTTP local aceita limite exato e recusa excesso de um byte com dependência travada.
 - [x] Checks, builds e Browser da integração executados e documentados.
-- [ ] Versões335/health/ready e push confirmados, sem atribuir smoke334 à correção não publicada.
+- [x] Versões335/health/ready e push confirmados em c2daa015; smoke17/17, sem atribuir smoke334 à correção não publicada.
+
+## Continuação — identidade de contato, confirmação e modalidade (PF1–PF3)
+
+Baseline por imports reais, sem provider: conversor do WhatsApp perde DDD igual ao DDI e
+schema admite16dígitos ao aplicar a mesma remoção; perfil exclusivamente presencial usa
+rótulo híbrido. Três contratos falham e controle online passa no artefato335. Corrigir usando
+conversões compartilhadas do perfil já corrigido, sem import entre formulários de páginas.
+Hidratação retira DDI uma vez; serialização/validação recebem número nacional intacto.
+
+Durante confirmaçãoCFP, impedir reinício/seleção concorrente e envios duplicados na tela;
+nenhuma promessa de cancelar aprovação no backend ou mudança em check_id/result_key.
+Preservar rótulo presencial/híbrido ao acrescentar cidade/UF. Sem env/migration/API/provider.
+Não inventar CPF/CRP nem chamar verificação com identidade de terceiros. Prova da consulta
+real e conclusão de cadastro continuam dependendo de dados autorizados.
+
+- [x] WhatsApp das duas telas compartilha conversão e validação sem remover DDD.
+- [x] Excesso de tamanho é recusado sem truncar/transformar a entrada em outro contato.
+- [ ] Confirmação pendente bloqueia ações conflitantes e recupera controles após erro.
+- [x] Modalidades online/presencial/híbrida e localização parcial mantêm significado correto.
+- [x] Testes/build/Browser e limites de prova documentados, sem provider simulado.
+- [ ] Commit/push e smoke da versão publicada registrados.
+
+Validação336:692 testes do workspace (197frontend/393backend/53Admin/43video/6versão),
+build frontend final e gate real de sessão no Browser local390px, com validação de vazio
+PT-BR e foco no e-mail. SSR usa componentes/Form/RHF reais;2 testes CFP são de composição
+estática explicitamente, não simulação do provider. Confirmação pendente está bloqueada no
+código e no card SSR; repetição visual após erro permanece pendente de sessão/identidade
+profissional autorizada. Não houve consultaCPF, contatoWhatsApp, alteração cadastral ou cobrança.
+
+### Próximo recorte reservado, após336 — vocabulário Admin e teclado em comunidades
+
+Implementação delegada de BA02/04/05/07 (rótulos canônicos, notas PT-BR e tipos de suspensão)
+e CP1/copy resposta-comentário. Sem env/schema, pagamentos, provider, publicação de conteúdo
+ou alteração de autorização. Escopos de escrita distintos; não incluir mudanças ainda não
+integradas no commit336. CP2/3, BA01/03/06 e demais achados continuam pendentes de validação
+focal; não declarar reprodução runtime a partir somente de fonte.

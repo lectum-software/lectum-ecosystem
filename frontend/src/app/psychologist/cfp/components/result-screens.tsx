@@ -9,20 +9,21 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import type { CfpResult, CfpSearchResponse } from "@/api/generator/types";
+import type { CfpSearchResponse } from "@/api/generator/types";
 import { formatCpf } from "@/components/controllers/utils";
 import { InlineAlert } from "@/components/ui/inline-alert";
-import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 import {
   cfpErrorTitle,
-  formatCfpRegistrationDate,
   nextStepHref,
   type ResolvedApiError,
   shouldShowCfpSupportGuidance,
   supportLinkProps,
 } from "../modules/support";
 import { CfpHero, PageFrame, PremiumPanel, SupportGuidance } from "./cfp-layout";
+import { ResultCard } from "./result-card";
+
+export { ResultCard, ResultField } from "./result-card";
 
 export const LoadingScreen = () => (
   <PageFrame>
@@ -111,74 +112,6 @@ export const AlreadyVerifiedScreen = ({
   </PageFrame>
 );
 
-export const ResultField = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="rounded-[18px] border border-border bg-surface-muted px-4 py-4">
-    <p className="text-xs font-bold uppercase tracking-wide text-subtle">{label}</p>
-    <div className="mt-2 text-base font-semibold text-foreground">{value}</div>
-  </div>
-);
-
-export const ResultCard = ({
-  result,
-  selected,
-  onSelect,
-}: {
-  result: CfpResult;
-  selected: boolean;
-  onSelect: () => void;
-}) => (
-  <button
-    aria-pressed={selected}
-    className={cn(
-      "w-full rounded-[24px] border bg-surface p-5 text-left shadow-[var(--lectum-shadow-soft)] transition md:p-6",
-      selected ? "border-primary ring-4 ring-primary/10" : "border-border hover:border-primary/40",
-    )}
-    onClick={onSelect}
-    type="button"
-  >
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-subtle">Nome encontrado</p>
-        <h2 className="mt-2 text-2xl font-bold text-foreground">
-          {result.nome || "Nome não informado"}
-        </h2>
-      </div>
-      {selected ? (
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-        </span>
-      ) : null}
-    </div>
-
-    <div className="mt-5 grid gap-3 md:grid-cols-2">
-      <ResultField label="Regional" value={result.nome_regional || "Não informado"} />
-      <ResultField label="Registro" value={result.registro || "Não informado"} />
-      <ResultField
-        label="Situação"
-        value={
-          <span
-            className={cn(
-              "inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold",
-              result.active ? "bg-success/10 text-success" : "bg-warning/10 text-warning",
-            )}
-          >
-            <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
-            {result.situacao || "Não informada"}
-          </span>
-        }
-      />
-      <ResultField
-        label="Data de inscrição"
-        value={formatCfpRegistrationDate(result.data_inscricao)}
-      />
-    </div>
-
-    <p className="mt-5 border-border border-t pt-5 text-sm leading-6 text-muted">
-      Dados retornados pela verificação automática.
-    </p>
-  </button>
-);
-
 export const ResultsScreen = ({
   result,
   selectedKey,
@@ -211,6 +144,7 @@ export const ResultsScreen = ({
             <ResultCard
               key={item.key}
               result={item}
+              disabled={isConfirming}
               selected={item.key === selectedKey}
               onSelect={() => onSelect(item.key)}
             />
@@ -245,6 +179,7 @@ export const ResultsScreen = ({
           </Button>
           <Button
             className="h-14 rounded-full text-base"
+            disabled={isConfirming}
             onClick={onRetry}
             type="button"
             variant="outline"

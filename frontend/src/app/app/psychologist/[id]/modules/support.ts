@@ -234,10 +234,15 @@ export const formatAttendanceLabel = (profile: DirectoryPsychologistProfile) => 
     const city = profile.address_city?.trim();
     const state = profile.address_state?.trim().toUpperCase();
 
-    if (city && state) return `Online e Presencial em ${city}/${state}`;
-    if (city) return `Online e Presencial em ${city}`;
+    const label =
+      profile.modality?.toLowerCase() === "presencial"
+        ? modalityLabel.presencial
+        : modalityLabel.hibrido;
 
-    return "Online e Presencial";
+    if (city && state) return `${label} em ${city}/${state}`;
+    if (city) return `${label} em ${city}`;
+
+    return label;
   }
 
   if (!profile.modality) return "Modalidade não informada";

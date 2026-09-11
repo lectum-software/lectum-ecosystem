@@ -7,9 +7,13 @@ import { onlyDigits } from "@/components/controllers/utils";
 import { type Field, type FieldOption, useFormList } from "@/hooks/form";
 import {
   COUNTRY_CALLING_CODE_OPTIONS,
-  DEFAULT_COUNTRY_CALLING_CODE,
   findCountryCallingCode,
 } from "@/utils/country-calling-codes";
+import {
+  isNationalPhoneLengthValid,
+  toWhatsappPhoneE164,
+  toWhatsappPhoneInput,
+} from "@/utils/phone-number";
 import {
   normalizeProfessionalDisplayName,
   normalizeProfessionalNamePart,
@@ -66,33 +70,7 @@ export type FreeProfileForm = {
   available_days: string[];
 };
 
-// A resposta da API contém o contato internacional. Só a hidratação retira o DDI.
-export const toWhatsappPhoneInput = (
-  value?: string | null,
-  countryCode = DEFAULT_COUNTRY_CALLING_CODE,
-) => {
-  const digits = onlyDigits(value);
-
-  if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
-    return digits.slice(countryCode.length);
-  }
-
-  return digits;
-};
-
-const isPhoneLengthValid = (value: string, countryCode: string) => {
-  const nationalDigits = onlyDigits(value);
-  const totalLength = (countryCode + nationalDigits).length;
-
-  return nationalDigits.length >= 6 && totalLength >= 8 && totalLength <= 15;
-};
-
-export const toWhatsappPhoneE164 = (value: string, countryCode = DEFAULT_COUNTRY_CALLING_CODE) => {
-  // O campo RHF já é nacional: um DDD igual ao DDI também pertence ao contato.
-  const nationalDigits = onlyDigits(value);
-
-  return nationalDigits ? `+${countryCode}${nationalDigits}` : null;
-};
+export { toWhatsappPhoneE164, toWhatsappPhoneInput };
 
 export const toBirthdateIso = (value?: string | null) => {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value?.trim() ?? "");
@@ -279,7 +257,7 @@ export const freeProfileSchema = z
       return;
     }
 
-    if (!isPhoneLengthValid(data.whatsapp, data.countryCode)) {
+    if (!isNationalPhoneLengthValid(data.whatsapp, data.countryCode)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Informe um WhatsApp válido",
