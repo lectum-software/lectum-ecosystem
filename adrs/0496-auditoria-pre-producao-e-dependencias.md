@@ -874,3 +874,34 @@ não editar migrations aplicadas para resolver riscos hipotéticos de um upgrade
 Qualquer novo writer/backfill deve preservar: FKs distintas de usuário/perfil, chaves únicas
 que incluem soft-delete, correspondência de alvo validada pela aplicação e cascatas/retenção.
 Não tratar arquivos presentes como prova de checksums aplicados ou consistência do banco.
+
+### Período de analytics, anexos e retenção342
+
+FE341-03: abrir o editor não altera a consulta aplicada. Um formulário adjacente reutiliza
+useFormList/React Hook Form, Zod e controllers da TASK02. Datas date-only e ordem são validadas
+antes do callback; manter validação autoritativa do backend. Erro PT-BR no campo com espaço
+reservado, inputs full-width na base mobile; cancelar desmonta o rascunho. Aplicar atualiza
+intervalo e período juntos. Não generalizar em um novo framework de filtros.
+
+FE341-02: retirar apenas tabIndex=-1 dos botões existentes de remoção; ativação nativa evita
+handlers duplicados Enter/Espaço. Disabled, permissão, mousedown e foco do editor permanecem.
+
+FE341-01: converter coordenadas do ponteiro pela matriz nativa getScreenCTM do SVG e limites
+do eixo compartilhados, não pelo retângulo externo. Matriz ausente/singular não busca. Sem
+posição de ponteiro, click não produz seek. Superfície slider acessível usa setas/Home/End,
+passos do player existente e texto de tempo; gates de locked/duração/callback permanecem.
+Não mudar curva, visual, playback ou regras de métricas por este patch. Baseline geométrico
+não equivale a observação de reprodução autenticada; Browser contratual sem vídeo não a substitui.
+
+### Scanner estático de ciclos342
+
+Imports locais emitidos .js/.mjs/.cjs precisam resolver fontes .ts/.mts/.cts antes dos arquivos
+runtime quando presentes. Excluir declarations e manter filtro de imports/exports somente de
+tipo. Grafo do vídeo passou de0 para116arestas; nenhum ciclo real foi encontrado. Parser/DFS
+continuam estáticos: não importar código da aplicação para fazer auditoria. Resolução fica
+limitada a relativos e alias@/ já suportado, sem alegar resolver require/dynamic/package exports.
+Regressões do scanner passam a integrar check:cycles. Referência: [TypeScript — substituição
+de extensão](https://www.typescriptlang.org/docs/handbook/modules/reference.html#file-extension-substitution).
+
+As correções342 não exigem env, package, migration, backfill ou reset; rollout de frontend
+independente e compatível com backend341. Versões dos cinco manifests seguem sincronizadas.

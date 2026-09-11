@@ -185,8 +185,19 @@ cards de auditoria validados em390px. Vídeo privado e demais fluxos completos a
 
 117. Convite para criar conta não permanece aberto após reconhecer uma pessoa já autenticada.
 
-Regressões locais e build aprovados; publicação e repetição em homologação ainda pendentes.
+Regressões locais, build e repetição em homologação aprovados;18/18smoke e três apps341.
 Mais97 arquivos de migrations lidos, sem executar mudanças no banco.
+
+### Correções locais na 0.1.342
+
+118. Período personalizado recusa datas vazias, impossíveis ou invertidas antes da consulta.
+119. Cancelar a edição do período preserva o filtro e os dados anteriores.
+120. Remover anexos voltou a funcionar por Tab, Enter e Espaço, mantendo o bloqueio durante envio.
+121. Gráfico de retenção respeita o ponto desenhado e permite navegação por setas, início e fim.
+122. Verificador de dependências passou a considerar imports TypeScript do serviço de vídeo.
+
+Regressões locais e build aprovados; publicação e repetição autenticada ainda pendentes.
+O gráfico foi testado como componente real, não como reprodução de vídeo pago.
 
 ## Ainda pendente
 
@@ -197,7 +208,7 @@ Mais97 arquivos de migrations lidos, sem executar mudanças no banco.
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1561 arquivos com leitura inicial**, 5 parciais e 1555 ainda não revisados.
+Cobertura da base: **1643 arquivos com leitura inicial**, 5 parciais e 1473 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

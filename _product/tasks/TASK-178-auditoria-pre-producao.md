@@ -671,8 +671,8 @@ Perfil confirmou a mesma conta autenticada sem novo login. Rastrear hidratação
 sem desligar autorização nem presumir que cookie/sessão deixaram de existir.
 
 - [x] Causa demonstrada por fonte e contrato real, mantendo gates de ações privadas.
-- [ ] Correção testada localmente e repetida em homologação; sem mocks como prova de integração.
-- [ ] Publicação340/341, ações da auditoria e limites restantes registrados com precisão.
+- [x] Correção testada localmente e repetida em homologação; sem mocks como prova de integração.
+- [x] Publicação340/341, ações da auditoria e limites restantes registrados com precisão.
 
 Sem migration/env/package previsto; não operar M1, produção, dados de terceiros ou credenciais.
 
@@ -688,3 +688,39 @@ nenhum novo defeito vigente demonstrado, nenhuma operação de banco. Preservar 
 users.id/perfil.id, reativação de vínculos soft-deleted e validação de alvo no writer.
 Pré-condições históricas de upgrade não comprovam incidente publicado nem autorizam reset.
 Ledger integrado por path+hash:1561leituras iniciais,5parciais,1555pendentes na base3121.
+
+Publicação341:632566df em homolog;18/18smoke às18:50UTC de11/09, três apps341,
+health/ready200. Nova aba em390px: recargas/rolagem e Perfil mantiveram sessão sem convite.
+Reload da ferramenta voltou ao topo; não afirmar restauração da rolagem nem todos os timings.
+Durante rollout houve estado de sessão/comunidade indisponível; reload posterior recuperou
+sem novo login, sem identificar causa exata. Nenhuma nova mutação persistida neste reteste.
+
+### Continuação342 — campos de período, teclado e scanner de imports
+
+Leitura lateral frontend68arquivos revelou três achados P2. FE341-03 confirmado no Browser
+publicado341: limpar uma parte da data e Aplicar fecha o editor e substitui os dados por erro.
+Todo o período recuperou a consulta; só leitura de dados da conta dedicada, sem mutação.
+FE341-02: remover anexo explicitamente fora da sequência Tab; corrigir sem mudar permissões.
+FE341-01: inversão do eixo de retenção não corresponde ao SVG; baseline aritmético/SSR confirmado.
+Scanner de ciclos ignora resolução de imports.js para fontes.ts no vídeo; provar e corrigir
+sem afirmar existência de ciclos reais antes do grafo completo.
+
+- [x] Datas com RHF/Zod/controllers; inválidas mantêm editor/consulta e erro local PT-BR.
+- [x] Remoção de anexos acessível por Tab/Enter/Espaço, mantendo disabled/permissões/foco.
+- [x] Scanner resolve fontes de imports emitidos sem confundir tipos e dependências externas.
+- [ ] Baseline/final, Browser mobile, builds, leituras e publicação registrados.
+
+Sem nova env/package/migration; não ampliar acesso nem editar dados de terceiros.
+
+- [x] Retenção usa CTM nativo do SVG/eixo existente e slider com teclas/gates preservados.
+- [x] Root check1034 testes:1028 aprovados/6skips conhecidos de drawtext; frontend427/427 e build.
+- [x] Ledger:82novas leituras da base,1643iniciais/5parciais/1473pendentes;1622paths no ledger.
+
+Browser local com componentes/fontes e CSS reais, sem respostas API substituídas:
+390px: data vazia mantém editor/consulta; cancelar descarta rascunho; válido aplica uma vez.
+Anexos: Tab/Shift+Tab, Enter/Space e mouse removem item correto e retornam ao editor;
+disabled fica fora do Tab. Retenção: cliques no eixo0/50/100 resultam0/50/100; setas,
+Home/End e gate locked; Enter/Space não buscam início. Desktop1280: clique inteiro no
+marco central resultou49,66%, coerente com arredondamento do pixel (não exigir precisão subpixel).
+Conta dedicada publicada sem vídeo/plano: não declarar prova remota de seek, métricas ou upload.
+Minutas legais, aparelhos reais e fluxos restantes mantêm TASK178 em andamento.

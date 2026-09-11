@@ -9,10 +9,19 @@ const requireFromBackend = createRequire(path.join(repositoryRoot, "backend/pack
 const ts = requireFromBackend("typescript");
 
 const applications = ["backend", "frontend", "admin", "video"];
-const sourceExtensions = [".cjs", ".js", ".jsx", ".mjs", ".ts", ".tsx"];
+const sourceExtensions = [".cjs", ".js", ".jsx", ".mjs", ".ts", ".tsx", ".cts", ".mts"];
+// TypeScript file-extension substitution, restricted to runtime implementations.
+// Declaration files describe modules but cannot introduce runtime graph edges.
+const emittedExtensionSources = new Map([
+  [".js", [".ts", ".tsx", ".js", ".jsx"]],
+  [".jsx", [".tsx", ".ts", ".jsx", ".js"]],
+  [".mjs", [".mts", ".mjs"]],
+  [".cjs", [".cts", ".cjs"]],
+]);
+const isDeclarationFile = (file) => /\.d\.(?:ts|mts|cts)$/.test(file);
 const ignoredSegments = new Set(["generated"]);
 
-const walk = async (directory) => {
+export const walk = async (directory) => {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
 
@@ -22,7 +31,11 @@ const walk = async (directory) => {
     const absolutePath = path.join(directory, entry.name);
     if (entry.isDirectory()) {
       files.push(...(await walk(absolutePath)));
-    } else if (entry.isFile() && sourceExtensions.includes(path.extname(entry.name))) {
+    } else if (
+      entry.isFile() &&
+      sourceExtensions.includes(path.extname(entry.name)) &&
+      !isDeclarationFile(entry.name)
+    ) {
       files.push(absolutePath);
     }
   }
@@ -45,7 +58,7 @@ const isRuntimeExport = (statement) => {
   return statement.exportClause.elements.some((element) => !element.isTypeOnly);
 };
 
-const moduleSpecifiersFrom = (sourceFile) => {
+export const moduleSpecifiersFrom = (sourceFile) => {
   const specifiers = [];
 
   for (const statement of sourceFile.statements) {
@@ -70,7 +83,7 @@ const moduleSpecifiersFrom = (sourceFile) => {
   return specifiers;
 };
 
-const resolveSourceImport = ({ importer, sourceRoot, sourceFiles, specifier }) => {
+export const resolveSourceImport = ({ importer, sourceRoot, sourceFiles, specifier }) => {
   let unresolvedPath;
 
   if (specifier.startsWith("@/")) {
@@ -81,19 +94,31 @@ const resolveSourceImport = ({ importer, sourceRoot, sourceFiles, specifier }) =
     return null;
   }
 
-  const candidates = [unresolvedPath];
+  if (isDeclarationFile(unresolvedPath)) return null;
+
+  const emittedExtension = path.extname(unresolvedPath);
+  const replacements = emittedExtensionSources.get(emittedExtension);
+  const candidates = replacements
+    ? replacements.map(
+        (extension) => `${unresolvedPath.slice(0, -emittedExtension.length)}${extension}`,
+      )
+    : [unresolvedPath];
   for (const extension of sourceExtensions) candidates.push(`${unresolvedPath}${extension}`);
   for (const extension of sourceExtensions) {
     candidates.push(path.join(unresolvedPath, `index${extension}`));
   }
 
-  return candidates.find((candidate) => sourceFiles.has(path.normalize(candidate))) ?? null;
+  return (
+    candidates.find(
+      (candidate) => !isDeclarationFile(candidate) && sourceFiles.has(path.normalize(candidate)),
+    ) ?? null
+  );
 };
 
 const canonicalCycleKey = (cycle) =>
   [...new Set(cycle.slice(0, -1))].sort((left, right) => left.localeCompare(right)).join("|");
 
-const findCycles = (graph) => {
+export const findCycles = (graph) => {
   const state = new Map();
   const stack = [];
   const cycles = [];
@@ -131,10 +156,7 @@ const findCycles = (graph) => {
   return cycles;
 };
 
-const failures = [];
-
-for (const application of applications) {
-  const sourceRoot = path.join(repositoryRoot, application, "src");
+export const buildSourceGraph = async (sourceRoot) => {
   const files = await walk(sourceRoot);
   const sourceFiles = new Set(files.map((file) => path.normalize(file)));
   const graph = new Map(files.map((file) => [file, new Set()]));
@@ -150,22 +172,45 @@ for (const application of applications) {
     );
 
     for (const specifier of moduleSpecifiersFrom(sourceFile)) {
-      const dependency = resolveSourceImport({ importer: file, sourceRoot, sourceFiles, specifier });
+      const dependency = resolveSourceImport({
+        importer: file,
+        sourceRoot,
+        sourceFiles,
+        specifier,
+      });
       if (dependency) graph.get(file).add(dependency);
     }
   }
 
-  for (const cycle of findCycles(graph)) {
-    failures.push(
-      `${application}: ${cycle.map((file) => path.relative(sourceRoot, file)).join(" -> ")}`,
+  return graph;
+};
+
+export const checkImportCycles = async () => {
+  const failures = [];
+  for (const application of applications) {
+    const sourceRoot = path.join(repositoryRoot, application, "src");
+    const graph = await buildSourceGraph(sourceRoot);
+
+    for (const cycle of findCycles(graph)) {
+      failures.push(
+        `${application}: ${cycle.map((file) => path.relative(sourceRoot, file)).join(" -> ")}`,
+      );
+    }
+  }
+
+  if (failures.length > 0) {
+    console.error(
+      "[import-cycles] Dependências circulares entre módulos locais foram encontradas:\n",
+    );
+    for (const failure of failures) console.error(`- ${failure}`);
+    process.exitCode = 1;
+  } else {
+    console.log(
+      "[import-cycles] OK: backend, frontend, admin e video sem ciclos entre módulos locais.",
     );
   }
-}
+};
 
-if (failures.length > 0) {
-  console.error("[import-cycles] Dependências circulares entre módulos locais foram encontradas:\n");
-  for (const failure of failures) console.error(`- ${failure}`);
-  process.exitCode = 1;
-} else {
-  console.log("[import-cycles] OK: backend, frontend, admin e video sem ciclos entre módulos locais.");
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await checkImportCycles();
 }

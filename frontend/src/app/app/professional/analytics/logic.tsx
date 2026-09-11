@@ -47,7 +47,10 @@ export const ProfessionalAnalyticsLogic = () => {
           disabled={analytics.isFetching}
           onChange={setPeriod}
           onCustomPopoverOpenChange={setCustomPopoverOpen}
-          onCustomRangeApply={setCustomRange}
+          onCustomRangeApply={(range) => {
+            setCustomRange(range);
+            setPeriod("custom");
+          }}
         />
 
         {analytics.isLoading ? <LoadingState label="Carregando dados de desempenho" /> : null}

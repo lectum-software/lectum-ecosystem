@@ -1394,3 +1394,47 @@ Os6renders já executados com sucesso na imagem340; vídeo não mudou neste patc
 O guard inicial sinalizou a palavra em dois comentários de teste; redação esclarecida sem
 alterar testes, relaxar scanner ou introduzir substituições. Verificação AST final aprovada.
 Bump341 executado uma única vez. Sem nova env/migration ou publicação de produção.
+
+Pós-deploy341:commit632566df enviado a homolog, hooks aprovados. Smoke11/09 às18:50:32UTC:
+18/18, backend/frontend/Admin341, health/ready200, versões públicas sem cache/noindex.
+Vercel frontend/Admin success. Evidência:/tmp/lectum-audit-341-smoke-homolog.json.
+Browser nova aba21 em390x844: convites indevidos ausentes em recargas/rolagem; Perfil
+confirmou mesma conta profissional sem novo login. Nenhuma mutação de dados neste reteste.
+Capturas antes/depois em/tmp/lectum-task178-cp4-341/browser/, todas inspecionadas.
+A captura apósEnd confirmou final da lista; reload voltou ao topo. Não contar como reprodução
+da mesma restauração de scroll/timing do defeito anterior. Contratos locais cobrem a transição.
+Durante rollout houve sessão indisponível→retry→comunidade indisponível; reload após backend341
+recuperou conteúdo. Não isolar causa sem rede/logs; anotado emNOTES.md, sem esconder incidente.
+Vídeo privado ainda só confirmado338 pelo operador, não inferido das versões públicas.
+
+## Continuação342 — pré-publicação
+
+Branch homolog/HEAD anterior632566df. Código congelado das laterais e integrado pelo parent.
+Sem nova env/package/migration, sem reset/seed/provider/mutação persistida para estes testes.
+
+- Datas FE341-03: baseline publicado341 no Browser, limpar data+Aplicar substituía consulta por
+  erro. Fontes finais14/14 (RHF/Zod reais, SSR e wiring separados); Browser local390 e1280,
+  inválido mantém editor/consulta, cancelar preserva filtro, válido aplica uma vez.
+- Anexos FE341-02: baseline5pass/2fail, final7/7; única linha de produção removida é tabIndex=-1.
+  Browser real: Tab/Shift+Tab, Enter/Space, mouse e disabled; itens do contrato apenas locais.
+  Asset é SVG existente servido pelo localhost; caminho relativo inicial não resolvia para o
+  item stored, corrigido só no harness com URL local absoluta. Não é bug novo de upload.
+- Retenção FE341-01: baseline13fail/2controles, final35/35; eixo original 0/50/100 calculava
+  6/43,33/80,67. Browser local com SVG real390: cliques0/50/100 corretos; setas/Home/End;
+  locked fora do Tab e Enter/Space sem seek. Desktop1280 clique central49,66% (pixel inteiro).
+  Preservação AST do SVG exceto ref e dos demais componentes/playback conferida.
+- Scanner: baseline24fail/8pass; final32/32, grafo vídeo116arestas antes ignoradas. Não houve
+  ciclo existente demonstrado. A varredura automática do grafo não é leitura manual.
+- Root check1034testes:1028pass/6skips drawtext conhecidos, frontend427/427, build otimizado
+  frontend aprovado, sem source maps. Bump342 executado uma única vez e check:version aprovado.
+
+Evidências locais: /tmp/lectum-task178-analytics-dates-342, /tmp/lectum-task178-media-keyboard-342,
+/tmp/lectum-task178-retention-342, /tmp/lectum-task178-cycle-342; relatórios/freeze/readlists.
+Capturas nativas salvas e arquivos exatos inspecionados. Contrato em /tmp/lectum-ui-342/browser
+usa componentes, React e CSS reais; sem substituir autenticação, API, dados ou plano.
+
+Leituras:68fontes frontend/10070linhas e12scripts raiz/1606linhas, mais fontes focais. Merge
+por path+hash, deduplicando suportes/releituras e recusando versões antigas:101paths atuais
+conferidos,82novas leituras da base. Total1643iniciais/5parciais/1473pendentes na base3121,
+1622linhas no ledger. Hash base original do inventário preservado; não confundir com revisão
+corrente. TASK178 não concluída; publicação342 e smoke registrados separadamente após deploy.

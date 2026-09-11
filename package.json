@@ -1,6 +1,6 @@
 {
   "name": "lectum-ecosystem",
-  "version": "0.1.341",
+  "version": "0.1.342",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
@@ -15,7 +15,7 @@
     "check:source-safety": "node scripts/check-source-safety.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:source-size": "node scripts/check-source-size.mjs",
-    "check:cycles": "node scripts/check-import-cycles.mjs",
+    "check:cycles": "node --test scripts/check-import-cycles.test.mjs && node scripts/check-import-cycles.mjs",
     "check:version": "node --test scripts/release-version-policy.test.mjs && node scripts/release-version.mjs check",
     "check:frontend": "pnpm --dir frontend check",
     "check:backend": "pnpm --dir backend check",

@@ -1,7 +1,13 @@
 "use client";
 
 import { Info, PlayCircle } from "lucide-react";
-import { type MouseEvent as ReactMouseEvent, useCallback, useRef, useState } from "react";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 import type { PsychologistAnalyticsPresentationVideo } from "@/api/generator/types/psychologist-analytics";
 import { VerticalVideoPlayer } from "@/components/ui/vertical-video-player";
 import { cn } from "@/lib/utils";
@@ -27,6 +33,10 @@ import {
   toChartPoint,
   toCount,
 } from "../modules/support";
+import {
+  getRetentionKeyboardSeekPercent,
+  getRetentionSeekPercent,
+} from "./retention-chart-interaction";
 
 export const PresentationVideoDashboardMetricCard = ({
   locked,
@@ -183,6 +193,7 @@ export const RetentionChart = ({
   points,
   views = 0,
 }: RetentionChartProps) => {
+  const svgRef = useRef<SVGSVGElement | null>(null);
   const chartPoints = buildRetentionCurvePoints({ points, views });
   const smoothPath = buildSmoothRetentionPath(chartPoints);
   const firstChartPoint = chartPoints[0] ?? { milestone: 0, rate: 0 };
@@ -194,39 +205,70 @@ export const RetentionChart = ({
         2,
       )} ${RETENTION_CHART_BOTTOM} L ${firstAreaPoint.x.toFixed(2)} ${RETENTION_CHART_BOTTOM} Z`
     : "";
-  const currentPercent = durationSeconds
-    ? clampPercent((Math.max(0, currentTimeSeconds) / durationSeconds) * 100)
-    : 0;
+  const seekDurationSeconds =
+    durationSeconds && Number.isFinite(durationSeconds) && durationSeconds > 0
+      ? durationSeconds
+      : 0;
+  const currentPercent =
+    seekDurationSeconds && Number.isFinite(currentTimeSeconds)
+      ? clampPercent((Math.max(0, currentTimeSeconds) / seekDurationSeconds) * 100)
+      : 0;
   const currentPoint = toChartPoint(currentPercent, 0);
-  const axisTicks = buildRetentionAxisTicks(durationSeconds);
-  const canSeek = Boolean(onSeek && !locked && durationSeconds && durationSeconds > 0);
+  const axisTicks = buildRetentionAxisTicks(seekDurationSeconds);
+  const canSeek = Boolean(onSeek && !locked && seekDurationSeconds);
 
-  const handleSeekFromChart = (event: ReactMouseEvent<HTMLButtonElement>) => {
+  const handleSeekFromChart = (event: ReactMouseEvent<HTMLDivElement>) => {
+    // Keyboard/assistive activation has no pointer location; slider keys handle it.
+    if (!canSeek || event.detail === 0) return;
+
+    const relativeX = getRetentionSeekPercent(
+      event.clientX,
+      event.clientY,
+      svgRef.current?.getScreenCTM(),
+    );
+    if (relativeX !== null) onSeek?.(relativeX);
+  };
+
+  const handleChartKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (!canSeek) return;
 
-    const rect = event.currentTarget.getBoundingClientRect();
-    const relativeX = clampPercent(((event.clientX - rect.left) / rect.width) * 100);
+    const relativeX = getRetentionKeyboardSeekPercent(
+      event.key,
+      currentTimeSeconds,
+      durationSeconds,
+    );
+    if (relativeX === null) return;
 
+    event.preventDefault();
+    event.stopPropagation();
     onSeek?.(relativeX);
   };
 
   return (
     <div className="min-w-0">
-      <button
+      <div
+        aria-disabled={!canSeek}
         aria-label="Selecionar trecho no gráfico de retenção"
+        aria-orientation="horizontal"
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={Math.round(currentPercent)}
+        aria-valuetext={`${formatSeconds((seekDurationSeconds * currentPercent) / 100)} de ${formatSeconds(seekDurationSeconds)}`}
         className={cn(
           "relative w-full overflow-hidden rounded-[22px] bg-transparent px-1 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
           canSeek && "cursor-pointer",
           locked && "blur-[4px]",
         )}
-        disabled={!canSeek}
         onClick={handleSeekFromChart}
-        type="button"
+        onKeyDown={handleChartKeyDown}
+        role="slider"
+        tabIndex={canSeek ? 0 : -1}
       >
         <svg
           aria-label="Curva estimada de retenção do vídeo"
           className="mx-auto h-40 w-full max-w-[320px] overflow-visible text-subtle md:h-56 md:max-w-none"
           preserveAspectRatio="xMidYMid meet"
+          ref={svgRef}
           role="img"
           viewBox="0 0 300 150"
         >
@@ -372,7 +414,7 @@ export const RetentionChart = ({
         <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-surface/95 px-1.5 py-0.5 text-[0.65rem] font-extrabold leading-none text-subtle shadow-sm">
           50%
         </span>
-      </button>
+      </div>
 
       {dropoff ? (
         <div className="mt-3 w-full rounded-2xl border border-primary/10 bg-surface px-3 py-3 text-left text-xs leading-5 text-muted">

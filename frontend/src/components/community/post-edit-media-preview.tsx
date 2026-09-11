@@ -116,7 +116,6 @@ export function PostEditMediaPreview({
                   onFocusEditor();
                 }}
                 onMouseDown={(event) => event.preventDefault()}
-                tabIndex={-1}
                 type="button"
               >
                 <X aria-hidden="true" className="h-3.5 w-3.5" />

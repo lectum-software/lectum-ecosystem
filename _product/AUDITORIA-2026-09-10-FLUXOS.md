@@ -141,3 +141,26 @@ reclassificar como erro de dados ou incluir correção não implementada neste c
 - Comunidade no build local: SSR carregou título, hidratação terminou em falha de conexão.
   Registrar limitação e validar publicação, sem desativar segurança para simular integração.
 - Homolog339:18/18smoke público. Vídeo privado ainda comprovado pelo operador somente na338.
+
+### Repetição publicada340/341
+
+- Comunidade340: voto/salvamento de post dedicado persistiram após recarregar e em Salvos;
+  voto em resposta salva apareceu também em Minhas respostas. Ações desfeitas pela UI,
+  salvos preexistentes preservados. Fluxo normal, sem alegar concorrência HTTP publicada.
+- CP4 corrigido341: nova aba mobile390, recargas/rolagem e retorno ao Perfil sem convite
+  indevido nem novo login. Sessão real; nenhum novo voto/save/post ou dado pessoal enviado.
+  Reload da ferramenta retorna ao topo: não comprovou restauração de scroll ou Safari.
+- Durante rollout341 houve indisponibilidade de sessão e depois comunidade; reload após
+  backend341/health/ready200 recuperou conteúdo. Causa não isolada, não ocultada pelo smoke.
+-341:18/18smoke; backend/frontend/Admin341. Vídeo privado segue pendente de prova posterior338.
+
+## Analytics e edição de mídia — continuação342
+
+- Baseline de período inválido reproduzido no frontend341 autenticado. Patch com formulário
+  RHF/Zod/controllers testado localmente; repetição publicada342 ainda pendente.
+- Tab/Shift+Tab e ativação de remoção de anexos testados em componente real com assets locais.
+  Não equivale a persistir uma edição de post, enviar um arquivo nem moderar conteúdo.
+- Slider de retenção e geometria nativa testados em390/1280; duração controlada e curva vazia
+  não são métricas de usuário. Reprodução paga/Stream continua pendente de requisito real.
+- Novos88testes registrados no check:14datas+7anexos+35retenção+32scanner. Não substituir
+  critérios de fluxo remoto por SSR, AST ou contratos puros.

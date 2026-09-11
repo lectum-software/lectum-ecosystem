@@ -2,12 +2,13 @@
 
 import { ArrowRight, BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { PsychologistAnalyticsPeriodKey } from "@/api/generator/types/psychologist-analytics";
 import { cn } from "@/lib/utils";
 import { Button } from "@/registry/new-york-v4/ui/button";
 
 import { type AnalyticsCardView, PERIOD_OPTIONS } from "../modules/support";
+import { CustomPeriodForm } from "./custom-period-form";
 
 export const PeriodTabs = ({
   customPopoverOpen,
@@ -27,7 +28,6 @@ export const PeriodTabs = ({
   onCustomRangeApply: (range: { end_at: string; start_at: string }) => void;
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [draftRange, setDraftRange] = useState(customRange);
 
   useEffect(() => {
     if (!customPopoverOpen) return;
@@ -47,8 +47,6 @@ export const PeriodTabs = ({
 
   const handlePeriodClick = (nextPeriod: PsychologistAnalyticsPeriodKey) => {
     if (nextPeriod === "custom") {
-      setDraftRange(customRange);
-      onChange(nextPeriod);
       onCustomPopoverOpenChange(true);
       return;
     }
@@ -57,8 +55,8 @@ export const PeriodTabs = ({
     onChange(nextPeriod);
   };
 
-  const applyCustomRange = () => {
-    onCustomRangeApply(draftRange);
+  const applyCustomRange = (range: { end_at: string; start_at: string }) => {
+    onCustomRangeApply(range);
     onCustomPopoverOpenChange(false);
   };
 
@@ -70,7 +68,7 @@ export const PeriodTabs = ({
       >
         <div className="flex min-w-max gap-1 rounded-[var(--lectum-card-radius)] border border-border bg-surface p-1 shadow-[var(--lectum-shadow-soft)] sm:gap-2 md:min-w-0 md:justify-between">
           {PERIOD_OPTIONS.map((option) => {
-            const active = option.value === current;
+            const active = !customPopoverOpen && option.value === current;
             const customActive = option.value === "custom" && customPopoverOpen;
 
             return (
@@ -114,49 +112,7 @@ export const PeriodTabs = ({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
-              Início
-              <input
-                className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
-                disabled={disabled}
-                max={draftRange.end_at || undefined}
-                onChange={(event) =>
-                  setDraftRange((currentRange) => ({
-                    ...currentRange,
-                    start_at: event.target.value,
-                  }))
-                }
-                type="date"
-                value={draftRange.start_at}
-              />
-            </label>
-            <label className="grid gap-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-subtle">
-              Fim
-              <input
-                className="h-11 min-w-0 rounded-[var(--lectum-control-radius)] border border-border bg-surface-muted px-3 text-sm font-bold text-foreground outline-none transition focus:border-primary disabled:opacity-60"
-                disabled={disabled}
-                min={draftRange.start_at || undefined}
-                onChange={(event) =>
-                  setDraftRange((currentRange) => ({
-                    ...currentRange,
-                    end_at: event.target.value,
-                  }))
-                }
-                type="date"
-                value={draftRange.end_at}
-              />
-            </label>
-          </div>
-
-          <Button
-            className="mt-4 h-11 w-full rounded-full text-sm font-extrabold"
-            disabled={disabled}
-            onClick={applyCustomRange}
-            type="button"
-          >
-            Aplicar período
-          </Button>
+          <CustomPeriodForm range={customRange} disabled={disabled} onApply={applyCustomRange} />
         </div>
       ) : null}
     </div>
