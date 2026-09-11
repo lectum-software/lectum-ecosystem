@@ -33,7 +33,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <QueryProvider>
           <AdminAuthProvider>{children}</AdminAuthProvider>
         </QueryProvider>
-        <Toaster closeButton position="top-right" richColors />
+        <Toaster
+          closeButton
+          containerAriaLabel="Notificações"
+          position="top-right"
+          richColors
+          toastOptions={{ closeButtonAriaLabel: "Fechar notificação" }}
+        />
       </body>
     </html>
   );

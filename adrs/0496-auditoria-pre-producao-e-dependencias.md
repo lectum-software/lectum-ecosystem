@@ -1053,3 +1053,12 @@ Corrigir apenas a referência no Admin; não alterar cálculo backend nem somar 
 fallback, para preservar compatibilidade com respostas antigas (campo ausente =>0).
 Teste compila declarações originais e componentes visuais reais, sem substituir APIs,
 providers ou autenticação. Sem env/package/migration; rollback Admin independente.
+
+
+### Avisos acessíveis351 — requisito prévio
+
+Usar as duas props oficiais presentes na versão instalada do Sonner; frontend já reexporta
+Toaster sem modificações. Não criar wrapper comum entre aplicações nem substituir o sistema
+de toast. Só nome acessível é traduzido: Notificações/Fechar notificação. Atalho e política
+de fechamento mantidos. Teste compila apenas o JSX original Toaster de cada layout e usa
+Sonner/React reais; providers de negócio não são carregados ou simulados.

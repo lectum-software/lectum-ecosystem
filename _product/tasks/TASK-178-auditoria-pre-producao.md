@@ -930,7 +930,26 @@ Rollback independente do Admin; nenhuma gravação ou recálculo histórico.
 
 - [x] Badge de Posts não inclui Respostas; zero/campo legado ausente continuam seguros.
 - [x] Testes executam JSX/formatadores reais, incluindo SSR e estado de atualização.
-- [ ] Browser local, check/build e reteste publicado registrados, sem confundir teste com integração.
+- [x] Browser local, check/build e reteste publicado registrados, sem confundir teste com integração.
 
 350 local:8/8regressões (baseline4pass/4fail),1152testesglobais/1146pass/6skipsdrawtext,
 Admin122/122 e build aprovado. Browser991×964/375×812; sem mutação remota. Publicação pendente.
+
+
+### Continuação351 — idioma dos avisos acessíveis
+
+A349-02: Sonner expõe região Notifications e botão Close toast em inglês. Configurar
+containerAriaLabel e toastOptions.closeButtonAriaLabel nos layouts próprios dos dois apps,
+sem novo wrapper, dependência, ícone ou alteração de posição/duração/atalho/política de fechar.
+Referência: toast real Admin e componentes existentes; sem redesenho ou nova tela.
+Sem env/API/migration; rollout e rollback Next independentes, sem dados persistentes.
+
+- [x] Região e botão de fechar têm nome PT-BR no componente real.
+- [x] Posição, richColors, closeButton de cada app e duração/atalho padrão preservados.
+- [ ] Checks/builds/Browser local e publicação verificados com limites explícitos.
+
+
+350 publicada b230217e:smoke5/5,3apps350,health/ready200. ContaQA1post/2respostas,0cliques:
+reteste preservou contagens/layout; caso nãozero validado somente no componente real local.
+351:3/3testesporapp,1158globais(1152pass/6skips),buildsNext aprovados. BrowserlocalAdmin991×964
+com teclado,front390×844 com clique. Sem promessa de teste físico/Safari. Deploy pendente.

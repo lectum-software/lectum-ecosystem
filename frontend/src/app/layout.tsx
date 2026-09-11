@@ -136,7 +136,12 @@ export default function RootLayout({
                 {children}
                 <Socket />
                 <PwaInstallPrompt />
-                <Toaster richColors position="top-right" />
+                <Toaster
+                  containerAriaLabel="Notificações"
+                  position="top-right"
+                  richColors
+                  toastOptions={{ closeButtonAriaLabel: "Fechar notificação" }}
+                />
               </ProgressiveConversionBoundary>
             </Query>
           </Redux>

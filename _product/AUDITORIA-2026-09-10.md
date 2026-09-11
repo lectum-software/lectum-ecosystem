@@ -243,7 +243,9 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 349: seis testes e comparação visual local passaram; publicação pendente.
 
-140. **Cliques por conteúdo:** publicações não somam mais os cliques das respostas. Oito testes e conferência visual local aprovados; publicação350 pendente.
+140. **Cliques por conteúdo:** publicações não somam mais os cliques das respostas. Validado e publicado em homologação na350.
+
+141. **Avisos acessíveis:** nomes da região e do botão de fechar em português no frontend e Admin. Testes e builds aprovados; publicação351 pendente.
 
 ## Ainda pendente
 

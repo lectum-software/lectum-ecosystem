@@ -13,7 +13,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | A342-03 | Editar data incompleta removia os próprios filtros. | Corrigido344; repetido no Admin publicado. |
 | A342-04 | Busca perde foco após atualizar a URL. | Corrigido345; foco e continuação da digitação repetidos nas duas listas publicadas. |
 | A342-05 | Expansor de campo profissional e setas de publicações sem nome acessível. | Corrigido347; nomes/expandido, teclado/seleção/Cancelar e paginação conferidos no Admin publicado e mobile. |
-| A342-06 | Contador de cliques de Posts inclui cliques das Respostas. | Corrigido350;8/8testes,comparação Browserlocal;aguarda reteste publicado. |
+| A342-06 | Contador de cliques de Posts inclui cliques das Respostas. | Corrigido/publicado350;8/8testes;reteste contaQA,smoke5/5. Nãozero comprovado localmente. |
 | A342-07 | Cores de donut e legenda divergem quando há categorias zeradas. | Corrigido/publicado349; seis testes e Browser local/homolog375×812 e1265×889; smoke5/5. |
 | A342-08 | Menu mobile permite Tab para conteúdo atrás do modal. | Reproduzido no Admin344: Tab atravessa o menu e alcança a busca atrás do overlay. Corrigido346; contenção/Escape/retorno/resize/histórico repetidos no Admin publicado. |
 | A342-09 | Métrica agrupada herda detalhes apenas da primeira origem. | Fonte; agregar detalhes coerentemente com o total. |
@@ -188,3 +188,6 @@ A348-01: corrigido e repetido no Admin348; Cancelar/Salvar/normalização/pendin
 de erro passaram. Nome QA restaurado após gravação e reload. Avatar+rascunho pendente manual.
 A349-02: botão acessível de fechar toast usa “Close toast” no Admin; rastrear configuração
 Sonner para PT-BR, sem tratar idioma do controle nativo do navegador como copy de produto.
+
+A349-02 corrigido351 em amboslayouts:3testesporapp,SSR e BrowserlocalAdmin/front. Publicação pendente.
+C17-B: nova pergunta enviada sobre rejeição humana versus reconfirmação CFP; nenhuma mudança em aprovação.

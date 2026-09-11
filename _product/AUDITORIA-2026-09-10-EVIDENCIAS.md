@@ -1873,3 +1873,41 @@ Baseline autenticado e screenshot mobile registrados sem gerar cliques ou editar
 Essa base não reproduz soma nãozero remotamente; não criar eventos artificiais para tal.
 Checkglobal350:1152testes,1146pass/6skipsdrawtext;Admin122/122;buildAdmin aprovado.
 Um bump350,cincomanifests,sem env/migration/package. Push/reteste após deploy pendentes.
+
+
+### Publicação350 — confirmação
+
+Commitb230217e enviado; hook de push62,56s aprovado. CincoGETs às22:37:10UTC em11/09/2026:
+backend/frontend/Admin350,health/ready200,Nextno-store/noindex. Artefato:
+/tmp/lectum-audit-350-smoke-curl-homolog.json. Vídeo privado não consultado.
+Reload autenticado na conta própria manteve1post/2respostas,0cliques em cada cartão.
+Capturas remotas375×812 antes/depois comparadas: sem regressão visível. Não equivale
+à reprodução nãozero em homolog; esse caso foi comprovado com JSX/SSR original e
+entradas unitárias locais, sem gerar eventos artificiais ou alterar estatísticas.
+
+### A349-02 — avisos acessíveis351
+
+Layouts integrais40/150linhas antes, wrappers e tipos/implementação Sonner pertinentes
+inspecionados. Configuradas props já existentes containerAriaLabel e
+ toastOptions.closeButtonAriaLabel; sem wrapper compartilhado ou nova dependência.
+Front mantém closeButton padrão ausente e Admintrue; top-right/richColors e duração/
+atalho originais preservados. Sem mudança de tokens/estilo/ícones ou de mensagem de negócio.
+
+Três testes por app executam JSX original do host, Sonner/React/SSR reais e verificam
+configuração consumida. Baseline de cadaapp1pass/2fail;final3/3. BrowserlocalAdmin991×964:
+Notifications/Close toast→Notificações/Fechar notificação; Tab alcança botão, Enterfecha
+com foco retornando ao disparador. Frontend390×844: mesma troca e clique fecha. O botão
+no caso unitário frontend foi solicitado por opção local do toast, não habilitado em
+produção globalmente; duração Infinity também só pertence ao harness para observação.
+Capturas de cada app antes/depois comparadas; nenhuma alteração de layout. Arquivos
+/tmp/lectum-task178-toasts-351/*/local-before.png e local-after.png contêm bytes JPEG
+nativos, sem edição, apesar do sufixo. Não é leitor de tela físico/Safari nem E2E de negócio.
+
+Checkglobal351:1158testes,1152pass/6skipsdrawtext;frontend444/Admin125/backend470;
+builds frontend/Admin aprovados. Um bump351,cincomanifests,sem env/migration/package.
+Publicação/reteste remoto pendentes. Nenhum reset, alteração de credenciais ou dado real.
+
+C17-B foi novamente rastreado em fonte, sem chamada CFP ou mudança de aprovação: proteger
+somente perfil não basta pois o raw confirmado também é fonte da UI. Pergunta específica
+sobre precedência de rejeição humana enviada; não reabrir KYC nem aprovar automaticamente
+uma reconfirmação enquanto a regra não estiver definida. Achado permanece aberto.
