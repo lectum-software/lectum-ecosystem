@@ -1043,3 +1043,13 @@ Associar a cor da paleta existente ao item antes de filtrar segmentos vazios, co
 donuts de pacientes/psicólogos. Não mudar geometria compartilhada nem contratos dos
 callers; opção por cor no item evita índices incompatíveis e lookup quadrático.
 Preservar porcentagens/totais e identidades. Sem env/migration/package.
+
+
+### Universos dos cartões350 — requisito prévio
+
+O contrato já separa posts e replies, cada um com items/total/total_whatsapp_clicks.
+O badge deve usar o mesmo grupo que seu cartão, não uma agregação intergrupos implícita.
+Corrigir apenas a referência no Admin; não alterar cálculo backend nem somar itens como
+fallback, para preservar compatibilidade com respostas antigas (campo ausente =>0).
+Teste compila declarações originais e componentes visuais reais, sem substituir APIs,
+providers ou autenticação. Sem env/package/migration; rollback Admin independente.

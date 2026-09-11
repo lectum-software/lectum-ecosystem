@@ -529,10 +529,7 @@ export const ContentFormatDistributionsBlock = ({
 }) => (
   <div className={cn("grid gap-5 lg:grid-cols-2", className)}>
     <ContentFormatDistributionCard
-      badgeLabel={formatContentFormatWhatsappClicks(
-        (distribution.posts.total_whatsapp_clicks ?? 0) +
-          (distribution.replies.total_whatsapp_clicks ?? 0),
-      )}
+      badgeLabel={formatContentFormatWhatsappClicks(distribution.posts.total_whatsapp_clicks ?? 0)}
       className={cardClassName}
       description="Quantidade e taxa por formato dos posts no mesmo período selecionado."
       distribution={distribution.posts}

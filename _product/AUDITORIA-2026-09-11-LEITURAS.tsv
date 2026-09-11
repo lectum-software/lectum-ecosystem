@@ -329,6 +329,7 @@ admin/postcss.config.mjs	Socrates;admin275;fonte_congelada_integral	dfac7ac2d86d
 admin/public/logo-icon.svg	Bacon;assets348;inspecao_visual_individual;ICO6frames;report_parent_integral;revisao_composta_XML_estrutural_e_PNGs_embutidos_vistos;305310bytes_base64_nao_lidos_como_texto	6ec042b1a33047c5fe890b189eef43ff4f0eeee0e94a47fb69150961d82645db	true
 admin/public/logo-light.png	Bacon;assets348;inspecao_visual_individual;ICO6frames;report_parent_integral	ed464c01a6b40525d2edac8ce85eec6fd8041521c5deda584b3ba246204daf84	true
 admin/scripts/community-edit-form.test.mjs	;parent348;leitura_integral_mais_delta_wrapper_e_resolucao_de_teste	78f5cf516a9331e399681e85fce6d48c3ea67e6872c563acbc377e36d361a72e	false
+admin/scripts/content-distribution.test.mjs	parent;350;autoria_e_revisao_integral;8testes_reais_AST_SSR_sem_API	5ba1825a298141a07d8c4a6b25ac7151d43492f7250c433c7f0260f3da505387	false
 admin/scripts/remove-production-source-maps.mjs	principal;integral	8768250e8f02b26a221d44f4b5983835f0324910175efb0403dc1e8b6b80e263	true
 admin/scripts/sync-route-group-manifests.mjs	Socrates;admin275;fonte_congelada_integral	f9e91db6f102668531e44df1f54e6b3bd1da1eb394b0cb95b687cac5bb77994c	true
 admin/scripts/traffic-donut.test.mjs	;parent349;leitura_integral_teste	64317904a8489edccf6bf7c6667297547965e3d9ae2ab060bfc751df8d61576c	false
@@ -584,7 +585,7 @@ admin/src/app/(admin)/psicologos/[id]/modules/tabs/reports/index.tsx	Socrates;ad
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/reports/support.tsx	Socrates;admin275;fonte_congelada_integral	00011f97caaaefa0e3cf5979a3e33b81444574008aef506d2ae1c7870038666a	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/reviews/index.tsx	Socrates;admin275;fonte_congelada_integral	0cb069fa21ce9773cf5a3be608e736484ee42b6862720fb4dddd7c884d08896f	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/statistics/common.tsx	Socrates;admin275;fonte_congelada_integral	e7c92ee414e3acf133cd83ea30d4c2244dbb2a70c805fb6cdd869d7364e27dd4	true
-admin/src/app/(admin)/psicologos/[id]/modules/tabs/statistics/community.tsx	Socrates;admin275;fonte_congelada_integral	78bbb027b017b1b996543da53d31d480e9e5845699ed2f01ea8c8de81a423207	true
+admin/src/app/(admin)/psicologos/[id]/modules/tabs/statistics/community.tsx	parent;350;releitura_integral557_antes552_depois;JSX_SRRe_Browser991x964_375x812;badge_sem_soma_intergrupos	345cd7173e108cc7f7fce9803755c223c823e960c524a5ec7cbc64afb5e74b00	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/statistics/index.tsx	Socrates;admin275;fonte_congelada_integral	54a6eff98c4c65aa43009d41a07ddf625616bf09b8ed72e8c01ef99f3c5a5d6e	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/statistics/metric-carousel.tsx	Socrates;admin275;fonte_congelada_integral	7f2430c05bd43c60a064c98b46755f1a38ae7bf28862eb57eaef4b1419b14943	true
 admin/src/app/(admin)/psicologos/[id]/modules/tabs/statistics/platform.tsx	Socrates;admin275;fonte_congelada_integral	a313ee7acc3888befa1436e8eecafcf53405893b2e3df7062233fc547e92821c	true
@@ -620,7 +621,7 @@ admin/src/app/(admin)/psicologos/views/stats-content.tsx	Socrates;admin275;fonte
 admin/src/app/(admin)/settings/page.tsx	Goodall;configuracoesSEO;integral_inicial | Planck;legal340;integral	48bd79eb117fddcf334a8d94369fcd5054e7ba5f89fc521671c5b6c0d4aeccce	true
 admin/src/app/(admin)/trafego/client.tsx	Socrates;admin275;fonte_congelada_integral	b1fa598166ebf2da99209cb71525dc69e1f59a1c5943aeccfafeb25933d8fb54	true
 admin/src/app/(admin)/trafego/components/location.tsx	Socrates;admin275;fonte_congelada_integral	9b8d936275789173b29bbaa09a0017401a960e0921da7128b14e59ff602225dd	true
-admin/src/app/(admin)/trafego/components/navigation-conversions.tsx	Socrates;admin275;fonte_congelada_integral;parent349;revisao_delta_cor_sobre_fonte_lida;DonutChart_integral;SSR_e_Browser	f30e6912a7a01f3caa91f96503f0fbaaaa64b5a6a6240e1a4a089ec6c2378d86	true
+admin/src/app/(admin)/trafego/components/navigation-conversions.tsx	parent;349_publicada;reteste_nativo_375x812_1265x889;geometria_inalterada	f30e6912a7a01f3caa91f96503f0fbaaaa64b5a6a6240e1a4a089ec6c2378d86	true
 admin/src/app/(admin)/trafego/components/overview-cards.tsx	Socrates;admin275;fonte_congelada_integral	87ad25a395f631b3f6496fd0a40cd37c50c05de662f95e2baf96aa4ff2f0068d	true
 admin/src/app/(admin)/trafego/components/timeline.tsx	Socrates;admin275;fonte_congelada_integral	8386b74796ddb496ee3feaa47cbba8ef29906ee52e893a5299153cbafbfc825c	true
 admin/src/app/(admin)/trafego/modules/traffic-support.ts	Socrates;admin275;fonte_congelada_integral	91e5e431505b8b023b259ed6164b03de0f84b21cbec774d029156d50c2285473	true

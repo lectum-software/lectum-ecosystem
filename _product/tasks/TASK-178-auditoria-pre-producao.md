@@ -900,7 +900,7 @@ contagens, percentuais, ordem, filtro, geometria, API, env, pacote ou banco.
 
 - [x] Cores de arco e legenda coincidem com zeros no início/meio e ciclo da paleta.
 - [x] Total/ordem/descrições/estado vazio mantidos; entradas não são alteradas.
-- [ ] Componente real em SSR, Browser local/publicado, check/build e smoke registrados.
+- [x] Componente real em SSR, Browser local/publicado, check/build e smoke registrados.
 
 Sem redesenho; evidência de fonte não implica incidente financeiro ou erro de contagem.
 
@@ -912,3 +912,25 @@ após reload. Falha de rede e upload de avatar não foram executados; não marca
 349: check global aprovado com1144testes (1138pass/6skips drawtext);Admin114/114.
 BuildAdmin aprovado; source-safety/ESLint/Biome/TypeScript preservados. Um único bump349
 sincronizou cinco manifests. Sem env/migração/pacote; publicação aguardando commit/push.
+
+
+349 publicada47da3541: cinco GETs públicos aprovados22:18:11UTC, backend/frontend/Admin349,
+health/ready200. Cadastros por perfil conferido novamente com0pacientes/4psicólogos:
+arco verde coincide com legenda. Browser nativo375×812 e1265×889; não equivale a Safari
+ou aparelho físico. Não houve alteração de registros. Serviço privado de vídeo não consultado.
+
+### Continuação350 — cliques de cada formato de conteúdo
+
+A342-06: badge de Posts soma total de Posts com Respostas, embora contrato e cartões
+sejam separados. Usar somente distribution.posts.total_whatsapp_clicks, preservando
+fallback0, singular/plural, total e itens dos dois grupos, período e estado Atualizando.
+Referência visual: proto Admin/Psicólogos/Detalhes do psicólogo/Estatísticas.png e cartões
+atuais, sem redesenho. Builder indisponível. Sem env, pacote, migration ou alteração de API.
+Rollback independente do Admin; nenhuma gravação ou recálculo histórico.
+
+- [x] Badge de Posts não inclui Respostas; zero/campo legado ausente continuam seguros.
+- [x] Testes executam JSX/formatadores reais, incluindo SSR e estado de atualização.
+- [ ] Browser local, check/build e reteste publicado registrados, sem confundir teste com integração.
+
+350 local:8/8regressões (baseline4pass/4fail),1152testesglobais/1146pass/6skipsdrawtext,
+Admin122/122 e build aprovado. Browser991×964/375×812; sem mutação remota. Publicação pendente.

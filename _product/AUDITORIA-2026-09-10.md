@@ -243,6 +243,8 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 349: seis testes e comparação visual local passaram; publicação pendente.
 
+140. **Cliques por conteúdo:** publicações não somam mais os cliques das respostas. Oito testes e conferência visual local aprovados; publicação350 pendente.
+
 ## Ainda pendente
 
 - Documentos legais aprovados e links no cadastro: **bloqueiam recomendação de produção**.

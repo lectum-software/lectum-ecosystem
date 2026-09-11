@@ -1839,3 +1839,37 @@ patch. Fonte não altera layout/breakpoints; reteste publicado após deploy aind
 349: check global aprovado com1144testes (1138pass/6skips drawtext);Admin114/114.
 BuildAdmin aprovado; source-safety/ESLint/Biome/TypeScript preservados. Um único bump349
 sincronizou cinco manifests. Sem env/migração/pacote; publicação aguardando commit/push.
+
+
+### Publicação349 — confirmação após rollout
+
+Commit47da3541: cinco GETs públicos às22:18:11UTC,11/09/2026, backend/frontend/Admin349,
+health/ready200 e versões Next sem cache/indexação. Artefato local:
+/tmp/lectum-audit-349-smoke-curl-homolog.json. Vídeo privado não consultado.
+Após reload do Admin349 e período Hoje, Cadastros por perfil conservou0pacientes/4psicólogos
+e passou a arco verde coerente com legenda. Capturas nativas375×812 e1265×889 em
+/tmp/lectum-task178-traffic-donut-349/homolog-mobile-after.png e homolog-desktop-after.png.
+Antes/depois remoto têm alturas/scroll distintos; não é comparação pixel-a-pixel. Local
+antes/depois991×964 foi comparado em conjunto. Nenhum registro alterado, Safari não testado.
+
+### A342-06 — separação de cliques350
+
+Parent leu community.tsx integral(557linhas antes/552depois), contratos statistics.ts52–85,
+170–189 e agregador business-content.ts501–546; componentes CardShell/Badge e funções
+visuais/imports pertinentes. Contrato fornece total separado em posts/replies; apenas o
+badge de Posts somava ambos. Não alterar percentuais, contagem de conteúdo ou API.
+Referência proto Estatísticas Admin inspecionada; Builder indisponível.
+
+Oito testes de JSX/SSR original com React/cards/geometry/Intl reais: baseline4pass/4fail,
+correção8/8. Casos3/7,zeros,campoausente,singular,milhar,refresh e gruposvazios; objetos
+congelados/identidade preservados. Compilação AST vive no diretório scripts existente,
+sem API/provider/auth substituído. Não certifica cálculo SQL ou integração remota.
+Browser local991×964 e375×812 antes/depois comparados em pares: badgePosts10→3,
+Respostas7 e disposição/legendas preservados, com entradas unitárias explicitamente
+identificadas e sem persistência. Capturas em /tmp/lectum-task178-content-badges-350/.
+
+Admin homolog349, conta própria filtrada por Auditoria:1post/2respostas, ambos0cliques.
+Baseline autenticado e screenshot mobile registrados sem gerar cliques ou editar registros.
+Essa base não reproduz soma nãozero remotamente; não criar eventos artificiais para tal.
+Checkglobal350:1152testes,1146pass/6skipsdrawtext;Admin122/122;buildAdmin aprovado.
+Um bump350,cincomanifests,sem env/migration/package. Push/reteste após deploy pendentes.
