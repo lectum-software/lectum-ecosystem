@@ -13,6 +13,36 @@ test("preserva mensagens de domínio próprias para usuários", () => {
   assert.equal(sanitizePublicErrorMessage(message), message);
 });
 
+test("não publica erros padrão de validação em inglês nem seus tipos internos", () => {
+  for (const message of [
+    "Invalid field",
+    "Invalid input: expected string, received undefined",
+    "Invalid email address",
+    "Too small: expected string to have >=3 characters",
+    "Too big: expected array to have <=10 items",
+    "Validation error",
+  ]) {
+    assert.equal(
+      sanitizePublicErrorMessage(message),
+      "Não foi possível concluir a solicitação agora.",
+    );
+    assert.deepEqual(sanitizePublicErrorData({ body: { name: message } }), {
+      body: { name: "Valor inválido." },
+    });
+  }
+});
+
+test("preserva orientações PT-BR de formato e tamanho", () => {
+  for (const message of [
+    "E-mail inválido.",
+    "Informe os 6 dígitos do código.",
+    "Texto deve conter pelo menos 3 caracteres.",
+    "Envie um vídeo de até 300MB.",
+  ]) {
+    assert.equal(sanitizePublicErrorMessage(message), message);
+  }
+});
+
 test("remove detalhes de infraestrutura e rastros internos", () => {
   assert.equal(isSafePublicErrorMessage("Prisma P2002 unique constraint failed"), false);
   assert.equal(isSafePublicErrorMessage("At least one policy returned UNAUTHORIZED."), false);

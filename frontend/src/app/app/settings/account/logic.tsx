@@ -192,7 +192,7 @@ const GoogleConnectionPanel = ({
       </div>
       {disabled ? (
         <InlineAlert title="Google indisponível" variant="info">
-          Vínculo com Google bloqueado neste ambiente porque o OAuth não está configurado.
+          Não é possível conectar sua conta ao Google agora. Tente novamente mais tarde.
         </InlineAlert>
       ) : null}
       <Button
@@ -379,7 +379,7 @@ export const AccountSettingsLogic = () => {
           backHref="/app/perfil"
           backLabel="Voltar para meu perfil"
           className="mb-4"
-          title="Email e senha"
+          title="E-mail e senha"
         />
 
         {account.security.isLoading || account.security.isPending ? (

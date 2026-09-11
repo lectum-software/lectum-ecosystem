@@ -2,6 +2,7 @@ type UnknownRecord = Record<string, unknown>;
 
 const DEFAULT_MESSAGE = "Não foi possível concluir a operação. Tente novamente.";
 const TECHNICAL_MESSAGE_PATTERNS = [
+  /\b(?:invalid|validation error|too small|too big|too short|too long|expected|received)\b/i,
   /request failed with status code/i,
   /network error/i,
   /internal server error/i,

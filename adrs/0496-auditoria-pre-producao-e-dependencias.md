@@ -135,3 +135,32 @@ Browser local testou o formulário de perfil real em harness temporário sem API
 Escape/restauração de foco, busca e campo dependente passaram. Duas regressões adicionais cobrem
 markup e wiring; não substituem interação. Check 489 testes e build frontend aprovados.
 Sem migration/env nova. Versão sincronizada 0.1.313, publicação/smoke pendentes neste registro.
+
+## Complemento — sessão opcional e mensagens (0.1.314)
+
+A estratégia JWT já distinguia credencial inválida de indisponibilidade (503), mas o middleware
+opcional ignorava esse erro e seguia como visitante. Agora propaga 503 seguro, sem mudar o acesso
+anônimo quando não há sessão válida. Captura dentro do callback é necessária porque Passport não
+aguarda sua Promise; catch externo não captura rejeição de `passToken`. Logs usam classificação
+literal e sanitizador existente. Não se adiciona regra nova de autorização por papel/objeto.
+
+Regressão usa subprocesso com env mínima, diretório sem .env, catálogos copiados e socket PostgreSQL
+inexistente local: Express/Passport, assinatura JWT e Prisma são reais. Não há mock de provider,
+seed ou acesso a credenciais publicadas. Antes devolvia 204 no endpoint de teste; depois 503,
+preservando 204 para visitante/credencial inválida. Isso cobre indisponibilidade na primeira
+consulta; a segunda consulta foi protegida por análise de controle, não por queda E2E do banco.
+
+Erros comuns `Invalid field`, `Invalid input`, `Too small` e semelhantes passavam no sanitizador.
+Ampliar o filtro já existente, sem substituir mensagens úteis em PT-BR por fallback genérico.
+Tela `/auth/error` reproduziu o achado no Browser de homolog. Aviso da conta que explicava OAuth
+não configurado passa a orientar uma nova tentativa sem detalhar infraestrutura.
+
+Smoke final 0.1.312 (23:57 UTC de 10/09) e 0.1.313 (00:07 UTC de 11/09): 16/16 aprovados.
+Browser publicado confirmou seleção/foco; valores do formulário não foram salvos. Sem alteração de
+banco, env, provider, pacotes ou contrato entre versões. Novo bump único para 0.1.314.
+
+Validação final local: 495 testes aprovados, Prisma/TypeScript/Biome e builds backend/frontend
+aprovados. Browser na build final confirmou `/auth/error?error=Invalid%20field` em desktop/mobile,
+sem API simulada; screenshots 14–16 evidenciam antes/depois. Separados os testes de mensagens em
+`frontend/src/api/errors.test.mjs` para não aumentar arquivo de testes legado além de 700 linhas.
+Teste isolado não herda PATH ou outra env do host e não exige variáveis novas na aplicação.

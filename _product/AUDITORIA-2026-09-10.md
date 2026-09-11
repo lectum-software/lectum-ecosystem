@@ -21,6 +21,9 @@
 15. Confirmação de e-mail descarta o estado antigo da navegação, que podia devolver a pessoa à verificação.
 16. Opções de seleção respondem a Enter/Espaço, não apenas ao pressionar o mouse.
 17. Escape fecha a lista e devolve o foco ao campo, preservando a escolha.
+18. Falha ao validar uma sessão não é mais confundida com navegação de visitante.
+19. Erros padrão de validação em inglês são substituídos por orientação segura em português.
+20. Aviso de conexão Google não expõe mais configuração interna da integração.
 
 Correções 1–11 publicadas em `0.1.311` (`fa6a6dce`). **Smoke de 10/09, 22:50 UTC:**
 backend, frontend e Admin confirmados nessa versão; 16 verificações HTTP passaram, incluindo
@@ -80,7 +83,7 @@ após o deploy; teste isolado de controller não equivale a confirmação real p
 | Vídeo/upload/playback | Frontend, API, R2/Stream | Limites locais e parser testados | Upload/playback real, URLs assinadas, interrupção, Safari |
 | Processamento de vídeo | API interna, fila, worker, volume | Inventário e baseline local | Smoke privado no servidor, egress e isolamento atuais |
 | Assinaturas/pagamentos | Frontend, Admin, backend, gateway | Inventário estático | Contas/cartões exclusivamente de teste, webhooks/idempotência |
-| Conta/privacidade/exclusão | Frontend, Admin, backend | Inventário estático | Revogação/exportação e exclusão somente da conta de auditoria |
+| Conta/privacidade/exclusão | Frontend, Admin, backend | Formulário próprio vazio, foco/erro PT-BR; leitura de serviço/repositório | Revogação/exportação e exclusão somente da conta de auditoria |
 | Notificações/analytics | Frontend, Admin, API/jobs/socket | Inventário estático | Preferências e acessos; sem campanha para terceiros |
 | Administração/catálogos/SEO | Admin, API administrativa | Dashboard autenticado desktop/mobile; menu fecha com Escape e devolve foco | Permissões de ações, validação de formulários, exportação |
 | Infraestrutura/deploy | Quatro apps, manifests, Docker | Atualização focal de dependências | Builds/smoke novos, CSP, cache e headers por superfície |
@@ -92,8 +95,10 @@ após o deploy; teste isolado de controller não equivale a confirmação real p
 - Verificar imposição server-side de confirmação de e-mail e troca obrigatória de senha;
   leitura inicial dos guards não mostrou essas condições, mas o cadastro completo ainda não foi
   exercitado. Também rastrear vínculo Google com conta manual pré-existente. Não é exploração confirmada.
-- Callback assíncrono de autenticação opcional não tem captura local de falhas; investigar rejeição
-  de persistência depois de validar JWT, sem derrubar o banco publicado para reproduzir.
+- Autenticação opcional corrigida: falha real de conexão local ao banco agora retorna 503;
+  visitante sem credencial e token inválido continuam sem autenticação nas rotas públicas.
+  A captura da segunda consulta foi revisada em código; interrupção entre consultas ainda não
+  foi exercitada com sessão persistida real. Não derrubar o banco publicado para reproduzir.
 - Modais e formulários ainda precisam de teclado/foco/leitor de tela e medidas mobile reais.
 - Worker possui egresso para render social no compose atual; o teste histórico de isolamento total
   não descreve essa versão. Auditar restrições de origem, redirects, DNS e mídia remota.
@@ -147,3 +152,29 @@ cinco manifests sincronizados. Sem a rota temporária no artefato. Publicação/
 - Dimensões verificadas nos arquivos: Admin/cadastro/OTP antes em 375×812; login local e
   controllers depois em 390×844; desktop 1280×720 e 1320×953. Não são dispositivos móveis reais.
 - Capturas 11/12 registram o select antes/depois; 12 inspecionada do arquivo salvo.
+
+## Continuação — autenticação e mensagens 0.1.314
+
+- Smoke final 0.1.312: 16/16 aprovados em 10/09 às 23:57 UTC, após recuperação do backend.
+- Smoke 0.1.313: 16/16 aprovados em 11/09 às 00:07 UTC; backend/frontend/Admin na mesma versão.
+- Browser homolog 0.1.313: Enter selecionou; Escape fechou/restaurou foco no perfil real. Saída
+  sem salvar os valores de teste. Captura 13; conta não recebeu alterações demográficas.
+- Tela pública de erro reproduziu `Invalid field` em homolog. O filtro existente passa a cobrir
+  erros padrão de validação; mensagens de domínio PT-BR continuam preservadas. Captura 14.
+- Autenticação opcional: Express, Passport/JWT e Prisma reais em processo local isolado, sem .env
+  do workspace. Banco aponta para socket inexistente temporário, sem acessar banco real ou provider.
+  Antes: credencial assinada com consulta impossível seguia como visitante (204 no teste do guard).
+  Depois: 503 seguro. Visitante/token inválido preservados; guard privado também respondeu 503.
+- Catch dentro do callback impede que uma rejeição de validação de sessão fique sem tratamento;
+  falha operacional síncrona também não segue como visitante. Sem mudar regras público/privado.
+- Formulário da conta vazio mostrou orientação PT-BR e foco em novo e-mail. Nenhuma senha,
+  e-mail, vínculo Google ou exclusão foi alterado pelo teste.
+- Leitura integral das duas minutas confirmou placeholders e checklist de aprovação pendentes.
+- Check agregado aprovado: 495 testes (132 frontend, 296 backend, 35 Admin, 32 video), sem skips.
+  Builds backend/frontend aprovados. Página de erro real na build local substituiu o inglês por
+  orientação PT-BR; desktop 1280×720 e mobile 390×844 sem overflow. Capturas 15/16 conferidas do disco.
+  Não há API ou provider simulado. Publicação/smoke desta versão ainda pendentes deste registro.
+
+Revisão de identidade ainda pendente: confirmar comportamento de contas manuais não verificadas
+quando o mesmo e-mail entra por Google e imposição de confirmação/troca obrigatória no servidor.
+Leitura de código não equivale à exploração confirmada nem autoriza alterar vínculo de contas reais.

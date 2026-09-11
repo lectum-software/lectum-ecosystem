@@ -156,9 +156,24 @@ foram removidos de `.next/dev` antes da repetição limpa; rota não está no ar
 - [x] Browser local confirmou Enter/Espaço, Escape, busca e cidade dependente nas variantes
   customizada, busca em dropdown e busca no input; hooks reais, nenhum envio à API.
 - [x] Check agregado: 489 testes aprovados; frontend build aprovado; bump único 0.1.313.
-- [ ] Repetir seleção no Browser publicado após deploy de 0.1.313.
+- [x] Repetir seleção no Browser publicado após deploy de 0.1.313: Enter, Escape e foco aprovados, sem salvar.
 
 0.1.312: frontend/Admin publicados; backend /ping 0.1.312 e /ready 200 às 23:56 UTC.
 Respostas transitórias 502 durante substituição do backend registradas; repetir smoke completo.
 Conta confirmada chegou ao perfil via retorno da verificação no Browser publicado. Novo cadastro
 com código real após patch ainda pendente. Capturas mobile variam entre 375px e 390px.
+
+## Continuação — autenticação opcional e mensagens 0.1.314
+
+- [x] Smoke final 0.1.312: 16/16 em 10/09, 23:57 UTC; 0.1.313: 16/16 em 11/09, 00:07 UTC.
+- [x] Reproduzida falha real de conexão Prisma em processo isolado sem env/segredos publicados.
+- [x] Autenticação opcional retorna 503 em indisponibilidade, sem tratar sessão incerta como visitante.
+- [x] Erros padrão de validação em inglês filtrados na API/frontend, preservando mensagens PT-BR.
+- [x] Mensagem técnica sobre configuração OAuth removida do painel de conta.
+- [x] Check agregado 495 testes; builds backend/frontend; Browser local de erro em 1280px e 390px.
+- [ ] Smoke publicado de 0.1.314.
+
+Contrato público/privado preservado. Sem migrations, dependências ou variáveis novas, sem reset.
+O teste isola Express/Passport/JWT/Prisma reais e catálogos reais; não simula um banco disponível.
+O callback interno recebeu catch por revisão de fluxo; falta exercitar queda entre duas consultas
+com sessão persistida real. Não declarar toda a autenticação ou o pentest integral certificados.

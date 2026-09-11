@@ -19,6 +19,7 @@ const TECHNICAL_ERROR_DATA_KEYS = new Set([
 const normalizeDataKey = (key: string) => key.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 const TECHNICAL_ERROR_PATTERNS = [
+  /\b(?:invalid|validation error|too small|too big|too short|too long|expected|received)\b/i,
   /request failed with status code/i,
   /network error|internal server error|socket hang up/i,
   /\b(?:econnrefused|econnreset|econnaborted|enotfound|etimedout|eai_again)\b/i,
