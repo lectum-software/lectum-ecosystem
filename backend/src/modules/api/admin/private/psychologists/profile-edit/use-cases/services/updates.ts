@@ -1,15 +1,12 @@
-import type { Prisma } from "@/external/generated/prisma/client";
 import type { Resolve } from "@/helpers/return";
 import { error } from "@/helpers/translate";
 import type {
   IAdminPsychologistUpdatePersonalDataDTO,
   IAdminPsychologistUpdateProfessionalDataDTO,
 } from "../../DTOs/IAdminPsychologistProfileEditDTO";
-import {
-  type AdminPsychologistPersonalProfileUpdate,
-  type AdminPsychologistProfessionalProfileUpdate,
-  AdminPsychologistProfileEditRepository,
-} from "../../repositories/AdminPsychologistProfileEditRepository";
+import { AdminPsychologistProfileEditRepository } from "../../repositories/AdminPsychologistProfileEditRepository";
+
+import { buildPersonalProfileUpdate, buildProfessionalChanges } from "./changes";
 
 import {
   APPROVED_REGISTRY_STATUS,
@@ -34,6 +31,11 @@ import {
   currentRelationIds,
   currentRelationNames,
 } from "./professional";
+
+const profileChanged = (): Resolve => ({
+  status: 409,
+  ...error("admin_psychologist_profile_changed", {}),
+});
 
 export const updateAdminPsychologistPersonalData = async (
   data: IAdminPsychologistUpdatePersonalDataDTO,
@@ -103,23 +105,12 @@ export const updateAdminPsychologistPersonalData = async (
     profile,
   });
 
-  const profileUpdate: AdminPsychologistPersonalProfileUpdate = {
-    birthdate: next.birthdate,
-    cpf: next.cpf,
-    gender: next.gender,
-    professional_address_city: next.address_city,
-    professional_address_complement: next.address_complement,
-    professional_address_district: next.address_district,
-    professional_address_number: next.address_number,
-    professional_address_state: next.address_state,
-    professional_address_street: next.address_street,
-    professional_address_zip: next.address_zip,
-    race_color: next.race_color,
-    religion: next.religion,
-    whatsapp: next.whatsapp,
-  };
-
-  await repository.updatePersonalData(profile.id, { audit, profile: profileUpdate });
+  const saved = await repository.updatePersonalData(profile.id, {
+    audit,
+    expectedUpdatedAt: profile.updatedAt,
+    profile: buildPersonalProfileUpdate(next, changedFieldKeys),
+  });
+  if (!saved) return profileChanged();
 
   return detailResponse(profile.user_id, "admin_psychologist_profile_personal_updated");
 };
@@ -233,11 +224,13 @@ export const updateAdminPsychologistProfessionalData = async (
 
   const next = {
     approach_ids: selectedIds.approach_ids,
-    languages: nextLanguages.canonical,
+    languages: Object.hasOwn(data.b, "languages") ? nextLanguages.canonical : previous.languages,
     modality: nextModality,
     service_ids: selectedIds.service_ids,
     specialty_ids: selectedIds.specialty_ids,
-    target_audience: nextTargetAudience.canonical,
+    target_audience: Object.hasOwn(data.b, "target_audience")
+      ? nextTargetAudience.canonical
+      : previous.target_audience,
   };
 
   const changedFieldKeys: string[] = [];
@@ -269,19 +262,12 @@ export const updateAdminPsychologistProfessionalData = async (
     profile,
   });
 
-  const profileUpdate: AdminPsychologistProfessionalProfileUpdate = {
-    languages: next.languages as Prisma.InputJsonValue,
-    modality: next.modality,
-    target_audience: next.target_audience as Prisma.InputJsonValue,
-  };
-
-  await repository.updateProfessionalData(profile, {
-    approachIds: next.approach_ids,
+  const saved = await repository.updateProfessionalData(profile, {
+    ...buildProfessionalChanges(next, changedFieldKeys),
     audit,
-    profile: profileUpdate,
-    serviceIds: next.service_ids,
-    specialtyIds: next.specialty_ids,
+    expectedUpdatedAt: profile.updatedAt,
   });
+  if (!saved) return profileChanged();
 
   return detailResponse(profile.user_id, "admin_psychologist_profile_professional_updated");
 };

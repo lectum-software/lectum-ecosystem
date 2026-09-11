@@ -207,3 +207,8 @@ C16/353: seguir/desseguir validado em service/repository/Prisma reais num Postgr
 descartável local (dez cenários, incluindo concorrência e isolamento por paciente).
 Não foram alteradas publicações de profissionais reais para reproduzir o problema.
 Rota/middleware autenticado não substituídos: cobertura HTTP específica continua limitada.
+
+
+C12/354:22contratos de deltas e11cenários repository/PG real em imagem imutável aprovados.
+Concorrência de gravação/histórico,omissão de seleções e rollback provados somente no
+laboratório isolado. HTTP autenticado e formulário já obsoleto não equivalem a essa prova.

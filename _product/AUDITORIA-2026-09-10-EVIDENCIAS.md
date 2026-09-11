@@ -1972,3 +1972,41 @@ Smoke público não substitui teste HTTP autenticado do cenário de despublicaç
 Testes de integração manual são adicionais: dez cenários+contêiner,11pass. Limpeza dos
 IDs temporários validada pelo hook; container local próprio removido. Um bump353 e
 cinco manifests sincronizados, check:version aprovado. Publicação/smoke pendentes.
+
+
+### Publicação353 e correção de edição354
+
+353/be689c56 publicado:smoke5/5às23:10:32UTC11/09,backend/frontend/Admin353;health/ready200
+e versõesNextno-store/noindex. Log:/tmp/lectum-audit-353-smoke-curl-homolog.json.
+Sem consulta adicional ao serviço privado de vídeo; não inferir versão de manifests.
+
+C12: select do perfil inclui updatedAt existente. Repository compara versão e estado
+ativo/não removido no updateMany transacional, avança tempo pelo menos1ms e só depois
+altera relações/log. Conflito retornafalse, service409 com mensagem leiga PT-BR. Nenhuma
+migration ou parâmetro obrigatório novo nos clientes. Campo/relação omitido não é enviado
+na escrita; idiomas/público omitidos também não são recanonicalizados incidentalmente.
+
+Helper changes usa chaves de domínio explícitas, tipos do contrato existente e testes
+unitários puros22/22:cada campo pessoal, ausência de mudança, null e relações vazias.
+Não usa API/provider simulado. Service mantém validações e confirmação CPF preexistentes.
+Não houve mudança de aprovação, selo ou da regra CPF/CRP ainda pendente.
+
+Integração reaproveita isolated-postgres-runner.mjs, com imagem imutável da aplicação e
+PostgreSQL17-alpine efêmero, rede interna e configuração independente do host.
+Baseline353:8cenários,2pass/6fail comprovados. Final354:os8anteriores+3sobre relações,11pass.
+Cobertura:stale pessoal/profissional,duastransações concorrentes com único vencedor/log,
+rollback se log falhar,conta inativa/perfil removido,limpeza null,isolamento de outroperfil,
+repetição semaudit,omissão/limpeza de relações e recusa de limpeza com snapshot antigo.
+Nenhum perfil publicado foi usado para provocar essas condições. Fixtures residem apenas
+na execução descartável, removida pelo runner. Não é prova HTTP/autorização da sessão.
+
+Imagens353 sha256:df35d0477215ba55c09edbbab7f07fd5b3f70339d63e501164c2652a62b6062c
+e354 sha256:62de68e8eb6daf837674ea61a7c5541f71786ab6f60083ec5d96a00095d59861.
+Comando manual:`node backend/scripts/profile-edit-integration.mjs --image=lectum-backend:audit-0.1.354`.
+Logs:/tmp/lectum-task178-profile-edit-354/{baseline,final,build-baseline,build-final,unit}.log.
+Checkglobal1180testes,1174pass/6skipsdrawtext;backend492. Buildbackend e Dockerlinux/amd64
+aprovados. Um bump354,cincomanifests,check:version aprovado. Publicação ainda pendente.
+
+Limite: comparação é entre leitura e escrita no backend. Não detecta formulário já
+antigo antes da requisição nem SQL externo que omita atualização de updatedAt. Rollout
+com backend antigo ainda pode gravar pela regra antiga; não prometer proteção retroativa.

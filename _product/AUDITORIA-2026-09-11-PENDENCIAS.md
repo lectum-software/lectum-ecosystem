@@ -26,14 +26,14 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C17-B | Confirmação por outro caminho pode substituir CPF/CRP protegido. | Fonte; P2 proposto. Preservar trava transacional e idempotência sem revogar aprovações existentes. |
 | C20 | Normalização estrutural deve evitar acesso a propriedades herdadas. | Fonte; impacto HTTP não comprovado. Nenhum teste/receita de exploração executado. Restrições operacionais anteriores permanecem. |
 | C9/C10 | Decisões concorrentes de moderação podem reutilizar contador/snapshot antigo. | Fonte; planejar escrita atômica e coerência da auditoria, sem remover conteúdo real para testar. |
-| C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Fonte; persistir apenas mudanças pretendidas e validar concorrência. |
+| C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Corrigido354;22contratos,11cenários PG real;publicação pendente. Não cobre formulário já obsoleto antes de chegar ao backend. |
 | C13 | Campo chamado cpf_masked retornava todos os dígitos. | Corrigido345 com máscara compartilhada; contratos/build aprovados. Endpoint administrativo; nenhum vazamento público demonstrado. |
 | C15 | Numerador e denominador de taxa de ação usam conjuntos diferentes de sessões. | Fonte; uniformizar universo, não apenas limitar percentual. |
 | C4 | Zero eventos no período pode virar contagem acumulada de comentários/salvamentos. | Fonte; confirmar semântica e usar fallback coerente. |
 | C5 | Atividade pode incluir publicações anteriores ao intervalo. | Fonte; separar histórico de tráfego e atividade do período. |
 | C6 | Views por conteúdo podem incluir visitas ao perfil. | Fonte; filtrar pelo alvo correto preservando atribuição histórica. |
 | C18 | Limite de consultas CFP não reserva a tentativa antes do efeito externo. | Fonte; tratar concorrência sem chamadas pagas de teste. |
-| C16 | Despublicação de perfil impede remover a própria relação de follow. | Corrigido353; dez cenários service/repository em PostgreSQL local real. Publicação pendente; sem E2E autenticado equivalente. |
+| C16 | Despublicação de perfil impede remover a própria relação de follow. | Corrigido/publicado353; dez cenários service/repository em PostgreSQL local real,smoke5/5. Sem E2E autenticado equivalente. |
 | C24 | Data de registro de hoje pode ser recusada pela manhã. | Corrigido346; comparação civil em São Paulo, 11 contratos em3fusos e build. |
 
 ## Hipóteses que exigem rastreio antes de mudar regras

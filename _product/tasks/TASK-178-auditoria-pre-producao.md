@@ -973,8 +973,28 @@ relação de terceiros. Sem env runtime, schema/migration/package; rollback back
 - [x] Follow continua exigindo profissional publicado; unfollow só altera relação do ator.
 - [x] Despublicação/inativação/remoção lógica e repetição/concorrência testadas em PG local real.
 - [x] Backend check/build aprovados sem manipulação de perfis reais.
-- [ ] Smoke publicado da353 confirmado.
+- [x] Smoke publicado da353 confirmado.
 
 353: dez cenários PG aprovados (11pass incluindo contêiner). Check global1158,1152pass/6skips
 drawtext, buildbackend aprovado. Laboratório próprio removido após limpeza validada; sem
 alteração de banco preexistente. Um bump353; publicação pendente.
+
+
+### Continuação354 — edição administrativa parcial e concorrência
+
+C12: persistir somente alterações solicitadas de dados pessoais/profissionais e não
+reaplicar relações omitidas. Proteger gravação e log com comparação atômica do updatedAt
+já existente; concorrência recusa snapshot antigo com409/PT-BR, sem gravação parcial.
+Não introduzir versão obrigatória no contrato HTTP, nem migration/env/package. Resultado
+normal permanece compatível; frontend antigo usa tratamento de erro existente. Rollback
+backend isolado, sem reset e sem manipular perfil real para provocar concorrência.
+
+- [x] Escritas parciais não incluem campos/relações omitidos; limpar explícito permanece.
+- [x] Snapshots concorrentes são recusados antes de relações/logs; somente escrita válida auditada.
+- [x] Contratos e PostgreSQL real isolado validam sucesso, conflito, limpeza e atomicidade.
+- [x] Check global, build backend e imagem Docker aprovados.
+- [ ] Commit/push e smoke de homologação354 registrados.
+
+353 publicado be689c56:smoke5/5 às23:10:32UTC de11/09;3apps353,health/ready200.
+354:22contratos puros e11cenários PG,sem mocks. Baseline PG353:2pass/6fail;final354
+8anteriores+3relações:11/11. Checkglobal1180,1174pass/6skips;buildbackend/imagem aprovados.

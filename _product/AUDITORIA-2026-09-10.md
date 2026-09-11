@@ -247,7 +247,12 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 
 141. **Avisos acessíveis:** nomes da região e do botão de fechar em português no frontend e Admin. Validado e publicado em homologação na351.
 
-142. **Deixar de seguir:** remover a própria relação não depende mais de o perfil continuar publicado. Dez cenários passaram em PostgreSQL local; publicação pendente.
+142. **Deixar de seguir:** remover a própria relação não depende mais de o perfil continuar publicado. Dez cenários passaram em PostgreSQL local; publicada e verificada em homologação na353.
+
+143. **Edição administrativa:** salvar um campo não reaplica os dados e seleções omitidos.
+144. **Edições simultâneas:** o backend recusa uma gravação baseada em dados que mudaram durante o processamento, sem alterar o histórico.
+
+354: testes locais e build aprovados; publicação pendente.
 
 ## Ainda pendente
 

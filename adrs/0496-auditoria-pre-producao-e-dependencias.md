@@ -1077,3 +1077,20 @@ ou fixtures permanentes; prova de service/repository não equivale a HTTP autent
 porta loopback, nome fixo de banco vazio, limpa exclusivamente os IDs criados e verifica
 limpeza. Sem env nova: não acrescentar configuração de laboratório ao ambiente publicado.
 Não alterar repository nem ampliar leitura de profissional indisponível para remover vínculo.
+
+
+### Edição parcial354 — requisito prévio
+
+Reutilizar updatedAt existente como comparação otimista no updateMany transacional.
+Incremento temporal mínimo de1ms evita que duas gravações deste caminho compartilhem
+versão quando o relógio não avança. Em conflito, devolver409 com orientação leiga; nenhuma
+relação nem log é gravado. Não exigir token de versão de clientes durante rollout.
+Escritas delta preservam campos/relações não alterados, mesmo frente a caminhos legados.
+Não promete detectar formulário que já chegou obsoleto antes da leitura no backend ou
+SQL externo que não atualize updatedAt; isso exigiria contrato/versionamento posterior.
+Reutilizar harness isolado PostgreSQL/imagem imutável, sem testes em ambiente publicado.
+
+354:22contratos e11casosPG aprovados;baseline353 demonstrou6falhas/8. Reaproveitado runner
+isolado existente,sem fonte sobreposta/imagem simulada. Campos e relações não alterados
+não integram a escrita;null/arrayvazio explícitos preservam intenção de limpar. Sem
+HTTP de conflito em homologação,sem nova env/dependência/schema. Buildbackend/Dockeraprovados.
