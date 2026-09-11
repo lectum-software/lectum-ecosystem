@@ -19,7 +19,7 @@ import { describedBy, fieldId } from "@/components/controllers/utils";
 import type { ControllerFieldProps } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 
-const normalizeEditableText = (value: string) => value.replace(/\r\n?/g, "\n");
+import { getEditableIncomingLength, normalizeEditableText } from "./input-policy";
 
 const selectionBelongsToElement = (element: HTMLElement, selection: Selection | null) => {
   if (!selection || selection.rangeCount === 0) return false;
@@ -187,6 +187,10 @@ function ContenteditableElement<FormType extends FieldValues>({
 
   const commitElementValue = useCallback(
     (element: HTMLDivElement) => {
+      if (disabled || readOnly) {
+        element.textContent = value;
+        return;
+      }
       const rawValue = normalizeEditableText(element.textContent ?? "");
       const nextValue = maxLength ? rawValue.slice(0, maxLength) : rawValue;
       const caretOffset = plainTextOffsetFromSelection(element);
@@ -203,7 +207,7 @@ function ContenteditableElement<FormType extends FieldValues>({
       field.onChange(nextValue);
       onChangeCallback?.(nextValue);
     },
-    [field, maxLength, onChangeCallback],
+    [disabled, field, maxLength, onChangeCallback, readOnly, value],
   );
 
   useEffect(() => {
@@ -218,18 +222,18 @@ function ContenteditableElement<FormType extends FieldValues>({
   }, [value]);
 
   const handleBeforeInput = (event: FormEvent<HTMLDivElement>) => {
+    if (disabled || readOnly) {
+      event.preventDefault();
+      return;
+    }
     if (!maxLength) return;
 
     const nativeEvent = event.nativeEvent as InputEvent;
-    if (nativeEvent.inputType.startsWith("delete")) return;
 
     const element = event.currentTarget;
     const currentLength = normalizeEditableText(element.textContent ?? "").length;
     const replacingLength = selectedTextLength(element);
-    const incomingLength =
-      nativeEvent.inputType === "insertParagraph" || nativeEvent.inputType === "insertLineBreak"
-        ? 1
-        : normalizeEditableText(nativeEvent.data ?? "").length;
+    const incomingLength = getEditableIncomingLength(nativeEvent);
 
     if (incomingLength <= 0) return;
 
@@ -243,6 +247,7 @@ function ContenteditableElement<FormType extends FieldValues>({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (disabled || readOnly) return;
     if (
       event.key !== "Enter" ||
       event.altKey ||
@@ -265,6 +270,10 @@ function ContenteditableElement<FormType extends FieldValues>({
   };
 
   const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
+    if (disabled || readOnly) {
+      event.preventDefault();
+      return;
+    }
     const plainText = normalizeEditableText(event.clipboardData.getData("text/plain"));
     if (!plainText) return;
 
@@ -304,8 +313,10 @@ function ContenteditableElement<FormType extends FieldValues>({
         aria-placeholder={placeholder}
         aria-readonly={readOnly || undefined}
         className={cn(
-          "min-h-28 w-full whitespace-pre-wrap break-words rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 py-3 text-sm text-foreground shadow-sm outline-none transition empty:before:pointer-events-none empty:before:text-subtle empty:before:content-[attr(data-placeholder)] focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
-          "[-webkit-user-modify:read-write-plaintext-only]",
+          "min-h-28 min-w-0 w-full whitespace-pre-wrap break-words rounded-[var(--lectum-control-radius)] border border-border bg-surface px-4 py-3 text-sm text-foreground shadow-sm outline-none transition empty:before:pointer-events-none empty:before:text-subtle empty:before:content-[attr(data-placeholder)] focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted",
+          disabled || readOnly
+            ? "[-webkit-user-modify:read-only]"
+            : "[-webkit-user-modify:read-write-plaintext-only]",
           error && "border-danger focus:border-danger focus:ring-danger/10",
           (disabled || readOnly) && "cursor-not-allowed bg-surface-muted text-muted",
           autoGrow && "resize-none overflow-y-auto",

@@ -164,3 +164,13 @@ reclassificar como erro de dados ou incluir correção não implementada neste c
   não são métricas de usuário. Reprodução paga/Stream continua pendente de requisito real.
 - Novos88testes registrados no check:14datas+7anexos+35retenção+32scanner. Não substituir
   critérios de fluxo remoto por SSR, AST ou contratos puros.
+
+### Continuação343 — campos e período administrativo
+
+- Contenteditable compartilhado: fonte integral + Browser local RHF/DOM/CSS reais, bloqueios
+  disabled/readOnly, beforeinput sem inputType, paste/nova linha/teto/remoção e palavra longa.
+  Validado390/1280; não equivale a publicar/editar post autenticado ou comprovar todos os IMEs.
+- Admin Comunidades /comunidades341: reproduzido A342-03, edição de Até com De vazio remove
+  filtros e exige Tentar novamente. Restaurado all; nenhuma mutação persistida. Correção pendente.
+- Backend342 confirmado pelo /ping; interfaces341 ainda não comprovam regressões342 publicadas.
+- Leitura inicial1669/3121 não é cobertura funcional;1452arquivos ainda pendentes.

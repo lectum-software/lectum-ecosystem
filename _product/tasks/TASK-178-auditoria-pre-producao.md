@@ -724,3 +724,40 @@ Home/End e gate locked; Enter/Space não buscam início. Desktop1280: clique int
 marco central resultou49,66%, coerente com arredondamento do pixel (não exigir precisão subpixel).
 Conta dedicada publicada sem vídeo/plano: não declarar prova remota de seek, métricas ou upload.
 Minutas legais, aparelhos reais e fluxos restantes mantêm TASK178 em andamento.
+
+### Continuação343 — editor bloqueado e eventos nativos
+
+Leitura integral do controller antes parcial revelou hipótese confirmada no Browser local:
+com disabled/readOnly=true, o campo aceita texto e altera RHF. CSS WebKit força edição apesar
+de contentEditable=false; handlers também não têm gate. O evento de digitação usado pelo
+React não garante inputType: startsWith direto lançou exceção na mesma interação nativa.
+Sem envio à API ou mutação persistida. Screenshot e fonte original em /tmp/lectum-task178-contenteditable-343.
+
+- [x] CSS e handlers respeitam disabled/readOnly sem bloquear seleção/cópia/navegação.
+- [x] beforeinput tolera forma real do evento e mantém teto, exclusão, nova linha e colagem.
+- [ ] Contratos reais + Browser local com controles ativo/bloqueado, check/build e publicação.
+
+Reusar controller/fundação existentes; helper adjacente somente se necessário. Sem env,
+package, migration/reset ou regra remota nova. UI mobile-first/tokens preservados; rollback
+frontend independente. Não generalizar este teste como certificação IME/Safari/aparelhos reais.
+
+Mesmo controller, teto200: palavra longa expandia o item grid para1885px em container360px
+(viewport390). DOM real confirmou min-width:auto e overflow-wrap:break-word. Acrescentar
+min-w-0 ao editor conforme padrão dos campos; não alterar limites. O output diagnóstico do
+harness também precisa quebrar linhas, mas não é código de produto nem parte do finding.
+
+343:14/14 contratos locais (política/SSR/wiring), Browser nativo390 e1280 com RHF real.
+Disabled/readOnly juntos e isolados não alteraram DOM/RHF sob digitação/Enter/paste; ativo
+conservou nova linha, teto200, exclusão e substituição. Palavra longa em390:1885→360px;
+em1280:398px no container398, sem overflow do campo. Sem autenticação/API nesta prova.
+Root check1048:1042pass/6skips drawtext conhecidos, frontend441/441 e build otimizado aprovados.
+Bump343 uma única vez; publicação/reteste do formulário integrado ainda não creditados.
+Leitura parent28paths atuais:26da base, completando5parciais. Base1669iniciais/0parciais/
+1452pendentes; ledger1650. Os dois subagentes ainda leem Admin/backend; não contar progresso
+incompleto como cobertura integral.
+
+Deploy342: operador mostrou Done do05f1506d. Backend342,health/ready200 confirmados11/09
+19:43UTC; frontend/Admin ainda341. Registro não equivale a publicação das interfaces.
+A342-03 confirmado no Admin publicado341: alterar Até com De vazio em Comunidades remove
+os controles e mostra período inválido. Tentar novamente restaurou all; sem mutação.
+Corrigir em patch próprio após343; não confundir com analytics profissional FE341-03.

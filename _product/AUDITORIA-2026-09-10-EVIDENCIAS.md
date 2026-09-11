@@ -1438,3 +1438,48 @@ por path+hash, deduplicando suportes/releituras e recusando versões antigas:101
 conferidos,82novas leituras da base. Total1643iniciais/5parciais/1473pendentes na base3121,
 1622linhas no ledger. Hash base original do inventário preservado; não confundir com revisão
 corrente. TASK178 não concluída; publicação342 e smoke registrados separadamente após deploy.
+
+## Continuação343 — controller contenteditable
+
+Fonte original integral, depois diff final revisado; baseline Browser real, sem APIs/módulos
+substituídos. disabled+readOnly aceitava X e alterava RHF; mesmo input produziu exceção local
+inputType.startsWith. Não afirmar que o app expôs stack em toast: o harness capturou erro JS.
+Palavra de200caracteres expandia editor1885px com parent360/min-width:auto; CSS min-w-0
+restabeleceu360px. Output diagnóstico do harness também precisava quebra de linha e foi
+corrigido apenas em /tmp; não é correção de produto nem prova do layout autenticado.
+
+Final:14/14 testes reais de política, React/RHF SSR e wiring estático explicitamente separado.
+Sem fabricar baseline automatizado contra módulo inexistente. Browser: disabled/readOnly
+juntos e isolados preservam Texto inicial após X/Enter/colagem; ativo aceita X+nova linha+
+linha2;205As viram200; digitação excedente é barrada; Backspace+Z mantém200. Uma leitura AX
+diff-only inicialmente pareceu falha; AX completo confirmou o valor, não houve falha real.
+Mobile390:campo360/client358/scroll358. Desktop1280:campo398/client396/scroll396 e length200.
+Capturas nativas salvas e arquivos exatos vistos em /tmp/lectum-task178-contenteditable-343:
+baseline-disabled,final-disabled,final-long-text,final-desktop. final-limit é evidência
+intermediária com overflow, não sucesso final. Sem Safari/iOS/Android reais ou fluxo IME.
+
+Root pnpm check exit0:1048testes,1042pass/6skips drawtext do host; frontend441/441. Build
+frontend otimizado exit0, sem source maps. Logs /tmp/lectum-343-root-check.log e
+/tmp/lectum-343-frontend-build.log. Bump343 executado uma vez antes desses checks.
+Nenhum novo package/env/migration/operação de provider/DB. Publicação343 não creditada ainda.
+
+Parent:17configs +4env.example (somente exemplos) +5fontes antes parciais lidos integralmente,
+mais2novos helpers/testes.28paths atuais por hash,26da base; nenhuma revisão antiga aceita.
+Base3121:1669iniciais,0parciais,1452pendentes; ledger1650. Readlist/merge/contagem em
+/tmp/lectum-343-parent-readlist.json e /tmp/lectum-343-coverage.json. Trabalhos parciais dos
+agentes Admin/backend não integrados. Hipóteses sem uso/falha (oneOfRequired0/false e i18n)
+não promovidas a bugs corrigidos. Arquivos privados AGENTS/CLAUDE do usuário preservados.
+
+### Deploy342 e novo baseline administrativo
+
+Operador mostrou Done05f1506d. Curl11/09 às19:43UTC confirmou backend342,/health e/ready200;
+frontend/Admin ainda341. Python urllib com user-agent padrão recebeu HTTPError no backend,
+enquanto curl respondeu200; não classificar como queda sem separar cliente/edge. Primeiro
+loop curl local falhou por variável zsh chamada path alterar PATH; corrigido para ep, sem
+modificação remota. Não é falha do produto. Aguardando statusVercel; não atribuir Done aos3apps.
+
+Admin /comunidades autenticado341: all→De vazio e Até válido. Clicar Até, Up, Tab removeu
+DashboardContent inteiro, inclusive campos; só erro Selecione um período válido permaneceu.
+Tentar novamente recuperou all. A342-03 confirmado, pendente patch posterior; apenas estado
+local/consultasGET. Capturas /tmp/lectum-task178-admin-dates-343/{baseline,error}.png vistas.
+Separado do FE341-03 no frontend. Não operar M1, dados de terceiros ou testes destrutivos.

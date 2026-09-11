@@ -199,6 +199,15 @@ Mais97 arquivos de migrations lidos, sem executar mudanças no banco.
 Regressões locais e build aprovados; publicação e repetição autenticada ainda pendentes.
 O gráfico foi testado como componente real, não como reprodução de vídeo pago.
 
+### Correções locais na 0.1.343
+
+123. Campo de texto bloqueado não permite mais digitação nem colagem indevidas.
+124. Digitação deixa de provocar erro quando o navegador envia um evento de texto diferente.
+125. Textos sem espaços deixam de alargar o campo além da tela no celular.
+
+14 novos testes, Browser local e build aprovados; publicação ainda pendente.
+O backend já serve342. Frontend e Admin ainda341 na última conferência.
+
 ## Ainda pendente
 
 - Documentos legais aprovados e links no cadastro: **bloqueiam recomendação de produção**.
@@ -208,7 +217,7 @@ O gráfico foi testado como componente real, não como reprodução de vídeo pa
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1643 arquivos com leitura inicial**, 5 parciais e 1473 ainda não revisados.
+Cobertura da base: **1669 arquivos com leitura inicial**, sem leituras parciais pendentes e 1452 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

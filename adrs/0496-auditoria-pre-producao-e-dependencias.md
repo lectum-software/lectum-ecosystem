@@ -905,3 +905,21 @@ de extensão](https://www.typescriptlang.org/docs/handbook/modules/reference.htm
 
 As correções342 não exigem env, package, migration, backfill ou reset; rollout de frontend
 independente e compatível com backend341. Versões dos cinco manifests seguem sincronizadas.
+
+### Editor de texto bloqueado e evento nativo343
+
+O CSS WebKit de edição plaintext forçava escrita mesmo com contentEditable=false; handlers
+sem gate propagavam a alteração ao RHF. Escolher read-only no estado bloqueado, recusar
+beforeinput/paste/Enter e restaurar valor autoritativo do campo caso um input ainda chegue.
+Não impedir eventos de cópia/seleção/navegação. Não mudar autorização remota ou limites.
+
+React beforeinput pode encapsular TextEvent sem inputType; helper adjacente calcula tamanho
+com guard de tipo e data opcional. Exclusões não são bloqueadas; quebras contam um caractere,
+normalização CR/LF e corte final já existentes permanecem. Não alegar certificação IME.
+
+O filho grid editável precisa min-w-0 para que break-words atue em palavras sem espaços.
+DOM nativo confirmou largura1885px em container360 antes,360 depois. Preservar tokens e
+estrutura; não criar componente ou pacote paralelo. Sem migration/env; rollback independente
+no frontend, APIs anteriores compatíveis. Contrato de componente local não substitui salvar
+uma publicação autenticada. Builder indisponível; fundação existente e protótipos exportados
+continuam referência, sem novo desenho de produto.
