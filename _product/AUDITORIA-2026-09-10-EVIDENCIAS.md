@@ -1139,3 +1139,63 @@ captura94 `/tmp/lectum-audit-178-ui/94-local337-login-desktop.png`. Não é prov
 switch ou telefone autenticados. Teclado nativo, toque/Safari/iOS e submissão real continuam
 pendentes; não usar fixture de conta/CPF/provider para concluir. Ledger1373; base1430leituras
 iniciais,5parciais,1686ainda não lidas. Releituras/compilação de dependências não ampliam cobertura.
+
+### Publicação337 e confronto visual do telefone
+
+3c8b356a publicado, smoke16/16 em2026-09-11T16:45:27Z; backend/frontend/Admin337,
+health/ready200. `/tmp/lectum-337-smoke-final.log` e JSON337 registram somente GET e
+validação de login vazio, sem exclusão/limpeza, dados pessoais ou nova chamada de provider.
+
+Capturas96/97 comparam a mesma conta de auditoria/formulário, país e entrada temporária:
+336 esconde os dois últimos dígitos;337 mostra os13dígitos completos. Viewport real887px;
+captura95 tem nome mobile mas NÃO é prova390px. Override do Browser atingia somente a aba
+selecionada18, não a16 autenticada. Valores vazios na projeção DOM não são perda de dados:
+a screenshot confirma preenchimento.16dígitos permanecem completos em337; blur não mostrou
+erro de tamanho, logo somente schema/unit demonstra rejeição, não feedback visual dessa etapa.
+NenhumSalvar/TestarWhatsApp acionado. Reload descarta rascunhos e captura99 confirma dados
+originais. Evidência contém contato autorizado em/tmp e não integra screenshots no Git.
+CP1 permanece sem prova nativa Tab/Space em paciente; gate da aba18 não autoriza copiar sessão.
+
+### V05 — contrato do diagnóstico de processo,338
+
+Import real de classifyManagedProcessDiagnostic: constructor retorna função e __proto__
+retorna objeto no baseline;7controles passam e2regressões falham. Object.hasOwn no catálogo
+restaura código textual fechado;9/9 testes passam, inclusive10filtros conhecidos e serialização
+da cadeia de erro. Não há prova de entrada remota alcançável nos graphs fixos doFFmpeg; não
+é evidência de exploração, prototype pollution ou vazamento ocorrido em homologação.
+Sem mídia, Redis/provider, mudança de isolamento/env/schema ou alteração de filas.
+`/tmp/lectum-338-v05-{baseline,final}.log`. Dois testes existentes exercitam processosNode
+locais de timeout/stdout/preabort; os novos casos são puros, não simulam integraçãoFFmpeg.
+
+### Validação338 — histórico e catálogo de notificações
+
+BA03: literal da consulta extraído sem alteração antes do baseline;2falhas/4controles.
+Remover active=true apenas do vínculo alvo permite histórico de conta inativa no Admin;
+permanece filtro de perfil/usuário não excluídos, papel psicólogo e dois IDs exatos.6/6
+contratos puros do where, sem banco: não afirmar consultaHTTP de conta suspensa validada.
+Mount administrativo mantém adminAuth central. Nenhuma conta foi suspensa para a prova.
+
+BR05: título do registro automático usa metadata/props/catálogo existentes. Object.hasOwn
+evita executar construtor/métodos herdados como builders.16/16 com i18n real, sem provider,
+sem alterar ordem de precedência, limite120 ou aliases. Não se enviou notificação/campanha.
+Helpers extraídos perto de seus consumidores, sem import de repository/Prisma runtime em testes.
+Artefatos focais em`/tmp/lectum-task178-ba03-br05-338`, com snapshots de extração, baseline
+e replay isolado. Parent revisou os seis arquivos modificados na integração.
+
+`pnpm check` aprovado:758 testes (216frontend/435backend/53Admin/48video/6versão).
+Builds backend/video aprovados. Imagens reais amd64 construídas com lock congelado:
+- backend338:`sha256:52fc9b9c3fa6780d8ba3c2d5ad57fa628c23ed8377afc95d23bc3c6b666eddfe`;
+- video338:`sha256:f7af3b15e2da8b028d862abab5b963d2c2087056224553dccd98c7adf9a21a56`.
+Video9/9 testes compilados na imagem final, sem rede, hostenv, mounts ou banco; apenas/tmp
+temporário gravável para os controles de processoNode. Não rodouFFmpeg/Redis/provider real.
+Logs`/tmp/lectum-338-{root-check,backend-build,video-build,backend-docker,video-docker,
+video-container-tests}.log`. Frontend/Admin sem alteração deUI/rotas; apenas bump sincronizado.
+
+Complemento338:22/22 testes backend compilados na imagem final, rede none, filesystem
+read-only e/tmp temporário; i18n real/local. Sem entrypoint/migrations/DB/env do host.
+`/tmp/lectum-338-backend-container-tests.log`. Baseline conjunto BA03/BR05:9falhas/13controles.
+FREEZE6SHA conferido e agente encerrado. Readlist em/tmp registra ranges e revisões; apenas
+leitura integral com SHA coincidente (ou original integral+diff do repository) entrou no ledger.
+Ledger1386; base3121:1437lidos inicialmente/5parciais/1679não revisados.13entradas novas no
+ledger não equivalem a13novos arquivos base:4sãohelpers/testes recém-criados e há arquivos
+previamente classificados integralmente na base mas ausentes do ledger adicional.

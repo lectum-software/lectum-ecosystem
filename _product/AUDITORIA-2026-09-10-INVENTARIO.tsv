@@ -272,11 +272,11 @@ _product/tasks/TASK-55-detalhe-psicologo-geral-perfil-admin.md	_product	document
 _product/tasks/TASK-56-detalhe-psicologo-plano-pagamentos-admin.md	_product	documentacao	1461390b9628e2c7819be113ba591aaa4ad7a196	44845	inventariado_nao_revisado
 _product/tasks/TASK-57-detalhe-psicologo-estatisticas-publicacoes-admin.md	_product	documentacao	cbdcdb0210360f391e5c0d2096fa5fddb956a31a	64882	inventariado_nao_revisado
 _product/tasks/TASK-58-detalhe-psicologo-avaliacoes-denuncias-admin.md	_product	documentacao	598fa98dd30b48d15486fb1a048d71b535b919c6	6155	inventariado_nao_revisado
-_product/tasks/TASK-59-detalhe-psicologo-atividades-admin.md	_product	documentacao	7b70c764e77bd3a3646af5d972e0c77f9477151d	6287	inventariado_nao_revisado
+_product/tasks/TASK-59-detalhe-psicologo-atividades-admin.md	_product	documentacao	7b70c764e77bd3a3646af5d972e0c77f9477151d	6287	lido_revisao_inicial
 _product/tasks/TASK-60-dashboard-administrativo-pacientes.md	_product	documentacao	87fcb9951b4d8217a9b1f4da3aadecf4b6b529e8	109651	inventariado_nao_revisado
 _product/tasks/TASK-61-detalhe-administrativo-paciente.md	_product	documentacao	13a6c3f55215efe4d7878f6f210891dc3bc7205a	95543	inventariado_nao_revisado
 _product/tasks/TASK-62-financeiro-administrativo.md	_product	documentacao	58c0ef79bd5304ff764f97a116a31e6fd31264e1	92541	inventariado_nao_revisado
-_product/tasks/TASK-63-fundacao-campanhas-logs-notificacoes-admin.md	_product	documentacao	b26553234555a7c550a645e7a825916bcdfe7f04	8969	inventariado_nao_revisado
+_product/tasks/TASK-63-fundacao-campanhas-logs-notificacoes-admin.md	_product	documentacao	b26553234555a7c550a645e7a825916bcdfe7f04	8969	lido_revisao_inicial
 _product/tasks/TASK-64-tela-administrativa-notificacoes.md	_product	documentacao	fe87ae2947fa55bd24ecfe3e7613b0e63c4ea2df	28359	inventariado_nao_revisado
 _product/tasks/TASK-65-configuracoes-admin-catalogos-filtros.md	_product	documentacao	de0ba2641d535b677a4c97134d2784e17a427e09	26516	inventariado_nao_revisado
 _product/tasks/TASK-66-verificacao-manual-crp-admin.md	_product	documentacao	b977ac6cbbf4876785bd692c7cd3bb593d26e49d	32098	inventariado_nao_revisado
@@ -286,7 +286,7 @@ _product/tasks/TASK-69-nome-profissional-whatsapp-psicologo.md	_product	document
 _product/tasks/TASK-70-resolucao-denuncias-recebidas-admin.md	_product	documentacao	f12410598a87de36e748adf40284e1f39cffb247	26543	inventariado_nao_revisado
 _product/tasks/TASK-71-admin-comunidade-abas-conteudo-ranking.md	_product	documentacao	e5b6cd46f298b05eb015add175ccc3237829b466	105939	inventariado_nao_revisado
 _product/tasks/TASK-72-metricas-conversao-uso-plataforma-psicologos-admin.md	_product	documentacao	0cbf84eb62ee870e096599802e0306f17d00bbec	123188	inventariado_nao_revisado
-_product/tasks/TASK-73-acoes-conta-psicologo-admin.md	_product	documentacao	c820c96c4109ebc5b7fc3a5250e8022ec9e9daf6	9145	inventariado_nao_revisado
+_product/tasks/TASK-73-acoes-conta-psicologo-admin.md	_product	documentacao	c820c96c4109ebc5b7fc3a5250e8022ec9e9daf6	9145	lido_revisao_inicial
 _product/tasks/TASK-74-moderacao-textual-alertas-admin-conteudo-sensivel-pacientes.md	_product	documentacao	4e8ecbd713f26ae7c9929b328f1ca4e11ec29737	32361	inventariado_nao_revisado
 _product/tasks/TASK-75-detalhe-analytics-conteudo-admin.md	_product	documentacao	fc0eb5181033341d762522046110a7c235cad1ea	35402	inventariado_nao_revisado
 _product/tasks/TASK-76-ajuste-filtros-periodo-admin.md	_product	documentacao	77b8cfb6878317602158c5b70c9c8ea902705d17	12110	inventariado_nao_revisado
@@ -359,7 +359,7 @@ admin/src/api/req/communities/types/statistics.ts	admin	codigo	6e06d5383832eca73
 admin/src/api/req/dashboard/index.ts	admin	codigo	5b5e2691dc282f8c57e4aac5e57bd1231977e74b	6849	inventariado_nao_revisado
 admin/src/api/req/finance/index.ts	admin	codigo	08cada4eae872a2de8c290c1e2d55814f4377b50	9229	lido_revisao_inicial
 admin/src/api/req/moderation/index.ts	admin	codigo	acff360b70944e47f7c779f1a970968b4d79936f	17543	inventariado_nao_revisado
-admin/src/api/req/notifications/index.ts	admin	codigo	d6042260f0955583158e6848faa178ccb1553218	8828	inventariado_nao_revisado
+admin/src/api/req/notifications/index.ts	admin	codigo	d6042260f0955583158e6848faa178ccb1553218	8828	lido_revisao_inicial
 admin/src/api/req/patients/account.ts	admin	codigo	593883814fef0a979c1b706b46486f59c86a4a27	3798	inventariado_nao_revisado
 admin/src/api/req/patients/dashboard-detail.ts	admin	codigo	7e4484999bf67943dc8f263c8674e847c0df6b1a	1846	inventariado_nao_revisado
 admin/src/api/req/patients/index.ts	admin	codigo	f9ae728341ca39c74197046ff8be440106d27822	2921	inventariado_nao_revisado
@@ -510,7 +510,7 @@ admin/src/app/(admin)/moderacao/sugestoes-comunidades/page.tsx	admin	codigo	1c78
 admin/src/app/(admin)/moderacao/textual/page.tsx	admin	codigo	e17972bd016b2566190a9b928d46d3564d97d7b3	124	inventariado_nao_revisado
 admin/src/app/(admin)/notificacoes/client.tsx	admin	codigo	02324ff401213b8bc1d9ad2962b13fa24e9be48c	10100	inventariado_nao_revisado
 admin/src/app/(admin)/notificacoes/components/campaigns.tsx	admin	codigo	2ddeea06776b56867d01327ce6eb3ec9cc9f0eb4	10254	inventariado_nao_revisado
-admin/src/app/(admin)/notificacoes/components/logs.tsx	admin	codigo	90b6ae25e8b7ddc12696237b440ba5f54dae16a1	5018	inventariado_nao_revisado
+admin/src/app/(admin)/notificacoes/components/logs.tsx	admin	codigo	90b6ae25e8b7ddc12696237b440ba5f54dae16a1	5018	lido_revisao_inicial
 admin/src/app/(admin)/notificacoes/components/new-notification-modal.tsx	admin	codigo	2c146579452f86a260b86025530600c7001c4b07	13380	inventariado_nao_revisado
 admin/src/app/(admin)/notificacoes/components/table.tsx	admin	codigo	cfa999bb61489e31fe75c6c19d53e0dbff0a8dda	14746	inventariado_nao_revisado
 admin/src/app/(admin)/notificacoes/modules/notification-support.tsx	admin	codigo	79f52827e696342bf0454d16c7efd69b36fa70fb	10576	inventariado_nao_revisado
@@ -1613,7 +1613,7 @@ backend/src/modules/api/admin/private/psychologists/activities/use-cases/service
 backend/src/modules/api/admin/private/psychologists/activities/use-cases/services/activity-builder.ts	backend	codigo	c35c6e09f388aeeaedf2683e06babfa35e495e22	7414	lido_revisao_inicial
 backend/src/modules/api/admin/private/psychologists/activities/use-cases/services/activity-query.ts	backend	codigo	fa52d3e6d771d9b306b8501cfa7a0357db102fc8	2125	lido_revisao_inicial
 backend/src/modules/api/admin/private/psychologists/activities/use-cases/services/activity-support.ts	backend	codigo	aaeb4b3b26c2cf3e12e4b9858cb653b68e79903d	17142	inventariado_nao_revisado
-backend/src/modules/api/admin/private/psychologists/activities/validator/index.ts	backend	codigo	49e7db978abede5323605b01e4c11ff6352bc923	1129	inventariado_nao_revisado
+backend/src/modules/api/admin/private/psychologists/activities/validator/index.ts	backend	codigo	49e7db978abede5323605b01e4c11ff6352bc923	1129	lido_revisao_inicial
 backend/src/modules/api/admin/private/psychologists/billing/DTOs/IAdminPsychologistBillingDTO.ts	backend	codigo	c0613ae077fc237c348775f574ffc4d16ef06f86	3184	lido_revisao_inicial
 backend/src/modules/api/admin/private/psychologists/billing/index.ts	backend	codigo	4f2cb3e43bc5539f68e56f8add793ddcea260fdc	510	lido_revisao_inicial
 backend/src/modules/api/admin/private/psychologists/billing/repositories/AdminPsychologistBillingRepository.ts	backend	codigo	41d18ebb25448894ebe7e8016ec76487444dca10	17332	lido_revisao_inicial
@@ -3072,7 +3072,7 @@ video/assets/social/lectum-symbol-white.png	video	visual_binario	ee5c2b4e16d556b
 video/assets/social/verified-badge.png	video	visual_binario	808ae324f233e1742d19bc7645ecf01e81a8b542	2138	inventariado_nao_revisado
 video/biome.json	video	configuracao	a71bb31fdcd64d3211579685f93af5aab511c060	749	lido_revisao_inicial
 video/docker-compose.yml	video	configuracao	9a89ea108979045b12ece3bde9bacf4f224bea0d	4530	lido_revisao_inicial
-video/package.json	video	configuracao	fdb55dcc074466d7a6ae256f9cba3c2ec41745c5	1530	inventariado_nao_revisado
+video/package.json	video	configuracao	fdb55dcc074466d7a6ae256f9cba3c2ec41745c5	1530	lido_revisao_inicial
 video/pnpm-lock.yaml	video	lockfile	7442d35096ca9378fa40b67a96feb1e1ce9a55c0	50806	inventariado_nao_revisado
 video/pnpm-workspace.yaml	video	configuracao	e47d284a3d6f7780e78a1719d4f1aebf2a8ae360	71	lido_revisao_inicial
 video/scripts/e2e.mjs	video	codigo	f9f66f2496e4af83c09508acc0b5b198774b81a1	6676	lido_revisao_inicial

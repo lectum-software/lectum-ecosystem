@@ -591,8 +591,22 @@ legado de exibição usado fora do controller. Sem contato real, pacote, schema 
 - [x] BA07 alinha tipo de duração à suspensão, sem alterar o validator HTTP1..90 existente.
 - [x] 731testes/checks, builds frontend/backend e Docker real +17testes compilados aprovados.
 - [ ] Browser autenticado de paciente valida sequência Tab/Space/Enter e teclado móvel em CP1.
-- [ ] Publicação337 e smoke registrados; nenhuma recomendação de produção sem pendências resolvidas.
+- [x] Publicação337:3c8b356a,16/16 smoke em11/09 16:45UTC; backend/frontend/Admin337 e health/ready200.
 
 Browser337local: gate/login observado em1280px após reload do build; sem sessão autenticada
 local, não certifica formulário privado. Prova do handler é unitária; não chamar input.detail=0
 em Node de uma tecla real do Browser. Para CF P/WhatsApp/provider continuam os limites336.
+
+### Continuação338 — histórico administrativo e diagnósticos controlados
+
+Antes de editar: confirmar BA03 (histórico de profissional inativo), BR05 (rótulos de
+notificações obtidos por propriedade herdada) e V05 (diagnóstico FFmpeg fora do catálogo)
+com funções/validadores reais e controles. Não simular banco/provider nem executar M1.
+Preservar autorização administrativa, contratos públicos, filtros conhecidos e histórico;
+nenhuma env, migration, pacote ou reparo de dados. Video mantém deploy independente.
+
+- [x] Filtro do histórico mantém exclusão/IDs/papel sem exigir conta ativa; contrato6/6, sem simular banco.
+- [x] Resolução de títulos e diagnósticos usa chaves próprias/fallback seguro;16/16 e9/9 focais.
+- [x] Regressões, check758, builds e imagens backend/video aprovados; limites de prova registrados.
+- [ ] Publicação338 e smoke; versão privada de video confirmada pelo operador.
+- [ ] Histórico de uma conta inativa dedicada validado emHTTP, sem suspender usuários reais.

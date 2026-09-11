@@ -105,3 +105,16 @@ têm novas evidências estáticas, sem confirmação de dados persistidos/provid
 - Pacientes/notificações: rótulos/notas PT-BR, fallback textual robusto; sem mutação persistida.
 - Suspensão: tipo de entrada alinhado; regra HTTP e duração permitida inalteradas.
 - Health/ready336200 e16/16smoke confirmados;337local731testes e Docker17/17 sem rede aprovados.
+
+### Continuação338 — limites da prova administrativa
+
+Admin autenticado, conta dedicada à auditoria: busca nominal retorna1registro; abasGeral/
+Atividades carregam10eventos. FiltroConta criada reduz a1evento, sem alterar cadastro/status.
+Captura100 em/tmp, viewport real991px; não equivale aSafari/iPhone nem prova de conta inativa.
+A conta permaneceuativa. Patch BA03 remove condiçãoactive=true exclusivamente na consulta
+do histórico administrativo, conservando IDs, papel, exclusão lógica e mount com adminAuth.
+Teste do where não é consulta real de banco nem autorização nova para sessões de usuário.
+
+Na lista com1registro apareceu concordância plural “1 psicólogos encontrados”; detalhe de
+assinatura gratuita repete “Plano Plano Gratuito”. Achados visuais menores registrados, sem
+reclassificar como erro de dados ou incluir correção não implementada neste commit.

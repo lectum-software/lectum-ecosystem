@@ -80,7 +80,9 @@ export const classifyManagedProcessDiagnostic = (stderr: string): ManagedProcess
   const filterMatch = /no such filter:\s*'?(?<filter>[a-z0-9_]+)'?/iu.exec(normalized);
   const filterName = filterMatch?.groups?.filter;
   if (filterName) {
-    return SPECIFIC_FILTER_DIAGNOSTIC[filterName] ?? "ffmpeg_filter_unavailable";
+    return Object.hasOwn(SPECIFIC_FILTER_DIAGNOSTIC, filterName)
+      ? (SPECIFIC_FILTER_DIAGNOSTIC[filterName] ?? "ffmpeg_filter_unavailable")
+      : "ffmpeg_filter_unavailable";
   }
   if (/no such filter:\s*''/iu.test(normalized)) return "ffmpeg_filtergraph_invalid";
   if (

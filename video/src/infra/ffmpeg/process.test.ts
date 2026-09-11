@@ -96,4 +96,38 @@ describe("managed FFmpeg process diagnostics", () => {
       undefined,
     );
   });
+
+  for (const filter of ["constructor", "__proto__", "toString", "hasOwnProperty"]) {
+    it(`trata ${filter} como filtro desconhecido, nunca como propriedade herdada`, () => {
+      const code = classifyManagedProcessDiagnostic(`No such filter: '${filter}'`);
+      assert.equal(code, "ffmpeg_filter_unavailable");
+      const error = new ManagedProcessError("failed", { diagnosticCode: code });
+      assert.deepEqual(
+        JSON.parse(JSON.stringify({ diagnostic_code: managedProcessDiagnosticCode(error) })),
+        {
+          diagnostic_code: "ffmpeg_filter_unavailable",
+        },
+      );
+    });
+  }
+
+  it("preserva todos os diagnósticos específicos dos filtros permitidos", () => {
+    for (const filter of [
+      "crop",
+      "drawbox",
+      "drawtext",
+      "eq",
+      "format",
+      "fps",
+      "overlay",
+      "pad",
+      "scale",
+      "setsar",
+    ]) {
+      assert.equal(
+        classifyManagedProcessDiagnostic(`No such filter: '${filter}'`),
+        `ffmpeg_filter_${filter}_unavailable`,
+      );
+    }
+  });
 });

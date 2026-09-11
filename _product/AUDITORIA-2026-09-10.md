@@ -138,7 +138,7 @@ Publicação0.1.335 confirmada com17 verificações aprovadas.
 
 Publicação336 confirmada com16 verificações aprovadas; confirmaçãoCFP real ainda pendente.
 
-### Correções locais na 0.1.337
+### Correções publicadas e verificadas na 0.1.337
 
 102. Campo de telefone com seletor de país não esconde nem corta dígitos.
 103. Opção de postagem anônima volta à navegação por Tab.
@@ -148,7 +148,17 @@ Publicação336 confirmada com16 verificações aprovadas; confirmaçãoCFP real
 107. Explicações das métricas de notificações estão em português.
 108. Tipo do comando administrativo de suspensão contém sua duração.
 
-Testes/builds aprovados; validação visual autenticada e publicação337 ainda pendentes.
+Publicação337 confirmada com16 verificações aprovadas. Telefone conferido sem salvar;
+teclado de paciente, confirmaçãoCFP e aparelhos reais continuam pendentes.
+
+### Correções locais na 0.1.338
+
+109. Consulta administrativa de atividades deixa de esconder a conta apenas por estar inativa.
+110. Títulos inesperados de notificações recebem um texto seguro em vez de quebrar a lista.
+111. Diagnósticos de vídeo mantêm códigos conhecidos mesmo diante de mensagens inesperadas.
+
+Sem alteração de banco, variáveis ou dados. Prova da conta inativa é de contrato da consulta;
+não suspendemos usuários para testar. Checks758, builds e imagens aprovados; publicação338 ainda pendente.
 
 ## Ainda pendente
 
@@ -159,7 +169,7 @@ Testes/builds aprovados; validação visual autenticada e publicação337 ainda 
 - Reconciliar checkout de resultado incerto e eventos financeiros com o recurso oficial do gateway.
 - Concluir foco dos demais modais, Safari/iOS e testes de mídia/perfil com requisitos reais.
 
-Cobertura da base: **1430 arquivos com leitura inicial**, 5 parciais e 1686 ainda não revisados.
+Cobertura da base: **1437 arquivos com leitura inicial**, 5 parciais e 1679 ainda não revisados.
 Leituras dos subagentes têm proveniência registrada; isso não equivale a testar cada fluxo.
 
 [Evidências, versões e limitações](AUDITORIA-2026-09-10-EVIDENCIAS.md) · [Inventário](AUDITORIA-2026-09-10-INVENTARIO.tsv) · [Fluxos](AUDITORIA-2026-09-10-FLUXOS.md) · [Leituras adicionais](AUDITORIA-2026-09-11-LEITURAS.tsv)

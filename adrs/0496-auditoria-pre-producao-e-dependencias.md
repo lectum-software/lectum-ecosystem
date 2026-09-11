@@ -764,3 +764,24 @@ substituir dependências. Teste semântico TypeScript do DTO evita Request.b:any
 contrato. Na imagem de produção só os17 testes puros são executados;20unitários no source
 incluem3 testes de tipos dependentes do compilador de desenvolvimento. Nenhuma API remota
 ou banco simulado para concluir integração; o alcance da prova permanece explícito.
+
+### Catálogo de diagnóstico FFmpeg338
+
+O retorno do classificador é código controlado, nunca o texto de stderr. Consulta em objeto
+comum sem checar propriedade própria violava esse contrato para nomes herdados. Manter o
+catálogo existente, guardá-lo com Object.hasOwn e preservar fallback genérico/todos os códigos
+específicos. Sem novo sanitizador paralelo ou mudança no processo/retry/provider. Regressão
+pura confirmada antes do patch; não interpretar como exploração remota reproduzida.
+Deploy de video independente, sem env/migration; rollback apenas código/imagem, sem dados.
+
+### Histórico administrativo e títulos338
+
+Desativação/suspensão restringe a sessão do usuário, não remove do administrador existente o
+acesso ao histórico. Alinhar somente a busca do alvo de atividades ao padrão administrativo
+que admite inativos; exclusão lógica, papel, vínculo e IDs permanecem. Centralização adminAuth
+inalterada. Teste verifica where, não consulta real nem conta desativada em homologação.
+
+No título de log automático, extrair resolução existente para helper puro junto do serviço e
+consultar somente chaves próprias do catálogo. Metadata salva continua prioritária e120caracteres
+continuam o teto. Não normalizar eventos desconhecidos nem alterar envio/campanha/dados.
+Sem schema/env/package ou contrato deAPI novo; rollback de código preserva persistência.

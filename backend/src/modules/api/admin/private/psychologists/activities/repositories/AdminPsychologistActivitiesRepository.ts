@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { activitiesProfileWhere } from "./activity-profile-where";
 
 const actorSelect = {
   id: true,
@@ -209,15 +210,7 @@ export type AdminPsychologistActivityAdminLog = Prisma.admin_activity_logGetPayl
 export class AdminPsychologistActivitiesRepository {
   async findPsychologist(id: string): Promise<AdminPsychologistActivitiesProfile | null> {
     return prisma.psychologist_profile.findFirst({
-      where: {
-        deleted: false,
-        OR: [{ id }, { user_id: id }],
-        user: {
-          active: true,
-          deleted: false,
-          role: "psicologo",
-        },
-      },
+      where: activitiesProfileWhere(id),
       select: psychologistSelect,
     });
   }
