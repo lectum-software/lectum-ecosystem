@@ -712,3 +712,68 @@ os12 novos do modal no runner normal. Frontend build exit0, sem source maps de p
 Source-safety2132 e source-size aprovados. Logs `/tmp/lectum-329-root-check.log` e
 `/tmp/lectum-329-frontend-build.log`. Sem schema/env/package novo; APIs continuam compatíveis.
 Backend/Admin/video mudam apenas a versão neste recorte; não alegar novo smoke privado do vídeo.
+
+Publicação .329: d367fee5, push aprovado com hooks. Smoke final16/16 (terceira leitura),
+backend/frontend/Admin .329 e health/ready200. Leituras anteriores capturaram deploy parcial,
+não regressão de contrato. Browser publicado70: modal nativo390, foco Fechar, fundo inerte,
+primeiro Escape no select preserva modal, segundo fecha e retorna Mais opções, overflowrestaurado.
+Nenhuma denúncia enviada em homologação nesse reteste. Vídeo permanece último confirmado .327.
+
+Leitura adicional detectou condição de corrida em PageViewTrackingRepository.updateDuration.
+Probe de repositório real na imagem .328/PGdescartável:6 cenários passaram e2 falharam — duração
+menor concorrente sobrescreve maior; soft-delete durante espera não impede escrita. Locks nativos
+observados em pg_stat_activity, não delays simulando banco. Resultado baseline exit1 e cleanup
+confirmado. Artefatos `/tmp/lectum-analytics-duration-178/`, nenhuma mudança em banco publicado.
+
+
+Continuação .330 — leituras e controle isolado:
+- Financeiro: 130 novas leituras integrais (incluindo81 antes pendentes); 18/18 arquivos da UI
+  financeira lidos pelo subagente, sem teste visual/consulta de gateway nesse recorte. Ledger
+  cumulativo distingue documentos parciais e fontes alteradas depois da leitura.
+- Sessão:51 fontes integrais; template lê presença de cookie diferentemente no SSR/cliente.
+  Fonte explica o mismatch local já observado mesmo com cookie válido/cache frio; ainda sem
+  correção ou reteste de produção. Não ampliar suppressHydrationWarning nem restaurar Redux
+  persistido. Relatório `/tmp/lectum-task178-session-hydration-review/report.md`.
+- Cobertura integrada inicial:837 fontes integrais,10 parciais,2274 ainda não revisadas;
+ 734 entradas no ledger adicional. Leitura não substitui validação de fluxo.
+- Runner PG compartilhado extraído de post-state, sem ler .env do host nem iniciar scheduler;
+  configuração efêmera sem credenciais OAuth fictícias. Import é inerte e dois testes verificam
+  rejeição de argumentos/configuração insegura antes de criar recursos.
+- A imagem controle .328 continua com48/48 cenários de estado de posts aprovados após extração;
+  duração repetiu6/8, mesmas duas falhas concorrentes reais. Todos os recursos etiquetados foram
+  removidos; comandos `/tmp/lectum-330-poststate-baseline.log` e
+  `/tmp/lectum-330-duration-baseline.log`. Não atribuir6/8 à imagem corrigida ainda não construída.
+
+Leitura das40 fontes de analytics público concluída, incluindo localização, atenção, retenção,
+ações e suas rotas/DTOs/validators. Ainda não significa40 fluxos end-to-end: callbacks de auth,
+headers do edge, geolocalização externa, sinais reais de retenção e política de remoção dos
+registros têm validação pendente. Nesta alteração somente duração de página é corrigida.
+As métricas de origem/atenção usam sinais do cliente e não constituem confirmação financeira.
+
+
+Financeiro .330: baseline preservado a partir do Gitd367fee5,16 casos (13 falhas +3 controles);
+mesmos16 corrigidos e12 controles adicionais passaram28/28, módulos reais importados. Testes
+executados pelo subagente em cópia de fontes com SHAs, sem AST/VM/substituir provider e apenas
+PATH no ambiente. Parent revisou diff, testes e conferiu os cinco SHAs do freeze. Evidência em
+`/tmp/lectum-task178-finance-f127.mt7q3m40/`: baseline.tap, fixed.tap, FREEZE-SHA256.json.
+Cobre status exato/nestedpayment, propriedade em ordem diferente, quantia inválida/overflow,
+vínculo exato/ambíguo, status_detail nulo e consumidores de receita/histórico/saúde/LTV/mapCharge.
+Zero explícito tem controle próprio; contratos de resumo, dedupe e MRR preservados. Não é prova
+de liquidação canônica ou de cobrança externa; C1/C3/F3-F6 seguem pendentes.
+Bump único .329→.330 realizado nos cinco manifests; versão6/6. Checkglobal e imagem em andamento.
+
+Check agregado .330 exit0:656 testes das apps +6 de versão (662 no total), sendo
+frontend171/backend389/Admin53/video43. Prisma/TypeScript/Biome, segurança de fonte2134,
+862 módulos backend alcançáveis, ciclos, envs e segredo aprovados. Build local backend aprovado;
+imagem integral e provas PG corrigidas ainda em execução. Nenhuma alteração de schema/migration.
+
+Imagem backend integral .330 construída com sucesso:
+`sha256:ecbef43f10c8170b0419eecabf68c91e9b3f054f157789a6a3eaa181d15099fc`.
+Duração corrigida8/8, incluindo os dois casos que falhavam no controle; estado de posts48/48
+na mesma imagem. Bancos/redes locais próprios removidos por label. Logs
+`/tmp/lectum-330-duration-fixed.log`, `/tmp/lectum-330-poststate-fixed.log`,
+`/tmp/lectum-330-docker-build.log`. Não houve execução de db:migrate em banco local persistente:
+schema/migrations não mudaram; migrate deploy limitou-se aos bancos descartáveis.
+Cobertura inicial atualizada:870 integrais/10 parciais/2241 não revisados;769 entradas adicionais.
+Financeiro/analytics são correções de código, não recálculo de dados publicados. Sem env/package
+novo; nenhuma alteração de UI além dos manifests nesta versão. Publicação e smoke em andamento.

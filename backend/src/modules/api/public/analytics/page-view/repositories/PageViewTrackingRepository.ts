@@ -99,30 +99,26 @@ export class PageViewTrackingRepository implements IPageViewTrackingRepository {
   }
 
   async updateDuration(input: PageViewDurationInput): Promise<page_view_event | null> {
-    const event = await this.repository.findFirst({
+    const where: Prisma.page_view_eventWhereInput = {
+      deleted: false,
+      id: input.id,
+      visitor_id: input.visitorId,
+      session_id: input.sessionId,
+    };
+
+    // A late heartbeat must not overwrite a larger duration or a removed event.
+    // PostgreSQL rechecks this predicate after a concurrent row update completes.
+    await this.repository.updateMany({
       where: {
-        deleted: false,
-        id: input.id,
-        visitor_id: input.visitorId,
-        session_id: input.sessionId,
-      },
-      select: {
-        id: true,
-        duration_seconds: true,
-      },
-    });
-
-    if (!event) return null;
-
-    const durationSeconds = Math.max(event.duration_seconds ?? 0, input.durationSeconds);
-
-    return this.repository.update({
-      where: {
-        id: event.id,
+        ...where,
+        OR: [{ duration_seconds: null }, { duration_seconds: { lt: input.durationSeconds } }],
       },
       data: {
-        duration_seconds: durationSeconds,
+        duration_seconds: input.durationSeconds,
       },
     });
+
+    // A smaller/equal heartbeat is still acknowledged when the event is eligible.
+    return this.repository.findFirst({ where });
   }
 }

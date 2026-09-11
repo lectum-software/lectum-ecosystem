@@ -1,3 +1,9 @@
+import {
+  findPayloadValue,
+  isConfirmedPaymentStatus,
+  valueContainsReference as payloadContainsAnyReference,
+  toAmountCents,
+} from "@/modules/billing/payment-event-values";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 import {
   addDays,
@@ -17,6 +23,8 @@ import type {
   AdminFinanceQuery,
 } from "../../DTOs/IAdminFinanceDashboardDTO";
 import type { AdminFinanceDashboardRepository } from "../../repositories/AdminFinanceDashboardRepository";
+
+export { findPayloadValue, isConfirmedPaymentStatus, payloadContainsAnyReference, toAmountCents };
 
 export const DEFAULT_PERIOD_DAYS = 30;
 
@@ -210,45 +218,6 @@ export const metric = (params: {
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-export const stringifyPayload = (value: unknown) => {
-  try {
-    return JSON.stringify(value ?? "").toLowerCase();
-  } catch {
-    return String(value ?? "").toLowerCase();
-  }
-};
-
-export const payloadContainsAnyReference = (payload: unknown, references: string[]) => {
-  const text = stringifyPayload(payload);
-
-  return references.some((reference) => text.includes(reference.toLowerCase()));
-};
-
-export const findPayloadValue = (value: unknown, keys: string[]): unknown => {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = findPayloadValue(item, keys);
-      if (found !== undefined) return found;
-    }
-
-    return undefined;
-  }
-
-  if (!isRecord(value)) return undefined;
-
-  const normalizedKeys = keys.map((key) => key.toLowerCase());
-  for (const [key, entry] of Object.entries(value)) {
-    if (normalizedKeys.includes(key.toLowerCase())) return entry;
-  }
-
-  for (const entry of Object.values(value)) {
-    const found = findPayloadValue(entry, keys);
-    if (found !== undefined) return found;
-  }
-
-  return undefined;
-};
-
 export const normalizeText = (value: unknown) =>
   String(value ?? "")
     .normalize("NFD")
@@ -257,25 +226,6 @@ export const normalizeText = (value: unknown) =>
 
 export const formatFinanceOperationalCode = (prefix: "A" | "C", internalId: number) =>
   `${prefix}${String(internalId).padStart(5, "0")}`;
-
-export const toAmountCents = (value: unknown): number | null => {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-    return Math.round(value * 100);
-  }
-
-  if (typeof value !== "string") return null;
-
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  const normalized =
-    trimmed.includes(",") && !trimmed.includes(".") ? trimmed.replace(",", ".") : trimmed;
-  const parsed = Number(normalized.replace(/[^0-9.-]/g, ""));
-
-  if (!Number.isFinite(parsed) || parsed <= 0) return null;
-
-  return Math.round(parsed * 100);
-};
 
 export const extractPaymentAmountCents = (payload: unknown) =>
   (() => {
@@ -288,14 +238,6 @@ export const extractPaymentAmountCents = (payload: unknown) =>
 
     return toAmountCents(isRecord(fallbackAmount) ? fallbackAmount.value : fallbackAmount);
   })();
-
-export const isConfirmedPaymentStatus = (payload: unknown) => {
-  const status = normalizeText(
-    findPayloadValue(payload, ["status", "status_detail", "action", "payment_status"]),
-  );
-
-  return ["approved", "accredited", "paid"].some((term) => status.includes(term));
-};
 
 export const isPaymentEvent = (type: string, payload: unknown) => {
   const typeText = normalizeText(type);
@@ -394,14 +336,14 @@ export const summarizeAverageLtv = (
     gatewayRevenueCents += summary.charged_amount_cents ?? 0;
   }
 
-  const references = Array.from(
-    new Set(
-      subscriptionsWithoutGatewaySummary.flatMap((subscription) =>
-        [subscription.id, subscription.gateway_subscription_id].filter(
-          (reference): reference is string => Boolean(reference && reference.length > 3),
-        ),
-      ),
+  const references = subscriptions.map((subscription) => ({
+    id: subscription.id,
+    values: [subscription.id, subscription.gateway_subscription_id].filter(
+      (reference): reference is string => Boolean(reference && reference.length > 3),
     ),
+  }));
+  const subscriptionsUsingLocalHistory = new Set(
+    subscriptionsWithoutGatewaySummary.map((subscription) => subscription.id),
   );
 
   let linkedConfirmedPayments = 0;
@@ -412,7 +354,11 @@ export const summarizeAverageLtv = (
     for (const event of paymentEvents) {
       if (!isPaymentEvent(event.type, event.payload)) continue;
       if (!isConfirmedPaymentStatus(event.payload)) continue;
-      if (!payloadContainsAnyReference(event.payload, references)) continue;
+      // Validate each owner separately; a union would accept A's local ID with B's gateway ID.
+      const matches = references.filter((reference) =>
+        payloadContainsAnyReference(event.payload, reference.values),
+      );
+      if (matches.length !== 1 || !subscriptionsUsingLocalHistory.has(matches[0].id)) continue;
 
       linkedConfirmedPayments += 1;
       const amount = extractPaymentAmountCents(event.payload);

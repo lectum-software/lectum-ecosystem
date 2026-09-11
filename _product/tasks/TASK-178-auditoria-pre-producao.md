@@ -410,7 +410,28 @@ posts/respostas. Não migrar os demais modais sem validar suas camadas e fluxos 
 - [x] Scroll lock compartilhável com cleanup e múltiplos donos; não prometer reparar locks legados.
 - [x] Preservar RHF/Zod, visual e política de envio/fechamento existente.
 - [x] Testes reais: frontend171/backend359/Admin53/video43 + versão6; build frontend e Browser local.
-- [ ] Publicação .329 e repetição do modal em homologação.
+- [x] Publicação d367fee5/.329: smoke16/16 e modal repetido em homologação390px.
 
 Safari/iOS, camadas de terceiros e outros modais permanecem na matriz até teste específico.
 Nenhuma mudança de banco, API, env ou dependência prevista. Não enviar denúncias a terceiros.
+
+## Continuação — integridade financeira e duração de analytics
+
+A .329 foi validada em homologação antes deste recorte. Corrigir os parsers paralelos do
+Financeiro Admin reutilizando o helper estrito já existente; não tratar evento bruto como
+consulta canônica nem alterar sem decisão regras de dedupe, MRR/cortesia ou receita líquida.
+Também foi reproduzida no PG descartável a regressão de duração por atualizações concorrentes
+e a gravação em evento removido enquanto uma atualização aguardava lock (controle .328:6/8).
+Sem novos campos, envs ou serviços; sem reprocessamento de dados publicados.
+
+- [x] Financeiro recusa falsos status pagos, quantias malformadas/não finitas e vínculo por substring.
+- [x] Histórico financeiro não entrega status_detail técnico bruto; contrato preservado com valor seguro.
+- [x] Casos negativos pelos helpers/consumidores reais; sem mock de provider/banco para concluir.
+- [x] Duração de página só cresce, atomicamente; evento removido ou outro visitante/sessão não muda.
+- [x] Regressões concorrentes reais em PG isolado, baseline e imagem corrigida, cleanup verificado.
+- [x] Checkglobal662, buildbackend e imagem integral .330, integrações PG8+48 aprovados.
+- [ ] Publicação e smoke da .330 em homologação.
+
+Continuam P1 externos: tentativa durável de checkout e liquidação canônica/inbox. Série incompleta,
+CSV cortado e dedupe de tentativas precisam recorte próprio com semântica explicitada; não
+corrigir valores reais por inferência nem executar cobrança para preencher a lacuna.

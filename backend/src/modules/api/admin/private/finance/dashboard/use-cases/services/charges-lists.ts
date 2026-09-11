@@ -12,36 +12,25 @@ import { AdminFinanceDashboardRepository } from "../../repositories/AdminFinance
 import {
   CHARGE_STATUS_FILTERS,
   DEFAULT_LIST_LIMIT,
-  extractPaymentAmountCents,
   formatFinanceOperationalCode,
   type GatewaySummaryBySubscriptionId,
-  isConfirmedPaymentStatus,
-  isPaymentEvent,
   MAX_LIST_LIMIT,
   normalizeText,
   PAYMENT_HEALTH_FILTERS,
   type PaymentEventRecord,
-  payloadContainsAnyReference,
   resolveAdminFinancePeriod,
   SUBSCRIPTION_STATUS_FILTERS,
 } from "./period-revenue";
 
 import {
-  extractPaymentReference,
+  mapCharge,
   mapGatewaySummaryPaymentHistoryItem,
   mapSubscription,
   type PaymentReferenceSubscriptionRecord,
   type SubscriptionRelationRecord,
-  subscriptionReferenceValues,
 } from "./subscriptions";
 
-export const findSubscriptionForPayment = (
-  event: PaymentEventRecord,
-  subscriptions: PaymentReferenceSubscriptionRecord[],
-) =>
-  subscriptions.find((subscription) =>
-    payloadContainsAnyReference(event.payload, subscriptionReferenceValues(subscription)),
-  ) ?? null;
+export { findSubscriptionForPayment, mapCharge } from "./subscriptions";
 
 export type GatewaySummaryEligibleSubscription = Pick<
   PaymentReferenceSubscriptionRecord,
@@ -117,40 +106,6 @@ export const mapGatewaySummaryCharge = (
     status_label: "Confirmada",
     subscription: mapSubscription(subscription, [], summaries),
     unavailable_reason: historyItem.unavailable_reason,
-  };
-};
-
-export const mapCharge = (
-  event: PaymentEventRecord,
-  subscriptions: PaymentReferenceSubscriptionRecord[],
-): AdminFinanceChargeItem | null => {
-  if (!isPaymentEvent(event.type, event.payload)) return null;
-  if (!isConfirmedPaymentStatus(event.payload)) return null;
-
-  const amountCents = extractPaymentAmountCents(event.payload);
-  const subscription = findSubscriptionForPayment(event, subscriptions);
-
-  return {
-    amount_available: amountCents !== null,
-    amount_cents: amountCents,
-    detail_url: subscription ? `/psicologos/${subscription.psychologist.user.id}` : null,
-    event_id: event.id,
-    event_type: event.type,
-    external_id: event.external_id,
-    gateway: "mercadopago",
-    internal_id: event.internal_id,
-    internal_id_available: event.internal_id > 0,
-    occurred_at: event.createdAt.toISOString(),
-    reference:
-      subscription?.gateway_subscription_id ??
-      subscription?.id ??
-      extractPaymentReference(event.payload),
-    source: "payment_event",
-    status: "confirmed",
-    status_label: "Confirmada",
-    subscription: subscription ? mapSubscription(subscription, [event]) : null,
-    unavailable_reason:
-      amountCents === null ? "payment_event_confirmado_sem_valor_monetario_extraivel" : null,
   };
 };
 

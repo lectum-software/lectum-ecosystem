@@ -559,3 +559,34 @@ recuperado no alerta apenas se documento ativo e foco em BODY/dialog; não inter
 em outro campo. Native Tab pode ir ao chrome do navegador, não aos controles do fundo do app.
 SSR/ownership puros complementam, não substituem essa prova. Outros modais/Safari/SPA/camadas
 permanecem em matriz, sem afirmar cobertura total. Runner permanente inclui os12 novos casos.
+
+### Parsers financeiros e duração concorrente — após .329
+
+O Financeiro geral possui parser paralelo que aceita substring de status/referência e quantia
+permissiva; convergir para os helpers estritos de billing já adotados no detalhe individual.
+Preservar contrato, regras de receita/MRR e dados existentes; detalhes técnicos devem sair nulos,
+não retornar mensagem de provider em sucesso. Isso corrige integridade local, não certifica
+liquidação: recurso canônico e tentativa durável permanecem P1, sem operação remota nesse recorte.
+
+Duração de analytics deve usar escrita condicional atômica com ownership e soft-delete no mesmo
+WHERE, seguida da leitura do evento elegível; read/Math.max/update separado perde a monotonicidade.
+Validar com locks reais em PG descartável e mesma imagem integral, não mock. Reaproveitar o runner
+isolado existente extraindo infraestrutura compartilhada apenas se necessária à regressão nova;
+sem credenciais OAuth fictícias ou bootstrap de schedulers. Rollback não precisa migração, mas
+reabre defeitos; não resetar dados. Nenhuma variável obrigatória/dependência nova.
+
+
+A escrita condicional usa a reavaliação de WHERE após uma atualização concorrente em
+[PostgreSQL Read Committed](https://www.postgresql.org/docs/current/transaction-iso.html).
+O teste sincroniza locks reais observados no servidor descartável; o polling só observa a
+barreira. Não altera isolation global nem exige migration. O runner compartilhado preservou
+48/48 controles de posts na imagem anterior e reproduziu os dois defeitos de duração.
+
+Mapeamento financeiro puro de cobrança/vínculo fica junto dos demais mapeamentos de assinatura;
+charges-lists reexporta as mesmas funções para preservar imports e mantém orquestração externa
+separada. Assim testes importam consumidores reais sem inicializar gateway/Prisma, em vez de
+simular dependências. Nenhuma função de provider foi substituída; parser compartilhado não mudou.
+O Financeiro passa a distinguir zero explícito válido de quantia ausente/malformada, como billing:
+zero continua receita0, mas deixa de marcar valor indisponível. Ausência, negativo ou texto
+inválido continuam nulos, nunca convertidos em zero. Denominador do LTV, MRR, cortesia e dedupe
+legado permanecem; vínculo ambíguo é recusado por conta, inclusive no LTV agregado.

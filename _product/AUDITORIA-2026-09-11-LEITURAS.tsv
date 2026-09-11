@@ -1,64 +1,111 @@
 arquivo	proveniencia	sha256_integracao	presente_inventario_base
-.codex/skills/execute-lectum-task/SKILL.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial	1ff706db6e53b6198e016a649ff3182279852ee362b4f14dc0ece4d9e0fafe3e	true
-AGENTS.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial	db6f3ceaefbd27b0e24b8e7b3a0d6dad07104882f0e773a990bb13833fc7d937	true
-_product/tasks/ARCHITECTURE.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial	6ecb0ac36eb1652301667981227afd029862b2dd356ddf8b4fe1d40950c10652	true
-_product/tasks/PACKAGES.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial	f376b3ac6bebf0272c2d2d85990a697a7d864daa6e93915258593a9dc9a33cf6	true
+.codex/skills/execute-lectum-task/SKILL.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | Euclid;hidratacao;integral_inicial	1ff706db6e53b6198e016a649ff3182279852ee362b4f14dc0ece4d9e0fafe3e	true
+AGENTS.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;conteudo328;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	db6f3ceaefbd27b0e24b8e7b3a0d6dad07104882f0e773a990bb13833fc7d937	true
+_product/tasks/ARCHITECTURE.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	6ecb0ac36eb1652301667981227afd029862b2dd356ddf8b4fe1d40950c10652	true
+_product/tasks/PACKAGES.md	Lagrange;video;integral | Euclid;modais329;integral_inicial | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f376b3ac6bebf0272c2d2d85990a697a7d864daa6e93915258593a9dc9a33cf6	true
 _product/tasks/PROTO-INVENTORY.md	Euclid;denuncias;integral | Tesla;notificacoes;integral	52207cf11d6bf46c3b107048de2a4bba8fc2efb0a59094290bfb202efdb2b778	true
 _product/tasks/TASK-153-permissao-nativa-direta-notificacoes.md	Tesla;notificacoes;integral	7f86c0da39e627a371e7dc568357947286deb784bef118747b57779878adeeb9	true
 _product/tasks/TASK-154-digests-temporais-push-notificacoes.md	Tesla;notificacoes;integral	774415b29a294664ef57144f2e10e734fbf05a29701fdd72431278d4bec5cda7	true
-_product/tasks/TASK-178-auditoria-pre-producao.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;checkout;integral_inicial	b191216ecce4912998b73c5753bd1b6a5e535f346a64fc0836fb32affc42cb23	false
+_product/tasks/TASK-178-auditoria-pre-producao.md	Lagrange;video;integral | Lagrange;estado_posts;integral | Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	0247c9fde664978a02ce706f7ea74c31ab0045851dbaf028af615bbe7140f4d7	false
 _product/tasks/TASK-29a-notificacoes-fundacao.md	Tesla;notificacoes;integral	3b0f608ed5698e06a85ab9c5b2ecf5ff63d5f4b2510b695f43cd55f35d35895c	true
 _product/tasks/TASK-29b-notificacoes-eventos.md	Tesla;notificacoes;integral	9d0296e8b026ade730c317e741a1d8f6fe8d2731ef202a8670189a25dbc58b7b	true
-_product/tasks/TASK-32-checkout-assinatura.md	Tesla;checkout;integral_inicial	221f00df01a81fa27c84337bebf481375f7008077e4724e053b5173eda791d4e	true
+_product/tasks/TASK-32-checkout-assinatura.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	221f00df01a81fa27c84337bebf481375f7008077e4724e053b5173eda791d4e	true
 _product/tasks/TASK-38-permissao-contextual-notificacoes-navegador.md	Tesla;notificacoes;integral	77576978ad8307e3e151bd1e03a50764d02969512e45038fc9a6345ea0c21741	true
 admin/scripts/remove-production-source-maps.mjs	principal;integral	8768250e8f02b26a221d44f4b5983835f0324910175efb0403dc1e8b6b80e263	true
 admin/src/api/cache/keys.ts	Euclid;conteudo328;integral	9552f0ae2605c4cbe9d9f6e13d5b9d0a058280b392b4b9ca1315f3ba4b6db70c	true
 admin/src/api/callers/communities/index.ts	Euclid;denuncias;integral | Euclid;conteudo328;integral	0162acd73db00f6e6e162938960324954f2a24fe5047ac4c6b7a710e87eb4d4b	true
+admin/src/api/callers/finance/index.ts	Tesla;financeiro330;integral_inicial	217d2aabeaad072f641125f87b1effb5beaa5da8a23d445ed15d0841e9228080	true
 admin/src/api/client.ts	Euclid;denuncias;integral	c62bddb9eae8ddd135d6b95797b34614e6d39f677b531da08d36c92dd898badc	true
+admin/src/api/errors.ts	Tesla;financeiro330;integral_inicial	5a906a863e19730da0f16c3f2733331fdc84bc6f35e9e704b239e85950e5034a	true
+admin/src/api/handle.ts	Tesla;financeiro330;integral_inicial	b064c547ae49e818f888e4f3848991b6dd7106f1447f91426b6a4298dfa0526c	true
 admin/src/api/req/communities/content-reports.ts	Euclid;denuncias;integral | Euclid;conteudo328;integral	7a647141e960f0be751577d0094f93188c1f5fc963ff2a66bb95215a3feb7706	true
 admin/src/api/req/communities/params.ts	Euclid;denuncias;integral | principal;integracao;integral	ef6d900132da9286d435e05a02bfae719457c9c77b5aac7650dd1762f5ef68d3	true
 admin/src/api/req/communities/types/content.ts	Euclid;conteudo328;integral	e349159eeed5e0e339b093d657c3857e1e418383362c1cf67745b665c66eb3ff	true
 admin/src/api/req/communities/types/ranking-reports.ts	Euclid;denuncias;integral	49cc55b192f13269acabba9a919925068511caff05045db3694c9fe158dc1ba1	true
+admin/src/api/req/finance/index.ts	Tesla;financeiro330;integral_inicial	08575247acc4c807bf036f368557ba7812245e2823033e5b66ad69533634fd77	true
 admin/src/app/(admin)/comunidades/[slug]/components/content-card.tsx	Euclid;conteudo328;integral	e4a9cb61c529018338e048db0153b0e50fcdfa1de034f1a6648bc6d0a50468ec	true
 admin/src/app/(admin)/comunidades/[slug]/components/content-controls.tsx	Euclid;denuncias;integral | principal;denunciasUI;integral | Euclid;conteudo328;integral	dfbd7d5890d875577410da95811eded5b4205384c30ff5bc025d5f288907bfed	true
 admin/src/app/(admin)/comunidades/[slug]/components/report-cards.tsx	Euclid;denuncias;integral	abe8d45dc4caa8d0e558c16d2bd7947d6c6860eeef0b2e0a5f40740bcaf4baf4	true
 admin/src/app/(admin)/comunidades/[slug]/modules/detail-support.tsx	Euclid;denuncias;integral | Euclid;conteudo328;integral	ee59f16b9eef68d3d78f9a5cf677b76241a7ace1665860b8dac6cfdce2943777	true
 admin/src/app/(admin)/comunidades/[slug]/views/content-tab.tsx	principal;conteudoUI;integral | Euclid;conteudo328;integral	139b14a41ad6a52c9b53aa21ffeb595d798434b242c9c1556799990645bdb3d6	true
 admin/src/app/(admin)/comunidades/[slug]/views/reports-tab.tsx	Euclid;denuncias;integral | principal;denunciasUI;integral | Euclid;conteudo328;integral	1149c7e8b1f67d38e25212ba47a67083476c986f010c8e9cd8fdf9d86467e71b	true
+admin/src/app/(admin)/financeiro/assinaturas/client.tsx	Tesla;financeiro330;integral_inicial	b632b3e29fdc250b330e290e43da28f376ecfe2e7cde687509a508a8e51e4d7b	true
+admin/src/app/(admin)/financeiro/assinaturas/components/filters.tsx	Tesla;financeiro330;integral_inicial	03e4380abd688bb700375cf1f244698546708209e5fa0d8ddfb962009649f3b4	true
+admin/src/app/(admin)/financeiro/assinaturas/components/payment-details.tsx	Tesla;financeiro330;integral_inicial	ec3c07b0837cf31ff7e45430dac67b82452939cd008cdd324341bf8319060499	true
+admin/src/app/(admin)/financeiro/assinaturas/components/table.tsx	Tesla;financeiro330;integral_inicial	d3b5be06f2c6fc8015a2a77c5735d4b3928c259866ea3d5e6d86b55a5d27a210	true
+admin/src/app/(admin)/financeiro/assinaturas/modules/subscription-support.tsx	Tesla;financeiro330;integral_inicial	510c7154c436c21ae6ec9903b667710a1207f0876ebf7388aeca228c105c8e7c	true
+admin/src/app/(admin)/financeiro/assinaturas/page.tsx	Tesla;financeiro330;integral_inicial	0725deedd2ad6502c94b3c77a98ca36da0ae15635f917ad8ece260cd56000223	true
+admin/src/app/(admin)/financeiro/client.tsx	Tesla;financeiro330;integral_inicial	b9a517763665ef93d6b980a5e768bc50aef31ce18acda0e66fc806819baeafe3	true
+admin/src/app/(admin)/financeiro/cobrancas/client.tsx	Tesla;financeiro330;integral_inicial	9e22c058a920c486e566991be0e6659114f42d791e0e75af86b11fb5cbb57108	true
+admin/src/app/(admin)/financeiro/cobrancas/components/filters.tsx	Tesla;financeiro330;integral_inicial	ead67aa0dff1811eaa47632c5ea8610017aaf07d7ac3d927c9884326c63ec5e3	true
+admin/src/app/(admin)/financeiro/cobrancas/components/table.tsx	Tesla;financeiro330;integral_inicial	2e07affa17fd9da8d3d122548167a63747889ec3a62f8c7af264252ccb38d832	true
+admin/src/app/(admin)/financeiro/cobrancas/modules/charge-support.ts	Tesla;financeiro330;integral_inicial	4b79e1ea723dcd51ce478d8b28777e0c2f308e4244b942184273b72c67be4c1a	true
+admin/src/app/(admin)/financeiro/cobrancas/page.tsx	Tesla;financeiro330;integral_inicial	9762d89eed27c33d1eb5c885e1a71cee75c97fda7cfe8e0eda51825e8424f6fd	true
+admin/src/app/(admin)/financeiro/components/header-chart.tsx	Tesla;financeiro330;integral_inicial	d28d7325acc999c6e5b9f4fa4880407f8cc1e675ae2813feb4ef725634903c54	true
+admin/src/app/(admin)/financeiro/components/metrics.tsx	Tesla;financeiro330;integral_inicial	1d2ae8e103afd3af0daf738cdc5d2a9dff64a34c760128ac49eb3e4ba834ef7c	true
+admin/src/app/(admin)/financeiro/components/subscription-lists.tsx	Tesla;financeiro330;integral_inicial	e3f4aa825d23d6180863532da9e1a5c5963809909e60e8ffcdca7ab8b5dceaf0	true
+admin/src/app/(admin)/financeiro/modules/finance-support.ts	Tesla;financeiro330;integral_inicial	0ead3af04e6d4fcc6f41f06ac80c93e129eaeedf5e39cd1e91c3804770a3ffac	true
+admin/src/app/(admin)/financeiro/page.tsx	Tesla;financeiro330;integral_inicial	36381ee147f913f35a38e44146c67794decd83e1cadbd8b293a85188387a8fde	true
+admin/src/app/(admin)/financeiro/views/overview.tsx	Tesla;financeiro330;integral_inicial	418999ce2df31ac85f16cc465b1d027d0e6a6e915f81d0193a149b97421e4f6f	true
+admin/src/app/(admin)/psicologos/[id]/modules/tabs/billing/cards.tsx	Tesla;financeiro330;integral_inicial	7d49e8ff9e877278b7c2b4d91c5a662e8f20e542e9ea80259b1b2c007506708e	true
+admin/src/app/(admin)/psicologos/[id]/modules/tabs/billing/index.tsx	Tesla;financeiro330;integral_inicial	955ea10e1233a0e1e9e0d65d99b71cb65df35ff0b94d09a5ba4423d10f98dfa9	true
 admin/src/components/controllers/checkbox-group.tsx	principal;integral	70a1fa7568891d2704f6a0d3bd9afbd4938b463bf359fe902353f4dfc235c16b	true
 admin/src/components/controllers/input.tsx	principal;integral	c88fc24c60a61a2d505c55b6c0834f3de8d5fa828d2cfa3676c1c17eabda5035	true
 admin/src/components/controllers/select.tsx	principal;integral	fc15a11cd2f93bb52b2015ade6fcf0416f1641fc3e9c8c7320ac02fbcf0b9e2d	true
 admin/src/components/controllers/textarea.tsx	principal;integral	15521b2878ee674a436c909b67b484d31a87874cf686f2b75a77e731e381786b	true
+admin/src/lib/chart-time-series.ts	Tesla;financeiro330;integral_inicial	6cfcb9ec1c04793c365e72b7853c743970f3e661e810fad18fa030a0a8a1ef2a	true
 admin/src/lib/community-reports.test.mjs	Euclid;denuncias;integral | principal;integracao;integral | Euclid;conteudo328;integral	7c5f2b09a94a0add504f9a185ad232bef51841625b56588fe161d784dff82ba7	false
 admin/src/lib/crp-formatters.test.mjs	Euclid;denuncias;integral	c2903b348c3498bbedaaaddae63717ffb6adb39a0639957220627193798feece	true
+admin/src/lib/download.ts	Tesla;financeiro330;integral_inicial	fd71224c2b957d7e04e2287bf817b05ca1841fe76537693a47efdc5ac8e503b3	true
+admin/src/lib/finance-operational-code.ts	Tesla;financeiro330;integral_inicial	653349cf94b0cb170aa1b48225dd90bf4ee955119a7edd8ab716e2fa5ca349a0	true
+admin/src/lib/safe-redirect.ts	Tesla;financeiro330;integral_inicial	6a6ecf8a021f1e31eeb7b63c94411f63d2729788a977a8403c34200046e2f30b	true
 admin/src/lib/shared-helpers.test.mjs	principal;integral | principal;integracao;integral | Euclid;denuncias;integral	f816a36384ef5ac03eae4da7a0404405d44ff2cba0452cdb9dcab6933877ca10	true
 admin/tsconfig.json	Euclid;denuncias;integral	b9cb328ea433b25c54c8649aed5ef3e1d9874110789c6453d1b96181e5695740	true
-adrs/0003-gateway-pagamento-mercado-pago.md	Tesla;checkout;integral_inicial	f9507a73435056b50bf393c21be4493a76026f9dab34fa73f30f0d8c44b5df51	true
+adrs/0003-gateway-pagamento-mercado-pago.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f9507a73435056b50bf393c21be4493a76026f9dab34fa73f30f0d8c44b5df51	true
 adrs/0145-edicao-post-publicado.md	Tesla;concorrencia;integral	263180188d44d46f76b1eb66d3f92967958a03617d40336c3ddc0ef6f2c8921a	true
 adrs/0169-autoria-notificacoes-profissionais.md	Tesla;notificacoes;integral	d65749c2a208e0c5612d437ace64111d873720d16eef8cb155f737a19c8265d2	true
-adrs/0173-checkout-assinatura-mercado-pago-preapproval.md	Tesla;checkout;integral_inicial	ca04c2b9b4b81a76f8a9541bfa1aa648375e648dbccb0ef99b2d1263f85d0859	true
+adrs/0172-bloqueio-checkout-mercado-pago-credenciais.md	Tesla;financeiro330;integral_inicial	c7dcea23288a290241e763d65ad4bc76b1825cb16870e4f466e5aeda13836542	true
+adrs/0173-checkout-assinatura-mercado-pago-preapproval.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	ca04c2b9b4b81a76f8a9541bfa1aa648375e648dbccb0ef99b2d1263f85d0859	true
+adrs/0174-gestao-assinatura-cartao-mercado-pago.md	Tesla;financeiro330;integral_inicial	7b6eb2089b76124a9f628554787bcc4208e2f2389b4e970938499e0f53b6e560	true
+adrs/0183-prioridade-plano-gratuito-billing.md	Tesla;financeiro330;integral_inicial	022436d1af07ee6ab79074a6dafc10846fcb3d2058e9f46541baacc1acb96286	true
 adrs/0194-autoacoes-profissional-fora-de-analytics-notificacoes.md	Tesla;notificacoes;integral	43104d64c1e80fc1540e248ff7b75158288a6cf27702ef14fbd5a5daf60252c8	true
 adrs/0195-autoacoes-paciente-posts-sem-notificacoes.md	Tesla;notificacoes;integral	665ed239ff72b9b1e2a049047c5c74972497d8346861afca3eac3dcab486fda2	true
-adrs/0209-historico-pagamentos-billing-real.md	Tesla;checkout;integral_inicial	d766b07dbd74dbce5efe85c36f544e8ae81a0513fdb16381fffbd632a4c00354	true
-adrs/0213-billing-cortesia-sem-cobranca-cartao.md	Tesla;checkout;integral_inicial	183f9d40027198d0c0c99200b421ced58a5d1724bf0aa01791b0fc03caaa136e	true
-adrs/0214-billing-cortesia-cta-cartao-futuro.md	Tesla;checkout;integral_inicial	b0d7280f238544eb34d5cf9a5e4a4fe40d7989bdc821b76dc3ea5ed092023823	true
-adrs/0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md	Tesla;checkout;integral_inicial	ac9ec00e71b826b9b114d295e0d256c87218a2216ff8ba1c9215b14c0bc8e38c	true
-adrs/0430-checkout-mercado-pago-sandbox-com-tunnel-sem-fallback.md	Tesla;checkout;integral_inicial	845b7f332c0f9933d3c84755fb04fef06c85d9d2019cd50612adc788b3cb9064	true
-adrs/0433-reconciliacao-assinatura-mercado-pago-webhook-e-entitlement.md	Tesla;checkout;integral_inicial	9e17a5859f116f580594a6d34c16fe4f31b99a92d42c54c6948bc0a2dc21e2f8	true
-adrs/0456-mensagens-publicas-recusa-cartao-mercado-pago.md	Tesla;checkout;integral_inicial	96e486c104504f6ef567cb13c7f566a2edcd1c8dbcb65ba48019f13cc66b0146	true
+adrs/0198-endereco-billing-sincroniza-perfil-psicologo.md	Tesla;financeiro330;integral_inicial	60056b06c9c51bf4a481f7617901ef8094443766ec024582e601c5e95a23cbb9	true
+adrs/0200-checkout-ativo-redireciona-endereco.md	Tesla;financeiro330;integral_inicial	d31fe802271ba4b7044028c0651b50d7994614fbeadde1987b3536bb8b094c20	true
+adrs/0204-upgrade-direto-checkout-profissional.md	Tesla;financeiro330;integral_inicial	0bc0087a365d4842a4f453d253cbb1a46ad8c609671a10c3e10449ab24d6a544	true
+adrs/0209-historico-pagamentos-billing-real.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	d766b07dbd74dbce5efe85c36f544e8ae81a0513fdb16381fffbd632a4c00354	true
+adrs/0213-billing-cortesia-sem-cobranca-cartao.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	183f9d40027198d0c0c99200b421ced58a5d1724bf0aa01791b0fc03caaa136e	true
+adrs/0214-billing-cortesia-cta-cartao-futuro.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	b0d7280f238544eb34d5cf9a5e4a4fe40d7989bdc821b76dc3ea5ed092023823	true
+adrs/0242-admin-financeiro-receita-mrr-exportacao.md	Tesla;financeiro330;integral_inicial	8cf5b78ef649edb282471f5afcbc0bc3801bcef7fe1664e3688c6c9193b3b6ec	true
+adrs/0309-admin-assinaturas-saude-pagamento.md	Tesla;financeiro330;integral_inicial	6ee0e241ed7f34400dbd43333f0a72f8a09a2563852deecc6d2fbdc05d39bf8f	true
+adrs/0416-homologacao-mercado-pago-card-payment-brick.md	Tesla;financeiro330;integral_inicial	75c2f36a9b85010410c1666b36f7a19e4b54cfaa555eda1dfd4b35cee171b909	true
+adrs/0417-restauracao-sandbox-mercado-pago-conta-vendedora-teste.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	ac9ec00e71b826b9b114d295e0d256c87218a2216ff8ba1c9215b14c0bc8e38c	true
+adrs/0425-sincronizacao-local-assinatura-mercado-pago.md	Tesla;financeiro330;integral_inicial	68506c3d687112aa83ff2b7f8b30d23aa53494bef4e635d9cf048545e8940f3d	true
+adrs/0428-retry-payer-email-sandbox-mercado-pago.md	Tesla;financeiro330;integral_inicial	77aee987a824efecf2b5a829451b52be9e3cfa5fa979777fefcaaedf72a4edf2	true
+adrs/0429-consulta-assinatura-mercado-pago-sem-scope-stage.md	Tesla;financeiro330;integral_inicial	e05f5ba9439995b14b5fe683c99c330664598b97050c1d53bd4aac7474103c16	true
+adrs/0430-checkout-mercado-pago-sandbox-com-tunnel-sem-fallback.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	845b7f332c0f9933d3c84755fb04fef06c85d9d2019cd50612adc788b3cb9064	true
+adrs/0433-reconciliacao-assinatura-mercado-pago-webhook-e-entitlement.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	9e17a5859f116f580594a6d34c16fe4f31b99a92d42c54c6948bc0a2dc21e2f8	true
+adrs/0446-sanitizacao-aliases-resposta-billing.md	Tesla;financeiro330;integral_inicial	08d343867e7e0128fdf8d11f7e91d5a5961746ce201f4e3873fe47caec334714	true
+adrs/0454-csp-mercado-pago-cardpayment-checkout.md	Tesla;financeiro330;integral_inicial	889ff976d3e629b99678434c60bbdfee0e7315c7d4eba86daec70287406538d6	true
+adrs/0456-mensagens-publicas-recusa-cartao-mercado-pago.md	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	96e486c104504f6ef567cb13c7f566a2edcd1c8dbcb65ba48019f13cc66b0146	true
+adrs/0458-cancelamento-admin-assinatura-mercado-pago.md	Tesla;financeiro330;integral_inicial	6eb17c8ccf65827952641351cc85fe8d7b58b45cf5521823102aaad3f8ffc7c0	true
 backend/.dockerignore	Lagrange;estado_posts;integral	1320d4f988e2f5428bcd2e47d7896cdf43bcf3ccd97b2db43bf43c518b1399f9	true
-backend/Dockerfile	Tesla;concorrencia;integral | principal;integracao;integral | Lagrange;estado_posts;integral	1dfd1c3db486e1333859d02ba3bda47cf6b00dfe4e16bb2bfb4692855fe72291	true
+backend/Dockerfile	Tesla;concorrencia;integral | principal;integracao;integral | Lagrange;estado_posts;integral | principal;duracao330;integral	1dfd1c3db486e1333859d02ba3bda47cf6b00dfe4e16bb2bfb4692855fe72291	true
 backend/biome.json	Lagrange;estado_posts;integral | Lagrange;perfil328;integral	b18d9e3b34ea13858684e4638be0df6f2b1ccea34b1df0d2f4273bae6d56efdf	true
-backend/package.json	Tesla;concorrencia;integral	11e082b4a3587895334aca632ebd90158c9bac4b9e5a527903d35703b01d93fa	true
-backend/prisma.config.ts	Tesla;concorrencia;integral	3182888f9d8533b5efaca15386e2a52763a99b99104a5d55ef79f644d5eb5b9d	true
+backend/package.json	Tesla;concorrencia;integral	b3e72142642f8f7e6ccce906474451960174e3a40332ae59f7c863cc8830df30	true
+backend/prisma.config.ts	Tesla;concorrencia;integral | principal;duracao330;integral	3182888f9d8533b5efaca15386e2a52763a99b99104a5d55ef79f644d5eb5b9d	true
+backend/scripts/analytics-duration-integration.mjs	principal;duracao330;integral	41eb37fba615822b991d9de2fe2fcec1e542acc779c811316121f1db96a4ec61	false
+backend/scripts/analytics-duration-probe.cjs	principal;duracao330;integral	ecfae7313c2c3aeca8d720338deecbfa36b79983317c721fec25ded287a6915e	false
 backend/scripts/auth-integration.mjs	Tesla;comunidades;integral | Tesla;concorrencia;integral	70616ca0a8f8f72019da6c55b912a2f0bb654f7e456722672f04d9e6291f2a3b	false
 backend/scripts/billing-history-integration.mjs	Euclid;denuncias;integral	670c10ddbeea35c89df3d942ce7ab6686bca2e824ea3f542a7726331bdb9e778	false
 backend/scripts/community-concurrency-integration.mjs	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Tesla;notificacoes;integral	e4165e3e21fd2ae38dac434b3b65a6b28c80efa9c2c4954fa7e225e71d616800	false
 backend/scripts/community-concurrency-probe.cjs	Tesla;concorrencia;integral	05551039e9817e92f73981c282065de29e94968bcb81d8c1c545b1827b896346	false
 backend/scripts/community-reports-integration.mjs	Euclid;denuncias;integral | Euclid;conteudo328;integral	aafa3e0b8afbeef54ebf5641ae7a6360f2a91aa6c3c28f41f8d2e10e9216407c	false
 backend/scripts/community-reports-probe.cjs	Euclid;denuncias;integral | Euclid;conteudo328;integral	b93f9269e657dbcb3c2057d9c3df6fea8556ef813a387e81be2a770589fe2939	false
+backend/scripts/isolated-postgres-runner.mjs	principal;duracao330;integral	c0316b9e1216fcaf54b6485ca3d0eef553e78e0ab4d766755251a30db40f936a	false
+backend/scripts/isolated-postgres-runner.test.mjs	principal;duracao330;integral	ea2ef947e9dddbae5d6aff3d7f3a96eb59b8842ca9bcb56e7c4c8561de9bec5e	false
 backend/scripts/password-reset-probe.cjs	Tesla;concorrencia;integral	9f90f89cf1c7bcba787c9a8bba8833fdefdc650cfa18e14b7ca31006489dc2c6	false
-backend/scripts/post-state-integration.mjs	Lagrange;estado_posts;integral | Lagrange;perfil328;integral	6e6ed3a75b16b4046e965bdb8901c43aeace852cbd725962ab1e403c46230548	false
+backend/scripts/post-state-integration.mjs	Lagrange;estado_posts;integral | Lagrange;perfil328;integral | principal;duracao330;integral	86c4a3f772b016f1cc73502294d66b2b3942ee6e5e85bbc427bbf541f3e42956	false
 backend/scripts/post-state-probe.cjs	Lagrange;estado_posts;integral	b30bc1777bb560aab70f7a703f6a454914ca64a0e8a94c40f6c29641fc1b21c3	false
 backend/src/config/dotenv.ts	Tesla;notificacoes;integral	3a8b950ad87cf016dd4448ff967b0736ba77a12cf956a25fb6264e5285d9c122	true
 backend/src/config/multer/buffer.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	d8e41f227c08c9f157298bd0364269ca98a94bd44063dbe0c963b8dd04fe922c	true
@@ -73,12 +120,14 @@ backend/src/config/multer/public-multipart.ts	Lagrange;perfil;integral | Lagrang
 backend/src/config/multer/s3.ts	Tesla;comunidades;integral | Lagrange;perfil328;integral	f2bd0ee97f66c88a0ac4e6d2da245bfe1248432991345641750911d964d96fb5	true
 backend/src/config/multer/storage.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	b2b8d24ef9ed16919c6ceb44e8de2220e04dc5f3cf74f2028839e5fbe6638395	true
 backend/src/config/webPush.ts	Tesla;notificacoes;integral	9bbbb48eb6cb228b4bd60be274bab1f01f04b1c904529e35295c487ec2972c01	true
-backend/src/external/prisma/client.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Lagrange;perfil328;integral	1f4d2ec812c36ac29753a75d2b9e3aa3460d426d6df2bdb4cef8d69a6815feaa	true
-backend/src/helpers/return/index.ts	Tesla;notificacoes;integral	183135671652a008fa7fc00ff19550db530db10ff13e0324270f3a467fe3e10c	true
+backend/src/external/prisma/client.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Lagrange;perfil328;integral | principal;duracao330;integral	1f4d2ec812c36ac29753a75d2b9e3aa3460d426d6df2bdb4cef8d69a6815feaa	true
+backend/src/helpers/return/csv.ts	Tesla;financeiro330;integral_inicial	9c091f1c169b12671a21c2cf7f6a7765e40d3fc882a910659a02d6c8552b57c6	true
+backend/src/helpers/return/index.ts	Tesla;notificacoes;integral | Tesla;financeiro330;integral_inicial	183135671652a008fa7fc00ff19550db530db10ff13e0324270f3a467fe3e10c	true
 backend/src/helpers/translate/index.ts	Tesla;concorrencia;integral | Lagrange;perfil328;integral	b39400512f83a5f62610f71bc0594feb80549b69317495fec0f1585294d65bec	true
 backend/src/helpers/translate/resolve.ts	Tesla;concorrencia;integral | Lagrange;perfil328;integral	6e6d899f2b633738784a00840f626083863d6640ab218b25a9472f0fa59c3613	true
 backend/src/infra/database/prisma/index.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Lagrange;perfil328;integral	f99d0c74c4c3537d1a345ad0abf9ab3c01372766050c83cd5728e7965fcb8169	true
-backend/src/main/billing/dunning.ts	Tesla;checkout;integral_inicial	f01b0efa279c5de2cb6ed98ba9ff7b3281674c081e3f2d54de0e1c28afa0acc8	true
+backend/src/interfaces/objects/index.ts	Tesla;financeiro330;integral_inicial	191f325498db4fe9ff26806dc61e956b781fe476261cced2909fdaa24fc904df	true
+backend/src/main/billing/dunning.ts	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f01b0efa279c5de2cb6ed98ba9ff7b3281674c081e3f2d54de0e1c28afa0acc8	true
 backend/src/main/notification/campaigns.ts	Tesla;notificacoes;integral	6f2203f730c8fd1471aea67bcfe83cb4181a6d47e7cb55433f9d72ff60056a87	true
 backend/src/main/notification/constants.test.ts	Tesla;notificacoes;integral	8cf83d04be7506c336c139cae0d54b7c6a00dd9bfebcc058b07784dbe8628d41	true
 backend/src/main/notification/constants.ts	Tesla;notificacoes;integral	bf41880fd52b0e04d6baf2e90c7e234984cbc949d9f5f56d9aeb00042bad3736	true
@@ -98,9 +147,9 @@ backend/src/main/notification/preferences.ts	Tesla;notificacoes;integral	8cc393b
 backend/src/main/notification/push-policy.test.ts	Tesla;notificacoes;integral	fe11fae1983f53dbd387778d25f17729b7a6645f715d84bb2df06bff7bcbd1ea	true
 backend/src/main/notification/push-policy.ts	Tesla;notificacoes;integral	f417938af74456fbceb0b26b442b6e626a58c1b68e83ca775fe47e8fe855c138	true
 backend/src/main/notification/push.ts	Tesla;notificacoes;integral	626d56e39eda1cff4e6e309a659a3720eff488af114287b4fdc70b9a3699ff95	true
-backend/src/main/server/environment.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral	7abaa3103464a0766cf6c68645e9b90b4e0811932fde4869db668c5801d39ab5	true
+backend/src/main/server/environment.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | principal;duracao330;integral	7abaa3103464a0766cf6c68645e9b90b4e0811932fde4869db668c5801d39ab5	true
 backend/src/main/server/i18n.ts	Euclid;denuncias;integral | Tesla;concorrencia;integral | Lagrange;perfil328;integral	f95d8b1599e61ef86b9a19683e479ead6adf3fc1f250c6f8588f59a7092f3c1a	true
-backend/src/main/server/imports/write.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;checkout;integral_inicial	b807f2d24a0d32eb36bd905ac716131d9c57233df121023857ffb1fef7c9a260	true
+backend/src/main/server/imports/write.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	b807f2d24a0d32eb36bd905ac716131d9c57233df121023857ffb1fef7c9a260	true
 backend/src/main/socket/clients.ts	Tesla;notificacoes;integral	0bb115d341541bed193b1ff05841b05387d32620d1c47555331f8d7980d4aa3c	true
 backend/src/main/socket/events/notification.ts	Tesla;notificacoes;integral	a5eb24bd7556d177c9c0b8209d4d36389ed4f4f0c94174d8193eb4d228516ac0	true
 backend/src/main/socket/index.ts	Tesla;notificacoes;integral	3866af87123f0534ed52d23e0ce026ec8c82f58ee2e1c40ec1f15a13ad1841fe	true
@@ -119,13 +168,38 @@ backend/src/modules/api/admin/private/communities/manage/use-cases/services/cont
 backend/src/modules/api/admin/private/communities/manage/use-cases/services/report-groups.ts	Euclid;denuncias;integral	c49f1c682a34a0bb17177c0da9d83a2d52a9ce5b5c6daf39d2070909704324e1	true
 backend/src/modules/api/admin/private/communities/manage/use-cases/services/report-operations.ts	Euclid;denuncias;integral	0f9fd98051b02408dd53d574fde014b5c73db8cf7368c3bfe280fe7317edb959	true
 backend/src/modules/api/admin/private/communities/manage/validator/index.ts	Euclid;denuncias;integral | Euclid;conteudo328;integral	32e08c99740b659c58d281086520b4c4f2414710c0381a96e06135efb0ab61fa	true
-backend/src/modules/api/admin/private/psychologists/billing/DTOs/IAdminPsychologistBillingDTO.ts	Euclid;billing;integral	4a8bfe09227e928dcd7f67db0a527eaf371d311170fdbd31d31e9d8a3c866607	true
+backend/src/modules/api/admin/private/dashboard/export/index.ts	Tesla;financeiro330;integral_inicial	0687163bc0014f2ff2f10cd54eef2d022eccdfb9ffae925ddb857e7dd82599ec	true
+backend/src/modules/api/admin/private/dashboard/export/use-cases/controller.ts	Tesla;financeiro330;integral_inicial	efcc7dd1eb706cbe1f997396d47f7b7fb8362021d76d1af13dfe0730560e2ada	true
+backend/src/modules/api/admin/private/dashboard/export/use-cases/services.ts	Tesla;financeiro330;integral_inicial	0e2780d354681fc386d8052ed89382b040fb1c02e4c85373b4860d5ec10cbf9b	true
+backend/src/modules/api/admin/private/dashboard/export/validator/index.ts	Tesla;financeiro330;integral_inicial	e84a19da733d2f53dd95ed1ee83f373ec00eae7eba1a5f38971547863a835a98	true
+backend/src/modules/api/admin/private/dashboard/summary/use-cases/services/conversion-finance.ts	Tesla;financeiro330;integral_inicial	e2d0da2c38a4ede68612674e9cc464c06f97bea660d6c73f7bd957ba1daa8549	true
+backend/src/modules/api/admin/private/dashboard/summary/use-cases/services/summary-builder.ts	Tesla;financeiro330;integral_inicial	be5a7cf0e1c6aedb314fea32572878f204047c92cf3a4f9bdfd5ab1eaf02fc6d	true
+backend/src/modules/api/admin/private/finance/dashboard/DTOs/IAdminFinanceDashboardDTO.ts	Tesla;financeiro330;integral_inicial	f2d7c7f9c9ad4d11b17f1d8199c57dd81bdea2da8992b161834e02b890f3f927	true
+backend/src/modules/api/admin/private/finance/dashboard/index.ts	Tesla;financeiro330;integral_inicial	fe974294c1378149ff364aff79b598648f884261bcde66f983646ee52e1eec87	true
+backend/src/modules/api/admin/private/finance/dashboard/repositories/AdminFinanceDashboardRepository.ts	Tesla;financeiro330;integral_inicial	5115e01af610dc1651358fee886756acd58938d423aa092e373d0c1f774165dc	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/controller.ts	Tesla;financeiro330;integral_inicial	54b73de40ee94aeff4488815a37a44bbe6d02a1010cf3ee9ec3fa874455f06fa	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services.ts	Tesla;financeiro330;integral_inicial	594c6682420a818f33c8aeddfcfeed444dcc152cb91343ff204c8eb61954c1d4	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/charges-lists.ts	Tesla;financeiro330;integral_inicial	603f98e4bb91738b6397f002e67f8a3a209dff45b7e8a7ee36d4f745c81742f7	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/csv-export.test.ts	Tesla;financeiro330;integral_inicial	345e8567d2b3f2375bc49b95ca30f0f4c3ac30a1e5cea6432e09758da0b608aa	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/csv-export.ts	Tesla;financeiro330;integral_inicial	92bdfd829a9b17e66406a0249be9d988582efc101e7a70c4edc02fcf4ad16e32	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/dashboard-builder.ts	Tesla;financeiro330;integral_inicial	572a7b31a66ba832d9e0216011ac1af7062a4e19d524c0fe74049e6a064c2aed	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/finance-charge-contract.test.ts	principal;financeiro330testes;integral	672369b718a4480fc44f75c289463c2561c08e7ab0af8164c05dc5fefc913347	false
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/finance-payment-values.test.ts	principal;financeiro330testes;integral	0067e1d395a170b6d2c9428896ccba8571b97ae0d29ac008df215430872bb6b9	false
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/finance-reconciliation.test.ts	Tesla;financeiro330;integral_inicial	d3a4748f449cf0e49971c6887d8cfdd0b40acccb2f6e3aabf499e4a51ec33035	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/period-revenue.ts	Tesla;financeiro330;integral_inicial	0f812f101c44200fd9cdd069d0caccb3c58dd4fbe08cc13f78c995c73222bfa7	true
+backend/src/modules/api/admin/private/finance/dashboard/use-cases/services/subscriptions.ts	Tesla;financeiro330;integral_inicial	0a96e16e903a52c930ea91f12d0f562d966a3d7938686b6f9d6b18e58da0de62	true
+backend/src/modules/api/admin/private/finance/dashboard/validator/index.ts	Tesla;financeiro330;integral_inicial	c667e8b23e9d3c8df028047b6465f8ca9184cd57b5faa652deee335368a46b18	true
+backend/src/modules/api/admin/private/finance/lists/DTOs/IAdminFinanceListsDTO.ts	Tesla;financeiro330;integral_inicial	80d5c6ac58599d04664fe0ebdf6a1bde75d9c1e5949c5fb38d6daf6c50db90ed	true
+backend/src/modules/api/admin/private/finance/lists/index.ts	Tesla;financeiro330;integral_inicial	982e9fd422e612b8e82d653197d689681c2a1313c3d0f9f7dc518b8c7096327b	true
+backend/src/modules/api/admin/private/finance/lists/use-cases/controller.ts	Tesla;financeiro330;integral_inicial	62f6782d7264d869ff99a2278e6120c86375fe2327f7604a431a2dac1f0af491	true
+backend/src/modules/api/admin/private/finance/lists/validator/index.ts	Tesla;financeiro330;integral_inicial	1660cf7a5b0b3ec7bde14fdf1f92264c8fd94e5d9d86aa04cbb8cfda72b99a3e	true
+backend/src/modules/api/admin/private/psychologists/billing/DTOs/IAdminPsychologistBillingDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	4a8bfe09227e928dcd7f67db0a527eaf371d311170fdbd31d31e9d8a3c866607	true
 backend/src/modules/api/admin/private/psychologists/billing/index.ts	Euclid;billing;integral	87a16c2b14180f20c2c5b27bd25248b843a262043cf64763a7f4ee367d4b1daf	true
-backend/src/modules/api/admin/private/psychologists/billing/repositories/AdminPsychologistBillingRepository.ts	Euclid;billing;integral	a3a99a88ac2a29549423f5f9b26c810275c41508e69b0e512719554302f19b8d	true
+backend/src/modules/api/admin/private/psychologists/billing/repositories/AdminPsychologistBillingRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	a3a99a88ac2a29549423f5f9b26c810275c41508e69b0e512719554302f19b8d	true
 backend/src/modules/api/admin/private/psychologists/billing/repositories/support/billing-query.test.ts	Euclid;billing;integral	239216fcb7272ae8a57f06285c76cad03b62cec2baf0e55061dfcb2f9316d7b3	false
-backend/src/modules/api/admin/private/psychologists/billing/repositories/support/billing-query.ts	Euclid;billing;integral	eb29aa6474525a0b8b4881ab207ca398b7557510c26719ad3392ae3ebb7a1f1b	true
+backend/src/modules/api/admin/private/psychologists/billing/repositories/support/billing-query.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	eb29aa6474525a0b8b4881ab207ca398b7557510c26719ad3392ae3ebb7a1f1b	true
 backend/src/modules/api/admin/private/psychologists/billing/use-cases/controller.ts	Euclid;billing;integral	c48a18a141fd7bb80804488b89b0adc77b88dd22b6fe61bd199a8110b02a94d2	true
-backend/src/modules/api/admin/private/psychologists/billing/use-cases/services.ts	Euclid;billing;integral	ddd7056a092453febc25c8b84f87a2df58e06ac45988da3f38fb34c0859dea3f	true
+backend/src/modules/api/admin/private/psychologists/billing/use-cases/services.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	ddd7056a092453febc25c8b84f87a2df58e06ac45988da3f38fb34c0859dea3f	true
 backend/src/modules/api/admin/private/psychologists/billing/validator/index.ts	Euclid;billing;integral	47c44e1d0b5cbaa885bf15b931447bc18dbb8051fc140aa1d3473b9b81801dfd	true
 backend/src/modules/api/admin/private/psychologists/dashboard/use-cases/services/subscriptions/timeline.ts	Euclid;billing;integral	77f18a052d7e4c8e5946f0c994bf4ce6cb3f5928cd6284b42b2b9a3f8d5e685f	true
 backend/src/modules/api/admin/private/settings/subscription-plan/DTOs/IAdminSettingsSubscriptionPlanDTO.ts	Euclid;billing;integral	e00bc41b14e9f50d19b675c18702bf2fbda1a15df06125d05cb65900bb2cd12b	true
@@ -140,6 +214,7 @@ backend/src/modules/api/admin/public/auth/login/use-cases/services.ts	Euclid;den
 backend/src/modules/api/admin/shared/auth/cookie.ts	Euclid;denuncias;integral	92bd7b01113558b01d64953fa9044462ec243f3aa9f9a1fdc4025e3ce2b684e5	true
 backend/src/modules/api/admin/shared/auth/jwt.ts	Euclid;denuncias;integral	53b18f7b8d1a5632f7906d8932f66eca373e7986506051141cd1c4e5e0a0f10a	true
 backend/src/modules/api/middlewares/_auth/helpers/account-requirements.ts	Tesla;notificacoes;integral	2b01f6e6d5b9393e59446cc1d156ac0c871553e5536ae325d0acdcd170fa9fb8	false
+backend/src/modules/api/middlewares/_auth/helpers/files.ts	principal;transversaisapos329;integral	1221e8b4c43c424c92579c1475cd6034e265f8fe1cd26e155a25b9c1e92a408e	true
 backend/src/modules/api/middlewares/_auth/helpers/login.ts	Tesla;notificacoes;integral	fbb62c3b8832adce8a1bfa134ab6673fab3fc48a43e7acbbc9aaff095207099c	true
 backend/src/modules/api/middlewares/_auth/helpers/token.ts	Tesla;notificacoes;integral	a0f19385c931730b8cae5c600b4b12edc2d7fa5877ecde7ada767685de434556	true
 backend/src/modules/api/middlewares/_auth/index.ts	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral	fd799ee69c29ddf2c663d5392bcb853a9d34c7b33cb3c211e3610bb98a85273c	true
@@ -283,60 +358,60 @@ backend/src/modules/api/private/posts/use-cases/services/share-render.ts	Tesla;c
 backend/src/modules/api/private/posts/use-cases/services/state-actions.ts	Tesla;comunidades;integral	52ac7f428418c64650566fefedbc4c4ef24fa3a2c0480c963eb83cd22105efbe	true
 backend/src/modules/api/private/posts/use-cases/services/update.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral	dcb315a63c4e4af702f62befe91b54092b4f3127264f1686830c566df8504e92	true
 backend/src/modules/api/private/posts/validator/index.ts	Tesla;comunidades;integral	b3fb9c4160272c48c273a78edc7dff6b1416399e80db442afeafd438da0d731b	true
-backend/src/modules/api/private/psychologist/billing/address/DTOs/IAddressDTO.ts	Euclid;billing;integral	702f0df26aaa68b86d728472c72cad5cb947d3448ee9f9d645d4abfcb3991aef	true
-backend/src/modules/api/private/psychologist/billing/address/index.ts	Euclid;billing;integral	0982024e67d175b1c42288de436be3a92ff6fa56a8274e99b8be6030beab6035	true
-backend/src/modules/api/private/psychologist/billing/address/repositories/AddressRepository.ts	Euclid;billing;integral	cf7b33d7167d3304db62aa5001c8df13288ba0309cf1f95e20d72a35889de74b	true
-backend/src/modules/api/private/psychologist/billing/address/repositories/interfaces/IAddressRepository.ts	Euclid;billing;integral	f9ab45d97fe408c23cf250caf10cc0712e9eee58559ed5b5a5f1bd9c9860b54a	true
-backend/src/modules/api/private/psychologist/billing/address/use-cases/controller.ts	Euclid;billing;integral	78fa9433e0661f23bff6a14cdcb19c9b3c1f616ceab187ed60a081b72c7433bf	true
-backend/src/modules/api/private/psychologist/billing/address/use-cases/services.ts	Euclid;billing;integral	dbfb4ac7de43d5833ad07b407d6fd8883c03d549bfd61cb8540461f5611a0463	true
-backend/src/modules/api/private/psychologist/billing/address/validator/index.ts	Euclid;billing;integral	d4134b70466ad566c4d74afa087670414a2ef5f7e9df91c1732ca5f9180c7430	true
-backend/src/modules/api/private/psychologist/billing/checkout/DTOs/ICheckoutDTO.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	30f032b68ca75098aa69ed425ac35c92c9fccb11c89011d9249c1de650524b87	true
-backend/src/modules/api/private/psychologist/billing/checkout/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	5311ebfedc13c36ea8c984c8198c03d52674cb9b7b224d22cdb97cc2e82f7804	true
-backend/src/modules/api/private/psychologist/billing/checkout/repositories/CheckoutRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	a7574ad0f17112917b67f2225bbf68ec48938659fb93eb011495cdb0349ebc7a	true
-backend/src/modules/api/private/psychologist/billing/checkout/repositories/interfaces/ICheckoutRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	45ce8697cef00d66f6a8cac2053d042e412c43f09e56c3a7e5b464a0bfa41f93	true
-backend/src/modules/api/private/psychologist/billing/checkout/use-cases/controller.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	156328b38648c6968b4ab7f44555880b23febdc8989df016a0de089309dad59e	true
-backend/src/modules/api/private/psychologist/billing/checkout/use-cases/plan-compatibility.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	821158789d583738e5e2921f18fe3646129611947850843f18875ff9aa08bc8d	false
-backend/src/modules/api/private/psychologist/billing/checkout/use-cases/plan-compatibility.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	2f2793ef2827f6e071a1d55019555f41b8996f1b0d8979c64e04eb00913eee53	false
-backend/src/modules/api/private/psychologist/billing/checkout/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	0d07597a0270c12400ad4b1ae1db64b2eaac15bfeef5543eff583b9669bb0e78	true
-backend/src/modules/api/private/psychologist/billing/checkout/validator/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	736ea23623e2447e935386c2e3d51cad28def39370218c7cce3cc179aa8ba503	true
-backend/src/modules/api/private/psychologist/billing/current/DTOs/ICurrentDTO.ts	Euclid;billing;integral	f6cee87a7e0c2cece62c5269fb2309bb126b2de7aa3722a895a3e6225ec3726d	true
-backend/src/modules/api/private/psychologist/billing/current/index.ts	Euclid;billing;integral	8a37ddedf14da8a19a661d384ce9239743d6f354a81819f212c2b70e5bdac246	true
-backend/src/modules/api/private/psychologist/billing/current/repositories/CurrentRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	a6442eb2736e10b0721c16c38689e059a63c2017bd4339799cd843f1c0613f8c	true
-backend/src/modules/api/private/psychologist/billing/current/repositories/interfaces/ICurrentRepository.ts	Euclid;billing;integral	80769482712c9c50dd850de5dc232b25f75ee19a219b06937deabbd95ff53971	true
-backend/src/modules/api/private/psychologist/billing/current/use-cases/controller.ts	Euclid;billing;integral	590d40c6b15e6523c67defe9c793767c2f59e3f43e20b6150ce12fe71eac5535	true
-backend/src/modules/api/private/psychologist/billing/current/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	fe1278723f2205c3a283601fc95ad275fe41e2b3b68e1c6ecade0a432742559f	true
-backend/src/modules/api/private/psychologist/billing/payment-method/session/DTOs/IPaymentMethodSessionDTO.ts	Euclid;billing;integral	3699d0c9097ec0e2f881d59cdaca06e1ad95354faedb6fc54d3c2659c580e6e0	true
-backend/src/modules/api/private/psychologist/billing/payment-method/session/index.ts	Euclid;billing;integral	5311ebfedc13c36ea8c984c8198c03d52674cb9b7b224d22cdb97cc2e82f7804	true
-backend/src/modules/api/private/psychologist/billing/payment-method/session/repositories/PaymentMethodSessionRepository.ts	Euclid;billing;integral	707795e801a57bf30819f9ff375aa0b9da0673f924fee860f40487ff447f6f6b	true
-backend/src/modules/api/private/psychologist/billing/payment-method/session/repositories/interfaces/IPaymentMethodSessionRepository.ts	Euclid;billing;integral	9e59bd59c546b10073295041736bea91f61ba93e6a62b83273eb6a41333e0a78	true
-backend/src/modules/api/private/psychologist/billing/payment-method/session/use-cases/controller.ts	Euclid;billing;integral	eec89b4e495eadff38926bd6b121b18b3239e29ad5ed0b3506327f41ad70f978	true
-backend/src/modules/api/private/psychologist/billing/payment-method/session/use-cases/services.ts	Euclid;billing;integral	42186dca81437727c356c6df41c5f5e21d058e04a1086c4c29726677711369c0	true
-backend/src/modules/api/private/psychologist/billing/payment-method/session/validator/index.ts	Euclid;billing;integral	a38793fb8447ce6e8d48788ce5c5cd9cc26c9728076ed569815dd36c99815c8d	true
-backend/src/modules/api/private/psychologist/billing/plans/DTOs/IPlansDTO.ts	Euclid;billing;integral	164a8e5438abdeb9d1d76a234dfcc8998a3f44c4711daeea75399b7228e86417	true
-backend/src/modules/api/private/psychologist/billing/plans/index.ts	Euclid;billing;integral	af1bb0a5fded28d4ab7577dd9e392ec1ccd917ce8b8e8b20650cf331c19cb47d	true
-backend/src/modules/api/private/psychologist/billing/plans/repositories/PlansRepository.ts	Euclid;billing;integral	ce17dc1aa720f824a653fee7a227379e8732ebcb3c7096b59f59afca5df859c0	true
-backend/src/modules/api/private/psychologist/billing/plans/repositories/interfaces/IPlansRepository.ts	Euclid;billing;integral	2367c7b4159c16a9502842e56b66c4953069c447f8f32e3ae9faca43a268acfa	true
-backend/src/modules/api/private/psychologist/billing/plans/use-cases/controller.ts	Euclid;billing;integral	d39e04b8761fee1fddb1214f7887010a1a31b6dc555ee5014e27f966864967d6	true
-backend/src/modules/api/private/psychologist/billing/plans/use-cases/services.ts	Euclid;billing;integral	18fd0d9fb441b40914fb2f83c58f3ba7ab431e9e8eef307f02d7f3f4d77fea0d	true
-backend/src/modules/api/private/psychologist/billing/select-free/DTOs/ISelectFreeDTO.ts	Euclid;billing;integral	a6e94e9bb1984b78521b6ccf1418501fff82eb7e26be64db0a7a47d77102b9a8	true
-backend/src/modules/api/private/psychologist/billing/select-free/index.ts	Euclid;billing;integral	308ed2b814d750a5474c5c91e6699412e0e046c9ae9c7f017d3c20b909090300	true
-backend/src/modules/api/private/psychologist/billing/select-free/repositories/SelectFreeRepository.ts	Euclid;billing;integral	cefd549e340bdff35b79a84952ae5e4a2c448d1d8efb3429da969e3445e86f03	true
-backend/src/modules/api/private/psychologist/billing/select-free/repositories/interfaces/ISelectFreeRepository.ts	Euclid;billing;integral	94370c98069fc1d0ab2a1b386a016280206b33d247830f5e47372de4bae0d1db	true
-backend/src/modules/api/private/psychologist/billing/select-free/use-cases/controller.ts	Euclid;billing;integral	5cdd2810044a71445a2fa31e179194217bf86833d4beb57238b257aea727bc09	true
-backend/src/modules/api/private/psychologist/billing/select-free/use-cases/services.ts	Euclid;billing;integral	5301ef67460ab2307598806c0d8d370240df43ef446eb8bf18f8810e55552893	true
-backend/src/modules/api/private/psychologist/billing/subscription/DTOs/ISubscriptionDTO.ts	Euclid;billing;integral	7d89bc4273a4c4e488e191f0e45c30af34f5958466f73c06f597719e6c56ada7	true
-backend/src/modules/api/private/psychologist/billing/subscription/index.ts	Euclid;billing;integral	61d79fbf1a2f97830919c60c31728cbee5617a5a772994f890aace8a63fb60a8	true
-backend/src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts	Euclid;billing;integral	1beb9a02ac0676cf0d044655ab4cedc2bb317c78f477f2d5283c30012d9f79ae	true
-backend/src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	0f63572037b6a293ff49ba028c51cc7f29562628f07f178da0efcd3a7eefa701	true
-backend/src/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository.ts	Euclid;billing;integral	2279298bd48c825ae669e9663ecc6712cd1d5097227eb80a1dba8d059ea43218	true
-backend/src/modules/api/private/psychologist/billing/subscription/use-cases/controller.ts	Euclid;billing;integral	6252831a22c556a97009677e93ee872e57adef05129c4f378167cdc735eff1bb	true
-backend/src/modules/api/private/psychologist/billing/subscription/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	8eb8f637af412ab127414ad0c278816040092ba009676141c823a7f493d2982a	true
-backend/src/modules/api/private/psychologist/billing/sync/DTOs/ISyncDTO.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	5e9b00617363f17dd926f9dccc4d296bd1f311b920df1b0b974778d317e2a4b0	true
-backend/src/modules/api/private/psychologist/billing/sync/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	308ed2b814d750a5474c5c91e6699412e0e046c9ae9c7f017d3c20b909090300	true
-backend/src/modules/api/private/psychologist/billing/sync/repositories/SyncRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	91d7656ba17b2799cc8dd40f08853352996b7ebdec8a6983c162f328da43b9dc	true
-backend/src/modules/api/private/psychologist/billing/sync/repositories/interfaces/ISyncRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	aba8f99a22a5fa0154fbbbb5fe4c57a0ee989f83caeb2d0f8cc5de8b17f4d0b3	true
-backend/src/modules/api/private/psychologist/billing/sync/use-cases/controller.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	4d67f6cb5bb8d253b255b2fe3adbfae891c164a5b2f2f74ff750fbbc0955f337	true
-backend/src/modules/api/private/psychologist/billing/sync/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	bdd4dd2f881ac96b07a0eca3cf875f9366de4f8756b4b9b979b57c51fb53a8e2	true
+backend/src/modules/api/private/psychologist/billing/address/DTOs/IAddressDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	702f0df26aaa68b86d728472c72cad5cb947d3448ee9f9d645d4abfcb3991aef	true
+backend/src/modules/api/private/psychologist/billing/address/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	0982024e67d175b1c42288de436be3a92ff6fa56a8274e99b8be6030beab6035	true
+backend/src/modules/api/private/psychologist/billing/address/repositories/AddressRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	cf7b33d7167d3304db62aa5001c8df13288ba0309cf1f95e20d72a35889de74b	true
+backend/src/modules/api/private/psychologist/billing/address/repositories/interfaces/IAddressRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	f9ab45d97fe408c23cf250caf10cc0712e9eee58559ed5b5a5f1bd9c9860b54a	true
+backend/src/modules/api/private/psychologist/billing/address/use-cases/controller.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	78fa9433e0661f23bff6a14cdcb19c9b3c1f616ceab187ed60a081b72c7433bf	true
+backend/src/modules/api/private/psychologist/billing/address/use-cases/services.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	dbfb4ac7de43d5833ad07b407d6fd8883c03d549bfd61cb8540461f5611a0463	true
+backend/src/modules/api/private/psychologist/billing/address/validator/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	d4134b70466ad566c4d74afa087670414a2ef5f7e9df91c1732ca5f9180c7430	true
+backend/src/modules/api/private/psychologist/billing/checkout/DTOs/ICheckoutDTO.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	30f032b68ca75098aa69ed425ac35c92c9fccb11c89011d9249c1de650524b87	true
+backend/src/modules/api/private/psychologist/billing/checkout/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	5311ebfedc13c36ea8c984c8198c03d52674cb9b7b224d22cdb97cc2e82f7804	true
+backend/src/modules/api/private/psychologist/billing/checkout/repositories/CheckoutRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	a7574ad0f17112917b67f2225bbf68ec48938659fb93eb011495cdb0349ebc7a	true
+backend/src/modules/api/private/psychologist/billing/checkout/repositories/interfaces/ICheckoutRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	45ce8697cef00d66f6a8cac2053d042e412c43f09e56c3a7e5b464a0bfa41f93	true
+backend/src/modules/api/private/psychologist/billing/checkout/use-cases/controller.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	156328b38648c6968b4ab7f44555880b23febdc8989df016a0de089309dad59e	true
+backend/src/modules/api/private/psychologist/billing/checkout/use-cases/plan-compatibility.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	821158789d583738e5e2921f18fe3646129611947850843f18875ff9aa08bc8d	false
+backend/src/modules/api/private/psychologist/billing/checkout/use-cases/plan-compatibility.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	2f2793ef2827f6e071a1d55019555f41b8996f1b0d8979c64e04eb00913eee53	false
+backend/src/modules/api/private/psychologist/billing/checkout/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	0d07597a0270c12400ad4b1ae1db64b2eaac15bfeef5543eff583b9669bb0e78	true
+backend/src/modules/api/private/psychologist/billing/checkout/validator/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	736ea23623e2447e935386c2e3d51cad28def39370218c7cce3cc179aa8ba503	true
+backend/src/modules/api/private/psychologist/billing/current/DTOs/ICurrentDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	f6cee87a7e0c2cece62c5269fb2309bb126b2de7aa3722a895a3e6225ec3726d	true
+backend/src/modules/api/private/psychologist/billing/current/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	8a37ddedf14da8a19a661d384ce9239743d6f354a81819f212c2b70e5bdac246	true
+backend/src/modules/api/private/psychologist/billing/current/repositories/CurrentRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	a6442eb2736e10b0721c16c38689e059a63c2017bd4339799cd843f1c0613f8c	true
+backend/src/modules/api/private/psychologist/billing/current/repositories/interfaces/ICurrentRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	80769482712c9c50dd850de5dc232b25f75ee19a219b06937deabbd95ff53971	true
+backend/src/modules/api/private/psychologist/billing/current/use-cases/controller.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	590d40c6b15e6523c67defe9c793767c2f59e3f43e20b6150ce12fe71eac5535	true
+backend/src/modules/api/private/psychologist/billing/current/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	fe1278723f2205c3a283601fc95ad275fe41e2b3b68e1c6ecade0a432742559f	true
+backend/src/modules/api/private/psychologist/billing/payment-method/session/DTOs/IPaymentMethodSessionDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	3699d0c9097ec0e2f881d59cdaca06e1ad95354faedb6fc54d3c2659c580e6e0	true
+backend/src/modules/api/private/psychologist/billing/payment-method/session/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	5311ebfedc13c36ea8c984c8198c03d52674cb9b7b224d22cdb97cc2e82f7804	true
+backend/src/modules/api/private/psychologist/billing/payment-method/session/repositories/PaymentMethodSessionRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	707795e801a57bf30819f9ff375aa0b9da0673f924fee860f40487ff447f6f6b	true
+backend/src/modules/api/private/psychologist/billing/payment-method/session/repositories/interfaces/IPaymentMethodSessionRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	9e59bd59c546b10073295041736bea91f61ba93e6a62b83273eb6a41333e0a78	true
+backend/src/modules/api/private/psychologist/billing/payment-method/session/use-cases/controller.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	eec89b4e495eadff38926bd6b121b18b3239e29ad5ed0b3506327f41ad70f978	true
+backend/src/modules/api/private/psychologist/billing/payment-method/session/use-cases/services.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	42186dca81437727c356c6df41c5f5e21d058e04a1086c4c29726677711369c0	true
+backend/src/modules/api/private/psychologist/billing/payment-method/session/validator/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	a38793fb8447ce6e8d48788ce5c5cd9cc26c9728076ed569815dd36c99815c8d	true
+backend/src/modules/api/private/psychologist/billing/plans/DTOs/IPlansDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	164a8e5438abdeb9d1d76a234dfcc8998a3f44c4711daeea75399b7228e86417	true
+backend/src/modules/api/private/psychologist/billing/plans/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	af1bb0a5fded28d4ab7577dd9e392ec1ccd917ce8b8e8b20650cf331c19cb47d	true
+backend/src/modules/api/private/psychologist/billing/plans/repositories/PlansRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	ce17dc1aa720f824a653fee7a227379e8732ebcb3c7096b59f59afca5df859c0	true
+backend/src/modules/api/private/psychologist/billing/plans/repositories/interfaces/IPlansRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	2367c7b4159c16a9502842e56b66c4953069c447f8f32e3ae9faca43a268acfa	true
+backend/src/modules/api/private/psychologist/billing/plans/use-cases/controller.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	d39e04b8761fee1fddb1214f7887010a1a31b6dc555ee5014e27f966864967d6	true
+backend/src/modules/api/private/psychologist/billing/plans/use-cases/services.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	18fd0d9fb441b40914fb2f83c58f3ba7ab431e9e8eef307f02d7f3f4d77fea0d	true
+backend/src/modules/api/private/psychologist/billing/select-free/DTOs/ISelectFreeDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	a6e94e9bb1984b78521b6ccf1418501fff82eb7e26be64db0a7a47d77102b9a8	true
+backend/src/modules/api/private/psychologist/billing/select-free/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	308ed2b814d750a5474c5c91e6699412e0e046c9ae9c7f017d3c20b909090300	true
+backend/src/modules/api/private/psychologist/billing/select-free/repositories/SelectFreeRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	cefd549e340bdff35b79a84952ae5e4a2c448d1d8efb3429da969e3445e86f03	true
+backend/src/modules/api/private/psychologist/billing/select-free/repositories/interfaces/ISelectFreeRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	94370c98069fc1d0ab2a1b386a016280206b33d247830f5e47372de4bae0d1db	true
+backend/src/modules/api/private/psychologist/billing/select-free/use-cases/controller.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	5cdd2810044a71445a2fa31e179194217bf86833d4beb57238b257aea727bc09	true
+backend/src/modules/api/private/psychologist/billing/select-free/use-cases/services.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	5301ef67460ab2307598806c0d8d370240df43ef446eb8bf18f8810e55552893	true
+backend/src/modules/api/private/psychologist/billing/subscription/DTOs/ISubscriptionDTO.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	7d89bc4273a4c4e488e191f0e45c30af34f5958466f73c06f597719e6c56ada7	true
+backend/src/modules/api/private/psychologist/billing/subscription/index.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	61d79fbf1a2f97830919c60c31728cbee5617a5a772994f890aace8a63fb60a8	true
+backend/src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.test.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	1beb9a02ac0676cf0d044655ab4cedc2bb317c78f477f2d5283c30012d9f79ae	true
+backend/src/modules/api/private/psychologist/billing/subscription/repositories/SubscriptionRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	0f63572037b6a293ff49ba028c51cc7f29562628f07f178da0efcd3a7eefa701	true
+backend/src/modules/api/private/psychologist/billing/subscription/repositories/interfaces/ISubscriptionRepository.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	2279298bd48c825ae669e9663ecc6712cd1d5097227eb80a1dba8d059ea43218	true
+backend/src/modules/api/private/psychologist/billing/subscription/use-cases/controller.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	6252831a22c556a97009677e93ee872e57adef05129c4f378167cdc735eff1bb	true
+backend/src/modules/api/private/psychologist/billing/subscription/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	8eb8f637af412ab127414ad0c278816040092ba009676141c823a7f493d2982a	true
+backend/src/modules/api/private/psychologist/billing/sync/DTOs/ISyncDTO.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	5e9b00617363f17dd926f9dccc4d296bd1f311b920df1b0b974778d317e2a4b0	true
+backend/src/modules/api/private/psychologist/billing/sync/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	308ed2b814d750a5474c5c91e6699412e0e046c9ae9c7f017d3c20b909090300	true
+backend/src/modules/api/private/psychologist/billing/sync/repositories/SyncRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	91d7656ba17b2799cc8dd40f08853352996b7ebdec8a6983c162f328da43b9dc	true
+backend/src/modules/api/private/psychologist/billing/sync/repositories/interfaces/ISyncRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	aba8f99a22a5fa0154fbbbb5fe4c57a0ee989f83caeb2d0f8cc5de8b17f4d0b3	true
+backend/src/modules/api/private/psychologist/billing/sync/use-cases/controller.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	4d67f6cb5bb8d253b255b2fe3adbfae891c164a5b2f2f74ff750fbbc0955f337	true
+backend/src/modules/api/private/psychologist/billing/sync/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	bdd4dd2f881ac96b07a0eca3cf875f9366de4f8756b4b9b979b57c51fb53a8e2	true
 backend/src/modules/api/private/psychologist/free-profile/DTOs/IFreeProfileDTO.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	fcc52abaff9c7a0c9c5d4f37ce691ddf8268ef8fcb3604b54df8fe58a2cfc1ca	true
 backend/src/modules/api/private/psychologist/free-profile/index.ts	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Tesla;notificacoes328;integral	3d7dcbc192f9b2dc15683118ab3a3e60fd56feb58f8b9da80f6ffd181ed3086e	true
 backend/src/modules/api/private/psychologist/free-profile/repositories/FreeProfileRepository.ts	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Tesla;notificacoes328;integral	2fb3d28c3412e490fadc11b4af1bf34628f3fd06383a76af83e89c2aaec3de5e	true
@@ -351,14 +426,54 @@ backend/src/modules/api/private/psychologist/free-profile/use-cases/services/pro
 backend/src/modules/api/private/psychologist/free-profile/use-cases/services/profile-video-multipart.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	864328e0c44ac7dd7b468db022bf7531c6e77d45d0f7478f02888dfa4dcbecd0	true
 backend/src/modules/api/private/psychologist/free-profile/use-cases/services/profile-video-policy.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	9401110151dda4d52e7711f93bfd38b0ea756a02f18e65c8e463be22ff274bfd	true
 backend/src/modules/api/private/psychologist/free-profile/validator/index.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	7e8274dc55f02e97858a8bce30ea747cc574e800152a9999fa39b2e9a9cfe1de	true
+backend/src/modules/api/public/analytics/action/DTOs/IImportantActionDTO.ts	principal;analytics330;integral	312baa3e68a7390aece58bda25b0d3d4d0073981497d552a44bcd9675cc5b0f0	true
+backend/src/modules/api/public/analytics/action/index.ts	principal;analytics330;integral	2d3db74ddfaf7b85fe403a45c6eb49e96b9c9a394d446a8411504ca01f21e01d	true
+backend/src/modules/api/public/analytics/action/repositories/ImportantActionRepository.ts	principal;duracao330;integral | principal;analytics330;integral	bdb685a3bbe7e21ad4f8f3bb7006b10c164e07878939033ce079bf2b057cd85a	true
+backend/src/modules/api/public/analytics/action/repositories/interfaces/IImportantActionRepository.ts	principal;analytics330;integral	e02ea473d5d7b2bc2a28ed45e7afd81eb44051f1f9134331eac4b3747a8cfd0e	true
+backend/src/modules/api/public/analytics/action/use-cases/controller.ts	principal;analytics330;integral	9b1f08dcedc4547a2641eb24707c3f1472f12f73ce09bf83bae6318028d01241	true
+backend/src/modules/api/public/analytics/action/use-cases/services.ts	principal;analytics330;integral	8dc79ac2dd6d0f64699f8feca757ac1bec8f7481c1923a0d1a2ea305537302b1	true
+backend/src/modules/api/public/analytics/action/validator/index.ts	principal;analytics330;integral	5343d21a53628a2d2db116fbcded0bae7b8011ecf7eceade043c312cd6681dfa	true
+backend/src/modules/api/public/analytics/content-attention/DTOs/IContentAttentionDTO.ts	principal;analytics330;integral	bf2c09a53784e944d32051608f6e351ee4a248d7568c8bd39d014578d290fa22	true
+backend/src/modules/api/public/analytics/content-attention/index.ts	principal;analytics330;integral	2d3db74ddfaf7b85fe403a45c6eb49e96b9c9a394d446a8411504ca01f21e01d	true
+backend/src/modules/api/public/analytics/content-attention/repositories/ContentAttentionRepository.ts	principal;analytics330;integral	f5a0c40828253d7f6f84c944d4331d6a8ad83e9ccdfb20102ed8a6bf4a111295	true
+backend/src/modules/api/public/analytics/content-attention/use-cases/controller.ts	principal;analytics330;integral	42bd11d530ac440504d39b7f444a5f5ee7de8f14c92d341668bd59e76c7197be	true
+backend/src/modules/api/public/analytics/content-attention/use-cases/services.ts	principal;analytics330;integral	d18b4c0f4dd7e4bd8ee813722fcf5cb94c373ad0f7a131ae8879199ada6a792b	true
+backend/src/modules/api/public/analytics/content-attention/validator/index.ts	principal;analytics330;integral	4111adf3558419a4e4823bb0f288154ad29c4f58f52e03338ebfd031b0ac5ce5	true
+backend/src/modules/api/public/analytics/content-video-watch/DTOs/IContentVideoWatchDTO.ts	principal;analytics330;integral	a3a7479f8bb0dd3080356027c28fbe28ffa60887fe0d6e33c8a3f0420f240491	true
+backend/src/modules/api/public/analytics/content-video-watch/index.ts	principal;analytics330;integral	2d3db74ddfaf7b85fe403a45c6eb49e96b9c9a394d446a8411504ca01f21e01d	true
+backend/src/modules/api/public/analytics/content-video-watch/repositories/ContentVideoWatchRepository.ts	principal;analytics330;integral	8b6c96f317479bf87b957c356cd917855a1aa4c4c28d80c5f16577ffcf1c7f0f	true
+backend/src/modules/api/public/analytics/content-video-watch/use-cases/controller.ts	principal;analytics330;integral	b796264697bdc453766af3bc5ee8f48372a585acfebd140092b5164825c2dee3	true
+backend/src/modules/api/public/analytics/content-video-watch/use-cases/services.ts	principal;analytics330;integral	b6a7e97cf70ae1cd93577da66f34ce5593b7c4e8bc4a947dabffd84d950d4c13	true
+backend/src/modules/api/public/analytics/content-video-watch/validator/index.ts	principal;analytics330;integral	10330c7ad79267fac3874f4a42aea0998111dcfd96a8dc798ad3ce22de1dab1f	true
+backend/src/modules/api/public/analytics/helpers/signup-identity.ts	principal;transversaisapos329;integral | principal;analytics330;integral	2527cf32cd16544f30f1e54b3fc220b6adce21dc1d211b5cfed8472a26ba3da8	true
+backend/src/modules/api/public/analytics/helpers/tracking.ts	principal;analytics330;integral	003f741c0c13e9b7d2a7450abaae4d161ebae40f325cad8da7ac3847f743cb53	true
+backend/src/modules/api/public/analytics/helpers/visitor-session.ts	principal;transversaisapos329;integral | principal;analytics330;integral	0204c24c394b46eb5ed04e1b03cd2b0fe562ec1b1e40d49bfbc2ef663c5120cd	true
+backend/src/modules/api/public/analytics/location-capture/DTOs/ILocationCaptureDTO.ts	principal;analytics330;integral	313d856a28c6c6ae7bf292a1996145318cc731291e77400244bcf00cb763e0e7	true
+backend/src/modules/api/public/analytics/location-capture/index.ts	principal;analytics330;integral	e7d98303b245300052890323ce6523a3c70094602721ea3578575a786e84ef9c	true
+backend/src/modules/api/public/analytics/location-capture/repositories/LocationCaptureRepository.ts	principal;duracao330;integral | principal;analytics330;integral	817c5cf409069e27ee33081822cc415126fa42c48c8cba016acec5944b325f82	true
+backend/src/modules/api/public/analytics/location-capture/repositories/interfaces/ILocationCaptureRepository.ts	principal;analytics330;integral	99e973f78463d5706792e977e86ba3a311421cf4cb5cba9d5623f1bfb6f19aba	true
+backend/src/modules/api/public/analytics/location-capture/use-cases/controller.ts	principal;analytics330;integral	62b8e6a9e05d922a7735a2401ad2091f10c3adeecd935c70655e7ea134b4e60a	true
+backend/src/modules/api/public/analytics/location-capture/use-cases/location-resolution.ts	principal;analytics330;integral	9163ae5bc99d414b0a030a653685698496dcc1d6ec82bfb32759a0b46b20cd95	true
+backend/src/modules/api/public/analytics/location-capture/use-cases/response.test.ts	principal;analytics330;integral	34b6c9a508418597fd61f8c0dc131f3b2dbd366b6c5ddde9633b27aad29e6069	true
+backend/src/modules/api/public/analytics/location-capture/use-cases/response.ts	principal;analytics330;integral	53a589380b177bd1902aea34562ae79c43db3128267bb37e55e7050e123a3856	true
+backend/src/modules/api/public/analytics/location-capture/use-cases/services.test.ts	principal;analytics330;integral	a935ff3f5aeb871d99a2b031613295b3569a7092b5d7a9dea703c4234acc3aa4	true
+backend/src/modules/api/public/analytics/location-capture/use-cases/services.ts	principal;analytics330;integral	e3a7ba7616d973b2f1ea1d272a2a49dc90d9957f01d099c0aeff9fa162d7a02d	true
+backend/src/modules/api/public/analytics/location-capture/validator/index.ts	principal;analytics330;integral	0db0de6890e5434820b47b529aa43a0905849b232ec5092f46db52b6b1cb991c	true
+backend/src/modules/api/public/analytics/page-view/DTOs/IPageViewTrackingDTO.ts	principal;duracao330;integral | principal;analytics330;integral	29c9331f2117871a3d097b9b3b95ebbea044d6237e41cea39a06b2cdd343428b	true
+backend/src/modules/api/public/analytics/page-view/index.ts	principal;analytics330;integral	a401bd5bf69cc524552f51837880a6da3b0d3b56f1bbc5a99476f68f3890370c	true
+backend/src/modules/api/public/analytics/page-view/repositories/PageViewTrackingRepository.ts	principal;duracao330;integral | principal;analytics330;integral	b0a8b0b0702e55c0eba3b1608ff047a53a5d141fa0fe070b2eda06f1d7c66319	true
+backend/src/modules/api/public/analytics/page-view/repositories/interfaces/IPageViewTrackingRepository.ts	principal;duracao330;integral | principal;analytics330;integral	ec35464d4fc9585231b9cbe63275f0e1d26e173fe02a4dc62d700809a7ae7ed7	true
+backend/src/modules/api/public/analytics/page-view/use-cases/controller.ts	principal;analytics330;integral	a4ff645c869608c9e2e13ab2aa32845c6aac2e17110fd4f8c6a4e2c435ad5969	true
+backend/src/modules/api/public/analytics/page-view/use-cases/services.ts	principal;duracao330;integral | principal;analytics330;integral	f15d49c60cbac720c7d49539fbb308d79862c3fc7f49b18a02450df1251ac906	true
+backend/src/modules/api/public/analytics/page-view/validator/index.ts	principal;duracao330;integral | principal;analytics330;integral	b79211c723a4d0153a849daabc70bd2a43ac8a637c980cb69e9227c097766573	true
 backend/src/modules/api/public/auth/login/index.ts	Tesla;notificacoes;integral | Tesla;notificacoes328;integral	ef62432e95b27ac20cd157cc0f8f7e453bf60a65563a151e9a083effafc3d137	true
 backend/src/modules/api/public/auth/login/repositories/LoginRepository.ts	Tesla;notificacoes;integral	81365bb2b4f8de595436212a56bf4dfa6fc167d548785d943323d0bd425adb2a	true
-backend/src/modules/api/public/billing/webhook/DTOs/IWebhookDTO.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	37d14b0bc065fd15c324e06d5ff39b607f992ce7db7f59515be5202acc044d9c	true
-backend/src/modules/api/public/billing/webhook/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	308ed2b814d750a5474c5c91e6699412e0e046c9ae9c7f017d3c20b909090300	true
-backend/src/modules/api/public/billing/webhook/repositories/WebhookRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	26798a770ec765691a40b1d8b1ca3edc60772f067fa7e311e5d5c0e1a31d72ef	true
-backend/src/modules/api/public/billing/webhook/repositories/interfaces/IWebhookRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	04f9e86d6996ff82a84aaf829488c024f86db6a1efc4083408eb5e8970f17748	true
-backend/src/modules/api/public/billing/webhook/use-cases/controller.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	e13696556cc4c8568464c4b51ec09eb210af6dbd8eefec8c74f8d4fce6fafcea	true
-backend/src/modules/api/public/billing/webhook/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	f8415a2d1fa01ef37f35665a2e4260c58be465dbba7c8ebaaa8e15242260a56d	true
+backend/src/modules/api/public/billing/webhook/DTOs/IWebhookDTO.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	37d14b0bc065fd15c324e06d5ff39b607f992ce7db7f59515be5202acc044d9c	true
+backend/src/modules/api/public/billing/webhook/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	308ed2b814d750a5474c5c91e6699412e0e046c9ae9c7f017d3c20b909090300	true
+backend/src/modules/api/public/billing/webhook/repositories/WebhookRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	26798a770ec765691a40b1d8b1ca3edc60772f067fa7e311e5d5c0e1a31d72ef	true
+backend/src/modules/api/public/billing/webhook/repositories/interfaces/IWebhookRepository.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	04f9e86d6996ff82a84aaf829488c024f86db6a1efc4083408eb5e8970f17748	true
+backend/src/modules/api/public/billing/webhook/use-cases/controller.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	e13696556cc4c8568464c4b51ec09eb210af6dbd8eefec8c74f8d4fce6fafcea	true
+backend/src/modules/api/public/billing/webhook/use-cases/services.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f8415a2d1fa01ef37f35665a2e4260c58be465dbba7c8ebaaa8e15242260a56d	true
 backend/src/modules/api/public/google/utils/config.ts	Tesla;notificacoes;integral	bc07a8cd2ad662949c7174ea1166c40d25b0f4f1ca4749ec2b560e6ca319cfbd	true
 backend/src/modules/api/public/seo/community-post/DTOs/IPublicCommunityPostSeoDTO.ts	Tesla;comunidades;integral	ec31d81584960b7f2ec0eeea7c3b01e0d38f415436340cea688a00bd003196e1	true
 backend/src/modules/api/public/seo/community-post/index.ts	Tesla;comunidades;integral	9ec10eaba22232a95d4d048adf23c054dc4257a690f535818627f14487347454	true
@@ -370,26 +485,26 @@ backend/src/modules/api/public/seo/community/index.ts	Tesla;comunidades;integral
 backend/src/modules/api/public/seo/community/use-cases/controller.ts	Tesla;comunidades;integral	d1a61043bb090e9cdaab522713dc665057180c99418f9b610a0b022cd0915793	true
 backend/src/modules/api/public/seo/community/use-cases/services.ts	Tesla;comunidades;integral	fa4c7cfcf595c4a3ad966fda1ea7c954160f068f978e9a4897fc48b831be5817	true
 backend/src/modules/api/public/seo/community/validator/index.ts	Tesla;comunidades;integral	cab07c01a56165518237eb3e15a4e459fdb3c952627759d453644dab002e3fda	true
-backend/src/modules/billing/dunning.test.ts	Euclid;billing;integral	08bf8a637ed9e05e003912a0a52cb4ac861fe9fd92aa731c6970e626fdeae31f	true
-backend/src/modules/billing/dunning.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	e813a211536a6655b187b92aa812fb1818c24a24b21cab4321f86651980aad77	true
-backend/src/modules/billing/effective-subscription.test.ts	Euclid;billing;integral	3073dbf0c0c89f7314a7d6279b8d02bd00088d5b712d2d7bbcd3b44ad698d6b9	true
-backend/src/modules/billing/effective-subscription.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	6de045f376d1a5f6b995c0c5f49cd541a9a14df0c4ab19eb4b0f9dcb9920342e	true
-backend/src/modules/billing/free-subscription.test.ts	Euclid;billing;integral	ff261ffef68a9643ec58d7c71332d1ec451938c70f49e456dbc9eee229ad1ff0	true
-backend/src/modules/billing/free-subscription.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	d6b14c04f6ce7622a44ad5c89c46badab4e87fbf2d62b7146eacea5b77914598	true
-backend/src/modules/billing/payment-event-values.ts	Euclid;billing;integral;principal;integral | principal;integracao;integral | Tesla;checkout;integral_inicial	abd4e3e219c3bbde087672192dc2326f4451bb25bae619172aff0204b0473acd	false
-backend/src/modules/billing/payment-gateway/MercadoPagoAdapter.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	ebd16b31438b041aee86306e8e599ab3cab73eefa20798e7c575420c681ca55e	true
-backend/src/modules/billing/payment-gateway/PaymentGateway.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	271e18d318807bcd327a4b28dbc9bc1173355fa0ba116b28d0c00f8cd24896e2	true
-backend/src/modules/billing/payment-gateway/error-log.ts	Euclid;billing;integral	881fd49ea764b95ebc8049c9b3e1db94bc3cbf583476fd4cb2606e4a486a5159	true
-backend/src/modules/billing/payment-gateway/idempotency.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	afb5b5a9073835d5cff6d3eb38ad77ce3e2e7194c78cebe3fd47dbeeba508fc5	false
-backend/src/modules/billing/payment-gateway/idempotency.ts	Euclid;billing;integral;principal;integral | Tesla;checkout;integral_inicial	0052b2ef33f0e8a8eb1947a92f50778d0037e38decdfc6ba19f6b98614af6098	false
-backend/src/modules/billing/payment-gateway/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	1cfd695f82c1488661f8bf2deef64b9a073d3126246730837eb1ef2b807672b7	true
-backend/src/modules/billing/payment-gateway/public-error.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	96b7d20ef072e670fb1794f773434b5c6c962dddbba89b3819d89585ea600e95	true
-backend/src/modules/billing/payment-gateway/public-error.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	f468bed39fce407537c3c276dbfeded6ceed528b5bc5f1278201de3865688804	true
-backend/src/modules/billing/payment-gateway/webhook-signature.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	83c3d6d3e47a47f1e716c2d13bce6493a7f2a43f89d8ff4abd6009b4f1a661a3	false
-backend/src/modules/billing/payment-gateway/webhook-signature.ts	Euclid;billing;integral;principal;integral | Tesla;checkout;integral_inicial	cf85f280e012b57ff190275406edf52ddfa65bb10c340eb8c80e34eb835ef8aa	false
-backend/src/modules/billing/payment-history.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	68b82862704173d7fff35a22e8085f65b0c71ebd39f89aa344d0087dba9c5acf	false
-backend/src/modules/billing/payment-history.ts	Euclid;billing;integral | principal;integracao;integral | Tesla;checkout;integral_inicial	9f9dbeb8ad8c3808b3b9f88feb8e8b509c0d4304a1e6f82c3b62aa9893c9f796	false
-backend/src/modules/billing/sync-mercado-pago-subscription.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial	96cba60864f93ef9e2c399f04cc2066e2f9564bbd5d15ba51dc9fe411a7c8cc4	true
+backend/src/modules/billing/dunning.test.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	08bf8a637ed9e05e003912a0a52cb4ac861fe9fd92aa731c6970e626fdeae31f	true
+backend/src/modules/billing/dunning.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	e813a211536a6655b187b92aa812fb1818c24a24b21cab4321f86651980aad77	true
+backend/src/modules/billing/effective-subscription.test.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	3073dbf0c0c89f7314a7d6279b8d02bd00088d5b712d2d7bbcd3b44ad698d6b9	true
+backend/src/modules/billing/effective-subscription.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	6de045f376d1a5f6b995c0c5f49cd541a9a14df0c4ab19eb4b0f9dcb9920342e	true
+backend/src/modules/billing/free-subscription.test.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	ff261ffef68a9643ec58d7c71332d1ec451938c70f49e456dbc9eee229ad1ff0	true
+backend/src/modules/billing/free-subscription.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	d6b14c04f6ce7622a44ad5c89c46badab4e87fbf2d62b7146eacea5b77914598	true
+backend/src/modules/billing/payment-event-values.ts	Euclid;billing;integral;principal;integral | principal;integracao;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	abd4e3e219c3bbde087672192dc2326f4451bb25bae619172aff0204b0473acd	false
+backend/src/modules/billing/payment-gateway/MercadoPagoAdapter.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	ebd16b31438b041aee86306e8e599ab3cab73eefa20798e7c575420c681ca55e	true
+backend/src/modules/billing/payment-gateway/PaymentGateway.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	271e18d318807bcd327a4b28dbc9bc1173355fa0ba116b28d0c00f8cd24896e2	true
+backend/src/modules/billing/payment-gateway/error-log.ts	Euclid;billing;integral | Tesla;financeiro330;integral_inicial	881fd49ea764b95ebc8049c9b3e1db94bc3cbf583476fd4cb2606e4a486a5159	true
+backend/src/modules/billing/payment-gateway/idempotency.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	afb5b5a9073835d5cff6d3eb38ad77ce3e2e7194c78cebe3fd47dbeeba508fc5	false
+backend/src/modules/billing/payment-gateway/idempotency.ts	Euclid;billing;integral;principal;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	0052b2ef33f0e8a8eb1947a92f50778d0037e38decdfc6ba19f6b98614af6098	false
+backend/src/modules/billing/payment-gateway/index.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	1cfd695f82c1488661f8bf2deef64b9a073d3126246730837eb1ef2b807672b7	true
+backend/src/modules/billing/payment-gateway/public-error.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	96b7d20ef072e670fb1794f773434b5c6c962dddbba89b3819d89585ea600e95	true
+backend/src/modules/billing/payment-gateway/public-error.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f468bed39fce407537c3c276dbfeded6ceed528b5bc5f1278201de3865688804	true
+backend/src/modules/billing/payment-gateway/webhook-signature.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	83c3d6d3e47a47f1e716c2d13bce6493a7f2a43f89d8ff4abd6009b4f1a661a3	false
+backend/src/modules/billing/payment-gateway/webhook-signature.ts	Euclid;billing;integral;principal;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	cf85f280e012b57ff190275406edf52ddfa65bb10c340eb8c80e34eb835ef8aa	false
+backend/src/modules/billing/payment-history.test.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	68b82862704173d7fff35a22e8085f65b0c71ebd39f89aa344d0087dba9c5acf	false
+backend/src/modules/billing/payment-history.ts	Euclid;billing;integral | principal;integracao;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	9f9dbeb8ad8c3808b3b9f88feb8e8b509c0d4304a1e6f82c3b62aa9893c9f796	false
+backend/src/modules/billing/sync-mercado-pago-subscription.ts	Euclid;billing;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	96cba60864f93ef9e2c399f04cc2066e2f9564bbd5d15ba51dc9fe411a7c8cc4	true
 backend/src/modules/profile-media/public-storage.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	836a091b0e92f583c767e4d01a5a2f69e4f1a4c6be622e5126f649557cfc9769	true
 backend/src/modules/video-assets/lifecycle.ts	Lagrange;perfil328;integral	f883aa3f8d4d88a6285640e7ff1c8f4ae9fb7303f5bd256506be5ae9b7e4b9dd	true
 backend/src/operations/subscriptions/grant-professional-subscription-service.ts	Euclid;billing;integral	5402681512145ddcd9e64c2148f7a7012e6ac42e14446018d5ddf4e0da77c41a	true
@@ -397,46 +512,64 @@ backend/src/operations/subscriptions/grant-professional-subscription.ts	Euclid;b
 backend/src/packages/validator/index.ts	Euclid;denuncias;integral	4509ae0a2d45c7900664b536bf7dc0fd06124524283d3f58670b5318af6755b6	true
 backend/src/packages/validator/schema/_internal/validations/functions/string.ts	Euclid;denuncias;integral	086de1c87fd0d4dcc4b439b57a1098c557082d97080c25ba30e0135f791b3b69	true
 backend/src/query/login.ts	Tesla;notificacoes;integral	f20937a297565accd0d59e3b8ea5ac026cc1feb663df1ae989dec0035f395221	true
+backend/src/utils/account-status.ts	principal;transversaisapos329;integral	a89e256744cb1fc282ca2d9838ff3f4fa53ae78eb93da6eec4ca54a011952597	true
+backend/src/utils/analytics-traffic-path.ts	principal;analytics330;integral	e78578e767a610f2a2f11928051fcb4660331e352eb89dcda86344a4a5d635fc	true
 backend/src/utils/anonymous-author.ts	Tesla;comunidades;integral	891017148844e7b53439ceebd28380a64b0df8eb63ae987d18f84ea98f0191cb	false
-backend/src/utils/community-membership.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Tesla;checkout;integral_inicial	f5273c10842a4c7e5402f50cc221f348ec548267624108dd7f07c251926cd0b8	true
+backend/src/utils/community-membership.ts	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	f5273c10842a4c7e5402f50cc221f348ec548267624108dd7f07c251926cd0b8	true
 backend/src/utils/content-moderation-events.ts	Tesla;concorrencia;integral	3dbe5ca8c24bfd8d7848ed2eddf80e4b2407c80962f9f2880f2dbb185c455170	true
 backend/src/utils/content-moderation.ts	Tesla;concorrencia;integral	71327ab03f787f8197d6cbd64ebef57ca32e605c292d0aff513a6ba82009d207	true
+backend/src/utils/csv.test.ts	Tesla;financeiro330;integral_inicial	57a9a6b6c1ef308fa59045ee8559627df895036ae338a54f0505ab136817194f	true
+backend/src/utils/csv.ts	Tesla;financeiro330;integral_inicial	46a60249960ec3308d54ac017c47b4bb9650642680d0c92f826adafad8c6132d	true
+backend/src/utils/jwt-cookie-ttl.ts	principal;transversaisapos329;integral	623c82e1bd3ad3c3d3d3e16eb00e375c35ed66778780ac2340c2818c667bfaa5	true
+backend/src/utils/local-database-safety.ts	principal;transversaisapos329;integral	cc3cdbd71cf7c2f85f244031aa6f726b5ffdcc22f10e416b89cbad5b015f3a66	true
+backend/src/utils/logout-cookie.test.ts	principal;transversaisapos329;integral	97b9ffac6f5e2eeafdd4d1837efd2aa1201507002a4036964acb20bc082d77a2	true
+backend/src/utils/logout-cookie.ts	principal;transversaisapos329;integral	4c1547d6fa856e6b4e9f51d4b3eac5639a6e085e1b84c72083eb797608c7f642	true
+backend/src/utils/logs.ts	principal;transversaisapos329;integral	c280e94c9f87e4bb26e00e446bf1033d2257ba7d483f28ded5470fadf4acb6db	true
 backend/src/utils/post-notification-mute.ts	Tesla;notificacoes;integral	c5b8585fd7287396beb4dcbd5ffaeb42f60ca487dffa645841007182c894b307	true
 backend/src/utils/prisma-error.ts	Tesla;concorrencia;integral	ed546082e92cf01e1c8cea1e3020834dbaef4e323912e4da58f13e57b0210dc7	true
-backend/src/utils/prisma-transaction.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Tesla;checkout;integral_inicial	ccf3105164c2fab988381f96be6f91558df9403debe23dfde79777e63b26474b	true
-backend/src/utils/public-origin.ts	Tesla;comunidades;integral | Lagrange;perfil;integral | Lagrange;perfil328;integral	7752397290c5a6b022be9e4cf1794c02bdfd2f87a0d2446264c1b9e2e3c6fa4b	true
-backend/src/utils/public-response.test.ts	principal;integracao;integral	0723e1f3707fff6fd1b9ff62d2a214d53cadd781cd7cf4c504547242b5af6577	true
-backend/src/utils/public-response.ts	Tesla;comunidades;integral | principal;integracao;integral	4fdc5972003441fe3ed5cb0e2b09b55f0b4b30ac8216336f552c142e331a9e93	true
+backend/src/utils/prisma-transaction.ts	Tesla;comunidades;integral | Tesla;concorrencia;integral | Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial | principal;analytics330;integral	ccf3105164c2fab988381f96be6f91558df9403debe23dfde79777e63b26474b	true
+backend/src/utils/public-origin.ts	Tesla;comunidades;integral | Lagrange;perfil;integral | Lagrange;perfil328;integral | principal;analytics330;integral	7752397290c5a6b022be9e4cf1794c02bdfd2f87a0d2446264c1b9e2e3c6fa4b	true
+backend/src/utils/public-response.test.ts	principal;integracao;integral | Tesla;financeiro330;integral_inicial	0723e1f3707fff6fd1b9ff62d2a214d53cadd781cd7cf4c504547242b5af6577	true
+backend/src/utils/public-response.ts	Tesla;comunidades;integral | principal;integracao;integral | Tesla;financeiro330;integral_inicial	4fdc5972003441fe3ed5cb0e2b09b55f0b4b30ac8216336f552c142e331a9e93	true
 backend/src/utils/push-subscription.test.ts	Tesla;notificacoes;integral	ffe9a63c61025b0987839cdd0eaa1de77636e8458ad2e874c241f6eb31fa328d	true
 backend/src/utils/push-subscription.ts	Tesla;notificacoes;integral	2e11a0dde2a202d6576fc468078a95d8cd9ba969866288287fcb0cea8203f7fc	true
 backend/src/utils/runtime-config.ts	Tesla;comunidades;integral	d06f4494310994dc35bc14b3bb779f3a81fa40dd61ed1a7c666e44d01b003d7d	true
 backend/src/utils/safe-external-url.ts	Tesla;notificacoes;integral	a04dc98a1db2232090843f8cfdc7d3e4e69b0a3471b1118fae433c7752e81fca	true
-backend/src/utils/subscription-entitlement.ts	Tesla;checkout;integral_inicial	8f0843103b75f1a331c07d1d155a5e0e9953569dc41f22569470dc157f00805f	true
+backend/src/utils/sanitize-sensitive.ts	Tesla;financeiro330;integral_inicial	a375edbd598af7a2e1e491fdffd92d3a358d8eee0527bfd8355fb4f83a5ad0d9	true
+backend/src/utils/subscription-entitlement.ts	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	8f0843103b75f1a331c07d1d155a5e0e9953569dc41f22569470dc157f00805f	true
 backend/src/utils/validator.ts	Euclid;denuncias;integral | Tesla;notificacoes;integral	52168fab9ef7baec62ff3453d3cd1f4a2e013ac4bf0b096e931fae8f526b35b3	true
 backend/tsconfig.json	Tesla;concorrencia;integral | Lagrange;estado_posts;integral | Lagrange;perfil328;integral	8f863ae8f89b0e7faed1728c83434feb20f9db1bd5b641272907badaf21bc698	true
-frontend/AGENTS.md	Tesla;notificacoes;integral | Euclid;modais329;integral_inicial	e3447d84251880fb34cfae09131cb4c57471529bbfe60976a3245793cf621627	true
+frontend/AGENTS.md	Tesla;notificacoes;integral | Euclid;modais329;integral_inicial | Euclid;hidratacao;integral_inicial	e3447d84251880fb34cfae09131cb4c57471529bbfe60976a3245793cf621627	true
 frontend/biome.json	Tesla;notificacoes;integral | Lagrange;perfil328;integral	8642db530904d3c3dec8f706276602e32a0c23c3e88a31bf158fe85d2171b9f2	true
-frontend/package.json	Tesla;notificacoes;integral | Euclid;modais329;integral_inicial	bf4e19660ecc6e039ad7bb252e6aeab77bf85ad286f988419eeef975a98698c1	true
+frontend/package.json	Tesla;notificacoes;integral | Euclid;modais329;integral_inicial	3b774e567ed23545d230473d537af9b9fdb8206b3e74506d0c8f401feb9eb501	true
 frontend/public/sw.js	Tesla;notificacoes;integral	9211267d985e453b85da84aecbe6653f6addaf5f719c79c99b37ad57603c5ccc	true
-frontend/src/api/cache/keys.ts	Lagrange;estado_posts;integral | Tesla;notificacoes;integral	92be75a81b6febac0788f8401dc048877c2db2e34d89a749153db707f0695753	true
+frontend/src/api/auth-cookie.ts	Euclid;hidratacao;integral_inicial	28bf4e81ba910f01d9b2ff932c8c907cc7ce6358de5e59ecae380be270b66990	true
+frontend/src/api/cache/keys.ts	Lagrange;estado_posts;integral | Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	92be75a81b6febac0788f8401dc048877c2db2e34d89a749153db707f0695753	true
+frontend/src/api/callers/account/index.tsx	Euclid;hidratacao;integral_inicial	8fc163cb8b3e2b75850d260020297f82a3fcecff98a9179fe994c78108f2cc9d	true
+frontend/src/api/callers/auth/index.tsx	Euclid;hidratacao;integral_inicial	13d5de8fccc48572aaac6ace227132b9bb367d41f159ab36dd1e1f574457989c	true
 frontend/src/api/callers/community/index.tsx	Lagrange;estado_posts;integral	bf35747767a5961851717c153b4cdd04bea47fe1086bf529b632b1095d53284b	true
-frontend/src/api/callers/notification/index.tsx	Tesla;notificacoes;integral	a3b617487b9ed90824ad740f190901d9851db24e0396e39f0c6933250a7920eb	true
+frontend/src/api/callers/directory/index.tsx	Euclid;hidratacao;integral_inicial	9069058f558820024e75ed5fad95e8539c2ee301fe583389742c98f80238df21	true
+frontend/src/api/callers/notification/index.tsx	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	a3b617487b9ed90824ad740f190901d9851db24e0396e39f0c6933250a7920eb	true
 frontend/src/api/callers/notification_subscription/index.tsx	Tesla;notificacoes;integral	e52c5273291210a7cf679100b9e6716fd0ca477d98cbad21600b1736fe6f188f	true
+frontend/src/api/callers/patient/index.tsx	Euclid;hidratacao;integral_inicial	7f122834228942893ab51da8579672bc8d84156c6a7d7bf8b5250f506bf82dd4	true
 frontend/src/api/callers/posts/queries.ts	Lagrange;estado_posts;integral	4e16206b844718d3eef3d2601d0efa4c8993572da56ba93b8eda2a67ce274064	true
 frontend/src/api/callers/posts/reply-mutations.ts	Lagrange;estado_posts;integral	c14b6fd538db67ab14e7837ca86aa8856da57d4bd1b4404de6a20b3896bf60f0	true
-frontend/src/api/callers/psychologist-billing/index.tsx	Tesla;checkout;integral_inicial	0f9678689292453fc7b3fd59c7276ed4513b3626022619ca0db20edb90730567	true
+frontend/src/api/callers/psychologist-billing/index.tsx	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	0f9678689292453fc7b3fd59c7276ed4513b3626022619ca0db20edb90730567	true
 frontend/src/api/callers/psychologist-free-profile/index.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral	c1d87933d7c6726ccd6ebe030103f8b7992145e887e17f2b6a870b85aee09ecc	true
 frontend/src/api/errors.ts	Tesla;notificacoes;integral	34e9035ac0a6b00d23abe9a98851c8c8d242e26723632d0260174520e3f50183	true
-frontend/src/api/generator/types/billing.ts	Tesla;checkout;integral_inicial	ee7f3e3e47a683035452e4e3eae7fee89b2c13360a5eafde38e07a780efec0fe	true
+frontend/src/api/generator/index.ts	Euclid;hidratacao;integral_inicial	c3ad703ffe117144f9267e7f67de73ca66cc293d3dcde42a533d36ba00f5a252	true
+frontend/src/api/generator/types/billing.ts	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	ee7f3e3e47a683035452e4e3eae7fee89b2c13360a5eafde38e07a780efec0fe	true
 frontend/src/api/generator/types/community.ts	Lagrange;estado_posts;integral	1c0aeb4b47d31d133c9ab4fb2e216e38dcc052f7c12fc47feca15184648c75e7	true
 frontend/src/api/generator/types/free-profile.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	f019c0326a538bf45520091ba464550cf6fc0cf0eedb83d462162e260b758460	true
 frontend/src/api/generator/types/notification.ts	Tesla;notificacoes;integral	495b9881513190bdc22eb96fdbdb51d437a91d22784120118cb1720632af4da5	true
 frontend/src/api/generator/types/posts.ts	Lagrange;estado_posts;integral	908f5e8ed9054319d4cd4eea3a1a9e0ffe9f2ffa400d153284b9c979d52ee95e	true
-frontend/src/api/handle.ts	Tesla;notificacoes;integral	a008172d977e8eb3484e78e397ebe1d5cddc7a22d8ebaf79cd3c72d474b4299c	true
-frontend/src/api/req/auth/index.ts	Tesla;notificacoes;integral | Tesla;notificacoes328;integral	65aa5afbead11de217f05e095a976e4a660dbffb3e08ff45ab6abbd961f6e65e	true
+frontend/src/api/handle.ts	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	a008172d977e8eb3484e78e397ebe1d5cddc7a22d8ebaf79cd3c72d474b4299c	true
+frontend/src/api/index.ts	Euclid;hidratacao;integral_inicial	3beae9a40f1c42f51fb93c11c6fe38dc48495f6f1ff36765f641574662cf785f	true
+frontend/src/api/req/auth/index.ts	Tesla;notificacoes;integral | Tesla;notificacoes328;integral | Euclid;hidratacao;integral_inicial	65aa5afbead11de217f05e095a976e4a660dbffb3e08ff45ab6abbd961f6e65e	true
+frontend/src/api/req/directory/index.ts	Euclid;hidratacao;integral_inicial	847b7270c36efc9d5181e404f078eebd981105d09062c6973921debf5589cf44	true
 frontend/src/api/req/notification-subscription/index.ts	Tesla;notificacoes;integral	beb085635605ae63c8fab82eb533f2bcf9d5add8be0b2285ac4ed54f3e397955	true
-frontend/src/api/req/notification/index.ts	Tesla;notificacoes;integral	84931ff3e99b2a750032e18a891973edc9bd0324ad27f7a95f7ad27b05429dec	true
-frontend/src/api/req/psychologist-billing/index.ts	Tesla;checkout;integral_inicial	879f9a0a33ba3e2967ce207e87706b6da770eae31ce81c8af358e443175b531c	true
+frontend/src/api/req/notification/index.ts	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	84931ff3e99b2a750032e18a891973edc9bd0324ad27f7a95f7ad27b05429dec	true
+frontend/src/api/req/psychologist-billing/index.ts	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	879f9a0a33ba3e2967ce207e87706b6da770eae31ce81c8af358e443175b531c	true
 frontend/src/api/req/psychologist-free-profile/index.ts	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Tesla;notificacoes328;integral	ad8d67d03ab25618aeda2b87d0226153b0c2f51d4d3d54d3a43f84df89341bc2	true
 frontend/src/app/app/community/[slug]/post/[id]/components/post-content.tsx	Euclid;modais329;integral_inicial	32e3db616082466596622715accfe6e380fd5b01a4f93a95144f8af24df86eb9	true
 frontend/src/app/app/community/[slug]/post/[id]/components/post-report-modal.tsx	principal;integracao;integral | Euclid;modais329;integral_inicial	6b4d80c1489fed2e06a74c6bb67e13a3d7d4dcaca8fe00e80dcae2f840941a81	true
@@ -453,7 +586,20 @@ frontend/src/app/app/notifications/logic.tsx	Tesla;notificacoes;integral	319f608
 frontend/src/app/app/notifications/page.tsx	Tesla;notificacoes;integral	50d84b515d3c93ed09db7aa4f4c9775e9ee72f1d30ee72323e1352de673ba4ac	true
 frontend/src/app/app/posts/saved/logic.tsx	Lagrange;estado_posts;integral	e2554cd867e8a3ec3f1d1b73b7c320ccf475b098f7de0fc48ed8ad42e444c1d2	true
 frontend/src/app/app/posts/saved/modules/support.ts	Lagrange;estado_posts;integral	fad5ea6879c2d78401fc3c0ac8aae70d5c029ae6ebeb8cf744c3582a19ed493e	true
-frontend/src/app/app/professional/billing/checkout/logic.tsx	Tesla;checkout;integral_inicial	6179098f4c8e3d05c4664ba181ccf79ba6af911c0699a786e788adde82a85510	true
+frontend/src/app/app/professional/billing/address/logic.tsx	Tesla;financeiro330;integral_inicial	d2ebb863020f38908f8e546ccb4ba0061a56049956fb88d827e6e9894b41dfef	true
+frontend/src/app/app/professional/billing/address/page.tsx	Tesla;financeiro330;integral_inicial	108259211735ccbe95257eeeb9d9c0407a000243f24858a595d1e15b13c47a7f	true
+frontend/src/app/app/professional/billing/address/use-form.tsx	Tesla;financeiro330;integral_inicial	17c09212f7fb03c96751e13b2676b813ed7f726f2d455af8fbaeaeaace11a600	true
+frontend/src/app/app/professional/billing/card/logic.tsx	Tesla;financeiro330;integral_inicial	6e11a9c259e2e10bac48cb1bc2479604146de00e39d72d33ae883df9ef0ab612	true
+frontend/src/app/app/professional/billing/card/page.tsx	Tesla;financeiro330;integral_inicial	f093682fe5ce76cbcddddf5c6289fb333c7e9d6cf888ff642a64c4b47f95e9e4	true
+frontend/src/app/app/professional/billing/checkout/logic.tsx	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	6179098f4c8e3d05c4664ba181ccf79ba6af911c0699a786e788adde82a85510	true
+frontend/src/app/app/professional/billing/checkout/page.tsx	Tesla;financeiro330;integral_inicial	b2dbeb4f0f6353f90e2d0b4a940dd73f55b23cd410144117e523de9b79624397	true
+frontend/src/app/app/professional/billing/checkout/summary-card.tsx	Tesla;financeiro330;integral_inicial	cdf41d4ef4d6a24437315d071510aaf5f0c5f65a49562154848ac3f8943a5b9f	true
+frontend/src/app/app/professional/billing/logic.tsx	Tesla;financeiro330;integral_inicial	f7bdada0b4e3ae597b0e6eab414d359389a2675678fe5f5f36c9387fb76dbc07	true
+frontend/src/app/app/professional/billing/page.tsx	Tesla;financeiro330;integral_inicial	91c2f91105c392edb3910394784d34f7c842ddc93e04503cae59433873a8ce35	true
+frontend/src/app/app/professional/billing/plans/logic.tsx	Tesla;financeiro330;integral_inicial	c6d95d2bfcba197e35d9e9b3a7cee7bf375ab9bd187eda4d5248e347a6b6c06a	true
+frontend/src/app/app/professional/billing/plans/page.tsx	Tesla;financeiro330;integral_inicial	e309af6503c2c0be98c0b7047dd455db7c39ffe53804c313b8017fc4e56bb653	true
+frontend/src/app/app/professional/billing/subscription/logic.tsx	Tesla;financeiro330;integral_inicial	3a71faae51dabe649f64d179d65d7c5500926594e63e38c091fe4b0e37e135db	true
+frontend/src/app/app/professional/billing/subscription/page.tsx	Tesla;financeiro330;integral_inicial	a940b98a93fc1e6103e149090228b1ec3cc84d2f32a482f4e2ec15b7f3d2b709	true
 frontend/src/app/app/professional/profile/setup/components/avatar-city-fields.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral	0b442491ec564b4365931de5b8f9c544a65858cc57ae4495a5fcd488f656c61e	true
 frontend/src/app/app/professional/profile/setup/components/avatar-editor.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral | Euclid;modais329;integral_inicial	7d8e4dd1378c751828376dee31babc218df118cd9a8234bf599cd17fd9732b33	true
 frontend/src/app/app/professional/profile/setup/components/catalog-fields.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral	96b1366cfcfdf6b6b39f4e0d11389b270f297175a8f034d07e8dcad80503b238	true
@@ -471,11 +617,21 @@ frontend/src/app/app/professional/profile/setup/use-form.test.mjs	Lagrange;perfi
 frontend/src/app/app/professional/profile/setup/use-form.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral	6a94bc82029947339da4cbc3a8555a6ff46e2c4f0d4f0b35825f64fc05812e47	true
 frontend/src/app/app/professional/profile/setup/views/professional-profile-setup.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral	706c8b34505b994b541bbc9033f95b56ab624a5d232aef3456d32117d15037f7	true
 frontend/src/app/app/profissional/perfil/configurar/page.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral	9d141ff3e9c49db60ad805a0637c1830a27dc9358759295f930d63be7af2dacd	true
+frontend/src/app/app/psychologists/hooks/setup-context.tsx	Euclid;hidratacao;integral_inicial	9b92e17614309e58965b007f1ae306fb9fd4e8d30194d0c367125b4704e26a94	true
+frontend/src/app/app/psychologists/hooks/use-psychologists-derived-view.ts	Euclid;hidratacao;integral_inicial	59d8c87b0cc8882b6321ee574d57f375294e616dcb55873b64a88ae39ec2bb2a	true
+frontend/src/app/app/psychologists/hooks/use-psychologists-directory.tsx	Euclid;hidratacao;integral_inicial	5a8037b86ae5fcffa244151864a2b003aac0c427317cdb1c10ea4e34a8112944	true
+frontend/src/app/app/psychologists/hooks/use-psychologists-setup.ts	Euclid;hidratacao;integral_inicial	640632c3f80b69c613308a390da275856e1d5cb6a2fa86f0578754139423a899	true
+frontend/src/app/app/psychologists/logic.tsx	Euclid;hidratacao;integral_inicial	7f236a57355d78964f64def3f4099f9f8cd911e0790c5c69c1d8e43fdfc98a51	true
+frontend/src/app/app/psychologists/modules/viewport.ts	Euclid;hidratacao;integral_inicial	c6d9a1d029e042ac1b00ce4aa50bc20531f9aec03962cd609168b628bbfa2f8f	true
+frontend/src/app/app/psychologists/page.tsx	Euclid;hidratacao;integral_inicial	c3205997decc2b56555d72912c3498c0f4f929a579c730218ac56952859c3028	true
+frontend/src/app/app/psychologists/view/index.tsx	Euclid;hidratacao;integral_inicial	f419d67364393de1aa626235024ad6c117513cdecd571b292caf2a70776cdbbe	true
 frontend/src/app/app/publicacoes/salvas/page.tsx	Lagrange;estado_posts;integral	86b54e9b5fdd58268ec462b3e641c6e69919d59498fff7d2e2b099d5786d7ad7	true
 frontend/src/app/app/settings/notifications/logic.tsx	Tesla;notificacoes;integral | Tesla;notificacoes328;integral	4c12b863892bc570e4a88918db543b19e3728351b484979d73974393b317f81d	true
 frontend/src/app/app/settings/notifications/notifications.test.mjs	Tesla;notificacoes;integral | Tesla;notificacoes328;integral	0c0f9915b3e73f0cdf056972dd844b4bafcdb17d6dbe8e2b80f17d05f30d30fd	false
 frontend/src/app/app/settings/notifications/page.tsx	Tesla;notificacoes;integral	b47cb4e5093c89471734d1de1261a5584d6a984efcc5fcaddac3e287cad97757	true
 frontend/src/app/app/settings/notifications/preferences-form.tsx	Tesla;notificacoes;integral | Tesla;notificacoes328;integral	010fe9b26b0eb5183d94542cab7d8127a92b04a2cc4a58ccefea9070f0b6b3e4	false
+frontend/src/app/layout.tsx	Euclid;hidratacao;integral_inicial	2434523a705775d282c9061ab95a1f02ea5d00fafb0bae7a5f0ef5bdf73ef422	true
+frontend/src/app/psicologos/page.tsx	Euclid;hidratacao;integral_inicial	5a4e13e13a215743369f8b445e5a389c42e98a986895aeb5b1661678689b920d	true
 frontend/src/components/community/community-delete-confirmation-modal.tsx	Euclid;modais329;integral_inicial	c4ca202e6b2cdf3b3df23351ce2f434ad7c417482f7ce71c5c1de71d37b016c8	true
 frontend/src/components/community/community-follow-button.tsx	Lagrange;estado_posts;integral	bef9c95b3ebeca7af7d1b8722f39247613682da95c234a7e6e798a3f10f9b0b2	true
 frontend/src/components/community/community-follow-toggle.tsx	Lagrange;estado_posts;integral	c185e6a5aed433d75ca40005132b488253ba8070d83dab4e9347800ecdf1b9f0	true
@@ -496,42 +652,63 @@ frontend/src/components/controllers/select/index.tsx	Euclid;modais329;integral_i
 frontend/src/components/controllers/switch/index.tsx	Tesla;notificacoes;integral	7c8df9fce0d31d0436d83158dd2b19058a03a44b02c57accfa8b8f6e74a2c672	true
 frontend/src/components/controllers/textarea/index.tsx	Lagrange;perfil;integral | Lagrange;perfil328;integral	9af434005bcc6fa2a23db296e5ec77ae0aeaba745e0eb25251255f11c035df1e	true
 frontend/src/components/controllers/utils.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	4fd7df53ec10686b270b5108bc434084a2778b7e76cd86cf546b44e195b285ee	true
+frontend/src/components/conversion/progressive-conversion-boundary.tsx	Euclid;hidratacao;integral_inicial	33e4c5278f8e6cf0b8c8ac41cdc90e68630991c4e8d3846894c775ba579a63ac	true
+frontend/src/components/conversion/progressive-conversion-core.tsx	Euclid;hidratacao;integral_inicial	2df926e908aee9519269bafdffbb18c14398a96750dca4a63df8b134d8a44695	true
+frontend/src/components/conversion/progressive-conversion-provider.tsx	Euclid;hidratacao;integral_inicial	a613e91c1a1d6609c63724d448354573d00c7d2586b4e01c06a95a858dbfe885	true
 frontend/src/components/ui/app-error-state.tsx	Tesla;notificacoes;integral	a9e51df17b5a32edf116e7fde1961daceefcd4fba9ebdf8cefe57f33938db6e8	true
 frontend/src/components/ui/empty-state.tsx	Tesla;notificacoes;integral	538dcd0b70e12da1b7adc62bcffb264ebf80068ed0f3174addadbe5666eca7c1	true
 frontend/src/components/ui/inline-alert.tsx	principal;integracao329;integral	2cc2a3a45178e70dbd7a9fb82b855c6747035e5fb70a06fdeb9beeb42b998e70	true
 frontend/src/components/ui/modal.test.mjs	principal;integracao329;integral	e0064cd9c83dd7e5d96aa178558b992c5ce131436933df6474e34c990a0a470f	false
 frontend/src/components/ui/modal.tsx	principal;integracao329;integral	2a5c96a045117e3d32148d12789374800cdb41f4b1c96ad348a599e69da9bb58	false
 frontend/src/components/ui/whatsapp-icon.tsx	Tesla;notificacoes;integral	626027451b8a919e48aca8ecf41c311f46f5370af2fc147210ace48e50cba43f	true
-frontend/src/hooks/cookies/signout/index.ts	Tesla;notificacoes;integral	242bfc555693321c9df1416b3aa810b67d6f7de8a912d72066a445b066374341	true
+frontend/src/hooks/cookies/index.ts	Euclid;hidratacao;integral_inicial	3a3e26b8b859801500db4911b1ace989fed1335e0270f2a9d9ca3c32e6c12832	true
+frontend/src/hooks/cookies/signout/index.ts	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	242bfc555693321c9df1416b3aa810b67d6f7de8a912d72066a445b066374341	true
+frontend/src/hooks/cookies/token/index.ts	Euclid;hidratacao;integral_inicial	2d4fc6ba689cd65e8cffb1bfce8b31197f908f1418ac4e6504bd70bdb083c23e	true
+frontend/src/hooks/cookies/user/index.ts	Euclid;hidratacao;integral_inicial	1524d13944b75d624a44ce7ae1c3019cad959bea45c06fa9fc6d6a275dde5492	true
 frontend/src/hooks/form/form.tsx	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;modais329;integral_inicial	90684eb99c2bbb6b9e319e7a37a1c46e528ed5e1f651c1a8bf1b817ba279a216	true
 frontend/src/hooks/form/index.tsx	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral | Euclid;modais329;integral_inicial | principal;integracao329;integral	c736049a3c562a27853775331ad38c28f3291b575478c0a9c8bc3ae913d920de	true
 frontend/src/hooks/form/initial.ts	Lagrange;perfil;integral | Tesla;notificacoes;integral | Lagrange;perfil328;integral	428ce3ee0ab276a89d2d962d5a854a4a367e46b022301551eaff15865c0613b1	true
 frontend/src/hooks/form/types.ts	Tesla;notificacoes;integral	d7cc83340e7128df1c84a1faaf2e3b4957eec5b0edd448916e44dd4b3d4f964c	true
-frontend/src/hooks/notification/index.tsx	Tesla;notificacoes;integral	6628f86dcb5a5f6a3326370c3523895cd8829ef559134f6c8909da15b3ca497b	true
+frontend/src/hooks/notification/index.tsx	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	6628f86dcb5a5f6a3326370c3523895cd8829ef559134f6c8909da15b3ca497b	true
+frontend/src/hooks/redux/index.ts	Euclid;hidratacao;integral_inicial	a537b20c02daff96538e900cf994c98a05d28e44d28121158d5d064c004377ef	true
 frontend/src/hooks/use-lectum-share-dialog.tsx	principal;integracao329;integral	4365303489202e025b2ff05599f3c958ce5aa51856c9193e3a005db9fdb50c38	true
 frontend/src/hooks/use-lectum-share-download-dialog.tsx	Euclid;modais329;integral_inicial	bde52f758729a14f5f03b6a2ef8d93eb69d19b131e353272777d3341a2cd82ec	true
 frontend/src/hooks/use-modal-scroll-lock.ts	principal;integracao329;integral	4ce73068b9d8afc41d50121aa20eac6376e2bb1e4845c27e4b2d3e3f313dc5e9	false
+frontend/src/hooks/user-set/index.tsx	Euclid;hidratacao;integral_inicial	f3e65c1c3e03c312be97034206e313a8d62a136d7e54bffc7dc2bea860c84f11	true
 frontend/src/lib/utils.ts	Tesla;notificacoes;integral	4acbc7165a8d54738ff62b51414e772c08fe78434e524e6d8770180d3ba2925f	true
-frontend/src/providers/query/index.tsx	Tesla;notificacoes;integral	b1c0641454d9523eda2c384e570f33b80f9420751838a243043f2b89b80c55c5	true
-frontend/src/providers/socket/index.tsx	Tesla;notificacoes;integral	e3dffa901f0ab0d40e785203494e2a2556e3e785ed3fb762f9df9d544ac37455	true
+frontend/src/providers/progress/index.tsx	Euclid;hidratacao;integral_inicial	7ce28a4e8164f82550f12e42342a1436fd8a5afb013670353529d70c4150368a	true
+frontend/src/providers/query/index.tsx	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	b1c0641454d9523eda2c384e570f33b80f9420751838a243043f2b89b80c55c5	true
+frontend/src/providers/redux/index.tsx	Euclid;hidratacao;integral_inicial	55ba2aa4e6a9b81ce20dd21dbdac054f38d75d82d260ed05ba8ca990968b44fe	true
+frontend/src/providers/socket/index.tsx	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	e3dffa901f0ab0d40e785203494e2a2556e3e785ed3fb762f9df9d544ac37455	true
 frontend/src/proxy.ts	Tesla;notificacoes;integral	a1d3886c0444f5ee76fd3f8aba77e9e5782fd8c74084ef22d0576f517f08c9cb	true
 frontend/src/registry/new-york-v4/ui/button.tsx	Tesla;notificacoes;integral	80867699fe403f0b3ccd8b1d429f37dc9cda289478838573fc188fea82797b60	true
-frontend/src/store/middleware/auth-persistence.ts	Tesla;notificacoes;integral	f7a626a43ef4047b527a55d4bcdf581c377ddaaf909597aee003fcb06ae8c872	true
+frontend/src/store/index.ts	Euclid;hidratacao;integral_inicial	92d291445b7a2e9fdb62b54294c0af22c5cbf7b39aee7ff8f24fda0c76607bac	true
+frontend/src/store/middleware/auth-persistence.ts	Tesla;notificacoes;integral | Euclid;hidratacao;integral_inicial	f7a626a43ef4047b527a55d4bcdf581c377ddaaf909597aee003fcb06ae8c872	true
+frontend/src/store/modules/rootReducers.ts	Euclid;hidratacao;integral_inicial	d6178140dd3f0eb4dbe82a4d43d149e89eb7da8c18b70499b3e4663f0ced0467	true
+frontend/src/store/modules/user/actions.ts	Euclid;hidratacao;integral_inicial	99bc00c7328c60ca31bb9624171e8b47f2b879bdf86446e09d4c691a29dba7a2	true
+frontend/src/store/modules/user/reducers.ts	Euclid;hidratacao;integral_inicial	2aca620624b8ed684a2724cba7a1c2921634eee70b039e6bb15a77a45b5657c9	true
+frontend/src/store/modules/user/types.ts	Euclid;hidratacao;integral_inicial	ddf246e3b37233956ad291aca127a03a70bba365fb013e3f49787c756be2fd95	true
+frontend/src/templates/private/index.tsx	Euclid;hidratacao;integral_inicial	45ba23c36810c47aa6adb09281f99555f796a64c4ab08fc2d68754e6823984ea	true
+frontend/src/templates/private/navigation.tsx	Euclid;hidratacao;integral_inicial	9dd403c21a4c3d789b38e0ea43a5984537d3bb96b551715e87af9bfdb9854706	true
+frontend/src/templates/private/sidebar-preference.ts	Euclid;hidratacao;integral_inicial	f60cfbca104b765d7081f05aa1abba748f5063bd3779c442c08fbd87e150479b	true
+frontend/src/utils/browser-storage.ts	Euclid;hidratacao;integral_inicial	a524d33b05e30029e3e1768f82cd95a56b5e2da62a5db905b934edb44841bdab	true
 frontend/src/utils/client-log.ts	Tesla;notificacoes;integral	78a2b46c980a77ddb3f9ddda3f6b6c80ea752214f388515f93147e6d15725064	true
 frontend/src/utils/country-calling-codes.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	1f4660fbff001c9b5937d35be428f6f3786ade7f5c9630f1e444bd46873232a2	true
 frontend/src/utils/crp.test.mjs	Lagrange;perfil328;integral	410c5dbd9f177983ed14ed2c1f0c5697282b2b4abd9e24c9e061d6d48a447e31	true
 frontend/src/utils/media-upload-error.ts	principal;integral	bbeb1df16c5783fb144619830694852c63566625081891870eac58c135db7920	true
 frontend/src/utils/media-upload-limits.ts	principal;integral	75f73211b3944fd673f0a190cdb7ddc2bb0978c94b9d63aafe5754251674d63e	true
-frontend/src/utils/mercado-pago.ts	Tesla;checkout;integral_inicial	0306ab07eeb5eec53ea3cd3666d6e4739ed2b33c4cc130b779e1615b829b9d6c	true
+frontend/src/utils/mercado-pago.ts	Tesla;checkout;integral_inicial | Tesla;financeiro330;integral_inicial	0306ab07eeb5eec53ea3cd3666d6e4739ed2b33c4cc130b779e1615b829b9d6c	true
 frontend/src/utils/multipart-upload.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	e029b6d44550e6a661a2ee9f2aaad1f1f21ad52c8ef48d083f9b763cea8defac	true
 frontend/src/utils/professional-name.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	306e2d6ba1e297fe1325dbad7f8c308ce6d622706f9e4fd2d7bfbf56aa1d0af9	true
 frontend/src/utils/profile-video-upload.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	01d0176d47ce23ad983a0dc623ecf49beb910f93e5329be2a5e310820e60ebb4	true
+frontend/src/utils/psychologists-feed-return-memory.ts	Euclid;hidratacao;integral_inicial	680e4cd059eeb675dd1ba2db9c60f78c75a795037b08735d49944763f150d0df	true
 frontend/src/utils/pull-to-refresh.ts	Euclid;modais329;integral_inicial	c735d71fc9ce7d68f8af477d74e8434bd5bc2b48359c3a1d1ca8b523d9f6b188	true
 frontend/src/utils/push-subscription.ts	Tesla;notificacoes;integral	5104a2a54a583f288b56d7531ba39552784f85a84101909cd830f894824f6613	true
 frontend/src/utils/safe-redirect.ts	Tesla;notificacoes;integral	fea2b879fff0b3affb79a587e8c4ffdc8048d0f159827fd0c556950537a7df7e	true
 frontend/src/utils/upload-lifecycle.ts	Lagrange;perfil;integral | Lagrange;perfil328;integral	1a83fffd87038603cc288dc2f73a47696656e360ea56149c5fc3b58a12e114f3	true
 scripts/check-env-examples.mjs	Lagrange;estado_posts;integral | Euclid;denuncias;integral	2f224ebf1268b3439be5df0728d9f9a3f4a07aa870bf4b3d7d5beb34f50c4dcf	true
 scripts/check-source-safety.mjs	Lagrange;estado_posts;integral | Euclid;denuncias;integral | Tesla;notificacoes;integral | Tesla;notificacoes328;integral	25b771003c26d68eeb1bacf3087e7fdb5ff93d9c99a6906cbbed58b4476cd7de	true
+scripts/check-source-size.mjs	principal;analytics330;integral	7d9be6fcc24b0b45d686e366081d5a54301eda8ee7d540e8d5749e041603b249	true
 video/.dockerignore	Lagrange;video;integral	8f8fc6d3182fe337e0e7be0ebf109e3d3f4b10c1701c5c01f816a3bf2f3fc6f5	true
 video/.gitignore	Lagrange;video;integral	f4c16b55118034eed191514a959d7c7252021c9a0ab91366cbb3c927640c41e9	true
 video/Dockerfile	Lagrange;video;integral | principal;integracao;integral	f847073fd876462938ca359e10985edcda897bd084241124d784e1d70d512840	true

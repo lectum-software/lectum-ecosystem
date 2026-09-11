@@ -1,7 +1,9 @@
+import { paymentStatus } from "@/modules/billing/payment-event-values";
 import type { GatewaySubscriptionPaymentSummary } from "@/modules/billing/payment-gateway";
 import { startOfDate } from "@/utils/date-range";
 import { normalizeStoredCrp } from "@/utils/professional-registry";
 import type {
+  AdminFinanceChargeItem,
   AdminFinancePaymentHealth,
   AdminFinancePaymentHistory,
   AdminFinancePaymentHistoryItem,
@@ -20,7 +22,6 @@ import {
   isPaymentEvent,
   MAX_PAYMENT_HISTORY_ITEMS,
   MILLISECONDS_PER_DAY,
-  normalizeText,
   type PaymentEventRecord,
   payloadContainsAnyReference,
   roundPercent,
@@ -114,6 +115,17 @@ export const subscriptionReferenceValues = (subscription: SubscriptionReferenceR
     Boolean(reference && reference.length > 3),
   );
 
+export const findSubscriptionForPayment = (
+  event: PaymentEventRecord,
+  subscriptions: PaymentReferenceSubscriptionRecord[],
+) => {
+  const matches = subscriptions.filter((subscription) =>
+    payloadContainsAnyReference(event.payload, subscriptionReferenceValues(subscription)),
+  );
+
+  return matches.length === 1 ? matches[0] : null;
+};
+
 export const toPayloadString = (value: unknown) => {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
@@ -134,9 +146,6 @@ export const extractPaymentReference = (payload: unknown) =>
     ]),
   );
 
-export const extractPaymentStatusDetail = (payload: unknown) =>
-  toPayloadString(findPayloadValue(payload, ["status_detail", "status", "payment_status"]));
-
 export const plural = (count: number, singular: string, pluralized: string) =>
   count === 1 ? singular : pluralized;
 
@@ -152,26 +161,21 @@ export const resolvePaymentHistoryStatus = (
   label: string;
   status: AdminFinancePaymentHistoryStatus;
 } => {
-  const status = normalizeText(
-    findPayloadValue(event.payload, ["status", "status_detail", "action", "payment_status"]),
-  );
-  const source = `${status} ${normalizeText(event.type)}`;
+  const status = paymentStatus(event.payload);
 
-  if (["approved", "accredited", "paid"].some((term) => source.includes(term))) {
+  if (isConfirmedPaymentStatus(event.payload)) {
     return { label: "Aprovada", status: "successful" };
   }
 
-  if (["rejected", "refused", "charged_back", "chargeback"].some((term) => source.includes(term))) {
+  if (["rejected", "refused", "charged_back", "chargeback"].includes(status)) {
     return { label: "Recusada", status: "failed" };
   }
 
-  if (source.includes("cancelled") || source.includes("canceled")) {
+  if (["cancelled", "canceled"].includes(status)) {
     return { label: "Cancelada", status: "failed" };
   }
 
-  if (
-    ["pending", "in_process", "authorized", "in_mediation"].some((term) => source.includes(term))
-  ) {
+  if (["pending", "in_process", "authorized", "in_mediation"].includes(status)) {
     return { label: "Pendente", status: "pending" };
   }
 
@@ -198,7 +202,7 @@ export const mapPaymentHistoryItem = (
     reference: extractPaymentReference(event.payload),
     source: "payment_event",
     status: status.status,
-    status_detail: extractPaymentStatusDetail(event.payload),
+    status_detail: null,
     status_label: status.label,
     title: options.title || "Cobrança da assinatura",
     unavailable_reason:
@@ -546,5 +550,39 @@ export const mapSubscription = (
     status: subscription.status,
     status_label: formatStatusLabel(subscription.status),
     updated_at: subscription.updatedAt.toISOString(),
+  };
+};
+
+export const mapCharge = (
+  event: PaymentEventRecord,
+  subscriptions: PaymentReferenceSubscriptionRecord[],
+): AdminFinanceChargeItem | null => {
+  if (!isPaymentEvent(event.type, event.payload)) return null;
+  if (!isConfirmedPaymentStatus(event.payload)) return null;
+
+  const amountCents = extractPaymentAmountCents(event.payload);
+  const subscription = findSubscriptionForPayment(event, subscriptions);
+
+  return {
+    amount_available: amountCents !== null,
+    amount_cents: amountCents,
+    detail_url: subscription ? `/psicologos/${subscription.psychologist.user.id}` : null,
+    event_id: event.id,
+    event_type: event.type,
+    external_id: event.external_id,
+    gateway: "mercadopago",
+    internal_id: event.internal_id,
+    internal_id_available: event.internal_id > 0,
+    occurred_at: event.createdAt.toISOString(),
+    reference:
+      subscription?.gateway_subscription_id ??
+      subscription?.id ??
+      extractPaymentReference(event.payload),
+    source: "payment_event",
+    status: "confirmed",
+    status_label: "Confirmada",
+    subscription: subscription ? mapSubscription(subscription, [event]) : null,
+    unavailable_reason:
+      amountCents === null ? "payment_event_confirmado_sem_valor_monetario_extraivel" : null,
   };
 };
