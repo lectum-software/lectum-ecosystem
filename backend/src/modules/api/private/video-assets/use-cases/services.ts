@@ -65,3 +65,7 @@ export const showStatus = (data: IVideoAssetActionDTO) =>
 
 export const destroy = (data: IVideoAssetActionDTO) =>
   cancelOwnedVideoAsset(data.p.id, data.auth.id!);
+
+// Abandonar uma tentativa não equivale a remover mídia já publicada/associada.
+export const cancelUpload = (data: IVideoAssetActionDTO) =>
+  cancelOwnedVideoAsset(data.p.id, data.auth.id!, { onlyUnattached: true });

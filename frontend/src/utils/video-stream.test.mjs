@@ -138,6 +138,33 @@ describe("Cloudflare Stream frontend contract", () => {
     assert.equal(shouldCleanupVideoAssetAfterFailure(true, new Error("processing timeout")), false);
   });
 
+  it("cleanup usa endpoint de tentativa sem fallback para remoção explícita", () => {
+    const source = readSource("../api/req/video-assets/index.ts");
+    const cleanupRequest = source
+      .split("export const cancelVideoAssetUpload =")[1]
+      ?.split("export const cleanupDetachedVideoAsset")[0];
+    assert.ok(cleanupRequest);
+    assert.match(cleanupRequest, /route: `\$\{route\}\/uploads\/:id`/);
+    assert.doesNotMatch(cleanupRequest, /deleteVideoAsset|catch\s*\(/);
+    const cleanup = source
+      .split("export const cleanupDetachedVideoAsset =")[1]
+      ?.split("const requestVideoAssetPlayback")[0];
+    assert.match(cleanup, /await cancelVideoAssetUpload\(assetId\)/);
+    assert.doesNotMatch(cleanup, /deleteVideoAsset\(/);
+  });
+
+  it("abort do upload não chama a remoção deliberada do vídeo de perfil", () => {
+    const source = readSource("./video-asset-upload.ts");
+    assert.match(source, /await cancelVideoAssetUpload\(provisioned\.asset_id\)/);
+    assert.doesNotMatch(source, /deleteVideoAsset/);
+    assert.match(source, /\.abort\(false\)/);
+    assert.doesNotMatch(source, /\.abort\(true\)|\.terminate\(/);
+    const profile = readSource("../api/req/psychologist-free-profile/index.ts");
+    const removal = profile.split("export const deletePsychologistFreeProfileVideo =")[1];
+    assert.match(removal, /route: `\$\{route\}\/video`, method: "DELETE"/);
+    assert.match(removal, /await deleteVideoAsset\(assetId\)/);
+  });
+
   it("não conecta o player com token ausente, inválido ou perto da expiração", () => {
     const now = Date.parse("2030-01-02T03:04:05.000Z");
 

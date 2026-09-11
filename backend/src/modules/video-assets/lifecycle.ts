@@ -42,7 +42,8 @@ export const retireOwnedVideoAssetReference = async ({
   const asset = await repository.findOwned(assetId, ownerId);
   if (!asset || asset.purpose !== purpose) return false;
 
-  await repository.cancel(asset);
-  await deleteRetiredProviderVideos([asset.provider_uid]);
+  const result = await repository.cancel(asset, { onlyUnattached: true });
+  if (result.kind !== "canceled") return false;
+  await deleteRetiredProviderVideos([result.asset.provider_uid]);
   return true;
 };

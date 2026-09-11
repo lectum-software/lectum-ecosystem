@@ -35,7 +35,7 @@ registra ações executadas e lacunas. Testes isolados não substituem o ambient
 | Termos/privacidade | Falta de links identificada; documentação a confirmar | Conteúdo oficialmente aprovado; bloqueia recomendação de produção |
 
 | Hidratação da sessão | .331: SSR real + Browser local com PG/sessão/revogação; homolog390/1280 público e privado390 sem mismatch | Outros guards/replay de intents e dispositivos reais não cobertos |
-| Metadados de SEO | Baseline .330 confirma concorrência defeituosa;18 cenários PG reais da .332 passam; .331 Admin lista9 páginas sem salvar | Publicação .332, UI completa e regra de canônico/global pendentes |
+| Metadados de SEO | Baseline .330 confirma concorrência defeituosa;18 cenários PG reais da .332 passam; .332 Admin lista9 páginas sem salvar e smoke16/16 | UI completa e regra de canônico/global pendentes |
 
 ## Limites operacionais
 
@@ -75,3 +75,9 @@ nenhum conteúdo de terceiros foi alterado.
   aberto e sobreposição de modais legados continuam pendentes; SSR não certifica esses casos.
 - Checkout: revisão somente-leitura confirmou riscos de tentativa incerta, recuperação sem ID
   remoto e uso de evento bruto no histórico. Sem cobrança/HTTP ao gateway e sem patch financeiro.
+
+### Novas lacunas estáticas rastreadas
+
+AF1–AF5 (conta/avaliações/recuperação) e C01–C07 (moderação/comunidades) estão no registro de
+evidências, ainda sem correção certificada. Associação/cancelamento de mídia M2/M3 está em
+validação .333 com banco isolado; upload físico e dispositivos reais continuam pendentes.

@@ -46,11 +46,23 @@ export const deleteVideoAsset = (assetId: string) =>
     hideError: true,
   });
 
+// Sem fallback para DELETE /:id: backends antigos devem reter a mídia, não
+// interpretar o abort de uma tentativa como remoção deliberada do vídeo atual.
+export const cancelVideoAssetUpload = (assetId: string) =>
+  handleReq<{ canceled: boolean }>({
+    ...callEndpoint({
+      method: "DELETE",
+      params: { id: assetId },
+      route: `${route}/uploads/:id`,
+    }),
+    hideError: true,
+  });
+
 export const cleanupDetachedVideoAsset = async (reference?: string | null) => {
   const assetId = videoAssetIdFromReference(reference);
   if (!assetId) return;
 
-  await deleteVideoAsset(assetId).catch(() => undefined);
+  await cancelVideoAssetUpload(assetId).catch(() => undefined);
 };
 
 const requestVideoAssetPlayback = (path: string) =>

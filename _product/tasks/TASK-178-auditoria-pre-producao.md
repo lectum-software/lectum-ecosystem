@@ -470,4 +470,30 @@ rollback somente de código, sem apagar metadados já criados.
 - [x] Inicializações administrativas concorrentes não geram conflito nem substituem IDs.
 - [x] Manutenção não sobrescreve customização concorrente nem modifica tombstone.
 - [x] Controles de aliases, timestamps, auditoria administrativa e colisão de ID passam no PG real:18/18 na imagem final .332; colisão provoca rollback total.
-- [ ] Checks/build/imagem, commit/push e smoke publicados registrados.
+- [x] Checks/build/imagem, commit372e534d/push e smoke16/16 .332 registrados; health/ready200, Admin SEO conferido sem edição. Primeiro deploy falhou no auth Docker Hub500 antes do build; repetição do usuário publicou sem mudança de código.
+
+## Continuação — associação e cancelamento de vídeo sem disputa destrutiva
+
+M2/M3a reproduzidos duas vezes em PostgreSQL descartável/imagem .330: cancelamento concorre
+com criação/edição de post/resposta ou associação de perfil; os cinco casos deixam referência
+persistida a ativo cancelado. Testes não acionaram Cloudflare/R2 nem dados publicados.
+
+Implementar admissão e cancelamento na mesma decisão transacional serializável, reutilizando
+retry existente e validação tx-aware de domínio. Preservar mídia R2, regras de acesso, contexto,
+dono, remoção deliberada e CAS da migração. Nenhum provider dentro de transação/retry.
+
+Separar abort de tentativa de remoção explícita por endpoint aditivo autenticado
+`DELETE /api/private/video-assets/uploads/:id`, que recusa qualquer ativo associado, inclusive
+perfil. Frontend novo só usa esse endpoint para cleanup; não recorre ao DELETE antigo em 404.
+Assim, frontend novo/backend anterior degrada para retenção temporária, não exclusão destrutiva.
+O DELETE legado continua compatível; clientes antigos mantêm risco semântico até atualização.
+Sem schema, migration, env ou dependência nova. Sem reparo/limpeza em massa. M1/M4–M7 permanecem
+separados até prova/correção própria; não chamar este recorte de conclusão de uploads.
+
+- [x] Associação/cancelamento confirmam somente uma ordem válida nos dois sentidos em PG real.
+- [x] Perfil revalida ativo atual, mantém newest/CAS, não referencia ativo cancelado.
+- [x] Cleanup de tentativa não remove vídeo associado; remoção explícita permanece possível.
+- [x] Frontend não usa DELETE destrutivo como fallback de cleanup durante rollout.
+- [x] Admissão por dono/contexto/finalidade, controles R2 e payloads existentes preservados.
+- [x] Checks673, builds/imagem, PG28+16HTTP+16concorrência+48post-state e Browser local registrados.
+- [ ] Commit/push .333 e smoke da versão publicada registrados.

@@ -881,3 +881,79 @@ Check agregado final .332 aprovado:671 testes (frontend176/backend393/Admin53/vi
 Biome/TypeScript/Prisma e guards sem falhas. Duas fontes de probe permanentes foram revisadas
 pelo principal, incluindo cleanup exclusivo, transações, barreiras e asserts de preservação.
 Nenhum reset/backfill publicado. Publicação ainda pendente até commit/push/smoke reais.
+
+## Publicação .332 — metadados e incidente de infraestrutura
+
+Commit372e534d publicado em homolog. Primeiro build remoto interrompido ao obter token anônimo
+do Docker Hub para node:22-bookworm-slim (HTTP500), antes de compilar a aplicação; usuário
+repetiu deploy sem alterar imagem/env/código. Backend anterior permaneceu .331 com health/ready
+200 durante a espera. Após retry: backend/frontend/Admin .332, smoke16/16; /health e /ready200.
+Artefatos `/tmp/lectum-332-push.log`, `/tmp/lectum-audit-332-smoke-homolog.json`,
+`/tmp/lectum-audit-332-smoke-third.log`. Servidor privado de vídeo não foi recertificado nesta etapa.
+
+Browser publicado: Admin SEO carrega os9 registros e trocar seleção para Busca de psicólogos
+mostra rota/canônico /psicologos; sem erro novo no console. Não houve edição/salvamento de
+configuração publicada. Captura80 em `/tmp/lectum-audit-178-ui/80-homolog-332-seo.jpg`.
+
+### Continuação: leitura de conta, avaliações e moderação (não confundir com teste executado)
+
+55 fontes novas de frontend e 44 de comunidades/moderação foram lidas integralmente pelos
+subagentes, com SHA/proveniência incorporados ao ledger. Dependências parciais permanecem
+parciais. As hipóteses abaixo ainda exigem reprodução/correção, não entram na lista simples
+de itens corrigidos. Nenhum dado publicado foi alterado nessa revisão.
+
+| ID | Evidência de código / risco | Próxima prova e limite |
+| --- | --- | --- |
+| AF1/P2 | `frontend/src/app/auth/admin-view-as/logic.tsx`: estado inicial interpreta fragmento só no cliente | Confirmar SSR/CSR real antes de afirmar mismatch; `useSearchParams` pode causar bailout. Token segue validado pelo backend; não demonstrado bypass. |
+| AF2/P2 | `frontend/src/components/account/account-delete-section.tsx`: query `deleteReauth=ok` mantém readiness mesmo após recusa específica | Reoferecer autenticação quando autorização expira/é consumida; não tratar query como prova. OAuth/exclusão reais não executados. |
+| AF3/P2 | `frontend/src/app/app/reviews/logic.tsx`: “carregar mais” substitui página sem voltar; versão profissional troca limite/query e desmonta cards com rascunho | PG com >10 avaliações e Browser; preservar histórico/rascunhos e erro. Não alegar perda persistida. |
+| AF4/P2 | `frontend/src/app/auth/recovery/logic.tsx`: onSuccess lê campo atual, não e-mail da mutation | Sucesso/reenvio devem usar envio A mesmo se campo mudar para B. Sem prova de entrega externa/vazamento. |
+| AF5/P3 | `frontend/src/app/app/reviews/success/logic.tsx`: entrada direta afirma avaliação concluída sem recibo | Verificar avaliação real/contexto antes de sucesso; POST normal só navega após sucesso. |
+| C01/P2 | `AdminModerationResolutionRepository`: resolução recebe denúncia lida antes da transação | Dois operadores podem concluir decisões divergentes; remoção pode ocorrer mesmo com zero denúncias atualizadas. Claim antes do efeito/auditoria, PG e ambos os schedules. |
+| C02/P2 | Mesmo repositório: markReviewing atualiza por ID com snapshot antigo | Pode reabrir resolved com resolved_at preenchido; definir revisão explícita de decisão e evitar auditoria de no-op. |
+| C03/P2 | `AdminModerationMutationSupportRepository` e `AdminCommunityManageContentMutationRepository`: contagem absoluta/lista de descendentes antecipadas | PG: duas remoções e criação concorrente de filha; coordenar todos os writers e contar alterações efetivas. Não recontar dados publicados. |
+| C04/P2 | `community-list.ts` + `manage-selects.ts`: post.reports inclui denúncia da resposta, somada novamente por replies.reports | Uma denúncia pode contar duas vezes; alias em_analise omitido. Provar com mapper/PG real, sem alterar registros. |
+| C05/P2 | `community-operations.ts`/`AdminCommunityManageCoreRepository`: dados/avatar/regras sem trilha mínima de ator | TASK-52 pede auditoria; usar padrão transacional já existente na ativação, com before/after seguros. Não é ausência de autenticação. |
+| C06/P2 | `AdminModerationCommunitySuggestionsRepository`: movimento recebe bloco elegível antes da transação | Arquivar bloco concorrente pode não impedir movimento; reler estados e auditar só mudança efetiva. Conversão interna sem comunidade é permitida na TASK-149. |
+| C07/P3 | Dashboard legado limita antes de prioridade, compara motivos PT com canônicos e ordena severity textual | Blocos retirados da UI na TASK-51; não afirmar perda de alerta visível. Decidir correção/depreciação compatível do DTO. |
+
+Relatórios causais locais: `/tmp/lectum-task178-frontend-flows-readonly/report.md` e
+`/tmp/lectum-task178-admin-community-moderation/relatorio.md`. Imports inventariados não são
+leituras; leitura não equivale a Browser, HTTP, entrega, pagamento nem dispositivo real.
+
+### Continuação .333 — validação de associação/cancelamento em execução
+
+Mudanças isolam cancelamento de tentativa e remoção deliberada; nenhuma alteração visual de
+produto. O build otimizado local foi aberto em390×844: login vazio mostra dois erros PT-BR,
+foco no e-mail e largura do documento390 sem overflow, console sem novo erro. Capturas82/83
+em `/tmp/lectum-audit-178-ui/`; captura81 ocorreu antes da repintura e não sustenta evidência
+visual. Esse teste de regressão NÃO prova TUS, cancelamento no celular ou reprodução no provider.
+
+Prova HTTP usa router, validator, middleware JWT/dispositivo/cookie e banco PostgreSQL reais
+na imagem integral. Provider desabilitado e rede isolada; registros ready são pré-condições
+locais, não alegação de upload real. Placeholders de OAuth somente permitem construir a
+strategy não utilizada; não substituem método nem certificam Google. Baseline .332 não tem
+a nova rota; o teste de usuário inativo foi corrigido para o contrato efetivo401, não tratado
+como vulnerabilidade. Resultado final será registrado após imagem .333.
+
+Primeira imagem .333 `sha256:7b2a8e360568388e40c789322303174886ca73488fde551771a02c5814dec5a5`:
+- `pnpm check`:673 testes (frontend178, backend393, Admin53, video43, versão6), zero falha.
+- Builds backend/frontend e Docker integral amd64 passaram. Sem migration/schema/env/package novo.
+- PG associação24/24, HTTP/JWT/cookie/dispositivo16/16, regressões de concorrência16/16 e
+  post-state48/48 passaram. O baseline antigo de concorrência continua reproduzindo10 falhas;
+  não somar baseline ao número de invariantes corrigidas. Recursos isolados removidos.
+- Logs HTTP: `/tmp/lectum-333-cleanup-http-final.log`; demais PG:
+  `/tmp/lectum-task178-media-m23-333.s8lfcz77/`. Sem overlay de dist/métodos, mock ou provider.
+- Gate adicional antes do commit: incluir controles de candidato mais recente e CAS de migração
+  no probe. Validação funcional em homolog e novas versões dependem do próximo push/deploy.
+
+Gate adicional fechado: `association-28.log` aprovou28/28, incluindo newest uploading e CAS
+de origem/capa válidos/divergentes. Runtime congelado, sem mudança para fazer o teste passar.
+Frontend final remove TUS DELETE do abort e repete check178/build; cancel remoto fica sob
+a decisão autenticada do backend. Suporte de Termination pela Cloudflare não foi presumido.
+Contagem total de PG/HTTP final108 (28+16+16+48), independente dos673 checks do workspace.
+
+Browser repetido no build frontend final após o ajuste TUS: login vazio390×844, foco e dois
+alertas PT-BR, scrollWidth390, console sem erro/warning. Captura84 é byte a byte idêntica à83
+(SHA `5246b48f6233220f5ebcb8998c7c810d74b77a9c2d392823f0065cb2288e4008`), sem mudança visual.
+Servidor local temporário encerrado e viewport restaurado; abas/sessões do usuário preservadas.

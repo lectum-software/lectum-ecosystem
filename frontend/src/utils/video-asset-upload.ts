@@ -4,8 +4,8 @@ import type {
   VideoAssetStatusResponse,
 } from "@/api/generator/types/video-assets";
 import {
+  cancelVideoAssetUpload,
   createVideoAssetUpload,
-  deleteVideoAsset,
   getVideoAssetStatus,
 } from "@/api/req/video-assets";
 import { shouldCleanupVideoAssetAfterFailure, TUS_CHUNK_SIZE_BYTES } from "@/utils/video-stream";
@@ -98,7 +98,12 @@ const uploadTus = ({
       if (settled) return;
       settled = true;
       signal?.removeEventListener("abort", abort);
-      void upload.abort(true).finally(() => reject(canceledError()));
+      // Interromper transporte não autoriza apagar mídia que o backend já associou.
+      // O cleanup abaixo decide a exclusão pelo endpoint autenticado, não por TUS DELETE.
+      void upload
+        .abort(false)
+        .catch(() => undefined)
+        .then(() => reject(canceledError()));
     }
 
     if (signal?.aborted) {
@@ -175,7 +180,7 @@ export const uploadVideoAsset = async ({
     return await waitUntilReady(provisioned.asset_id, onProgress, signal);
   } catch (error) {
     if (shouldCleanupVideoAssetAfterFailure(uploadCompleted, error)) {
-      await deleteVideoAsset(provisioned.asset_id).catch(() => undefined);
+      await cancelVideoAssetUpload(provisioned.asset_id).catch(() => undefined);
     }
     throw error;
   }

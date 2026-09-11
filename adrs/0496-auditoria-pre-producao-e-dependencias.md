@@ -649,3 +649,44 @@ outros defaults, sem inicialização parcial. Manutenção ordena IDs antes de a
 Imagem final .332 passou18 controles PG reais, inclusive edição pelo repositório administrativo
 com trilha de auditoria; baseline final .330 falhou5/12. Regressão permanente reutiliza o runner
 isolado; triggers/locks reais coordenam falhas/concorrência, nunca substituem métodos do app.
+
+### Associação/cancelamento de mídia — M2/M3 (.333)
+
+A prova na imagem .330 repetida duas vezes demonstrou cinco interleavings inválidos: publicação
+ou edição de post/resposta e associação automática do perfil podem confirmar enquanto o cancel
+aguarda a escrita do ativo; resultado contém referência a ativo cancelado. Não depende de
+exclusão física no provider e não é bypass de acesso entre donos.
+
+Decisão: admissão de referência e cancelamento compartilham transações Serializable com o helper
+existente e revalidam a cada retry. Leitura do ativo/escrita da associação confronta leitura da
+associação/escrita do ativo; nenhum lock global, parser alternativo ou provider dentro do retry.
+Cancel retorna disposição tipada; só um cancel confirmado permite exclusão remota. Revalidar o
+candidato de perfil dentro da transação mantém newest, origem/CAS da migração e idempotência.
+Falha/resultado incerto de commit conserva mídia: retenção órfã exige reconciliação futura,
+não compensação destrutiva baseada em leitura anterior.
+
+O cancelamento de tentativa ganha endpoint autenticado aditivo `DELETE /api/private/video-assets/uploads/:id`.
+Ele recusa ativos associados, inclusive apresentação. DELETE legado preserva remoção deliberada
+do próprio perfil; para posts/respostas, associação ativa continua recusando ambos. Frontend usa
+o endpoint novo para cleanup e nunca faz fallback para o antigo. Uma query/body opcional teria
+sido ignorada pelo backend anterior, produzindo justamente o efeito destrutivo a evitar; 404 do
+endpoint novo degrada para retenção segura durante rollout. Clientes antigos permanecem com a
+semântica antiga até atualizar, e rollback de backend preserva esta proteção do cliente novo.
+
+Não há mudança de schema, migration, env, dependência nem política de acesso público. Não reparar
+histórico ou executar limpeza de mídias publicadas. M1 (R2 pós-commit), M4 (reconciliação ready),
+M5–M7 e cancelamento de uma publicação já enviada continuam em escopos pendentes. Prova DB/HTTP
+não certifica transporte TUS nem exclusão/reprodução física Cloudflare/R2.
+
+A revisão final também remove `upload.abort(true)` do cliente. A [extensão Termination do
+TUS](https://tus.io/protocols/resumable-upload#termination) pode terminar uploads concluídos;
+`abort(true)` na biblioteca instalada envia DELETE direto à URL de upload. Não foi comprovado
+que a Cloudflare aceita esse método nesse endpoint; a ausência dessa prova não deve ser a
+barreira de integridade. Usar `abort(false)` apenas interrompe o transporte/retries, e o cleanup
+passa pelo cancel autenticado/transacional. Tratar a rejeição do abort evita promise órfã.
+Sem fallback destrutivo nem nova dependência; suporte físico do provider não foi inferido.
+
+Prova final:28 invariantes PG,16 HTTP/JWT/cookie/dispositivo,16 regressões de concorrência e48
+de estado de posts/respostas aprovadas na imagem .333. Os4 controles adicionais preservam newest
+e CAS de origem/capa da migração; nenhum objeto R2 é lido/removido. Regressões frontend178,
+backend393, Admin53, video43 e versão6 passam. Build frontend repetido após mudar abort parafalse.

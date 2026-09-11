@@ -18,7 +18,7 @@ import { deletePublicProfileMedia } from "../profile-media/public-storage";
 import { deleteRetiredProviderVideos } from "./lifecycle";
 import { isR2MigrationAsset } from "./r2-migration/policy";
 import { VideoAssetRepository } from "./repository";
-import type { VideoAssetProviderUpdate, VideoAssetRecord } from "./types";
+import type { VideoAssetCancelOptions, VideoAssetProviderUpdate, VideoAssetRecord } from "./types";
 import { getVideoAssetUploadFailure, validateVideoAssetUploadMetadata } from "./upload-policy";
 
 const PROVIDER_SYNC_INTERVAL_MS = 10_000;
@@ -119,6 +119,7 @@ export const provisionVideoAssetUpload = async ({
     traceId,
   });
 
+  let provisionedUid: string | null = null;
   try {
     const provisioned = await provider.provisionUpload({
       assetId,
@@ -128,16 +129,9 @@ export const provisionVideoAssetUpload = async ({
       sizeBytes: size,
     });
 
-    const activated = await repository
-      .activateUploadReservation(assetId, ownerId, provisioned.providerUid)
-      .catch(async (databaseError) => {
-        await provider.deleteVideo(provisioned.providerUid).catch(() => undefined);
-        throw databaseError;
-      });
-    if (!activated) {
-      await provider.deleteVideo(provisioned.providerUid).catch(() => undefined);
-      throw new Error("Video upload reservation could not be activated");
-    }
+    provisionedUid = provisioned.providerUid;
+    const activated = await repository.activateUploadReservation(assetId, ownerId, provisionedUid);
+    if (!activated) throw new Error("Video upload reservation could not be activated");
 
     console.info("[VIDEO_STREAM_UPLOAD_PROVISION_SUCCESS]", {
       elapsedMs: Date.now() - startedAt,
@@ -158,7 +152,12 @@ export const provisionVideoAssetUpload = async ({
       },
     };
   } catch (providerError) {
-    await repository.cancel(reservation).catch(() => undefined);
+    const canceled = await repository
+      .cancel(reservation, { onlyUnattached: true })
+      .catch(() => null);
+    if (canceled?.kind === "canceled" && provisionedUid) {
+      await provider.deleteVideo(provisionedUid).catch(() => undefined);
+    }
     console.error("[VIDEO_STREAM_UPLOAD_PROVISION_FAILED]", {
       ...safeProviderLog(providerError),
       elapsedMs: Date.now() - startedAt,
@@ -234,30 +233,28 @@ export const showOwnedVideoAssetStatus = async (assetId: string, ownerId: string
   };
 };
 
-export const cancelOwnedVideoAsset = async (assetId: string, ownerId: string) => {
-  const repository = new VideoAssetRepository();
-  const asset = await repository.findOwned(assetId, ownerId);
-  if (!asset) {
-    return {
-      status: 200,
-      ...msg("video_upload_canceled", {}),
-      data: { canceled: true },
-    };
+export const cancelOwnedVideoAsset = async (
+  assetId: string,
+  ownerId: string,
+  options: VideoAssetCancelOptions = {},
+) => {
+  const result = await new VideoAssetRepository().cancel(
+    { id: assetId, owner_id: ownerId },
+    options,
+  );
+  if (result.kind === "attached") {
+    return { status: 409, ...error("video_asset_attached", {}) };
   }
 
-  if (asset.purpose !== "profile_presentation" && (await repository.isAttached(asset))) {
-    return {
-      status: 409,
-      ...error("video_asset_attached", {}),
-    };
-  }
-
-  await repository.cancel(asset);
-  const provider = getVideoStreamProvider();
-  if (provider) {
-    await provider.deleteVideo(asset.provider_uid).catch((providerError) => {
-      console.warn("[VIDEO_STREAM_DELETE_DEGRADED]", safeProviderLog(providerError));
-    });
+  // A failed/uncertain transaction must never authorize destructive compensation.
+  // not_found is idempotent for callers, but does not authorize another provider delete.
+  if (result.kind === "canceled") {
+    const provider = getVideoStreamProvider();
+    if (provider) {
+      await provider.deleteVideo(result.asset.provider_uid).catch((providerError) => {
+        console.warn("[VIDEO_STREAM_DELETE_DEGRADED]", safeProviderLog(providerError));
+      });
+    }
   }
 
   return {

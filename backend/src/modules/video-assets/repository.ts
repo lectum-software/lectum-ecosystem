@@ -1,17 +1,16 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import {
-  type VideoAssetPurpose,
-  videoAssetIdFromReference,
-  videoAssetPlaybackReference,
-} from "@/infra/video-stream";
+import { type VideoAssetPurpose, videoAssetPlaybackReference } from "@/infra/video-stream";
 import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { findReadyOwnedVideoAsset, findVideoAssetAssociations } from "./association-guard";
 import { canViewVideoAsset } from "./authorization";
 import { isR2MigrationAsset } from "./r2-migration/policy";
 import { mutableVideoAssetStatusesFor } from "./status";
 import type {
   ProfileVideoAssetAttachment,
   VideoAssetAssociationInput,
+  VideoAssetCancelOptions,
+  VideoAssetCancelResult,
   VideoAssetProviderUpdate,
   VideoAssetRecord,
 } from "./types";
@@ -168,33 +167,31 @@ export class VideoAssetRepository {
       previousVideoUrl: null,
       retiredProviderUids: [],
     });
-    const contextId = asset.context_id;
-    if (
-      asset.purpose !== "profile_presentation" ||
-      asset.provider !== "cloudflare_stream" ||
-      asset.status !== "ready" ||
-      !contextId
-    ) {
-      return notAttached();
-    }
-
     return withSerializableTransaction(async (transaction) => {
+      const current = await findReadyOwnedVideoAsset(transaction, {
+        contextId: asset.context_id ?? "",
+        ownerId: asset.owner_id,
+        purpose: "profile_presentation",
+        reference: videoAssetPlaybackReference(asset.id),
+      });
+      if (!current?.context_id) return notAttached();
+      const contextId = current.context_id;
       const newest = await transaction.video_asset.findFirst({
         where: {
           ...activeAssetWhere,
-          owner_id: asset.owner_id,
+          owner_id: current.owner_id,
           purpose: "profile_presentation",
         },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         select: { id: true },
       });
-      if (newest?.id !== asset.id) return notAttached();
+      if (newest?.id !== current.id) return notAttached();
 
       const profile = await transaction.psychologist_profile.findFirst({
         where: {
           deleted: false,
           id: contextId,
-          user_id: asset.owner_id,
+          user_id: current.owner_id,
         },
         select: {
           id: true,
@@ -204,16 +201,16 @@ export class VideoAssetRepository {
       });
       if (!profile) return notAttached();
 
-      const reference = videoAssetPlaybackReference(asset.id);
+      const reference = videoAssetPlaybackReference(current.id);
       if (profile.video_url === reference) return notAttached();
-      const isR2Migration = isR2MigrationAsset(asset);
-      if (isR2Migration && profile.video_url !== asset.source_reference) return notAttached();
+      const isR2Migration = isR2MigrationAsset(current);
+      if (isR2Migration && profile.video_url !== current.source_reference) return notAttached();
 
       const replacedAssets = await transaction.video_asset.findMany({
         where: {
           ...activeAssetWhere,
-          id: { not: asset.id },
-          owner_id: asset.owner_id,
+          id: { not: current.id },
+          owner_id: current.owner_id,
           purpose: "profile_presentation",
         },
         select: { provider_uid: true },
@@ -222,9 +219,9 @@ export class VideoAssetRepository {
         where: {
           deleted: false,
           id: profile.id,
-          user_id: asset.owner_id,
+          user_id: current.owner_id,
           video_url: profile.video_url,
-          ...(isR2Migration ? { video_cover_url: asset.source_thumbnail_reference } : {}),
+          ...(isR2Migration ? { video_cover_url: current.source_thumbnail_reference } : {}),
         },
         data: {
           video_cover_url: null,
@@ -238,8 +235,8 @@ export class VideoAssetRepository {
         await transaction.video_asset.updateMany({
           where: {
             ...activeAssetWhere,
-            id: { not: asset.id },
-            owner_id: asset.owner_id,
+            id: { not: current.id },
+            owner_id: current.owner_id,
             purpose: "profile_presentation",
           },
           data: {
@@ -253,7 +250,7 @@ export class VideoAssetRepository {
 
       if (isR2Migration) {
         await transaction.video_asset.update({
-          where: { id: asset.id },
+          where: { id: current.id },
           data: { migrated_at: new Date() },
         });
       }
@@ -268,23 +265,7 @@ export class VideoAssetRepository {
   }
 
   async isReadyOwnedReference(input: VideoAssetAssociationInput) {
-    const id = videoAssetIdFromReference(input.reference);
-    if (!id) return false;
-
-    const asset = await prisma.video_asset.findFirst({
-      where: {
-        ...activeAssetWhere,
-        context_id: input.contextId,
-        id,
-        owner_id: input.ownerId,
-        provider: "cloudflare_stream",
-        purpose: input.purpose,
-        status: "ready",
-      },
-      select: { id: true },
-    });
-
-    return Boolean(asset);
+    return Boolean(await findReadyOwnedVideoAsset(prisma, input));
   }
 
   async isPlaybackAuthorized(asset: VideoAssetRecord, userId?: string | null) {
@@ -383,53 +364,41 @@ export class VideoAssetRepository {
   }
 
   async isAttached(asset: VideoAssetRecord) {
-    const reference = videoAssetPlaybackReference(asset.id);
-    const [profile, post, reply] = await Promise.all([
-      prisma.psychologist_profile.findFirst({
-        where: { deleted: false, video_url: reference },
-        select: { id: true },
-      }),
-      prisma.community_post.findFirst({
-        where: {
-          OR: [
-            { media_url: reference },
-            { media_items: { some: { deleted: false, media_url: reference } } },
-          ],
-          deleted: false,
-        },
-        select: { id: true },
-      }),
-      prisma.post_reply.findFirst({
-        where: { deleted: false, media_url: reference },
-        select: { id: true },
-      }),
-    ]);
-
+    const { profile, post, reply } = await findVideoAssetAssociations(prisma, asset);
     return Boolean(profile || post || reply);
   }
 
-  async cancel(asset: VideoAssetRecord) {
-    const reference = videoAssetPlaybackReference(asset.id);
-    const now = new Date();
+  async cancel(
+    identity: Pick<VideoAssetRecord, "id" | "owner_id">,
+    options: VideoAssetCancelOptions = {},
+  ): Promise<VideoAssetCancelResult> {
+    return withSerializableTransaction(async (transaction): Promise<VideoAssetCancelResult> => {
+      const asset = await transaction.video_asset.findFirst({
+        where: { ...activeAssetWhere, id: identity.id, owner_id: identity.owner_id },
+      });
+      if (!asset) return { kind: "not_found" };
 
-    await prisma.$transaction([
-      prisma.psychologist_profile.updateMany({
-        where: {
-          deleted: false,
-          user_id: asset.owner_id,
-          video_url: reference,
-        },
+      const { profile, post, reply } = await findVideoAssetAssociations(transaction, asset);
+      if (
+        post ||
+        reply ||
+        (profile &&
+          (options.onlyUnattached ||
+            asset.purpose !== "profile_presentation" ||
+            profile.user_id !== asset.owner_id))
+      )
+        return { kind: "attached" };
+
+      const reference = videoAssetPlaybackReference(asset.id);
+      await transaction.psychologist_profile.updateMany({
+        where: { deleted: false, user_id: asset.owner_id, video_url: reference },
         data: { video_cover_url: null, video_url: null },
-      }),
-      prisma.video_asset.updateMany({
+      });
+      const canceled = await transaction.video_asset.updateMany({
         where: { ...activeAssetWhere, id: asset.id, owner_id: asset.owner_id },
-        data: {
-          deleted: true,
-          deletedAt: now,
-          error_code: null,
-          status: "canceled",
-        },
-      }),
-    ]);
+        data: { deleted: true, deletedAt: new Date(), error_code: null, status: "canceled" },
+      });
+      return canceled.count === 1 ? { kind: "canceled", asset } : { kind: "not_found" };
+    });
   }
 }

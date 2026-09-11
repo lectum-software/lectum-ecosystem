@@ -1,6 +1,7 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
 import { isVideoAssetPlaybackReference } from "@/infra/video-stream";
+import { canAssociateVideoAssetReferences } from "@/modules/video-assets/association-guard";
 import { resolveReadyOwnedVideoAssetReference } from "@/modules/video-assets/service";
 import { ensureCommunityMembership } from "@/utils/community-membership";
 import { getCommunityMentorRankingSignals } from "@/utils/community-mentor-ranking";
@@ -259,6 +260,21 @@ export class PostReplyRepository extends PostRepositoryContext {
         // enquanto a mídia era validada ou antes de um retry por concorrência.
         const currentPost = await findPublishedPost(data.p.id, transaction);
         if (!currentPost) return { kind: "not_found" };
+
+        const author = await transaction.user.findFirst({
+          where: { id: data.auth.id!, active: true, deleted: false },
+          select: { id: true },
+        });
+        if (!author) return { kind: "forbidden" };
+        if (
+          !(await canAssociateVideoAssetReferences(transaction, {
+            ownerId: author.id,
+            contextId: currentPost.id,
+            purpose: "community_reply",
+            references: [streamVideoReference || mediaUrl],
+          }))
+        )
+          return { kind: "invalid_media" };
 
         if (data.b.parentReplyId) {
           const parent = await transaction.post_reply.findFirst({

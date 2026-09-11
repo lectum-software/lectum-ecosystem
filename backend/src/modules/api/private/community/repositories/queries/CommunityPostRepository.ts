@@ -1,5 +1,6 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
+import { canAssociateVideoAssetReferences } from "@/modules/video-assets/association-guard";
 import { ensureCommunityMembership } from "@/utils/community-membership";
 import { getPostIdsWithPsychologistReplies } from "@/utils/community-post-replies";
 import { getMutedPostIds } from "@/utils/post-notification-mute";
@@ -117,24 +118,31 @@ export class CommunityPostRepository extends CommunityRepositoryContext {
     data: ICommunityCreatePostDTO,
     options: CommunityPostCreationOptions = {},
   ): Promise<CommunityPostDTO | null> {
-    const community = await this.repository.findFirst({
-      where: {
-        slug: data.p.slug,
-        active: true,
-        deleted: false,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!community) return null;
-
     const isPsychologist = data.auth.role === "psicologo";
     const mediaItems = data.b.mediaItems ?? [];
     const firstMediaItem = mediaItems[0];
     const status = options.status ?? "publicado";
     const post = await withSerializableTransaction(async (transaction) => {
+      const community = await transaction.community.findFirst({
+        where: { slug: data.p.slug, active: true, deleted: false },
+        select: { id: true },
+      });
+      if (!community) return null;
+      const author = await transaction.user.findFirst({
+        where: { id: data.auth.id!, active: true, deleted: false },
+        select: { id: true },
+      });
+      if (
+        !author ||
+        !(await canAssociateVideoAssetReferences(transaction, {
+          ownerId: author.id,
+          contextId: data.p.slug,
+          purpose: "community_post",
+          references: [data.b.mediaUrl, ...mediaItems.map((item) => item.mediaUrl)],
+        }))
+      )
+        return null;
+
       await ensureCommunityMembership({
         client: transaction,
         communityId: community.id,
@@ -167,6 +175,6 @@ export class CommunityPostRepository extends CommunityRepositoryContext {
       });
     });
 
-    return toPostResponse(post);
+    return post ? toPostResponse(post) : null;
   }
 }

@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import { error500, send } from "@/helpers/return";
-import { createUpload, destroy as destroyService, showStatus } from "./services";
+import {
+  cancelUpload as cancelUploadService,
+  createUpload,
+  destroy as destroyService,
+  showStatus,
+} from "./services";
 
 export const store = async (req: Request, res: Response) => {
   try {
@@ -23,5 +28,16 @@ export const destroy = async (req: Request, res: Response) => {
     return send(res, await destroyService(req as unknown as Parameters<typeof destroyService>[0]));
   } catch (err) {
     return error500(res, "video_asset_destroy", err);
+  }
+};
+
+export const cancelUpload = async (req: Request, res: Response) => {
+  try {
+    return send(
+      res,
+      await cancelUploadService(req as unknown as Parameters<typeof cancelUploadService>[0]),
+    );
+  } catch (err) {
+    return error500(res, "video_asset_upload_cancel", err);
   }
 };

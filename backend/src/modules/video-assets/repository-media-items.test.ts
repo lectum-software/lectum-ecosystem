@@ -15,11 +15,14 @@ describe("VideoAssetRepository community_post_media associations", () => {
   });
 
   it("considera video do carrossel como anexo ativo", async () => {
-    const source = await repositorySource();
+    const source = await readFile("src/modules/video-assets/association-guard.ts", "utf8");
 
     assert.match(
       source,
       /media_items:\s*{\s*some:\s*{\s*deleted:\s*false,\s*media_url:\s*reference/s,
     );
+    const repository = await repositorySource();
+    assert.match(repository, /findVideoAssetAssociations\(prisma, asset\)/);
+    assert.match(repository, /findVideoAssetAssociations\(transaction, asset\)/);
   });
 });

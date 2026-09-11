@@ -3,6 +3,13 @@ import type { VideoAssetPurpose, VideoAssetStatus } from "@/infra/video-stream";
 
 export type VideoAssetRecord = video_asset;
 
+export type VideoAssetCancelOptions = { onlyUnattached?: boolean };
+
+export type VideoAssetCancelResult =
+  | { kind: "canceled"; asset: VideoAssetRecord }
+  | { kind: "not_found" }
+  | { kind: "attached" };
+
 export type VideoAssetAssociationInput = {
   contextId: string;
   ownerId: string;
