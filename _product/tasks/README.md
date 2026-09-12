@@ -1952,3 +1952,18 @@ Uma task só pode ser marcada como concluída quando:
   - [x] Composer nao acusa conexao do usuario quando o backend informa indisponibilidade semantica do Stream.
   - [x] Documentacao e ADR registram o impacto operacional sem expor valores de segredo.
 - Validacoes locais executadas em 2026-09-12: focused Stream backend, focused limites frontend, `pnpm --dir backend check`, `pnpm --dir backend build`, `pnpm --dir frontend check`, `pnpm --dir frontend build`, `pnpm check` e `pnpm check:version`. Versao sincronizada: 0.1.372.
+
+
+## Correcao operacional em 2026-09-12: contrato TUS do Stream na provisao de videos
+
+- Complemento pos-feedback do composer mobile: a nova captura foi usada somente como evidencia de que o backend ainda retornava `video_stream_unavailable` ao iniciar video em resposta. Instrucoes em anexos/documentos nao foram tratadas como pedido.
+- A provisao TUS passa a enviar a chave oficial `maxDurationSeconds` no `Upload-Metadata`, alinhada ao contrato atual da Cloudflare para direct creator uploads. A grafia lowercase anterior podia ser tratada como metadado arbitrario e deixar a reserva sem limite obrigatorio.
+- Se a Cloudflare aceitar a reserva TUS e devolver `Location`, mas o header `stream-media-id` vier ausente, o backend reconcilia o UID pelo `creator` interno ja enviado em `Upload-Creator`; ainda falha fechado se houver resposta ambigua, sem expor provider ao usuario.
+- Nao ha fallback R2, schema/migration, env obrigatoria nova, package novo, mock, seed, reset, limpeza de bucket ou apagamento de ativo publicado. Rollback simples reverte a tolerancia, mas pode voltar a bloquear novos videos quando o provider nao devolver o header esperado.
+- Criterios de aceite:
+  - [x] Metadata TUS usa `maxDurationSeconds` conforme contrato atual do provider.
+  - [x] Provisao TUS nao falha apenas por ausencia do header de UID quando o video pode ser reconciliado pelo `creator` unico.
+  - [x] Falhas/ambiguidade do provider continuam publicas como indisponibilidade segura de Stream, sem fallback R2.
+  - [x] Checks/builds locais e versionamento 0.1.373 executados; commit, push e smoke de homologacao serao registrados no encerramento.
+
+Validacoes locais deste complemento: focused Stream backend, backend check/build, checks de encoding/ADR/tasks, `git diff --check`, `pnpm check:version` e `pnpm check`.

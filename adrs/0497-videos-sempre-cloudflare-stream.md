@@ -105,3 +105,10 @@ pnpm --dir backend video:migrate-r2-to-stream -- --apply --confirm=homolog --lim
 - Repetir lotes até o dry-run retornar `candidates_in_batch: 0`, sem apagar objetos/capas R2.
 - Após homologação aprovada, repetir o runbook em produção somente por promoção revisada
   `homolog` → `main` e janela operacional própria.
+
+
+## Complemento operacional 2026-09-12: contrato TUS de provisao
+
+- A provisao TUS para novos videos deve seguir a grafia documentada pela Cloudflare em `Upload-Metadata`: `maxDurationSeconds` para o limite reservado, junto de `expiry`, `requiresignedurls`, `allowedorigins` e `thumbnailtimestamppct`.
+- O UID canonico continua sendo o `stream-media-id` retornado pelo provider. Quando a reserva TUS ja foi aceita e a URL de upload oficial foi emitida, a ausencia desse header pode ser reconciliada por uma busca exata pelo `creator` interno enviado em `Upload-Creator`, falhando fechado em zero, mais de um resultado ou contrato invalido.
+- A reconciliacao nao reabre fallback R2, nao cria provider alternativo e nao torna `/ready` dependente de uma chamada mutante ao Stream. Falhas seguem como indisponibilidade segura para o usuario.

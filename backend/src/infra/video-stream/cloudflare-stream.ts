@@ -74,7 +74,7 @@ const encodeMetadataValue = (value: string) => Buffer.from(value, "utf8").toStri
 const buildUploadMetadata = (input: ProvisionVideoUploadInput, allowedOrigins: readonly string[]) =>
   [
     `name ${encodeMetadataValue(`lectum-${input.purpose}-${input.assetId}`)}`,
-    `maxdurationseconds ${encodeMetadataValue(String(input.maxDurationSeconds))}`,
+    `maxDurationSeconds ${encodeMetadataValue(String(input.maxDurationSeconds))}`,
     "requiresignedurls",
     `allowedorigins ${encodeMetadataValue(JSON.stringify(allowedOrigins))}`,
     `thumbnailtimestamppct ${encodeMetadataValue("0.1")}`,
@@ -173,11 +173,22 @@ export class CloudflareStreamAdapter {
     const uploadUrl = response.headers.get("location")?.trim() ?? "";
     const providerUid = response.headers.get("stream-media-id")?.trim() ?? "";
 
-    if (!isCloudflareDirectUploadUrl(uploadUrl) || !isCloudflareStreamVideoUid(providerUid)) {
+    if (!isCloudflareDirectUploadUrl(uploadUrl)) {
       throw new VideoStreamProviderError("provision_upload_contract", response.status);
     }
 
-    return { providerUid, uploadUrl };
+    if (isCloudflareStreamVideoUid(providerUid)) return { providerUid, uploadUrl };
+
+    let details: VideoStreamDetails | null = null;
+    try {
+      details = await this.findVideoByCreator(input.assetId);
+    } catch {
+      throw new VideoStreamProviderError("provision_upload_contract", response.status);
+    }
+
+    if (!details) throw new VideoStreamProviderError("provision_upload_contract", response.status);
+
+    return { providerUid: details.providerUid, uploadUrl };
   }
 
   async importVideoByUrl(input: ImportVideoByUrlInput): Promise<VideoStreamDetails> {

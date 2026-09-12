@@ -154,7 +154,8 @@ describe("Cloudflare Stream direct upload", () => {
 
     const metadata = headers.get("upload-metadata") ?? "";
     assert.match(metadata, /requiresignedurls/);
-    assert.match(metadata, /maxdurationseconds NjAw/);
+    assert.match(metadata, /maxDurationSeconds NjAw/);
+    assert.doesNotMatch(metadata, /maxdurationseconds/);
     assert.match(metadata, /expiry MjAzMC0wMS0wMlQwMzowNDowNS4wMDBa/);
     assert.match(
       metadata,
@@ -167,6 +168,51 @@ describe("Cloudflare Stream direct upload", () => {
       uploadUrl: "https://upload.videodelivery.net/tus/capability-value",
     });
     assert.doesNotMatch(JSON.stringify(result), /private-api-token/);
+  });
+
+  it("reconcilia UID TUS por creator quando o header do provider vem ausente", async () => {
+    const config = createConfig();
+    const calls: string[] = [];
+    const fetcher = (async (input: Parameters<typeof fetch>[0]) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.endsWith("/stream?direct_user=true")) {
+        return new Response(null, {
+          headers: { Location: "https://upload.videodelivery.net/tus/capability-value" },
+          status: 201,
+        });
+      }
+
+      return Response.json({
+        result: [
+          {
+            creator: "asset_internal_123",
+            readyToStream: false,
+            status: { state: "pendingupload" },
+            uid: "fedcba9876543210fedcba9876543210",
+          },
+        ],
+        success: true,
+      });
+    }) as typeof fetch;
+    const adapter = new CloudflareStreamAdapter(config, fetcher);
+
+    const result = await adapter.provisionUpload({
+      assetId: "asset_internal_123",
+      expiresAt: new Date("2030-01-02T03:04:05.000Z"),
+      maxDurationSeconds: 600,
+      purpose: "community_reply",
+      sizeBytes: 5_242_880,
+    });
+
+    assert.deepEqual(calls, [
+      "https://api.cloudflare.com/client/v4/accounts/account_123/stream?direct_user=true",
+      "https://api.cloudflare.com/client/v4/accounts/account_123/stream?creator=asset_internal_123&include_counts=false&limit=10",
+    ]);
+    assert.deepEqual(result, {
+      providerUid: "fedcba9876543210fedcba9876543210",
+      uploadUrl: "https://upload.videodelivery.net/tus/capability-value",
+    });
   });
 
   it("rejeita URL de upload fora do domínio oficial", async () => {
