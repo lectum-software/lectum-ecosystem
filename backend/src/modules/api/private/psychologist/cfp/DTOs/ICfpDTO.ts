@@ -1,4 +1,4 @@
-import type { user } from "@/interfaces/objects";
+import type { professional_registry_check, user } from "@/interfaces/objects";
 
 export type CfpSearchBody = {
   cpf?: string;
@@ -52,6 +52,7 @@ export type StoredRegistryCheckRaw = {
   response: unknown;
   normalized_results: CfpResult[];
   attempt_status?:
+    | "pending"
     | "success"
     | "empty"
     | "provider_config_error"
@@ -79,6 +80,10 @@ export interface ICfpConfirmDTO {
   b: CfpConfirmBody;
   auth: user;
 }
+
+export type CfpSearchReservation =
+  | { ok: true; check: professional_registry_check; used: number | null }
+  | { ok: false; reason: "profile_not_found" | "attempts_exceeded"; used: number };
 
 export type CfpConfirmationOutcome =
   | { ok: true; data: CfpConfirmResponse }

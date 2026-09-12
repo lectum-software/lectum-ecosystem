@@ -279,3 +279,6 @@ Serviço privado de vídeo não verificado neste smoke;última prova fornecida33
 incluindo disputaautomática/manual, idempotência, proteçãoCPF/CRP noautosserviço e rollback.
 Nenhuma chamada aoCFP ou alteração de registro emhomolog para fabricar essa prova.
 Teste de providercomregistroreal/C17-A permanece separado. Deploy/smoke pendentes.
+
+365/cb213570:deploy/smoke5/5confirmados,backend/frontend/Admin365. Saúde/disponibilidade
+públicas aprovadas;prova de concorrência restrita aoPostgreSQL isolado, não a cadastros reais.

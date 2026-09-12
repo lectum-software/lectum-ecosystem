@@ -15,9 +15,8 @@ import {
 } from "@/utils/professional-name";
 import {
   normalizeCrpRegistrationNumber,
-  normalizeStoredCrp,
   parseStoredCrp,
-  resolveCrpFromRegistryChecks,
+  resolveProfileCrp,
 } from "@/utils/professional-registry";
 import { activeSubscriptionPeriodWhere } from "@/utils/subscription-entitlement";
 import { buildLectumWhatsappUrl } from "@/utils/whatsapp-contact";
@@ -393,9 +392,7 @@ export const toResponse = async (
   const specialtyLimit = isFree ? 3 : 10;
   const serviceLimit = isFree ? 1 : Math.max(catalogs.services.length, 1);
   const approachLimit = isFree ? 1 : Math.max(catalogs.approaches.length, 1);
-  const displayCrp = normalizeStoredCrp(
-    resolveCrpFromRegistryChecks(profile.registry_checks) || profile.crp,
-  );
+  const displayCrp = resolveProfileCrp(profile.crp, profile.registry_checks);
   const crp = parseStoredCrp(displayCrp);
   const identityFieldsLocked = isProfessionalIdentityLocked({
     cfpVerifiedAt: profile.cfp_verified_at,

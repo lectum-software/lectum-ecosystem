@@ -9,7 +9,10 @@ import type {
   AdminPostReportRecord,
 } from "../../repositories/interfaces/IAdminModerationRepository";
 import { toStringArray } from "./events";
+import { incrementChartPoint, sortChartPoints } from "./overview-chart-points";
 import { postReportStatusGroup, reportAuthor } from "./reports";
+
+export { chartDateKey, incrementChartPoint, sortChartPoints } from "./overview-chart-points";
 
 export const reportChartTypes = [
   "all",
@@ -18,25 +21,6 @@ export const reportChartTypes = [
   "psychologist_posts",
   "psychologist_replies",
 ] as const satisfies readonly AdminModerationReportChartType[];
-
-export const chartDateKey = (date: Date) => date.toISOString().slice(0, 10);
-
-export const incrementChartPoint = <T extends { date: string }>(
-  map: Map<string, T>,
-  date: Date,
-  createPoint: (date: string) => T,
-  key: string,
-) => {
-  const day = chartDateKey(date);
-  const point = map.get(day) ?? createPoint(day);
-  const writable = point as unknown as Record<string, number>;
-
-  writable[key] = Number(writable[key] ?? 0) + 1;
-  map.set(day, point);
-};
-
-export const sortChartPoints = <T extends { date: string }>(map: Map<string, T>) =>
-  [...map.values()].sort((left, right) => left.date.localeCompare(right.date));
 
 export const createReportChartPoint = (date: string) => ({
   date,

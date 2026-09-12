@@ -291,7 +291,16 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 364: publicada; 29 testes focais/revisão/check/build/smoke aprovados e filtro Hoje conferido no Admin.
 
 159. **Registro profissional protegido:** confirmação repetida não troca CPF/CRP nem desfaz reprovação manual; decisões simultâneas não sobrescrevem uma à outra.
-365: 38 cenários em banco isolado, testes/check/build e revisão aprovados; publicação pendente.
+365: publicada; 38 cenários em banco isolado, testes/check/build, revisão e smoke aprovados.
+
+160. **Limite de consultas:** chamadas simultâneas respeitam a cota; tentativas interrompidas não permitem consultas extras.
+161. **WhatsApp atualizado:** uma confirmação antiga não restaura o número anterior nem transfere sua verificação.
+162. **Registro corrigido:** o CRP atual e a decisão humana prevalecem sobre informações antigas.
+163. **Datas e horários:** filtros e gráficos deixam de deslocar o dia ou a hora por diferença de fuso.
+164. **Campos com zero ou “não”:** as validações deixam de ignorar limites zero e valores falsos.
+165. **CPF inválido:** sequências de dígitos repetidos são recusadas pelo validador.
+
+366: correções implementadas; check/build, 78 cenários de banco isolado e UI local aprovados. Publicação em validação.
 
 ## Ainda pendente
 

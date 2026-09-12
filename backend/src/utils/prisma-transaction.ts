@@ -1,10 +1,9 @@
 import type { Prisma } from "@/external/generated/prisma/client";
 import prisma from "@/infra/database/prisma";
-import { isPrismaErrorCode } from "./prisma-error";
+import { isSerializableRetryableError } from "./prisma-error";
 
 export { getPrismaErrorCode, isPrismaErrorCode } from "./prisma-error";
 
-const SERIALIZABLE_RETRY_CODES = new Set(["P2002", "P2034"]);
 const DEFAULT_MAX_ATTEMPTS = 3;
 
 export const withSerializableTransaction = async <T>(
@@ -19,8 +18,7 @@ export const withSerializableTransaction = async <T>(
         isolationLevel: "Serializable",
       });
     } catch (error) {
-      const shouldRetry =
-        attempt < attempts && isPrismaErrorCode(error, [...SERIALIZABLE_RETRY_CODES]);
+      const shouldRetry = attempt < attempts && isSerializableRetryableError(error);
 
       if (!shouldRetry) throw error;
 

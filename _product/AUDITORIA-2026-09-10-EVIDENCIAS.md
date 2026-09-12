@@ -2366,3 +2366,24 @@ Seis testes da extração também passaram compilados na imagem sem rede. Logs/r
 /tmp/lectum-task178-registry-365-tests/. RevisãoMendel15arquivos,11integrais/4parciais ehashes
 conferidos;Gaussdiagnóstico/draftfocal. Nenhum bloqueante novo. Serviço privado vídeo e
 múltiplas assinaturas históricas não certificados por este conjunto. Publicação pendente.
+
+365/cb213570 publicado:smoke5GETs públicos em2026-09-12T11:56:59.819805+00:00,5/5aprovados.
+Backend/frontend/Admin0.1.365,health/ready200 eNextversionsno-store/noindex. Dois smokes
+intermediários registraram rollout parcial, semfalha dehealth/ready. Arquivo final:
+/tmp/lectum-audit-365-smoke-curl-homolog.json. Buildlocal365repetidoaprovado.
+Não é E2Epublicado deCFP nem validação do serviço privado de vídeo. TASK178segueemcurso.
+
+
+##366 — correções de concorrência e validação
+
+Imagem final amd64: d1b58ed0d6acf2c6f43ff7663cf20f46053f30e90bf9ea9dbfb0b4fed38b56a1.
+Wrappers manuais backend/scripts/{cfp-search-attempts,whatsapp-verification,registry-confirmation}-integration.mjs
+com --image=lectum-backend:audit-0.1.366: respectivamente20/20(três vezes),20/20,38/38.
+PostgreSQL real descartável/rede interna, sem configuração publicada/provider. Recursos
+isolados removidos; não equivale a CFP pago, SMS, cadastro publicado ou teste E2E.
+Rootcheck1397tests/1391pass/0fail/6skipsdrawtext; backendfinal661/661. Builds backend/Admin,
+Dockeramd64, Biome/TS/Prisma/checkversion passaram. Testes de datas em três fusos passaram.
+Browser homolog Admin Moderação mostrou dia11 nos inputs/eixo e dia10 no título antes.
+Componente real local, sem API simulada, validado390/1280px e troca de período/data; título
+agora coincide com os inputs. Fonte visual local Admin/Dashboard; Quick Copy indisponível
+nesta sessão. Não houve redesenho. Publicação/smoke ainda pendentes.

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { AdminModerationReportChartType } from "@/api/req/moderation";
-import { parseCalendarChartDate } from "@/lib/chart-time-series";
+import { formatCalendarDayMonth, parseCalendarChartDate } from "@/lib/chart-time-series";
 import { cn } from "@/lib/utils";
 import { colorWithAlpha } from "@/lib/visual-tokens";
 
@@ -20,11 +20,6 @@ export const cardClass =
   "rounded-card border border-border/80 bg-surface/95 shadow-admin-soft backdrop-blur";
 
 export const numberFormatter = new Intl.NumberFormat("pt-BR");
-
-export const overviewDateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "short",
-});
 
 export type ModerationChartPoint = {
   date: string;
@@ -244,11 +239,7 @@ export const overviewPeriodLabel = (period: OverviewPeriodValue) => {
 export const rangeIsValid = (range: OverviewRange) =>
   Boolean(range.from && range.to && range.from.localeCompare(range.to) <= 0);
 
-export const formatOverviewDate = (value: string) => {
-  const parsed = parseCalendarChartDate(value);
-
-  return parsed ? overviewDateFormatter.format(parsed) : value;
-};
+export const formatOverviewDate = formatCalendarDayMonth;
 
 export const formatOverviewPeriod = (
   period: OverviewPeriodValue,
@@ -259,7 +250,7 @@ export const formatOverviewPeriod = (
 
   return `${overviewPeriodLabel(period)} · ${formatOverviewDate(
     range.from,
-  )} a ${formatOverviewDate(range.to)}.`;
+  )} a ${formatOverviewDate(range.to)}`;
 };
 
 export const filterChartPointsByRange = (points: ModerationChartPoint[], range: OverviewRange) => {

@@ -1314,7 +1314,7 @@ PostgreSQL descartável isolado e imagem imutável, sem configuração publicada
 - [x] Retry exato idempotente e confirmação/histórico atômicos sob concorrência real.
 - [x] Decisão humana obsoleta não sobrescreve registro nem cria histórico enganoso.
 - [x] Testes reais, revisão independente e checks/build registrados.
-- [ ] Commit/push, versões e smoke publicados registrados.
+- [x] Commit/push, versões e smoke publicados registrados.
 
 365 detalhe de borda:edição de perfil também usava o bloqueio calculado antes da
 transação. Revalidar CPF/CRP na mesma escrita; manter demais campos editáveis. O campo
@@ -1337,3 +1337,55 @@ Seis testes puros também passaram noJScompilado da imagem, sem rede. Revisão i
 Mendel15arquivos(11integrais/4parciais),hashes conferidos/ledger; sem bloqueante novo.
 Gauss9fontesdraft(5integrais/4parciais),diagnóstico dewriters eprecedência sem bloqueante;
 não equivale a teste universal. Nenhuma mutação ou consultaCFP publicada. Pushpendente.
+
+365/cb213570:commit/pushhomolog concluídos;smoke5/5 em2026-09-12T11:56:59.819805+00:00.
+Backend/frontend/Admin365,health/ready200,Nextversionsno-store/noindex. Buildlocal365
+repetido póscommit também aprovado. Publicação não valida consulta pagaCFP ou todoonboarding;
+nenhum cadastro publicado alterado para esses testes. Vídeo privado sem prova adicional.
+
+### Continuação366 — correções executáveis restantes
+
+C18: reservar a tentativa CFP no banco existente antes de chamar o provider, com
+transação curta e bloqueio da linha do perfil antes da contagem/inserção. A mesma reserva recebe o resultado;
+nenhum timeout/restart libera automaticamente cota cujo efeito externo é desconhecido.
+Preservar limite3, contagem histórica e revisão humana, sem consulta paga nos testes.
+C14: CRP atual explicitamente corrigido tem precedência sobre evidência histórica na
+apresentação; preservar fallback legado e direitos já existentes. C3: corrigir somente
+inconsistência de fuso comprovada com o recorte atual, sem alterar população ou métricas.
+Sem env, package, migration, reset ou backfill previstos. Rollout aditivo entre aplicações;
+reservas pendentes são compatíveis com leitores anteriores (sem resultados/found=false).
+Durante coexistência de réplicas antigas, o limite concorrente só é garantido quando todas
+as instâncias do backend usam o novo reservador. Rollback de código preserva históricos,
+mas retira a proteção nova. Sem mudança de UI estrutural.
+
+- [x] Reserva CFP impede ultrapassar cota sob concorrência e mantém pendências contabilizadas.
+- [x] Finalização atualiza uma única reserva sem trocar dono/histórico confirmado.
+- [x] Correção humana do CRP é exibida sem reverter aprovação ou evidência histórica.
+- [x] Gráfico usa intervalo/fuso coerentes, se defeito confirmado.
+- [x] Regressões reais, checks/build e revisão aprovados.
+- [ ] Commit/push e smoke publicado registrados.
+
+C19 complemento executável: o MVP não usa OTP novo (ADR0022), mas a rota legada de
+confirmação continua montada. Salvar um novo WhatsApp deve invalidar códigos pendentes;
+confirmação legada não pode recolocar o número anterior, usar snapshot expirado/excluído,
+ignorar tentativas esgotadas ou devolver sucesso sem perfil correspondente. Manter apenas
+compatibilidade válida com o número atual, rechecando atomicamente e sem enviar SMS.
+Troca de número pelo perfil também não transfere o timestamp de verificação anterior.
+Sem apagar histórico nem mudar a liberação atual de wa.me (não depende de OTP).
+
+- [x] Código legado não substitui o WhatsApp atual nem confirma snapshot inválido.
+- [x] Troca de número invalida códigos pendentes e não transfere verificação anterior.
+- [x] Regressão PostgreSQL isolada e concorrência verificadas sem SMS ou número real.
+
+366 final: rowlock por perfil em ReadCommitted substitui a tentativa inicial Serializable,
+que esgotou retries entre perfis independentes. Não houve relaxamento do teste. Adapter
+40001 também é reconhecido pelo helper Serializable dos outros fluxos, sem retry de timeout.
+Imagem final amd64 d1b58ed0d6acf2c6f43ff7663cf20f46053f30e90bf9ea9dbfb0b4fed38b56a1:
+CFP20/20 em três execuções; WhatsApp20/20; regressão registro38/38; cleanup isolado confirmado.
+Witness365 comprova contagem/inserção separadas; WhatsApp365 falhou18/20. Build ARM local
+foi recusado pelo runner amd64 antes do teste e substituído por build na plataforma correta.
+Checkglobal1397tests/1391pass/0fail/6skipsdrawtextpreexistentes; backendfinal661/661;
+Prisma/TS/Biome/buildlocal+Docker e Admincheck/build aprovados. UI real local validada
+mobile/desktop; três fusos no formatter. C21/C22:42 novos testes+14base, sem provider.
+Revisões independentes de C18/C19, rowlock e retry sem novo bloqueante. Sem migration/env
+ou package novo; bump366executado uma vez. Commit/push/smoke ainda pendentes.

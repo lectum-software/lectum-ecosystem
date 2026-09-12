@@ -49,6 +49,25 @@ export class FreeProfileRepository implements IFreeProfileRepository {
     if (!existing || !profile) return null;
 
     await withSerializableTransaction(async (tx) => {
+      // Verification belongs to the saved number, never to a replacement entered later.
+      await tx.psychologist_profile.updateMany({
+        where: {
+          id: profile.id,
+          deleted: false,
+          OR: [{ whatsapp: null }, { whatsapp: { not: body.whatsapp } }],
+        },
+        data: { whatsapp_verified_at: null },
+      });
+      await tx.phone_verification.updateMany({
+        where: {
+          user_id: userId,
+          purpose: "psychologist_whatsapp",
+          deleted: false,
+          verified_at: null,
+          ...(body.whatsapp === null ? {} : { phone: { not: body.whatsapp } }),
+        },
+        data: { deleted: true, deletedAt: new Date() },
+      });
       await tx.user.update({
         where: { id: userId },
         data: { name: body.name },

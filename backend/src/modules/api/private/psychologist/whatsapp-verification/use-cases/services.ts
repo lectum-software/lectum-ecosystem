@@ -5,9 +5,8 @@ import type {
   IConfirmWhatsappVerificationDTO,
   IRequestWhatsappVerificationDTO,
 } from "../DTOs/IWhatsappVerificationDTO";
+import { CODE_ATTEMPT_LIMIT } from "../domain/limits";
 import { WhatsappVerificationRepository } from "../repositories/WhatsappVerificationRepository";
-
-const CODE_ATTEMPT_LIMIT = 5;
 
 const normalizePhone = (value: string) => {
   const parsed = parsePhoneNumberFromString(value, "BR");
@@ -49,6 +48,9 @@ export const requestVerification = async (data: IRequestWhatsappVerificationDTO)
     userId: data.auth.id!,
     phone,
   });
+  if (!saved) {
+    return { status: 404, ...error("not_found", { model: "psychologist_profile" }) };
+  }
 
   return {
     status: 200,
@@ -111,6 +113,9 @@ export const confirmVerification = async (data: IConfirmWhatsappVerificationDTO)
     verification,
     verifiedAt,
   });
+  if (!confirmed) {
+    return { status: 409, ...error("phone_verification_unavailable", {}) };
+  }
 
   return {
     status: 200,

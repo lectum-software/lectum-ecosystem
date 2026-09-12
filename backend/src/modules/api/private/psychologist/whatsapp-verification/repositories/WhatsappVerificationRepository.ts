@@ -1,5 +1,7 @@
 import prisma from "@/infra/database/prisma";
 import type { phone_verification, psychologist_profile } from "@/interfaces/objects";
+import { withSerializableTransaction } from "@/utils/prisma-transaction";
+import { CODE_ATTEMPT_LIMIT } from "../domain/limits";
 import type {
   ConfirmWhatsappVerificationInput,
   CreateWhatsappVerificationInput,
@@ -26,17 +28,26 @@ export class WhatsappVerificationRepository implements IWhatsappVerificationRepo
     return mapProfile(profile);
   }
 
-  async saveWhatsapp(input: SaveWhatsappInput): Promise<SaveWhatsappOutput> {
-    await prisma.psychologist_profile.updateMany({
-      where: {
-        user_id: input.userId,
-        deleted: false,
-      },
-      data: {
-        whatsapp: input.phone,
-        whatsapp_verified_at: null,
-      },
+  async saveWhatsapp(input: SaveWhatsappInput): Promise<SaveWhatsappOutput | null> {
+    const saved = await withSerializableTransaction(async (tx) => {
+      const updated = await tx.psychologist_profile.updateMany({
+        where: {
+          user_id: input.userId,
+          deleted: false,
+        },
+        data: {
+          whatsapp: input.phone,
+          whatsapp_verified_at: null,
+        },
+      });
+      if (updated.count === 0) return false;
+      await tx.phone_verification.updateMany({
+        where: { user_id: input.userId, purpose: PURPOSE, deleted: false, verified_at: null },
+        data: { deleted: true, deletedAt: new Date() },
+      });
+      return true;
     });
+    if (!saved) return null;
 
     return {
       phone: input.phone,
@@ -157,6 +168,10 @@ export class WhatsappVerificationRepository implements IWhatsappVerificationRepo
       where: {
         id,
         deleted: false,
+        verified_at: null,
+        purpose: PURPOSE,
+        expires_at: { gt: new Date() },
+        attempts: { lt: CODE_ATTEMPT_LIMIT },
       },
       data: {
         attempts: {
@@ -167,33 +182,40 @@ export class WhatsappVerificationRepository implements IWhatsappVerificationRepo
   }
 
   async confirmVerification(input: ConfirmWhatsappVerificationInput) {
-    const verifiedAt = input.verifiedAt;
-
-    await prisma.$transaction(async (tx) => {
-      await tx.phone_verification.update({
+    return withSerializableTransaction(async (tx) => {
+      const verifiedAt = new Date();
+      const verification = await tx.phone_verification.findFirst({
         where: {
           id: input.verification.id!,
-        },
-        data: {
-          verified_at: verifiedAt,
+          user_id: input.verification.user_id!,
+          purpose: PURPOSE,
+          phone: input.verification.phone!,
+          code_hash: input.verification.code_hash!,
+          deleted: false,
+          verified_at: null,
+          expires_at: { gt: verifiedAt },
+          attempts: { lt: CODE_ATTEMPT_LIMIT },
         },
       });
+      if (!verification) return null;
 
-      await tx.psychologist_profile.updateMany({
+      // Never restore a previous phone from the OTP snapshot. Only verify the current one.
+      const updated = await tx.psychologist_profile.updateMany({
         where: {
-          user_id: input.verification.user_id!,
+          user_id: verification.user_id,
           deleted: false,
+          whatsapp: verification.phone,
         },
         data: {
-          whatsapp: input.verification.phone!,
           whatsapp_verified_at: verifiedAt,
         },
       });
+      if (updated.count === 0) return null;
+      await tx.phone_verification.update({
+        where: { id: verification.id },
+        data: { verified_at: verifiedAt },
+      });
+      return { phone: verification.phone, whatsapp_verified_at: verifiedAt };
     });
-
-    return {
-      phone: input.verification.phone!,
-      whatsapp_verified_at: verifiedAt,
-    };
   }
 }

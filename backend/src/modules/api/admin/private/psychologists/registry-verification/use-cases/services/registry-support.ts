@@ -24,6 +24,7 @@ export const SAVE_CONFIRMATION = "SALVAR REGISTRO";
 export type RawRecord = Record<string, unknown>;
 
 export type AttemptStatus =
+  | "pending"
   | "empty"
   | "provider_config_error"
   | "provider_error"
@@ -117,6 +118,7 @@ export const isManualCheck = (check: AdminPsychologistRegistryVerificationCheck)
 export const attemptStatusFromRaw = (raw: RawRecord | null): AttemptStatus | null => {
   const value = getString(raw, "attempt_status");
   if (
+    value === "pending" ||
     value === "empty" ||
     value === "provider_config_error" ||
     value === "provider_error" ||
@@ -140,6 +142,7 @@ export const resultLabel = (check: AdminPsychologistRegistryVerificationCheck) =
   }
 
   if (check.found) return "Resultado encontrado";
+  if (status === "pending") return "Consulta em andamento ou interrompida";
   if (status === "provider_rate_limited") return "Limite de tentativas da API automática";
   if (status === "provider_unavailable" || status === "provider_config_error") {
     return "API automática indisponível";

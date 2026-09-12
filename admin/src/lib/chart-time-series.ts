@@ -10,6 +10,13 @@ const chartMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "UTC",
 });
 
+const calendarDayMonthFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "short",
+  // Datas civis são representadas à meia-noite UTC, sem conversão para o fuso do browser.
+  timeZone: "UTC",
+});
+
 export type CalendarChartGranularity = "day" | "month";
 export type CalendarMetricAggregation = "last" | "sum";
 export type CalendarChartPoint<K extends string> = Record<K, number> & {
@@ -67,6 +74,12 @@ export const formatCalendarTooltipDate = (date: Date | string) => {
   const parsed = typeof date === "string" ? parseCalendarChartDate(date) : date;
 
   return parsed ? dateOnlyFormatter.format(parsed) : String(date);
+};
+
+export const formatCalendarDayMonth = (value: string) => {
+  const parsed = parseCalendarChartDate(value);
+
+  return parsed ? calendarDayMonthFormatter.format(parsed) : value;
 };
 
 const formatCalendarMonth = (date: Date) => {

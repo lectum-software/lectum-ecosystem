@@ -66,6 +66,7 @@
     "phone_verification_send_failed": "Não foi possível enviar o código por SMS agora.",
     "phone_verification_recent": "Aguarde {{seconds}} segundos antes de solicitar um novo código.",
     "phone_verification_not_found": "Solicitação de verificação não encontrada.",
+    "phone_verification_unavailable": "Esta confirmação não é mais válida. Confira e salve seu WhatsApp novamente.",
     "phone_verification_expired": "Código expirado. Solicite um novo código.",
     "phone_verification_too_many_attempts": "Muitas tentativas incorretas. Solicite um novo código.",
     "professional_subscription_active": "Sua assinatura profissional ativa precisa ser gerenciada antes de mudar para o plano gratuito.",

@@ -12,8 +12,10 @@ import type {
   CfpConfirmationOutcome,
   CfpResult,
   CfpSearchBody,
+  CfpSearchReservation,
   StoredRegistryCheckRaw,
 } from "../DTOs/ICfpDTO";
+import { CPF_SEARCH_ATTEMPT_LIMIT } from "../domain/search-attempts";
 import { asStoredRaw, extractStoredResults } from "../domain/stored-results";
 import type { ICfpRepository } from "./interfaces/ICfpRepository";
 
@@ -78,6 +80,77 @@ export class CfpRepository implements ICfpRepository {
         raw: props.raw as Prisma.InputJsonValue,
         checked_at: new Date(),
       },
+    });
+  }
+
+  async reserveSearch(props: {
+    psychologistId: string;
+    request: CfpSearchBody;
+  }): Promise<CfpSearchReservation> {
+    const cpf = normalizeDigits(props.request.cpf) || null;
+    // Serialize this profile's budget without SSI conflicts between unrelated profiles.
+    // No profile fields are written. The external request starts only after commit.
+    return prisma.$transaction<CfpSearchReservation>(
+      async (tx) => {
+        const profiles = await tx.$queryRaw<{ id: string }[]>`
+        SELECT id FROM psychologist_profiles
+        WHERE id = ${props.psychologistId} AND deleted = false
+        FOR UPDATE
+      `;
+        const profile = profiles[0];
+        if (!profile) return { ok: false, reason: "profile_not_found", used: 0 };
+        const used = cpf
+          ? await tx.professional_registry_check.count({
+              where: {
+                psychologist_id: profile.id,
+                deleted: false,
+                cpf: { not: null },
+              },
+            })
+          : null;
+        if (used !== null && used >= CPF_SEARCH_ATTEMPT_LIMIT) {
+          return { ok: false, reason: "attempts_exceeded", used };
+        }
+        const raw: StoredRegistryCheckRaw = {
+          provider: "infosimples",
+          request: props.request,
+          response: null,
+          normalized_results: [],
+          attempt_status: "pending",
+        };
+        const check = await tx.professional_registry_check.create({
+          data: {
+            psychologist_id: profile.id,
+            provider: "infosimples",
+            cpf,
+            registro: props.request.registro || null,
+            uf: props.request.uf || null,
+            found: false,
+            raw: raw as Prisma.InputJsonValue,
+            checked_at: new Date(),
+          },
+        });
+        return { ok: true, check, used: used === null ? null : used + 1 };
+      },
+      { isolationLevel: "ReadCommitted" },
+    );
+  }
+
+  async completeSearch(props: {
+    checkId: string;
+    psychologistId: string;
+    found: boolean;
+    raw: StoredRegistryCheckRaw;
+  }): Promise<professional_registry_check> {
+    // A late/repeated completion cannot overwrite a finished or confirmed check.
+    return this.checkRepository.update({
+      where: {
+        id: props.checkId,
+        psychologist_id: props.psychologistId,
+        deleted: false,
+        raw: { path: ["attempt_status"], equals: "pending" },
+      },
+      data: { found: props.found, raw: props.raw as Prisma.InputJsonValue },
     });
   }
 

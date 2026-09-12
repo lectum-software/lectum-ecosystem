@@ -121,3 +121,19 @@ export const resolveCrpFromRegistryChecks = (checks?: ProfessionalRegistryCheckL
 
   return null;
 };
+
+export const resolveProfileCrp = (
+  crp?: string | null,
+  checks?: ProfessionalRegistryCheckLike[] | null,
+) => {
+  const currentCrp = normalizeStoredCrp(crp);
+  // A complete current CRP includes human corrections and must not be replaced by history.
+  if (currentCrp && !/^\d+$/.test(crp?.trim() ?? "")) return currentCrp;
+
+  const confirmedCrp = normalizeStoredCrp(resolveCrpFromRegistryChecks(checks));
+  if (!currentCrp) return confirmedCrp;
+
+  // Legacy numeric-only values may borrow a regional, but never a different registration number.
+  const confirmed = parseStoredCrp(confirmedCrp);
+  return confirmed.crp_region && confirmed.crp_number === currentCrp ? confirmedCrp : currentCrp;
+};

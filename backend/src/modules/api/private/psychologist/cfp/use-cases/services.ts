@@ -6,6 +6,7 @@ import type {
   ICfpSearchDTO,
   StoredRegistryCheckRaw,
 } from "../DTOs/ICfpDTO";
+import { toAttempts } from "../domain/search-attempts";
 import { extractStoredResults } from "../domain/stored-results";
 import {
   InfoSimplesCfpProvider,
@@ -13,7 +14,6 @@ import {
 } from "../providers/InfoSimplesCfpProvider";
 import { CfpRepository } from "../repositories/CfpRepository";
 
-const CPF_SEARCH_ATTEMPT_LIMIT = 3;
 const PROVIDER_UNAVAILABLE_CODES = new Set([609, 615]);
 
 const normalizeDigits = (value?: string | null) => (value || "").replace(/\D/g, "");
@@ -36,12 +36,6 @@ const isProviderRateLimit = (code: number | null, message: string | null) => {
 };
 
 const isCfpLogEnabled = () => process.env.CFP_PROVIDER_LOGS !== "false";
-
-const toAttempts = (used: number): CfpSearchAttempts => ({
-  limit: CPF_SEARCH_ATTEMPT_LIMIT,
-  remaining: Math.max(CPF_SEARCH_ATTEMPT_LIMIT - used, 0),
-  used,
-});
 
 const withAttempts = <T extends Record<string, unknown>>(
   data: T,
@@ -210,8 +204,6 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const usedAttempts = request.cpf ? await repository.countCpfSearchAttempts(profile.id!) : 0;
-
   if (request.cpf) {
     await repository.saveSubmittedCpf({
       cpf: request.cpf,
@@ -231,8 +223,12 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  if (request.cpf && usedAttempts >= CPF_SEARCH_ATTEMPT_LIMIT) {
-    const attempts = toAttempts(usedAttempts);
+  const reservation = await repository.reserveSearch({ psychologistId: profile.id!, request });
+  if (!reservation.ok && reservation.reason === "profile_not_found") {
+    return { status: 404, ...error("not_found", { model: "psychologist_profile" }) };
+  }
+  if (!reservation.ok) {
+    const attempts = toAttempts(reservation.used);
 
     logCfpSearchError("CFP_SEARCH_ATTEMPT_LIMIT_REACHED", {
       attempts,
@@ -246,7 +242,7 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const attempts = request.cpf ? toAttempts(usedAttempts + 1) : null;
+  const attempts = reservation.used === null ? null : toAttempts(reservation.used);
   const provider = new InfoSimplesCfpProvider();
   let response: Awaited<ReturnType<InfoSimplesCfpProvider["search"]>>;
 
@@ -261,7 +257,8 @@ export const search = async (data: ICfpSearchDTO) => {
   } catch (err) {
     logProviderUnavailable(err, traceId);
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -270,7 +267,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response: null,
         status: "provider_unavailable",
       }),
-      request,
     });
 
     return {
@@ -285,7 +281,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -293,7 +290,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_config_error",
       }),
-      request,
     });
 
     return {
@@ -308,7 +304,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -316,7 +313,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_validation_error",
       }),
-      request,
     });
 
     return {
@@ -331,7 +327,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -339,7 +336,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_unavailable",
       }),
-      request,
     });
 
     return {
@@ -354,7 +350,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -362,7 +359,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_rate_limited",
       }),
-      request,
     });
 
     return {
@@ -379,7 +375,8 @@ export const search = async (data: ICfpSearchDTO) => {
       traceId,
     });
 
-    await repository.createCheck({
+    await repository.completeSearch({
+      checkId: reservation.check.id!,
       found: false,
       psychologistId: profile.id!,
       raw: createStoredRaw({
@@ -387,7 +384,6 @@ export const search = async (data: ICfpSearchDTO) => {
         response,
         status: "provider_error",
       }),
-      request,
     });
 
     return {
@@ -398,9 +394,9 @@ export const search = async (data: ICfpSearchDTO) => {
     };
   }
 
-  const check = await repository.createCheck({
+  const check = await repository.completeSearch({
+    checkId: reservation.check.id!,
     psychologistId: profile.id!,
-    request,
     found: response.results.length > 0,
     raw: {
       ...createStoredRaw({

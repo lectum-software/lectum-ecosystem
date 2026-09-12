@@ -3,6 +3,7 @@ import type {
   CfpConfirmationOutcome,
   CfpResult,
   CfpSearchBody,
+  CfpSearchReservation,
   StoredRegistryCheckRaw,
 } from "../../DTOs/ICfpDTO";
 
@@ -10,6 +11,16 @@ export interface ICfpRepository {
   getProfile(userId: string): Promise<psychologist_profile | null>;
   countCpfSearchAttempts(psychologistId: string): Promise<number>;
   saveSubmittedCpf(props: { psychologistId: string; cpf: string }): Promise<void>;
+  reserveSearch(props: {
+    psychologistId: string;
+    request: CfpSearchBody;
+  }): Promise<CfpSearchReservation>;
+  completeSearch(props: {
+    checkId: string;
+    psychologistId: string;
+    found: boolean;
+    raw: StoredRegistryCheckRaw;
+  }): Promise<professional_registry_check>;
   createCheck(props: {
     psychologistId: string;
     request: CfpSearchBody;

@@ -23,7 +23,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | ID | Pendência | Evidência / estado |
 |---|---|---|
 | C17-A | Confirmação não aplica toda a compatibilidade/inequivocidade documentada. | Fonte; P2 proposto. Definir desambiguação antes de criar bloqueio mais amplo. Não é KYC/IDOR comprovado. |
-| C17-B | Confirmação por outro caminho pode substituir CPF/CRP protegido. | Correção365 em validação:Serializable/CAS, retry exato, preservação de rejeição manual e trava de autosserviço. Não revoga aprovações existentes. Publicação ainda pendente. |
+| C17-B | Confirmação por outro caminho pode substituir CPF/CRP protegido. | Publicado365/cb213570:38cenários PostgreSQL isolados,6testes puros,check/build/revisão/smoke5/5 aprovados. Retry exato e rejeição manual preservados; sem revogar aprovações. Não equivale a E2E de provider. |
 | C20 | Normalização estrutural deve evitar acesso a propriedades herdadas. | Fonte; impacto HTTP não comprovado. Nenhum teste/receita de exploração executado. Restrições operacionais anteriores permanecem. |
 | C9/C10 | Decisões concorrentes de moderação podem reutilizar contador/snapshot antigo. | Corrigido/publicado358:26cenários PostgreSQL real isolado e4contratos; check/build/Docker e smoke aprovados; sem remoção publicada para testar. |
 | C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Corrigido/publicado354;22contratos,11cenários PG real;smoke5/5 e ediçãoQA restaurada. Não cobre formulário já obsoleto antes de chegar ao backend. |
@@ -33,15 +33,15 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C4-paciente | Zero de relações no intervalo pode virar contagem acumulada. | Corrigido/publicado362;12testes reais/check/build/smoke e leitura QA aprovados. Consultas temporais e exclusões próprias preservadas. |
 | C5 | Atividade pode incluir publicações anteriores ao intervalo. | Publicado364/c4d3aa3e;29testes/check/build/revisão/smoke aprovados. Hoje12/09:22conteúdos preservados;6→0autores ativos,1,2→0ações por profissional. Sem mutações publicadas. |
 | C6 | Views por conteúdo podem incluir visitas ao perfil. | Publicado363/5b9511f4;17testes, check/build/revisão/smoke e leitura AX publicados aprovados. Razões corrigidas e dataset histórico/atribuição preservados. |
-| C18 | Limite de consultas CFP não reserva a tentativa antes do efeito externo. | Fonte; tratar concorrência sem chamadas pagas de teste. |
+| C18 | Limite de consultas CFP não reservava a tentativa antes do efeito externo. | Corrigido366; 20 cenários PG reais passaram3vezes, incluindo perfis independentes. Sem consulta paga; publicação pendente. |
 | C16 | Despublicação de perfil impede remover a própria relação de follow. | Corrigido/publicado353; dez cenários service/repository em PostgreSQL local real,smoke5/5. Sem E2E autenticado equivalente. |
 | C24 | Data de registro de hoje pode ser recusada pela manhã. | Corrigido346; comparação civil em São Paulo, 11 contratos em3fusos e build. |
 
 ## Hipóteses que exigem rastreio antes de mudar regras
 
 - Universo histórico de membros, origem de tráfego, coortes e scores (C1/C2/C7/C8/C11).
-- Fuso horário de gráficos (C3), precedência de evidência manual (C14), confirmação legada de telefone (C19).
-- Validação genérica de CPF e limites zero/falsy (C21/C22): provar consumidor ativo.
+- C3/C14/C19 corrigidos366: fuso e resumo/CRP atuais testados; WhatsApp20 e registro38 cenários PG aprovados; publicação pendente.
+- C21/C22 corrigidos366: 42 testes novos +14base aprovados; min0 tem consumidores ativos. CPF/max0/condições genéricas cobertos como contrato, sem alegar exploração publicada.
 - Métricas de mentoria e filtros de eventos próprios no ranking (C23/C25).
 - Sucesso parcial de mutations encadeadas, idiomas, fallback de slices e listas administrativas.
 

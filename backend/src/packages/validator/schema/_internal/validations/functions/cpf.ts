@@ -12,7 +12,7 @@ export default ({}: IValidationParams) => {
       if (!regex.test(value)) return false;
 
       const cpf = value.replace(/\D/g, "");
-      if (cpf === "00000000000") return false;
+      if (/^(\d)\1{10}$/.test(cpf)) return false;
       let sum = 0;
       let rest;
 

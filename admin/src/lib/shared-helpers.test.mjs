@@ -220,3 +220,15 @@ test("controllers mantêm IDs e mensagens únicos entre formulários reais simul
   assert.equal([...html.matchAll(/\bfor="/g)].length, 6);
   assert.equal(render(), html, "IDs de SSR devem ser determinísticos");
 });
+
+test("moderação apresenta a data civil sem retroceder um dia no fuso do browser", async () => {
+  const { formatCalendarDayMonth } = await import("./chart-time-series.ts");
+  for (const [input, expected] of [
+    ["2026-09-11", "11 de set."],
+    ["2027-01-01", "01 de jan."],
+    ["2024-02-29", "29 de fev."],
+  ]) {
+    assert.equal(formatCalendarDayMonth(input), expected);
+  }
+  assert.equal(formatCalendarDayMonth("data inválida"), "data inválida");
+});

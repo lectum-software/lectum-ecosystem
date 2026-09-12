@@ -17,9 +17,23 @@ import {
   PLATFORM_WEEKDAY_LABELS,
   pad,
   roundOneDecimal,
+  TIMEZONE,
 } from "./intent";
 
 import { dateKeyInTimeZone } from "./metrics-series";
+
+const platformHourFormatter = new Intl.DateTimeFormat("en-US", {
+  hour: "2-digit",
+  hourCycle: "h23",
+  timeZone: TIMEZONE,
+});
+
+const platformHour = (date: Date) =>
+  Number(platformHourFormatter.formatToParts(date).find((part) => part.type === "hour")?.value);
+
+// A chave existente já representa o dia civil em TIMEZONE; UTC serve só para ler seu weekday.
+const platformWeekday = (date: Date) =>
+  new Date(`${dateKeyInTimeZone(date)}T00:00:00.000Z`).getUTCDay();
 
 export const patientPlatformPageLabel = (view: AdminPatientDetailPlatformPageViewRecord) => {
   const path = (view.normalized_path || view.path || "/").split("?")[0] ?? "/";
@@ -108,7 +122,7 @@ export const incrementPlatformHourlyActivity = (
   date: Date,
   field: PatientPlatformActivityMetric,
 ) => {
-  const point = hourly.get(date.getHours());
+  const point = hourly.get(platformHour(date));
   if (!point) return;
 
   point[field] += 1;
@@ -128,7 +142,7 @@ export const incrementPlatformHourlyActivityCollections = (
   field: PatientPlatformActivityMetric,
 ) => {
   incrementPlatformHourlyActivity(hourly, date, field);
-  const weekday = hourlyByWeekday.get(date.getDay());
+  const weekday = hourlyByWeekday.get(platformWeekday(date));
   if (weekday) incrementPlatformHourlyActivity(weekday.hours, date, field);
 };
 
@@ -209,7 +223,7 @@ export const summarizePlatformPeakActivityHours = (
   const viewsWithUser = pageViews.filter((view) => view.user_id);
   const countsByHour = Array.from({ length: 24 }, () => 0);
 
-  for (const view of viewsWithUser) countsByHour[view.occurred_at.getHours()] += 1;
+  for (const view of viewsWithUser) countsByHour[platformHour(view.occurred_at)] += 1;
 
   const total = viewsWithUser.length;
   if (total === 0) return [];

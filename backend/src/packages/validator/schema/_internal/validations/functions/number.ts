@@ -3,8 +3,9 @@ import type { IValidationParams } from "../types";
 import { z } from "../zod";
 
 export default ({ int, positive, max, min }: IValidationParams) => {
-  min = min ? Number(min) : undefined;
-  max = max ? Number(max) : undefined;
+  // Zero é um limite explícito; configuração vazia legada continua sem limite.
+  min = min || min === 0 ? Number(min) : undefined;
+  max = max || max === 0 ? Number(max) : undefined;
 
   let baseSchema = z.number({});
 

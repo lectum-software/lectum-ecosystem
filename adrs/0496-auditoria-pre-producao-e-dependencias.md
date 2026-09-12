@@ -1239,3 +1239,44 @@ substituição automática nem revoga direitos. Entitlement manual é rechecado 
 consulta usa período corrente, não o instante do boot. Precedência de exibição de CRP
 histórico versus correção humana é C14 separado, não alterada. Primeira revisão de fonte
 Gauss não encontrou bloqueante nos trechos lidos; não atesta execução concorrente.
+
+
+### 366 — concorrência, evidência atual e validação compartilhada
+
+C18: reservar a cota CFP com lock da linha do perfil e contagem+inserção antes do provider. Finalizar
+por ID/dono/status pendente, sem recriar histórico. Uma interrupção não restitui cota
+automaticamente: evita repetir efeito externo incerto e mantém revisão humana disponível.
+Nenhuma chamada externa dentro de retry. Leitores antigos toleram a reserva sem resultados;
+a garantia concorrente exige todas as réplicas do backend atualizadas.
+
+C19: manter MVP sem OTP novo. O caminho legado revalida desafio/perfil na transação e só
+confirma o número corrente. Salvar/substituir WhatsApp invalida pendências incompatíveis;
+verificação anterior não acompanha número novo. Histórico concluído permanece intacto.
+
+C14: valor atual completo de CRP prevalece sobre histórico. Valor legado somente numérico
+pode receber a região histórica apenas quando o número coincide. Resumo de revisão não
+transforma reprovação/pendência canônica em aprovação antiga; cortesia e direitos legados
+continuam preservados. Funções de apresentação puras separadas do acesso ao banco.
+
+C3: atividade horária, dias da semana e picos usam o fuso São Paulo já contratado pelo
+heatmap. Moderação agrupa instantes nesse calendário; datas civis do filtro são formatadas
+em UTC para não retroceder no browser. Reusar helper de datas, sem biblioteca ou layout novo.
+C21/C22: rejeitar CPF de dígitos repetidos; respeitar limites zero e presença de zero/false
+nas condições do validator existente, preservando ausência null/undefined/string vazia.
+Nenhuma tabela, migration, env obrigatória, provider novo ou alteração de limites de negócio.
+
+366 validação concorrente revelou serialização abortada no commit como
+DriverAdapterError/TransactionWriteConflict/40001, sem o wrapper P2034. Estender somente
+o classificador do retry Serializable para essa combinação estruturada do adapter-pg
+instalado. Não interpretar mensagens nem repetir timeouts/resultado de commit desconhecido;
+preservar limite/backoff e códigos antigos. Provar novamente em PostgreSQL real.
+
+
+366 decisão final de concorrência: embora o retry tenha tratado o erro do adapter,
+Serializable esgotou cinco tentativas no caso de perfis distintos (5+5 chamadas). A reserva
+passa a usar ReadCommitted + SELECT FOR UPDATE parametrizado no repository. Bloqueia
+somente o perfil, sem reescrever seus campos; a contagem seguinte vê o commit anterior.
+Evita conflitos SSI de predicado entre usuários, sem mutex de processo/Redis/tabela nova.
+Teste inalterado passou três vezes (20/20 cada); WhatsApp20 e registro38 também passaram
+na imagem final d1b58ed0d6acf2c6f43ff7663cf20f46053f30e90bf9ea9dbfb0b4fed38b56a1.
+Todas as réplicas antigas devem ser substituídas: elas não participam do lock novo.
