@@ -359,8 +359,8 @@ export const returnRate = (stats: TrafficStats): NumericMetric => {
 };
 
 export const importantActionRate = (stats: TrafficStats): NumericMetric => {
-  const sessionsWithPageview = pageViewSessions(stats).size;
-  if (sessionsWithPageview === 0) {
+  const sessionsWithPageview = pageViewSessions(stats);
+  if (sessionsWithPageview.size === 0) {
     return {
       unavailable: true,
       unavailableReason: "Sem sessões com visualizações para calcular a taxa.",
@@ -368,9 +368,16 @@ export const importantActionRate = (stats: TrafficStats): NumericMetric => {
     };
   }
 
+  // Numerador e denominador usam sessões com pageview no mesmo período.
+  // Ações sem pageview continuam disponíveis para os demais indicadores.
+  const sessionsWithAction = actionSessionKeys(stats);
+  const eligibleActionSessions = [...sessionsWithPageview.keys()].filter((key) =>
+    sessionsWithAction.has(key),
+  ).length;
+
   return {
     unavailable: false,
-    value: safePercentage(actionSessionKeys(stats).size, sessionsWithPageview),
+    value: safePercentage(eligibleActionSessions, sessionsWithPageview.size),
   };
 };
 

@@ -1103,5 +1103,43 @@ Admin independente; rollback de código não desfaz posições já persistidas.
 - [x] Subir/Descer nativos, extremos e bloqueios validados em lógica, SSR e Browser local.
 - [x] Ref e lote aguardado preservam conteúdo/ativo/título; contratos puros aprovados.
 - [x] Formulários reais RHF e callbacks locais validados; foco/anúncio revisados em fonte.
-- [ ] Foco e gravações integrados confirmados no Browser publicado, sem induzir falha do serviço.
+- [x] Foco e gravações integrados confirmados no Browser publicado, sem induzir falha do serviço.
 - [ ] Check/build, commit/push e smoke; ordem real QA confirmada após reload e restaurada.
+
+359/ce8d5c98: commit/push concluídos, cinco GETs públicos aprovados às01:24:48UTC de12/09.
+Backend/frontend/Admin359, health/ready200. No Admin390×844, Enter moveu a regra original
+para baixo e Espaço restaurou a ordem; ambos persistiram após reload. Durante os envios,
+todos os controles ficaram bloqueados e o foco acompanhou a regra. Foco movido para o
+campo Nome enquanto o segundo envio estava pendente permaneceu lá depois da conclusão.
+Editar a regra temporária bloqueou ordenação/CRUD; Cancelar descartou rascunho, Salvar
+desabilitou os campos e persistiu após reload. Nenhum texto da regra original mudou.
+Pares antes/depois390×844 e1280×900 comparados conjuntamente, sem overflow observado.
+Limitação final: Remover da regra temporária QA359 deixou a aba sem resposta; o Browser
+não expôs confirmação nativa acessível. Remoção não confirmada, solicitada intervenção
+manual apenas nesse item. Não repetir remoção, acessar app nativo negado ou substituir
+o fluxo por API. Checkbox final continua aberto até verificar limpeza.
+
+### Continuação360 — universo coerente da taxa de ação
+
+C15: importantActionRate divide todas as sessões com ação pelas sessões com pageview,
+sem interseção. A TASK50 descreve a ação, mas não explicita o denominador. Correção
+conservadora: manter o denominador já implementado (sessões com pageview no período)
+e contar somente suas sessões que também têm ação no mesmo conjunto carregado.
+Chave visitor_id+session_id existente; repetir no período anterior pelo mesmo helper.
+Não trocar por união/todas as sessões, não limitar artificialmente a100%, não excluir
+os eventos sem pageview de outros indicadores nem reescrever dados históricos.
+Backend apenas, sem UI, migration, package ou env; contrato da resposta inalterado.
+Rollback somente de código, sem efeito em dados. Não provocar eventos em homolog para
+fabricar números; testes puros reais do cálculo/buildQuality, não mocks de API/DB.
+
+- [x] Numerador é subconjunto do denominador, com deduplicação por visitante e sessão.
+- [x] Ausência de base continua indisponível; zero observado e arredondamento preservados.
+- [x] Períodos atual/anterior e demais métricas preservados por testes focais reais.
+- [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
+- [ ] Commit/push e cinco GETs de smoke de homologação registrados.
+
+360:14testes puros aprovados (baseline7pass/7fail), incluindo56combinações de conjuntos;
+checkglobal1245testes/1239pass/6skipsdrawtext preexistentes; backendbuild aprovado.
+Prisma generate/TypeScript/Biome incluídos. Nenhuma migration necessária. Revisão
+independente de3fontes completas e hashes conferidos,sem regressão concreta identificada.
+Leitura normal do Admin359 em7dias06–12/09:16,6%; não é prova de ocorrência acima de100.

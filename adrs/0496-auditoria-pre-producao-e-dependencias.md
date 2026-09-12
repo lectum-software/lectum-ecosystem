@@ -1157,3 +1157,13 @@ throwOnError; renderização normal segue props do pai, sem preferência permane
 cache separado. Foco one-shot apenas no gesto inicial, nunca recriado depois do await.
 20contratos e Browser local/RHF aprovados; sem promessa de ordenação atômica entre
 abas,administradores ou navegações que desmontem o Manager.
+
+### Taxa de sessões com ação360 — decisão prévia
+
+Preservar o universo de pageviews já escolhido pelo cálculo vigente. A correção C15
+é a interseção de sessões com ações nesse universo, não mudança do denominador para
+união ou todas as sessões. O contrato histórico é incompleto sobre o denominador;
+esta decisão o explicita sem mudar a base existente. Preservar sessionKey, unavailable,
+arredondamento, eventos brutos e outros consumidores de actionSessionKeys. Não usar
+clamp100 para encobrir população divergente. Validação pura do helper e buildQuality,
+sem provider/DB/HTTP; não atestar ocorrências no ambiente publicado sem evidência.

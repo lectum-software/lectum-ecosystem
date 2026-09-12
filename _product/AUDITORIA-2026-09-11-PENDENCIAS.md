@@ -9,7 +9,7 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | ID | Pendência | Evidência / estado |
 |---|---|---|
 | A342-01 | Upload de avatar pode apagar texto ainda não salvo da comunidade. | Corrigido348; RHF real e Browser local; upload remoto ainda pendente. |
-| A342-02 | Reordenação de regras não possui alternativa por teclado. | Fonte; corrigir mantendo persistência e bloqueios. |
+| A342-02 | Reordenação de regras não possui alternativa por teclado. | Corrigido/publicado359; teclado/foco/persistência/reload e restauração da ordem conferidos. Limpeza de uma regra QA temporária aguarda diálogo manual. |
 | A342-03 | Editar data incompleta removia os próprios filtros. | Corrigido344; repetido no Admin publicado. |
 | A342-04 | Busca perde foco após atualizar a URL. | Corrigido345; foco e continuação da digitação repetidos nas duas listas publicadas. |
 | A342-05 | Expansor de campo profissional e setas de publicações sem nome acessível. | Corrigido347; nomes/expandido, teclado/seleção/Cancelar e paginação conferidos no Admin publicado e mobile. |
@@ -25,10 +25,10 @@ já realizadas permanece em [Acompanhamento](AUDITORIA-2026-09-10.md).
 | C17-A | Confirmação não aplica toda a compatibilidade/inequivocidade documentada. | Fonte; P2 proposto. Definir desambiguação antes de criar bloqueio mais amplo. Não é KYC/IDOR comprovado. |
 | C17-B | Confirmação por outro caminho pode substituir CPF/CRP protegido. | Fonte; P2 proposto. Preservar trava transacional e idempotência sem revogar aprovações existentes. |
 | C20 | Normalização estrutural deve evitar acesso a propriedades herdadas. | Fonte; impacto HTTP não comprovado. Nenhum teste/receita de exploração executado. Restrições operacionais anteriores permanecem. |
-| C9/C10 | Decisões concorrentes de moderação podem reutilizar contador/snapshot antigo. | Corrigido358:26cenários PostgreSQL real isolado e4contratos; check/build/Docker passados. Publicação pendente; sem remoção publicada para testar. |
+| C9/C10 | Decisões concorrentes de moderação podem reutilizar contador/snapshot antigo. | Corrigido/publicado358:26cenários PostgreSQL real isolado e4contratos; check/build/Docker e smoke aprovados; sem remoção publicada para testar. |
 | C12 | Edição parcial pode regravar campos omitidos a partir de snapshot antigo. | Corrigido/publicado354;22contratos,11cenários PG real;smoke5/5 e ediçãoQA restaurada. Não cobre formulário já obsoleto antes de chegar ao backend. |
 | C13 | Campo chamado cpf_masked retornava todos os dígitos. | Corrigido345 com máscara compartilhada; contratos/build aprovados. Endpoint administrativo; nenhum vazamento público demonstrado. |
-| C15 | Numerador e denominador de taxa de ação usam conjuntos diferentes de sessões. | Fonte; uniformizar universo, não apenas limitar percentual. |
+| C15 | Numerador e denominador de taxa de ação usam conjuntos diferentes de sessões. | Corrigido360 mantendo base de visualizações;14testes puros/check/build aprovados. Publicação pendente; sem ocorrência publicada acima de100 comprovada. |
 | C4 | Zero eventos no período pode virar contagem acumulada de comentários/salvamentos. | Fonte; confirmar semântica e usar fallback coerente. |
 | C5 | Atividade pode incluir publicações anteriores ao intervalo. | Fonte; separar histórico de tráfego e atividade do período. |
 | C6 | Views por conteúdo podem incluir visitas ao perfil. | Fonte; filtrar pelo alvo correto preservando atribuição histórica. |

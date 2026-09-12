@@ -228,3 +228,8 @@ rotas/middlewares e a UI publicada não foram substituídos por mocks nem certif
 358:smoke público completo; leitura normal de Denúncias da comunidade QA confirmada
 após publicação,sem mutação.26cenários PostgreSQL isolado cobrem transações;não equivalem
 à concorrência provocada no Admin publicado.359 ordenação acessível segue em execução.
+
+359: Admin publicado confirmou ordenar com Enter/Espaço, extremos/bloqueios, foco da
+regra e ausência de roubo tardio, gravação/reload e restauração da ordem; Cancelar/Salvar
+na regra temporária aprovados. Regra original preservada. Remoção de QA359 aguarda
+confirmação manual pois a aba ficou sem resposta no diálogo; limpeza ainda não atestada.

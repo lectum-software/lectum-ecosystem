@@ -2169,3 +2169,45 @@ Limite700 é por arquivo,não orçamento de leitura; leitura complementar corrig
 corte inicial de42linhas do segundo revisor. Parent revisou diff,helpers/forms/testes
 e executou componentes reais locais. Sem migração,envnova,pacote,API simulada ouDB.
 Foco real do Manager e persistência/reload são reteste pósdeploy,não certificados porSSR.
+
+359/ce8d5c98 publicado; /tmp/lectum-audit-359-smoke-curl-homolog.json contém cinco
+GETs aprovados às01:24:48UTC12/09:backend/frontend/Admin359,health/ready200,
+Nextversions no-store/noindex. Não confirma vídeo privado. Rollout intermediário
+preservado separadamente, sem falha de saúde observada.
+Browser real390×844: Enter moveu original para posição2; snapshot imediato mostrou
+ARTICLE Regra2de2 focado, aria-busy=true, todos os oito botões das regras disabled e
+anúncio Salvando ordem. Reload confirmou ordem invertida. Espaço restaurou posição1;
+clique no campo Nome ainda com aria-busy=true moveu foco para INPUT, que permaneceu
+após Ordem das regras salva e aria-busy=false. Reload confirmou ordem restaurada.
+Edição apenas da regra temporária QA359: bloqueios, Cancelar descartando rascunho,
+Salvar desabilitando campos e persistência após reload aprovados. Texto original intacto.
+Pares mobile-before/after e desktop-before/after comparados juntos, um par por chamada,
+390×844/1280×900. Capturas e observações em /tmp/lectum-task178-rule-order-359.
+Remover regra2 temporária: comando de clique ficou sem resposta, AX/DOM indisponíveis;
+getJsDialog não expôs diálogo. Não inferir sucesso/falha do produto nem repetir mutação.
+Solicitado ao usuário confirmar somente QA359 se houver diálogo; limpeza não comprovada.
+Nenhum acesso nativo alternativo, cookie/API ou dado real externo usado para contornar.
+
+359: usuário confirmou que havia diálogo e escolheu Cancelar. DOM voltou a responder;
+original e QA359 continuam presentes, sem remoção. Orientada limpeza manual somente
+QA359. Não classificar a pausa do Browser no diálogo nativo como falha comprovada do app.
+
+360/C15: revisão Gauss da fonte baseline,21integrais/3parciais/1somente metadados;
+relatório e ranges em /tmp/lectum-task178-action-rate-360. Partial de docs não promovido
+para cobertura integral, overviewbaseline substituído por leitura completa do patch
+pelo parent/Socrates. Revisão independente final de overview596,test170,caller247:
+sem regressão concreta; hashes conferidos. Artefatos separados contêm a proveniência.
+Teste puro importa helpers reais e buildQuality, sem repository/DB/API/provider.
+14casos:baseline7pass/7fail,patch14pass; includes56combinações de conjuntos,não apenas
+assertiva de teto100. Títulos de3testes passaram para PT-BR após guard textual identificar
+pageview; nenhuma assertion nem guard foi enfraquecida. Fonte de resposta/UI inalterada.
+Logs /tmp/lectum-360-action-rate-{baseline,final}.log. Isso não certifica eventos reais,
+HTTP autenticado ou medição publicada acima de100; o defeito foi demonstrado no cálculo.
+
+360:checkglobal1245tests/1239pass/0fail/6skipsdrawtext;backendbuild aprovado, incluindo
+Prisma generate/TypeScript/Biome. /tmp/lectum-360-{root-check,backend-build}.log.
+Browser normalAdmin359: preset7dias estabilizado06–12/09 e taxa16,6%. Datas preenchidas
+pela ferramenta não aplicaram recorte custom; não contar essa tentativa como filtro
+funcional nem como defeito do produto. Baselineválido é o preset7d selecionado, com
+captura DOM mínima sem pessoas/cookies (/tmp/lectum-task178-action-rate-360/browser-before.json).
+Nenhum evento fabricado nem acesso ao banco publicado. Publicação360 pendente.

@@ -273,7 +273,10 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 151. **Regras pelo teclado:** controles Subir/Descer permitem ordenar sem depender de arrastar.
 152. **Envios sobrepostos:** regras bloqueiam novas ações durante todo o salvamento; falha parcial exige consultar o que foi realmente salvo.
 153. **Formulários de regras:** campos e cancelamento ficam protegidos até o envio terminar.
-359: 20 testes focais, check global, build e componentes no Browser local aprovados; publicação pendente.
+359: publicada; teclado, foco, bloqueios e gravação conferidos no Admin. Remoção do item temporário aguarda confirmação manual na aba sem resposta.
+
+154. **Taxa de ações:** conta apenas sessões pertencentes à base do indicador, evitando percentuais inflados.
+360: 14 testes focais, check global e build aprovados; publicação pendente.
 
 ## Ainda pendente
 
