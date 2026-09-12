@@ -256,3 +256,8 @@ inline na documentação que ativara checkencoding;nenhum verificador enfraqueci
 Queries temporais/exclusões próprias preservadas; sem novaextração/package/env/migration.
 QA antes:1comentário/0salvamentos. Fluxo publicado só leitura;sem simular oufabricar eventos.
 Deploy362 pendente,privadovídeo sem nova comprovação. Artefatos /tmp/lectum-task178-patient-counts-362.
+
+362/7921abef:smoke5/5 em 2026-09-12T02:18:34.265249+00:00;backend/frontend/Admin362,
+health/ready200,Nextversionsno-store/noindex. BrowserQA apósreload manteve1comentário/
+0salvamentos e demais métricas; registro não demonstra divergência prévia. Sem mutações.
+Vídeo privado permanece sem comprovação deversão além338; não presumir362.

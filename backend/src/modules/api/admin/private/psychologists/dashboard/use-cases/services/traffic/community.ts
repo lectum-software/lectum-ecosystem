@@ -58,6 +58,9 @@ const isCommunityTrafficPostTargetType = (targetType: string | null) =>
 const isCommunityTrafficReplyTargetType = (targetType: string | null) =>
   targetType === "post_reply" || targetType === "reply";
 
+export const isCommunityTrafficContentTargetType = (targetType: string | null) =>
+  isCommunityTrafficPostTargetType(targetType) || isCommunityTrafficReplyTargetType(targetType);
+
 export const roundTrafficMetricPercent = (value: number) => Math.round(value * 10) / 10;
 
 const buildCommunityTrafficPlatformMetric = (

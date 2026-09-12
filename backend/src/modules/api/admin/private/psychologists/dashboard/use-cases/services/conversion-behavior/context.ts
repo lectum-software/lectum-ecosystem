@@ -19,6 +19,7 @@ import type {
 } from "../../../repositories/interfaces/IAdminPsychologistsDashboardRepository";
 import {
   filterCommunityTrafficPlatformMetricDataset,
+  isCommunityTrafficContentTargetType,
   isCommunityTrafficVideoMedia,
 } from "../traffic/community";
 import {
@@ -329,7 +330,11 @@ export const buildProfileConversionBehaviorRowContext = ({
 
   const communityViewsPerContent =
     communityContentCount > 0
-      ? roundOneDecimal(rowCommunityTrafficDataset.pageViews.length / communityContentCount)
+      ? roundOneDecimal(
+          rowCommunityTrafficDataset.pageViews.filter((view) =>
+            isCommunityTrafficContentTargetType(view.target_type),
+          ).length / communityContentCount,
+        )
       : null;
 
   const communityAttentionPerContent =

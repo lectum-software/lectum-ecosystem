@@ -2260,3 +2260,45 @@ Deploy362 pendente,privadovídeo sem nova comprovação. Artefatos /tmp/lectum-t
 hashes focais atuais conferidos. Sem regressão bloqueante identificada. Teste começa
 no bundle pronto; datas,exclusões e variante parent_reply conferidos apenas em fonte,
 não em SQL/HTTP. Variante não recebeu cenário dedicado, sem mudança no agrupamento.
+
+362/7921abef:smoke5/5 em 2026-09-12T02:18:34.265249+00:00;backend/frontend/Admin362,
+health/ready200,Nextversionsno-store/noindex. BrowserQA apósreload manteve1comentário/
+0salvamentos e demais métricas; registro não demonstra divergência prévia. Sem mutações.
+Vídeo privado permanece sem comprovação deversão além338; não presumir362.
+
+C5 diagnóstico lateral:24paths,9leituras integrais/12parciais/3sómetadados,3173linhas
+literais.9hashes deintegrais conferidos e integrados. Fontecontexto parcial da lateral
+não tratada como versãofutura alterada porC6. Proposta:C5 precisa ajustar subtotais de
+atividade na célula e metadados de disponibilidade dos formatos, não só média no contexto.
+Histórico de tráfego permanece;specs123/125/126 restauramatividade no intervalo. Nenhum
+requisito externo faltante identificado;sem implementação/runtime/DB nesta revisão.
+Relatório/readlist:/tmp/lectum-task178-activity-period-next. C6 em execução separado.
+
+
+### C6 — visualizações comunitárias363
+
+Numerador do contexto reutiliza classificadores existentes de post/resposta depois
+do filtro de autores/IDs. Visitas ao perfil permanecem no dataset para atribuição.
+Sem query, contrato, schema, migration, package ou env alterados. 17testes puros reais:
+baseline9pass/8fail, final17pass, compilado17pass. Grafo estático runtime inspecionado
+antes de testar, sem bootstrap de infraestrutura; fixtures unitárias não são E2E.
+Artefatos: /tmp/lectum-task178-community-views-363/ e logs /tmp/lectum-363-*.log.
+Typecheck/build aprovado; revisão independente e repetição global pendentes neste registro.
+Admin362: dashboard normal carregado; nenhuma mutação. Campo da razão não ficou visível
+na seção observada, portanto não é prova visual da correção. Sem abrir diálogos adicionais.
+
+363 complemento Browser: a inspeção AX posterior encontrou a razão na descrição
+acessível/title da célula comunitária (não no texto da tag). EmTodooperíodo, categorias
+Padrão/Baixa/SemConversão mostram9,1/12,9/6,3views por conteúdo respectivamente.
+Leitura DOM de atributos confirmada e guardada em browser-before.json, sem ler estado
+interno, fazer API paralela ou abrir modal. Duplicação DOM corresponde às variantes
+mobile/desktop já existentes; não é duplicação da população. Retestar após publicação.
+
+363:repetição integral do check global aprovada:1286testes/1280pass/0fail/6skipsdrawtext
+preexistentes. Prisma/TS/Biome inclusos; build aprovado. Arquivo de teste é descoberto
+pelo glob vigente do backend, sem registro adicional ou alteração de script.
+
+Revisão363:3fontes finais lidas porGauss/1447linhas, SHA atual conferido; relatório
+/tmp/lectum-task178-community-views-363-review/report.md. Sem regressão identificada.
+Global1286/1280pass/0fail/6skipspreexistentes, build363 e17testes compilados aprovados.
+O formato da assertion foi corrigido e relido; nenhuma redução da cobertura de testes.

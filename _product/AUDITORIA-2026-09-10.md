@@ -282,7 +282,10 @@ Concluída leitura lateral de275fontes do Admin; demais problemas encontrados se
 361: publicada; testes/check/build e leitura QA aprovados.
 
 156. **Publicações do paciente:** comentários e salvamentos sem registros elegíveis também permanecem em zero.
-362: testes/check/build aprovados; publicação pendente.
+362: publicada; testes/check/build/smoke e leitura normal QA aprovados.
+
+157. **Visualizações de conteúdo:** visitas ao perfil não inflam a média de leitura de posts e respostas.
+363: 17 testes focais, check global, build e revisão aprovados; publicação em andamento.
 
 ## Ainda pendente
 

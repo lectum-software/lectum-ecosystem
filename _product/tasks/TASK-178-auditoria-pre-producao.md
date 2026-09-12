@@ -1195,7 +1195,7 @@ A versão361 deve ter publicação verificada antes do push seguinte.
 - [x] Ausência de relações mantém zero real, valores positivos e separação por publicação.
 - [x] Contrato, campos não afetados, agrupadores e ordenação preservados em teste puro.
 - [x] Backend Prisma/TypeScript/Biome/build e check global aprovados.
-- [ ] Commit/push, smoke, versões e leitura normal da conta QA registrados.
+- [x] Commit/push, smoke, versões e leitura normal da conta QA registrados.
 
 361/b9c89301 publicado:smoke5/5 às02:07:40UTC12/09,backend/frontend/Admin361,
 health/ready200,Nextversionsno-store/noindex. Leitura normal QA apósreload manteve3itens
@@ -1209,3 +1209,49 @@ Checkglobal1269testes/1263pass/0fail/6skipsdrawtext;backendbuildPrisma/TS/Biome 
 Primeira execução parou na documentação:operador de código fora de crases foi marcado
 pelo check deencoding. Corrigido apenasMarkdown, sem enfraquecer verificador; repetição
 integral passou. Sem mutações publicadas. QA antes362:1comentário/0salvamentos.
+
+
+### Continuação363 — visualizações médias do conteúdo comunitário
+
+C6:communityViewsPerContent conta também visitas a perfil presentes no dataset para
+atribuição. Manter essas visitas para atribuição/origens, mas excluí-las do numerador
+que mede consumo de posts/respostas. Reusar classificadores existentes de alvos com
+predicado composto no módulo traffic/community; preservar filtro de autores/IDs anterior,
+coorte de conteúdo/denominador, arredondamento, null sem conteúdo e métricas restantes.
+Não mudar queries/telemetria nem eliminar páginas de perfil do dataset compartilhado.
+Testar contexto e métricas reais com entradas unitárias tipadas, sem bootstrap deinfra.
+Backend somente;sem UI/package/env/migration/backfill;rollback de código. Não publicar
+antes da validação do deploy362. C5 segue revisão independente, não misturar sua semântica.
+
+- [x] Visitas ao perfil não aumentam visualizações médias de posts/respostas.
+- [x] Aliases de conteúdo, atribuição ao perfil, filtros e ausência de base preservados.
+- [x] Testes reais, revisão independente e backend/global checks/build aprovados.
+- [ ] Commit/push, smoke, versões e leitura normal publicados registrados.
+
+362/7921abef:commit/pushconcluídos,smoke5/5 registrado em /tmp/lectum-audit-362-smoke-curl-homolog.json,
+backend/frontend/Admin362,health/ready200,Nextversionsno-store/noindex. Apósreload,
+postQA manteve1comentário/0salvamentos e demais métricas; não demonstra ocorrência
+naquele registro. Sem mutação publicada para fabricar resultado. Vídeo privado permanece
+sem comprovação adicional;última prova recebida338.
+
+363:17testes puros reais, baseline9pass/8fail e final17pass, também noJavaScript compilado.
+Atribuição, aliases, autores/IDs, sessões, janela inclusiva30min, arredondamento, null
+e entradas preservados. Backendbuild aprovado. Checkglobal inicial apontou só formatação
+de uma assertion; corrigida sem mudança lógica, repetição integral em andamento.
+Leitura normal do dashboard em362 carregou sem erro; a razão corrigida não ficou visível
+na seção observada. Sem mutação publicada, sem alegar reprodução E2E desse indicador.
+
+363 complemento Browser: a inspeção AX posterior encontrou a razão na descrição
+acessível/title da célula comunitária (não no texto da tag). EmTodooperíodo, categorias
+Padrão/Baixa/SemConversão mostram9,1/12,9/6,3views por conteúdo respectivamente.
+Leitura DOM de atributos confirmada e guardada em browser-before.json, sem ler estado
+interno, fazer API paralela ou abrir modal. Duplicação DOM corresponde às variantes
+mobile/desktop já existentes; não é duplicação da população. Retestar após publicação.
+
+363:repetição integral do check global aprovada:1286testes/1280pass/0fail/6skipsdrawtext
+preexistentes. Prisma/TS/Biome inclusos; build aprovado. Arquivo de teste é descoberto
+pelo glob vigente do backend, sem registro adicional ou alteração de script.
+
+363:revisão independente Gauss leu3fontes finais/1447linhas; hashes atuais conferidos
+e integrados ao ledger. Sem regressão introduzida identificada. Bump único363/checkversion
+aprovados; build repetido na363 e17testes compilados passaram. Publicação pendente.

@@ -1191,3 +1191,13 @@ e exclui relações próprias; não espelhar a semântica temporal do psicólogo
 queries. O builder já é puro:alterar apenas2fallbacks, sem extração/helper/infra novos.
 Campos restantes e agrupadores/ordenação preservados; contadores históricos não são
 corrigidos ou apagados. Testes tipados do builder real não certificam queries ou E2E.
+
+
+### Universo de visualizações comunitárias363 — decisão prévia
+
+C6 corrige somente numerador de communityViewsPerContent no contexto de conversão.
+O dataset inclui páginas de perfil legitimamente para atribuição; removê-las globalmente
+quebraria outra métrica. Filtrar pelo predicado composto dos classificadores existentes
+de post/resposta, depois do filtro atual de autores/IDs. Coorte/denominador, período,
+arredondamento e null sem base preservados; não somar médias arredondadas para inferir
+contagem. Nenhuma query/dado histórico modificado. C5 é decisão separada.
